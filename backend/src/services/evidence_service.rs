@@ -5,11 +5,12 @@
 
 use crate::clinvar::ClinVarClient;
 use crate::config::Config;
-use crate::db;
+use crate::error::{AppError, AppResult};
 use crate::llm::LlmClient;
 use crate::models::{
-    AnalysisResult, AppError, AppResult, ClinVarResult, DocumentStatus, Evidence, VariantClassification,
+    AnalysisResult, ClinVarResult, DocumentStatus, Evidence, VariantClassification,
 };
+use crate::repositories::{documents, evidence};
 use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -33,13 +34,13 @@ impl EvidenceService {
 
     /// Process a document: extract text, analyze with LLM, validate with ClinVar
     pub async fn process_document(&self, document_id: Uuid) -> AppResult<AnalysisResult> {
-        // Get document from database
-        let document = db::documents::get_by_id(&self.pool, document_id)
+        // Get document from database via repository
+        let document = documents::get_by_id(&self.pool, document_id)
             .await?
             .ok_or_else(|| AppError::NotFound(format!("Document not found: {}", document_id)))?;
 
         // Update status to processing
-        db::documents::update_status(&self.pool, document_id, DocumentStatus::Processing).await?;
+        documents::update_status(&self.pool, document_id, DocumentStatus::Processing).await?;
 
         // Get extracted text (should be populated during upload)
         let text = document.extracted_text.ok_or_else(|| {
@@ -52,17 +53,17 @@ impl EvidenceService {
             .extract_evidence(document_id, &text, document.language)
             .await
         {
-            Ok(evidence) => evidence,
+            Ok(ev) => ev,
             Err(e) => {
-                db::documents::update_status(&self.pool, document_id, DocumentStatus::Failed)
+                documents::update_status(&self.pool, document_id, DocumentStatus::Failed)
                     .await?;
                 return Err(e);
             }
         };
 
-        // Store extracted evidence
-        for evidence in &evidence_list {
-            db::evidence::insert(&self.pool, evidence).await?;
+        // Store extracted evidence via repository
+        for ev in &evidence_list {
+            evidence::insert(&self.pool, ev).await?;
         }
 
         // Prepare variants for ClinVar validation
@@ -78,8 +79,8 @@ impl EvidenceService {
         let final_classification = Self::determine_classification(&evidence_list, &clinvar_results);
         let confidence_score = Self::calculate_confidence(&evidence_list, &clinvar_results);
 
-        // Update document status
-        db::documents::update_status(&self.pool, document_id, DocumentStatus::Processed).await?;
+        // Update document status via repository
+        documents::update_status(&self.pool, document_id, DocumentStatus::Processed).await?;
 
         Ok(AnalysisResult {
             id: Uuid::new_v4(),
@@ -212,18 +213,18 @@ impl EvidenceService {
 
     /// Get analysis result for a document
     pub async fn get_analysis(&self, document_id: Uuid) -> AppResult<Option<AnalysisResult>> {
-        let document = db::documents::get_by_id(&self.pool, document_id).await?;
+        let document = documents::get_by_id(&self.pool, document_id).await?;
 
         match document {
             Some(doc) if doc.status == DocumentStatus::Processed => {
-                let evidence = db::evidence::get_by_document_id(&self.pool, document_id).await?;
+                let ev_list = evidence::get_by_document_id(&self.pool, document_id).await?;
 
-                if evidence.is_empty() {
+                if ev_list.is_empty() {
                     return Ok(None);
                 }
 
                 // Fetch ClinVar results for the variants
-                let variants: Vec<(String, Option<String>, Option<String>)> = evidence
+                let variants: Vec<(String, Option<String>, Option<String>)> = ev_list
                     .iter()
                     .map(|e| (e.gene.clone(), e.hgvs_c.clone(), e.hgvs_p.clone()))
                     .collect();
@@ -231,13 +232,13 @@ impl EvidenceService {
                 let clinvar_results = self.clinvar_client.validate_variants(&variants).await?;
 
                 let final_classification =
-                    Self::determine_classification(&evidence, &clinvar_results);
-                let confidence_score = Self::calculate_confidence(&evidence, &clinvar_results);
+                    Self::determine_classification(&ev_list, &clinvar_results);
+                let confidence_score = Self::calculate_confidence(&ev_list, &clinvar_results);
 
                 Ok(Some(AnalysisResult {
                     id: Uuid::new_v4(),
                     document_id,
-                    evidence,
+                    evidence: ev_list,
                     clinvar_results,
                     final_classification,
                     confidence_score,

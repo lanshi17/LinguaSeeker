@@ -24,6 +24,21 @@ impl std::fmt::Display for VariantClassification {
     }
 }
 
+impl std::str::FromStr for VariantClassification {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Pathogenic" => Ok(VariantClassification::Pathogenic),
+            "Likely Pathogenic" => Ok(VariantClassification::LikelyPathogenic),
+            "Uncertain Significance" => Ok(VariantClassification::UncertainSignificance),
+            "Likely Benign" => Ok(VariantClassification::LikelyBenign),
+            "Benign" => Ok(VariantClassification::Benign),
+            _ => Err(format!("Unknown variant classification: {}", s)),
+        }
+    }
+}
+
 /// ACMG/AMP evidence criteria
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AcmgCriteria {

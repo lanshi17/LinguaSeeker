@@ -4,7 +4,7 @@
 //! Migration scripts are executed in order to create/modify database schema.
 
 use sqlx::PgPool;
-use crate::models::AppResult;
+use crate::error::AppResult;
 
 /// Run all database migrations
 pub async fn run_all(pool: &PgPool) -> AppResult<()> {

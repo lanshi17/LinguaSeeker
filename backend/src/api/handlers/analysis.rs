@@ -5,9 +5,9 @@ use axum::{
     Json,
 };
 use std::sync::Arc;
-use uuid::Uuid;
 
 use crate::api::AppState;
+use crate::api::validators;
 use crate::models::dto::AnalysisResponse;
 use crate::models::{AppError, AppResult};
 
@@ -16,8 +16,7 @@ pub async fn analyze_document(
     State(state): State<Arc<AppState>>,
     Path(id): Path<String>,
 ) -> AppResult<Json<AnalysisResponse>> {
-    let uuid = Uuid::parse_str(&id)
-        .map_err(|_| AppError::InvalidInput(format!("Invalid document ID: {}", id)))?;
+    let uuid = validators::validate_uuid(&id)?;
 
     let result = state.evidence_service.process_document(uuid).await?;
     Ok(Json(result.into()))
@@ -28,8 +27,7 @@ pub async fn get_analysis_results(
     State(state): State<Arc<AppState>>,
     Path(id): Path<String>,
 ) -> AppResult<Json<AnalysisResponse>> {
-    let uuid = Uuid::parse_str(&id)
-        .map_err(|_| AppError::InvalidInput(format!("Invalid document ID: {}", id)))?;
+    let uuid = validators::validate_uuid(&id)?;
 
     let result = state
         .evidence_service

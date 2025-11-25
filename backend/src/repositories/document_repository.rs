@@ -4,7 +4,8 @@ use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::models::{AppResult, Document, DocumentStatus, Language};
+use crate::error::{AppError, AppResult};
+use crate::models::{Document, DocumentStatus, Language};
 
 /// Insert a new document
 pub async fn insert(pool: &PgPool, doc: &Document) -> AppResult<()> {
@@ -20,7 +21,7 @@ pub async fn insert(pool: &PgPool, doc: &Document) -> AppResult<()> {
     .bind(doc.upload_time)
     .bind(&doc.content_hash)
     .bind(&doc.extracted_text)
-    .bind(format!("{:?}", doc.status).to_lowercase())
+    .bind(doc.status.to_string())
     .execute(pool)
     .await?;
 
@@ -49,7 +50,7 @@ pub async fn get_by_id(pool: &PgPool, id: Uuid) -> AppResult<Option<Document>> {
                 upload_time,
                 content_hash,
                 extracted_text,
-                status: parse_status(&status),
+                status: status.parse().unwrap_or(DocumentStatus::Uploaded),
             }))
         }
         None => Ok(None),
@@ -78,7 +79,7 @@ pub async fn list(pool: &PgPool) -> AppResult<Vec<Document>> {
                 upload_time,
                 content_hash,
                 extracted_text,
-                status: parse_status(&status),
+                status: status.parse().unwrap_or(DocumentStatus::Uploaded),
             }
         })
         .collect();
@@ -93,7 +94,7 @@ pub async fn update_status(pool: &PgPool, id: Uuid, status: DocumentStatus) -> A
         UPDATE documents SET status = $1 WHERE id = $2
         "#,
     )
-    .bind(format!("{:?}", status).to_lowercase())
+    .bind(status.to_string())
     .bind(id)
     .execute(pool)
     .await?;
@@ -114,15 +115,4 @@ pub async fn update_extracted_text(pool: &PgPool, id: Uuid, text: &str) -> AppRe
     .await?;
 
     Ok(())
-}
-
-/// Parse status string to DocumentStatus enum
-fn parse_status(status: &str) -> DocumentStatus {
-    match status {
-        "uploaded" => DocumentStatus::Uploaded,
-        "processing" => DocumentStatus::Processing,
-        "processed" => DocumentStatus::Processed,
-        "failed" => DocumentStatus::Failed,
-        _ => DocumentStatus::Uploaded,
-    }
 }

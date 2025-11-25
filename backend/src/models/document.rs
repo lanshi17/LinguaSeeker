@@ -27,3 +27,28 @@ pub enum DocumentStatus {
     Processed,
     Failed,
 }
+
+impl std::fmt::Display for DocumentStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DocumentStatus::Uploaded => write!(f, "uploaded"),
+            DocumentStatus::Processing => write!(f, "processing"),
+            DocumentStatus::Processed => write!(f, "processed"),
+            DocumentStatus::Failed => write!(f, "failed"),
+        }
+    }
+}
+
+impl std::str::FromStr for DocumentStatus {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "uploaded" => Ok(DocumentStatus::Uploaded),
+            "processing" => Ok(DocumentStatus::Processing),
+            "processed" => Ok(DocumentStatus::Processed),
+            "failed" => Ok(DocumentStatus::Failed),
+            _ => Err(format!("Unknown document status: {}", s)),
+        }
+    }
+}

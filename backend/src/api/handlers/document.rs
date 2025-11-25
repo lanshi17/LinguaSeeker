@@ -10,19 +10,20 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::api::AppState;
-use crate::db;
+use crate::api::validators;
 use crate::models::dto::{DocumentListResponse, DocumentResponse, UploadResponse};
 use crate::models::{AppError, AppResult, Document, DocumentStatus, Language};
+use crate::repositories::documents;
 
 /// List all documents
 pub async fn list_documents(
     State(state): State<Arc<AppState>>,
 ) -> AppResult<Json<DocumentListResponse>> {
-    let documents = db::documents::list(&state.pool).await?;
-    let total = documents.len();
-    let documents: Vec<DocumentResponse> = documents.into_iter().map(Into::into).collect();
+    let docs = documents::list(&state.pool).await?;
+    let total = docs.len();
+    let doc_responses: Vec<DocumentResponse> = docs.into_iter().map(Into::into).collect();
 
-    Ok(Json(DocumentListResponse { documents, total }))
+    Ok(Json(DocumentListResponse { documents: doc_responses, total }))
 }
 
 /// Upload a document
@@ -86,13 +87,13 @@ pub async fn upload_document(
         status: DocumentStatus::Uploaded,
     };
 
-    // Store document metadata
-    db::documents::insert(&state.pool, &document).await?;
+    // Store document metadata via repository
+    documents::insert(&state.pool, &document).await?;
 
     // Store raw content as extracted text (placeholder for actual PDF extraction)
     let extracted_text = String::from_utf8_lossy(&content).to_string();
     if !extracted_text.is_empty() {
-        db::documents::update_extracted_text(&state.pool, document_id, &extracted_text).await?;
+        documents::update_extracted_text(&state.pool, document_id, &extracted_text).await?;
     }
 
     Ok(Json(UploadResponse {
@@ -110,10 +111,9 @@ pub async fn get_document(
     State(state): State<Arc<AppState>>,
     Path(id): Path<String>,
 ) -> AppResult<Json<DocumentResponse>> {
-    let uuid = Uuid::parse_str(&id)
-        .map_err(|_| AppError::InvalidInput(format!("Invalid document ID: {}", id)))?;
+    let uuid = validators::validate_uuid(&id)?;
 
-    let document = db::documents::get_by_id(&state.pool, uuid)
+    let document = documents::get_by_id(&state.pool, uuid)
         .await?
         .ok_or_else(|| AppError::NotFound(format!("Document not found: {}", id)))?;
 

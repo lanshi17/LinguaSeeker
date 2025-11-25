@@ -4,7 +4,8 @@ use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::models::{AppResult, Evidence, VariantClassification};
+use crate::error::AppResult;
+use crate::models::{Evidence, VariantClassification};
 
 /// Insert new evidence
 pub async fn insert(pool: &PgPool, evidence: &Evidence) -> AppResult<()> {
@@ -62,7 +63,7 @@ pub async fn get_by_document_id(pool: &PgPool, document_id: Uuid) -> AppResult<V
                 hgvs_p,
                 evidence_text,
                 acmg_criteria: serde_json::from_value(acmg_criteria).unwrap_or_default(),
-                suggested_classification: suggested_classification.and_then(|s| parse_classification(&s)),
+                suggested_classification: suggested_classification.and_then(|s| s.parse::<VariantClassification>().ok()),
                 confidence_score,
                 extracted_at,
             }
@@ -70,16 +71,4 @@ pub async fn get_by_document_id(pool: &PgPool, document_id: Uuid) -> AppResult<V
         .collect();
 
     Ok(evidence_list)
-}
-
-/// Parse classification string to enum
-fn parse_classification(s: &str) -> Option<VariantClassification> {
-    match s {
-        "Pathogenic" => Some(VariantClassification::Pathogenic),
-        "Likely Pathogenic" => Some(VariantClassification::LikelyPathogenic),
-        "Uncertain Significance" => Some(VariantClassification::UncertainSignificance),
-        "Likely Benign" => Some(VariantClassification::LikelyBenign),
-        "Benign" => Some(VariantClassification::Benign),
-        _ => None,
-    }
 }
