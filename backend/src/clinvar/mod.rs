@@ -7,12 +7,11 @@ use chrono::{DateTime, Utc};
 use reqwest::Client;
 use serde::Deserialize;
 
-const CLINVAR_API_BASE: &str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
-
 /// ClinVar API client
 pub struct ClinVarClient {
     client: Client,
     api_key: Option<String>,
+    base_url: String,
 }
 
 /// ClinVar search response
@@ -89,13 +88,14 @@ impl ClinVarClient {
     pub fn new(config: &Config) -> Self {
         Self {
             client: Client::new(),
-            api_key: config.clinvar_api_key.clone(),
+            api_key: config.clinvar.api_key.clone(),
+            base_url: config.clinvar.base_url.clone(),
         }
     }
 
     /// Build API URL with optional API key
     fn build_url(&self, endpoint: &str, params: &[(&str, &str)]) -> String {
-        let mut url = format!("{}/{}", CLINVAR_API_BASE, endpoint);
+        let mut url = format!("{}/{}", self.base_url, endpoint);
         let mut query_params: Vec<(&str, &str)> = params.to_vec();
         
         if let Some(ref key) = self.api_key {

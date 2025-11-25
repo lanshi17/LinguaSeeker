@@ -13,6 +13,7 @@ pub struct LlmClient {
     client: Client,
     api_url: String,
     api_key: String,
+    model: String,
 }
 
 /// Request payload for LLM API
@@ -76,8 +77,9 @@ impl LlmClient {
     pub fn new(config: &Config) -> Self {
         Self {
             client: Client::new(),
-            api_url: config.llm_api_url.clone(),
-            api_key: config.llm_api_key.clone(),
+            api_url: config.llm.api_url.clone(),
+            api_key: config.llm.api_key.clone(),
+            model: config.llm.model.clone(),
         }
     }
 
@@ -153,7 +155,7 @@ Response format (JSON array):
         let prompt = self.generate_prompt(text, language);
 
         let request = LlmRequest {
-            model: "llama3.2".to_string(),
+            model: self.model.clone(),
             prompt,
             stream: false,
             format: Some("json".to_string()),
@@ -240,7 +242,7 @@ Language:"#,
         );
 
         let request = LlmRequest {
-            model: "llama3.2".to_string(),
+            model: self.model.clone(),
             prompt,
             stream: false,
             format: None,

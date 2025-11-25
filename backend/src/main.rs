@@ -4,6 +4,15 @@
 //! based on ACMG/AMP guidelines. It parses multilingual PDF documents (Chinese,
 //! Japanese, German, French, English), extracts evidence using LLM, integrates
 //! with ClinVar for validation, and outputs results in an interactive HTML interface.
+//!
+//! ## Architecture
+//!
+//! The codebase follows a layered architecture:
+//! - **API Layer** (`api/`): HTTP handlers, routes, validators
+//! - **Service Layer** (`services/`): Business logic
+//! - **Data Layer** (`repositories/`, `db/`): Data access and persistence
+//! - **Model Layer** (`models/`): Data structures, DTOs, errors
+//! - **Config Layer** (`config/`): Configuration management
 
 mod api;
 mod clinvar;
@@ -12,6 +21,7 @@ mod db;
 mod error;
 mod llm;
 mod models;
+mod repositories;
 mod services;
 
 use std::net::SocketAddr;
@@ -41,7 +51,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Load configuration
     let config = Config::from_env().unwrap_or_default();
-    let addr: SocketAddr = format!("{}:{}", config.host, config.port).parse()?;
+    let addr: SocketAddr = format!("{}:{}", config.server.host, config.server.port).parse()?;
 
     tracing::info!("Starting Evidence Platform server on {}", addr);
 
