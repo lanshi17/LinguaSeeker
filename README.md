@@ -1,157 +1,60 @@
-# Multilingual Document Evidence Collection Platform
+# 多语种文献证据提取平台
 
-🧬 A platform designed to assist researchers in automating gene variant classification based on ACMG/AMP guidelines.
+## 项目简介
 
-## Features
+这是一个用于多语种文献证据提取的研究平台，旨在帮助研究人员从不同语言的学术文献中自动提取和整理相关证据。
 
-- **Multilingual PDF Parsing**: Supports documents in Chinese (中文), Japanese (日本語), German (Deutsch), French (Français), and English
-- **LLM-Powered Evidence Extraction**: Uses large language models to analyze documents and extract variant evidence
-- **ClinVar Integration**: Automatically validates extracted variants against the ClinVar database
-- **ACMG/AMP Classification**: Applies ACMG/AMP criteria (PVS1, PS1-4, PM1-6, PP1-5, BA1, BS1-4, BP1-7) to classify variants
-- **Interactive HTML Interface**: Modern Vue.js frontend for uploading documents and viewing analysis results
-
-## Technology Stack
-
-- **Frontend**: Vue 3 + TypeScript + Vite
-- **Backend**: Rust + Axum
-- **Database**: PostgreSQL
-- **Cache**: Redis
-- **LLM Integration**: Compatible with Ollama and other LLM APIs
-
-## Project Structure
+## 目录结构
 
 ```
-├── backend/                 # Rust Axum backend
-│   ├── src/
-│   │   ├── api/            # API routes and handlers
-│   │   ├── clinvar/        # ClinVar API integration
-│   │   ├── config/         # Configuration management
-│   │   ├── db/             # Database operations
-│   │   ├── llm/            # LLM integration for evidence extraction
-│   │   ├── models/         # Data models
-│   │   ├── services/       # Business logic
-│   │   ├── static/         # Static HTML fallback
-│   │   ├── error.rs        # Error handling
-│   │   └── main.rs         # Application entry point
-│   └── Cargo.toml
-├── frontend/               # Vue.js frontend
-│   ├── src/
-│   │   ├── api/           # API client
-│   │   ├── components/    # Vue components
-│   │   ├── types/         # TypeScript types
-│   │   ├── App.vue        # Main application
-│   │   └── main.ts        # Entry point
-│   ├── package.json
-│   └── vite.config.ts
-└── README.md
+├── apps/                 # [核心代码] 具体的应用程序
+│   ├── backend/          # 后端服务 (API, 微服务)
+│   ├── frontend/         # 前端应用 (Web, Admin)
+│   └── mobile/           # 移动端应用 (iOS, Android, Flutter)
+├── libs/                 # [共享库] 跨应用共享的代码 (工具类, UI组件库, 类型定义)
+├── docs/                 # [文档中心] 架构图, API文档, 需求说明
+├── deploy/               # [运维基础设施] Docker, K8s, Nginx配置
+├── scripts/              # [自动化工具] CI/CD脚本, 数据库迁移脚本, 本地启动脚本
+├── tests/                # [测试] 端到端测试 (E2E), 性能测试脚本
+├── .gitignore            # Git忽略文件
+├── README.md             # 项目入口说明书
+└── docker-compose.yml    # 本地开发环境编排
 ```
 
-## Getting Started
+## 开发环境搭建
 
-### Prerequisites
+### 环境要求
 
-- Rust 1.70+
-- Node.js 18+
-- PostgreSQL 14+
-- Redis 7+
-- (Optional) Ollama or other LLM service
+- Node.js >= 16.x
+- Python >= 3.8
+- Docker & Docker Compose
+- PostgreSQL >= 13.x
+- Redis >= 6.x
 
-### Backend Setup
+### 快速开始
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-
-2. Create a `.env` file with your configuration:
-   ```env
-   DATABASE_URL=postgres://user:password@localhost:5432/evidence_platform
-   REDIS_URL=redis://localhost:6379
-   LLM_API_URL=http://localhost:11434/api/generate
-   LLM_API_KEY=your_api_key
-   CLINVAR_API_KEY=your_ncbi_api_key  # Optional, for higher rate limits
-   HOST=0.0.0.0
-   PORT=8080
-   ```
-
-3. Build and run the backend:
-   ```bash
-   cargo build --release
-   cargo run --release
-   ```
-
-### Frontend Setup
-
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-4. Or build for production:
-   ```bash
-   npm run build
-   ```
-
-### Development
-
-Run both frontend and backend in development mode:
+1. 克隆项目代码
+2. 安装依赖
+3. 配置环境变量
+4. 启动开发服务器
 
 ```bash
-# Terminal 1 - Backend
-cd backend && cargo run
-
-# Terminal 2 - Frontend
-cd frontend && npm run dev
+# 启动所有服务
+docker-compose up -d
 ```
 
-The frontend development server will proxy API requests to the backend.
+## 技术栈
 
-## API Endpoints
+- 前端: React + TypeScript + Ant Design
+- 后端: Node.js/Python + Express/FastAPI
+- 移动端: Flutter
+- 数据库: PostgreSQL + Redis
+- 部署: Docker + Kubernetes
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/health` | Health check |
-| GET | `/api/documents` | List all documents |
-| POST | `/api/documents` | Upload a document |
-| GET | `/api/documents/{id}` | Get document details |
-| POST | `/api/documents/{id}/analyze` | Analyze document with LLM |
-| GET | `/api/documents/{id}/results` | Get analysis results |
+## 团队成员
 
-## ACMG/AMP Classification Criteria
+- [姓名] - [角色] - [邮箱]
 
-The platform supports the following ACMG/AMP evidence criteria:
+## 许可证
 
-### Pathogenic Criteria
-- **PVS1**: Null variant in gene where LOF is a known mechanism
-- **PS1-PS4**: Strong evidence of pathogenicity
-- **PM1-PM6**: Moderate evidence of pathogenicity
-- **PP1-PP5**: Supporting evidence of pathogenicity
-
-### Benign Criteria
-- **BA1**: Allele frequency >5% in population databases
-- **BS1-BS4**: Strong evidence of benign impact
-- **BP1-BP7**: Supporting evidence of benign impact
-
-## Contributing
-
-Contributions are welcome! Please read our contributing guidelines and submit pull requests.
-
-## License
-
-This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- ACMG/AMP variant classification guidelines
-- ClinVar database from NCBI
-- The Rust and Vue.js communities
+本项目采用 [许可证名称] 许可证。详细信息请参阅 [LICENSE](LICENSE) 文件。

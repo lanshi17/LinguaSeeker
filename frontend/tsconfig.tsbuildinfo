@@ -1,1 +1,0 @@
-{"root":["./src/main.ts","./src/vite-env.d.ts","./src/api/index.ts","./src/types/index.ts","./src/App.vue","./src/components/AnalysisResults.vue","./src/components/DocumentList.vue","./src/components/DocumentUpload.vue"],"version":"5.9.3"}
