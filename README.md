@@ -10,7 +10,6 @@
 ├── apps/                 # [核心代码] 具体的应用程序
 │   ├── backend/          # 后端服务 (API, 微服务)
 │   ├── frontend/         # 前端应用 (Web, Admin)
-│   └── mobile/           # 移动端应用 (iOS, Android, Flutter)
 ├── libs/                 # [共享库] 跨应用共享的代码 (工具类, UI组件库, 类型定义)
 ├── docs/                 # [文档中心] 架构图, API文档, 需求说明
 ├── deploy/               # [运维基础设施] Docker, K8s, Nginx配置
@@ -47,14 +46,13 @@ docker-compose up -d
 
 - 前端: React + TypeScript + Ant Design
 - 后端: Node.js/Python + Express/FastAPI
-- 移动端: Flutter
 - 数据库: PostgreSQL + Redis
 - 部署: Docker + Kubernetes
 
 ## 团队成员
 
-- [姓名] - [角色] - [邮箱]
+- [lanshi] - [Architect] - [yhvguk@foxmail.com]
 
 ## 许可证
 
-本项目采用 [许可证名称] 许可证。详细信息请参阅 [LICENSE](LICENSE) 文件。
+本项目采用 [MIT[ 许可证。详细信息请参阅 [LICENSE](LICENSE) 文件。
