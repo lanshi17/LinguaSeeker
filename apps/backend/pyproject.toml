@@ -10,40 +10,34 @@ dependencies = [
     "uvicorn[standard]>=0.32.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.6.0",
-    
     # Agent Framework
     "langgraph>=0.2.0",
     "langchain>=0.3.0",
     "langchain-core>=0.3.0",
-    
     # LLM Providers
-    "openai>=1.54.0",  # For DeepSeek (OpenAI-compatible) and Claude
-    "anthropic>=0.39.0",  # Claude Opus 4.5
-    
+    "openai>=1.54.0", # For DeepSeek (OpenAI-compatible) and Claude
+    "anthropic>=0.39.0", # Claude Opus 4.5
     # Database Clients
-    "neo4j>=5.26.0",  # Neo4j Graph Database
-    "pymilvus>=2.4.0",  # Milvus Vector Database
-    "qdrant-client>=1.12.0",  # Qdrant (Alternative)
-    "psycopg[binary]>=3.2.0",  # PostgreSQL
-    "sqlalchemy>=2.0.36",  # ORM
-    "alembic>=1.14.0",  # Database migrations
-    
+    "neo4j>=5.26.0", # Neo4j Graph Database
+    "pymilvus>=2.4.0", # Milvus Vector Database
+    "qdrant-client>=1.12.0", # Qdrant (Alternative)
+    "psycopg[binary]>=3.2.0", # PostgreSQL
+    "sqlalchemy>=2.0.36", # ORM
+    "alembic>=1.14.0", # Database migrations
     # Object Storage
-    "minio>=7.2.0",  # MinIO client
-    
+    "minio>=7.2.0", # MinIO client
     # PDF Parsing
-    "magic-pdf>=0.7.0",  # MinerU
-    
+    "magic-pdf>=0.7.0", # MinerU
     # Embedding & NLP
     "sentence-transformers>=3.3.0",
     "tiktoken>=0.8.0",
-    
     # Utilities
     "python-dotenv>=1.0.0",
     "pyyaml>=6.0.2",
     "aiohttp>=3.11.0",
     "httpx>=0.28.0",
-    "tenacity>=9.0.0",  # Retry logic
+    "tenacity>=9.0.0", # Retry logic
+    "requests>=2.32.5",
 ]
 
 [project.optional-dependencies]
@@ -72,3 +66,6 @@ target-version = "py312"
 python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/acmg_ps3_backend"]
