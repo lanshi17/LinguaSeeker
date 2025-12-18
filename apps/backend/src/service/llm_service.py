@@ -1,12 +1,13 @@
 """LLM调用服务 - 封装DeepSeek和Claude的调用
 
-支持双LLM架构:
-- DeepSeek-V3.2: 主力LLM，用于实体提取、证据验证等
-- Claude Opus 4.5: 仲裁LLM，用于最终评级决策和复杂推理
+支持双LLM架构 - 统一使用Anthropic兼容格式:
+- DeepSeek-V3.2: 主力LLM,用于实体提取、证据验证等 (Anthropic兼容格式)
+- Claude 3.5 Sonnet/Opus: 仲裁LLM,用于最终评级决策和复杂推理 (Anthropic原生格式)
 """
 from typing import Dict, Any, List, Optional
 from enum import Enum
 import logging
+import anthropic
 
 logger = logging.getLogger(__name__)
 
@@ -24,16 +25,16 @@ class LLMRole(str, Enum):
 
 
 class LLMService:
-    """大语言模型调用服务
+    """大语言模型调用服务 - 统一Anthropic格式
     
     双LLM架构:
-    1. DeepSeek-V3.2 (主力): 
+    1. DeepSeek-V3.2 (主力) - Anthropic兼容格式: 
        - 实体提取
        - 证据初步验证
        - Cypher查询生成
        - 文本理解和分类
     
-    2. Claude Opus 4.5 (仲裁):
+    2. Claude 3.5 Sonnet/Opus (仲裁) - Anthropic原生格式:
        - 最终ACMG-PS3评级决策
        - 复杂证据推理
        - 冲突解决
@@ -46,21 +47,44 @@ class LLMService:
         claude_client=None,
         llm_config: Optional[Dict[str, Any]] = None
     ):
-        """支持OpenAI兼容的自定义调用与本地部署模式
+        """支持Anthropic兼容格式的统一调用接口
         
         llm_config示例:
         {
-          "mode": "api" | "local",
-          "openai_api_base": "https://api.deepseek.com",
-          "openai_api_key": "...",
+          "deepseek_api_key": "...",
+          "deepseek_base_url": "https://api.deepseek.com",
           "deepseek_model": "deepseek-chat",
-          "claude_model": "claude-opus-4.5",
-          "local_endpoint": "http://localhost:11434/v1"
+          "claude_api_key": "...",
+          "claude_model": "claude-3-5-sonnet-20241022"
         }
         """
-        self.deepseek_client = deepseek_client
-        self.claude_client = claude_client
         self.config = llm_config or {}
+        
+        # 初始化DeepSeek客户端(Anthropic兼容格式)
+        if deepseek_client:
+            self.deepseek_client = deepseek_client
+        else:
+            api_key = self.config.get("deepseek_api_key")
+            base_url = self.config.get("deepseek_base_url", "https://api.deepseek.com")
+            if api_key:
+                self.deepseek_client = anthropic.AsyncAnthropic(
+                    api_key=api_key,
+                    base_url=base_url
+                )
+            else:
+                self.deepseek_client = None
+        
+        # 初始化Claude客户端(Anthropic原生格式)
+        if claude_client:
+            self.claude_client = claude_client
+        else:
+            claude_api_key = self.config.get("claude_api_key")
+            if claude_api_key:
+                self.claude_client = anthropic.AsyncAnthropic(
+                    api_key=claude_api_key
+                )
+            else:
+                self.claude_client = None
     
     async def chat_completion(
         self, 
@@ -96,17 +120,55 @@ class LLMService:
         max_tokens: int,
         **kwargs
     ) -> str:
-        """调用OpenAI兼容API (DeepSeek或其他)"""
-        # TODO: 实现OpenAI兼容API调用（远程API或本地endpoint）
-        # response = await self.deepseek_client.chat.completions.create(
-        #     model=self.config.get("deepseek_model", "deepseek-chat"),
-        #     messages=messages,
-        #     temperature=temperature,
-        #     max_tokens=max_tokens
-        # )
-        # return response.choices[0].message.content
-        logger.info(f"[DeepSeek] Calling with {len(messages)} messages")
-        return "DeepSeek response placeholder"
+        """调用DeepSeek API (Anthropic兼容格式)"""
+        if not self.deepseek_client:
+            raise ValueError("DeepSeek client not initialized. Please provide API key in config.")
+        
+        try:
+            # 转换消息格式为Anthropic格式
+            system_message = None
+            anthropic_messages = []
+            
+            for msg in messages:
+                role = msg.get("role")
+                content = msg.get("content")
+                
+                if role == "system":
+                    system_message = content
+                elif role in ["user", "assistant"]:
+                    anthropic_messages.append({
+                        "role": role,
+                        "content": content
+                    })
+            
+            # 确保消息序列以user消息开头
+            if not anthropic_messages or anthropic_messages[0]["role"] != "user":
+                if system_message and not anthropic_messages:
+                    anthropic_messages = [{"role": "user", "content": system_message}]
+                    system_message = None
+            
+            logger.info(f"[DeepSeek] Calling with {len(anthropic_messages)} messages")
+            
+            # 构建API调用参数
+            api_params = {
+                "model": self.config.get("deepseek_model", "deepseek-chat"),
+                "messages": anthropic_messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                **kwargs
+            }
+            
+            if system_message:
+                api_params["system"] = system_message
+            
+            # 调用Anthropic格式API
+            response = await self.deepseek_client.messages.create(**api_params)
+            content = response.content[0].text
+            logger.info(f"[DeepSeek] Response received: {len(content)} chars")
+            return content
+        except Exception as e:
+            logger.error(f"[DeepSeek] API call failed: {e}")
+            raise
     
     async def _call_claude(
         self, 
@@ -115,17 +177,63 @@ class LLMService:
         max_tokens: int,
         **kwargs
     ) -> str:
-        """调用Claude API"""
-        # TODO: 实现Claude API调用
-        # response = await self.claude_client.messages.create(
-        #     model=self.config.get("claude_model", "claude-opus-4.5"),
-        #     messages=messages,
-        #     temperature=temperature,
-        #     max_tokens=max_tokens
-        # )
-        # return response.content[0].text
-        logger.info(f"[Claude] Calling with {len(messages)} messages")
-        return "Claude response placeholder"
+        """调用Claude API(使用Anthropic原生格式)"""
+        if not self.claude_client:
+            raise ValueError("Claude client not initialized. Please provide API key in config.")
+        
+        try:
+            # 转换消息格式为Anthropic格式
+            # Anthropic要求system消息单独处理,user/assistant消息在messages数组中
+            system_message = None
+            anthropic_messages = []
+            
+            for msg in messages:
+                role = msg.get("role")
+                content = msg.get("content")
+                
+                if role == "system":
+                    # Anthropic的system消息单独处理
+                    system_message = content
+                elif role in ["user", "assistant"]:
+                    anthropic_messages.append({
+                        "role": role,
+                        "content": content
+                    })
+            
+            # 确保消息序列以user消息开头
+            if not anthropic_messages or anthropic_messages[0]["role"] != "user":
+                logger.warning("[Claude] Messages must start with user role, adjusting...")
+                if system_message and not anthropic_messages:
+                    # 如果只有system消息,将其转为user消息
+                    anthropic_messages = [{"role": "user", "content": system_message}]
+                    system_message = None
+            
+            logger.info(f"[Claude] Calling with {len(anthropic_messages)} messages")
+            
+            # 构建API调用参数
+            api_params = {
+                "model": self.config.get("claude_model", "claude-3-5-sonnet-20241022"),
+                "messages": anthropic_messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                **kwargs
+            }
+            
+            # 如果有system消息,添加到参数中
+            if system_message:
+                api_params["system"] = system_message
+            
+            # 调用Anthropic API
+            response = await self.claude_client.messages.create(**api_params)
+            
+            # 提取响应内容
+            content = response.content[0].text
+            logger.info(f"[Claude] Response received: {len(content)} chars")
+            return content
+            
+        except Exception as e:
+            logger.error(f"[Claude] API call failed: {e}")
+            raise
     
     async def extract_entities(
         self, 

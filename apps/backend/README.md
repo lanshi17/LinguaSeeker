@@ -9,7 +9,7 @@
 | **后端框架** | **FastAPI** |
 | **Agent框架** | **LangGraph** |
 | **主力LLM** | **DeepSeek-V3.2** |
-| **仲裁LLM** | **Claude Opus 4.5** |
+| **仲裁LLM** | **Claude 3.5 Sonnet/Opus**|
 | **PDF解析** | **MinerU** |
 | **图数据库** | **Neo4j** |
 | **向量数据库** | **Qdrant（默认）** |
@@ -49,7 +49,48 @@ python main.py
 
 ## 🔄 LLM 与解析模式
 
-- **LLM模式**：支持 OpenAI 兼容 API（前期）与本地部署（后期），采用主力模型（DeepSeek）+ 仲裁模型（Claude）协作。
+### LLM 双模式架构 (v2.1.0+)
+
+本系统采用**双LLM协作**架构，结合不同模型的优势：
+
+- **主力模型 - DeepSeek-V3.2** (Anthropic兼容格式)
+  - 快速响应，成本经济
+  - 用于：实体提取、证据初步验证、Cypher查询生成
+  - API格式：Anthropic标准消息格式
+  
+- **仲裁模型 - Claude 3.5 Sonnet/Opus** (Anthropic原生格式)
+  - 复杂推理能力强
+  - 用于：最终ACMG评级决策、证据冲突仲裁、高风险判断
+  - API格式：Anthropic原生消息格式
+
+**关键特性**：
+- ✅ 统一Anthropic消息格式
+- ✅ 双LLM共识机制（一致采纳，不一致仲裁）
+- ✅ 灵活配置（支持单独或组合使用）
+- ✅ 完整的异步API支持
+
+**使用示例**：
+```python
+from src.service.llm_service import LLMService, LLMProvider
+
+# 配置双LLM (统一Anthropic格式)
+config = {
+    "deepseek_api_key": "sk-xxx",    # DeepSeek (Anthropic兼容)
+    "claude_api_key": "sk-ant-xxx"   # Claude (Anthropic原生)
+}
+service = LLMService(llm_config=config)
+
+# 快速任务用DeepSeek
+entities = await service.extract_entities(text, ["Gene", "Variant"])
+
+# 关键决策用Claude
+rating = await service.generate_final_rating(evidence, gene, variant)
+```
+
+详细文档：[src/service/LLM_SERVICE_GUIDE.md](src/service/LLM_SERVICE_GUIDE.md)
+
+### 解析模式
+
 - **解析模式**：MinerU（Magic-PDF）支持 API 调用（前期）与本地部署（后期）。
 
 ## 📁 项目结构
@@ -135,7 +176,10 @@ backend/
     - 协调上述三个流程的完整工作流
 
   - **LLM服务** (`llm_service.py`)
-    - 支持 OpenAI 兼容 API（前期）与本地部署（后期），DeepSeek/Claude 协作调用
+    - DeepSeek (Anthropic兼容): 主力模型，用于快速任务
+    - Claude (Anthropic原生): 仲裁模型，用于关键决策
+    - 双LLM协作与共识机制
+    - 统一Anthropic消息格式
 
 ### 3. Domain/Entity层
 - 职责：定义核心业务模型和数据结构
@@ -174,13 +218,50 @@ backend/
 
 ## 📚 文档与参考
 
-- 部署指南: 见 [DEPLOYMENT.md](DEPLOYMENT.md)
-- API 文档: http://localhost:8000/docs
-- Qdrant 文档: https://qdrant.tech/documentation/
+- **LLM服务指南**: [src/service/LLM_SERVICE_GUIDE.md](src/service/LLM_SERVICE_GUIDE.md) - 详细的LLM使用文档
+- **LLM更新总结**: [LLM_SERVICE_UPDATE_SUMMARY.md](LLM_SERVICE_UPDATE_SUMMARY.md) - v2.1.0更新说明
+- **部署指南**: [DEPLOYMENT.md](DEPLOYMENT.md) - 生产环境部署文档
+- **API 文档**: http://localhost:8000/docs - 交互式API文档
+- **Qdrant 文档**: https://qdrant.tech/documentation/ - 向量数据库文档
+- **Anthropic API**: https://docs.anthropic.com/ - Claude API官方文档
+- **DeepSeek API**: https://platform.deepseek.com/docs - DeepSeek API文档
 
 ## 🔧 配置
 
 所有配置通过环境变量管理，详见 `.env.example`
+
+### LLM API密钥配置
+
+系统需要配置双LLM的API密钥：
+
+```bash
+# 1. 复制配置模板
+cp .env.example .env
+
+# 2. 编辑配置文件，添加API密钥
+vim .env
+```
+
+必需的配置项：
+
+```env
+# DeepSeek (主力LLM - Anthropic兼容格式)
+DEEPSEEK_API_KEY="sk-xxxxxxxxxxxxxxxx"
+DEEPSEEK_BASE_URL="https://api.deepseek.com"
+
+# Claude (仲裁LLM - Anthropic原生格式)
+CLAUDE_API_KEY="sk-ant-xxxxxxxxxxxxxxxx"
+CLAUDE_MODEL="claude-3-5-sonnet-20241022"
+```
+
+**获取API密钥**：
+- DeepSeek: https://platform.deepseek.com/
+- Claude: https://console.anthropic.com/
+
+**可选配置**：
+- 如果只使用DeepSeek，可以不配置Claude密钥
+- 如果只使用Claude，可以不配置DeepSeek密钥
+- 推荐配置双LLM以获得最佳性能
 
 ## 🧭 服务-数据分离（重点）
 
@@ -219,3 +300,40 @@ MINIO_ENDPOINT="minio.example.com:9000"
 - `POST /api/graph/nl-query` - 自然语言查询图谱
 
 完整文档: http://localhost:8000/docs
+
+## 📝 更新日志
+
+### v2.1.0 (2024-12-18)
+**LLM服务重大升级 - 自定义Anthropic格式支持**
+
+✨ 新特性：
+- ✅ 采用Anthropic Python SDK统一格式
+- ✅ 统一Anthropic消息格式（兼容DeepSeek和Claude）
+- ✅ 完整的DeepSeek (Anthropic兼容) + Claude (Anthropic原生) 双LLM架构
+- ✅ 双LLM共识机制实现
+- ✅ 专用方法封装（实体提取、证据验证、最终评级等）
+- ✅ 完善的异步API支持和错误处理
+
+🔧 技术改进：
+- 使用`anthropic.AsyncAnthropic`统一客户端
+- 统一Anthropic消息格式（DeepSeek和Claude）
+- System消息独立处理符合Anthropic规范
+- 消息序列验证和自动修正
+- 详细的API调用日志
+
+📚 文档更新：
+- 新增 [LLM_SERVICE_GUIDE.md](src/service/LLM_SERVICE_GUIDE.md) - 完整使用指南
+- 新增 [LLM_SERVICE_UPDATE_SUMMARY.md](LLM_SERVICE_UPDATE_SUMMARY.md) - 更新总结
+- 新增 [llm_service_example.py](src/service/llm_service_example.py) - 代码示例
+- 更新 `.env.example` - LLM配置说明
+
+📦 依赖更新：
+- `anthropic>=0.39.0` - 统一使用Anthropic SDK
+- `requests>=2.32.5` - HTTP客户端
+
+🔗 相关链接：
+- [详细更新文档](LLM_SERVICE_UPDATE_SUMMARY.md)
+- [使用指南](src/service/LLM_SERVICE_GUIDE.md)
+
+### v2.0.0
+初始版本，基于GraphRAG和LangGraph的ACMG-PS3智能评级系统

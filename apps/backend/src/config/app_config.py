@@ -20,11 +20,11 @@ class LLMConfig:
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-chat"
     
-    # 仲裁LLM - Claude Opus 4.5
+    # 仲裁LLM - Claude
     arbiter_provider: str = "claude"
     claude_api_key: Optional[str] = None
     anthropic_base_url: str = "https://api.anthropic.com"
-    claude_model: str = "claude-opus-4.5"
+    claude_model: str = "claude-3-5-sonnet-20241022"  # 或 claude-opus-4.5
     
     # 通用配置
     temperature: float = 0.7
