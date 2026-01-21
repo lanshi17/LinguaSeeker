@@ -19,13 +19,13 @@ class LLMConfig:
     deepseek_api_key: Optional[str] = None
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-chat"
-    
+
     # 仲裁LLM - Claude
     arbiter_provider: str = "claude"
     claude_api_key: Optional[str] = None
     anthropic_base_url: str = "https://api.anthropic.com"
     claude_model: str = "claude-3-5-sonnet-20241022"  # 或 claude-opus-4.5
-    
+
     # 通用配置
     temperature: float = 0.7
     max_tokens: int = 2000
@@ -57,22 +57,22 @@ class AppConfig:
     version: str = "2.0.0"
     environment: Environment = Environment.DEVELOPMENT
     debug: bool = True
-    
+
     # API配置
     api_prefix: str = "/api"
     api_version: str = "v1"
     host: str = "0.0.0.0"
     port: int = 8000
-    
+
     # 服务配置
     llm: LLMConfig = None
     embedding: EmbeddingConfig = None
     mineru: MinerUConfig = None
-    
+
     # 任务配置
     max_reasoning_iterations: int = 3
     task_timeout_seconds: int = 3600
-    
+
     def __post_init__(self):
         if self.llm is None:
             self.llm = LLMConfig()
@@ -80,7 +80,7 @@ class AppConfig:
             self.embedding = EmbeddingConfig()
         if self.mineru is None:
             self.mineru = MinerUConfig()
-    
+
     @classmethod
     def from_env(cls):
         """从环境变量加载配置"""
