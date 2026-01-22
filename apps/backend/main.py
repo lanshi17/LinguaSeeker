@@ -9,6 +9,7 @@
 - 图数据库: Neo4j
 - 向量数据库: Milvus/Qdrant
 """
+
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
@@ -30,29 +31,27 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期管理
-    
+
     启动时：
     - 初始化配置
     - 连接数据库（Neo4j, Milvus, PostgreSQL）
     - 初始化LLM客户端（DeepSeek, Claude）
     - 初始化MinerU解析服务
-    
+
     关闭时：
     - 关闭所有数据库连接
     - 清理资源
     """
     # 启动初始化
     logger.info("🚀 Initializing ACMG-PS3 Intelligence System...")
-    
+
     # 加载配置
     app_config = AppConfig.from_env()
     db_config = DatabaseConfig.from_env()
-    
+
     # 设置日志
-    Logger.setup_logging(
-        log_level="DEBUG" if app_config.debug else "INFO"
-    )
-    
+    Logger.setup_logging(log_level="DEBUG" if app_config.debug else "INFO")
+
     # 初始化数据库连接
     logger.info("📊 Connecting to databases...")
     try:
@@ -63,7 +62,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"❌ Database connection failed: {e}")
         raise
-    
+
     # 初始化LLM客户端
     logger.info("🤖 Initializing LLM clients...")
     try:
@@ -73,11 +72,11 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"❌ LLM initialization failed: {e}")
         raise
-    
+
     # 初始化依赖注入容器
     logger.info("📦 Initializing dependency injection...")
     container.initialize()
-    
+
     # 初始化MinerU服务
     logger.info("📄 Initializing MinerU (Magic-PDF) service...")
     try:
@@ -85,13 +84,13 @@ async def lifespan(app: FastAPI):
         logger.info("  ✓ MinerU service ready")
     except Exception as e:
         logger.warning(f"⚠️  MinerU service unavailable: {e}")
-    
+
     logger.info(f"✅ System started successfully!")
     logger.info(f"🌐 API: http://{app_config.host}:{app_config.port}{app_config.api_prefix}")
     logger.info(f"📚 Docs: http://{app_config.host}:{app_config.port}/docs")
-    
+
     yield
-    
+
     # 关闭清理
     logger.info("🛑 Shutting down...")
     container.close()
@@ -100,10 +99,10 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     """创建FastAPI应用实例"""
-    
+
     # 加载配置
     app_config = AppConfig.from_env()
-    
+
     # 创建FastAPI应用
     app = FastAPI(
         title=app_config.app_name,
@@ -112,9 +111,9 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
         docs_url="/docs",
         redoc_url="/redoc",
-        openapi_url=f"{app_config.api_prefix}/openapi.json"
+        openapi_url=f"{app_config.api_prefix}/openapi.json",
     )
-    
+
     # CORS中间件配置
     app.add_middleware(
         CORSMiddleware,
@@ -123,20 +122,15 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+
     # 全局异常处理
     @app.exception_handler(ACMGException)
     async def acmg_exception_handler(request: Request, exc: ACMGException):
         """处理自定义业务异常"""
         return JSONResponse(
-            status_code=400,
-            content={
-                "error": exc.code,
-                "message": exc.message,
-                "detail": str(exc)
-            }
+            status_code=400, content={"error": exc.code, "message": exc.message, "detail": str(exc)}
         )
-    
+
     @app.exception_handler(Exception)
     async def general_exception_handler(request: Request, exc: Exception):
         """处理未捕获的异常"""
@@ -146,10 +140,10 @@ def create_app() -> FastAPI:
             content={
                 "error": "INTERNAL_ERROR",
                 "message": "An unexpected error occurred",
-                "detail": str(exc) if app_config.debug else None
-            }
+                "detail": str(exc) if app_config.debug else None,
+            },
         )
-    
+
     # 健康检查端点
     @app.get("/health")
     async def health_check():
@@ -158,9 +152,9 @@ def create_app() -> FastAPI:
             "status": "healthy",
             "service": app_config.app_name,
             "version": app_config.version,
-            "environment": app_config.environment.value
+            "environment": app_config.environment.value,
         }
-    
+
     @app.get("/")
     async def root():
         """根路径"""
@@ -168,15 +162,12 @@ def create_app() -> FastAPI:
             "message": "ACMG-PS3 Intelligence System",
             "version": app_config.version,
             "docs": "/docs",
-            "health": "/health"
+            "health": "/health",
         }
-    
+
     # 注册API路由
-    app.include_router(
-        api_router,
-        prefix=app_config.api_prefix
-    )
-    
+    app.include_router(api_router, prefix=app_config.api_prefix)
+
     return app
 
 
@@ -187,15 +178,16 @@ app = create_app()
 def main():
     """主函数 - 用于开发环境启动"""
     app_config = AppConfig.from_env()
-    
+
     # 使用uvicorn启动服务
     uvicorn.run(
         "main:app",
         host=app_config.host,
         port=app_config.port,
         reload=app_config.debug,  # 开发模式下启用热重载
+        reload_excludes=["*__pycache__*", "*tests*"],
         log_level="debug" if app_config.debug else "info",
-        access_log=True
+        access_log=True,
     )
 
 
