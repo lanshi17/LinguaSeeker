@@ -331,7 +331,7 @@ class BilingualHTMLGenerator:
         """Build evidence summary HTML sidebar."""
         
         score = evidence.get("arbiter_score", 0)
-        score_class = "score-high" if score >=75else "score-medium" if score >= 50 else "score-low"
+        score_class = "score-high" if score >= 75 else "score-medium" if score >= 50 else "score-low"
         
         sidebar_html = f"""
         <div class="evidence-score {score_class}">
