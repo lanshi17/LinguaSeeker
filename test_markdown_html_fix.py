@@ -18,7 +18,7 @@ def test_preserves_mark_tags():
     assert "&lt;mark&gt;" not in html, f"<mark> was incorrectly escaped to &lt;mark&gt;! HTML: {html}"
     
     # Verify markdown is properly converted
-    assert "<strong>bold</strong>" in html or "<b>bold</b>" in html, f"Bold markdown not converted! HTML: {html}"
+    assert "<strong>bold</strong>" in html, f"Bold markdown not converted! HTML: {html}"
     
     print("✓ <mark> tags are preserved correctly")
     print(f"  Generated HTML snippet: {html[:200]}")
