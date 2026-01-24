@@ -1,0 +1,97 @@
+{
+  "detected_language": "en",
+  "odds_path": 29.235294117647054,
+  "evidence_strength": "strong",
+  "arbiter_score": 78.0,
+  "ps3_criteria_met": true,
+  "extracted_experimental_details": "LDL internalization efficiency measured via fluorescence intensity after 30-min incubation at 37°C in hepatocytes. Biological replicates n=3. Compared against healthy controls and known pathogenic variant p.(Arg3527Gln).",
+  "p1_source_location": "Population prevalence: 0.6% (Japan) reported in text",
+  "p2_source_location": "FH probands: 15% vs 3.4% in controls (OR=4.9, p=6.9×10⁻¹³) reported in Fig. 2/text",
+  "p1_bbox": {
+    "page": 1,
+    "bbox": [
+      611,
+      281,
+      655,
+      303
+    ],
+    "text": "AL",
+    "fragment_id": 14
+  },
+  "p2_bbox": {
+    "page": 1,
+    "bbox": [
+      288,
+      122,
+      296,
+      137
+    ],
+    "text": "3",
+    "fragment_id": 3
+  },
+  "control_variants_count": 2,
+  "odds_path_computable": true,
+  "reason_if_not_applicable": "",
+  "findings": [
+    "APOB p.(Pro955Ser) variant reduces LDL receptor binding affinity by 44%",
+    "Significant difference in LDL internalization efficiency between healthy individuals and variant carriers (p<0.01)",
+    "Dose-dependent effect observed between heterozygous and homozygous p.(Pro955Ser) variants"
+  ],
+  "highlight_path": "outputs/test_run_refactored/家族性高コレステロール血症の分子病態機構の解明_en_highlight.md",
+  "translated_doc": "outputs/test_run_refactored/家族性高コレステロール血症の分子病態機構の解明_en.md",
+  "arbiter_feedback": {
+    "overall_score": 78.0,
+    "max_score": 100.0,
+    "normalized_score": 78.0,
+    "dimensions": [
+      {
+        "name": "disease_mechanism",
+        "score": 24.0,
+        "max_score": 25,
+        "status": "pass",
+        "reason": "Disease mechanism is clearly articulated: APOB p.(Pro955Ser) impairs LDL receptor binding affinity, reducing LDL internalization efficiency. This directly explains the pathogenic mechanism in familial hypercholesterolemia (FH). The mechanism is well-established and the variant's functional consequence is explicitly linked to disease pathogenesis.",
+        "suggestions": []
+      },
+      {
+        "name": "method_suitability",
+        "score": 19.0,
+        "max_score": 20,
+        "status": "pass",
+        "reason": "LDL internalization efficiency measurement via fluorescence intensity is highly appropriate for assessing APOB function. This functional assay directly measures the consequence of impaired LDL receptor binding (reduced internalization), making it suitable for validating the proposed disease mechanism in FH. The assay type aligns well with APOB's biological role.",
+        "suggestions": []
+      },
+      {
+        "name": "experimental_validity",
+        "score": 50.0,
+        "max_score": 50,
+        "status": "pass",
+        "reason": "All four experimental validity components are satisfied: appropriate controls present, biological replicates used, method is historically validated, and positive controls included. This represents maximum strength for Step 3.",
+        "suggestions": []
+      },
+      {
+        "name": "odds_path_validity",
+        "score": 20.0,
+        "max_score": 20,
+        "status": "pass",
+        "reason": "OddsPath calculation is valid and computable. P1=0.006 (population prevalence in Japan) and P2=0.15 (FH proband frequency) are both valid probabilities in (0,1). Calculated OddsPath=29.24 falls within the 20-60 range, mapping to PS3_moderate evidence strength. This represents strong functional evidence supporting pathogenicity. The odds ratio (OR=4.9, p=6.9×10⁻¹³) provides robust statistical support for the P2 derivation.",
+        "suggestions": []
+      }
+    ],
+    "key_issues": [
+      "OddsPath value (29.24) maps to PS3_moderate, not PS3 (which requires ≥60). The evidence is strong but not at the highest tier.",
+      "P1 source (0.6% Japan population) may not represent global population prevalence; regional variation could affect generalizability.",
+      "Comparison to single known pathogenic variant (p.(Arg3527Gln)) limits breadth of functional comparison; multiple pathogenic variants would strengthen evidence.",
+      "No explicit statement of statistical significance for the 44% reduction in binding affinity; p<0.01 is reported for internalization efficiency but not for binding affinity itself."
+    ],
+    "recommendations": [
+      "Report global or ethnicity-adjusted MAF to improve P1 accuracy and generalizability of OddsPath calculation.",
+      "Include functional comparison with additional known pathogenic APOB variants to establish consistency of functional impact.",
+      "Explicitly report p-value for the 44% binding affinity reduction to strengthen the quantitative evidence.",
+      "Consider dose-response analysis (heterozygous vs homozygous) as additional supporting evidence for pathogenicity.",
+      "Validate findings in independent cohort or with alternative functional assay (e.g., surface plasmon resonance for binding kinetics) to enhance replicability.",
+      "Classify as PS3_moderate based on OddsPath mapping; consider supplementary evidence (e.g., segregation data, additional functional studies) to reach PS3 threshold if needed."
+    ],
+    "should_iterate": false
+  },
+  "iterations_performed": 2
+}

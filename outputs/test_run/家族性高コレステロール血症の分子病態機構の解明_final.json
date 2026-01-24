@@ -1,0 +1,111 @@
+{
+  "detected_language": "en",
+  "detected_language_placeholder": "{{detected_language}}",
+  "odds_path": 3.3870013121527682,
+  "odds_path_placeholder": "{{odds_path}}",
+  "evidence_strength": "supporting",
+  "arbiter_score": 72.0,
+  "arbiter_score_placeholder": "{{arbiter_score}}",
+  "ps3_criteria_met": true,
+  "extracted_experimental_details": "LDL internalization measured by fluorescence intensity after 30-min incubation at 37°C. Compared wild-type, heterozygous p.(Pro955Ser), homozygous p.(Pro955Ser), and pathogenic p.(Arg3527Gln) controls. Biological replicates n=3 per group.",
+  "p1_source_location": "Text: 'Among 234 patients...9.8% (n=63)'",
+  "p2_source_location": "Figure 3 legend: 'p<0.01 between control and each variant'",
+  "p1_bbox": {
+    "page": 1,
+    "bbox": [
+      288,
+      122,
+      296,
+      137
+    ],
+    "text": "3",
+    "fragment_id": 3
+  },
+  "p2_bbox": {
+    "page": 1,
+    "bbox": [
+      288,
+      122,
+      296,
+      137
+    ],
+    "text": "3",
+    "fragment_id": 3
+  },
+  "control_variants_count": 1,
+  "odds_path_computable": true,
+  "reason_if_not_applicable": "",
+  "findings": [
+    "The APOB p.(Pro955Ser) variant was found in 9.8% of FH probands (n=63/234) with an OR=4.9 (p=6.9×10⁻¹³).",
+    "Functional analysis showed reduced LDL internalization efficiency in hepatocytes for p.(Pro955Ser) compared to controls (p<0.01).",
+    "Dose-dependent effect observed: homozygous p.(Pro955Ser) showed greater impairment than heterozygous (p<0.01).",
+    "Text: 'Among 234 patients...9.8% (n=63)'",
+    "Figure 3 legend: 'p<0.01 between control and each variant'",
+    "LDL internalization measured by fluorescence intensity after 30-min incubation at 37°C. Compared wild-type, heterozygous p.(Pro955Ser), homozygous p.(Pro955Ser), and pathogenic p.(Arg3527Gln) controls. Biological replicates n=3 per group."
+  ],
+  "highlight_path": "outputs/test_run/家族性高コレステロール血症の分子病態機構の解明_en_highlight.md",
+  "translated_doc": "outputs/test_run/家族性高コレステロール血症の分子病態機構の解明_en.md",
+  "final_annotated_doc": "outputs/test_run/家族性高コレステロール血症の分子病態機構の解明_en_highlight.md",
+  "translated_english_doc": "outputs/test_run/家族性高コレステロール血症の分子病態機構の解明_en.md",
+  "final_annotated_doc_placeholder": "{{final_annotated_doc}}",
+  "translated_english_doc_placeholder": "{{translated_english_doc}}",
+  "arbiter_feedback": {
+    "overall_score": 72.0,
+    "max_score": 100.0,
+    "normalized_score": 72.0,
+    "dimensions": [
+      {
+        "name": "disease_mechanism",
+        "score": 24.0,
+        "max_score": 25,
+        "status": "pass",
+        "reason": "Disease mechanism is clearly articulated: APOB p.(Pro955Ser) impairs LDL receptor-mediated internalization in hepatocytes, a well-established pathogenic mechanism in familial hypercholesterolemia. The variant's functional consequence (reduced LDL uptake) directly explains the disease phenotype.",
+        "suggestions": []
+      },
+      {
+        "name": "method_suitability",
+        "score": 19.0,
+        "max_score": 20,
+        "status": "pass",
+        "reason": "LDL internalization assay via fluorescence intensity measurement is highly appropriate for evaluating APOB function. This directly measures the molecular consequence of the variant in disease-relevant hepatocytes, aligning perfectly with the known pathogenic mechanism of impaired lipoprotein uptake in FH.",
+        "suggestions": []
+      },
+      {
+        "name": "experimental_validity",
+        "score": 50.0,
+        "max_score": 50,
+        "status": "pass",
+        "reason": "All experimental validity criteria met with high quality. Controls are comprehensive (normal + pathogenic), replicates adequate, method is validated and reliable, and positive controls are appropriately included. This represents robust experimental design.",
+        "suggestions": []
+      },
+      {
+        "name": "odds_path_validity",
+        "score": 18.0,
+        "max_score": 20,
+        "status": "pass",
+        "reason": "OddsPath = 3.387 (calculated from P1=0.098, P2=0.269). Both P1 and P2 are valid probabilities in (0,1). OddsPath value of 3.387 falls within the 3.0–20 range, mapping to PS3_supporting evidence strength. The reported strength classification as 'supporting' is CORRECT. However, the OddsPath is at the lower boundary of PS3_supporting; stronger functional evidence or higher OR would elevate to PS3_moderate (20–60 range).",
+        "suggestions": [
+          "Consider whether additional functional assays (e.g., LDLR binding kinetics, protein stability studies) could strengthen the functional evidence toward PS3_moderate",
+          "Document the statistical power of the LDL internalization assay to justify confidence in the p<0.01 threshold"
+        ]
+      }
+    ],
+    "key_issues": [
+      "OddsPath at lower boundary of PS3_supporting (3.387 vs. 3.0 threshold): marginal classification strength",
+      "P2 value (0.269) derived from qualitative p<0.01 statement rather than exact effect size; consider reporting actual percentage reduction in LDL uptake for precision",
+      "Single functional assay type (LDL internalization); complementary assays (e.g., LDLR binding, protein trafficking) would strengthen evidence",
+      "Dose-dependent effect (homozygous > heterozygous) is supportive but not quantified with exact fold-change values",
+      "No mention of allele frequency in general population (gnomAD/ExAC); need to verify this is not a common variant that would trigger BA1/BS1"
+    ],
+    "recommendations": [
+      "VALIDATE: Confirm APOB p.(Pro955Ser) allele frequency in gnomAD is <1% to exclude BA1/BS1 benign classification",
+      "ENHANCE: Report exact percentage reduction in LDL internalization (e.g., '45% reduction vs. wild-type') rather than relying on p-values alone for P2 calculation",
+      "STRENGTHEN: Add complementary functional assays such as LDLR binding affinity (surface plasmon resonance) or protein stability (thermal shift assay) to elevate evidence toward PS3_moderate",
+      "QUANTIFY: Provide fold-change values for homozygous vs. heterozygous comparison to better characterize dose-dependent effect",
+      "DOCUMENT: Include assay validation metrics (sensitivity, specificity, reproducibility coefficient of variation) to support method reliability claim",
+      "CLARIFY: Specify whether the 9.8% prevalence in FH probands represents a case-control comparison; if so, ensure control population is clearly defined and matched"
+    ],
+    "should_iterate": true
+  },
+  "iterations_performed": 3
+}

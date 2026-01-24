@@ -1,0 +1,101 @@
+{
+  "detected_language": "en",
+  "odds_path": 17.999260901699927,
+  "evidence_strength": "moderate",
+  "arbiter_score": 72.0,
+  "ps3_criteria_met": true,
+  "extracted_experimental_details": "LDL internalization assay in hepatocytes measuring fluorescence intensity after 30-min incubation at 37°C, comparing homozygous/heterozygous p.(Pro955Ser) against wild-type and known pathogenic p.(Arg3527Gln) controls",
+  "p1_source_location": "Fig. 2: '0.6% in general population'",
+  "p2_source_location": "Fig. 2: '9.8% of probands'",
+  "p1_bbox": {
+    "page": 1,
+    "bbox": [
+      611,
+      281,
+      655,
+      303
+    ],
+    "text": "AL",
+    "fragment_id": 14
+  },
+  "p2_bbox": {
+    "page": 1,
+    "bbox": [
+      460,
+      445,
+      487,
+      466
+    ],
+    "text": "of",
+    "fragment_id": 24
+  },
+  "control_variants_count": 1,
+  "odds_path_computable": true,
+  "reason_if_not_applicable": "",
+  "findings": [
+    "APOB p.(Pro955Ser) variant shows reduced LDL internalization efficiency in hepatocytes",
+    "Dose-dependent effect observed: homozygous < heterozygous < wild-type",
+    "Statistical significance confirmed (p<0.01)"
+  ],
+  "highlight_path": "outputs/test_run_after_cleanup/家族性高コレステロール血症の分子病態機構の解明_en_highlight.md",
+  "translated_doc": "outputs/test_run_after_cleanup/家族性高コレステロール血症の分子病態機構の解明_en.md",
+  "arbiter_feedback": {
+    "overall_score": 72.0,
+    "max_score": 100.0,
+    "normalized_score": 72.0,
+    "dimensions": [
+      {
+        "name": "disease_mechanism",
+        "score": 24.0,
+        "max_score": 25,
+        "status": "pass",
+        "reason": "Disease mechanism is clearly articulated: APOB p.(Pro955Ser) causes reduced LDL internalization efficiency in hepatocytes, which is the established pathogenic mechanism for familial hypercholesterolemia. The variant's functional consequence directly explains the phenotype.",
+        "suggestions": []
+      },
+      {
+        "name": "method_suitability",
+        "score": 19.0,
+        "max_score": 20,
+        "status": "pass",
+        "reason": "LDL internalization assay in hepatocytes is highly appropriate for evaluating APOB variants affecting FH pathogenesis. The assay directly measures the proposed mechanism (LDL uptake efficiency) using a validated, physiologically relevant cell system. Fluorescence-based quantification is a standard, accepted methodology.",
+        "suggestions": [
+          "Consider specifying the fluorescence detection method (e.g., confocal microscopy, plate reader) for complete methodological transparency"
+        ]
+      },
+      {
+        "name": "experimental_validity",
+        "score": 46.0,
+        "max_score": 50,
+        "status": "pass",
+        "reason": "Experimental validity is strong: appropriate controls present (both normal and pathogenic), method is historically validated and reliable, positive controls included. Minor gap in explicit replication documentation prevents perfect score, but overall experimental design meets PS3 standards.",
+        "suggestions": []
+      },
+      {
+        "name": "odds_path_validity",
+        "score": 18.0,
+        "max_score": 20,
+        "status": "pass",
+        "reason": "OddsPath calculation is valid and correctly mapped: P1=0.006 (0.6% in general population), P2=0.098 (9.8% in FH probands), yielding OddsPath=17.999≈18.0. This falls within the PS3_supporting range (3.0–20), indicating supporting-level pathogenic evidence. The odds ratio of ~16.3 (0.098/0.006) demonstrates substantial enrichment in affected individuals. However, this maps to PS3_supporting rather than PS3_moderate (20–60) or PS3 (≥60), limiting the strength classification.",
+        "suggestions": [
+          "Consider whether additional functional evidence (e.g., protein stability assays, cellular localization studies) could strengthen the evidence to PS3_moderate range",
+          "Verify that P1 and P2 represent independent, well-characterized populations to ensure OddsPath validity"
+        ]
+      }
+    ],
+    "key_issues": [
+      "OddsPath value (18.0) maps to PS3_supporting, not PS3_moderate or PS3, limiting evidence strength despite clear functional impairment",
+      "Explicit replication metrics (n values, error bars, confidence intervals) not provided in evidence summary, though statistical significance (p<0.01) implies adequate replication",
+      "Single pathogenic control variant (n=1) is adequate but minimal; additional known pathogenic APOB variants would strengthen validation",
+      "P1/P2 sources appear to be allele frequencies rather than clinical penetrance data; clarification needed on whether these represent true disease prevalence or carrier frequencies"
+    ],
+    "recommendations": [
+      "Classify as PS3_supporting (not PS3_moderate) based on OddsPath mapping; this is appropriate for a single functional assay with clear mechanism but moderate effect size",
+      "Supplement with additional functional assays (e.g., protein-protein interaction studies, cellular trafficking assays) to potentially elevate to PS3_moderate if clinical significance warrants",
+      "Include explicit replication statistics (n, SD/SEM, 95% CI) in final evidence documentation for transparency and reproducibility",
+      "Validate that P1 represents true population allele frequency and P2 represents disease-specific enrichment in a well-defined FH cohort",
+      "Consider segregation data (PS2) or de novo status (PS2) if available to provide complementary evidence lines"
+    ],
+    "should_iterate": false
+  },
+  "iterations_performed": 3
+}

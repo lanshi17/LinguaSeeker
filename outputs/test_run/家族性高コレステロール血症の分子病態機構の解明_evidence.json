@@ -1,0 +1,20 @@
+{
+  "findings": [
+    "The APOB p.(Pro955Ser) variant was found in 9.8% of FH probands (n=63/234) with an OR=4.9 (p=6.9×10⁻¹³).",
+    "Functional analysis showed reduced LDL internalization efficiency in hepatocytes for p.(Pro955Ser) compared to controls (p<0.01).",
+    "Dose-dependent effect observed: homozygous p.(Pro955Ser) showed greater impairment than heterozygous (p<0.01)."
+  ],
+  "p1": 0.098,
+  "p2": 0.269,
+  "odds_path": 3.3870013121527682,
+  "strength": "supporting",
+  "rationale": "The variant demonstrates both statistical association (high OR) and functional impairment in a disease-relevant assay (hepatocyte LDL uptake), meeting PS3 criteria.",
+  "experimental_details": "LDL internalization measured by fluorescence intensity after 30-min incubation at 37°C. Compared wild-type, heterozygous p.(Pro955Ser), homozygous p.(Pro955Ser), and pathogenic p.(Arg3527Gln) controls. Biological replicates n=3 per group.",
+  "p1_source_location": "Text: 'Among 234 patients...9.8% (n=63)'",
+  "p2_source_location": "Figure 3 legend: 'p<0.01 between control and each variant'",
+  "ps3_criteria_met": true,
+  "control_variants_count": 1,
+  "odds_path_computable": true,
+  "reason_if_not_applicable": "",
+  "arbiter_score": 72.0
+}

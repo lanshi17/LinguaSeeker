@@ -1,0 +1,59 @@
+[project]
+name = "03-multi-acmg-simple-demo"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "python-dotenv>=1.0.1",
+    "langchain>=0.2.11",
+    "langgraph>=0.2.18",
+    "langchain-community>=0.2.6",
+    "langchain-openai>=0.1.18",
+    "langchain-anthropic>=0.1.22",
+    "qdrant-client>=1.8.2",
+    "pypdf>=4.1.0",
+    "pdf2image>=1.17.0",
+    "pytesseract>=0.3.10",
+    "Pillow>=10.4.0",
+    "langdetect>=1.0.9",
+    "orjson>=3.10.6"
+]
+
+[tool.uv]
+# 设置默认源（优先级最高）
+index-url = "http://127.0.0.1:3141/root/pypi/+simple/"
+
+# 配置所有镜像源（按优先级排序）
+[[tool.uv.index]]
+name = "local"
+url = "http://127.0.0.1:3141/root/pypi/+simple/"
+default = true  # 默认源，必须设置一个
+
+[[tool.uv.index]]
+name = "tuna"  # 清华源（国内最快）
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+
+[[tool.uv.index]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple/"
+
+[[tool.uv.index]]
+name = "ustc"  # 中科大源
+url = "https://pypi.mirrors.ustc.edu.cn/simple/"
+
+[[tool.uv.index]]
+name = "huaweicloud"
+url = "https://mirrors.huaweicloud.com/repository/pypi/simple/"
+
+[[tool.uv.index]]
+name = "volces"  # 火山引擎
+url = "https://mirrors.volces.com/pypi/simple/"
+
+[[tool.uv.index]]
+name = "tencent"
+url = "https://mirrors.cloud.tencent.com/pypi/simple/"
+
+[[tool.uv.index]]
+name = "pypi"  # 官方源（备用）
+url = "https://pypi.org/simple/"

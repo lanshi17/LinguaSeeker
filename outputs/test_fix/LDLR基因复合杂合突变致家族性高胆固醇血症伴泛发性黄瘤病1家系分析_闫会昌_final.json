@@ -1,0 +1,105 @@
+{
+  "detected_language": "en",
+  "detected_language_placeholder": "{{detected_language}}",
+  "odds_path": 1.0,
+  "odds_path_placeholder": "{{odds_path}}",
+  "evidence_strength": "indeterminate",
+  "arbiter_score": 5.0,
+  "arbiter_score_placeholder": "{{arbiter_score}}",
+  "ps3_criteria_met": false,
+  "extracted_experimental_details": "No experimental controls (wild-type, pathogenic, or positive controls) provided and no biological or technical replicates reported",
+  "p1_source_location": "",
+  "p2_source_location": "",
+  "p1_bbox": null,
+  "p2_bbox": null,
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "No functional assay performed—PS3 classification is not applicable",
+  "findings": [
+    "No experimental controls (wild-type, pathogenic, or positive controls) provided and no biological or technical replicates reported"
+  ],
+  "highlight_path": "outputs/test_fix/LDLR基因复合杂合突变致家族性高胆固醇血症伴泛发性黄瘤病1家系分析_闫会昌_en_highlight.md",
+  "translated_doc": "outputs/test_fix/LDLR基因复合杂合突变致家族性高胆固醇血症伴泛发性黄瘤病1家系分析_闫会昌_en.md",
+  "final_annotated_doc": "outputs/test_fix/LDLR基因复合杂合突变致家族性高胆固醇血症伴泛发性黄瘤病1家系分析_闫会昌_en_highlight.md",
+  "translated_english_doc": "outputs/test_fix/LDLR基因复合杂合突变致家族性高胆固醇血症伴泛发性黄瘤病1家系分析_闫会昌_en.md",
+  "final_annotated_doc_placeholder": "{{final_annotated_doc}}",
+  "translated_english_doc_placeholder": "{{translated_english_doc}}",
+  "arbiter_feedback": {
+    "overall_score": 5.0,
+    "max_score": 100.0,
+    "normalized_score": 5.0,
+    "dimensions": [
+      {
+        "name": "disease_mechanism",
+        "score": 0.0,
+        "max_score": 25,
+        "status": "fail",
+        "reason": "No disease mechanism clarity provided. The evidence JSON contains no findings, experimental details, or mechanistic explanation. The rationale explicitly states 'No functional assay performed,' indicating complete absence of functional evidence to support PS3 classification.",
+        "suggestions": [
+          "Provide clear description of the variant's pathogenic mechanism (e.g., loss-of-function, gain-of-function, dominant-negative effect)",
+          "Explain how the variant disrupts normal protein function or cellular processes",
+          "Reference relevant literature on the gene's role in disease pathogenesis",
+          "Specify the molecular consequence (e.g., altered protein folding, impaired binding, reduced expression)"
+        ]
+      },
+      {
+        "name": "method_suitability",
+        "score": 0.0,
+        "max_score": 20,
+        "status": "fail",
+        "reason": "No functional assay method is described or employed. The evidence explicitly states no functional assay was performed. Without any assay methodology, suitability assessment is moot—there is nothing to evaluate for appropriateness to the disease mechanism.",
+        "suggestions": [
+          "Select an appropriate functional assay matching the disease mechanism (e.g., protein-protein interaction assays for binding defects, reporter assays for transcriptional effects, cell-based assays for signaling pathway disruption)",
+          "Justify why the chosen assay is suitable for testing the specific pathogenic mechanism",
+          "Consider multiple complementary assay types if mechanism is complex",
+          "Reference validated protocols or published methods for the assay type"
+        ]
+      },
+      {
+        "name": "experimental_validity",
+        "score": 0.0,
+        "max_score": 50,
+        "status": "fail",
+        "reason": "Complete failure across all experimental validity criteria. No controls, no replicates, no method employed, and no positive controls. This represents a fundamental absence of experimental rigor required for PS3 classification. Maximum evidence strength achievable would be PS3_supporting only if other criteria were met, but they are not.",
+        "suggestions": []
+      },
+      {
+        "name": "odds_path_validity",
+        "score": 0.0,
+        "max_score": 20,
+        "status": "fail",
+        "reason": "OddsPath cannot be validly computed from this evidence. Although P1=0.001 and P2=0.001 are provided (yielding OddsPath=1.0), these values are meaningless without underlying experimental data. The evidence explicitly states 'No functional assay performed,' making any odds calculation unfounded. OddsPath=1.0 falls in the neutral zone (0.33–3.0) and cannot support PS3 or BS3 classification. The P1/P2 values lack source documentation (p1_source_location and p2_source_location are empty strings), preventing validation of their derivation.",
+        "suggestions": [
+          "Do not attempt OddsPath calculation without valid experimental data",
+          "If functional assay is performed, derive P1 and P2 from reported statistics (e.g., effect sizes, p-values, confidence intervals)",
+          "Document the source and calculation method for all probability values",
+          "Ensure P1 and P2 are in valid range (0,1) and represent distinct hypotheses (pathogenic vs. benign)",
+          "Only map OddsPath to evidence strength after experimental validity is established"
+        ]
+      }
+    ],
+    "key_issues": [
+      "CRITICAL: No functional assay performed—PS3 classification is explicitly not applicable per the evidence statement",
+      "CRITICAL: Zero experimental controls (wild-type, pathogenic, or positive controls) provided",
+      "CRITICAL: No biological or technical replicates reported",
+      "CRITICAL: No disease mechanism clarity or explanation provided",
+      "CRITICAL: P1/P2 values lack source documentation and are derived without experimental basis",
+      "CRITICAL: OddsPath=1.0 is neutral and cannot support PS3 or BS3 classification",
+      "No findings array populated (empty array)",
+      "Strength classified as 'indeterminate' but should be 'not applicable' given absence of functional evidence"
+    ],
+    "recommendations": [
+      "DO NOT ASSIGN PS3 CLASSIFICATION to this variant based on current evidence—it explicitly does not meet PS3 criteria",
+      "Perform functional assay(s) appropriate to the suspected disease mechanism before attempting PS3 classification",
+      "Include both wild-type/normal controls AND pathogenic/abnormal controls in all experiments",
+      "Perform biological or technical replicates (minimum n=3 recommended) to establish reproducibility",
+      "Use known pathogenic and benign variants as positive controls to validate assay performance",
+      "Document all experimental methods, controls, and raw data with clear source attribution",
+      "Derive P1/P2 values from actual experimental statistics, not assumed values",
+      "Consider alternative evidence codes (e.g., computational evidence PP3, segregation data PS2/PM6) if functional assays cannot be performed",
+      "If this is a preliminary assessment, clearly label it as 'insufficient evidence' rather than 'indeterminate'"
+    ],
+    "should_iterate": true
+  },
+  "iterations_performed": 3
+}

@@ -1,0 +1,20 @@
+{
+  "findings": [
+    "APOB p.(Pro955Ser) variant reduces LDL receptor binding affinity by 44%",
+    "Significant difference in LDL internalization efficiency between healthy individuals and variant carriers (p<0.01)",
+    "Dose-dependent effect observed between heterozygous and homozygous p.(Pro955Ser) variants"
+  ],
+  "p1": 0.006,
+  "p2": 0.15,
+  "odds_path": 29.235294117647054,
+  "strength": "strong",
+  "rationale": "The variant shows statistically significant reduction in LDL binding affinity (44%) with p<0.01, demonstrating a clear functional impact consistent with FH pathogenesis. The effect is dose-dependent (heterozygous vs homozygous) and shows comparable impact to known pathogenic variant p.(Arg3527Gln).",
+  "experimental_details": "LDL internalization efficiency measured via fluorescence intensity after 30-min incubation at 37°C in hepatocytes. Biological replicates n=3. Compared against healthy controls and known pathogenic variant p.(Arg3527Gln).",
+  "p1_source_location": "Population prevalence: 0.6% (Japan) reported in text",
+  "p2_source_location": "FH probands: 15% vs 3.4% in controls (OR=4.9, p=6.9×10⁻¹³) reported in Fig. 2/text",
+  "ps3_criteria_met": true,
+  "control_variants_count": 2,
+  "odds_path_computable": true,
+  "reason_if_not_applicable": "",
+  "arbiter_score": 78.0
+}

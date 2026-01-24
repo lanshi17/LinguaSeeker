@@ -1,0 +1,97 @@
+{
+  "detected_language": "en",
+  "odds_path": 17.999260901699927,
+  "evidence_strength": "moderate",
+  "arbiter_score": 82.0,
+  "ps3_criteria_met": true,
+  "extracted_experimental_details": "LDL internalization efficiency was measured via fluorescence intensity after 30-min incubation at 37°C in hepatocytes. Comparisons were made between homozygous p.(Pro955Ser), heterozygous p.(Pro955Ser), pathogenic p.(Arg3527Gln), and healthy controls.",
+  "p1_source_location": "Population frequency reported as 0.6% in text",
+  "p2_source_location": "Variant prevalence of 9.8% in FH patients reported in text",
+  "p1_bbox": {
+    "page": 1,
+    "bbox": [
+      668,
+      281,
+      717,
+      305
+    ],
+    "text": "AT",
+    "fragment_id": 15
+  },
+  "p2_bbox": {
+    "page": 1,
+    "bbox": [
+      611,
+      281,
+      655,
+      303
+    ],
+    "text": "AL",
+    "fragment_id": 14
+  },
+  "control_variants_count": 2,
+  "odds_path_computable": true,
+  "reason_if_not_applicable": "",
+  "findings": [
+    "The APOB p.(Pro955Ser) variant shows defective LDL binding with a 44% reduction compared to controls",
+    "Functional analysis was performed in hepatocytes, which are relevant tissues for LDL metabolism",
+    "The study included controls from healthy individuals and comparisons with known pathogenic variants (p.(Arg3527Gln))"
+  ],
+  "highlight_path": "outputs/test_run_refactored_clean/家族性高コレステロール血症の分子病態機構の解明_en_highlight.md",
+  "translated_doc": "outputs/test_run_refactored_clean/家族性高コレステロール血症の分子病態機構の解明_en.md",
+  "arbiter_feedback": {
+    "overall_score": 82.0,
+    "max_score": 100.0,
+    "normalized_score": 82.0,
+    "dimensions": [
+      {
+        "name": "disease_mechanism",
+        "score": 24.0,
+        "max_score": 25,
+        "status": "pass",
+        "reason": "The disease mechanism is clearly articulated: APOB p.(Pro955Ser) causes familial hypercholesterolemia (FH) through defective LDL binding, resulting in impaired LDL receptor-mediated uptake in hepatocytes. The pathogenic mechanism (loss of LDL binding function) is well-established for APOB variants and directly linked to the clinical phenotype.",
+        "suggestions": []
+      },
+      {
+        "name": "method_suitability",
+        "score": 20.0,
+        "max_score": 20,
+        "status": "pass",
+        "reason": "LDL internalization efficiency measurement via fluorescence intensity in hepatocytes is highly appropriate for evaluating the proposed mechanism. Hepatocytes are the primary tissue responsible for LDL metabolism and clearance, making this functional assay directly relevant to the disease pathophysiology. The 30-min incubation at 37°C represents physiologically relevant conditions.",
+        "suggestions": []
+      },
+      {
+        "name": "experimental_validity",
+        "score": 50.0,
+        "max_score": 50,
+        "status": "pass",
+        "reason": "All experimental validity criteria are met. The study includes appropriate controls (both normal and pathogenic), demonstrates biological replication across genotypes, uses a historically validated method, and incorporates positive controls. This represents high-quality functional evidence.",
+        "suggestions": []
+      },
+      {
+        "name": "odds_path_validity",
+        "score": 20.0,
+        "max_score": 20,
+        "status": "pass",
+        "reason": "OddsPath calculation is valid and computable. P1 (0.006) and P2 (0.098) are both in the valid range (0,1). Calculated OddsPath = 17.999 falls within the PS3_supporting range (3.0–20), correctly mapping to 'PS3_supporting' strength. The odds ratio of ~16.3 (P2/P1 = 0.098/0.006) indicates the variant is ~16-fold more common in FH patients than in the general population, providing strong epidemiological support for pathogenicity.",
+        "suggestions": []
+      }
+    ],
+    "key_issues": [
+      "Strength classification as 'moderate' appears conservative given OddsPath of 17.999 maps to PS3_supporting (not moderate). Consider revising strength classification to 'PS3_supporting' for consistency.",
+      "No explicit mention of effect size confidence intervals or statistical power analysis. While p<0.01 is reported, 95% CI around the 44% reduction would strengthen the evidence.",
+      "Limited information on sample size (n values for each group not provided). Transparency on replication numbers would enhance reproducibility assessment.",
+      "No mention of whether the assay was blinded or if there were any technical limitations acknowledged."
+    ],
+    "recommendations": [
+      "Revise evidence strength classification from 'moderate' to 'PS3_supporting' to align with OddsPath mapping (17.999 ∈ [3.0–20]).",
+      "Report 95% confidence intervals around the 44% LDL binding reduction to quantify precision of the functional effect estimate.",
+      "Provide explicit sample sizes (n) for each experimental group to enable independent assessment of statistical power.",
+      "Consider whether additional functional assays (e.g., LDLR binding kinetics, cell surface expression) could further validate the mechanism.",
+      "Document any potential confounding factors in hepatocyte culture conditions or batch effects that might affect reproducibility.",
+      "Clarify whether heterozygous vs. homozygous genotypes show dose-dependent effects, which would strengthen the functional evidence."
+    ],
+    "should_iterate": true
+  },
+  "iterations_performed": 1
+}

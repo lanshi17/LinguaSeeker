@@ -1,0 +1,20 @@
+{
+  "findings": [
+    "The APOB p.(Pro955Ser) variant shows defective LDL binding with a 44% reduction compared to controls",
+    "Functional analysis was performed in hepatocytes, which are relevant tissues for LDL metabolism",
+    "The study included controls from healthy individuals and comparisons with known pathogenic variants (p.(Arg3527Gln))"
+  ],
+  "p1": 0.006,
+  "p2": 0.098,
+  "odds_path": 17.999260901699927,
+  "strength": "moderate",
+  "rationale": "The variant demonstrates significantly reduced LDL uptake in hepatocytes compared to wild-type controls, with statistical significance (p<0.01). The population frequency (0.6%) is substantially lower than its prevalence in FH patients (9.8%), supporting pathogenicity.",
+  "experimental_details": "LDL internalization efficiency was measured via fluorescence intensity after 30-min incubation at 37°C in hepatocytes. Comparisons were made between homozygous p.(Pro955Ser), heterozygous p.(Pro955Ser), pathogenic p.(Arg3527Gln), and healthy controls.",
+  "p1_source_location": "Population frequency reported as 0.6% in text",
+  "p2_source_location": "Variant prevalence of 9.8% in FH patients reported in text",
+  "ps3_criteria_met": true,
+  "control_variants_count": 2,
+  "odds_path_computable": true,
+  "reason_if_not_applicable": "",
+  "arbiter_score": 82.0
+}
