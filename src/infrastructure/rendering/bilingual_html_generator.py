@@ -429,7 +429,8 @@ class BilingualHTMLGenerator:
                 if text and bbox and text in html:
                     bbox_str = ",".join(map(str, bbox))
                     # Create a span with data-bbox attributes around the text
-                    # Simple text replacement - wrap the first occurrence
+                    # Note: Uses simple replacement of first occurrence only (count=1)
+                    # If more precise matching is needed, consider using regex with word boundaries
                     replacement = f'<span data-page="{page}" data-bbox="[{bbox_str}]">{text}</span>'
                     html = html.replace(text, replacement, 1)
         
