@@ -228,6 +228,7 @@ class ReportGenerationStep(IPipelineStep):
             evidence = context.get("evidence")
             arbiter_feedback = context.get("arbiter_feedback", {})
             highlighted_doc_path = context.get("highlighted_doc_path")
+            bbox_metadata = context.get("bbox_metadata", [])
             
             # Create HTML generator
             html_gen = BilingualHTMLGenerator(
@@ -238,14 +239,14 @@ class ReportGenerationStep(IPipelineStep):
             evidence_summary = {
                 "arbiter_score": arbiter_feedback.get("overall_score", 0),
                 "ps3_criteria_met": evidence.ps3_criteria_met if evidence else False,
-                "evidence_level": evidence.strength.value if evidence and hasattr(evidence, "strength") else "Unknown",
+                "evidence_strength": evidence.strength.value if evidence and hasattr(evidence, "strength") else "Unknown",
                 "odds_path": evidence.odds_path_value if evidence else None,
-                "p1_source": evidence.p1_source_location if evidence else None,
-                "p2_source": evidence.p2_source_location if evidence else None,
-                "control_count": evidence.control_variants_count if evidence else 0,
+                "p1_source_location": evidence.p1_source_location if evidence else None,
+                "p2_source_location": evidence.p2_source_location if evidence else None,
+                "control_variants_count": evidence.control_variants_count if evidence else 0,
             }
             
-            # Generate HTML
+            # Generate HTML with bbox metadata
             html_content = html_gen.generate_bilingual_html(
                 original_markdown=raw_text,
                 english_markdown=english_md,
@@ -253,6 +254,7 @@ class ReportGenerationStep(IPipelineStep):
                 highlighted_english_markdown=english_md,
                 evidence_summary=evidence_summary,
                 title=f"ACMG PS3 Evidence - {pdf_stem}",
+                bbox_metadata=bbox_metadata,
             )
             
             # Save HTML
