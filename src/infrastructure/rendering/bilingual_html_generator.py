@@ -2,6 +2,8 @@
 
 from typing import Dict, List, Optional, Any
 from html import escape
+import markdown
+import re
 
 
 class BilingualHTMLGenerator:
@@ -392,26 +394,26 @@ class BilingualHTMLGenerator:
 
     @staticmethod
     def _markdown_to_html(markdown_text: str, bbox_metadata: Optional[List[Dict[str, Any]]] = None) -> str:
-        """Simple markdown to HTML conversion with optional bbox attributes.
+        """Convert markdown to HTML with proper parsing, preserving existing HTML tags.
+        
+        This function:
+        1. Uses the markdown library for proper markdown parsing (handles unbalanced syntax)
+        2. Preserves existing HTML tags like <mark> (doesn't escape them)
+        3. Injects data-bbox attributes for coordinate-level tracing
         
         Args:
-            markdown_text: Markdown text to convert
+            markdown_text: Markdown text to convert (may already contain HTML tags like <mark>)
             bbox_metadata: Optional list of bbox metadata dicts with keys: page, bbox, text
             
         Returns:
             HTML string with data-bbox attributes where applicable
         """
-        html = escape(markdown_text)
+        # Use markdown library for proper conversion
+        # This handles unbalanced markdown syntax safely and preserves existing HTML
+        md = markdown.Markdown(extensions=['extra', 'nl2br'])
+        html = md.convert(markdown_text)
         
-        # Convert markdown heading levels
-        html = html.replace("## ", "<h2>").replace("##", "</h2>")
-        html = html.replace("### ", "<h3>").replace("###", "</h3>")
-        html = html.replace("#### ", "<h4>").replace("####", "</h4>")
-        
-        # Convert bold and italic
-        html = html.replace("**", "<strong>").replace("*", "<em>")
-        
-        # If bbox metadata is available, wrap text segments with data-bbox attributes
+        # If bbox metadata is available, inject data-bbox attributes
         if bbox_metadata:
             # Create a mapping of text to bbox for quick lookup
             text_to_bbox = {}
@@ -420,21 +422,15 @@ class BilingualHTMLGenerator:
                 if text and len(text) > 10:  # Only index significant text fragments
                     text_to_bbox[text] = item
             
-            # Add data-bbox attributes to text segments
-            # For simplicity, we'll wrap each paragraph with bbox data if matched
-            # In production, this would be more sophisticated with precise text matching
+            # Inject data-bbox attributes by wrapping matched text in spans
             for text, item in text_to_bbox.items():
                 page = item.get("page", 0)
                 bbox = item.get("bbox", [])
-                if text in markdown_text and bbox:
+                if text and bbox and text in html:
                     bbox_str = ",".join(map(str, bbox))
-                    # Wrap matched text with span containing data-bbox
-                    replacement = f'<span data-page="{page}" data-bbox="[{bbox_str}]">{escape(text)}</span>'
-                    html = html.replace(escape(text), replacement, 1)
-        
-        # Preserve marks (already in <mark> tags from highlighting)
-        # Convert line breaks
-        html = html.replace("\n\n", "</p><p>").replace("\n", "<br>")
-        html = f"<p>{html}</p>"
+                    # Create a span with data-bbox attributes around the text
+                    # Simple text replacement - wrap the first occurrence
+                    replacement = f'<span data-page="{page}" data-bbox="[{bbox_str}]">{text}</span>'
+                    html = html.replace(text, replacement, 1)
         
         return html

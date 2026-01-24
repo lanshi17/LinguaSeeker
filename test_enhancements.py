@@ -51,16 +51,16 @@ def test_enhanced_features():
         assert "bbox_metadata" in params, "bbox_metadata parameter not found"
         print("✓ BilingualHTMLGenerator accepts bbox_metadata parameter")
         
-        # Test with sample data
+        # Test with sample data - use text that matches the markdown content
         sample_bbox = [
-            {"page": 1, "bbox": [100, 200, 300, 400], "text": "Sample text for testing"}
+            {"page": 1, "bbox": [100, 200, 300, 400], "text": "This is a longer test sentence"}
         ]
         
         html = gen.generate_bilingual_html(
-            original_markdown="测试文本",
-            english_markdown="Test text",
-            highlighted_original_markdown="测试文本",
-            highlighted_english_markdown="Test text",
+            original_markdown="This is a longer test sentence",
+            english_markdown="This is a longer test sentence",
+            highlighted_original_markdown="This is a longer test sentence",
+            highlighted_english_markdown="This is a longer test sentence",
             evidence_summary=None,
             bbox_metadata=sample_bbox
         )
