@@ -31,6 +31,7 @@ class BilingualHTMLGenerator:
         highlighted_english_markdown: str,
         evidence_summary: Optional[Dict[str, Any]] = None,
         title: str = "ACMG PS3 Evidence Extraction Report",
+        bbox_metadata: Optional[List[Dict[str, Any]]] = None,
     ) -> str:
         """Generate bilingual HTML report with side-by-side layout.
         
@@ -41,6 +42,7 @@ class BilingualHTMLGenerator:
             highlighted_english_markdown: Highlighted version of English
             evidence_summary: Evidence extraction summary JSON
             title: HTML page title
+            bbox_metadata: Optional bbox metadata to add data-bbox attributes
             
         Returns:
             Complete HTML document string
@@ -50,8 +52,8 @@ class BilingualHTMLGenerator:
         sidebar_html = self._build_evidence_sidebar(evidence_summary) if evidence_summary else ""
         
         # Convert markdown to HTML (simple conversion)
-        original_html = self._markdown_to_html(highlighted_original_markdown)
-        english_html = self._markdown_to_html(highlighted_english_markdown)
+        original_html = self._markdown_to_html(highlighted_original_markdown, bbox_metadata)
+        english_html = self._markdown_to_html(highlighted_english_markdown, bbox_metadata)
         
         html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -389,8 +391,16 @@ class BilingualHTMLGenerator:
         return sidebar_html
 
     @staticmethod
-    def _markdown_to_html(markdown_text: str) -> str:
-        """Simple markdown to HTML conversion."""
+    def _markdown_to_html(markdown_text: str, bbox_metadata: Optional[List[Dict[str, Any]]] = None) -> str:
+        """Simple markdown to HTML conversion with optional bbox attributes.
+        
+        Args:
+            markdown_text: Markdown text to convert
+            bbox_metadata: Optional list of bbox metadata dicts with keys: page, bbox, text
+            
+        Returns:
+            HTML string with data-bbox attributes where applicable
+        """
         html = escape(markdown_text)
         
         # Convert markdown heading levels
@@ -400,6 +410,27 @@ class BilingualHTMLGenerator:
         
         # Convert bold and italic
         html = html.replace("**", "<strong>").replace("*", "<em>")
+        
+        # If bbox metadata is available, wrap text segments with data-bbox attributes
+        if bbox_metadata:
+            # Create a mapping of text to bbox for quick lookup
+            text_to_bbox = {}
+            for item in bbox_metadata:
+                text = item.get("text", "").strip()
+                if text and len(text) > 10:  # Only index significant text fragments
+                    text_to_bbox[text] = item
+            
+            # Add data-bbox attributes to text segments
+            # For simplicity, we'll wrap each paragraph with bbox data if matched
+            # In production, this would be more sophisticated with precise text matching
+            for text, item in text_to_bbox.items():
+                page = item.get("page", 0)
+                bbox = item.get("bbox", [])
+                if text in markdown_text and bbox:
+                    bbox_str = ",".join(map(str, bbox))
+                    # Wrap matched text with span containing data-bbox
+                    replacement = f'<span data-page="{page}" data-bbox="[{bbox_str}]">{escape(text)}</span>'
+                    html = html.replace(escape(text), replacement, 1)
         
         # Preserve marks (already in <mark> tags from highlighting)
         # Convert line breaks
