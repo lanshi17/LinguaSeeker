@@ -74,8 +74,10 @@ Examples:
         evidence_count = len(evidence_obj.get('findings', [])) if isinstance(evidence_obj, dict) else len(evidence_obj)
         print(f"Evidence Count: {evidence_count}")
         print(f"\nOutput Files:")
-        print(f"  - Markdown: {result['output_markdown']}")
-        print(f"  - Highlight: {result['highlight_markdown']}")
+        if result.get('output_html'):
+            print(f"  - 📄 HTML Report: {result['output_html']}")
+        elif result.get('html_report_path'):
+            print(f"  - 📊 HTML Report: {result['html_report_path']}")
         if result.get('evidence_json_path'):
             print(f"  - Evidence JSON: {result['evidence_json_path']}")
         if result.get('final_structured_path'):

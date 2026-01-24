@@ -33,14 +33,14 @@ class QwenOCRService:
             base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
         )
         
-    def pdf_to_markdown(self, pdf_path: str) -> str:
-        """Convert PDF to markdown using OCR with batch processing.
+    def pdf_to_html(self, pdf_path: str) -> str:
+        """Convert PDF to HTML using OCR with batch processing.
         
         Args:
             pdf_path: Path to PDF file
             
         Returns:
-            Markdown formatted text
+            HTML formatted text
             
         Raises:
             ParsingException: If OCR fails
@@ -102,10 +102,10 @@ class QwenOCRService:
                 "image_url": {"url": img_data_uri}
             })
         
-        # Add text prompt asking for document parsing
+        # Add text prompt asking for HTML format output
         image_contents.append({
             "type": "text",
-            "text": "请对这个文档图片进行OCR识别，保持原始格式和结构，使用LaTeX格式输出数学公式和表格。请完整识别所有文本内容。"
+            "text": "请对这个文档图片进行OCR识别，输出为HTML格式。要求：\n1. 使用HTML标签保持原始格式和结构\n2. 使用<p>标签分段\n3. 使用<h1>, <h2>等标签标记标题\n4. 使用<table>标签输出表格\n5. 数学公式使用LaTeX格式并包裹在<span class='math'>标签中\n6. 保持换行和缩进\n7. 输出完整的可读的HTML片段，不需要<!DOCTYPE>和<html>标签\n请完整识别所有文本内容。"
         })
         
         # Prepare request using OpenAI-compatible format

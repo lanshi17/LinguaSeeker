@@ -19,8 +19,7 @@ class ProcessPDFResponse:
         detected_language: str,
         arbiter_score: Optional[float],
         evidence: Optional[Dict[str, Any]],
-        output_markdown: str,
-        highlight_markdown: str,
+        output_html: str,
         evidence_json_path: Optional[str] = None,
         final_structured_path: Optional[str] = None,
         bbox_metadata_path: Optional[str] = None,
@@ -29,8 +28,7 @@ class ProcessPDFResponse:
         self.detected_language = detected_language
         self.arbiter_score = arbiter_score
         self.evidence = evidence
-        self.output_markdown = output_markdown
-        self.highlight_markdown = highlight_markdown
+        self.output_html = output_html
         self.evidence_json_path = evidence_json_path
         self.final_structured_path = final_structured_path
         self.bbox_metadata_path = bbox_metadata_path
@@ -41,8 +39,7 @@ class ProcessPDFResponse:
             "detected_language": self.detected_language,
             "arbiter_score": self.arbiter_score,
             "evidence": self.evidence,
-            "output_markdown": self.output_markdown,
-            "highlight_markdown": self.highlight_markdown,
+            "output_html": self.output_html,
             "evidence_json_path": self.evidence_json_path,
             "final_structured_path": self.final_structured_path,
             "bbox_metadata_path": self.bbox_metadata_path,

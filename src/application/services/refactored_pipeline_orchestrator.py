@@ -124,7 +124,6 @@ class RefactoredPipelineOrchestrator:
                 "raw_text",
                 "bbox_metadata",
                 "page_count",
-                "translated_doc_path",
                 "bbox_metadata_path",
             ],
             "translation": [
@@ -141,7 +140,6 @@ class RefactoredPipelineOrchestrator:
             ],
             "highlighting": [
                 "highlighted_markdown",
-                "highlighted_doc_path",
                 "document",
             ],
             "report_generation": [
@@ -201,8 +199,7 @@ class RefactoredPipelineOrchestrator:
             detected_language=detected_language.value if detected_language else "unknown",
             arbiter_score=arbiter_score,
             evidence=final_payload.get("stages", {}).get("evidence_processing", {}),
-            output_markdown=self.context.get("translated_doc_path", ""),
-            highlight_markdown=self.context.get("highlighted_doc_path", ""),
+            output_html=self.context.get("html_report_path", ""),
             evidence_json_path=self.context.get("evidence_json_path"),
             final_structured_path=final_payload.get("final_structured_path"),
             bbox_metadata_path=self.context.get("bbox_metadata_path"),

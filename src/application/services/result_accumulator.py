@@ -86,7 +86,6 @@ class ResultAccumulator(IResultAccumulator):
             pdf_data = self._step_results["pdf_processing"]
             critical.update({
                 "detected_language": pdf_data.get("detected_language"),
-                "output_markdown": pdf_data.get("translated_doc_path"),
                 "bbox_metadata_path": pdf_data.get("bbox_metadata_path"),
             })
         
@@ -98,14 +97,11 @@ class ResultAccumulator(IResultAccumulator):
                 "evidence_json_path": evidence_data.get("evidence_json_path"),
             })
         
-        if "highlighting" in self._step_results:
-            highlight_data = self._step_results["highlighting"]
-            critical["highlight_markdown"] = highlight_data.get("highlighted_doc_path")
-        
         if "report_generation" in self._step_results:
             report_data = self._step_results["report_generation"]
             critical.update({
                 "final_structured_path": report_data.get("structured_json_path"),
+                "output_html": report_data.get("html_report_path"),
                 "html_report_path": report_data.get("html_report_path"),
             })
         

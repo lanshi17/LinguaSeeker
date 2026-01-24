@@ -186,8 +186,7 @@ class PayloadBuilder:
             Output paths payload section
         """
         return {
-            "output_markdown": context_dict.get("translated_doc_path"),
-            "highlight_markdown": context_dict.get("highlighted_doc_path"),
+            "output_html": context_dict.get("html_report_path"),
             "evidence_json_path": context_dict.get("evidence_json_path"),
             "final_structured_path": context_dict.get("final_structured_path"),
             "bbox_metadata_path": context_dict.get("bbox_metadata_path"),

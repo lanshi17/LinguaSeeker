@@ -1,0 +1,16 @@
+{
+  "findings": [],
+  "p1": 0.1,
+  "p2": 0.5,
+  "odds_path": 9.0,
+  "strength": "moderate",
+  "rationale": "The functional assay method described (Southern blotting) is inappropriate for assessing LDL receptor function as it is a genotyping tool, not a functional assay. No experimental controls (wild-type or pathogenic) or replicates are documented.",
+  "experimental_details": "Southern blotting was used to identify deletions in the LDL receptor gene. No functional assays measuring LDL receptor activity (e.g., LDL uptake assays) were performed.",
+  "p1_source_location": "P1/P2 data not explicitly reported",
+  "p2_source_location": "P1/P2 data not explicitly reported",
+  "ps3_criteria_met": false,
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "Functional assay method is inappropriate—Southern blotting is a genotyping tool, not a functional assay. No experimental controls (wild-type, pathogenic, or positive controls) are present. No replicates (biological or technical) are documented.",
+  "arbiter_score": 15.0
+}

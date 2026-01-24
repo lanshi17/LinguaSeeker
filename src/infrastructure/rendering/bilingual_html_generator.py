@@ -2,7 +2,6 @@
 
 from typing import Dict, List, Optional, Any
 from html import escape
-import markdown
 import re
 
 
@@ -394,44 +393,69 @@ class BilingualHTMLGenerator:
 
     @staticmethod
     def _markdown_to_html(markdown_text: str, bbox_metadata: Optional[List[Dict[str, Any]]] = None) -> str:
-        """Convert markdown to HTML with proper parsing, preserving existing HTML tags.
+        """Convert text to HTML directly without markdown processing.
         
-        This function:
-        1. Uses the markdown library for proper markdown parsing (handles unbalanced syntax)
-        2. Preserves existing HTML tags like <mark> (doesn't escape them)
-        3. Injects data-bbox attributes for coordinate-level tracing
+        Skips markdown library entirely to avoid encoding issues with multi-language text.
+        Performs simple text-to-HTML conversion with line break handling.
         
         Args:
-            markdown_text: Markdown text to convert (may already contain HTML tags like <mark>)
+            markdown_text: Raw text to convert (may contain line breaks and marked text)
             bbox_metadata: Optional list of bbox metadata dicts with keys: page, bbox, text
             
         Returns:
-            HTML string with data-bbox attributes where applicable
+            HTML string with proper encoding and data-bbox attributes where applicable
         """
-        # Use markdown library for proper conversion
-        # This handles unbalanced markdown syntax safely and preserves existing HTML
-        md = markdown.Markdown(extensions=['extra', 'nl2br'])
-        html = md.convert(markdown_text)
+        if not markdown_text:
+            return ""
         
-        # If bbox metadata is available, inject data-bbox attributes
+        # Ensure text is properly UTF-8 encoded string
+        if isinstance(markdown_text, bytes):
+            markdown_text = markdown_text.decode('utf-8', errors='replace')
+        
+        # Directly convert text to HTML without markdown library
+        # 1. Escape HTML special characters
+        html = escape(markdown_text)
+        
+        # 2. Preserve existing <mark> tags that were added by highlighting step
+        # Replace escaped mark tags back to proper HTML tags
+        html = html.replace('&lt;mark&gt;', '<mark>')
+        html = html.replace('&lt;/mark&gt;', '</mark>')
+        
+        # 3. Convert line breaks to HTML <br> tags
+        html = html.replace('\n', '<br />\n')
+        
+        # 4. Convert multiple spaces to preserve formatting (optional but useful)
+        # Replace "  " (two spaces) with &nbsp;&nbsp; to preserve whitespace
+        # This helps with indented content
+        lines = html.split('<br />')
+        formatted_lines = []
+        for line in lines:
+            # Preserve leading spaces as non-breaking spaces for indentation
+            stripped = line.lstrip(' ')
+            leading_spaces = len(line) - len(stripped)
+            if leading_spaces > 0:
+                line = '&nbsp;' * leading_spaces + stripped
+            formatted_lines.append(line)
+        html = '<br />\n'.join(formatted_lines)
+        
+        # 5. Inject data-bbox attributes if available
         if bbox_metadata:
-            # Create a mapping of text to bbox for quick lookup
-            text_to_bbox = {}
             for item in bbox_metadata:
                 text = item.get("text", "").strip()
-                if text and len(text) > 10:  # Only index significant text fragments
-                    text_to_bbox[text] = item
-            
-            # Inject data-bbox attributes by wrapping matched text in spans
-            for text, item in text_to_bbox.items():
+                if not text or len(text) < 3:
+                    continue
+                    
                 page = item.get("page", 0)
                 bbox = item.get("bbox", [])
-                if text and bbox and text in html:
+                if not bbox:
+                    continue
+                
+                # Escape the text for safe regex matching
+                escaped_text = escape(text)
+                if escaped_text in html:
                     bbox_str = ",".join(map(str, bbox))
-                    # Create a span with data-bbox attributes around the text
-                    # Note: Uses simple replacement of first occurrence only (count=1)
-                    # If more precise matching is needed, consider using regex with word boundaries
-                    replacement = f'<span data-page="{page}" data-bbox="[{bbox_str}]">{text}</span>'
-                    html = html.replace(text, replacement, 1)
+                    # Wrap matched text in span with bbox attributes
+                    replacement = f'<span data-page="{page}" data-bbox="[{bbox_str}]">{escaped_text}</span>'
+                    html = html.replace(escaped_text, replacement, 1)
         
         return html

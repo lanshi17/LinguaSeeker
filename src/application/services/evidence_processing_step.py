@@ -25,7 +25,7 @@ class EvidenceProcessingStep(IPipelineStep):
     - Manage P1/P2 secondary search
     
     Input context keys:
-    - english_markdown: Translated content
+    - english_html: Translated HTML content
     - out_dir: Output directory
     - bbox_metadata: Optional bbox metadata
     
@@ -77,8 +77,8 @@ class EvidenceProcessingStep(IPipelineStep):
         Returns:
             True if prerequisites met
         """
-        if not context.has("english_markdown"):
-            self.logger.error("Missing english_markdown in context")
+        if not context.has("english_html"):
+            self.logger.error("Missing english_html in context")
             return False
         
         if not context.has("out_dir"):
@@ -97,7 +97,7 @@ class EvidenceProcessingStep(IPipelineStep):
             RuntimeError: If execution fails
         """
         try:
-            english_markdown = context.get("english_markdown")
+            english_html = context.get("english_html")
             out_dir = context.get("out_dir")
             pdf_path = context.get("pdf_path", "")
             bbox_metadata = context.get("bbox_metadata", [])
@@ -109,7 +109,7 @@ class EvidenceProcessingStep(IPipelineStep):
             
             # 2. Iteratively extract and refine evidence
             evidence, arbiter_feedback, iteration_count = self._extract_with_refinement(
-                english_markdown,
+                english_html,
                 kb_context,
                 pdf_path,
                 bbox_metadata

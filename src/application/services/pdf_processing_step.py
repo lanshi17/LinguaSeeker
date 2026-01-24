@@ -20,12 +20,12 @@ class PDFProcessingStep(IPipelineStep):
     - Persist raw metadata
     
     Output context keys:
-    - raw_text: Extracted text content
+    - raw_html: Extracted HTML content
     - detected_language: Detected language
     - bbox_metadata: Bounding box metadata (optional)
     - page_count: Number of pages
-    - translated_doc_path: Path where translated doc will be saved
     - bbox_metadata_path: Path for bbox metadata file
+    - original_html_path: Path to saved original HTML file
     """
 
     def __init__(
@@ -100,27 +100,30 @@ class PDFProcessingStep(IPipelineStep):
             
             # Setup output paths
             pdf_stem = Path(pdf_path).stem
-            translated_doc_path = Path(out_dir) / f"{pdf_stem}_en.md"
+            original_html_path = Path(out_dir) / f"{pdf_stem}_original.html"
             bbox_metadata_path = Path(out_dir) / f"{pdf_stem}_bbox.json"
             
-            # 1. Extract text
-            self.logger.info("Extracting text from PDF...")
-            raw_text = self.pdf_repo.extract_text(pdf_path)
-            bbox_metadata = []
+            # Always use extract_html_with_bbox which includes OCR and encoding fixes
+            self.logger.info("Extracting HTML and bbox metadata from PDF with OCR...")
+            raw_html, bbox_metadata = self.pdf_repo.extract_html_with_bbox(pdf_path)
             
-            # 2. Extract bbox metadata if needed
-            if not raw_text.strip():
-                self.logger.info("No extracted text; using OCR with bbox...")
-                raw_text, bbox_metadata = self.pdf_repo.extract_text_with_bbox(pdf_path)
-            else:
-                # Even when text is available, collect bbox metadata for highlighting
+            # Fallback: If OCR yielded very little, try PyPDFLoader as text and convert to HTML
+            if not raw_html or len(raw_html.strip()) < 100:
+                self.logger.info("OCR extraction yielded minimal results; trying PyPDFLoader...")
                 try:
-                    _, bbox_metadata = self.pdf_repo.extract_text_with_bbox(pdf_path)
+                    pdf_text = self.pdf_repo.extract_text(pdf_path)
+                    if pdf_text and len(pdf_text.strip()) > len(raw_html.strip()):
+                        # Convert plain text to simple HTML
+                        from html import escape
+                        raw_html = "<p>" + escape(pdf_text).replace("\n\n", "</p>\n<p>").replace("\n", "<br>\n") + "</p>"
                 except Exception as e:
-                    self.logger.warning(f"BBox extraction failed: {e}")
-                    bbox_metadata = []
+                    self.logger.warning(f"PyPDFLoader fallback failed: {e}")
             
-            # 3. Persist bbox metadata
+            # 3. Save original HTML file
+            original_html_path.write_text(raw_html, encoding="utf-8")
+            self.logger.info(f"Original HTML saved: {original_html_path}")
+            
+            # 4. Persist bbox metadata
             if bbox_metadata:
                 bbox_metadata_path.write_text(
                     json.dumps(bbox_metadata, ensure_ascii=False, indent=2),
@@ -128,25 +131,25 @@ class PDFProcessingStep(IPipelineStep):
                 )
                 self.logger.info(f"BBox metadata saved: {bbox_metadata_path}")
             
-            # 4. Detect language
+            # 5. Detect language
             self.logger.info("Detecting document language...")
             lang = self.lang_detector.detect(pdf_path)
             
-            # 5. Get page count
+            # 6. Get page count
             page_count = self.pdf_repo.get_page_count(pdf_path)
             
-            # 6. Update context
+            # 7. Update context
             context.update({
-                "raw_text": raw_text,
+                "raw_html": raw_html,
                 "detected_language": lang,
                 "bbox_metadata": bbox_metadata,
                 "page_count": page_count,
-                "translated_doc_path": str(translated_doc_path),
                 "bbox_metadata_path": str(bbox_metadata_path) if bbox_metadata else None,
+                "original_html_path": str(original_html_path),
             })
             
             self.logger.info(
-                f"PDF processing complete: {len(raw_text)} chars, "
+                f"PDF processing complete: {len(raw_html)} chars, "
                 f"language={lang.value if lang else 'unknown'}, "
                 f"pages={page_count}"
             )
@@ -174,7 +177,8 @@ class PDFProcessingStep(IPipelineStep):
                 self.logger.warning(f"Rollback cleanup failed: {e}")
         
         # Clear context
-        context.remove("raw_text")
+        context.remove("raw_html")
         context.remove("detected_language")
         context.remove("bbox_metadata")
         context.remove("page_count")
+        context.remove("original_html_path")

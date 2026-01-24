@@ -13,18 +13,18 @@ class HighlightingStep(IPipelineStep):
     Responsibilities:
     - Create Document entity with metadata
     - Apply intelligent highlighting using bbox
-    - Persist highlighted markdown
     
     Input context keys:
-    - english_markdown: Content to highlight
+    - english_html: HTML content to highlight
     - detected_language: Source language
     - evidence: Extracted evidence object
     - bbox_metadata: BBox metadata for smart matching
     - pdf_path: Original PDF path
+    - out_dir: Output directory
     
     Output context keys:
-    - highlighted_markdown: Highlighted content
-    - highlighted_doc_path: Path to saved highlighted doc
+    - highlighted_json_path: Path to saved highlighting JSON
+    - document: Document entity with highlighting applied
     """
 
     def __init__(self):
@@ -50,8 +50,8 @@ class HighlightingStep(IPipelineStep):
         Returns:
             True if prerequisites met
         """
-        if not context.has("english_markdown"):
-            self.logger.error("Missing english_markdown in context")
+        if not context.has("english_html"):
+            self.logger.error("Missing english_html in context")
             return False
         
         if not context.has("detected_language"):
@@ -70,12 +70,12 @@ class HighlightingStep(IPipelineStep):
             RuntimeError: If execution fails
         """
         try:
-            english_markdown = context.get("english_markdown")
+            english_html = context.get("english_html")
             detected_language = context.get("detected_language")
             evidence = context.get("evidence")
             bbox_metadata = context.get("bbox_metadata", [])
             pdf_path = context.get("pdf_path", "")
-            translated_doc_path = context.get("translated_doc_path")
+            out_dir = context.get("out_dir")
             
             self.logger.info("Highlighting evidence in document...")
             
@@ -83,7 +83,7 @@ class HighlightingStep(IPipelineStep):
             doc = Document(
                 original_path=pdf_path,
                 detected_language=detected_language,
-                english_content=english_markdown,
+                english_content=english_html,
                 bbox_fragments=bbox_metadata
             )
             
@@ -93,21 +93,27 @@ class HighlightingStep(IPipelineStep):
             # Apply highlighting
             doc.highlight_with_bbox(spans_to_highlight)
             
-            # Persist highlighted content
-            highlighted_doc_path = None
-            if translated_doc_path:
-                highlight_path = str(translated_doc_path).replace("_en.md", "_en_highlight.md")
-                Path(highlight_path).write_text(
-                    doc.highlighted_content or doc.english_content,
-                    encoding="utf-8"
-                )
-                highlighted_doc_path = highlight_path
-                self.logger.info(f"Highlighted document saved: {highlight_path}")
+            # Save highlighting JSON
+            from pathlib import Path
+            import json
+            pdf_stem = Path(pdf_path).stem if pdf_path else "output"
+            highlighted_json_path = Path(out_dir) / f"{pdf_stem}_highlighting.json"
+            
+            highlighting_data = {
+                "spans_highlighted": len(spans_to_highlight),
+                "highlighted_spans": spans_to_highlight,
+                "bbox_matched": len(doc.bbox_fragments) if doc.bbox_fragments else 0
+            }
+            
+            highlighted_json_path.write_text(
+                json.dumps(highlighting_data, ensure_ascii=False, indent=2),
+                encoding="utf-8"
+            )
+            self.logger.info(f"Highlighting JSON saved: {highlighted_json_path}")
             
             # Update context
             context.update({
-                "highlighted_markdown": doc.highlighted_content or doc.english_content,
-                "highlighted_doc_path": highlighted_doc_path,
+                "highlighted_json_path": str(highlighted_json_path),
                 "document": doc,
             })
             
@@ -128,16 +134,7 @@ class HighlightingStep(IPipelineStep):
         Args:
             context: Pipeline context
         """
-        highlighted_path = context.get("highlighted_doc_path")
-        if highlighted_path and Path(highlighted_path).exists():
-            try:
-                Path(highlighted_path).unlink()
-                self.logger.info(f"Rolled back: {highlighted_path}")
-            except Exception as e:
-                self.logger.warning(f"Rollback cleanup failed: {e}")
-        
         context.remove("highlighted_markdown")
-        context.remove("highlighted_doc_path")
         context.remove("document")
 
     @staticmethod

@@ -63,6 +63,10 @@ class PDFRepositoryImpl(PDFRepository):
                 text = data["text"][i].strip()
                 if not text:
                     continue
+                
+                # Fix encoding issues - especially for CJK text from OCR
+                text = self._fix_ocr_encoding(text)
+                
                 x, y, w, h = data["left"][i], data["top"][i], data["width"][i], data["height"][i]
                 fragment = {
                     "page": idx,
@@ -78,6 +82,100 @@ class PDFRepositoryImpl(PDFRepository):
             md_pages.append(page_md)
 
         return "\n\n---\n\n".join(md_pages), fragments
+
+    @staticmethod
+    def _fix_ocr_encoding(text: str) -> str:
+        """Fix encoding issues in OCR output, especially for CJK text.
+        
+        Handles mojibake where CP932/Shift_JIS bytes were misinterpreted as UTF-8.
+        
+        Args:
+            text: Potentially garbled text from OCR
+            
+        Returns:
+            Properly encoded UTF-8 text
+        """
+        if not text:
+            return text
+        
+        # Check if text is bytes (shouldn't happen but handle it)
+        if isinstance(text, bytes):
+            try:
+                return text.decode('utf-8', errors='replace')
+            except:
+                try:
+                    return text.decode('cp932', errors='replace')
+                except:
+                    return str(text)
+        
+        # Check if text appears to be mojibake (CP932 bytes misinterpreted as Latin-1/UTF-8)
+        # Mojibake typically has many high-byte characters in the 0x80-0xFF range
+        has_high_bytes = any(0x80 <= ord(c) <= 0xFF for c in text)
+        has_cjk = any('\u4e00' <= c <= '\u9fff' or '\u3040' <= c <= '\u309f' or '\u30a0' <= c <= '\u30ff' for c in text)
+        
+        if has_high_bytes and not has_cjk:
+            # Likely mojibake - try to fix it
+            try:
+                # Convert to bytes using Latin-1 (which preserves the byte values)
+                # then decode as CP932 (Shift_JIS for Japanese)
+                fixed_text = text.encode('latin-1').decode('cp932', errors='replace')
+                # Verify it looks better now (has some CJK characters)
+                if any('\u4e00' <= c <= '\u9fff' or '\u3040' <= c <= '\u309f' or '\u30a0' <= c <= '\u30ff' for c in fixed_text):
+                    return fixed_text
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                pass
+        
+        return text
+
+    def extract_html_with_bbox(self, pdf_path: str) -> tuple[str, list[dict]]:
+        """Extract HTML using OCR-LLM while capturing bbox metadata.
+
+        Uses Qwen-VL-OCR to extract HTML formatted content and pytesseract for bbox.
+        
+        Returns:
+            Tuple of (HTML content, bbox metadata list)
+        """
+        # Use OCR-LLM to get HTML content
+        if self.ocr_service:
+            html_content = self.ocr_service.pdf_to_html(pdf_path)
+        else:
+            # Fallback to basic text extraction if no OCR service
+            text = self.extract_text(pdf_path)
+            # Wrap in basic HTML tags
+            html_content = f"<div>{text.replace(chr(10), '<br />')}</div>"
+        
+        # Get bbox metadata using pytesseract
+        images = convert_from_path(pdf_path)
+        fragments = []
+        fragment_id = 0
+
+        lang_hint = "eng"
+        try:
+            lang_hint = self._map_lang_to_ocr_code(self.detect_language(pdf_path))
+        except Exception:
+            lang_hint = "eng"
+
+        for idx, page in enumerate(images, 1):
+            data = pytesseract.image_to_data(page, lang=lang_hint, output_type=pytesseract.Output.DICT)
+            for i in range(len(data["text"])):
+                text = data["text"][i].strip()
+                if not text:
+                    continue
+                
+                # Fix encoding issues
+                text = self._fix_ocr_encoding(text)
+                
+                x, y, w, h = data["left"][i], data["top"][i], data["width"][i], data["height"][i]
+                fragment = {
+                    "page": idx,
+                    "bbox": [x, y, x + w, y + h],
+                    "text": text,
+                    "fragment_id": fragment_id,
+                }
+                fragments.append(fragment)
+                fragment_id += 1
+
+        return html_content, fragments
 
     def detect_language(self, pdf_path: str) -> Language:
         text = self.extract_text(pdf_path)

@@ -41,8 +41,7 @@ def main():
         print("=" * 80)
         print(f"✓ 检测语言: {result['detected_language']}")
         print(f"✓ 仲裁评分: {result.get('arbiter_score', 0):.1f}/100")
-        print(f"✓ 输出Markdown: {result['output_markdown']}")
-        print(f"✓ 输出高亮: {result['highlight_markdown']}")
+        print(f"✓ 输出HTML: {result.get('output_html') or result.get('html_report_path')}")
         print(f"✓ 输出JSON: {result['final_structured_path']}")
         print("=" * 80 + "\n")
         

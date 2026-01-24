@@ -22,8 +22,6 @@ class PipelineState:
         self.arbiter_score: Optional[float] = None
         self.arbiter_feedback: Optional[Dict[str, Any]] = None
         self.bbox_metadata: Optional[list] = None
-        self.translated_doc_path: Optional[str] = None
-        self.highlighted_doc_path: Optional[str] = None
         self.evidence_json_path: Optional[str] = None
         self.iteration: int = 0
         # P2: Figure and Table Detection
@@ -41,8 +39,6 @@ class PipelineState:
             "bbox_metadata": self.bbox_metadata,
             "evidence_json": self.evidence_json,
             "highlighted_markdown": self.highlighted_markdown,
-            "translated_doc_path": self.translated_doc_path,
-            "highlighted_doc_path": self.highlighted_doc_path,
             "evidence_json_path": self.evidence_json_path,
             "arbiter_score": self.arbiter_score,
             "arbiter_feedback": self.arbiter_feedback,

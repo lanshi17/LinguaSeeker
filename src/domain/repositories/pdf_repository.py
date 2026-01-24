@@ -32,6 +32,18 @@ class PDFRepository(ABC):
         """
 
     @abstractmethod
+    def extract_html_with_bbox(self, pdf_path: str) -> tuple[str, list[dict]]:
+        """Extract HTML plus Text-with-Bbox metadata using OCR.
+
+        Args:
+            pdf_path: Path to PDF file
+
+        Returns:
+            Tuple of (HTML content, bbox metadata list). Bbox metadata should include
+            page index, bounding box coordinates, and raw text for each fragment.
+        """
+
+    @abstractmethod
     def detect_language(self, pdf_path: str) -> Language:
         """Detect language from PDF.
 
