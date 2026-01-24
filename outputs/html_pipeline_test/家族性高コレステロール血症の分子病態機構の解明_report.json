@@ -1,0 +1,108 @@
+{
+  "detected_language": "en",
+  "original_html_path": "outputs/html_pipeline_test/家族性高コレステロール血症の分子病態機構の解明_original.html",
+  "english_html_path": "outputs/html_pipeline_test/家族性高コレステロール血症の分子病態機構の解明_english.html",
+  "bbox_metadata_path": "outputs/html_pipeline_test/家族性高コレステロール血症の分子病態機構の解明_bbox.json",
+  "evidence_json_path": "outputs/html_pipeline_test/家族性高コレステロール血症の分子病態機構の解明_evidence.json",
+  "highlighted_json_path": "outputs/html_pipeline_test/家族性高コレステロール血症の分子病態機構の解明_highlighting.json",
+  "odds_path": 998.9999999999991,
+  "evidence_strength": "very-strong",
+  "arbiter_score": 62.0,
+  "ps3_criteria_met": false,
+  "extracted_experimental_details": "LDL was isolated and fluorescently labeled from blood samples of: (1) FH proband homozygous for p.(Pro955Ser), (2) child heterozygous for p.(Pro955Ser), (3) patient heterozygous for known pathogenic p.(Arg3527Gln), and (4) healthy individual. Each labeled LDL was added to cultured hepatocytes, and LDL uptake was measured by flow cytometry after 30-min incubation at 37°C. Mean fluorescence intensity was measured with biological replicates (n=3).",
+  "p1_source_location": "P1 data not explicitly reported; inferred from Figure 3 description: 1 pathogenic control variant (p.Arg3527Gln) out of 2 total control variants (healthy wild-type + pathogenic control)",
+  "p2_source_location": "P2 data not explicitly reported; inferred from Figure 3 results: test variant (homozygous p.Pro955Ser) shows identical functional impairment (44% of wild-type) to known pathogenic control variant (44% of wild-type)",
+  "p1_bbox": {
+    "page": 1,
+    "bbox": [
+      288,
+      122,
+      296,
+      137
+    ],
+    "text": "3",
+    "fragment_id": 3
+  },
+  "p2_bbox": {
+    "page": 1,
+    "bbox": [
+      288,
+      122,
+      296,
+      137
+    ],
+    "text": "3",
+    "fragment_id": 3
+  },
+  "control_variants_count": 2,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "OddsPath cannot be computed due to insufficient empirical data. P1 and P2 are inferred rather than derived from a large variant dataset. The study design is a binary comparison (test variant vs. known pathogenic control) rather than a multi-variant analysis needed for robust OddsPath calculation. With only 2 control variants, evidence is limited to PS3_supporting level at best.",
+  "findings": [
+    "APOB p.(Pro955Ser) variant reduces LDL uptake in hepatocytes to 44% of wild-type levels, comparable to known pathogenic p.(Arg3527Gln) variant (44% vs. healthy control)",
+    "Functional assay measures LDL internalization efficiency via flow cytometry after 30-min incubation at 37°C",
+    "Study includes healthy control (wild-type), heterozygous p.(Pro955Ser), homozygous p.(Pro955Ser), and known pathogenic p.(Arg3527Gln) control",
+    "Biological replicates: n=3 (mean ± S.D.)",
+    "Statistical significance: p<0.01 between healthy individual and each variant"
+  ],
+  "arbiter_feedback": {
+    "overall_score": 62.0,
+    "max_score": 100.0,
+    "normalized_score": 62.0,
+    "dimensions": [
+      {
+        "name": "disease_mechanism",
+        "score": 24.0,
+        "max_score": 25,
+        "status": "pass",
+        "reason": "Disease mechanism is clearly articulated: APOB variants impair LDL receptor binding/internalization in hepatocytes, leading to reduced LDL clearance and familial hypercholesterolemia. The pathogenic mechanism (loss of LDL uptake function) is well-established and directly relevant to APOB-related FH pathogenesis.",
+        "suggestions": []
+      },
+      {
+        "name": "method_suitability",
+        "score": 19.0,
+        "max_score": 20,
+        "status": "pass",
+        "reason": "Flow cytometry-based LDL internalization assay is highly appropriate for measuring the proposed mechanism (impaired hepatocyte LDL uptake). The assay directly quantifies the functional consequence of the variant on the disease-relevant pathway. Method is well-suited to APOB functional evaluation.",
+        "suggestions": []
+      },
+      {
+        "name": "experimental_validity",
+        "score": 50.0,
+        "max_score": 50,
+        "status": "pass",
+        "reason": "All experimental validity criteria satisfied: appropriate controls present (normal + pathogenic), biological replicates used (n=3), method is historically validated (flow cytometry), and positive controls employed (known pathogenic variant). This represents high-quality experimental design.",
+        "suggestions": []
+      },
+      {
+        "name": "odds_path_validity",
+        "score": 9.0,
+        "max_score": 20,
+        "status": "fail",
+        "reason": "CRITICAL ISSUE: OddsPath calculation is methodologically invalid. P1 (0.5) and P2 (0.999) are inferred from a binary comparison (1 pathogenic control out of 2 total variants) rather than derived from empirical multi-variant datasets. OddsPath methodology requires P1/P2 to be calculated from large variant cohorts with known clinical outcomes. The reported odds_path value (998.99) is mathematically derived but clinically meaningless because it violates the foundational OddsPath requirement: empirical calibration against variant databases. The study design (test variant vs. single known pathogenic control) cannot generate valid P1/P2 probabilities. Evidence strength cannot be mapped via OddsPath; must default to PS3_supporting based on Step 3 quality alone.",
+        "suggestions": [
+          "Do NOT use OddsPath mapping for this evidence. The inferred P1/P2 values lack empirical foundation.",
+          "Classify as PS3_supporting based on experimental quality (Step 3 pass) without OddsPath quantification.",
+          "For PS3 (not supporting), would require: (a) multi-variant functional dataset with empirical P1/P2 calibration, OR (b) additional independent functional studies, OR (c) segregation data in affected families."
+        ]
+      }
+    ],
+    "key_issues": [
+      "OddsPath methodology violation: P1/P2 inferred from binary comparison, not empirical multi-variant dataset. Reported odds_path=998.99 is mathematically invalid for clinical classification.",
+      "P1 calculation error: Treating 1 pathogenic control variant out of 2 total controls as P1=0.5 misapplies OddsPath. P1 should represent prior probability of pathogenicity across a large variant cohort, not control variant ratio.",
+      "P2 calculation error: Setting P2=0.999 based on identical functional impairment to single known pathogenic variant lacks statistical rigor. P2 requires multi-variant comparison data.",
+      "Evidence strength overestimated: Claimed 'very-strong' (PS3) is unsupported. Actual evidence quality supports PS3_supporting maximum.",
+      "Limited control variant count: Only 2 control variants (1 pathogenic, 1 wild-type) insufficient for robust OddsPath calibration.",
+      "No segregation data: Study lacks family-level segregation evidence that could elevate PS3_supporting to PS3_moderate or PS3."
+    ],
+    "recommendations": [
+      "RECLASSIFY as PS3_supporting (not PS3 or very-strong). This reflects high experimental quality (Step 3 pass) without invalid OddsPath mapping.",
+      "Remove OddsPath calculation from evidence summary. Acknowledge that binary functional comparison cannot generate valid P1/P2 probabilities.",
+      "To achieve PS3 (not supporting): Conduct multi-variant functional study comparing ≥10 variants (mix of pathogenic, benign, uncertain) with empirical P1/P2 calibration against clinical outcomes.",
+      "Strengthen evidence by: (a) Segregation analysis in p.Pro955Ser families, (b) Independent replication in second lab, (c) Functional assay in additional cell types (e.g., fibroblasts), (d) Biochemical validation (e.g., APOB protein expression/localization).",
+      "Document that p.Arg3527Gln positive control validates assay sensitivity but does not establish P2 probability for test variant.",
+      "Consider combining with PS4 (population data) if p.Pro955Ser enriched in FH cases vs. controls, or PM5 if different missense at same residue is known pathogenic."
+    ],
+    "should_iterate": true
+  },
+  "iterations_performed": 3
+}

@@ -1,0 +1,18 @@
+{
+  "findings": [
+    "The study investigates the association between the Ava II (rs5925) polymorphism in the LDL receptor gene and plasma lipid levels in ischemic stroke patients. It reports significant differences in allele frequencies (A+ allele: 44.74% in stroke vs. 15.22% in controls, P<0.0001) and associations between genotypes and multiple lipid parameters (e.g., LDL-C, TC, TG)."
+  ],
+  "p1": 0.1,
+  "p2": 0.5,
+  "odds_path": 9.0,
+  "strength": "moderate",
+  "rationale": "This study provides population association and biochemical correlation data, not direct functional assay evidence. No experimental assessment of variant-specific molecular or cellular function (e.g., LDL receptor binding, uptake, trafficking, or expression) was performed.",
+  "experimental_details": "The study used PCR-RFLP for genotyping and standard biochemical assays to measure plasma lipid parameters (TC, TG, HDL-C, LDL-C, etc.) in 95 ischemic stroke patients and 115 controls. No cell-based, in vitro, or in vivo functional assays of the LDL receptor protein were conducted.",
+  "p1_source_location": "P1/P2 data not explicitly reported. No functional assay control group with known pathogenic/benign variants was described.",
+  "p2_source_location": "P1/P2 data not explicitly reported. No functional assay results quantifying variant-specific functional impact were provided.",
+  "ps3_criteria_met": false,
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "This is population association evidence (PS4-type), NOT functional evidence (PS3). The study lacks any functional assay demonstrating a direct molecular or cellular impact of the variant on LDL receptor activity. PS3 requires well-established functional studies showing a deleterious effect, which are absent here.",
+  "arbiter_score": 15.0
+}

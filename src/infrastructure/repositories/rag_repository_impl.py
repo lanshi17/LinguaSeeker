@@ -1,90 +1,71 @@
-"""RAG repository implementation."""
+"""RAG repository implementation with persistent vector store."""
 
 from pathlib import Path
 from typing import List, Optional, Tuple
 
 import httpx
 from langchain_openai import OpenAIEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyPDFLoader
-from qdrant_client import QdrantClient
-from qdrant_client.http import models as rest
-from qdrant_client.models import Distance, VectorParams
 
 # Using absolute imports from src root
 from src.domain.repositories import RAGRepository
 from src.infrastructure.utils.exceptions import ParsingException
 from src.infrastructure.utils.config import RerankConfig
 from src.infrastructure.utils.logger import Logger
+from src.infrastructure.vector_store import VectorStoreManager
 
 
 class RAGRepositoryImpl(RAGRepository):
-    """Concrete RAG repository using Qdrant and OpenAI embeddings.
+    """Concrete RAG repository using persistent VectorStoreManager.
     
-    Two-collection design:
-    - `knowledge_base_collection`: Pre-built index from ACMG guidelines, etc.
-    - `temp_collection`: Temporary vectorization for fallback/static PDF loading
+    Features:
+    - Persistent vector storage (cached across runs)
+    - Automatic PDF change detection
+    - Fallback to temporary vectorization
+    - Optional document reranking
     """
 
-    def __init__(self, embeddings: OpenAIEmbeddings, rerank_config: Optional[RerankConfig] = None):
+    def __init__(
+        self,
+        embeddings: OpenAIEmbeddings,
+        rerank_config: Optional[RerankConfig] = None,
+        cache_dir: Optional[str] = None,
+    ):
+        """Initialize RAG repository.
+        
+        Args:
+            embeddings: OpenAI embeddings instance
+            rerank_config: Optional reranking configuration
+            cache_dir: Directory for persistent vector store
+        """
         self.embeddings = embeddings
-        self.client = QdrantClient(":memory:")
-        self.kb_collection = "knowledge_base"
-        self.temp_collection = "temp_pdf"
         self.rerank_config = rerank_config
         self.logger = Logger.get_logger(__name__)
+        
+        # Use persistent vector store manager
+        self.vector_store = VectorStoreManager(
+            embeddings=embeddings,
+            cache_dir=cache_dir,
+        )
+        
         self._kb_built = False
 
     def build_knowledge_base_index(self, kb_pdf_paths: List[str]) -> None:
-        """Build permanent knowledge base index from list of KB PDFs.
+        """Build or update persistent knowledge base index.
+        
+        Uses automatic change detection - PDFs are only re-indexed if modified.
         
         Args:
-            kb_pdf_paths: List of paths to knowledge base PDFs (e.g., ['KnowledgeRetrievalBase/acmg_guide.pdf'])
+            kb_pdf_paths: List of paths to knowledge base PDFs
         """
-        all_texts = []
-        for pdf_path in kb_pdf_paths:
-            self.logger.info(f"Loading knowledge base PDF: {pdf_path}")
-            try:
-                loader = PyPDFLoader(pdf_path)
-                docs = loader.load()
-                splitter = RecursiveCharacterTextSplitter(
-                    chunk_size=800,
-                    chunk_overlap=100,
-                )
-                splits = splitter.split_documents(docs)
-                all_texts.extend([doc.page_content for doc in splits])
-            except Exception as e:
-                self.logger.warning(f"Failed to load KB PDF {pdf_path}: {e}")
-
-        if not all_texts:
-            self.logger.warning("No texts loaded from knowledge base PDFs")
-            self._kb_built = False
-            return
-
-        # Create vector index
-        sample_embedding = self.embeddings.embed_query("test")
-        embedding_dim = len(sample_embedding)
-
-        self.client.recreate_collection(
-            collection_name=self.kb_collection,
-            vectors_config=VectorParams(
-                size=embedding_dim,
-                distance=Distance.COSINE,
-            ),
-        )
-
-        vectors = self.embeddings.embed_documents(all_texts)
-        points = [
-            rest.PointStruct(
-                id=idx,
-                vector=vectors[idx],
-                payload={"text": all_texts[idx]},
-            )
-            for idx in range(len(all_texts))
-        ]
-        self.client.upsert(collection_name=self.kb_collection, points=points)
-        self._kb_built = True
-        self.logger.info(f"Knowledge base index built with {len(all_texts)} chunks")
+        total_chunks = self.vector_store.build_knowledge_base(kb_pdf_paths)
+        self._kb_built = total_chunks > 0
+        
+        if self._kb_built:
+            self.logger.info(f"Knowledge base ready with {total_chunks} chunks")
+            stats = self.vector_store.get_statistics()
+            self.logger.debug(f"Vector store stats: {stats}")
+        else:
+            self.logger.warning("Failed to build knowledge base")
 
     def retrieve_from_knowledge_base(
         self,
@@ -92,50 +73,41 @@ class RAGRepositoryImpl(RAGRepository):
         k: int = 4,
         similarity_threshold: float = 0.65,
     ) -> Tuple[List[str], float]:
-        """Retrieve from KB with similarity threshold detection.
+        """Retrieve from persistent knowledge base.
         
         Returns:
             (retrieved_texts, max_similarity_score)
-            If max_similarity < threshold, caller should trigger fallback.
         """
         if not self._kb_built:
-            self.logger.warning("Knowledge base not built; returning empty results")
+            self.logger.warning("Knowledge base not built")
             return [], 0.0
-
-        vector = self.embeddings.embed_query(query)
-        results = self.client.query_points(
-            collection_name=self.kb_collection,
-            query=vector,
-            limit=k * 3 if self.rerank_config and self.rerank_config.enabled else k,
-        ).points
-
-        if not results:
-            return [], 0.0
-
-        # Extract similarity scores and documents
-        documents = []
-        scores = []
-        for hit in results:
-            text = hit.payload.get("text", "")
-            score = hit.score
-            documents.append(text)
-            scores.append(score)
-
-        max_score = max(scores) if scores else 0.0
-
+        
+        documents, max_score = self.vector_store.retrieve_from_knowledge_base(
+            query=query,
+            k=k,
+            similarity_threshold=similarity_threshold,
+        )
+        
         # Apply reranking if enabled
         if self.rerank_config and self.rerank_config.enabled and documents:
             documents = self._rerank_documents(query, documents, k)
-
+        
         return documents[:k], max_score
 
     def fallback_load_and_vectorize(self, pdf_path: str) -> None:
-        """Fallback: Temporarily vectorize a static PDF and add to temp collection."""
+        """Fallback: Temporarily vectorize a static PDF.
+        
+        Args:
+            pdf_path: Path to PDF file to vectorize temporarily
+        """
+        from langchain_community.document_loaders import PyPDFLoader
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
+        
         pdf_file = Path(pdf_path)
         if not pdf_file.exists():
             self.logger.warning(f"Fallback PDF not found: {pdf_path}")
             return
-
+        
         self.logger.info(f"Fallback: Loading and vectorizing {pdf_path}")
         try:
             loader = PyPDFLoader(pdf_path)
@@ -146,53 +118,27 @@ class RAGRepositoryImpl(RAGRepository):
             )
             splits = splitter.split_documents(docs)
             texts = [doc.page_content for doc in splits]
-
-            # Create temp collection if needed
-            if not self.client.collection_exists(self.temp_collection):
-                sample_embedding = self.embeddings.embed_query("test")
-                embedding_dim = len(sample_embedding)
-                self.client.recreate_collection(
-                    collection_name=self.temp_collection,
-                    vectors_config=VectorParams(
-                        size=embedding_dim,
-                        distance=Distance.COSINE,
-                    ),
-                )
-
-            vectors = self.embeddings.embed_documents(texts)
-            points = [
-                rest.PointStruct(
-                    id=idx,
-                    vector=vectors[idx],
-                    payload={"text": texts[idx]},
-                )
-                for idx in range(len(texts))
-            ]
-            self.client.upsert(collection_name=self.temp_collection, points=points)
-            self.logger.info(f"Fallback: Temporarily vectorized {len(texts)} chunks")
+            
+            self.vector_store.add_temporary_documents(texts, metadata={"source": pdf_path})
+            self.logger.info(f"Fallback: Vectorized {len(texts)} chunks")
+            
         except Exception as e:
             self.logger.error(f"Fallback vectorization failed: {e}")
 
     def retrieve(self, query: str, k: int = 4) -> List[str]:
         """Generic retrieve (backward compatibility).
         
-        Prioritizes knowledge base; falls back to temp collection if available.
+        Attempts retrieval from persistent knowledge base.
+        
+        Args:
+            query: Search query
+            k: Number of results
+            
+        Returns:
+            List of relevant documents
         """
-        docs, max_score = self.retrieve_from_knowledge_base(query, k, similarity_threshold=0.0)
-        if docs:
-            return docs
-
-        # Try temp collection
-        if self.client.collection_exists(self.temp_collection):
-            vector = self.embeddings.embed_query(query)
-            results = self.client.query_points(
-                collection_name=self.temp_collection,
-                query=vector,
-                limit=k,
-            ).points
-            return [hit.payload.get("text", "") for hit in results]
-
-        return []
+        docs, _ = self.retrieve_from_knowledge_base(query, k, similarity_threshold=0.0)
+        return docs
 
     def _rerank_documents(self, query: str, documents: List[str], top_k: int) -> List[str]:
         """Rerank documents using OpenAI-compatible rerank API."""

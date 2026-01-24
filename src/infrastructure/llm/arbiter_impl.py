@@ -146,7 +146,7 @@ OUTPUT FORMAT (must be valid JSON):
                     max_score=25,
                     status=step1.get("status", "fail"),
                     reason=step1.get("reason", ""),
-                    suggestions=step1.get("suggestions", []),
+                    suggestions=tuple(step1.get("suggestions", [])),
                 ))
             
             # Step 2: Method Suitability
@@ -158,7 +158,7 @@ OUTPUT FORMAT (must be valid JSON):
                     max_score=20,
                     status=step2.get("status", "fail"),
                     reason=step2.get("reason", ""),
-                    suggestions=step2.get("suggestions", []),
+                    suggestions=tuple(step2.get("suggestions", [])),
                 ))
             
             # Step 3: Experimental Validity (aggregate)
@@ -170,7 +170,7 @@ OUTPUT FORMAT (must be valid JSON):
                     max_score=50,
                     status=step3.get("step3_status", "fail"),
                     reason=step3.get("reason", ""),
-                    suggestions=[],
+                    suggestions=tuple(),
                 ))
             
             # Step 4: Odds Path Validity
@@ -182,7 +182,7 @@ OUTPUT FORMAT (must be valid JSON):
                     max_score=20,
                     status="pass" if step4.get("odds_path_valid") else "fail",
                     reason=step4.get("reason", ""),
-                    suggestions=step4.get("suggestions", []),
+                    suggestions=tuple(step4.get("suggestions", [])),
                 ))
             
             # Determine if iteration is needed
@@ -192,9 +192,9 @@ OUTPUT FORMAT (must be valid JSON):
             feedback = ArbiterFeedback(
                 overall_score=overall_score,
                 max_score=100.0,
-                dimensions=dimensions,
-                key_issues=data.get("key_issues", []),
-                recommendations=data.get("recommendations", []),
+                dimensions=tuple(dimensions),
+                key_issues=tuple(data.get("key_issues", [])),
+                recommendations=tuple(data.get("recommendations", [])),
                 should_iterate=should_iterate,
             )
             
@@ -211,13 +211,13 @@ OUTPUT FORMAT (must be valid JSON):
         """Create default feedback when parsing fails."""
         return ArbiterFeedback(
             overall_score=0.0,
-            dimensions=[
+            dimensions=(
                 DimensionScore("disease_mechanism", 0, 25, "fail", "Not evaluated"),
                 DimensionScore("method_suitability", 0, 20, "fail", "Not evaluated"),
                 DimensionScore("experimental_validity", 0, 50, "fail", "Not evaluated"),
                 DimensionScore("odds_path_validity", 0, 20, "fail", "Not evaluated"),
-            ],
-            key_issues=["Failed to parse arbiter evaluation"],
+            ),
+            key_issues=("Failed to parse arbiter evaluation",),
             should_iterate=True,
         )
 

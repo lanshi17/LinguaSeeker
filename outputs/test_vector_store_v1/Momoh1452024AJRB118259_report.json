@@ -1,0 +1,118 @@
+{
+  "detected_language": "en",
+  "original_html_path": "outputs/test_vector_store_v1/Momoh1452024AJRB118259_original.html",
+  "english_html_path": "outputs/test_vector_store_v1/Momoh1452024AJRB118259_english.html",
+  "bbox_metadata_path": "outputs/test_vector_store_v1/Momoh1452024AJRB118259_bbox.json",
+  "evidence_json_path": "outputs/test_vector_store_v1/Momoh1452024AJRB118259_evidence.json",
+  "highlighted_json_path": "outputs/test_vector_store_v1/Momoh1452024AJRB118259_highlighting.json",
+  "odds_path": 1.0,
+  "evidence_strength": "indeterminate",
+  "arbiter_score": 8.0,
+  "ps3_criteria_met": false,
+  "extracted_experimental_details": "The study genotyped the LDL-R gene Ava II polymorphism (rs5925) using PCR-RFLP in 95 ischemic stroke patients and 115 controls. Plasma lipid parameters (TC, TG, HDL-C, LDL-C, etc.) were measured using standard biochemical kits. Statistical associations between genotypes and lipid levels were analyzed. No direct functional assays of LDL-R protein activity (e.g., binding, internalization, expression, localization) were performed.",
+  "p1_source_location": "P1/P2 data not explicitly reported. The study does not contain a model data set of pathogenic variants for functional comparison.",
+  "p2_source_location": "P1/P2 data not explicitly reported. The study does not contain a functionally abnormal group defined by a direct assay of LDL-R activity.",
+  "p1_bbox": {
+    "page": 1,
+    "bbox": [
+      733,
+      207,
+      766,
+      232
+    ],
+    "text": "of",
+    "fragment_id": 2
+  },
+  "p2_bbox": {
+    "page": 1,
+    "bbox": [
+      733,
+      207,
+      766,
+      232
+    ],
+    "text": "of",
+    "fragment_id": 2
+  },
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "The evidence is a genotype-phenotype association study, not a direct functional assay of LDL-R activity. PS3 requires molecular/cellular functional evidence. The study methods (PCR-RFLP, lipid profiling) are unsuitable for establishing functional impact per the SVI framework. This evidence should be considered for PS4/PP3/PP4 instead.",
+  "findings": [
+    "The study is a genotype-phenotype association study correlating the LDL-R gene Ava II (rs5925) polymorphism with plasma lipid levels in ischemic stroke patients and controls. It does not describe a direct molecular or cellular functional assay of LDL-R activity (e.g., binding, internalization, expression, or trafficking).",
+    "No functional controls (known pathogenic or benign LDL-R variants) were used in the study. The controls are population-based (healthy individuals) rather than experimental controls for a functional assay.",
+    "No biological or technical replicates of a functional assay are reported. The study reports population-level replication (multiple subjects) but not experimental replication of a functional measurement.",
+    "The assay method used is PCR-RFLP for genotyping, which is not a functional assay for protein activity. Lipid level measurements are downstream biochemical phenotypes, not direct assessments of LDL-R function."
+  ],
+  "arbiter_feedback": {
+    "overall_score": 8.0,
+    "max_score": 100.0,
+    "normalized_score": 8.0,
+    "dimensions": [
+      {
+        "name": "disease_mechanism",
+        "score": 2.0,
+        "max_score": 25,
+        "status": "fail",
+        "reason": "Disease mechanism clarity is severely compromised. While LDL-R dysfunction in lipid metabolism is well-established, the evidence does NOT establish how the Ava II polymorphism (rs5925) causes functional impairment of LDL-R protein. The study only shows association between genotype and plasma lipid levels—a downstream phenotype—without mechanistic explanation of the molecular defect. No direct evidence that this polymorphism alters LDL-R binding, internalization, expression, trafficking, or any other functional property is provided.",
+        "suggestions": [
+          "Provide direct evidence of how rs5925 alters LDL-R protein structure or function",
+          "Explain the molecular mechanism linking the polymorphism to LDL-R dysfunction",
+          "Distinguish between association (genotype→lipid levels) and mechanism (genotype→protein defect→lipid levels)"
+        ]
+      },
+      {
+        "name": "method_suitability",
+        "score": 0.0,
+        "max_score": 20,
+        "status": "fail",
+        "reason": "The functional assay method is fundamentally inappropriate for PS3 evaluation. PCR-RFLP is a genotyping method, not a functional assay. Plasma lipid measurements are downstream biochemical phenotypes, not direct assessments of LDL-R protein activity. PS3 requires in vitro or in vivo functional studies (e.g., receptor binding assays, cell internalization assays, expression studies, immunofluorescence). This study employs population-level association methods, which are suitable for PS4/PP3/PP4 but NOT for PS3.",
+        "suggestions": [
+          "Perform direct LDL-R functional assays: ligand binding, receptor-mediated endocytosis, or expression quantification",
+          "Use cell-based systems (HEK293, CHO, or primary hepatocytes) to measure LDL-R activity",
+          "Consider in vivo functional studies if applicable (e.g., LDL clearance kinetics)"
+        ]
+      },
+      {
+        "name": "experimental_validity",
+        "score": 0.0,
+        "max_score": 50,
+        "status": "fail",
+        "reason": "All four experimental validity criteria fail completely. The study lacks: (1) functional controls, (2) experimental replicates, (3) validated functional assay methods, and (4) positive control variants. This is not a functional study and therefore cannot support PS3.",
+        "suggestions": []
+      },
+      {
+        "name": "odds_path_validity",
+        "score": 0.0,
+        "max_score": 20,
+        "status": "fail",
+        "reason": "OddsPath cannot be validly computed because the evidence does not meet PS3 prerequisites. The reported P1=0.001 and P2=0.001 are not derived from a functional assay framework and do not represent the probability of observing the functional phenotype in pathogenic vs. benign variants. The odds_path=1.0 indicates no discrimination, which is expected when P1=P2. Critically: (1) P1/P2 sources are not explicitly reported, (2) no model dataset of pathogenic variants exists, (3) no functionally abnormal group defined by direct assay exists. Even if OddsPath were computed, it would be meaningless without valid functional data. This evidence should NOT be mapped to PS3 strength categories.",
+        "suggestions": [
+          "Do not attempt OddsPath mapping for non-functional evidence",
+          "If functional assays are performed, establish P1 (probability of functional defect in pathogenic variants) and P2 (probability in benign variants) from direct assay results",
+          "Consider PS4 or PP3/PP4 mapping if genotype-phenotype association strength is sufficient"
+        ]
+      }
+    ],
+    "key_issues": [
+      "CRITICAL: This is a genotype-phenotype association study, NOT a functional assay study. PS3 explicitly requires functional evidence.",
+      "No direct molecular or cellular functional assays of LDL-R activity (binding, internalization, expression, trafficking) are performed.",
+      "Plasma lipid levels are downstream phenotypes, not direct measures of LDL-R protein function.",
+      "No functional controls (pathogenic or benign LDL-R variants) are used.",
+      "No experimental replicates of functional measurements are reported.",
+      "PCR-RFLP is a genotyping method, not a functional assay method.",
+      "P1/P2 values are not derived from functional assay data and cannot support OddsPath calculation for PS3.",
+      "The evidence is misclassified as PS3-eligible; it should be evaluated under PS4 (if association strength is sufficient) or PP3/PP4 instead."
+    ],
+    "recommendations": [
+      "REJECT this evidence for PS3 classification. It does not meet the PS3 SVI framework requirements.",
+      "RECLASSIFY this evidence as PS4 or PP3/PP4 if appropriate: (a) PS4 if the genotype-phenotype association shows statistically significant increased prevalence in affected individuals (OR>5, CI excludes 1.0); (b) PP3/PP4 if computational or segregation data support pathogenicity.",
+      "If PS3 evidence is needed, perform direct functional assays: (1) LDL-R binding assays (e.g., ELISA, surface plasmon resonance), (2) receptor-mediated endocytosis assays (e.g., fluorescent LDL uptake in transfected cells), (3) expression quantification (qPCR, Western blot, immunofluorescence), (4) cell-based functional assays in HEK293, CHO, or primary hepatocytes.",
+      "Include positive controls: known pathogenic LDL-R variants (e.g., null mutations, known missense mutations) and known benign variants.",
+      "Perform biological replicates (independent cell culture experiments, independent tissue preparations) and technical replicates (multiple measurements per sample).",
+      "If functional assays are performed, calculate P1 (probability of functional defect in pathogenic variants) and P2 (probability in benign variants) from direct assay results, then compute OddsPath for PS3 strength mapping.",
+      "Document the disease mechanism clearly: explain how rs5925 alters LDL-R protein structure/function and how this leads to altered lipid metabolism and stroke risk."
+    ],
+    "should_iterate": true
+  },
+  "iterations_performed": 3
+}

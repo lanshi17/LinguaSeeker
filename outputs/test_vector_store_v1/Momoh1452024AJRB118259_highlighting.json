@@ -1,0 +1,13 @@
+{
+  "spans_highlighted": 7,
+  "highlighted_spans": [
+    "The study is a genotype-phenotype association study correlating the LDL-R gene Ava II (rs5925) polymorphism with plasma lipid levels in ischemic stroke patients and controls. It does not describe a direct molecular or cellular functional assay of LDL-R activity (e.g., binding, internalization, expression, or trafficking).",
+    "No functional controls (known pathogenic or benign LDL-R variants) were used in the study. The controls are population-based (healthy individuals) rather than experimental controls for a functional assay.",
+    "No biological or technical replicates of a functional assay are reported. The study reports population-level replication (multiple subjects) but not experimental replication of a functional measurement.",
+    "The assay method used is PCR-RFLP for genotyping, which is not a functional assay for protein activity. Lipid level measurements are downstream biochemical phenotypes, not direct assessments of LDL-R function.",
+    "P1/P2 data not explicitly reported. The study does not contain a model data set of pathogenic variants for functional comparison.",
+    "P1/P2 data not explicitly reported. The study does not contain a functionally abnormal group defined by a direct assay of LDL-R activity.",
+    "The study genotyped the LDL-R gene Ava II polymorphism (rs5925) using PCR-RFLP in 95 ischemic stroke patients and 115 controls. Plasma lipid parameters (TC, TG, HDL-C, LDL-C, etc.) were measured using standard biochemical kits. Statistical associations between genotypes and lipid levels were analyzed. No direct functional assays of LDL-R protein activity (e.g., binding, internalization, expression, localization) were performed."
+  ],
+  "bbox_matched": 4587
+}

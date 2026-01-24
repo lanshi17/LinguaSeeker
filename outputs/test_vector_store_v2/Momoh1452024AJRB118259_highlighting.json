@@ -1,0 +1,10 @@
+{
+  "spans_highlighted": 4,
+  "highlighted_spans": [
+    "The study investigates the association between the Ava II (rs5925) polymorphism in the LDL receptor gene and plasma lipid levels in ischemic stroke patients. It reports significant differences in allele frequencies (A+ allele: 44.74% in stroke vs. 15.22% in controls, P<0.0001) and associations between genotypes and multiple lipid parameters (e.g., LDL-C, TC, TG).",
+    "P1/P2 data not explicitly reported. No functional assay control group with known pathogenic/benign variants was described.",
+    "P1/P2 data not explicitly reported. No functional assay results quantifying variant-specific functional impact were provided.",
+    "The study used PCR-RFLP for genotyping and standard biochemical assays to measure plasma lipid parameters (TC, TG, HDL-C, LDL-C, etc.) in 95 ischemic stroke patients and 115 controls. No cell-based, in vitro, or in vivo functional assays of the LDL receptor protein were conducted."
+  ],
+  "bbox_matched": 4587
+}

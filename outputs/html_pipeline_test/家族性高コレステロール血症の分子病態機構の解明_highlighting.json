@@ -1,0 +1,14 @@
+{
+  "spans_highlighted": 8,
+  "highlighted_spans": [
+    "APOB p.(Pro955Ser) variant reduces LDL uptake in hepatocytes to 44% of wild-type levels, comparable to known pathogenic p.(Arg3527Gln) variant (44% vs. healthy control)",
+    "Functional assay measures LDL internalization efficiency via flow cytometry after 30-min incubation at 37°C",
+    "Study includes healthy control (wild-type), heterozygous p.(Pro955Ser), homozygous p.(Pro955Ser), and known pathogenic p.(Arg3527Gln) control",
+    "Biological replicates: n=3 (mean ± S.D.)",
+    "Statistical significance: p<0.01 between healthy individual and each variant",
+    "P1 data not explicitly reported; inferred from Figure 3 description: 1 pathogenic control variant (p.Arg3527Gln) out of 2 total control variants (healthy wild-type + pathogenic control)",
+    "P2 data not explicitly reported; inferred from Figure 3 results: test variant (homozygous p.Pro955Ser) shows identical functional impairment (44% of wild-type) to known pathogenic control variant (44% of wild-type)",
+    "LDL was isolated and fluorescently labeled from blood samples of: (1) FH proband homozygous for p.(Pro955Ser), (2) child heterozygous for p.(Pro955Ser), (3) patient heterozygous for known pathogenic p.(Arg3527Gln), and (4) healthy individual. Each labeled LDL was added to cultured hepatocytes, and LDL uptake was measured by flow cytometry after 30-min incubation at 37°C. Mean fluorescence intensity was measured with biological replicates (n=3)."
+  ],
+  "bbox_matched": 3118
+}

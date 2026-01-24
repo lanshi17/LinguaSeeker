@@ -1,0 +1,21 @@
+{
+  "findings": [
+    "The study is a genotype-phenotype association study correlating the LDL-R gene Ava II (rs5925) polymorphism with plasma lipid levels in ischemic stroke patients and controls. It does not describe a direct molecular or cellular functional assay of LDL-R activity (e.g., binding, internalization, expression, or trafficking).",
+    "No functional controls (known pathogenic or benign LDL-R variants) were used in the study. The controls are population-based (healthy individuals) rather than experimental controls for a functional assay.",
+    "No biological or technical replicates of a functional assay are reported. The study reports population-level replication (multiple subjects) but not experimental replication of a functional measurement.",
+    "The assay method used is PCR-RFLP for genotyping, which is not a functional assay for protein activity. Lipid level measurements are downstream biochemical phenotypes, not direct assessments of LDL-R function."
+  ],
+  "p1": 0.001,
+  "p2": 0.001,
+  "odds_path": 1.0,
+  "strength": "indeterminate",
+  "rationale": "The evidence does not meet PS3 criteria because it is not a functional study. PS3 requires well-established in vitro or in vivo functional studies showing a deleterious effect on the gene or gene product. This study provides population association data (genotype with lipid levels), which is more appropriate for PS4 (if association strength is sufficient) or PP3/PP4. The lack of direct functional assays, functional controls, and experimental replicates precludes PS3 application.",
+  "experimental_details": "The study genotyped the LDL-R gene Ava II polymorphism (rs5925) using PCR-RFLP in 95 ischemic stroke patients and 115 controls. Plasma lipid parameters (TC, TG, HDL-C, LDL-C, etc.) were measured using standard biochemical kits. Statistical associations between genotypes and lipid levels were analyzed. No direct functional assays of LDL-R protein activity (e.g., binding, internalization, expression, localization) were performed.",
+  "p1_source_location": "P1/P2 data not explicitly reported. The study does not contain a model data set of pathogenic variants for functional comparison.",
+  "p2_source_location": "P1/P2 data not explicitly reported. The study does not contain a functionally abnormal group defined by a direct assay of LDL-R activity.",
+  "ps3_criteria_met": false,
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "The evidence is a genotype-phenotype association study, not a direct functional assay of LDL-R activity. PS3 requires molecular/cellular functional evidence. The study methods (PCR-RFLP, lipid profiling) are unsuitable for establishing functional impact per the SVI framework. This evidence should be considered for PS4/PP3/PP4 instead.",
+  "arbiter_score": 8.0
+}

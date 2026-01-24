@@ -1,0 +1,22 @@
+{
+  "findings": [
+    "APOB p.(Pro955Ser) variant reduces LDL uptake in hepatocytes to 44% of wild-type levels, comparable to known pathogenic p.(Arg3527Gln) variant (44% vs. healthy control)",
+    "Functional assay measures LDL internalization efficiency via flow cytometry after 30-min incubation at 37°C",
+    "Study includes healthy control (wild-type), heterozygous p.(Pro955Ser), homozygous p.(Pro955Ser), and known pathogenic p.(Arg3527Gln) control",
+    "Biological replicates: n=3 (mean ± S.D.)",
+    "Statistical significance: p<0.01 between healthy individual and each variant"
+  ],
+  "p1": 0.5,
+  "p2": 0.999,
+  "odds_path": 998.9999999999991,
+  "strength": "very-strong",
+  "rationale": "P1 is inferred as 0.5 (1 pathogenic control variant out of 2 total control variants). P2 is inferred as 1.0 (test variant shows identical functional impairment to known pathogenic control). These values are not empirically derived from a large variant dataset, violating OddsPath methodology requirements.",
+  "experimental_details": "LDL was isolated and fluorescently labeled from blood samples of: (1) FH proband homozygous for p.(Pro955Ser), (2) child heterozygous for p.(Pro955Ser), (3) patient heterozygous for known pathogenic p.(Arg3527Gln), and (4) healthy individual. Each labeled LDL was added to cultured hepatocytes, and LDL uptake was measured by flow cytometry after 30-min incubation at 37°C. Mean fluorescence intensity was measured with biological replicates (n=3).",
+  "p1_source_location": "P1 data not explicitly reported; inferred from Figure 3 description: 1 pathogenic control variant (p.Arg3527Gln) out of 2 total control variants (healthy wild-type + pathogenic control)",
+  "p2_source_location": "P2 data not explicitly reported; inferred from Figure 3 results: test variant (homozygous p.Pro955Ser) shows identical functional impairment (44% of wild-type) to known pathogenic control variant (44% of wild-type)",
+  "ps3_criteria_met": false,
+  "control_variants_count": 2,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "OddsPath cannot be computed due to insufficient empirical data. P1 and P2 are inferred rather than derived from a large variant dataset. The study design is a binary comparison (test variant vs. known pathogenic control) rather than a multi-variant analysis needed for robust OddsPath calculation. With only 2 control variants, evidence is limited to PS3_supporting level at best.",
+  "arbiter_score": 62.0
+}

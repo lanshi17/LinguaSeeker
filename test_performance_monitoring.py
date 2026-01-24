@@ -4,7 +4,7 @@
 import sys
 from pathlib import Path
 
-from src.domain.interfaces import run_pipeline_refactored
+from src.application.pipeline_runner import run_pipeline_refactored
 from src.infrastructure.utils.timer import print_timer_stats, clear_timer_stats
 
 

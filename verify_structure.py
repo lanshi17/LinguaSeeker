@@ -68,8 +68,8 @@ def verify_imports():
         errors.append(f"Application layer (refactored): {e}")
 
     try:
-        from domain.interfaces import run_pipeline, run_pipeline_refactored
-        print("✓ Public API imported (domain.interfaces)")
+        from application.pipeline_runner import run_pipeline, run_pipeline_refactored
+        print("✓ Public API imported (application.pipeline_runner)")
     except Exception as e:  # noqa: BLE001
         errors.append(f"Public API: {e}")
 

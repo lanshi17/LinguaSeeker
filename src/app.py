@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Simple ACMG PS3 Evidence Extraction Agent - Entry Point.
+"""ACMG PS3 Evidence Extraction Platform - Unified Entry Point.
 
-This is the main command-line interface for the ACMG PS3 pipeline.
+Supports both CLI and FastAPI server modes.
 Uses Domain-Driven Design architecture with clean separation of concerns.
 """
 
@@ -9,59 +9,138 @@ import argparse
 import sys
 from pathlib import Path
 
-from src.domain.interfaces import run_pipeline_refactored
+from src.application.pipeline_runner import run_pipeline_refactored
+from src.presentation.api_app import app as fastapi_app
 
 
 def main():
-    """Main entry point with argument parsing."""
+    """Main entry point with mode selection (CLI or API)."""
     parser = argparse.ArgumentParser(
         description="ACMG PS3 Evidence Extraction Pipeline",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Process a PDF with default output directory
-  uv run src/simple_acmgAgent.py input.pdf
-  
-  # Process with custom output directory
-  uv run src/simple_acmgAgent.py input.pdf --out-dir ./results
-  
-  # Or use main.py
+  # CLI mode: Process a PDF with default output directory
   uv run main.py input.pdf
+  
+  # CLI mode: Process with custom output directory
+  uv run main.py input.pdf --out-dir ./results
+  
+  # API mode: Start FastAPI server
+  uv run main.py --api --port 8000
         """,
     )
     
+    # Mode argument
+    parser.add_argument(
+        "--api",
+        action="store_true",
+        help="Run FastAPI server instead of CLI mode",
+    )
+    
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Port for FastAPI server (default: 8000)",
+    )
+    
+    parser.add_argument(
+        "--host",
+        type=str,
+        default="127.0.0.1",
+        help="Host for FastAPI server (default: 127.0.0.1)",
+    )
+    
+    # CLI mode arguments
     parser.add_argument(
         "pdf_path",
+        nargs="?",
         type=str,
-        help="Path to the input PDF file",
+        help="Path to the input PDF file (CLI mode)",
     )
     
     parser.add_argument(
         "--out-dir",
         type=str,
         default="outputs",
-        help="Output directory for results (default: outputs)",
+        help="Output directory for results (default: outputs, CLI mode)",
     )
     
     args = parser.parse_args()
     
+    # API mode
+    if args.api:
+        return _run_api_server(args.host, args.port)
+    
+    # CLI mode
+    return _run_cli_mode(args.pdf_path, args.out_dir)
+
+
+def _run_api_server(host: str, port: int) -> int:
+    """Run FastAPI server.
+    
+    Args:
+        host: Server host
+        port: Server port
+        
+    Returns:
+        Exit code (0 for success, 1 for error)
+    """
+    try:
+        import uvicorn
+        
+        print(f"Starting FastAPI server on {host}:{port}...")
+        print(f"API documentation: http://{host}:{port}/api/v1/docs")
+        
+        uvicorn.run(
+            fastapi_app,
+            host=host,
+            port=port,
+            log_level="info",
+        )
+        return 0
+    except ImportError:
+        print("Error: uvicorn is required for API mode. Install it with: pip install uvicorn", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"API server error: {e}", file=sys.stderr)
+        return 1
+
+
+def _run_cli_mode(pdf_path: str, out_dir: str) -> int:
+    """Run CLI mode for PDF processing.
+    
+    Args:
+        pdf_path: Path to PDF file
+        out_dir: Output directory
+        
+    Returns:
+        Exit code (0 for success, 1 for error)
+    """
+    
     # Validate input file
-    pdf_file = Path(args.pdf_path)
+    if not pdf_path:
+        print("Error: pdf_path is required in CLI mode", file=sys.stderr)
+        print("Use --api to run API server mode", file=sys.stderr)
+        return 1
+    
+    pdf_file = Path(pdf_path)
     if not pdf_file.exists():
-        print(f"Error: Input file not found: {args.pdf_path}", file=sys.stderr)
-        sys.exit(1)
+        print(f"Error: Input file not found: {pdf_path}", file=sys.stderr)
+        return 1
     
     if not pdf_file.suffix.lower() == ".pdf":
-        print(f"Error: Input file must be a PDF: {args.pdf_path}", file=sys.stderr)
-        sys.exit(1)
+        print(f"Error: Input file must be a PDF: {pdf_path}", file=sys.stderr)
+        return 1
     
     # Run pipeline
-    print(f"Processing PDF: {args.pdf_path}")
-    print(f"Output directory: {args.out_dir}")
+    print(f"Processing PDF: {pdf_path}")
+    print(f"Output directory: {out_dir}")
     print("-" * 60)
     
     try:
-        result = run_pipeline_refactored(pdf_path=args.pdf_path, out_dir=args.out_dir)
+        result = run_pipeline_refactored(pdf_path=pdf_path, out_dir=out_dir)
         
         # Display summary
         print("\n" + "=" * 60)

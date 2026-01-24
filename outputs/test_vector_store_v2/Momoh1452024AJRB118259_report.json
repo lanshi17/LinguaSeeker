@@ -1,0 +1,119 @@
+{
+  "detected_language": "en",
+  "original_html_path": "outputs/test_vector_store_v2/Momoh1452024AJRB118259_original.html",
+  "english_html_path": "outputs/test_vector_store_v2/Momoh1452024AJRB118259_english.html",
+  "bbox_metadata_path": "outputs/test_vector_store_v2/Momoh1452024AJRB118259_bbox.json",
+  "evidence_json_path": "outputs/test_vector_store_v2/Momoh1452024AJRB118259_evidence.json",
+  "highlighted_json_path": "outputs/test_vector_store_v2/Momoh1452024AJRB118259_highlighting.json",
+  "odds_path": 9.0,
+  "evidence_strength": "moderate",
+  "arbiter_score": 15.0,
+  "ps3_criteria_met": false,
+  "extracted_experimental_details": "The study used PCR-RFLP for genotyping and standard biochemical assays to measure plasma lipid parameters (TC, TG, HDL-C, LDL-C, etc.) in 95 ischemic stroke patients and 115 controls. No cell-based, in vitro, or in vivo functional assays of the LDL receptor protein were conducted.",
+  "p1_source_location": "P1/P2 data not explicitly reported. No functional assay control group with known pathogenic/benign variants was described.",
+  "p2_source_location": "P1/P2 data not explicitly reported. No functional assay results quantifying variant-specific functional impact were provided.",
+  "p1_bbox": {
+    "page": 1,
+    "bbox": [
+      881,
+      861,
+      896,
+      878
+    ],
+    "text": "2",
+    "fragment_id": 43
+  },
+  "p2_bbox": {
+    "page": 1,
+    "bbox": [
+      932,
+      207,
+      960,
+      231
+    ],
+    "text": "in",
+    "fragment_id": 4
+  },
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "This is population association evidence (PS4-type), NOT functional evidence (PS3). The study lacks any functional assay demonstrating a direct molecular or cellular impact of the variant on LDL receptor activity. PS3 requires well-established functional studies showing a deleterious effect, which are absent here.",
+  "findings": [
+    "The study investigates the association between the Ava II (rs5925) polymorphism in the LDL receptor gene and plasma lipid levels in ischemic stroke patients. It reports significant differences in allele frequencies (A+ allele: 44.74% in stroke vs. 15.22% in controls, P<0.0001) and associations between genotypes and multiple lipid parameters (e.g., LDL-C, TC, TG)."
+  ],
+  "arbiter_feedback": {
+    "overall_score": 15.0,
+    "max_score": 100.0,
+    "normalized_score": 15.0,
+    "dimensions": [
+      {
+        "name": "disease_mechanism",
+        "score": 5.0,
+        "max_score": 25,
+        "status": "fail",
+        "reason": "The disease mechanism is described only at a population/epidemiological level (association between polymorphism and lipid levels in stroke patients), NOT at the molecular/functional level. The study does not explain HOW the Ava II variant affects LDL receptor protein function, binding, trafficking, or expression. The mechanism linking genotype to phenotype remains a 'black box' from a functional perspective.",
+        "suggestions": [
+          "Clarify the hypothesized molecular mechanism: Does the variant affect LDL receptor protein folding, ligand binding, endocytosis, or expression levels?",
+          "Provide structural or biochemical rationale for why this specific nucleotide change would impair LDL receptor function",
+          "Distinguish between population association (which may reflect linkage disequilibrium) and direct functional causation"
+        ]
+      },
+      {
+        "name": "method_suitability",
+        "score": 0.0,
+        "max_score": 20,
+        "status": "fail",
+        "reason": "The study employs PCR-RFLP genotyping and plasma lipid biochemical assays—these are population/clinical phenotyping methods, NOT functional assays of the LDL receptor protein itself. PS3 requires direct functional assays (e.g., cell-based LDL uptake assays, receptor binding studies, expression quantification, trafficking assays). The selected methods are inappropriate for demonstrating variant-specific molecular dysfunction.",
+        "suggestions": [
+          "Conduct cell-based LDL uptake assays comparing wild-type vs. variant LDL receptor",
+          "Perform ligand-binding kinetics studies (Kd measurements)",
+          "Measure LDL receptor protein expression and localization via Western blot or immunofluorescence",
+          "Use yeast two-hybrid or co-immunoprecipitation to assess protein-protein interactions",
+          "Perform surface plasmon resonance (SPR) or ELISA-based binding assays"
+        ]
+      },
+      {
+        "name": "experimental_validity",
+        "score": 0.0,
+        "max_score": 50,
+        "status": "fail",
+        "reason": "All four Step 3 criteria fail. The study contains zero functional assay controls, zero replicates, and zero positive/negative controls. This is a population association study, not a functional validation study.",
+        "suggestions": []
+      },
+      {
+        "name": "odds_path_validity",
+        "score": 0.0,
+        "max_score": 20,
+        "status": "fail",
+        "reason": "OddsPath cannot be validly computed from this evidence. The provided P1=0.1 and P2=0.5 are NOT derived from functional assay data; they appear to be post-hoc assignments without explicit justification. The evidence JSON itself states 'P1/P2 data not explicitly reported' and 'No functional assay control group with known pathogenic/benign variants was described.' The OddsPath value of 9.0 (which would map to PS3_supporting) is therefore NOT supported by the underlying evidence. This is a critical validity failure: OddsPath requires quantitative functional assay results (e.g., % activity retained, fold-change in expression, binding affinity ratio), which are entirely absent.",
+        "suggestions": [
+          "Do NOT attempt to map population association statistics (allele frequency differences, OR from case-control studies) to PS3 OddsPath. This conflates PS4 (population data) with PS3 (functional evidence).",
+          "If functional assays were performed, report explicit quantitative metrics: e.g., 'variant LDL receptor retained 15% of wild-type binding activity (95% CI: 8–22%)'",
+          "Derive P1 and P2 from functional assay results, not from epidemiological associations",
+          "Validate OddsPath calculation independently before submission"
+        ]
+      }
+    ],
+    "key_issues": [
+      "CRITICAL: This is PS4 evidence (population association), NOT PS3 evidence (functional studies). The study demonstrates epidemiological association but provides zero direct functional assay data.",
+      "CRITICAL: No functional assays of LDL receptor protein were performed. The study measures plasma lipids in patients, not variant-specific molecular dysfunction.",
+      "CRITICAL: OddsPath value (9.0) is not supported by functional assay data. P1 and P2 appear to be arbitrary assignments without explicit quantitative justification.",
+      "No positive/negative controls for functional assays.",
+      "No biological or technical replicates.",
+      "Disease mechanism is described only at population level; molecular mechanism is unexplained.",
+      "Genotyping method (PCR-RFLP) is appropriate for population studies but irrelevant to PS3 classification.",
+      "Plasma lipid measurements are clinical phenotypes, not functional assay readouts of the LDL receptor protein itself."
+    ],
+    "recommendations": [
+      "REJECT this evidence for PS3 classification. Reclassify as PS4 (population association) if allele frequency differences and OR meet PS4 thresholds (OR >5.0, CI excludes 1.0).",
+      "To support PS3, conduct de novo functional studies: (1) cell-based LDL uptake assays, (2) receptor binding kinetics, (3) protein expression/localization, or (4) trafficking assays.",
+      "Include positive controls (known pathogenic LDL receptor variants) and negative controls (known benign variants) in any functional assay.",
+      "Report quantitative functional metrics with 95% confidence intervals (e.g., % activity, fold-change, Kd values).",
+      "Perform biological replicates (≥3 independent cell cultures or patient samples) and technical replicates (≥3 measurements per replicate).",
+      "Use validated, clinically established functional assay methods (e.g., certified cell-based assays, validated binding assays).",
+      "Do NOT conflate population association statistics with functional assay OddsPath calculations.",
+      "If this evidence is intended to support PS3, completely redesign the study to include direct functional assays of the LDL receptor protein."
+    ],
+    "should_iterate": true
+  },
+  "iterations_performed": 3
+}
