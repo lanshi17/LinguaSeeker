@@ -1,0 +1,989 @@
+[
+    {
+        "type": "text",
+        "text": "Familiäre homozygote Hypercholesterinämie ",
+        "text_level": 1,
+        "bbox": [
+            95,
+            54,
+            650,
+            78
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Eine neue Therapieoption bei komplett fehlendem LDL-Rezeptor ",
+        "bbox": [
+            97,
+            85,
+            697,
+            105
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Klaus Peter Mellwig, Martin Farr, Jürgen Diekmann, Dieter Horstkotte, Frank van Buuren ",
+        "bbox": [
+            94,
+            118,
+            721,
+            133
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Die familiäre homozygote Hypercholesterinämie kann schon im jungen Alter zu schweren Komplikationen wie der koronaren Herzkrankheit führen. Ursache dieser sehr seltenen Erkrankung ist meist eine Mutation im LDL-Rezeptor-Gen. Verliert der Rezeptor dadurch seine Aktivität vollständig, reichen herkömmliche Interventionen zur Senkung der Lipidwerte oft nicht aus. Wie dieser Fall zeigt, bietet eine alternative pharmakologische Strategie hier neue Therapiemöglichkeiten. ",
+        "bbox": [
+            95,
+            179,
+            831,
+            264
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Anamnese ",
+        "text_level": 1,
+        "bbox": [
+            260,
+            296,
+            346,
+            310
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Eine 28-jährige Patientin (161 cm, 41 kg) stellt sich mit einer Hypercholesterinämie vor, die seit der Kindheit bekannt ist. Der Vater der Patientin starb 54-jährig an den Folgen eines Herzinfarktes, die Schwester mit 25 Jahren im Rahmen eines akuten Koronarsyndroms. ",
+        "bbox": [
+            260,
+            325,
+            571,
+            409
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Diagnostik und Therapie ",
+        "text_level": 1,
+        "bbox": [
+            260,
+            437,
+            457,
+            453
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Genetik I Die genetische Diagnostik erfolgt durch Sanger-Sequenzierung aller Exons und flankierender Spleistellen des LDL-Rezeptor (LDLR)-Gens (MIM 606945). Diese wird ergänzt durch eine MLPA-Analytik (MRC Holland), um eine exonische Deletion (,Pseudohomozygotie\") auszuschlieen. Dabei zeigt sich, dass eine homozygote Mutation $\\mathrm { c } . 1 2 0 0 \\mathrm { C } > \\mathrm { A }$ | $( \\mathsf { p . T y r } 4 0 0 ^ { \\ast }$ ) vorliegt, die ein Stopp-Codon an Aminosäureposition 400 einführt $\\blacktriangleright$ Abb. 1, blauer Pfeil). Diese ",
+        "bbox": [
+            260,
+            467,
+            571,
+            610
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "image",
+        "img_path": "images/8d77962ebcefc9586d8e550291ec74495663ff57aca0fadf4e7cd765f6751840.jpg",
+        "image_caption": [
+            "Abb. 1 Kompletter Funktionsausfall des LDL-Rezeptors bedingt durch eine homozygote Mutation ${ \\mathsf { c } } . 1 2 0 0 { \\mathsf { C } } { \\mathsf { > A } }$ (p.Tyr400\\*) im LDLR-Gen, die ein vorzeitiges Stopp-Codon an Aminosäureposition 400 einführt. "
+        ],
+        "image_footnote": [],
+        "bbox": [
+            70,
+            636,
+            897,
+            945
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Mutation wurde bereits bei einem anderen Patienten beschrieben, allerdings lag dort eine heterozygote Hypercholesterinämie vor [11]. Die Mutation führt zu einer Verkürzung des LDL-Rezeptors. Da ihm folglich die meisten C-terminalen Domänen und insbesondere die Transmembran-Domäne fehlen, wird er, wenn überhaupt, nur in löslicher Form exprimiert ( Abb. 1, roter Pfeil). Somit ist keine membrangebundene Cholesterinaufnahme möglich und die zugrundeliegende Mutation muss als Nullmutation eingestuft werden (funktionell komplett fehlender Rezeptor). ",
+        "bbox": [
+            593,
+            296,
+            904,
+            481
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Kardiovaskuläre Manifestation | Bei der Patientin wird eine Koronarangiographie durchgeführt. Sie zeigt eine diffuse kalzifizierende koronare Herzkrankheit mit ",
+        "bbox": [
+            593,
+            496,
+            905,
+            552
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "$7 5 \\%$ iger Ostiumstenose der linken Koronararterie, nachfolgend $7 5 \\%$ iger Hauptstammstenose vor der Bifurkation, ",
+        "bbox": [
+            593,
+            554,
+            905,
+            610
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "discarded",
+        "text": "Mellwig KP et al. Familiäre homozygote .. Dtsch Med Wochenschr 2016; 141: 878881 ",
+        "bbox": [
+            67,
+            976,
+            521,
+            987
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "discarded",
+        "text": "878 Kasuistik ",
+        "bbox": [
+            0,
+            0,
+            163,
+            36
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "discarded",
+        "text": "20 ",
+        "bbox": [
+            976,
+            250,
+            1000,
+            767
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "image",
+        "img_path": "images/d5b93a3b3930ccff4a0472c9dd9bf7a3c65988eaf37d79e97bb8c630ee1b95bb.jpg",
+        "image_caption": [],
+        "image_footnote": [],
+        "bbox": [
+            92,
+            56,
+            405,
+            287
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "image",
+        "img_path": "images/403c90bc8cee023166d39b54b429f665b932d0caab680b68cb0620765f163e50.jpg",
+        "image_caption": [
+            "Abb. 2 Fortgeschrittene koronare Herzkrankheit mit Ostiumstenosen der linken Koronararterie, Hauptstammstenose, hochgradiger Stenose des Ramus descendens anterior, kollateralisiertem Verschluss des Ramus marginalis der linken Koronararterie (links) und segmentalem Verschluss der rechten Koronararterie (rechts). "
+        ],
+        "image_footnote": [],
+        "bbox": [
+            426,
+            58,
+            736,
+            288
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "$9 0 \\%$ -iger Stenose des Ramus descendens anterior zu Beginn des distalen Drittels, $\\blacktriangleright$ kollateralisiertem Verschluss des Ramus marginalis 1 und segmentiertem Verschluss der rechten Koronararterie im Abgangsbereich (! Abb. 2). ",
+        "bbox": [
+            92,
+            325,
+            405,
+            409
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Die Duplexsonographie der hirnversorgenden Gefäe weist eine diffuse Verkalkung der Karotiden nach. Diese umfasst die Arteria carotis interna links mit $7 0 { - } 8 0 \\%$ iger Stenose im Bereich des Bulbus /Abganges (Vmax syst $2 7 4 \\mathrm { c m } / s$ und Vmax diast $4 1 \\mathrm { c m } / s ,$ , unter deutlicher Plaquebildung im weiteren Verlauf. Dazu zeigt sich eine höhergradige Stenose der Arteria carotis externa links. Ebenfalls betroffen sind die Arteria carotis communis rechts mit $7 0 - 8 0 \\%$ iger Stenose im mittleren Drittel $\\mathrm { ( V m a x ~ 3 0 0 c m / s }$ ), die Arteria carotis interna rechts mit $6 0 \\%$ -iger Stenose (Vmax syst. $1 8 3 \\mathrm { c m } / \\mathrm { : }$ s und Vmax diast $2 6 \\mathsf { c m } / \\mathsf { s } )$ , sowie die Arteria carotis externa rechts mit hö- hergradiger Stenose. ",
+        "bbox": [
+            92,
+            411,
+            405,
+            596
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            426,
+            325,
+            737,
+            353
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Operative Myokardrevaskularisation I Es folgt eine Myokardrevaskularisation mittels aortokoronarem 4-fach Venenbypass am schlagenden Herzen in OPCAB-Technik mit ",
+        "bbox": [
+            426,
+            369,
+            737,
+            423
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "$\\blacktriangleright$ aortokoronarer Venenbrücke (ACVB) zum Ramus descendens (LAD), $\\blacktriangleright$ zentraler PasPort-Anastomose, $\\blacktriangleright$ aortokoronarer Venenbrücke zum Ramus diagonalis 1 und Ramus marginalis 1 ",
+        "bbox": [
+            426,
+            426,
+            737,
+            495
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "als ersten T-Graft des ACVB auf LAD sowie ACVB auf RCA als zweiten T-Graft des ACVB auf LAD. ",
+        "bbox": [
+            425,
+            496,
+            739,
+            524
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Lipidapherese | Die Laborkontrolle der präoperativen Lipidwerte ergibt folgende Werte: ",
+        "bbox": [
+            425,
+            539,
+            737,
+            567
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "$\\blacktriangleright$ Gesamt-Cholesterin $7 7 3 \\mathrm { m g } _ { i }$ /dl (Normwerte: $1 1 0 { - } 2 2 0 \\mathrm { m g } / \\mathrm { d l } )$ > LDL 733 mg / dl (bis 150 mg / dl) ",
+        "bbox": [
+            426,
+            568,
+            737,
+            610
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "table",
+        "img_path": "images/c31edfb08b129eefe0dff2b217ff2c4b96cee7bbc57edebffbd5cf33d08e7361.jpg",
+        "table_caption": [
+            ". $\\mathsf C =$ Cholesterin, $\\mathsf { L P } ( \\mathsf { a } ) =$ Lipoprotein(a), $\\mathsf { A S T } { = } \\mathsf { G O T }$ (Glutamat-Oxalacetat-Transferase), $\\mathsf { A L T } \\mathsf { = } \\mathsf { G P T }$ (Glutamat-Pyruvat-Transaminase) "
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Zyklus</td><td colspan=\"2\">Gesamt-C (mg/dl)</td><td colspan=\"2\">LDL-C (mg/dl)</td><td colspan=\"2\">HDL-C (mg/dl)</td><td colspan=\"2\">Triglyzeride (mg/dl)</td><td colspan=\"2\">Fibrinogen (mg/dl)</td><td colspan=\"2\">LP(a) (mg/dl)</td><td>AST (U/I)</td><td>ALT (U/l)</td></tr><tr><td></td><td>prä</td><td>post</td><td>prä</td><td>post</td><td>prä</td><td>post</td><td>prä</td><td>post</td><td>prä</td><td>post</td><td>prä</td><td>post</td><td></td><td></td></tr><tr><td colspan=\"15\">vor Beginn der Lomitapid-Therapie</td></tr><tr><td>1</td><td>325</td><td>131</td><td>264</td><td>85</td><td>50</td><td>38</td><td>121</td><td>40</td><td>242</td><td>84</td><td>36</td><td>11</td><td>27</td><td>26</td></tr><tr><td>2</td><td>290</td><td>109</td><td>229</td><td>67</td><td>50</td><td>36</td><td>107</td><td>36</td><td>204</td><td>72</td><td>35</td><td>10</td><td></td><td></td></tr><tr><td>3</td><td>318</td><td>114</td><td>252</td><td>70</td><td>38</td><td>30</td><td>176</td><td>58</td><td>222</td><td>75</td><td>40</td><td>11</td><td></td><td></td></tr><tr><td>4</td><td>405</td><td>135</td><td>340</td><td>93</td><td>40</td><td>39</td><td>151</td><td>50</td><td>202</td><td>66</td><td>42</td><td>11</td><td></td><td></td></tr><tr><td colspan=\"9\">unter Lomitapid-Therapie</td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>1</td><td>219</td><td>83</td><td>162</td><td>44</td><td>44</td><td>29</td><td>63</td><td>23</td><td>185</td><td>56</td><td>25</td><td>7 38</td><td></td><td>42</td></tr><tr><td>2</td><td>225</td><td>75</td><td>171</td><td>43</td><td>44</td><td>30</td><td>80</td><td>18</td><td>204</td><td>80</td><td>31</td><td>6</td><td></td><td></td></tr><tr><td>3</td><td>211</td><td>78</td><td>159</td><td>42</td><td>46</td><td>34</td><td>38</td><td>11</td><td>262</td><td>87</td><td>33</td><td>8</td><td>35</td><td>34</td></tr><tr><td>4</td><td>149</td><td>65</td><td>104</td><td>31</td><td>43</td><td>32</td><td>34</td><td>8</td><td>248</td><td>86</td><td>32</td><td>9</td><td></td><td></td></tr></table>",
+        "bbox": [
+            92,
+            679,
+            929,
+            950
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "discarded",
+        "text": "Mellwig KP et al. Familiäre homozygote . Dtsch Med Wochenschr 2016; 141: 878881 ",
+        "bbox": [
+            477,
+            976,
+            927,
+            987
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "discarded",
+        "text": "Kasuistik 879 ",
+        "bbox": [
+            95,
+            0,
+            1000,
+            35
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            978,
+            234,
+            1000,
+            765
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "image",
+        "img_path": "images/0b49d456b2ad8ed976680f1b68a1552e45179e8a0a92d135558db19a86170e07.jpg",
+        "image_caption": [
+            "Abb. 3 Verlauf der LDL-Plasmakonzentration vor und nach Apherese unter Einleitung einer LomitapidTherapie mit konsekutiver Dosissteigerung. "
+        ],
+        "image_footnote": [],
+        "bbox": [
+            267,
+            58,
+            889,
+            389
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "image",
+        "img_path": "images/647d9aa55786ca57a1130fdb4950a88b51d85432c05c2f3e86a0402e97436fd2.jpg",
+        "image_caption": [],
+        "image_footnote": [],
+        "bbox": [
+            68,
+            537,
+            159,
+            625
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Dr. med. Klaus-Peter Mellwig ",
+        "text_level": 1,
+        "bbox": [
+            70,
+            630,
+            194,
+            653
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "ist Oberarzt der Klinik für Kardiologie mit Schwerpunkt invasive Kardiologie und Intensivmedizin im Herzund Diabeteszentrum NRW, Bad Oeynhausen. kpmellwig@hdz-nrw.de ",
+        "bbox": [
+            70,
+            653,
+            236,
+            738
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "image",
+        "img_path": "images/ce2123c2743f676fac657706e0047ed8406e5cf2c0d8fbf7062663478e3ecb37.jpg",
+        "image_caption": [],
+        "image_footnote": [],
+        "bbox": [
+            70,
+            762,
+            157,
+            849
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Dr. rer. nat. Martin Farr ",
+        "text_level": 1,
+        "bbox": [
+            70,
+            856,
+            211,
+            866
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "ist Leiter des Labors der Klinik für Kardiologie mit Schwerpunkt kardiale Gendiagnostik im Herz- und Diabeteszentrum NRW, Bad Oeynhausen. mfarr@hdz-nrw.de ",
+        "bbox": [
+            68,
+            867,
+            235,
+            952
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "HDL 46mg/dl (Männer $3 5 \\mathrm { - } 5 5 \\mathrm { m g } / \\mathrm { d l }$ , Frauer 45-65 mg /dl) Triglyzeride 135 mg / dl $\\left( 7 0 { - } 1 5 0 \\mathrm { m g } / \\mathrm { d l } \\right)$ Lipoprotein(a) $6 3 \\mathrm { m g } / \\mathrm { d l } \\left( < 3 0 \\mathrm { m g } / \\mathrm { d l } \\right)$ ",
+        "bbox": [
+            260,
+            424,
+            568,
+            481
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "5 Tage nach der operativen Myokardrevaskularisation erfolgt unter Fortsetzung der Statin-Therapie (Simvastatin $4 0 \\mathrm { m g } / \\mathrm { d } )$ und Ezetimib die erste Lipidapherese nach dem HELP-Verfahren (Heparininduzierte extrakorporale LDL-Präzipitation) [1] In wöchentlichen Intervallen wird die Therapie fortgesetzt und später auf 5 Tage reduziert. Es folgen insgesamt 90 Behandlungen während der nächsten 2 Jahre. Die Absenkungsrate für LDL beträgt im Mittel $7 4 \\%$ und für Fibrinogen $7 0 \\%$ Trotz der Behandlung ist eine klinische Verschlechterung in Form einer fortschreitenden AP-Symptomatik feststellbar. Die Spiroergometrie zeigt eine zunehmende ST-Senkung sowie eine abnehmende kardiopulmonale Leistungsfähigkeit. ",
+        "bbox": [
+            260,
+            482,
+            571,
+            696
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Zusätzliche Behandlung mit einem MTP-Inhibitor I ",
+        "text_level": 1,
+        "bbox": [
+            262,
+            711,
+            569,
+            725
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "saminasen überwacht werden: Bei einem Anstieg auf das 3- bis 5-Fache der Norm (ULN) ist eine Dosisreduktion notwendig; steigen die Werte noch höher $( > 5$ ULN), müsste man die Therapie unterbrechen. Bei der Patientin jedoch lagen die Transaminasen (AST, ALT) zu Beginn der Therapie im Normbereich und auch unter der Therapie ist nur ein moderater Anstieg zu verzeichnen (! Tab. 1). ",
+        "bbox": [
+            593,
+            424,
+            905,
+            538
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Wegen der weiterhin erhöhten Lipidparameter vor der Apheresebehandlung (! Tab. 1) fällt 2 Jahre nach der Myokardrevaskularisation die Entscheidung, Lomitapid, einen Inhibitor des mikrosomalen Triglycerid-Transfer-Proteins (MTP), in Deutschland erstmalig auBerhalb einer Studie einzusetzen. Dies geschieht in Kenntnis der Rezeptorstruktur und unter Fortsetzung von Lipidapherese und lipidsenkender Medikation. Die Lipidparameter der letzten 4 Behandlungen sind in $\\blacktriangleright$ Tab. 1 aufgeführt. Eine Dosiserhöhung erfolgt von 5 auf 10 und anschlieend auf $2 0 \\mathrm { m g / d }$ im Abstand von jeweils 8 Wochen ( Abb. 3). Zusätzlich wird die Patientin diätetisch geschult, um eine Steatorrhoe zu vermeiden. Fettlösliche Vitamine werden subs tituiert. Während der Therapie müssen die Tran",
+        "bbox": [
+            260,
+            726,
+            571,
+            952
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Aufklärung zur Familienplanung I Da der LDLRDefekt autosomal-dominant vererbt wird, teilen wir der Patientin mit, dass im Fall eines Kinderwunsches vor Schwangerschaftsbeginn eine humangenetische Beratung erfolgen sollte. Bei ihren Kindern wird zumindest eine heterozygote Hypercholesterinämie auftreten. Liegt beim Partner ebenfalls eine heterozygote Veranlagung vor, erkranken die Kinder mit $5 0 \\%$ iger Wahrscheinlichkeit an einer homozygoten Hypercholesterinämie. ",
+        "bbox": [
+            593,
+            554,
+            905,
+            696
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Diskussion ",
+        "text_level": 1,
+        "bbox": [
+            593,
+            723,
+            682,
+            738
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Genetischer Hintergrund | Die homozygote Hypercholesterinämie ist eine extrem seltene, genetisch bedingte Erkrankung des Cholesterinstoffwechsels mit einer weltweiten Prävalenz von 1:1 000 000 [2, 3]. Bei der Mehrheit der Patienten führen Mutationen im LDLR-Gen zur Erkrankung. Dabei können auf beiden Allelen jeweils die gleiche Mutation (.,echt homozygot\") oder zwei verschiedene Mutationen liegen (,compound heterozygot\"). In Abhängigkeit vom biochemischen Effekt auf den LDLR unterscheidet man ,,Nullmutationen\" mit einer LDLR-Aktivität von unter $2 \\%$ oder ,Defektmutationen\" mit LDLR-Aktivitäten von $2 - 2 5 \\%$ Letztere zeichnen sich durch einen milderen Phänotyp aus. Nur wenige Fälle werden durch Mutationen in anderen Genen verursacht. Insbesondere kommen genetische Veränderungen im Apolipoprotein B (ApoB)-Gen oder im Gen für die Proprotein Convertase Subtilisin / Kexin 9 (PCSK9) vor [4,5]. ",
+        "bbox": [
+            593,
+            754,
+            904,
+            952
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "discarded",
+        "text": "Mellwig KP et al. Familiäre homozygote .. Dtsch Med Wochenschr 2016; 141: 878881 ",
+        "bbox": [
+            68,
+            976,
+            519,
+            987
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "discarded",
+        "text": "880 Kasuistik ",
+        "bbox": [
+            0,
+            0,
+            897,
+            35
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            978,
+            242,
+            1000,
+            769
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            92,
+            54,
+            405,
+            139
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Klinische Darstellung I Charakteristisch für den klinischen Phänotyp der homozygoten Hypercholesterinämie ist das Auftreten von ",
+        "bbox": [
+            92,
+            153,
+            405,
+            195
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "> extrem hohen Konzentrationen an Gesamtund LDL-Cholesterin $\\left( 5 0 0 - 1 0 0 0 \\mathrm { m g / d l } \\right)$ , 4 Xanthomen, > einer koronaren Herzkrankheit bereits im ersten bis zweiten Lebensjahrzehnt und > selten, aber spezifisch, einer supravalvulären Aortenstenose aufgrund groer athero-sklerotischer Plaques an der Aortenwurzel. ",
+        "bbox": [
+            92,
+            196,
+            405,
+            310
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Therapieoptionen I Der therapeutische Goldstandard einer homozygoten Hypercholesterinämie ist die Lipidapherese, begleitet von hoch dosierter Behandlung mit Statinen sowie Ezetimib [6]. In vielen Fällen reicht der cholesterinsenkende Effekt allerdings nicht aus. Weitere Therapieoptionen ergeben sich durch neue pharmakologische Ansätze, wie die ",
+        "bbox": [
+            92,
+            326,
+            405,
+            438
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Hemmung der ApoB-Synthese durch das Antisense-Oligonukleotid Mipomersen [7], Hemmung des mikrosomalen Transfer-Proteins durch Lomitapid [8], oder Erhöhung der LDLR-Dichte durch Antikörpervermittelte Blockade der PCSK9-Wirkung mittels Evolocumab [9] oder Alirocumab [10]. ",
+        "bbox": [
+            92,
+            440,
+            405,
+            539
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "HELP | Bei diesem Verfahren [1]separiert ein Plasmafilter zunächst Plasma und Blutzellen. Das Plasma wird dabei kontinuierlich mit 0,3 molarem Natriumazetat-Puffer $\\left( \\mathsf { p H 4 } , 8 5 \\right)$ mit 100 Einheiten Heparin $\\mathrm { \\dot { m } l }$ gemischt. Dieses Gemisch führt bei einem pH-Wert von 5,12 zu einer sofortigen Fällung des Heparin-Lipoprotein-Fibrinogen-Komplexes. Ein zweiter Filter trennt das Prä- zipitat ab und das LDL-freie Plasma passiert einen Ionenaustauscher, der das überschüssige Heparin entfernt. Mittels Bicarbonatdialyse wird das Plasma dann auf das Ausgangvolumen sowie auf den physiologischen pH-Wert von 7,4 eingestellt. Dieses führt man dem Patienten anschlieBend wieder zu. Insgesamt durchlaufen in einer Sitzung von ca. 2 Stunden im Durchschnitt $2 8 0 0 \\mathrm { m l }$ Plasma den Filter. ",
+        "bbox": [
+            92,
+            554,
+            405,
+            795
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Pharmakotherapie mit Statin und Ezitimib |Statine bewirken eine vermehrte LDL-Rezeptorbildung, indem sie die 3-Hydroxy-3-Methylglutaryl-Coenzym-A (HMG-CoA)-Reduktase hemmen. Aufgrund des genetisch bedingten Rezeptordefekts ist bei der Patientin somit keine bedeutsame Senkung des LDL durch Statine zu erwarten. Ezetimib hingegen inaktiviert vollständig den Cholesterol-Transporter Niemann-Pick C1-like protein 1 (NPC1L1). Dadurch resorbiert der ",
+        "bbox": [
+            92,
+            810,
+            405,
+            953
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Dünndarm nur ca. $5 0 \\%$ des über die Nahrung zugeführten (exogenen) sowie des über die Galle ausgeschiedenen (biliär endogenen) Cholesterins. Da die endogene Cholesterinproduktion in der Leber jedoch steigt, reduziert sich der Effekt letztlich auf eine maximal $2 0 \\%$ ige Senkung des LDL-Cholesterin-Serumspiegels. ",
+        "bbox": [
+            425,
+            54,
+            739,
+            153
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Lomitapid | Dieses Pharmakon ist seit 2012 von der FDA und EMA für Patienten mit homozygoter familiärer Hypercholesterinämie zugelassen. Es hemmt das MTP und verhindert so die Bildung und Sekretion von VLDL-Partikeln in Hepatozyten und Chylomikronen sowie in Enterozyten. Dort verhindert Lomitapid die Inkorporation der Lipide in ApoB. Als adjuvantes Medikament kann es die Lipidwerte zusätzlich senken: ",
+        "bbox": [
+            426,
+            167,
+            739,
+            296
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "$\\blacktriangleright$ LDL um $5 0 \\%$ $\\blacktriangleright$ ApoB um $4 9 \\%$ $\\blacktriangleright$ Lipoprotein(a) um $1 5 \\%$ $\\blacktriangleright$ Triglyzeride um $45 \\%$ ",
+        "bbox": [
+            426,
+            297,
+            588,
+            353
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "An unerwünschten Arzneimittelwirkungen sind Leberfunktionsstörungen möglich: ",
+        "bbox": [
+            425,
+            354,
+            739,
+            382
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "$\\blacktriangleright$ Erhöhung der Transaminasen $\\blacktriangleright$ Lebersteatose ",
+        "bbox": [
+            426,
+            383,
+            628,
+            409
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Gastrointestinale Störungen, die überwiegend als Steatorrhoe auftreten, können durch eine fettarme Diät und die Substitution mit fettlöslichen Vitaminen (Vitamin A, D, E, K) und essentiellen Fettsäuren minimiert werden. ",
+        "bbox": [
+            426,
+            411,
+            739,
+            481
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Konsequenz für Klinik und Praxis ",
+        "text_level": 1,
+        "bbox": [
+            438,
+            498,
+            652,
+            511
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Die familiäre homozygote Hypercholesterinämie ist eine seltene Erkrankung des Cholesterinstoffwechsels, die meist durch eine Mutation des LDL-Rezeptor-Gens bedingt ist. Statin, Ezetimib und Apherese als klassische Kombinationstherapie reichen nicht immer aus, um die LDL-Zielwerte zu erreichen. Ist eine ,,Nullmutation\" des LDL-Rezeptors gendiagnostisch nachweisbar, bleibt eine Rezeptor-rezyklierende Therapie mit PCSK9-Inhibitor wirkungslos. Um das LDL zusätzlich zu reduzieren, ist in diesem Fall begleitend zur Lipidapherese eine Rezeptor-unabhängige Pharmakotherapie mit Lomitapid möglich. ",
+        "bbox": [
+            438,
+            513,
+            724,
+            741
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "ist Leiter der Abteilung Immunhämatologie des Instituts für Laboratoriumsund Transfusionsmedizin im Herz- und Diabeteszentrum NRW, Bad Oeynhausen. jdiekmann@hdz-nrw.de ",
+        "bbox": [
+            761,
+            160,
+            922,
+            244
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Wir danken Birthe Cantow und Sonja Bögeholz für die Durchführung der molekulargenetischen Analytik. ",
+        "bbox": [
+            425,
+            771,
+            731,
+            795
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Danksagung ",
+        "text_level": 1,
+        "bbox": [
+            426,
+            759,
+            509,
+            770
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Dr. Mellwig gibt an, dass er ein Vortragshonorar der Firma Aegerion erhalten hat. Die übrigen Autoren geben an, dass kein Interessenkonflikt besteht. ",
+        "bbox": [
+            426,
+            846,
+            719,
+            881
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Univ.-Prof. Dr. med. Dieter Horstkotte ",
+        "text_level": 1,
+        "bbox": [
+            761,
+            363,
+            922,
+            385
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "image",
+        "img_path": "images/8e4eb0a9fee9b2e8d0064ca9c6c062252fb23aaf508cba8d7fc4f30b292a2b06.jpg",
+        "image_caption": [],
+        "image_footnote": [],
+        "bbox": [
+            759,
+            271,
+            850,
+            358
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Jürgen Diekmann ",
+        "text_level": 1,
+        "bbox": [
+            761,
+            147,
+            870,
+            158
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "image",
+        "img_path": "images/4ea6b0e07795ed46c3c63ac9b75b7e1509c7d15199c9d89cfe0e4ad877c5116f.jpg",
+        "image_caption": [],
+        "image_footnote": [],
+        "bbox": [
+            761,
+            54,
+            853,
+            142
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "ist Direktor der Klinik für Kardiologie im Herz- und Diabeteszentrum NRW, Bad Oeynhausen. akleemeyer@hdz-nrw.de ",
+        "bbox": [
+            759,
+            387,
+            921,
+            447
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Interessenkonflikt ",
+        "text_level": 1,
+        "bbox": [
+            428,
+            833,
+            541,
+            844
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "S ",
+        "bbox": [
+            759,
+            472,
+            852,
+            559
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "PD Dr. med. Frank van Buuren, MBA ",
+        "text_level": 1,
+        "bbox": [
+            761,
+            566,
+            870,
+            587
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "ist Oberarzt der Klinik für Kardiologie mit Schwerpunkt invasive Kardiologie und invasive Angiologie im Herz- und Diabeteszentrum NRW, Bad Oeynhausen fvbuuren@hdz-nrw.de ",
+        "bbox": [
+            759,
+            590,
+            929,
+            673
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "discarded",
+        "text": "DOI 10.1055/s-0041-109013 Dtsch Med Wochenschr 2016; 141:878881 $\\circledcirc$ Georg Thieme Verlag KG . Stuttgart $\\cdot$ New York. ISSN 0012-0472 ",
+        "bbox": [
+            759,
+            878,
+            929,
+            953
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "discarded",
+        "text": "Vollständiges Literaturverzeichnis unter http://dx.doi.org/10.1055/s-0041-109013 ",
+        "bbox": [
+            426,
+            929,
+            670,
+            953
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "discarded",
+        "text": "Mellwig KP et al. Familiäre homozygote …. Dtsch Med Wochenschr 2016; 141: 878881 ",
+        "bbox": [
+            477,
+            976,
+            927,
+            987
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "discarded",
+        "text": "Kasuistik 881 ",
+        "bbox": [
+            94,
+            0,
+            1000,
+            35
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            976,
+            244,
+            1000,
+            761
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Literatur ",
+        "text_level": 1,
+        "bbox": [
+            260,
+            55,
+            314,
+            66
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "1 Wieland H, Seidel D. A simple specific method for precipitation of low density lipopro-teins. J Lipid Res 1983; 24: 904909   \n2 Goldstein JL, Schrott HG, Hazzard WR et al. Hyperlipidemia in coronary heart dis-ease. II. Genetic analysis of lipid levels in 176 families and delineation of a new in-herited disorder, combined hyperlipidemia. J Clin Invest 1973; 52: 15441568   \n3 Sjouke B, Kusters DM, Kindt I et al. Homozygous autosomal dominant hypercholes-terolaemia in the Netherlands: prevalence, genotype-phenotype relationship, and clinical outcome. Eur Heart J 2014, D0l: 10. 1093/eurheartj / ehu058   \n4 Pisciotta L, Priore Oliva C, Cefalu ABet al. Additive effect of mutations in LDLR and PCSK9 genes on the phenotype of familial hypercholesterolemia. Atherosclerosis 2006; 186: 433440   \n5 Stein EA, Mellis S, Yancopoulos GD et al. Effect of a monoclonal antibody to PCSK9 on LDL cholesterol. N Engl J Med 2012; 366: 11081118   \n6 Stefanutti C, Thompson GR. Lipoprotein apheresis in the management of familial hypercholesterolaemia: historical perspective and recent advances. Curr Atheroscler Rep 2015; 17: 465   \n7 Visser ME, Witztum JL, Stroes ES et al. Antisense oligonucleotides for the treatment of dyslipidaemia. Eur Heart J 2012; 33: 14511458   \n8 Perry CM. Lomitapide: a review of its use in adults with homozygous familial hyper-cholesterolemia. Am J Cardiovasc Drugs 2013; 13: 285-296   \n9 . and safety of evolocumab in reducing lipids and cardiovascular events. N Engl J Med 2015; 372: 1500-1509   \n10Roinsn G, Farnier M, Krep M et al. Efiand safety of alirocumab in reducing lipids and cardiovascular events. N Engl J Med 2015; 372: 14891499   \n11 Mozas P, Castillo S, Tejedor D et al. Molecular characterization of familial hypercholesterolemia in Spain: identification of 39 novel and 77 recurrent mutations in LDLR. Hum Mutat 2004; 24: 187 ",
+        "bbox": [
+            258,
+            68,
+            573,
+            564
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "discarded",
+        "text": "Mellwig KP et al. Familiäre homozygote … Dtsch Med Wochenschr 2016; 141: 878881 ",
+        "bbox": [
+            67,
+            976,
+            519,
+            987
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            0,
+            0,
+            67,
+            35
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "discarded",
+        "text": "20 ",
+        "bbox": [
+            976,
+            242,
+            1000,
+            770
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "discarded",
+        "text": "Kasuistik ",
+        "bbox": [
+            70,
+            0,
+            900,
+            35
+        ],
+        "page_idx": 4
+    }
+]

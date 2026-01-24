@@ -1,0 +1,18 @@
+{
+  "findings": [
+    "The paper describes a clinical trial of alirocumab (PCSK9 inhibitor) in pediatric patients with heterozygous familial hypercholesterolemia (HeFH), showing significant LDL-C reduction compared to placebo. However, this is a therapeutic efficacy study, not a functional assay of specific genetic variants. The study does not assess the functional impact of individual PCSK9 or LDLR variants on protein function."
+  ],
+  "p1": 0.001,
+  "p2": 0.001,
+  "odds_path": 1.0,
+  "strength": "indeterminate",
+  "rationale": "The study is a clinical trial evaluating drug efficacy, not a functional assay of specific genetic variants. No variant-specific functional data (e.g., protein expression, binding affinity, enzymatic activity) are reported. The paper does not provide data on proportions of pathogenic vs. benign variants in functional assay groups.",
+  "experimental_details": "Phase 3 randomized, double-blind, placebo-controlled trial of alirocumab in pediatric HeFH patients. Patients received subcutaneous alirocumab or placebo every 2 or 4 weeks for 24 weeks. Primary endpoint: percent change in LDL-C from baseline to week 24. No in vitro or in vivo functional assays of specific genetic variants were performed.",
+  "p1_source_location": "P1/P2 data not explicitly reported; no functional assay data on variant pathogenicity proportions",
+  "p2_source_location": "P1/P2 data not explicitly reported; no functional assay data on variant pathogenicity proportions",
+  "ps3_criteria_met": false,
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "mechanism unclear; study does not assess functional impact of specific genetic variants, only evaluates therapeutic drug efficacy in a clinical population",
+  "arbiter_score": 5.0
+}

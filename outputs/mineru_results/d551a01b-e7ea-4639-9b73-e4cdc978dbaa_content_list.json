@@ -1,0 +1,3057 @@
+[
+    {
+        "type": "text",
+        "text": "Glofitamab in refractory or relapsed diffuse large B cell lymphoma after failing CAR-T cell therapy: a phase 2 LYSA study ",
+        "text_level": 1,
+        "bbox": [
+            131,
+            288,
+            922,
+            363
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Guillaume Cartron, Roch Houot, Yassine Al Tabaa, Fabien Le Bras, Loic Ysebaert, Sylvain Choquet, Fabrice Jardin, Jacques-Olivier Bay, François-Xavier Gros, Franck Morschhauser, et al. ",
+        "bbox": [
+            144,
+            369,
+            909,
+            441
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "To cite this version: ",
+        "text_level": 1,
+        "bbox": [
+            139,
+            499,
+            378,
+            518
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Guillaume Cartron, Roch Houot, Yassine Al Tabaa, Fabien Le Bras, Loic Ysebaert, et al.. Glofitamab in refractory or relapsed diffuse large B cell lymphoma after failing CAR-T cell therapy: a phase 2 LYSA study. Nature Cancer, 2025, 6, pp.1173-1183. ff10.1038/s43018-025-00941-2ff. ffhal-05029288ff ",
+        "bbox": [
+            127,
+            531,
+            942,
+            580
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "HAL Id: hal-05029288 ",
+        "text_level": 1,
+        "bbox": [
+            364,
+            671,
+            635,
+            690
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "https://hal.science/hal-05029288v1 ",
+        "text_level": 1,
+        "bbox": [
+            289,
+            697,
+            707,
+            718
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Submitted on 29 Aug 2025 ",
+        "bbox": [
+            391,
+            727,
+            606,
+            741
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "HAL is a multi-disciplinary open access archive for the deposit and dissemination of scientific research documents, whether they are published or not. The documents may come from teaching and research institutions in France or abroad, or from public or private research centers. ",
+        "bbox": [
+            92,
+            802,
+            490,
+            898
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "L’archive ouverte pluridisciplinaire HAL, est destinée au dépôt et à la diffusion de documents scientifiques de niveau recherche, publiés ou non, émanant des établissements d’enseignement et de recherche français ou étrangers, des laboratoires publics ou privés. ",
+        "bbox": [
+            507,
+            802,
+            907,
+            898
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "discarded",
+        "text": "HAL open science ",
+        "bbox": [
+            332,
+            84,
+            719,
+            192
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            117,
+            502,
+            132,
+            516
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Title: Glofitamab in Refractory or Relapsed Diffuse Large B-cell Lymphoma after Failing CART cell Therapy: A Phase 2 LYSA study ",
+        "bbox": [
+            112,
+            89,
+            883,
+            143
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Authors and Affiliations: ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            194,
+            328,
+            213
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Guillaume Cartron1,2, Roch Houot3,4, Yassine Al Tabaa5, Fabien Le Bras6, Loïc Ysebaert7,8, Sylvain Choquet9, Fabrice Jardin10,11, Jacques-Olivier Bay12, François-Xavier Gros13, Franck Morschhauser14,15, Olivier Casasnovas16,17, Thomas Gastinne18, Catherine Thieblemont19,20, Magalie Joris21, Laure Ricard22, Caroline Regny23, Laurianne Drieu La Rochelle24, Pierre Feugier25,26, Ambroise Marcais27, Samuel Griolet28, Karin Tarte29, Camille Laurent30,31, Pierre Sesques32 ",
+        "bbox": [
+            114,
+            228,
+            887,
+            422
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "1Department of Hematology, University Hospital of Montpellier, Montpellier, France   \n2UMR CNRS 5535, Montpellier, France   \n3Department of Hematology, University Hospital of Rennes, Rennes, France   \n4UMR U1236, INSERM, University of Rennes, Rennes, France   \n5Scintidoc Nuclear Medicine Center, Clinique Clémentville, Montpellier, France   \n6Department of Hematology, Lymphoma Malignancies Unit, Henri Mondor Hospital, Assistance   \nPublique-Hôpitaux de Paris, Créteil, France   \n7Department of Hematology, Cancer University Institute of Toulouse Oncopole, Toulouse   \n8Centre de Recherches en Cancérologie de Toulouse. INSERM U1037, Toulouse, France   \n9Department of Hematology, La Pitié Salpetrière Hospital, Assistance Publique-Hôpitaux de Paris,   \nParis, France ",
+        "bbox": [
+            111,
+            473,
+            890,
+            844
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "10Department of Hematology, U1245, Henri Becquerel Institute, Rouen, France ",
+        "bbox": [
+            114,
+            856,
+            743,
+            876
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            857,
+            989
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "discarded",
+        "text": "1 ",
+        "bbox": [
+            869,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "11INSERM U1245, Rouen, France ",
+        "bbox": [
+            117,
+            89,
+            388,
+            108
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "12Department of Adults Cell Therapy and Clinical Hematology, University Hospital Clermont",
+        "bbox": [
+            114,
+            125,
+            883,
+            143
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Ferrand, Clermont-Ferrand, France ",
+        "bbox": [
+            116,
+            160,
+            395,
+            179
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Bordeaux, France ",
+        "bbox": [
+            116,
+            229,
+            259,
+            247
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "14Department of Hematology, University Hospital of Lille, Lille, France ",
+        "bbox": [
+            117,
+            263,
+            686,
+            284
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "15ULR 7365 GRITA, Lille, France ",
+        "bbox": [
+            117,
+            297,
+            392,
+            318
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "16Department of Hematology, University Hospital Dijon Bourgogne, Dijon, France ",
+        "bbox": [
+            116,
+            333,
+            774,
+            353
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "17INSERM U1231, Dijon, France ",
+        "bbox": [
+            117,
+            367,
+            383,
+            387
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "18Department of Hematology, University Hospital, Nantes, France ",
+        "bbox": [
+            116,
+            402,
+            640,
+            422
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "19Department of Onco-Hematology, Saint Louis Hospital, Assistance Publique-Hôpitaux de Paris, ",
+        "bbox": [
+            114,
+            438,
+            887,
+            458
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Paris, France ",
+        "bbox": [
+            114,
+            473,
+            222,
+            492
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "20University of Paris Cité, Paris, France ",
+        "bbox": [
+            114,
+            507,
+            433,
+            526
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "21Department of Hematology, University Hospital of Amiens, Amiens, France ",
+        "bbox": [
+            114,
+            542,
+            736,
+            563
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "22Department of Hematology, Saint Antoine Hospital, Assistance Publique-Hôpitaux de Paris, ",
+        "bbox": [
+            114,
+            577,
+            892,
+            598
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Paris, France ",
+        "bbox": [
+            114,
+            613,
+            222,
+            631
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "23Department of Hematology, University Hospital of Grenoble, Grenoble, France ",
+        "bbox": [
+            116,
+            646,
+            759,
+            667
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "24Department of Hematology, University Hospital of Tours, Tours, France ",
+        "bbox": [
+            120,
+            683,
+            709,
+            702
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "25Department of Hematology, University Hospital of Nancy, Nancy, France ",
+        "bbox": [
+            119,
+            717,
+            714,
+            737
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "26INSERM 1256, Nancy, France ",
+        "bbox": [
+            116,
+            751,
+            375,
+            771
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "27Department of Hematology, Necker Hospital, Assistance Publique-Hôpitaux de Paris, Paris, ",
+        "bbox": [
+            114,
+            786,
+            885,
+            806
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "France ",
+        "bbox": [
+            116,
+            823,
+            173,
+            840
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "28Department of Biostatistics, LYSARC, Lyon-Sud Hospital, Pierre-Bénite, France ",
+        "bbox": [
+            114,
+            856,
+            772,
+            876
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            859,
+            989
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "discarded",
+        "text": "2 ",
+        "bbox": [
+            869,
+            939,
+            883,
+            953
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "29UMR1236, SITI Laboratory, University Hospital, INSERM, EFS, Rennes, France   \n30Department of Pathology, Cancer University Institute of Toulouse Oncopole, Toulouse, France   \n31Centre de Recherches en Cancérologie de Toulouse, INSERM U1037, Toulouse, France   \n32Department of Hematology, University Hospital of Lyon, Lyon, France ",
+        "bbox": [
+            112,
+            88,
+            883,
+            214
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Corresponding author: Guillaume Cartron, MD-PhD, Département d’Hématologie Clinique, Centre Hospitalier Universitaire, 80 Avenue Augustin Fliche, 34295 Montpellier Cedex 05, France. Phone: 33 (0) 4 67 33 83 64. Fax: 33 (0) 4 67 33 91 94. E-mail: g-cartron@chumontpellier.fr. ",
+        "bbox": [
+            112,
+            263,
+            887,
+            388
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            857,
+            989
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "discarded",
+        "text": "3 ",
+        "bbox": [
+            869,
+            939,
+            883,
+            953
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "ABSTRACT ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            90,
+            241,
+            111
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Patients with diffuse large B-cell lymphoma (DLBCL) refractory or in first progression/relapse (R/R) after chimeric antigen receptor-T (CAR-T) cell therapy exhibit dramatic outcomes. We enrolled such patients in a phase 2 single-arm, non-blinded, trial (NCT04703686) to evaluate the efficacy and safety of glofitamab, a CD20xCD3 T-cell-engaging bispecific antibody, employing a short ramp-up regimen to reach full dose within one week. A total of 46 patients received at least one glofitamab infusion following obinutuzumab (anti-CD20 monoclonal antibody) pre-treatment. The primary endpoint was overall survival (OS). Secondary endpoints included independentassessed best overall metabolic response rate (OMRR) and complete metabolic response rate (CMRR), progression-free survival (PFS), duration of response, safety and tolerability, and healthrelated quality of life. After a median follow-up of 15.3 months $9 5 \\%$ confidence interval [CI], 10.1–17.7), the primary endpoint was met, achieving a median OS of 14.7 months ( $90 \\%$ CI, 8.8– not reached). Best OMRR was $7 6 . 1 \\%$ . Best CMRR was $4 5 . 7 \\%$ . Median PFS was 3.8 months $9 5 \\%$ CI, 2.4–19.6). Despite the shortened set-up dosing, no excess cytokine release syndrome or neurotoxicity events were observed (grade ${ \\ge } 3$ , $0 \\%$ for both). In conclusion, glofitamab improved OS in patients with R/R DLBCL after CAR-T cell therapy, with a favorable safety profile. ",
+        "bbox": [
+            112,
+            127,
+            887,
+            641
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            856,
+            989
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "discarded",
+        "text": "4 ",
+        "bbox": [
+            870,
+            939,
+            883,
+            952
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "MAIN TEXT ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            90,
+            250,
+            111
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Patients diagnosed with diffuse large B-cell lymphoma (DLBCL) often face grim outcomes upon reaching the third-line of treatment, with a reported overall survival (OS) of less than 7 months1,2. Recent regulatory approvals of chimeric antigen receptor-T (CAR-T) cell products have transformed the treatment landscape for DLBCL in second and subsequent lines3,4. Axicabtagene ciloleucel (axi-cel), lisocabtagene maraleucel (liso-cel), and tisagenlecleucel (tisa-cel) have received initial approval by the Food and Drug Administration (FDA) and European Medicines Agency (EMA) for use after failing two or more lines of lymphoma therapy5. Subsequently, both agencies granted axi-cel and liso-cel approval for second-line treatment of adults with relapsed/refractory (R/R) LBCL, based on the prolonged median event-free survival observed in two phase 3 randomized controlled trials (ZUMA-7 and TRANSFORM, respectively) compared to chemotherapy followed by autologous stem cell transplantation (ASCT)6,7. These phase 3 study findings may be extrapolated to patients ineligible for ASCT, as demonstrated in subsequent phase 2 studies8,9. ",
+        "bbox": [
+            112,
+            126,
+            887,
+            569
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Despite the initial efficacy of CAR-T cell therapy, some patients with aggressive R/R DLBCL may be refractory to such therapy or progress/relapse later. Observations from a retrospective study10 and the French registry DESCAR- $\\mathbf { \\nabla } \\cdot \\mathbf { T } ^ { 1 1 }$ highlight that patients who relapse after CAR-T cell therapy face a dramatic outcome, with a median OS shorter than 6 months. Yet, treatment options after failing CAR-T cell therapy are limited, stressing the need for novel therapeutic agents5. ",
+        "bbox": [
+            112,
+            617,
+            887,
+            779
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Bispecific antibodies like glofitamab and epcoritamab, that target human CD20-expressing tumor cells and the CD3 epsilon component of the T-cell receptor complex, have emerged as novel ",
+        "bbox": [
+            114,
+            827,
+            885,
+            882
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "discarded",
+        "text": "5 ",
+        "bbox": [
+            869,
+            939,
+            883,
+            953
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "treatment options in this patient population5,12. Glofitamab has recently gained approval from the FDA and EMA for the treatment of patients with R/R DLBCL after two or more lines of systemic lymphoma therapy, and is currently recommended as a third-line option4. This approval was based on the encouraging results of NP30179, a phase 1/2 dose-escalation study13,14. The phase 2 part of NP30179 study enrolled 155 patients with R/R non-Hodgkin’s lymphoma (NHL), including 110 patients $( 7 1 \\% )$ with R/R DLBCL. Patients received an infusion of obinutuzumab 7 days prior to first glofitamab infusion to mitigate the side effects associated with bispecific antibodies, mainly cytokine release syndrome (CRS) and neurotoxicity. Glofitamab was then administered at a low dose of $2 . 5 \\mathrm { m g }$ on Day 8 of Cycle 1 and stepped up to the full dose of $3 0 ~ \\mathrm { m g }$ on Day 1 of Cycle 2. At a median follow-up of 12.6 months, the overall response rate (ORR) was $52 \\%$ and complete response rate (CRR) was $3 9 \\% ^ { 1 3 }$ . ",
+        "bbox": [
+            112,
+            88,
+            887,
+            459
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "There are currently no prospective studies assessing the use of bispecific antibodies in patients with DLBCL, refractory or in first progression/relapse after CAR T-cell therapy. However, several factors associated with CAR-T cell therapy outcomes, such as T-cell lymphodepletion before CAR-T cell infusion, the CAR-T cell “exhausted” phenotype, and low CAR-T cell expansions, have raised questions about the efficacy of using CD20xCD3 antibodies in patients who previously failed to respond to CAR T-cells15-17. Accordingly, the Lymphoma Study Association (LYSA) conducted a prospective phase 2 study, BiCAR (NCT04703686), to evaluate the efficacy and safety of glofitamab in patients with DLBCL refractory or experiencing a first relapse after CART cell infusion. This study employed a short ramp-up regimen allowing to reach the full dose of glofitamab within one week. We report here the primary analysis of the ongoing BiCAR study. ",
+        "bbox": [
+            112,
+            506,
+            887,
+            843
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            857,
+            989
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "discarded",
+        "text": "6 ",
+        "bbox": [
+            869,
+            939,
+            883,
+            953
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "Results ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            92,
+            189,
+            111
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "Patient disposition ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            131,
+            274,
+            148
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "This study comprised two distinct cohorts of patients: Cohort 1, enrolling patients with CD20- positive R/R DLBCL, and Cohort 2, enrolling patients with R/R primary mediastinal B-cell lymphoma, mantle cell lymphoma, transformed indolent NHL, or indolent NHL. Refractory designates patients who have never experienced a metabolic response (i.e., stable or progressive disease) after CAR-T cell therapy. Relapse/progression designates patients who experienced metabolic response (partial or complete metabolic response) after CAR-T cell therapy and then relapsed/progressed on subsequent positron emission tomography - computed tomography (PETCT). In this report, we present the results of the primary analysis from Cohort 1, with a data cutoff date of 28 November 2023. Data monitoring was stopped on 31 August 2023; therefore, the ongoing survival data were censored at this point. ",
+        "bbox": [
+            112,
+            165,
+            887,
+            500
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "Between 3 May 2021 and 27 April 2023, a total of 62 patients were screened, of whom 47 were enrolled in Cohort 1, and were pretreated with $1 { , } 0 0 0 ~ \\mathrm { m g }$ of obinutuzumab administered 3 days prior to the first glofitamab dose. During Cycle 1, which consisted of 14 days, glofitamab was administered intravenously at incremental doses of $2 . 5 ~ \\mathrm { m g }$ on Day 1, followed by $1 0 ~ \\mathrm { m g }$ on Day 3, and $3 0 ~ \\mathrm { m g }$ on Day 8. Cycle 2 was initiated on Day 15, where patients received $3 0 ~ \\mathrm { m g }$ of glofitamab intravenously. As such, the time between obinutuzumab pre-treatment and the first full dose of glofitamab $( 3 0 ~ \\mathrm { m g } )$ was 11 days. The second full dose of glofitamab was infused at Day 15, yielding a cumulative dose of $7 2 . 5 ~ \\mathrm { m g }$ of glofitamab within 15 days. The study design and treatment schedule are presented in Fig. 1. ",
+        "bbox": [
+            112,
+            547,
+            887,
+            848
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            856,
+            989
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "discarded",
+        "text": "7 ",
+        "bbox": [
+            870,
+            939,
+            882,
+            952
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "Of the 47 patients, 46 received at least one dose of glofitamab, constituting the full analysis set (FAS). The median time between CAR-T cell infusion and enrollment was 4.4 months (range, 1.3– 15.9). Almost all patients $( 4 5 / 4 7 ; 9 5 . 7 \\% )$ received at least two cycles of glofitamab. Overall, 43 of 46 patients $( 9 3 . 5 \\% )$ received at least two cycles of glofitamab with no progression within the two first cycles. Major protocol deviations were reported for three patients: one patient did not fulfill the inclusion criteria related to adequate liver function, and two patients did not fulfill the exclusion criteria related to acute infection or reactivation of a latent infection $\\lceil n = 1$ who had COVID-19 pneumonia) and to prior malignancy $( n = 1 )$ ). The patient disposition flow diagram is presented in Fig. 2. At the time of data cut-off, 16 of 46 patients $( 3 4 . 8 \\% )$ had completed glofitamab treatment, and 29 of 46 patients $( 6 3 . 0 \\% )$ had permanently discontinued glofitamab treatment, the majority of whom due to disease progression ${ n = 2 3 }$ ). ",
+        "bbox": [
+            112,
+            89,
+            887,
+            459
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Patient demographics and disease characteristics of the FAS $N { = } 4 6 )$ ) are summarized in Table 1 and Supplementary Table 1. Mean $\\pm$ standard deviation (SD) age at enrollment was $5 9 . 7 \\pm 1 3 . 8 5$ years, and $3 2 . 6 \\%$ of patients were females. The majority of patients (38/46; $8 2 . 6 \\%$ ) had an Ann Arbor stage III or IV, and 26 of 45 $( 5 7 . 8 \\% )$ had an international prognostic index $\\left( \\mathrm { I P I } \\right) \\ge 3 .$ . Lactate dehydrogenase (LDH) level was abnormal in 35 of 45 patients $( 7 7 . 8 \\% )$ ). Mean $\\pm$ SD total metabolic tumor volume (TMTV) was $1 3 5 . 9 \\pm 2 1 4 . 6 \\ \\mathrm { c m } ^ { 3 }$ . Overall, 37 of 46 patients $( 8 0 . 4 \\% )$ received ${ \\ge } 3$ lines of previous treatment for lymphoma including CAR-T cell therapy. All patients in the FAS had a biopsy proven $\\mathrm { C D } 2 0 +$ DLBCL confirmed by central review, with 41 patients $( 8 9 . 1 \\% )$ having an H score of $3 0 0 ^ { 1 9 }$ . CD19 was expressed in 29/46 patients $( 6 3 . 0 \\% )$ . At screening, 15 patients $( 3 2 . 6 \\% )$ had refractory disease, while 31 patients $( 6 7 . 4 \\% )$ relapsed/progressed after first CAR-T cell therapy. ",
+        "bbox": [
+            112,
+            507,
+            885,
+            878
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            857,
+            989
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "discarded",
+        "text": "8 ",
+        "bbox": [
+            869,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "CAR T-cells and different T-cells counts were evaluated at inclusion and are presented in Supplementary Table 2. CAR T-cells were detectable $( \\geq 1$ cells per $\\mu \\mathrm { L }$ ) in 17/37 patients $( 4 5 . 9 \\% )$ and non-detectable in 20/37 $( 5 4 . 1 \\% )$ , with data missing in 9/46 patients. Median T-lymphocyte count was 436 per $\\mu \\mathrm { L }$ (range, 23–2587), including 12 per $\\mu \\mathrm { L }$ (range, 10–1553) T4 lymphocytes and 186 per $\\mu \\mathrm { L }$ (range, 8–1722) T8 lymphocytes. ",
+        "bbox": [
+            112,
+            123,
+            887,
+            290
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "Primary outcome ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            342,
+            264,
+            359
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "The primary endpoint was OS in patients with R/R DLBCL (Cohort 1). OS was measured from the date of the first glofitamab infusion to the date of death from any cause; alive patients were censored at the date of last contact or cut-off, whichever occurred first. The BiCAR study was designed to detect an improvement in median OS from 6.3 to 12.6 months (hazard ratio [HR], 0.5), assuming a $90 \\%$ power at a $5 \\%$ (one-sided) significance level. At a median follow-up duration of 15.3 months $9 5 \\%$ confidence interval [CI], 10.1–17.7), the primary endpoint was met, with a median OS of 14.7 months $90 \\%$ CI, 8.8–not reached) (Fig. 3a). The estimated OS rates at 8, 12, and 24 months were $6 8 . 9 \\%$ ( $90 \\%$ CI, 55.3–79.1), $5 5 . 9 \\%$ ( $90 \\%$ CI, 41.2–68.2) and $3 1 . 2 \\%$ ( $90 \\%$ CI, 14.1–50.1), respectively. ",
+        "bbox": [
+            112,
+            375,
+            887,
+            675
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "Secondary outcomes ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            724,
+            289,
+            742
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "Key secondary endpoints included independent- and investigator-assessed overall metabolic response rate (OMRR) and complete metabolic response rate (CMRR) after Cycles 2, 6, 9, and at the end of glofitamab treatment. The end of glofitamab treatment was defined as the end of Cycle 11 or permanent discontinuation of glofitamab, whichever occurred first. Secondary endpoints also ",
+        "bbox": [
+            114,
+            758,
+            885,
+            883
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "discarded",
+        "text": "9 ",
+        "bbox": [
+            869,
+            939,
+            883,
+            952
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "included independent- and investigator-assessed best OMRR and CMRR, progression-free survival (PFS) from the first glofitamab infusion, duration of response (DoR), duration of complete response (DoCR), nature and severity of reported adverse events, deaths, and health-related quality of life (QoL). Metabolic response was evaluated according to the Lugano 2014 response criteria18, after Cycles 2, 4, 6, 9, and 11. ",
+        "bbox": [
+            114,
+            88,
+            887,
+            250
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "The independent- and investigator-assessed OMRR and CMRR after Cycles 2, 6, 9, and at end of glofitamab treatment are presented in Table 2. Investigator-assessed OMRR was $6 6 . 7 \\%$ ( $9 5 \\%$ CI, 51.0–80.0) after Cycle 2, with 14 of 45 patients $( 3 1 . 1 \\% )$ achieving CMR and 16 of 45 $( 3 5 . 6 \\% )$ achieving partial metabolic response (PMR). OMRR increased after Cycles 6 and 9, along with an increase in the number of patients with CMR. According to central independent review, OMRR was $7 7 . 3 \\%$ b $9 5 \\%$ CI, 62.2–88.5) after Cycle 2, and remained above $60 \\%$ throughout all evaluations. Best OMRR was $7 6 . 1 \\%$ ( $9 5 \\%$ CI, 61.2–87.4), with best CMR reported for 21 of 46 patients $( 4 5 . 7 \\% )$ , best PMR for 14 of 46 patients $( 3 0 . 4 \\% )$ , and best stable disease for 1 of 46 patients $( 2 . 2 \\% )$ (Fig. 4). The results of the PET-CT scans at each evaluation, along with the Deauville score, appearance of new lesions, and the maximal tumor standardized uptake value according to investigators’ review and independent review are summarized in Supplementary Table 3 and Supplementary Table 4, respectively. ",
+        "bbox": [
+            112,
+            297,
+            885,
+            705
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "At a median follow-up duration of 15.3 months, median PFS was 3.8 months ( $9 5 \\%$ CI, 2.4–19.6), with 29 events reported: 25 progressions/relapses and 4 deaths (Fig. 3b). Of note, one further progression occurring between the date of cut-off and the date of database export was excluded from the survival analyses. Estimated PFS rates at 12 and 24 months were $3 6 . 7 \\%$ ( $9 5 \\%$ CI, 22.5– ",
+        "bbox": [
+            114,
+            751,
+            885,
+            877
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            862,
+            989
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "discarded",
+        "text": "10 ",
+        "bbox": [
+            861,
+            939,
+            883,
+            953
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "51.1) and $2 4 . 5 \\%$ ( $9 5 \\%$ CI, 7.0–47.5), respectively. Median DoR for 32 patients with at least one CR or PR was 19.7 months ( $9 5 \\%$ CI, 4.0–not reached), and median DoCR for 18 patients with at least one CR was not reached ( $9 5 \\%$ CI, 19.7–not reached) (Fig. 3c and Fig. 3d, respectively). Of the 26 patients who progressed/relapsed post-glofitamab, 24 received treatment for their progression; 14 of 24 $( 5 8 . 3 \\% )$ received combination regimens consisting of at least one monoclonal antibody (Supplementary Table 5). ",
+        "bbox": [
+            112,
+            88,
+            887,
+            284
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "Safety ",
+        "text_level": 1,
+        "bbox": [
+            114,
+            334,
+            169,
+            352
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "Of the 46 patients in the FAS, 38 patients $( 8 2 . 6 \\% )$ experienced at least one adverse event of any grade (Table 3). Grade ${ \\ge } 3$ adverse events occurred in 33 patients $( 7 1 . 7 \\% )$ (Supplementary Table 6). The most commonly reported grade ${ \\ge } 3$ adverse events were neutropenia $( n = 1 6 ; 3 4 . 8 \\% )$ , lymphopenia $( n = 9 ; 1 9 . 6 \\% )$ , anemia $( n = 6 ; 1 3 . 0 \\% )$ , and COVID-19 pneumonia $( n = 6 ; 1 3 . 0 \\% )$ ). Cumulative infection rate throughout the treatment and during post-treatment follow-up is presented in Fig. 5. Serious adverse events were reported in 19 patients $( 4 1 . 3 \\% )$ , of whom 8 had treatment-related serious adverse events (Supplementary Table 7). ",
+        "bbox": [
+            112,
+            368,
+            887,
+            598
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "A total of 17 adverse events of special interest were reported in 13 patients $( 2 8 . 3 \\% )$ (Supplementary Table 8). Of these events, 9 reported in 9 patients were considered related to glofitamab. CRS (grade 2) was reported in 4 of 46 patients $( 8 . 7 \\% )$ and neurotoxicity (grade 2) was reported in 1 of 46 patient $( 2 . 2 \\% )$ (Table 3). Of note, 2 additional CRSs occurred in 2 patients; however, both events were of grade 1 and, as such, were not considered adverse events of special interest. There was no grade ${ \\ge } 3$ CRS or neurotoxicity events. In total, 3 second primary ",
+        "bbox": [
+            112,
+            647,
+            885,
+            843
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            864,
+            989
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "discarded",
+        "text": "11 ",
+        "bbox": [
+            861,
+            939,
+            880,
+            953
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "malignancies were reported in 3 patients $( 6 . 5 \\% )$ , which included right nodular basal cell carcinoma $( n = 1 )$ , left nodular basal cell carcinoma $( n = 1 )$ ), and myelodysplastic syndrome $( n = 1 )$ ). ",
+        "bbox": [
+            112,
+            89,
+            885,
+            143
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "At the cut-off date of 28 November 2023, 21 patients had died, of whom 16 died from lymphoma $( 7 6 . 2 \\% )$ , 2 $( 9 . 5 \\% )$ from concurrent illness (1 hemoptysis due to pulmonary hemorrhage and 1 COVID-19 pneumonia), 1 $( 4 . 8 \\% )$ from toxicity of study treatment (COVID-19 pneumonia related to glofitamab and obinutuzumab), 1 $( 4 . 8 \\% )$ from cardiomyopathy, and 1 $( 4 . 8 \\% )$ from an unknown cause. Of the patients who died, 1 was in CR, 2 in PR, 15 in progressive disease, and 3 were not evaluated. ",
+        "bbox": [
+            112,
+            194,
+            887,
+            387
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "Quality of life ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            439,
+            235,
+            457
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "To assess health-related QoL, patients completed the European Organization for Research and Treatment of Cancer Quality of Life Questionnaire Core 30 (EORTC QLQ-C30) and the Functional Assessment of Cancer Therapy-Lymphoma (FACT-LymS) subscale. The completion rates for QoL evaluations were $8 7 . 0 \\%$ at Cycle 1, $8 4 . 4 \\%$ at Cycle 2, $8 4 . 2 \\%$ at Cycle 3, $8 5 . 2 \\%$ at Cycle 5, $9 1 . 3 \\%$ at Cycle 7, $8 5 . 0 \\%$ at Cycle 9, and $7 5 . 0 \\%$ at Cycle 11. Overall, 40 of 46 patients $( 8 7 . 0 \\% )$ in the FAS completed at least one QoL assessment. ",
+        "bbox": [
+            112,
+            473,
+            887,
+            667
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "The mean scores on the functional scales of the EORTC QLQ-C30, including global health status, role functioning, and emotional functioning, improved from baseline (Day 1-Cycle 1) to Day 1- Cycle 3, and were generally sustained in subsequent visits (Extended Data Fig. 1). For the symptom scales, the mean score changes showed improvement in fatigue, pain, dyspnea, and insomnia, all of which were also clinically meaningful (Extended Data Fig. 2). The median time ",
+        "bbox": [
+            114,
+            717,
+            885,
+            877
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            866,
+            989
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            862,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "to confirmed improvement was 1.2 months for global health status, emotional functioning, and pain, 2.6 months for role functioning, 3.4 months for insomnia, and 3.9 months for fatigue. The FACT-LymS subscale also demonstrated improvement, with patients experiencing clinically meaningful benefits within a median time of 2.8 months (Extended Data Fig. 3). ",
+        "bbox": [
+            114,
+            88,
+            885,
+            214
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "Subgroup analysis ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            265,
+            272,
+            284
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "In the univariate analysis, performed post-hoc, a statistically significant difference was observed for OS depending on the patient’s LDH status, refractory/relapse status, CR status, and CAR-T8 class (Extended Data Fig. 4 and Extended Data Fig. 5). Patients with an abnormal LDH level had a worse OS rate than those with normal LDH (HR, 4.70; $9 5 \\%$ CI, 1.06–20.82; $\\scriptstyle \\mathrm { P = 0 . 0 4 1 }$ ). Moreover, a worse OS was observed in patients who did not achieve a CR assessed at the end of 2 cycles of glofitamab according to central review, compared to those with a CR (HR, 6.71; $9 5 \\%$ CI, 1.52– 29.64; $_ { \\mathrm { P = } 0 . 0 1 3 }$ ). Patients who experienced a later relapse ${ > } 6$ months) had a better OS compared to those who were refractory to CAR-T cell therapy or relapsed early (late relapse versus refractory plus early relapse, HR, 0.21; $9 5 \\%$ CI, 0.06–0.74; $_ { \\mathrm { P = } 0 . 0 1 5 }$ ). A shorter median OS was observed in patients with detectable CAR-T8 cells versus those with undetectable cells; however, this difference was barely statistically significant (HR, 2.55; $9 5 \\%$ CI, 1.00–6.50; $\\mathrm { P = } 0 . 0 5 0$ ). Of the 10 patients with detectable CAR-T8 cells, 9 $( 9 0 . 0 \\% )$ had refractory disease/early relapse and only 1 $( 1 0 . 0 \\% )$ had late relapse. Of the 27 patients with undetectable CAR-T8 cells, 17 $( 6 3 . 0 \\% )$ had refractory disease/early relapse and 10 $( 3 7 . 0 \\% )$ had late relapse. The CR rates after Cycle 2 of glofitamab were consistent among all subgroups, including relapse/refractory subgroups (Extended Data Fig. 6). ",
+        "bbox": [
+            112,
+            290,
+            887,
+            843
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            862,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "Discussion ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            92,
+            220,
+            111
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "Our study, BiCAR, met its primary endpoint, with a median OS of 14.7 months at a median followup duration of 15.3 months. The estimated OS rates at 8, 12, and 24 months were $6 8 . 9 \\%$ , $5 5 . 9 \\%$ , and $3 1 . 2 \\%$ , respectively. The independent-assessed best OMRR and best CMRR were $7 6 . 1 \\%$ and $4 5 . 7 \\%$ , respectively. The results of this primary analysis are in line with the known safety profile of glofitamab, even with the short ramp-up glofitamab dosing regimen, and demonstrate a significant antitumor activity in patients with R/R DLBCL failing first- and second-line treatment, who have exhausted most other treatment options5,10,11. ",
+        "bbox": [
+            112,
+            130,
+            887,
+            359
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "DLBCL is the most aggressive subtype of B-cell NHL, often leading to a poor outcome, especially in patients who present with R/R disease after first-line treatment20,21. While CAR-T cell therapy has been established as a promising second-line treatment option for these patients, real-world data underline low response and survival rates for patients who are refractory or relapse after CAR-T cell therapy, highlighting the need for better treatment options post CAR-T cell therapy10,11. Bispecific antibodies, including glofitamab, have emerged as a novel class of agents with potential efficacy in patients with R/R NHL. Our study findings concur with those of the phase 2 part of Study NP30179, in which a subgroup analysis was performed on patients who had previously received CAR-T cell therapy $( n = 5 2 )$ ) versus those who had not $( n = 1 0 3 ) ^ { 1 3 , 2 2 }$ . Based on the independent-assessment, CRR was comparable between both subgroups $3 5 \\%$ and $42 \\%$ , respectively)13. Of note, patients enrolled in Study NP30179 did not necessarily receive CAR-T cell products as the last line prior to glofitamab treatment 13. ",
+        "bbox": [
+            112,
+            409,
+            887,
+            814
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            862,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "Our study findings also concur with those of two small-scale retrospective studies23,24, which reported a favorable ORR and CRR in patients who received glofitamab after failing CAR-T cell therapy23,24. In a single-center study, reported by Rentsch and colleagues $( 2 0 2 2 ) ^ { 2 4 }$ , 9 patients with DLBCL received glofitamab after relapsing post CAR T-cell therapy, resulting in best ORR and CRR of $67 \\%$ and $4 4 . 4 \\%$ , respectively. At a median follow-up duration of 8.2 months, median PFS was 5.4 months, and median OS was not reached24. Dodero and colleagues $( 2 0 2 3 ) ^ { 2 3 }$ also assessed glofitamab in patients with R/R LBCL receiving standard or investigational treatments after failing CAR T-cell products23. Of these patients, 18 received glofitamab – 12 of whom had reported CD20 expression. The ORR and CRR were $61 \\%$ and $33 \\%$ , respectively. The estimated 1-year OS rate was $47 \\%$ for all 18 patients treated with glofitamab23. In our study, glofitamab resulted in high response rates and durable remissions. Median PFS was 3.8 months, median DoR was 19.7 months, and median DoCR was not reached. ",
+        "bbox": [
+            112,
+            87,
+            885,
+            493
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "In the NP30179 study, the time between obinutuzumab pre-treatment and the first full dose of glofitamab was 21 days13. In our study, we shortened the ramp-up dosing schedule of glofitamab to account for the high risk of early progression in patients failing to respond to CAR-T cells11. Indeed, failure after CAR-T cell treatment typically occurs within a median of 3 months11. The second full dose of glofitamab was infused at Day 15, yielding a cumulative dose of $7 2 . 5 ~ \\mathrm { m g }$ of glofitamab within 21 days in BiCAR compared to $1 2 . 5 ~ \\mathrm { m g }$ in $\\mathrm { N P } 3 0 1 7 9 ^ { 1 3 }$ . The short ramp-up glofitamab dosing regimen presents practical advantages. The intensity of the glofitamab dosage infused within the first 21 days $( 7 2 . 5 \\mathrm { m g } )$ ) may have contributed to the observed clinical efficacy and potentially enhance clinical benefit (43 of 46 patients $[ 9 3 . 5 \\% ]$ received at least two cycles of glofitamab with no progression within the two first cycles). In addition, this shorter regimen may ",
+        "bbox": [
+            112,
+            541,
+            887,
+            878
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            864,
+            989
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "discarded",
+        "text": "15 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "reduce the burden on healthcare resources and improve patient convenience by decreasing the hospitalization duration between the pre-treatment and the first glofitamab infusion. ",
+        "bbox": [
+            114,
+            89,
+            885,
+            143
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "text",
+        "text": "Despite using a faster step-up dosing, glofitamab infusions were not associated with an increased rate of glofitamab-related toxicities, namely CRS and neurotoxicity. Glofitamab showed an acceptable safety profile in the BiCAR study, which emphasizes that the newly employed dosing regimen of glofitamab is feasible in this patient population. CRS and neurotoxicity rates were low in our study (CRS, $1 3 . 0 \\%$ ; neurotoxicity, $2 . 2 \\%$ ). In the NP30179 study, CRS and neurotoxicity rates were $6 3 . 0 \\%$ and $8 . 0 \\%$ , respectively. The mechanism of CRS is not fully understood; however, we assume that peripheral lymphodepletion could explain part of this observation, but such hypothesis is not supported by the concomitant clinical efficacy. Another possible reason for the lower rates of CRS events may be the time between the obinutuzumab dose and the glofitamab infusion at the maximum dose. ",
+        "bbox": [
+            114,
+            193,
+            885,
+            529
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "text",
+        "text": "Glofitamab is a readily available and accessible T-cell-engaging therapy, unlike CAR-T cell therapies, which require manufacturing, potential bridging therapy, and may be impractical for patients with rapidly progressive disease14. Our results suggest that lymphodepletion, the lack of CAR-T cell expansion, and the CAR-T cell exhausted phenotype (ex vivo data) described in patients failing to respond to CAR-T cells do not impede the efficacy of glofitamab15-17. Indeed, the median OS of 14.7 months observed in the BiCAR study seems to surpass that of the NP30179 study (11.5 months), which included patients with R/R NHL regardless of their prior treatment history. These results suggest that a low residual T-lymphocyte count, or residual CAR-T cells may still be sufficient for glofitamab to exhibit an antitumor effect. Indeed, glofitamab may have ",
+        "bbox": [
+            112,
+            577,
+            887,
+            878
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            864,
+            989
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            862,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "text",
+        "text": "activated the residual CAR-T cells, which, along with endogenous T-cells, contributed to this clinical benefit; however, such mechanism of action warrants further investigations. In addition, lymphodepletion is assessed at the blood concentration level, which may not necessarily represent the presence of T-lymphocytes or CAR-T cells at the tumor site. According to the subgroup analysis, a shorter median OS was observed in patients with detectable CAR-T8 cells versus those with undetectable cells. These findings, along with the findings of Piccione and colleagues (2022) and Nassiri and colleagues (2023), suggest that circulating CAR-T8/CD8 cells might not be representative of CAR-T8/CD8 cells available at the tumor microenvironment25,26. ",
+        "bbox": [
+            112,
+            87,
+            887,
+            354
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "text",
+        "text": "It is important to note that the extrapolation of the results observed with glofitamab to other CD3xCD20 bispecific antibodies cannot be anticipated, since there are not enough data available at this point to make such conclusions. Even though the CRR was similar for glofitamab and epcoritamab in phase 1/2 studies13,27, there are several differences between the two agents including the route of administration and its associated pharmacokinetics, the step-up dosing regimen, the molecular structure, and the different epitopes they bind to27,28. In a phase 1/2 study, epcoritamab was administered subcutaneously, which delays peak concentration, in 28-day cycles to 157 patients with R/R LBCL. Epcoritamab was administered in a step-up dosing regimen starting at $0 . 1 6 ~ \\mathrm { m g }$ on Day 1, followed by $0 . 8 ~ \\mathrm { m g }$ on Day 8, reaching the full dose of $4 8 ~ \\mathrm { m g }$ on Day 15. Of the 157 patients, 61 $( 3 8 . 9 \\% )$ ) had received prior CAR T-cell therapy, not necessarily as the last line of therapy prior to epcoritamab27. Prospective studies are warranted to determine the efficacy of epcoritamab and other CD3xCD20 antibodies in patients with R/R DLBCL after CART cell therapy. ",
+        "bbox": [
+            112,
+            402,
+            887,
+            844
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            862,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "text",
+        "text": "Overall, the primary analysis of this study, employing a short ramp-up dosing regimen, highlights a favorable safety profile, overall improvement in health-related QoL, and significant antitumor activity of glofitamab in patients with R/R DLBCL who have exhausted conventional treatment options, including CAR-T cell therapy. ",
+        "bbox": [
+            114,
+            88,
+            887,
+            214
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "text",
+        "text": "This study has nevertheless some limitations, including its design as a phase 2, single-arm trial with a historical control. In addition, the exclusion of patients who relapsed within the first month post-CAR-T cell infusion, to avoid both toxicity accumulation and the inclusion of a patient subpopulation known for their very poor prognosis11, could impact the generalizability of the findings. However, we still enrolled patients with refractory disease (15/46; $3 2 . 6 \\%$ ) and those who relapsed between 1 and 3 months post-CAR-T cell therapy (8/46; $1 7 . 4 \\%$ ). Another limitation could be that the majority of patients $( 8 0 . 4 \\% )$ enrolled in the BiCAR study received CAR-T cell therapy as third- or further line of therapy, while liso-cel and axi-cel are currently approved in the secondline setting. Furthermore, patients enrolled in the BiCAR study had CD20-expressing tumor cells, unlike those in the real-world setting, where patients may have DLBCL with or without the expression of CD20. Although phase 3 studies comparing glofitamab to standard of care or best supportive care are pertinent to establish its efficacy as a treatment option in patients with R/R DLBCL post-CAR-T cell therapy, the feasibility of such studies may be challenging due to glofitamab’s accelerated approval status. ",
+        "bbox": [
+            112,
+            258,
+            887,
+            739
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "text",
+        "text": "In conclusion, this first prospective study dedicated to DLBCL patients who have failed CAR Tcell therapy, BiCAR, indicates that glofitamab, implemented as a short ramp-up dosing regimen, is a safe and effective therapeutic option. Glofitamab was associated with a median OS of 14.7 ",
+        "bbox": [
+            114,
+            786,
+            885,
+            876
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            864,
+            989
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "discarded",
+        "text": "18 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "text",
+        "text": "months, with no reported grade 3 CRS or neurotoxicity. These BiCAR findings highlight the potential of glofitamab as a valuable addition to the treatment armamentarium for the challenging management of this patient population. ",
+        "bbox": [
+            114,
+            88,
+            885,
+            179
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            862,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "text",
+        "text": "Methods ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            92,
+            202,
+            111
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "Ethics ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            166,
+            169,
+            183
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "The study protocol was approved by the French Ethics Committee Ile de France X (Aulnay SousBois) N°20.12.08.60717/ Id. 10596, in accordance with applicable French laws and regulations. The study protocol is included in the Supplementary Information. The study design and conduct were in accordance with the Good Clinical Practice guidelines of the International Council for Harmonization, and the Declaration of Helsinki. The first patient was enrolled on 3 May 2021 and the last patient was enrolled on 27 April 2023. All patients signed a written informed consent prior to the initiation of any study-related procedure. The CONSORT (Consolidated Standards of Reporting Trials) guidelines29 were considered when reporting the BiCAR study. ",
+        "bbox": [
+            112,
+            199,
+            887,
+            464
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "Study design ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            515,
+            225,
+            532
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "We described herein the results of Cohort 1 of the BiCAR study (ClinicalTrials.gov registration submitted on 04 January 2021: NCT04703686), an ongoing, single-arm, multicenter, phase 2 trial enrolling patients with R/R NHL in 19 centers in France. The study included 2 cohorts based on NHL subtype. Cohort 1 enrolled patients with R/R DLBCL, and Cohort 2 enrolled patients with R/R primary mediastinal B-cell lymphoma, mantle cell lymphoma, transformed indolent NHL, or indolent NHL. This study is anticipated to end on the date of the last patient’s last visit scheduled no later than May 21, 2025. In this report, we presented the results of the primary and secondary endpoints for Cohort 1, i.e., patients with R/R DLBCL. Results for Cohort 2 will be reported separately. Additional planned exploratory endpoints including phenotype/metabolism activation ",
+        "bbox": [
+            112,
+            547,
+            887,
+            848
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            861,
+            939,
+            883,
+            953
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "and frequency, PET Omics before and after treatment, and immune microenvironment, are not presented in this report. ",
+        "bbox": [
+            114,
+            89,
+            885,
+            145
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "Cohort 1 study participants ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            195,
+            349,
+            213
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "Cohort 1 enrolled patients aged $\\geq 1 8$ years with R/R DLBCL who received a CAR-T cell product at least 1 month prior to study enrollment, with no metabolic response or had progressed/relapsed starting 1 month after CAR-T cell therapy, as confirmed by a PET-CT central review. It was mandatory that all patients receiving treatment for DLBCL had lymphoma cells expressing CD20 at relapse post CAR-T cell therapy, as proven by a biopsy prior to enrollment. ",
+        "bbox": [
+            114,
+            228,
+            887,
+            388
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "Other inclusion criteria included: ",
+        "bbox": [
+            116,
+            439,
+            377,
+            457
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "• Eastern Cooperative Oncology Group performance status 0 or 1.   \n• Bi-dimensionally measurable disease defined by at least one single node or tumor lesion ${ > } 1 . 5 ~ \\mathrm { c m }$ , as assessed by CT scan or PET-CT with at least one hypermetabolic lesion.   \n• No persistent CAR-T neurotoxicity symptoms or previous experience during CAR-T cell therapy of neurotoxicity grade ${ > } 3$ .   \n• Adverse events from prior anti-cancer therapy must have resolved to grade ${ \\le } 1$ except hematological toxicities.   \n• Adequate liver function: total bilirubin $\\leq 1 . 5 \\mathrm { ~ x ~ }$ upper limit of normal (ULN); aspartate aminotransferase (AST)/alanine aminotransferase (ALT) ≤3 x ULN. Patients with documented history of Gilbert's Syndrome and in whom total bilirubin elevations are accompanied by elevated indirect bilirubin are eligible. ",
+        "bbox": [
+            142,
+            474,
+            888,
+            848
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            862,
+            989
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "discarded",
+        "text": "21 ",
+        "bbox": [
+            861,
+            939,
+            880,
+            953
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "• Adequate hematological function: neutrophil count ${ \\ge } 1 . 0 \\mathrm { G / L }$ ; platelet count ${ \\ge } 5 0 \\mathrm { G / L }$ (and platelet transfusion free within 14 days prior to administration of obinutuzumab); hemoglobin $\\geq 8 . 0 \\mathrm { \\textrm { g } / d L }$ (transfusion free within 21 days prior to administration of obinutuzumab).   \n• Adequate renal function: creatinine clearance $\\geq 3 0 ~ \\mathrm { m L / m i n }$ , calculated by the Modification of Diet in Renal Disease/Cockroft-Gault formula.   \n• Negative serum or urinary pregnancy test within 7 days prior to study treatment in women of childbearing potential.   \n• Negative serologic or polymerase chain reaction (PCR) test results for acute or chronic hepatitis B virus infection, negative test results for hepatitis C virus and for Human Immunodeficiency Virus (HIV).   \n• Life expectancy ${ \\ge } 3$ months. ",
+        "bbox": [
+            140,
+            90,
+            888,
+            500
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "Exclusion criteria included: ",
+        "bbox": [
+            116,
+            549,
+            334,
+            566
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "• Previously known CD20 negative status.   \n• Patients with chronic lymphocytic leukemia, Richter syndrome, and Burkitt lymphoma.   \n• Patients relapsing or progressing within 30 days after CAR-T cell therapy.   \nCurrent or past history of cerebral disorders.   \n• Prior history of malignancies other than lymphoma, unless the subject has been free of the disease for ${ \\ge } 3$ years. Exceptions will be allowed for patients with non-melanoma skin tumors (basal cell or squamous cell carcinoma of the skin) or any surgically removed stage 0 (in situ) carcinoma.   \n• Current uncontrolled autoimmune disease. ",
+        "bbox": [
+            142,
+            583,
+            887,
+            890
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            859,
+            989
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "• History of severe allergic or anaphylactic reactions to monoclonal antibody therapy (or recombinant antibody-related fusion proteins). ",
+        "bbox": [
+            143,
+            90,
+            885,
+            145
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "• Treatment between infusion of CAR T-cells and pre-phase (i.e. obinutuzumab infusion on Cycle 1/Day -3): with standard radiotherapy, systemic immunotherapeutic agents, any chemotherapeutic agent, any systemic immunosuppressive medication, or treatment with any other investigational anti-cancer agent (defined as treatment for which there is currently no regulatory authority approved indication).   \n• Major surgery or significant traumatic injury within 28 days prior to the obinutuzumab infusion.   \n• Administration of a live-attenuated vaccine within 4 weeks before obinutuzumab infusion.   \nCurrent or past history of detectable cerebrospinal fluid lymphoma cells, or a history of central nervous system (CNS) lymphoma localization or primary CNS lymphoma.   \n• Prior solid organ transplantation.   \n• Prior allogeneic stem cell transplantation.   \nASCT within 100 days prior to obinutuzumab infusion.   \n• Left ventricular ejection fraction ${ < } 4 0 \\%$ as determined by echocardiography or multiple uptake gated acquisition scan, or significant cardiovascular disease.   \nPatients with known acute infection or reactivation of a latent infection, or any major episode of infection requiring hospitalization or treatment with intravenous antibiotics (for intravenous antibiotics, this pertains to completion of the last course of antibiotic treatment) within 2 weeks prior to enrollment.   \n• History of treatment-emergent immune-related adverse events associated with prior immunotherapeutic agents. ",
+        "bbox": [
+            140,
+            154,
+            892,
+            901
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "discarded",
+        "text": "23 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "• Patients with a history of macrophage activation syndrome/hemophagocytic lymphohistiocytosis.   \n• Patient with a history of confirmed progressive multifocal leukoencephalopathy.   \n• Clinically significant history of liver disease or cirrhosis. ",
+        "bbox": [
+            142,
+            90,
+            885,
+            218
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "text",
+        "text": "Study treatment and procedures ",
+        "text_level": 1,
+        "bbox": [
+            117,
+            268,
+            390,
+            286
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "text",
+        "text": "The study-related procedures and glofitamab treatment schedule are presented in Fig. 1. ",
+        "bbox": [
+            117,
+            301,
+            807,
+            321
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "text",
+        "text": "Patients were initially pretreated with $1 { , } 0 0 0 ~ \\mathrm { m g }$ of obinutuzumab administered intravenously, 3 days prior to the day of the first glofitamab dose. During Cycle 1, which consisted of 14 days, glofitamab was administered intravenously at incremental doses of $2 . 5 \\mathrm { m g }$ on Day 1, followed by $1 0 \\mathrm { m g }$ on Day 3, and $3 0 \\mathrm { m g }$ on Day 8. Cycle 2 was initiated on Day 15 (Fig. 1). For Cycle 2 to 11, the cycle duration was 21 days, where patients received $3 0 \\mathrm { m g }$ of glofitamab intravenously on the first day of each cycle. ",
+        "bbox": [
+            112,
+            371,
+            887,
+            565
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "text",
+        "text": "At baseline, within 15 days prior to obinutuzumab administration, eligibility criteria were confirmed, and demographic data were collected. The sex of each patient was self-reported, and this information was collected during screening. Clinical examination (including vital signs and body surface area) and blood sampling for laboratory tests (including hematology and serum biochemistry) were collected at baseline, on the first day of each cycle, and within 28 days after Cycle 11 (or at permanent discontinuation). Additional laboratory tests were performed during Cycle 1 on Day 2 or 3 and Day 7 or 8. PET-CTs were performed at baseline and throughout the study at different timepoints to assess tumor response according to the Lugano classification18. ",
+        "bbox": [
+            112,
+            614,
+            885,
+            880
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            864,
+            989
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "discarded",
+        "text": "24 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "text",
+        "text": "The PET-CT, showing progression, relapse, or no metabolic response from 1 month after infusion of CAR-T cell therapy and used for patient enrollment, had to be performed within 15 days prior to enrollment. The disease status had to be confirmed by central review of the last two PET-CTs. During treatment, PET-CTs were performed following Cycles 2, 4, 6, 9, and 11. Responses were also assessed according to the Deauville 5-point score, which is based on the $^ { 1 8 } \\mathrm { F } .$ - fluorodeoxyglucose uptake. PET-CT scans with Deauville scores of 1–3 were considered negative, whereas those with scores of 4 or 5 were considered positive. CAR-T cells and lymphocytes were quantified using the flow cytometric assay that has been previously validated30,31 and used in routine clinical practice (Supplementary Fig. 1). Safety assessments were reported continuously, from the signing of the informed consent form until 30 days following the patient’s last study treatment administration, for grade ${ \\ge } 3$ adverse events, adverse events of special interest, grade ${ \\ge } 2$ neurotoxicity, and grade ${ \\ge } 2$ infections. Adverse events of special interest included grade ${ \\ge } 2$ CRS, grade ${ \\ge } 2$ tumor flare, grade ${ \\ge } 2$ neurotoxicity, suspected hemophagocytic lymphohistiocytosis, grade ${ \\ge } 2$ AST, ALT, or total bilirubin elevation, grade ${ \\ge } 3$ tumor lysis syndrome, grade ${ \\ge } 3$ febrile neutropenia, grade ${ \\ge } 2$ disseminated intravascular coagulation, any grade pneumonitis or interstitial lung disease, colitis, and secondary malignancies. Secondary malignancies were recorded until the end of the study. CRS and neurotoxicity events were graded using the American Society for Transplantation and Cellular Therapy consensus grading criteria32. Other adverse events were classified using the latest version of the Medical Dictionary for Drug Regulatory Activities (MedDRA) coding system at the time of database lock, and their severity was graded according to the National Cancer Institute (NCI) Common Terminology Criteria for Adverse Events (CTCAE version 5.0) whenever possible, regardless of relationship to study treatment. ",
+        "bbox": [
+            112,
+            89,
+            888,
+            848
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "discarded",
+        "text": "25 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "text",
+        "text": "After the treatment phase, follow-up visits were done every 3 months for 2 years and then every 6 months. During these visits, assessments included clinical examinations, blood sampling for hematology blood tests, and the evaluation of the disease status by CT scan enhanced with intravenous contrast for patients with CR with respect to previous assessment and by PET-CT for patients without CR with respect to previous assessment. All deaths and the reasons for deaths were recorded. ",
+        "bbox": [
+            114,
+            88,
+            885,
+            284
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "text",
+        "text": "Study endpoints ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            334,
+            253,
+            353
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "text",
+        "text": "The primary endpoint of the study was OS after receiving glofitamab in patients with R/R DLBCL (Cohort 1) who failed CAR T-cell therapy. OS was measured from the date of the first glofitamab infusion to the date of death from any cause, censoring patients who were still alive at the analysis cut-off date. ",
+        "bbox": [
+            114,
+            368,
+            885,
+            492
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "text",
+        "text": "Secondary endpoints included safety and efficacy endpoints. Key secondary endpoints included metabolic responses: OMRR and CMRR after Cycles 2, 6, 9 and at the end of treatment—defined as end of Cycle 11 or at permanent treatment discontinuation of glofitamab, whichever occurs first. Metabolic responses were reviewed according to Lugano 2014 criteria18, and assessed by both the investigator (locally) and by a central independent review panel composed of two readers and an adjudicator. Best OMRR and best CMRR were also estimated at the end of treatment. Other secondary efficacy endpoints included PFS, DoR, and DoCR. PFS was measured from the first glofitamab infusion to the first observation of documented disease progression based on independent review or death due to any cause. DoR was defined from the time of first CR or PR to the date of first documented disease progression, relapse, or death from any cause. DoCR was ",
+        "bbox": [
+            112,
+            542,
+            887,
+            877
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            862,
+            989
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "text",
+        "text": "defined from the time of first CR to the date of first documented disease progression, relapse, or death from any cause. The results of the PET-CT scans after Cycles 2, 6, 9 and at the end of treatment, along with the Deauville score, appearance of new lesions, and the maximal tumor standardized uptake value according to investigators’ review and independent review are also evaluated. ",
+        "bbox": [
+            114,
+            88,
+            887,
+            248
+        ],
+        "page_idx": 27
+    },
+    {
+        "type": "text",
+        "text": "Secondary safety endpoints included the incidence, nature, and severity of adverse events. Adverse effects of special interest included CRS and neurotoxicity. ",
+        "bbox": [
+            114,
+            299,
+            883,
+            353
+        ],
+        "page_idx": 27
+    },
+    {
+        "type": "text",
+        "text": "Other secondary endpoints included health-related QoL according to the EORTC QLQ-C30 and the FACT-LymS subscale. The EORTC QLQ-C30, which includes 30 questions across 9 multiitem scales, measures various aspects of patient functioning and global health status/QoL. Higher scores on functioning scales and global health status indicate better functioning and overall wellbeing, while higher symptom scores reflect greater severity of symptoms. The FACT-LymS is a 15-item subscale of the 42-item FACT-Lym questionnaire, specifically assessing patient concerns related to lymphoma. Scores range from 0 to 60, with higher scores indicating better health-related QoL. ",
+        "bbox": [
+            114,
+            404,
+            885,
+            666
+        ],
+        "page_idx": 27
+    },
+    {
+        "type": "text",
+        "text": "Protocol Amendments ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            718,
+            305,
+            736
+        ],
+        "page_idx": 27
+    },
+    {
+        "type": "text",
+        "text": "After the initiation of the BiCAR study, few changes were made regarding several aspects of the study including glofitamab formulation, eligibility criteria and management/monitoring of adverse events. The most pertinent modifications that were made across different versions of the protocol included: ",
+        "bbox": [
+            114,
+            751,
+            885,
+            876
+        ],
+        "page_idx": 27
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 27
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 27
+    },
+    {
+        "type": "text",
+        "text": "• Changing the glofitamab formulation from single dose $2 \\textrm { \\textmu m L }$ glass vials with a concentration of $5 ~ \\mathrm { m g / m L }$ to a new formulation that was provided in single dose $1 0 ~ \\mathrm { m L }$ glass vials with a concentration of $1 \\mathrm { m g / m L }$ .   \n• Adding detailed guidelines for the management of liver function tests and neurologic toxicity.   \nClarifying the definition of adverse events of special interest and modifying the criteria regarding the follow-up of adverse events and serious adverse events.   \n• Adding details related to the COVID-19 infection, whether it was prophylactic measures, polymerase chain reaction (PCR) testing (before and during treatment), management, and glofitamab dosing in case of positive COVID-19 PCR result. ",
+        "bbox": [
+            147,
+            90,
+            887,
+            429
+        ],
+        "page_idx": 28
+    },
+    {
+        "type": "text",
+        "text": "Statistical analysis ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            478,
+            272,
+            496
+        ],
+        "page_idx": 28
+    },
+    {
+        "type": "text",
+        "text": "Sample size calculation was performed with the SWOG tool, using a one-arm survival sample size, assuming an exponentially distributed OS time with a constant hazard rate over the course of the study. We hypothesized that glofitamab would increase median OS from 6.3 months (observed in previous studies11,33) to 12.6 months in patients with DLBCL who relapsed or were refractory to CAR T-cell therapy. Based on this hypothesis, 46 evaluable patients were required to detect this improvement, assuming a $90 \\%$ power at a $5 \\%$ (one-sided) significance level. The null hypothesis would be rejected if the lower limit of the $90 \\%$ CI is ${ \\ge } 6 . 3$ months. Assuming a $20 \\%$ drop-out (i.e. patients in the enrolled set but not treated with both glofitamab and obinutuzumab), an overall sample size of 58 patients needed to be enrolled. Enrollment was stopped once the calculated sample size of 46 evaluable patients was reached. ",
+        "bbox": [
+            112,
+            511,
+            887,
+            847
+        ],
+        "page_idx": 28
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 28
+    },
+    {
+        "type": "discarded",
+        "text": "28 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 28
+    },
+    {
+        "type": "text",
+        "text": "A pre-specified interim analysis of the primary endpoint was triggered at the 13th death to have the power required in the protocol. This event took place in December 2022 with 35 patients recruited at that time out of the 46 patients planned. Given the novel short ramp-up glofitamab regimen used after first progression/relapse of a CAR-T therapy, and to ensure a strong safety analysis covering all treated patients, this interim analysis was updated when the 46 patients have completed their glofitamab treatment, providing complete safety results and consolidated survival data. ",
+        "bbox": [
+            112,
+            88,
+            885,
+            318
+        ],
+        "page_idx": 29
+    },
+    {
+        "type": "text",
+        "text": "Data collection and analysis were not performed blind to the conditions of the experiments. All efficacy analyses were performed on the FAS, which included patients who signed the informed consent and received at least one dose of study treatment. OS, PFS, DoR, and DoCR were analyzed using the Kaplan-Meier method, and survival curves were provided. Survival probabilities, median survival, and quartiles were estimated (if reached) with their $9 5 \\%$ CIs. CIs for median OS were also estimated at $90 \\%$ to be consistent with the one-sided $5 \\%$ level of significance. Response rates were expressed with $9 5 \\%$ CI according to Pearson-Clopper method. Patients without response assessment at one evaluation were considered as non-responders at that evaluation. The number and percent of patients with CR, PR, stable disease, and progressive disease that was not evaluated were provided. ",
+        "bbox": [
+            114,
+            367,
+            885,
+            703
+        ],
+        "page_idx": 29
+    },
+    {
+        "type": "text",
+        "text": "A subgroup analysis using the univariate Cox Model was conducted for OS and CR after Cycle 2, and forest plots were generated post-hoc. The covariates were sex, age, Ann Arbor stage, LDH status, IPI, extra-nodal involvement, relapse/refractory status, prior CAR-T cell therapy, CR status after Cycle 2, TMTV, lymphocyte B count, total CAR-T count, CAR-T4 count, and CAR-T8 ",
+        "bbox": [
+            114,
+            751,
+            885,
+            877
+        ],
+        "page_idx": 29
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            862,
+            989
+        ],
+        "page_idx": 29
+    },
+    {
+        "type": "discarded",
+        "text": "29 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 29
+    },
+    {
+        "type": "text",
+        "text": "count. Of note, time-dependent variables such as CR after Cycle 2 were analyzed with a landmark method with time starting at PET2. ",
+        "bbox": [
+            114,
+            89,
+            883,
+            145
+        ],
+        "page_idx": 30
+    },
+    {
+        "type": "text",
+        "text": "All safety analyses were performed on the FAS and were descriptive. Safety summaries of patients enrolled in the study who withdrew before glofitamab start were provided. ",
+        "bbox": [
+            114,
+            194,
+            883,
+            248
+        ],
+        "page_idx": 30
+    },
+    {
+        "type": "text",
+        "text": "The QoL set comprised patients who had completed baseline evaluations at Day 1 of Cycle 1 and at least one post-baseline QoL measurement. Completion rates for QoL assessments were determined by dividing the number of patients submitting a valid QoL questionnaire at a given timepoint by the number of patients expected to submit at that timepoint. QoL data were analyzed if at least 10 patients provided responses at each timepoint. Post-hoc QoL analyses employed a linear mixed-effects model for repeated measures (MMRM) to estimate least squares mean changes from baseline for symptom and functioning domains. Time to confirmed improvement was assessed using the Kaplan-Meier approach, and proportions of patients with clinically meaningful improvement or deterioration from baseline were evaluated through descriptive analyses. Clinically meaningful changes were defined based on contemporary minimally important differences34,35. Time to confirmed improvement was defined as the time of the first of at least two consecutive assessments with QoL score change greater than or equal to the responder’s definition for improvement. ",
+        "bbox": [
+            112,
+            297,
+            885,
+            738
+        ],
+        "page_idx": 30
+    },
+    {
+        "type": "text",
+        "text": "The Electronic Data Capture system from Ennov v.8.1 (Ennov) was used for data collection. All statistical analyses were performed using SAS v.9.3 or higher (SAS Institute). ",
+        "bbox": [
+            114,
+            786,
+            885,
+            842
+        ],
+        "page_idx": 30
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 30
+    },
+    {
+        "type": "discarded",
+        "text": "30 ",
+        "bbox": [
+            861,
+            939,
+            883,
+            953
+        ],
+        "page_idx": 30
+    },
+    {
+        "type": "text",
+        "text": "Reporting summary ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            90,
+            287,
+            108
+        ],
+        "page_idx": 31
+    },
+    {
+        "type": "text",
+        "text": "Further information on research design is available in the Nature Research Reporting Summary linked to this article. ",
+        "bbox": [
+            116,
+            125,
+            882,
+            178
+        ],
+        "page_idx": 31
+    },
+    {
+        "type": "text",
+        "text": "Data availability ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            229,
+            256,
+            247
+        ],
+        "page_idx": 31
+    },
+    {
+        "type": "text",
+        "text": "The study protocol is available in the Supplementary Information. This trial is currently ongoing. Requests for access to aggregate data and supporting clinical documents will be reviewed and approved by an independent review panel on the basis of scientific merit. The datasets generated and/or analyzed during the current study are not publicly available due to proprietary considerations. All data provided are anonymized to respect the privacy of patients who have participated in the trial, in line with applicable laws and regulations. Data requests pertaining to the manuscript may be made to the corresponding author (G.C.; g-cartron@chu-montpellier.fr). Requests will be processed within 12 weeks. The remaining data are available within the Article and Supplementary Information. Source data are provided with this paper. For original data, please contact LYSA/LYSARC data protection officer at dpo@lysarc.org, who will respond to your request in compliance with the applicable data protection regulations, data security requirements, the principle of data minimization, and subject to the provisions of the contractual provisions. ",
+        "bbox": [
+            112,
+            263,
+            885,
+            667
+        ],
+        "page_idx": 31
+    },
+    {
+        "type": "text",
+        "text": "Code availability ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            718,
+            261,
+            736
+        ],
+        "page_idx": 31
+    },
+    {
+        "type": "text",
+        "text": "All codes that are necessary to reproduce all the results in this paper are implemented in SAS $\\textsuperscript { \\textregistered }$ 9.4. The code to generate results that are reported in the paper and central to its main claims have been developed by LYSA/LYSARC and is currently only available upon request to Isabelle Chaillol (email: isabelle.chaillol@lysarc.org). ",
+        "bbox": [
+            111,
+            752,
+            890,
+            877
+        ],
+        "page_idx": 31
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            862,
+            989
+        ],
+        "page_idx": 31
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            861,
+            939,
+            880,
+            953
+        ],
+        "page_idx": 31
+    },
+    {
+        "type": "text",
+        "text": "Acknowledgements: ",
+        "text_level": 1,
+        "bbox": [
+            117,
+            126,
+            285,
+            143
+        ],
+        "page_idx": 32
+    },
+    {
+        "type": "text",
+        "text": "This study was funded by an unrestricted grant from F. Hoffmann-La Roche, Ltd. The funder had no role in study design, data collection and analysis, decision to publish or preparation of the manuscript. The sponsor, LYSARC, was involved in the design and conduct of the study and in the collection, management, analysis, and interpretation of the data. We thank the patients, their families and the study personnel involved in this trial. We also thank the BiCAR trial investigators, S. Doyen (Clinical Projects Manager, LYSARC, France), F. Broussais (Medical director LYSARC, France), and the LYSARC study team, including LYSA-IM and LYSA-P, for their precious contribution. In addition, we thank Julie Nassif, PharmD, and Thomas Rohban, MD, from Partner 4 health (Paris, France) for providing medical writing support in accordance with the current Good Publication Practice guidelines. ",
+        "bbox": [
+            112,
+            159,
+            887,
+            493
+        ],
+        "page_idx": 32
+    },
+    {
+        "type": "text",
+        "text": "Author Contributions: ",
+        "text_level": 1,
+        "bbox": [
+            117,
+            544,
+            307,
+            561
+        ],
+        "page_idx": 32
+    },
+    {
+        "type": "text",
+        "text": "G.C., P.S., Y.A.L., K.T. and C.L. contributed to the conception, design, and planning of the study. G.C., R.H., Y.A.L., F.L.B., L.Y., S.C., F.J., J-O.B, F-X.G., F.M., O.C., T.G., C.T., M.J., L.R., C.R., L.D.L.R., P.F., A.M., S.G., K.T., C.L., and P.S. contributed to the acquisition and analysis of data. G.C., R.H., Y.A.L., F.L.B., L.Y., S.C., F.J., J-O.B, F-X.G., F.M., O.C., T.G., C.T., M.J., L.R., C.R., L.D.L.R., P.F., A.M., S.G., K.T., C.L., and P.S. contributed to the critical review and revision of the manuscript. All authors approved the final version of the manuscript and are accountable for all aspects of the work. ",
+        "bbox": [
+            112,
+            578,
+            887,
+            806
+        ],
+        "page_idx": 32
+    },
+    {
+        "type": "text",
+        "text": "Competing Interests: ",
+        "text_level": 1,
+        "bbox": [
+            116,
+            858,
+            294,
+            876
+        ],
+        "page_idx": 32
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 32
+    },
+    {
+        "type": "discarded",
+        "text": "32 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 32
+    },
+    {
+        "type": "text",
+        "text": "G.C. has received honoraria, and advisory/consultancy fees from Roche, Bristol-Myers Squibb, BeiGene, Novartis, Kite/Gilead, Takeda, AstraZeneca, AbbVie, Janssen, Onward Therapeutics, and Mabqi. R.H. has received honoraria from Kite/Gilead, Novartis, Incyte, Janssen, MSD, Takeda, and Roche; and is a member on an entity’s Board of Directors or advisory committees of Kite/Gilead, Novartis, Bristol-Myers Squibb/Celgene, ADC Therapeutics, Incyte and Miltenyi. L.Y. has received honoraria, and advisory/consultancy fees from AbbVie, AstraZeneca, BeiGene, Bristol-Myers Squibb/Celgene, Gilead/Kite, Janssen, and Roche. S.C. has received honoraria, and advisory/consultancy fees from AbbVie, AstraZeneca, Atara, BeiGene, Gilead/Kite, Janssen, Novartis, Pierre Fabre, and Takeda. F.J. has received honoraria, and advisory/consultancy fees from Roche, Bristol-Myers Squibb, Novartis, Kite/Gilead, Takeda, AbbVie, and Janssen. F-X.G. has received honoraria, and advisory/consultancy fees from Bristol-Myers Squibb, Novartis, Kite/Gilead, AstraZeneca, Janssen, and Miltenyi. F.M. has received consultancy fees from AbbVie, Bristol-Myers Squibb, Gilead, Novartis, and Roche, serves as an advisor for AbbVie, Gilead and Roche and received honoraria from Chugai and Kaleda for scientific lectures. O.C. has received honoraria, and advisory/consultancy fees from Roche, Takeda, Gilead/Kite, BristolMyers Squib, MSD, AbbVie, BeiGene, and ADC therapeutics. T.G. has received travel and accommodation expenses from Roche. C.T. has received honoraria, and advisory/consultancy fees from Roche, Bristol-Myers Squibb, Novartis, Kite/Gilead, Takeda, AbbVie, Janssen. L.D.L.R. has received honoraria, and advisory/consultancy fees from Gilead/Kite, Novartis, Bristol-Myers Squibb, Janssen, Takeda. P.F. has received honoraria, and advisory/consultancy fees from, BeiGene, Kite/Gilead, AstraZeneca, AbbVie, Janssen. S.G. is an employee of LYSARC. P.S. has received honoraria, and advisory/consultancy fees from Janssen, Roche, Bristol-Myers Squibb, ",
+        "bbox": [
+            112,
+            78,
+            887,
+            847
+        ],
+        "page_idx": 33
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 33
+    },
+    {
+        "type": "discarded",
+        "text": "33 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 33
+    },
+    {
+        "type": "text",
+        "text": "AbbVie, AstraZeneca, Chugai, Novartis, and Kite/Gilead. Y.A.T., M.J., C.L., F.L.B., A.M., JO.B., C.R., L.R., and K.T. declare that they have no conflict of interest. ",
+        "bbox": [
+            112,
+            89,
+            883,
+            143
+        ],
+        "page_idx": 34
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 34
+    },
+    {
+        "type": "discarded",
+        "text": "34 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 34
+    },
+    {
+        "type": "text",
+        "text": "Tables and Figures ",
+        "text_level": 1,
+        "bbox": [
+            117,
+            92,
+            305,
+            111
+        ],
+        "page_idx": 35
+    },
+    {
+        "type": "table",
+        "img_path": "images/26317e112011d5a79b97561fb7fc749812098e5093fa5465f70270f13f0bb7d5.jpg",
+        "table_caption": [
+            "Table 1. Patient demographic and disease characteristics at inclusion "
+        ],
+        "table_footnote": [
+            "Missing data are specified for any variable for which n $( \\% )$ does not add up to N. "
+        ],
+        "table_body": "<table><tr><td></td><td rowspan=1 colspan=1>FAS (N=46)</td></tr><tr><td rowspan=1 colspan=1>Mean ±SD age at enrollment, years</td><td rowspan=1 colspan=1>59.7 ± 13.85</td></tr><tr><td rowspan=1 colspan=1>Sex, n (%)</td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>Female</td><td rowspan=1 colspan=1>15 (32.6)</td></tr><tr><td rowspan=1 colspan=1>Male</td><td rowspan=1 colspan=1>31 (67.4)</td></tr><tr><td rowspan=1 colspan=1>ECOG performance status, n (%)</td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>0</td><td rowspan=1 colspan=1>23 (50.0)</td></tr><tr><td rowspan=1 colspan=1>1</td><td rowspan=1 colspan=1>23 (50.0)</td></tr><tr><td rowspan=1 colspan=1>Ann Arbor stage, n (%)</td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>I-II</td><td rowspan=1 colspan=1>8 (17.4)</td></tr><tr><td rowspan=1 colspan=1>III-IV</td><td rowspan=1 colspan=1>38 (82.6)</td></tr><tr><td rowspan=1 colspan=1>IPI, n (%)</td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>0-2</td><td rowspan=1 colspan=1>19 (42.2)</td></tr><tr><td rowspan=1 colspan=1>3-4</td><td rowspan=1 colspan=1>26 (57.8)</td></tr><tr><td rowspan=1 colspan=1>Missing</td><td rowspan=1 colspan=1>1</td></tr><tr><td rowspan=1 colspan=1>Presence of at least one extra-nodal site, n (%)</td><td rowspan=1 colspan=1>35 (76.1)</td></tr><tr><td rowspan=1 colspan=1>Lactate dehydrogenase status</td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>≤ULN</td><td rowspan=1 colspan=1>10 (22.2)</td></tr><tr><td rowspan=1 colspan=1>&gt;ULN</td><td rowspan=1 colspan=1>35 (77.8)</td></tr><tr><td rowspan=1 colspan=1>Missing</td><td rowspan=1 colspan=1>1</td></tr><tr><td rowspan=1 colspan=1>Mean ± SD total metabolic tumor volume (TMTV), cm3</td><td rowspan=1 colspan=1>135.9 ± 214.6</td></tr><tr><td rowspan=1 colspan=1>Median number of previous lines of lymphoma treatment (minimum-maximum)</td><td rowspan=1 colspan=1>3 (25)</td></tr><tr><td rowspan=1 colspan=1>≥3 lines of treatment, n (%)</td><td rowspan=1 colspan=1>37 (80.4)</td></tr><tr><td rowspan=1 colspan=1>Previous autologous or allogeneic transplant, n (%)</td><td rowspan=1 colspan=1>8 (17.4)</td></tr><tr><td rowspan=1 colspan=1>Previous CAR-T cell therapy, n (%)</td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>Experimental CAR-T cell product (in clinical trial)</td><td rowspan=1 colspan=1>3 (6.5)</td></tr><tr><td rowspan=1 colspan=1>Tisa-cel</td><td rowspan=1 colspan=1>17 (37.0)</td></tr><tr><td rowspan=1 colspan=1>Axi-cel</td><td rowspan=1 colspan=1>26 (56.5)</td></tr><tr><td rowspan=1 colspan=1>Patient status at screening, n (%)</td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>Refractorya</td><td rowspan=1 colspan=1>15 (32.6)</td></tr><tr><td rowspan=1 colspan=1>Relapse/progressionb</td><td rowspan=1 colspan=1>31 (67.4)</td></tr><tr><td rowspan=1 colspan=1>Time between CAR-T cell therapy and relapse/progression (N = 31), n(%)</td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>13 months</td><td rowspan=1 colspan=1>8 (25.8)</td></tr><tr><td rowspan=1 colspan=1>36 months</td><td rowspan=1 colspan=1>8 (25.8)</td></tr><tr><td rowspan=1 colspan=1>&gt;6 months</td><td rowspan=1 colspan=1>15 (48.4)</td></tr><tr><td rowspan=1 colspan=1>Median time between CAR-T cell infusion and last progression (minimum-maximum), months (N = 31)</td><td rowspan=1 colspan=1>5.9 (1.014.6)</td></tr><tr><td rowspan=1 colspan=1>Median time between CAR-T cell infusion and inclusion (minimum-maximum), months</td><td rowspan=1 colspan=1>4.4 (1.315.9)</td></tr><tr><td rowspan=1 colspan=1>Median time between inclusion and first glofitamab infusion (minimum-maximum), days</td><td rowspan=1 colspan=1>5 (318)</td></tr></table>",
+        "bbox": [
+            114,
+            157,
+            859,
+            878
+        ],
+        "page_idx": 35
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 35
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 35
+    },
+    {
+        "type": "text",
+        "text": "aRefractory: designates patients who never experienced a metabolic response (i.e., stable or progressive disease) after CAR-T cell therapy. bRelapse/progression: designates patients who experienced response (PR or CR) after CAR-T cells then relapse/progression on subsequent PET-CT. Axi-cel, axicabtagene ciloleucel; CAR-T, chimeric antigen receptor-T; CR, complete response; ECOG, Eastern Cooperative Oncology Group; FAS, full analysis set; IPI, international prognostic index; PET-CT, positron emission tomography–computed tomography; PR, partial response; SD, standard deviation; tisa-cel, tisagenlecleucel; ULN, upper limit of normal ",
+        "bbox": [
+            114,
+            88,
+            885,
+            252
+        ],
+        "page_idx": 36
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            859,
+            989
+        ],
+        "page_idx": 36
+    },
+    {
+        "type": "discarded",
+        "text": "36 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 36
+    },
+    {
+        "type": "table",
+        "img_path": "images/2025e592790b3a0becee09ca2e0d1f37120d0e7990ab051325e8bb4efda693c9.jpg",
+        "table_caption": [
+            "Table 2. Metabolic response based on Lugano criteria18 "
+        ],
+        "table_footnote": [
+            "Data are expressed as $n$ $( \\% )$ , where percentages were based on $N .$ The bold formatted text indicates the number (percent) of patients with objective response (i.e., complete response $^ +$ partial response) "
+        ],
+        "table_body": "<table><tr><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1>After Cycle 2</td><td rowspan=1 colspan=1>After Cycle 6</td><td rowspan=1 colspan=1>After Cycle 9</td><td rowspan=1 colspan=1>End oftreatment</td></tr><tr><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1>N = 46</td><td rowspan=1 colspan=1>N = 46</td><td rowspan=1 colspan=1>N = 46</td><td rowspan=1 colspan=1>N = 46</td></tr><tr><td rowspan=1 colspan=1>Investigator-assessed</td><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>Objective response</td><td rowspan=1 colspan=1>30 (65.2)</td><td rowspan=1 colspan=1>19 (41.3)</td><td rowspan=1 colspan=1>17 (37.0)</td><td rowspan=1 colspan=1>13 (28.3)</td></tr><tr><td rowspan=1 colspan=1>Complete response</td><td rowspan=1 colspan=1>14 (30.4)</td><td rowspan=1 colspan=1>16 (34.8)</td><td rowspan=1 colspan=1>14 (30.4)</td><td rowspan=1 colspan=1>12 (26.1)</td></tr><tr><td rowspan=1 colspan=1>Partial response</td><td rowspan=1 colspan=1>16 (34.8)</td><td rowspan=1 colspan=1>3 (6.5)</td><td rowspan=1 colspan=1>3 (6.5)</td><td rowspan=1 colspan=1>1 (2.2)</td></tr><tr><td rowspan=1 colspan=1>Stable disease</td><td rowspan=1 colspan=1>4 (8.7)</td><td rowspan=1 colspan=1>0 (0.0)</td><td rowspan=1 colspan=1>0 (0.0)</td><td rowspan=1 colspan=1>0 (0.0)</td></tr><tr><td rowspan=1 colspan=1>Progressive disease</td><td rowspan=1 colspan=1>9 (19.6)</td><td rowspan=1 colspan=1>6 (13.0)</td><td rowspan=1 colspan=1>2 (4.3)</td><td rowspan=1 colspan=1>5 (10.9)</td></tr><tr><td rowspan=1 colspan=1>Missing</td><td rowspan=1 colspan=1>3</td><td rowspan=1 colspan=1>21</td><td rowspan=1 colspan=1>27</td><td rowspan=1 colspan=1>28</td></tr><tr><td rowspan=1 colspan=1>If missing, reason</td><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>ProgressiveDisease</td><td rowspan=1 colspan=1>0 (0.0)</td><td rowspan=1 colspan=1>17 (37.0)</td><td rowspan=1 colspan=1>22 (47.8)</td><td rowspan=1 colspan=1>20 (43.5)</td></tr><tr><td rowspan=1 colspan=1>Adverse Event</td><td rowspan=1 colspan=1>1 (2.2)</td><td rowspan=1 colspan=1>1 (2.2)</td><td rowspan=1 colspan=1>1 (2.2)</td><td rowspan=1 colspan=1>2 (4.3)</td></tr><tr><td rowspan=1 colspan=1>Death</td><td rowspan=1 colspan=1>2 (4.3)</td><td rowspan=1 colspan=1>3 (6.5)</td><td rowspan=1 colspan=1>3 (6.5)</td><td rowspan=1 colspan=1>3 (6.5)</td></tr><tr><td rowspan=1 colspan=1>Missing</td><td rowspan=1 colspan=1>0</td><td rowspan=1 colspan=1>0</td><td rowspan=1 colspan=1>1</td><td rowspan=1 colspan=1>3</td></tr><tr><td rowspan=1 colspan=1>Independent-assessed</td><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>Objective response</td><td rowspan=1 colspan=1>34 (73.9)</td><td rowspan=1 colspan=1>17 (37.0)</td><td rowspan=1 colspan=1>15 (32.6)</td><td rowspan=1 colspan=1>11 (23.9)</td></tr><tr><td rowspan=1 colspan=1>Complete response</td><td rowspan=1 colspan=1>14 (30.4)</td><td rowspan=1 colspan=1>16 (34.8)</td><td rowspan=1 colspan=1>15 (32.6)</td><td rowspan=1 colspan=1>11 (23.9)</td></tr><tr><td rowspan=1 colspan=1>Partial response</td><td rowspan=1 colspan=1>20 (43.5)</td><td rowspan=1 colspan=1>1 (2.2)</td><td rowspan=1 colspan=1>0 (0.0)</td><td rowspan=1 colspan=1>0 (0.0)</td></tr><tr><td rowspan=1 colspan=1>Stable disease</td><td rowspan=1 colspan=1>1 (2.2)</td><td rowspan=1 colspan=1>3 (6.5)</td><td rowspan=1 colspan=1>3 (6.5)</td><td rowspan=1 colspan=1>3 (6.5)</td></tr><tr><td rowspan=1 colspan=1>Progressive disease</td><td rowspan=1 colspan=1>8 (17.4)</td><td rowspan=1 colspan=1>5 (10.9)</td><td rowspan=1 colspan=1>2 (4.3)</td><td rowspan=1 colspan=1>3 (6.5)</td></tr><tr><td rowspan=1 colspan=1>Missing</td><td rowspan=1 colspan=1>3</td><td rowspan=1 colspan=1>21</td><td rowspan=1 colspan=1>26</td><td rowspan=1 colspan=1>29</td></tr><tr><td rowspan=1 colspan=1>If missing, reason</td><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>ProgressiveDisease</td><td rowspan=1 colspan=1>0 (0.0)</td><td rowspan=1 colspan=1>17 (37.0)</td><td rowspan=1 colspan=1>22 (47.8)</td><td rowspan=1 colspan=1>21 (45.7)</td></tr><tr><td rowspan=1 colspan=1>Adverse Event</td><td rowspan=1 colspan=1>1 (2.2)</td><td rowspan=1 colspan=1>1 (2.2)</td><td rowspan=1 colspan=1>1 (2.2)</td><td rowspan=1 colspan=1>2 (4.3)</td></tr><tr><td rowspan=1 colspan=1>Death</td><td rowspan=1 colspan=1>2 (4.3)</td><td rowspan=1 colspan=1>3 (6.5)</td><td rowspan=1 colspan=1>3 (6.5)</td><td rowspan=1 colspan=1>3 (6.5)</td></tr><tr><td rowspan=1 colspan=1>Missing</td><td rowspan=1 colspan=1>0</td><td rowspan=1 colspan=1>0</td><td rowspan=1 colspan=1>0</td><td rowspan=1 colspan=1>3</td></tr></table>",
+        "bbox": [
+            114,
+            121,
+            882,
+            652
+        ],
+        "page_idx": 37
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            859,
+            989
+        ],
+        "page_idx": 37
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 37
+    },
+    {
+        "type": "table",
+        "img_path": "images/81bc8abe1cb78b6c444f9d360b43070e75986e688db22f929d4431aea715bad3.jpg",
+        "table_caption": [
+            "Table 3. Adverse events reported in the full analysis set "
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1>Any gradeN = 46</td></tr><tr><td rowspan=1 colspan=1>Adverse events (AEs)</td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>Patients with at least one AE</td><td rowspan=1 colspan=1>38 (82.6)</td></tr><tr><td rowspan=1 colspan=1>Patients with at least one AE of highest grade ≥3</td><td rowspan=1 colspan=1>33 (71.7)</td></tr><tr><td rowspan=1 colspan=1>Patients with at least one serious AE</td><td rowspan=1 colspan=1>19 (41.3)</td></tr><tr><td rowspan=1 colspan=1>Patients with at least one serious AE with highest grade ≥3</td><td rowspan=1 colspan=1>12 (26.1)</td></tr><tr><td rowspan=1 colspan=1>Patients with at least one fatal AE</td><td rowspan=1 colspan=1>2 (4.3)</td></tr><tr><td rowspan=1 colspan=1>Treatment-related adverse events (TRAEs)</td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>Patients with at least one TRAE</td><td rowspan=1 colspan=1>29 (63.0)</td></tr><tr><td rowspan=1 colspan=1>Patients with at least one TRAE of highest grade ≥3</td><td rowspan=1 colspan=1>21 (45.7)</td></tr><tr><td rowspan=1 colspan=1>Patients with at least one fatal TRAE</td><td rowspan=1 colspan=1>1 (2.2)</td></tr><tr><td rowspan=1 colspan=1>Patients with at least one TRAE leading to treatment discontinuation</td><td rowspan=1 colspan=1>3 (6.5)</td></tr><tr><td rowspan=1 colspan=1>Adverse events of special interest (AESIs)</td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>Patients with at least one AESI</td><td rowspan=1 colspan=1>13 (28.3)</td></tr><tr><td rowspan=1 colspan=1>Patients with at least one related AESIa</td><td rowspan=1 colspan=1>9 (19.6)</td></tr><tr><td rowspan=1 colspan=1>Cytokine release syndrome (grade 2)b</td><td rowspan=1 colspan=1>4 (8.7)</td></tr><tr><td rowspan=1 colspan=1>Neurotoxicity (grade 2)b</td><td rowspan=1 colspan=1>1 (2.2)</td></tr><tr><td rowspan=1 colspan=1>Tumor flare (grade 2)</td><td rowspan=1 colspan=1>4 (8.7)</td></tr></table>",
+        "bbox": [
+            114,
+            141,
+            877,
+            486
+        ],
+        "page_idx": 38
+    },
+    {
+        "type": "text",
+        "text": "Data are $n \\left( \\% \\right)$ , where percentages were based on $N .$ . aTwo of the AESIs (one tumor flare and one neurotoxicity) were considered related to glofitamab and obinutuzumab, while the remaining events were considered related to glofitamab only. bNone of the cytokine release syndrome or neurotoxicity events were grade ${ \\ge } 3$ . ",
+        "bbox": [
+            114,
+            493,
+            883,
+            569
+        ],
+        "page_idx": 38
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            859,
+            989
+        ],
+        "page_idx": 38
+    },
+    {
+        "type": "discarded",
+        "text": "38 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 38
+    },
+    {
+        "type": "text",
+        "text": "Fig. 1. BiCAR study procedures and glofitamab treatment schedule. aGlofitamab $3 0 ~ \\mathrm { m g }$ was administered every 21 days starting Cycle 2. C, cycle; D, day; FDG, $^ { 1 8 } \\mathrm { F }$ -fluorodeoxyglucose; Glofi, glofitamab; Obi, obinutuzumab; PET, positron emission tomography; R/R, refractory/relapsed. ",
+        "bbox": [
+            112,
+            89,
+            887,
+            214
+        ],
+        "page_idx": 39
+    },
+    {
+        "type": "text",
+        "text": "Fig. 2. Flow diagram of the study population. FAS, full analysis set; n, number of patients; N, total number of patients. ",
+        "bbox": [
+            114,
+            268,
+            885,
+            325
+        ],
+        "page_idx": 39
+    },
+    {
+        "type": "text",
+        "text": "Fig. 3. Kaplan-Meier curves of overall survival (a), progression-free survival (b), duration of response (c), and duration of complete response (d) in the full analysis set. CI, confidence interval; CR, complete response; FAS, full analysis set; OS, overall survival; PFS, progressionfree survival; PR, partial response. ",
+        "bbox": [
+            112,
+            380,
+            885,
+            506
+        ],
+        "page_idx": 39
+    },
+    {
+        "type": "text",
+        "text": "Fig. 4. Best metabolic response in the full analysis set. CMR, complete metabolic response;   \nOMR, objective metabolic response; PD, progressive disease; PMR, partial metabolic response;   \nSD, stable disease. ",
+        "bbox": [
+            112,
+            560,
+            885,
+            650
+        ],
+        "page_idx": 39
+    },
+    {
+        "type": "text",
+        "text": "Fig. 5. Cumulative incidence rate of infections all grades. C1, cycle 1; CL, confidence limits; ",
+        "bbox": [
+            117,
+            712,
+            874,
+            732
+        ],
+        "page_idx": 39
+    },
+    {
+        "type": "text",
+        "text": "D1, day 1. No., number ",
+        "bbox": [
+            114,
+            747,
+            303,
+            765
+        ],
+        "page_idx": 39
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 39
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 39
+    },
+    {
+        "type": "image",
+        "img_path": "images/53ab2f2845dbcf37f9cd74930a5e0780b766ec7032c3e98d018a07bda1712190.jpg",
+        "image_caption": [],
+        "image_footnote": [],
+        "bbox": [
+            28,
+            32,
+            982,
+            987
+        ],
+        "page_idx": 40
+    },
+    {
+        "type": "image",
+        "img_path": "images/30ee624e784a6675b1917b237b34593d0b41a763e3ff171b8097e03f93a9d0bf.jpg",
+        "image_caption": [],
+        "image_footnote": [],
+        "bbox": [
+            39,
+            0,
+            968,
+            995
+        ],
+        "page_idx": 41
+    },
+    {
+        "type": "text",
+        "text": "References   \n1. Halwani, A.S., et al. Survival patterns in patients with relapsed or refractory diffuse large B cell lymphoma: treatment trajectories and responses after the first relapse. Blood 134, 1622 (2019).   \n2. Kanas, G., et al. Epidemiology of diffuse large B-cell lymphoma (DLBCL) and follicular lymphoma (FL) in the United States and Western Europe: population-level projections for 2020-2025. Leuk Lymphoma 63, 54-63 (2022).   \n3. Tilly, H., et al. Diffuse large B-cell lymphoma (DLBCL): ESMO Clinical Practice Guidelines for diagnosis, treatment and follow-up. Ann Oncol 26 Suppl 5, v116-125 (2015).   \n4. Zelenetz, A.D., et al. NCCN Guidelines(R) Insights: B-Cell Lymphomas, Version 6.2023. J Natl Compr Canc Netw 21, 1118-1131 (2023).   \n5. Sehn, L.H. & Salles, G. Diffuse Large B-Cell Lymphoma. N Engl J Med 384, 842-858 (2021).   \n6. Locke, F.L., et al. Axicabtagene Ciloleucel as Second-Line Therapy for Large B-Cell Lymphoma. N Engl J Med 386, 640-654 (2022).   \n7. Abramson, J.S., et al. Lisocabtagene maraleucel as second-line therapy for large B-cell lymphoma: primary analysis of the phase 3 TRANSFORM study. Blood 141, 1675-1684 (2023).   \n8. Houot, R., et al. Axicabtagene ciloleucel as second-line therapy in large B cell lymphoma ineligible for autologous stem cell transplantation: a phase 2 trial. Nat Med 29, 2593-2601 (2023). ",
+        "bbox": [
+            102,
+            71,
+            892,
+            861
+        ],
+        "page_idx": 42
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            857,
+            989
+        ],
+        "page_idx": 42
+    },
+    {
+        "type": "discarded",
+        "text": "40 ",
+        "bbox": [
+            861,
+            939,
+            883,
+            953
+        ],
+        "page_idx": 42
+    },
+    {
+        "type": "text",
+        "text": "9. Sehgal, A., et al. Lisocabtagene maraleucel as second-line therapy in adults with relapsed or refractory large B-cell lymphoma who were not intended for haematopoietic stem cell transplantation (PILOT): an open-label, phase 2 study. Lancet Oncol 23, 1066-1077 (2022). ",
+        "bbox": [
+            112,
+            88,
+            885,
+            213
+        ],
+        "page_idx": 43
+    },
+    {
+        "type": "text",
+        "text": "10. Spiegel, J.Y., et al. Outcomes of patients with large B-cell lymphoma progressing after axicabtagene ciloleucel therapy. Blood 137, 1832-1835 (2021). ",
+        "bbox": [
+            112,
+            228,
+            885,
+            285
+        ],
+        "page_idx": 43
+    },
+    {
+        "type": "text",
+        "text": "11. Di Blasi, R., et al. Outcomes of patients with aggressive B-cell lymphoma after failure of anti-CD19 CAR T-cell therapy: a DESCAR-T analysis. Blood 140, 2584-2593 (2022). ",
+        "bbox": [
+            112,
+            297,
+            887,
+            354
+        ],
+        "page_idx": 43
+    },
+    {
+        "type": "text",
+        "text": "12. Bacac, M., et al. CD20-TCB with Obinutuzumab Pretreatment as Next-Generation Treatment of Hematologic Malignancies. Clin Cancer Res 24, 4785-4797 (2018). ",
+        "bbox": [
+            112,
+            368,
+            887,
+            424
+        ],
+        "page_idx": 43
+    },
+    {
+        "type": "text",
+        "text": "13. Dickinson, M.J., et al. Glofitamab for Relapsed or Refractory Diffuse Large B-Cell Lymphoma. N Engl J Med 387, 2220-2231 (2022). ",
+        "bbox": [
+            114,
+            438,
+            887,
+            493
+        ],
+        "page_idx": 43
+    },
+    {
+        "type": "text",
+        "text": "14. Hutchings, M., et al. Glofitamab, a Novel, Bivalent CD20-Targeting T-Cell-Engaging Bispecific Antibody, Induces Durable Complete Remissions in Relapsed or Refractory BCell Lymphoma: A Phase I Trial. J Clin Oncol 39, 1959-1970 (2021). ",
+        "bbox": [
+            112,
+            507,
+            885,
+            598
+        ],
+        "page_idx": 43
+    },
+    {
+        "type": "text",
+        "text": "15. Deng, Q., et al. Characteristics of anti-CD19 CAR T cell infusion products associated with efficacy and toxicity in patients with large B cell lymphomas. Nat Med 26, 1878-1887 (2020). ",
+        "bbox": [
+            112,
+            611,
+            885,
+            702
+        ],
+        "page_idx": 43
+    },
+    {
+        "type": "text",
+        "text": "16. Locke, F.L., et al. Tumor burden, inflammation, and product attributes determine outcomes of axicabtagene ciloleucel in large B-cell lymphoma. Blood Adv 4, 4898-4911 (2020). ",
+        "bbox": [
+            114,
+            717,
+            885,
+            772
+        ],
+        "page_idx": 43
+    },
+    {
+        "type": "text",
+        "text": "17. Lamure, S., et al. Clinical and Product Features Associated with Outcome of DLBCL Patients to CD19-Targeted CAR T-Cell Therapy. Cancers (Basel) 13(2021). ",
+        "bbox": [
+            114,
+            786,
+            885,
+            843
+        ],
+        "page_idx": 43
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            150,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 43
+    },
+    {
+        "type": "discarded",
+        "text": "41 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 43
+    },
+    {
+        "type": "text",
+        "text": "18. Cheson, B.D., et al. Recommendations for initial evaluation, staging, and response assessment of Hodgkin and non-Hodgkin lymphoma: the Lugano classification. J Clin Oncol 32, 3059-3068 (2014). ",
+        "bbox": [
+            112,
+            88,
+            885,
+            179
+        ],
+        "page_idx": 44
+    },
+    {
+        "type": "text",
+        "text": "19. Spiegel, J.Y., et al. CAR T cells with dual targeting of CD19 and CD22 in adult patients with recurrent or refractory B cell malignancies: a phase 1 trial. Nat Med 27, 1419-1431 (2021). ",
+        "bbox": [
+            112,
+            193,
+            885,
+            284
+        ],
+        "page_idx": 44
+    },
+    {
+        "type": "text",
+        "text": "20. Silkenstedt, E., Salles, G., Campo, E. & Dreyling, M. B-cell non-Hodgkin lymphomas. Lancet 403, 1791-1807 (2024). ",
+        "bbox": [
+            112,
+            297,
+            885,
+            353
+        ],
+        "page_idx": 44
+    },
+    {
+        "type": "text",
+        "text": "21. Ip, A., et al. Treatment Outcomes with Standard of Care in Relapsed/Refractory Diffuse Large B-Cell Lymphoma: Real-World Data Analysis. Adv Ther 41, 1226-1244 (2024). ",
+        "bbox": [
+            112,
+            368,
+            885,
+            424
+        ],
+        "page_idx": 44
+    },
+    {
+        "type": "text",
+        "text": "22. Hutchings, M., et al. Glofitamab monotherapy in relapsed or refractory large B-Cell Lymphoma: extended follow-up from a pivotal phase II study and subgroup analyses in patients with prior chimeric antigen receptor T-Cell therapy and by baseline total metabolic tumor volume. Blood 142, 433 (2023). ",
+        "bbox": [
+            112,
+            438,
+            885,
+            563
+        ],
+        "page_idx": 44
+    },
+    {
+        "type": "text",
+        "text": "23. Dodero, A., et al. Outcome after chimeric antigen receptor (CAR) T-cell therapy failure in large B-cell lymphomas. Br J Haematol 204, 151-159 (2024). ",
+        "bbox": [
+            112,
+            577,
+            885,
+            632
+        ],
+        "page_idx": 44
+    },
+    {
+        "type": "text",
+        "text": "24. Rentsch, V., et al. Glofitamab Treatment in Relapsed or Refractory DLBCL after CAR TCell Therapy. Cancers (Basel) 14(2022). ",
+        "bbox": [
+            112,
+            647,
+            885,
+            703
+        ],
+        "page_idx": 44
+    },
+    {
+        "type": "text",
+        "text": "25. Piccione, E.C., et al. P1210: immune correlates of response to glofitamab: biomarker findings from a pivotal phase II expansion study in patients with relapsed or refractory (R/R) diffuse large B-cell lymphoma (DLBCL). HemaSphere 6, 1096-1097 (2022). ",
+        "bbox": [
+            112,
+            717,
+            885,
+            808
+        ],
+        "page_idx": 44
+    },
+    {
+        "type": "text",
+        "text": "26. Nassiri, S., et al. Molecular Mechanisms Underlying Response and Resistance to Glofitamab. Blood 142, 1619 (2023). ",
+        "bbox": [
+            112,
+            821,
+            885,
+            877
+        ],
+        "page_idx": 44
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            861,
+            989
+        ],
+        "page_idx": 44
+    },
+    {
+        "type": "discarded",
+        "text": "42 ",
+        "bbox": [
+            861,
+            939,
+            883,
+            953
+        ],
+        "page_idx": 44
+    },
+    {
+        "type": "text",
+        "text": "27. Thieblemont, C., et al. Epcoritamab, a Novel, Subcutaneous CD3xCD20 Bispecific T-CellEngaging Antibody, in Relapsed or Refractory Large B-Cell Lymphoma: Dose Expansion in a Phase I/II Trial. J Clin Oncol 41, 2238-2247 (2023). ",
+        "bbox": [
+            111,
+            88,
+            885,
+            180
+        ],
+        "page_idx": 45
+    },
+    {
+        "type": "text",
+        "text": "28. Falchi, L., Vardhana, S.A. & Salles, G.A. Bispecific antibodies for the treatment of B-cell lymphoma: promises, unknowns, and opportunities. Blood 141, 467-480 (2023). ",
+        "bbox": [
+            112,
+            194,
+            887,
+            250
+        ],
+        "page_idx": 45
+    },
+    {
+        "type": "text",
+        "text": "29. Schulz, K. F., Altman, D. G. & Moher, D. CONSORT 2010 statement: updated guidelines for reporting parallel group randomised trials. BMJ 340, c332 (2010). ",
+        "bbox": [
+            112,
+            263,
+            885,
+            319
+        ],
+        "page_idx": 45
+    },
+    {
+        "type": "text",
+        "text": "30. Peinelt, A., et al. Monitoring of Circulating CAR T Cells: Validation of a Flow Cytometric Assay, Cellular Kinetics, and Phenotype Analysis Following Tisagenlecleucel. Front Immunol 13, 830773 (2022). ",
+        "bbox": [
+            111,
+            332,
+            887,
+            424
+        ],
+        "page_idx": 45
+    },
+    {
+        "type": "text",
+        "text": "31. Oras, A., et al. Comprehensive flow cytometric reference intervals of leukocyte subsets from six study centers across Europe. Clin Exp Immunol 202, 363-378 (2020). ",
+        "bbox": [
+            112,
+            438,
+            887,
+            493
+        ],
+        "page_idx": 45
+    },
+    {
+        "type": "text",
+        "text": "32. Lee, D.W., et al. ASTCT Consensus Grading for Cytokine Release Syndrome and Neurologic Toxicity Associated with Immune Effector Cells. Biol Blood Marrow Transplant 25, 625-638 (2019). ",
+        "bbox": [
+            112,
+            507,
+            887,
+            598
+        ],
+        "page_idx": 45
+    },
+    {
+        "type": "text",
+        "text": "33. Crump, M., et al. Outcomes in refractory diffuse large B-cell lymphoma: results from the international SCHOLAR-1 study. Blood 130, 1800-1808 (2017). ",
+        "bbox": [
+            112,
+            612,
+            888,
+            667
+        ],
+        "page_idx": 45
+    },
+    {
+        "type": "text",
+        "text": "34. Cocks, K., et al. Evidence-based guidelines for interpreting change scores for the European Organisation for the Research and Treatment of Cancer Quality of Life Questionnaire Core 30. Eur J Cancer 48, 1713-1721 (2012). ",
+        "bbox": [
+            112,
+            681,
+            887,
+            772
+        ],
+        "page_idx": 45
+    },
+    {
+        "type": "text",
+        "text": "35. Hlubocky, F.J. , et al. The development and validation of a measure of health-related quality of life for non-hodgkin’s lymphoma: the functional assessment of cancer therapy— lymphoma (FACT-Lym). Lymphoma 2013, 147176 (2013). ",
+        "bbox": [
+            112,
+            786,
+            885,
+            877
+        ],
+        "page_idx": 45
+    },
+    {
+        "type": "text",
+        "text": "ACCEPTED MANUSCRIPT / CLEAN COPY ",
+        "text_level": 1,
+        "bbox": [
+            148,
+            957,
+            861,
+            991
+        ],
+        "page_idx": 45
+    },
+    {
+        "type": "discarded",
+        "text": "43 ",
+        "bbox": [
+            861,
+            939,
+            882,
+            953
+        ],
+        "page_idx": 45
+    }
+]

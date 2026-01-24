@@ -1,0 +1,7 @@
+{
+  "ps3_evidence_level": "PS3_supporting",
+  "odds_path_value": null,
+  "p1_source": "not reported",
+  "p2_source": "not reported",
+  "reasoning_summary": "The paper does not describe a functional assay for a specific genetic variant. It measures protein levels (LR11 and PTPRO) in patient serum as biomarkers for a clinical outcome (in-stent restenosis). This is a clinical association study, not a variant-specific functional study as required for PS3."
+}

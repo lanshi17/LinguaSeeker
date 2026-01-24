@@ -1,0 +1,832 @@
+[
+    {
+        "type": "text",
+        "text": "老年急性心肌梗死患者经皮冠状动脉介入术前后外周血具有 11 个配体结合重复结构的低密度脂蛋白受体相关蛋白和蛋白酪氨酸磷酸酶受体 O 水平变化及其与支架内再狭窄的关系",
+        "text_level": 1,
+        "bbox": [
+            94,
+            121,
+            764,
+            272
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "余信1 张娜娜1 李毅2  \n西安交通大学附属红会医院全科医学科，西安 710000;  陕西省安康市中心医院心内科，  \n安康 725000  \n通信作者: 李毅，Email: 1123079500@ qq． com",
+        "bbox": [
+            94,
+            290,
+            784,
+            359
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "【摘要】 目的 探讨老年急性心肌梗死( AMI) 患者经皮冠状动脉介入( PCI) 术前后外周血具有11 个配体结合重复结构的低密度脂蛋白受体相关蛋白( LR11) 、蛋白酪氨酸磷酸酶受体 O( PTPRO) 水平变化及其与支架内再狭窄( ISR) 的关系。 方法 前瞻性选取 2021 年 1 月至 2023 年 12 月在西安交通大学附属红会医院行 PCI 术的老年 AMI 患者 312 例，根据 1 年后是否发生 ISR 分为 ISR 组和非 ISR 组。 采用酶联免疫吸附试验法检测外周血 LR11、 PTPRO 水平。 通过 Spearman 相关分析 AMI 患者外周血 LR11、 PTPRO 水平与 PCI 术后1 年管腔直径狭窄率的相关性，并分析外周血 LR11、PTPRO 水平与 AMI 患者 PCI 术后 ISR 的关系及预测效能。 结果 AMI 患者 PCI 术后外周血 LR11、PTPRO 水平高于术前［ $\\left[ 1 9 5 \\pm 4 8 \\right] \\mathrm { m g / L }$ 比( $1 5 3 \\pm$ 4 $3 ) \\mathrm { \\ m g / L _ { \\cdot } } \\left( 2 0 \\pm 4 \\right) \\mathrm { \\ \\mu g / L }$ 比( $1 6 \\pm 4 ) ~ \\mu \\mathrm { g / L } ]$ ］( 均 $\\textstyle P < 0 . 0 5 )$ 。 AMI 患者 PCI 术后外周血 LR11 、 PTPRO 水平与PCI 术后1 年管腔直径狭窄率均呈正相关( $r _ { \\mathrm { s } } = 0 . 6 1 7 { \\cdot } 0 . 6 0 2$ ，均 $P < 0 . 0 0 1$ ) 。 随访 1 年，312 例 AMI 患者PCI 术后 ISR 发生率为 $1 6 . 7 \\% \\big ( 5 2 / 3 1 2 \\big )$ 。 低密度脂蛋白胆固醇高、术后 LR11 高、术后 PTPRO 高为 AMI 患者 PCI 术后 ISR 的独立危险因素( 均 $P < 0 . 0 5 !$ ) 。 术后外周血 LR11、 PTPRO 及二者联合预测 AMI 患者 PCI术后 ISR 的曲线下面积为 $0 . 8 2 4 , 0 . 7 9 7 , 0 . 9 0 4$ ，二者联合优于各自单独预测( 均 $\\textstyle P < 0 . 0 5 )$ 。 结论 老年AMI 患者 PCI 术后外周血 LR11、PTPRO 水平升高与 PCI 术后 ISR 有关，二者联合对 PCI 术后 ISR 有较高的预测效能。",
+        "bbox": [
+            92,
+            375,
+            784,
+            599
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "【关键词】 急性心肌梗死; 经皮冠状动脉介入; 具有 11 个配体结合重复结构的低密度脂蛋白受体相关蛋白; 蛋白酪氨酸磷酸酶受体 O; 支架内再狭窄",
+        "bbox": [
+            90,
+            600,
+            783,
+            631
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "【基金项目】 陕西省科学技术厅科技计划项目( 2021JQ-344)",
+        "bbox": [
+            121,
+            633,
+            526,
+            648
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "【DOI 】 10． 3760 /j． issn． 1673-4777． 2025． 12． 002 【中图分类号】 R 541 【文献标识码】 A",
+        "bbox": [
+            124,
+            649,
+            741,
+            664
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Changes of low-density lipoprotein receptor-related protein with 11 ligand-binding repeats and protein tyrosine phosphatase receptor O in peripheral blood before and after percutaneous coronary intervention in elderly patients with acute myocardial infarction and their relationship with in-stent restenosis Yu $X i n ^ { I }$ ，Zhang Nana1 ，Li $Y i ^ { 2 }$   \n1 Department of General Practice，Honghui Hospital Affiliated to Xi'an Jiaotong University，Xi'an 710000，China; 2 Department of Cardiology，Ankang Central Hospital，Shaanxi Province，Ankang 725000，China   \nCorresponding author: Li Yi，Email: 1123079500@ qq． com ",
+        "bbox": [
+            90,
+            682,
+            784,
+            776
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "【Abstract 】 Objective To investigate the changes of low-density lipoprotein receptor-related protein with 11 ligand-binding repeats ( LR11) and protein tyrosine phosphatase receptor O ( PTPRO) in peripheral blood before and after percutaneous coronary intervention ( PCI) in elderly patients with acute myocardial infarction ( AMI) and their relationship with in-stent restenosis ( ISR) ． Methods A total of 312 elderly AMI patients who underwent PCI in Honghui Hospital Affiliated to Xi' an Jiaotong University from January 2021 to December 2023 were prospectively selected，and they were divided into ISR group and non-ISR group according to whether ISR occurred after 1 year． The levels of LR11 and PTPRO in peripheral blood were detected by enzyme-linked immunosorbent assay． Spearman correlation was used to analyze the correlation between the levels of peripheral blood LR11 and PTPRO and the rate of luminal diameter stenosis at 1 year after PCI in AMI patients，and the relationship between the levels of peripheral blood LR11 and PTPRO and ISR in AMI patients after PCI and its predictive efficacy were analyzed． Results The levels of LR11 and PTPRO in peripheral blood of AMI patients after PCI were higher than those before PCI $[ 1 9 5 \\pm 4 8 ) ~ \\mathrm { m g / L }$ vs $\\left( \\ 1 5 3 \\pm 4 3 \\right) \\mathrm { m g / L }$ ， $\\left( { 2 0 \\pm 4 } \\right) \\mu \\mathrm { g / L }$ vs $\\left( ~ 1 6 \\pm 4 \\right) ~ \\mu \\mathrm { g / L }$ ( both $P < 0 . 0 5$ ) ． The levels of LR11 and PTPRO in peripheral blood of AMI patients after PCI were positively correlated with the lumen diameter stenosis rate at 1 year after PCI ( $r _ { \\mathrm { s } } = 0 . 6 1 7$ ，0． 602，both $P < 0 . 0 0 1$ ) ． After 1-year follow-up，the incidence of ISR after PCI was $1 6 . 7 \\%$ ( 52 /312) in 312 AMI patients． High low-density lipoprotein cholesterol，high postoperative LR11 and high postoperative PTPRO were independent risk factors for ISR in AMI patients after PCI ( all $P < 0 . 0 5$ ) ． The area under the curve of postoperative peripheral blood LR11， PTPRO and their combination to predict ISR in AMI patients after PCI was 0． 824，0． 797 and 0． 904，respectively， and the combination of the two was better than each single prediction ( both $P < 0 . \\ 0 5$ ) ． Conclusion The increased levels of LR11 and PTPRO in peripheral blood of elderly AMI patients after PCI are related to ISR after PCI． The combination of LR11 and PTPRO has a high predictive effect on ISR after PCI． ",
+        "bbox": [
+            92,
+            778,
+            786,
+            845
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "discarded",
+        "text": "【引用本文】 余信，张娜娜，李毅． 老年急性心肌梗死患者经皮冠状动脉介入术前后外周血具有 11 个配体结合重复结构的低密度脂蛋白受体相关蛋白和蛋白酪氨酸磷酸酶受体 O 水平变化及其与支架内再狭窄的关系［J］． 中国医药，2025，20( 12) : 1767-1772． DOI: 10． 3760 /j． issn． 1673-4777． 2025． 12． 002．",
+        "bbox": [
+            92,
+            860,
+            784,
+            903
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "discarded",
+        "text": "中国医药 2025 年 12 月第 20 卷第 12 期 China Medicine，December 2025，Vol． 20，No． 12",
+        "bbox": [
+            90,
+            61,
+            610,
+            74
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            31,
+            963,
+            322,
+            979
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "discarded",
+        "text": "· 1767 · ",
+        "bbox": [
+            847,
+            63,
+            894,
+            72
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "discarded",
+        "text": "· 论 著 · ",
+        "bbox": [
+            811,
+            95,
+            899,
+            115
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            94,
+            91,
+            784,
+            303
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "【Keywords 】 Acute myocardial infarction; Percutaneous coronary intervention; Low-density lipoprotein receptor-related protein with 11 ligand-binding repeats; Protein tyrosine phosphatase receptor O; In-stent restenosis ",
+        "bbox": [
+            94,
+            305,
+            783,
+            331
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "【Fund program 】 Science and Technology Plan Project of Shaanxi Provincial Department of Science and Technology ( 2021JQ-344) ",
+        "bbox": [
+            92,
+            332,
+            781,
+            359
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "虽然近年来药物洗脱支架的广泛使用降低了支架内再狭窄( ISR) 风险，但随着接受经皮冠状动脉介入( PCI) 治疗的急性心肌梗死( AMI) 患者的增多，PCI 术后 ISR 仍然严重影响患者预后［1-2］。 相比于中青年患者，老年 AMI 患者常伴多种基础疾病及血管壁重构能力下降、内皮功能障碍等病理生理特点，更易出现 ISR，预后也更差［］。 因此早期识别有ISR 风险的老年 AMI 患者非常重要。 研究表明，支架内新生动脉粥样硬化( NAS) 参与 ISR 的发生，与炎症反应、内皮功能障碍、血管平滑肌细胞增殖迁移等相关［4］。 具有11 个配体结合重复结构的低密度脂蛋白受体相关蛋白( LR11) 是一种跨膜蛋白，能通过血管平滑肌细胞增殖迁移促进动脉粥样硬化( AS) ［5］。 Suwa 等［6］报道，血清 LR11 水平升高与冠心病( 冠状动脉粥样硬化性心脏病) 患者长期临床预后不良相关。 蛋白酪氨酸磷酸酶受体 O( PTPRO)是一种跨膜蛋白酪氨酸磷酸酶，能激活炎症信号通路促进炎症反应［7］。 Hao 等［8］报道，外周血单核细胞中 PTPRO 高表达与急性冠状动脉综合征患者不良预后有关。 尽管上述研究提示 LR11、PTPRO 在AS 及冠心病中的潜在作用，但目前关于二者在老年AMI 患者中与 PCI 术后 ISR 关系的系统研究较少。本研究旨在探讨老年 AMI 患者 PCI 术前后外周血LR11、PTPRO 水平变化及其与 ISR 的关系，以期为ISR 防治提供更多依据。",
+        "bbox": [
+            92,
+            374,
+            484,
+            819
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "1 对象与方法",
+        "text_level": 1,
+        "bbox": [
+            92,
+            821,
+            211,
+            837
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "1． 1 对象 前瞻性选取 2021 年 1 月至 2023 年 12 月在西安交通大学附属红会医院行 PCI 术的老年 AMI患者 312 例，年龄( $6 9 \\pm 9 1$ 岁，范围 $6 0 \\sim 7 9 $ 岁; 女105 例 、 男 207 例 。 纳入标准: $\\textcircled{1}$ 年龄 $\\geqslant 6 0$ 岁; $\\textcircled{2}$ 符合 AMI 诊断标准［9］，并行药物洗脱支架 PCI 术;$\\textcircled{3}$ 有完整的临床信息; $\\textcircled{4}$ 能进行随访。 排除标准:$\\textcircled{1}$ 既往血运重建史; $\\textcircled{2}$ 伴自身免疫疾病者; $\\textcircled{3}$ 对比剂过敏者; $\\textcircled{4}$ 先天性心脏病、心脏瓣膜病、急性心包炎等其他心脏病患者; $\\textcircled{5}$ 近 3 个月内使用免疫抑制剂者; $\\textcircled{6}$ 电解质紊乱、严重肝肾功能不全者; $\\textcircled{7}$ 恶性肿瘤患者; $\\textcircled{8}$ 陈旧性心肌梗死; $\\textcircled{9}$ 伴血液系统疾病患者。 脱落标准: 随访期间死亡者。 本研究经西安交通大学附属红会医院伦理委员会批准( 20200629) ，患者或家属均签署了知情同意书。",
+        "bbox": [
+            92,
+            839,
+            484,
+            909
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            515,
+            375,
+            905,
+            552
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "1． 2 方法",
+        "text_level": 1,
+        "bbox": [
+            514,
+            555,
+            598,
+            570
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "1． 2． 1 外周血 LR11 、 PTPRO 水平检测 采集 AMI患者 PCI 术前和 PCI 术后 1 d 体检时外周静脉血$4 ~ \\mathrm { m l }$ ，离心取上清，采用酶联免疫吸附试验法检测LR11( 深圳市康初源有限公司，试剂盒货号: ADS-0199H1) 、PTPRO( 上海恒斐生物科技有限公司，试剂盒货号: E-EL-H0908) 水平 。",
+        "bbox": [
+            514,
+            573,
+            907,
+            676
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "1． 2． 2 管腔直径狭窄率 记录 AMI 患者 PCI 术后  \n1 年支架管腔直径狭窄率［( 术前管腔直径 － 术后  \n1 年管腔直径) /术前管腔直径 $\\times 1 0 0 \\%$ ］。",
+        "bbox": [
+            514,
+            680,
+            905,
+            730
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "1． 3 ISR 诊断和分组 通过门诊对 AMI 患者随访1 年，将再次冠状动脉造影发现支架内或支架近端/远端的邻近节段( $5 \\ \\mathrm { m m }$ 内) 管腔直径狭窄率 $> 5 0 \\%$ 定义为 ISR［10］。 根据是否发生 ISR 将患者分为 ISR组和非 ISR 组 。",
+        "bbox": [
+            514,
+            732,
+            905,
+            819
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "1． 4 统计学分析 选用 SPSS 28． 0 统计软件分析数据。 计数资料以例 $1 \\%$ ) 表示，组间比较采用 $\\chi ^ { 2 }$ 检验; 正态分布的计量资料以 ${ \\bar { x } } \\pm s$ 表示，组间比较采用 $t$ 检验; 偏态分布的计量资料以 $M ( \\mathrm { \\Phi } Q _ { 1 } , Q _ { 3 } )$ 表示，组间比较采用非参数检验; 采用 Spearman 相关分析法分析 AMI 患者外周血 LR11、 PTPRO 水平与 PCI术后1 年管腔直径狭窄率的相关性; 采用多因素Logistic 回归方法和受试者工作特征( ROC) 曲线分析外周血 LR11、PTPRO 水平与 AMI 患者 PCI 术后 ISR的关系及预测效能。 $P < 0 . 0 5$ 为差异有统计学意义。",
+        "bbox": [
+            514,
+            821,
+            907,
+            909
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "discarded",
+        "text": "中国医药 2025 年 12 月第 20 卷第 12 期 China Medicine，December 2025，Vol． 20，No． 12",
+        "bbox": [
+            388,
+            61,
+            904,
+            73
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            31,
+            963,
+            322,
+            979
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "discarded",
+        "text": "· 1768 · ",
+        "bbox": [
+            104,
+            63,
+            149,
+            72
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            92,
+            90,
+            484,
+            178
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "2 结果",
+        "text_level": 1,
+        "bbox": [
+            92,
+            180,
+            156,
+            195
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "2． 1 AMI 患者术前与术后外周血 LR11、 PTPRO 水平比较 AMI 患者 PCI 术后外周血 LR11、 PTPRO 水平均高于术前［ $\\mathrm { \\left[ 1 9 5 \\pm 4 8 \\right] m g / L }$ 比( $1 5 3 \\pm 4 3 ) \\mathrm { \\ m g / L }$ 、$\\left( 2 0 \\pm 4 \\right) ~ \\mu \\mathrm { g / L }$ 比 ( $1 6 \\pm 4$ ) $\\mu \\mathrm { g } / \\mathrm { L } ]$ ］( $t = - 1 1 . 6 0 4$ 、－ 10． 275，均 $\\textstyle P < 0 . 0 5 )$ 。",
+        "bbox": [
+            92,
+            197,
+            484,
+            284
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "2． 2 AMI 患者外周血 LR11 、 PTPRO 水平与 PCI 术后1 年支架管腔直径狭窄率的相关性 本研究无脱落患者。 312 例 AMI 患者 PCI 术后 1 年支架管腔直径狭窄率为 $4 1 . 9 7 \\% \\vert ~ 3 4 . 3 6 \\% ~ , 4 7 . 2 9 \\% )$ 。 Spearman相关性分析结果显示，AMI 患者 PCI 术前外周血LR11、PTPRO 水平与 PCI 术后 1 年管腔直径狭窄率无明显相关性 $r _ { \\mathrm { s } } = 0 . 1 0 3 , P = 0 . 0 6 9$ ; $r _ { \\mathrm { s } } = 0$ ． 101 、$P = 0 . 0 7 4 )$ ) ，PCI 术后外周血 LR11、 PTPRO 水平与PCI 术后 1 年支架管腔直径狭窄率均呈正相关( $r _ { \\textrm { s } } =$ 0． 617 、0． 602，均 $P < 0 . 0 0 1 |$ ) 。",
+        "bbox": [
+            92,
+            286,
+            484,
+            461
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "2．3 AMI 患者 PCI 术后 ISR 的单因素分析 随访1 年，312 例 AMI 患者 PCI 术后 ISR 发生率为 $1 6 . 7 \\%$ ( 52/312) 。 单因素分析结果显示，糖尿病、低密度脂蛋白胆固醇( LDL-C) 、血管完全闭塞、 术后 LR11 、术后 PTPRO 与 AMI 患者 PCI 术后 ISR 有关( 均 $P <$ 0． 05) 。 见表 1 。",
+        "bbox": [
+            90,
+            463,
+            482,
+            568
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "2． 4 AMI 患者 PCI 术后 ISR 危险因素的多因素Logistic 回归分析 以糖尿病、LDL-C、完全闭塞、 术后LR11、术后 PTPRO 为自变量，AMI 患者 PCI 术后 ISR为因变量进行多因素 Logistic 回归，结果显示，LDL-C高、术后 LR11 高、术后 PTPRO 高为 AMI 患者 PCI 术后ISR 的独立危险因素( 均 $P < 0 . 0 5 )$ 。 见表 2 。",
+        "bbox": [
+            92,
+            570,
+            484,
+            675
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "2． 5 外周血 LR11 、PTPRO 水平对 AMI 患者 PCI 术后 ISR 的预测效能 通过 Logistic 回归拟合 PCI 术后外周血 LR11、PTPRO 水平联合预测 AMI 患者 PCI术后ISR 的概率 $ \\big [ \\mathrm { L o g i t } \\big ( { \\cal P } \\big ) = - 1 5 . 5 7 3 + 0 . 0 3 2 \\times .$ 术后$\\mathrm { L R 1 1 } + 0 . 3 3 4 \\times$ 术后PTPRO］。 ROC 曲线分析结果显示，术后外周血 LR11、 PTPRO 及二者联合预测 AMI患者 PCI 术 后 ISR 的 曲 线 下 面 积 分 别 为 0． 824、$0 . 7 9 7 . 0 . 9 0 4$ ，二者联合优于各自单独预测( $Z = 3 . 4 5 7$ 、$P = 0 . 0 0 1$ $1 ; Z = 4 . 0 6 1 , P < 0 . 0 0 1 )$ 。 见表 3 。",
+        "bbox": [
+            90,
+            677,
+            484,
+            834
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "3 讨论",
+        "text_level": 1,
+        "bbox": [
+            92,
+            837,
+            157,
+            852
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "AMI 是冠状动脉急性、持续性缺血缺氧导致心肌坏死的严重心血管疾病，PCI 术可迅速开通闭塞血管，恢复心肌灌注，挽救濒死心肌，且药物洗脱支架在传统裸金属支架基础上涂覆抗增殖药物，能有效抑制内膜过度增生，降低再狭窄风险［11］。 但受个体因素、基础疾病、代谢异常、炎症反应等多种因素影响，仍有部分患者在 PCI 术后出现 ISR，通过再次阻塞或闭塞靶血管影响冠状动脉血流灌注，导致心绞痛复发、 心肌缺血和再次 AMI，增加死亡风险［12-13］。 但目前尚缺乏公认可靠的预测指标，有必要深入探索相关血液标志物。",
+        "bbox": [
+            92,
+            854,
+            484,
+            906
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            515,
+            90,
+            905,
+            230
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "NAS 是 ISR 发生的关键机制之一，与传统 AS缓慢发展的过程不同，NAS 常在支架置入后短期内发生，主要由支架置入引发的血流动力学改变、内皮损伤、炎症反应及氧化应激等因素共同作用所致，这些因素可促使内膜不稳定性增生，显著提高支架内狭窄的发生率，最终导致 ISR［14］。 LR11 是一种主要由血管平滑肌细胞表达的跨膜蛋白，又称Sortilin 相关受体 1，可增强血小板源生长因子信号通路，促进血管平滑肌细胞向内膜迁移和增殖，从而加速斑块形成［15］。 Ohwaki 等［16］研究发现，LR11在球囊损伤大鼠模型的内膜增厚区域表达上调，并可剂量依赖性地增强巨噬细胞迁移及脂质沉积，促进泡沫细胞形成; 相反，LR11 缺失可减少巨噬细胞浸润，抑制 AS 发展。 此外，Bajari 等［17］发现，在低密度脂蛋白刺激下，人冠状动脉内皮细胞中 LR11表达上调，增强血管平滑肌细胞增殖和迁移能力，加速 AS 形成。 而在 LR11 敲除小鼠中，血管紧张素 Ⅱ 刺激导致的血管平滑肌细胞增殖及颈动脉粥样硬化显著减轻［18］。 这些研究共同表明，LR11 在AS 形成中具有重要作用 。 同时 Vongpromek 等［19］报道显示，循环 LR11 水平升高与心血管事件风险显著相关。 因此，推测 LR11 可能参与 AMI 患者PCI 术后 ISR 的发生。 本研究结果显示，AMI 患者PCI 术后外周血 LR11 水平高于术前，并与 PCI 术后1 年内管腔直径狭窄率呈正相关，提示术后外周血LR11 水平升高与 ISR 发生密切相关。 其机制可能为，LR11 作为一种与血管平滑肌细胞表型转换密切相关的跨膜蛋白，其水平升高能促进血管平滑肌细胞向内膜迁移和增殖，导致支架内膜增生和NAS 形成，从而增加 PCI 术后 ISR 风险; 同时 LR11还能增强巨噬细胞趋化与泡沫细胞形成，增强局部炎症反应和脂质沉积，进一步加剧支架内 NAS形成，导致 AMI 患者 PCI 术后 ISR 风险增加［15-17］ 。Suwa 等［6］和 Ogita 等［20］也报道显示，循环 LR11 水平升高与接受 PCI 术的冠心病患者长期临床预后不良相关。",
+        "bbox": [
+            514,
+            224,
+            907,
+            873
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "炎症反应在 AS 发生和进展中起着核心作用，通过血管内皮损伤、泡沫细胞形成以及血管平滑肌细胞增殖和迁移等过程，促进 AS 的形成［21］。 PTPRO是一种主要由免疫细胞( 如巨噬细胞、T 细胞等) 表达的受体型酪氨酸磷酸酶，能够上调细胞表面 Toll样受体4( TLR4) 的表达，增强髓分化因子88 依赖的信号传导，进一步激活 TLR4 /核因子 $\\kappa \\mathrm { B } \\big ( \\mathrm { ~ N F \\mathrm { \\star B } } \\big )$ 通路，在炎症反应中发挥关键作用［7］。 例如，PTPRO已被证实能够激活 $\\mathrm { T L R 4 / N F { \\bf \\cdot } s B }$ 信号通路，促进溃疡性结肠炎和急性肺损伤等疾病中的炎症反应，而其敲低能够有效阻断该信号通路的激活［22-23］。 此外，研究发现，PTPRO 还能够激活 $\\mathrm { N F } _ { \\bf \\Phi \\mathrm { \\kappa B } }$ 通路，促进脂肪组织和肝脏中的脂质积 累、 炎 症 反 应，提 示PTPRO 还与代谢紊乱相关［24］。 另一项研究表明，PTPRO 激活 TLR4 /NF- $\\mathbf { \\sigma } _ { \\mathbf { \\kappa } } \\mathbf { B }$ 通路，促进氧化型低密度脂蛋白诱导的巨噬细胞泡沫细胞形成，进而加剧小鼠的 AS 发展［25］。 因此，推测 PTPRO 可能参与 AMI患者 PCI 术后 ISR 的发生。 本研究结果显示，AMI患者 PCI 术后外周血 PTPRO 水平高于术前，并与PCI 术后1 年内管腔直径狭窄率呈正相关，提示术后外周血 PTPRO 水平升高与 ISR 发生密切相关。 其机制可能为，PTPRO 能通过激活 $\\mathrm { T L R 4 / N F { \\bf \\vec { \\kappa } } { B } }$ 信号通路，增强炎症因子表达，通过血管内皮损伤、泡沫细胞形成以及血管平滑肌细胞增殖和迁移等诱导NAS 形成，导致 PCI 术后 ISR 风险增加［25-26］; 同时PTPRO 激活的 $\\mathrm { T L R 4 / N F { \\bf \\vec { \\kappa } } { B } }$ 信号通路还能促进氧化应激和细胞凋亡，进一步加剧巨噬细胞脂质积累，从而增加 PCI 术后 ISR 风险［27］。 本研究还发现，LDL-C高、完全闭塞为 AMI 患者 PCI 术后 ISR 的独立危险因素，与既往报道一致。 考虑与 LDL-C 水平升高反映代谢紊乱，能通过脂质沉积来促进 NAS 形成有关［28］。 ROC 曲线显示，术后外周血 LR11 、 PTPRO 及二者联合预测 AMI 患者 PCI 术后 ISR 的曲线下面积为 0． 824 、 0． 797 、 0． 904，二者联合优于各自单独预测。 这说明 PCI 术后外周血 LR11、 PTPRO 有助于预测 PCI 术后 ISR，同时检测 PCI 术后外周血 LR11 、PTPRO 具备更高的预测效能。",
+        "bbox": [
+            515,
+            872,
+            904,
+            906
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "discarded",
+        "text": "中国医药 2025 年 12 月第 20 卷第 12 期 China Medicine，December 2025，Vol． 20，No． 12",
+        "bbox": [
+            92,
+            61,
+            610,
+            73
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "discarded",
+        "text": "· 1769 · ",
+        "bbox": [
+            848,
+            63,
+            894,
+            72
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            31,
+            963,
+            322,
+            979
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "table",
+        "img_path": "images/7727447dfcf99a6cced7a071d1899ff3cc3dc30e2894156b9492566dada06ff3.jpg",
+        "table_caption": [
+            "表1 老年急性心肌梗死患者经皮冠状动脉介入术后 ISR 的单因素分析"
+        ],
+        "table_footnote": [
+            "注: ISR 为支架内再狭窄; LR11 为具有11 个配体结合重复结构的低密度脂蛋白受体相关蛋白; PTPRO 为蛋白酪氨酸磷酸酶受体 O; “ － ”为采用 Fisher 确切概率法，无数据"
+        ],
+        "table_body": "<table><tr><td colspan=\"3\">1,</td><td colspan=\"3\">ISR( n = 260)</td></tr><tr><td>I</td><td>ISR ( n =52)</td><td></td><td></td><td>χ{2ItzZ </td><td>P</td></tr><tr><td>%)]</td><td></td><td></td><td></td><td>3.126</td><td>0.077</td></tr><tr><td></td><td></td><td>29( 55.8)</td><td>178( 68.5)</td><td></td><td></td></tr><tr><td></td><td>23( 44.2)</td><td></td><td>82(31.5)</td><td></td><td></td></tr><tr><td>(,x ± s</td><td></td><td>70 ± 6</td><td>69 ± 7</td><td>0.952</td><td>0.342</td></tr><tr><td>%)</td><td>27( 51.9)</td><td></td><td>109( 41.9)</td><td>1.762</td><td>0.184</td></tr><tr><td>%</td><td>28( 53.8)</td><td></td><td>104( 40.0)</td><td>3.404</td><td>0.065</td></tr><tr><td>e%)</td><td></td><td></td><td></td><td>8.833</td><td>0.065</td></tr><tr><td>$</td><td>22( 42.3)</td><td></td><td>130( 50.0)</td><td></td><td></td></tr><tr><td></td><td>3( 5.8)</td><td></td><td>26( 10.0)</td><td></td><td></td></tr><tr><td></td><td>21( 40.4)</td><td></td><td>94( 36.2)</td><td></td><td></td></tr><tr><td>+</td><td>4(</td><td>7.7)</td><td>9( 3.5)</td><td></td><td></td></tr><tr><td>+</td><td>2(</td><td>3.8)</td><td>1( 0.4)</td><td></td><td></td></tr><tr><td>%</td><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td>7(13.5)</td><td></td><td>26( 10.0)</td><td>0.549</td><td>0.459</td></tr><tr><td>AT</td><td>10( 19.2)</td><td></td><td>37( 14.2)</td><td>0.847</td><td>0.357</td></tr><tr><td></td><td>7( 13.5)</td><td></td><td>30( 11.5)</td><td>0.153</td><td>0.695</td></tr><tr><td></td><td>23( 44.2)</td><td></td><td>93(35.8)</td><td>1.328</td><td>0.249</td></tr><tr><td>R</td><td>19( 36.5)</td><td></td><td>49( 18.8)</td><td>7.958</td><td>0.005</td></tr><tr><td></td><td>32( 61.5)</td><td></td><td>134(51.5)</td><td>1.740</td><td>0.187</td></tr><tr><td>(mmol/L,x ± s) [mmol/L,M(Q1Q3)]</td><td>5.2 ± 1.0</td><td></td><td>4.9 ± 0.8</td><td>1.888</td><td>0.064</td></tr><tr><td></td><td>1.97(1. 16,3.07)</td><td></td><td>1.92( 1. 03 ,2. 80)</td><td>-0.588</td><td>0.557</td></tr><tr><td>(mmol/L,x ± )</td><td>1.07 ± 0.24</td><td></td><td>1.08 ± 0.20</td><td>-0.485</td><td>0.629</td></tr><tr><td>(mmol/L,x ± )</td><td>2.9 ± 0.5</td><td></td><td>2.7 ± 0.5</td><td>3.174</td><td>0.002</td></tr><tr><td>g/L,M(Q1,Q3)] Gensin ,)</td><td>3. 12(2. 20 ,4. 23)</td><td></td><td>3.11(2.22,3.90)</td><td>-0.621</td><td>0.535</td></tr><tr><td></td><td>67.23( 46.01,84.66)</td><td></td><td>59.32( 42.24 ,78.01)</td><td>-1.857</td><td>0.063</td></tr><tr><td>m2(%)] [r,(Q1,Q3) ]</td><td>11( 21.2)</td><td></td><td>18( 6.9)</td><td>8.789</td><td>0.003</td></tr><tr><td></td><td>2.00( 1.00,3.00)</td><td></td><td>2.00( 1.00,3.00)</td><td>-0.920</td><td>0.358</td></tr><tr><td>(mm,x ± s)</td><td>2.9 ± 0.5</td><td></td><td>3.0 ± 0.4</td><td>-1.786</td><td>0.079</td></tr><tr><td>( mm,x ± )</td><td>45 ± 17</td><td></td><td>40 ± 15</td><td>1.908</td><td>0.057</td></tr><tr><td>%)]</td><td></td><td></td><td></td><td>0.322</td><td>0.956</td></tr><tr><td>A</td><td>36( 69.2)</td><td></td><td>171(65.8)</td><td></td><td></td></tr><tr><td>D </td><td>10( 19.2)</td><td></td><td>52( 20.0)</td><td></td><td></td></tr><tr><td>#</td><td>3( 5.8)</td><td></td><td>19( 7.3)</td><td></td><td></td></tr><tr><td></td><td>3( 5.8)</td><td></td><td>18( 6.9)</td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>β</td><td>52( 100.0)</td><td></td><td>256( 98.5)</td><td></td><td>0.100</td></tr><tr><td></td><td>44( 84.6)</td><td></td><td>189( 72.7)</td><td>3.258</td><td>0.071</td></tr><tr><td>/</td><td>30( 57.7)</td><td></td><td>130( 50.0)</td><td>1.026</td><td>0.311</td></tr><tr><td></td><td>21( 40.4)</td><td></td><td>99( 38. 1)</td><td>0.098</td><td>0.755</td></tr><tr><td>t#</td><td>51( 98.1)</td><td></td><td>249( 95.8)</td><td>0.156</td><td>0.693</td></tr><tr><td>LR11( mg/L,x ± s)</td><td>164 ± 45</td><td></td><td>151 ± 42</td><td>1.944</td><td>0.053</td></tr><tr><td>PTPRO( μg/L, x ± s)</td><td>17 ± 5</td><td></td><td>16 ± 4</td><td>1.741</td><td>0.083</td></tr><tr><td>LR11( mg/L,x ± s)</td><td>240 ± 37</td><td></td><td>185 ± 44</td><td>8.340</td><td>&lt;0.001</td></tr><tr><td>PTPRO( μg/L,¯x ± s)</td><td>24 ± 4</td><td></td><td>19 ± 4</td><td>7.371</td><td>&lt;0.001</td></tr></table>",
+        "bbox": [
+            89,
+            99,
+            897,
+            712
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "table",
+        "img_path": "images/76ef04f9e86c707a6466725ef3781a267b83e3c1343fcc2b0800924913924a7a.jpg",
+        "table_caption": [
+            "表 2 老年急性心肌梗死患者经皮冠状动脉介入术后支架内再狭窄危险因素的多因素 Logistic 回归分析"
+        ],
+        "table_footnote": [
+            "注: LDL-C 为低密度脂蛋白胆固醇; LR11 为具有11 个配体结合重复结构的低密度脂蛋白受体相关蛋白; PTPRO 为蛋白酪氨酸磷酸酶受体 O;“ － ”为无数据"
+        ],
+        "table_body": "<table><tr><td>$a </td><td>β</td><td></td><td>Wald χ²</td><td>It</td><td>95%</td><td>P</td></tr><tr><td></td><td>0.823</td><td>0.486</td><td>2.873</td><td>2.277</td><td>0.879 ~5.899</td><td>0.090</td></tr><tr><td>LDL-C</td><td>0.830</td><td>0.421</td><td>3.884</td><td>2.293</td><td>1.005 ~5.232</td><td>0.049</td></tr><tr><td></td><td>1.057</td><td>0.608</td><td>3.021</td><td>2.877</td><td>0.874 ~9.474</td><td>0.082</td></tr><tr><td>LR11</td><td>0.031</td><td>0.005</td><td>31.706</td><td>1.031</td><td>1.020 ~1.042</td><td>&lt;0.001</td></tr><tr><td>PTPRO</td><td>0.369</td><td>0.067</td><td>30.102</td><td>1.446</td><td>1.268 ~1.650</td><td>&lt;0.001</td></tr><tr><td>E</td><td>19.022</td><td>2.557</td><td>55.340</td><td>&lt;0.001</td><td></td><td>&lt;0.001</td></tr></table>",
+        "bbox": [
+            92,
+            774,
+            905,
+            875
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            31,
+            963,
+            322,
+            979
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "discarded",
+        "text": "中国医药 2025 年 12 月第 20 卷第 12 期 China Medicine，December 2025，Vol． 20，No． 12",
+        "bbox": [
+            386,
+            61,
+            904,
+            73
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "discarded",
+        "text": "· 1770 · ",
+        "bbox": [
+            104,
+            63,
+            149,
+            72
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "table",
+        "img_path": "images/75af9cda4d9482ef435f8531aa2eb865a1b0380aa40b08177ac60753b9bdf4f6.jpg",
+        "table_caption": [
+            "表3 外周血 LR11、PTPRO 水平对老年急性心肌梗死患者经皮冠状动脉介入术后支架内再狭窄的预测效能"
+        ],
+        "table_footnote": [
+            "注: LR11 为具有11 个配体结合重复结构的低密度脂蛋白受体相关蛋白; PTPRO 为蛋白酪氨酸磷酸酶受体 O; “ － ”为无数据"
+        ],
+        "table_body": "<table><tr><td>HET</td><td>T</td><td>95%</td><td>P</td><td>WT</td><td>%</td><td>(%)</td><td></td></tr><tr><td>LR11</td><td>0.824</td><td>0.777 ~0.865</td><td>&lt;0.001</td><td>217.64 mg/L</td><td>71.2</td><td>77.3</td><td>0.485</td></tr><tr><td>PTPRO</td><td>0.797</td><td>0.748 ~0.840</td><td>&lt;0.001</td><td>21.89 μg/L</td><td>96.2</td><td>49.2</td><td>0.454</td></tr><tr><td>A</td><td>0.904</td><td>0.866 ~0.935</td><td>&lt;0.001</td><td></td><td>98.1</td><td>66.2</td><td>0.642</td></tr></table>",
+        "bbox": [
+            92,
+            107,
+            907,
+            170
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            92,
+            180,
+            489,
+            820
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "综上所述，PCI 术后外周血 LR11、 PTPRO 水平升高与老年 AMI 患者 PCI 术后 ISR 有关，二者联合对 PCI 术后 ISR 有较高的预测效能。 但本研究为单中心小样本研究，缺乏长期随访数据，且未纳入其他影响 PCI 术后 ISR 的混杂因素。 未来可通过多中心、大样本研究进行验证，并延长随访时间和纳入更多因素，进一步明确 外 周 血 LR11、 PTPRO 水 平 与AMI 患者 PCI 术后 ISR 的关系 。",
+        "bbox": [
+            92,
+            819,
+            487,
+            906
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            510,
+            196,
+            905,
+            248
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "利益冲突 所有作者均声明不存在利益冲突  \n作者贡献 余信: 直接参与，统计分析; 张娜娜: 采集、分析/解释数  \n据，审阅文章; 李毅: 酝酿和设计实验，工作支持",
+        "bbox": [
+            509,
+            260,
+            905,
+            303
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "参考文献",
+        "text_level": 1,
+        "bbox": [
+            510,
+            315,
+            574,
+            328
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "［1］ 《药物涂层球囊临床应用中国专家共识( 第二版) 》专家组． 药物涂层球囊临床应用中国专家共识( 第二版) ［J］． 中国介入心脏病学杂志，2023，31( 6) : 413-426． DOI: 10． 3969 /j． issn． 1004-8812． 2023． 06． 003．",
+        "bbox": [
+            522,
+            330,
+            907,
+            386
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Chinese expert consensus on the clinical application of drug coated balloon( 2nd edition) Chinese Drug Coated Balloon Expert Group． Chinese expert consensus on the clinical application of drug coated balloon ( 2nd edition) ［J］． Chinese Journal of Interventional Cardiology，2023，31( 6) : 413-426． DOI: 10． 3969 /j． issn． 1004-8812． 2023． 06． 003． ",
+        "bbox": [
+            541,
+            391,
+            905,
+            474
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "［2］ Deng C，Liu Z，Zhao R，et al． Intravascular imaging and functional assessment for coronary in-stent restenosis: current status and future directions［J］． Int J Cardiol，2025，421: 132918． DOI: 10． 1016 / j． ijcard． 2024． 132918． ",
+        "bbox": [
+            524,
+            479,
+            905,
+            533
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "［3］ 严玮，刘圣好，吴克霞． 中青年与老年冠心病患者病变特点差异及 PCI 术后支架内再狭窄的危险因素分析［J］． 中国循证心血管医学杂志，2024，16( 4) : 466-468． DOI: 10． 3969 /j． issn． 1674-4055． 2024． 04． 17．",
+        "bbox": [
+            522,
+            537,
+            907,
+            593
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Yan W，Liu SH，Wu KX． Difference in pathological characteristics between middle-aged and young patients and elderly patients with coronary heart diseaseand risk factors of in-stent restenosis after PCI［J］． Chinese Journal of Evidence-Bases Cardiovascular Medicine，2024，16( 4) : 466-468． DOI: 10． 3969 /j． issn． 1674-4055． 2024． 04． 17． ",
+        "bbox": [
+            524,
+            596,
+            905,
+            681
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "［4］ Gupta A，Maitas O，Patel RAG． Recurrent drug eluting stent， in-stent restenosis ( DES-ISR) : Epidemiology，pathophysiology ＆ treatment［J］． Prog Cardiovasc Dis，2025，88: 68-74． DOI: 10． 1016 /j． pcad． 2024． 12． 003． ",
+        "bbox": [
+            522,
+            684,
+            904,
+            740
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "［5］ Schmidt V，Subkhangulova A，Willnow TE． Sorting receptor SORLA: cellular mechanisms and implications for disease［J］． Cell Mol Life Sci，2017，74( 8) : 1475-1483． DOI: 10． 1007 /s00018-016-2410-z． ［6］ Suwa S，Ogita M，Takahashi N，et al． Impact of LR11 as residual risk on long-term clinical outcomes in patients with coronary artery disease treated with statins after first percutaneous coronary intervention $\\mathbb { I }$ ］． Int Heart J，2020，61( 3) : 470-475． DOI: 10． 1536 / ihj． 19-686． ",
+        "bbox": [
+            522,
+            744,
+            905,
+            785
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            522,
+            788,
+            905,
+            859
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "［7］ Chen Y，Sun B． PTPRO activates TLR4 /NF-κB signaling to intensify lipopolysaccharide-induced pneumonia cell injury ［J］． Allergol Immunopathol ( Madr) ，2022，50( 3) : 119-124． DOI: 10． 15586 / ",
+        "bbox": [
+            522,
+            863,
+            905,
+            904
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "discarded",
+        "text": "中国医药 2025 年 12 月第 20 卷第 12 期 China Medicine，December 2025，Vol． 20，No． 12",
+        "bbox": [
+            94,
+            61,
+            610,
+            74
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "discarded",
+        "text": "· 1771 · ",
+        "bbox": [
+            848,
+            63,
+            894,
+            72
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            31,
+            963,
+            322,
+            979
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "aei． v50i3． 589． ［8］ Hao M，Guo M，Yan R． Protein tyrosine phosphatase receptor-type O expression as a prognostic marker in patients with acute coronary syndrome undergoing percutaneous coronary intervention: a prospective study［J］． Exp Ther Med，2021，21( 5) : 435． DOI: 10． 3892 /etm． 2021． 9852． ［9］ 中国医师协会急诊医师分会，国家卫健委能力建设与继续教育 中心急诊学专家委员会，中国医疗保健国际交流促进会急诊急 救分会． 急性冠脉综合征急诊快速诊治指南( 2019) ［J］． 中华 急诊医学杂志，2019，28 ( 4) : 421-428． DOI: 10． 3760 /cma． j． issn． 1671-0282． 2019． 04． 003． Emergency Physician Branch of Chinese Medical Doctor Association，Emergency Medicine Expert Committee of National Health Commission Capacity Building and Continuing Education Center， Emergency and First Aid Branch of China International Exchange and Promotive Association for Medical and Health Care． Guidelines for emergency rapid diagnosis and treatment of acute coronary syndrome( 2019) ［J］． Chinese Journal of Emergency Medicine， 2019，28( 4) : 421-428． DOI: 10． 3760 /cma． j． issn． 1671-0282． 2019． 04． 003．   \n［10］ D'Ascenzo F，Barbero U，Cerrato E，et al． Accuracy of intravascular ultrasound and optical coherence tomography in identifying functionally significant coronary stenosis according to vessel diameter: a metaanalysis of 2，581 patients and 2，807 lesions $\\mathbb { I }$ ］． Am Heart J，2015， 169( 5) : 663-673． DOI: 10． 1016/j． ahj． 2015． 01． 013．   \n［11］ Camaj A，Leone PP，Colombo A，et al． Drug-coated balloons for the treatment of coronary artery disease: a review $\\mathbb { I }$ ． JAMA Cardiol， 2025，10( 2) : 189-198． DOI: 10． 1001 /jamacardio． 2024． 4244．   \n［12］ Spadafora L，Quarta R，Martino G，et al． From mechanisms to management: tackling in-stent restenosis in the drug-eluting stent era［J］． Curr Cardiol Rep，2025，27 ( 1 ) : 53． DOI: 10． 1007 / s11886-025-02193-z．   \n［13］ Kuna C，Bradaric C，Koch T，et al． Age-related ten-year outcomes after percutaneous coronary intervention of in-stent restenosis［J］． Int J Cardiol，2025，428: 133109． DOI: 10． 1016 /j． ijcard． 2025． 133109．   \n［14］ 付超，王艳，徐红梅，等． 支架内新生动脉粥样硬化: 现状、危险 因素 、 防治与未来［J］． 心血管康复医学杂志，2023，32( 3) : 298- 301． DOI: $1 0 . 3 9 6 9 / \\mathrm { j }$ ． issn． 1008-0074． 2023． 03． 21． Fu C，Wang Y，Xu HM，et al． In-stent neo atherosclerosis: current situation，risk factors，prevention，treatment and future［J］． Chinese Journal of Cardiovascular Rehabilitation Medicine，2023，32 ( 3 ) : 298-301． DOI: $1 0 . 3 9 6 9 / \\mathrm { j }$ ． issn． 1008-0074． 2023． 03． 21．   \n［15］ Harada M，Jiang M，Terai K，et al． Levels of circulating soluble LR11，a regulator of smooth muscle cell migration，are highly associated with atherosclerotic plaques in patients with carotid artery stenosis $\\mathbb { I }$ ］． Clin Chim Acta，2019，490: 69-76． DOI: 10． 1016 / j． cca． 2018． 12． 005．   \n［16］ Ohwaki K，Bujo H，Jiang M，et al． A secreted soluble form of LR11， specifically expressed in intimal smooth muscle cells，accelerates formation of lipid-laden macrophages［J］． Arterioscler Thromb Vasc Biol，2007，27 ( 5 ) : 1050-1056． DOI: 10． 1161 /ATVBAHA． 106． 137091．   \n［17］ Bajari TM，Winnicki W，Gensberger ET，et al． Known players，new interplay in atherogenesis: Chronic shear stress and carbamylated-LDL induce and modulate expression of atherogenic LR11 in human coronary artery endothelium［J］． Thromb Haemost，2014，111 ( 2 ) : 323- 332． DOI: 10． 1160 /TH12-12-0924．   \n［18］ Jiang M，Bujo H，Ohwaki K，et al． Ang Ⅱ -stimulated migration of vascular smooth muscle cells is dependent on LR11 in mice［J］． J Clin Invest，2008，118( 8) : 2733-2746． DOI: 10． 1172 /JCI32381．   \n［19］ Vongpromek R，Bujo H，Hoekstra M，et al． LR11 /SorLA links triglyceride-rich lipoproteins to risk of developing cardiovascular disease in FH patients［J］． Atherosclerosis，2015，243 ( 2) : 429- 437． DOI: 10． 1016 / j． atherosclerosis． 2015． 10． 009．   \n［20］ Ogita M，Miyauchi K，Kasai T，et al． Prognostic impact of circulating soluble LR11 on long-term clinical outcomes in patients with coronary artery disease［J］． Atherosclerosis，2016，244: 216-221． DOI: 10． 1016 / j． atherosclerosis． 2015． 11． 004．   \n［21］ Occhipinti G，Brugaletta S，Abbate A，et al． Inflammation in coronary atherosclerosis: diagnosis and treatment［J］． Heart，2025， 111( 17) : 801-810． DOI: 10． 1136 /heartjnl-2024-325408．   \n［22］ Zhao J，Yan S，Zhu X，et al． PTPRO exaggerates inflammation in ulcerative colitis through TLR4 /NF-κB pathway［J］． J Cell Biochem， 2020，121( 2) : 1061-1071． DOI: 10． 1002 /jcb． 29343．   \n［23］ Huan Z，Tang Y，Xu C，et al． PTPRO knockdown protects against inflammation in hemorrhage shock-induced lung injury involving the NF-κB signaling pathway［J］． Respir Res，2022，23 ( 1 ) : 195． DOI: 10． 1186 /s12931-022-02118-2．   \n［24］ Shintani T，Suzuki R，Takeuchi Y，et al． Deletion or inhibition of PTPRO prevents ectopic fat accumulation and induces healthy obesity with markedly reduced systemic inflammation［J］． Life Sci， 2023，313: 121292． DOI: 10． 1016 /j． lfs． 2022． 121292．   \n［25］ 梁彩虹． 基于调控 $\\mathrm { T L R 4 / N F { \\bf \\cdot } s B }$ 信号通路的 PTPRO 影响动脉 粥样硬化机制及冠心病 PCI 术后患者氯吡格雷抵抗中医舌诊 研究［D］． 南京: 南京中医药大学，2017． Liang CH． PTPRO promotes ox-LDL induced oxidative stress and cell apoptosis through TLR4 /NF- $\\mathbf { \\sigma } _ { \\kappa \\mathrm { B } }$ pathway ＆ diagnostic value of TCM Tongue diagnosis in coronary heart disease patients with clopidogrel resistance after PCI［D］． Nanjing: Nanjing University of Chinese Medicine，2017．   \n［26］ Yan B，Yu X，Cai X，et al． A review: the significance of toll-like receptors 2 and 4，and $\\mathrm { N F } _ { \\bf \\mathrm { \\sf \\sf ~ \\sf ~ \\sf ~ K } } \\mathrm { B }$ signaling in endothelial cells during atherosclerosis［J］． Front Biosci ( Landmark Ed) ，2024，29 ( 4) : 161． DOI: 10． 31083 /j． fbl2904161．   \n［27］ Liang C，Wang X，Hu J，et al． PTPRO promotes oxidized lowdensity lipoprotein induced oxidative stress and cell apoptosis through toll-like receptor 4 /nuclear factor $\\boldsymbol { \\kappa } \\mathrm { B }$ pathway［J］． Cell Physiol Biochem，2017，42( 2) : 495-505． DOI: 10． 1159/000477596．   \n［28］ 徐帅磊，乔勇，汤成春． 冠状动脉支架内再狭窄危险因素研究进 展［J］． 东南大学学报( 医学版) ，2023，42 ( 3) : 475-480． DOI: 10． 3969 /j． issn． 1671-6264． 2023． 03． 022． Xu SL，Qiao Y，Tang CC． Research progress on risk factors for restenosis in coronary stents［J］． Journal of Southeast University ( Medical Science Edition) ，2023，42 ( 3 ) : 475-480． DOI: 10． 3969 /j． issn． 1671-6264． 2023． 03． 022． ",
+        "bbox": [
+            95,
+            67,
+            490,
+            907
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            515,
+            24,
+            909,
+            846
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "( 收稿: 2025-07-26) ",
+        "bbox": [
+            763,
+            844,
+            873,
+            856
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "( 本文编辑: 徐飞)",
+        "bbox": [
+            761,
+            858,
+            873,
+            872
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            31,
+            963,
+            322,
+            980
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "discarded",
+        "text": "· 1772 · ",
+        "bbox": [
+            104,
+            63,
+            149,
+            72
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "discarded",
+        "text": "中国医药 2025 年 12 月第 20 卷第 12 期 China Medicine，December 2025，Vol． 20，No． 12",
+        "bbox": [
+            386,
+            61,
+            904,
+            74
+        ],
+        "page_idx": 5
+    }
+]

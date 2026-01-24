@@ -1,0 +1,7 @@
+{
+  "ps3_evidence_level": "PS3_supporting",
+  "odds_path_value": null,
+  "p1_source": "not reported",
+  "p2_source": "not reported",
+  "reasoning_summary": "The study does not meet PS3 criteria because it does not perform functional studies on specific genetic variants. It measures protein levels (LR11, PTPRO) as biomarkers in patient serum, which is a clinical association study, not a variant-specific functional assay. No genetic variants are tested, and no control variants (pathogenic/benign) are used in experimental validation of variant function."
+}

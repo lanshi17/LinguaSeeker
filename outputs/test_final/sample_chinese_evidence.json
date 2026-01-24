@@ -1,0 +1,18 @@
+{
+  "findings": [
+    "The study investigates LR11 and PTPRO protein levels in peripheral blood, not genetic variants. No specific genetic variant is studied, and no functional assay is performed on a specific variant's molecular or cellular impact."
+  ],
+  "p1": 0.001,
+  "p2": 0.001,
+  "odds_path": 1.0,
+  "strength": "indeterminate",
+  "rationale": "The paper does not describe a functional assay for a specific genetic variant. It measures protein levels (LR11 and PTPRO) in patient serum as biomarkers for a clinical outcome (in-stent restenosis). This is a clinical association study, not a variant-specific functional study as required for PS3.",
+  "experimental_details": "Enzyme-linked immunosorbent assay (ELISA) was used to measure LR11 and PTPRO protein levels in peripheral blood serum from 312 elderly AMI patients before and after PCI. The study correlated these levels with the incidence of in-stent restenosis (ISR) after one year.",
+  "p1_source_location": "P1/P2 data not explicitly reported. The study does not analyze the functional impact of specific genetic variants in a controlled experimental model.",
+  "p2_source_location": "P1/P2 data not explicitly reported. The study reports protein concentration differences between patient groups (ISR vs. non-ISR) but does not classify variants as pathogenic or benign based on functional assays.",
+  "ps3_criteria_met": false,
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "The study does not perform a functional assay on a specific genetic variant. It is a clinical biomarker association study measuring protein levels in patient cohorts, which does not fit the PS3 framework for assessing variant pathogenicity through well-established functional studies.",
+  "arbiter_score": 5.0
+}
