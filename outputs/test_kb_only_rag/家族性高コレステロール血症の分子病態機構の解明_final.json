@@ -1,0 +1,52 @@
+{
+  "detected_language": "en",
+  "detected_language_placeholder": "{{detected_language}}",
+  "odds_path": 3.0868657884439803,
+  "odds_path_placeholder": "{{odds_path}}",
+  "evidence_strength": "supporting",
+  "arbiter_score": 3.0,
+  "arbiter_score_placeholder": "{{arbiter_score}}",
+  "ps3_criteria_met": true,
+  "extracted_experimental_details": "LDL internalization measured via fluorescence intensity after 30-min incubation at 37°C (n=3 replicates). Compared homozygous/heterozygous p.(Pro955Ser), pathogenic p.(Arg3527Gln), and healthy controls.",
+  "p1_source_location": "Fig. 2 legend (3.4% allele frequency in Japan)",
+  "p2_source_location": "Fig. 2 legend (9.8% prevalence in FH probands)",
+  "p1_bbox": {
+    "page": 1,
+    "bbox": [
+      288,
+      122,
+      296,
+      137
+    ],
+    "text": "3",
+    "fragment_id": 3
+  },
+  "p2_bbox": {
+    "page": 1,
+    "bbox": [
+      611,
+      281,
+      655,
+      303
+    ],
+    "text": "AL",
+    "fragment_id": 14
+  },
+  "control_variants_count": 3,
+  "odds_path_computable": true,
+  "reason_if_not_applicable": "",
+  "findings": [
+    "The APOB p.(Pro955Ser) variant showed reduced LDL internalization efficiency in hepatocytes compared to healthy controls.",
+    "Homozygous p.(Pro955Ser) variants exhibited significantly lower uptake than heterozygous variants (p<0.01).",
+    "The variant's effect size was moderate (OR=4.9, 95% CI: 3.4–7.1).",
+    "Fig. 2 legend (3.4% allele frequency in Japan)",
+    "Fig. 2 legend (9.8% prevalence in FH probands)",
+    "LDL internalization measured via fluorescence intensity after 30-min incubation at 37°C (n=3 replicates). Compared homozygous/heterozygous p.(Pro955Ser), pathogenic p.(Arg3527Gln), and healthy controls."
+  ],
+  "highlight_path": "outputs/test_kb_only_rag/家族性高コレステロール血症の分子病態機構の解明_en_highlight.md",
+  "translated_doc": "outputs/test_kb_only_rag/家族性高コレステロール血症の分子病態機構の解明_en.md",
+  "final_annotated_doc": "outputs/test_kb_only_rag/家族性高コレステロール血症の分子病態機構の解明_en_highlight.md",
+  "translated_english_doc": "outputs/test_kb_only_rag/家族性高コレステロール血症の分子病態機構の解明_en.md",
+  "final_annotated_doc_placeholder": "{{final_annotated_doc}}",
+  "translated_english_doc_placeholder": "{{translated_english_doc}}"
+}

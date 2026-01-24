@@ -1,0 +1,52 @@
+{
+  "detected_language": "en",
+  "detected_language_placeholder": "{{detected_language}}",
+  "odds_path": 17.999260901699927,
+  "odds_path_placeholder": "{{odds_path}}",
+  "evidence_strength": "moderate",
+  "arbiter_score": 0.0,
+  "arbiter_score_placeholder": "{{arbiter_score}}",
+  "ps3_criteria_met": true,
+  "extracted_experimental_details": "LDL internalization efficiency measured via fluorescence intensity after 30-min incubation at 37°C using LDL isolated from variant carriers and healthy individuals (n=3 replicates).",
+  "p1_source_location": "Population prevalence: 0.6% (Japan) from text",
+  "p2_source_location": "Among patients genetically diagnosed with FH (n=234), the p.(Pro955Ser) variant accounted for 9.8% (n=23)",
+  "p1_bbox": {
+    "page": 1,
+    "bbox": [
+      611,
+      281,
+      655,
+      303
+    ],
+    "text": "AL",
+    "fragment_id": 14
+  },
+  "p2_bbox": {
+    "page": 1,
+    "bbox": [
+      288,
+      122,
+      296,
+      137
+    ],
+    "text": "3",
+    "fragment_id": 3
+  },
+  "control_variants_count": 1,
+  "odds_path_computable": true,
+  "reason_if_not_applicable": "",
+  "findings": [
+    "APOB p.(Pro955Ser) variant showed impaired LDL receptor binding",
+    "Homozygous p.(Pro955Ser) variants exhibited significantly reduced LDL internalization efficiency compared to healthy controls",
+    "Heterozygous p.(Pro955Ser) variants showed intermediate LDL internalization efficiency",
+    "Population prevalence: 0.6% (Japan) from text",
+    "Among patients genetically diagnosed with FH (n=234), the p.(Pro955Ser) variant accounted for 9.8% (n=23)",
+    "LDL internalization efficiency measured via fluorescence intensity after 30-min incubation at 37°C using LDL isolated from variant carriers and healthy individuals (n=3 replicates)."
+  ],
+  "highlight_path": "outputs/full_pipeline_run/家族性高コレステロール血症の分子病態機構の解明_en_highlight.md",
+  "translated_doc": "outputs/full_pipeline_run/家族性高コレステロール血症の分子病態機構の解明_en.md",
+  "final_annotated_doc": "outputs/full_pipeline_run/家族性高コレステロール血症の分子病態機構の解明_en_highlight.md",
+  "translated_english_doc": "outputs/full_pipeline_run/家族性高コレステロール血症の分子病態機構の解明_en.md",
+  "final_annotated_doc_placeholder": "{{final_annotated_doc}}",
+  "translated_english_doc_placeholder": "{{translated_english_doc}}"
+}

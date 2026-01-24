@@ -1,0 +1,16 @@
+{
+  "findings": [],
+  "p1": 0.001,
+  "p2": 0.001,
+  "odds_path": 1.0,
+  "strength": "indeterminate",
+  "rationale": "No functional assay performed—PS3 classification is not applicable",
+  "experimental_details": "No experimental controls (wild-type, pathogenic, or positive controls) provided and no biological or technical replicates reported",
+  "p1_source_location": "",
+  "p2_source_location": "",
+  "ps3_criteria_met": false,
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "No functional assay performed—PS3 classification is not applicable",
+  "arbiter_score": 5.0
+}

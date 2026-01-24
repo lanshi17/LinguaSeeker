@@ -1,0 +1,89 @@
+{
+  "detected_language": "ru",
+  "odds_path": 9.0,
+  "evidence_strength": "moderate",
+  "arbiter_score": 15.0,
+  "ps3_criteria_met": false,
+  "extracted_experimental_details": "Multiplex Ligation-dependent Probe Amplification (MLPA) was used to detect large deletions in LDLR. No functional assays were performed.",
+  "p1_source_location": "",
+  "p2_source_location": "",
+  "p1_bbox": null,
+  "p2_bbox": null,
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "method inappropriate",
+  "findings": [],
+  "highlight_path": "outputs/performance_test/ФЕНОТИП СЕМЕЙНОЙ ГЕТЕРОЗИГОТНОЙ ГИПЕРХОЛЕСТЕРИНЕМИИ, ОБУСЛОВЛЕННОЙ ДЕЛЕЦИЕЙ ЭКЗОНОВ 2-10 ГЕНА LDLR: КЛИНИЧЕСКИЙ СЛУЧАЙ_en_highlight.md",
+  "translated_doc": "outputs/performance_test/ФЕНОТИП СЕМЕЙНОЙ ГЕТЕРОЗИГОТНОЙ ГИПЕРХОЛЕСТЕРИНЕМИИ, ОБУСЛОВЛЕННОЙ ДЕЛЕЦИЕЙ ЭКЗОНОВ 2-10 ГЕНА LDLR: КЛИНИЧЕСКИЙ СЛУЧАЙ_en.md",
+  "arbiter_feedback": {
+    "overall_score": 15.0,
+    "max_score": 100.0,
+    "normalized_score": 15.0,
+    "dimensions": [
+      {
+        "name": "disease_mechanism",
+        "score": 12.0,
+        "max_score": 25,
+        "status": "partial",
+        "reason": "The disease mechanism (LDLR deletions causing familial hypercholesterolemia through loss of LDL receptor function) is well-established in the literature. However, the evidence extraction fails to connect the MLPA finding to functional consequences. The mechanism is clear in principle but not demonstrated for THIS variant.",
+        "suggestions": [
+          "Explicitly state how large deletions in LDLR lead to disease (e.g., haploinsufficiency, complete loss of receptor function)",
+          "Clarify whether the deletion is in-frame or out-of-frame, and its predicted effect on protein structure",
+          "Document the specific exons/domains affected by the deletion"
+        ]
+      },
+      {
+        "name": "method_suitability",
+        "score": 0.0,
+        "max_score": 20,
+        "status": "fail",
+        "reason": "MLPA (Multiplex Ligation-dependent Probe Amplification) is a structural/copy number detection method, NOT a functional assay. PS3 specifically requires 'well-established functional studies' demonstrating deleterious effect on gene/protein function. MLPA only confirms presence/absence of DNA sequence; it does not measure functional consequences (LDL binding, receptor internalization, protein expression, signaling capacity, etc.). This is a categorical disqualification for PS3.",
+        "suggestions": [
+          "Recognize that MLPA is appropriate for PVS1 (predicted null variant) classification, NOT PS3",
+          "If PS3 evidence is needed, perform functional assays: LDL binding assays, receptor activity assays, protein expression studies, or cell-based uptake assays",
+          "Consider whether PVS1 (predicted null in LOF gene) is more appropriate than PS3 for this deletion"
+        ]
+      },
+      {
+        "name": "experimental_validity",
+        "score": 0.0,
+        "max_score": 50,
+        "status": "fail",
+        "reason": "Complete failure across all experimental validity checks. No controls of any kind, no replicates, and the method is inappropriate for PS3. This evidence cannot support PS3 classification.",
+        "suggestions": []
+      },
+      {
+        "name": "odds_path_validity",
+        "score": 0.0,
+        "max_score": 20,
+        "status": "fail",
+        "reason": "OddsPath calculation is mathematically possible (P1=0.1, P2=0.5 → OddsPath=9.0), but it is NOT VALID for PS3 classification because: (1) the underlying method (MLPA) is inappropriate for functional evidence, (2) no functional assay data exists to generate valid P1/P2 probabilities, (3) P1/P2 values appear to be assigned without empirical functional data, (4) OddsPath=9.0 would map to PS3_supporting range (3.0-20), but this mapping is invalid given the methodological failure. The odds calculation cannot rescue fundamentally inappropriate evidence.",
+        "suggestions": [
+          "Do not attempt to force OddsPath mapping when the underlying evidence method is inappropriate",
+          "If functional data were available, re-derive P1/P2 from actual functional assay results (e.g., % LDL binding, receptor activity relative to controls)",
+          "Recognize that structural confirmation (MLPA) + predicted null status may support PVS1, not PS3"
+        ]
+      }
+    ],
+    "key_issues": [
+      "CRITICAL: MLPA is a structural detection method, not a functional assay. PS3 requires functional evidence demonstrating deleterious effect on protein function.",
+      "No functional assays performed: no LDL binding studies, no receptor activity assays, no protein expression analysis, no cell-based functional studies.",
+      "No control variants: neither positive (known pathogenic LDLR variants) nor negative (benign variants) controls used.",
+      "No replicates: single MLPA run, no biological or technical replication.",
+      "Invalid P1/P2 assignment: probabilities appear arbitrary without empirical functional data to support them.",
+      "Misclassification risk: This evidence may be appropriate for PVS1 (predicted null variant in LOF gene) but NOT for PS3 (functional evidence).",
+      "OddsPath mapping is invalid: even though OddsPath=9.0 mathematically falls in PS3_supporting range, the underlying evidence does not support this classification."
+    ],
+    "recommendations": [
+      "REJECT this evidence for PS3 classification. The method is fundamentally inappropriate.",
+      "Reclassify: Consider whether PVS1 (predicted null variant) is more appropriate for this large LDLR deletion, given that LOF is the established disease mechanism.",
+      "If PS3 evidence is required, perform functional assays such as: (a) LDL binding assays comparing deletion variant to wild-type LDLR, (b) receptor internalization assays in cell culture, (c) protein expression studies (Western blot, immunofluorescence), (d) comparison to known pathogenic LDLR variants.",
+      "Include appropriate controls: wild-type LDLR as positive control, known benign LDLR variants as negative controls, known pathogenic LDLR variants as positive controls.",
+      "Document replication: perform assays in triplicate or use multiple cell lines/biological replicates.",
+      "Re-derive P1/P2 from actual functional data if PS3 evidence is pursued.",
+      "Clarify the deletion breakpoints, affected exons, and predicted protein consequence (truncation, frameshift, etc.)."
+    ],
+    "should_iterate": true
+  },
+  "iterations_performed": 3
+}

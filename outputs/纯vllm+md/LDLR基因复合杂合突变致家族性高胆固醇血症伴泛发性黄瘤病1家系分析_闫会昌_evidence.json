@@ -1,0 +1,11 @@
+{
+  "findings": [
+    "Compound heterozygous LDLR mutations: c.763T>C (p.Cys255Arg): PM1+PM2+PP3+PP4 (Likely Pathogenic)",
+    "c.941-12G>A: PM2+PM3+PP4 (VUS)"
+  ],
+  "p1": 0.5,
+  "p2": 0.9,
+  "odds_path": 9.000000000000002,
+  "strength": "moderate",
+  "rationale": "The compound heterozygous mutations were identified and classified per ACMG standards, with one being likely pathogenic and the other a VUS, supporting a damaging effect on the LDLR gene product."
+}

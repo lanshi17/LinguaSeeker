@@ -1,0 +1,16 @@
+{
+  "findings": [],
+  "p1": 0.1,
+  "p2": 0.5,
+  "odds_path": 9.0,
+  "strength": "moderate",
+  "rationale": "MLPA is a structural detection method, not a functional assay. No functional evidence (e.g., LDL binding, receptor activity, protein expression) was provided.",
+  "experimental_details": "Multiplex Ligation-dependent Probe Amplification (MLPA) was used to detect large deletions in LDLR. No functional assays were performed.",
+  "p1_source_location": "",
+  "p2_source_location": "",
+  "ps3_criteria_met": false,
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "method inappropriate",
+  "arbiter_score": 15.0
+}
