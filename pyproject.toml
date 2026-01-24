@@ -17,7 +17,8 @@ dependencies = [
     "pytesseract>=0.3.10",
     "Pillow>=10.4.0",
     "langdetect>=1.0.9",
-    "orjson>=3.10.6"
+    "orjson>=3.10.6",
+    "markdown>=3.5.0"
 ]
 
 [tool.uv]
