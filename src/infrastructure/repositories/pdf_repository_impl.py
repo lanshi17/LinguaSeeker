@@ -137,8 +137,15 @@ class PDFRepositoryImpl(PDFRepository):
             md_pages.append(f"# Page {i}\n\n{text}")
         return "\n\n---\n\n".join(md_pages)
 
-    def extract_html(self, pdf_path: str, out_dir: str, enable_translation: bool = True) -> dict:
+    def extract_html(self, pdf_path: str, out_dir: str, enable_translation: bool = True, detected_language: str = None) -> dict:
         """Extract structured HTML using MinerU service if available.
+        
+        Args:
+            pdf_path: Path to PDF file
+            out_dir: Output directory
+            enable_translation: Whether to generate English translation
+            detected_language: Pre-detected language code (ch, en, ja, etc).
+                              If provided, MinerU will use this language.
 
         Returns a dict with keys:
             - original_structured_html
@@ -149,7 +156,7 @@ class PDFRepositoryImpl(PDFRepository):
         """
         if not isinstance(self.ocr_service, MinerUOCRService):
             raise RuntimeError("MinerUOCRService not initialized; set use_mineru=True")
-        return self.ocr_service.extract_structured_html(pdf_path, out_dir, enable_translation)
+        return self.ocr_service.extract_structured_html(pdf_path, out_dir, enable_translation, detected_language)
 
     def get_page_count(self, pdf_path: str) -> int:
         try:

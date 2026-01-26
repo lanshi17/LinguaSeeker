@@ -1,0 +1,18 @@
+{
+  "findings": [
+    "No functional assay data reported in the paper. The paper describes genetic sequencing, segregation analysis, and computational predictions (CADD, SIFT, Polyphen2, MutationTaster) for the LDLR c.1879G>A (p.A627T) variant, but does not present any experimental functional studies (e.g., LDL binding, internalization, trafficking assays)."
+  ],
+  "p1": 0.001,
+  "p2": 0.001,
+  "odds_path": 1.0,
+  "strength": "indeterminate",
+  "rationale": "The paper does not contain any experimental functional data. All evidence presented is genetic (segregation) and computational/predictive. Therefore, PS3 cannot be applied as no functional studies were performed.",
+  "experimental_details": "None. The study methods include clinical data collection, DNA extraction, whole-exome and Sanger sequencing, and computational pathogenicity prediction using CADD, SIFT, Polyphen2, and MutationTaster. No laboratory-based functional assays on the LDLR p.A627T variant are described.",
+  "p1_source_location": "P1/P2 data not explicitly reported. No functional assay control group data is present.",
+  "p2_source_location": "P1/P2 data not explicitly reported. No functional assay variant-specific data is present.",
+  "ps3_criteria_met": false,
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "No functional assay performed—PS3 is NOT applicable. Evidence is computational and segregation-based only.",
+  "arbiter_score": 5.0
+}

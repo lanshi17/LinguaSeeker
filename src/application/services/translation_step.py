@@ -36,7 +36,7 @@ class TranslationStep(IPipelineStep):
         """
         self.translator = translator
         self.logger = Logger.get_logger(__name__)
-        self.max_chunk_size = 4000  # characters per chunk
+        self.max_chunk_size = 1500  # characters per chunk to avoid LLM timeouts
 
     @property
     def name(self) -> str:
@@ -80,13 +80,23 @@ class TranslationStep(IPipelineStep):
             raw_text = context.get("raw_text")
             detected_language = context.get("detected_language")
             page_count = context.get("page_count", 0)
+            english_markdown_ctx = context.get("english_markdown") if context.has("english_markdown") else ""
 
-            # If MinerU already produced English content, reuse it and skip translation
-            if not raw_text and context.has("english_markdown"):
-                english_markdown = context.get("english_markdown") or ""
-                glossary_terms = self._extract_glossary_terms(english_markdown)
+            # Decide if we should translate
+            needs_translation = bool(raw_text)
+            lang_value = getattr(detected_language, "value", detected_language)
+
+            if not needs_translation:
+                # No raw_text; fallback to english_markdown from MinerU
+                needs_translation = self._contains_significant_cjk(english_markdown_ctx) or (lang_value and str(lang_value).lower() != "en")
+                if needs_translation:
+                    raw_text = english_markdown_ctx
+
+            if not needs_translation:
+                # Trust existing English content; just compute glossary
+                glossary_terms = self._extract_glossary_terms(english_markdown_ctx or "")
                 context.update({
-                    "english_markdown": english_markdown,
+                    "english_markdown": english_markdown_ctx or "",
                     "glossary_terms": glossary_terms,
                 })
                 self.logger.info("English content already present; skipping translation")
@@ -183,6 +193,23 @@ class TranslationStep(IPipelineStep):
         
         result = "\n\n---\n\n".join(translated_segments)
         return result
+
+    @staticmethod
+    def _contains_significant_cjk(text: str, min_chars: int = 30, ratio_threshold: float = 0.10) -> bool:
+        """Check whether text contains meaningful amount of CJK characters.
+
+        Args:
+            text: Text to inspect
+            min_chars: Minimum CJK characters to trigger
+            ratio_threshold: Ratio of CJK to total length to trigger
+        """
+        if not text:
+            return False
+        total = len(text)
+        if total == 0:
+            return False
+        cjk_count = len(re.findall(r"[\u4e00-\u9fff]", text))
+        return cjk_count >= min_chars and (cjk_count / total) >= ratio_threshold
 
     def _split_content(self, text: str) -> List[str]:
         """Split content into manageable chunks.

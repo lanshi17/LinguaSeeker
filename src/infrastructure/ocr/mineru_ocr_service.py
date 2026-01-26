@@ -21,6 +21,7 @@ import zipfile
 import io
 import warnings
 import os
+import re
 
 # Suppress NumPy 2.0 compatibility warnings from FastText
 warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -72,9 +73,17 @@ class MinerUOCRService:
         pdf_path: str,
         out_dir: str,
         enable_translation: bool = True,
+        detected_language: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Process PDF via MinerU to produce structured HTML outputs.
 
+        Args:
+            pdf_path: Path to PDF file
+            out_dir: Output directory
+            enable_translation: Whether to generate English translation
+            detected_language: Pre-detected language code (ch, en, ja, etc).
+                              If provided, skips auto-detection.
+                              
         Returns a dict with keys:
         - original_structured_html: path to original-language HTML ({{original_structured_html}})
         - translated_english_html: path to translated HTML ({{translated_english_html}})
@@ -100,7 +109,7 @@ class MinerUOCRService:
         if self.api_url and self.api_token:
             try:
                 self.logger.info("Using MinerU HTTP Batch API for extraction")
-                extraction_result = self._run_http_api(pdf, out, enable_translation)
+                extraction_result = self._run_http_api(pdf, out, enable_translation, detected_language)
                 
                 # Extract results from batch API
                 extracted_dir = Path(extraction_result.get("full_zip_path"))
@@ -359,6 +368,16 @@ class MinerUOCRService:
 
             # Step 3: Detect language using FastText if we have text
             if text.strip():
+                # Quick heuristic: if Chinese characters dominate, force Chinese
+                total_chars = len(text)
+                cjk_chars = len(re.findall(r"[\u4e00-\u9fff]", text))
+                cjk_ratio = cjk_chars / max(total_chars, 1)
+                if cjk_chars >= 30 and cjk_ratio >= 0.15:
+                    self.logger.info(
+                        f"Heuristic detected Chinese (cjk_ratio={cjk_ratio:.2f}, chars={cjk_chars}); forcing 'ch'"
+                    )
+                    return "ch"
+
                 # Use FastText for language detection
                 # FastText expects single line input
                 text_single_line = " ".join(text.split()[:200])  # Limit to 200 words for efficiency
@@ -400,6 +419,13 @@ class MinerUOCRService:
                             self.logger.info(f"Mapped FastText detected language {detected_code} -> {language} for MinerU")
                         else:
                             self.logger.info(f"FastText detected language: {detected_code}")
+
+                        # If FastText says English but text still contains many CJK chars, trust heuristic
+                        if language == "en" and cjk_chars >= 20 and cjk_ratio >= 0.10:
+                            self.logger.info(
+                                f"Overriding FastText 'en' due to CJK presence (cjk_ratio={cjk_ratio:.2f}, chars={cjk_chars})"
+                            )
+                            return "ch"
                         
                         return language
                     else:
@@ -423,11 +449,11 @@ class MinerUOCRService:
             self.logger.warning(f"Language detection failed: {e}; using default 'en'")
             return "en"
 
-    def _run_http_api(self, pdf: Path, out_dir: Path, enable_translation: bool) -> Dict[str, Any]:
+    def _run_http_api(self, pdf: Path, out_dir: Path, enable_translation: bool, detected_language: Optional[str] = None) -> Dict[str, Any]:
         """Use new MinerU batch API for PDF extraction.
 
         Workflow:
-        1. Auto-detect language using _detect_language()
+        1. Use provided language or auto-detect using _detect_language()
         2. POST to /file-urls/batch to apply for pre-signed upload URLs
         3. PUT PDF to pre-signed OSS URL
         4. Poll /extract-results/batch/{batch_id} until state="done"
@@ -436,15 +462,18 @@ class MinerUOCRService:
 
         Returns dict with:
         - full_zip_path: path to directory with extracted files
-        - detected_language: auto-detected language code
+        - detected_language: language code (provided or auto-detected)
         - extracted_files: dict mapping file types to paths
         """
         if not self.api_url or not self.api_token:
             raise RuntimeError("MinerU API credentials not configured")
 
-        # Step 1: Detect language
-        detected_language = self._detect_language(pdf)
-        self.logger.info(f"Detected PDF language: {detected_language}")
+        # Step 1: Use provided language or detect
+        if detected_language:
+            self.logger.info(f"Using provided language: {detected_language}")
+        else:
+            detected_language = self._detect_language(pdf)
+            self.logger.info(f"Detected PDF language: {detected_language}")
 
         # Step 2: Apply for batch upload URLs
         batch_api_url = self._normalize_batch_api_url()

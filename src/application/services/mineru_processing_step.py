@@ -7,6 +7,7 @@ from typing import Optional
 from src.domain.interfaces.pipeline_step import IPipelineStep, IPipelineContext
 from src.domain.repositories import PDFRepository
 from src.infrastructure.utils.logger import Logger
+from src.infrastructure.utils.markdown_to_html import markdown_to_html
 
 
 class MinerUProcessingStep(IPipelineStep):
@@ -43,8 +44,19 @@ class MinerUProcessingStep(IPipelineStep):
             pdf_path = context.get("pdf_path")
             out_dir = context.get("out_dir")
 
+            # Step 1: Explicitly detect language before calling MinerU
+            self.logger.info("Detecting PDF language...")
+            detected_language = self._detect_language(pdf_path)
+            self.logger.info(f"Detected language: {detected_language}")
+
+            # Step 2: Invoke MinerU with detected language
             self.logger.info("Invoking MinerU for structured HTML extraction...")
-            outputs = self.pdf_repo.extract_html(pdf_path, out_dir, enable_translation=True)
+            outputs = self.pdf_repo.extract_html(
+                pdf_path, 
+                out_dir, 
+                enable_translation=True,
+                detected_language=detected_language
+            )
 
             original_html_path = outputs.get("original_structured_html")
             translated_html_path = outputs.get("translated_english_html")
@@ -101,3 +113,44 @@ class MinerUProcessingStep(IPipelineStep):
         soup = BeautifulSoup(Path(html_path).read_text(encoding="utf-8"), "html.parser")
         # Join text preserving some structure
         return "\n\n".join(p.get_text(separator=" ", strip=True) for p in soup.find_all(["p", "div", "li"]))
+
+    @staticmethod
+    def _detect_language(pdf_path: str) -> str:
+        """Detect language from PDF using heuristics.
+        
+        Uses CJK character counting for Chinese/Japanese detection,
+        falls back to langdetect for other languages.
+        
+        Returns MinerU language code (ch, en, ja, etc.)
+        """
+        import re
+        from pathlib import Path
+        from src.infrastructure.ocr import MinerUOCRService
+        
+        try:
+            # Use MinerU's language detection which includes CJK heuristic
+            # Create a temporary MinerUOCRService just for language detection
+            from src.infrastructure.utils.config import LLMConfig
+            cfg = LLMConfig()
+            mineru_svc = MinerUOCRService(cfg)
+            return mineru_svc._detect_language(Path(pdf_path))
+        except Exception as e:
+            # Fallback: simple heuristic
+            try:
+                from langchain_community.document_loaders import PyPDFLoader
+                loader = PyPDFLoader(pdf_path)
+                docs = loader.load()
+                text = "\n".join(doc.page_content for doc in docs[:3])
+                
+                # Check for CJK characters
+                cjk_count = len(re.findall(r"[\u4e00-\u9fff]", text))
+                if cjk_count >= 30:
+                    return "ch"
+                
+                # Fall back to langdetect
+                from langdetect import detect
+                code = detect(text)
+                lang_map = {"zh": "ch", "zh-hans": "ch", "zh-hant": "ch"}
+                return lang_map.get(code, code if len(code) <= 2 else "en")
+            except Exception:
+                return "en"  # Default fallback

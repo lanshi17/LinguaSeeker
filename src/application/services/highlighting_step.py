@@ -5,6 +5,7 @@ from pathlib import Path
 from src.domain.interfaces.pipeline_step import IPipelineStep, IPipelineContext
 from src.domain.entities import Document
 from src.infrastructure.utils.logger import Logger
+from src.infrastructure.utils.markdown_to_html import markdown_to_html
 
 
 class HighlightingStep(IPipelineStep):
@@ -74,6 +75,7 @@ class HighlightingStep(IPipelineStep):
             evidence = context.get("evidence")
             bbox_metadata = context.get("bbox_metadata", [])
             pdf_path = context.get("pdf_path", "")
+            out_dir = context.get("out_dir", "")
             
             self.logger.info("Highlighting evidence in document...")
             
@@ -91,10 +93,26 @@ class HighlightingStep(IPipelineStep):
             # Apply highlighting
             doc.highlight_with_bbox(spans_to_highlight)
             
+            # Generate final English HTML from translated markdown
+            highlighted_content = doc.highlighted_content or doc.english_content
+            final_html = markdown_to_html(highlighted_content, title="Analysis Report")
+            
+            # Save final English HTML to output directory
+            translated_english_html = None
+            if out_dir:
+                pdf_stem = Path(pdf_path).stem if pdf_path else "document"
+                translated_english_html = str(Path(out_dir) / f"{pdf_stem}_mineru_english.html")
+                try:
+                    Path(translated_english_html).write_text(final_html, encoding="utf-8")
+                    self.logger.info(f"Final English HTML saved: {translated_english_html}")
+                except Exception as e:
+                    self.logger.warning(f"Failed to save final English HTML: {e}")
+            
             # Update context
             context.update({
-                "highlighted_markdown": doc.highlighted_content or doc.english_content,
+                "highlighted_markdown": highlighted_content,
                 "document": doc,
+                "translated_english_html": translated_english_html or context.get("translated_english_html"),
             })
             
             self.logger.info(

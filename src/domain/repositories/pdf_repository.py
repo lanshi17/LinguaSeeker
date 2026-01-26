@@ -92,8 +92,15 @@ class PDFRepository(ABC):
         """
 
         @abstractmethod
-        def extract_html(self, pdf_path: str, out_dir: str, enable_translation: bool = True) -> dict:
+        def extract_html(self, pdf_path: str, out_dir: str, enable_translation: bool = True, detected_language: str = None) -> dict:
                 """Extract structured HTML using MinerU if available.
+                
+                Args:
+                    pdf_path: Path to PDF file
+                    out_dir: Output directory
+                    enable_translation: Whether to generate English translation
+                    detected_language: Pre-detected language code (e.g., 'ch', 'en', 'ja').
+                                      If provided, MinerU will use this language.
 
                 Returns a dict with keys:
                     - original_structured_html
