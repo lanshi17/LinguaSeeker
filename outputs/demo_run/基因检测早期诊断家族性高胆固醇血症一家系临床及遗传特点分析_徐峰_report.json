@@ -1,0 +1,112 @@
+{
+  "detected_language": "zh",
+  "original_html_path": "outputs/demo_run/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_original.html",
+  "english_html_path": "outputs/demo_run/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_english.html",
+  "bbox_metadata_path": "outputs/demo_run/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_bbox.json",
+  "evidence_json_path": "outputs/demo_run/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_evidence.json",
+  "highlighted_json_path": "outputs/demo_run/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_highlighting.json",
+  "odds_path": 1.0,
+  "evidence_strength": "indeterminate",
+  "arbiter_score": 15.0,
+  "ps3_criteria_met": false,
+  "extracted_experimental_details": "No functional assay was performed. The study used genetic sequencing (PCR and Sanger sequencing) to identify the variant in family members and correlated it with clinical lipid profiles and phenotypes.",
+  "p1_source_location": "P1/P2 data not explicitly reported. No functional assay data or control variant proportions are presented.",
+  "p2_source_location": "P1/P2 data not explicitly reported. No functional assay data or control variant proportions are presented.",
+  "p1_bbox": {
+    "page": 1,
+    "bbox": [
+      59,
+      2263,
+      71,
+      2278
+    ],
+    "text": "f",
+    "fragment_id": 0
+  },
+  "p2_bbox": {
+    "page": 1,
+    "bbox": [
+      59,
+      2263,
+      71,
+      2278
+    ],
+    "text": "f",
+    "fragment_id": 0
+  },
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "No functional assay data presented. The paper is a clinical correlation study, not a functional study. Step ① (Disease Mechanism Clarity) cannot be completed because the molecular/cellular impact of the variant is not experimentally investigated or clearly described beyond genetic association.",
+  "findings": [
+    "The paper reports a heterozygous LDLR c.1879G>A (p.A627T) variant identified in 7 affected family members with elevated LDL-C and clinical features of familial hypercholesterolemia. The study describes the variant's association with the disease phenotype but does not present any functional assay data (e.g., protein expression, receptor activity, trafficking) to directly assess the variant's molecular impact."
+  ],
+  "arbiter_feedback": {
+    "overall_score": 15.0,
+    "max_score": 100.0,
+    "normalized_score": 15.0,
+    "dimensions": [
+      {
+        "name": "disease_mechanism",
+        "score": 0.0,
+        "max_score": 25,
+        "status": "fail",
+        "reason": "Disease mechanism clarity is absent. While the variant is associated with familial hypercholesterolemia phenotype (elevated LDL-C, clinical features), the paper does not explain the molecular/cellular mechanism by which the A627T substitution impairs LDLR function. No description of how this variant affects protein folding, trafficking, ligand binding, or receptor-mediated endocytosis is provided. Association with disease phenotype ≠ mechanistic clarity.",
+        "suggestions": [
+          "Provide structural prediction or bioinformatic analysis explaining how A627T affects LDLR domain function",
+          "Describe the expected molecular consequence (e.g., impaired trafficking, reduced ligand binding, protein instability)",
+          "Reference known LDLR pathogenic mechanisms to contextualize this variant's predicted impact"
+        ]
+      },
+      {
+        "name": "method_suitability",
+        "score": 0.0,
+        "max_score": 20,
+        "status": "na",
+        "reason": "Step 2 cannot be evaluated because no functional assay was performed. The study used only genetic sequencing (PCR/Sanger) and clinical phenotyping—neither constitutes a functional assay suitable for PS3 assessment. Without a functional assay method, suitability cannot be evaluated.",
+        "suggestions": [
+          "Perform cell-based assays (e.g., LDLR surface expression via flow cytometry, LDL uptake assays)",
+          "Conduct protein expression/stability studies (Western blot, immunofluorescence)",
+          "Use yeast two-hybrid or co-immunoprecipitation to assess protein-protein interactions"
+        ]
+      },
+      {
+        "name": "experimental_validity",
+        "score": 0.0,
+        "max_score": 50,
+        "status": "fail",
+        "reason": "All Step 3 criteria fail. No functional assay was performed, therefore no experimental controls, replicates, or positive controls exist. This is a critical failure for PS3 assessment.",
+        "suggestions": []
+      },
+      {
+        "name": "odds_path_validity",
+        "score": 0.0,
+        "max_score": 20,
+        "status": "fail",
+        "reason": "OddsPath cannot be computed from this evidence. The reported P1=0.001 and P2=0.001 appear to be placeholder values with no empirical basis. No functional assay data, control variant proportions, or statistical outcomes are provided. The odds_path value of 1.0 is mathematically invalid for PS3/BS3 classification (falls in neutral zone 0.33–3.0, which maps to no evidence). Without functional assay results, P1/P2 cannot be derived from experimental data.",
+        "suggestions": [
+          "Perform functional assay and calculate P1 (proportion of pathogenic variants showing the phenotype) and P2 (proportion of benign variants showing the phenotype)",
+          "Report raw data: number of pathogenic variants tested, number showing functional impairment; number of benign variants tested, number showing functional impairment",
+          "Ensure P1 and P2 are in (0,1) range and derived from actual experimental results, not assumptions"
+        ]
+      }
+    ],
+    "key_issues": [
+      "CRITICAL: No functional assay data present—this is a clinical case report, not a functional study",
+      "Disease mechanism not explained at molecular/cellular level; only genetic association reported",
+      "No experimental controls (wild-type, pathogenic, or benign variants)",
+      "No biological or technical replicates of any functional assay",
+      "P1/P2 values appear arbitrary (both 0.001) with no empirical justification",
+      "OddsPath value of 1.0 is mathematically neutral and non-informative for PS3/BS3 classification",
+      "Study design (genetic sequencing + clinical phenotyping) is fundamentally incompatible with PS3 SVI framework"
+    ],
+    "recommendations": [
+      "DO NOT APPLY PS3 CRITERIA to this evidence. This study does not meet the prerequisite for PS3 assessment: presence of functional assay data.",
+      "If PS3 evidence is needed for this variant, commission or identify a functional study that includes: (a) cell-based assays measuring LDLR trafficking/activity, (b) wild-type and pathogenic controls, (c) biological replicates, (d) quantitative outcomes enabling P1/P2 calculation.",
+      "For current classification, rely on other ACMG criteria (e.g., PS2 for segregation in family, PM2 for allele frequency, PP3 for computational predictions) rather than PS3.",
+      "If this variant has been functionally characterized in other published studies, retrieve and evaluate those instead.",
+      "Consider that clinical association alone (elevated LDL-C in carriers) is suggestive but insufficient for PS3; functional impairment must be experimentally demonstrated."
+    ],
+    "should_iterate": false
+  },
+  "iterations_performed": 1
+}

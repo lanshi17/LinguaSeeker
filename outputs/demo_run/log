@@ -1,0 +1,77 @@
+Processing PDF: inputs/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰.pdf
+Output directory: outputs/demo_run
+------------------------------------------------------------
+⏱ 完整管线处理...
+2026-01-26 11:40:44,300 - src.application.services.refactored_pipeline_orchestrator - INFO - Executing step: pdf_processing - Extract text and metadata from PDF, detect language
+  ⏱ 【pdf_processing】...
+2026-01-26 11:40:44,300 - src.application.services.pdf_processing_step - INFO - Processing PDF: inputs/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰.pdf
+2026-01-26 11:40:44,300 - src.application.services.pdf_processing_step - INFO - Extracting HTML and bbox metadata from PDF with OCR...
+2026-01-26 11:40:44,300 - src.infrastructure.ocr.qwen_ocr_service - INFO - Starting OCR for PDF: inputs/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰.pdf
+2026-01-26 11:40:44,638 - src.infrastructure.ocr.qwen_ocr_service - INFO - Converted PDF to 5 images
+2026-01-26 11:40:44,638 - src.infrastructure.ocr.qwen_ocr_service - INFO - Processing batch 1/5 (1 pages)
+2026-01-26 11:41:05,779 - src.infrastructure.ocr.qwen_ocr_service - INFO - Processing batch 2/5 (1 pages)
+2026-01-26 11:41:27,293 - src.infrastructure.ocr.qwen_ocr_service - INFO - Processing batch 3/5 (1 pages)
+2026-01-26 11:41:40,045 - src.infrastructure.ocr.qwen_ocr_service - INFO - Processing batch 4/5 (1 pages)
+2026-01-26 11:41:59,827 - src.infrastructure.ocr.qwen_ocr_service - INFO - Processing batch 5/5 (1 pages)
+Multiple definitions in dictionary at byte 0x176fdd for key /MediaBox
+2026-01-26 11:42:38,485 - src.application.services.pdf_processing_step - INFO - Original HTML saved: outputs/demo_run/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_original.html
+2026-01-26 11:42:38,498 - src.application.services.pdf_processing_step - INFO - BBox metadata saved: outputs/demo_run/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_bbox.json
+2026-01-26 11:42:38,498 - src.application.services.pdf_processing_step - INFO - Detecting document language...
+Multiple definitions in dictionary at byte 0x176fdd for key /MediaBox
+2026-01-26 11:42:39,356 - src.application.services.pdf_processing_step - INFO - PDF processing complete: 17313 chars, language=zh, pages=5
+  ✓ 【pdf_processing】 | 115.0561s
+2026-01-26 11:42:39,356 - src.application.services.refactored_pipeline_orchestrator - INFO - Step pdf_processing completed successfully in 115.06s
+2026-01-26 11:42:39,357 - src.application.services.refactored_pipeline_orchestrator - INFO - Executing step: translation - Translate content to English with glossary for consistency
+  ⏱ 【translation】...
+2026-01-26 11:42:39,357 - src.application.services.translation_step - INFO - Translating HTML content (17313 chars)...
+2026-01-26 11:42:39,357 - src.application.services.translation_step - INFO - Starting translation of 17313 chars...
+2026-01-26 11:47:45,032 - src.application.services.translation_step - INFO - English HTML saved: outputs/demo_run/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_english.html
+2026-01-26 11:47:45,033 - src.application.services.translation_step - INFO - Translation complete: 29107 chars, glossary terms: 111
+  ✓ 【translation】 | 305.6761s
+2026-01-26 11:47:45,033 - src.application.services.refactored_pipeline_orchestrator - INFO - Step translation completed successfully in 305.68s
+2026-01-26 11:47:45,033 - src.application.services.refactored_pipeline_orchestrator - INFO - Executing step: evidence_processing - Extract and iteratively refine PS3 evidence with quality scoring
+  ⏱ 【evidence_processing】...
+2026-01-26 11:47:45,033 - src.application.services.evidence_processing_step - INFO - Starting evidence processing...
+2026-01-26 11:47:45,033 - src.application.services.evidence_processing_step - INFO - Retrieving PS3 context from knowledge base...
+2026-01-26 11:47:45,033 - src.infrastructure.vector_store.vector_store_manager - INFO - Knowledge base 'KnowledgeRetrievalBase/acmg_guide.pdf' unchanged, using cached version
+2026-01-26 11:47:45,033 - src.infrastructure.vector_store.vector_store_manager - INFO - Using existing knowledge base with 178 chunks
+2026-01-26 11:47:45,033 - src.infrastructure.repositories.rag_repository_impl - INFO - Knowledge base ready with 178 chunks
+2026-01-26 11:47:45,784 - src.infrastructure.vector_store.vector_store_manager - ERROR - Error retrieving from knowledge base: Error code: 400 - {'error': {'message': '<400> InternalError.Algo.InvalidParameter: Value error, contents is neither str nor list of str.: input.contents', 'type': 'InvalidParameter', 'param': None, 'code': 'InvalidParameter'}, 'id': '80f0f5ba-e67a-93e5-a023-15131130fb17', 'request_id': '80f0f5ba-e67a-93e5-a023-15131130fb17'}
+2026-01-26 11:47:45,784 - src.application.services.evidence_processing_step - WARNING - KB similarity low (0.000); triggering fallback
+2026-01-26 11:47:45,784 - src.infrastructure.repositories.rag_repository_impl - INFO - Fallback: Loading and vectorizing KnowledgeRetrievalBase/acmg_guide.pdf
+2026-01-26 11:47:47,314 - src.infrastructure.vector_store.vector_store_manager - ERROR - Error adding temporary documents: Error code: 400 - {'error': {'message': '<400> InternalError.Algo.InvalidParameter: Value error, contents is neither str nor list of str.: input.contents', 'type': 'InvalidParameter', 'param': None, 'code': 'InvalidParameter'}, 'id': '228d51b9-19cc-956b-a4dc-6eba72521029', 'request_id': '228d51b9-19cc-956b-a4dc-6eba72521029'}
+2026-01-26 11:47:47,315 - src.infrastructure.repositories.rag_repository_impl - INFO - Fallback: Vectorized 178 chunks
+2026-01-26 11:47:47,703 - src.infrastructure.vector_store.vector_store_manager - ERROR - Error retrieving from knowledge base: Error code: 400 - {'error': {'message': '<400> InternalError.Algo.InvalidParameter: Value error, contents is neither str nor list of str.: input.contents', 'type': 'InvalidParameter', 'param': None, 'code': 'InvalidParameter'}, 'id': 'd5206856-03ad-9ac8-bfd1-0a9fe071fc7a', 'request_id': 'd5206856-03ad-9ac8-bfd1-0a9fe071fc7a'}
+2026-01-26 11:47:47,703 - src.application.services.evidence_processing_step - INFO - Evidence extraction iteration 1...
+2026-01-26 11:48:31,493 - src.application.services.evidence_processing_step - INFO - Iteration 1: Score=15.0, Issues=7
+2026-01-26 11:48:31,494 - src.application.services.evidence_processing_step - INFO - Evidence processing complete: score=15.0, iterations=1
+  ✓ 【evidence_processing】 | 46.4610s
+2026-01-26 11:48:31,494 - src.application.services.refactored_pipeline_orchestrator - INFO - Step evidence_processing completed successfully in 46.46s
+2026-01-26 11:48:31,494 - src.application.services.refactored_pipeline_orchestrator - INFO - Executing step: highlighting - Highlight evidence in translated document using bbox guidance
+  ⏱ 【highlighting】...
+2026-01-26 11:48:31,494 - src.application.services.highlighting_step - INFO - Highlighting evidence in document...
+2026-01-26 11:48:31,499 - src.application.services.highlighting_step - INFO - Highlighting JSON saved: outputs/demo_run/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_highlighting.json
+2026-01-26 11:48:31,499 - src.application.services.highlighting_step - INFO - Highlighting complete: 4 spans highlighted
+  ✓ 【highlighting】 | 0.0048s
+2026-01-26 11:48:31,499 - src.application.services.refactored_pipeline_orchestrator - INFO - Step highlighting completed successfully in 0.00s
+2026-01-26 11:48:31,499 - src.application.services.refactored_pipeline_orchestrator - INFO - Executing step: report_generation - Generate final structured JSON and bilingual HTML report
+  ⏱ 【report_generation】...
+2026-01-26 11:48:31,499 - src.application.services.report_generation_step - INFO - Generating final report JSON...
+2026-01-26 11:48:31,499 - src.application.services.report_generation_step - INFO - Report JSON saved: outputs/demo_run/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_report.json
+2026-01-26 11:48:31,499 - src.application.services.report_generation_step - INFO - Report generation complete
+  ✓ 【report_generation】 | 0.0002s
+2026-01-26 11:48:31,499 - src.application.services.refactored_pipeline_orchestrator - INFO - Step report_generation completed successfully in 0.00s
+✓ 完整管线处理 | 467.1985s
+
+============================================================
+PROCESSING COMPLETE
+============================================================
+Detected Language: zh
+Arbiter Score: 15.0/100
+Evidence Count: 0
+
+Output Files:
+  - Evidence JSON: outputs/demo_run/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_evidence.json
+  - BBox metadata: outputs/demo_run/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_bbox.json
+
+⚠ Quality below threshold (15.0 < 75)

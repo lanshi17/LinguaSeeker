@@ -1,0 +1,18 @@
+{
+  "findings": [
+    "The paper reports a heterozygous LDLR c.1879G>A (p.A627T) variant identified in 7 affected family members with elevated LDL-C and clinical features of familial hypercholesterolemia. The study describes the variant's association with the disease phenotype but does not present any functional assay data (e.g., protein expression, receptor activity, trafficking) to directly assess the variant's molecular impact."
+  ],
+  "p1": 0.001,
+  "p2": 0.001,
+  "odds_path": 1.0,
+  "strength": "indeterminate",
+  "rationale": "The paper is a clinical case report describing the identification of the LDLR c.1879G>A variant in a family with hypercholesterolemia. It does not contain any experimental functional assay data (e.g., in vitro studies, cellular assays, biochemical tests) to evaluate the variant's effect on LDLR protein function. Therefore, the SVI PS3 assessment framework cannot be applied as there is no functional evidence to evaluate.",
+  "experimental_details": "No functional assay was performed. The study used genetic sequencing (PCR and Sanger sequencing) to identify the variant in family members and correlated it with clinical lipid profiles and phenotypes.",
+  "p1_source_location": "P1/P2 data not explicitly reported. No functional assay data or control variant proportions are presented.",
+  "p2_source_location": "P1/P2 data not explicitly reported. No functional assay data or control variant proportions are presented.",
+  "ps3_criteria_met": false,
+  "control_variants_count": 0,
+  "odds_path_computable": false,
+  "reason_if_not_applicable": "No functional assay data presented. The paper is a clinical correlation study, not a functional study. Step ① (Disease Mechanism Clarity) cannot be completed because the molecular/cellular impact of the variant is not experimentally investigated or clearly described beyond genetic association.",
+  "arbiter_score": 15.0
+}

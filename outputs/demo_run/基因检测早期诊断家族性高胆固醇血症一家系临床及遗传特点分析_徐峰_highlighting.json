@@ -1,0 +1,10 @@
+{
+  "spans_highlighted": 4,
+  "highlighted_spans": [
+    "The paper reports a heterozygous LDLR c.1879G>A (p.A627T) variant identified in 7 affected family members with elevated LDL-C and clinical features of familial hypercholesterolemia. The study describes the variant's association with the disease phenotype but does not present any functional assay data (e.g., protein expression, receptor activity, trafficking) to directly assess the variant's molecular impact.",
+    "P1/P2 data not explicitly reported. No functional assay data or control variant proportions are presented.",
+    "P1/P2 data not explicitly reported. No functional assay data or control variant proportions are presented.",
+    "No functional assay was performed. The study used genetic sequencing (PCR and Sanger sequencing) to identify the variant in family members and correlated it with clinical lipid profiles and phenotypes."
+  ],
+  "bbox_matched": 5111
+}
