@@ -1,0 +1,98 @@
+Processing PDF: inputs/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰.pdf
+Output directory: outputs/zh/峰/
+------------------------------------------------------------
+⏱ 完整管线处理...
+2026-01-26 11:17:26,377 - src.application.services.refactored_pipeline_orchestrator - INFO - Executing step: mineru_processing - Use MinerU to generate structured HTML (orig+EN) with bbox and figures
+  ⏱ 【mineru_processing】...
+2026-01-26 11:17:26,377 - src.application.services.mineru_processing_step - INFO - Detecting PDF language...
+Multiple definitions in dictionary at byte 0x176fdd for key /MediaBox
+2026-01-26 11:17:27,216 - src.infrastructure.ocr.mineru_ocr_service - INFO - Heuristic detected Chinese (cjk_ratio=0.34, chars=2588); forcing 'ch'
+2026-01-26 11:17:27,216 - src.infrastructure.ocr.mineru_ocr_service - INFO - Heuristic detected Chinese (cjk_ratio=0.34, chars=2588); forcing 'ch'
+2026-01-26 11:17:27,216 - src.application.services.mineru_processing_step - INFO - Detected language: ch
+2026-01-26 11:17:27,216 - src.application.services.mineru_processing_step - INFO - Invoking MinerU for structured HTML extraction...
+2026-01-26 11:17:27,216 - src.infrastructure.ocr.mineru_ocr_service - INFO - Using MinerU HTTP Batch API for extraction
+2026-01-26 11:17:27,216 - src.infrastructure.ocr.mineru_ocr_service - INFO - Using MinerU HTTP Batch API for extraction
+2026-01-26 11:17:27,216 - src.infrastructure.ocr.mineru_ocr_service - INFO - Using provided language: ch
+2026-01-26 11:17:27,216 - src.infrastructure.ocr.mineru_ocr_service - INFO - Using provided language: ch
+2026-01-26 11:17:27,378 - src.infrastructure.ocr.mineru_ocr_service - INFO - Got batch_id=d825800c-2505-4aae-93c4-c397eb67757c
+2026-01-26 11:17:27,378 - src.infrastructure.ocr.mineru_ocr_service - INFO - Got batch_id=d825800c-2505-4aae-93c4-c397eb67757c
+2026-01-26 11:17:27,754 - src.infrastructure.ocr.mineru_ocr_service - INFO - PDF uploaded successfully
+2026-01-26 11:17:27,754 - src.infrastructure.ocr.mineru_ocr_service - INFO - PDF uploaded successfully
+2026-01-26 11:17:30,105 - src.infrastructure.ocr.mineru_ocr_service - INFO - ✓ Processing complete at attempt 2
+2026-01-26 11:17:30,105 - src.infrastructure.ocr.mineru_ocr_service - INFO - ✓ Processing complete at attempt 2
+2026-01-26 11:17:30,105 - src.infrastructure.ocr.mineru_ocr_service - INFO - Downloading result zip from https://cdn-mineru.openxlab.org.cn/result/2026-01-26/27daf7c7-2d0c-4fa5-9a01-a744a0dfc28e.zip
+2026-01-26 11:17:30,105 - src.infrastructure.ocr.mineru_ocr_service - INFO - Downloading result zip from https://cdn-mineru.openxlab.org.cn/result/2026-01-26/27daf7c7-2d0c-4fa5-9a01-a744a0dfc28e.zip
+2026-01-26 11:17:30,888 - src.infrastructure.ocr.mineru_ocr_service - INFO - Zip contains 10 files
+2026-01-26 11:17:30,888 - src.infrastructure.ocr.mineru_ocr_service - INFO - Zip contains 10 files
+2026-01-26 11:17:30,896 - src.infrastructure.ocr.mineru_ocr_service - INFO - ✓ Extracted 10 files to outputs/zh/峰/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_mineru_extracted
+2026-01-26 11:17:30,896 - src.infrastructure.ocr.mineru_ocr_service - INFO - ✓ Extracted 10 files to outputs/zh/峰/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_mineru_extracted
+2026-01-26 11:17:30,901 - src.infrastructure.ocr.mineru_ocr_service - INFO - Extracted 5 figures to outputs/zh/峰/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_figures
+2026-01-26 11:17:30,901 - src.infrastructure.ocr.mineru_ocr_service - INFO - Extracted 5 figures to outputs/zh/峰/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_figures
+2026-01-26 11:17:30,904 - src.application.services.mineru_processing_step - WARNING - Failed to parse bbox JSON: 'str' object has no attribute 'get'
+2026-01-26 11:17:30,913 - src.application.services.mineru_processing_step - INFO - MinerU processing complete; HTML and bbox metadata ready
+  ✓ 【mineru_processing】 | 4.5367s
+2026-01-26 11:17:30,914 - src.application.services.refactored_pipeline_orchestrator - INFO - Step mineru_processing completed successfully in 4.54s
+2026-01-26 11:17:30,914 - src.application.services.refactored_pipeline_orchestrator - INFO - Executing step: translation - Translate content to English with glossary for consistency
+  ⏱ 【translation】...
+2026-01-26 11:17:30,914 - src.application.services.translation_step - INFO - Translating content (13768 chars)...
+2026-01-26 11:17:30,914 - src.application.services.translation_step - INFO - Large document detected; using chunked translation...
+2026-01-26 11:17:30,914 - src.application.services.translation_step - INFO - Translating segment 1/10...
+2026-01-26 11:17:48,665 - src.application.services.translation_step - INFO - Translating segment 2/10...
+2026-01-26 11:18:12,354 - src.application.services.translation_step - INFO - Translating segment 3/10...
+2026-01-26 11:18:42,218 - src.application.services.translation_step - INFO - Translating segment 4/10...
+2026-01-26 11:19:17,354 - src.application.services.translation_step - INFO - Translating segment 5/10...
+2026-01-26 11:19:57,060 - src.application.services.translation_step - INFO - Translating segment 6/10...
+2026-01-26 11:20:31,332 - src.application.services.translation_step - INFO - Translating segment 7/10...
+2026-01-26 11:20:51,628 - src.application.services.translation_step - INFO - Translating segment 8/10...
+2026-01-26 11:21:22,483 - src.application.services.translation_step - INFO - Translating segment 9/10...
+2026-01-26 11:21:59,690 - src.application.services.translation_step - INFO - Translating segment 10/10...
+2026-01-26 11:22:06,277 - src.application.services.translation_step - INFO - Translation complete: 27900 chars, glossary terms: 108
+  ✓ 【translation】 | 275.3636s
+2026-01-26 11:22:06,277 - src.application.services.refactored_pipeline_orchestrator - INFO - Step translation completed successfully in 275.36s
+2026-01-26 11:22:06,277 - src.application.services.refactored_pipeline_orchestrator - INFO - Executing step: evidence_processing - Extract and iteratively refine PS3 evidence with quality scoring
+  ⏱ 【evidence_processing】...
+2026-01-26 11:22:06,277 - src.application.services.evidence_processing_step - INFO - Starting evidence processing...
+2026-01-26 11:22:06,278 - src.application.services.evidence_processing_step - INFO - Retrieving PS3 context from knowledge base...
+2026-01-26 11:22:06,278 - src.infrastructure.repositories.rag_repository_impl - INFO - Loading knowledge base PDF: KnowledgeRetrievalBase/acmg_guide.pdf
+2026-01-26 11:22:18,559 - src.infrastructure.repositories.rag_repository_impl - INFO - Knowledge base index built with 178 chunks
+2026-01-26 11:22:18,760 - src.infrastructure.repositories.rag_repository_impl - INFO - Reranking 12 documents with model qwen3-rerank
+2026-01-26 11:23:19,145 - src.infrastructure.repositories.rag_repository_impl - INFO - Successfully reranked to 4 documents
+2026-01-26 11:23:19,146 - src.application.services.evidence_processing_step - WARNING - KB similarity low (0.548); triggering fallback
+2026-01-26 11:23:19,146 - src.infrastructure.repositories.rag_repository_impl - INFO - Fallback: Loading and vectorizing KnowledgeRetrievalBase/acmg_guide.pdf
+2026-01-26 11:23:31,341 - src.infrastructure.repositories.rag_repository_impl - INFO - Fallback: Temporarily vectorized 178 chunks
+2026-01-26 11:23:31,524 - src.infrastructure.repositories.rag_repository_impl - INFO - Reranking 12 documents with model qwen3-rerank
+2026-01-26 11:24:31,984 - src.infrastructure.repositories.rag_repository_impl - INFO - Successfully reranked to 4 documents
+2026-01-26 11:24:31,984 - src.application.services.evidence_processing_step - INFO - Evidence extraction iteration 1...
+2026-01-26 11:25:18,917 - src.application.services.evidence_processing_step - INFO - Iteration 1: Score=18.0, Issues=7
+2026-01-26 11:25:18,917 - src.application.services.evidence_processing_step - INFO - Evidence extraction iteration 2...
+2026-01-26 11:26:01,144 - src.application.services.evidence_processing_step - INFO - Iteration 2: Score=8.0, Issues=7
+2026-01-26 11:26:01,144 - src.application.services.evidence_processing_step - INFO - Evidence extraction iteration 3...
+2026-01-26 11:26:42,471 - src.application.services.evidence_processing_step - INFO - Iteration 3: Score=5.0, Issues=6
+2026-01-26 11:26:42,471 - src.application.services.evidence_processing_step - INFO - Evidence processing complete: score=5.0, iterations=3
+  ✓ 【evidence_processing】 | 276.1934s
+2026-01-26 11:26:42,471 - src.application.services.refactored_pipeline_orchestrator - INFO - Step evidence_processing completed successfully in 276.19s
+2026-01-26 11:26:42,471 - src.application.services.refactored_pipeline_orchestrator - INFO - Executing step: highlighting - Highlight evidence in translated document using bbox guidance
+  ⏱ 【highlighting】...
+2026-01-26 11:26:42,471 - src.application.services.highlighting_step - INFO - Highlighting evidence in document...
+2026-01-26 11:26:42,472 - src.application.services.highlighting_step - INFO - Final English HTML saved: outputs/zh/峰/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_mineru_english.html
+2026-01-26 11:26:42,472 - src.application.services.highlighting_step - INFO - Highlighting complete: 4 spans highlighted
+  ✓ 【highlighting】 | 0.0011s
+2026-01-26 11:26:42,472 - src.application.services.refactored_pipeline_orchestrator - INFO - Step highlighting completed successfully in 0.00s
+2026-01-26 11:26:42,472 - src.application.services.refactored_pipeline_orchestrator - INFO - Executing step: report_generation - Report generation (stub)
+  ⏱ 【report_generation】...
+  ✓ 【report_generation】 | 0.0000s
+2026-01-26 11:26:42,472 - src.application.services.refactored_pipeline_orchestrator - INFO - Step report_generation completed successfully in 0.00s
+✓ 完整管线处理 | 556.0953s
+
+============================================================
+PROCESSING COMPLETE
+============================================================
+Detected Language: ch
+Arbiter Score: 5.0/100
+Evidence Count: 0
+
+Output Files:
+  - Evidence JSON: outputs/zh/峰/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_evidence.json
+  - BBox metadata: outputs/zh/峰/基因检测早期诊断家族性高胆固醇血症一家系临床及遗传特点分析_徐峰_bbox.json
+
+⚠ Quality below threshold (5.0 < 75)
