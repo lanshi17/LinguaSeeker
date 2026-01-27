@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict
 from utils.exceptions import MinerUException
 from typing import Type
-from mineru_mapping import MinerUErrorCode, ERROR_CODE_MAPPING
+from .mineru_mapping import MinerUErrorCode, ERROR_CODE_MAPPING
 from utils.logger import Logger
 from config.app_config import AppConfig
 cfg=AppConfig.from_env()
@@ -23,8 +23,13 @@ class MinerUInterface(ABC):
         self.batch_status_url=self.config.batch_status_url
         self.model_version=self.config.model_version
         self.api_token=self.config.api_token
-        self.logger = Logger("MinerUInterface")
+        self.logger = Logger.get_logger("MinerUInterface")
         self.logger.info("MinerUInterface initialized")
+        
+    @abstractmethod
+    def pipline_process(self, files: list) -> Dict[str, Any]:
+        """文件流水线处理"""
+        pass
         
     @abstractmethod
     def apply_upload_urls(self, files: list) -> Dict[str, Any]:
@@ -40,3 +45,15 @@ class MinerUInterface(ABC):
     def retrieve_results(self, file_id: str) -> Dict[str, Any]:
         """检索处理结果"""
         pass
+
+    @abstractmethod
+    def download_result_file(self, file_url: str) -> bytes:
+        """下载结果文件"""
+        pass
+    
+    @abstractmethod
+    def close(self) -> None:
+        """关闭会话"""
+        pass
+    
+    

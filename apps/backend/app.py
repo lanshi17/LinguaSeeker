@@ -1,9 +1,9 @@
 # app.py--后端启动入口
 from fastapi import FastAPI
-from src.controller import task_controller
+from src.presentation.upload_controller import UploadController
 
 app = FastAPI()
-app.include_router(task_controller.router())
+app.include_router(UploadController.router)
 
 # --- IGNORE ---
 if __name__ == "__main__":

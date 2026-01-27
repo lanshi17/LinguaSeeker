@@ -14,6 +14,27 @@ class MinerUImpl(MinerUInterface):
     def __init__(self, config: AppConfig = cfg):
         super().__init__(config)
         self._session = requests.Session()
+        
+    def pipline_process(self, files: list) -> Dict[str, Any]:
+        """文件流水线处理"""
+        upload_response = self.apply_upload_urls(files)
+        upload_urls = [file_info["upload_url"] for file_info in upload_response.get("files", [])]
+        
+        upload_results = self.upload_to_urls(files, upload_urls)
+        self.logger.info(f"Upload results: {upload_results}")
+        
+        file_ids = [file_info["file_id"] for file_info in upload_response.get("files", [])]
+        processing_results = {}
+        
+        for file_id in file_ids:
+            status = self.get_processing_status(file_id)
+            processing_results[file_id] = status
+            
+            if status.get("extract_result", {}).get("state") == "completed":
+                result = self.retrieve_results(file_id)
+                processing_results[file_id]["result"] = result
+                
+        return processing_results
 
     def _request(
         self,
@@ -27,6 +48,7 @@ class MinerUImpl(MinerUInterface):
     ) -> requests.Response:
         """统一的请求发送与异常处理入口"""
         headers = kwargs.pop("headers", None)
+        # 合并请求头
         if include_auth_header:
             merged_headers = dict(self.header)
             if headers:
@@ -159,3 +181,21 @@ class MinerUImpl(MinerUInterface):
                 f"File: {extract_result.get('file_name')}, Download URL: {extract_result.get('full_zip_url')}"
             )
         return data
+    
+    def download_result_file(self, file_url: str) -> bytes:
+        """下载结果文件"""
+        response = self._request(
+            "GET",
+            file_url,
+            action="Download result file",
+            include_auth_header=False,
+        )
+        self.logger.info("Result file downloaded successfully")
+        return response.content
+    
+    def close(self) -> None:
+        """关闭会话"""
+        self._session.close()
+        self.logger.info("MinerUImpl session closed")
+        
+       

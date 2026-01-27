@@ -87,11 +87,15 @@ class MinerUConfig:
     status_url: str = "https://mineru.net/api/v4/extract/task/" #https://mineru.net/api/v4/extract/task/{task_id}
     batch_status_url: str = "https://mineru.net/api/v4/extract-results/batch/" #https://mineru.net/api/v4/extract-results/batch/{batch_id}
     model_version: str = "vlm"
-    extra_formats: list[str] = ["html"]
+    extra_formats: list[str] = None
     api_token: str = ""
     pipeline_id: str = ""
     timeout: int = 300
     max_file_size_mb: int = 100
+    
+    def __post_init__(self):
+        if self.extra_formats is None:
+            self.extra_formats = ["html"]
 
 @dataclass
 class AppConfig:
