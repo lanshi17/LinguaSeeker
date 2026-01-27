@@ -9,8 +9,15 @@ import os
 import time
 
 class PDFToHTMLParser(DocumentParser):
-    def __init__(self, mineru_adapter: MinerUInterface):
+    # Default configuration for MinerU processing
+    DEFAULT_MAX_WAIT_TIME = 300  # 5 minutes
+    DEFAULT_POLL_INTERVAL = 10   # 10 seconds
+    
+    def __init__(self, mineru_adapter: MinerUInterface, max_wait_time: int = DEFAULT_MAX_WAIT_TIME, 
+                 poll_interval: int = DEFAULT_POLL_INTERVAL):
         self.mineru_adapter = mineru_adapter
+        self.max_wait_time = max_wait_time
+        self.poll_interval = poll_interval
         self.logger = Logger.get_logger("PDFToHTMLParser")
         self.logger.info("PDFToHTMLParser initialized with MinerU adapter")
         
@@ -46,14 +53,12 @@ class PDFToHTMLParser(DocumentParser):
             state = extract_result.get("state")
             
             # Poll for completion if still running
-            max_wait_time = 300  # 5 minutes
-            poll_interval = 10  # 10 seconds
             elapsed_time = 0
             
-            while state == "running" and elapsed_time < max_wait_time:
-                self.logger.info(f"Processing still running, waiting {poll_interval}s...")
-                time.sleep(poll_interval)
-                elapsed_time += poll_interval
+            while state == "running" and elapsed_time < self.max_wait_time:
+                self.logger.info(f"Processing still running, waiting {self.poll_interval}s...")
+                time.sleep(self.poll_interval)
+                elapsed_time += self.poll_interval
                 
                 # Check status again
                 status = self.mineru_adapter.get_processing_status(file_id)

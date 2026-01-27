@@ -1,6 +1,6 @@
 # 编排文件处理流程
 from domain.__init__ import DocumentParser
-from domain.impl.pdf_to_html_parse import PDFToHTMLParse
+from domain.impl.pdf_to_html_parse import PDFToHTMLParser
 from infrastructure.adapters.mineru import MinerUAdapter
 from utils.logger import Logger
 from typing import Any
@@ -10,7 +10,7 @@ class DocumentService:
     def __init__(self):
         self.logger = Logger.get_logger("DocumentService")
         self.mineru_adapter = MinerUAdapter()
-        self.pdf_parser: DocumentParser = PDFToHTMLParse(self.mineru_adapter)
+        self.pdf_parser: DocumentParser = PDFToHTMLParser(self.mineru_adapter)
         self.logger.info("DocumentService initialized")
 
     def process_pdf(self, file_path: str) -> str:
