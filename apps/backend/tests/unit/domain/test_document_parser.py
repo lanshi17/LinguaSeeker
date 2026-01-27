@@ -1,8 +1,5 @@
 # test document parser
 import pytest
-import os
-import zipfile
-from unittest.mock import Mock, MagicMock, patch
 from domain.impl.pdf_to_html_parse import PDFToHTMLParser
 from infrastructure.adapters.mineru import MinerUImpl
 from utils.exceptions import ParseException
@@ -40,13 +37,10 @@ def mock_mineru_adapter():
 
 
 @pytest.fixture
-def pdf_parser(mock_mineru_adapter):
-    return PDFToHTMLParser(mock_mineru_adapter)
-
-
-def test_parse_valid_pdf(pdf_parser, mock_mineru_adapter, tmp_path):
-    """Test parsing a valid PDF file using MinerU pipeline"""
-    # Prepare a simple PDF file for testing
+def pdf_parser(mineru_adapter):
+    return PDFToHTMLParser(mineru_adapter)
+def test_parse_valid_pdf(pdf_parser, tmp_path):
+    # 准备一个简单的PDF文件用于测试
     pdf_file = tmp_path / "test.pdf"
     with open(pdf_file, "wb") as f:
         f.write(b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n")

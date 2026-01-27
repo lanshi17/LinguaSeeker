@@ -62,6 +62,8 @@ class MinIOConfig:
     access_key: str = ""
     secret_key: str = ""
     bucket_name: str = "acmg-documents"
+    api: str = "s3v4"
+    path: str = "auto"
     secure: bool = False
 
 
@@ -112,6 +114,15 @@ class DatabaseConfig:
         cfg.qdrant.port = int(os.getenv("QDRANT_PORT", cfg.qdrant.port))
         cfg.qdrant.collection_name = os.getenv("QDRANT_COLLECTION_NAME", cfg.qdrant.collection_name)
         cfg.qdrant.dimension = int(os.getenv("QDRANT_DIMENSION", cfg.qdrant.dimension))
+        
+        # MinIO
+        cfg.minio.endpoint = os.getenv("MINIO_ENDPOINT", cfg.minio.endpoint)
+        cfg.minio.access_key = os.getenv("MINIO_ACCESS_KEY", cfg.minio.access_key)
+        cfg.minio.secret_key = os.getenv("MINIO_SECRET_KEY", cfg.minio.secret_key)
+        cfg.minio.bucket_name = os.getenv("MINIO_BUCKET_NAME", cfg.minio.bucket_name)
+        cfg.minio.api = os.getenv("MINIO_API", cfg.minio.api)
+        cfg.minio.path = os.getenv("MINIO_PATH", cfg.minio.path)
+        cfg.minio.secure = os.getenv("MINIO_SECURE", str(cfg.minio.secure)).lower() in ("true", "1", "yes")
 
         return cfg
 
