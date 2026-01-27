@@ -1,7 +1,0 @@
-application
-config
-domain
-infrastructure
-main
-presentation
-utils

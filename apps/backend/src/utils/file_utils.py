@@ -12,13 +12,17 @@ from utils.exceptions import FileProcessingException
 
 logger = Logger.get_logger("FileUtils")
 
+# Default timeout for file downloads (in seconds)
+DEFAULT_DOWNLOAD_TIMEOUT = 300
 
-def download_file(url: str, destination: str) -> str:
+
+def download_file(url: str, destination: str, timeout: int = DEFAULT_DOWNLOAD_TIMEOUT) -> str:
     """Download a file from a URL to a destination path.
     
     Args:
         url: URL to download from
         destination: Path to save the downloaded file
+        timeout: Timeout for the download request in seconds (default: 300)
         
     Returns:
         Path to the downloaded file
@@ -28,7 +32,7 @@ def download_file(url: str, destination: str) -> str:
     """
     try:
         logger.info(f"Downloading file from {url}")
-        response = requests.get(url, stream=True, timeout=300)
+        response = requests.get(url, stream=True, timeout=timeout)
         response.raise_for_status()
         
         with open(destination, 'wb') as f:
