@@ -102,3 +102,9 @@ class MinerUException(ACMGException):
         super().__init__(message=f"MinerU service error: {message}", code=code)
 
 
+class FileProcessingException(ACMGException):
+    """File processing exception"""
+
+    def __init__(self, message: str, code: str = "FILE_PROCESSING_ERROR"):
+        super().__init__(message=f"File processing error: {message}", code=code)
+
