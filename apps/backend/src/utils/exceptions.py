@@ -104,5 +104,3 @@ class MinerUException(ACMGException):
 class StoreException(ACMGException):
     """存储异常类"""
 
-    def __init__(self, message: str):
-        super().__init__(message=f"Storage operation failed: {message}", code="STORE_ERROR")
