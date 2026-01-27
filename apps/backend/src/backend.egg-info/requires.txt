@@ -1,0 +1,10 @@
+fastapi>=0.128.0
+pdfplumber>=0.11.9
+pydantic>=2.12.5
+requests>=2.32.5
+
+[dev]
+pytest>=7.4.0
+black>=24.10.0
+mypy>=1.3.0
+pdbpp>=0.10.3
