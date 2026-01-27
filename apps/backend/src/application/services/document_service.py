@@ -1,6 +1,6 @@
 # 编排文件处理流程
 from domain.__init__ import DocumentParser, PDFParser
-from infrastructure.adapters.mineru import MinerUAdapter
+from infrastructure.adapters.mineru import MinerUImpl
 from infrastructure.store.minio_store import MinIOStore
 from config.database_config import DatabaseConfig
 from utils.logger import Logger
@@ -15,7 +15,7 @@ class DocumentService:
 
     def __init__(self, db_config: Optional[DatabaseConfig] = None):
         self.logger = Logger.get_logger("DocumentService")
-        self.mineru_adapter = MinerUAdapter()
+        self.mineru_adapter = MinerUImpl()
         self.pdf_parser: DocumentParser = PDFParser(self.mineru_adapter)
 
         # 初始化MinIO存储
