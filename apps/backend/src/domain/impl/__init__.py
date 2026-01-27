@@ -1,1 +1,5 @@
-from .pdf_to_html_parse import PDFToHTMLParser
+from .pdf_parser import PDFParser
+
+__all__ = [
+    "PDFParser",
+]

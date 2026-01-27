@@ -101,4 +101,8 @@ class MinerUException(ACMGException):
     def __init__(self, message: str, code: str = "MINERU_ERROR"):
         super().__init__(message=f"MinerU service error: {message}", code=code)
 
+class StoreException(ACMGException):
+    """存储异常类"""
 
+    def __init__(self, message: str):
+        super().__init__(message=f"Storage operation failed: {message}", code="STORE_ERROR")

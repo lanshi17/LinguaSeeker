@@ -5,7 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "dotenv>=0.9.9",
     "fastapi>=0.128.0",
+    "fasttext>=0.9.3",
+    "minio>=7.2.20",
     "pdfplumber>=0.11.9",
     "pydantic>=2.12.5",
     "requests>=2.32.5",
@@ -17,4 +20,47 @@ dev = [
     "black>=24.10.0",
     "mypy>=1.3.0",
     "pdbpp>=0.10.3",
+]
+
+[tool.uv]
+# 设置默认源（优先级最高）
+index-url = "http://127.0.0.1:3141/root/pypi/+simple/"
+
+# 配置所有镜像源（按优先级排序）
+[[tool.uv.index]]
+name = "local"
+url = "http://127.0.0.1:3141/root/pypi/+simple/"
+default = true  # 默认源，必须设置一个
+
+[[tool.uv.index]]
+name = "tuna"  # 清华源（国内最快）
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+
+[[tool.uv.index]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple/"
+
+[[tool.uv.index]]
+name = "ustc"  # 中科大源
+url = "https://pypi.mirrors.ustc.edu.cn/simple/"
+
+[[tool.uv.index]]
+name = "huaweicloud"
+url = "https://mirrors.huaweicloud.com/repository/pypi/simple/"
+
+[[tool.uv.index]]
+name = "volces"  # 火山引擎
+url = "https://mirrors.volces.com/pypi/simple/"
+
+[[tool.uv.index]]
+name = "tencent"
+url = "https://mirrors.cloud.tencent.com/pypi/simple/"
+
+[[tool.uv.index]]
+name = "pypi"  # 官方源（备用）
+url = "https://pypi.org/simple/"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: tests that hit external services like MinIO",
 ]

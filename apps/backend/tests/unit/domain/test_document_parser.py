@@ -1,6 +1,6 @@
 # test document parser
 import pytest
-from domain.impl.pdf_to_html_parse import PDFToHTMLParser
+from domain.impl.pdf_parser import PDFParser
 from infrastructure.adapters.mineru import MinerUImpl
 from utils.exceptions import ParseException
 @pytest.fixture
@@ -8,7 +8,7 @@ def mineru_adapter():
     return MinerUImpl()
 @pytest.fixture
 def pdf_parser(mineru_adapter):
-    return PDFToHTMLParser(mineru_adapter)
+    return PDFParser(mineru_adapter)
 def test_parse_valid_pdf(pdf_parser, tmp_path):
     # 准备一个简单的PDF文件用于测试
     pdf_file = tmp_path / "test.pdf"

@@ -1,6 +1,10 @@
 # Global fixture configuration (e.g., pytest-asyncio, database sessions)
 import sys
 from pathlib import Path
+import dotenv
+
+# Load environment variables from .env.test file
+dotenv.load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env.test")
 
 # Add src directory to Python path
 src_path = Path(__file__).parent.parent / "src"
