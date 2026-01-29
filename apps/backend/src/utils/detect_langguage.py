@@ -1,45 +1,61 @@
-# 安装: pip install fasttext
-import fasttext
-import os
-from pathlib import Path
-import tempfile
-# 加载预训练模型 (需下载 lid.176.ftz)
-# 优先使用环境变量指定的模型路径，其次使用缓存目录
-env_model_path = os.environ.get("FASTTEXT_MODEL_PATH")
-if env_model_path:
-    model_path = env_model_path
-else:
-    cache_dir = os.environ.get("FASTTEXT_CACHE_DIR")
-    if not cache_dir:
-        # 使用系统临时目录作为默认缓存目录
-        cache_dir = os.path.join(tempfile.gettempdir(), "fasttext_models")
-    os.makedirs(cache_dir, exist_ok=True)
-    model_path = os.path.join(cache_dir, "lid.176.ftz")
+# 语言检测工具 (基于 lingua)
+from __future__ import annotations
 
-if not os.path.exists(model_path):
-    import urllib.request
-    print(f"Downloading language detection model to {model_path}...")
-    urllib.request.urlretrieve(
-        'https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.ftz',
-        model_path
-    )
-model = fasttext.load_model(model_path)
+from typing import Dict, List
 
-def detect_language(text_snippet):
-    # 提取文档前 1000 字符作为样本
-    predictions = model.predict(text_snippet.replace("\n", " "), k=1)
-    lang_id = predictions[0][0].split("__")[-1] # 输出如 __label__zh
-    
-    # 映射到 MinerU 支持的格式
-    lang_map = {
-        "zh": ["ch"],          # 中文
-        "en": ["en"],          # 英文
-        "ja": ["ja"],          # 日文
-        "de": ["de"],          # 德文
-        "fr": ["fr"],          # 法文
-        "ru": ["ru"],          # 俄文
-        #"el": ["el"],          # 希腊文
-        #"th": ["th"],          # 泰文
-        
-    }
-    return lang_map.get(lang_id, ["en"]) # 默认英文
+from lingua import Language, LanguageDetector, LanguageDetectorBuilder
+
+from src.utils.logger import Logger
+
+logger = Logger.get_logger("LanguageDetector")
+DEFAULT_LANGUAGES: List[str] = ["en"]
+
+# MinerU 语言映射表
+LANGUAGE_MAPPING: Dict[Language, List[str]] = {
+    Language.CHINESE: ["ch"],
+    Language.ENGLISH: ["en"],
+    Language.JAPANESE: ["ja"],
+    Language.GERMAN: ["de"],
+    Language.FRENCH: ["fr"],
+    Language.RUSSIAN: ["ru"],
+}
+
+def _build_detector() -> LanguageDetector | None:
+    try:
+        supported_languages = list(LANGUAGE_MAPPING.keys())
+        if not supported_languages:
+            logger.warning("No languages configured for Lingua detector, falling back to defaults")
+            return None
+        return LanguageDetectorBuilder.from_languages(*supported_languages).build()
+    except Exception as exc:
+        logger.error("Failed to initialize Lingua detector ({})", exc)
+        return None
+
+_DETECTOR: LanguageDetector | None = _build_detector()
+
+def detect_language(text_snippet: str) -> List[str]:
+    normalized_snippet = (text_snippet or "").replace("\n", " ").strip()
+    if not normalized_snippet:
+        logger.warning("Empty text snippet for language detection, defaulting to {}", DEFAULT_LANGUAGES)
+        return DEFAULT_LANGUAGES
+
+    if _DETECTOR is None:
+        logger.warning("Lingua detector is unavailable, defaulting to {}", DEFAULT_LANGUAGES)
+        return DEFAULT_LANGUAGES
+
+    try:
+        detected_language = _DETECTOR.detect_language_of(normalized_snippet)
+    except Exception as exc:
+        logger.error("Language detection failed ({}), falling back to {}", exc, DEFAULT_LANGUAGES)
+        return DEFAULT_LANGUAGES
+
+    if not detected_language:
+        logger.warning("Lingua could not determine language, defaulting to {}", DEFAULT_LANGUAGES)
+        return DEFAULT_LANGUAGES
+
+    mineru_languages = LANGUAGE_MAPPING.get(detected_language)
+    if not mineru_languages:
+        logger.info("Detected unsupported language {}, defaulting to {}", detected_language, DEFAULT_LANGUAGES)
+        return DEFAULT_LANGUAGES
+
+    return mineru_languages

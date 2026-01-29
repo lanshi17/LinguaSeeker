@@ -4,6 +4,14 @@ from dataclasses import dataclass
 import os
 from enum import Enum
 
+@dataclass
+class RedisConfig:
+    """Redis配置"""
+    host: str = "localhost"
+    port: int = 6379
+    db: int = 0
+    password: Optional[str] = None
+    max_connections: int = 10
 
 @dataclass
 class PostgreSQLConfig:

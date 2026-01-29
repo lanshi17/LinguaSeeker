@@ -6,11 +6,9 @@ import tempfile
 from pathlib import Path
 from typing import Dict, Any
 import requests
-from utils.logger import Logger
-from utils.exceptions import FileProcessingException
+from loguru import logger
+from .exceptions import FileProcessingException, SuppressAndLog
 
-
-logger = Logger.get_logger("FileUtils")
 
 # Default timeout for file downloads (in seconds)
 DEFAULT_DOWNLOAD_TIMEOUT = 300
@@ -48,6 +46,17 @@ def download_file(url: str, destination: str, timeout: int = DEFAULT_DOWNLOAD_TI
     except IOError as e:
         logger.error(f"Failed to save downloaded file to {destination}: {e}")
         raise FileProcessingException(f"Failed to save file: {e}")
+
+
+def safe_remove_file(file_path: str) -> bool:
+    """安全删除文件，使用SuppressAndLog处理可能的异常"""
+    with SuppressAndLog(OSError):
+        os.remove(file_path)
+        logger.info(f"Successfully removed file: {file_path}")
+        return True
+    
+    logger.warning(f"Failed to remove file (may not exist): {file_path}")
+    return False
 
 
 def extract_zip(zip_path: str, extract_to: str) -> str:

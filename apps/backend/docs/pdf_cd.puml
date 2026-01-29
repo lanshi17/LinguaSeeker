@@ -1,0 +1,38 @@
+@startuml PDFClassDiagram
+title PDF Module Class Diagram
+
+package "Entity" {
+  class UserEntity {
+    + userId : Long
+    - username : String
+    - password : String
+    + UserEntity()
+    + getUsername() : String
+    + setUsername(username: String)
+    + getPassword() : String
+    + setPassword(password: String)
+  }
+}
+
+package "Service" {
+  class UserService {
+    + createUser(user: UserEntity) : UserEntity
+    + getUserById(id: Long) : UserEntity
+    + updateUser(user: UserEntity) : UserEntity
+    + deleteUser(id: Long)
+  }
+}
+
+package "Controller" {
+  class UserController {
+    + createUser()
+    + getUserById()
+    + updateUser()
+    + deleteUser()
+  }
+}
+
+UserController --> UserService: uses
+UserService --> UserEntity: manages
+
+@enduml

@@ -7,7 +7,7 @@
 import asyncio
 import functools
 import inspect
-import logging
+from loguru import logger as loguru_logger
 import resource
 import sys
 import threading
@@ -35,7 +35,7 @@ T = TypeVar('T')
 Decorator = Callable[[T], T]
 TimerResult = Dict[str, Union[str, float, int]]
 
-logger = logging.getLogger(__name__)
+logger = loguru_logger
 
 
 class TimerData:
@@ -102,7 +102,7 @@ class ConsoleOutput:
 
     def output(self, message: str) -> None:
         """输出消息到控制台"""
-        print(message, file=self.file)
+        logger.info(message)
 
 
 class FileOutput:

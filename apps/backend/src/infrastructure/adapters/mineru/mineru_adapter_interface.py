@@ -2,13 +2,13 @@
 # defines the interface for interacting with the minerU service
 from abc import ABC, abstractmethod
 from typing import Any, Dict
-from utils.exceptions import MinerUException
+from src.utils.exceptions import MinerUException
 from typing import Type
 from .mineru_mapping import MinerUErrorCode, ERROR_CODE_MAPPING
-from utils.logger import Logger
-from config.app_config import AppConfig
+from src.utils.logger import Logger
+from src.config.app_config import AppConfig
 cfg=AppConfig.from_env()
-class MinerUInterface(ABC):
+class MinerUAdapterInterface(ABC):
     """MinerU适配器接口类"""
 
     def __init__(self, config: AppConfig = cfg):
@@ -23,8 +23,8 @@ class MinerUInterface(ABC):
         self.batch_status_url=self.config.batch_status_url
         self.model_version=self.config.model_version
         self.api_token=self.config.api_token
-        self.logger = Logger.get_logger("MinerUInterface")
-        self.logger.info("MinerUInterface initialized")
+        self.logger = Logger.get_logger("MinerUAdapterInterface")
+        self.logger.info("MinerUAdapterInterface initialized")
         
     @abstractmethod
     def pipline_process(self, files: list) -> Dict[str, Any]:
@@ -55,5 +55,3 @@ class MinerUInterface(ABC):
     def close(self) -> None:
         """关闭会话"""
         pass
-    
-    

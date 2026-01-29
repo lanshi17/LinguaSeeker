@@ -1,18 +1,17 @@
 # minerU impl.py--minerU适配器实现
 # implements the MinerU interface for file processing
-from config.app_config import AppConfig
-from infrastructure.adapters.mineru.mineru_interface import cfg
-from src.infrastructure.adapters.mineru.mineru_interface import MinerUInterface
-from infrastructure.adapters.mineru.mineru_mapping import ERROR_CODE_MAPPING
-from utils.logger import Logger
-from utils.exceptions import MinerUException
-from typing import Any, Dict
+from src.infrastructure.adapters.mineru.mineru_adapter_interface import MinerUAdapterInterface
+from src.infrastructure.adapters.mineru.mineru_mapping import ERROR_CODE_MAPPING
+from src.utils.logger import Logger
+from src.utils.exceptions import MinerUException
+from typing import Any, Dict, List, Optional
+import os
 import requests
 
-class MinerUImpl(MinerUInterface):
+class MinerUAdapterImpl(MinerUAdapterInterface):
     """MinerU适配器实现类"""
-    def __init__(self, config: AppConfig = cfg):
-        super().__init__(config)
+    def __init__(self):
+        super().__init__()
         self._session = requests.Session()
         
     def pipline_process(self, files: list) -> Dict[str, Any]:
@@ -87,14 +86,20 @@ class MinerUImpl(MinerUInterface):
 
     def _build_upload_payload(self, files: list[str], file_configs: Dict[str, Any] | None) -> Dict[str, Any]:
         """ 构建申请上传URL的请求负载 """
+        payload_files = []
+        configs = file_configs or {}
+
+        for file in files:
+            file_entry: Dict[str, Any] = {
+                "url": file,
+                "name": os.path.basename(file),
+            }
+            # Merge per-file config if provided
+            file_entry.update(configs.get(file, {}))
+            payload_files.append(file_entry)
+
         return {
-            "files": [
-                {
-                    "url": file,
-                    **(file_configs.get(file, {}) if file_configs else {})
-                }
-                for file in files
-            ],
+            "files": payload_files,
             "model_version": self.model_version
         }
 
@@ -121,8 +126,16 @@ class MinerUImpl(MinerUInterface):
             action="Apply upload URLs",
         )
         result = self._handle_api_response(response.json(), "Apply upload URLs")
+        data = result.get("data", result)
+
+        normalized_files = self._normalize_file_entries(data, files)
+        if not normalized_files:
+            self.logger.error("Apply upload URLs response missing file data: %s", data)
+            raise MinerUException("Apply upload URLs succeeded but no file upload info was returned")
+
+        data["files"] = normalized_files
         self.logger.info("Applied upload URLs successfully")
-        return result.get("data", result)
+        return data
 
     def upload_to_urls(self, file_paths: list[str], upload_urls: list[str]) -> Dict[str, str]:
         """上传文件到申请的URL"""
@@ -154,6 +167,12 @@ class MinerUImpl(MinerUInterface):
 
     def get_processing_status(self, file_id: str) -> Dict[str, Any]:
         """获取文件处理状态"""
+        batch_id = self._extract_batch_id(file_id)
+        if batch_id:
+            data = self._get_batch_status(batch_id, action="Get batch processing status")
+            self._log_extract_progress(data.get("extract_result", {}))
+            return data
+
         response = self._request(
             "GET",
             f"{self.status_url}/{file_id}",
@@ -167,6 +186,16 @@ class MinerUImpl(MinerUInterface):
 
     def retrieve_results(self, file_id: str) -> Dict[str, Any]:
         """检索处理结果"""
+        batch_id = self._extract_batch_id(file_id)
+        if batch_id:
+            data = self._get_batch_status(batch_id, action="Retrieve batch results")
+            extract_result = data.get("extract_result", {})
+            if extract_result:
+                self.logger.info(
+                    f"File: {extract_result.get('file_name')}, Download URL: {extract_result.get('full_zip_url')}"
+                )
+            return data
+
         response = self._request(
             "GET",
             f"{self.status_url}/{file_id}",
@@ -197,5 +226,133 @@ class MinerUImpl(MinerUInterface):
         """关闭会话"""
         self._session.close()
         self.logger.info("MinerUImpl session closed")
-        
-       
+
+    def _normalize_file_entries(self, payload: Dict[str, Any], requested_files: List[str]) -> List[Dict[str, Any]]:
+        """Normalize API responses so downstream logic always sees files list."""
+        if payload is None:
+            return []
+
+        candidate_keys = [
+            "files",
+            "file_url_infos",
+            "file_urls",
+            "fileInfos",
+            "file_infos",
+        ]
+
+        entries: List[Any] = self._search_for_list(payload, candidate_keys)
+        if not entries:
+            return []
+
+        batch_id = self._search_payload_for_key(payload, "batch_id")
+        normalized_entries: List[Dict[str, Any]] = []
+
+        if entries and isinstance(entries[0], dict):
+            for idx, entry in enumerate(entries):
+                normalized = dict(entry)
+                normalized.setdefault("batch_id", batch_id or entry.get("batch_id"))
+
+                file_id = (
+                    entry.get("file_id")
+                    or entry.get("fileId")
+                    or entry.get("fileID")
+                    or entry.get("id")
+                )
+                upload_url = (
+                    entry.get("upload_url")
+                    or entry.get("uploadUrl")
+                    or entry.get("url")
+                )
+
+                if not file_id and normalized.get("batch_id"):
+                    file_id = self._build_batch_identifier(normalized["batch_id"], idx)
+
+                if file_id:
+                    normalized["file_id"] = file_id
+                if upload_url:
+                    normalized["upload_url"] = upload_url
+
+                normalized_entries.append(normalized)
+            return normalized_entries
+
+        # entries list may be strings (upload URLs)
+        for idx, entry in enumerate(entries):
+            if not isinstance(entry, str):
+                continue
+            identifier = self._build_batch_identifier(batch_id, idx)
+            if not identifier:
+                self.logger.warning("Unable to build batch identifier for upload URL response: %s", entry)
+                continue
+            normalized_entries.append(
+                {
+                    "file_id": identifier,
+                    "batch_id": batch_id,
+                    "upload_url": entry,
+                    "source_file": requested_files[idx] if idx < len(requested_files) else None,
+                }
+            )
+
+        return normalized_entries
+    
+    def _search_for_list(self, payload: Dict[str, Any], candidate_keys: List[str]) -> List[Any]:
+        stack: List[Dict[str, Any]] = [payload]
+        while stack:
+            current = stack.pop()
+            for key in candidate_keys:
+                entries = current.get(key)
+                if isinstance(entries, list) and entries:
+                    return entries
+            for value in current.values():
+                if isinstance(value, dict):
+                    stack.append(value)
+        return []
+
+    def _search_payload_for_key(self, payload: Dict[str, Any], target_key: str) -> Optional[Any]:
+        stack: List[Dict[str, Any]] = [payload]
+        while stack:
+            current = stack.pop()
+            if target_key in current and current[target_key]:
+                return current[target_key]
+            for value in current.values():
+                if isinstance(value, dict):
+                    stack.append(value)
+        return None
+
+    def _build_batch_identifier(self, batch_id: Optional[str], index: int) -> Optional[str]:
+        if not batch_id:
+            return None
+        return f"batch::{batch_id}::{index}"
+
+    def _extract_batch_id(self, file_id: str) -> Optional[str]:
+        if not isinstance(file_id, str):
+            return None
+        if not file_id.startswith("batch::"):
+            return None
+        parts = file_id.split("::")
+        if len(parts) >= 2 and parts[1]:
+            return parts[1]
+        return None
+
+    def _select_first_extract_result(self, extract_result: Any) -> Dict[str, Any]:
+        if isinstance(extract_result, list):
+            return extract_result[0] if extract_result else {}
+        if isinstance(extract_result, dict):
+            return extract_result
+        return {}
+
+    def _get_batch_status(self, batch_id: str, action: str) -> Dict[str, Any]:
+        if not self.batch_status_url:
+            raise MinerUException("Batch status URL is not configured for MinerU client")
+
+        response = self._request(
+            "GET",
+            f"{self.batch_status_url}{batch_id}",
+            action=action,
+        )
+        payload = self._handle_api_response(response.json(), action)
+        data = payload.get("data", payload)
+        normalized = {
+            "batch_id": data.get("batch_id") or batch_id,
+            "extract_result": self._select_first_extract_result(data.get("extract_result")),
+        }
+        return normalized

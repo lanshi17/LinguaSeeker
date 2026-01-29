@@ -1,35 +1,41 @@
 # base store -save file 
-from utils.logger import Logger
-from utils.exceptions import StoreException
+from loguru import logger
+from src.utils.exceptions import StoreException
 from typing import Any
 from abc import ABC, abstractmethod
-from config.database_config import DatabaseConfig
 import os
 
 """ Abstract Base Store Class
 This class defines the interface for a base store that handles saving and retrieving data.
-It uses a database configuration for initialization and provides methods for saving, retrieving,
-and validating paths.
+It provides methods for saving, retrieving, and validating paths with proper write permission checks.
 """
 class BaseStore(ABC):
-    def __init__(self, db_config: DatabaseConfig):
-        self.db_config = db_config
-        self.logger = Logger.get_logger("BaseStore")
-        self.logger.info("BaseStore initialized with database configuration")
+    def __init__(self):
+        logger.info("BaseStore initialized")
 
     @abstractmethod
-    def save(self, data: Any, destination: str) -> None:
-        """Save data to the specified destination."""
+    def save(self, content: Any, destination: str) -> None:
+        """Save the content to the specified destination."""
         pass
+
     @abstractmethod
     def retrieve(self, source: str) -> Any:
         """Retrieve data from the specified source."""
         pass
-    def validate_path(self, path: str) -> bool:
-        """Validate if the given path exists."""
-        if os.path.exists(path):
-            self.logger.info(f"Path validated: {path} exists.")
+
+    def validate_path(self, destination: str) -> bool:
+        """Validate if the destination path is writable."""
+        dir_name = os.path.dirname(destination)
+        if not os.path.exists(dir_name):
+            try:
+                os.makedirs(dir_name)
+                logger.info(f"Created directory for path: {dir_name}")
+            except Exception as e:
+                logger.error(f"Error creating directory {dir_name}: {e}")
+                return False
+        if os.access(dir_name, os.W_OK):
+            logger.info(f"Path is writable: {destination}")
             return True
         else:
-            self.logger.warning(f"Path validation failed: {path} does not exist.")
+            logger.warning(f"Path is not writable: {destination}")
             return False

@@ -101,7 +101,7 @@ class MinerUConfig:
 class AppConfig:
     """应用配置"""
     app_name: str = "ACMG-PS3 Intelligence System"
-    version: str = "1.0.0"
+    app_version: str = "1.0.0"
     environment: Environment = Environment.DEVELOPMENT
     debug: bool = True
 
@@ -169,7 +169,7 @@ class AppConfig:
         cfg = cls()
 
         cfg.app_name = os.getenv("APP_NAME", cfg.app_name)
-        cfg.version = os.getenv("APP_VERSION", cfg.version)
+        cfg.app_version = os.getenv("APP_VERSION", cfg.app_version)
 
         environment = os.getenv("ENVIRONMENT")
         if environment:

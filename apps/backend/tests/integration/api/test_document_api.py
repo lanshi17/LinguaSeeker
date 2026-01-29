@@ -2,7 +2,7 @@
 Integration tests for document API workflow.
 
 Tests the complete flow:
-1. UploadController receives PDF upload -> creates DocumentDTO
+1. UploadController receives PDF upload -> creates DocumentUploadDTO
 2. DocumentService processes the DTO -> calls PDFParser
 3. PDFParser detects language -> calls MinerU adapter
 4. MinIO stores the extracted files
@@ -20,7 +20,7 @@ import uuid
 # Import application components
 from presentation.upload_controller import UploadController
 from application.services.document_service import DocumentService
-from application.dtos.document_dto import DocumentDTO
+from application.dtos.document_dto import DocumentUploadDTO
 from domain.impl.pdf_parser import PDFParser
 from infrastructure.adapters.mineru import MinerUImpl
 from infrastructure.store.minio_store import MinIOStore
@@ -167,10 +167,10 @@ class TestDocumentAPIIntegration:
             assert result["file_count"] == 2
             assert len(result["minio_files"]) == 2
 
-            # Verify DocumentService was called with DocumentDTO
+            # Verify DocumentService was called with DocumentUploadDTO
             mock_doc_service.process_pdf_document.assert_called_once()
             call_args = mock_doc_service.process_pdf_document.call_args[0][0]
-            assert isinstance(call_args, DocumentDTO)
+            assert isinstance(call_args, DocumentUploadDTO)
             assert call_args.filename == "test_zh.pdf"
             assert call_args.size == len(file_content)
 
@@ -221,11 +221,11 @@ class TestDocumentAPIIntegration:
     ):
         """Test DocumentService.process_pdf_document with mocked dependencies"""
 
-        # Create DocumentDTO
+        # Create DocumentUploadDTO
         with open(test_pdf_file, "rb") as f:
             file_content = f.read()
 
-        document = DocumentDTO(
+        document = DocumentUploadDTO(
             filename="test_zh.pdf",
             content=file_content,
             size=len(file_content),
@@ -380,7 +380,7 @@ class TestDocumentAPIIntegration:
 
             def mock_process_pdf_document(document_dto):
                 """Simulate the complete processing flow"""
-                assert isinstance(document_dto, DocumentDTO)
+                assert isinstance(document_dto, DocumentUploadDTO)
                 assert document_dto.filename == "test_zh.pdf"
                 assert document_dto.temp_file_path is not None
 
@@ -420,7 +420,7 @@ class TestDocumentAPIIntegration:
             # Verify the flow was executed
             mock_service_instance.process_pdf_document.assert_called_once()
 
-            # Verify DocumentDTO was created correctly
+            # Verify DocumentUploadDTO was created correctly
             call_args = mock_service_instance.process_pdf_document.call_args[0][0]
             assert call_args.filename == "test_zh.pdf"
             assert call_args.content_type == "application/pdf"

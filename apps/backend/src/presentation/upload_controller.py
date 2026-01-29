@@ -2,11 +2,11 @@
 from src.presentation.base_controller import BaseController
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from typing import Any, Dict
-from utils.logger import Logger
-from application.__init__ import *
-from config.app_config import AppConfig
-from utils.exceptions import FileUploadError
-from application.services.document_service import DocumentService
+from src.utils.logger import Logger
+from src.application.dtos.document_dto import DocumentUploadDTO, DocumentProcessResultDTO
+from src.config.app_config import AppConfig
+from src.utils.exceptions import FileUploadError
+from src.application.services.document_service import DocumentService
 import tempfile
 import os
 from pathlib import Path
@@ -21,6 +21,7 @@ class UploadController(BaseController):
         self.document_service = DocumentService()
         self.temp_dir = Path(tempfile.gettempdir()) / "pdf_uploads"
         self.temp_dir.mkdir(parents=True, exist_ok=True)
+        self.logger = Logger()
         self.register_routes()
 
     def register_routes(self):
@@ -44,8 +45,8 @@ class UploadController(BaseController):
             if not file.filename or not file.filename.endswith(".pdf"):
                 raise FileUploadError("Unsupported file type")
 
-            # 创建DocumentDTO实体
-            document = DocumentDTO(
+            # 创建DocumentUploadDTO实体
+            document = DocumentUploadDTO(
                 filename=file.filename,
                 content=content,
                 size=len(content),
@@ -63,17 +64,27 @@ class UploadController(BaseController):
             # 调用应用层服务处理PDF，传递DTO对象
             self.logger.info(f"Processing PDF file: {file.filename}")
             result = self.document_service.process_pdf_document(document)
+            if isinstance(result, DocumentProcessResultDTO):
+                result_data: Dict[str, Any] = result.model_dump()
+            elif hasattr(result, "model_dump"):
+                result_data = result.model_dump()
+            elif hasattr(result, "dict"):
+                result_data = result.dict()
+            elif isinstance(result, dict):
+                result_data = result
+            else:
+                result_data = dict(result)
 
             self.logger.info(f"File {file.filename} uploaded and processed successfully")
             return {
                 "message": "File uploaded and processed successfully",
                 "filename": file.filename,
                 "size": len(content),
-                "document_id": result.get("document_id"),
-                "minio_prefix": result.get("minio_prefix"),
-                "minio_files": result.get("minio_files", []),
-                "file_count": len(result.get("minio_files", [])),
-                "processed_at": result.get("processed_at")
+                "document_id": result_data.get("document_id"),
+                "minio_prefix": result_data.get("minio_prefix"),
+                "minio_files": result_data.get("minio_files", []),
+                "file_count": len(result_data.get("minio_files", [])),
+                "processed_at": result_data.get("processed_at")
             }
 
         except FileUploadError as e:
@@ -94,4 +105,3 @@ class UploadController(BaseController):
     def get_router(self) -> APIRouter:
         """获取上传路由器实例"""
         return self.router
-        

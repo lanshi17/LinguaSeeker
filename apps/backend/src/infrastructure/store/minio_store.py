@@ -1,8 +1,8 @@
 from typing import Optional, List
 from .base_store import BaseStore
-from config.database_config import DatabaseConfig
-from utils.logger import Logger
-from utils.exceptions import StoreException
+from src.config.database_config import DatabaseConfig
+from src.utils.logger import Logger
+from src.utils.exceptions import StoreException
 import os
 from minio import Minio
 from minio.error import S3Error
@@ -15,7 +15,7 @@ class MinIOStore(BaseStore):
     """MinIO对象存储实现类"""
 
     def __init__(self, db_config: DatabaseConfig):
-        super().__init__(db_config)
+        super().__init__()
         self.config = db_config.minio
         self.logger = Logger.get_logger("MinIOStore")
 
