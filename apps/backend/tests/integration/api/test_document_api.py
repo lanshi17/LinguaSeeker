@@ -4,7 +4,7 @@ Integration tests for document API workflow.
 Tests the complete flow:
 1. UploadController receives PDF upload -> creates DocumentUploadDTO
 2. DocumentService processes the DTO -> calls PDFParser
-3. PDFParser detects language -> calls MinerU adapter
+3. PDFParser submits file -> MinerU adapter processes it
 4. MinIO stores the extracted files
 """
 
@@ -12,7 +12,7 @@ import pytest
 import os
 import io
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from fastapi import UploadFile
 import tempfile
 import uuid
@@ -242,8 +242,7 @@ class TestDocumentAPIIntegration:
         try:
             # Create DocumentService with mocked dependencies
             with patch('application.services.document_service.MinerUImpl', return_value=mock_mineru_adapter), \
-                 patch('application.services.document_service.MinIOStore', return_value=mock_minio_store), \
-                 patch('domain.impl.pdf_parser.detect_language', return_value=["ch"]):
+                 patch('application.services.document_service.MinIOStore', return_value=mock_minio_store):
 
                 service = DocumentService(db_config=mock_db_config)
                 service.mineru_adapter = mock_mineru_adapter
@@ -268,40 +267,29 @@ class TestDocumentAPIIntegration:
                 os.remove(temp_file_path)
 
 
-    def test_pdf_parser_with_language_detection(
+    def test_pdf_parser_without_language_configuration(
         self,
         test_pdf_file,
         mock_mineru_adapter
     ):
-        """Test PDFParser.parse_with_mineru including language detection"""
+        """Test PDFParser.parse_with_mineru without language pre-processing"""
 
         parser = PDFParser(mineru_adapter=mock_mineru_adapter)
 
-        # Mock language detection
-        with patch('domain.impl.pdf_parser.detect_language') as mock_detect:
-            mock_detect.return_value = ["ch"]  # Chinese
+        result = parser.parse_with_mineru(
+            file_path=str(test_pdf_file),
+            document_id="test-doc-id-123"
+        )
 
-            result = parser.parse_with_mineru(
-                file_path=str(test_pdf_file),
-                document_id="test-doc-id-123"
-            )
+        # Verify result
+        assert result["file_id"] == "test-file-id-12345"
+        assert result["full_zip_url"] == "https://mock-download-url.com/result.zip"
+        assert result["state"] == "completed"
+        assert result["document_id"] == "test-doc-id-123"
+        assert "detected_languages" not in result
 
-            # Verify result
-            assert result["file_id"] == "test-file-id-12345"
-            assert result["full_zip_url"] == "https://mock-download-url.com/result.zip"
-            assert result["state"] == "completed"
-            assert result["detected_languages"] == ["ch"]
-            assert result["document_id"] == "test-doc-id-123"
-
-            # Verify language detection was called
-            mock_detect.assert_called_once()
-
-            # Verify MinerU adapter was called with language config
-            mock_mineru_adapter.apply_upload_urls.assert_called_once()
-            call_args = mock_mineru_adapter.apply_upload_urls.call_args
-            file_config = call_args[1].get("file_config", call_args[0][1] if len(call_args[0]) > 1 else {})
-            assert str(test_pdf_file) in file_config
-            assert file_config[str(test_pdf_file)]["parse_language"] == ["ch"]
+        # Verify MinerU adapter was called without language config
+        mock_mineru_adapter.apply_upload_urls.assert_called_once_with([str(test_pdf_file)])
 
 
     def test_minio_store_download_and_extract_zip(self, mock_db_config):
@@ -369,11 +357,7 @@ class TestDocumentAPIIntegration:
 
         # Step 3: Setup complete mock chain
         with patch('presentation.upload_controller.DocumentService') as MockDocService, \
-             patch('domain.impl.pdf_parser.detect_language') as mock_detect_lang, \
              patch.object(uuid, 'uuid4', return_value=uuid.UUID('12345678-1234-5678-1234-567812345678')):
-
-            # Configure language detection
-            mock_detect_lang.return_value = ["ch"]
 
             # Configure document service mock
             mock_service_instance = MockDocService.return_value
@@ -476,25 +460,6 @@ class TestDocumentAPIErrorHandling:
                 await controller._upload_pdf(file=upload_file)
 
             assert "Internal Server Error" in str(exc_info.value)
-
-
-    def test_language_detection_fallback(self, test_pdf_file, mock_mineru_adapter):
-        """Test language detection fallback to default when detection fails"""
-
-        parser = PDFParser(mineru_adapter=mock_mineru_adapter)
-
-        with patch('domain.impl.pdf_parser.detect_language') as mock_detect:
-            # Simulate language detection returning empty string
-            mock_detect.return_value = ["en"]  # Fallback to English
-
-            result = parser.parse_with_mineru(
-                file_path=str(test_pdf_file),
-                document_id="test-doc-id"
-            )
-
-            # Should still complete successfully with fallback language
-            assert result["state"] == "completed"
-            assert result["detected_languages"] == ["en"]
 
 
 # Run tests with: pytest tests/integration/api/test_document_api.py -v

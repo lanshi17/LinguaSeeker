@@ -84,6 +84,7 @@ class MinerUConfig:
     """MinerU解析服务配置"""
     batch_url: str = "https://mineru.net/api/v4/file-urls/batch"
     api_url: str = "https://mineru.net/api/v4/extract/task"
+    task_batch_url: str = "https://mineru.net/api/v4/extract/task/batch"
     status_url: str = "https://mineru.net/api/v4/extract/task/" #https://mineru.net/api/v4/extract/task/{task_id}
     batch_status_url: str = "https://mineru.net/api/v4/extract-results/batch/" #https://mineru.net/api/v4/extract-results/batch/{batch_id}
     model_version: str = "vlm"
@@ -245,6 +246,7 @@ class AppConfig:
         mineru = cfg.mineru
         mineru.api_url = os.getenv("MINERU_API_URL", mineru.api_url)
         mineru.batch_url = os.getenv("MINERU_BATCH_URL", mineru.batch_url)
+        mineru.task_batch_url = os.getenv("MINERU_TASK_BATCH_URL", mineru.task_batch_url)
         mineru.status_url = os.getenv("MINERU_STATUS_URL", mineru.status_url)
         mineru.batch_status_url = os.getenv("MINERU_BATCH_STATUS_URL", mineru.batch_status_url)
         mineru.api_token = os.getenv("MINERU_API_TOKEN", mineru.api_token)

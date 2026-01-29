@@ -1,10 +1,7 @@
 # minerU interface.py--minerU适配器接口
 # defines the interface for interacting with the minerU service
 from abc import ABC, abstractmethod
-from typing import Any, Dict
-from src.utils.exceptions import MinerUException
-from typing import Type
-from .mineru_mapping import MinerUErrorCode, ERROR_CODE_MAPPING
+from typing import Any, Dict, List
 from src.utils.logger import Logger
 from src.config.app_config import AppConfig
 cfg=AppConfig.from_env()
@@ -19,6 +16,7 @@ class MinerUAdapterInterface(ABC):
         }
         self.batch_url=self.config.batch_url
         self.api_url=self.config.api_url
+        self.task_batch_url=self.config.task_batch_url
         self.status_url=self.config.status_url
         self.batch_status_url=self.config.batch_status_url
         self.model_version=self.config.model_version
@@ -32,13 +30,34 @@ class MinerUAdapterInterface(ABC):
         pass
         
     @abstractmethod
-    def apply_upload_urls(self, files: list) -> Dict[str, Any]:
+    def apply_upload_urls(
+        self,
+        files: list,
+        file_configs: Dict[str, Any] | None = None,
+        *,
+        request_options: Dict[str, Any] | None = None,
+    ) -> Dict[str, Any]:
         """申请文件上传URL"""
+        pass
+
+    @abstractmethod
+    def submit_url_tasks(
+        self,
+        files: List[Any],
+        *,
+        request_options: Dict[str, Any] | None = None,
+    ) -> Dict[str, Any]:
+        """申请URL批量解析任务"""
         pass
 
     @abstractmethod
     def get_processing_status(self, file_id: str) -> Dict[str, Any]:
         """获取文件处理状态"""
+        pass
+
+    @abstractmethod
+    def get_batch_results(self, batch_id: str) -> Dict[str, Any]:
+        """通过批量ID获取解析状态"""
         pass
 
     @abstractmethod

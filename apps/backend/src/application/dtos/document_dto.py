@@ -25,7 +25,6 @@ class DocumentProcessResultDTO(BaseModel):
     file_count: int
     processed_at: datetime
     mineru_file_id: Optional[str] = None
-    detected_languages: Optional[list] = None
     state: Optional[str] = None
     full_zip_url: Optional[str] = None
     html_content: Optional[str] = None

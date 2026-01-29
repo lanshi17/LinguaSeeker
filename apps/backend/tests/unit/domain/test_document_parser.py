@@ -1,14 +1,16 @@
 # test document parser
 import pytest
-from domain.impl.pdf_parser import PDFParser
-from infrastructure.adapters.mineru import MinerUImpl
-from utils.exceptions import ParseException
+from unittest.mock import Mock, patch
+import zipfile
+from src.domain.impl.pdf_parser import PDFParser
+from src.infrastructure.adapters.mineru import MinerUAdapterImpl
+from src.utils.exceptions import ParseException
 
 
 @pytest.fixture
 def mock_mineru_adapter():
     """Create a mock MinerU adapter for testing"""
-    mock_adapter = Mock(spec=MinerUImpl)
+    mock_adapter = Mock(spec=MinerUAdapterImpl)
     
     # Mock the pipeline processing flow
     mock_adapter.pipline_process.return_value = {
@@ -40,7 +42,7 @@ def mock_mineru_adapter():
 def pdf_parser(mock_mineru_adapter):
     return PDFParser(mock_mineru_adapter)
 
-def test_parse_valid_pdf(pdf_parser, tmp_path):
+def test_parse_valid_pdf(pdf_parser, mock_mineru_adapter, tmp_path):
     # 准备一个简单的PDF文件用于测试
     pdf_file = tmp_path / "test.pdf"
     with open(pdf_file, "wb") as f:
@@ -54,7 +56,7 @@ def test_parse_valid_pdf(pdf_parser, tmp_path):
         zf.writestr("result.html", html_content)
     
     # Mock the download_file function to return the zip we created
-    with patch('domain.impl.pdf_to_html_parse.download_file') as mock_download:
+    with patch('src.domain.impl.pdf_parser.download_file') as mock_download:
         # Mock download to copy our test zip
         def mock_download_side_effect(url, destination):
             import shutil

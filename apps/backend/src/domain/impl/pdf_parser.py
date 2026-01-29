@@ -2,7 +2,6 @@
 from src.domain.abc.document_parser import DocumentParser
 from loguru import logger
 from src.utils.exceptions import ParseException
-from src.utils.detect_langguage import detect_language
 from typing import Any, Dict, List, Optional
 from src.infrastructure.adapters.mineru import (
     MinerUAdapterInterface,
@@ -45,19 +44,14 @@ class PDFParser(DocumentParser):
             raise ParseException(f"PDF file does not exist: {file_path}")
 
         try:
-            detected_languages = self._detect_languages(file_path, language_hint)
-            logger.info(
-                "Submitting %s to MinerU with languages=%s",
-                file_path,
-                detected_languages,
-            )
+            if language_hint:
+                logger.info(
+                    "Language hints provided (%s) but MinerU requests no longer send explicit language configuration",
+                    language_hint,
+                )
 
-            file_config = {
-                file_path: {
-                    "parse_language": detected_languages,
-                }
-            }
-            upload_response = self.mineru_adapter.apply_upload_urls([file_path], file_config)
+            logger.info("Submitting %s to MinerU", file_path)
+            upload_response = self.mineru_adapter.apply_upload_urls([file_path])
             file_entries = upload_response.get("files") or []
             if not file_entries:
                 raise ParseException("MinerU did not return upload information for the file")
@@ -72,7 +66,7 @@ class PDFParser(DocumentParser):
             status = self._wait_for_completion(file_id, poll_interval, timeout_seconds)
             extract_result = status.get("extract_result") or {}
             state = extract_result.get("state")
-            if state != "completed":
+            if state != "done":
                 error_message = extract_result.get("err_msg") or f"MinerU processing failed with state={state}"
                 raise ParseException(error_message)
 
@@ -88,7 +82,6 @@ class PDFParser(DocumentParser):
                 "file_name": extract_result.get("file_name") or os.path.basename(file_path),
                 "state": extract_result.get("state") or state,
                 "full_zip_url": full_zip_url,
-                "detected_languages": detected_languages,
             }
         except ParseException:
             raise
@@ -115,31 +108,6 @@ class PDFParser(DocumentParser):
             logger.error(f"Error saving HTML content to {destination}: {e}")
             raise ParseException(f"Failed to save HTML content: {e}")
 
-    def _detect_languages(self, file_path: str, language_hint: Optional[List[str]]) -> List[str]:
-        if language_hint:
-            return language_hint
-        snippet = self._extract_text_snippet(file_path)
-        languages = detect_language(snippet)
-        if not languages:
-            return ["en"]
-        return languages
-
-    def _extract_text_snippet(self, file_path: str, max_pages: int = 3, max_chars: int = 1000) -> str:
-        collected: List[str] = []
-        try:
-            with pdfplumber.open(file_path) as pdf:
-                for page in pdf.pages[:max_pages]:
-                    text = page.extract_text() or ""
-                    if text:
-                        collected.append(text)
-                    if sum(len(part) for part in collected) >= max_chars:
-                        break
-        except Exception as exc:
-            logger.warning(f"Failed to extract text for language detection from {file_path}: {exc}")
-            return ""
-        snippet = " ".join(collected)
-        return snippet[:max_chars]
-
     def _wait_for_completion(
         self,
         file_id: str,
@@ -151,7 +119,7 @@ class PDFParser(DocumentParser):
             status = self.mineru_adapter.get_processing_status(file_id)
             extract_result = status.get("extract_result") or {}
             state = extract_result.get("state")
-            if state in {"completed", "failed"}:
+            if state in {"done" ,"failed"}:
                 return status
             if time.monotonic() - start > timeout_seconds:
                 raise ParseException(f"MinerU processing timed out for file {file_id}")

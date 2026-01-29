@@ -53,6 +53,7 @@ class QdrantConfig:
     host: str = "localhost"
     port: int = 6333
     collection_name: str = "paper_chunks"
+    api_key: str = ""
     dimension: int = 1536
     prefer_grpc: bool = False
 
@@ -79,6 +80,7 @@ class DatabaseConfig:
     """数据库配置管理"""
     
     def __init__(self):
+        self.redis = RedisConfig()
         self.postgresql = PostgreSQLConfig()
         self.neo4j = Neo4jConfig()
         self.milvus = MilvusConfig()
@@ -90,6 +92,14 @@ class DatabaseConfig:
     def from_env(cls):
         """从环境变量加载配置"""
         cfg = cls()
+        # Redis
+        cfg.redis = RedisConfig(
+            host=os.getenv("REDIS_HOST", "localhost"),
+            port=int(os.getenv("REDIS_PORT", "6379")),
+            db=int(os.getenv("REDIS_DB", "0")),
+            password=os.getenv("REDIS_PASSWORD", None),
+            max_connections=int(os.getenv("REDIS_MAX_CONNECTIONS", "10"))
+        )
         # PostgreSQL
         cfg.postgresql.host = os.getenv("POSTGRES_HOST", cfg.postgresql.host)
         cfg.postgresql.port = int(os.getenv("POSTGRES_PORT", cfg.postgresql.port))
@@ -120,6 +130,7 @@ class DatabaseConfig:
         # Qdrant
         cfg.qdrant.host = os.getenv("QDRANT_HOST", cfg.qdrant.host)
         cfg.qdrant.port = int(os.getenv("QDRANT_PORT", cfg.qdrant.port))
+        cfg.qdrant.api_key = os.getenv("QDRANT_API_KEY", cfg.qdrant.api_key)
         cfg.qdrant.collection_name = os.getenv("QDRANT_COLLECTION_NAME", cfg.qdrant.collection_name)
         cfg.qdrant.dimension = int(os.getenv("QDRANT_DIMENSION", cfg.qdrant.dimension))
         

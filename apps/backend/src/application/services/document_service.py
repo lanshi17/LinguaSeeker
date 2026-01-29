@@ -60,7 +60,6 @@ class DocumentService:
                 file_count=storage_result.get("file_count"),
                 processed_at=datetime.now(timezone.utc),
                 mineru_file_id=parse_result.get("file_id"),
-                detected_languages=parse_result.get("detected_languages"),
                 state=parse_result.get("state"),
                 full_zip_url=parse_result.get("full_zip_url"),
             )
@@ -115,7 +114,6 @@ class DocumentService:
                 "file_name": parse_result.get("file_name") or os.path.basename(file_path),
                 "status": parse_result.get("state"),
                 "processed_at": datetime.now(timezone.utc).isoformat(),
-                "detected_languages": parse_result.get("detected_languages"),
                 "full_zip_url": parse_result.get("full_zip_url"),
             }
 
