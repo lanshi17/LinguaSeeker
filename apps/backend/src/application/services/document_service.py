@@ -37,7 +37,7 @@ class DocumentService:
             # 生成唯一的document ID
             document_id = str(uuid.uuid4())
 
-            parse_result = self.pdf_parser.parse_with_mineru(
+            parse_result = self.pdf_parser.parse(
                 document.temp_file_path,
                 document_id=document_id,
             )
@@ -69,46 +69,11 @@ class DocumentService:
             logger.error(f"Error processing PDF document: {e}")
             raise
 
-
-    def process_pdf(self, file_path: str, store_in_minio: bool = False, object_prefix: Optional[str] = None) -> Dict[str, Any]:
-        """处理PDF文件并返回解析后的HTML内容
-
-        Args:
-            file_path: PDF文件路径
-            store_in_minio: 是否将结果存储到MinIO
-            object_prefix: MinIO对象名称前缀（可选）
-
-        Returns:
-            包含HTML内容和MinIO路径（如果存储）的字典
-        """
-        try:
-            logger.info(f"Processing PDF file: {file_path}")
-            content = self.pdf_parser.parse(file_path)
-           
-
-            result = {
-                "content": content,
-                "file_name": os.path.basename(file_path),
-                "processed_at": datetime.now(timezone.utc).isoformat(),
-            }
-
-            if store_in_minio:
-                prefix = object_prefix or os.path.splitext(os.path.basename(file_path))[0]
-                object_name = self.document_storage.store_html_content(content, prefix)
-                result["minio_path"] = object_name
-
-            logger.info("PDF file processed successfully")
-            return result
-
-        except Exception as e:
-            logger.error(f"Error processing PDF file: {e}")
-            raise
-
     def process_pdf_with_mineru(self, file_path: str, store_results: bool = True) -> Dict[str, Any]:
         """使用MinerU处理PDF文件并存储结果到MinIO"""
         try:
             logger.info(f"Processing PDF with MinerU: {file_path}")
-            parse_result = self.pdf_parser.parse_with_mineru(file_path, document_id=None)
+            parse_result = self.pdf_parser.parse(file_path, document_id=None)
             result_data = {
                 "file_id": parse_result.get("file_id"),
                 "file_name": parse_result.get("file_name") or os.path.basename(file_path),

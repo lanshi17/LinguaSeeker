@@ -22,10 +22,26 @@ class BaseController(ABC):
         self.router = APIRouter(prefix=api_prefix)
         logger.info(f"Initialized {self.__class__.__name__} with API prefix {api_prefix} on {host}:{port}")
 
+
     @abstractmethod
-    def register_routes(self):
+    def handle_request(self, request: BaseModel) -> BaseModel:
+        """Method to handle incoming requests.
+
+        Args:
+            request: The incoming request model.
+
+        Returns:
+            The response model.
+
+        Raises:
+            ControllerException: If there is an error processing the request.
+        """
+        pass
+    @abstractmethod
+    def _register_routes(self):
         """Method to register routes to the router."""
         pass
+
 
     def get_router(self) -> APIRouter:
         """Returns the APIRouter instance."""

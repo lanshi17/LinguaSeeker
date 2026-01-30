@@ -3,6 +3,7 @@
 import pytest
 import tempfile
 import os
+import ssl
 from unittest.mock import Mock, patch, MagicMock
 from config.database_config import DatabaseConfig, MinIOConfig
 from infrastructure.store.minio_store import MinIOStore
@@ -63,6 +64,62 @@ class TestMinIOStore:
 
             # 验证bucket创建被调用
             mock_client.make_bucket.assert_called_once_with("test-bucket")
+
+    def test_initialization_with_url_and_path_endpoint(self, mock_db_config):
+        """测试带协议和路径的endpoint被正确解析"""
+        mock_db_config.minio.endpoint = "https://storage.internal:9443/minio"
+        with patch('infrastructure.store.minio_store.Minio') as mock_minio:
+            mock_client = MagicMock()
+            mock_minio.return_value = mock_client
+            mock_client.bucket_exists.return_value = True
+
+            MinIOStore(mock_db_config)
+
+            mock_minio.assert_called_once_with(
+                "storage.internal:9443",
+                access_key="test_access_key",
+                secret_key="test_secret_key",
+                secure=True
+            )
+
+    def test_initialization_without_scheme_preserves_secure_flag(self, mock_db_config):
+        """测试无协议endpoint沿用配置secure标志"""
+        mock_db_config.minio.endpoint = "minio:9000/path/to/service"
+        mock_db_config.minio.secure = True
+        with patch('infrastructure.store.minio_store.Minio') as mock_minio:
+            mock_client = MagicMock()
+            mock_minio.return_value = mock_client
+            mock_client.bucket_exists.return_value = True
+
+            MinIOStore(mock_db_config)
+
+            mock_minio.assert_called_once_with(
+                "minio:9000",
+                access_key="test_access_key",
+                secret_key="test_secret_key",
+                secure=True
+            )
+
+    def test_initialization_ssl_error_falls_back_to_insecure(self, mock_db_config):
+        """测试SSL错误时自动降级为HTTP"""
+        mock_db_config.minio.endpoint = "https://localhost:9000"
+        mock_db_config.minio.secure = True
+
+        def _minio_ctor(endpoint, access_key=None, secret_key=None, secure=None):
+            if secure:
+                raise ssl.SSLError("wrong version")
+            client = MagicMock()
+            client.bucket_exists.return_value = True
+            return client
+        with patch("infrastructure.store.minio_store.Minio", side_effect=_minio_ctor) as mock_minio:
+            store = MinIOStore(mock_db_config)
+
+            assert mock_minio.call_count == 2
+            first_call = mock_minio.call_args_list[0]
+            second_call = mock_minio.call_args_list[1]
+            assert first_call.kwargs["secure"] is True
+            assert second_call.kwargs["secure"] is False
+            assert store.client is not None
 
     def test_upload_file(self, minio_store):
         """测试文件上传"""

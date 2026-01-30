@@ -22,7 +22,7 @@ from presentation.upload_controller import UploadController
 from application.services.document_service import DocumentService
 from application.dtos.document_dto import DocumentUploadDTO
 from domain.impl.pdf_parser import PDFParser
-from infrastructure.adapters.mineru import MinerUImpl
+from infrastructure.adapters.mineru import MinerUAdapterImpl
 from infrastructure.store.minio_store import MinIOStore
 from config.app_config import AppConfig
 from config.database_config import DatabaseConfig
@@ -62,38 +62,14 @@ def mock_db_config():
 @pytest.fixture
 def mock_mineru_adapter():
     """Mock MinerU adapter for testing"""
-    adapter = Mock(spec=MinerUImpl)
+    adapter = Mock(spec=MinerUAdapterImpl)
 
-    # Mock the apply_upload_urls response
-    adapter.apply_upload_urls.return_value = {
-        "files": [{
-            "file_id": "test-file-id-12345",
-            "upload_url": "https://mock-upload-url.com/upload"
-        }]
-    }
-
-    # Mock upload_to_urls to succeed
-    adapter.upload_to_urls.return_value = None
-
-    # Mock get_processing_status to return completed status
-    adapter.get_processing_status.return_value = {
-        "extract_result": {
-            "state": "completed",
-            "extract_progress": {
-                "extracted_pages": 10,
-                "total_pages": 10
-            }
-        }
-    }
-
-    # Mock retrieve_results to return download URL
-    adapter.retrieve_results.return_value = {
-        "extract_result": {
-            "state": "completed",
-            "file_id": "test-file-id-12345",
-            "file_name": "test_zh.pdf",
-            "full_zip_url": "https://mock-download-url.com/result.zip"
-        }
+    # Mock the mineru_parse method (new unified API)
+    adapter.mineru_parse.return_value = {
+        "file_id": "test-file-id-12345",
+        "file_name": "test_zh.pdf",
+        "state": "completed",
+        "full_zip_url": "https://mock-result-url.com/result.zip",
     }
 
     return adapter
@@ -241,7 +217,7 @@ class TestDocumentAPIIntegration:
 
         try:
             # Create DocumentService with mocked dependencies
-            with patch('application.services.document_service.MinerUImpl', return_value=mock_mineru_adapter), \
+            with patch('application.services.document_service.MinerUAdapterImpl', return_value=mock_mineru_adapter), \
                  patch('application.services.document_service.MinIOStore', return_value=mock_minio_store):
 
                 service = DocumentService(db_config=mock_db_config)
@@ -272,11 +248,11 @@ class TestDocumentAPIIntegration:
         test_pdf_file,
         mock_mineru_adapter
     ):
-        """Test PDFParser.parse_with_mineru without language pre-processing"""
+        """Test PDFParser.parse without language pre-processing"""
 
         parser = PDFParser(mineru_adapter=mock_mineru_adapter)
 
-        result = parser.parse_with_mineru(
+        result = parser.parse(
             file_path=str(test_pdf_file),
             document_id="test-doc-id-123"
         )

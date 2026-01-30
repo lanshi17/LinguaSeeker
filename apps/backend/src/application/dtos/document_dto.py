@@ -28,6 +28,9 @@ class DocumentProcessResultDTO(BaseModel):
     state: Optional[str] = None
     full_zip_url: Optional[str] = None
     html_content: Optional[str] = None
+    markdown_content: Optional[str] = None
+    json_content: Optional[dict] = None
+    picture_content: Optional[bytes] = None
     error_message: Optional[str] = None
     class Config:
         arbitrary_types_allowed = True

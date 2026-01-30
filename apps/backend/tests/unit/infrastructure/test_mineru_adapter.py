@@ -16,10 +16,8 @@ def test_mineru_adapter_parse_pdf():
     adapter = MineruAdapter()
     pdf_path = os.path.join(TEST_DATA_DIR, "test_zh.pdf")
     document_id = "test-document-id-123"
-    files=[pdf_path]
-    result = adapter.pipline_process(
-        files
-    )
+    files = [pdf_path]
+    result = adapter.mineru_parse(files)
     logger.info(f"MinerU parse result: {result}")
     ic(result)
     assert isinstance(result, dict)
@@ -27,11 +25,12 @@ def test_mineru_adapter_parse_pdf():
     assert result.get("file_name") == "test_zh.pdf"
     assert result.get("state") in ["processing", "completed", "failed"]
     assert result.get("full_zip_url") is not None
+
+
 def test_mineru_adapter_parse_invalid_pdf():
     adapter = MineruAdapter()
     invalid_pdf_path = os.path.join(TEST_DATA_DIR, "invalid_file.pdf")
     document_id = "test-invalid-document-id-456"
     with pytest.raises(Exception) as exc_info:
-        adapter.pipline_process([invalid_pdf_path]
-        )
+        adapter.mineru_parse([invalid_pdf_path])
     logger.info(f"Expected exception for invalid PDF: {exc_info.value}")    

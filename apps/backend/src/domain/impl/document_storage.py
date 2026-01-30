@@ -62,14 +62,6 @@ class DocumentStorage:
             "minio_files": uploaded_files,
         }
 
-    def store_html_content(self, html_content: str, object_prefix: str) -> str:
-        """保存解析出的HTML内容"""
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-        object_name = f"documents/{object_prefix}/{timestamp}/result.html"
-        store = self._get_minio_store()
-        store.save(html_content.encode("utf-8"), object_name)
-        self.logger.info(f"Stored HTML content in MinIO: {object_name}")
-        return object_name
 
     def _store_zip_result(self, zip_url: Optional[str], object_prefix: str):
         if not zip_url:

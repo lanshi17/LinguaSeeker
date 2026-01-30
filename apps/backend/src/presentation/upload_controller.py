@@ -1,4 +1,5 @@
 # upload_controller.py--上传控制器
+from pydantic import BaseModel
 from src.presentation.base_controller import BaseController
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from typing import Any, Dict
@@ -22,9 +23,14 @@ class UploadController(BaseController):
         self.temp_dir = Path(tempfile.gettempdir()) / "pdf_uploads"
         self.temp_dir.mkdir(parents=True, exist_ok=True)
         self.logger = Logger()
-        self.register_routes()
+        self._register_routes()
 
-    def register_routes(self):
+    def handle_request(self, request: BaseModel) -> BaseModel:
+        """处理上传请求的占位方法"""
+        self.logger.info("Handling upload request")
+        self._register_routes()
+        return request
+    def _register_routes(self):
         """注册上传路由"""
         self.router.post(
             "/upload/file/pdf",

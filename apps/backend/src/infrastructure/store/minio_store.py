@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from .base_store import BaseStore
 from src.config.database_config import DatabaseConfig
 from src.utils.logger import Logger
@@ -8,8 +8,11 @@ from minio import Minio
 from minio.error import S3Error
 import zipfile
 import tempfile
-from pathlib import Path
 import requests
+from urllib.parse import urlparse
+import ssl
+from urllib3.exceptions import SSLError as Urllib3SSLError, MaxRetryError
+from requests.exceptions import SSLError as RequestsSSLError
 
 class MinIOStore(BaseStore):
     """MinIO对象存储实现类"""
@@ -20,20 +23,99 @@ class MinIOStore(BaseStore):
         self.logger = Logger.get_logger("MinIOStore")
 
         # 初始化MinIO客户端
+        endpoint, secure = self._sanitize_endpoint(self.config.endpoint, self.config.secure)
         try:
-            self.client = Minio(
-                self.config.endpoint,
-                access_key=self.config.access_key,
-                secret_key=self.config.secret_key,
-                secure=self.config.secure
-            )
-            self.logger.info(f"MinIO client initialized: endpoint={self.config.endpoint}, secure={self.config.secure}")
+            self._initialize_client(endpoint, secure)
+        except Exception as exc:
+            if self._should_retry_insecure(exc, secure):
+                self.logger.warning(
+                    "SSL handshake failed for MinIO endpoint %s (%s); retrying with secure=False",
+                    endpoint,
+                    exc,
+                )
+                try:
+                    self._initialize_client(endpoint, False)
+                    return
+                except Exception as retry_exc:
+                    self.logger.error(
+                        f"Failed to initialize MinIO client after SSL fallback: {retry_exc}"
+                    )
+                    raise StoreException(
+                        f"MinIO initialization failed after SSL fallback: {retry_exc}"
+                    ) from retry_exc
 
-            # 确保bucket存在
-            self._ensure_bucket_exists()
-        except Exception as e:
-            self.logger.error(f"Failed to initialize MinIO client: {e}")
-            raise StoreException(f"MinIO initialization failed: {e}")
+            self.logger.error(f"Failed to initialize MinIO client: {exc}")
+            raise StoreException(f"MinIO initialization failed: {exc}") from exc
+
+    def _sanitize_endpoint(self, raw_endpoint: str, secure_flag: bool) -> Tuple[str, bool]:
+        """Normalize endpoint to host:port and derive secure flag if scheme is provided."""
+        endpoint = (raw_endpoint or "").strip()
+        if not endpoint:
+            raise StoreException("MinIO endpoint cannot be empty")
+
+        parts = urlparse(endpoint) if "://" in endpoint else urlparse(f"//{endpoint}")
+        host = parts.netloc or parts.path
+
+        if not host:
+            raise StoreException(f"Invalid MinIO endpoint: {endpoint}")
+
+        final_secure = secure_flag
+        if parts.scheme:
+            if parts.scheme not in ("http", "https"):
+                raise StoreException(f"Unsupported MinIO endpoint scheme: {parts.scheme}")
+            final_secure = parts.scheme == "https"
+
+        if parts.path and parts.path not in ("", "/"):
+            self.logger.warning(
+                "Ignoring path %s in MinIO endpoint %s; MinIO only accepts host:port",
+                parts.path,
+                raw_endpoint,
+            )
+
+        if parts.query:
+            self.logger.warning(
+                "Ignoring query %s in MinIO endpoint %s; MinIO only accepts host:port",
+                parts.query,
+                raw_endpoint,
+            )
+
+        return host, final_secure
+
+    def _initialize_client(self, endpoint: str, secure: bool) -> None:
+        """Create MinIO client and ensure bucket availability."""
+        self.client = Minio(
+            endpoint,
+            access_key=self.config.access_key,
+            secret_key=self.config.secret_key,
+            secure=secure
+        )
+        self.logger.info(
+            "MinIO client initialized: endpoint=%s (raw=%s), secure=%s",
+            endpoint,
+            self.config.endpoint,
+            secure,
+        )
+        self._ensure_bucket_exists()
+
+    def _should_retry_insecure(self, exc: Exception, secure: bool) -> bool:
+        """Determine whether to retry initialization over HTTP when SSL errors occur."""
+        if not secure:
+            return False
+
+        ssl_error_types = (ssl.SSLError, RequestsSSLError, Urllib3SSLError)
+        if isinstance(exc, ssl_error_types):
+            return True
+
+        reason = getattr(exc, "reason", None)
+        if isinstance(reason, ssl_error_types):
+            return True
+
+        if isinstance(exc, MaxRetryError):
+            inner = getattr(exc, "reason", None)
+            if isinstance(inner, ssl_error_types):
+                return True
+
+        return "SSL" in str(exc).upper()
 
     def _ensure_bucket_exists(self) -> None:
         """确保bucket存在，不存在则创建"""

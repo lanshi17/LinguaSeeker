@@ -14,7 +14,7 @@ class BaseStore(ABC):
         logger.info("BaseStore initialized")
 
     @abstractmethod
-    def save(self, content: Any, destination: str) -> None:
+    def save(self, data: Any, destination: str) -> None:
         """Save the content to the specified destination."""
         pass
 

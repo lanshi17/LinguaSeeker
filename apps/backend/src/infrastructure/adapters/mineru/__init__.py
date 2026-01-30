@@ -1,10 +1,10 @@
-# init-mineru-adapter
-from .mineru_adapter_impl import MinerUAdapterImpl
+# MinerU适配器模块
+# 提供MinerU文档处理服务的统一接口
+
 from .mineru_adapter_interface import MinerUAdapterInterface
-from .mineru_mapping import ERROR_CODE_MAPPING
+from .mineru_adapter_impl import MinerUAdapterImpl
 
 __all__ = [
-    "MinerUAdapterImpl",
     "MinerUAdapterInterface",
-    "ERROR_CODE_MAPPING",
+    "MinerUAdapterImpl",
 ]
