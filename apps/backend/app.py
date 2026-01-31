@@ -3,6 +3,8 @@ from fastapi import FastAPI
 from src.presentation.upload_controller import UploadController
 from loguru import logger
 from src.config import app_config,database_config
+import os
+# 加载配置
 cfg = app_config.AppConfig.from_env()
 db_cfg = database_config.DatabaseConfig.from_env()
 from icecream.builtins import install
@@ -10,8 +12,8 @@ install()
 app = FastAPI(title=cfg.app_name, version=cfg.app_version)
 upload_controller = UploadController(config=cfg)
 app.include_router(upload_controller.router)
-
-
+#禁用网络代理
+os.environ["NO_PROXY"] = ",".join(["localhost", "127.0.0.1"])
 if __name__ == "__main__":
     import uvicorn
     logger.info(f"Starting {cfg.app_name} version {cfg.app_version}")
