@@ -24,7 +24,7 @@ class TaskController(BaseController):
         Args:
             config: 应用配置
         """
-        super().__init__(config, api_prefix="/api/v1/tasks")
+        super().__init__(config)
         self.processor = get_async_document_processor()
         self._register_routes()
         logger.info("TaskController initialized")

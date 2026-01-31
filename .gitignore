@@ -105,3 +105,6 @@ hs_err_pid*
 **/*.env.*
 **/*/.work_logs.sh
 
+
+.qwen/
+gha-creds-*.json

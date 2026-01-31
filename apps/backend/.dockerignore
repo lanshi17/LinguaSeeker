@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+.env
+.eggs/
+.pytest_cache/
+*.egg-info/
+
+# Logs
+*.log
+
+# Build artifacts
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+
+# Docker
+Dockerfile*
+.dockerignore
+
+# Local config
+.env*
+!.env.example
+
+# Cache
+.uv-cache/

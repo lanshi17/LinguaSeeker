@@ -112,6 +112,13 @@ class AppConfig:
     host: str = "0.0.0.0"
     port: int = 8000
 
+    # MinIO配置
+    minio_endpoint: str = "localhost:9000"
+    minio_access_key: str = "your-minio-access-key"
+    minio_secret_key: str = "your-minio-secret-key"
+    minio_bucket: str = "acmg-documents"
+    minio_secure: bool = False
+
     # 服务配置
     llm: Optional[LLMConfig] = None
     embedding: Optional[EmbeddingConfig] = None
@@ -191,6 +198,24 @@ class AppConfig:
         cfg.task_timeout_seconds = int(
             os.getenv("TASK_TIMEOUT_SECONDS", cfg.task_timeout_seconds)
         )
+
+        # MinIO配置
+        minio_endpoint = os.getenv("MINIO_ENDPOINT", cfg.minio_endpoint)
+        # Strip protocol prefix if present (MinIO SDK doesn't accept it in endpoint)
+        if minio_endpoint.startswith("http://"):
+            minio_endpoint = minio_endpoint.replace("http://", "")
+            cfg.minio_secure = False
+        elif minio_endpoint.startswith("https://"):
+            minio_endpoint = minio_endpoint.replace("https://", "")
+            cfg.minio_secure = True
+        cfg.minio_endpoint = minio_endpoint
+
+        cfg.minio_access_key = os.getenv("MINIO_ACCESS_KEY", cfg.minio_access_key)
+        cfg.minio_secret_key = os.getenv("MINIO_SECRET_KEY", cfg.minio_secret_key)
+        cfg.minio_bucket = os.getenv("MINIO_BUCKET_NAME", cfg.minio_bucket)
+        # Only override secure if MINIO_SECURE is explicitly set
+        if "MINIO_SECURE" in os.environ:
+            cfg.minio_secure = cls._str_to_bool(os.getenv("MINIO_SECURE"), cfg.minio_secure)
 
         # LLM配置
         llm = cfg.llm

@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field
-from src.domain.enums.task_status import TaskStatus
+from src.application.enums.task_status import TaskStatus
 
 
 class DocumentTask(BaseModel):

@@ -1,0 +1,75 @@
+# Web Framework
+fastapi>=0.128.0
+uvicorn[standard]>=0.22.0
+python-multipart>=0.0.22
+websockets>=12.0
+
+# Data Validation
+pydantic>=2.12.5
+pydantic-settings>=2.0.0
+
+# Async Task Queue
+celery>=5.4.0
+redis>=5.0.0
+kombu>=5.3.0
+
+# Database
+asyncpg>=0.29.0  # PostgreSQL async driver
+psycopg2-binary>=2.9.9  # PostgreSQL sync driver (for Alembic)
+sqlalchemy>=2.0.25
+alembic>=1.13.0
+
+# State Machine
+transitions>=0.9.0
+
+# Object Storage
+minio>=7.2.20
+
+# Graph Database
+neo4j>=5.16.0
+py2neo>=2021.2.4  # Optional: higher-level Neo4j interface
+
+# Vector Store
+qdrant-client>=1.7.0
+
+# PDF Parsing
+# MinerU - Note: This may need specific installation instructions
+# Check: https://github.com/opendatalab/MinerU
+# mineru>=0.1.0  # Uncomment when available, or install via separate instructions
+pdfplumber>=0.11.9  # Fallback parser
+
+# LLM Integration
+openai>=1.10.0  # For OpenAI models
+anthropic>=0.18.0  # For Claude models
+httpx>=0.26.0  # HTTP client for API calls
+
+# Utilities
+python-dotenv>=1.0.0
+loguru>=0.7.3
+python-jose[cryptography]>=3.3.0  # JWT tokens
+passlib[bcrypt]>=1.7.4  # Password hashing
+lingua-language-detector>=2.1.1  # Language detection
+requests>=2.32.5
+
+# Testing
+pytest>=9.0.2
+pytest-asyncio>=1.3.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+pytest-celery>=0.0.0  # Celery testing
+testcontainers>=3.7.1  # For integration tests
+httpx>=0.26.0  # For testing FastAPI endpoints
+
+# Code Quality
+black>=24.10.0
+ruff>=0.1.9
+mypy>=1.3.0
+
+# Development Tools
+icecream>=2.1.10
+pdbpp>=0.10.3
+ipython>=8.20.0
+
+# Monitoring (Optional)
+flower>=2.0.1  # Celery monitoring UI
+prometheus-client>=0.19.0  # Metrics collection

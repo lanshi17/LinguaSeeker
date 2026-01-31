@@ -1,7 +1,9 @@
 from .base_controller import BaseController
-from .upload_controller import UploadController
+from .controllers.pdf_parse_controller import PDFParseController
+from .controllers.task_controller import TaskController
 
 __all__ = [
     "BaseController",
-    "UploadController",
+    "PDFParseController",
+    "TaskController",
 ]
