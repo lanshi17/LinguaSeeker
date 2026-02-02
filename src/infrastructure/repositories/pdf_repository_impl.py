@@ -238,7 +238,7 @@ class PDFRepositoryImpl(PDFRepository):
         Returns:
             Tuple of (figures, tables) with metadata and optional images
         """
-        from src.domain.services.figure_table_detector import FigureTableDetector
+        from src.infrastructure.implementations import FigureTableDetector
         
         # Step 1: Detect figure/table locations using keyword patterns
         figures, tables = FigureTableDetector.detect_figure_table_locations(

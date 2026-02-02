@@ -10,7 +10,7 @@ from src.domain.services import (
     EvidenceExtractorService,
     ArbiterService,
 )
-from src.domain.services.p1p2_search import P1P2SearchEngine
+from src.infrastructure.implementations import P1P2SearchEngine
 from src.infrastructure.utils.logger import Logger
 
 

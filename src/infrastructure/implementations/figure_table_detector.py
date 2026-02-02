@@ -1,11 +1,15 @@
-"""Figure and table detection module for OCR enhancement."""
+"""Figure and table detection - OCR technical implementation."""
 
 import re
-from typing import List, Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 class FigureTableDetector:
-    """Detect and extract figure/table metadata from OCR results."""
+    """Detect and extract figure/table metadata from OCR results.
+    
+    This is a technical utility for processing OCR output.
+    Core business logic is in domain services.
+    """
     
     # Keywords for figure detection
     FIGURE_KEYWORDS = [

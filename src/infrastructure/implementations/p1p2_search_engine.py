@@ -1,11 +1,15 @@
-"""P1/P2 data secondary search module."""
+"""P1/P2 data search engine - technical implementation."""
 
 import re
-from typing import List, Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 class P1P2SearchEngine:
-    """Search engine for extracting P1/P2 data locations when not explicitly found."""
+    """Search engine for extracting P1/P2 data locations when not explicitly found.
+    
+    This is a technical utility for text search patterns.
+    Core business logic is in domain services.
+    """
     
     # Keywords for secondary search
     CONTROL_GROUP_KEYWORDS = [
@@ -98,20 +102,3 @@ class P1P2SearchEngine:
                 }
         
         return None
-
-    @staticmethod
-    def find_statistical_values(text: str, bbox_fragments: List[Dict]) -> List[Dict]:
-        """Find statistical metrics (p-values, OR, etc.) in text."""
-        
-        results = []
-        
-        for keyword_pattern in P1P2SearchEngine.STATISTICAL_KEYWORDS:
-            matches = list(re.finditer(keyword_pattern, text, re.IGNORECASE))
-            for match in matches:
-                location = P1P2SearchEngine._get_location_context(
-                    text, match.start(), match.end(), bbox_fragments
-                )
-                if location:
-                    results.append(location)
-        
-        return results
