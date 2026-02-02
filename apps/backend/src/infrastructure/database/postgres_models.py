@@ -332,6 +332,7 @@ class ParsingTask(Base):
     started_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     estimated_completion = Column(DateTime, nullable=True)
 
     # Relationships

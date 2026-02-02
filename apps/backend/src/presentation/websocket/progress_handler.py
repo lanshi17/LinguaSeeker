@@ -9,12 +9,14 @@ from typing import Dict, Set, Optional
 import asyncio
 import json
 from datetime import datetime
+import redis.asyncio as redis
 
 from fastapi import WebSocket, WebSocketDisconnect, APIRouter
 from fastapi.websockets import WebSocketState
 
 from src.application.services.task_management_service import TaskManagementService
 from src.utils.logger import Logger
+from src.config.database_config import DatabaseConfig
 
 
 class ProgressHandler:
@@ -29,7 +31,36 @@ class ProgressHandler:
         """Initialize progress handler."""
         self.logger = Logger()
         self.active_connections: Dict[str, Set[WebSocket]] = {}
+        self.redis_client = None
+        self.pubsub = None
         # Don't initialize task management service here to avoid session issues
+
+    async def initialize_redis(self):
+        """Initialize Redis connection with authentication."""
+        if self.redis_client is None:
+            config = DatabaseConfig.from_env()
+            redis_cfg = config.redis
+
+            # Create Redis connection with authentication
+            self.redis_client = redis.Redis(
+                host=redis_cfg.host,
+                port=redis_cfg.port,
+                db=redis_cfg.db,
+                password=redis_cfg.password,  # This handles authentication
+                max_connections=redis_cfg.max_connections,
+                decode_responses=False,  # Keep responses as bytes to handle all types
+                socket_connect_timeout=5,
+                socket_timeout=5,
+                retry_on_timeout=True
+            )
+
+            # Test the connection
+            try:
+                await self.redis_client.ping()
+                self.logger.info("Redis connection established successfully")
+            except Exception as e:
+                self.logger.error(f"Failed to connect to Redis: {e}")
+                raise
 
     async def connect(self, websocket: WebSocket, task_id: str) -> None:
         """
@@ -47,6 +78,15 @@ class ProgressHandler:
         self.active_connections[task_id].add(websocket)
         self.logger.info(f"WebSocket connected for task {task_id}")
 
+        # Subscribe to Redis channel for this task
+        await self.initialize_redis()
+        if self.pubsub is None:
+            self.pubsub = self.redis_client.pubsub()
+
+        channel_name = f'task:{task_id}:progress'
+        await self.pubsub.subscribe(channel_name)
+        self.logger.info(f"Subscribed to Redis channel: {channel_name}")
+
     async def disconnect(self, websocket: WebSocket, task_id: str) -> None:
         """
         Remove WebSocket connection from active connections.
@@ -59,6 +99,12 @@ class ProgressHandler:
             self.active_connections[task_id].discard(websocket)
             if not self.active_connections[task_id]:
                 del self.active_connections[task_id]
+
+        # Unsubscribe from Redis channel if no more connections for this task
+        if task_id in self.active_connections and len(self.active_connections[task_id]) == 0:
+            channel_name = f'task:{task_id}:progress'
+            await self.pubsub.unsubscribe(channel_name)
+            self.logger.info(f"Unsubscribed from Redis channel: {channel_name}")
 
         self.logger.info(f"WebSocket disconnected for task {task_id}")
 
@@ -97,41 +143,47 @@ class ProgressHandler:
         for websocket in disconnected:
             await self.disconnect(websocket, task_id)
 
+    async def listen_to_redis_channel(self, task_id: str):
+        """
+        Listen to Redis pub/sub channel for progress updates and forward to WebSocket clients.
+
+        Args:
+            task_id: Task ID to monitor
+        """
+        await self.initialize_redis()
+        channel_name = f'task:{task_id}:progress'
+        pubsub = self.redis_client.pubsub()
+        await pubsub.subscribe(channel_name)
+
+        try:
+            self.logger.info(f"Listening to Redis channel: {channel_name}")
+            async for message in pubsub.listen():
+                if message['type'] == 'message':
+                    try:
+                        progress_data = json.loads(message['data'].decode('utf-8'))
+                        await self.send_progress_update(task_id, progress_data)
+                    except json.JSONDecodeError as e:
+                        self.logger.error(f"Error decoding Redis message: {e}")
+                    except Exception as e:
+                        self.logger.error(f"Error processing Redis message: {e}")
+        finally:
+            await pubsub.close()
+
     async def start_progress_monitoring(self, task_id: str) -> None:
         """
         Start monitoring task progress and sending updates.
 
-        This method runs in the background and periodically checks
-        task status, sending updates via WebSocket.
+        This method runs in the background and listens to Redis for updates
+        from Celery workers, forwarding them via WebSocket.
 
         Args:
             task_id: Task ID to monitor
         """
         self.logger.info(f"Starting progress monitoring for task {task_id}")
 
-        # Create task management service instance
-        task_management_service = TaskManagementService()
-
         try:
-            while True:
-                # Get current task status
-                progress_data = await task_management_service.get_task_progress(task_id)
-
-                if not progress_data:
-                    # Task no longer exists
-                    break
-
-                # Send progress update
-                await self.send_progress_update(task_id, progress_data)
-
-                # Check if task is complete
-                status = progress_data.get("status", "").lower()
-                if status in ["completed", "failed", "cancelled"]:
-                    break
-
-                # Wait before next update (30 seconds as per requirements)
-                await asyncio.sleep(30)
-
+            # Listen to Redis channel for progress updates from Celery workers
+            await self.listen_to_redis_channel(task_id)
         except Exception as e:
             self.logger.error(f"Error in progress monitoring for task {task_id}: {e}")
         finally:
@@ -151,8 +203,8 @@ async def task_progress_websocket(websocket: WebSocket, task_id: str):
     WebSocket endpoint for real-time task progress updates.
 
     Clients connect to this endpoint to receive live progress updates
-    for a specific parsing task. Updates are sent every 30 seconds
-    as specified in the requirements.
+    for a specific parsing task. Updates are sent via Redis pub/sub
+    from Celery workers.
 
     Args:
         websocket: WebSocket connection
@@ -161,7 +213,7 @@ async def task_progress_websocket(websocket: WebSocket, task_id: str):
     await progress_handler.connect(websocket, task_id)
 
     try:
-        # Start progress monitoring in background
+        # Start listening for Redis messages in background
         monitoring_task = asyncio.create_task(
             progress_handler.start_progress_monitoring(task_id)
         )
@@ -169,9 +221,12 @@ async def task_progress_websocket(websocket: WebSocket, task_id: str):
         # Keep connection alive
         while True:
             # Receive any messages from client (for future extensions)
-            data = await websocket.receive_text()
-            # For now, we don't process client messages
-            # Just keep the connection alive
+            try:
+                data = await websocket.receive_text()
+                # For now, we don't process client messages
+                # Just keep the connection alive
+            except:
+                break
 
     except WebSocketDisconnect:
         await progress_handler.disconnect(websocket, task_id)

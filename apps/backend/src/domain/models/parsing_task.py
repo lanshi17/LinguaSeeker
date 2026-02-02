@@ -54,6 +54,7 @@ class ParsingTask:
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
     estimated_completion: Optional[datetime] = None
 
     def __post_init__(self) -> None:

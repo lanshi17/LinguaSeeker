@@ -27,9 +27,10 @@ class TaskManagementService(BaseService):
     def __init__(self, config: AppConfig = None):
         super().__init__(config or AppConfig.from_env())
         self.logger = Logger()
-        self.task_repository = TaskRepositoryImpl()
-        self.document_repository = DocumentRepositoryImpl()
-        self.audit_log_repository = AuditLogRepositoryImpl()
+        from src.infrastructure.database.session_factory import get_db_session
+        self.task_repository = TaskRepositoryImpl(get_db_session())
+        self.document_repository = DocumentRepositoryImpl(get_db_session())
+        self.audit_log_repository = AuditLogRepositoryImpl(get_db_session())
 
     async def create_task(
         self,

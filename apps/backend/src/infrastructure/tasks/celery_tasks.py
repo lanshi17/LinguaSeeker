@@ -26,9 +26,10 @@ celery_app = get_celery_app()
 logger = Logger()
 
 # Initialize services (these will be used within tasks)
-task_repository = TaskRepositoryImpl()
-document_repository = DocumentRepositoryImpl()
-audit_log_repository = AuditLogRepositoryImpl()
+from src.infrastructure.database.session_factory import get_db_session
+task_repository = TaskRepositoryImpl(get_db_session())
+document_repository = DocumentRepositoryImpl(get_db_session())
+audit_log_repository = AuditLogRepositoryImpl(get_db_session())
 
 
 @celery_app.task(
@@ -136,7 +137,8 @@ def retry_failed_task(self, task_id: str) -> dict:
 
     try:
         # Get the original task details
-        task_repo = TaskRepositoryImpl()
+        from src.infrastructure.database.session_factory import get_db_session
+        task_repo = TaskRepositoryImpl(get_db_session())
         task = task_repo.get_by_id(task_id)
 
         if not task or task.status != TaskStatus.FAILED:
@@ -146,7 +148,6 @@ def retry_failed_task(self, task_id: str) -> dict:
         task.status = TaskStatus.PENDING
         task.failure_reason = None
         task.retry_count += 1
-        task.updated_at = datetime.utcnow()
 
         task_repo.save(task)
 
@@ -262,20 +263,23 @@ def _update_task_status(
         stage_enum = TaskStage(stage.upper()) if hasattr(TaskStage, stage.upper()) else TaskStage.INGESTION
 
         # Update task in database
+        current_time = datetime.utcnow()
         task = ParsingTask(
             id=uuid.UUID(task_id),
             document_id=uuid.uuid4(),  # This would be the actual document ID
             status=status_enum,
             progress_percentage=progress,
             current_stage=stage_enum,
-            updated_at=datetime.utcnow()
+            created_at=current_time,
+            updated_at=current_time
         )
 
         if error_message:
             task.failure_reason = error_message
 
         # Save to repository
-        task_repo = TaskRepositoryImpl()
+        from src.infrastructure.database.session_factory import get_db_session
+        task_repo = TaskRepositoryImpl(get_db_session())
         task_repo.save(task)
 
     except Exception as e:

@@ -39,6 +39,7 @@ class TaskRepositoryImpl:
             started_at=model.started_at,
             completed_at=model.completed_at,
             created_at=model.created_at,
+            updated_at=model.updated_at if hasattr(model, 'updated_at') else model.created_at,
             estimated_completion=model.estimated_completion,
         )
 
@@ -56,6 +57,7 @@ class TaskRepositoryImpl:
             started_at=entity.started_at,
             completed_at=entity.completed_at,
             created_at=entity.created_at,
+            updated_at=entity.updated_at,
             estimated_completion=entity.estimated_completion,
         )
 
@@ -75,6 +77,7 @@ class TaskRepositoryImpl:
             existing.failure_reason = task.failure_reason
             existing.started_at = task.started_at
             existing.completed_at = task.completed_at
+            existing.updated_at = datetime.utcnow()  # Update the timestamp when saving
             existing.estimated_completion = task.estimated_completion
         else:
             # Create new
@@ -91,6 +94,17 @@ class TaskRepositoryImpl:
         result = await self.session.execute(stmt)
         model = result.scalar_one_or_none()
         return self._to_domain(model) if model else None
+
+    async def get_by_id(self, task_id: str) -> Optional[ParsingTask]:
+        """Get task by ID (alias for find_by_id to maintain compatibility)."""
+        from uuid import UUID
+
+        try:
+            uuid_task_id = UUID(task_id)
+            return await self.find_by_id(uuid_task_id)
+        except ValueError:
+            # Invalid UUID format
+            return None
 
     async def find_by_document_id(self, document_id: UUID) -> Optional[ParsingTask]:
         """Find task by document ID."""
@@ -163,6 +177,28 @@ class TaskRepositoryImpl:
         if model:
             await self.session.delete(model)
             await self.session.commit()
+            return True
+        return False
+
+    async def update_status(self, task_id: UUID, status: str, progress: int, stage: str, error_message: str = None) -> bool:
+        """Update task status, progress, and stage."""
+        stmt = select(TaskModel).where(TaskModel.id == task_id)
+        result = await self.session.execute(stmt)
+        model = result.scalar_one_or_none()
+
+        if model:
+            model.status = TaskStatusEnum(status.upper())
+            model.progress_percentage = progress
+            model.current_stage = TaskStageEnum(stage.upper())
+            if error_message:
+                model.failure_reason = error_message
+
+            # Update the model's updated_at field if it exists
+            if hasattr(model, 'updated_at'):
+                model.updated_at = datetime.utcnow()
+
+            await self.session.commit()
+            await self.session.refresh(model)
             return True
         return False
 

@@ -44,24 +44,25 @@ class PDFParseService(BaseService):
     @property
     def document_repository(self):
         if self._document_repository is None:
-            # TODO: This should use a database session from dependency injection
-            # For now, we'll create a dummy instance for testing
             from src.infrastructure.repositories.postgres.document_repository_impl import DocumentRepositoryImpl
-            self._document_repository = DocumentRepositoryImpl(None)  # Pass None for now
+            from src.infrastructure.database.session_factory import get_db_session
+            self._document_repository = DocumentRepositoryImpl(get_db_session())
         return self._document_repository
 
     @property
     def task_repository(self):
         if self._task_repository is None:
             from src.infrastructure.repositories.postgres.task_repository_impl import TaskRepositoryImpl
-            self._task_repository = TaskRepositoryImpl(None)  # Pass None for now
+            from src.infrastructure.database.session_factory import get_db_session
+            self._task_repository = TaskRepositoryImpl(get_db_session())
         return self._task_repository
 
     @property
     def audit_log_repository(self):
         if self._audit_log_repository is None:
             from src.infrastructure.repositories.postgres.audit_log_repository_impl import AuditLogRepositoryImpl
-            self._audit_log_repository = AuditLogRepositoryImpl(None)  # Pass None for now
+            from src.infrastructure.database.session_factory import get_db_session
+            self._audit_log_repository = AuditLogRepositoryImpl(get_db_session())
         return self._audit_log_repository
 
     async def process_document_async(self, parsing_task: ParsingTask, upload_request: Any) -> None:

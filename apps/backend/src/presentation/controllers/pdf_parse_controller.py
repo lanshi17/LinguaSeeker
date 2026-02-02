@@ -1,13 +1,25 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    BackgroundTasks,
+    Depends,
+    UploadFile,
+    File,
+    Form,
+)
 from fastapi.responses import JSONResponse
 from typing import Optional, Union
 from pydantic import BaseModel
 import uuid
+import base64
 from datetime import datetime
 
 from src.presentation.base_controller import BaseController
 from src.presentation.dtos.request.pdf_upload_request import PDFUploadRequest
-from src.presentation.dtos.response.task_status_response import TaskStatusResponse, TaskStatus
+from src.presentation.dtos.response.task_status_response import (
+    TaskStatusResponse,
+    TaskStatus,
+)
 from src.application.services.pdf_parse_service import PDFParseService
 from src.domain.models.parsing_task import ParsingTask
 from src.utils.logger import Logger
@@ -38,21 +50,28 @@ class PDFParseController(BaseController):
             "/pdf/upload",
             response_model=dict,
             tags=["PDF Parsing"],
-            summary="Upload PDF document for parsing"
+            summary="Upload PDF document for parsing (JSON with Base64)",
         )(self.upload_pdf)
+
+        self.router.post(
+            "/pdf/upload/form",
+            response_model=dict,
+            tags=["PDF Parsing"],
+            summary="Upload PDF document for parsing (multipart/form-data)",
+        )(self.upload_pdf_form)
 
         self.router.post(
             "/pdf/fetch-by-pmid",
             response_model=dict,
             tags=["PDF Parsing"],
-            summary="Fetch and parse document by PMID"
+            summary="Fetch and parse document by PMID",
         )(self.fetch_by_pmid)
 
         self.router.post(
             "/pdf/fetch-by-doi",
             response_model=dict,
             tags=["PDF Parsing"],
-            summary="Fetch and parse document by DOI"
+            summary="Fetch and parse document by DOI",
         )(self.fetch_by_doi)
 
         # Status endpoints
@@ -60,14 +79,14 @@ class PDFParseController(BaseController):
             "/tasks/{task_id}",
             response_model=TaskStatusResponse,
             tags=["Task Management"],
-            summary="Get parsing task status"
+            summary="Get parsing task status",
         )(self.get_task_status)
 
         self.router.get(
             "/tasks/{task_id}/progress",
             response_model=dict,
             tags=["Task Management"],
-            summary="Get real-time task progress"
+            summary="Get real-time task progress",
         )(self.get_task_progress)
 
         # Management endpoints
@@ -75,17 +94,19 @@ class PDFParseController(BaseController):
             "/tasks/{task_id}/retry",
             response_model=dict,
             tags=["Task Management"],
-            summary="Retry failed parsing task"
+            summary="Retry failed parsing task",
         )(self.retry_task)
 
         self.router.delete(
             "/tasks/{task_id}",
             response_model=dict,
             tags=["Task Management"],
-            summary="Cancel parsing task"
+            summary="Cancel parsing task",
         )(self.cancel_task)
 
-    async def upload_pdf(self, request: PDFUploadRequest, background_tasks: BackgroundTasks):
+    async def upload_pdf(
+        self, request: PDFUploadRequest, background_tasks: BackgroundTasks
+    ):
         """
         Upload a PDF document for asynchronous parsing.
 
@@ -93,7 +114,7 @@ class PDFParseController(BaseController):
         The actual parsing happens asynchronously in the background.
         """
         try:
-            filename_info = request.filename if request.filename else 'PMID/DOI fetch'
+            filename_info = request.filename if request.filename else "PMID/DOI fetch"
             self.logger.info(f"Received PDF upload request: {filename_info}")
 
             # Validate request
@@ -101,59 +122,118 @@ class PDFParseController(BaseController):
                 if not request.file_content or not request.filename:
                     raise HTTPException(
                         status_code=400,
-                        detail="File content and filename are required for file uploads"
+                        detail="File content and filename are required for file uploads",
                     )
                 if len(request.file_content) > self.config.max_upload_size:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"File size exceeds maximum limit of {self.config.max_upload_size} bytes"
+                        detail=f"File size exceeds maximum limit of {self.config.max_upload_size} bytes",
                     )
 
             # Create parsing task
             task_id = str(uuid.uuid4())
+            current_time = datetime.utcnow()
             parsing_task = ParsingTask(
                 id=task_id,
                 document_id=str(uuid.uuid4()),
                 status=TaskStatus.PENDING,
                 priority=request.priority or 0,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
+                created_at=current_time,
+                updated_at=current_time,
             )
 
             # Start background processing
             background_tasks.add_task(
                 self.pdf_parse_service.process_document_async,
                 parsing_task=parsing_task,
-                upload_request=request
+                upload_request=request,
             )
 
-            self.logger.info(f"Created parsing task {task_id} for document {parsing_task.document_id}")
+            self.logger.info(
+                f"Created parsing task {task_id} for document {parsing_task.document_id}"
+            )
 
             return {
                 "task_id": task_id,
                 "document_id": parsing_task.document_id,
                 "status": "pending",
                 "message": "Document upload accepted. Processing started in background.",
-                "websocket_url": f"/ws/task/{task_id}/progress"
+                "websocket_url": f"/ws/task/{task_id}/progress",
             }
 
         except HTTPException:
             raise
         except Exception as e:
             self.logger.error(f"Error creating PDF parsing task: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Internal server error: {str(e)}"
+            )
+
+    async def upload_pdf_form(
+        self,
+        file: UploadFile = File(..., description="PDF file to upload"),
+        priority: int = Form(0, description="Processing priority (0-10)", ge=0, le=10),
+    ):
+        """
+        Upload a PDF document using multipart/form-data for parsing.
+
+        This endpoint accepts direct file uploads via form-data.
+        Creates a new parsing task and returns the task ID immediately.
+        The actual parsing happens asynchronously in the background.
+        """
+        try:
+            self.logger.info(f"Received PDF form upload: {file.filename}")
+
+            # Validate file
+            if not file.filename:
+                raise HTTPException(status_code=400, detail="Filename is required")
+
+            # Read file content
+            file_content = await file.read()
+
+            # Validate file size
+            if len(file_content) > self.config.max_upload_size:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"File size exceeds maximum limit of {self.config.max_upload_size} bytes",
+                )
+
+            # Check if it looks like a PDF
+            if len(file_content) > 4 and file_content[:4] != b"%PDF":
+                raise HTTPException(
+                    status_code=400, detail="File does not appear to be a valid PDF"
+                )
+
+            # Convert to base64
+            base64_content = base64.b64encode(file_content).decode("utf-8")
+
+            # Create request object
+            request = PDFUploadRequest(
+                file_content=base64_content,
+                filename=file.filename,
+                source="file",
+                priority=priority,
+            )
+
+            # Use the existing upload logic with new BackgroundTasks
+            return await self.upload_pdf(request, BackgroundTasks())
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            self.logger.error(f"Error creating PDF parsing task from form: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Internal server error: {str(e)}"
+            )
 
     async def fetch_by_pmid(self, pmid: str, priority: Optional[int] = 0):
         """
         Fetch document by PMID and create parsing task.
         """
-        request = PDFUploadRequest(
-            pmid=pmid,
-            source="pmid",
-            priority=priority
-        )
+        request = PDFUploadRequest(pmid=pmid, source="pmid", priority=priority)
         # Reuse the upload logic
         from fastapi.background import BackgroundTasks
+
         background_tasks = BackgroundTasks()
         return await self.upload_pdf(request, background_tasks)
 
@@ -161,13 +241,10 @@ class PDFParseController(BaseController):
         """
         Fetch document by DOI and create parsing task.
         """
-        request = PDFUploadRequest(
-            doi=doi,
-            source="doi",
-            priority=priority
-        )
+        request = PDFUploadRequest(doi=doi, source="doi", priority=priority)
         # Reuse the upload logic
         from fastapi.background import BackgroundTasks
+
         background_tasks = BackgroundTasks()
         return await self.upload_pdf(request, background_tasks)
 
@@ -209,7 +286,9 @@ class PDFParseController(BaseController):
         try:
             success = await self.pdf_parse_service.retry_task(task_id)
             if not success:
-                raise HTTPException(status_code=404, detail="Task not found or cannot be retried")
+                raise HTTPException(
+                    status_code=404, detail="Task not found or cannot be retried"
+                )
             return {"message": "Task retry initiated successfully", "task_id": task_id}
         except HTTPException:
             raise
@@ -224,7 +303,9 @@ class PDFParseController(BaseController):
         try:
             success = await self.pdf_parse_service.cancel_task(task_id)
             if not success:
-                raise HTTPException(status_code=404, detail="Task not found or cannot be cancelled")
+                raise HTTPException(
+                    status_code=404, detail="Task not found or cannot be cancelled"
+                )
             return {"message": "Task cancelled successfully", "task_id": task_id}
         except HTTPException:
             raise
