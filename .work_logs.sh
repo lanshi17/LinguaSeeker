@@ -98,3 +98,9 @@
 : 1769401991:0;cp -r ../03_Multi-ACMG-Simple-demo/src/infrastructure/utils  utils
 : 1769402006:0;cp -r ../../../03_Multi-ACMG-Simple-demo/src/infrastructure/utils  utils
 : 1769402020:0;cp -r ../../../../03_Multi-ACMG-Simple-demo/src/infrastructure/utils  utils
+: 1770023179:0;git branch -h
+: 1770023223:0;git branch dev-yangzs -d
+: 1770023293:0;git branch -d copilot/varied-ostrich
+: 1770023328:0;git branch -D copilot/varied-ostrich
+: 1770023451:0;git checkout yangzs && git merge -f dev\
+
