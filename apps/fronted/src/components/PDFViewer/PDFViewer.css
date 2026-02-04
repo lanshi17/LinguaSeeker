@@ -1,0 +1,142 @@
+/**
+ * PDF 查看器样式
+ */
+.pdf-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f5f5f5;
+}
+
+.pdf-viewer.loading,
+.pdf-viewer.error {
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 工具栏 */
+.pdf-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  gap: 16px;
+}
+
+.page-controls,
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdf-toolbar button {
+  padding: 6px 12px;
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.pdf-toolbar button:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+
+.pdf-toolbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #666;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* 画布容器 */
+.pdf-container {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.pdf-canvas {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* 高亮层 */
+.highlight-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.evidence-highlight {
+  position: absolute;
+  border-radius: 4px;
+  opacity: 0.3;
+  transition: all 0.3s ease;
+}
+
+.evidence-highlight.PVS { background: #dc2626; }
+.evidence-highlight.PS { background: #ea580c; }
+.evidence-highlight.PM { background: #ca8a04; }
+.evidence-highlight.PP { background: #16a34a; }
+.evidence-highlight.BA { background: #2563eb; }
+.evidence-highlight.BS { background: #7c3aed; }
+.evidence-highlight.BP { background: #db2777; }
+
+.evidence-highlight.active {
+  opacity: 0.6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* 滚动条 */
+.pdf-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.pdf-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pdf-container::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 4px;
+}
+
+.pdf-container::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}

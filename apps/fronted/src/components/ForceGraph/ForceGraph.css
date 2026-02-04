@@ -1,0 +1,322 @@
+/**
+ * 力导向图样式
+ */
+
+.force-graph {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #f8fafc 0%, #e2e8f0 100%);
+  overflow: hidden;
+}
+
+.graph-svg {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.graph-svg:active {
+  cursor: grabbing;
+}
+
+/* 节点样式 */
+.node {
+  transition: opacity 0.2s;
+}
+
+.node:hover {
+  opacity: 1 !important;
+}
+
+.node-label {
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* 连线样式 */
+.links line {
+  transition: stroke-width 0.2s;
+}
+
+.links line:hover {
+  stroke-width: 4px !important;
+  stroke-opacity: 1 !important;
+}
+
+/* 缩放控制 */
+.graph-controls {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  padding: 8px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.graph-controls button {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #475569;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.graph-controls button:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.zoom-level {
+  font-size: 12px;
+  color: #64748b;
+  padding: 0 8px;
+  min-width: 50px;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* 筛选控制 */
+.graph-filters {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 140px;
+}
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: #475569;
+  transition: color 0.2s;
+}
+
+.filter-item:hover {
+  color: #334155;
+}
+
+.filter-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}
+
+.filter-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* 导出按钮 */
+.export-btn {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transition: all 0.2s;
+}
+
+.export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+}
+
+/* 提示框 */
+.graph-tooltip {
+  position: absolute;
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  max-width: 300px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.tooltip-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  transition: all 0.2s;
+}
+
+.tooltip-close:hover {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.tooltip-header {
+  margin-bottom: 8px;
+}
+
+.tooltip-type {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tooltip-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.tooltip-evidence {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 4px 0;
+}
+
+.tooltip-evidence strong {
+  color: #334155;
+}
+
+.tooltip-hint {
+  font-size: 12px;
+  color: #3b82f6;
+  margin: 8px 0 0 0;
+  font-weight: 500;
+}
+
+/* 暗色模式 */
+@media (prefers-color-scheme: dark) {
+  .force-graph {
+    background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+  }
+
+  .graph-controls,
+  .graph-filters,
+  .graph-tooltip {
+    background: #1e293b;
+  }
+
+  .graph-controls button {
+    background: #334155;
+    color: #e2e8f0;
+  }
+
+  .graph-controls button:hover {
+    background: #475569;
+  }
+
+  .zoom-level {
+    color: #94a3b8;
+  }
+
+  .filter-header {
+    color: #e2e8f0;
+    border-bottom-color: #334155;
+  }
+
+  .filter-item {
+    color: #cbd5e1;
+  }
+
+  .filter-item:hover {
+    color: #f1f5f9;
+  }
+
+  .node-label {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    fill: #e2e8f0;
+  }
+
+  .tooltip-title {
+    color: #f1f5f9;
+  }
+
+  .tooltip-evidence {
+    color: #94a3b8;
+  }
+
+  .tooltip-evidence strong {
+    color: #e2e8f0;
+  }
+
+  .tooltip-close {
+    color: #64748b;
+  }
+
+  .tooltip-close:hover {
+    background: #334155;
+    color: #94a3b8;
+  }
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .graph-filters {
+    top: 12px;
+    right: 12px;
+    padding: 12px;
+    min-width: 120px;
+  }
+
+  .graph-controls {
+    bottom: 12px;
+    left: 12px;
+  }
+
+  .export-btn {
+    bottom: 12px;
+    right: 12px;
+  }
+}
