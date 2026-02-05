@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     mineru_mode: str
     mineru_api_url: str
     mineru_api_token: str
+    mineru_version: str
+    mineru_download_dir: str
     mineru_timeout: int = 300
     mineru_max_file_size_mb: int = 100
 
