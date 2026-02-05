@@ -1,7 +1,6 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from typing import Optional, Union
 from enum import Enum
-import base64
 
 
 class UploadSource(str, Enum):
@@ -46,6 +45,17 @@ class PDFUploadRequest(BaseModel):
         ge=0,
         le=10,
     )
+    client_hash: Optional[str] = Field(
+        default=None,
+        description="Client-calculated hash for debugging mismatches",
+        json_schema_extra={"example": "ccbdf673..."},
+    )
+    content_hash: Optional[str] = Field(
+        default=None,
+        description="(internal) SHA256 hash of the uploaded PDF for duplicate detection",
+        exclude=True,
+        repr=False,
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -57,21 +67,3 @@ class PDFUploadRequest(BaseModel):
             }
         }
     }
-
-    @validator("file_content")
-    def validate_file_content(cls, v, values):
-        if v is None:
-            return v
-        # Validate that the content is valid base64
-        try:
-            decoded = base64.b64decode(v, validate=True)
-            # Optional: Check if it looks like a PDF (starts with %PDF-)
-            if len(decoded) > 4 and decoded[:4] != b"%PDF":
-                raise ValueError("File content does not appear to be a valid PDF")
-            return v
-        except ValueError as e:
-            # Ensure we don't include bytes objects in the error message
-            error_msg = str(e)
-            if isinstance(error_msg, bytes):
-                error_msg = error_msg.decode("utf-8", errors="replace")
-            raise ValueError(f"Invalid base64 encoded file content: {error_msg}")

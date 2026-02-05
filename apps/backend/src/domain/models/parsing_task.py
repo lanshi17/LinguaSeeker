@@ -6,7 +6,7 @@ Represents an asynchronous document processing task.
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union, Dict
 from uuid import UUID, uuid4
 
 
@@ -32,6 +32,50 @@ class TaskStage(str, Enum):
     COMPLETED = "COMPLETED"
 
 
+class TaskType(str, Enum):
+    """Types of parsing tasks based on ingestion source."""
+
+    PDF_PARSE = "pdf_parse"
+    IDENTIFIER_RESOLVE = "identifier_resolve"
+    DATA_EXTRACTION = "data_extraction"
+
+
+StageLabel = Union[str, "TaskStage", None]
+
+_STAGE_ALIAS_MAP: Dict[str, TaskStage] = {
+    TaskStage.INGESTION.value.lower(): TaskStage.INGESTION,
+    TaskStage.DECOMPOSITION.value.lower(): TaskStage.DECOMPOSITION,
+    TaskStage.LAYOUT.value.lower(): TaskStage.LAYOUT,
+    TaskStage.TRANSLATION.value.lower(): TaskStage.TRANSLATION,
+    TaskStage.EVIDENCE.value.lower(): TaskStage.EVIDENCE,
+    TaskStage.ARBITRATION.value.lower(): TaskStage.ARBITRATION,
+    TaskStage.COMPLETED.value.lower(): TaskStage.COMPLETED,
+    "validation": TaskStage.INGESTION,
+    "document validation": TaskStage.INGESTION,
+    "document storage": TaskStage.DECOMPOSITION,
+    "ingestion": TaskStage.INGESTION,
+    "pdf parsing": TaskStage.LAYOUT,
+    "layout analysis": TaskStage.LAYOUT,
+    "translation review": TaskStage.TRANSLATION,
+    "evidence extraction": TaskStage.EVIDENCE,
+    "finalizing": TaskStage.ARBITRATION,
+    "finalization": TaskStage.ARBITRATION,
+    "completed": TaskStage.COMPLETED,
+    "failed": TaskStage.COMPLETED,
+}
+
+
+def normalize_stage_label(stage: StageLabel) -> TaskStage:
+    """Map arbitrary status labels to the canonical TaskStage enum."""
+    if isinstance(stage, TaskStage):
+        return stage
+    if stage is None:
+        return TaskStage.INGESTION
+
+    normalized = " ".join(str(stage).strip().lower().split())
+    return _STAGE_ALIAS_MAP.get(normalized, TaskStage.INGESTION)
+
+
 @dataclass
 class ParsingTask:
     """Domain entity representing an asynchronous parsing task.
@@ -44,10 +88,11 @@ class ParsingTask:
     DEFAULT_PRIORITY: int = field(default=5, init=False, repr=False)
 
     id: UUID = field(default_factory=uuid4)
-    document_id: UUID = field(default_factory=uuid4)
+    document_id: Optional[UUID] = field(default_factory=uuid4)
     current_stage: TaskStage = TaskStage.INGESTION
     progress_percentage: int = 0
     status: TaskStatus = TaskStatus.PENDING
+    task_type: TaskType = TaskType.PDF_PARSE
     priority: int = 5
     retry_count: int = 0
     failure_reason: Optional[str] = None
@@ -59,6 +104,8 @@ class ParsingTask:
 
     def __post_init__(self) -> None:
         """Validate task after initialization."""
+        if isinstance(self.task_type, str):
+            self.task_type = TaskType(self.task_type)
         self._validate()
 
     def _validate(self) -> None:
@@ -78,6 +125,8 @@ class ParsingTask:
             raise ValueError(
                 f"Retry count {self.retry_count} exceeds maximum {self.MAX_RETRIES}"
             )
+        if not isinstance(self.task_type, TaskType):
+            raise ValueError(f"Invalid task_type {self.task_type}")
 
     def start(self) -> None:
         """Start task processing."""
@@ -217,6 +266,6 @@ class ParsingTask:
     def __repr__(self) -> str:
         """String representation of task."""
         return (
-            f"ParsingTask(id={self.id}, status={self.status}, "
+            f"ParsingTask(id={self.id}, type={self.task_type.value}, status={self.status}, "
             f"stage={self.current_stage}, progress={self.progress_percentage}%)"
         )

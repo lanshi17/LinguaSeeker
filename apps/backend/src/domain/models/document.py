@@ -7,7 +7,7 @@ Separate from database models (postgres_models.py) and DTOs (presentation layer)
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from uuid import UUID, uuid4
 
 
@@ -44,10 +44,19 @@ class Document:
     publication_date: Optional[datetime] = None
     pmid: Optional[str] = None
     doi: Optional[str] = None
+    filename: Optional[str] = None
+    content: bytes = field(default=b"", repr=False)
+    content_type: Optional[str] = None
     content_hash: str = ""
     file_size_bytes: int = 0
     page_count: int = 0
     storage_path: str = ""
+    storage_key: Optional[str] = None
+    storage_bucket: Optional[str] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    evidence_count: int = 0
+    processed_at: Optional[datetime] = None
+    status: Optional[str] = None
     processing_status: ProcessingStatus = ProcessingStatus.PENDING
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)

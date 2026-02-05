@@ -3,18 +3,26 @@
 Manages parsing task persistence and querying.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Union
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from sqlalchemy import select, func, update
+from sqlalchemy import select, func, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.models.parsing_task import ParsingTask, TaskStatus, TaskStage
+from src.domain.models.parsing_task import (
+    ParsingTask,
+    TaskStatus,
+    TaskStage,
+    TaskType,
+    StageLabel,
+    normalize_stage_label,
+)
 from src.infrastructure.database.postgres_models import (
     ParsingTask as TaskModel,
     TaskStatus as TaskStatusEnum,
     TaskStage as TaskStageEnum,
+    TaskType as TaskTypeEnum,
 )
 
 
@@ -30,6 +38,7 @@ class TaskRepositoryImpl:
         return ParsingTask(
             id=model.id,
             document_id=model.document_id,
+            task_type=TaskType(model.task_type.value) if model.task_type else TaskType.PDF_PARSE,
             current_stage=TaskStage(model.current_stage.value),
             progress_percentage=model.progress_percentage,
             status=TaskStatus(model.status.value),
@@ -48,6 +57,7 @@ class TaskRepositoryImpl:
         return TaskModel(
             id=entity.id,
             document_id=entity.document_id,
+            task_type=TaskTypeEnum(entity.task_type.value),
             current_stage=TaskStageEnum(entity.current_stage.value),
             progress_percentage=entity.progress_percentage,
             status=TaskStatusEnum(entity.status.value),
@@ -61,32 +71,54 @@ class TaskRepositoryImpl:
             estimated_completion=entity.estimated_completion,
         )
 
+    def _coerce_status_enum(self, status: Union[str, TaskStatus]) -> TaskStatusEnum:
+        """Normalize status input into the Postgres enum."""
+        if isinstance(status, TaskStatus):
+            label = status.value
+        else:
+            label = str(status).upper()
+        try:
+            return TaskStatusEnum(label)
+        except ValueError as exc:  # pragma: no cover - defensive
+            raise ValueError(f"Unsupported task status '{status}'") from exc
+
+    def _coerce_stage_enum(self, stage: StageLabel) -> TaskStageEnum:
+        """Normalize stage labels into the Postgres enum."""
+        normalized_stage = normalize_stage_label(stage)
+        return TaskStageEnum(normalized_stage.value)
+
     async def save(self, task: ParsingTask) -> ParsingTask:
         """Save or update a task."""
-        stmt = select(TaskModel).where(TaskModel.id == task.id)
-        result = await self.session.execute(stmt)
-        existing = result.scalar_one_or_none()
+        try:
+            stmt = select(TaskModel).where(TaskModel.id == task.id)
+            result = await self.session.execute(stmt)
+            existing = result.scalar_one_or_none()
 
-        if existing:
-            # Update existing
-            existing.current_stage = TaskStageEnum(task.current_stage.value)
-            existing.progress_percentage = task.progress_percentage
-            existing.status = TaskStatusEnum(task.status.value)
-            existing.priority = task.priority
-            existing.retry_count = task.retry_count
-            existing.failure_reason = task.failure_reason
-            existing.started_at = task.started_at
-            existing.completed_at = task.completed_at
-            existing.updated_at = datetime.utcnow()  # Update the timestamp when saving
-            existing.estimated_completion = task.estimated_completion
-        else:
-            # Create new
-            model = self._to_model(task)
-            self.session.add(model)
+            if existing:
+                # Update existing
+                existing.current_stage = TaskStageEnum(task.current_stage.value)
+                existing.progress_percentage = task.progress_percentage
+                existing.status = TaskStatusEnum(task.status.value)
+                existing.priority = task.priority
+                existing.retry_count = task.retry_count
+                existing.failure_reason = task.failure_reason
+                existing.started_at = task.started_at
+                existing.completed_at = task.completed_at
+                existing.updated_at = datetime.utcnow()  # Update the timestamp when saving
+                existing.estimated_completion = task.estimated_completion
+                existing.task_type = TaskTypeEnum(task.task_type.value)
+            else:
+                # Create new
+                model = self._to_model(task)
+                self.session.add(model)
 
-        await self.session.commit()
-        await self.session.refresh(existing if existing else model)
-        return self._to_domain(existing if existing else model)
+            await self.session.commit()
+            await self.session.refresh(existing if existing else model)
+            return self._to_domain(existing if existing else model)
+        except Exception as e:
+            # Rollback on error to prevent transaction abortion
+            await self.session.rollback()
+            raise e
 
     async def find_by_id(self, task_id: UUID) -> Optional[ParsingTask]:
         """Find task by ID."""
@@ -114,7 +146,11 @@ class TaskRepositoryImpl:
         return self._to_domain(model) if model else None
 
     async def find_by_status(
-        self, status: TaskStatus, limit: int = 100, offset: int = 0
+        self,
+        status: TaskStatus,
+        limit: int = 100,
+        offset: int = 0,
+        priority_filter: Optional[int] = None,
     ) -> List[ParsingTask]:
         """Find tasks by status."""
         stmt = (
@@ -124,6 +160,8 @@ class TaskRepositoryImpl:
             .limit(limit)
             .offset(offset)
         )
+        if priority_filter is not None:
+            stmt = stmt.where(TaskModel.priority >= priority_filter)
         result = await self.session.execute(stmt)
         models = result.scalars().all()
         return [self._to_domain(model) for model in models]
@@ -159,48 +197,73 @@ class TaskRepositoryImpl:
         self, task_id: UUID, progress: int, stage: Optional[TaskStage] = None
     ) -> bool:
         """Update task progress and optionally stage."""
-        values = {"progress_percentage": progress}
-        if stage:
-            values["current_stage"] = TaskStageEnum(stage.value)
+        try:
+            values = {"progress_percentage": progress}
+            if stage:
+                values["current_stage"] = TaskStageEnum(stage.value)
 
-        stmt = update(TaskModel).where(TaskModel.id == task_id).values(**values)
-        result = await self.session.execute(stmt)
-        await self.session.commit()
-        return result.rowcount > 0
+            stmt = update(TaskModel).where(TaskModel.id == task_id).values(**values)
+            result = await self.session.execute(stmt)
+            await self.session.commit()
+            return result.rowcount > 0
+        except Exception as e:
+            # Rollback on error to prevent transaction abortion
+            await self.session.rollback()
+            raise e
 
     async def delete(self, task_id: UUID) -> bool:
         """Delete a task."""
-        stmt = select(TaskModel).where(TaskModel.id == task_id)
-        result = await self.session.execute(stmt)
-        model = result.scalar_one_or_none()
+        try:
+            stmt = select(TaskModel).where(TaskModel.id == task_id)
+            result = await self.session.execute(stmt)
+            model = result.scalar_one_or_none()
 
-        if model:
-            await self.session.delete(model)
-            await self.session.commit()
-            return True
-        return False
+            if model:
+                await self.session.delete(model)
+                await self.session.commit()
+                return True
+            return False
+        except Exception as e:
+            # Rollback on error to prevent transaction abortion
+            await self.session.rollback()
+            raise e
 
-    async def update_status(self, task_id: UUID, status: str, progress: int, stage: str, error_message: str = None) -> bool:
+    async def update_status(
+        self,
+        task_id: UUID,
+        status: Union[str, TaskStatus],
+        progress: int,
+        stage: StageLabel,
+        error_message: Optional[str] = None,
+    ) -> bool:
         """Update task status, progress, and stage."""
-        stmt = select(TaskModel).where(TaskModel.id == task_id)
-        result = await self.session.execute(stmt)
-        model = result.scalar_one_or_none()
+        try:
+            stmt = select(TaskModel).where(TaskModel.id == task_id)
+            result = await self.session.execute(stmt)
+            model = result.scalar_one_or_none()
 
-        if model:
-            model.status = TaskStatusEnum(status.upper())
-            model.progress_percentage = progress
-            model.current_stage = TaskStageEnum(stage.upper())
-            if error_message:
-                model.failure_reason = error_message
+            if model:
+                status_enum = self._coerce_status_enum(status)
+                model.status = status_enum
+                model.progress_percentage = progress
+                model.current_stage = self._coerce_stage_enum(stage)
+                if error_message is not None:
+                    model.failure_reason = error_message
+                elif status_enum != TaskStatusEnum.FAILED:
+                    model.failure_reason = None
 
-            # Update the model's updated_at field if it exists
-            if hasattr(model, 'updated_at'):
-                model.updated_at = datetime.utcnow()
+                # Update the model's updated_at field if it exists
+                if hasattr(model, 'updated_at'):
+                    model.updated_at = datetime.utcnow()
 
-            await self.session.commit()
-            await self.session.refresh(model)
-            return True
-        return False
+                await self.session.commit()
+                await self.session.refresh(model)
+                return True
+            return False
+        except Exception as e:
+            # Rollback on error to prevent transaction abortion
+            await self.session.rollback()
+            raise e
 
     async def count_by_status(self, status: TaskStatus) -> int:
         """Count tasks by status."""
@@ -219,3 +282,60 @@ class TaskRepositoryImpl:
             count = await self.count_by_status(status)
             stats[status.value] = count
         return stats
+
+    async def count_high_priority_tasks(
+        self, status: TaskStatus, priority_threshold: int = 7
+    ) -> int:
+        """Count tasks at or above a given priority for a specific status."""
+        stmt = (
+            select(func.count())
+            .select_from(TaskModel)
+            .where(
+                TaskModel.status == TaskStatusEnum(status.value),
+                TaskModel.priority >= priority_threshold,
+            )
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar() or 0
+
+    async def get_recent_failures(self, hours: int = 24) -> List[ParsingTask]:
+        """Return failed tasks within the past N hours."""
+        cutoff = datetime.utcnow() - timedelta(hours=hours)
+        stmt = (
+            select(TaskModel)
+            .where(
+                TaskModel.status == TaskStatusEnum.FAILED,
+                TaskModel.updated_at >= cutoff,
+            )
+            .order_by(TaskModel.updated_at.desc())
+        )
+        result = await self.session.execute(stmt)
+        models = result.scalars().all()
+        return [self._to_domain(model) for model in models]
+
+    async def get_completed_tasks_with_timing(self, limit: int = 100) -> List[ParsingTask]:
+        """Return recently completed tasks with timing metadata."""
+        stmt = (
+            select(TaskModel)
+            .where(TaskModel.status == TaskStatusEnum.COMPLETED)
+            .order_by(TaskModel.completed_at.desc().nullslast())
+            .limit(limit)
+        )
+        result = await self.session.execute(stmt)
+        models = result.scalars().all()
+        return [self._to_domain(model) for model in models]
+
+    async def cleanup_old_completed_tasks(self, days_to_retain: int = 90) -> int:
+        """Delete completed tasks older than the retention window."""
+        cutoff = datetime.utcnow() - timedelta(days=days_to_retain)
+        stmt = (
+            delete(TaskModel)
+            .where(
+                TaskModel.status == TaskStatusEnum.COMPLETED,
+                TaskModel.completed_at.isnot(None),
+                TaskModel.completed_at < cutoff,
+            )
+        )
+        result = await self.session.execute(stmt)
+        await self.session.commit()
+        return result.rowcount or 0

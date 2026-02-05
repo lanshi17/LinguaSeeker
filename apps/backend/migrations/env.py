@@ -35,7 +35,7 @@ except ImportError:
 # Override database URL with environment variable
 database_url = os.getenv(
     "DATABASE_URL",
-    "postgresql://acmg_user:acmg_pass@localhost:5432/acmg_db"
+    "postgresql://postgres:your-postgres-password@localhost:5432/acmg_ps3"
 )
 config.set_main_option("sqlalchemy.url", database_url)
 

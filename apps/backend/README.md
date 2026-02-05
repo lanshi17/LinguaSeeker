@@ -69,6 +69,14 @@ uvicorn app:app --reload --port 8000
 celery -A src.infrastructure.tasks.celery_tasks worker --loglevel=info
 ```
 
+## API Docs & Swagger
+
+- **Swagger UI**: http://localhost:8000/docs (auto-generated from the running FastAPI app).  
+  Make sure the server is started with the same `.env`/`.env.development` values you use in `design_docs/contracts/openapi.yaml`.
+- **ReDoc**: http://localhost:8000/redoc for a static, read-only reference.
+- **OpenAPI JSON**: http://localhost:8000/openapi.json if you need to feed the contract into tests or SDK generators.
+- **Source of truth**: `design_docs/contracts/openapi.yaml` now mirrors the actual `/api/v1` routers (`PDFParseController` and the WebSocket handler). Update this file whenever you add or rename endpoints so that contract tests stay in sync.
+
 ## Documentation
 
 - [Architecture Plan](design_docs/plan.md)

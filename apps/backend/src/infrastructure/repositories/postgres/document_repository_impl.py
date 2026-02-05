@@ -131,6 +131,9 @@ class DocumentRepositoryImpl(DocumentRepository):
             if "content_hash" in str(e):
                 raise ValueError(f"Document with hash {document.content_hash} already exists")
             raise
+        except Exception:
+            await self.session.rollback()
+            raise
 
     async def find_by_id(self, document_id: UUID) -> Optional[Document]:
         """Find document by ID."""

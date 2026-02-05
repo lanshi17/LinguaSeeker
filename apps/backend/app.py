@@ -4,11 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from src.presentation.controllers.pdf_parse_controller import PDFParseController
-from src.presentation.controllers.task_controller import TaskController
-
-# from src.presentation.websocket.progress_handler import router as websocket_router
+from src.presentation.websocket.progress_handler import router as websocket_router
 from loguru import logger
 from src.config import app_config, database_config
+from src.infrastructure.database.bootstrap import ensure_database_ready
 import os
 import json
 from typing import Any, Callable
@@ -102,15 +101,54 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 # Initialize controllers
 pdf_parse_controller = PDFParseController(config=cfg)
-task_controller = TaskController(config=cfg)
 
 # Include routers
 app.include_router(pdf_parse_controller.router)
-app.include_router(task_controller.router)
-# app.include_router(websocket_router)
+app.include_router(websocket_router)
+
+# Basic health endpoints
+@app.get("/")
+async def root() -> dict:
+    """Simple root endpoint to confirm service availability."""
+    return {"status": "ok", "app": cfg.app_name, "version": cfg.app_version}
+
+
+@app.get(cfg.api_prefix)
+async def api_root() -> dict:
+    """List available API versions."""
+    return {"status": "ok", "versions": [cfg.api_version]}
+
+
+@app.get(f"{cfg.api_prefix}/{cfg.api_version}")
+async def api_version_root() -> dict:
+    """Version-specific root endpoint."""
+    return {
+        "status": "ok",
+        "version": cfg.api_version,
+        "available_resources": ["pdf", "tasks", "ws/task/{task_id}/progress"],
+    }
+
+
+@app.get(f"{cfg.api_prefix}/{cfg.api_version}/health")
+async def api_health() -> dict:
+    """API health probe for load balancers and uptime checks."""
+    return {"status": "ok"}
 
 # 禁用网络代理
 os.environ["NO_PROXY"] = ",".join(["localhost", "127.0.0.1"])
+
+
+@app.on_event("startup")
+async def bootstrap_database() -> None:
+    """Ensure the PostgreSQL schema matches the required structure."""
+
+    db_ready = await ensure_database_ready(raise_on_failure=False)
+    if not db_ready:
+        logger.error(
+            "Database bootstrap failed during startup. API will continue running,"
+            " but database-backed endpoints may return errors until credentials"
+            " or connectivity are fixed."
+        )
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,90 +1,120 @@
-"""Celery configuration for async task processing."""
+"""Celery configuration utilities with Redis authentication support."""
+
+from __future__ import annotations
 
 import os
+from functools import lru_cache
+from typing import Optional, Sequence
+from urllib.parse import quote
+
+from celery import Celery
 from kombu import Exchange, Queue
 
+from src.config.app_config import AppConfig
+from src.config.database_config import DatabaseConfig
 
-class CeleryConfig:
-    """Celery configuration settings."""
+# Ensure .env files are loaded before we hydrate DatabaseConfig
+AppConfig._load_dotenv()
+_db_config = DatabaseConfig.from_env()
+_redis_cfg = _db_config.redis
 
-    # Broker settings (Redis)
-    broker_url = os.getenv("REDIS_BROKER_URL", "redis://localhost:6379/1")
-    result_backend = os.getenv("REDIS_RESULT_BACKEND", "redis://localhost:6379/2")
 
-    # Serialization
-    task_serializer = "json"
-    result_serializer = "json"
-    accept_content = ["json"]
-    timezone = "UTC"
-    enable_utc = True
+def _safe_int(value: Optional[str], default: int) -> int:
+    try:
+        return int(value) if value is not None else default
+    except (TypeError, ValueError):
+        return default
 
-    # Task execution settings
-    task_time_limit = 600  # 10 minutes hard limit
-    task_soft_time_limit = 540  # 9 minutes warning
-    task_acks_late = True
-    task_reject_on_worker_lost = True
 
-    # Retry settings
-    task_annotations = {
-        "*": {
-            "max_retries": 3,
-            "retry_backoff": True,
-            "retry_backoff_max": 8,  # Max 8 seconds
-            "retry_jitter": True,
-        }
-    }
+def _resolve_db_number(env_keys: Sequence[str], default: int) -> int:
+    for key in env_keys:
+        if not key:
+            continue
+        candidate = os.getenv(key)
+        if candidate is not None:
+            return _safe_int(candidate, default)
+    return default
 
-    # Worker settings
-    worker_prefetch_multiplier = 4
-    worker_max_tasks_per_child = 100
-    worker_disable_rate_limits = False
 
-    # Result backend settings
-    result_expires = 3600  # 1 hour
-    result_persistent = True
+def _build_auth_segment() -> str:
+    """Compose the redis auth string with URL-safe encoding."""
+    username = os.getenv("REDIS_USERNAME") or None
+    password = _redis_cfg.password or os.getenv("REDIS_PASSWORD") or None
 
-    # Task routing
-    task_routes = {
-        "src.infrastructure.tasks.celery_tasks.parse_pdf_task": {
-            "queue": "pdf_parsing"
-        },
-        "src.infrastructure.tasks.celery_tasks.extract_evidence_task": {
-            "queue": "evidence_extraction"
-        },
-        "src.infrastructure.tasks.celery_tasks.sync_graph_task": {
-            "queue": "graph_sync"
-        },
-    }
+    if username and password:
+        return f"{quote(username, safe='')}:{quote(password, safe='')}@"
+    if username:
+        return f"{quote(username, safe='')}@"
+    if password:
+        return f":{quote(password, safe='')}@"
+    return ""
 
-    # Queue definitions
-    task_queues = (
-        Queue("default", Exchange("default"), routing_key="default"),
-        Queue("pdf_parsing", Exchange("pdf_parsing"), routing_key="pdf.#"),
-        Queue(
-            "evidence_extraction",
-            Exchange("evidence_extraction"),
-            routing_key="evidence.#",
-        ),
-        Queue("graph_sync", Exchange("graph_sync"), routing_key="graph.#"),
-        Queue(
-            "celery_dead_letter",
-            Exchange("celery_dead_letter"),
-            routing_key="dead_letter.#",
-        ),
+
+def _build_redis_url(url_env: str, db_envs: Sequence[str], default_db: int) -> str:
+    """Return a redis:// URL honoring per-component overrides."""
+    if url := os.getenv(url_env):
+        return url
+
+    db_number = _resolve_db_number(db_envs, default_db)
+    host = _redis_cfg.host
+    port = _redis_cfg.port
+    auth_segment = _build_auth_segment()
+    return f"redis://{auth_segment}{host}:{port}/{db_number}"
+
+
+def _create_celery_app() -> Celery:
+    """Instantiate and configure a Celery application."""
+    broker_url = _build_redis_url(
+        "REDIS_BROKER_URL",
+        ("REDIS_BROKER_DB", "CELERY_BROKER_DB", "REDIS_DB"),
+        default_db=0,
+    )
+    result_backend = _build_redis_url(
+        "REDIS_RESULT_BACKEND",
+        ("REDIS_RESULT_DB", "CELERY_RESULT_DB", "REDIS_DB"),
+        default_db=1,
     )
 
-    # Beat schedule (for periodic tasks)
-    beat_schedule = {
-        "cleanup-old-logs": {
-            "task": "src.infrastructure.tasks.celery_tasks.cleanup_old_logs_task",
-            "schedule": 86400.0,  # Daily
+    app = Celery("document_processing", broker=broker_url, backend=result_backend)
+
+    app.conf.update(
+        task_serializer="json",
+        accept_content=["json"],
+        result_serializer="json",
+        timezone="UTC",
+        enable_utc=True,
+        result_expires=3600 * 24,  # persist results for 24h
+        result_extended=True,
+        task_routes={
+            "src.infrastructure.tasks.celery_tasks.*": {
+                "queue": "document_processing",
+                "routing_key": "document.processing",
+            },
         },
-        "sync-graph-periodically": {
-            "task": "src.infrastructure.tasks.celery_tasks.sync_graph_task",
-            "schedule": 3600.0,  # Hourly
-        },
-    }
+        task_queues=(
+            Queue("default", Exchange("default"), routing_key="default"),
+            Queue(
+                "document_processing",
+                Exchange("document_processing"),
+                routing_key="document.processing",
+            ),
+        ),
+        worker_prefetch_multiplier=1,
+        worker_max_tasks_per_child=100,
+        task_soft_time_limit=600,
+        task_time_limit=900,
+        task_acks_late=True,
+        task_reject_on_worker_lost=True,
+        broker_connection_retry_on_startup=True,
+    )
+
+    return app
 
 
-# Export configuration
-celery_config = CeleryConfig()
+@lru_cache(maxsize=1)
+def get_celery_app() -> Celery:
+    """Return a singleton Celery app for both workers and API clients."""
+    return _create_celery_app()
+
+
+__all__ = ["get_celery_app"]

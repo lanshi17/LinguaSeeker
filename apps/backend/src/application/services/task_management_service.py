@@ -1,15 +1,17 @@
-import asyncio
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import uuid
+import hashlib
+from contextlib import asynccontextmanager
 
 from src.application.services.base_service import BaseService
-from src.domain.models.parsing_task import ParsingTask, TaskStatus, TaskStage
+from src.domain.models.parsing_task import ParsingTask, TaskStatus, TaskStage, TaskType
+from src.domain.models.document import Document
 from src.infrastructure.repositories.postgres.task_repository_impl import TaskRepositoryImpl
 from src.infrastructure.repositories.postgres.document_repository_impl import DocumentRepositoryImpl
-from src.infrastructure.repositories.postgres.audit_log_repository_impl import AuditLogRepositoryImpl
 from src.utils.logger import Logger
 from src.config.app_config import AppConfig
+from src.infrastructure.database.session_factory import db_session_factory
 
 
 class TaskManagementService(BaseService):
@@ -27,10 +29,16 @@ class TaskManagementService(BaseService):
     def __init__(self, config: AppConfig = None):
         super().__init__(config or AppConfig.from_env())
         self.logger = Logger()
-        from src.infrastructure.database.session_factory import get_db_session
-        self.task_repository = TaskRepositoryImpl(get_db_session())
-        self.document_repository = DocumentRepositoryImpl(get_db_session())
-        self.audit_log_repository = AuditLogRepositoryImpl(get_db_session())
+
+    @asynccontextmanager
+    async def _task_repo(self):
+        async with db_session_factory.get_session_context() as session:
+            yield TaskRepositoryImpl(session)
+
+    @asynccontextmanager
+    async def _document_repo(self):
+        async with db_session_factory.get_session_context() as session:
+            yield DocumentRepositoryImpl(session)
 
     async def create_task(
         self,
@@ -52,30 +60,62 @@ class TaskManagementService(BaseService):
         self.logger.info(f"Creating new parsing task with priority {priority}")
 
         # Generate document ID if not provided
-        if not document_id:
-            document_id = str(uuid.uuid4())
+        if document_id:
+            document_uuid = uuid.UUID(str(document_id))
+        else:
+            document_uuid = uuid.uuid4()
+            document_id = str(document_uuid)
 
         # Create parsing task
+        normalized_source = (source_type or "file").lower()
+        task_type = (
+            TaskType.IDENTIFIER_RESOLVE
+            if normalized_source in ("pmid", "doi")
+            else TaskType.PDF_PARSE
+        )
+
+        # Ensure corresponding document placeholder exists before creating the task
+        await self._ensure_document_placeholder(document_uuid, normalized_source)
+
         task = ParsingTask(
             id=uuid.uuid4(),
-            document_id=uuid.UUID(document_id),
+            document_id=document_uuid,
+            task_type=task_type,
             priority=priority,
             created_at=datetime.utcnow()
         )
 
         # Save to repository
-        await self.task_repository.save(task)
+        async with self._task_repo() as task_repo:
+            await task_repo.save(task)
 
-        # Log task creation
-        await self.audit_log_repository.log_task_creation(
-            task_id=str(task.id),
-            document_id=document_id,
-            priority=priority,
-            source_type=source_type
+        # Audit logging currently reduced to structured logs
+        self.logger.info(
+            f"Task created: task_id={task.id} document_id={document_id} "
+            f"priority={priority} source_type={source_type}"
         )
 
         self.logger.info(f"Created parsing task {task.id} for document {document_id}")
         return task
+
+    async def _ensure_document_placeholder(self, document_id: uuid.UUID, source_type: str) -> None:
+        """Create a placeholder document so FK constraints are satisfied."""
+        async with self._document_repo() as doc_repo:
+            existing = await doc_repo.find_by_id(document_id)
+            if existing:
+                return
+
+            content_hash = hashlib.sha256(f"placeholder:{document_id}".encode("utf-8")).hexdigest()
+            placeholder = Document(
+                id=document_id,
+                title=f"Pending Document {document_id}",
+                content_hash=content_hash,
+                file_size_bytes=0,
+                page_count=0,
+                storage_path=f"pending/{document_id}",
+                metadata={"source": source_type},
+            )
+            await doc_repo.save(placeholder)
 
     async def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
         """
@@ -88,16 +128,17 @@ class TaskManagementService(BaseService):
             Task status information or None if not found
         """
         try:
-            task = await self.task_repository.get_by_id(task_id)
+            async with self._task_repo() as task_repo:
+                task = await task_repo.get_by_id(task_id)
             if not task:
                 return None
 
             return {
                 "task_id": str(task.id),
                 "document_id": str(task.document_id),
-                "status": task.status.value,
+                "status": task.status.value.lower(),
                 "progress_percentage": task.progress_percentage,
-                "current_stage": task.current_stage.value,
+                "current_stage": task.current_stage.value.lower(),
                 "priority": task.priority,
                 "retry_count": task.retry_count,
                 "failure_reason": task.failure_reason,
@@ -121,16 +162,17 @@ class TaskManagementService(BaseService):
             Task progress information or None if not found
         """
         try:
-            task = await self.task_repository.get_by_id(task_id)
+            async with self._task_repo() as task_repo:
+                task = await task_repo.get_by_id(task_id)
             if not task:
                 return None
 
             return {
                 "task_id": str(task.id),
-                "status": task.status.value,
+                "status": task.status.value.lower(),
                 "progress_percentage": task.progress_percentage,
-                "current_stage": task.current_stage.value,
-                "updated_at": task.created_at.isoformat() if task.created_at else None
+                "current_stage": task.current_stage.value.lower(),
+                "updated_at": task.updated_at.isoformat() if task.updated_at else None
             }
         except Exception as e:
             self.logger.error(f"Error getting task progress for {task_id}: {str(e)}")
@@ -152,19 +194,17 @@ class TaskManagementService(BaseService):
             return False
 
         try:
-            task = await self.task_repository.get_by_id(task_id)
-            if not task:
-                return False
+            async with self._task_repo() as task_repo:
+                task = await task_repo.get_by_id(task_id)
+                if not task:
+                    return False
 
-            # Update priority
-            task.priority = priority
-            await self.task_repository.save(task)
+                old_priority = task.priority
+                task.priority = priority
+                await task_repo.save(task)
 
-            # Log priority change
-            await self.audit_log_repository.log_task_priority_change(
-                task_id=task_id,
-                old_priority=task.priority,
-                new_priority=priority
+            self.logger.info(
+                f"Task priority updated: task_id={task_id} old={old_priority} new={priority}"
             )
 
             self.logger.info(f"Set priority {priority} for task {task_id}")
@@ -185,23 +225,17 @@ class TaskManagementService(BaseService):
             True if successful, False if task cannot be retried
         """
         try:
-            task = await self.task_repository.get_by_id(task_id)
-            if not task:
-                return False
+            async with self._task_repo() as task_repo:
+                task = await task_repo.get_by_id(task_id)
+                if not task:
+                    return False
 
-            if not task.can_retry():
-                self.logger.warning(f"Cannot retry task {task_id} in status {task.status}")
-                return False
+                if not task.can_retry():
+                    self.logger.warning(f"Cannot retry task {task_id} in status {task.status}")
+                    return False
 
-            # Retry the task
-            task.retry()
-            await self.task_repository.save(task)
-
-            # Log retry
-            await self.audit_log_repository.log_task_retry(
-                task_id=task_id,
-                retry_count=task.retry_count
-            )
+                task.retry()
+                await task_repo.save(task)
 
             self.logger.info(f"Retried task {task_id} (attempt {task.retry_count})")
             return True
@@ -221,20 +255,17 @@ class TaskManagementService(BaseService):
             True if successful, False if task cannot be cancelled
         """
         try:
-            task = await self.task_repository.get_by_id(task_id)
-            if not task:
-                return False
+            async with self._task_repo() as task_repo:
+                task = await task_repo.get_by_id(task_id)
+                if not task:
+                    return False
 
-            if task.is_terminal():
-                self.logger.warning(f"Cannot cancel task {task_id} in terminal status {task.status}")
-                return False
+                if task.is_terminal():
+                    self.logger.warning(f"Cannot cancel task {task_id} in terminal status {task.status}")
+                    return False
 
-            # Mark as failed with cancellation reason
-            task.fail("Task cancelled by user")
-            await self.task_repository.save(task)
-
-            # Log cancellation
-            await self.audit_log_repository.log_task_cancellation(task_id)
+                task.fail("Task cancelled by user")
+                await task_repo.save(task)
 
             self.logger.info(f"Cancelled task {task_id}")
             return True
@@ -251,23 +282,21 @@ class TaskManagementService(BaseService):
             Queue statistics including counts by status and priority
         """
         try:
-            # Get counts by status
-            pending_count = await self.task_repository.count_by_status(TaskStatus.PENDING)
-            processing_count = await self.task_repository.count_by_status(TaskStatus.PROCESSING)
-            completed_count = await self.task_repository.count_by_status(TaskStatus.COMPLETED)
-            failed_count = await self.task_repository.count_by_status(TaskStatus.FAILED)
-            retry_count = await self.task_repository.count_by_status(TaskStatus.RETRY)
+            async with self._task_repo() as task_repo:
+                pending_count = await task_repo.count_by_status(TaskStatus.PENDING)
+                processing_count = await task_repo.count_by_status(TaskStatus.PROCESSING)
+                completed_count = await task_repo.count_by_status(TaskStatus.COMPLETED)
+                failed_count = await task_repo.count_by_status(TaskStatus.FAILED)
+                retry_count = await task_repo.count_by_status(TaskStatus.RETRY)
 
-            # Get high priority tasks
-            high_priority_pending = await self.task_repository.count_high_priority_tasks(
-                TaskStatus.PENDING, priority_threshold=7
-            )
-            high_priority_processing = await self.task_repository.count_high_priority_tasks(
-                TaskStatus.PROCESSING, priority_threshold=7
-            )
+                high_priority_pending = await task_repo.count_high_priority_tasks(
+                    TaskStatus.PENDING, priority_threshold=7
+                )
+                high_priority_processing = await task_repo.count_high_priority_tasks(
+                    TaskStatus.PROCESSING, priority_threshold=7
+                )
 
-            # Get recent failures
-            recent_failures = await self.task_repository.get_recent_failures(hours=24)
+                recent_failures = await task_repo.get_recent_failures(hours=24)
 
             return {
                 "total_tasks": pending_count + processing_count + completed_count + failed_count + retry_count,
@@ -295,7 +324,8 @@ class TaskManagementService(BaseService):
         Calculate average processing time for completed tasks.
         """
         try:
-            completed_tasks = await self.task_repository.get_completed_tasks_with_timing(limit=100)
+            async with self._task_repo() as task_repo:
+                completed_tasks = await task_repo.get_completed_tasks_with_timing(limit=100)
             if not completed_tasks:
                 return 0.0
 
@@ -331,20 +361,21 @@ class TaskManagementService(BaseService):
             List of task information
         """
         try:
-            tasks = await self.task_repository.find_by_status(
-                status, limit=limit, offset=offset, priority_filter=priority_filter
-            )
+            async with self._task_repo() as task_repo:
+                tasks = await task_repo.find_by_status(
+                    status, limit=limit, offset=offset, priority_filter=priority_filter
+                )
 
             return [
                 {
                     "task_id": str(task.id),
                     "document_id": str(task.document_id),
-                    "status": task.status.value,
+                    "status": task.status.value.lower(),
                     "progress_percentage": task.progress_percentage,
-                    "current_stage": task.current_stage.value,
+                    "current_stage": task.current_stage.value.lower(),
                     "priority": task.priority,
                     "created_at": task.created_at.isoformat() if task.created_at else None,
-                    "updated_at": task.created_at.isoformat() if task.created_at else None
+                    "updated_at": task.updated_at.isoformat() if task.updated_at else None
                 }
                 for task in tasks
             ]
@@ -364,7 +395,8 @@ class TaskManagementService(BaseService):
             Number of tasks deleted
         """
         try:
-            deleted_count = await self.task_repository.cleanup_old_completed_tasks(days_to_retain)
+            async with self._task_repo() as task_repo:
+                deleted_count = await task_repo.cleanup_old_completed_tasks(days_to_retain)
             self.logger.info(f"Cleaned up {deleted_count} completed tasks older than {days_to_retain} days")
             return deleted_count
         except Exception as e:

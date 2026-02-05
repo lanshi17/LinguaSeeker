@@ -12,7 +12,6 @@ from uuid import uuid4
 from sqlalchemy import (
     Boolean,
     Column,
-    Date,
     DateTime,
     Enum,
     ForeignKey,
@@ -104,6 +103,14 @@ class TaskStage(str, enum.Enum):
     COMPLETED = "COMPLETED"
 
 
+class TaskType(str, enum.Enum):
+    """Parsing task type based on ingestion mode."""
+
+    PDF_PARSE = "pdf_parse"
+    IDENTIFIER_RESOLVE = "identifier_resolve"
+    DATA_EXTRACTION = "data_extraction"
+
+
 class AgentType(str, enum.Enum):
     """Agent types in the workflow."""
 
@@ -170,7 +177,7 @@ class Document(Base):
     title = Column(String(500), nullable=False)
     authors = Column(JSONB, nullable=False, default=list)
     journal = Column(String(200), nullable=True)
-    publication_date = Column(Date, nullable=True)
+    publication_date = Column(DateTime(timezone=True), nullable=True)
     pmid = Column(String(50), nullable=True)
     doi = Column(String(200), nullable=True)
     content_hash = Column(String(64), nullable=False, unique=True)
@@ -321,8 +328,17 @@ class ParsingTask(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     document_id = Column(
-        UUID(as_uuid=True), ForeignKey("documents.id"), nullable=False, unique=True
+        UUID(as_uuid=True),
+        ForeignKey(
+            "documents.id",
+            ondelete="SET NULL",
+            deferrable=True,
+            initially="IMMEDIATE",
+        ),
+        nullable=True,
+        unique=True,
     )
+    task_type = Column(Enum(TaskType), nullable=False, default=TaskType.PDF_PARSE)
     current_stage = Column(Enum(TaskStage), nullable=False, default=TaskStage.INGESTION)
     progress_percentage = Column(Integer, nullable=False, default=0)
     status = Column(Enum(TaskStatus), nullable=False, default=TaskStatus.PENDING)
@@ -343,6 +359,7 @@ class ParsingTask(Base):
         Index("idx_tasks_document_id", "document_id"),
         Index("idx_tasks_status", "status"),
         Index("idx_tasks_stage", "current_stage"),
+        Index("idx_tasks_type", "task_type"),
         Index("idx_tasks_priority", "priority"),
         Index("idx_tasks_created_at", "created_at"),
         Index("idx_tasks_started_at", "started_at"),

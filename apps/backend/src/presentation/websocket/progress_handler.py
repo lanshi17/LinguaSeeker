@@ -11,7 +11,7 @@ import json
 from datetime import datetime
 import redis.asyncio as redis
 
-from fastapi import WebSocket, WebSocketDisconnect, APIRouter
+from fastapi import WebSocket, WebSocketDisconnect, APIRouter, HTTPException
 from fastapi.websockets import WebSocketState
 
 from src.application.services.task_management_service import TaskManagementService
@@ -233,3 +233,20 @@ async def task_progress_websocket(websocket: WebSocket, task_id: str):
     except Exception as e:
         progress_handler.logger.error(f"WebSocket error for task {task_id}: {e}")
         await progress_handler.disconnect(websocket, task_id)
+
+
+@router.get("/ws/task/{task_id}/progress")
+async def task_progress_snapshot(task_id: str):
+    """
+    HTTP fallback endpoint that returns the latest known progress snapshot.
+
+    Useful for clients that cannot maintain WebSocket connections but still
+    rely on the same URI pattern.
+    """
+    service = TaskManagementService()
+    progress = await service.get_task_progress(task_id)
+    if not progress:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    progress["websocket_url"] = f"/ws/task/{task_id}/progress"
+    return progress

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 
@@ -23,19 +23,9 @@ class EvidenceListResponse(BaseModel):
     """
     Response DTO for listing evidence items from a document.
     """
-    document_id: str = Field(..., description="Document identifier")
-    total_evidence_items: int = Field(..., description="Total number of evidence items found")
-    auto_accepted: int = Field(..., description="Number of items auto-accepted (confidence >= 0.85)")
-    review_required: int = Field(..., description="Number of items requiring human review")
-    evidence_items: List[EvidenceItemSummary] = Field(
-        default_factory=list,
-        description="List of extracted evidence items"
-    )
-    processing_completed_at: Optional[datetime] = Field(None, description="When processing completed")
-    average_confidence: float = Field(0.0, description="Average confidence score across all items")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "document_id": "doc_12345",
                 "total_evidence_items": 8,
@@ -71,3 +61,15 @@ class EvidenceListResponse(BaseModel):
                 "average_confidence": 0.85
             }
         }
+    )
+
+    document_id: str = Field(..., description="Document identifier")
+    total_evidence_items: int = Field(..., description="Total number of evidence items found")
+    auto_accepted: int = Field(..., description="Number of items auto-accepted (confidence >= 0.85)")
+    review_required: int = Field(..., description="Number of items requiring human review")
+    evidence_items: List[EvidenceItemSummary] = Field(
+        default_factory=list,
+        description="List of extracted evidence items"
+    )
+    processing_completed_at: Optional[datetime] = Field(None, description="When processing completed")
+    average_confidence: float = Field(0.0, description="Average confidence score across all items")

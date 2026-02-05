@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
@@ -10,6 +10,7 @@ class TaskStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+    RETRY = "retry"
 
 
 class EvidenceItemSummary(BaseModel):
@@ -27,24 +28,9 @@ class TaskStatusResponse(BaseModel):
     """
     Response DTO for querying parsing task status.
     """
-    task_id: str = Field(..., description="Unique identifier for the parsing task")
-    document_id: str = Field(..., description="Unique identifier for the associated document")
-    status: TaskStatus = Field(..., description="Current status of the parsing task")
-    progress_percentage: int = Field(0, description="Progress percentage (0-100)", ge=0, le=100)
-    current_stage: Optional[str] = Field(None, description="Current processing stage")
-    created_at: datetime = Field(..., description="Timestamp when the task was created")
-    updated_at: datetime = Field(..., description="Timestamp when the task was last updated")
-    completed_at: Optional[datetime] = Field(None, description="Timestamp when the task was completed")
-    error_message: Optional[str] = Field(None, description="Error message if task failed")
-    evidence_items: List[EvidenceItemSummary] = Field(
-        default_factory=list,
-        description="List of extracted evidence items with summary information"
-    )
-    processing_time_seconds: Optional[float] = Field(None, description="Total processing time in seconds")
-    file_size_bytes: Optional[int] = Field(None, description="Original file size in bytes")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "task_id": "task_12345",
                 "document_id": "doc_67890",
@@ -75,3 +61,20 @@ class TaskStatusResponse(BaseModel):
                 "file_size_bytes": 2048000
             }
         }
+    )
+
+    task_id: str = Field(..., description="Unique identifier for the parsing task")
+    document_id: str = Field(..., description="Unique identifier for the associated document")
+    status: TaskStatus = Field(..., description="Current status of the parsing task")
+    progress_percentage: int = Field(0, description="Progress percentage (0-100)", ge=0, le=100)
+    current_stage: Optional[str] = Field(None, description="Current processing stage")
+    created_at: datetime = Field(..., description="Timestamp when the task was created")
+    updated_at: datetime = Field(..., description="Timestamp when the task was last updated")
+    completed_at: Optional[datetime] = Field(None, description="Timestamp when the task was completed")
+    error_message: Optional[str] = Field(None, description="Error message if task failed")
+    evidence_items: List[EvidenceItemSummary] = Field(
+        default_factory=list,
+        description="List of extracted evidence items with summary information"
+    )
+    processing_time_seconds: Optional[float] = Field(None, description="Total processing time in seconds")
+    file_size_bytes: Optional[int] = Field(None, description="Original file size in bytes")

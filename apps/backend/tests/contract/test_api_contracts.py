@@ -8,7 +8,10 @@ and handle various input scenarios correctly.
 import pytest
 import json
 from unittest.mock import patch, AsyncMock
+from types import SimpleNamespace
+from uuid import uuid4
 from fastapi.testclient import TestClient
+from fastapi import FastAPI
 
 from src.presentation.controllers.pdf_parse_controller import PDFParseController
 from src.config.app_config import AppConfig
@@ -19,7 +22,8 @@ def test_client():
     """Create a test client for the PDF parse controller."""
     config = AppConfig()
     controller = PDFParseController(config)
-    app = controller.get_router()
+    app = FastAPI()
+    app.include_router(controller.get_router())
     return TestClient(app)
 
 
@@ -35,7 +39,8 @@ def valid_pdf_upload_request():
         "file_content": pdf_base64,
         "filename": "test_document.pdf",
         "source": "file",
-        "priority": 5
+        "priority": 5,
+        "client_hash": "abc123",
     }
 
 
@@ -60,7 +65,7 @@ def test_pdf_upload_endpoint_contract(test_client, valid_pdf_upload_request):
         )
 
         # Verify response status
-        assert response.status_code == 200
+        assert response.status_code == 201
 
         # Verify response structure
         response_data = response.json()
@@ -76,6 +81,10 @@ def test_pdf_upload_endpoint_contract(test_client, valid_pdf_upload_request):
 
         # Verify status is pending
         assert response_data["status"] == "pending"
+        assert "server_hash" in response_data
+        assert "client_hash" in response_data
+        assert response_data["client_hash"] == "abc123"
+        assert response_data["server_hash"] is None
 
 
 def test_pdf_upload_missing_file_content(test_client):
@@ -90,6 +99,74 @@ def test_pdf_upload_missing_file_content(test_client):
 
     response = test_client.post("/pdf/upload", json=invalid_request)
     assert response.status_code == 422  # Validation error
+
+
+def test_pdf_upload_duplicate_returns_conflict(test_client, valid_pdf_upload_request):
+    duplicate_doc = SimpleNamespace(
+        id=uuid4(),
+        content_hash="abc123",
+        processing_status="COMPLETED",
+    )
+
+    async def fake_duplicate(request, *_args, **_kwargs):
+        request.content_hash = duplicate_doc.content_hash
+        return duplicate_doc
+
+    with patch(
+        "src.application.services.pdf_parse_service.PDFParseService.find_duplicate_document",
+        new=fake_duplicate,
+    ):
+
+        response = test_client.post(
+            "/pdf/upload",
+            json=valid_pdf_upload_request,
+        )
+
+        assert response.status_code == 409
+        data = response.json()
+        assert data["error"] == "DUPLICATE_DOCUMENT"
+        assert data["existing_document_id"] == str(duplicate_doc.id)
+        assert data["server_hash"] == "abc123"
+        assert data["client_hash"] == "abc123"
+        assert data["match"] is True
+        assert (
+            response.headers.get("X-Existing-Document-Id") == str(duplicate_doc.id)
+        )
+
+
+def test_pdf_upload_duplicate_use_existing_returns_existing_document(
+    test_client, valid_pdf_upload_request
+):
+    duplicate_doc = SimpleNamespace(
+        id=uuid4(),
+        content_hash="abc123",
+        processing_status="COMPLETED",
+    )
+
+    async def fake_duplicate(request, *_args, **_kwargs):
+        request.content_hash = duplicate_doc.content_hash
+        return duplicate_doc
+
+    with patch(
+        "src.application.services.pdf_parse_service.PDFParseService.find_duplicate_document",
+        new=fake_duplicate,
+    ), patch(
+        "src.application.services.pdf_parse_service.PDFParseService.save_parsing_task",
+        new_callable=AsyncMock,
+    ) as mock_save_task:
+
+        response = test_client.post(
+            "/pdf/upload",
+            params={"use_existing": "true"},
+            json=valid_pdf_upload_request,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["document_id"] == str(duplicate_doc.id)
+        assert data["server_hash"] == "abc123"
+        assert data["match"] is True
+        mock_save_task.assert_not_called()
 
 
 def test_pdf_upload_invalid_base64(test_client):

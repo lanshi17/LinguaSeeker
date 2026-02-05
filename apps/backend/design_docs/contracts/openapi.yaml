@@ -1,37 +1,72 @@
 openapi: 3.1.0
 info:
-  title: ACMG Intelligent Parsing Pipeline API
-  version: 1.0.0
-  description: |
-    REST API for automated ACMG evidence extraction from biomedical literature.
-    Supports document upload (PDF/PMID/DOI), asynchronous parsing, evidence review,
-    and knowledge graph querying.
+  title: ACMG-PS3 Intelligent Parsing API
+  description: |-
+    Versioned REST contract for the FastAPI backend that powers the ACMG-PS3
+    multilingual document evidence extraction platform. The specification mirrors
+    the current `/api/v1` implementation (FastAPI routers in
+    `src/presentation/controllers`) so that the generated Swagger UI stays in sync
+    with the running service.
+
+    All endpoints are asynchronous-friendly. Uploads immediately return a task
+    identifier, while task state can be polled via REST or streamed through the
+    `/ws/task/{task_id}/progress` WebSocket.
+  version: 2.1.0
   contact:
-    name: ACMG-PS3 Intelligence System
+    name: ACMG-PS3 Engineering
     email: support@example.com
-
 servers:
+  - url: http://localhost:8000
+    description: FastAPI root (dev)
   - url: http://localhost:8000/api/v1
-    description: Local development
-  - url: https://api.acmg-system.example.com/v1
-    description: Production
-
+    description: Versioned REST prefix
 tags:
-  - name: documents
-    description: Document upload and management
-  - name: evidence
-    description: Evidence extraction and review
-  - name: tasks
-    description: Parsing task management
-  - name: graph
-    description: Knowledge graph queries
+  - name: PDF Parsing
+    description: Upload and ingestion endpoints for PDF/PMID/DOI sources.
+  - name: Task Management
+    description: Database-backed parsing task lifecycle operations.
+  - name: Legacy Task Queue
+    description: Direct access to the Celery worker queue (used by older agents).
+  - name: Realtime Progress
+    description: Streaming progress updates over HTTP/WebSocket.
 
 paths:
-  /documents/upload:
+  /api/v1/pdf/upload:
     post:
-      tags: [documents]
-      summary: Upload PDF document for parsing
-      operationId: uploadDocument
+      tags: [PDF Parsing]
+      summary: Upload PDF via JSON payload
+      description: >
+        Accepts base64-encoded PDF bytes or PMID/DOI metadata in a JSON payload
+        and creates an asynchronous parsing task. The endpoint mirrors
+        `PDFParseController.upload_pdf`.
+      operationId: pdfUploadJson
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PDFUploadRequest'
+      responses:
+        '202':
+          description: Upload accepted; parsing scheduled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCreatedResponse'
+        '400':
+          description: Validation error (invalid base64, missing filename, oversized file).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error while creating the task.
+
+  /api/v1/pdf/upload/form:
+    post:
+      tags: [PDF Parsing]
+      summary: Upload PDF via multipart/form-data
+      operationId: pdfUploadForm
       requestBody:
         required: true
         content:
@@ -43,417 +78,260 @@ paths:
                 file:
                   type: string
                   format: binary
-                  description: PDF file (max 100MB)
+                  description: PDF binary (max 50 MB by default).
                 priority:
                   type: integer
                   minimum: 0
                   maximum: 10
-                  default: 5
-                  description: Queue priority (0=low, 10=urgent)
+                  default: 0
+                  description: Optional queue priority override.
       responses:
         '202':
-          description: Document accepted for processing
+          description: Upload accepted; parsing scheduled.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TaskCreatedResponse'
         '400':
-          description: Invalid file format or size
+          description: Invalid file or payload.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '413':
-          description: File too large (>100MB)
+        '500':
+          description: Unexpected server error while creating the task.
 
-  /documents/fetch:
+  /api/v1/pdf/fetch-by-pmid:
     post:
-      tags: [documents]
-      summary: Fetch document by PMID or DOI
-      operationId: fetchDocument
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                pmid:
-                  type: string
-                  example: "12345678"
-                doi:
-                  type: string
-                  example: "10.1038/nature12345"
-                priority:
-                  type: integer
-                  minimum: 0
-                  maximum: 10
-                  default: 5
-              oneOf:
-                - required: [pmid]
-                - required: [doi]
-      responses:
-        '202':
-          description: Fetch request accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TaskCreatedResponse'
-        '404':
-          description: PMID/DOI not found in public repositories
-        '502':
-          description: External repository unavailable
-
-  /documents/{document_id}:
-    get:
-      tags: [documents]
-      summary: Get document metadata and processing status
-      operationId: getDocument
+      tags: [PDF Parsing]
+      summary: Create parsing task from a PubMed ID
+      operationId: pdfFetchByPMID
       parameters:
-        - name: document_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Document details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DocumentResponse'
-        '404':
-          description: Document not found
-
-  /documents/{document_id}/evidence:
-    get:
-      tags: [evidence]
-      summary: Get all evidence items for a document
-      operationId: getDocumentEvidence
-      parameters:
-        - name: document_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: review_required
+        - name: pmid
           in: query
-          schema:
-            type: boolean
-          description: Filter by review status
-        - name: min_confidence
-          in: query
-          schema:
-            type: number
-            format: float
-            minimum: 0
-            maximum: 1
-          description: Minimum confidence threshold
-      responses:
-        '200':
-          description: Evidence list
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  document_id:
-                    type: string
-                    format: uuid
-                  evidence_count:
-                    type: integer
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/EvidenceItem'
-
-  /evidence/{evidence_id}:
-    get:
-      tags: [evidence]
-      summary: Get single evidence item details
-      operationId: getEvidence
-      parameters:
-        - name: evidence_id
-          in: path
           required: true
           schema:
             type: string
-            format: uuid
-      responses:
-        '200':
-          description: Evidence details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EvidenceItem'
-
-    patch:
-      tags: [evidence]
-      summary: Edit evidence item (for human review)
-      operationId: updateEvidence
-      parameters:
-        - name: evidence_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                acmg_code:
-                  $ref: '#/components/schemas/ACMGCode'
-                confidence_score:
-                  type: number
-                  format: float
-                  minimum: 0
-                  maximum: 1
-                human_notes:
-                  type: string
-                  maxLength: 2000
-                human_reviewed:
-                  type: boolean
-      responses:
-        '200':
-          description: Evidence updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EvidenceItem'
-        '400':
-          description: Invalid update data
-
-  /tasks/{task_id}:
-    get:
-      tags: [tasks]
-      summary: Get parsing task status
-      operationId: getTaskStatus
-      parameters:
-        - name: task_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Task status
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TaskStatusResponse'
-
-  /tasks/{task_id}/retry:
-    post:
-      tags: [tasks]
-      summary: Retry failed task
-      operationId: retryTask
-      parameters:
-        - name: task_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '202':
-          description: Task retry scheduled
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TaskCreatedResponse'
-        '400':
-          description: Task not in FAILED state or retry limit exceeded
-
-  /tasks:
-    get:
-      tags: [tasks]
-      summary: List all tasks with filtering
-      operationId: listTasks
-      parameters:
-        - name: status
+            example: "12345678"
+          description: PubMed identifier (1-8 digits).
+        - name: priority
           in: query
-          schema:
-            $ref: '#/components/schemas/TaskStatus'
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 20
-        - name: offset
-          in: query
+          required: false
           schema:
             type: integer
             minimum: 0
+            maximum: 10
             default: 0
+          description: Optional queue priority override.
       responses:
-        '200':
-          description: Task list
+        '202':
+          description: Fetch request accepted and task created.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  total:
-                    type: integer
-                  limit:
-                    type: integer
-                  offset:
-                    type: integer
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/TaskStatusResponse'
-
-  /tasks/{task_id}/priority:
-    patch:
-      tags: [tasks]
-      summary: Update task priority (for urgent documents)
-      operationId: updateTaskPriority
-      parameters:
-        - name: task_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [priority]
-              properties:
-                priority:
-                  type: integer
-                  minimum: 0
-                  maximum: 10
-      responses:
-        '200':
-          description: Priority updated
+                $ref: '#/components/schemas/TaskCreatedResponse'
         '400':
-          description: Invalid priority value
-
-  /tasks/{task_id}/audit-logs:
-    get:
-      tags: [tasks]
-      summary: Get audit trail for task (Agent decision history)
-      operationId: getTaskAuditLogs
-      parameters:
-        - name: task_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: agent_type
-          in: query
-          schema:
-            $ref: '#/components/schemas/AgentType'
-      responses:
-        '200':
-          description: Audit log entries
+          description: Invalid PMID format.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  task_id:
-                    type: string
-                    format: uuid
-                  entries:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/AuditLogEntry'
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error.
 
-  /graph/variants/{hgvs_notation}:
-    get:
-      tags: [graph]
-      summary: Get variant details with aggregated evidence
-      operationId: getVariant
+  /api/v1/pdf/fetch-by-doi:
+    post:
+      tags: [PDF Parsing]
+      summary: Create parsing task from a DOI
+      operationId: pdfFetchByDOI
       parameters:
-        - name: hgvs_notation
-          in: path
-          required: true
-          schema:
-            type: string
-          example: "NM_000059.3:c.1521_1523delCTT"
-      responses:
-        '200':
-          description: Variant with evidence stacking
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VariantResponse'
-
-  /graph/variants/{hgvs_notation}/evidence-stack:
-    get:
-      tags: [graph]
-      summary: Get cross-document evidence stacking analysis
-      operationId: getEvidenceStack
-      parameters:
-        - name: hgvs_notation
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: min_hops
+        - name: doi
           in: query
+          required: true
+          schema:
+            type: string
+            example: "10.1038/s41467-024-00001-0"
+          description: Digital Object Identifier for the publication.
+        - name: priority
+          in: query
+          required: false
           schema:
             type: integer
-            minimum: 1
-            maximum: 5
-            default: 2
-          description: Graph traversal depth
+            minimum: 0
+            maximum: 10
+            default: 0
+          description: Optional queue priority override.
       responses:
-        '200':
-          description: Evidence stacking analysis
+        '202':
+          description: Fetch request accepted and task created.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  variant:
-                    $ref: '#/components/schemas/VariantResponse'
-                  supporting_documents:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        document_id:
-                          type: string
-                          format: uuid
-                        title:
-                          type: string
-                        evidence_items:
-                          type: array
-                          items:
-                            $ref: '#/components/schemas/EvidenceItem'
-                  suggested_upgrade:
-                    type: object
-                    nullable: true
-                    properties:
-                      from_code:
-                        $ref: '#/components/schemas/ACMGCode'
-                      to_code:
-                        $ref: '#/components/schemas/ACMGCode'
-                      rationale:
-                        type: string
+                $ref: '#/components/schemas/TaskCreatedResponse'
+        '400':
+          description: Invalid DOI format.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error.
+
+  /api/v1/tasks/{task_id}:
+    parameters:
+      - $ref: '#/components/parameters/TaskIdPath'
+    get:
+      tags: [Task Management]
+      summary: Get parsing task status
+      description: >
+        Returns the persisted status for a parsing task stored in PostgreSQL,
+        including evidence summaries if available.
+      operationId: parsingTaskStatus
+      responses:
+        '200':
+          description: Current task status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParsingTaskStatusResponse'
+        '404':
+          description: Task does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Task Management]
+      summary: Cancel parsing task
+      description: Marks an in-flight parsing task as cancelled.
+      operationId: parsingTaskCancel
+      responses:
+        '200':
+          description: Cancellation acknowledged.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskActionResponse'
+        '404':
+          description: Task not found or already terminal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/tasks/{task_id}/progress:
+    parameters:
+      - $ref: '#/components/parameters/TaskIdPath'
+    get:
+      tags: [Task Management]
+      summary: Get parsing task progress snapshot
+      description: >
+        Lightweight polling endpoint that surfaces progress percentage and stage.
+        Front-ends can fall back to this endpoint when WebSocket upgrades are not
+        available.
+      operationId: parsingTaskProgress
+      responses:
+        '200':
+          description: Latest progress snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskProgressResponse'
+        '404':
+          description: Task not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/tasks/{task_id}/retry:
+    parameters:
+      - $ref: '#/components/parameters/TaskIdPath'
+    post:
+      tags: [Task Management]
+      summary: Retry failed parsing task
+      description: >
+        Resets a task in `failed` status back to `pending`. Only available for
+        failure states.
+      operationId: parsingTaskRetry
+      responses:
+        '200':
+          description: Retry accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskActionResponse'
+        '404':
+          description: Task not found or not eligible for retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /ws/task/{task_id}/progress:
+    parameters:
+      - $ref: '#/components/parameters/TaskIdPath'
+    get:
+      tags: [Realtime Progress]
+      summary: Upgrade to WebSocket for live progress updates
+      description: >
+        Upgrades the HTTP connection to a WebSocket (managed by
+        `src/presentation/websocket/progress_handler.ProgressHandler`) and
+        streams JSON progress events published by Redis.
+      operationId: progressWebSocket
+      responses:
+        '101':
+          description: WebSocket handshake complete.
+        '404':
+          description: No handler available (route missing in deployment).
 
 components:
+  parameters:
+    TaskIdPath:
+      name: task_id
+      in: path
+      required: true
+      schema:
+        type: string
+        description: UUID of the parsing task.
+
   schemas:
+    PDFUploadRequest:
+      type: object
+      description: Payload accepted by `/api/v1/pdf/upload`.
+      properties:
+        file_content:
+          type: string
+          description: Base64-encoded PDF content.
+          example: JVBERi0xLjQKJcfs...
+        filename:
+          type: string
+          description: Original filename (required when `source=file`).
+          example: acmg_evidence_study.pdf
+        pmid:
+          type: string
+          description: PubMed ID (used when `source=pmid`).
+          example: "12345678"
+        doi:
+          type: string
+          description: DOI (used when `source=doi`).
+          example: 10.1038/s41467-024-00001-0
+        source:
+          type: string
+          description: Upload source selector.
+          enum: [file, pmid, doi]
+          default: file
+        priority:
+          type: integer
+          minimum: 0
+          maximum: 10
+          default: 0
+          description: Queue priority override.
+      required: [source]
+
     TaskCreatedResponse:
       type: object
-      required: [task_id, document_id]
       properties:
         task_id:
           type: string
@@ -462,299 +340,118 @@ components:
           type: string
           format: uuid
         status:
-          $ref: '#/components/schemas/TaskStatus'
+          type: string
+          enum: [pending, processing, completed, failed, cancelled]
+        message:
+          type: string
+          example: Document upload accepted. Processing started in background.
         websocket_url:
           type: string
-          format: uri
-          example: "ws://localhost:8000/ws/task/{task_id}/progress"
+          example: /ws/task/06d4ec78-20b2-4ac4-8c42-5dd52bcb10a6/progress
+      required: [task_id, document_id, status, message, websocket_url]
 
-    DocumentResponse:
+    EvidenceItemSummary:
       type: object
-      required: [id, title, processing_status, created_at]
       properties:
         id:
           type: string
-          format: uuid
-        title:
-          type: string
-        authors:
-          type: array
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-              affiliation:
-                type: string
-        journal:
-          type: string
-        publication_date:
-          type: string
-          format: date
-        pmid:
-          type: string
-          nullable: true
-        doi:
-          type: string
-          nullable: true
-        content_hash:
-          type: string
-        page_count:
-          type: integer
-        processing_status:
-          $ref: '#/components/schemas/ProcessingStatus'
-        created_at:
-          type: string
-          format: date-time
-
-    EvidenceItem:
-      type: object
-      required: [id, document_id, acmg_code, confidence_score, source_page]
-      properties:
-        id:
-          type: string
-          format: uuid
-        document_id:
-          type: string
-          format: uuid
         acmg_code:
-          $ref: '#/components/schemas/ACMGCode'
+          type: string
+          description: ACMG evidence code (PS, PM, etc.).
         confidence_score:
           type: number
           format: float
           minimum: 0
           maximum: 1
+        review_required:
+          type: boolean
         source_page:
           type: integer
           minimum: 1
-        bounding_box:
-          type: object
-          properties:
-            x:
-              type: number
-            y:
-              type: number
-            width:
-              type: number
-            height:
-              type: number
-        supporting_text:
-          type: string
-        review_required:
-          type: boolean
-        human_reviewed:
-          type: boolean
-        human_notes:
-          type: string
-          nullable: true
-        variant_id:
-          type: string
-          format: uuid
-          nullable: true
-        extracted_at:
-          type: string
-          format: date-time
 
-    TaskStatusResponse:
+    ParsingTaskStatusResponse:
       type: object
-      required: [task_id, document_id, status, current_stage, progress_percentage]
       properties:
         task_id:
           type: string
-          format: uuid
         document_id:
           type: string
-          format: uuid
         status:
-          $ref: '#/components/schemas/TaskStatus'
-        current_stage:
-          $ref: '#/components/schemas/AgentStage'
+          type: string
+          enum: [pending, processing, completed, failed, cancelled]
         progress_percentage:
           type: integer
           minimum: 0
           maximum: 100
-        retry_count:
-          type: integer
-        failure_reason:
+        current_stage:
           type: string
           nullable: true
-        started_at:
+        created_at:
           type: string
           format: date-time
-          nullable: true
+        updated_at:
+          type: string
+          format: date-time
         completed_at:
           type: string
           format: date-time
           nullable: true
-        estimated_completion:
-          type: string
-          format: date-time
-          nullable: true
-
-    AuditLogEntry:
-      type: object
-      required: [id, task_id, created_at, agent_type, state_from, state_to, latency_ms]
-      properties:
-        id:
-          type: string
-          format: uuid
-        task_id:
-          type: string
-          format: uuid
-        created_at:
-          type: string
-          format: date-time
-        agent_type:
-          $ref: '#/components/schemas/AgentType'
-        state_from:
-          type: string
-        state_to:
-          type: string
-        confidence_score:
-          type: number
-          format: float
-          nullable: true
-        latency_ms:
-          type: integer
-        input_prompt:
-          type: string
-        output_reasoning:
-          type: string
-        failure_reason:
+        error_message:
           type: string
           nullable: true
-        model_version:
-          type: string
-
-    VariantResponse:
-      type: object
-      required: [id, hgvs_notation, gene, pathogenicity_classification]
-      properties:
-        id:
-          type: string
-          format: uuid
-        hgvs_notation:
-          type: string
-        gene:
-          type: string
-        chromosome:
-          type: string
-        position:
-          type: integer
-        pathogenicity_classification:
-          $ref: '#/components/schemas/PathogenicityClass'
-        aggregated_confidence:
-          type: number
-          format: float
-        evidence_count:
-          type: integer
-        associated_phenotypes:
+        evidence_items:
           type: array
           items:
-            type: object
-            properties:
-              hpo_code:
-                type: string
-              description:
-                type: string
+            $ref: '#/components/schemas/EvidenceItemSummary'
+        processing_time_seconds:
+          type: number
+          format: float
+          nullable: true
+        file_size_bytes:
+          type: integer
+          nullable: true
+      required:
+        - task_id
+        - document_id
+        - status
+        - progress_percentage
+        - created_at
+        - updated_at
+
+    TaskProgressResponse:
+      type: object
+      properties:
+        task_id:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, completed, failed, cancelled]
+        progress_percentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+        current_stage:
+          type: string
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+      required: [task_id, status, progress_percentage, updated_at]
+
+    TaskActionResponse:
+      type: object
+      properties:
+        task_id:
+          type: string
+        message:
+          type: string
+      required: [task_id, message]
 
     ErrorResponse:
       type: object
-      required: [error, message]
       properties:
-        error:
-          type: string
-          example: "VALIDATION_ERROR"
-        message:
-          type: string
-          example: "File size exceeds 100MB limit"
-        details:
-          type: object
-          nullable: true
-
-    ACMGCode:
-      type: string
-      enum:
-        - PS1
-        - PS2
-        - PS3
-        - PS4
-        - PM1
-        - PM2
-        - PM3
-        - PM4
-        - PM5
-        - PM6
-        - PP1
-        - PP2
-        - PP3
-        - PP4
-        - PP5
-        - BA1
-        - BS1
-        - BS2
-        - BS3
-        - BS4
-        - BP1
-        - BP2
-        - BP3
-        - BP4
-        - BP5
-        - BP6
-        - BP7
-
-    TaskStatus:
-      type: string
-      enum:
-        - PENDING
-        - PROCESSING
-        - COMPLETED
-        - FAILED
-        - RETRY
-
-    ProcessingStatus:
-      type: string
-      enum:
-        - PENDING
-        - PROCESSING
-        - COMPLETED
-        - FAILED
-        - NEEDS_REVIEW
-
-    AgentStage:
-      type: string
-      enum:
-        - INGESTION
-        - DECOMPOSITION
-        - LAYOUT
-        - TRANSLATION
-        - EVIDENCE
-        - ARBITRATION
-        - COMPLETED
-
-    AgentType:
-      type: string
-      enum:
-        - LAYOUT
-        - TRANSLATION
-        - EVIDENCE
-        - ARBITRATION
-
-    PathogenicityClass:
-      type: string
-      enum:
-        - BENIGN
-        - LIKELY_BENIGN
-        - VUS
-        - LIKELY_PATHOGENIC
-        - PATHOGENIC
-        - CONFLICTING
-
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-security:
-  - bearerAuth: []
+        detail:
+          oneOf:
+            - type: string
+            - type: object
+              additionalProperties: true

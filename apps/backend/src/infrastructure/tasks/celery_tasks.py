@@ -6,30 +6,26 @@ in the background, allowing the main application to remain responsive.
 """
 
 import asyncio
+import json
 from typing import Optional
 import uuid
 from datetime import datetime
 
-from celery import Celery
 from celery.exceptions import Retry
+from celery.schedules import crontab
 from src.config.celery_config import get_celery_app
 from src.utils.logger import Logger
-from src.domain.models.parsing_task import ParsingTask, TaskStatus, TaskStage
+from src.domain.models.parsing_task import TaskStatus, normalize_stage_label
 from src.application.services.pdf_parse_service import PDFParseService
 from src.application.services.task_management_service import TaskManagementService
 from src.infrastructure.repositories.postgres.task_repository_impl import TaskRepositoryImpl
-from src.infrastructure.repositories.postgres.document_repository_impl import DocumentRepositoryImpl
-from src.infrastructure.repositories.postgres.audit_log_repository_impl import AuditLogRepositoryImpl
 
 # Initialize Celery app
 celery_app = get_celery_app()
 logger = Logger()
 
 # Initialize services (these will be used within tasks)
-from src.infrastructure.database.session_factory import get_db_session
-task_repository = TaskRepositoryImpl(get_db_session())
-document_repository = DocumentRepositoryImpl(get_db_session())
-audit_log_repository = AuditLogRepositoryImpl(get_db_session())
+from src.infrastructure.database.session_factory import db_session_factory
 
 
 @celery_app.task(
@@ -136,28 +132,15 @@ def retry_failed_task(self, task_id: str) -> dict:
     logger.info(f"Retrying failed task {task_id}")
 
     try:
-        # Get the original task details
-        from src.infrastructure.database.session_factory import get_db_session
-        task_repo = TaskRepositoryImpl(get_db_session())
-        task = task_repo.get_by_id(task_id)
+        task_management_service = TaskManagementService()
+        success = asyncio.run(task_management_service.retry_task(task_id))
 
-        if not task or task.status != TaskStatus.FAILED:
-            raise ValueError(f"Task {task_id} is not in FAILED state or does not exist")
+        if not success:
+            raise ValueError(f"Task {task_id} could not be retried")
 
-        # Reset task status to pending
-        task.status = TaskStatus.PENDING
-        task.failure_reason = None
-        task.retry_count += 1
-
-        task_repo.save(task)
-
-        # Re-queue the original processing task
-        # This would need to reconstruct the original upload request
-        # For now, we'll just return success
         result = {
             "task_id": task_id,
             "status": "retry_initiated",
-            "retry_count": task.retry_count,
             "message": "Task retry initiated successfully"
         }
 
@@ -248,7 +231,7 @@ def _update_task_status(
     error_message: Optional[str] = None
 ) -> None:
     """
-    Helper function to update task status in the database.
+    Helper function to update task status in the database and publish to WebSocket.
 
     Args:
         task_id: Task identifier
@@ -258,32 +241,74 @@ def _update_task_status(
         error_message: Error message if task failed
     """
     try:
-        # Convert string status to enum
-        status_enum = TaskStatus(status.upper())
-        stage_enum = TaskStage(stage.upper()) if hasattr(TaskStage, stage.upper()) else TaskStage.INGESTION
-
-        # Update task in database
         current_time = datetime.utcnow()
-        task = ParsingTask(
-            id=uuid.UUID(task_id),
-            document_id=uuid.uuid4(),  # This would be the actual document ID
-            status=status_enum,
-            progress_percentage=progress,
-            current_stage=stage_enum,
-            created_at=current_time,
-            updated_at=current_time
+        asyncio.run(
+            _persist_task_status(
+                task_id,
+                status,
+                progress,
+                stage,
+                error_message,
+                current_time,
+            )
         )
 
-        if error_message:
-            task.failure_reason = error_message
+        try:
+            from src.infrastructure.database.redis_client import get_redis_client
 
-        # Save to repository
-        from src.infrastructure.database.session_factory import get_db_session
-        task_repo = TaskRepositoryImpl(get_db_session())
-        task_repo.save(task)
+            redis_client = get_redis_client()
+            redis_conn = redis_client.get_connection()
+
+            progress_data = {
+                "task_id": task_id,
+                "status": status,
+                "progress": progress,
+                "stage": stage,
+                "timestamp": current_time.isoformat(),
+                "error_message": error_message,
+            }
+
+            channel_name = f"task:{task_id}:progress"
+            redis_conn.publish(channel_name, json.dumps(progress_data))
+
+            logger.info(f"Published progress update to WebSocket channel: {channel_name}")
+            redis_conn.close()
+        except Exception as redis_err:
+            logger.error(f"Error publishing to WebSocket channel: {redis_err}")
 
     except Exception as e:
         logger.error(f"Error updating task status for {task_id}: {str(e)}")
+
+
+async def _persist_task_status(
+    task_id: str,
+    status: str,
+    progress: int,
+    stage: str,
+    error_message: Optional[str],
+    current_time: datetime,
+) -> None:
+    """Persist the task status using the async session factory."""
+    status_enum = TaskStatus(status.upper()) if isinstance(status, str) else status
+    stage_enum = normalize_stage_label(stage)
+    task_uuid = uuid.UUID(task_id)
+
+    async with db_session_factory.get_session_context() as session:
+        repository = TaskRepositoryImpl(session)
+        updated = await repository.update_status(
+            task_uuid,
+            status_enum,
+            progress,
+            stage_enum,
+            error_message,
+        )
+        if not updated:
+            logger.warning(
+                "Task %s not found when updating status to %s at stage %s",
+                task_id,
+                status_enum.value,
+                stage_enum.value,
+            )
 
 
 # Register periodic tasks

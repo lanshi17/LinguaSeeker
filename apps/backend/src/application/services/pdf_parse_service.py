@@ -1,9 +1,11 @@
 import base64
 import re
+import hashlib
 from typing import Optional, Union, Dict, Any, List
 from datetime import datetime
 import asyncio
 from pathlib import Path
+from uuid import UUID
 
 from src.application.services.base_service import BaseService
 from src.domain.models.parsing_task import ParsingTask
@@ -13,10 +15,12 @@ from src.infrastructure.storage.minio_storage_client import MinIOStorageClient
 from src.infrastructure.adapters.mineru_adapter import MinerUAdapter
 from src.infrastructure.repositories.postgres.document_repository_impl import DocumentRepositoryImpl
 from src.infrastructure.repositories.postgres.task_repository_impl import TaskRepositoryImpl
-from src.infrastructure.repositories.postgres.audit_log_repository_impl import AuditLogRepositoryImpl
 from src.utils.logger import Logger
 from src.utils.exceptions import FileUploadError, ValidationException
 from src.config.app_config import AppConfig
+from src.infrastructure.database.session_factory import db_session_factory
+from src.application.services.task_management_service import TaskManagementService
+from src.presentation.dtos.request.pdf_upload_request import UploadSource
 
 
 class PDFParseService(BaseService):
@@ -36,34 +40,47 @@ class PDFParseService(BaseService):
         self.logger = Logger()
         self.storage_client = MinIOStorageClient()
         self.mineru_adapter = MinerUAdapter()
-        # Repositories will be created lazily when needed
-        self._document_repository = None
-        self._task_repository = None
-        self._audit_log_repository = None
+        self.task_management_service = TaskManagementService(self.config)
 
-    @property
-    def document_repository(self):
-        if self._document_repository is None:
-            from src.infrastructure.repositories.postgres.document_repository_impl import DocumentRepositoryImpl
-            from src.infrastructure.database.session_factory import get_db_session
-            self._document_repository = DocumentRepositoryImpl(get_db_session())
-        return self._document_repository
+    async def save_document(self, document: Document) -> Document:
+        """Persist a document using a short-lived session."""
+        async with db_session_factory.get_session_context() as session:
+            repository = DocumentRepositoryImpl(session)
+            return await repository.save(document)
 
-    @property
-    def task_repository(self):
-        if self._task_repository is None:
-            from src.infrastructure.repositories.postgres.task_repository_impl import TaskRepositoryImpl
-            from src.infrastructure.database.session_factory import get_db_session
-            self._task_repository = TaskRepositoryImpl(get_db_session())
-        return self._task_repository
+    async def save_parsing_task(self, parsing_task: ParsingTask) -> ParsingTask:
+        """Persist a parsing task using a short-lived session."""
+        async with db_session_factory.get_session_context() as session:
+            repository = TaskRepositoryImpl(session)
+            return await repository.save(parsing_task)
 
-    @property
-    def audit_log_repository(self):
-        if self._audit_log_repository is None:
-            from src.infrastructure.repositories.postgres.audit_log_repository_impl import AuditLogRepositoryImpl
-            from src.infrastructure.database.session_factory import get_db_session
-            self._audit_log_repository = AuditLogRepositoryImpl(get_db_session())
-        return self._audit_log_repository
+    async def find_duplicate_document(
+        self,
+        upload_request: Any,
+        file_bytes: Optional[bytes],
+        filename: Optional[str] = None,
+    ) -> Optional[Document]:
+        """Return existing document that matches the computed hash, if any."""
+        if not file_bytes:
+            return None
+
+        content_hash = hashlib.sha256(file_bytes).hexdigest()
+        setattr(upload_request, "content_hash", content_hash)
+        client_hash = getattr(upload_request, "client_hash", None)
+
+        self.logger.info(
+            "[Hash Debug] Received file: %s | type=%s | length=%s | server_hash=%s | client_hash=%s | match=%s",
+            filename or getattr(upload_request, "filename", "unknown"),
+            type(file_bytes).__name__,
+            len(file_bytes),
+            content_hash,
+            client_hash,
+            client_hash == content_hash if client_hash else "n/a",
+        )
+
+        async with db_session_factory.get_session_context() as session:
+            repository = DocumentRepositoryImpl(session)
+            return await repository.find_by_content_hash(content_hash)
 
     async def process_document_async(self, parsing_task: ParsingTask, upload_request: Any) -> None:
         """
@@ -116,8 +133,9 @@ class PDFParseService(BaseService):
         Validate the upload request and create a Document entity.
         """
         self.logger.info("Validating document upload request")
+        source = self._resolve_source(upload_request)
 
-        if hasattr(upload_request, 'source') and upload_request.source == "file":
+        if source == UploadSource.FILE:
             # Validate file upload
             if not upload_request.file_content:
                 raise ValidationException("File content is required")
@@ -140,49 +158,61 @@ class PDFParseService(BaseService):
             if not self._is_valid_pdf(file_content):
                 raise ValidationException("Uploaded file is not a valid PDF")
 
-            # Create document entity
+            content_hash = getattr(upload_request, "content_hash", None)
+            if not content_hash:
+                content_hash = hashlib.sha256(file_content).hexdigest()
+            storage_path = f"uploads/{document_id}.pdf"
+
             document = Document(
                 id=document_id,
+                title=upload_request.filename,
                 filename=upload_request.filename,
                 content=file_content,
-                size=len(file_content),
                 content_type="application/pdf",
+                content_hash=content_hash,
+                file_size_bytes=len(file_content),
+                page_count=0,
+                storage_path=storage_path,
+                metadata={"source": "file"},
                 created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
+                updated_at=datetime.utcnow(),
             )
 
         else:
             # Handle PMID/DOI fetch (this would be implemented separately)
             # For now, we'll create a placeholder document
-            source_type = getattr(upload_request, 'source', 'pmid')
-            identifier = getattr(upload_request, source_type, None)
+            source_type = source.value if isinstance(source, UploadSource) else str(source)
+            identifier_attr = "pmid" if source == UploadSource.PMID else "doi"
+            identifier = getattr(upload_request, identifier_attr, None)
 
             if not identifier:
                 raise ValidationException(f"{source_type.upper()} identifier is required")
 
             # Validate PMID format (8 digits)
-            if source_type == "pmid":
-                if not re.match(r'^\d{1,8}$', identifier):
+            if source == UploadSource.PMID:
+                if not self.validate_pmid(identifier):
                     raise ValidationException("Invalid PMID format. Must be 1-8 digits.")
 
             # Validate DOI format (basic check)
-            elif source_type == "doi":
-                if not re.match(r'^10\.\d{4,9}/[-._;()/:A-Z0-9]+$', identifier, re.IGNORECASE):
+            elif source == UploadSource.DOI:
+                if not self.validate_doi(identifier):
                     raise ValidationException("Invalid DOI format.")
 
-            # Create placeholder document
+            content_hash = hashlib.sha256(f"{source_type}:{identifier}".encode("utf-8")).hexdigest()
+
             document = Document(
                 id=document_id,
+                title=f"{source_type.upper()} {identifier}",
                 filename=f"{source_type}_{identifier}.pdf",
-                content=b"",  # Will be populated after fetching
-                size=0,
+                content=b"",
                 content_type="application/pdf",
+                content_hash=content_hash,
+                file_size_bytes=0,
+                page_count=0,
+                storage_path=f"identifiers/{document_id}",
+                metadata={"source": source_type, "identifier": identifier},
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
-                metadata={
-                    "source": source_type,
-                    "identifier": identifier
-                }
             )
 
         return document
@@ -218,7 +248,7 @@ class PDFParseService(BaseService):
         document.storage_bucket = self.config.minio_bucket
 
         # Save document to database
-        await self.document_repository.save(document)
+        await self.save_document(document)
 
     async def _parse_pdf_with_mineru(self, document: Document, task_id: str) -> Dict[str, Any]:
         """
@@ -267,99 +297,58 @@ class PDFParseService(BaseService):
         document.status = "processed"
 
         # Save updated document
-        await self.document_repository.save(document)
+        await self.save_document(document)
 
         # Store evidence items (this would be implemented in evidence repository)
         # For now, we'll just log the count
         self.logger.info(f"Stored {len(evidence_items)} evidence items for document {document.id}")
 
-    async def _update_task_status(self, task_id: str, status: str, progress: int, stage: str) -> None:
+    async def _update_task_status(
+        self,
+        task_id: str,
+        status: str,
+        progress: int,
+        stage: str,
+        error_message: str | None = None,
+    ) -> None:
         """
         Update the task status in the database.
         """
-        await self.task_repository.update_status(task_id, status, progress, stage)
+        task_uuid = task_id if isinstance(task_id, UUID) else UUID(str(task_id))
+        async with db_session_factory.get_session_context() as session:
+            repository = TaskRepositoryImpl(session)
+            await repository.update_status(task_uuid, status, progress, stage, error_message)
 
     async def _handle_task_failure(self, task_id: str, error_message: str) -> None:
         """
         Handle task failure by updating status and logging the error.
         """
         self.logger.error(f"Handling task failure for {task_id}: {error_message}")
-        await self.task_repository.update_status(task_id, "failed", 0, "Failed", error_message)
-        # Log to audit trail
-        await self.audit_log_repository.log_error(task_id, error_message)
+        await self._update_task_status(task_id, "failed", 0, "Failed", error_message)
 
     async def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
         """
         Get the current status of a parsing task.
         """
-        task = await self.task_repository.get_by_id(task_id)
-        if not task:
-            return None
-
-        # Get evidence items summary
-        evidence_items = await self._get_evidence_summary(task.document_id)
-
-        return {
-            "task_id": task.id,
-            "document_id": task.document_id,
-            "status": task.status,
-            "progress_percentage": task.progress,
-            "current_stage": task.current_stage,
-            "created_at": task.created_at,
-            "updated_at": task.updated_at,
-            "completed_at": task.completed_at,
-            "error_message": task.error_message,
-            "evidence_items": evidence_items,
-            "processing_time_seconds": task.processing_time_seconds,
-            "file_size_bytes": task.file_size_bytes
-        }
-
-    async def _get_evidence_summary(self, document_id: str) -> List[Dict[str, Any]]:
-        """
-        Get a summary of evidence items for a document.
-        """
-        # This would query the evidence repository in a real implementation
-        # For now, return an empty list
-        return []
+        return await self.task_management_service.get_task_status(task_id)
 
     async def get_task_progress(self, task_id: str) -> Optional[Dict[str, Any]]:
         """
         Get real-time progress information for a parsing task.
         """
-        task = await self.task_repository.get_by_id(task_id)
-        if not task:
-            return None
-
-        return {
-            "task_id": task.id,
-            "status": task.status,
-            "progress_percentage": task.progress,
-            "current_stage": task.current_stage,
-            "updated_at": task.updated_at
-        }
+        return await self.task_management_service.get_task_progress(task_id)
 
     async def retry_task(self, task_id: str) -> bool:
         """
         Retry a failed parsing task.
         """
-        task = await self.task_repository.get_by_id(task_id)
-        if not task or task.status != "failed":
-            return False
-
-        # Reset task status
-        await self.task_repository.update_status(task_id, "pending", 0, "Pending")
-        return True
+        return await self.task_management_service.retry_task(task_id)
 
     async def cancel_task(self, task_id: str) -> bool:
         """
         Cancel a pending or processing parsing task.
         """
-        task = await self.task_repository.get_by_id(task_id)
-        if not task or task.status in ["completed", "failed", "cancelled"]:
-            return False
-
-        await self.task_repository.update_status(task_id, "cancelled", 0, "Cancelled")
-        return True
+        return await self.task_management_service.cancel_task(task_id)
 
     def validate_pmid(self, pmid: str) -> bool:
         """
@@ -376,3 +365,15 @@ class PDFParseService(BaseService):
     def perform_service(self, *args, **kwargs):
         """Abstract method implementation - not used in this service."""
         pass
+
+    def _resolve_source(self, upload_request: Any) -> UploadSource:
+        """Normalize the source on dynamic upload request objects."""
+        source_value = getattr(upload_request, "source", UploadSource.FILE)
+        if isinstance(source_value, UploadSource):
+            return source_value
+        if isinstance(source_value, str):
+            try:
+                return UploadSource(source_value.lower())
+            except ValueError:
+                return UploadSource.FILE
+        return UploadSource.FILE
