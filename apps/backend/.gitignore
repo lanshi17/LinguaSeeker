@@ -80,3 +80,4 @@ tmp/
 # Build artifacts
 *.whl
 
+**/.work_logs.sh

@@ -18,7 +18,7 @@
 
 ## 🚀 快速开始
 
-### 1. 安装依赖
+### 1. 安装依赖（使用 uv）
 ```bash
 # 复制环境变量配置
 cp .env.example .env
@@ -27,20 +27,20 @@ cp .env.example .env
 vim .env
 
 # 安装依赖
-pip install -e .
+uv sync
 
 # 检查配置
-python check_config.py
+uv run python check_config.py
 ```
 
-### 2. 启动服务
+### 2. 启动服务（使用 uv）
 ```bash
 # 方式1: 使用启动脚本
 chmod +x start.sh
 ./start.sh
 
 # 方式2: 直接运行
-python main.py
+uv run python main.py
 ```
 
 ### 3. 访问服务
