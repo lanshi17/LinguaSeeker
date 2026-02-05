@@ -13,7 +13,7 @@ async def test_db_connection():
     """Test database connection with the correct credentials."""
     # Explicitly set environment variables for this test
     os.environ['POSTGRES_USER'] = 'yangzs'
-    os.environ['POSTGRES_PASSWORD'] = '36j7Tec@4rV3W2bR'
+    os.environ['POSTGRES_PASSWORD'] = 'xxxxxxxxxx'
     os.environ['POSTGRES_HOST'] = 'localhost'
     os.environ['POSTGRES_PORT'] = '5432'
     os.environ['POSTGRES_DB'] = 'acmg_ps3'
@@ -59,7 +59,7 @@ async def create_tables_if_needed():
     """Create tables if they don't exist."""
     # Set environment variables
     os.environ['POSTGRES_USER'] = 'yangzs'
-    os.environ['POSTGRES_PASSWORD'] = '36j7Tec@4rV3W2bR'
+    os.environ['POSTGRES_PASSWORD'] = 'xxxxxx'
     os.environ['POSTGRES_HOST'] = 'localhost'
     os.environ['POSTGRES_PORT'] = '5432'
     os.environ['POSTGRES_DB'] = 'acmg_ps3'
