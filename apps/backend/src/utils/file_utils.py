@@ -146,22 +146,29 @@ def find_file_in_directory(directory: str, extension: str) -> str:
         raise FileProcessingException(f"Error searching for file: {e}")
 
 
-def get_all_files_in_directory(directory: str) -> list[str]:
-    """获取目录下所有文件的完整路径列表。
+def get_all_files_in_directory(directory: str) -> Dict[str, str]:
+    """获取目录下所有文件的完整路径Dict。
     
     Args:
         directory: 目标目录路径。
         
     Returns:
-        包含所有文件完整路径的列表。
+        包含所有文件完整路径的字典，键为文件路径，值为文件内容。
     """
-    file_paths = []
-    for root, _, files in os.walk(directory):
-        for file in files:
-            full_path = os.path.join(root, file)
-            file_paths.append(full_path)
-            logger.debug(f"Found file: {full_path}")
-    return file_paths
+    files_dict = {}
+    try:
+        path = Path(directory)
+        for file_path in path.rglob("*"):
+            if file_path.is_file():
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    files_dict[str(file_path)] = content
+                    logger.debug(f"Loaded file: {file_path}")
+        return files_dict
+    except Exception as e:
+        logger.error(f"Error reading files in directory {directory}: {e}")
+        raise FileProcessingException(f"Error reading files: {e}")
+    
 
 def ensure_directory_exists(directory: str) -> str:
     """确保目录存在，如果不存在则创建它。
@@ -175,3 +182,4 @@ def ensure_directory_exists(directory: str) -> str:
     os.makedirs(directory, exist_ok=True)
     logger.info(f"Directory ensured: {directory}")
     return directory
+

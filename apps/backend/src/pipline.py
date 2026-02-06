@@ -1,6 +1,8 @@
 from loguru import logger
 import requests
-import component.mineru as mineru
+from component.mineru import MinerUComponent
+from component.rag import RAGComponent
+from database.qdrant import QdrantManager as qdrant
 from utils.timer import Timer, timer
 import utils.exceptions as exc
 import utils.file_utils as file_utils
@@ -34,97 +36,42 @@ logger.add(
     enqueue=True, # 线程安全
 )
 
-@Timer("mineru上传文件")
-def minerU(files_path: list[str]) -> Any:
-    token=settings.mineru_api_token
-    batch_id=mineru.upload_local_files_batch(token,files_path,common_params={"model_version":cfg.mineru_version})[1]
-    if not batch_id:
-        logger.error("批量上传申请失败，无法继续。")
+mineru=MinerUComponent()
+rag=RAGComponent()
+@timer("嵌入知识库到Qdrant")
+def ingest_knowledge_to_qdrant(folder_path: str) -> None:
+    client = qdrant()
+    #测试连接
+    if not qdrant.ping(client):
+        logger.error("无法连接到 Qdrant 服务，终止嵌入过程。")
         return
-    logger.debug(f"批量上传申请结果 batch_id: {batch_id}")
-    status_info=mineru.query_batch_status(token=token,batch_id=batch_id)
-    logger.debug(f"初始状态: {status_info}")
-    #轮询等待解析完成
-    try:
-        final_status = mineru.poll_batch_status_until_done(token=token, batch_id=batch_id)
-        logger.debug(f"最终状态: {final_status}")
-    except Exception as e:
-        logger.exception(f"轮询过程中出现错误: {e}")
-        final_status = None
-        
-    #download results
-    try:
-        if not final_status:
-            logger.error("最终状态为空，无法下载结果。")
-            return None
-            
-        download_folder = file_utils.ensure_directory_exists(settings.mineru_download_dir)
-        logger.debug(f"下载目录: {download_folder}")
-        download_zip_path =uuid4().hex
-        # 从状态数据中提取下载URL（优先 full_zip_url）
-        download_url = final_status.download_url
-        if not download_url and final_status.extract_result:
-            download_url = final_status.extract_result[0].full_zip_url
-        if not download_url:
-            logger.error("最终状态中没有可用的下载URL（download_url/full_zip_url）")
-            return None
-        file_utils.download_file(
-            download_url,
-            f"{download_folder}/{download_zip_path}.zip",
-            allow_insecure_fallback=True,
-        )
-        logger.debug(f"结果已下载到: {download_folder}")
-    except exc.FileProcessingException as e:
-        logger.exception(f"下载结果时出现错误: {e}")
-        return None
-    finally:
-        pass
-    #extract the download'folder
-    try:
-        extracted_folder = file_utils.ensure_directory_exists(f"{download_folder}/extracted/{download_zip_path}")
-        logger.debug(f"解压目录: {extracted_folder}")
-        #uuid as extract folder name
-        file_utils.extract_zip(f"{download_folder}/{download_zip_path}.zip", extracted_folder)
-        logger.debug(f"结果已解压到: {extracted_folder}")
-    except exc.FileProcessingException as e:
-        logger.exception(f"解压结果时出现错误: {e}")
-        return None
-    finally:
-        pass
-    
-    # 列出解压目录下的所有文件并找到.md文件并返回md文件路径
-    try:
-        #列出解压目录下的所有文件
-        all_files = file_utils.get_all_files_in_directory(extracted_folder)
-        logger.debug(f"解压目录下的所有文件: {all_files}")
-        #找到.md文件
-        md_file_path = file_utils.find_file_in_directory(extracted_folder, ".md")
-        logger.debug(f"找到的.md文件路径: {md_file_path}")
-        return md_file_path
-    except exc.FileProcessingException as e:
-        logger.exception(f"查找.md文件时出现错误: {e}")
-        return None
-    
-    
+    #健康检查
+    if not qdrant.health_check(client):
+        logger.error("Qdrant 服务健康检查失败，终止嵌入过程。")
+        return
+    #嵌入知识库
+    logger.info(f"开始将知识库嵌入 Qdrant，文件夹路径: {folder_path}")
+    qdrant.ingest_files(client, folder_path)
+    logger.success("知识库嵌入 Qdrant 完成。")
 
 
-if __name__ == "__main__":
-    import os
-    #禁用代理 unset http_proxy https_proxy all_proxy  
-    os.environ.pop("http_proxy", None)
-    os.environ.pop("https_proxy", None)
-    os.environ.pop("all_proxy", None)    
-    # #batch test
-    # #文件夹
-    # folder_path = os.getcwd() + "/demo_pdf/"
-    # #获取文件列表
-    # files = file_utils.get_all_files_in_directory(folder_path)
-    # minerU(files)
-    #测试单个文件
-    file_path=Path(os.getcwd() + "/demo_pdf/test_de01.pdf")
-    md_file_path=minerU([str(file_path)])
-    if not isinstance(md_file_path, str):
-        logger.error("未能生成md文件")
-        sys.exit(1)
-    logger.debug("上传测试完成")
-    logger.success("解析文件完成")
+# if __name__ == "__main__":
+#     import os
+#     #禁用代理 unset http_proxy https_proxy all_proxy  
+#     os.environ.pop("http_proxy", None)
+#     os.environ.pop("https_proxy", None)
+#     os.environ.pop("all_proxy", None)    
+#     # #batch test
+#     # #文件夹
+#     # folder_path = os.getcwd() + "/demo_pdf/"
+#     # #获取文件列表
+#     # files = file_utils.get_all_files_in_directory(folder_path)
+#     # minerU(files)
+#     #测试单个文件
+#     file_path=Path(os.getcwd() + "/demo_pdf/test_de01.pdf")
+#     md_file_path=minerU([str(file_path)])
+#     if not isinstance(md_file_path, str):
+#         logger.error("未能生成md文件")
+#         sys.exit(1)
+#     logger.debug("上传测试完成")
+#     logger.success("解析文件完成")
