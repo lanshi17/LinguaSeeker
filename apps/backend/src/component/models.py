@@ -68,6 +68,9 @@ class RAGQueryRequest(BaseModel):
     query: str = Field(..., description="查询内容")
     top_k: Optional[int] = Field(5, description="返回的最相似文档数量")
     score_threshold: Optional[float] = Field(0.7, description="相似度阈值")
+    max_context_chars: Optional[int] = Field(4000, description="上下文最大字符数")
+    chunk_overlap: Optional[int] = Field(200, description="文本块重叠字符数")
+    enable_rerank: Optional[bool] = Field(True, description="是否启用重排序")
 class RAGQueryResponseItem(BaseModel):
     """RAG 查询响应单项"""
     document_id: str = Field(..., description="文档ID")

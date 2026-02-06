@@ -11,8 +11,8 @@
 
 import sys
 import os
+import asyncio
 from pathlib import Path
-
 # 添加项目根目录到 Python 路径
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
@@ -21,13 +21,13 @@ from loguru import logger
 from src.database.qdrant import QdrantManager
 from src.config import settings as cfg
 
-def main():
+async def main():
     """主函数"""
     import argparse
     
     parser = argparse.ArgumentParser(description="初始化 Qdrant 知识库")
     parser.add_argument("--reset", action="store_true", help="重置现有集合")
-    parser.add_argument("--docs-dir", type=str, default="acmg_knowledge_base", 
+    parser.add_argument("--docs-dir", type=str, default="knowledge_docs", 
                         help="知识文档目录路径")
     args = parser.parse_args()
     
@@ -50,26 +50,24 @@ def main():
         return 1
     
     # 3. 健康检查
-    if not manager.ping():
+    health = await manager.ping()
+    if health.status != "ok":
         logger.error("✗ Qdrant 服务连接失败，请检查服务是否启动")
         logger.info("提示: 使用 Docker 启动 Qdrant:")
         logger.info("  docker run -p 6333:6333 -p 6334:6334 -v $(pwd)/qdrant_storage:/qdrant/storage qdrant/qdrant")
         return 1
     logger.info("✓ Qdrant 服务连接成功")
     
-    if not manager.health_check():
-        logger.warning("⚠ Qdrant 健康检查失败")
-    else:
-        logger.info("✓ Qdrant 健康状态良好")
+    # QdrantManager does not expose a health_check method; ping is sufficient.
     
     # 4. 创建或重置集合
     try:
         if args.reset:
             logger.warning("正在重置集合...")
-            manager.reset_collection()
+            await manager.reset_collection()
             logger.info("✓ 集合重置成功")
         else:
-            manager.create_collection_if_not_exists()
+            await manager.create_collection_if_not_exists()
             logger.info("✓ 集合创建/检查成功")
     except Exception as e:
         logger.error(f"✗ 集合操作失败: {e}")
@@ -98,7 +96,7 @@ def main():
     # 6. 导入文档
     try:
         logger.info("开始导入文档到 Qdrant...")
-        manager.ingest_files(str(docs_dir))
+        await manager.ingest_files(str(docs_dir))
         logger.info("✓ 文档导入成功")
     except Exception as e:
         logger.error(f"✗ 文档导入失败: {e}")
@@ -108,9 +106,8 @@ def main():
     
     # 7. 验证导入结果
     try:
-        collection_info = manager.get_collection_info()
-        vectors_count = collection_info.points_count if hasattr(collection_info, 'points_count') else 'unknown'
-        logger.info(f"✓ 集合中的向量数量: {vectors_count}")
+        collection_info = await manager.get_collection_info()
+        logger.info(f"✓ 集合中的向量数量: {collection_info.vectors_count}")
     except Exception as e:
         logger.warning(f"⚠ 无法获取集合信息: {e}")
     
@@ -126,4 +123,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(asyncio.run(main()))

@@ -37,6 +37,13 @@ class Settings(BaseSettings):
     embedding_model: str
     embedding_dimension: int
     embedding_batch_size: int = 10
+    
+    # ==================== Rerank 配置 ====================
+    rerank_api_key: Optional[str] = None
+    rerank_base_url: Optional[str] = None
+    rerank_model: Optional[str] = None
+    rerank_top_k: int = 10
+    rerank_score_threshold: float = 0.7
 
     # ==================== MinerU 配置 ====================
     mineru_mode: str
@@ -77,10 +84,17 @@ class Settings(BaseSettings):
     # ==================== Qdrant配置 ====================
     qdrant_host: str
     qdrant_port: int = 6333
+    qdrant_https: bool = False
+    qdrant_verify_ssl: bool = True
     qdrant_collection_name: str
     qdrant_api_key: Optional[str] = None
     qdrant_dimension: int
     qdrant_prefer_grpc: bool = True
+    qdrant_top_k: int = 5
+    qdrant_score_threshold: float = 0.7
+    qdrant_max_retries: int = 3
+    qdrant_retry_delay: float = 1.0
+    qdrant_verify_ssl: bool = True
 
     # ==================== Milvus配置 ====================
     milvus_host: str

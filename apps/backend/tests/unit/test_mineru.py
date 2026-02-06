@@ -16,7 +16,7 @@ def test_minerU_pipeline_on_sample_pdf():
     os.environ.pop("https_proxy", None)
     os.environ.pop("all_proxy", None)    
     #测试单个文件
-    file_path=Path(os.getcwd() + "/demo_pdf/test_ja01.pdf")
+    file_path=Path(os.getcwd() + "/knowledge_docs/Richards 等 - 2015 - Standards and guidelines for the interpretation of sequence variants a joint consensus recommendati.pdf")
     parse_folder_path = mineru.minerU_pipeline([str(file_path)])
     assert isinstance(parse_folder_path, str)
     # 文件夹列表包含.md文件和图片文件

@@ -8,8 +8,11 @@ dotenv.load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env.local")
 
 # Add src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
-
+# Disable proxies for tests
+import os
+os.environ.pop("http_proxy", None)
+os.environ.pop("https_proxy", None)
+os.environ.pop("all_proxy", None)  
 import pytest
 @pytest.fixture(scope="session")
 def any_global_fixture():

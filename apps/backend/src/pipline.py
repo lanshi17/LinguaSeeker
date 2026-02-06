@@ -2,7 +2,7 @@ from loguru import logger
 import requests
 from component.mineru import MinerUComponent
 from component.rag import RAGComponent
-from database.qdrant import QdrantManager as qdrant
+from database.qdrant import QdrantManager
 from utils.timer import Timer, timer
 import utils.exceptions as exc
 import utils.file_utils as file_utils
@@ -38,21 +38,7 @@ logger.add(
 
 mineru=MinerUComponent()
 rag=RAGComponent()
-@timer("嵌入知识库到Qdrant")
-def ingest_knowledge_to_qdrant(folder_path: str) -> None:
-    client = qdrant()
-    #测试连接
-    if not qdrant.ping(client):
-        logger.error("无法连接到 Qdrant 服务，终止嵌入过程。")
-        return
-    #健康检查
-    if not qdrant.health_check(client):
-        logger.error("Qdrant 服务健康检查失败，终止嵌入过程。")
-        return
-    #嵌入知识库
-    logger.info(f"开始将知识库嵌入 Qdrant，文件夹路径: {folder_path}")
-    qdrant.ingest_files(client, folder_path)
-    logger.success("知识库嵌入 Qdrant 完成。")
+
 
 
 # if __name__ == "__main__":

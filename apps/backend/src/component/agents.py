@@ -265,7 +265,7 @@ def validate_ps3_step2(assay_suitable: str) -> dict:
         }
 
 @tool
-def search_knowledge_base(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
+async def search_knowledge_base(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
     """
     从 Qdrant 知识库中检索相关文档
     
@@ -277,14 +277,14 @@ def search_knowledge_base(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         包含相关文档的列表，每个文档包含 content 和 score
     """
     try:
-        qdrant_manager = get_qdrant_manager()
-        embedding_client = get_embedding_client()
+        qdrant_manager = rag.get_qdrant_manager()
+        embedding_client = rag.get_embedding_client()
         
         # 生成查询向量
         query_vector = embedding_client.embed_query(query)
         
         # 检索相关文档
-        search_results = qdrant_manager.client.search(
+        search_results = await qdrant_manager.client.search(
             collection_name=qdrant_manager.collection_name,
             query_vector=query_vector,
             limit=top_k,
@@ -390,7 +390,7 @@ def fuse_layout(state: ProcessingState) -> ProcessingState:
     return state
 
 @timer("步骤4: 证据提取+RAG")
-def extract_ps3_evidence(state: ProcessingState) -> ProcessingState:
+async def extract_ps3_evidence(state: ProcessingState) -> ProcessingState:
     """使用 LLM + RAG 提取 PS3 证据"""
     logger.info("开始提取 PS3 证据...")
     
@@ -413,7 +413,7 @@ def extract_ps3_evidence(state: ProcessingState) -> ProcessingState:
                 query_vector = embedding_client.embed_query(query)
                 
                 # 检索相关文档
-                search_results = qdrant_manager.client.search(  # type: ignore
+                search_results = await qdrant_manager.client.search(  # type: ignore
                     collection_name=qdrant_manager.collection_name,
                     query_vector=query_vector,
                     limit=3,
