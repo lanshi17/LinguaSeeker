@@ -1,73 +1,123 @@
-# React + TypeScript + Vite
+# Multi-ACGM-fronted
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based frontend application for the Multi-ACGM project that enables processing and analysis of PDF documents using advanced AI techniques.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- PDF Upload and Processing
+- Advanced Document Analysis
+- Interactive Visualization
+- Real-time Status Monitoring
 
-## React Compiler
+## Architecture
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+This application follows a modern React + TypeScript + Vite architecture with the following key components:
 
-## Expanding the ESLint configuration
+- **Frontend Framework**: React 18 with TypeScript
+- **Build Tool**: Vite for fast development
+- **Styling**: Tailwind CSS
+- **State Management**: Zustand
+- **Routing**: React Router DOM
+- **HTTP Client**: Axios
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## PDF Upload Functionality
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Upload Endpoint
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+The application supports PDF uploads via a single unified endpoint:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+POST /api/v1/pdf/upload
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Upload Method
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **Form Data Upload**: The application exclusively uses `multipart/form-data` format for PDF uploads
+- **File Parameter**: The PDF file should be sent as the `file` parameter
+- **Content Type**: `application/pdf` files are accepted
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Example Request
+
+```javascript
+const formData = new FormData();
+formData.append('file', pdfFile);
+
+const response = await axios.post('/api/v1/pdf/upload', formData, {
+  headers: {
+    'Content-Type': 'multipart/form-data'
+  }
+});
 ```
+
+## Project Structure
+
+```
+src/
+├── components/          # Reusable UI components
+├── pages/              # Page components
+├── services/           # API services
+├── utils/              # Utility functions
+├── store/              # State management (Zustand)
+├── hooks/              # Custom React hooks
+├── types/              # TypeScript type definitions
+└── assets/             # Static assets
+```
+
+## Environment Variables
+
+The application uses the following environment variables:
+
+- `VITE_API_BASE_URL` - Base URL for the backend API
+- `VITE_APP_TITLE` - Application title
+
+## Development Setup
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Copy environment variables:
+```bash
+cp .env.local.example .env.local
+```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+## Building for Production
+
+To build the application for production:
+
+```bash
+npm run build
+```
+
+## API Documentation
+
+For detailed API documentation, refer to the `api_docs/` directory.
+
+## Technologies Used
+
+- [React](https://reactjs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Vite](https://vitejs.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Axios](https://axios-http.com/)
+- [Zustand](https://zustand-demo.pmnd.rs/)
+- [React Router DOM](https://reactrouter.com/)
+- [Lucide React](https://lucide.dev/)
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License.

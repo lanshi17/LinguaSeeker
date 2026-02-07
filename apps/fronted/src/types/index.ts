@@ -2,6 +2,9 @@
  * 核心类型定义
  */
 
+// 导出 API 类型
+export * from './api';
+
 // 证据类型常量对象
 export const EvidenceType = {
   PVS: 'PVS',

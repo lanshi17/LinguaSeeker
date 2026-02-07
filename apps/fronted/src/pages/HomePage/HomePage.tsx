@@ -10,25 +10,37 @@
  */
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Upload, 
-  FileText, 
-  Search, 
-  Network, 
-  ArrowRight, 
-  Loader2, 
-  Link2, 
-  AlertCircle, 
+import {
+  Upload,
+  FileText,
+  Search,
+  Network,
+  ArrowRight,
+  Loader2,
+  Link2,
+  AlertCircle,
   CheckCircle,
   Sparkles,
   BookOpen,
   MousePointerClick,
   Zap,
   MonitorSmartphone,
-  ChevronRight
+  ChevronRight,
+  Eye,
+  X,
+  Microscope
 } from 'lucide-react';
-import { useDocumentStore } from '../../store/documentStore';
-import { uploadDocument, fetchByPMID } from '../../services/documentApi';
+import {
+  uploadPDFForm,
+  fetchByPMID,
+  fetchByDOI,
+  pollTaskStatus
+} from '../../services/api';
+import { useTaskQueue } from '../../hooks/useTaskPolling';
+import { ProxyDiagnostic } from '../../components/debug/ProxyDiagnostic/ProxyDiagnostic';
+import { validatePDFFile, getUserFriendlyError } from '../../services/errorHandler';
+import { calculateFileHash, formatFileSize } from '../../utils/helpers/fileUtils';
+import type { TaskStatusResponse } from '../../types';
 import './HomePage.css';
 
 /**
@@ -70,49 +82,156 @@ const features = [
     desc: 'Adapts to different screen sizes',
     detail: 'Auto-switch to tab mode on small screens'
   },
+  {
+    icon: <Microscope size={20} />,
+    title: 'Evidence Visualization',
+    desc: 'Interactive medical evidence highlighting and analysis',
+    detail: 'Four-pane layout with real-time evidence positioning'
+  },
 ];
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { taskQueue, addTask, updateTask, removeTask } = useDocumentStore();
+  const { queue, activeCount, addTask, updateTaskProgress, removeTask } = useTaskQueue();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const [searchKeyword, setSearchKeyword] = useState('');
   const [textInput, setTextInput] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [activeTab, setActiveTab] = useState<'upload' | 'text'>('upload');
   const [showMoreFeatures, setShowMoreFeatures] = useState(false);
+  
+  const [processingInput, setProcessingInput] = useState(false);
+  
+  // 错误提示状态
+  const [uploadError, setUploadError] = useState<{title: string; message: string; type: 'error' | 'warning' | 'info'; action?: string} | null>(null);
+  
+  // 统一使用 form-data 上传
+  const useFormDataUpload = true;
+  
+  // 调试模式：强制上传（绕过重复检测）
+  const [forceUpload, setForceUpload] = useState(false);
+  
+  // 当前上传文件信息（用于显示）
+  const [currentFile, setCurrentFile] = useState<{name: string; size: string; hash: string} | null>(null);
 
   /**
-   * Handle file upload
+   * 触发文件选择
+   */
+  const handleSelectFile = () => {
+    fileInputRef.current?.click();
+  };
+
+  /**
+   * 处理文件上传
    */
   const handleFileUpload = useCallback(async (file: File) => {
-    if (file.type !== 'application/pdf') {
-      alert('Please upload a PDF file');
+    // 清除之前的错误和文件信息
+    setUploadError(null);
+    setCurrentFile(null);
+    
+    // 验证文件
+    const validation = validatePDFFile(file);
+    if (!validation.valid) {
+      setUploadError({
+        title: '文件验证失败',
+        message: validation.error || '文件不符合要求',
+        type: 'warning',
+      });
       return;
     }
 
+    // 计算文件 hash 用于调试
+    const fileHash = await calculateFileHash(file);
+    setCurrentFile({
+      name: file.name,
+      size: formatFileSize(file.size),
+      hash: fileHash,
+    });
+    
+    console.log('[Upload] 文件信息:', {
+      name: file.name,
+      size: formatFileSize(file.size),
+      hash: fileHash,
+      type: file.type,
+    });
+
     const taskId = `upload-${Date.now()}`;
-    addTask({ id: taskId, type: 'upload' });
+    addTask({ 
+      id: taskId, 
+      type: 'pdf_upload', 
+      title: file.name,
+      description: 'PDF 文件上传'
+    });
 
     try {
-      updateTask(taskId, { status: 'processing', progress: 30 });
-      const result = await uploadDocument(file);
-      
-      updateTask(taskId, { status: 'completed', progress: 100 });
-      setTimeout(() => removeTask(taskId), 3000);
-      
-      navigate(`/analysis/${result.id}`);
-    } catch (err) {
-      updateTask(taskId, { 
-        status: 'error', 
-        progress: 0,
-        error: err instanceof Error ? err.message : 'Upload failed'
+      // 统一使用 form-data 方式上传
+      console.log('[Upload] 使用 form-data 方式上传 (multipart/form-data)', { force: forceUpload });
+      const response = await uploadPDFForm(file, 0, forceUpload, fileHash);
+
+      // 开始轮询任务状态
+      pollTaskStatus(
+        response.task_id,
+        (status) => {
+          updateTaskProgress(taskId, status);
+        }
+      ).then((finalStatus) => {
+        if (finalStatus.status === 'completed') {
+          // 跳转到分析页面
+          setTimeout(() => {
+            navigate(`/analysis/${finalStatus.document_id}`);
+          }, 1000);
+        }
       });
+    } catch (err) {
+      const userError = getUserFriendlyError(err);
+      
+      // 控制台输出详细错误分类（用于调试）
+      console.error('[Upload] 上传失败:', {
+        type: userError.type,
+        title: userError.title,
+        description: userError.description,
+        action: userError.action,
+        file: currentFile,
+        hash: fileHash, // 前端计算的 hash
+        error: err,
+      });
+      
+      // 特别输出 hash 调试信息（用于与后端对比）
+      if (userError.type === 'warning' && userError.title === '文件已上传过') {
+        console.warn('[Hash Debug] 检测到重复文件:');
+        console.warn('  前端计算 Hash (SHA-256):', fileHash);
+        console.warn('  文件名:', file.name);
+        console.warn('  文件大小:', formatFileSize(file.size));
+        console.warn('  请与后端日志中的 hash 值对比');
+      }
+      
+      setUploadError({
+        title: userError.title,
+        message: userError.description,
+        type: userError.type,
+        action: userError.action,
+      });
+      
+      updateTaskProgress(taskId, {
+        task_id: taskId,
+        document_id: '',
+        status: 'failed',
+        progress_percentage: 0,
+        current_stage: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        completed_at: null,
+        error_message: userError.description,
+        evidence_items: [],
+        processing_time_seconds: null,
+        file_size_bytes: file.size,
+      } as TaskStatusResponse);
     }
-  }, [addTask, updateTask, removeTask, navigate]);
+  }, [addTask, updateTaskProgress, navigate, useBinaryUpload, forceUpload]);
 
   /**
-   * Handle drag and drop
+   * 处理拖拽
    */
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -129,7 +248,7 @@ export const HomePage: React.FC = () => {
   };
 
   /**
-   * Handle text input submission (PMID/DOI/URL)
+   * 处理文本输入提交 (PMID/DOI/URL)
    */
   const handleTextSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,45 +256,106 @@ export const HomePage: React.FC = () => {
 
     const detectedType = detectInputType(textInput);
     if (detectedType === 'unknown') {
-      alert('Cannot recognize input type. Please enter PMID (numbers), DOI (10.xxx), or URL (http/https)');
+      alert('无法识别输入类型。请输入 PMID (纯数字)、DOI (10.xxx开头) 或 URL (http/https)');
       return;
     }
     
-    const type = detectedType as 'pmid' | 'doi' | 'url';
-    const taskId = `${type}-${Date.now()}`;
+    setProcessingInput(true);
+    const input = textInput.trim();
     
-    addTask({ id: taskId, type });
-    updateTask(taskId, { status: 'processing', progress: 50 });
+    const taskId = `${detectedType}-${Date.now()}`;
+    
+    addTask({ 
+      id: taskId, 
+      type: detectedType === 'pmid' ? 'pmid_fetch' : detectedType === 'doi' ? 'doi_fetch' : 'pmid_fetch',
+      title: detectedType.toUpperCase(),
+      description: input
+    });
 
     try {
-      if (type === 'pmid') {
-        const doc = await fetchByPMID(textInput.trim());
-        updateTask(taskId, { status: 'completed', progress: 100 });
-        setTimeout(() => removeTask(taskId), 3000);
-        navigate(`/analysis/${doc.id}`);
+      let response;
+      
+      if (detectedType === 'pmid') {
+        response = await fetchByPMID({ pmid: input });
+      } else if (detectedType === 'doi') {
+        response = await fetchByDOI({ doi: input });
       } else {
-        // DOI/URL not yet supported, demo redirect
-        await new Promise(r => setTimeout(r, 1000));
-        updateTask(taskId, { status: 'completed', progress: 100 });
-        setTimeout(() => removeTask(taskId), 3000);
-        navigate('/analysis/demo');
+        // URL 暂不支持，使用演示数据
+        setTimeout(() => {
+          navigate('/analysis/demo');
+        }, 1000);
+        setProcessingInput(false);
+        return;
       }
-    } catch (err) {
-      updateTask(taskId, { 
-        status: 'error', 
-        progress: 0,
-        error: 'Fetch failed'
+
+      // 开始轮询任务状态
+      pollTaskStatus(
+        response.task_id,
+        (status) => {
+          updateTaskProgress(taskId, status);
+        }
+      ).then((finalStatus) => {
+        if (finalStatus.status === 'completed') {
+          setTimeout(() => {
+            navigate(`/analysis/${finalStatus.document_id}`);
+          }, 1000);
+        }
+        setProcessingInput(false);
       });
+    } catch (err) {
+      updateTaskProgress(taskId, {
+        task_id: taskId,
+        document_id: '',
+        status: 'failed',
+        progress_percentage: 0,
+        current_stage: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        completed_at: null,
+        error_message: err instanceof Error ? err.message : '获取失败',
+        evidence_items: [],
+        processing_time_seconds: null,
+        file_size_bytes: null,
+      } as TaskStatusResponse);
+      setProcessingInput(false);
     }
   };
 
   /**
-   * Handle graph search
+   * 处理图谱搜索
    */
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchKeyword.trim()) return;
     navigate(`/graph?keyword=${encodeURIComponent(searchKeyword.trim())}`);
+  };
+
+  /**
+   * 获取任务类型显示文本
+   */
+  const getTaskTypeText = (type: string): string => {
+    switch (type) {
+      case 'pdf_upload': return 'PDF 上传';
+      case 'pmid_fetch': return 'PMID 分析';
+      case 'doi_fetch': return 'DOI 分析';
+      default: return '未知任务';
+    }
+  };
+
+  /**
+   * 获取状态图标
+   */
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'processing':
+        return <Loader2 className="spin" size={16} />;
+      case 'completed':
+        return <CheckCircle size={16} className="success" />;
+      case 'failed':
+        return <AlertCircle size={16} className="error" />;
+      default:
+        return <ClockIcon size={16} />;
+    }
   };
 
   return (
@@ -185,16 +365,16 @@ export const HomePage: React.FC = () => {
         <div className="hero-content">
           <div className="hero-badge">
             <Sparkles size={14} />
-            <span>Multi-source Literature Intelligence System</span>
+            <span>多源文献智能解析系统</span>
           </div>
           <h1 className="hero-title">
             <span className="gradient-text">Multi-ACMG</span>
-            <span>Literature Evidence Analysis</span>
+            <span>文献证据分析</span>
           </h1>
           <p className="hero-subtitle">
-            Intelligently analyze medical literature, auto-extract ACMG evidence, build knowledge graphs
+            智能解析医学文献，自动提取 ACMG 证据，构建知识图谱
             <br />
-            Supports semantic chapter alignment, triple-panel linkage, precise evidence positioning
+            支持语义章节对齐、三屏联动、精确证据定位
           </p>
         </div>
       </section>
@@ -208,7 +388,7 @@ export const HomePage: React.FC = () => {
               className={activeTab === 'upload' ? 'active' : ''}
               onClick={() => setActiveTab('upload')}
             >
-              <Upload size={16} /> PDF Upload
+              <Upload size={16} /> PDF 上传
             </button>
             <button
               className={activeTab === 'text' ? 'active' : ''}
@@ -220,24 +400,103 @@ export const HomePage: React.FC = () => {
 
           {activeTab === 'upload' ? (
             <div
-              className={`upload-zone ${isDragging ? 'dragging' : ''}`}
+              className={`upload-zone ${isDragging ? 'dragging' : ''} ${uploadError ? 'has-error' : ''}`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
+              {uploadError && (
+                <div className={`upload-error ${uploadError.type}`}>
+                  <AlertCircle size={20} />
+                  <div className="error-content">
+                    <strong>{uploadError.title}</strong>
+                    <span>{uploadError.message}</span>
+                    {uploadError.action && (
+                      <span className="error-action">{uploadError.action}</span>
+                    )}
+                    {/* 重复文件错误：提供查看文档库选项 */}
+                    {uploadError.title === '文件已上传过' && (
+                      <div className="error-actions">
+                        <button 
+                          className="btn-view-library"
+                          onClick={() => navigate('/library')}
+                        >
+                          查看文档库
+                        </button>
+                        <button 
+                          className="btn-upload-other"
+                          onClick={() => {
+                            setUploadError(null);
+                            handleSelectFile();
+                          }}
+                        >
+                          上传其他文件
+                        </button>
+                      </div>
+                    )}
+                    <button 
+                      className="btn-dismiss"
+                      onClick={() => setUploadError(null)}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {/* 当前文件信息显示 */}
+              {currentFile && !uploadError && (
+                <div className="current-file-info">
+                  <FileText size={16} />
+                  <div className="file-details">
+                    <span className="file-name">{currentFile.name}</span>
+                    <span className="file-meta">{currentFile.size} · Hash: {currentFile.hash.slice(0, 16)}...</span>
+                  </div>
+                </div>
+              )}
               <div className="upload-icon">
                 <Upload size={48} />
               </div>
-              <h3>Drag PDF file here</h3>
-              <p>Or click to select file, batch upload supported</p>
+              <h3>拖拽 PDF 文件到此处</h3>
+              <p>支持 PDF 格式，最大 50MB</p>
               <input
+                ref={fileInputRef}
                 type="file"
                 accept=".pdf"
-                onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    handleFileUpload(e.target.files[0]);
+                    // 重置 input 以便可以再次选择同一文件
+                    e.target.value = '';
+                  }
+                }}
               />
-              <button className="action-btn primary">
-                Select File <ArrowRight size={16} />
+              <button 
+                className="action-btn primary" 
+                onClick={handleSelectFile}
+                type="button"
+              >
+                选择文件 <ArrowRight size={16} />
               </button>
+              
+              {/* 调试模式：强制上传（绕过重复检测） */}
+              {import.meta.env.DEV && (
+                <div className="debug-options">
+                  <label className="debug-upload-toggle warning">
+                    <input
+                      type="checkbox"
+                      checked={forceUpload}
+                      onChange={(e) => setForceUpload(e.target.checked)}
+                    />
+                    <span>⚠️ 强制上传（绕过重复检测）</span>
+                  </label>
+                  {currentFile && (
+                    <div className="debug-hash-info">
+                      <code>Hash: {currentFile.hash.slice(0, 24)}...</code>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <form onSubmit={handleTextSubmit} className="text-input-form">
@@ -247,7 +506,8 @@ export const HomePage: React.FC = () => {
                   type="text"
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="Enter PMID (e.g., 12345678) or DOI/URL..."
+                  placeholder="输入 PMID (如 12345678) 或 DOI/URL..."
+                  disabled={processingInput}
                 />
                 {textInput && (
                   <span className={`input-type ${detectInputType(textInput)}`}>
@@ -258,9 +518,13 @@ export const HomePage: React.FC = () => {
               <button
                 type="submit"
                 className="action-btn primary"
-                disabled={!textInput.trim()}
+                disabled={!textInput.trim() || processingInput}
               >
-                Analyze <ArrowRight size={16} />
+                {processingInput ? (
+                  <><Loader2 size={16} className="spin" /> 处理中...</>
+                ) : (
+                  <>开始分析 <ArrowRight size={16} /></>
+                )}
               </button>
             </form>
           )}
@@ -271,8 +535,8 @@ export const HomePage: React.FC = () => {
           <div className="action-icon">
             <Network size={32} />
           </div>
-          <h3>Evidence Graph</h3>
-          <p>Search for genes, transcripts, variants, and more</p>
+          <h3>证据图谱</h3>
+          <p>搜索基因、转录本、变异位点等</p>
           <form onSubmit={handleSearchSubmit}>
             <div className="search-input-group">
               <Search size={16} />
@@ -280,7 +544,7 @@ export const HomePage: React.FC = () => {
                 type="text"
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                placeholder="Enter keywords (e.g., BRCA1, TRPV1)..."
+                placeholder="输入关键词 (如 BRCA1, TRPV1)..."
               />
             </div>
             <button
@@ -288,28 +552,49 @@ export const HomePage: React.FC = () => {
               className="action-btn"
               disabled={!searchKeyword.trim()}
             >
-              Search <ArrowRight size={16} />
+              搜索 <ArrowRight size={16} />
             </button>
           </form>
+        </div>
+
+        {/* Evidence demo card */}
+        <div className="action-card demo-card" onClick={() => navigate('/evidence-demo')}>
+          <div className="action-icon">
+            <Microscope size={32} />
+          </div>
+          <h3>证据可视化演示</h3>
+          <p>体验医学文献证据高亮与交互分析</p>
+          <div className="demo-features">
+            <span className="demo-tag">四窗格布局</span>
+            <span className="demo-tag">实时高亮</span>
+            <span className="demo-tag">双向交互</span>
+          </div>
+          <button className="action-btn primary">
+            查看演示 <ArrowRight size={16} />
+          </button>
         </div>
       </section>
 
       {/* Task status panel */}
-      {taskQueue.length > 0 && (
+      {queue.length > 0 && (
         <section className="task-panel">
-          <h3>Task Status</h3>
+          <div className="task-panel-header">
+            <h3>任务状态</h3>
+            {activeCount > 0 && (
+              <span className="task-count">{activeCount} 个进行中</span>
+            )}
+          </div>
           <div className="task-list">
-            {taskQueue.map((task) => (
+            {queue.map((task) => (
               <div key={task.id} className={`task-item ${task.status}`}>
                 <div className="task-info">
-                  {task.status === 'processing' && <Loader2 className="spin" size={16} />}
-                  {task.status === 'completed' && <CheckCircle size={16} className="success" />}
-                  {task.status === 'error' && <AlertCircle size={16} className="error" />}
-                  <span className="task-type">
-                    {task.type === 'upload' ? 'PDF Upload' : 
-                     task.type === 'pmid' ? 'PMID Analysis' : 
-                     task.type === 'doi' ? 'DOI Analysis' : 'URL Analysis'}
-                  </span>
+                  {getStatusIcon(task.status)}
+                  <div className="task-details">
+                    <span className="task-type">{getTaskTypeText(task.type)}</span>
+                    {task.description && (
+                      <span className="task-desc">{task.description}</span>
+                    )}
+                  </div>
                 </div>
                 <div className="task-progress">
                   <div className="progress-bar">
@@ -318,8 +603,28 @@ export const HomePage: React.FC = () => {
                       style={{ width: `${task.progress}%` }}
                     />
                   </div>
-                  {task.error && <span className="error-text">{task.error}</span>}
+                  <div className="task-actions">
+                    <span className="progress-text">{task.progress}%</span>
+                    {task.documentId && (
+                      <button 
+                        className="btn-view"
+                        onClick={() => navigate(`/analysis/${task.documentId}`)}
+                      >
+                        <Eye size={14} />
+                      </button>
+                    )}
+                    <button 
+                      className="btn-remove"
+                      onClick={() => removeTask(task.id)}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
                 </div>
+                {task.currentStage && (
+                  <span className="task-stage">{task.currentStage}</span>
+                )}
+                {task.error && <span className="error-text">{task.error}</span>}
               </div>
             ))}
           </div>
@@ -328,7 +633,7 @@ export const HomePage: React.FC = () => {
 
       {/* Feature comparison */}
       <section className="features-section">
-        <h2>Key Features</h2>
+        <h2>核心功能</h2>
         <div className="features-grid">
           {features.map((feature, idx) => (
             <div key={idx} className="feature-card">
@@ -344,7 +649,7 @@ export const HomePage: React.FC = () => {
           className="more-features-btn"
           onClick={() => setShowMoreFeatures(!showMoreFeatures)}
         >
-          {showMoreFeatures ? 'Collapse' : 'Learn More'}
+          {showMoreFeatures ? '收起' : '了解更多'}
           <ChevronRight size={16} className={showMoreFeatures ? 'rotate' : ''} />
         </button>
         
@@ -360,29 +665,29 @@ export const HomePage: React.FC = () => {
               </thead>
               <tbody>
                 <tr>
-                  <td>Content length difference</td>
-                  <td>Pixel-based scrolling → severe misalignment</td>
-                  <td>Semantic chapter alignment + progress compensation</td>
+                  <td>内容长度差异</td>
+                  <td>像素级滚动 → 严重错位</td>
+                  <td>语义章节对齐 + 进度补偿</td>
                 </tr>
                 <tr>
-                  <td>Vague chapter boundaries</td>
-                  <td>Cannot identify "current chapter"</td>
-                  <td>Intersection Observer precisely identifies visible chapters</td>
+                  <td>章节边界模糊</td>
+                  <td>无法识别"当前章节"</td>
+                  <td>Intersection Observer 精确识别</td>
                 </tr>
                 <tr>
-                  <td>Poor user control</td>
-                  <td>Passive sync, easy to get lost</td>
-                  <td>Sidebar navigation + align button, user-driven</td>
+                  <td>用户控制性差</td>
+                  <td>被动同步，容易迷失</td>
+                  <td>侧边栏导航 + 对齐按钮，用户主导</td>
                 </tr>
                 <tr>
-                  <td>Performance issues</td>
-                  <td>High-frequency scroll events</td>
-                  <td>Debouncing + throttling + fallback strategies</td>
+                  <td>性能问题</td>
+                  <td>高频滚动事件</td>
+                  <td>防抖 + 节流 + 降级策略</td>
                 </tr>
                 <tr>
-                  <td>Poor small-screen experience</td>
-                  <td>Dual-column squeezes content</td>
-                  <td>Responsive auto-switch to tab mode</td>
+                  <td>小屏体验差</td>
+                  <td>双栏挤压内容</td>
+                  <td>响应式自动切换标签模式</td>
                 </tr>
               </tbody>
             </table>
@@ -390,10 +695,36 @@ export const HomePage: React.FC = () => {
         )}
       </section>
 
+      {/* 代理连接测试 */}
+      {import.meta.env.DEV && (
+        <section className="proxy-test-section">
+          <ProxyDiagnostic />
+        </section>
+      )}
+
       {/* Footer */}
       <footer className="home-footer">
-        <p>Multi-ACMG Literature Evidence Analysis System</p>
+        <p>Multi-ACMG 文献证据分析系统</p>
       </footer>
     </div>
   );
 };
+
+// 时钟图标组件
+const ClockIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+export default HomePage;

@@ -6,10 +6,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, Share2, AlertCircle } from 'lucide-react';
-import { OptimizedTriplePanel } from '../../components/OptimizedTriplePanel/OptimizedTriplePanel';
+import { OptimizedTriplePanel } from '../../components/markdown/OptimizedTriplePanel/OptimizedTriplePanel';
 import { useDocumentStore } from '../../store/documentStore';
 import { getDocument } from '../../services/documentApi';
-import { URLStateManager } from '../../utils/urlState';
+import { URLStateManager } from '../../utils/helpers/urlState';
 import type { DocumentData } from '../../types';
 import './AnalysisPage.css';
 

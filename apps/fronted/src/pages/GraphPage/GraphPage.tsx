@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter } from 'lucide-react';
-import { ForceGraph } from '../../components/Graph/ForceGraph';
+import { ForceGraph } from '../../components/graph/ForceGraph/ForceGraph';
 import { useDocumentStore } from '../../store/documentStore';
 import { EvidenceType } from '../../types';
 import type { GraphNode, GraphEdge } from '../../types';

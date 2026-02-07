@@ -4,7 +4,7 @@
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { TriplePanelState, Evidence } from '../types';
-import { URLStateManager } from '../utils/urlState';
+import { URLStateManager } from '../utils/helpers/urlState';
 
 interface UseTriplePanelOptions {
   docId: string;

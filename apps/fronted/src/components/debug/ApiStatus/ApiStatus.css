@@ -1,0 +1,402 @@
+/* API Status Component Styles */
+
+.api-status {
+  position: relative;
+  display: inline-block;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 12px;
+  color: #374151;
+  transition: all 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+
+.status-indicator:hover {
+  background: #f9fafb;
+}
+
+.status-indicator.connected {
+  border-color: #10b981;
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-indicator.disconnected {
+  border-color: #ef4444;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-indicator.checking {
+  border-color: #3b82f6;
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-text {
+  font-weight: 500;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Status Details Popup */
+.status-details {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  padding: 16px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.details-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.details-header h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #111827;
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #f3f4f6;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Detail Sections */
+.detail-section {
+  margin-bottom: 16px;
+}
+
+.detail-section h5 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px 0;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.detail-label {
+  color: #6b7280;
+  min-width: 70px;
+}
+
+.detail-value {
+  color: #111827;
+  font-family: monospace;
+  font-size: 11px;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Summary Box */
+.summary-box {
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.summary-box.success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+.summary-box.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #ef4444;
+}
+
+/* Checks List */
+.checks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.check-item.ok {
+  background: #f0fdf4;
+}
+
+.check-item.warning {
+  background: #fffbeb;
+}
+
+.check-item.error {
+  background: #fef2f2;
+}
+
+.check-icon {
+  flex-shrink: 0;
+}
+
+.check-name {
+  font-weight: 500;
+  color: #111827;
+  min-width: 100px;
+}
+
+.check-message {
+  color: #6b7280;
+  flex: 1;
+}
+
+/* Recommendations */
+.recommendations-list {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.recommendations-list li {
+  margin-bottom: 6px;
+}
+
+/* Quick Actions */
+.quick-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex: 1;
+  justify-content: center;
+}
+
+.btn-action:hover {
+  background: #2563eb;
+}
+
+.btn-action.secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.btn-action.secondary:hover {
+  background: #e5e7eb;
+}
+
+/* Help Text */
+.help-text {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.help-text p {
+  margin: 0 0 6px 0;
+  font-weight: 500;
+}
+
+.help-text ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.help-text li {
+  margin-bottom: 4px;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .status-indicator {
+    background: #1f2937;
+    border-color: #374151;
+    color: #e5e7eb;
+  }
+  
+  .status-indicator:hover {
+    background: #111827;
+  }
+  
+  .status-indicator.connected {
+    background: #065f46;
+    border-color: #10b981;
+    color: #6ee7b7;
+  }
+  
+  .status-indicator.disconnected {
+    background: #7f1d1d;
+    border-color: #ef4444;
+    color: #fca5a5;
+  }
+  
+  .status-indicator.checking {
+    background: #1e3a8a;
+    border-color: #3b82f6;
+    color: #93c5fd;
+  }
+  
+  .status-details {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .details-header {
+    border-color: #374151;
+  }
+  
+  .details-header h4 {
+    color: #e5e7eb;
+  }
+  
+  .btn-icon {
+    background: #374151;
+    color: #9ca3af;
+  }
+  
+  .btn-icon:hover {
+    background: #4b5563;
+    color: #e5e7eb;
+  }
+  
+  .detail-section h5 {
+    color: #9ca3af;
+  }
+  
+  .detail-value {
+    background: #111827;
+    color: #e5e7eb;
+  }
+  
+  .check-item.ok {
+    background: #064e3b;
+  }
+  
+  .check-item.warning {
+    background: #78350f;
+  }
+  
+  .check-item.error {
+    background: #7f1d1d;
+  }
+  
+  .check-name {
+    color: #e5e7eb;
+  }
+  
+  .check-message {
+    color: #9ca3af;
+  }
+  
+  .summary-box.success {
+    background: #064e3b;
+    color: #6ee7b7;
+  }
+  
+  .summary-box.error {
+    background: #7f1d1d;
+    color: #fca5a5;
+  }
+  
+  .recommendations-list {
+    color: #d1d5db;
+  }
+  
+  .btn-action.secondary {
+    background: #374151;
+    color: #e5e7eb;
+  }
+  
+  .btn-action.secondary:hover {
+    background: #4b5563;
+  }
+  
+  .help-text {
+    border-color: #374151;
+    color: #9ca3af;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .status-details {
+    width: 300px;
+    right: -60px;
+  }
+}

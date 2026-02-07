@@ -1,0 +1,115 @@
+{
+  "metadata": {
+    "document_id": "demo_001",
+    "analysis_date": "2024-01-15T10:30:00Z",
+    "version": "1.0"
+  },
+  "evidence_items": [
+    {
+      "id": "E1",
+      "type": "text",
+      "purpose": "disease_mechanism",
+      "locator": {
+        "file": "en_format.md",
+        "char_start": 245,
+        "char_end": 380,
+        "line_start": 12,
+        "line_end": 14
+      },
+      "quote": "The TRPV1 channel is a polymodal nociceptor that plays a critical role in pain sensation and thermoregulation.",
+      "keywords": {
+        "raw": ["TRPV1", "nociceptor", "pain sensation"],
+        "normalized": ["trpv1", "nociceptor", "pain"],
+        "tex_wrapped": ["TRPV1", "n = 3"]
+      }
+    },
+    {
+      "id": "E2",
+      "type": "text",
+      "purpose": "assay_setup",
+      "locator": {
+        "file": "en_format.md",
+        "char_start": 520,
+        "char_end": 680,
+        "line_start": 22,
+        "line_end": 25
+      },
+      "quote": "HEK293 cells were transiently transfected with wild-type TRPV1 cDNA using Lipofectamine 2000 according to manufacturer's instructions.",
+      "keywords": {
+        "raw": ["HEK293", "TRPV1", "Lipofectamine 2000"],
+        "normalized": ["hek293", "trpv1", "transfection"],
+        "tex_wrapped": ["HEK293"]
+      }
+    },
+    {
+      "id": "E3",
+      "type": "text",
+      "purpose": "controls_replicates",
+      "locator": {
+        "file": "en_format.md",
+        "char_start": 850,
+        "char_end": 920,
+        "line_start": 32,
+        "line_end": 34
+      },
+      "quote": "All experiments were performed with n = 3 biological replicates and repeated at least three times independently.",
+      "keywords": {
+        "raw": ["n = 3", "biological replicates", "three times"],
+        "normalized": ["replicates", "n=3", "independent"],
+        "tex_wrapped": ["n = 3", "3"]
+      }
+    },
+    {
+      "id": "E4",
+      "type": "text",
+      "purpose": "assay_result",
+      "locator": {
+        "file": "en_format.md",
+        "char_start": 1100,
+        "char_end": 1280,
+        "line_start": 42,
+        "line_end": 45
+      },
+      "quote": "Capsaicin evoked robust calcium influx in TRPV1-expressing cells with EC50 of 44.2 ± 3.1 nM, consistent with published literature values.",
+      "keywords": {
+        "raw": ["Capsaicin", "EC50", "44.2 nM"],
+        "normalized": ["capsaicin", "ec50", "44.2nm"],
+        "tex_wrapped": ["EC_{50}", "44.2 \\pm 3.1", "nM"]
+      }
+    },
+    {
+      "id": "E5",
+      "type": "image",
+      "purpose": "assay_result",
+      "locator": {
+        "file": "en_format.md",
+        "char_start": 1500,
+        "char_end": 1520,
+        "line_start": 55,
+        "line_end": 57
+      },
+      "keywords": {
+        "raw": ["Figure 1", "dose-response", "calcium imaging"],
+        "normalized": ["figure1", "dose-response", "imaging"]
+      },
+      "image_ref": "fig1"
+    },
+    {
+      "id": "E6",
+      "type": "image",
+      "purpose": "assay_setup",
+      "locator": {
+        "file": "en_format.md",
+        "char_start": 1800,
+        "char_end": 1820,
+        "line_start": 65,
+        "line_end": 67
+      },
+      "keywords": {
+        "raw": ["Figure 2", "cell culture", "transfection"],
+        "normalized": ["figure2", "cell-culture"]
+      },
+      "image_ref": "fig2"
+    }
+  ]
+}

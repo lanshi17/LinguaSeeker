@@ -1,0 +1,359 @@
+/**
+ * 医学证据可视化查看器样式
+ * 四窗格布局
+ */
+
+/* 主容器 */
+.evidence-viewer {
+  display: grid;
+  grid-template-columns: 200px 1fr 1fr 280px;
+  gap: 1px;
+  height: calc(100vh - 60px);
+  background: #e8e8e8;
+  overflow: hidden;
+}
+
+/* 面板通用样式 */
+.panel {
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e8e8e8;
+  font-weight: 500;
+  font-size: 14px;
+  color: #262626;
+  flex-shrink: 0;
+}
+
+/* 左一: 大纲面板 */
+.panel-outline {
+  border-right: 1px solid #e8e8e8;
+}
+
+.outline-content {
+  padding: 8px 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.outline-item {
+  padding: 6px 16px;
+  font-size: 13px;
+  color: #595959;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.outline-item:hover {
+  background: #f0f0f0;
+  color: #1890ff;
+}
+
+.outline-item.level-1 {
+  font-weight: 600;
+  color: #262626;
+}
+
+.outline-item.level-2 {
+  font-weight: 500;
+}
+
+/* 左二: 原文面板 */
+.panel-original {
+  border-right: 1px solid #e8e8e8;
+}
+
+/* 右二: 处理后面板 */
+.panel-processed {
+  border-right: 1px solid #e8e8e8;
+}
+
+.highlight-legend {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.legend-item {
+  padding: 2px 8px;
+  font-size: 11px;
+  border-radius: 4px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+/* 右一: 证据面板 */
+.panel-evidence {
+  background: #fafafa;
+}
+
+.evidence-content {
+  padding: 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.evidence-group {
+  margin-bottom: 16px;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.group-header .count {
+  font-weight: 400;
+  color: #8c8c8c;
+  margin-left: 4px;
+}
+
+.group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.evidence-card {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.evidence-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateX(2px);
+}
+
+.evidence-card.selected {
+  box-shadow: 0 0 0 2px #1890ff, 0 4px 12px rgba(24, 144, 255, 0.2);
+}
+
+.evidence-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.evidence-id {
+  font-weight: 600;
+  font-size: 12px;
+  color: #262626;
+}
+
+.evidence-quote {
+  font-size: 12px;
+  color: #595959;
+  line-height: 1.5;
+  margin: 0 0 8px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.evidence-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.keyword-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: #f0f0f0;
+  border-radius: 3px;
+  color: #595959;
+  font-family: 'Courier New', monospace;
+}
+
+/* Markdown内容样式 */
+.markdown-content {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #262626;
+}
+
+.markdown-content h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #1a1a1a;
+}
+
+.markdown-content h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 24px 0 12px 0;
+  color: #1a1a1a;
+  border-bottom: 1px solid #e8e8e8;
+  padding-bottom: 8px;
+}
+
+.markdown-content h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 16px 0 8px 0;
+  color: #333;
+}
+
+.markdown-content p {
+  margin: 0 0 12px 0;
+}
+
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 12px 0;
+}
+
+.markdown-content em {
+  color: #8c8c8c;
+  font-size: 13px;
+}
+
+/* 证据高亮样式 */
+.evidence-highlight {
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.evidence-highlight:hover {
+  filter: brightness(0.95);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 闪烁动画 */
+@keyframes evidence-flash {
+  0%, 100% { 
+    filter: brightness(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% { 
+    filter: brightness(1.1);
+    box-shadow: 0 0 0 4px rgba(24, 144, 255, 0.3);
+  }
+}
+
+.evidence-flash {
+  animation: evidence-flash 1.5s ease-in-out;
+}
+
+/* 图片证据高亮 */
+.evidence-image {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.evidence-image:hover {
+  filter: brightness(1.05);
+  transform: scale(1.02);
+}
+
+/* 加载和错误状态 */
+.evidence-viewer-loading,
+.evidence-viewer-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: calc(100vh - 60px);
+  gap: 16px;
+  color: #8c8c8c;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e8e8e8;
+  border-top-color: #1890ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 响应式调整 */
+@media (max-width: 1400px) {
+  .evidence-viewer {
+    grid-template-columns: 180px 1fr 1fr 240px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .evidence-viewer {
+    grid-template-columns: 160px 1fr 1fr 220px;
+  }
+  
+  .panel-header {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .evidence-viewer {
+    background: #1a1a1a;
+  }
+  
+  .panel {
+    background: #141414;
+  }
+  
+  .panel-header {
+    background: #1f1f1f;
+    border-color: #333;
+    color: #e0e0e0;
+  }
+  
+  .markdown-content {
+    color: #e0e0e0;
+  }
+  
+  .markdown-content h1,
+  .markdown-content h2,
+  .markdown-content h3 {
+    color: #f0f0f0;
+  }
+  
+  .outline-item {
+    color: #a0a0a0;
+  }
+  
+  .outline-item:hover {
+    background: #2a2a2a;
+  }
+  
+  .evidence-card {
+    background: #1f1f1f;
+  }
+}
