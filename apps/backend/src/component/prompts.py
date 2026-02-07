@@ -76,12 +76,17 @@ def get_layout_fusion_prompt(translated_md: str, image_descriptions: List[str]) 
 返回整合后的 Markdown（保留所有结构标记）"""
 
 
-def get_ps3_evidence_extraction_prompt(middleware_md: str, knowledge_context: str = "") -> str:
+def get_ps3_evidence_extraction_prompt(
+    translated_md: str,
+    image_descriptions: List[str],
+    knowledge_context: str = "",
+) -> str:
     """
     生成 PS3 证据提取的提示词
     
     Args:
-        middleware_md: 中间处理后的 Markdown 文档
+        translated_md: 翻译后的 Markdown 文档
+        image_descriptions: 图片描述列表
         knowledge_context: 可选的知识库检索结果上下文
     
     Returns:
@@ -101,6 +106,10 @@ The following documents from the knowledge base may provide relevant guidance fo
 ---
 """
     
+    image_section = "\n".join(
+        [f"### Image {i + 1} Description\n{desc}" for i, desc in enumerate(image_descriptions)]
+    )
+
     return f"""You are a clinical genomics expert specialized in ACMG PS3 (Functional Evidence) classification.
 Evaluate the medical document following the PS3 SVI four-step decision framework below.
 {knowledge_section}
@@ -201,7 +210,10 @@ Count the total number of control variants (benign + pathogenic) used:
 ---
 
 ## MEDICAL DOCUMENT TO EVALUATE
-{middleware_md}
+{translated_md}
+
+## IMAGE DESCRIPTIONS
+{image_section if image_section else "(none)"}
 
 ---
 
@@ -210,19 +222,57 @@ Count the total number of control variants (benign + pathogenic) used:
 2. **Use the provided tools** when calculating OddsPath or determining evidence strength
 3. **Document your reasoning** at each step
 4. **Return structured JSON output** with detailed assessments
+5. **Strict JSON only**: use double quotes for keys/strings, no trailing commas, no extra text
+6. **Evidence annotations**: every conclusion must cite evidence IDs; each evidence quote MUST be an exact substring from the medical document
 
 ## OUTPUT FORMAT (valid JSON only)
 {{{{
+    "annotation_schema_version": "1.0",
+    "source_documents": {{{{
+        "en_md": {{{{ "path": "en_format.md" }}}},
+        "image_descriptions": {{{{ "path": "image_descriptions.txt" }}}},
+        "images": [{{{{
+            "id": "fig1",
+            "label": "Fig. 1",
+            "path": "images/figure.jpg",
+            "nearest_md_lines": {{{{
+                "file": "en_format.md",
+                "line_start": null,
+                "line_end": null
+            }}}}
+        }}}}]
+    }}}},
+    "evidence_annotations": [{{{{
+        "id": "E1",
+        "type": "text|image",
+        "purpose": "disease_mechanism|assay_setup|controls_replicates|assay_result",
+        "locator": {{{{
+            "file": "en_format.md",
+            "char_start": null,
+            "char_end": null,
+            "line_start": null,
+            "line_end": null
+        }}}},
+        "quote": "Exact substring from the document",
+        "keywords": {{{{
+            "raw": ["keyword1", "keyword2"],
+            "normalized": ["keyword1", "keyword2"],
+            "tex_wrapped": ["$n = 3$", "$44\\%$"]
+        }}}},
+        "image_ref": "fig1"
+    }}}}],
   "ps3_step_1": {{{{
     "disease_mechanism_clarity": "clear|partial|unclear",
     "can_proceed": true|false,
     "explanation": "Detailed explanation of the pathogenic mechanism found in document",
+        "evidence_refs": ["E1"],
     "score": 0-25
   }}}},
   "ps3_step_2": {{{{
     "assay_suitable": "yes|no",
     "can_proceed": true|false,
     "explanation": "Assessment of whether the functional assay matches the mechanism",
+        "evidence_refs": ["E2"],
     "score": 0-20
   }}}},
   "ps3_step_3": {{{{
@@ -241,6 +291,7 @@ Count the total number of control variants (benign + pathogenic) used:
     }}}},
     "max_evidence_level": "none|supporting|moderate",
     "can_proceed": true|false,
+        "evidence_refs": ["E3", "E4"],
     "score": 0-30
   }}}},
   "ps3_step_4": {{{{
@@ -259,6 +310,7 @@ Count the total number of control variants (benign + pathogenic) used:
       "max_evidence_level": "supporting|moderate"
     }}}},
     "final_evidence_strength": "none|BS3|BS3_moderate|BS3_supporting|PS3_supporting|PS3_moderate|PS3|PS3_very_strong",
+        "evidence_refs": ["E4"],
     "score": 0-25
   }}}},
   "overall_assessment": {{{{
@@ -266,15 +318,72 @@ Count the total number of control variants (benign + pathogenic) used:
     "final_recommendation": "approved|needs_refinement|rejected",
     "key_strengths": ["strength 1", "strength 2"],
     "key_weaknesses": ["weakness 1", "weakness 2"],
-    "improvement_suggestions": ["suggestion 1", "suggestion 2"]
+        "improvement_suggestions": ["suggestion 1", "suggestion 2"],
+        "evidence_refs": ["E1", "E2"]
   }}}}
 }}}}
 
 **Return only valid JSON. No additional text.**"""
 
 
+def get_ps3_evidence_feedback_prompt(
+    translated_md: str,
+    image_descriptions: List[str],
+    ps3_evidence: Dict[str, Any],
+    arbitration_feedback: str,
+    knowledge_context: str = "",
+) -> str:
+    """
+    生成基于仲裁反馈的 PS3 证据修订提示词
+    
+    Args:
+        translated_md: 翻译后的 Markdown 文档
+        image_descriptions: 图片描述列表
+        ps3_evidence: 当前 PS3 证据评估结果
+        arbitration_feedback: 仲裁反馈
+        knowledge_context: 可选的知识库检索结果上下文
+    """
+    knowledge_section = ""
+    if knowledge_context:
+        knowledge_section = f"""
+## REFERENCE KNOWLEDGE BASE DOCUMENTS
+{knowledge_context}
+
+---
+"""
+
+    image_section = "\n".join(
+        [f"### Image {i + 1} Description\n{desc}" for i, desc in enumerate(image_descriptions)]
+    )
+
+    return f"""You are a clinical genomics expert specialized in ACMG PS3 (Functional Evidence) classification.
+Revise the PS3 evidence JSON using the arbitration feedback while keeping the medical document unchanged.
+{knowledge_section}
+## MEDICAL DOCUMENT TO EVALUATE
+{translated_md}
+
+## IMAGE DESCRIPTIONS
+{image_section if image_section else "(none)"}
+
+## CURRENT PS3 EVIDENCE JSON
+{json.dumps(ps3_evidence, ensure_ascii=False, indent=2)}
+
+## ARBITRATION FEEDBACK
+{arbitration_feedback}
+
+## INSTRUCTIONS
+1. Apply the feedback to correct or refine the PS3 evidence assessment.
+2. Keep the JSON schema identical to the extraction output format.
+3. Update scores and explanations as needed based on the feedback.
+4. Strict JSON only: use double quotes for keys/strings, no trailing commas, no extra text.
+5. Keep evidence annotations and evidence_refs consistent with the document content.
+
+**Return only valid JSON. No additional text.**"""
+
+
 def get_arbitration_prompt(
-    middleware_md: str,
+    translated_md: str,
+    image_descriptions: List[str],
     ps3_evidence: Dict[str, Any],
     calculated_score: float,
     final_recommendation: str
@@ -283,7 +392,8 @@ def get_arbitration_prompt(
     生成仲裁评分的提示词
     
     Args:
-        middleware_md: 中间处理后的 Markdown 文档
+        translated_md: 翻译后的 Markdown 文档
+        image_descriptions: 图片描述列表
         ps3_evidence: PS3 证据评估结果
         calculated_score: 计算得到的分数
         final_recommendation: 初步建议
@@ -291,10 +401,17 @@ def get_arbitration_prompt(
     Returns:
         格式化的提示词
     """
+    image_section = "\n".join(
+        [f"### Image {i + 1} Description\n{desc}" for i, desc in enumerate(image_descriptions)]
+    )
+
     return f"""作为医学证据仲裁专家，请评估以下 PS3 功能证据的质量和完整性：
 
-## 中间文档
-{middleware_md}
+## 翻译后的文档
+{translated_md}
+
+## 图片描述
+{image_section if image_section else "(none)"}
 
 ## 提取的 PS3 证据评估
 {json.dumps(ps3_evidence, ensure_ascii=False, indent=2)}
@@ -321,11 +438,12 @@ def get_arbitration_prompt(
     "final_decision": "approved|needs_refinement|reject"
 }}}}
 
-仅返回 JSON，不需要额外说明。"""
+仅返回 JSON，不需要额外说明。要求使用双引号，不能有尾随逗号。"""
 
 
 def get_feedback_refinement_prompt(
-    middleware_md: str,
+    translated_md: str,
+    image_descriptions: List[str],
     arbitration_feedback: str,
     arbitration_score: float,
     weaknesses: List[str],
@@ -335,7 +453,8 @@ def get_feedback_refinement_prompt(
     生成反馈微调的提示词
     
     Args:
-        middleware_md: 当前的 Markdown 文档
+        translated_md: 翻译后的 Markdown 文档
+        image_descriptions: 图片描述列表
         arbitration_feedback: 仲裁反馈
         arbitration_score: 仲裁评分
         weaknesses: 关键弱点列表
@@ -347,10 +466,17 @@ def get_feedback_refinement_prompt(
     weaknesses_str = ', '.join(weaknesses) if weaknesses else '未指明'
     improvements_str = '\n'.join(f'- {sugg}' for sugg in improvements) if improvements else '请根据仲裁反馈进行改进'
     
+    image_section = "\n".join(
+        [f"### Image {i + 1} Description\n{desc}" for i, desc in enumerate(image_descriptions)]
+    )
+
     return f"""基于 PS3 四步法评审反馈，改进医学文档以提高证据质量：
 
 ## 当前文档
-{middleware_md}
+{translated_md}
+
+## 图片描述
+{image_section if image_section else "(none)"}
 
 ## 仲裁反馈
 {arbitration_feedback}

@@ -68,7 +68,8 @@ def extract_ps3_evidence(state: ProcessingState) -> ProcessingState:
     
     # 步骤 2: 使用 LLM + RAG 上下文提取证据
     prompt = prompts.get_ps3_evidence_extraction_prompt(
-        state['middleware_md'],
+        state['translated_md'],
+        state['image_descriptions'],
         knowledge_context=knowledge_context
     )
 ```

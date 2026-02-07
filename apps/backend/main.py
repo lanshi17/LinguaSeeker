@@ -9,7 +9,8 @@ from uuid import uuid4
 from loguru import logger
 from datetime import datetime
 from typing import Callable, Optional, Dict, Any
-from config import settings # 导入配置实例
+import src.api  as api_routers
+from src.config import settings as cfg # 导入配置实例
 # 添加一个 sink 到文件，实现滚动和保留策略
 # 这里使用 "a" 模式追加，每天凌晨滚动，保留最近7天的日志
 logger.add(
@@ -36,14 +37,20 @@ logger.add(
 )
 
 app = FastAPI(
-    title=settings.app_name, 
-    debug=settings.debug,
-    prefix="/api/v2"  # 统一的 API 前缀
+    title=cfg.app_name, 
+    debug=cfg.debug,
+    prefix=cfg.api_prefix  # 统一的 API 前缀
 )
+
+app.include_router(api_routers.router, prefix=cfg.api_prefix)
 
 @app.get("/") 
 def read_root():
-    return {"Hello": "World", "App Name": settings.app_name, "Debug Mode": settings.debug}
+    return {
+        "Hello": "World", "App Name": cfg.app_name, "Debug Mode": cfg.debug,
+        "Environment": cfg.environment, "API Prefix": cfg.api_prefix,
+        "Health Check Endpoint": f"http://{cfg.api_host}:{cfg.api_port}{cfg.api_prefix}/health"
+            }
 
 os.environ.pop("http_proxy", None)
 os.environ.pop("https_proxy", None)
@@ -52,4 +59,4 @@ os.environ.pop("all_proxy", None)
 if __name__ == "__main__":
     import uvicorn
     # 配置可以从 .env 或环境变量自动加载
-    uvicorn.run(app, host="0.0.0.0", port=8000,env_file=".env.local")
+    uvicorn.run(app, host=cfg.api_host, port=cfg.api_port, env_file=".env.local")

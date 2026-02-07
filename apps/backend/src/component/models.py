@@ -71,7 +71,6 @@ class EvidenceOutput(BaseModel):
     """证据提取输出"""
     ps3_evidence: Dict[str, Any] = Field(..., description="PS3 证据评估结果")
     arbitration_score: float = Field(..., description="仲裁评分 (0-100)")
-    middleware_md: str = Field(..., description="处理后的中间 英文 Markdown 文档")
     image_descriptions: List[str] = Field(default_factory=list, description="图片描述列表")
     final_evidence_strength: Optional[str] = Field(None, description="最终证据强度等级")
     status: Optional[str] = Field("pending", description="处理状态")

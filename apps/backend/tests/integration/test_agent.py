@@ -41,6 +41,36 @@ class DummyLLM:
         return DummyResponse(self._content)
 
 
+class DummySearchResponse:
+    def __init__(self):
+        self.results = []
+
+
+class DummyQdrantManager:
+    score_threshold = 0.0
+
+    async def search(self, query_vector, top_k, score_threshold):
+        return DummySearchResponse()
+
+
+class DummyEmbeddingClient:
+    def embed_query(self, query):
+        return [0.0]
+
+
+class DummyRag:
+    def get_qdrant_manager(self):
+        return DummyQdrantManager()
+
+    def get_embedding_client(self):
+        return DummyEmbeddingClient()
+
+
+class DummyTool:
+    async def ainvoke(self, args):
+        return []
+
+
 @pytest.fixture(autouse=True)
 def stub_llms(monkeypatch):
     evidence_json = json.dumps({
@@ -62,6 +92,8 @@ def stub_llms(monkeypatch):
     monkeypatch.setattr(EvidenceAgent, "get_vlm", lambda self: DummyLLM("Image description: A test image."))
     monkeypatch.setattr(EvidenceAgent, "get_evidence_llm", lambda self: DummyLLM(evidence_json))
     monkeypatch.setattr(EvidenceAgent, "get_arbitration_llm", lambda self: DummyLLM(arbitration_json))
+    monkeypatch.setattr(agent, "rag", DummyRag())
+    monkeypatch.setattr("src.component.agents.search_knowledge_base", DummyTool())
 
 def _make_state(markdown_content: str, image_paths: List[str]) -> ProcessingState:
     return {
@@ -69,9 +101,9 @@ def _make_state(markdown_content: str, image_paths: List[str]) -> ProcessingStat
         "image_paths": image_paths,
         "translated_md": "",
         "image_descriptions": [],
-        "middleware_md": "",
         "ps3_evidence": {},
         "evidence_sources": [],
+        "knowledge_context": "",
         "arbitration_score": 0.0,
         "arbitration_feedback": "",
         "iteration_count": 0,
@@ -202,6 +234,8 @@ def test_describe_images():
     """测试图片描述生成"""
     #准备测试图片
     test_image_path = "test_image.jpg"
+    with open(test_image_path, "wb") as f:
+        f.write(b"test")
     state = _make_state("# 标题\n这是一些内容。", [test_image_path])
     result = agent.describe_images(state)
     descriptions = result.get("image_descriptions")
@@ -209,18 +243,7 @@ def test_describe_images():
     assert len(descriptions) == 1, "图片描述数量不正确"
     assert isinstance(descriptions[0], str) and descriptions[0], "图片描述内容不正确"
     logger.debug("图片描述生成测试通过。{}", descriptions[0])
-    
-#步骤3: 排版融合
-@pytest.mark.unit
-def test_fuse_layout():
-    """测试排版融合"""
-    state = _make_state("# 标题\n这是一些内容。", [])
-    state["translated_md"] = "# Title\nSome content."
-    state["image_descriptions"] = ["Image description: A test image."]
-    result = agent.fuse_layout(state)
-    fused_content = result.get("middleware_md")
-    assert isinstance(fused_content, str) and fused_content, "排版融合内容不正确"
-    logger.debug("排版融合测试通过。")
+    os.remove(test_image_path)
     
 #步骤4: 证据提取+RAG
 @pytest.mark.asyncio
@@ -228,7 +251,8 @@ async def test_extract_ps3_evidence():
     """测试提取 PS3 证据"""
     test_content = "# 标题\n这是一些内容，包含功能性研究结果。"
     state = _make_state(test_content, [])
-    state["middleware_md"] = test_content
+    state["translated_md"] = "# Title\nSome content."
+    state["image_descriptions"] = ["Image description: A test image."]
     result = await agent.extract_ps3_evidence(state)
     evidence = result.get("ps3_evidence")
     assert evidence is not None, "提取的证据为空"
@@ -240,7 +264,8 @@ async def test_extract_ps3_evidence():
 def test_arbitrate_score():
     """测试仲裁评分"""
     state = _make_state("# 标题\n这是一些内容。", [])
-    state["middleware_md"] = "# Title\nSome content."
+    state["translated_md"] = "# Title\nSome content."
+    state["image_descriptions"] = ["Image description: A test image."]
     state["ps3_evidence"] = {
         "overall_assessment": {"final_recommendation": "needs_refinement"},
         "ps3_step_1": {"score": 10},
@@ -257,21 +282,6 @@ def test_arbitrate_score():
     assert isinstance(feedback, str), "反馈类型不正确"
     logger.debug("仲裁评分测试通过。")
     
-#步骤6: 反馈微调 feedback_refinement
-@pytest.mark.unit
-def test_feedback_refinement():
-    """测试反馈微调"""
-    test_content = "# 标题\n这是一些内容，包含功能性研究结果。"
-    state = _make_state(test_content, [])
-    state["middleware_md"] = test_content
-    state["ps3_evidence"] = {"overall_assessment": {"key_weaknesses": [], "improvement_suggestions": []}}
-    state["arbitration_feedback"] = "请更详细地描述功能性研究结果。"
-    state["arbitration_score"] = 50.0
-    result = agent.feedback_refinement(state)
-    refined_content = result.get("middleware_md")
-    assert isinstance(refined_content, str) and refined_content, "反馈微调内容不正确"
-    logger.debug("反馈微调测试通过。")
-
 #=================================agent集成测试=================================
 @pytest.mark.integration
 def test_process_medical_evidence():
@@ -281,6 +291,8 @@ def test_process_medical_evidence():
     timer.start()
     test_markdown_content = "# 标题\n这是一些中文内容，包含功能性研究结果。"
     test_image_path = "test_image.jpg"
+    with open(test_image_path, "wb") as f:
+        f.write(b"test")
     test_request = AgentRequest(
         question="Analyze the medical evidence",
         context=test_markdown_content,
@@ -298,4 +310,5 @@ def test_process_medical_evidence():
     assert hasattr(response, "ps3_evidence"), "输出结果格式不正确"
     
     logger.debug("医学证据处理流程集成测试通过。{}", response)
+    os.remove(test_image_path)
     timer.stop()

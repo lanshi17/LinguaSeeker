@@ -18,7 +18,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from loguru import logger
-from src.database.qdrant import QdrantManager
+from src.database.qdrant_client import QdrantManager
 from src.config import settings as cfg
 
 async def main():

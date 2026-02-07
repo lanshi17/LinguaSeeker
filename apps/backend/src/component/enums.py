@@ -81,29 +81,29 @@ class mineru_response_code(Enum):
 
 #================================Agent status 定义=================================
 class ProcessingState(TypedDict):
-    """医学证据处理流程状态"""
-    # 输入
-    markdown_content: str  # 原始 Markdown 内容
-    image_paths: List[str]  # 图片路径列表
-    
-    # 中间处理结果
-    translated_md: str  # 翻译后的 Markdown (英文)
-    image_descriptions: List[str]  # 图片描述列表
-    middleware_md: str  # 融合后的 Markdown
-    
-    # 证据提取结果
-    ps3_evidence: Dict[str, Any]  # PS3 证据字典
-    evidence_sources: List[str]  # 证据来源
-    
-    # 评分与迭代
-    arbitration_score: float  # 仲裁得分 (0-100)
-    arbitration_feedback: str  # 反馈建议
-    iteration_count: int  # 迭代次数
-    max_iterations: int  # 最大迭代次数（默认2）
-    
-    # 最终结果
-    status: str  # "pending", "approved", "manual_review"
-    output: Optional[Dict[str, Any]]  # 最终输出 JSON
+	"""医学证据处理流程状态"""
+	# 输入
+	markdown_content: str  # 原始 Markdown 内容
+	image_paths: List[str]  # 图片路径列表
+	
+	# 中间处理结果
+	translated_md: str  # 翻译后的 Markdown (英文)
+	image_descriptions: List[str]  # 图片描述列表
+	
+	# 证据提取结果
+	ps3_evidence: Dict[str, Any]  # PS3 证据字典
+	evidence_sources: List[str]  # 证据来源
+	knowledge_context: str  # 知识库上下文
+	
+	# 评分与迭代
+	arbitration_score: float  # 仲裁得分 (0-100)
+	arbitration_feedback: str  # 反馈建议
+	iteration_count: int  # 迭代次数
+	max_iterations: int  # 最大迭代次数（默认2）
+	
+	# 最终结果
+	status: str  # "pending", "approved", "manual_review"
+	output: Optional[Dict[str, Any]]  # 最终输出 JSON
 
 #================================Agent status 定义 结束=================================
 

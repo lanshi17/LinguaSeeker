@@ -46,6 +46,8 @@ dependencies = [
     "langchain-anthropic>=1.3.1",
     "langchain-community>=0.4.1",
     "dashscope>=1.25.11",
+    "celery>=5.6.2",
+    "redis>=7.1.0",
 ]
 
 [project.optional-dependencies]

@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     # ==================== 应用配置 ====================
     app_name: str
     app_version: str
+    api_prefix: str
+    cors_origins: str
     environment: str
     debug: bool = False
     api_host: str = "0.0.0.0"

@@ -183,3 +183,44 @@ def ensure_directory_exists(directory: str) -> str:
     logger.info(f"Directory ensured: {directory}")
     return directory
 
+def copy_file_to_directory(file_path: str, destination_directory: str) -> str:
+    """将文件复制到指定目录。
+    
+    Args:
+        file_path: 源文件路径。
+        destination_directory: 目标目录路径。   
+    """
+    try:
+        from shutil import copy2
+        ensure_directory_exists(destination_directory)
+        destination_path = Path(destination_directory) / Path(file_path).name
+        copy2(file_path, destination_path)
+        logger.info(f"Copied file {file_path} to {destination_path}")
+        return str(destination_path)
+    except Exception as e:
+        logger.error(f"Error copying file {file_path} to {destination_directory}: {e}")
+        raise FileProcessingException(f"Error copying file: {e}")
+
+def cleanup_old_temp_folders(temp_root: str, keep_latest: int = 3) -> None:
+    """清理临时文件夹，只保留最近的几个运行文件夹。
+    
+    Args:
+        temp_root: 临时文件夹根目录路径。
+        keep_latest: 保留的最新运行文件夹数量。
+    """
+    try:
+        temp_path = Path(temp_root)
+        if not temp_path.exists() or not temp_path.is_dir():
+            logger.warning(f"Temporary root directory does not exist: {temp_root}")
+            return
+        
+        run_dirs = [d for d in temp_path.iterdir() if d.is_dir() and d.name.startswith("run_")]
+        run_dirs.sort(key=lambda d: d.stat().st_mtime, reverse=True)
+        
+        for old_dir in run_dirs[keep_latest:]:
+            from shutil import rmtree
+            rmtree(old_dir)
+            logger.info(f"Removed old temporary folder: {old_dir}")
+    except Exception as e:
+        logger.error(f"Error cleaning up temporary folders in {temp_root}: {e}")
+        raise FileProcessingException(f"Error cleaning up temp folders: {e}")

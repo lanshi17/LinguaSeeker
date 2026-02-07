@@ -105,3 +105,4 @@ hs_err_pid*
 **/.work_logs.sh
 
 apps/backend/demo_pdf/*
+apps/backend/demo_output/*
