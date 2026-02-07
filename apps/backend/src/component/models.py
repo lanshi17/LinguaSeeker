@@ -38,6 +38,20 @@ class BatchStatusData(BaseModel):
     batch_id: str = Field(..., description="批次ID")
     extract_result: List[FileExtractResult] = Field(..., description="解析结果列表")
     download_url: Optional[str] = Field(None, description="批量下载链接（如有）")
+
+class MinerURequest(BaseModel):
+    """MinerU 请求体"""
+    file_paths: List[str] = Field(..., description="文件路径列表")
+    callback: Optional[str] = Field(None, description="回调URL")
+
+    #language: Optional[str] = Field("en", description="处理语言，默认为英文")
+class MinerUResponse(BaseModel):
+    """MinerU 响应体"""
+    task_id: str = Field(..., description="任务ID")
+    status: str = Field(..., description="任务状态")
+    message: Optional[str] = Field(None, description="附加消息")
+    folder_path: Optional[str] = Field(None, description="解析解压后的文件夹路径")
+    # minio_urls: Optional[List[str]] = Field(None, description="MinIO 文件链接列表")
     
 # ==================== Agent ====================
 class AgentRequest(BaseModel):
@@ -57,10 +71,12 @@ class EvidenceOutput(BaseModel):
     """证据提取输出"""
     ps3_evidence: Dict[str, Any] = Field(..., description="PS3 证据评估结果")
     arbitration_score: float = Field(..., description="仲裁评分 (0-100)")
-    middleware_md: str = Field(..., description="处理后的中间 Markdown 文档")
+    middleware_md: str = Field(..., description="处理后的中间 英文 Markdown 文档")
     image_descriptions: List[str] = Field(default_factory=list, description="图片描述列表")
     final_evidence_strength: Optional[str] = Field(None, description="最终证据强度等级")
     status: Optional[str] = Field("pending", description="处理状态")
+    origin_format_md: Optional[str] = Field(None, description="原始格式的 排版后的Markdown 内容")
+    en_format_md: Optional[str] = Field(None, description="翻译成英文的排版后的Markdown 内容")
     
 # ==================== RAG ====================
 class RAGQueryRequest(BaseModel):

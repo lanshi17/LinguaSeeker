@@ -80,6 +80,7 @@ class Settings(BaseSettings):
 
     # ==================== 向量数据库选择 ====================
     vector_db: str
+    knowledge_docs_dir: str
 
     # ==================== Qdrant配置 ====================
     qdrant_host: str

@@ -115,9 +115,7 @@ async def main():
     logger.info("✓ 知识库初始化完成!")
     logger.info("=" * 60)
     logger.info("")
-    logger.info("下一步:")
-    logger.info("  1. 运行测试: python scripts/test_rag_retrieval.py")
-    logger.info("  2. 启动服务: python main.py")
+
     
     return 0
 

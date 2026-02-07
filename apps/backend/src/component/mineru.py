@@ -11,6 +11,8 @@ from .models import (
     BatchUploadResponseData, 
     ApiResponse, 
     FileExtractResult, 
+    MinerURequest,
+    MinerUResponse,
     BatchStatusData
 )
 from config import settings as cfg
@@ -41,7 +43,7 @@ class MinerUComponent:
     def upload_local_files_batch(
         self,
         token: str,
-        file_paths: list[str],
+        file_paths: list,
         common_params: dict = None
     ) -> tuple[bool, Optional[str], Optional[str]]:
         """
@@ -324,7 +326,7 @@ class MinerUComponent:
         batch_id: str,
         interval: int = 5,
         max_attempts: int = 60
-    ) -> Optional[BatchStatusData]:
+    ) -> Optional[BatchStatusData]|FileExtractResult:
         """
         轮询批量任务状态，直到所有任务完成或失败（备选方式）。
 
@@ -335,7 +337,7 @@ class MinerUComponent:
             max_attempts (int): 最大轮询次数。
         
         Returns:
-            Optional[BatchStatusData]: 最终状态信息（BatchStatusData 实例），失败返回 None。
+            Optional[BatchStatusData]|FileExtractResult: 最终状态信息（BatchStatusData 或 FileExtractResult 实例），失败返回 None。
         """
         print(f"开始轮询任务状态 (batch_id: {batch_id})，最长等待 {max_attempts * interval / 60:.2f} 分钟...")
         
@@ -388,11 +390,11 @@ class MinerUComponent:
         return status_data
 
     @Timer("mineru上传文件")
-    def minerU_pipeline(self, files_path: list[str]) -> Any:
+    def minerU_pipeline(self, request:MinerURequest) ->MinerUResponse|None:
         token = self.token
         success, batch_id, error_msg = self.upload_local_files_batch(
             token,
-            files_path,
+            request.file_paths,
             common_params={"model_version": self.mineru_version},
         )
         if not success or not batch_id:
@@ -458,7 +460,12 @@ class MinerUComponent:
             md_file_path = file_utils.find_file_in_directory(extracted_folder, ".md")
             logger.debug(f"找到的.md文件路径: {md_file_path}")
             # 返回解压文件夹路径，以便调用者可以访问所有文件（包括图片）
-            return extracted_folder
+            return MinerUResponse(
+                task_id=batch_id,
+                status="done",
+                message="文件解析完成",
+                folder_path=extracted_folder,
+            )
         except exc.FileProcessingException as e:
             logger.exception(f"查找.md文件时出现错误: {e}")
             return None
