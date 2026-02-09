@@ -15,10 +15,10 @@ from .models import (
     MinerUResponse,
     BatchStatusData
 )
-from config import settings as cfg
-from utils.timer import Timer
-from utils import file_utils
-from utils import exceptions as exc
+from src.config import settings as cfg
+from src.utils.timer import Timer
+from src.utils import file_utils
+from src.utils import exceptions as exc
 
 
 class MinerUComponent:

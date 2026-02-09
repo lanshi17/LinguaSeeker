@@ -1,4 +1,9 @@
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+from contextlib import asynccontextmanager
 import websockets
 import asyncio
 import json
@@ -9,7 +14,11 @@ from uuid import uuid4
 from loguru import logger
 from datetime import datetime
 from typing import Callable, Optional, Dict, Any
-import src.api  as api_routers
+import src.presentation.api as api_routers
+import src.presentation.task_api as task_api_routers
+from src.utils.exceptions import ACMGException, TaskNotFoundException, ValidationException
+from src.health import check_all_connections
+from src.database.minio_client import MinIOClient
 from src.config import settings as cfg # 导入配置实例
 # 添加一个 sink 到文件，实现滚动和保留策略
 # 这里使用 "a" 模式追加，每天凌晨滚动，保留最近7天的日志
@@ -36,13 +45,74 @@ logger.add(
     enqueue=True, # 线程安全
 )
 
+def _parse_cors_origins(origins: str) -> list[str]:
+    if not origins:
+        return []
+    if origins.strip() == "*":
+        return ["*"]
+    return [origin.strip() for origin in origins.split(",") if origin.strip()]
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    checks = check_all_connections()
+    failed = [name for name, ok in checks.items() if not ok]
+    if failed:
+        logger.warning("Startup connectivity check failed: {}", ", ".join(failed))
+    else:
+        logger.info("Startup connectivity check passed")
+    try:
+        await MinIOClient().ensure_buckets()
+    except Exception as exc:
+        logger.warning("MinIO bucket init failed: {}", exc)
+    yield
+
+
 app = FastAPI(
-    title=cfg.app_name, 
+    title=cfg.app_name,
     debug=cfg.debug,
-    prefix=cfg.api_prefix  # 统一的 API 前缀
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_parse_cors_origins(cfg.cors_origins),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 app.include_router(api_routers.router, prefix=cfg.api_prefix)
+app.include_router(task_api_routers.router, prefix=cfg.api_prefix)
+
+
+@app.exception_handler(ACMGException)
+async def handle_acmg_exception(_, exc: ACMGException):
+    status_code = 400
+    if isinstance(exc, TaskNotFoundException):
+        status_code = 404
+    elif isinstance(exc, ValidationException):
+        status_code = 422
+
+    return JSONResponse(
+        status_code=status_code,
+        content={"code": exc.code, "message": exc.message},
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def handle_validation_error(_, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content=jsonable_encoder(
+            {
+                "code": "VALIDATION_ERROR",
+                "message": "Invalid request payload",
+                "errors": exc.errors(),
+            }
+        ),
+    )
 
 @app.get("/") 
 def read_root():

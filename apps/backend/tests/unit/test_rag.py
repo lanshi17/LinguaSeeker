@@ -2,10 +2,10 @@ from src.utils.timer import Timer, timer
 import src.utils.exceptions as exc
 import src.utils.file_utils as file_utils
 from src.config import settings as cfg 
-from src.component.rag import RAGComponent
+from src.domain.rag import RAGComponent
 from loguru import logger
 from typing import List, Dict, Any, Optional
-from src.component.models import RAGQueryRequest, RAGQueryResponse
+from src.domain.models import RAGQueryRequest, RAGQueryResponse
 import asyncio
 import pytest
 rag = RAGComponent()

@@ -2,26 +2,28 @@ from typing import List
 import json
 from pathlib import Path
 from loguru import logger
-from src.component.enums import ProcessingState
-from src.component.models import AgentRequest, EvidenceOutput
+from src.domain.enums import ProcessingState
+from src.domain.models import AgentRequest, EvidenceOutput
 
-from src.component.agents import (
+from src.domain.agents import (
     EvidenceAgent,
-    save_intermediate_md,
+   
+    search_knowledge_base,
+)
+from src.domain.tools import (
     load_intermediate_md,
     OddsPath_Calculator,
     determine_evidence_strength_from_oddspath,
     determine_max_evidence_from_controls,
     validate_ps3_step1,
     validate_ps3_step2,
-    search_knowledge_base,
 )
 import os
 from src.utils.timer import Timer, timer
 import src.utils.exceptions as exc
 import src.utils.file_utils as file_utils
 from src.config import settings
-from src.component.rag import RAGComponent 
+from src.domain.rag import RAGComponent 
 import pytest
 cfg = settings
 

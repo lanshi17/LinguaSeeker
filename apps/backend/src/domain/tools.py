@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 from langchain_core.tools import tool
 from loguru import logger
 
-from component.rag import RAGComponent
+from src.domain.rag import RAGComponent
 # ========================= tools定义 ====================
 
 @tool

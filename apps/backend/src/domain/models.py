@@ -76,6 +76,29 @@ class EvidenceOutput(BaseModel):
     status: Optional[str] = Field("pending", description="处理状态")
     origin_format_md: Optional[str] = Field(None, description="原始格式的 排版后的Markdown 内容")
     en_format_md: Optional[str] = Field(None, description="翻译成英文的排版后的Markdown 内容")
+
+
+class PipelineFiles(BaseModel):
+    """Pipeline 输出文件路径集合"""
+    origin_md_path: str = Field(..., description="原始 Markdown MinIO 对象键")
+    en_md_path: str = Field(..., description="英文 Markdown MinIO 对象键")
+    image_desc_path: str = Field(..., description="图片描述文本 MinIO 对象键")
+    ps3_evidence_path: str = Field(..., description="PS3 证据 JSON MinIO 对象键")
+    image_dir: str = Field(..., description="图片 MinIO 前缀")
+    origin_md_url: Optional[str] = Field(None, description="原始 Markdown API 路由")
+    en_md_url: Optional[str] = Field(None, description="英文 Markdown API 路由")
+    image_desc_url: Optional[str] = Field(None, description="图片描述文本 API 路由")
+    ps3_evidence_url: Optional[str] = Field(None, description="PS3 证据 JSON API 路由")
+    image_urls: Optional[List[str]] = Field(None, description="图片 API 路由列表")
+
+
+class PipelineResult(BaseModel):
+    """Pipeline 结果输出"""
+    document_id: str = Field(..., description="文档唯一 ID")
+    output_dir: str = Field(..., description="MinIO 输出前缀")
+    mineru_folder: str = Field(..., description="MinerU 输出目录")
+    files: PipelineFiles = Field(..., description="输出文件集合")
+    evidence: EvidenceOutput = Field(..., description="证据提取结果")
     
 # ==================== RAG ====================
 class RAGQueryRequest(BaseModel):
@@ -94,32 +117,6 @@ class RAGQueryResponseItem(BaseModel):
 class RAGQueryResponse(BaseModel):
     """RAG 查询响应体"""
     results: List[RAGQueryResponseItem] = Field(..., description="查询结果列表")
-# ==================== Qdrant ====================
-class QdrantHealthResponse(BaseModel):
-    """Qdrant 健康检查响应体"""
-    status: str = Field(..., description="服务状态，通常为 'ok' 或 'error'")
-    details: Optional[Dict[str, Any]] = Field(None, description="附加的健康信息")
-class QdrantCollectionInfoResponse(BaseModel):
-    """Qdrant 集合信息响应体"""
-    name: str = Field(..., description="集合名称")
-    vectors_count: int = Field(..., description="向量数量")
-    segments_count: int = Field(..., description="段数量")
-    index_status: str = Field(..., description="索引状态")
-    storage_size: Optional[int] = Field(None, description="存储大小（字节）")
-    config: Optional[Dict[str, Any]] = Field(None, description="集合配置详情")
-class QdrantPoint(BaseModel):
-    """Qdrant 向量点"""
-    id: str = Field(..., description="向量点ID")
-    vector: List[float] = Field(..., description="向量数据")
-    payload: Optional[Dict[str, Any]] = Field(None, description="附加负载数据")
-class QdrantSearchResultItem(BaseModel):
-    """Qdrant 搜索结果单项"""
-    point_id: str = Field(..., description="向量点ID")
-    score: float = Field(..., description="相似度分数")
-    payload: Optional[Dict[str, Any]] = Field(None, description="附加负载数据")
-class QdrantSearchResponse(BaseModel):
-    """Qdrant 搜索响应体"""
-    results: List[QdrantSearchResultItem] = Field(..., description="搜索结果列表")
 # ==================== Embedding ====================
 class EmbeddingRequest(BaseModel):
     """嵌入请求体"""

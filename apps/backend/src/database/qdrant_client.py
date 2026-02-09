@@ -5,12 +5,12 @@ from src.config import settings as cfg
 from loguru import logger
 from pydantic import SecretStr
 from langchain_openai.embeddings import OpenAIEmbeddings
-from src.component.models import (
-    QdrantCollectionInfoResponse,
-    QdrantSearchResponse,
-    QdrantHealthResponse,
-    QdrantPoint,
-    QdrantSearchResultItem,
+from src.database.dtos import (
+    QdrantCollectionInfoDto,
+    QdrantSearchResponseDto,
+    QdrantHealthResponseDto,
+    QdrantPointDto,
+    QdrantSearchResultItemDto,
 )
 from src.utils.file_utils import get_all_files_in_directory
 import os
@@ -144,7 +144,7 @@ class QdrantManager:
             logger.error(f"检查 Qdrant 集合是否存在时出错: {e}")
             raise
     
-    async def get_collection_info(self) -> QdrantCollectionInfoResponse:
+    async def get_collection_info(self) -> QdrantCollectionInfoDto:
         """获取 Qdrant 集合信息"""
         try:
             collection_info = await self.client.get_collection(self.collection_name)
@@ -160,7 +160,7 @@ class QdrantManager:
             config = getattr(collection_info, "config", None)
             if hasattr(config, "model_dump"):
                 config = config.model_dump()
-            return QdrantCollectionInfoResponse(
+            return QdrantCollectionInfoDto(
                 name=self.collection_name,
                 vectors_count=int(vectors_count or 0),
                 segments_count=segments_count,
@@ -185,24 +185,24 @@ class QdrantManager:
     
     # ==================== 健康检查 ====================
     
-    async def ping(self) -> QdrantHealthResponse:
+    async def ping(self) -> QdrantHealthResponseDto:
         """检查 Qdrant 服务是否可用"""
         try:
             await self.client.get_collections()
             logger.info("Qdrant 服务连接成功。")
-            return QdrantHealthResponse(status="ok")
+            return QdrantHealthResponseDto(status="ok")
         except Exception as e:
             logger.error(f"Qdrant 服务连接失败: {e}")
-            return QdrantHealthResponse(status="error", details={"error": str(e)})
+            return QdrantHealthResponseDto(status="error", details={"error": str(e)})
     
     
     # ==================== 数据操作 ====================
     
-    async def ingest_files(self, file_dir: str) -> List[QdrantPoint]:
+    async def ingest_files(self, file_dir: str) -> List[QdrantPointDto]:
         """将指定文件夹中的所有文件向量化并存储到 Qdrant"""
         files = get_all_files_in_directory(file_dir)
         points = []
-        qdrant_points: List[QdrantPoint] = []
+        qdrant_points: List[QdrantPointDto] = []
         max_chars = getattr(cfg, "embedding_max_chars", 8000)
         overlap = getattr(cfg, "embedding_chunk_overlap", 200)
         
@@ -224,7 +224,7 @@ class QdrantManager:
                     "content": chunk,
                 }
                 qdrant_points.append(
-                    QdrantPoint(id=point_id, vector=vector, payload=payload)
+                    QdrantPointDto(id=point_id, vector=vector, payload=payload)
                 )
                 points.append(
                     rest.PointStruct(
@@ -249,7 +249,7 @@ class QdrantManager:
             logger.error(f"向 Qdrant 集合插入向量时出错: {e}")
             raise
 
-    async def search(self, query_vector: List[float], top_k: int, score_threshold: float) -> QdrantSearchResponse:
+    async def search(self, query_vector: List[float], top_k: int, score_threshold: float) -> QdrantSearchResponseDto:
         """在 Qdrant 中检索 Top-K 文档"""
         query_response = await self.client.query_points(
             collection_name=self.collection_name,
@@ -263,14 +263,14 @@ class QdrantManager:
         if results is None:
             results = getattr(query_response, "result", [])
         response_items = [
-            QdrantSearchResultItem(
+            QdrantSearchResultItemDto(
                 point_id=str(item.id),
                 score=float(item.score),
                 payload=item.payload,
             )
             for item in results
         ]
-        return QdrantSearchResponse(results=response_items)
+        return QdrantSearchResponseDto(results=response_items)
 
 
 # ==================== 单例入口 ====================

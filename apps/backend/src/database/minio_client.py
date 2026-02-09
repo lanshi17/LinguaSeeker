@@ -1,44 +1,58 @@
-from typing import Optional, List, Tuple, BinaryIO, Dict
+from __future__ import annotations
+
 from io import BytesIO
-from src.utils.exceptions import StoreException
+import json
 import os
-from src.config import settings as cfg
+from typing import Dict, List, Optional
+from urllib.parse import urlparse
+
+from loguru import logger
 from minio import Minio
 from minio.error import S3Error
-from loguru import logger 
-import zipfile
-import tempfile
-import requests
-from urllib.parse import urlparse
-import ssl
-from urllib3.exceptions import SSLError as Urllib3SSLError, MaxRetryError
-from requests.exceptions import SSLError as RequestsSSLError
 
-class MinIOClient():
-    """MinIO对象存储"""
+from src.config import settings as cfg
+from src.database.enum import MinioBucketNameEnum
+from src.database.models import MinioObjectRefModel
+from src.utils.exceptions import StoreException
+
+
+class MinIOClient:
+    """MinIO storage wrapper with higher-level helpers."""
+
+    @staticmethod
+    def _normalize_endpoint(endpoint: str) -> str:
+        if not endpoint:
+            return endpoint
+
+        endpoint = endpoint.strip()
+        if "://" not in endpoint:
+            if "/" in endpoint:
+                logger.warning("MinIO endpoint contains a path, ignoring it: {}", endpoint)
+                return endpoint.split("/", 1)[0]
+            return endpoint
+
+        parsed = urlparse(endpoint)
+        if parsed.scheme:
+            if parsed.path and parsed.path != "/":
+                logger.warning("MinIO endpoint contains a path, ignoring it: {}", parsed.path)
+            return parsed.netloc or parsed.path
+
+        return parsed.netloc or parsed.path
 
     def __init__(
         self,
-        endpoint: str = None,
-        access_key: str = None,
-        secret_key: str = None,
-        secure: bool = True,
-        bucket_name: str = None,
-    ):
-        """Initialize MinIO client.
-
-        Args:
-            endpoint: MinIO endpoint (e.g., "localhost:9000")
-            access_key: Access key ID
-            secret_key: Secret access key
-            secure: Use HTTPS if True, HTTP if False
-            bucket_name: Default bucket name
-        """
-        self.endpoint = endpoint or cfg.minio_endpoint
+        endpoint: Optional[str] = None,
+        access_key: Optional[str] = None,
+        secret_key: Optional[str] = None,
+        secure: Optional[bool] = None,
+        bucket_name: Optional[str] = None,
+    ) -> None:
+        raw_endpoint = endpoint or cfg.minio_endpoint
+        self.endpoint = self._normalize_endpoint(raw_endpoint)
         self.access_key = access_key or cfg.minio_access_key
         self.secret_key = secret_key or cfg.minio_secret_key
-        self.secure = secure
-        self.bucket_name = bucket_name or cfg.minio_bucket_name
+        self.secure = cfg.minio_secure if secure is None else secure
+        self.bucket_name = bucket_name or cfg.minio_results_bucket
         self.logger = logger
 
         try:
@@ -48,29 +62,33 @@ class MinIOClient():
                 secret_key=self.secret_key,
                 secure=self.secure,
             )
-        except Exception as e:
-            raise ConnectionError(f"Failed to connect to MinIO: {e}")
+        except Exception as exc:
+            raise ConnectionError(f"Failed to connect to MinIO: {exc}")
+
+    @staticmethod
+    def build_processed_object_key(document_id: str, name: str) -> str:
+        return f"{document_id}/{name}"
+
+    @staticmethod
+    def build_processed_image_key(document_id: str, filename: str) -> str:
+        return f"{document_id}/images/{filename}"
 
     async def upload_file(
         self,
         bucket: str,
         object_key: str,
-        file_data: BinaryIO,
+        file_data: BytesIO,
         content_type: Optional[str] = None,
         metadata: Optional[Dict[str, str]] = None,
     ) -> str:
-        """Upload a file to MinIO."""
         try:
-            # Ensure bucket exists
             if not await self.bucket_exists(bucket):
                 await self.create_bucket(bucket)
 
-            # Get file size
             file_data.seek(0, os.SEEK_END)
             file_size = file_data.tell()
             file_data.seek(0)
 
-            # Upload
             self.client.put_object(
                 bucket_name=bucket,
                 object_name=object_key,
@@ -80,148 +98,101 @@ class MinIOClient():
                 metadata=metadata,
             )
 
-            # Return object path
             protocol = "https" if self.secure else "http"
             return f"{protocol}://{self.endpoint}/{bucket}/{object_key}"
-
-        except S3Error as e:
-            raise IOError(f"Failed to upload file: {e}")
+        except S3Error as exc:
+            raise IOError(f"Failed to upload file: {exc}")
 
     async def download_file(self, bucket: str, object_key: str) -> BytesIO:
-        """Download a file from MinIO."""
         try:
-            response = self.client.get_object(
-                bucket_name=bucket,
-                object_name=object_key,
-            )
-
-            # Read into BytesIO
+            response = self.client.get_object(bucket_name=bucket, object_name=object_key)
             data = BytesIO(response.read())
             response.close()
             response.release_conn()
-
             return data
-
-        except S3Error as e:
-            if e.code == "NoSuchKey":
+        except S3Error as exc:
+            if exc.code == "NoSuchKey":
                 raise FileNotFoundError(f"Object not found: {bucket}/{object_key}")
-            raise IOError(f"Failed to download file: {e}")
+            raise IOError(f"Failed to download file: {exc}")
 
     async def delete_file(self, bucket: str, object_key: str) -> bool:
-        """Delete a file from MinIO."""
         try:
-            self.client.remove_object(
-                bucket_name=bucket,
-                object_name=object_key,
-            )
+            self.client.remove_object(bucket_name=bucket, object_name=object_key)
             return True
-
-        except S3Error as e:
-            if e.code == "NoSuchKey":
+        except S3Error as exc:
+            if exc.code == "NoSuchKey":
                 return False
-            raise IOError(f"Failed to delete file: {e}")
+            raise IOError(f"Failed to delete file: {exc}")
 
     async def file_exists(self, bucket: str, object_key: str) -> bool:
-        """Check if a file exists in MinIO."""
         try:
-            self.client.stat_object(
-                bucket_name=bucket,
-                object_name=object_key,
-            )
+            self.client.stat_object(bucket_name=bucket, object_name=object_key)
             return True
-        except S3Error as e:
-            if e.code == "NoSuchKey":
+        except S3Error as exc:
+            if exc.code == "NoSuchKey":
                 return False
-            raise IOError(f"Failed to check file existence: {e}")
+            raise IOError(f"Failed to check file existence: {exc}")
 
-    async def get_file_metadata(
-        self, bucket: str, object_key: str
-    ) -> Dict[str, str]:
-        """Get file metadata."""
+    async def get_file_metadata(self, bucket: str, object_key: str) -> Dict[str, str]:
         try:
-            stat = self.client.stat_object(
-                bucket_name=bucket,
-                object_name=object_key,
-            )
-
+            stat = self.client.stat_object(bucket_name=bucket, object_name=object_key)
             metadata = {
                 "size": str(stat.size),
                 "etag": stat.etag,
                 "content_type": stat.content_type or "application/octet-stream",
                 "last_modified": stat.last_modified.isoformat(),
             }
-
-            # Add custom metadata
             if stat.metadata:
                 metadata.update(stat.metadata)
-
             return metadata
-
-        except S3Error as e:
-            if e.code == "NoSuchKey":
+        except S3Error as exc:
+            if exc.code == "NoSuchKey":
                 raise FileNotFoundError(f"Object not found: {bucket}/{object_key}")
-            raise IOError(f"Failed to get metadata: {e}")
+            raise IOError(f"Failed to get metadata: {exc}")
 
     async def list_objects(
         self, bucket: str, prefix: Optional[str] = None, limit: int = 1000
     ) -> List[str]:
-        """List objects in a bucket."""
         try:
-            objects = self.client.list_objects(
-                bucket_name=bucket,
-                prefix=prefix,
-                recursive=True,
-            )
-
-            # Collect object names
+            objects = self.client.list_objects(bucket_name=bucket, prefix=prefix, recursive=True)
             names = []
             for obj in objects:
                 names.append(obj.object_name)
                 if len(names) >= limit:
                     break
-
             return names
-
-        except S3Error as e:
-            raise IOError(f"Failed to list objects: {e}")
+        except S3Error as exc:
+            raise IOError(f"Failed to list objects: {exc}")
 
     async def create_bucket(self, bucket: str) -> bool:
-        """Create a storage bucket."""
         try:
             if await self.bucket_exists(bucket):
                 return False
-
             self.client.make_bucket(bucket)
             return True
-
-        except S3Error as e:
-            raise IOError(f"Failed to create bucket: {e}")
+        except S3Error as exc:
+            raise IOError(f"Failed to create bucket: {exc}")
 
     async def bucket_exists(self, bucket: str) -> bool:
-        """Check if a bucket exists."""
         try:
             return self.client.bucket_exists(bucket)
-        except S3Error as e:
-            raise IOError(f"Failed to check bucket existence: {e}")
+        except S3Error as exc:
+            raise IOError(f"Failed to check bucket existence: {exc}")
 
     async def delete_bucket(self, bucket: str, force: bool = False) -> bool:
-        """Delete a storage bucket."""
         try:
             if force:
-                # Remove all objects first
                 objects = self.client.list_objects(bucket, recursive=True)
                 for obj in objects:
                     self.client.remove_object(bucket, obj.object_name)
-
             self.client.remove_bucket(bucket)
             return True
-
-        except S3Error as e:
-            if e.code == "NoSuchBucket":
+        except S3Error as exc:
+            if exc.code == "NoSuchBucket":
                 return False
-            if e.code == "BucketNotEmpty" and not force:
+            if exc.code == "BucketNotEmpty" and not force:
                 raise ValueError(f"Bucket {bucket} is not empty. Use force=True to delete.")
-            raise IOError(f"Failed to delete bucket: {e}")
+            raise IOError(f"Failed to delete bucket: {exc}")
 
     async def get_presigned_url(
         self,
@@ -230,27 +201,20 @@ class MinIOClient():
         expires_in: int = 3600,
         method: str = "GET",
     ) -> str:
-        """Generate a presigned URL for temporary access."""
         try:
             if method == "GET":
                 url = self.client.presigned_get_object(
-                    bucket_name=bucket,
-                    object_name=object_key,
-                    expires=expires_in,
+                    bucket_name=bucket, object_name=object_key, expires=expires_in
                 )
             elif method == "PUT":
                 url = self.client.presigned_put_object(
-                    bucket_name=bucket,
-                    object_name=object_key,
-                    expires=expires_in,
+                    bucket_name=bucket, object_name=object_key, expires=expires_in
                 )
             else:
                 raise ValueError(f"Unsupported method: {method}")
-
             return url
-
-        except S3Error as e:
-            raise IOError(f"Failed to generate presigned URL: {e}")
+        except S3Error as exc:
+            raise IOError(f"Failed to generate presigned URL: {exc}")
 
     async def copy_object(
         self,
@@ -259,60 +223,35 @@ class MinIOClient():
         dest_bucket: str,
         dest_key: str,
     ) -> bool:
-        """Copy an object within or between buckets."""
         try:
             from minio.commonconfig import CopySource
 
             copy_source = CopySource(source_bucket, source_key)
-
-            self.client.copy_object(
-                bucket_name=dest_bucket,
-                object_name=dest_key,
-                source=copy_source,
-            )
+            self.client.copy_object(bucket_name=dest_bucket, object_name=dest_key, source=copy_source)
             return True
-
-        except S3Error as e:
-            if e.code == "NoSuchKey":
+        except S3Error as exc:
+            if exc.code == "NoSuchKey":
                 raise FileNotFoundError(f"Source object not found: {source_bucket}/{source_key}")
-            raise IOError(f"Failed to copy object: {e}")
+            raise IOError(f"Failed to copy object: {exc}")
 
     async def get_object_size(self, bucket: str, object_key: str) -> int:
-        """Get object size in bytes."""
         try:
-            stat = self.client.stat_object(
-                bucket_name=bucket,
-                object_name=object_key,
-            )
+            stat = self.client.stat_object(bucket_name=bucket, object_name=object_key)
             return stat.size
-
-        except S3Error as e:
-            if e.code == "NoSuchKey":
+        except S3Error as exc:
+            if exc.code == "NoSuchKey":
                 raise FileNotFoundError(f"Object not found: {bucket}/{object_key}")
-            raise IOError(f"Failed to get object size: {e}")
+            raise IOError(f"Failed to get object size: {exc}")
 
-    async def store_file(self, key: str, content: bytes, content_type: str = "application/octet-stream") -> str:
-        """
-        Store a file in MinIO storage.
-
-        Args:
-            key: Storage key (path/object name)
-            content: File content as bytes
-            content_type: MIME type of the content
-
-        Returns:
-            URL to the stored file
-        """
-        self.logger.info(f"Storing file with key: {key}")
-
-        # Ensure bucket exists
+    async def store_file(
+        self, key: str, content: bytes, content_type: str = "application/octet-stream"
+    ) -> str:
+        self.logger.info("Storing file with key: {}", key)
         if not await self.bucket_exists(self.bucket_name):
             await self.create_bucket(self.bucket_name)
 
-        # Upload file
         file_data = BytesIO(content)
         file_size = len(content)
-
         try:
             self.client.put_object(
                 bucket_name=self.bucket_name,
@@ -321,44 +260,146 @@ class MinIOClient():
                 length=file_size,
                 content_type=content_type,
             )
-
             protocol = "https" if self.secure else "http"
             url = f"{protocol}://{self.endpoint}/{self.bucket_name}/{key}"
-            self.logger.info(f"File stored successfully: {url}")
+            self.logger.info("File stored successfully: {}", url)
             return url
-
-        except S3Error as e:
-            self.logger.error(f"Failed to store file {key}: {e}")
-            raise IOError(f"Failed to store file: {e}")
+        except S3Error as exc:
+            self.logger.error("Failed to store file {}: {}", key, exc)
+            raise IOError(f"Failed to store file: {exc}")
 
     async def get_file(self, key: str) -> bytes:
-        """
-        Retrieve a file from MinIO storage.
-
-        Args:
-            key: Storage key (path/object name)
-
-        Returns:
-            File content as bytes
-        """
-        self.logger.info(f"Retrieving file with key: {key}")
-
+        self.logger.info("Retrieving file with key: {}", key)
         try:
-            response = self.client.get_object(
-                bucket_name=self.bucket_name,
-                object_name=key,
-            )
-
+            response = self.client.get_object(bucket_name=self.bucket_name, object_name=key)
             content = response.read()
             response.close()
             response.release_conn()
-
-            self.logger.info(f"File retrieved successfully: {key} ({len(content)} bytes)")
+            self.logger.info("File retrieved successfully: {} ({} bytes)", key, len(content))
             return content
-
-        except S3Error as e:
-            if e.code == "NoSuchKey":
-                self.logger.error(f"File not found: {key}")
+        except S3Error as exc:
+            if exc.code == "NoSuchKey":
+                self.logger.error("File not found: {}", key)
                 raise FileNotFoundError(f"Object not found: {self.bucket_name}/{key}")
-            self.logger.error(f"Failed to retrieve file {key}: {e}")
-            raise IOError(f"Failed to retrieve file: {e}")
+            self.logger.error("Failed to retrieve file {}: {}", key, exc)
+            raise IOError(f"Failed to retrieve file: {exc}")
+
+    async def ensure_bucket(self, bucket_name: str) -> None:
+        try:
+            exists = await self.bucket_exists(bucket_name)
+            if not exists:
+                await self.create_bucket(bucket_name)
+                logger.info("Created MinIO bucket: {}", bucket_name)
+        except Exception as exc:
+            logger.exception("Failed to ensure bucket {}: {}", bucket_name, exc)
+            raise StoreException(f"Failed to ensure bucket {bucket_name}: {exc}")
+
+    async def ensure_buckets(self) -> None:
+        await self.ensure_bucket(MinioBucketNameEnum.LITERATURE_UPLOADS.value)
+        await self.ensure_bucket(MinioBucketNameEnum.PROCESSED_RESULTS.value)
+
+    async def upload_bytes(
+        self,
+        bucket: MinioBucketNameEnum,
+        object_key: str,
+        payload: bytes,
+        content_type: str,
+        metadata: Optional[Dict[str, str]] = None,
+    ) -> MinioObjectRefModel:
+        await self.ensure_bucket(bucket.value)
+        data = BytesIO(payload)
+        await self.upload_file(
+            bucket=bucket.value,
+            object_key=object_key,
+            file_data=data,
+            content_type=content_type,
+            metadata=metadata,
+        )
+        return MinioObjectRefModel(
+            bucket=bucket,
+            object_key=object_key,
+            content_type=content_type,
+        )
+
+    async def download_bytes(self, bucket: MinioBucketNameEnum, object_key: str) -> bytes:
+        buffer = await self.download_file(bucket.value, object_key)
+        return buffer.getvalue()
+
+    async def upload_literature_upload(
+        self,
+        filename: str,
+        payload: bytes,
+        content_type: str,
+        object_prefix: Optional[str] = None,
+        metadata: Optional[Dict[str, str]] = None,
+    ) -> MinioObjectRefModel:
+        object_key = f"{object_prefix}/{filename}" if object_prefix else filename
+        return await self.upload_bytes(
+            bucket=MinioBucketNameEnum.LITERATURE_UPLOADS,
+            object_key=object_key,
+            payload=payload,
+            content_type=content_type,
+            metadata=metadata,
+        )
+
+    async def download_literature_upload(self, object_key: str) -> bytes:
+        return await self.download_bytes(MinioBucketNameEnum.LITERATURE_UPLOADS, object_key)
+
+    async def upload_processed_result_json(
+        self, document_id: str, payload: Dict[str, object]
+    ) -> MinioObjectRefModel:
+        object_key = self.build_processed_object_key(document_id, "ps3_evidence.json")
+        content = json.dumps(payload, ensure_ascii=False, indent=4).encode("utf-8")
+        return await self.upload_bytes(
+            bucket=MinioBucketNameEnum.PROCESSED_RESULTS,
+            object_key=object_key,
+            payload=content,
+            content_type="application/json",
+        )
+
+    async def download_processed_result_json(self, document_id: str) -> bytes:
+        object_key = self.build_processed_object_key(document_id, "ps3_evidence.json")
+        return await self.download_bytes(MinioBucketNameEnum.PROCESSED_RESULTS, object_key)
+
+    async def download_processed_result(self, object_key: str) -> bytes:
+        return await self.download_bytes(MinioBucketNameEnum.PROCESSED_RESULTS, object_key)
+
+    async def upload_processed_result_bytes(
+        self,
+        document_id: str,
+        object_name: str,
+        payload: bytes,
+        content_type: str,
+    ) -> MinioObjectRefModel:
+        object_key = self.build_processed_object_key(document_id, object_name)
+        return await self.upload_bytes(
+            bucket=MinioBucketNameEnum.PROCESSED_RESULTS,
+            object_key=object_key,
+            payload=payload,
+            content_type=content_type,
+        )
+
+    async def upload_processed_image(
+        self,
+        document_id: str,
+        filename: str,
+        payload: bytes,
+        content_type: str,
+    ) -> MinioObjectRefModel:
+        object_key = self.build_processed_image_key(document_id, filename)
+        return await self.upload_bytes(
+            bucket=MinioBucketNameEnum.PROCESSED_RESULTS,
+            object_key=object_key,
+            payload=payload,
+            content_type=content_type,
+        )
+
+
+def get_minio_client() -> MinIOClient:
+    return MinIOClient(
+        endpoint=cfg.minio_endpoint,
+        access_key=cfg.minio_access_key,
+        secret_key=cfg.minio_secret_key,
+        secure=cfg.minio_secure,
+        bucket_name=cfg.minio_results_bucket,
+    )

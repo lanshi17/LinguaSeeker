@@ -1,6 +1,7 @@
 # config.py
 from typing import List, Optional
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -64,11 +65,11 @@ class Settings(BaseSettings):
     redis_max_connections: int = 20
 
     # ==================== PostgreSQL配置 ====================
-    postgres_host: str
-    postgres_port: int = 5432
-    postgres_db: str
-    postgres_user: str
-    postgres_password: str
+    postgres_host: str = Field(validation_alias=AliasChoices("POSTGRES_HOST", "PGHOST"))
+    postgres_port: int = Field(5432, validation_alias=AliasChoices("POSTGRES_PORT", "PGPORT"))
+    postgres_db: str = Field(validation_alias=AliasChoices("POSTGRES_DB", "PGDATABASE"))
+    postgres_user: str = Field(validation_alias=AliasChoices("POSTGRES_USER", "PGUSER"))
+    postgres_password: str = Field(validation_alias=AliasChoices("POSTGRES_PASSWORD", "PGPASSWORD"))
     postgres_pool_size: int = 20
     postgres_max_overflow: int = 30
 
@@ -97,7 +98,6 @@ class Settings(BaseSettings):
     qdrant_score_threshold: float = 0.7
     qdrant_max_retries: int = 3
     qdrant_retry_delay: float = 1.0
-    qdrant_verify_ssl: bool = True
 
     # ==================== Milvus配置 ====================
     milvus_host: str
@@ -113,7 +113,9 @@ class Settings(BaseSettings):
     minio_secret_key: str
     minio_api: str
     minio_path: str
-    minio_bucket_name: str
+    minio_bucket_name: str = "processed-results"
+    minio_uploads_bucket: str = "literature-uploads"
+    minio_results_bucket: str = "processed-results"
     minio_secure: bool = True
     minio_root_user: str
     minio_root_password: str

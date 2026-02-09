@@ -1,5 +1,5 @@
 import pytest
-from src.component.mineru import MinerUComponent
+from src.domain.mineru import MinerUComponent
 from pathlib import Path
 from loguru import logger
 from src.utils import file_utils

@@ -10,17 +10,17 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from loguru import logger
 import requests
-from component.mineru import MinerUComponent
-from component.agents import EvidenceAgent
-from component.models import MinerURequest, MinerUResponse, EvidenceOutput
+from domain.mineru import MinerUComponent
+from domain.agents import EvidenceAgent
+from domain.models import MinerURequest, MinerUResponse, EvidenceOutput
 from src.database.qdrant_client import QdrantManager,initialize_knowledge_base
-from utils.timer import Timer, timer
-import utils.exceptions as exc
-import utils.file_utils as file_utils
+from src.utils.timer import Timer, timer
+import src.utils.exceptions as exc
+import src.utils.file_utils as file_utils
 from typing import Any, List
 from uuid import uuid4
 from datetime import datetime
-from config import settings
+from src.config import settings
 timer=Timer("整体流程运行时间")
 timer.start()
 cfg = settings
