@@ -7,12 +7,17 @@ import mimetypes
 import tempfile
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Union
+from uuid import uuid4
 from loguru import logger
 from src.health import check_all_connections 
 from src.config  import settings as cfg
-from fastapi import APIRouter, File, Request, Response, HTTPException, UploadFile, WebSocket, WebSocketDisconnect, Query, Path
+from fastapi import APIRouter, File, Request, Response, HTTPException, UploadFile, Query, Path
 from pydantic import BaseModel, Field, HttpUrl
-from src.database.redis_client import check_pdf_hash as redis_check_pdf_hash, get_cached_pdf_result
+from src.database.redis_client import (
+    check_pdf_hash as redis_check_pdf_hash,
+    get_cached_pdf_result,
+    delete_cached_pdf_result,
+)
 from src.database.postgre_client import get_postgres_client
 from src.service.tasks import process_pdf_task
 from src.database.minio_client import MinIOClient
@@ -27,29 +32,70 @@ class HealthResponse(BaseModel):
     details: Dict[str, bool] = Field(..., description="Dependency status map.")
     timestamp: str = Field(..., description="UTC timestamp in ISO-8601 format.")
 
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "status": "ok",
+                "details": {"postgres": True, "redis": True, "minio": True},
+                "timestamp": "2026-02-10T08:00:00+00:00",
+            }
+        }
+
 
 class PDFHashCheckResponse(BaseModel):
     exists: bool = Field(..., description="Whether the hash is present in cache or index.")
     result: Optional[Dict[str, Any]] = Field(None, description="Cached processing result, if available.")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "exists": True,
+                "result": {"document_id": "9f2b2a1c-8f55-4e24-8ad8-45ad1354edcb"},
+            }
+        }
 
 
 class UploadQueuedResponse(BaseModel):
     status: str = Field("queued", description="Upload processing status.")
     task_id: str = Field(..., description="Celery task id for background processing.")
     filename: Optional[str] = Field(None, description="Original file name.")
-    hash: str = Field(..., description="SHA-256 hash of the PDF content.")
+    document_id: Optional[str] = Field(None, description="Document id in database, if available.")
     upload_key: str = Field(..., description="Object storage key for the uploaded PDF.")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "status": "queued",
+                "task_id": "1f6a8b7a-1b87-4d75-8c72-6f2f6a1a9c2e",
+                "filename": "sample.pdf",
+                "document_id": "9f2b2a1c-8f55-4e24-8ad8-45ad1354edcb",
+                "upload_key": "9f2b2a1c-8f55-4e24-8ad8-45ad1354edcb/sample.pdf",
+            }
+        }
 
 
 class UploadCachedResponse(BaseModel):
     status: str = Field("cached", description="Upload was found in cache.")
-    hash: str = Field(..., description="SHA-256 hash of the PDF content.")
     filename: Optional[str] = Field(None, description="Original file name.")
+    document_id: Optional[str] = Field(None, description="Document id in database, if available.")
     result: Dict[str, Any] = Field(..., description="Cached processing result.")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "status": "cached",
+                "filename": "sample.pdf",
+                "document_id": "9f2b2a1c-8f55-4e24-8ad8-45ad1354edcb",
+                "result": {"summary": "cached result payload"},
+            }
+        }
 
 
 class ErrorResponse(BaseModel):
     detail: str = Field(..., description="Error details.")
+
+    class Config:
+        json_schema_extra = {"example": {"detail": "Invalid input."}}
 
 
 @router.get(
@@ -60,8 +106,8 @@ class ErrorResponse(BaseModel):
     response_model=HealthResponse,
 )
 async def health_check():
-    """Health check endpoint."""
-    #检查数据库连接等
+    """Return aggregated status for core dependencies."""
+    # 检查数据库连接等
     checks = check_all_connections()
     overall_status = "ok" if all(checks.values()) else "error"
     return {
@@ -84,7 +130,7 @@ async def health_check():
 async def check_pdf_hash(
     hash: str = Query(..., min_length=32, description="SHA-256 hash of the PDF content.")
 ):
-    """检查PDF哈希值是否存在"""
+    """Check whether a PDF hash exists and return cached result if available."""
     try:
         cached = get_cached_pdf_result(hash)
         if cached is not None:
@@ -114,7 +160,7 @@ async def upload_pdf(
     file: Optional[UploadFile] = File(None, description="Single PDF file field named 'file'."),
     files: Optional[List[UploadFile]] = File(None, description="Alternative multi-file field; only one is allowed."),
 ):
-    """PDF上传接口"""
+    """Upload a single PDF and return either cached result or async task info."""
     if file is None and files:
         if len(files) != 1:
             raise HTTPException(status_code=400, detail="Exactly one PDF file is required.")
@@ -140,17 +186,38 @@ async def upload_pdf(
         len(pdf_data),
     )
     pdf_hash = hashlib.sha256(pdf_data).hexdigest()
-    postgres_client = get_postgres_client()
+    try:
+        postgres_client = get_postgres_client()
+    except Exception as exc:
+        logger.exception("PostgreSQL client init failed: {}", exc)
+        raise HTTPException(status_code=503, detail="PostgreSQL unavailable")
     existing_document = None
     try:
         cached = get_cached_pdf_result(pdf_hash)
         if cached is not None:
-            return {
-                "status": "cached",
-                "hash": pdf_hash,
-                "filename": file.filename,
-                "result": cached,
-            }
+            cached_document_id = None
+            try:
+                cached_document = postgres_client.find_document_by_hash(pdf_hash)
+                if cached_document is not None:
+                    cached_document_id = str(cached_document.document_id)
+            except Exception as exc:
+                logger.warning("PostgreSQL hash lookup failed for cached {}: {}", pdf_hash, exc)
+            if cached_document_id is None:
+                logger.warning(
+                    "Cached result missing document_id for hash {}. Removing cache entry.",
+                    pdf_hash,
+                )
+                try:
+                    delete_cached_pdf_result(pdf_hash)
+                except Exception as exc:
+                    logger.warning("Failed to delete cached result for {}: {}", pdf_hash, exc)
+            else:
+                return {
+                    "status": "cached",
+                    "filename": file.filename,
+                    "document_id": cached_document_id,
+                    "result": cached,
+                }
     except Exception as exc:
         logger.warning("Redis lookup failed, continue processing: {}", exc)
 
@@ -159,7 +226,11 @@ async def upload_pdf(
     except Exception as exc:
         logger.warning("PostgreSQL hash lookup failed for {}: {}", pdf_hash, exc)
 
-    minio_client = MinIOClient()
+    try:
+        minio_client = MinIOClient()
+    except Exception as exc:
+        logger.exception("MinIO client init failed: {}", exc)
+        raise HTTPException(status_code=503, detail="Object storage unavailable")
     upload_ref = None
     if existing_document and existing_document.local_path:
         try:
@@ -195,18 +266,24 @@ async def upload_pdf(
             logger.exception("Failed to upload PDF to MinIO: {}", exc)
             raise HTTPException(status_code=503, detail="Failed to store PDF in object storage")
 
+    document_id = None
     if existing_document is None:
         try:
-            postgres_client.create_document(
+            new_document_id = uuid4()
+            created_document = postgres_client.create_document(
                 title=file.filename or pdf_hash,
+                document_id=new_document_id,
+                original_filename=file.filename or None,
                 pmid=None,
                 local_path=upload_ref.object_key,
                 file_hash=pdf_hash,
                 status="uploaded",
                 summary=None,
             )
+            document_id = str(created_document.document_id)
         except Exception as exc:
-            logger.warning("Failed to insert document record for hash {}: {}", pdf_hash, exc)
+            logger.exception("Failed to insert document record for hash {}: {}", pdf_hash, exc)
+            raise HTTPException(status_code=503, detail="PostgreSQL insert failed")
     elif upload_ref and existing_document.local_path != upload_ref.object_key:
         try:
             postgres_client.update_document(
@@ -214,8 +291,25 @@ async def upload_pdf(
                 local_path=upload_ref.object_key,
                 status="uploaded",
             )
+            document_id = str(existing_document.document_id)
         except Exception as exc:
-            logger.warning("Failed to update document record for hash {}: {}", pdf_hash, exc)
+            logger.exception("Failed to update document record for hash {}: {}", pdf_hash, exc)
+            raise HTTPException(status_code=503, detail="PostgreSQL update failed")
+    else:
+        if existing_document is not None:
+            document_id = str(existing_document.document_id)
+            if not getattr(existing_document, "original_filename", None) and file.filename:
+                try:
+                    postgres_client.update_document(
+                        existing_document.document_id,
+                        original_filename=file.filename,
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        "Failed to update original filename for document {}: {}",
+                        existing_document.document_id,
+                        exc,
+                    )
     
     # 处理解析文件,调用service进行处理
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
@@ -224,7 +318,10 @@ async def upload_pdf(
 
     try:
         logger.debug("Enqueueing Celery task for tmp path: {}", tmp_file_path)
-        async_result = process_pdf_task.apply_async(args=[[tmp_file_path]], kwargs={"file_hash": pdf_hash})
+        async_result = process_pdf_task.apply_async(
+            args=[[tmp_file_path]],
+            kwargs={"file_hash": pdf_hash, "document_id": document_id},
+        )
     except Exception as exc:
         logger.exception("Failed to enqueue Celery task: {}", exc)
         raise HTTPException(status_code=503, detail="Task queue unavailable")
@@ -233,7 +330,7 @@ async def upload_pdf(
         "status": "queued",
         "task_id": async_result.id,
         "filename": file.filename,
-        "hash": pdf_hash,
+        "document_id": document_id,
         "upload_key": upload_ref.object_key,
     }
 
@@ -251,9 +348,10 @@ async def upload_pdf(
     },
 )
 async def download_processed_result_file(
-    document_id: str = Path(..., description="Document id or hash prefix."),
+        document_id: str = Path(..., description="Document UUID."),
     object_path: str = Path(..., description="Relative path within the result bucket."),
 ):
+    """Download a processed file from object storage as raw bytes."""
     if not object_path:
         raise HTTPException(status_code=400, detail="object_path is required")
 

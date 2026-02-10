@@ -1,83 +1,113 @@
-#enum.py
+"""
+领域枚举与常量
+仅包含证据强度、ACMG 等级、分类映射等核心领域枚举。
+MinerU 相关常量已迁移至 mineru_constants.py。
+"""
 
 from enum import Enum
-from typing import TypedDict, List, Dict, Any,Optional
-from pydantic import BaseModel, Field
+from typing import TypedDict, List, Dict, Any, Optional, Tuple
 
-#=================================Mineru API 常量定义=================================
 
-# Mineru API 响应码与任务状态映射
-MINERU_API_CODE_SUCCESS = 0
-MINERU_TASK_STATE_MAP = {
-	"done": "任务处理状态，完成",
-	"pending": "任务处理状态，排队中",
-	"running": "任务处理状态，正在解析",
-	"failed": "任务处理状态，解析失败",
-	"waiting-file": "任务处理状态，等待文件上传",
-	"converting": "任务处理状态，格式转换中",
-}
+#================================ 证据强度枚举 ===================================
 
-# Mineru API 常见错误码说明与解决建议
-MINERU_ERROR_DETAIL_MAP = {
-	"A0202": ("Token 错误", "检查 Token 是否正确，请检查是否有Bearer前缀 或者更换新 Token"),
-	"A0211": ("Token 过期", "更换新 Token"),
-	"-500": ("传参错误", "请确保参数类型及Content-Type正确"),
-	"-10001": ("服务异常", "请稍后再试"),
-	"-10002": ("请求参数错误", "检查请求参数格式"),
-	"-60001": ("生成上传 URL 失败，请稍后再试", "请稍后再试"),
-	"-60002": ("获取匹配的文件格式失败", "检测文件类型失败，请求的文件名及链接中带有正确的后缀名，且文件为 pdf,doc,docx,ppt,pptx,png,jp(e)g 中的一种"),
-	"-60003": ("文件读取失败", "请检查文件是否损坏并重新上传"),
-	"-60004": ("空文件", "请上传有效文件"),
-	"-60005": ("文件大小超出限制", "检查文件大小，最大支持 200MB"),
-	"-60006": ("文件页数超过限制", "请拆分文件后重试"),
-	"-60007": ("模型服务暂时不可用", "请稍后重试或联系技术支持"),
-	"-60008": ("文件读取超时", "检查 URL 可访问"),
-	"-60009": ("任务提交队列已满", "请稍后再试"),
-	"-60010": ("解析失败", "请稍后再试"),
-	"-60011": ("获取有效文件失败", "请确保文件已上传"),
-	"-60012": ("找不到任务", "请确保task_id有效且未删除"),
-	"-60013": ("没有权限访问该任务", "只能访问自己提交的任务"),
-	"-60014": ("删除运行中的任务", "运行中的任务暂不支持删除"),
-	"-60015": ("文件转换失败", "可以手动转为pdf再上传"),
-	"-60016": ("文件转换失败", "文件转换为指定格式失败，可以尝试其他格式导出或重试"),
-	"-60017": ("重试次数达到上线", "等后续模型升级后重试"),
-	"-60018": ("每日解析任务数量已达上限", "明日再来"),
-	"-60019": ("html文件解析额度不足", "明日再来"),
-	"-60020": ("文件拆分失败", "请稍后重试"),
-	"-60021": ("读取文件页数失败", "请稍后重试"),
-	"-60022": ("网页读取失败", "可能因网络问题或者限频导致读取失败，请稍后重试"),
-}
-class mineru_response_code(Enum):
-	SUCCESS = "0"
-	TOKEN_INVALID = "A0202"
-	TOKEN_EXPIRED = "A0211"
-	PARAM_ERROR = "-500"
-	SERVICE_ERROR = "-10001"
-	REQUEST_PARAM_ERROR = "-10002"
-	UPLOAD_URL_FAILED = "-60001"
-	FILE_FORMAT_NOT_MATCH = "-60002"
-	FILE_READ_FAILED = "-60003"
-	EMPTY_FILE = "-60004"
-	FILE_TOO_LARGE = "-60005"
-	FILE_PAGES_EXCEED = "-60006"
-	MODEL_SERVICE_UNAVAILABLE = "-60007"
-	FILE_READ_TIMEOUT = "-60008"
-	QUEUE_FULL = "-60009"
-	PARSE_FAILED = "-60010"
-	VALID_FILE_NOT_FOUND = "-60011"
-	TASK_NOT_FOUND = "-60012"
-	TASK_NO_PERMISSION = "-60013"
-	DELETE_RUNNING_TASK = "-60014"
-	FILE_CONVERT_FAILED_PDF = "-60015"
-	FILE_CONVERT_FAILED_FORMAT = "-60016"
-	RETRY_LIMIT_REACHED = "-60017"
-	DAILY_TASK_LIMIT_REACHED = "-60018"
-	HTML_QUOTA_INSUFFICIENT = "-60019"
-	FILE_SPLIT_FAILED = "-60020"
-	FILE_PAGE_COUNT_FAILED = "-60021"
-	WEB_READ_FAILED = "-60022"
+class EvidenceStrength(str, Enum):
+	"""ACMG PS3/BS3 证据强度等级"""
+	NONE = "none"
+	BS3 = "BS3"
+	BS3_MODERATE = "BS3_moderate"
+	BS3_SUPPORTING = "BS3_supporting"
+	INCONCLUSIVE = "inconclusive"
+	PS3_SUPPORTING = "PS3_supporting"
+	PS3_MODERATE = "PS3_moderate"
+	PS3 = "PS3"
+	PS3_VERY_STRONG = "PS3_very_strong"
 
-#=================================Mineru API 常量定义 结束=================================
+
+class ACMGEvidenceLevel(str, Enum):
+	"""ACMG 证据等级分类"""
+	PVS1 = "PVS1"          # 非常强致病证据
+	PS1 = "PS1"             # 强致病证据
+	PS2 = "PS2"
+	PS3 = "PS3"
+	PS4 = "PS4"
+	PM1 = "PM1"             # 中等致病证据
+	PM2 = "PM2"
+	PM3 = "PM3"
+	PM4 = "PM4"
+	PM5 = "PM5"
+	PM6 = "PM6"
+	PP1 = "PP1"             # 支持致病证据
+	PP2 = "PP2"
+	PP3 = "PP3"
+	PP4 = "PP4"
+	PP5 = "PP5"
+	BA1 = "BA1"             # 独立良性证据
+	BS1 = "BS1"             # 强良性证据
+	BS2 = "BS2"
+	BS3 = "BS3"
+	BS4 = "BS4"
+	BP1 = "BP1"             # 支持良性证据
+	BP2 = "BP2"
+	BP3 = "BP3"
+	BP4 = "BP4"
+	BP5 = "BP5"
+	BP6 = "BP6"
+	BP7 = "BP7"
+
+class EvidenceClassification(str, Enum):
+	"""证据强度分类结果"""
+	PATHOGENIC = "Pathogenic"
+	STRONG_PATHOGENIC = "Strong Pathogenic"
+	MODERATE_PATHOGENIC = "Moderate Pathogenic"
+	LIKELY_PATHOGENIC = "Likely Pathogenic"
+	UNCERTAIN_SIGNIFICANCE = "Uncertain Significance"
+	LIKELY_BENIGN = "Likely Benign"
+	BENIGN = "Benign"
+
+
+# ==================== 分数-分类映射 ====================
+
+SCORE_CLASSIFICATION_MAP: List[Tuple[float, str]] = [
+    (85.0, EvidenceClassification.PATHOGENIC.value),
+    (80.0, EvidenceClassification.STRONG_PATHOGENIC.value),
+    (70.0, EvidenceClassification.MODERATE_PATHOGENIC.value),
+    (60.0, EvidenceClassification.LIKELY_PATHOGENIC.value),
+    (40.0, EvidenceClassification.UNCERTAIN_SIGNIFICANCE.value),
+    (20.0, EvidenceClassification.LIKELY_BENIGN.value),
+    (0.0,  EvidenceClassification.BENIGN.value),
+]
+
+EVIDENCE_VALIDITY_THRESHOLD = 85.0  # 置信度 >= 85 判定有效
+
+
+# ==================== OddsPath → 证据强度 ====================
+
+ODDSPATH_STRENGTH_MAP: List[Tuple[float, str]] = [
+    (350.0,  EvidenceStrength.PS3_VERY_STRONG.value),
+    (18.7,   EvidenceStrength.PS3.value),
+    (4.3,    EvidenceStrength.PS3_MODERATE.value),
+    (2.1,    EvidenceStrength.PS3_SUPPORTING.value),
+    (0.48,   EvidenceStrength.INCONCLUSIVE.value),
+    (0.23,   EvidenceStrength.BS3_SUPPORTING.value),
+    (0.053,  EvidenceStrength.BS3_MODERATE.value),
+    (0.0,    EvidenceStrength.BS3.value),
+]
+
+
+class EntityType(str, Enum):
+	"""实体类型枚举"""
+	GENE = "gene"
+	VARIANT = "variant"
+	PHENOTYPE = "phenotype"
+	DISEASE = "disease"
+	TRANSCRIPT = "transcript"
+	PROTEIN_CHANGE = "protein_change"
+	LITERATURE = "literature"
+	EXPERIMENT = "experiment"
+	SPECIES = "species"
+
+#================================ 证据强度枚举 结束 ================================
+
 
 #================================Agent status 定义=================================
 class ProcessingState(TypedDict):
@@ -85,22 +115,33 @@ class ProcessingState(TypedDict):
 	# 输入
 	markdown_content: str  # 原始 Markdown 内容
 	image_paths: List[str]  # 图片路径列表
-	
+
 	# 中间处理结果
 	translated_md: str  # 翻译后的 Markdown (英文)
 	image_descriptions: List[str]  # 图片描述列表
-	
+
 	# 证据提取结果
 	ps3_evidence: Dict[str, Any]  # PS3 证据字典
+	extracted_fields: Dict[str, Any]  # 提取的结构化字段（11个标准字段）
 	evidence_sources: List[str]  # 证据来源
 	knowledge_context: str  # 知识库上下文
-	
+
+	# 置信度与分类
+	field_confidence_scores: Dict[str, float]  # 每个字段的置信度评分
+	overall_confidence: float  # 总体置信度评分 (0-100)
+	evidence_classification: str  # 证据分类结果
+	acmg_evidence_levels: List[str]  # ACMG 证据等级列表
+
 	# 评分与迭代
-	arbitration_score: float  # 仲裁得分 (0-100)
+	arbitration_confidence: float  # 仲裁置信度 (0-1)
 	arbitration_feedback: str  # 反馈建议
 	iteration_count: int  # 迭代次数
 	max_iterations: int  # 最大迭代次数（默认2）
-	
+	needs_manual_review: bool  # 是否需要人工复核
+	# VLM 相关
+	enable_vlm: bool  # 是否启用（默认关闭）
+	vlm_results: List[Dict[str, Any]]  # VLM 提取结果
+
 	# 最终结果
 	status: str  # "pending", "approved", "manual_review"
 	output: Optional[Dict[str, Any]]  # 最终输出 JSON

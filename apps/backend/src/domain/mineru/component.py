@@ -3,9 +3,14 @@ from typing import List, Dict, Any, Callable, Optional
 import time
 import json
 from uuid import uuid4
-from .enums import MINERU_TASK_STATE_MAP, MINERU_ERROR_DETAIL_MAP, mineru_response_code
+from src.domain.mineru.constants import (
+    mineru_response_code,
+    MINERU_TASK_STATE_MAP,
+    MINERU_ERROR_DETAIL_MAP,
+    MINERU_API_CODE_SUCCESS,
+)
 from loguru import logger
-from .models import (
+from src.domain.models import (
     FileUploadItem, 
     BatchUploadRequest, 
     BatchUploadResponseData, 

@@ -7,13 +7,13 @@ from pathlib import Path
 from loguru import logger
 from src.domain.enums import ProcessingState
 from src.domain.models import EvidenceOutput
-from src.domain import prompts
+from src.domain.agent import prompts
 from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
 from pydantic import SecretStr
-from src.domain.tools import (
+from src.domain.evidence.tools import (
     search_knowledge_base,
     get_evidence_tools,
     get_evidence_tool_map,
@@ -31,21 +31,27 @@ class EvidenceAgent:
     def __init__(self, cfg=settings, rag_component: Optional[RAGComponent] = None):
         self.cfg = cfg
         self.rag = rag_component or RAGComponent()
+        logger.info("EvidenceAgent initialized")
 
     def _normalize_anthropic_base_url(self, base_url: str) -> str:
         if not base_url:
+            logger.debug("Anthropic base URL is empty")
             return base_url
         cleaned = base_url.rstrip("/")
         if cleaned.endswith("/v1"):
             cleaned = cleaned[:-3]
+        logger.debug("Normalized Anthropic base URL: {}", cleaned)
         return cleaned
 
     def _estimate_tokens(self, text: str) -> int:
         if not text:
+            logger.debug("Token estimate requested for empty text")
             return 0
         ascii_chars = sum(1 for ch in text if ch.isascii())
         non_ascii_chars = len(text) - ascii_chars
-        return int(ascii_chars / 4 + non_ascii_chars)
+        estimated = int(ascii_chars / 4 + non_ascii_chars)
+        logger.debug("Estimated tokens: {}", estimated)
+        return estimated
 
     def _split_paragraph(
         self,
@@ -61,6 +67,7 @@ class EvidenceAgent:
             return True
 
         if fits(paragraph):
+            logger.debug("Paragraph fits in a single chunk")
             return [paragraph]
 
         sentences = [s for s in re.split(r"(?<=[。！？.!?])\s+", paragraph.strip()) if s]
@@ -90,6 +97,7 @@ class EvidenceAgent:
 
         if current:
             chunks.append(current)
+        logger.debug("Paragraph split into {} chunk(s)", len(chunks))
         return chunks
 
     def _segment_text_for_translation(
@@ -117,38 +125,120 @@ class EvidenceAgent:
 
         if current:
             segments.append(current)
+        logger.debug("Segmented text into {} segment(s)", len(segments))
         return segments
 
+    def _get_default_rag_queries(self) -> List[str]:
+        return [
+            "PS3 BS3 functional evidence assessment criteria",
+            "ACMG variant interpretation guidelines functional assays",
+            "OddsPath calculation pathogenic benign variants",
+        ]
+
+    async def _retrieve_knowledge_context(self, search_queries: List[str]) -> str:
+        retrieved_docs = []
+        try:
+            qdrant_manager = self.rag.get_qdrant_manager()
+            embedding_client = self.rag.get_embedding_client()
+
+            for query in search_queries:
+                query_vector = embedding_client.embed_query(query)
+
+                search_response = await qdrant_manager.search(
+                    query_vector=query_vector,
+                    top_k=3,
+                    score_threshold=qdrant_manager.score_threshold,
+                )
+
+                for result in search_response.results:
+                    payload = result.payload or {}
+                    retrieved_docs.append({
+                        "content": payload.get("content", ""),
+                        "file_path": payload.get("file_path", ""),
+                        "score": result.score,
+                        "source": "rag",
+                    })
+        except Exception as e:
+            logger.error(f"知识库检索失败: {e}")
+            raise RuntimeError("知识库检索失败") from e
+
+        for query in search_queries:
+            try:
+                tool_results = await search_knowledge_base.ainvoke({
+                    "query": query,
+                    "top_k": 3,
+                })
+            except Exception as e:
+                logger.error(f"工具检索失败 '{query}': {e}")
+                raise RuntimeError("工具检索失败") from e
+
+            for result in tool_results:
+                retrieved_docs.append({
+                    "content": result.get("content", ""),
+                    "file_path": result.get("file_path", ""),
+                    "score": result.get("score", 0),
+                    "source": "tool",
+                })
+
+        seen_content = set()
+        unique_docs = []
+        for doc in sorted(retrieved_docs, key=lambda x: x["score"], reverse=True):
+            content_hash = hash(doc["content"][:200])
+            if content_hash not in seen_content:
+                seen_content.add(content_hash)
+                unique_docs.append(doc)
+
+        top_docs = unique_docs[:5]
+
+        knowledge_context = "\n\n".join([
+            f"[参考文档 {i+1}] (相似度: {doc['score']:.3f})\n{doc['content'][:1000]}..."
+            for i, doc in enumerate(top_docs)
+        ]) if top_docs else "未检索到相关知识库文档"
+
+        logger.info(f"知识库检索完成，获取 {len(top_docs)} 个相关文档")
+        return knowledge_context
+
+    def _retrieve_knowledge_context_sync(self, search_queries: List[str]) -> str:
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(self._retrieve_knowledge_context(search_queries))
+        raise RuntimeError("_retrieve_knowledge_context_sync cannot run inside a running event loop")
+
     # ==================== LLM 客户端配置 ====================
-    def get_translation_llm(self, model_name: str = "qwen-mt-flash"):
+    def get_translation_llm(self):
         """获取翻译 LLM 客户端"""
+        logger.info("Initializing translation LLM")
         return ChatOpenAI(
-            model=model_name,
-            api_key=SecretStr(self.cfg.generic_api_key),
-            base_url=self.cfg.generic_base_url,
+            model=self.cfg.mt_model,
+            api_key=SecretStr(self.cfg.mt_api_key),
+            base_url=self.cfg.mt_base_url,
             temperature=0.0,
         )
 
-    def get_format_llm(self, model_name: str = "qwen-flash"):
+    def get_format_llm(self):
         """获取排版 LLM 客户端"""
+        logger.info("Initializing format LLM")
         return ChatOpenAI(
-            model=model_name,
-            api_key=SecretStr(self.cfg.generic_api_key),
-            base_url=self.cfg.generic_base_url,
+            model=self.cfg.format_model,
+            api_key=SecretStr(self.cfg.format_api_key),
+            base_url=self.cfg.format_base_url,
             temperature=0.0,
         )
 
-    def get_vlm(self, model_name: str = "qwen3-vl-flash"):
+    def get_vlm(self):
         """获取支持视觉的 LLM 客户端"""
+        logger.info("Initializing VLM")
         return ChatOpenAI(
-            model=model_name,
-            api_key=SecretStr(self.cfg.generic_api_key),
-            base_url=self.cfg.generic_base_url,
+            model=self.cfg.vlm_model,
+            api_key=SecretStr(self.cfg.vlm_api_key),
+            base_url=self.cfg.vlm_base_url,
             temperature=0.0,
         )
 
     def get_evidence_llm(self):
         """获取证据提取 LLM 客户端（支持工具调用）"""
+        logger.info("Initializing evidence LLM")
         llm = ChatAnthropic(
             model_name=self.cfg.evidence_model,
             api_key=SecretStr(self.cfg.evidence_api_key),
@@ -161,6 +251,7 @@ class EvidenceAgent:
 
     def get_arbitration_llm(self):
         """获取仲裁 LLM 客户端"""
+        logger.info("Initializing arbitration LLM")
         return ChatAnthropic(
             model_name=self.cfg.arbitration_model,
             api_key=SecretStr(self.cfg.arbitration_api_key),
@@ -178,12 +269,15 @@ class EvidenceAgent:
     ):
         tool_map = get_evidence_tool_map()
         current_messages: List[Any] = list(messages)
+        logger.debug("Invoking LLM with {} message(s)", len(current_messages))
         response = llm.invoke(current_messages)
 
         for _ in range(max_rounds):
             tool_calls = getattr(response, "tool_calls", None) or []
             if not tool_calls:
                 break
+
+            logger.debug("Processing {} tool call(s)", len(tool_calls))
 
             current_messages.append(response)
             tool_messages: List[ToolMessage] = []
@@ -322,73 +416,8 @@ class EvidenceAgent:
         if not translated_md:
             raise RuntimeError("翻译后的 Markdown 为空，无法提取证据")
 
-        search_queries = [
-            "PS3 BS3 functional evidence assessment criteria",
-            "ACMG variant interpretation guidelines functional assays",
-            "OddsPath calculation pathogenic benign variants",
-        ]
-
-        retrieved_docs = []
-        try:
-            qdrant_manager = self.rag.get_qdrant_manager()
-            embedding_client = self.rag.get_embedding_client()
-
-            for query in search_queries:
-                query_vector = embedding_client.embed_query(query)
-
-                search_response = await qdrant_manager.search(
-                    query_vector=query_vector,
-                    top_k=3,
-                    score_threshold=qdrant_manager.score_threshold,
-                )
-
-                for result in search_response.results:
-                    payload = result.payload or {}
-                    retrieved_docs.append({
-                        "content": payload.get("content", ""),
-                        "file_path": payload.get("file_path", ""),
-                        "score": result.score,
-                        "source": "rag",
-                    })
-        except Exception as e:
-            logger.error(f"知识库检索失败: {e}")
-            raise RuntimeError("知识库检索失败") from e
-
-        for query in search_queries:
-            try:
-                tool_results = await search_knowledge_base.ainvoke({
-                    "query": query,
-                    "top_k": 3,
-                })
-            except Exception as e:
-                logger.error(f"工具检索失败 '{query}': {e}")
-                raise RuntimeError("工具检索失败") from e
-
-            for result in tool_results:
-                retrieved_docs.append({
-                    "content": result.get("content", ""),
-                    "file_path": result.get("file_path", ""),
-                    "score": result.get("score", 0),
-                    "source": "tool",
-                })
-
-        seen_content = set()
-        unique_docs = []
-        for doc in sorted(retrieved_docs, key=lambda x: x['score'], reverse=True):
-            content_hash = hash(doc['content'][:200])
-            if content_hash not in seen_content:
-                seen_content.add(content_hash)
-                unique_docs.append(doc)
-
-        top_docs = unique_docs[:5]
-
-        knowledge_context = "\n\n".join([
-            f"[参考文档 {i+1}] (相似度: {doc['score']:.3f})\n{doc['content'][:1000]}..."
-            for i, doc in enumerate(top_docs)
-        ]) if top_docs else "未检索到相关知识库文档"
-
-        logger.info(f"知识库检索完成，获取 {len(top_docs)} 个相关文档")
-
+        search_queries = self._get_default_rag_queries()
+        knowledge_context = await self._retrieve_knowledge_context(search_queries)
         state["knowledge_context"] = knowledge_context
 
         llm = self.get_evidence_llm()
@@ -485,12 +514,17 @@ class EvidenceAgent:
         overall_assessment = ps3_evidence.get('overall_assessment', {})
         final_recommendation = overall_assessment.get('final_recommendation', 'needs_refinement')
 
+        search_queries = self._get_default_rag_queries()
+        knowledge_context = self._retrieve_knowledge_context_sync(search_queries)
+        state["knowledge_context"] = knowledge_context
+
         prompt = prompts.get_arbitration_prompt(
             state['translated_md'],
             state.get("image_descriptions", []),
             state['ps3_evidence'],
             calculated_score,
             final_recommendation,
+            knowledge_context=knowledge_context,
         )
 
         try:
@@ -502,15 +536,19 @@ class EvidenceAgent:
         try:
             content = response.content if isinstance(response.content, str) else str(response.content)
             arbitration_result = self._extract_json_payload(content)
-            state['arbitration_score'] = float(arbitration_result.get('arbitration_score', calculated_score))
+            raw_confidence = arbitration_result.get('confidence', None)
+
+            confidence = 0.0
+            if isinstance(raw_confidence, (int, float)):
+                confidence = float(raw_confidence)
+
+            confidence = max(0.0, min(1.0, confidence))
+            state['arbitration_confidence'] = confidence
             state['arbitration_feedback'] = arbitration_result.get('feedback', '')
 
-            logger.info(f"仲裁得分: {state['arbitration_score']}/100")
+            logger.info(f"仲裁置信度: {state['arbitration_confidence']:.2f}")
             logger.info(
-                f"初步得分: {calculated_score}, 调整: {arbitration_result.get('score_adjustment', 0)}"
-            )
-            logger.info(
-                f"最终决策: {arbitration_result.get('final_decision', 'unknown')}"
+                f"初步得分: {calculated_score}, 最终决策: {arbitration_result.get('final_decision', 'unknown')}"
             )
         except json.JSONDecodeError as e:
             logger.error(f"仲裁 JSON 解析失败: {e}，使用计算得分")
@@ -518,7 +556,7 @@ class EvidenceAgent:
 
         self._apply_arbitration_feedback(state)
 
-        logger.info(f"仲裁完成，最终得分: {state['arbitration_score']}")
+        logger.info(f"仲裁完成，最终置信度: {state['arbitration_confidence']:.2f}")
         return state
 
     
@@ -526,11 +564,12 @@ class EvidenceAgent:
     @staticmethod
     def route_decision(state: ProcessingState) -> str:
         """路由决策：是否通过、继续迭代或标记人工复核"""
-        score = state['arbitration_score']
-        logger.info(f"路由决策: score={score}")
+        confidence = state.get('arbitration_confidence', 0.0)
 
-        if score >= prompts.ARBITRATION_SCORE_THRESHOLD:
-            logger.info("✓ 评分 >= 85，通过审核")
+        logger.info(f"路由决策: confidence={confidence:.2f}")
+
+        if confidence >= prompts.ARBITRATION_CONFIDENCE_THRESHOLD:
+            logger.info("✓ 置信度 >= 0.85，通过审核")
             return "approved"
         logger.warning("评分未达标，标记人工复核")
         return "manual_review"
@@ -598,7 +637,7 @@ class EvidenceAgent:
             'ps3_evidence': {},
             'evidence_sources': [],
             'knowledge_context': '',
-            'arbitration_score': 0,
+            'arbitration_confidence': 0.0,
             'arbitration_feedback': '',
             'iteration_count': 0,
             'max_iterations': max_iterations,
@@ -613,7 +652,7 @@ class EvidenceAgent:
             logger.error(f"医学证据处理失败: {e}")
             return EvidenceOutput(
                 ps3_evidence={"error": str(e)},
-                arbitration_score=0.0,
+                arbitration_confidence=0.0,
                 image_descriptions=initial_state.get("image_descriptions", []),
                 final_evidence_strength=None,
                 status="failed",
@@ -632,7 +671,7 @@ class EvidenceAgent:
 
         output = EvidenceOutput(
             ps3_evidence=final_state['ps3_evidence'],
-            arbitration_score=final_state['arbitration_score'],
+            arbitration_confidence=final_state.get('arbitration_confidence'),
             image_descriptions=final_state['image_descriptions'],
             final_evidence_strength=final_evidence_strength,
             status=final_state['status'],
@@ -641,7 +680,7 @@ class EvidenceAgent:
         )
 
         logger.info(
-            f"证据处理完成: status={final_state['status']}, score={final_state['arbitration_score']}, "
+            f"证据处理完成: status={final_state['status']}, confidence={final_state['arbitration_confidence']:.2f}, "
             f"strength={final_evidence_strength}"
         )
 

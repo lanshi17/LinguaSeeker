@@ -249,7 +249,12 @@ class QdrantManager:
             logger.error(f"向 Qdrant 集合插入向量时出错: {e}")
             raise
 
-    async def search(self, query_vector: List[float], top_k: int, score_threshold: float) -> QdrantSearchResponseDto:
+    async def search(
+        self,
+        query_vector: List[float],
+        top_k: int,
+        score_threshold: Optional[float],
+    ) -> QdrantSearchResponseDto:
         """在 Qdrant 中检索 Top-K 文档"""
         query_response = await self.client.query_points(
             collection_name=self.collection_name,
@@ -262,6 +267,22 @@ class QdrantManager:
         results = getattr(query_response, "points", None)
         if results is None:
             results = getattr(query_response, "result", [])
+        if not results and score_threshold is not None and score_threshold > 0:
+            logger.info(
+                "Qdrant search returned 0 results with score_threshold={}, retrying without threshold.",
+                score_threshold,
+            )
+            query_response = await self.client.query_points(
+                collection_name=self.collection_name,
+                query=query_vector,
+                limit=top_k,
+                score_threshold=None,
+                with_payload=True,
+                with_vectors=False,
+            )
+            results = getattr(query_response, "points", None)
+            if results is None:
+                results = getattr(query_response, "result", [])
         response_items = [
             QdrantSearchResultItemDto(
                 point_id=str(item.id),

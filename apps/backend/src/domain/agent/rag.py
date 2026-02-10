@@ -8,7 +8,7 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 from loguru import logger
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field,SecretStr
-from .models import (
+from src.domain.models import (
     RAGQueryRequest, RAGQueryResponse, EmbeddingRequest, EmbeddingResponse,
     RerankRequest, RerankResponse
 )

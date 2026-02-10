@@ -5,12 +5,12 @@ from loguru import logger
 from src.domain.enums import ProcessingState
 from src.domain.models import AgentRequest, EvidenceOutput
 
-from src.domain.agents import (
+from src.domain.agent.workflow import (
     EvidenceAgent,
    
     search_knowledge_base,
 )
-from src.domain.tools import (
+from src.domain.evidence.tools import (
     load_intermediate_md,
     OddsPath_Calculator,
     determine_evidence_strength_from_oddspath,
@@ -23,7 +23,7 @@ from src.utils.timer import Timer, timer
 import src.utils.exceptions as exc
 import src.utils.file_utils as file_utils
 from src.config import settings
-from src.domain.rag import RAGComponent 
+from src.domain.agent.rag import RAGComponent 
 import pytest
 cfg = settings
 

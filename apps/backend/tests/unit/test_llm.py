@@ -41,12 +41,12 @@ def test_generic_llm_api():
         pytest.skip("跳过测试: 当前 LLM 模式不是 API 模式")
     try:
         llm = ChatOpenAI(
-            api_key=SecretStr(cfg.generic_api_key),
-            base_url=cfg.generic_base_url,
+            api_key=SecretStr(cfg.format_api_key),
+            base_url=cfg.format_base_url,
             temperature=cfg.llm_temperature,
             timeout=cfg.llm_timeout,
             max_retries=cfg.llm_max_retries,
-            model="qwen-flash"
+            model=cfg.format_model,
         )
         messages = [
             SystemMessage(content="You are a helpful assistant."),
@@ -94,7 +94,7 @@ def test_arbitration_llm_api():
     try:
         llm = ChatAnthropic(
             api_key=SecretStr(cfg.arbitration_api_key),
-            base_url=cfg.arbitration_base_url,
+            base_url="https://yunwu.ai/",
             temperature=cfg.llm_temperature,
             timeout=cfg.llm_timeout,
             max_retries=cfg.llm_max_retries,

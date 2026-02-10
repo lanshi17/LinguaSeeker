@@ -88,6 +88,12 @@ def cache_pdf_result(
     pipe.execute()
 
 
+def delete_cached_pdf_result(pdf_hash: str) -> None:
+    """Delete cached result payload and hash marker for a PDF hash."""
+    redis_conn = redis_client.get_connection()
+    redis_conn.delete(_result_key(pdf_hash), _hash_key(pdf_hash))
+
+
 def list_celery_task_meta(
     cursor: int = 0,
     count: int = 100,

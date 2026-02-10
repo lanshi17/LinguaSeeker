@@ -16,8 +16,18 @@ class Settings(BaseSettings):
     api_port: int = 8000
 
     # ==================== LLM配置 ====================
-    generic_api_key: str
-    generic_base_url: str
+    mt_api_key: str
+    mt_base_url: str
+    mt_model: str
+    
+    format_api_key: str
+    format_base_url: str
+    format_model: str
+    
+    vlm_api_key: str
+    vlm_base_url: str
+    vlm_model: str
+    vlm_enable: bool = False
     
     evidence_api_key: str
     evidence_base_url: str
@@ -32,6 +42,10 @@ class Settings(BaseSettings):
     llm_timeout: int = 60
     llm_max_retries: int = 3
     llm_mode: str = "api"
+
+
+    # ==================== 证据分类配置 ====================
+    evidence_validity_threshold: float = 85.0  # 证据有效性阈值
 
     # ==================== Embedding配置 ====================
     embedding_provider: str

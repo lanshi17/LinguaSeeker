@@ -2,6 +2,7 @@ from pathlib import Path
 import asyncio
 import os
 import sys
+from datetime import datetime, timezone
 from uuid import uuid4
 from typing import Any, Dict, List, Optional
 import mimetypes
@@ -14,8 +15,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.domain.mineru import MinerUComponent
-from src.domain.agents import EvidenceAgent
+from src.domain.mineru.component import MinerUComponent
+from src.domain.agent.workflow import EvidenceAgent
 from src.domain.models import (
     EvidenceOutput,
     MinerURequest,
@@ -62,7 +63,24 @@ async def init_knowledge_base_if_needed() -> bool:
             logger.warning("Knowledge base init failed, continue without it: {}", e)
             return False
     else:
-        logger.info("Collection {} exists, skipping init.", cfg.qdrant_collection_name)
+        try:
+            info = await _qdrant_manager.get_collection_info()
+        except Exception as e:
+            logger.warning("Unable to read collection info, skip init: {}", e)
+            return True
+
+        if info.vectors_count == 0:
+            logger.warning(
+                "Collection {} exists but is empty, initializing knowledge base...",
+                cfg.qdrant_collection_name,
+            )
+            try:
+                await initialize_knowledge_base(cfg.knowledge_docs_dir)
+            except Exception as e:
+                logger.warning("Knowledge base init failed, continue without it: {}", e)
+                return False
+        else:
+            logger.info("Collection {} exists, skipping init.", cfg.qdrant_collection_name)
     return True
 
 
@@ -144,6 +162,7 @@ async def run_fastapi_pipeline(
     output_root: Optional[Path] = None,
     keep_tmp_runs: int = 3,
     hash_file_paths: bool = False,
+    document_id: Optional[str] = None,
 ) -> PipelineResult:
     """FastAPI-friendly pipeline wrapper based on pipline.py."""
     if not file_paths:
@@ -158,7 +177,7 @@ async def run_fastapi_pipeline(
 
     _disable_proxies()
 
-    document_id = str(uuid4())
+    document_id = document_id or str(uuid4())
 
     with Timer("pipeline_total"):
         try:
@@ -215,11 +234,19 @@ async def run_fastapi_pipeline(
         )
 
 
-@celery_app.task(name="tasks.process_pdf")
+@celery_app.task(
+    name="tasks.process_pdf",
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 3, "countdown": 30, "queue": "retry"},
+    retry_jitter=True,
+)
 def process_pdf_task(
+    self,
     file_paths: List[str],
     output_root: Optional[str] = None,
     file_hash: Optional[str] = None,
+    document_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     logger.debug(
         "Celery task start file_paths: {} output_root: {} file_hash: {}",
@@ -227,13 +254,38 @@ def process_pdf_task(
         output_root,
         file_hash,
     )
+    start_time = datetime.now(timezone.utc)
+    file_size_bytes: Optional[int] = 0
+    sized_files = 0
+    for file_path in file_paths:
+        try:
+            file_size_bytes += os.path.getsize(file_path)
+            sized_files += 1
+        except OSError as exc:
+            logger.warning("Unable to read file size for {}: {}", file_path, exc)
+    if sized_files == 0:
+        file_size_bytes = None
     resolved_output_root = Path(output_root) if output_root else None
-    result = asyncio.run(run_fastapi_pipeline(file_paths, output_root=resolved_output_root))
+    result = asyncio.run(
+        run_fastapi_pipeline(
+            file_paths,
+            output_root=resolved_output_root,
+            document_id=document_id,
+        )
+    )
+    end_time = datetime.now(timezone.utc)
+    processing_duration_seconds = (end_time - start_time).total_seconds()
     payload: Dict[str, Any]
     if hasattr(result, "model_dump"):
         payload = result.model_dump()
     else:
         payload = result
+    if isinstance(payload, dict):
+        if file_size_bytes is not None:
+            payload.setdefault("file_size_bytes", file_size_bytes)
+        payload.setdefault("processing_duration_seconds", processing_duration_seconds)
+        payload.setdefault("created_at", start_time.isoformat())
+        payload.setdefault("updated_at", end_time.isoformat())
     if file_hash:
         try:
             cache_pdf_result(file_hash, payload)

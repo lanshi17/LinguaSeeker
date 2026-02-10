@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from contextlib import asynccontextmanager
-import websockets
 import asyncio
 import json
 import sys
@@ -16,6 +15,7 @@ from datetime import datetime
 from typing import Callable, Optional, Dict, Any
 import src.presentation.api as api_routers
 import src.presentation.task_api as task_api_routers
+import src.presentation.graph_api as evidence_api_routers
 from src.utils.exceptions import ACMGException, TaskNotFoundException, ValidationException
 from src.health import check_all_connections
 from src.database.minio_client import MinIOClient
@@ -24,7 +24,7 @@ from src.config import settings as cfg # 导入配置实例
 # 这里使用 "a" 模式追加，每天凌晨滚动，保留最近7天的日志
 logger.add(
     sink=f"logs/app_{datetime.now().strftime('%Y%m%d')}.log", # 文件名包含日期
-    level="INFO", # 记录 INFO 及以上级别的日志到文件
+    level="DEBUG", # 记录 DEBUG 及以上级别的日志到文件
     rotation="00:00", # 每天午夜滚动
     retention="7 days", # 保留最近7天的日志文件
     format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {name}:{function}:{line} - {message}",
@@ -85,6 +85,7 @@ app.add_middleware(
 
 app.include_router(api_routers.router, prefix=cfg.api_prefix)
 app.include_router(task_api_routers.router, prefix=cfg.api_prefix)
+app.include_router(evidence_api_routers.router, prefix=cfg.api_prefix)
 
 
 @app.exception_handler(ACMGException)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Optional
+from uuid import uuid4
 
 from sqlalchemy import (
 	Column,
@@ -15,7 +16,7 @@ from sqlalchemy import (
 	UniqueConstraint,
 	func,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import declarative_base, relationship
 
 from src.database.enum import MinioBucketNameEnum
@@ -40,8 +41,9 @@ class User(Base):
 class Document(Base):
 	__tablename__ = "documents"
 
-	document_id = Column(Integer, primary_key=True, autoincrement=True)
+	document_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
 	title = Column(String(500), nullable=False)
+	original_filename = Column(String(500), nullable=True)
 	pmid = Column(String(64), nullable=True)
 	local_path = Column(Text, nullable=True)
 	file_hash = Column(String(64), nullable=False)
@@ -68,7 +70,7 @@ class Task(Base):
 	__tablename__ = "tasks"
 
 	task_id = Column(Integer, primary_key=True, autoincrement=True)
-	document_id = Column(Integer, ForeignKey("documents.document_id"), nullable=False)
+	document_id = Column(UUID(as_uuid=True), ForeignKey("documents.document_id"), nullable=False)
 	task_type = Column("type", String(50), nullable=False)
 	status = Column(String(50), nullable=False, default="pending")
 	progress = Column(Float, nullable=True)
@@ -108,7 +110,7 @@ class Entity(Base):
 class EntityDocumentMapping(Base):
 	__tablename__ = "entity_document_mapping"
 
-	document_id = Column(Integer, ForeignKey("documents.document_id"), primary_key=True)
+	document_id = Column(UUID(as_uuid=True), ForeignKey("documents.document_id"), primary_key=True)
 	entity_id = Column(Integer, ForeignKey("entities.entity_id"), primary_key=True)
 	confidence_score = Column(Float, nullable=True)
 	mentions = Column(JSONB, nullable=True)
@@ -155,6 +157,61 @@ class GraphEdgeCache(Base):
 		Index("ix_graph_edges_cache_relationship_type", "relationship_type"),
 		Index("ix_graph_edges_cache_start_node_id", "start_node_id"),
 		Index("ix_graph_edges_cache_end_node_id", "end_node_id"),
+	)
+
+
+# ==================== 证据强度分类表 ====================
+
+class EvidenceRecord(Base):
+	"""证据评估记录表"""
+	__tablename__ = "evidence_records"
+
+	evidence_id = Column(Integer, primary_key=True, autoincrement=True)
+	document_id = Column(UUID(as_uuid=True), ForeignKey("documents.document_id"), nullable=False)
+	gene_symbol = Column(String(100), nullable=True)
+	variant_hgvs_c = Column(String(500), nullable=True)
+	variant_hgvs_p = Column(String(500), nullable=True)
+	protein_change = Column(String(500), nullable=True)
+	transcript_id = Column(String(100), nullable=True)
+	reference_genome = Column(String(50), nullable=True)
+	disease_name = Column(String(500), nullable=True)
+	icd10_code = Column(String(50), nullable=True)
+	species = Column(String(100), nullable=True)
+	phenotype = Column(Text, nullable=True)
+
+	# 证据强度分类
+	evidence_strength = Column(String(50), nullable=True)
+	evidence_classification = Column(String(100), nullable=True)
+	overall_confidence = Column(Float, nullable=True)
+	is_valid = Column(String(10), nullable=True, default="false")
+
+	# ACMG 等级
+	acmg_levels = Column(JSONB, nullable=True)
+
+	# 原始提取数据
+	extracted_fields = Column(JSONB, nullable=True)
+	ps3_evidence = Column(JSONB, nullable=True)
+
+	# 时间戳
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(
+		DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+	)
+
+	document = relationship("Document", backref="evidence_records")
+
+	__table_args__ = (
+		Index("ix_evidence_gene_symbol", "gene_symbol"),
+		Index("ix_evidence_variant_hgvs_c", "variant_hgvs_c"),
+		Index("ix_evidence_variant_hgvs_p", "variant_hgvs_p"),
+		Index("ix_evidence_protein_change", "protein_change"),
+		Index("ix_evidence_disease_name", "disease_name"),
+		Index("ix_evidence_icd10_code", "icd10_code"),
+		Index("ix_evidence_strength", "evidence_strength"),
+		Index("ix_evidence_classification", "evidence_classification"),
+		Index("ix_evidence_document_id", "document_id"),
+		Index("ix_evidence_gene_variant", "gene_symbol", "variant_hgvs_c"),
+		Index("ix_evidence_gene_protein", "gene_symbol", "protein_change"),
 	)
 
 

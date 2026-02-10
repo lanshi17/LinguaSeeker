@@ -16,6 +16,7 @@ from src.service.dtos import (
     TaskListItem,
     TaskListResponse,
     TaskStatusResponse,
+    ValidationErrorResponse,
 )
 from src.service.enum import TaskStatus
 
@@ -48,12 +49,39 @@ def _parse_date_done(value: Optional[str]) -> Optional[datetime]:
         return None
 
 
+def _extract_task_metrics(meta: Dict[str, Any]) -> Dict[str, Any]:
+    result = meta.get("result")
+    if not isinstance(result, dict):
+        result = {}
+
+    updated_at = result.get("updated_at") or meta.get("date_done")
+    return {
+        "file_size_bytes": result.get("file_size_bytes"),
+        "processing_duration_seconds": result.get("processing_duration_seconds"),
+        "created_at": result.get("created_at"),
+        "updated_at": updated_at,
+    }
+
+
+def _safe_task_meta(async_result: AsyncResult) -> Dict[str, Any]:
+    getter = getattr(async_result, "_get_task_meta", None)
+    if not callable(getter):
+        return {}
+    try:
+        meta = getter()
+    except Exception as exc:
+        logger.warning("Failed to read task meta for {}: {}", async_result.id, exc)
+        return {}
+    return meta or {}
+
+
 def _build_task_list_item(meta: Dict[str, Any], include_result: bool) -> TaskListItem:
     task_id = _extract_task_id(meta)
     status = TaskStatus.from_celery(str(meta.get("status", "PENDING")))
     date_done = meta.get("date_done")
     result = None
     error = None
+    metrics = _extract_task_metrics(meta)
 
     if status == TaskStatus.success and include_result:
         if isinstance(meta.get("result"), dict):
@@ -73,6 +101,10 @@ def _build_task_list_item(meta: Dict[str, Any], include_result: bool) -> TaskLis
         task_id=task_id,
         status=status,
         date_done=date_done,
+        file_size_bytes=metrics.get("file_size_bytes"),
+        processing_duration_seconds=metrics.get("processing_duration_seconds"),
+        created_at=metrics.get("created_at"),
+        updated_at=metrics.get("updated_at"),
         result=result,
         error=error,
     )
@@ -86,14 +118,20 @@ def _task_sort_key(item: TaskListItem) -> datetime:
 @router.post(
     "",
     summary="Create a task",
-    description="Create a background processing task for one or more PDF file paths.",
+    description=(
+        "Create a background processing task.\n"
+        "Request body: JSON with file_paths and optional output_root.\n"
+        "Response body: task id and initial status."
+    ),
     response_model=TaskCreateResponse,
     responses={
         400: {"model": ErrorResponse, "description": "Invalid input."},
         503: {"model": ErrorResponse, "description": "Task queue unavailable."},
+        422: {"model": ValidationErrorResponse, "description": "Validation error."},
     },
 )
 def create_task(payload: TaskCreateRequest) -> TaskCreateResponse:
+    """Queue a new processing task and return the task metadata."""
     if not payload.file_paths:
         raise HTTPException(status_code=400, detail="file_paths is required")
 
@@ -113,7 +151,10 @@ def create_task(payload: TaskCreateRequest) -> TaskCreateResponse:
 @router.get(
     "/{task_id}",
     summary="Get task status",
-    description="Fetch task status and result by task id.",
+    description=(
+        "Fetch task status and result by task id.\n"
+        "Response body includes status plus result or error when available."
+    ),
     response_model=TaskStatusResponse,
     responses={
         404: {"model": ErrorResponse, "description": "Task not found."},
@@ -122,21 +163,40 @@ def create_task(payload: TaskCreateRequest) -> TaskCreateResponse:
 def get_task_status(
     task_id: str = Path(..., description="Celery task id."),
 ) -> TaskStatusResponse:
+    """Return latest task status from Celery backend."""
     logger.debug("Fetching task status for task_id: {}", task_id)
     async_result = AsyncResult(task_id, app=celery_app)
 
     if async_result is None:
         raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
 
+    meta = _safe_task_meta(async_result)
+    metrics = _extract_task_metrics(meta)
     response = TaskStatusResponse(
         task_id=task_id,
         status=TaskStatus.from_celery(async_result.status),
+        file_size_bytes=metrics.get("file_size_bytes"),
+        processing_duration_seconds=metrics.get("processing_duration_seconds"),
+        created_at=metrics.get("created_at"),
+        updated_at=metrics.get("updated_at"),
+        result=None,
+        error=None,
     )
     if async_result.failed():
         response.error = str(async_result.result)
         logger.debug("Task failed: {} error: {}", task_id, response.error)
     elif async_result.successful():
         response.result = async_result.result
+        if isinstance(async_result.result, dict):
+            response.file_size_bytes = (
+                response.file_size_bytes or async_result.result.get("file_size_bytes")
+            )
+            response.processing_duration_seconds = (
+                response.processing_duration_seconds
+                or async_result.result.get("processing_duration_seconds")
+            )
+            response.created_at = response.created_at or async_result.result.get("created_at")
+            response.updated_at = response.updated_at or async_result.result.get("updated_at")
         logger.debug("Task succeeded: {}", task_id)
     else:
         logger.debug("Task status: {} status: {}", task_id, async_result.status)
@@ -147,7 +207,10 @@ def get_task_status(
 @router.get(
     "",
     summary="List tasks",
-    description="List recent tasks with optional filtering and pagination.",
+    description=(
+        "List recent tasks with optional filtering and pagination.\n"
+        "Response body contains items, next_cursor and count."
+    ),
     response_model=TaskListResponse,
     responses={
         400: {"model": ErrorResponse, "description": "Invalid query parameters."},
@@ -159,6 +222,7 @@ def list_tasks(
     status: Optional[TaskStatus] = Query(None, description="Filter by task status."),
     include_result: bool = Query(False, description="Include result payloads in list items."),
 ) -> TaskListResponse:
+    """Return a paginated list of tasks from Redis task meta."""
     if limit < 1 or limit > 200:
         raise HTTPException(status_code=400, detail="limit must be between 1 and 200")
 

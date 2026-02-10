@@ -1,5 +1,6 @@
 # celery_app.py
 from celery import Celery
+from kombu import Queue
 from urllib.parse import quote
 from src.config import settings as cfg
 
@@ -29,5 +30,14 @@ celery_app.conf.update(
     accept_content=['json'],
     result_serializer='json',
     task_track_started=True,
-    timezone='UTC'
+    timezone='UTC',
+    task_default_queue='default',
+    task_create_missing_queues=True,
+    task_queues=(
+        Queue('default', routing_key='default'),
+        Queue('retry', routing_key='retry'),
+    ),
+    task_routes={
+        'tasks.process_pdf': {'queue': 'default', 'routing_key': 'default'},
+    },
 )

@@ -1,15 +1,40 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from langchain_core.tools import tool
 from loguru import logger
 
-from src.domain.rag import RAGComponent
+from src.domain.enums import EvidenceStrength
+from src.domain.evidence.classifier import EvidenceClassifier
+from src.domain.models import EvidenceStrengthClassification
+from src.domain.agent.rag import RAGComponent
+
+
+class ToolProxy:
+    def __init__(self, func: Any, tool_obj: Any):
+        self._func = func
+        self._tool = tool_obj
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        return self._func(*args, **kwargs)
+
+    def invoke(self, *args: Any, **kwargs: Any) -> Any:
+        return self._tool.invoke(*args, **kwargs)
+
+    async def ainvoke(self, *args: Any, **kwargs: Any) -> Any:
+        return await self._tool.ainvoke(*args, **kwargs)
+
+    @property
+    def name(self) -> str:
+        return self._tool.name
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._tool, name)
 # ========================= tools定义 ====================
 
-@tool
-def load_intermediate_md(file_path: str) -> str:
+def load_intermediate_md_impl(file_path: str) -> str:
     """加载中间 Markdown 文件的工具函数"""
     try:
+        logger.debug("Loading intermediate markdown: {}", file_path)
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
         logger.info(f"中间 Markdown 文件已加载: {file_path}")
@@ -18,8 +43,7 @@ def load_intermediate_md(file_path: str) -> str:
         logger.error(f"加载文件失败: {e}")
         return f"加载文件失败: {str(e)}"
 
-@tool
-def OddsPath_Calculator(P1: float, P2: float) -> float:
+def OddsPath_Calculator_impl(P1: float, P2: float) -> float:
     """
     计算 OddsPath 的工具函数
     
@@ -42,8 +66,7 @@ def OddsPath_Calculator(P1: float, P2: float) -> float:
         logger.error(f"计算 OddsPath 失败: {e}")
         return -1.0
 
-@tool
-def determine_evidence_strength_from_oddspath(oddspath: float) -> str:
+def determine_evidence_strength_from_oddspath_impl(oddspath: float) -> str:
     """
     根据 OddsPath 值确定 PS3/BS3 证据强度
     
@@ -64,6 +87,7 @@ def determine_evidence_strength_from_oddspath(oddspath: float) -> str:
     - >350: PS3_very_strong
     """
     try:
+        logger.debug("Determining evidence strength from OddsPath: {}", oddspath)
         if oddspath < 0:
             return "invalid_oddspath"
         elif oddspath < 0.053:
@@ -86,8 +110,7 @@ def determine_evidence_strength_from_oddspath(oddspath: float) -> str:
         logger.error(f"确定证据强度失败: {e}")
         return "error"
 
-@tool
-def determine_max_evidence_from_controls(control_variants_count: int) -> str:
+def determine_max_evidence_from_controls_impl(control_variants_count: int) -> str:
     """
     根据对照变异数量确定最大可用的证据强度
     
@@ -102,6 +125,7 @@ def determine_max_evidence_from_controls(control_variants_count: int) -> str:
     - ≥11个: 最高使用到 PS3_moderate / BS3_moderate
     """
     try:
+        logger.debug("Determining max evidence from controls: {}", control_variants_count)
         if control_variants_count <= 0:
             return "no_evidence"
         elif control_variants_count <= 10:
@@ -112,8 +136,7 @@ def determine_max_evidence_from_controls(control_variants_count: int) -> str:
         logger.error(f"确定最大证据强度失败: {e}")
         return "error"
 
-@tool
-def validate_ps3_step1(disease_mechanism_clarity: str) -> dict:
+def validate_ps3_step1_impl(disease_mechanism_clarity: str) -> dict:
     """
     验证 PS3 步骤①：明确疾病的致病机制
     
@@ -124,26 +147,28 @@ def validate_ps3_step1(disease_mechanism_clarity: str) -> dict:
         包含验证结果的字典
     """
     if disease_mechanism_clarity == "clear":
+        logger.debug("PS3 step1: clear")
         return {
             "step1_pass": True,
             "can_proceed": True,
             "message": "致病机制清晰，可以继续评估"
         }
     elif disease_mechanism_clarity == "partial":
+        logger.debug("PS3 step1: partial")
         return {
             "step1_pass": False,
             "can_proceed": True,
             "message": "致病机制部分清晰，建议补充信息后继续"
         }
     else:
+        logger.debug("PS3 step1: unclear")
         return {
             "step1_pass": False,
             "can_proceed": False,
             "message": "致病机制不清晰，不应使用 PS3/BS3 证据"
         }
 
-@tool
-def validate_ps3_step2(assay_suitable: str) -> dict:
+def validate_ps3_step2_impl(assay_suitable: str) -> dict:
     """
     验证 PS3 步骤②：评估功能实验方法的适用性
     
@@ -154,20 +179,21 @@ def validate_ps3_step2(assay_suitable: str) -> dict:
         包含验证结果的字典
     """
     if assay_suitable == "yes":
+        logger.debug("PS3 step2: yes")
         return {
             "step2_pass": True,
             "can_proceed": True,
             "message": "功能实验方法符合致病机制，可以继续评估"
         }
     else:
+        logger.debug("PS3 step2: no")
         return {
             "step2_pass": False,
             "can_proceed": False,
             "message": "功能实验方法不符合致病机制，不应使用 PS3/BS3 证据"
         }
 
-@tool
-async def search_knowledge_base(
+async def search_knowledge_base_impl(
     query: str,
     top_k: int = 10,
     score_threshold: float | None = None,
@@ -185,6 +211,7 @@ async def search_knowledge_base(
     """
     rag = RAGComponent()
     try:
+        logger.info("Searching knowledge base")
         qdrant_manager = rag.get_qdrant_manager()
         embedding_client = rag.get_embedding_client()
         
@@ -218,18 +245,74 @@ async def search_knowledge_base(
         return []
 
 
+load_intermediate_md_tool = tool(load_intermediate_md_impl)
+OddsPath_Calculator_tool = tool(OddsPath_Calculator_impl)
+determine_evidence_strength_from_oddspath_tool = tool(determine_evidence_strength_from_oddspath_impl)
+determine_max_evidence_from_controls_tool = tool(determine_max_evidence_from_controls_impl)
+validate_ps3_step1_tool = tool(validate_ps3_step1_impl)
+validate_ps3_step2_tool = tool(validate_ps3_step2_impl)
+search_knowledge_base_tool = tool(search_knowledge_base_impl)
+
+load_intermediate_md = ToolProxy(load_intermediate_md_impl, load_intermediate_md_tool)
+OddsPath_Calculator = ToolProxy(OddsPath_Calculator_impl, OddsPath_Calculator_tool)
+determine_evidence_strength_from_oddspath = ToolProxy(
+    determine_evidence_strength_from_oddspath_impl,
+    determine_evidence_strength_from_oddspath_tool,
+)
+determine_max_evidence_from_controls = ToolProxy(
+    determine_max_evidence_from_controls_impl,
+    determine_max_evidence_from_controls_tool,
+)
+validate_ps3_step1 = ToolProxy(validate_ps3_step1_impl, validate_ps3_step1_tool)
+validate_ps3_step2 = ToolProxy(validate_ps3_step2_impl, validate_ps3_step2_tool)
+search_knowledge_base = ToolProxy(search_knowledge_base_impl, search_knowledge_base_tool)
+
+
 EVIDENCE_TOOLS = [
-    OddsPath_Calculator,
-    determine_evidence_strength_from_oddspath,
-    determine_max_evidence_from_controls,
-    validate_ps3_step1,
-    validate_ps3_step2,
+    OddsPath_Calculator_tool,
+    determine_evidence_strength_from_oddspath_tool,
+    determine_max_evidence_from_controls_tool,
+    validate_ps3_step1_tool,
+    validate_ps3_step2_tool,
 ]
 
-
 def get_evidence_tools() -> List[Any]:
+    """Return the list of evidence tool callables."""
+    logger.debug("Building evidence tool list")
     return list(EVIDENCE_TOOLS)
 
-
 def get_evidence_tool_map() -> Dict[str, Any]:
+    """Return a name-to-tool mapping for evidence tools."""
+    logger.debug("Building evidence tool map")
     return {tool_item.name: tool_item for tool_item in EVIDENCE_TOOLS}
+
+@tool
+def oddspath_to_strength(oddspath: float) -> str:
+    """将 OddsPath 值映射为证据强度等级（委托给 EvidenceClassifier）"""
+    return EvidenceClassifier.oddspath_to_strength(oddspath)
+
+@tool
+def max_strength_from_controls(count: int) -> str:
+    """根据对照变异数量确定最大可用证据强度（委托给 EvidenceClassifier）"""
+    return EvidenceClassifier.max_strength_from_controls(count)
+
+@tool
+def strength_to_acmg_levels(strength: str) -> List[str]:
+    """将证据强度映射为 ACMG 证据等级列表（委托给 EvidenceClassifier）"""
+    return EvidenceClassifier.strength_to_acmg_levels(strength)
+
+@tool
+def classify_evidence(
+    ps3_evidence: Dict[str, Any],
+    extracted_fields: Optional[Dict[str, Any]] = None,
+) -> EvidenceStrengthClassification:
+    """对 LLM 提取的证据进行完整的强度分类（委托给 EvidenceClassifier）"""
+    return EvidenceClassifier.classify(ps3_evidence, extracted_fields)
+
+@tool
+def validate_with_arbitration(
+    ps3_evidence: Dict[str, Any],
+    arbitration_result: Dict[str, Any],
+) -> Dict[str, Any]:
+    """将仲裁结果与初始分类进行比对（委托给 EvidenceClassifier）"""
+    return EvidenceClassifier.validate_with_arbitration(ps3_evidence, arbitration_result)

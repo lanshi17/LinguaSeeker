@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 import pytest
 
 from src.service import tasks as tasks_module
-from src.domain.models import EvidenceOutput, MinerUResponse, PipelineResult
+from src.domain.models import EvidenceOutput, MinerUResponse, PipelineFiles, PipelineResult
 
 
 def _make_mineru_folder(tmp_path: Path) -> Path:
@@ -15,6 +15,28 @@ def _make_mineru_folder(tmp_path: Path) -> Path:
     image_path = folder / "image1.jpg"
     image_path.write_bytes(b"fake")
     return folder
+
+
+def _make_evidence_output(ps3_evidence: Dict[str, Any] | None = None) -> EvidenceOutput:
+    return EvidenceOutput(
+        ps3_evidence=ps3_evidence or {},
+        arbitration_score=0.0,
+        image_descriptions=[],
+        final_evidence_strength="",
+        status="success",
+        origin_format_md="",
+        en_format_md="",
+        extracted_fields={},
+        field_confidence_scores={},
+        overall_confidence=0.0,
+        evidence_classification="",
+        acmg_evidence_levels=[],
+    )
+
+
+@pytest.fixture()
+def mineru_folder(tmp_path: Path) -> Path:
+    return _make_mineru_folder(tmp_path)
 
 
 def test_disable_proxies() -> None:
@@ -27,44 +49,10 @@ def test_disable_proxies() -> None:
     assert "all_proxy" not in os.environ
 
 
-def test_collect_mineru_assets(tmp_path: Path) -> None:
-    folder = _make_mineru_folder(tmp_path)
-    content, images = tasks_module._collect_mineru_assets(str(folder))
+def test_collect_mineru_assets(mineru_folder: Path) -> None:
+    content, images = tasks_module._collect_mineru_assets(str(mineru_folder))
     assert "hello world" in content
     assert any(Path(p).name == "image1.jpg" for p in images)
-
-
-def test_prepare_output_dir(tmp_path: Path) -> None:
-    output_dir = tasks_module._prepare_output_dir(tmp_path)
-    assert output_dir.exists()
-    assert output_dir.parent == tmp_path
-    assert output_dir.name.startswith("run_")
-
-
-def test_save_outputs(tmp_path: Path) -> None:
-    output_dir = tmp_path / "out"
-    output_dir.mkdir()
-
-    image_path = tmp_path / "image1.jpg"
-    image_path.write_bytes(b"fake")
-
-    evidence = EvidenceOutput(
-        ps3_evidence={"ok": True},
-        arbitration_score=0.9,
-        image_descriptions=["img"],
-        final_evidence_strength="PS3",
-        status="success",
-        origin_format_md="orig",
-        en_format_md="en",
-    )
-
-    saved = tasks_module._save_outputs(evidence, [str(image_path)], output_dir)
-    assert Path(saved.origin_md_path).exists()
-    assert Path(saved.en_md_path).exists()
-    assert Path(saved.image_desc_path).exists()
-    assert Path(saved.ps3_evidence_path).exists()
-    assert Path(saved.image_dir).exists()
-    assert (Path(saved.image_dir) / "image1.jpg").exists()
 
 
 @pytest.mark.asyncio
@@ -102,8 +90,7 @@ async def test_init_knowledge_base_if_needed_runs_init(monkeypatch: pytest.Monke
 
 
 @pytest.mark.asyncio
-async def test_run_fastapi_pipeline_success(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    mineru_folder = _make_mineru_folder(tmp_path)
+async def test_run_fastapi_pipeline_success(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, mineru_folder: Path) -> None:
 
     async def fake_init() -> bool:
         return True
@@ -121,15 +108,7 @@ async def test_run_fastapi_pipeline_success(monkeypatch: pytest.MonkeyPatch, tmp
 
     class FakeAgent:
         def process_medical_evidence(self, markdown_content: str, image_paths: List[str]) -> EvidenceOutput:
-            return EvidenceOutput(
-                ps3_evidence={"ok": True},
-                arbitration_score=0.9,
-                image_descriptions=["img"],
-                final_evidence_strength="PS3",
-                status="success",
-                origin_format_md=markdown_content,
-                en_format_md="en",
-            )
+            return _make_evidence_output()
 
     monkeypatch.setattr(tasks_module, "_mineru", FakeMinerU())
     monkeypatch.setattr(tasks_module, "_agents", FakeAgent())
@@ -158,21 +137,19 @@ def test_process_pdf_task(monkeypatch: pytest.MonkeyPatch) -> None:
             document_id="doc-1",
             output_dir="/tmp/out",
             mineru_folder="/tmp/mineru",
-            files={
-                "origin_md_path": "/tmp/orig.md",
-                "en_md_path": "/tmp/en.md",
-                "image_desc_path": "/tmp/image_desc.txt",
-                "ps3_evidence_path": "/tmp/ps3.json",
-                "image_dir": "/tmp/images",
-            },
-            evidence={
-                "ps3_evidence": {"ok": True},
-                "arbitration_score": 0.1,
-                "image_descriptions": [],
-                "status": "success",
-                "origin_format_md": "orig",
-                "en_format_md": "en",
-            },
+            files=PipelineFiles(
+                origin_md_path="/tmp/orig.md",
+                en_md_path="/tmp/en.md",
+                image_desc_path="/tmp/image_desc.txt",
+                ps3_evidence_path="/tmp/ps3.json",
+                image_dir="/tmp/images",
+                origin_md_url="",
+                en_md_url="",
+                image_desc_url="",
+                ps3_evidence_url="",
+                image_urls=[],
+            ),
+            evidence=_make_evidence_output(ps3_evidence={"ok": True}),
         )
 
     monkeypatch.setattr(tasks_module, "run_fastapi_pipeline", fake_run)

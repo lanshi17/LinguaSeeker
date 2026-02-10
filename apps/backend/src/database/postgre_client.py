@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Any, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Union
+from uuid import UUID
 from urllib.parse import quote_plus
 
 import psycopg2
@@ -17,6 +18,7 @@ from src.database.models import (
 	Document,
 	Entity,
 	EntityDocumentMapping,
+	EvidenceRecord,
 	GraphEdgeCache,
 	GraphNodeCache,
 	Task,
@@ -96,6 +98,12 @@ class PostgresClient:
 			future=True,
 		)
 
+	@staticmethod
+	def _coerce_uuid(value: Union[UUID, str]) -> UUID:
+		if isinstance(value, UUID):
+			return value
+		return UUID(str(value))
+
 	@contextmanager
 	def session_scope(self) -> Iterable[Session]:
 		session = self.SessionLocal()
@@ -129,25 +137,32 @@ class PostgresClient:
 		self,
 		title: str,
 		file_hash: str,
+		document_id: Optional[UUID] = None,
+		original_filename: Optional[str] = None,
 		pmid: Optional[str] = None,
 		local_path: Optional[str] = None,
 		status: str = "pending",
 		summary: Optional[str] = None,
 	) -> Document:
 		with self.session_scope() as session:
-			document = Document(
-				title=title,
-				pmid=pmid,
-				local_path=local_path,
-				file_hash=file_hash,
-				status=status,
-				summary=summary,
-			)
+			doc_kwargs = {
+				"title": title,
+				"original_filename": original_filename,
+				"pmid": pmid,
+				"local_path": local_path,
+				"file_hash": file_hash,
+				"status": status,
+				"summary": summary,
+			}
+			if document_id is not None:
+				doc_kwargs["document_id"] = document_id
+			document = Document(**doc_kwargs)
 			session.add(document)
 			session.flush()
 			return document
 
-	def get_document_by_id(self, document_id: int) -> Optional[Document]:
+	def get_document_by_id(self, document_id: UUID) -> Optional[Document]:
+		document_id = self._coerce_uuid(document_id)
 		with self.session_scope() as session:
 			return session.get(Document, document_id)
 
@@ -175,7 +190,8 @@ class PostgresClient:
 				query = query.filter(Document.status == status)
 			return query.order_by(Document.document_id).offset(offset).limit(limit).all()
 
-	def update_document(self, document_id: int, **fields: Any) -> Optional[Document]:
+	def update_document(self, document_id: UUID, **fields: Any) -> Optional[Document]:
+		document_id = self._coerce_uuid(document_id)
 		with self.session_scope() as session:
 			document = session.get(Document, document_id)
 			if not document:
@@ -186,7 +202,8 @@ class PostgresClient:
 			session.flush()
 			return document
 
-	def delete_document(self, document_id: int) -> bool:
+	def delete_document(self, document_id: UUID) -> bool:
+		document_id = self._coerce_uuid(document_id)
 		with self.session_scope() as session:
 			document = session.get(Document, document_id)
 			if not document:
@@ -197,12 +214,13 @@ class PostgresClient:
 	# -------------------- Tasks --------------------
 	def create_task(
 		self,
-		document_id: int,
+		document_id: UUID,
 		task_type: str,
 		status: str = "pending",
 		progress: Optional[float] = None,
 		result: Optional[Dict[str, Any]] = None,
 	) -> Task:
+		document_id = self._coerce_uuid(document_id)
 		with self.session_scope() as session:
 			task = Task(
 				document_id=document_id,
@@ -219,7 +237,8 @@ class PostgresClient:
 		with self.session_scope() as session:
 			return session.get(Task, task_id)
 
-	def list_tasks_by_document(self, document_id: int) -> List[Task]:
+	def list_tasks_by_document(self, document_id: UUID) -> List[Task]:
+		document_id = self._coerce_uuid(document_id)
 		with self.session_scope() as session:
 			return (
 				session.query(Task)
@@ -336,7 +355,8 @@ class PostgresClient:
 			result = session.execute(upsert_stmt)
 			return result.rowcount or 0
 
-	def get_entities_for_document(self, document_id: int) -> List[Entity]:
+	def get_entities_for_document(self, document_id: UUID) -> List[Entity]:
+		document_id = self._coerce_uuid(document_id)
 		with self.session_scope() as session:
 			return (
 				session.query(Entity)
@@ -418,6 +438,137 @@ class PostgresClient:
 		with self.session_scope() as session:
 			result = session.execute(upsert_stmt)
 			return result.scalar_one()
+
+
+	# -------------------- Evidence Records --------------------
+	def create_evidence_record(
+		self,
+		document_id: UUID,
+		gene_symbol: Optional[str] = None,
+		variant_hgvs_c: Optional[str] = None,
+		variant_hgvs_p: Optional[str] = None,
+		protein_change: Optional[str] = None,
+		transcript_id: Optional[str] = None,
+		reference_genome: Optional[str] = None,
+		disease_name: Optional[str] = None,
+		icd10_code: Optional[str] = None,
+		species: Optional[str] = None,
+		phenotype: Optional[str] = None,
+		evidence_strength: Optional[str] = None,
+		evidence_classification: Optional[str] = None,
+		overall_confidence: Optional[float] = None,
+		is_valid: str = "false",
+		acmg_levels: Optional[Dict[str, Any]] = None,
+		extracted_fields: Optional[Dict[str, Any]] = None,
+		ps3_evidence: Optional[Dict[str, Any]] = None,
+	) -> EvidenceRecord:
+		document_id = self._coerce_uuid(document_id)
+		with self.session_scope() as session:
+			record = EvidenceRecord(
+				document_id=document_id,
+				gene_symbol=gene_symbol,
+				variant_hgvs_c=variant_hgvs_c,
+				variant_hgvs_p=variant_hgvs_p,
+				protein_change=protein_change,
+				transcript_id=transcript_id,
+				reference_genome=reference_genome,
+				disease_name=disease_name,
+				icd10_code=icd10_code,
+				species=species,
+				phenotype=phenotype,
+				evidence_strength=evidence_strength,
+				evidence_classification=evidence_classification,
+				overall_confidence=overall_confidence,
+				is_valid=is_valid,
+				acmg_levels=acmg_levels,
+				extracted_fields=extracted_fields,
+				ps3_evidence=ps3_evidence,
+			)
+			session.add(record)
+			session.flush()
+			return record
+
+	def get_evidence_by_id(self, evidence_id: int) -> Optional[EvidenceRecord]:
+		with self.session_scope() as session:
+			return session.get(EvidenceRecord, evidence_id)
+
+	def search_evidence_by_gene(self, gene_symbol: str, limit: int = 50) -> List[EvidenceRecord]:
+		with self.session_scope() as session:
+			return (
+				session.query(EvidenceRecord)
+				.filter(EvidenceRecord.gene_symbol == gene_symbol)
+				.order_by(EvidenceRecord.overall_confidence.desc())
+				.limit(limit)
+				.all()
+			)
+
+	def search_evidence_by_variant(
+		self,
+		variant: Optional[str] = None,
+		protein_change: Optional[str] = None,
+		limit: int = 50,
+	) -> List[EvidenceRecord]:
+		with self.session_scope() as session:
+			query = session.query(EvidenceRecord)
+			if variant:
+				query = query.filter(
+					(EvidenceRecord.variant_hgvs_c == variant)
+					| (EvidenceRecord.variant_hgvs_p == variant)
+				)
+			if protein_change:
+				query = query.filter(EvidenceRecord.protein_change == protein_change)
+			return query.order_by(EvidenceRecord.overall_confidence.desc()).limit(limit).all()
+
+	def search_evidence_multi(
+		self,
+		gene_symbol: Optional[str] = None,
+		variant: Optional[str] = None,
+		protein_change: Optional[str] = None,
+		disease_name: Optional[str] = None,
+		min_confidence: Optional[float] = None,
+		only_valid: bool = False,
+		limit: int = 100,
+	) -> List[EvidenceRecord]:
+		"""多条件图谱检索：基于 Variation/Gene/Protein Change 的关联证据检索"""
+		with self.session_scope() as session:
+			query = session.query(EvidenceRecord)
+			if gene_symbol:
+				query = query.filter(EvidenceRecord.gene_symbol == gene_symbol)
+			if variant:
+				query = query.filter(
+					(EvidenceRecord.variant_hgvs_c == variant)
+					| (EvidenceRecord.variant_hgvs_p == variant)
+				)
+			if protein_change:
+				query = query.filter(EvidenceRecord.protein_change == protein_change)
+			if disease_name:
+				query = query.filter(EvidenceRecord.disease_name.ilike(f"%{disease_name}%"))
+			if min_confidence is not None:
+				query = query.filter(EvidenceRecord.overall_confidence >= min_confidence)
+			if only_valid:
+				query = query.filter(EvidenceRecord.is_valid == "true")
+			return query.order_by(EvidenceRecord.overall_confidence.desc()).limit(limit).all()
+
+	def get_evidence_for_document(self, document_id: UUID) -> List[EvidenceRecord]:
+		document_id = self._coerce_uuid(document_id)
+		with self.session_scope() as session:
+			return (
+				session.query(EvidenceRecord)
+				.filter(EvidenceRecord.document_id == document_id)
+				.order_by(EvidenceRecord.evidence_id)
+				.all()
+			)
+
+	def update_evidence_record(self, evidence_id: int, **fields: Any) -> Optional[EvidenceRecord]:
+		with self.session_scope() as session:
+			record = session.get(EvidenceRecord, evidence_id)
+			if not record:
+				return None
+			for key, value in fields.items():
+				if hasattr(record, key):
+					setattr(record, key, value)
+			session.flush()
+			return record
 
 
 _postgres_client: Optional[PostgresClient] = None

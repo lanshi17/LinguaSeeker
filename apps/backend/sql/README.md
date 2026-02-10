@@ -5,6 +5,8 @@
 ## 文件说明
 
 - `init_database_schema.sql` - PostgreSQL数据库模式初始化脚本，包含所有表结构、索引和约束的定义
+- `seed_data.sql` - 初始化种子数据（系统用户等）
+- `cleanup_orphan_records.sql` - 清理孤立/冗余记录
 
 ## 使用说明
 
@@ -14,9 +16,18 @@
 ./init_db.sh
 ```
 
+要清理冗余/孤立记录，请运行：
+```bash
+./run_cleanup_sql.sh
+```
+
 或者直接使用psql命令：
 ```bash
 psql -h localhost -p 5432 -U [username] -d [database_name] -f sql/init_database_schema.sql
+```
+```bash
+psql -h localhost -p 5432 -U [username] -d [database_name] -f sql/seed_data.sql
+psql -h localhost -p 5432 -U [username] -d [database_name] -f sql/cleanup_orphan_records.sql
 ```
 
 ## 脚本详情

@@ -10,8 +10,8 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from loguru import logger
 import requests
-from domain.mineru import MinerUComponent
-from domain.agents import EvidenceAgent
+from domain.mineru.component import MinerUComponent
+from domain.agent.workflow import EvidenceAgent
 from domain.models import MinerURequest, MinerUResponse, EvidenceOutput
 from src.database.qdrant_client import QdrantManager,initialize_knowledge_base
 from src.utils.timer import Timer, timer
@@ -116,7 +116,6 @@ logger.debug("医学证据处理测试完成:{}", agent_response)
 #保存结果
 """ 
     ps3_evidence: Dict[str, Any] = Field(..., description="PS3 证据评估结果")
-    arbitration_score: float = Field(..., description="仲裁评分 (0-100)")
     image_descriptions: List[str] = Field(default_factory=list, description="图片描述列表")
     final_evidence_strength: Optional[str] = Field(None, description="最终证据强度等级")
     status: Optional[str] = Field("pending", description="处理状态")
