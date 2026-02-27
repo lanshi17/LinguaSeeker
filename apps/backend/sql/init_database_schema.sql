@@ -36,6 +36,18 @@ CREATE TABLE IF NOT EXISTS tasks (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
+-- 3b. task_logs
+CREATE TABLE IF NOT EXISTS task_logs (
+    log_id SERIAL PRIMARY KEY,
+    task_id INTEGER REFERENCES tasks(task_id) ON DELETE SET NULL,
+    document_id UUID NOT NULL REFERENCES documents(document_id) ON DELETE CASCADE,
+    status VARCHAR(50) NOT NULL,
+    category VARCHAR(100),
+    payload JSONB,
+    missing_fields_detail JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
 -- 4. entities
 CREATE TABLE IF NOT EXISTS entities (
     entity_id SERIAL PRIMARY KEY,
@@ -74,6 +86,59 @@ CREATE TABLE IF NOT EXISTS graph_edges_cache (
     properties JSONB
 );
 
+-- 8. clinvar_variations (ClinVar 基础变异表)
+CREATE TABLE IF NOT EXISTS clinvar_variations (
+    variation_id BIGINT PRIMARY KEY,
+    preferred_name VARCHAR(1000),
+    primary_hgvs VARCHAR(1000),
+    gene_symbol VARCHAR(100),
+    transcript_id VARCHAR(100),
+    clinvar_accession VARCHAR(32),
+    review_status VARCHAR(200),
+    clinical_significance VARCHAR(200),
+    last_evaluated_at TIMESTAMP WITH TIME ZONE,
+    synonyms JSONB,
+    hgvs_list JSONB,
+    trait_names JSONB,
+    attributes JSONB,
+    citations_synced_at TIMESTAMP WITH TIME ZONE,
+    scorecards_synced_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+-- 9. variation_citations (ClinVar/内部文献映射)
+CREATE TABLE IF NOT EXISTS variation_citations (
+    citation_id SERIAL PRIMARY KEY,
+    variation_id BIGINT NOT NULL REFERENCES clinvar_variations(variation_id) ON DELETE CASCADE,
+    source VARCHAR(50) NOT NULL,
+    pmid VARCHAR(32),
+    document_id UUID REFERENCES documents(document_id) ON DELETE CASCADE,
+    evidence_strength VARCHAR(100),
+    notes TEXT,
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+-- 10. clingen_evidence_profiles (ClinGen EviRepo 评分表)
+CREATE TABLE IF NOT EXISTS clingen_evidence_profiles (
+    profile_id SERIAL PRIMARY KEY,
+    variation_id BIGINT NOT NULL REFERENCES clinvar_variations(variation_id) ON DELETE CASCADE,
+    assertion_id VARCHAR(200) NOT NULL,
+    disease_label VARCHAR(500),
+    disease_mondo VARCHAR(100),
+    expert_panel VARCHAR(255),
+    classification VARCHAR(100),
+    published_at DATE,
+    evidence_codes JSONB,
+    guideline_label VARCHAR(500),
+    score_breakdown JSONB,
+    raw_payload JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    UNIQUE (variation_id, assertion_id)
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_documents_status ON documents(status);
 CREATE INDEX IF NOT EXISTS idx_documents_pmid ON documents(pmid);
@@ -81,6 +146,8 @@ CREATE INDEX IF NOT EXISTS idx_documents_file_hash ON documents(file_hash);
 
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_document_id ON tasks(document_id);
+CREATE INDEX IF NOT EXISTS idx_task_logs_document_id ON task_logs(document_id);
+CREATE INDEX IF NOT EXISTS idx_task_logs_status ON task_logs(status);
 
 CREATE INDEX IF NOT EXISTS idx_entities_name ON entities(name);
 CREATE INDEX IF NOT EXISTS idx_entities_type_name ON entities(type, name);
@@ -96,6 +163,14 @@ CREATE INDEX IF NOT EXISTS idx_graph_edges_cache_start_node_id ON graph_edges_ca
 CREATE INDEX IF NOT EXISTS idx_graph_edges_cache_end_node_id ON graph_edges_cache(end_node_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_graph_edges_cache_neo4j_rel_id ON graph_edges_cache(neo4j_relationship_id);
 
+CREATE INDEX IF NOT EXISTS idx_clinvar_variations_gene_symbol ON clinvar_variations(gene_symbol);
+CREATE INDEX IF NOT EXISTS idx_clinvar_variations_primary_hgvs ON clinvar_variations(primary_hgvs);
+CREATE INDEX IF NOT EXISTS idx_variation_citations_variation ON variation_citations(variation_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_variation_citations_pmid ON variation_citations(variation_id, source, pmid) WHERE pmid IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_variation_citations_document ON variation_citations(variation_id, source, document_id) WHERE document_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_clingen_profiles_variation ON clingen_evidence_profiles(variation_id);
+CREATE INDEX IF NOT EXISTS idx_clingen_profiles_disease ON clingen_evidence_profiles(disease_mondo);
+
 -- 8. evidence_records (证据强度分类表)
 CREATE TABLE IF NOT EXISTS evidence_records (
     evidence_id SERIAL PRIMARY KEY,
@@ -104,6 +179,7 @@ CREATE TABLE IF NOT EXISTS evidence_records (
     variant_hgvs_c VARCHAR(500),
     variant_hgvs_p VARCHAR(500),
     protein_change VARCHAR(500),
+    clinvar_variation_id BIGINT REFERENCES clinvar_variations(variation_id),
     transcript_id VARCHAR(100),
     reference_genome VARCHAR(50),
     disease_name VARCHAR(500),
@@ -127,6 +203,7 @@ CREATE INDEX IF NOT EXISTS idx_evidence_gene_symbol ON evidence_records(gene_sym
 CREATE INDEX IF NOT EXISTS idx_evidence_variant_hgvs_c ON evidence_records(variant_hgvs_c);
 CREATE INDEX IF NOT EXISTS idx_evidence_variant_hgvs_p ON evidence_records(variant_hgvs_p);
 CREATE INDEX IF NOT EXISTS idx_evidence_protein_change ON evidence_records(protein_change);
+CREATE INDEX IF NOT EXISTS idx_evidence_clinvar_variation ON evidence_records(clinvar_variation_id);
 CREATE INDEX IF NOT EXISTS idx_evidence_disease_name ON evidence_records(disease_name);
 CREATE INDEX IF NOT EXISTS idx_evidence_icd10_code ON evidence_records(icd10_code);
 CREATE INDEX IF NOT EXISTS idx_evidence_strength ON evidence_records(evidence_strength);
@@ -154,6 +231,12 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_evidence_records_updated_at BEFORE UPDATE ON evidence_records
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_clinvar_variations_updated_at BEFORE UPDATE ON clinvar_variations
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_clingen_profiles_updated_at BEFORE UPDATE ON clingen_evidence_profiles
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- View: document task status
 CREATE OR REPLACE VIEW document_task_status AS
 SELECT
@@ -175,6 +258,7 @@ SELECT
     er.variant_hgvs_c,
     er.variant_hgvs_p,
     er.protein_change,
+    er.clinvar_variation_id,
     er.disease_name,
     er.evidence_strength,
     er.evidence_classification,
@@ -194,6 +278,7 @@ CREATE OR REPLACE VIEW multi_document_evidence AS
 SELECT
     er.gene_symbol,
     er.variant_hgvs_c,
+    er.clinvar_variation_id,
     er.protein_change,
     COUNT(DISTINCT er.document_id) AS document_count,
     array_agg(DISTINCT d.title) AS document_titles,
@@ -203,6 +288,6 @@ SELECT
 FROM evidence_records er
 JOIN documents d ON er.document_id = d.document_id
 WHERE er.gene_symbol IS NOT NULL
-GROUP BY er.gene_symbol, er.variant_hgvs_c, er.protein_change;
+GROUP BY er.gene_symbol, er.variant_hgvs_c, er.clinvar_variation_id, er.protein_change;
 
 SELECT 'Database schema initialized successfully!' AS message;

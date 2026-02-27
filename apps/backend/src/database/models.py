@@ -6,15 +6,18 @@ from uuid import uuid4
 
 from sqlalchemy import (
 	Column,
+	Date,
 	DateTime,
 	Float,
 	ForeignKey,
 	Index,
 	Integer,
+	BigInteger,
 	String,
 	Text,
 	UniqueConstraint,
 	func,
+	text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import declarative_base, relationship
@@ -85,6 +88,26 @@ class Task(Base):
 	__table_args__ = (
 		Index("ix_tasks_status", "status"),
 		Index("ix_tasks_document_id", "document_id"),
+	)
+
+
+class TaskLog(Base):
+	__tablename__ = "task_logs"
+
+	log_id = Column(Integer, primary_key=True, autoincrement=True)
+	task_id = Column(Integer, ForeignKey("tasks.task_id", ondelete="SET NULL"), nullable=True)
+	document_id = Column(UUID(as_uuid=True), ForeignKey("documents.document_id", ondelete="CASCADE"), nullable=False)
+	status = Column(String(50), nullable=False)
+	category = Column(String(100), nullable=True)
+	payload = Column(JSONB, nullable=True)
+	missing_fields_detail = Column(JSONB, nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+	task = relationship("Task", backref="logs")
+
+	__table_args__ = (
+		Index("ix_task_logs_document_id", "document_id"),
+		Index("ix_task_logs_status", "status"),
 	)
 
 
@@ -160,6 +183,123 @@ class GraphEdgeCache(Base):
 	)
 
 
+# ==================== ClinVar / ClinGen 扩展表 ====================
+
+class ClinVarVariation(Base):
+	__tablename__ = "clinvar_variations"
+
+	variation_id = Column(BigInteger, primary_key=True)
+	preferred_name = Column(String(1000), nullable=True)
+	primary_hgvs = Column(String(1000), nullable=True)
+	gene_symbol = Column(String(100), nullable=True)
+	transcript_id = Column(String(100), nullable=True)
+	clinvar_accession = Column(String(32), nullable=True)
+	review_status = Column(String(200), nullable=True)
+	clinical_significance = Column(String(200), nullable=True)
+	last_evaluated_at = Column(DateTime(timezone=True), nullable=True)
+	synonyms = Column(JSONB, nullable=True)
+	hgvs_list = Column(JSONB, nullable=True)
+	trait_names = Column(JSONB, nullable=True)
+	attributes = Column(JSONB, nullable=True)
+	citations_synced_at = Column(DateTime(timezone=True), nullable=True)
+	scorecards_synced_at = Column(DateTime(timezone=True), nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(
+		DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+	)
+
+	evidence_records = relationship("EvidenceRecord", back_populates="clinvar_variation")
+	citations = relationship(
+		"VariationCitation", back_populates="variation", cascade="all, delete-orphan"
+	)
+	scorecards = relationship(
+		"ClinGenEvidenceProfile", back_populates="variation", cascade="all, delete-orphan"
+	)
+
+	__table_args__ = (
+		Index("ix_clinvar_variations_gene_symbol", "gene_symbol"),
+		Index("ix_clinvar_variations_primary_hgvs", "primary_hgvs"),
+	)
+
+
+class VariationCitation(Base):
+	__tablename__ = "variation_citations"
+
+	citation_id = Column(Integer, primary_key=True, autoincrement=True)
+	variation_id = Column(
+		BigInteger,
+		ForeignKey("clinvar_variations.variation_id", ondelete="CASCADE"),
+		nullable=False,
+	)
+	source = Column(String(50), nullable=False)
+	pmid = Column(String(32), nullable=True)
+	document_id = Column(
+		UUID(as_uuid=True),
+		ForeignKey("documents.document_id", ondelete="CASCADE"),
+		nullable=True,
+	)
+	evidence_strength = Column(String(100), nullable=True)
+	notes = Column(Text, nullable=True)
+	citation_metadata = Column("metadata", JSONB, key="citation_metadata", nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+	variation = relationship("ClinVarVariation", back_populates="citations")
+	document = relationship("Document")
+
+	__table_args__ = (
+		Index("ix_variation_citations_variation", "variation_id"),
+		Index(
+			"uq_variation_citations_pmid",
+			"variation_id",
+			"source",
+			"pmid",
+			unique=True,
+			postgresql_where=text("pmid IS NOT NULL"),
+		),
+		Index(
+			"uq_variation_citations_document",
+			"variation_id",
+			"source",
+			"document_id",
+			unique=True,
+			postgresql_where=text("document_id IS NOT NULL"),
+		),
+	)
+
+
+class ClinGenEvidenceProfile(Base):
+	__tablename__ = "clingen_evidence_profiles"
+
+	profile_id = Column(Integer, primary_key=True, autoincrement=True)
+	variation_id = Column(
+		BigInteger,
+		ForeignKey("clinvar_variations.variation_id", ondelete="CASCADE"),
+		nullable=False,
+	)
+	assertion_id = Column(String(200), nullable=False)
+	disease_label = Column(String(500), nullable=True)
+	disease_mondo = Column(String(100), nullable=True)
+	expert_panel = Column(String(255), nullable=True)
+	classification = Column(String(100), nullable=True)
+	published_at = Column(Date, nullable=True)
+	guideline_label = Column(String(500), nullable=True)
+	evidence_codes = Column(JSONB, nullable=True)
+	score_breakdown = Column(JSONB, nullable=True)
+	raw_payload = Column(JSONB, nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(
+		DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+	)
+
+	variation = relationship("ClinVarVariation", back_populates="scorecards")
+
+	__table_args__ = (
+		UniqueConstraint("variation_id", "assertion_id", name="uq_clingen_assertion"),
+		Index("ix_clingen_variation", "variation_id"),
+		Index("ix_clingen_disease_mondo", "disease_mondo"),
+	)
+
+
 # ==================== 证据强度分类表 ====================
 
 class EvidenceRecord(Base):
@@ -172,6 +312,9 @@ class EvidenceRecord(Base):
 	variant_hgvs_c = Column(String(500), nullable=True)
 	variant_hgvs_p = Column(String(500), nullable=True)
 	protein_change = Column(String(500), nullable=True)
+	clinvar_variation_id = Column(
+		BigInteger, ForeignKey("clinvar_variations.variation_id"), nullable=True
+	)
 	transcript_id = Column(String(100), nullable=True)
 	reference_genome = Column(String(50), nullable=True)
 	disease_name = Column(String(500), nullable=True)
@@ -183,6 +326,7 @@ class EvidenceRecord(Base):
 	evidence_strength = Column(String(50), nullable=True)
 	evidence_classification = Column(String(100), nullable=True)
 	overall_confidence = Column(Float, nullable=True)
+	arbitration_score = Column(Float, nullable=True)
 	is_valid = Column(String(10), nullable=True, default="false")
 
 	# ACMG 等级
@@ -199,6 +343,7 @@ class EvidenceRecord(Base):
 	)
 
 	document = relationship("Document", backref="evidence_records")
+	clinvar_variation = relationship("ClinVarVariation", back_populates="evidence_records")
 
 	__table_args__ = (
 		Index("ix_evidence_gene_symbol", "gene_symbol"),
@@ -212,6 +357,7 @@ class EvidenceRecord(Base):
 		Index("ix_evidence_document_id", "document_id"),
 		Index("ix_evidence_gene_variant", "gene_symbol", "variant_hgvs_c"),
 		Index("ix_evidence_gene_protein", "gene_symbol", "protein_change"),
+		Index("ix_evidence_clinvar_variation_id", "clinvar_variation_id"),
 	)
 
 

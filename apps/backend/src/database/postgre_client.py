@@ -3,14 +3,13 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Union
 from uuid import UUID
-from urllib.parse import quote_plus
 
 import psycopg2
 from loguru import logger
 from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.engine import URL
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, sessionmaker, joinedload
 
 from src.config import settings as cfg
 from src.database.models import (
@@ -22,22 +21,28 @@ from src.database.models import (
 	GraphEdgeCache,
 	GraphNodeCache,
 	Task,
+	TaskLog,
 	User,
+	ClinVarVariation,
+	VariationCitation,
+	ClinGenEvidenceProfile,
 )
 
 
 def _build_database_url(db_name: Optional[str] = None) -> str:
-	password = quote_plus(cfg.postgres_password or "")
-	return str(
-		URL.create(
-			drivername="postgresql+psycopg2",
-			username=cfg.postgres_user,
-			password=password,
-			host=cfg.postgres_host,
-			port=cfg.postgres_port,
-			database=db_name or cfg.postgres_db,
-		)
+	url = URL.create(
+		drivername="postgresql+psycopg2",
+		username=cfg.postgres_user,
+		password=cfg.postgres_password or "",
+		host=cfg.postgres_host,
+		port=cfg.postgres_port,
+		database=db_name or cfg.postgres_db,
 	)
+	return url.render_as_string(hide_password=False)
+
+
+def get_database_url(db_name: Optional[str] = None) -> str:
+	return _build_database_url(db_name)
 
 
 def _build_conninfo(db_name: Optional[str] = None) -> str:
@@ -99,10 +104,20 @@ class PostgresClient:
 		)
 
 	@staticmethod
-	def _coerce_uuid(value: Union[UUID, str]) -> UUID:
+	def _coerce_uuid(value: Union[UUID, str, int]) -> UUID:
 		if isinstance(value, UUID):
 			return value
-		return UUID(str(value))
+		if isinstance(value, int):
+			if value < 0:
+				raise ValueError("UUID integer value must be non-negative")
+			return UUID(int=value)
+		text = str(value).strip()
+		try:
+			return UUID(text)
+		except ValueError as exc:
+			if text.isdigit():
+				return UUID(int=int(text))
+			raise ValueError(f"Invalid UUID value: {value}") from exc
 
 	@contextmanager
 	def session_scope(self) -> Iterable[Session]:
@@ -265,6 +280,29 @@ class PostgresClient:
 				return False
 			session.delete(task)
 			return True
+
+	def append_task_log(
+		self,
+		document_id: UUID,
+		status: str,
+		category: Optional[str] = None,
+		payload: Optional[Dict[str, Any]] = None,
+		missing_fields_detail: Optional[Dict[str, Any]] = None,
+		task_id: Optional[int] = None,
+	) -> TaskLog:
+		document_id = self._coerce_uuid(document_id)
+		with self.session_scope() as session:
+			entry = TaskLog(
+				document_id=document_id,
+				task_id=task_id,
+				status=status,
+				category=category,
+				payload=payload,
+				missing_fields_detail=missing_fields_detail,
+			)
+			session.add(entry)
+			session.flush()
+			return entry
 
 	# -------------------- Entities --------------------
 	def create_entity(
@@ -439,6 +477,137 @@ class PostgresClient:
 			result = session.execute(upsert_stmt)
 			return result.scalar_one()
 
+	# -------------------- ClinVar / ClinGen Variations --------------------
+	def get_clinvar_variation(self, variation_id: int) -> Optional[ClinVarVariation]:
+		with self.session_scope() as session:
+			return session.get(ClinVarVariation, variation_id)
+
+	def get_clinvar_variation_by_hgvs(self, hgvs: str) -> Optional[ClinVarVariation]:
+		if not hgvs:
+			return None
+		with self.session_scope() as session:
+			return (
+				session.query(ClinVarVariation)
+				.filter(func.lower(ClinVarVariation.primary_hgvs) == hgvs.lower())
+				.one_or_none()
+			)
+
+	def upsert_clinvar_variation(self, variation_id: int, **fields: Any) -> ClinVarVariation:
+		with self.session_scope() as session:
+			variation = session.get(ClinVarVariation, variation_id)
+			if not variation:
+				variation = ClinVarVariation(variation_id=variation_id)
+				session.add(variation)
+			for key, value in fields.items():
+				if hasattr(variation, key) and value is not None:
+					setattr(variation, key, value)
+			session.flush()
+			return variation
+
+	def list_variation_citations(self, variation_id: int) -> List[VariationCitation]:
+		with self.session_scope() as session:
+			return (
+				session.query(VariationCitation)
+				.options(joinedload(VariationCitation.document))
+				.filter(VariationCitation.variation_id == variation_id)
+				.order_by(VariationCitation.citation_id)
+				.all()
+			)
+
+	def replace_variation_citations(
+		self,
+		variation_id: int,
+		source: str,
+		entries: Sequence[Dict[str, Any]],
+	) -> None:
+		with self.session_scope() as session:
+			session.query(VariationCitation).filter(
+				VariationCitation.variation_id == variation_id,
+				VariationCitation.source == source,
+			).delete(synchronize_session=False)
+
+			for entry in entries:
+				citation = VariationCitation(
+					variation_id=variation_id,
+					source=source,
+					pmid=entry.get("pmid"),
+					document_id=entry.get("document_id"),
+					evidence_strength=entry.get("evidence_strength"),
+					notes=entry.get("notes"),
+					citation_metadata=entry.get("metadata"),
+				)
+				session.add(citation)
+
+	def upsert_internal_variation_citation(
+		self,
+		variation_id: int,
+		document_id: UUID,
+		evidence_strength: Optional[str] = None,
+		pmid: Optional[str] = None,
+		metadata: Optional[Dict[str, Any]] = None,
+	) -> VariationCitation:
+		document_id = self._coerce_uuid(document_id)
+		with self.session_scope() as session:
+			citation = (
+				session.query(VariationCitation)
+				.filter(
+					VariationCitation.variation_id == variation_id,
+					VariationCitation.source == "internal",
+					VariationCitation.document_id == document_id,
+				)
+				.one_or_none()
+			)
+			if not citation:
+				citation = VariationCitation(
+					variation_id=variation_id,
+					source="internal",
+					document_id=document_id,
+					pmid=pmid,
+					evidence_strength=evidence_strength,
+					citation_metadata=metadata,
+				)
+				session.add(citation)
+			else:
+				if pmid:
+					citation.pmid = pmid
+				if evidence_strength:
+					citation.evidence_strength = evidence_strength
+				if metadata:
+					citation.citation_metadata = metadata
+			session.flush()
+			return citation
+
+	def list_clingen_profiles(self, variation_id: int) -> List[ClinGenEvidenceProfile]:
+		with self.session_scope() as session:
+			return (
+				session.query(ClinGenEvidenceProfile)
+				.filter(ClinGenEvidenceProfile.variation_id == variation_id)
+				.order_by(ClinGenEvidenceProfile.published_at.desc().nullslast())
+				.all()
+			)
+
+	def replace_clingen_profiles(
+		self, variation_id: int, profiles: Sequence[Dict[str, Any]]
+	) -> None:
+		with self.session_scope() as session:
+			session.query(ClinGenEvidenceProfile).filter(
+				ClinGenEvidenceProfile.variation_id == variation_id
+			).delete(synchronize_session=False)
+			for payload in profiles:
+				profile = ClinGenEvidenceProfile(
+					variation_id=variation_id,
+					assertion_id=payload["assertion_id"],
+					disease_label=payload.get("disease_label"),
+					disease_mondo=payload.get("disease_mondo"),
+					expert_panel=payload.get("expert_panel"),
+					classification=payload.get("classification"),
+					published_at=payload.get("published_at"),
+					guideline_label=payload.get("guideline_label"),
+					evidence_codes=payload.get("evidence_codes"),
+					score_breakdown=payload.get("score_breakdown"),
+					raw_payload=payload.get("raw_payload"),
+				)
+				session.add(profile)
 
 	# -------------------- Evidence Records --------------------
 	def create_evidence_record(
@@ -448,6 +617,7 @@ class PostgresClient:
 		variant_hgvs_c: Optional[str] = None,
 		variant_hgvs_p: Optional[str] = None,
 		protein_change: Optional[str] = None,
+		clinvar_variation_id: Optional[int] = None,
 		transcript_id: Optional[str] = None,
 		reference_genome: Optional[str] = None,
 		disease_name: Optional[str] = None,
@@ -457,6 +627,7 @@ class PostgresClient:
 		evidence_strength: Optional[str] = None,
 		evidence_classification: Optional[str] = None,
 		overall_confidence: Optional[float] = None,
+		arbitration_score: Optional[float] = None,
 		is_valid: str = "false",
 		acmg_levels: Optional[Dict[str, Any]] = None,
 		extracted_fields: Optional[Dict[str, Any]] = None,
@@ -470,6 +641,7 @@ class PostgresClient:
 				variant_hgvs_c=variant_hgvs_c,
 				variant_hgvs_p=variant_hgvs_p,
 				protein_change=protein_change,
+				clinvar_variation_id=clinvar_variation_id,
 				transcript_id=transcript_id,
 				reference_genome=reference_genome,
 				disease_name=disease_name,
@@ -479,6 +651,7 @@ class PostgresClient:
 				evidence_strength=evidence_strength,
 				evidence_classification=evidence_classification,
 				overall_confidence=overall_confidence,
+				arbitration_score=arbitration_score,
 				is_valid=is_valid,
 				acmg_levels=acmg_levels,
 				extracted_fields=extracted_fields,
@@ -506,10 +679,13 @@ class PostgresClient:
 		self,
 		variant: Optional[str] = None,
 		protein_change: Optional[str] = None,
+		clinvar_variation_id: Optional[int] = None,
 		limit: int = 50,
 	) -> List[EvidenceRecord]:
 		with self.session_scope() as session:
 			query = session.query(EvidenceRecord)
+			if clinvar_variation_id is not None:
+				query = query.filter(EvidenceRecord.clinvar_variation_id == clinvar_variation_id)
 			if variant:
 				query = query.filter(
 					(EvidenceRecord.variant_hgvs_c == variant)
@@ -524,6 +700,7 @@ class PostgresClient:
 		gene_symbol: Optional[str] = None,
 		variant: Optional[str] = None,
 		protein_change: Optional[str] = None,
+		clinvar_variation_id: Optional[int] = None,
 		disease_name: Optional[str] = None,
 		min_confidence: Optional[float] = None,
 		only_valid: bool = False,
@@ -539,6 +716,8 @@ class PostgresClient:
 					(EvidenceRecord.variant_hgvs_c == variant)
 					| (EvidenceRecord.variant_hgvs_p == variant)
 				)
+			if clinvar_variation_id is not None:
+				query = query.filter(EvidenceRecord.clinvar_variation_id == clinvar_variation_id)
 			if protein_change:
 				query = query.filter(EvidenceRecord.protein_change == protein_change)
 			if disease_name:
@@ -572,10 +751,25 @@ class PostgresClient:
 
 
 _postgres_client: Optional[PostgresClient] = None
+_schema_initialized: bool = False
+
+
+def _ensure_schema_initialized() -> None:
+	global _schema_initialized
+	if _schema_initialized:
+		return
+	try:
+		initialize_schema()
+		_schema_initialized = True
+		logger.info("PostgreSQL schema initialization ensured via SQLAlchemy metadata")
+	except Exception as exc:
+		logger.warning("Failed to auto-initialize PostgreSQL schema: {}", exc)
+		raise
 
 
 def get_postgres_client() -> PostgresClient:
 	global _postgres_client
 	if _postgres_client is None:
+		_ensure_schema_initialized()
 		_postgres_client = PostgresClient()
 	return _postgres_client

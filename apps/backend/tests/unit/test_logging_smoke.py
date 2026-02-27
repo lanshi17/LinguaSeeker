@@ -1,5 +1,6 @@
 import types
-from typing import Any, Dict, List, cast
+from pathlib import Path
+from typing import Any, Dict, List, Optional, cast
 
 import pytest
 
@@ -19,6 +20,32 @@ class DummyRag:
 
     def get_embedding_client(self) -> Any:
         return object()
+
+
+class DummyVariationService:
+    def __init__(self, variation_id: Optional[int] = 42) -> None:
+        self.variation_id = variation_id
+
+    def resolve_variation(self, *_: Any, **__: Any):
+        if self.variation_id is None:
+            return None
+        return types.SimpleNamespace(variation_id=self.variation_id)
+
+    def build_variation_payload(self, variation_id: int) -> Dict[str, Any]:
+        return {
+            "variation": {"variation_id": variation_id, "primary_hgvs": "c.1A>T"},
+            "citations": [],
+            "scorecards": [],
+        }
+
+    def sync_clinvar_citations(self, *_: Any, **__: Any) -> None:
+        return None
+
+    def sync_clingen_profiles(self, *_: Any, **__: Any) -> None:
+        return None
+
+    def record_internal_citation(self, *_: Any, **__: Any) -> None:
+        return None
 
 
 def test_workflow_helpers_smoke() -> None:
@@ -198,6 +225,11 @@ def test_graph_search_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(search_module, "get_neo4j_client", lambda: FakeNeo4j())
     monkeypatch.setattr(search_module, "get_postgres_client", lambda: FakePostgres())
+    monkeypatch.setattr(
+        search_module,
+        "get_variation_data_service",
+        lambda: DummyVariationService(),
+    )
     engine = search_module.GraphSearchEngine()
     assert engine.search_by_variant("c.1A>T").nodes
     assert engine.search_by_gene("GENE").nodes
@@ -205,7 +237,7 @@ def test_graph_search_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     assert engine.get_document_evidence(1).document_count == 0
 
 
-def test_graph_sync_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_graph_sync_smoke(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     class FakeNeo4j:
         def upsert_document(self, *_: Any, **__: Any) -> None:
             return None
@@ -258,9 +290,28 @@ def test_graph_sync_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(sync_module, "get_neo4j_client", lambda: FakeNeo4j())
     monkeypatch.setattr(sync_module, "get_postgres_client", lambda: FakePostgres())
+    monkeypatch.setattr(
+        sync_module,
+        "get_variation_data_service",
+        lambda: DummyVariationService(),
+    )
+    monkeypatch.setattr(sync_module.GraphSyncService, "_FAILURE_ARCHIVE_PATH", tmp_path / "failures.jsonl")
     svc = sync_module.GraphSyncService()
-    result = svc.sync_evidence(1, {"ps3_evidence": {}, "arbitration_score": 0.0})
-    assert result["pg_evidence_id"] == 1
+	result = svc.sync_evidence(
+		1,
+		{
+			"ps3_evidence": {},
+			"arbitration_score": 0.0,
+			"overall_confidence": 90.0,
+			"extracted_fields": {
+				"gene": {"symbol": "GENE"},
+				"variant": {"hgvs_c": "c.1A>T"},
+				"transcript_id": {"transcript_id": "NM_000000.1"},
+				"disease_chpo": {"disease_name": "Example"},
+			},
+		},
+	)
+	assert result["pg_evidence_id"] == 1
 
 
 @pytest.mark.asyncio

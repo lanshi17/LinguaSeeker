@@ -236,6 +236,7 @@ class EvidenceStrengthClassification(BaseModel):
     classification: str = Field(..., description="分类结果")
     acmg_levels: List[str] = Field(default_factory=list, description="ACMG 证据等级列表")
     is_valid: bool = Field(False, description="证据是否有效 (置信度>=85)")
+    validity_reason: Optional[str] = Field(None, description="有效性判定原因")
     supporting_evidence: List[str] = Field(default_factory=list, description="支持证据列表")
     reasoning: Optional[str] = Field(None, description="分类推理")
 
@@ -252,7 +253,15 @@ class EvidenceStrengthClassification(BaseModel):
     ) -> List[str]:
         """根据 PS3 步骤4判定 ACMG 证据等级（委托给 EvidenceClassifier）"""
         from src.domain.evidence.classifier import EvidenceClassifier
-        final_strength = ps3_step_4.get("final_evidence_strength", "none")
+        raw_strength = ps3_step_4.get("final_evidence_strength")
+        if isinstance(raw_strength, str):
+            cleaned = raw_strength.strip()
+            if cleaned.lower() in {"n/a", "na", "not_applicable"}:
+                final_strength = "inconclusive"
+            else:
+                final_strength = cleaned or "inconclusive"
+        else:
+            final_strength = "inconclusive"
         return EvidenceClassifier.strength_to_acmg_levels(final_strength)
 
 

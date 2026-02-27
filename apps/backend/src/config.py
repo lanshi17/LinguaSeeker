@@ -46,6 +46,11 @@ class Settings(BaseSettings):
 
     # ==================== 证据分类配置 ====================
     evidence_validity_threshold: float = 85.0  # 证据有效性阈值
+    evidence_review_floor: float = 60.0  # 低置信度进入人工复核的默认阈值
+    evidence_retry_limit: int = 1  # 针对解析失败的自动重试次数
+    evidence_retry_delay_seconds: int = 600  # 解析失败重试的延迟
+    evidence_failure_alert_threshold: int = 5  # 同一字段失败多少次后告警
+    evidence_failure_archive_path: str = "logs/evidence_failure_archive.jsonl"
 
     # ==================== Embedding配置 ====================
     embedding_provider: str

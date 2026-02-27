@@ -29,7 +29,7 @@ logger.add(
     retention="7 days", # 保留最近7天的日志文件
     format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {name}:{function}:{line} - {message}",
     compression="zip", # 可选：对旧日志进行压缩
-    enqueue=True, # 线程安全
+    enqueue=False, # 禁用多进程队列，避免 SemLock 权限错误
     serialize=False # 默认为 False，如果为 True，整个日志记录会被序列化成 JSON
 )
 
@@ -42,7 +42,7 @@ logger.add(
     colorize=True, # 启用颜色，使终端日志更易读
     backtrace=True, # 记录完整的回溯信息
     diagnose=True, # 提供更详细的错误上下文 (在生产环境中可能需要关闭以保护敏感信息)
-    enqueue=True, # 线程安全
+    enqueue=False, # 禁用多进程队列
 )
 
 def _parse_cors_origins(origins: str) -> list[str]:

@@ -43,6 +43,18 @@ def load_intermediate_md_impl(file_path: str) -> str:
         logger.error(f"加载文件失败: {e}")
         return f"加载文件失败: {str(e)}"
 
+EPSILON = 1e-6
+
+
+def _clamp_probability(value: float) -> float:
+    """Clamp probability into (0,1) while preserving near-certain semantics."""
+    if value <= 0:
+        return EPSILON
+    if value >= 1:
+        return 1 - EPSILON
+    return value
+
+
 def OddsPath_Calculator_impl(P1: float, P2: float) -> float:
     """
     计算 OddsPath 的工具函数
@@ -56,9 +68,21 @@ def OddsPath_Calculator_impl(P1: float, P2: float) -> float:
     """
     try:
         logger.debug(f"计算 OddsPath: P1={P1}, P2={P2}")
-        if not (0 < P1 < 1) or not (0 < P2 < 1):
-            raise ValueError("P1 和 P2 必须在 (0,1) 范围内")
-        
+        if not (0 <= P1 <= 1) or not (0 <= P2 <= 1):
+            raise ValueError("P1 和 P2 必须在 [0,1] 范围内")
+
+        clamped_P1 = _clamp_probability(P1)
+        clamped_P2 = _clamp_probability(P2)
+        if clamped_P1 != P1 or clamped_P2 != P2:
+            logger.warning(
+                "OddsPath 输入命中边界，已自动裁剪: 原始(P1={}, P2={}) → 裁剪后(P1={}, P2={})",
+                P1,
+                P2,
+                clamped_P1,
+                clamped_P2,
+            )
+        P1, P2 = clamped_P1, clamped_P2
+
         odds_path = (P2 * (1 - P1)) / ((1 - P2) * P1)
         logger.info(f"计算 OddsPath: P1={P1}, P2={P2}, OddsPath={odds_path:.4f}")
         return odds_path
@@ -77,7 +101,7 @@ def determine_evidence_strength_from_oddspath_impl(oddspath: float) -> str:
         证据强度等级字符串
     
     OddsPath 映射规则:
-    - <0.053: BS3
+    - <0.053: BS3_very_strong
     - <0.23: BS3_moderate
     - <0.48: BS3_supporting
     - 0.48-2.1: 不明确
@@ -91,7 +115,7 @@ def determine_evidence_strength_from_oddspath_impl(oddspath: float) -> str:
         if oddspath < 0:
             return "invalid_oddspath"
         elif oddspath < 0.053:
-            return "BS3"
+            return "BS3_very_strong"
         elif oddspath < 0.23:
             return "BS3_moderate"
         elif oddspath < 0.48:

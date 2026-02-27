@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from typing import Any, Dict
 
 import pytest
 
@@ -22,8 +23,13 @@ def test_odds_path_calculator_invalid() -> None:
     assert tools_module.OddsPath_Calculator(1.2, 0.5) == -1.0
 
 
+def test_odds_path_calculator_boundary_clamp() -> None:
+    result = tools_module.OddsPath_Calculator(0.0, 1.0)
+    assert result > 0
+
+
 def test_determine_evidence_strength_from_oddspath() -> None:
-    assert tools_module.determine_evidence_strength_from_oddspath(0.02) == "BS3"
+    assert tools_module.determine_evidence_strength_from_oddspath(0.02) == "BS3_very_strong"
     assert tools_module.determine_evidence_strength_from_oddspath(0.1) == "BS3_moderate"
     assert tools_module.determine_evidence_strength_from_oddspath(0.3) == "BS3_supporting"
     assert tools_module.determine_evidence_strength_from_oddspath(1.0) == "inconclusive"
@@ -48,7 +54,7 @@ def test_validate_ps3_steps() -> None:
 
 def test_classifier_mappings() -> None:
     assert classifier_module.EvidenceClassifier.oddspath_to_strength(5.0) == "PS3_moderate"
-    assert classifier_module.EvidenceClassifier.max_strength_from_controls(0) == "none"
+    assert classifier_module.EvidenceClassifier.max_strength_from_controls(0) == "no_evidence"
     assert classifier_module.EvidenceClassifier.score_to_classification(85.0) == "Pathogenic"
 
 
@@ -65,6 +71,7 @@ def test_classifier_classify_with_fields() -> None:
     assert result.classification == "Pathogenic"
     assert result.acmg_levels == ["PP3"]
     assert result.is_valid is True
+    assert result.validity_reason == "meets_threshold"
     assert set(result.supporting_evidence) == {"s1", "s2", "s3"}
 
 
@@ -80,6 +87,17 @@ def test_classifier_validate_with_arbitration() -> None:
     assert result["adjusted_score"] == 90.0
     assert result["final_classification"] == "Pathogenic"
     assert result["final_is_valid"] is True
+
+
+def test_classifier_validity_reason_missing_fields() -> None:
+    ps3_evidence: Dict[str, Any] = {
+        "ps3_step_1": {"score": 0},
+        "ps3_step_2": {"score": 0},
+    }
+    result = classifier_module.EvidenceClassifier.classify(ps3_evidence, extracted_fields=None)
+    assert result.overall_score == 0.0
+    assert result.is_valid is False
+    assert result.validity_reason in {"missing_extractions", "no_structured_fields", "no_scoring_signal"}
 
 
 def test_aggregate_variant_group(monkeypatch: pytest.MonkeyPatch) -> None:

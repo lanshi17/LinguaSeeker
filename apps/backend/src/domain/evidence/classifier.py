@@ -43,6 +43,7 @@ class EvidenceClassifier:
         EvidenceStrength.PS3.value:              [ACMGEvidenceLevel.PS3.value],
         EvidenceStrength.PS3_MODERATE.value:     [ACMGEvidenceLevel.PM1.value],
         EvidenceStrength.PS3_SUPPORTING.value:   [ACMGEvidenceLevel.PP3.value],
+        EvidenceStrength.BS3_VERY_STRONG.value:  [ACMGEvidenceLevel.BS3.value],
         EvidenceStrength.BS3.value:              [ACMGEvidenceLevel.BS3.value],
         EvidenceStrength.BS3_MODERATE.value:     [ACMGEvidenceLevel.BS2.value],
         EvidenceStrength.BS3_SUPPORTING.value:   [ACMGEvidenceLevel.BP4.value],
@@ -54,14 +55,14 @@ class EvidenceClassifier:
     def oddspath_to_strength(oddspath: float) -> str:
         """将 OddsPath 值映射为证据强度等级。"""
         if oddspath < 0:
-            logger.debug("OddsPath < 0, returning NONE")
-            return EvidenceStrength.NONE.value
+            logger.warning("OddsPath < 0, returning inconclusive strength")
+            return EvidenceStrength.INCONCLUSIVE.value
         for threshold, strength in ODDSPATH_STRENGTH_MAP:
             if oddspath > threshold:
                 logger.debug("OddsPath {} mapped to strength {}", oddspath, strength)
                 return strength
-        logger.debug("OddsPath {} mapped to default BS3", oddspath)
-        return EvidenceStrength.BS3.value
+        logger.debug("OddsPath {} mapped to default BS3_very_strong", oddspath)
+        return EvidenceStrength.BS3_VERY_STRONG.value
 
     # ==================== 对照变异数 → 最大证据强度 ====================
 
@@ -69,8 +70,8 @@ class EvidenceClassifier:
     def max_strength_from_controls(count: int) -> str:
         """根据对照变异数量确定最大可用证据强度。"""
         if count <= 0:
-            logger.debug("Control count <= 0, returning NONE")
-            return EvidenceStrength.NONE.value
+            logger.debug("Control count <= 0, returning no_evidence")
+            return "no_evidence"
         elif count <= 10:
             logger.debug("Control count {} mapped to max_supporting", count)
             return "max_supporting"
@@ -123,6 +124,8 @@ class EvidenceClassifier:
                 field_confidence = fields_model.compute_overall_confidence()
             except Exception:
                 logger.warning("无法解析 extracted_fields，跳过字段置信度计算")
+        elif extracted_fields is None:
+            logger.warning("字段置信度计算跳过：extracted_fields 缺失或为 None")
         logger.debug("Field confidence: {}", field_confidence)
 
         # 3) 综合评分 (PS3: 60% + 字段置信度: 40%)
@@ -138,12 +141,34 @@ class EvidenceClassifier:
 
         # 5) ACMG 等级
         step4 = ps3_evidence.get("ps3_step_4", {})
-        final_strength = step4.get("final_evidence_strength", "none")
+        raw_strength = step4.get("final_evidence_strength")
+        if isinstance(raw_strength, str):
+            cleaned = raw_strength.strip()
+            if cleaned.lower() in {"n/a", "na", "not_applicable"}:
+                final_strength = EvidenceStrength.INCONCLUSIVE.value
+            else:
+                final_strength = cleaned or EvidenceStrength.INCONCLUSIVE.value
+        else:
+            final_strength = EvidenceStrength.INCONCLUSIVE.value
         acmg_levels = cls.strength_to_acmg_levels(final_strength)
         logger.debug("Final strength: {} ACMG levels: {}", final_strength, acmg_levels)
 
         # 6) 有效性
-        is_valid = overall_score >= EVIDENCE_VALIDITY_THRESHOLD
+        validity_reason = cls._determine_validity_reason(
+            total_score,
+            field_confidence,
+            overall_score,
+            extracted_fields,
+        )
+        if validity_reason != "meets_threshold":
+            logger.warning(
+                "证据有效性未达阈值: reason={} total_score={:.2f} field_confidence={:.2f} overall={:.2f}",
+                validity_reason,
+                total_score,
+                field_confidence,
+                overall_score,
+            )
+        is_valid = validity_reason == "meets_threshold"
 
         # 7) 支持证据
         supporting: List[str] = []
@@ -157,7 +182,8 @@ class EvidenceClassifier:
             f"字段置信度: {field_confidence:.1f}/100, "
             f"综合评分: {overall_score:.1f}/100, "
             f"证据强度: {final_strength}, "
-            f"有效性: {'有效' if is_valid else '无效'}"
+            f"有效性: {'有效' if is_valid else '无效'}, "
+            f"原因: {validity_reason}"
         )
 
         logger.info(
@@ -170,6 +196,7 @@ class EvidenceClassifier:
             classification=classification,
             acmg_levels=acmg_levels,
             is_valid=is_valid,
+            validity_reason=validity_reason,
             supporting_evidence=list(dict.fromkeys(supporting)),
             reasoning=reasoning,
         )
@@ -194,21 +221,41 @@ class EvidenceClassifier:
         """
         initial = cls.classify(ps3_evidence)
 
-        raw_confidence = arbitration_result.get("confidence", 0.0)
-        try:
-            confidence = float(raw_confidence)
-        except (TypeError, ValueError):
-            confidence = 0.0
+        def _coerce_float(value: Any) -> Optional[float]:
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return None
 
+        confidence = _coerce_float(arbitration_result.get("confidence")) or 0.0
         confidence = max(0.0, min(1.0, confidence))
-        final_is_valid = confidence >= (EVIDENCE_VALIDITY_THRESHOLD / 100.0)
-        arb_decision = arbitration_result.get("final_decision", "reject")
+
+        arbitration_score = _coerce_float(arbitration_result.get("arbitration_score"))
+        score_adjustment = _coerce_float(arbitration_result.get("score_adjustment")) or 0.0
+
+        if arbitration_score is not None:
+            adjusted_score = arbitration_score
+        elif score_adjustment:
+            adjusted_score = initial.overall_score + score_adjustment
+        elif confidence > 0.0:
+            adjusted_score = confidence * 100.0
+        else:
+            adjusted_score = initial.overall_score
+
+        adjusted_score = max(0.0, min(100.0, adjusted_score))
+        final_classification = cls.score_to_classification(adjusted_score)
+        final_is_valid = adjusted_score >= EVIDENCE_VALIDITY_THRESHOLD
+
+        arb_decision = arbitration_result.get("final_decision")
+        if not isinstance(arb_decision, str):
+            arb_decision = "approved" if final_is_valid else "manual_review"
 
         return {
             "initial_score": initial.overall_score,
             "initial_classification": initial.classification,
+            "adjusted_score": round(adjusted_score, 2),
             "arbitration_confidence": round(confidence, 4),
-            "final_classification": initial.classification,
+            "final_classification": final_classification,
             "final_is_valid": final_is_valid,
             "arbitration_decision": arb_decision,
             "acmg_levels": initial.acmg_levels,
@@ -237,6 +284,28 @@ class EvidenceClassifier:
                 except (TypeError, ValueError):
                     pass
         return min(total, 100.0)
+
+    @staticmethod
+    def _determine_validity_reason(
+        total_score: float,
+        field_confidence: float,
+        overall_score: float,
+        extracted_fields: Optional[Dict[str, Any]],
+    ) -> str:
+        threshold = EVIDENCE_VALIDITY_THRESHOLD
+        if overall_score >= threshold:
+            return "meets_threshold"
+        if not extracted_fields:
+            if overall_score <= 0:
+                return "missing_extractions"
+            return "no_structured_fields"
+        if total_score <= 0 and field_confidence <= 0:
+            return "no_scoring_signal"
+        if field_confidence <= 0:
+            return "field_confidence_zero"
+        if overall_score <= 0:
+            return "score_zero"
+        return "below_threshold"
 
 
 # ==================== 模块级工具函数 (供外部直接使用) ====================

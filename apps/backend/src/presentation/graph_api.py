@@ -84,6 +84,24 @@ class ErrorResponse(BaseModel):
 router = APIRouter(prefix="/evidence", tags=["Evidence"])
 
 
+def _parse_document_identifier(raw_id: str) -> tuple[str, Optional[int]]:
+    normalized = str(raw_id or "").strip()
+    if normalized.isdigit():
+        return normalized, int(normalized)
+    return normalized, None
+
+
+def _inject_document_identifier(payload: Dict[str, Any], normalized: str, numeric: Optional[int]) -> Dict[str, Any]:
+    identifier: Any = numeric if numeric is not None else normalized
+    if identifier:
+        payload["document_id"] = identifier
+    if numeric is not None:
+        for record in payload.get("evidence_records", []):
+            if record.get("document_id") == normalized:
+                record["document_id"] = numeric
+    return payload
+
+
 # ==================== 图谱检索 ====================
 
 @router.post(
@@ -186,11 +204,13 @@ async def get_document_evidence(
 ):
     """Fetch all evidence linked to a document id."""
     try:
-        logger.info("Document evidence request: {}", document_id)
+        normalized_id, numeric_id = _parse_document_identifier(document_id)
+        logger.info("Document evidence request: {}", normalized_id or document_id)
         engine = get_graph_search_engine()
-        result = engine.get_document_evidence(document_id)
+        result = engine.get_document_evidence(normalized_id)
         logger.debug("Document evidence result: {} evidence", result.total_evidence)
-        return EvidenceSearchResponse(data=result.to_dict())
+        payload = _inject_document_identifier(result.to_dict(), normalized_id, numeric_id)
+        return EvidenceSearchResponse(data=payload)
     except Exception as e:
         logger.error("Document evidence retrieval failed: {}", e)
         raise HTTPException(status_code=500, detail=str(e))

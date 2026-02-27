@@ -54,7 +54,7 @@ def test_get_task_status_success(client: TestClient, monkeypatch: pytest.MonkeyP
         def __init__(self, task_id: str) -> None:
             self.id = task_id
             self.status = "SUCCESS"
-            self.result = {"ok": True}
+            self.result = {"ok": True, "document_id": "doc-999"}
 
         def failed(self) -> bool:
             return False
@@ -69,7 +69,8 @@ def test_get_task_status_success(client: TestClient, monkeypatch: pytest.MonkeyP
     payload = response.json()
     assert payload["task_id"] == "task-200"
     assert payload["status"] == "SUCCESS"
-    assert payload["result"] == {"ok": True}
+    assert payload["document_id"] == "doc-999"
+    assert "result" not in payload
 
 
 def test_get_task_status_failure(client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str) -> None:

@@ -1,8 +1,10 @@
-from pathlib import Path
 import asyncio
+import json
 import os
 import sys
+import time
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
 from typing import Any, Dict, List, Optional
 import mimetypes
@@ -24,6 +26,7 @@ from src.domain.models import (
     PipelineFiles,
     PipelineResult,
 )
+from src.domain.graph.sync import SchemaSyncError, get_graph_sync_service
 from src.database.qdrant_client import QdrantManager, initialize_knowledge_base
 from src.database.minio_client import MinIOClient
 from src.utils.timer import Timer
@@ -39,6 +42,136 @@ cfg = settings
 _mineru = MinerUComponent()
 _agents = EvidenceAgent()
 _qdrant_manager = QdrantManager()
+_REBUILD_EMPTY_KB = getattr(cfg, "rebuild_empty_knowledge_base", False)
+
+
+def _sync_evidence_to_graph(document_id: str, evidence_output: Any | None) -> Optional[Dict[str, Any]]:
+	"""Push extracted evidence into PostgreSQL + Neo4j via GraphSyncService."""
+	if not evidence_output:
+		logger.debug("Graph sync skipped for document {}: empty evidence payload", document_id)
+		return None
+
+	payload: Any = evidence_output
+	if hasattr(payload, "model_dump"):
+		payload = payload.model_dump()
+	elif hasattr(payload, "dict"):
+		payload = payload.dict()
+
+	if not isinstance(payload, dict):
+		logger.warning(
+			"Graph sync skipped for document {}: payload is not a dict (type={})",
+			document_id,
+			type(payload),
+		)
+		return None
+
+	svc = get_graph_sync_service()
+	max_attempts = 3
+	for attempt in range(1, max_attempts + 1):
+		try:
+			result = svc.sync_evidence(document_id, payload)
+			if not result:
+				return None
+			if result.get("skipped"):
+				reason = result.get("reason", "data_quality")
+				logger.warning(
+					"Graph sync skipped for document {} due to {} (context={})",
+					document_id,
+					reason,
+					result.get("context"),
+				)
+				result.setdefault("error_category", "data")
+				if result.get("retryable"):
+					_schedule_evidence_retry(document_id, payload, reason)
+			else:
+				logger.info("Graph sync finished for document {}: {}", document_id, result)
+			return result
+		except SchemaSyncError as schema_exc:
+			logger.error(
+				"Graph sync schema error for document {}: {} | context={}",
+				document_id,
+				schema_exc,
+				getattr(schema_exc, "context", {}),
+			)
+			return {
+				"pg_evidence_id": None,
+				"neo4j_synced": False,
+				"error_category": "schema",
+				"error": str(schema_exc),
+				"context": getattr(schema_exc, "context", {}),
+			}
+		except exc.ValidationException as validation_exc:
+			logger.warning(
+				"Graph sync validation error for document {}: {}",
+				document_id,
+				validation_exc,
+			)
+			return {
+				"pg_evidence_id": None,
+				"neo4j_synced": False,
+				"error_category": "data",
+				"error": str(validation_exc),
+			}
+		except Exception as general_exc:
+			logger.error(
+				"Graph sync attempt %s/%s failed for document %s: %s",
+				attempt,
+				max_attempts,
+				document_id,
+				general_exc,
+			)
+			if attempt == max_attempts:
+				return None
+			time.sleep(min(3, attempt))
+
+
+def _materialize_retry_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
+	def _default(obj: Any) -> Any:
+		if hasattr(obj, "model_dump"):
+			return obj.model_dump()
+		if hasattr(obj, "dict"):
+			return obj.dict()
+		if isinstance(obj, set):
+			return list(obj)
+		return str(obj)
+
+	try:
+		return json.loads(json.dumps(payload, default=_default))
+	except Exception:
+		# 如果 JSON 序列化失败，则退化为浅拷贝
+		return dict(payload)
+
+
+def _schedule_evidence_retry(document_id: str, payload: Dict[str, Any], reason: str) -> None:
+	max_retries = getattr(cfg, "evidence_retry_limit", 0)
+	if max_retries <= 0:
+		logger.debug("Quality retry disabled, skip scheduling for {}", document_id)
+		return
+	attempts = int(payload.get("_quality_retry_attempts", 0))
+	if attempts >= max_retries:
+		logger.info(
+			"Quality retry limit reached for document {} (attempts={} reason={})",
+			document_id,
+			attempts,
+			reason,
+		)
+		return
+	delay_seconds = max(30, getattr(cfg, "evidence_retry_delay_seconds", 600))
+	retry_payload = _materialize_retry_payload(payload)
+	retry_payload["_quality_retry_attempts"] = attempts + 1
+	logger.info(
+		"Scheduling quality retry for document {} in {}s (attempt {}/{}) reason={}",
+		document_id,
+		delay_seconds,
+		attempts + 1,
+		max_retries,
+		reason,
+	)
+	retry_graph_sync_task.apply_async(
+		args=[document_id, retry_payload],
+		countdown=delay_seconds,
+		queue="retry",
+	)
 
 
 def _disable_proxies() -> None:
@@ -62,25 +195,34 @@ async def init_knowledge_base_if_needed() -> bool:
         except Exception as e:
             logger.warning("Knowledge base init failed, continue without it: {}", e)
             return False
-    else:
-        try:
-            info = await _qdrant_manager.get_collection_info()
-        except Exception as e:
-            logger.warning("Unable to read collection info, skip init: {}", e)
-            return True
+        return True
 
-        if info.vectors_count == 0:
-            logger.warning(
-                "Collection {} exists but is empty, initializing knowledge base...",
-                cfg.qdrant_collection_name,
-            )
-            try:
-                await initialize_knowledge_base(cfg.knowledge_docs_dir)
-            except Exception as e:
-                logger.warning("Knowledge base init failed, continue without it: {}", e)
-                return False
-        else:
-            logger.info("Collection {} exists, skipping init.", cfg.qdrant_collection_name)
+    if not _REBUILD_EMPTY_KB:
+        logger.info("Collection {} exists, skipping init.", cfg.qdrant_collection_name)
+        return True
+
+    try:
+        info = await _qdrant_manager.get_collection_info()
+    except Exception as e:
+        logger.warning("Unable to read collection info, skip init: {}", e)
+        return True
+
+    if info.vectors_count == 0:
+        logger.warning(
+            "Collection {} exists but is empty, initializing knowledge base...",
+            cfg.qdrant_collection_name,
+        )
+        try:
+            await initialize_knowledge_base(cfg.knowledge_docs_dir)
+        except Exception as e:
+            logger.warning("Knowledge base init failed, continue without it: {}", e)
+            return False
+    else:
+        logger.info(
+            "Collection {} has %s vectors, skipping init.",
+            cfg.qdrant_collection_name,
+            info.vectors_count,
+        )
     return True
 
 
@@ -266,13 +408,13 @@ def process_pdf_task(
     if sized_files == 0:
         file_size_bytes = None
     resolved_output_root = Path(output_root) if output_root else None
-    result = asyncio.run(
-        run_fastapi_pipeline(
-            file_paths,
-            output_root=resolved_output_root,
-            document_id=document_id,
-        )
-    )
+    run_kwargs: Dict[str, Any] = {
+        "output_root": resolved_output_root,
+    }
+    if document_id is not None:
+        run_kwargs["document_id"] = document_id
+    result = asyncio.run(run_fastapi_pipeline(file_paths, **run_kwargs))
+    graph_sync_result = _sync_evidence_to_graph(result.document_id, getattr(result, "evidence", None))
     end_time = datetime.now(timezone.utc)
     processing_duration_seconds = (end_time - start_time).total_seconds()
     payload: Dict[str, Any]
@@ -286,6 +428,8 @@ def process_pdf_task(
         payload.setdefault("processing_duration_seconds", processing_duration_seconds)
         payload.setdefault("created_at", start_time.isoformat())
         payload.setdefault("updated_at", end_time.isoformat())
+        if graph_sync_result is not None:
+            payload["graph_sync_result"] = graph_sync_result
     if file_hash:
         try:
             cache_pdf_result(file_hash, payload)
@@ -294,3 +438,14 @@ def process_pdf_task(
     logger.debug("Celery task complete")
     return payload
 
+
+@celery_app.task(
+    name="tasks.retry_graph_sync",
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 2, "countdown": 60, "queue": "retry"},
+    retry_jitter=True,
+)
+def retry_graph_sync_task(self, document_id: str, evidence_payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    logger.info("Quality retry triggered for document {}", document_id)
+    return _sync_evidence_to_graph(document_id, evidence_payload)

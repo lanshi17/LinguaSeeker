@@ -82,13 +82,20 @@ def _build_task_list_item(meta: Dict[str, Any], include_result: bool) -> TaskLis
     result = None
     error = None
     metrics = _extract_task_metrics(meta)
+    raw_result = meta.get("result")
+    document_id = None
 
     if status == TaskStatus.success and include_result:
-        if isinstance(meta.get("result"), dict):
-            result = meta.get("result")
+        if isinstance(raw_result, dict):
+            result = raw_result
+
+    if isinstance(raw_result, dict):
+        doc_value = raw_result.get("document_id")
+        if doc_value is not None:
+            document_id = str(doc_value)
 
     if status == TaskStatus.failure:
-        raw_error = meta.get("result")
+        raw_error = raw_result
         if isinstance(raw_error, str):
             error = raw_error
         elif raw_error is not None:
@@ -101,6 +108,7 @@ def _build_task_list_item(meta: Dict[str, Any], include_result: bool) -> TaskLis
         task_id=task_id,
         status=status,
         date_done=date_done,
+        document_id=document_id,
         file_size_bytes=metrics.get("file_size_bytes"),
         processing_duration_seconds=metrics.get("processing_duration_seconds"),
         created_at=metrics.get("created_at"),
@@ -152,8 +160,8 @@ def create_task(payload: TaskCreateRequest) -> TaskCreateResponse:
     "/{task_id}",
     summary="Get task status",
     description=(
-        "Fetch task status and result by task id.\n"
-        "Response body includes status plus result or error when available."
+        "Fetch task status and document reference by task id.\n"
+        "Response body includes status plus document_id or error when available."
     ),
     response_model=TaskStatusResponse,
     responses={
@@ -175,28 +183,29 @@ def get_task_status(
     response = TaskStatusResponse(
         task_id=task_id,
         status=TaskStatus.from_celery(async_result.status),
+        document_id=None,
         file_size_bytes=metrics.get("file_size_bytes"),
         processing_duration_seconds=metrics.get("processing_duration_seconds"),
         created_at=metrics.get("created_at"),
         updated_at=metrics.get("updated_at"),
-        result=None,
         error=None,
     )
     if async_result.failed():
         response.error = str(async_result.result)
         logger.debug("Task failed: {} error: {}", task_id, response.error)
     elif async_result.successful():
-        response.result = async_result.result
-        if isinstance(async_result.result, dict):
-            response.file_size_bytes = (
-                response.file_size_bytes or async_result.result.get("file_size_bytes")
-            )
+        result_payload = async_result.result
+        if isinstance(result_payload, dict):
+            response.file_size_bytes = response.file_size_bytes or result_payload.get("file_size_bytes")
             response.processing_duration_seconds = (
                 response.processing_duration_seconds
-                or async_result.result.get("processing_duration_seconds")
+                or result_payload.get("processing_duration_seconds")
             )
-            response.created_at = response.created_at or async_result.result.get("created_at")
-            response.updated_at = response.updated_at or async_result.result.get("updated_at")
+            response.created_at = response.created_at or result_payload.get("created_at")
+            response.updated_at = response.updated_at or result_payload.get("updated_at")
+            doc_value = result_payload.get("document_id")
+            if doc_value is not None:
+                response.document_id = str(doc_value)
         logger.debug("Task succeeded: {}", task_id)
     else:
         logger.debug("Task status: {} status: {}", task_id, async_result.status)

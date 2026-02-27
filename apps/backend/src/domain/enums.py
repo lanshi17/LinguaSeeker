@@ -7,12 +7,18 @@ MinerU 相关常量已迁移至 mineru_constants.py。
 from enum import Enum
 from typing import TypedDict, List, Dict, Any, Optional, Tuple
 
+try:
+	from src.config import settings as _settings  # type: ignore
+except Exception:  # pragma: no cover - 配置加载失败时使用默认阈值
+	_settings = None
+
 
 #================================ 证据强度枚举 ===================================
 
 class EvidenceStrength(str, Enum):
 	"""ACMG PS3/BS3 证据强度等级"""
 	NONE = "none"
+	BS3_VERY_STRONG = "BS3_very_strong"
 	BS3 = "BS3"
 	BS3_MODERATE = "BS3_moderate"
 	BS3_SUPPORTING = "BS3_supporting"
@@ -77,7 +83,10 @@ SCORE_CLASSIFICATION_MAP: List[Tuple[float, str]] = [
     (0.0,  EvidenceClassification.BENIGN.value),
 ]
 
-EVIDENCE_VALIDITY_THRESHOLD = 85.0  # 置信度 >= 85 判定有效
+if _settings is not None:
+	EVIDENCE_VALIDITY_THRESHOLD = getattr(_settings, "evidence_validity_threshold", 85.0)
+else:
+	EVIDENCE_VALIDITY_THRESHOLD = 85.0  # 置信度 >= 85 判定有效
 
 
 # ==================== OddsPath → 证据强度 ====================
@@ -90,7 +99,6 @@ ODDSPATH_STRENGTH_MAP: List[Tuple[float, str]] = [
     (0.48,   EvidenceStrength.INCONCLUSIVE.value),
     (0.23,   EvidenceStrength.BS3_SUPPORTING.value),
     (0.053,  EvidenceStrength.BS3_MODERATE.value),
-    (0.0,    EvidenceStrength.BS3.value),
 ]
 
 

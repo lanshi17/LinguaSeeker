@@ -12,7 +12,7 @@ Neo4j 图数据库客户端
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 from loguru import logger
 from neo4j import GraphDatabase
@@ -36,10 +36,12 @@ _SCHEMA_CONSTRAINTS = [
 ]
 
 _SCHEMA_INDEXES = [
-    "CREATE INDEX IF NOT EXISTS FOR (g:Gene) ON (g.symbol)",
-    "CREATE INDEX IF NOT EXISTS FOR (v:Variant) ON (v.hgvs_p)",
-    "CREATE INDEX IF NOT EXISTS FOR (v:Variant) ON (v.rs_id)",
-    "CREATE INDEX IF NOT EXISTS FOR (d:Disease) ON (d.icd10_code)",
+	"CREATE INDEX IF NOT EXISTS FOR (g:Gene) ON (g.symbol)",
+	"CREATE INDEX IF NOT EXISTS FOR (v:Variant) ON (v.hgvs_p)",
+	"CREATE INDEX IF NOT EXISTS FOR (v:Variant) ON (v.rs_id)",
+	"CREATE INDEX IF NOT EXISTS FOR (v:Variant) ON (v.variation_id)",
+	"CREATE INDEX IF NOT EXISTS FOR (v:Variant) ON (v.transcript_id, v.exon_range)",
+	"CREATE INDEX IF NOT EXISTS FOR (d:Disease) ON (d.icd10_code)",
     "CREATE INDEX IF NOT EXISTS FOR (d:Disease) ON (d.omim_id)",
     "CREATE INDEX IF NOT EXISTS FOR (p:Phenotype) ON (p.hpo_id)",
     "CREATE INDEX IF NOT EXISTS FOR (doc:Document) ON (doc.file_hash)",
@@ -101,13 +103,43 @@ class Neo4jClient:
         """
         return self._single(query, {"symbol": symbol, "props": props})
 
-    def upsert_variant(self, hgvs_c: str, **props: Any) -> Dict[str, Any]:
-        query = """
-        MERGE (v:Variant {hgvs_c: $hgvs_c})
-        SET v += $props
-        RETURN v
-        """
-        return self._single(query, {"hgvs_c": hgvs_c, "props": props})
+	def upsert_variant(
+		self,
+		hgvs_c: Optional[str],
+		variation_id: Optional[int] = None,
+		structural_key: Optional[str] = None,
+		transcript_id: Optional[str] = None,
+		exon_range: Optional[str] = None,
+		**props: Any,
+	) -> Dict[str, Any]:
+		merge_clause, locator_params = self._build_variant_merge_clause(
+			hgvs_c,
+			structural_key,
+			transcript_id,
+			exon_range,
+		)
+		payload_props = {k: v for k, v in props.items() if v is not None}
+		if transcript_id is not None:
+			payload_props.setdefault("transcript_id", transcript_id)
+		if exon_range is not None:
+			payload_props.setdefault("exon_range", exon_range)
+		if structural_key is not None:
+			payload_props.setdefault("structural_key", structural_key)
+		set_variation_clause = ""
+		if variation_id is not None:
+			set_variation_clause = (
+				"SET v.variation_id = CASE WHEN v.variation_id IS NULL THEN $variation_id ELSE v.variation_id END"
+			)
+		query = f"""
+		{merge_clause}
+		{set_variation_clause}
+		SET v += $props
+		RETURN v
+		"""
+		params: Dict[str, Any] = {**locator_params, "props": payload_props}
+		if variation_id is not None:
+			params["variation_id"] = variation_id
+		return self._single(query, params)
 
     def upsert_disease(self, name: str, **props: Any) -> Dict[str, Any]:
         query = """
@@ -159,14 +191,37 @@ class Neo4jClient:
 
     # ==================== 关系 CRUD ====================
 
-    def link_gene_variant(self, gene_symbol: str, variant_hgvs_c: str, **props: Any) -> None:
-        query = """
-        MATCH (g:Gene {symbol: $gene_symbol})
-        MATCH (v:Variant {hgvs_c: $variant_hgvs_c})
-        MERGE (g)-[r:HAS_VARIANT]->(v)
-        SET r += $props
-        """
-        self.run_query(query, {"gene_symbol": gene_symbol, "variant_hgvs_c": variant_hgvs_c, "props": props})
+	def link_gene_variant(
+		self,
+		gene_symbol: str,
+		variant_hgvs_c: Optional[str],
+		variation_id: Optional[int] = None,
+		structural_key: Optional[str] = None,
+		transcript_id: Optional[str] = None,
+		exon_range: Optional[str] = None,
+		**props: Any,
+	) -> None:
+		match_clause, params = self._build_variant_match_clause(
+			variation_id,
+			variant_hgvs_c,
+			structural_key,
+			transcript_id,
+			exon_range,
+		)
+		query = f"""
+		MATCH (g:Gene {{symbol: $gene_symbol}})
+		{match_clause}
+		MERGE (g)-[r:HAS_VARIANT]->(v)
+		SET r += $props
+		"""
+		self.run_query(
+			query,
+			{
+				**params,
+				"gene_symbol": gene_symbol,
+				"props": props,
+			},
+		)
 
     def link_gene_transcript(self, gene_symbol: str, transcript_id: str) -> None:
         query = """
@@ -176,14 +231,37 @@ class Neo4jClient:
         """
         self.run_query(query, {"gene_symbol": gene_symbol, "transcript_id": transcript_id})
 
-    def link_variant_phenotype(self, variant_hgvs_c: str, phenotype_desc: str, **props: Any) -> None:
-        query = """
-        MATCH (v:Variant {hgvs_c: $variant})
-        MATCH (p:Phenotype {description: $phenotype})
-        MERGE (v)-[r:HAS_PHENOTYPE]->(p)
-        SET r += $props
-        """
-        self.run_query(query, {"variant": variant_hgvs_c, "phenotype": phenotype_desc, "props": props})
+	def link_variant_phenotype(
+		self,
+		variant_hgvs_c: Optional[str],
+		phenotype_desc: str,
+		variation_id: Optional[int] = None,
+		structural_key: Optional[str] = None,
+		transcript_id: Optional[str] = None,
+		exon_range: Optional[str] = None,
+		**props: Any,
+	) -> None:
+		match_clause, params = self._build_variant_match_clause(
+			variation_id,
+			variant_hgvs_c,
+			structural_key,
+			transcript_id,
+			exon_range,
+		)
+		query = f"""
+		{match_clause}
+		MATCH (p:Phenotype {{description: $phenotype}})
+		MERGE (v)-[r:HAS_PHENOTYPE]->(p)
+		SET r += $props
+		"""
+		self.run_query(
+			query,
+			{
+				**params,
+				"phenotype": phenotype_desc,
+				"props": props,
+			},
+		)
 
     def link_disease_gene(self, disease_name: str, gene_symbol: str, **props: Any) -> None:
         query = """
@@ -204,13 +282,69 @@ class Neo4jClient:
         """
         self.run_query(query, {"doc_id": document_id, "entity_value": entity_value, "props": props})
 
-    def link_variant_evidence(self, variant_hgvs_c: str, evidence_id: str) -> None:
-        query = """
-        MATCH (v:Variant {hgvs_c: $variant})
-        MATCH (e:Evidence {evidence_id: $evidence_id})
-        MERGE (v)-[:HAS_EVIDENCE]->(e)
-        """
-        self.run_query(query, {"variant": variant_hgvs_c, "evidence_id": evidence_id})
+	def link_variant_evidence(
+		self,
+		variant_hgvs_c: Optional[str],
+		evidence_id: str,
+		variation_id: Optional[int] = None,
+		structural_key: Optional[str] = None,
+		transcript_id: Optional[str] = None,
+		exon_range: Optional[str] = None,
+	) -> None:
+		match_clause, params = self._build_variant_match_clause(
+			variation_id,
+			variant_hgvs_c,
+			structural_key,
+			transcript_id,
+			exon_range,
+		)
+		query = f"""
+		{match_clause}
+		MATCH (e:Evidence {{evidence_id: $evidence_id}})
+		MERGE (v)-[:HAS_EVIDENCE]->(e)
+		"""
+		self.run_query(query, {**params, "evidence_id": evidence_id})
+
+	def _build_variant_merge_clause(
+		self,
+		hgvs_c: Optional[str],
+		structural_key: Optional[str],
+		transcript_id: Optional[str],
+		exon_range: Optional[str],
+	) -> Tuple[str, Dict[str, Any]]:
+		if hgvs_c:
+			return "MERGE (v:Variant {hgvs_c: $variant_hgvs_c})", {"variant_hgvs_c": hgvs_c}
+		if structural_key:
+			return "MERGE (v:Variant {structural_key: $structural_key})", {"structural_key": structural_key}
+		if transcript_id and exon_range:
+			return (
+				"MERGE (v:Variant {transcript_id: $variant_transcript, exon_range: $variant_exon_range})",
+				{"variant_transcript": transcript_id, "variant_exon_range": exon_range},
+			)
+		raise ValueError("variant locator is required for upsert")
+
+	def _build_variant_match_clause(
+		self,
+		variation_id: Optional[int],
+		variant_hgvs_c: Optional[str],
+		structural_key: Optional[str],
+		transcript_id: Optional[str],
+		exon_range: Optional[str],
+	) -> Tuple[str, Dict[str, Any]]:
+		if variation_id is not None:
+			return "MATCH (v:Variant {variation_id: $variation_id})", {"variation_id": variation_id}
+		if variant_hgvs_c:
+			return "MATCH (v:Variant {hgvs_c: $variant_hgvs_c})", {
+				"variant_hgvs_c": variant_hgvs_c,
+			}
+		if structural_key:
+			return "MATCH (v:Variant {structural_key: $structural_key})", {"structural_key": structural_key}
+		if transcript_id and exon_range:
+			return (
+				"MATCH (v:Variant {transcript_id: $variant_transcript, exon_range: $variant_exon_range})",
+				{"variant_transcript": transcript_id, "variant_exon_range": exon_range},
+			)
+		raise ValueError("variant locator is required")
 
     def link_evidence_document(self, evidence_id: str, document_id: str) -> None:
         query = """
@@ -222,17 +356,28 @@ class Neo4jClient:
 
     # ==================== 检索 ====================
 
-    def find_variant_evidence_graph(self, variant_hgvs_c: str) -> List[Dict[str, Any]]:
+    def find_variant_evidence_graph(
+        self,
+        variant_hgvs_c: Optional[str] = None,
+        variation_id: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
         """检索变异相关的完整证据子图"""
+        if variation_id is not None:
+            match_variant = "MATCH (v:Variant {variation_id: $variation_id})"
+        elif variant_hgvs_c:
+            match_variant = "MATCH (v:Variant {hgvs_c: $variant})"
+        else:
+            return []
         query = """
-        MATCH (v:Variant {hgvs_c: $variant})
+        {match_clause}
         OPTIONAL MATCH (g:Gene)-[:HAS_VARIANT]->(v)
         OPTIONAL MATCH (v)-[:HAS_PHENOTYPE]->(p:Phenotype)
         OPTIONAL MATCH (v)-[:HAS_EVIDENCE]->(e:Evidence)
         OPTIONAL MATCH (e)-[:FROM_DOCUMENT]->(doc:Document)
         RETURN v, g, p, e, doc
         """
-        return self.run_query(query, {"variant": variant_hgvs_c})
+        params = {"variant": variant_hgvs_c, "variation_id": variation_id}
+        return self.run_query(query.format(match_clause=match_variant), params)
 
     def find_gene_related_variants(self, gene_symbol: str) -> List[Dict[str, Any]]:
         """查找基因相关的所有变异及其证据"""

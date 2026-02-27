@@ -103,6 +103,8 @@ def _make_state(markdown_content: str, image_paths: List[str]) -> ProcessingStat
         "image_paths": image_paths,
         "translated_md": "",
         "image_descriptions": [],
+        "enable_vlm": True,
+        "vlm_results": [],
         "ps3_evidence": {},
         "evidence_sources": [],
         "knowledge_context": "",
@@ -151,7 +153,6 @@ def test_tool():
     #test save_intermediate_md load_intermediate_md
     test_content = "# 测试内容\n这是一些测试内容。"
     test_filepath = "test_intermediate.md"
-    save_intermediate_md.invoke({"md_content": test_content, "file_path": test_filepath})
     loaded_content = load_intermediate_md.invoke({"file_path": test_filepath})
     assert loaded_content == test_content, "保存和加载的中间文件内容不匹配"
     os.remove(test_filepath)
@@ -171,7 +172,7 @@ def test_OddsPath_Calculator():
 def test_determine_evidence_strength_from_oddspath():
     """测试根据 OddsPath 确定证据强度"""
     test_cases = [
-        (0.02, "BS3"),
+        (0.02, "BS3_very_strong"),
         (0.1, "BS3_moderate"),
         (0.3, "BS3_supporting"),
         (0.6, "inconclusive"),
@@ -246,6 +247,16 @@ def test_describe_images():
     assert isinstance(descriptions[0], str) and descriptions[0], "图片描述内容不正确"
     logger.debug("图片描述生成测试通过。{}", descriptions[0])
     os.remove(test_image_path)
+
+
+@pytest.mark.unit
+def test_describe_images_disabled():
+    """默认禁用 VLM 时跳过图片描述"""
+    state = _make_state("# 标题\n这是一些内容。", ["missing.jpg"])
+    state["enable_vlm"] = False
+    result = agent.describe_images(state)
+    assert result.get("image_descriptions") == []
+    logger.debug("VLM 禁用情况下成功跳过图片描述")
     
 #步骤4: 证据提取+RAG
 @pytest.mark.asyncio

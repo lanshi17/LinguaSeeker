@@ -45,13 +45,13 @@ class TaskCreateResponse(BaseModel):
 class TaskStatusResponse(BaseModel):
 	task_id: str = Field(..., description="Celery task id")
 	status: TaskStatus = Field(..., description="Task status")
+	document_id: Optional[str] = Field(None, description="Document id associated with the task result")
 	file_size_bytes: Optional[int] = Field(None, description="Total input file size in bytes")
 	processing_duration_seconds: Optional[float] = Field(
 		None, description="Processing duration in seconds"
 	)
 	created_at: Optional[str] = Field(None, description="Task creation timestamp if available")
 	updated_at: Optional[str] = Field(None, description="Task update timestamp if available")
-	result: Optional[Dict[str, Any]] = Field(None, description="Task result if completed")
 	error: Optional[str] = Field(None, description="Error message if failed")
 
 	class Config:
@@ -59,11 +59,11 @@ class TaskStatusResponse(BaseModel):
 			"example": {
 				"task_id": "1f6a8b7a-1b87-4d75-8c72-6f2f6a1a9c2e",
 				"status": "SUCCESS",
+				"document_id": "c525fcfa-6dd9-4c9d-8d42-bd7c5a52fa7a",
 				"file_size_bytes": 1048576,
 				"processing_duration_seconds": 12.3,
 				"created_at": "2026-02-10T08:00:00+00:00",
 				"updated_at": "2026-02-10T08:00:12+00:00",
-				"result": {"summary": "task result payload"},
 				"error": None,
 			}
 		}
@@ -73,6 +73,7 @@ class TaskListItem(BaseModel):
 	task_id: str = Field(..., description="Celery task id")
 	status: TaskStatus = Field(..., description="Task status")
 	date_done: Optional[str] = Field(None, description="Completion timestamp if available")
+	document_id: Optional[str] = Field(None, description="Document id associated with the task result")
 	file_size_bytes: Optional[int] = Field(None, description="Total input file size in bytes")
 	processing_duration_seconds: Optional[float] = Field(
 		None, description="Processing duration in seconds"
@@ -96,6 +97,7 @@ class TaskListResponse(BaseModel):
 						"task_id": "1f6a8b7a-1b87-4d75-8c72-6f2f6a1a9c2e",
 						"status": "SUCCESS",
 						"date_done": "2026-02-10T08:00:00+00:00",
+						"document_id": "c525fcfa-6dd9-4c9d-8d42-bd7c5a52fa7a",
 						"file_size_bytes": 1048576,
 						"processing_duration_seconds": 12.3,
 						"created_at": "2026-02-10T08:00:00+00:00",

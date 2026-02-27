@@ -7,11 +7,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
+from uuid import UUID
 
 from loguru import logger
 
 from src.database.neo4j_client import get_neo4j_client
 from src.database.postgre_client import get_postgres_client
+from src.domain.variant import get_variation_data_service, VariationDataService
 
 
 # ==================== 数据结构 ====================
@@ -42,9 +44,12 @@ class SearchResult:
     evidence_records: List[Dict[str, Any]] = field(default_factory=list)
     document_count: int = 0
     total_evidence: int = 0
+    variation: Optional[Dict[str, Any]] = None
+    citations: List[Dict[str, Any]] = field(default_factory=list)
+    scorecards: List[Dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        payload = {
             "nodes": [
                 {"id": n.node_id, "type": n.node_type, "label": n.label, **n.properties}
                 for n in self.nodes
@@ -57,6 +62,13 @@ class SearchResult:
             "document_count": self.document_count,
             "total_evidence": self.total_evidence,
         }
+        if self.variation is not None:
+            payload["variation"] = self.variation
+        if self.citations:
+            payload["citations"] = self.citations
+        if self.scorecards:
+            payload["scorecards"] = self.scorecards
+        return payload
 
 
 # ==================== 搜索引擎 ====================
@@ -67,6 +79,7 @@ class GraphSearchEngine:
     def __init__(self) -> None:
         self._neo4j = get_neo4j_client()
         self._pg = get_postgres_client()
+        self._variants: VariationDataService = get_variation_data_service()
         logger.info("GraphSearchEngine initialized")
 
     # -------------------- 基于变异搜索 --------------------
@@ -85,15 +98,33 @@ class GraphSearchEngine:
         result = SearchResult()
         seen_nodes: Set[str] = set()
 
+        variation_id: Optional[int] = None
+        if variant:
+            variation = self._variants.resolve_variation(variant)
+            if variation:
+                variation_id = int(variation.variation_id)
+                payload = self._variants.build_variation_payload(variation_id)
+                result.variation = payload.get("variation")
+                result.citations = payload.get("citations", [])
+                result.scorecards = payload.get("scorecards", [])
+        if result.variation is None:
+            result.variation = {"primary_hgvs": variant}
+
         # 1) Neo4j 图检索
-        graph_rows = self._neo4j.find_variant_evidence_graph(variant)
+        graph_rows = self._neo4j.find_variant_evidence_graph(
+            variant_hgvs_c=variant,
+            variation_id=variation_id,
+        )
         logger.debug("Graph rows for variant {}: {}", variant, len(graph_rows))
         for row in graph_rows:
             self._extract_nodes_edges(row, result, seen_nodes)
 
         # 2) PostgreSQL 补充证据记录
         if include_evidence:
-            pg_records = self._pg.search_evidence_by_variant(variant=variant)
+            pg_records = self._pg.search_evidence_by_variant(
+                variant=variant,
+                clinvar_variation_id=variation_id,
+            )
             logger.debug("Evidence records for variant {}: {}", variant, len(pg_records))
             for rec in pg_records:
                 result.evidence_records.append(self._evidence_to_dict(rec))
@@ -219,10 +250,11 @@ class GraphSearchEngine:
 
     def get_document_evidence(self, document_id: str) -> SearchResult:
         """获取某文档的所有证据及其图谱关系"""
-        logger.info("Fetching document evidence: {}", document_id)
+        normalized_id = str(document_id).strip()
+        logger.info("Fetching document evidence: {}", normalized_id)
         result = SearchResult()
-        pg_records = self._pg.get_evidence_for_document(document_id)
-        logger.debug("Document {} evidence records: {}", document_id, len(pg_records))
+        pg_records = self._pg.get_evidence_for_document(normalized_id)
+        logger.debug("Document {} evidence records: {}", normalized_id, len(pg_records))
         for rec in pg_records:
             result.evidence_records.append(self._evidence_to_dict(rec))
         result.document_count = 1 if pg_records else 0
@@ -312,8 +344,9 @@ class GraphSearchEngine:
                 k: v for k, v in record.__dict__.items()
                 if not k.startswith("_")
             }
-            if "document_id" in d and d["document_id"] is not None:
-                d["document_id"] = str(d["document_id"])
+            doc_id = d.get("document_id")
+            if isinstance(doc_id, UUID):
+                d["document_id"] = str(doc_id)
             # 序列化 datetime
             for k in ("created_at", "updated_at"):
                 if k in d and d[k] is not None:

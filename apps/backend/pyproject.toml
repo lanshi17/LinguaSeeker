@@ -48,6 +48,7 @@ dependencies = [
     "dashscope>=1.25.11",
     "celery>=5.6.2",
     "redis>=7.1.0",
+    "redis-cli>=1.0.1",
 ]
 
 [project.optional-dependencies]
@@ -82,7 +83,11 @@ warn_unused_configs = true
 packages = ["src/acmg_ps3_backend"]
 
 [dependency-groups]
-dev = ["icecream>=2.1.10", "pytest>=9.0.2", "pytest-asyncio>=0.24.0"]
+dev = [
+    "icecream>=2.1.10",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=0.24.0",
+]
 
 [tool.pytest.ini_options]
 markers = [

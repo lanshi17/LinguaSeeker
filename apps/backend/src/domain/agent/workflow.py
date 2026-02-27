@@ -245,6 +245,7 @@ class EvidenceAgent:
             base_url=self._normalize_anthropic_base_url(self.cfg.evidence_base_url),
             temperature=0.0,
             timeout=self.cfg.llm_timeout,
+            streaming=True,
             stop=["\n\nHuman:"],
         )
         return llm.bind_tools(get_evidence_tools())
@@ -259,6 +260,8 @@ class EvidenceAgent:
             temperature=0.0,
             timeout=self.cfg.llm_timeout,
             stop=["\n\nHuman:"],
+            streaming=True,
+            thinking={"type": "enabled"},
         )
 
     def _invoke_with_tools(
@@ -310,6 +313,48 @@ class EvidenceAgent:
 
         return response
 
+    def _message_content_to_text(self, content: Any) -> str:
+        """Normalize LangChain/Anthropic message content into plain text."""
+        if content is None:
+            return ""
+
+        if isinstance(content, str):
+            return content.strip()
+
+        if isinstance(content, bytes):
+            try:
+                return content.decode("utf-8").strip()
+            except Exception:
+                return ""
+
+        if isinstance(content, list):
+            parts = [
+                text for item in content
+                if (text := self._message_content_to_text(item))
+            ]
+            return "\n".join(parts).strip()
+
+        if isinstance(content, dict):
+            if content.get("type") == "text" and "text" in content:
+                return self._message_content_to_text(content["text"])
+
+            parts = []
+            for key in ("text", "content", "result", "message"):
+                if key in content:
+                    text = self._message_content_to_text(content[key])
+                    if text:
+                        parts.append(text)
+            return "\n".join(parts).strip()
+
+        for attr in ("text", "content", "result", "message"):
+            value = getattr(content, attr, None)
+            if value is not None:
+                text = self._message_content_to_text(value)
+                if text:
+                    return text
+
+        return str(content).strip()
+
     def _extract_json_payload(self, content: str) -> Dict[str, Any]:
         if not content:
             raise RuntimeError("LLM 响应为空，无法解析 JSON")
@@ -349,7 +394,7 @@ class EvidenceAgent:
             prompt = prompts.get_translation_prompt(segment)
             try:
                 response = llm.invoke([HumanMessage(content=prompt)])
-                content = response.content if isinstance(response.content, str) else str(response.content)
+                content = self._message_content_to_text(response.content)
                 translated_segments.append(content)
                 logger.info(f"翻译分段 {idx}/{len(segments)} 完成，字数: {len(content)}")
             except Exception as e:
@@ -364,12 +409,25 @@ class EvidenceAgent:
     @timer("步骤2: 图片描述")
     def describe_images(self, state: ProcessingState) -> ProcessingState:
         """使用 VLM 生成图片描述"""
-        logger.info(f"开始处理 {len(state['image_paths'])} 张图片...")
+        enable_vlm = bool(state.get("enable_vlm", self.cfg.vlm_enable))
+        image_paths = state.get("image_paths", [])
+
+        if not enable_vlm:
+            logger.info("VLM 功能已禁用，跳过图片描述阶段")
+            state["image_descriptions"] = []
+            return state
+
+        if not image_paths:
+            logger.info("没有可处理的图片，跳过图片描述阶段")
+            state["image_descriptions"] = []
+            return state
+
+        logger.info(f"开始处理 {len(image_paths)} 张图片...")
 
         llm = self.get_vlm()
         descriptions = []
 
-        for idx, img_path in enumerate(state['image_paths']):
+        for idx, img_path in enumerate(image_paths):
             try:
                 with open(img_path, 'rb') as f:
                     img_data = base64.b64encode(f.read()).decode()
@@ -398,7 +456,7 @@ class EvidenceAgent:
                 )
 
                 response = llm.invoke([message])
-                descriptions.append(response.content)
+                descriptions.append(self._message_content_to_text(response.content))
                 logger.info(f"图片 {idx+1} 描述完成")
             except Exception as e:
                 logger.error(f"处理图片 {img_path} 失败: {e}")
@@ -406,6 +464,7 @@ class EvidenceAgent:
 
         state['image_descriptions'] = descriptions
         return state
+
 
     @timer("步骤4: 证据提取+RAG")
     async def extract_ps3_evidence(self, state: ProcessingState) -> ProcessingState:
@@ -434,7 +493,7 @@ class EvidenceAgent:
             raise RuntimeError("证据提取 LLM 调用失败") from e
 
         try:
-            content = response.content if isinstance(response.content, str) else str(response.content)
+            content = self._message_content_to_text(response.content)
             evidence_json = self._extract_json_payload(content)
             state['ps3_evidence'] = evidence_json
 
@@ -451,7 +510,7 @@ class EvidenceAgent:
 
             logger.info(f"PS3 证据提取完成，总分: {total_score}/100")
             logger.info(
-                f"最终证据强度: {evidence_json.get('ps3_step_4', {}).get('final_evidence_strength', 'none')}"
+                f"最终证据强度: {evidence_json.get('ps3_step_4', {}).get('final_evidence_strength', 'inconclusive')}"
             )
         except json.JSONDecodeError as e:
             logger.error(f"JSON 解析失败: {e}")
@@ -488,7 +547,7 @@ class EvidenceAgent:
             raise RuntimeError("证据反馈 LLM 调用失败") from e
 
         try:
-            content = response.content if isinstance(response.content, str) else str(response.content)
+            content = self._message_content_to_text(response.content)
             evidence_json = self._extract_json_payload(content)
             total_score = (
                 evidence_json.get("ps3_step_1", {}).get("score", 0)
@@ -534,7 +593,7 @@ class EvidenceAgent:
             raise RuntimeError("仲裁 LLM 调用失败") from e
 
         try:
-            content = response.content if isinstance(response.content, str) else str(response.content)
+            content = self._message_content_to_text(response.content)
             arbitration_result = self._extract_json_payload(content)
             raw_confidence = arbitration_result.get('confidence', None)
 
@@ -544,6 +603,7 @@ class EvidenceAgent:
 
             confidence = max(0.0, min(1.0, confidence))
             state['arbitration_confidence'] = confidence
+            state['arbitration_score'] = round(confidence * 100.0, 2)
             state['arbitration_feedback'] = arbitration_result.get('feedback', '')
 
             logger.info(f"仲裁置信度: {state['arbitration_confidence']:.2f}")
@@ -564,14 +624,33 @@ class EvidenceAgent:
     @staticmethod
     def route_decision(state: ProcessingState) -> str:
         """路由决策：是否通过、继续迭代或标记人工复核"""
-        confidence = state.get('arbitration_confidence', 0.0)
+        raw_score = state.get('arbitration_score')
+        raw_confidence = state.get('arbitration_confidence')
 
-        logger.info(f"路由决策: confidence={confidence:.2f}")
+        score: Optional[float] = None
+        confidence: Optional[float] = None
+        try:
+            if raw_score is not None:
+                score = float(raw_score)
+        except (TypeError, ValueError):
+            score = None
+        try:
+            if raw_confidence is not None:
+                confidence = float(raw_confidence)
+        except (TypeError, ValueError):
+            confidence = None
 
-        if confidence >= prompts.ARBITRATION_CONFIDENCE_THRESHOLD:
-            logger.info("✓ 置信度 >= 0.85，通过审核")
+        logger.info("路由决策: score=%s, confidence=%s", score, confidence)
+
+        if score is not None and score >= prompts.ARBITRATION_SCORE_THRESHOLD:
+            logger.info("✓ 仲裁得分 >= %.1f，通过审核", prompts.ARBITRATION_SCORE_THRESHOLD)
             return "approved"
-        logger.warning("评分未达标，标记人工复核")
+
+        if confidence is not None and confidence >= prompts.ARBITRATION_CONFIDENCE_THRESHOLD:
+            logger.info("✓ 仲裁置信度 >= %.2f，通过审核", prompts.ARBITRATION_CONFIDENCE_THRESHOLD)
+            return "approved"
+
+        logger.warning("评分/置信度未达标，标记人工复核")
         return "manual_review"
 
     @staticmethod
@@ -634,6 +713,8 @@ class EvidenceAgent:
             'image_paths': image_paths,
             'translated_md': '',
             'image_descriptions': [],
+            'enable_vlm': bool(self.cfg.vlm_enable),
+            'vlm_results': [],
             'ps3_evidence': {},
             'evidence_sources': [],
             'knowledge_context': '',
@@ -662,7 +743,10 @@ class EvidenceAgent:
 
         final_evidence_strength = None
         if 'ps3_step_4' in final_state.get('ps3_evidence', {}):
-            final_evidence_strength = final_state['ps3_evidence']['ps3_step_4'].get('final_evidence_strength', 'none')
+            final_evidence_strength = final_state['ps3_evidence']['ps3_step_4'].get(
+                'final_evidence_strength',
+                'inconclusive',
+            )
 
         final_state['ps3_evidence'] = enrich_evidence_json(
             final_state.get('ps3_evidence', {}),
@@ -690,5 +774,3 @@ class EvidenceAgent:
 
 
 logger.debug(f"LLM配置: LLM模式: {cfg.llm_mode}, 证据模型: {cfg.evidence_model}, 仲裁模型: {cfg.arbitration_model}")
-
-
