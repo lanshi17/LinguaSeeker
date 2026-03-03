@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -16,6 +16,11 @@ from typing import Callable, Optional, Dict, Any
 import src.presentation.api as api_routers
 import src.presentation.task_api as task_api_routers
 import src.presentation.graph_api as evidence_api_routers
+from src.presentation.error_contract import (
+    failed_payload,
+    map_error_code,
+    normalize_error_code,
+)
 from src.utils.exceptions import ACMGException, TaskNotFoundException, ValidationException
 from src.health import check_all_connections
 from src.database.minio_client import MinIOClient
@@ -89,29 +94,45 @@ app.include_router(evidence_api_routers.router, prefix=cfg.api_prefix)
 
 
 @app.exception_handler(ACMGException)
-async def handle_acmg_exception(_, exc: ACMGException):
+async def handle_acmg_exception(request: Request, exc: ACMGException):
     status_code = 400
     if isinstance(exc, TaskNotFoundException):
         status_code = 404
     elif isinstance(exc, ValidationException):
         status_code = 422
 
+    request_id = request.headers.get("x-request-id") or str(uuid4())
+    error_code = normalize_error_code(exc.code, status_code, exc.message)
+
     return JSONResponse(
         status_code=status_code,
-        content={"code": exc.code, "message": exc.message},
+        content=failed_payload(error_code, exc.message, request_id),
+    )
+
+
+@app.exception_handler(HTTPException)
+async def handle_http_exception(request: Request, exc: HTTPException):
+    request_id = request.headers.get("x-request-id") or str(uuid4())
+    detail = exc.detail if isinstance(exc.detail, str) else json.dumps(exc.detail, ensure_ascii=False)
+    error_code = map_error_code(exc.status_code, detail)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=failed_payload(error_code, detail, request_id),
     )
 
 
 @app.exception_handler(RequestValidationError)
-async def handle_validation_error(_, exc: RequestValidationError):
+async def handle_validation_error(request: Request, exc: RequestValidationError):
+    request_id = request.headers.get("x-request-id") or str(uuid4())
     return JSONResponse(
         status_code=422,
         content=jsonable_encoder(
-            {
-                "code": "VALIDATION_ERROR",
-                "message": "Invalid request payload",
-                "errors": exc.errors(),
-            }
+            failed_payload(
+                "INPUT_INVALID",
+                "Invalid request payload",
+                request_id,
+                errors=exc.errors(),
+            )
         ),
     )
 

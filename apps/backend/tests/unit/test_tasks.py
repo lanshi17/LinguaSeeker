@@ -1,12 +1,14 @@
 import os
 from pathlib import Path
 from typing import Any, Dict, List
+from types import SimpleNamespace
 
 import pytest
 
 from src.domain.graph.sync import SchemaSyncError
 from src.service import tasks as tasks_module
 from src.domain.models import EvidenceOutput, MinerUResponse, PipelineFiles, PipelineResult
+import src.utils.exceptions as exc
 
 
 def _make_mineru_folder(tmp_path: Path) -> Path:
@@ -57,7 +59,9 @@ def test_collect_mineru_assets(mineru_folder: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_init_knowledge_base_if_needed_skips_when_exists(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_init_knowledge_base_if_needed_skips_when_exists(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     async def fake_check(_: str) -> bool:
         return True
 
@@ -91,8 +95,9 @@ async def test_init_knowledge_base_if_needed_runs_init(monkeypatch: pytest.Monke
 
 
 @pytest.mark.asyncio
-async def test_run_fastapi_pipeline_success(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, mineru_folder: Path) -> None:
-
+async def test_run_fastapi_pipeline_success(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, mineru_folder: Path
+) -> None:
     async def fake_init() -> bool:
         return True
 
@@ -108,7 +113,9 @@ async def test_run_fastapi_pipeline_success(monkeypatch: pytest.MonkeyPatch, tmp
             )
 
     class FakeAgent:
-        def process_medical_evidence(self, markdown_content: str, image_paths: List[str]) -> EvidenceOutput:
+        def process_medical_evidence(
+            self, markdown_content: str, image_paths: List[str]
+        ) -> EvidenceOutput:
             return _make_evidence_output()
 
     monkeypatch.setattr(tasks_module, "_mineru", FakeMinerU())
@@ -133,96 +140,436 @@ async def test_run_fastapi_pipeline_empty_paths() -> None:
 
 
 def test_process_pdf_task(monkeypatch: pytest.MonkeyPatch) -> None:
-    async def fake_run(_: List[str], output_root: Path | None = None) -> PipelineResult:
-        return PipelineResult(
-            document_id="doc-1",
-            output_dir="/tmp/out",
-            mineru_folder="/tmp/mineru",
-            files=PipelineFiles(
-                origin_md_path="/tmp/orig.md",
-                en_md_path="/tmp/en.md",
-                image_desc_path="/tmp/image_desc.txt",
-                ps3_evidence_path="/tmp/ps3.json",
-                image_dir="/tmp/images",
-                origin_md_url="",
-                en_md_url="",
-                image_desc_url="",
-                ps3_evidence_url="",
-                image_urls=[],
-            ),
-            evidence=_make_evidence_output(ps3_evidence={"ok": True}),
-        )
+    evidence = _make_evidence_output(ps3_evidence={"ok": True})
+    saved_files = PipelineFiles(
+        origin_md_path="/tmp/orig.md",
+        en_md_path="/tmp/en.md",
+        image_desc_path="/tmp/image_desc.txt",
+        ps3_evidence_path="/tmp/ps3.json",
+        image_dir="/tmp/images",
+        origin_md_url="",
+        en_md_url="",
+        image_desc_url="",
+        ps3_evidence_url="",
+        image_urls=[],
+    )
 
-    monkeypatch.setattr(tasks_module, "run_fastapi_pipeline", fake_run)
-    class FakeGraphSync:
-        def __init__(self) -> None:
-            self.calls: List[tuple[str, Dict[str, Any]]] = []
+    def fake_acquisition(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+        nt["acquisition"] = "success"
+        return fps, nt
 
-        def sync_evidence(self, document_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-            self.calls.append((document_id, payload))
-            return {"pg_evidence_id": 1, "neo4j_synced": True}
+    async def fake_parsing(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+        nt["parsing"] = "success"
+        return "md content", ["/img.jpg"], nt
 
-    fake_sync = FakeGraphSync()
+    def fake_translation(pg: Any, ptid: str, md: str, nt: Dict[str, str]) -> Any:
+        nt["translation"] = "success"
+        return md, "en text", nt, []
 
-	monkeypatch.setattr(tasks_module, "get_graph_sync_service", lambda: fake_sync)
-	result = tasks_module.process_pdf_task(["file.pdf"])
-	assert result["document_id"] == "doc-1"
-	assert result["graph_sync_result"] == {"pg_evidence_id": 1, "neo4j_synced": True}
-	assert fake_sync.calls and fake_sync.calls[0][0] == "doc-1"
+    def fake_extraction(pg: Any, ptid: str, en: str, imgs: List[str], nt: Dict[str, str]) -> Any:
+        nt["extraction"] = "success"
+        return evidence, nt
+
+    def fake_acmg(pg: Any, ptid: str, did: str, resp: Any, nt: Dict[str, str]) -> Any:
+        nt["acmg"] = "success"
+        return {"pg_evidence_id": 1, "neo4j_synced": True}, nt
+
+    async def fake_store(*_: Any, **__: Any) -> PipelineFiles:
+        return saved_files
+
+    monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
+    monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
+    monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
+    monkeypatch.setattr(tasks_module, "run_node_extraction", fake_extraction)
+    monkeypatch.setattr(tasks_module, "run_node_acmg", fake_acmg)
+    monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store)
+    monkeypatch.setattr(
+        tasks_module.file_utils,
+        "cleanup_old_temp_folders",
+        lambda *_, **__: None,
+    )
+
+    result = tasks_module.process_pdf_task(["file.pdf"])
+    assert result["document_id"]
+    assert result["graph_sync_result"] == {"pg_evidence_id": 1, "neo4j_synced": True}
 
 
 def test_sync_evidence_to_graph_retries_transient_error(monkeypatch: pytest.MonkeyPatch) -> None:
-	class FlakySync:
-		def __init__(self) -> None:
-			self.calls = 0
+    class FlakySync:
+        def __init__(self) -> None:
+            self.calls = 0
 
-		def sync_evidence(self, document_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-			self.calls += 1
-			if self.calls < 2:
-				raise RuntimeError("temporary failure")
-			return {"pg_evidence_id": 9, "neo4j_synced": True}
+        def sync_evidence(self, document_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+            self.calls += 1
+            if self.calls < 2:
+                raise RuntimeError("temporary failure")
+            return {"pg_evidence_id": 9, "neo4j_synced": True}
 
-	flaky = FlakySync()
-	monkeypatch.setattr(tasks_module, "get_graph_sync_service", lambda: flaky)
-	result = tasks_module._sync_evidence_to_graph("doc-1", {"any": "payload"})
-	assert result == {"pg_evidence_id": 9, "neo4j_synced": True}
-	assert flaky.calls == 2
+    flaky = FlakySync()
+    monkeypatch.setattr(tasks_module, "get_graph_sync_service", lambda: flaky)
+    result = tasks_module._sync_evidence_to_graph("doc-1", {"any": "payload"})
+    assert result == {"pg_evidence_id": 9, "neo4j_synced": True}
+    assert flaky.calls == 2
 
 
 def test_sync_evidence_to_graph_schema_error(monkeypatch: pytest.MonkeyPatch) -> None:
-	class BrokenSync:
-		def sync_evidence(self, document_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-			raise SchemaSyncError("missing column", context={"document_id": document_id})
+    class BrokenSync:
+        def sync_evidence(self, document_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+            raise SchemaSyncError("missing column", context={"document_id": document_id})
 
-	monkeypatch.setattr(tasks_module, "get_graph_sync_service", lambda: BrokenSync())
-	result = tasks_module._sync_evidence_to_graph("doc-99", {"ok": True})
-	assert result["error_category"] == "schema"
-	assert result["context"]["document_id"] == "doc-99"
+    monkeypatch.setattr(tasks_module, "get_graph_sync_service", lambda: BrokenSync())
+    result = tasks_module._sync_evidence_to_graph("doc-99", {"ok": True})
+    assert result["error_category"] == "schema"
+    assert result["context"]["document_id"] == "doc-99"
 
 
 def test_sync_evidence_to_graph_schedules_quality_retry(monkeypatch: pytest.MonkeyPatch) -> None:
-	class RetrySync:
-		def sync_evidence(self, *_: Any, **__: Any) -> Dict[str, Any]:
-			return {
-				"pg_evidence_id": None,
-				"neo4j_synced": False,
-				"skipped": True,
-				"retryable": True,
-				"reason": "missing_core_fields",
-				"context": {},
-			}
+    class RetrySync:
+        def sync_evidence(self, *_: Any, **__: Any) -> Dict[str, Any]:
+            return {
+                "pg_evidence_id": None,
+                "neo4j_synced": False,
+                "skipped": True,
+                "retryable": True,
+                "reason": "missing_core_fields",
+                "context": {},
+            }
 
-	scheduled: Dict[str, Any] = {}
+    scheduled: Dict[str, Any] = {}
 
-	def fake_schedule(doc_id: str, payload: Dict[str, Any], reason: str) -> None:
-		scheduled["doc_id"] = doc_id
-		scheduled["payload"] = payload
-		scheduled["reason"] = reason
+    def fake_schedule(doc_id: str, payload: Dict[str, Any], reason: str) -> None:
+        scheduled["doc_id"] = doc_id
+        scheduled["payload"] = payload
+        scheduled["reason"] = reason
 
-	monkeypatch.setattr(tasks_module, "get_graph_sync_service", lambda: RetrySync())
-	monkeypatch.setattr(tasks_module, "_schedule_evidence_retry", fake_schedule)
-	result = tasks_module._sync_evidence_to_graph("doc-2", {"foo": "bar"})
-	assert result["skipped"] is True
-	assert scheduled["doc_id"] == "doc-2"
-	assert scheduled["reason"] == "missing_core_fields"
-	assert scheduled["payload"]["foo"] == "bar"
+    monkeypatch.setattr(tasks_module, "get_graph_sync_service", lambda: RetrySync())
+    monkeypatch.setattr(tasks_module, "_schedule_evidence_retry", fake_schedule)
+    result = tasks_module._sync_evidence_to_graph("doc-2", {"foo": "bar"})
+    assert result["skipped"] is True
+    assert scheduled["doc_id"] == "doc-2"
+    assert scheduled["reason"] == "missing_core_fields"
+    assert scheduled["payload"]["foo"] == "bar"
+
+
+def test_build_sentence_alignments_and_warning_detection() -> None:
+    source = "NM_000527.4:c.123A>G\nsecond line"
+    en = "translation line 1\nsecond line"
+    aligns = tasks_module._build_sentence_alignments(source, en)
+    assert len(aligns) == 2
+    assert aligns[0]["source_sentence"] == "NM_000527.4:c.123A>G"
+    warnings = tasks_module._detect_warning_codes(source, en)
+    assert "HGVS_AUTOCORRECT_FAILED" in warnings
+
+
+def test_persist_alignments_and_warnings_calls_postgres() -> None:
+    class FakePostgres:
+        def __init__(self) -> None:
+            self.rows: List[Dict[str, Any]] = []
+
+        def create_sentence_alignment(self, **kwargs: Any) -> Any:
+            self.rows.append(kwargs)
+            return None
+
+    fake_pg = FakePostgres()
+    warnings = tasks_module._persist_alignments_and_warnings(
+        fake_pg,
+        paper_task_id="paper-1",
+        source_text="line1\nline2",
+        en_text="en1\nen2",
+        base_warnings=["FULLTEXT_UNAVAILABLE"],
+    )
+    assert len(fake_pg.rows) == 2
+    assert fake_pg.rows[0]["paper_task_id"] == "paper-1"
+    assert warnings == ["FULLTEXT_UNAVAILABLE"]
+
+
+def test_get_node_policy_uses_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(tasks_module.cfg, "node_extraction_max_retries", 5)
+    monkeypatch.setattr(tasks_module.cfg, "node_extraction_delay_seconds", 7)
+    monkeypatch.setattr(tasks_module.cfg, "node_extraction_timeout_seconds", 42)
+    policy = tasks_module._get_node_policy("extraction")
+    assert policy == {"max_retries": 5, "delay": 7, "timeout": 42}
+
+
+@pytest.mark.asyncio
+async def test_run_async_with_node_policy_retries_then_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(tasks_module.cfg, "node_acquisition_max_retries", 2)
+    monkeypatch.setattr(tasks_module.cfg, "node_acquisition_delay_seconds", 0)
+    monkeypatch.setattr(tasks_module.cfg, "node_acquisition_timeout_seconds", 3)
+    attempts = {"count": 0}
+
+    async def flaky_runner() -> str:
+        attempts["count"] += 1
+        if attempts["count"] < 2:
+            raise RuntimeError("temporary")
+        return "ok"
+
+    result, used_attempt = await tasks_module._run_async_with_node_policy(
+        "acquisition",
+        "test-op",
+        flaky_runner,
+    )
+    assert result == "ok"
+    assert used_attempt == 2
+
+
+def test_process_pubmed_paper_task_success(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakePubMedService:
+        async def fetch_article_metadata_abstract(self, pmid: str) -> Any:
+            return SimpleNamespace(
+                pmid=pmid,
+                title="LDLR study",
+                journal="Journal",
+                pub_date="2025",
+                abstract="Functional assay supports pathogenicity",
+            )
+
+    class FakeAgent:
+        def process_medical_evidence(
+            self, markdown_content: str, image_paths: List[str]
+        ) -> EvidenceOutput:
+            assert "LDLR study" in markdown_content
+            assert image_paths == []
+            output = _make_evidence_output(ps3_evidence={"ok": True})
+            output.en_format_md = "LDLR translated abstract"
+            return output
+
+    class FakePostgres:
+        def __init__(self) -> None:
+            self.paper_updates: List[Dict[str, Any]] = []
+            self.logs: List[Dict[str, Any]] = []
+            self.documents: List[Dict[str, Any]] = []
+            self.alignments: List[Dict[str, Any]] = []
+
+        def update_paper_task(self, paper_task_id: str, **fields: Any) -> Any:
+            self.paper_updates.append({"paper_task_id": paper_task_id, "fields": fields})
+            return None
+
+        def update_task_request(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def append_paper_task_log(self, paper_task_id: str, **kwargs: Any) -> Any:
+            self.logs.append({"paper_task_id": paper_task_id, **kwargs})
+            return None
+
+        def update_document(self, document_id: str, **fields: Any) -> Any:
+            self.documents.append({"document_id": document_id, "fields": fields})
+            return None
+
+        def refresh_task_request_status(self, _: str) -> Any:
+            return None
+
+        def create_sentence_alignment(self, **kwargs: Any) -> Any:
+            self.alignments.append(kwargs)
+            return None
+
+    async def fake_store_outputs(*_: Any, **__: Any) -> PipelineFiles:
+        return PipelineFiles(
+            origin_md_path="/tmp/orig.md",
+            en_md_path="/tmp/en.md",
+            image_desc_path="/tmp/image_desc.txt",
+            ps3_evidence_path="/tmp/ps3.json",
+            image_dir="/tmp/images",
+            origin_md_url="",
+            en_md_url="",
+            image_desc_url="",
+            ps3_evidence_url="",
+            image_urls=[],
+        )
+
+    fake_pg = FakePostgres()
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: fake_pg)
+    monkeypatch.setattr(tasks_module, "get_pubmed_service", lambda: FakePubMedService())
+    monkeypatch.setattr(tasks_module, "_agents", FakeAgent())
+    monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store_outputs)
+    monkeypatch.setattr(tasks_module, "_sync_evidence_to_graph", lambda *_: {"neo4j_synced": True})
+
+    result = tasks_module.process_pubmed_paper_task(
+        pmid="12345678",
+        document_id="doc-1",
+        paper_task_id="paper-1",
+        request_id="req-1",
+    )
+
+    assert result["status"] == "success"
+    assert result["fulltext_unavailable"] is True
+    assert fake_pg.paper_updates[-1]["fields"]["status"] == "success"
+    assert "warning_codes" in fake_pg.paper_updates[-1]["fields"]
+    assert "FULLTEXT_UNAVAILABLE" in fake_pg.paper_updates[-1]["fields"]["warning_codes"]
+    assert len(fake_pg.alignments) >= 1
+    assert any(log.get("node") == "acmg" for log in fake_pg.logs)
+
+
+def test_process_pubmed_paper_task_fetch_timeout_marks_failed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakePubMedService:
+        async def fetch_article_metadata_abstract(self, _: str) -> Any:
+            raise RuntimeError("timeout")
+
+    class FakePostgres:
+        def __init__(self) -> None:
+            self.paper_updates: List[Dict[str, Any]] = []
+            self.logs: List[Dict[str, Any]] = []
+
+        def update_paper_task(self, paper_task_id: str, **fields: Any) -> Any:
+            self.paper_updates.append({"paper_task_id": paper_task_id, "fields": fields})
+            return None
+
+        def update_task_request(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def append_paper_task_log(self, paper_task_id: str, **kwargs: Any) -> Any:
+            self.logs.append({"paper_task_id": paper_task_id, **kwargs})
+            return None
+
+        def refresh_task_request_status(self, _: str) -> Any:
+            return None
+
+    fake_pg = FakePostgres()
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: fake_pg)
+    monkeypatch.setattr(tasks_module, "get_pubmed_service", lambda: FakePubMedService())
+
+    tasks_module.process_pubmed_paper_task.max_retries = 0
+
+    with pytest.raises(RuntimeError):
+        tasks_module.process_pubmed_paper_task(
+            pmid="12345678",
+            document_id="doc-1",
+            paper_task_id="paper-1",
+            request_id="req-1",
+        )
+
+    assert fake_pg.paper_updates[-1]["fields"]["status"] == "failed"
+    assert fake_pg.paper_updates[-1]["fields"]["error_code"] == "FETCH_TIMEOUT"
+
+
+# ---------------------------------------------------------------------------
+# M1 utility helpers
+# ---------------------------------------------------------------------------
+
+
+class _FakePostgresForNodes:
+    """Minimal postgres stub that records ``append_paper_task_log`` calls."""
+
+    def __init__(self) -> None:
+        self.logs: List[Dict[str, Any]] = []
+
+    def append_paper_task_log(self, paper_task_id: str, **kwargs: Any) -> None:
+        self.logs.append({"paper_task_id": paper_task_id, **kwargs})
+
+
+def test_detect_language_english() -> None:
+    text = (
+        "The LDLR gene encodes the low-density lipoprotein receptor. "
+        "Mutations in this gene cause familial hypercholesterolemia."
+    )
+    assert tasks_module._detect_language(text) == "en"
+
+
+def test_detect_language_chinese() -> None:
+    text = "这是一段中文文本，用于测试语言检测功能。该段落包含大量中文字符以确保准确。"
+    assert tasks_module._detect_language(text) == "unknown"
+
+
+def test_detect_language_empty() -> None:
+    assert tasks_module._detect_language("") == "unknown"
+    assert tasks_module._detect_language("   ") == "unknown"
+
+
+def test_is_docx_true() -> None:
+    assert tasks_module._is_docx("report.docx") is True
+    assert tasks_module._is_docx("report.DOC") is True
+    assert tasks_module._is_docx("/some/path/file.DOCX") is True
+
+
+def test_is_docx_false() -> None:
+    assert tasks_module._is_docx("report.pdf") is False
+    assert tasks_module._is_docx("file.txt") is False
+    assert tasks_module._is_docx("data.xlsx") is False
+
+
+def test_attempt_hgvs_correction_no_missing() -> None:
+    source = "Variant NM_000527.4:c.123A>G was found."
+    translated = "The variant NM_000527.4:c.123A>G was identified."
+    result, all_restored = tasks_module._attempt_hgvs_correction(source, translated)
+    assert all_restored is True
+    assert result == translated
+
+
+def test_attempt_hgvs_correction_with_prefix_match() -> None:
+    source = "Variant NM_000527.4:c.123A>G was found."
+    translated = "The variant NM_000truncated was identified."
+    result, all_restored = tasks_module._attempt_hgvs_correction(source, translated)
+    assert "c.123A>G" in result
+    assert all_restored is True
+
+
+def test_attempt_hgvs_correction_fallback_append() -> None:
+    source = "Variant NM_000527.4:c.123A>G was found."
+    translated = "The variant was completely removed from the translation."
+    result, all_restored = tasks_module._attempt_hgvs_correction(source, translated)
+    assert all_restored is False
+    assert "[HGVS Reference]" in result
+    assert "c.123A>G" in result
+
+
+def test_run_node_acquisition_success(tmp_path: Path) -> None:
+    fake_pg = _FakePostgresForNodes()
+    temp_file = tmp_path / "test.pdf"
+    temp_file.write_bytes(b"fake pdf content")
+    paths = [str(temp_file)]
+    node_trace: Dict[str, str] = {}
+
+    result_paths, result_trace = tasks_module.run_node_acquisition(
+        fake_pg, "paper-1", paths, node_trace
+    )
+    assert result_paths == paths
+    assert result_trace["acquisition"] == "success"
+    assert len(fake_pg.logs) == 2
+
+
+def test_run_node_acquisition_missing_file() -> None:
+    fake_pg = _FakePostgresForNodes()
+    node_trace: Dict[str, str] = {}
+
+    with pytest.raises(exc.ValidationException):
+        tasks_module.run_node_acquisition(fake_pg, "paper-1", ["/nonexistent/file.pdf"], node_trace)
+    assert len(fake_pg.logs) == 2
+    assert fake_pg.logs[1].get("error_code") == "INPUT_INVALID"
+
+
+@pytest.mark.asyncio
+async def test_run_node_parsing_docx_terminal() -> None:
+    fake_pg = _FakePostgresForNodes()
+    node_trace: Dict[str, str] = {}
+
+    with pytest.raises(exc.ParsingException, match="DOCX"):
+        await tasks_module.run_node_parsing(fake_pg, "paper-1", ["report.docx"], node_trace)
+    assert fake_pg.logs[1].get("error_code") == "PARSE_FAILED"
+
+
+def test_run_node_translation_english_skip() -> None:
+    fake_pg = _FakePostgresForNodes()
+    node_trace: Dict[str, str] = {}
+    english_text = (
+        "The BRCA1 gene is associated with hereditary breast cancer. "
+        "Pathogenic variants in BRCA1 increase lifetime risk significantly. "
+        "Functional assays demonstrate loss of protein activity."
+    )
+
+    source_text, en_text, result_trace, warnings = tasks_module.run_node_translation(
+        fake_pg, "paper-1", english_text, node_trace
+    )
+    assert source_text == english_text
+    assert en_text == english_text
+    assert result_trace["translation"] == "skipped_english"
+    assert warnings == []
+
+
+def test_paddleocr_available_false() -> None:
+    from src.domain.mineru.component import paddleocr_available
+
+    assert paddleocr_available() is False

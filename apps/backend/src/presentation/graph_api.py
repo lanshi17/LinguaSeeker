@@ -406,26 +406,18 @@ async def aggregate_by_variant(
 
 @router.get(
     "/quality",
-    response_model=QualityOverviewResponse,
-    summary="证据质量监控概览",
-    description="返回有效率、置信度分布、强度分布、分类分布等。",
+    summary="证据质量监控概览（MVP已下线）",
+    description="MVP 范围内 quality API 已下线；兼容旧调用返回 404。",
     responses={
-        500: {"model": ErrorResponse, "description": "Lookup failed."},
+        404: {"model": ErrorResponse, "description": "Quality API removed in MVP."},
     },
 )
 async def quality_overview(
     gene_symbol: Optional[str] = Query(None, description="可选基因过滤"),
 ):
-    """Return evidence quality KPIs and distributions."""
-    try:
-        logger.info("Quality overview request")
-        eng = get_evidence_aggregation_engine()
-        overview = eng.quality_overview(gene_symbol=gene_symbol)
-        logger.debug("Quality overview total evidence: {}", overview.get("total_evidence"))
-        return QualityOverviewResponse(data=overview)
-    except Exception as e:
-        logger.error("Quality overview failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+    """Quality API is out of MVP scope and intentionally unavailable."""
+    logger.info("Quality overview request rejected (MVP disabled)")
+    raise HTTPException(status_code=404, detail="Quality API removed in MVP")
 
 
 # ==================== 图数据库 ====================

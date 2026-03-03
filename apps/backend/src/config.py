@@ -142,6 +142,21 @@ class Settings(BaseSettings):
     # ==================== 任务配置 ====================
     max_reasoning_iterations: int = 3
     task_timeout_seconds: int = 3600
+    node_acquisition_max_retries: int = 2
+    node_acquisition_delay_seconds: int = 300
+    node_acquisition_timeout_seconds: int = 900
+    node_parsing_max_retries: int = 1
+    node_parsing_delay_seconds: int = 600
+    node_parsing_timeout_seconds: int = 1800
+    node_translation_max_retries: int = 2
+    node_translation_delay_seconds: int = 120
+    node_translation_timeout_seconds: int = 1200
+    node_extraction_max_retries: int = 2
+    node_extraction_delay_seconds: int = 300
+    node_extraction_timeout_seconds: int = 1800
+    node_acmg_max_retries: int = 1
+    node_acmg_delay_seconds: int = 180
+    node_acmg_timeout_seconds: int = 900
 
     # ==================== 爬取配置 ====================
     pubmed_api_key: Optional[str] = None

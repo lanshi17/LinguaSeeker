@@ -17,12 +17,14 @@ from src.database.redis_client import (
     check_pdf_hash as redis_check_pdf_hash,
     get_cached_pdf_result,
     delete_cached_pdf_result,
+    redis_client,
 )
 from src.database.postgre_client import get_postgres_client
 from src.service.tasks import process_pdf_task
 from src.database.minio_client import MinIOClient
 from src.database.enum import MinioBucketNameEnum
 from src.database.models import MinioObjectRefModel
+from src.presentation.error_contract import build_log_link
 
 router = APIRouter()
 
@@ -96,6 +98,12 @@ class ErrorResponse(BaseModel):
 
     class Config:
         json_schema_extra = {"example": {"detail": "Invalid input."}}
+
+
+class LogLinkReissueResponse(BaseModel):
+    request_id: str = Field(..., description="Request id used for log link reissue")
+    log_link: str = Field(..., description="Reissued signed log link")
+    expires_in_seconds: int = Field(24 * 60 * 60, description="Link validity window")
 
 
 @router.get(
@@ -367,6 +375,39 @@ async def download_processed_result_file(
 
     content_type = mimetypes.guess_type(object_path)[0] or "application/octet-stream"
     return Response(content=payload, media_type=content_type)
+
+
+@router.get(
+    "/logs/reissue",
+    tags=["File"],
+    summary="Reissue log link",
+    description="Reissue signed log link with 1 request/minute rate limit per request_id.",
+    response_model=LogLinkReissueResponse,
+    responses={
+        429: {"model": ErrorResponse, "description": "Rate limit exceeded."},
+        503: {"model": ErrorResponse, "description": "Rate limiter unavailable."},
+    },
+)
+async def reissue_log_link(
+    request_id: str = Query(..., min_length=8, description="Request id used to regenerate log link."),
+):
+    rate_key = f"log_reissue:{request_id}"
+    try:
+        redis_conn = redis_client.get_connection()
+        hit_count = int(redis_conn.incr(rate_key))
+        if hit_count == 1:
+            redis_conn.expire(rate_key, 60)
+    except Exception as exc:
+        logger.warning("Failed to apply reissue rate limit for {}: {}", request_id, exc)
+        raise HTTPException(status_code=503, detail="Rate limiter unavailable")
+
+    if hit_count > 1:
+        raise HTTPException(status_code=429, detail="Reissue rate limit exceeded")
+
+    return LogLinkReissueResponse(
+        request_id=request_id,
+        log_link=build_log_link(request_id),
+    )
     
     
     

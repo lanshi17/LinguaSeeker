@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, cast
 
 import pytest
+from fastapi import HTTPException
 
 from src.domain.agent.workflow import EvidenceAgent
 from src.domain.evidence import classifier as classifier_module
@@ -297,21 +298,21 @@ def test_graph_sync_smoke(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> No
     )
     monkeypatch.setattr(sync_module.GraphSyncService, "_FAILURE_ARCHIVE_PATH", tmp_path / "failures.jsonl")
     svc = sync_module.GraphSyncService()
-	result = svc.sync_evidence(
-		1,
-		{
-			"ps3_evidence": {},
-			"arbitration_score": 0.0,
-			"overall_confidence": 90.0,
-			"extracted_fields": {
-				"gene": {"symbol": "GENE"},
-				"variant": {"hgvs_c": "c.1A>T"},
-				"transcript_id": {"transcript_id": "NM_000000.1"},
-				"disease_chpo": {"disease_name": "Example"},
-			},
-		},
-	)
-	assert result["pg_evidence_id"] == 1
+    result = svc.sync_evidence(
+        1,
+        {
+            "ps3_evidence": {},
+            "arbitration_score": 0.0,
+            "overall_confidence": 90.0,
+            "extracted_fields": {
+                "gene": {"symbol": "GENE"},
+                "variant": {"hgvs_c": "c.1A>T"},
+                "transcript_id": {"transcript_id": "NM_000000.1"},
+                "disease_chpo": {"disease_name": "Example"},
+            },
+        },
+    )
+    assert result["pg_evidence_id"] == 1
 
 
 @pytest.mark.asyncio
@@ -396,6 +397,8 @@ async def test_graph_api_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     assert (await graph_api_module.aggregate_evidence(req)).code == 0
     assert (await graph_api_module.aggregate_by_gene("GENE")).code == 0
     assert (await graph_api_module.aggregate_by_variant(variant="c.1A>T")).code == 0
-    assert (await graph_api_module.quality_overview(gene_symbol=None)).code == 0
+    with pytest.raises(HTTPException) as quality_exc:
+        await graph_api_module.quality_overview(gene_symbol=None)
+    assert quality_exc.value.status_code == 404
     assert (await graph_api_module.graph_statistics()).code == 0
     assert (await graph_api_module.resync_document(1)).code == 0

@@ -58,6 +58,9 @@ class Document(Base):
 	)
 
 	tasks = relationship("Task", back_populates="document", cascade="all, delete-orphan")
+	paper_tasks = relationship(
+		"PaperTask", back_populates="document", cascade="all, delete-orphan"
+	)
 	entity_links = relationship(
 		"EntityDocumentMapping", back_populates="document", cascade="all, delete-orphan"
 	)
@@ -358,6 +361,119 @@ class EvidenceRecord(Base):
 		Index("ix_evidence_gene_variant", "gene_symbol", "variant_hgvs_c"),
 		Index("ix_evidence_gene_protein", "gene_symbol", "protein_change"),
 		Index("ix_evidence_clinvar_variation_id", "clinvar_variation_id"),
+	)
+
+
+class TaskRequest(Base):
+	__tablename__ = "task_requests"
+
+	request_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+	task_form_text = Column(Text, nullable=False)
+	status = Column(String(50), nullable=False, default="queued")
+	request_metadata = Column("metadata", JSONB, key="request_metadata", nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(
+		DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+	)
+
+	paper_tasks = relationship(
+		"PaperTask", back_populates="request", cascade="all, delete-orphan"
+	)
+
+	__table_args__ = (
+		Index("ix_task_requests_status", "status"),
+	)
+
+
+class PaperTask(Base):
+	__tablename__ = "paper_tasks"
+
+	paper_task_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+	request_id = Column(
+		UUID(as_uuid=True),
+		ForeignKey("task_requests.request_id", ondelete="CASCADE"),
+		nullable=False,
+	)
+	document_id = Column(
+		UUID(as_uuid=True),
+		ForeignKey("documents.document_id", ondelete="SET NULL"),
+		nullable=True,
+	)
+	original_filename = Column(String(500), nullable=True)
+	file_hash = Column(String(64), nullable=True)
+	status = Column(String(50), nullable=False, default="queued")
+	error_code = Column(String(50), nullable=True)
+	duplicate_of = Column(
+		UUID(as_uuid=True),
+		ForeignKey("paper_tasks.paper_task_id", ondelete="SET NULL"),
+		nullable=True,
+	)
+	celery_task_id = Column(String(100), nullable=True)
+	fulltext_unavailable = Column(String(10), nullable=False, default="false")
+	warning_codes = Column(JSONB, nullable=True)
+	node_trace = Column(JSONB, nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(
+		DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+	)
+
+	request = relationship("TaskRequest", back_populates="paper_tasks")
+	document = relationship("Document", back_populates="paper_tasks")
+	duplicate_of_task = relationship("PaperTask", remote_side=[paper_task_id])
+
+	__table_args__ = (
+		Index("ix_paper_tasks_request_id", "request_id"),
+		Index("ix_paper_tasks_status", "status"),
+		Index("ix_paper_tasks_file_hash", "file_hash"),
+		Index("ix_paper_tasks_celery_task_id", "celery_task_id"),
+	)
+
+
+class PaperTaskLog(Base):
+	__tablename__ = "paper_task_logs"
+
+	log_id = Column(Integer, primary_key=True, autoincrement=True)
+	paper_task_id = Column(
+		UUID(as_uuid=True),
+		ForeignKey("paper_tasks.paper_task_id", ondelete="CASCADE"),
+		nullable=False,
+	)
+	status = Column(String(50), nullable=False)
+	node = Column(String(50), nullable=True)
+	error_code = Column(String(50), nullable=True)
+	message = Column(Text, nullable=True)
+	payload = Column(JSONB, nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+	paper_task = relationship("PaperTask", backref="logs")
+
+	__table_args__ = (
+		Index("ix_paper_task_logs_paper_task_id", "paper_task_id"),
+		Index("ix_paper_task_logs_status", "status"),
+	)
+
+
+class SentenceAlignment(Base):
+	__tablename__ = "sentence_alignments"
+
+	alignment_id = Column(Integer, primary_key=True, autoincrement=True)
+	paper_task_id = Column(
+		UUID(as_uuid=True),
+		ForeignKey("paper_tasks.paper_task_id", ondelete="CASCADE"),
+		nullable=False,
+	)
+	source_sentence = Column(Text, nullable=False)
+	en_sentence = Column(Text, nullable=False)
+	source_start = Column(Integer, nullable=True)
+	source_end = Column(Integer, nullable=True)
+	en_start = Column(Integer, nullable=True)
+	en_end = Column(Integer, nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+	paper_task = relationship("PaperTask", backref="sentence_alignments")
+
+	__table_args__ = (
+		Index("ix_sentence_alignments_paper_task_id", "paper_task_id"),
 	)
 
 

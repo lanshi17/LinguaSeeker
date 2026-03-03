@@ -35,10 +35,16 @@ llm_mode: str = "api"
 """
 
 #测试api是否可用
-@pytest.mark.unit
-def test_generic_llm_api():
+def _require_live_llm_api() -> None:
     if cfg.llm_mode != "api":
         pytest.skip("跳过测试: 当前 LLM 模式不是 API 模式")
+    if os.getenv("RUN_LIVE_LLM_TESTS", "0").strip().lower() not in {"1", "true", "yes"}:
+        pytest.skip("跳过测试: 未开启 live LLM API 测试 (设置 RUN_LIVE_LLM_TESTS=1 可启用)")
+
+
+@pytest.mark.unit
+def test_generic_llm_api():
+    _require_live_llm_api()
     try:
         llm = ChatOpenAI(
             api_key=SecretStr(cfg.format_api_key),
@@ -63,8 +69,7 @@ def test_generic_llm_api():
 def test_evidence_llm_api():
     logger.debug("environment evidence_base_url: {}", cfg.evidence_base_url)
     logger.debug("environment evidence_model: {}", cfg.evidence_model)
-    if cfg.llm_mode != "api":
-        pytest.skip("跳过测试: 当前 LLM 模式不是 API 模式")
+    _require_live_llm_api()
     try:
         llm = ChatAnthropic(
             api_key=SecretStr(cfg.evidence_api_key),
@@ -89,8 +94,7 @@ def test_evidence_llm_api():
         
 @pytest.mark.unit
 def test_arbitration_llm_api():
-    if cfg.llm_mode != "api":
-        pytest.skip("跳过测试: 当前 LLM 模式不是 API 模式")
+    _require_live_llm_api()
     try:
         llm = ChatAnthropic(
             api_key=SecretStr(cfg.arbitration_api_key),

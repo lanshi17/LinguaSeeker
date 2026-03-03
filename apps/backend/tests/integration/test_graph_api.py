@@ -102,6 +102,10 @@ def _patch_dependencies(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_search_evidence_requires_params(client: TestClient, evidence_prefix: str) -> None:
     response = client.post(f"{evidence_prefix}/search", json={})
     assert response.status_code == 400
+    payload = response.json()
+    assert payload["status"] == "failed"
+    assert payload["error_code"] == "INPUT_INVALID"
+    assert "log_link" in payload
 
 
 def test_search_evidence_success(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
@@ -178,6 +182,10 @@ def test_aggregate_by_gene(client: TestClient, monkeypatch: pytest.MonkeyPatch, 
 def test_aggregate_by_variant_requires_params(client: TestClient, evidence_prefix: str) -> None:
     response = client.get(f"{evidence_prefix}/aggregate/variant")
     assert response.status_code == 400
+    payload = response.json()
+    assert payload["status"] == "failed"
+    assert payload["error_code"] == "INPUT_INVALID"
+    assert "log_link" in payload
 
 
 def test_aggregate_by_variant(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
@@ -190,8 +198,12 @@ def test_aggregate_by_variant(client: TestClient, monkeypatch: pytest.MonkeyPatc
 def test_quality_overview(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
     _patch_dependencies(monkeypatch)
     response = client.get(f"{evidence_prefix}/quality?gene_symbol=BRCA1")
-    assert response.status_code == 200
-    assert response.json()["data"]["total_evidence"] == 3
+    assert response.status_code == 404
+    payload = response.json()
+    assert payload["status"] == "failed"
+    assert payload["error_code"] == "INPUT_INVALID"
+    assert payload["detail"] == "Quality API removed in MVP"
+    assert "log_link" in payload
 
 
 def test_graph_statistics(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:

@@ -1,16 +1,30 @@
 import json
+import hashlib
+import tempfile
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from celery.result import AsyncResult
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, HTTPException, Path as ApiPath, Query, UploadFile, File, Form
 from loguru import logger
 from pydantic import BaseModel, Field
 
 from src.celery_app import celery_app
+from src.database.minio_client import MinIOClient
+from src.database.postgre_client import get_postgres_client
 from src.database.redis_client import list_celery_task_meta
-from src.service.tasks import process_pdf_task
+from src.domain.literature.pubmed_service import get_pubmed_service
+from src.service.tasks import process_pdf_task, process_pubmed_paper_task
 from src.service.dtos import (
+    PubMedCandidateItem,
+    PubMedCandidateSearchRequest,
+    PubMedCandidateSearchResponse,
+    PubMedSelectionSubmitRequest,
+	PaperTaskItemResponse,
+	TaskRequestCreateResponse,
+	TaskRequestStatusResponse,
     TaskCreateRequest,
     TaskCreateResponse,
     TaskListItem,
@@ -21,6 +35,11 @@ from src.service.dtos import (
 from src.service.enum import TaskStatus
 
 router = APIRouter(prefix="/tasks", tags=["Task"])
+
+MAX_UPLOAD_FILES = 10
+MAX_UPLOAD_FILE_SIZE_BYTES = 10 * 1024 * 1024
+MAX_UPLOAD_TOTAL_BYTES = 50 * 1024 * 1024
+ALLOWED_SUFFIXES = {".pdf", ".docx"}
 
 
 class ErrorResponse(BaseModel):
@@ -123,6 +142,24 @@ def _task_sort_key(item: TaskListItem) -> datetime:
     return parsed or datetime.min.replace(tzinfo=timezone.utc)
 
 
+def _paper_item_model(entry: Any) -> PaperTaskItemResponse:
+    duplicate_of = getattr(entry, "duplicate_of", None)
+    document_id = getattr(entry, "document_id", None)
+    return PaperTaskItemResponse(
+        paper_task_id=str(entry.paper_task_id),
+        filename=getattr(entry, "original_filename", None),
+        status=getattr(entry, "status", "queued"),
+        error_code=getattr(entry, "error_code", None),
+        duplicate_of=str(duplicate_of) if duplicate_of else None,
+        document_id=str(document_id) if document_id else None,
+        celery_task_id=getattr(entry, "celery_task_id", None),
+    )
+
+
+def _synthetic_hash_from_pmid(pmid: str) -> str:
+	return hashlib.sha256(f"pmid:{pmid}".encode("utf-8")).hexdigest()
+
+
 @router.post(
     "",
     summary="Create a task",
@@ -156,6 +193,340 @@ def create_task(payload: TaskCreateRequest) -> TaskCreateResponse:
     )
 
 
+@router.post(
+    "/requests/pubmed/candidates",
+    summary="Search PubMed candidates",
+    description="Search PubMed candidate papers by task form and filters (MVP source: pubmed only).",
+    response_model=PubMedCandidateSearchResponse,
+    responses={
+        400: {"model": ErrorResponse, "description": "Invalid query or unsupported source/country."},
+        504: {"model": ErrorResponse, "description": "PubMed fetch timeout."},
+    },
+)
+async def search_pubmed_candidates(payload: PubMedCandidateSearchRequest) -> PubMedCandidateSearchResponse:
+    if payload.source.lower() != "pubmed":
+        raise HTTPException(status_code=400, detail="Fetch no result: source must be pubmed in MVP")
+    query = f"{payload.target} {payload.disease}".strip()
+    if not query:
+        raise HTTPException(status_code=400, detail="INPUT_INVALID: target and disease are required")
+    service = get_pubmed_service()
+    try:
+        rows = await service.search_candidates(
+            query=query,
+            country=payload.country,
+            candidate_limit=payload.candidate_limit,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        logger.warning("PubMed candidate fetch failed: {}", exc)
+        raise HTTPException(status_code=504, detail="Fetch timeout while querying PubMed")
+
+    if not rows:
+        raise HTTPException(status_code=400, detail="Fetch no result from PubMed")
+
+    return PubMedCandidateSearchResponse(
+        task_form=payload.task_form,
+        candidates=[
+            PubMedCandidateItem(
+                pmid=item.pmid,
+                title=item.title,
+                journal=item.journal,
+                pub_date=item.pub_date,
+            )
+            for item in rows
+        ],
+    )
+
+
+@router.post(
+    "/requests/pubmed/submit",
+    summary="Submit selected PubMed papers",
+    description="Create request and paper tasks from selected PubMed candidates (1~10), with per-paper dedup and task queueing.",
+    response_model=TaskRequestCreateResponse,
+    responses={
+        400: {"model": ErrorResponse, "description": "Invalid selection or unsupported source."},
+        503: {"model": ErrorResponse, "description": "Dependency unavailable."},
+    },
+)
+def submit_pubmed_selection(payload: PubMedSelectionSubmitRequest) -> TaskRequestCreateResponse:
+    if payload.source.lower() != "pubmed":
+        raise HTTPException(status_code=400, detail="Fetch no result: source must be pubmed in MVP")
+    pmids = [str(p).strip() for p in payload.selected_pmids if str(p).strip()]
+    if not pmids:
+        raise HTTPException(status_code=400, detail="INPUT_INVALID: selected_pmids is required")
+    if len(pmids) > 10:
+        raise HTTPException(status_code=400, detail="INPUT_INVALID: selected_pmids max is 10")
+
+    postgres = get_postgres_client()
+    request_entry = postgres.create_task_request(
+        task_form_text=payload.task_form,
+        status="queued",
+        metadata={
+            "entry": "pubmed",
+            "target": payload.target,
+            "disease": payload.disease,
+            "country": payload.country,
+            "language": payload.language,
+            "selected_count": len(pmids),
+        },
+    )
+
+    paper_entries: List[Any] = []
+    for pmid in pmids:
+        existing_document = postgres.get_document_by_pmid(pmid)
+        synthetic_hash = _synthetic_hash_from_pmid(pmid)
+        historical_paper = postgres.find_latest_paper_task_by_hash(synthetic_hash)
+
+        if existing_document is not None:
+            paper_entry = postgres.create_paper_task(
+                request_id=request_entry.request_id,
+                document_id=existing_document.document_id,
+                original_filename=f"PMID:{pmid}",
+                file_hash=synthetic_hash,
+                status="success",
+                error_code="FILE_DUPLICATE",
+                duplicate_of=(historical_paper.paper_task_id if historical_paper else None),
+            )
+            postgres.append_paper_task_log(
+                paper_entry.paper_task_id,
+                status="success",
+                node="dedup",
+                error_code="FILE_DUPLICATE",
+                message=f"Duplicate PMID detected: {pmid}",
+            )
+            paper_entries.append(paper_entry)
+            continue
+
+        document = postgres.create_document(
+            title=f"PMID:{pmid}",
+            original_filename=f"PMID:{pmid}",
+            pmid=pmid,
+            local_path=None,
+            file_hash=synthetic_hash,
+            status="queued",
+        )
+        paper_entry = postgres.create_paper_task(
+            request_id=request_entry.request_id,
+            document_id=document.document_id,
+            original_filename=f"PMID:{pmid}",
+            file_hash=synthetic_hash,
+            status="queued",
+        )
+        postgres.append_paper_task_log(
+            paper_entry.paper_task_id,
+            status="queued",
+            node="acquisition",
+            message=f"PubMed paper queued: {pmid}",
+            payload={"pmid": pmid},
+        )
+
+        async_result = process_pubmed_paper_task.apply_async(
+            args=[
+                pmid,
+                str(document.document_id),
+                str(paper_entry.paper_task_id),
+                str(request_entry.request_id),
+            ],
+        )
+        paper_entry = postgres.update_paper_task(
+            paper_entry.paper_task_id,
+            celery_task_id=async_result.id,
+        )
+        paper_entries.append(paper_entry)
+
+    request_entry = postgres.refresh_task_request_status(request_entry.request_id)
+    return TaskRequestCreateResponse(
+        request_id=str(request_entry.request_id),
+        status=request_entry.status,
+        papers=[_paper_item_model(item) for item in paper_entries],
+    )
+
+
+@router.post(
+    "/requests/upload",
+    summary="Create request by upload",
+    description=(
+        "Create a request with natural-language task form and upload files (PDF/DOCX).\n"
+        "Applies global SHA-256 dedup, one Celery task per non-duplicate paper, and request-level status aggregation."
+    ),
+    response_model=TaskRequestCreateResponse,
+    responses={
+        400: {"model": ErrorResponse, "description": "Invalid input or upload constraints violated."},
+        503: {"model": ErrorResponse, "description": "Storage/database/queue unavailable."},
+    },
+)
+async def create_task_request_by_upload(
+    task_form: str = Form(..., description="Natural-language task form text."),
+    files: List[UploadFile] = File(..., description="Uploaded files (PDF/DOCX)."),
+) -> TaskRequestCreateResponse:
+    normalized_form = (task_form or "").strip()
+    if not normalized_form:
+        raise HTTPException(status_code=400, detail="Task form text is required")
+    if not files:
+        raise HTTPException(status_code=400, detail="At least one file is required")
+    if len(files) > MAX_UPLOAD_FILES:
+        raise HTTPException(status_code=400, detail=f"Too many files: max {MAX_UPLOAD_FILES}")
+
+    try:
+        postgres = get_postgres_client()
+        minio = MinIOClient()
+    except Exception as exc:
+        logger.exception("Failed to initialize dependencies for upload request: {}", exc)
+        raise HTTPException(status_code=503, detail="Dependency unavailable")
+
+    request_entry = postgres.create_task_request(
+        task_form_text=normalized_form,
+        status="queued",
+        metadata={"entry": "upload", "paper_count": len(files)},
+    )
+
+    total_bytes = 0
+    paper_entries: List[Any] = []
+
+    for upload in files:
+        filename = upload.filename or ""
+        suffix = Path(filename).suffix.lower()
+        if suffix not in ALLOWED_SUFFIXES:
+            raise HTTPException(status_code=400, detail="Unsupported file type. Allowed: PDF, DOCX")
+
+        payload = await upload.read()
+        file_size = len(payload)
+        if file_size > MAX_UPLOAD_FILE_SIZE_BYTES:
+            raise HTTPException(status_code=400, detail="File too large. Max 10MB per file")
+        total_bytes += file_size
+        if total_bytes > MAX_UPLOAD_TOTAL_BYTES:
+            raise HTTPException(status_code=400, detail="Total upload size exceeded. Max 50MB")
+
+        file_hash = hashlib.sha256(payload).hexdigest()
+        existing_document = postgres.find_document_by_hash(file_hash)
+        historical_paper = postgres.find_latest_paper_task_by_hash(file_hash)
+
+        if existing_document is not None:
+            paper_entry = postgres.create_paper_task(
+                request_id=request_entry.request_id,
+                document_id=existing_document.document_id,
+                original_filename=filename or None,
+                file_hash=file_hash,
+                status="success",
+                error_code="FILE_DUPLICATE",
+                duplicate_of=(historical_paper.paper_task_id if historical_paper else None),
+            )
+            postgres.append_paper_task_log(
+                paper_entry.paper_task_id,
+                status="success",
+                node="dedup",
+                error_code="FILE_DUPLICATE",
+                message="Duplicate file detected by SHA-256",
+            )
+            paper_entries.append(paper_entry)
+            continue
+
+        try:
+            upload_ref = await minio.upload_literature_upload(
+                filename=filename or f"{file_hash}{suffix}",
+                payload=payload,
+                content_type=upload.content_type or "application/octet-stream",
+                object_prefix=file_hash,
+                metadata={"hash": file_hash, "filename": filename},
+            )
+        except Exception as exc:
+            logger.exception("Failed to upload file to object storage: {}", exc)
+            raise HTTPException(status_code=503, detail="Failed to store uploaded file")
+
+        document = postgres.create_document(
+            title=filename or file_hash,
+            original_filename=filename or None,
+            local_path=upload_ref.object_key,
+            file_hash=file_hash,
+            status="queued",
+        )
+        paper_entry = postgres.create_paper_task(
+            request_id=request_entry.request_id,
+            document_id=document.document_id,
+            original_filename=filename or None,
+            file_hash=file_hash,
+            status="queued",
+        )
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
+            tmp_file.write(payload)
+            tmp_path = tmp_file.name
+
+        try:
+            async_result = process_pdf_task.apply_async(
+                args=[[tmp_path]],
+                kwargs={
+                    "file_hash": file_hash,
+                    "document_id": str(document.document_id),
+                    "paper_task_id": str(paper_entry.paper_task_id),
+                    "request_id": str(request_entry.request_id),
+                },
+            )
+        except Exception as exc:
+            logger.exception("Failed to enqueue paper task {}: {}", paper_entry.paper_task_id, exc)
+            postgres.update_paper_task(
+                paper_entry.paper_task_id,
+                status="failed",
+                error_code="INTERNAL_ERROR",
+            )
+            postgres.append_paper_task_log(
+                paper_entry.paper_task_id,
+                status="failed",
+                node="queue",
+                error_code="INTERNAL_ERROR",
+                message="Task queue unavailable",
+            )
+            raise HTTPException(status_code=503, detail="Task queue unavailable")
+
+        paper_entry = postgres.update_paper_task(
+            paper_entry.paper_task_id,
+            celery_task_id=async_result.id,
+        )
+        postgres.append_paper_task_log(
+            paper_entry.paper_task_id,
+            status="queued",
+            node="queue",
+            message="Paper task queued",
+            payload={"celery_task_id": async_result.id},
+        )
+        paper_entries.append(paper_entry)
+
+    request_entry = postgres.refresh_task_request_status(request_entry.request_id)
+    return TaskRequestCreateResponse(
+        request_id=str(request_entry.request_id),
+        status=request_entry.status,
+        papers=[_paper_item_model(item) for item in paper_entries],
+    )
+
+
+@router.get(
+    "/requests/{request_id}",
+    summary="Get request status",
+    description="Fetch aggregated request status and all paper task states.",
+    response_model=TaskRequestStatusResponse,
+    responses={404: {"model": ErrorResponse, "description": "Request not found."}},
+)
+def get_task_request_status(
+    request_id: str = ApiPath(..., description="Request UUIDv4."),
+) -> TaskRequestStatusResponse:
+    try:
+        request_uuid = UUID(request_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid request_id")
+
+    postgres = get_postgres_client()
+    request_entry = postgres.refresh_task_request_status(request_uuid)
+    if request_entry is None:
+        raise HTTPException(status_code=404, detail="Request not found")
+    papers = postgres.list_paper_tasks_by_request(request_uuid)
+    return TaskRequestStatusResponse(
+        request_id=str(request_entry.request_id),
+        status=request_entry.status,
+        papers=[_paper_item_model(item) for item in papers],
+    )
+
+
 @router.get(
     "/{task_id}",
     summary="Get task status",
@@ -169,7 +540,7 @@ def create_task(payload: TaskCreateRequest) -> TaskCreateResponse:
     },
 )
 def get_task_status(
-    task_id: str = Path(..., description="Celery task id."),
+    task_id: str = ApiPath(..., description="Celery task id."),
 ) -> TaskStatusResponse:
     """Return latest task status from Celery backend."""
     logger.debug("Fetching task status for task_id: {}", task_id)

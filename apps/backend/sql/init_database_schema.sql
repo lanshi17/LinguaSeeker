@@ -48,6 +48,71 @@ CREATE TABLE IF NOT EXISTS task_logs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
+-- 3c. task_requests
+CREATE TABLE IF NOT EXISTS task_requests (
+    request_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    task_form_text TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'queued' NOT NULL,
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ix_task_requests_status ON task_requests (status);
+
+-- 3d. paper_tasks
+CREATE TABLE IF NOT EXISTS paper_tasks (
+    paper_task_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_id UUID NOT NULL REFERENCES task_requests(request_id) ON DELETE CASCADE,
+    document_id UUID REFERENCES documents(document_id) ON DELETE SET NULL,
+    original_filename VARCHAR(500),
+    file_hash VARCHAR(64),
+    status VARCHAR(50) DEFAULT 'queued' NOT NULL,
+    error_code VARCHAR(50),
+    duplicate_of UUID REFERENCES paper_tasks(paper_task_id) ON DELETE SET NULL,
+    celery_task_id VARCHAR(100),
+    fulltext_unavailable VARCHAR(10) DEFAULT 'false' NOT NULL,
+    warning_codes JSONB,
+    node_trace JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ix_paper_tasks_request_id ON paper_tasks (request_id);
+CREATE INDEX IF NOT EXISTS ix_paper_tasks_status ON paper_tasks (status);
+CREATE INDEX IF NOT EXISTS ix_paper_tasks_file_hash ON paper_tasks (file_hash);
+CREATE INDEX IF NOT EXISTS ix_paper_tasks_celery_task_id ON paper_tasks (celery_task_id);
+
+-- 3e. paper_task_logs
+CREATE TABLE IF NOT EXISTS paper_task_logs (
+    log_id SERIAL PRIMARY KEY,
+    paper_task_id UUID NOT NULL REFERENCES paper_tasks(paper_task_id) ON DELETE CASCADE,
+    status VARCHAR(50) NOT NULL,
+    node VARCHAR(50),
+    error_code VARCHAR(50),
+    message TEXT,
+    payload JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ix_paper_task_logs_paper_task_id ON paper_task_logs (paper_task_id);
+CREATE INDEX IF NOT EXISTS ix_paper_task_logs_status ON paper_task_logs (status);
+
+-- 3f. sentence_alignments
+CREATE TABLE IF NOT EXISTS sentence_alignments (
+    alignment_id SERIAL PRIMARY KEY,
+    paper_task_id UUID NOT NULL REFERENCES paper_tasks(paper_task_id) ON DELETE CASCADE,
+    source_sentence TEXT NOT NULL,
+    en_sentence TEXT NOT NULL,
+    source_start INTEGER,
+    source_end INTEGER,
+    en_start INTEGER,
+    en_end INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ix_sentence_alignments_paper_task_id ON sentence_alignments (paper_task_id);
+
 -- 4. entities
 CREATE TABLE IF NOT EXISTS entities (
     entity_id SERIAL PRIMARY KEY,

@@ -157,12 +157,12 @@ class GraphSyncService:
         transcript_id = fused_core.get("transcript_id") or ""
         ref_genome = self._normalize_string(ref_genome_info.get("version")) or ""
         disease_name = fused_core.get("disease_name") or ""
-		structural_hint = {}
-		structural_candidate = fused_core.get("_structural_variant")
-		if isinstance(structural_candidate, dict):
-			structural_hint = structural_candidate
-			if isinstance(extracted, dict):
-				extracted["_structural_variant"] = structural_candidate
+        structural_hint: Dict[str, Any] = {}
+        structural_candidate = fused_core.get("_structural_variant")
+        if isinstance(structural_candidate, dict):
+            structural_hint = structural_candidate
+            if isinstance(extracted, dict):
+                extracted["_structural_variant"] = structural_candidate
         icd10 = self._normalize_string(disease_info.get("icd10_code")) if disease_info else ""
         species = self._normalize_string(species_info.get("species_name")) or ""
         phenotype_desc = self._normalize_string(phenotype_info.get("phenotype_description")) or ""
@@ -237,95 +237,95 @@ class GraphSyncService:
             transcript_id=transcript_id,
             disease_name=disease_name,
         )
-		integrity_context["field_resolution"] = resolution_details
-		integrity_context["validity_status"] = validity_status
-		integrity_context["validity_reason"] = validity_reason
-		if structural_hint:
-			integrity_context["structural_variant"] = structural_hint
-		if manual_review_detail:
-			integrity_context["pending_manual_review"] = manual_review_detail
+        integrity_context["field_resolution"] = resolution_details
+        integrity_context["validity_status"] = validity_status
+        integrity_context["validity_reason"] = validity_reason
+        if structural_hint:
+            integrity_context["structural_variant"] = structural_hint
 
-		manual_review_required = bool(structural_hint)
-		manual_review_detail: Optional[Dict[str, Any]] = None
-		missing_core_fields = self._missing_core_fields(core_field_map, structural_hint)
-		if missing_core_fields:
-			can_continue = self._can_continue_with_structural_fallback(
-				missing_core_fields,
-				structural_hint,
-			)
-			if not can_continue:
-				logger.warning(
-					"Skipping evidence insert for document {} due to missing core fields {} | context={}",
-					canonical_document_id,
-					missing_core_fields,
-					integrity_context,
-				)
-				self._log_document_summary(
-					canonical_document_id,
-					success=False,
-					summary={
-						"gene_symbol": gene_symbol,
-						"variant_hgvs_c": variant_hgvs_c,
-						"variant_hgvs_p": variant_hgvs_p,
-						"transcript_id": transcript_id,
-						"disease_name": disease_name,
-						"confidence": overall_conf,
-						"validity_status": validity_status,
-					},
-				)
-				self._archive_failure_case(
-					canonical_document_id,
-					reason="missing_core_fields",
-					missing_fields=missing_core_fields,
-					resolution_details=resolution_details,
-				)
-			self._track_missing_fields(missing_core_fields)
-			if self._should_mark_manual_review_on_skip(
-				missing_core_fields,
-				gene_symbol,
-				disease_name,
-				transcript_id,
-			):
-				skip_detail = {
-					"reason": "missing_structural_variant",
-					"missing_fields": missing_core_fields,
-					"structural_hint": structural_hint,
-				}
-				self._mark_pending_manual_review(
-					uuid_document_id,
-					skip_detail,
-					resolution_details,
-				)
-				retryable = any(
-					"not_provided" in details.get("reasons", [])
-					or "section_missing" in details.get("reasons", [])
-					or "empty_string" in details.get("reasons", [])
-					for field, details in resolution_details.items()
-					if field in self._CORE_FIELD_LABELS
-				)
-				return {
-					"pg_evidence_id": None,
-					"neo4j_synced": False,
-					"skipped": True,
-					"reason": "missing_core_fields",
-					"missing_fields": missing_core_fields,
-					"context": integrity_context,
-					"retryable": retryable,
-				}
-			manual_review_required = True
-			manual_review_detail = {
-				"reason": "structural_cnv_missing_hgvs",
-				"missing_fields": list(missing_core_fields),
-				"structural_hint": structural_hint,
-			}
-			missing_core_fields = []
+        manual_review_required = bool(structural_hint)
+        manual_review_detail: Optional[Dict[str, Any]] = None
+        missing_core_fields = self._missing_core_fields(core_field_map, structural_hint)
+        if missing_core_fields:
+            can_continue = self._can_continue_with_structural_fallback(
+                missing_core_fields,
+                structural_hint,
+            )
+            if not can_continue:
+                logger.warning(
+                    "Skipping evidence insert for document {} due to missing core fields {} | context={}",
+                    canonical_document_id,
+                    missing_core_fields,
+                    integrity_context,
+                )
+                self._log_document_summary(
+                    canonical_document_id,
+                    success=False,
+                    summary={
+                        "gene_symbol": gene_symbol,
+                        "variant_hgvs_c": variant_hgvs_c,
+                        "variant_hgvs_p": variant_hgvs_p,
+                        "transcript_id": transcript_id,
+                        "disease_name": disease_name,
+                        "confidence": overall_conf,
+                        "validity_status": validity_status,
+                    },
+                )
+                self._archive_failure_case(
+                    canonical_document_id,
+                    reason="missing_core_fields",
+                    missing_fields=missing_core_fields,
+                    resolution_details=resolution_details,
+                )
+                self._track_missing_fields(missing_core_fields)
+                if self._should_mark_manual_review_on_skip(
+                    missing_core_fields,
+                    gene_symbol,
+                    disease_name,
+                    transcript_id,
+                ):
+                    skip_detail = {
+                        "reason": "missing_structural_variant",
+                        "missing_fields": missing_core_fields,
+                        "structural_hint": structural_hint,
+                    }
+                    self._mark_pending_manual_review(
+                        uuid_document_id,
+                        skip_detail,
+                        resolution_details,
+                    )
+                retryable = any(
+                    "not_provided" in details.get("reasons", [])
+                    or "section_missing" in details.get("reasons", [])
+                    or "empty_string" in details.get("reasons", [])
+                    for field, details in resolution_details.items()
+                    if field in self._CORE_FIELD_LABELS
+                )
+                return {
+                    "pg_evidence_id": None,
+                    "neo4j_synced": False,
+                    "skipped": True,
+                    "reason": "missing_core_fields",
+                    "missing_fields": missing_core_fields,
+                    "context": integrity_context,
+                    "retryable": retryable,
+                }
+            manual_review_required = True
+            manual_review_detail = {
+                "reason": "structural_cnv_missing_hgvs",
+                "missing_fields": list(missing_core_fields),
+                "structural_hint": structural_hint,
+            }
+            missing_core_fields = []
 
-		if structural_hint and manual_review_detail is None:
-			manual_review_detail = {
-				"reason": "synthetic_structural_descriptor",
-				"missing_fields": [],
-				"structural_hint": structural_hint,
-			}
+        if structural_hint and manual_review_detail is None:
+            manual_review_detail = {
+                "reason": "synthetic_structural_descriptor",
+                "missing_fields": [],
+                "structural_hint": structural_hint,
+            }
+        if manual_review_detail:
+            integrity_context["pending_manual_review"] = manual_review_detail
 
         # 1) --- PostgreSQL ---
         try:
@@ -401,18 +401,18 @@ class GraphSyncService:
             )
             raise
 
-		if manual_review_required:
-			review_detail = dict(manual_review_detail or {})
-			review_detail.setdefault("missing_fields", [])
-			review_detail.setdefault("structural_hint", structural_hint)
-			review_detail["evidence_id"] = evidence_id
-			self._mark_pending_manual_review(
-				uuid_document_id,
-				review_detail,
-				resolution_details,
-			)
+        if manual_review_required:
+            review_detail = dict(manual_review_detail or {})
+            review_detail.setdefault("missing_fields", [])
+            review_detail.setdefault("structural_hint", structural_hint)
+            review_detail["evidence_id"] = evidence_id
+            self._mark_pending_manual_review(
+                uuid_document_id,
+                review_detail,
+                resolution_details,
+            )
 
-		if variation_id is not None:
+        if variation_id is not None:
             doc_entity = None
             get_doc = getattr(self._pg, "get_document_by_id", None)
             if callable(get_doc):
@@ -433,24 +433,24 @@ class GraphSyncService:
 
         # 2) --- Neo4j ---
         neo4j_ok = False
-		try:
-			self._sync_to_neo4j(
-				document_id=canonical_document_id,
-				evidence_id=str(evidence_id),
-				gene_symbol=gene_symbol,
-				variant_hgvs_c=variant_hgvs_c,
-				variant_hgvs_p=variant_hgvs_p,
-				variation_id=variation_id,
-				transcript_id=transcript_id,
-				disease_name=disease_name,
-				icd10=icd10,
-				phenotype_desc=phenotype_desc,
-				species=species,
-				strength=strength,
-				classification=classification,
-				overall_conf=overall_conf,
-				structural_hint=structural_hint,
-			)
+        try:
+            self._sync_to_neo4j(
+                document_id=canonical_document_id,
+                evidence_id=str(evidence_id),
+                gene_symbol=gene_symbol,
+                variant_hgvs_c=variant_hgvs_c,
+                variant_hgvs_p=variant_hgvs_p,
+                variation_id=variation_id,
+                transcript_id=transcript_id,
+                disease_name=disease_name,
+                icd10=icd10,
+                phenotype_desc=phenotype_desc,
+                species=species,
+                strength=strength,
+                classification=classification,
+                overall_conf=overall_conf,
+                structural_hint=structural_hint,
+            )
             neo4j_ok = True
         except Exception as e:
             logger.error("Neo4j sync failed for evidence {}: {}", evidence_id, e)
@@ -508,47 +508,47 @@ class GraphSyncService:
         normalized.setdefault("annotation_schema_version", "1.0")
         return normalized
 
-	@classmethod
-	def _missing_core_fields(
-		cls,
-		core_fields: Dict[str, Optional[str]],
-		structural_hint: Optional[Dict[str, Any]] = None,
-	) -> List[str]:
-		missing: List[str] = []
-		structural_substitute = bool(
-			structural_hint
-			and structural_hint.get("exon_range")
-			and structural_hint.get("transcript_id")
-		)
-		for key, label in cls._CORE_FIELD_LABELS.items():
-			value = core_fields.get(key)
-			if key == "variant_descriptor" and not value and structural_substitute:
-				continue
-			if not value:
-				missing.append(label)
-		return missing
+    @classmethod
+    def _missing_core_fields(
+        cls,
+        core_fields: Dict[str, Optional[str]],
+        structural_hint: Optional[Dict[str, Any]] = None,
+    ) -> List[str]:
+        missing: List[str] = []
+        structural_substitute = bool(
+            structural_hint
+            and structural_hint.get("exon_range")
+            and structural_hint.get("transcript_id")
+        )
+        for key, label in cls._CORE_FIELD_LABELS.items():
+            value = core_fields.get(key)
+            if key == "variant_descriptor" and not value and structural_substitute:
+                continue
+            if not value:
+                missing.append(label)
+        return missing
 
-	def _can_continue_with_structural_fallback(
-		self,
-		missing_fields: List[str],
-		structural_hint: Optional[Dict[str, Any]],
-	) -> bool:
-		if not structural_hint:
-			return False
-		if not structural_hint.get("exon_range") or not structural_hint.get("transcript_id"):
-			return False
-		return set(missing_fields).issubset({"variant_hgvs"})
+    def _can_continue_with_structural_fallback(
+        self,
+        missing_fields: List[str],
+        structural_hint: Optional[Dict[str, Any]],
+    ) -> bool:
+        if not structural_hint:
+            return False
+        if not structural_hint.get("exon_range") or not structural_hint.get("transcript_id"):
+            return False
+        return set(missing_fields).issubset({"variant_hgvs"})
 
-	def _should_mark_manual_review_on_skip(
-		self,
-		missing_fields: List[str],
-		gene_symbol: Optional[str],
-		disease_name: Optional[str],
-		transcript_id: Optional[str],
-	) -> bool:
-		if not gene_symbol or not disease_name or not transcript_id:
-			return False
-		return set(missing_fields).issubset({"variant_hgvs"})
+    def _should_mark_manual_review_on_skip(
+        self,
+        missing_fields: List[str],
+        gene_symbol: Optional[str],
+        disease_name: Optional[str],
+        transcript_id: Optional[str],
+    ) -> bool:
+        if not gene_symbol or not disease_name or not transcript_id:
+            return False
+        return set(missing_fields).issubset({"variant_hgvs"})
 
     @staticmethod
     def _snapshot_context(document_id: str, **fields: Optional[str]) -> Dict[str, Optional[str]]:
@@ -591,11 +591,11 @@ class GraphSyncService:
         except Exception:
             return None
 
-	def _collect_fallback_contexts(self, evidence_output: Dict[str, Any]) -> List[Any]:
-		contexts: List[Any] = []
-		for key in (
-			"metadata",
-			"document_metadata",
+    def _collect_fallback_contexts(self, evidence_output: Dict[str, Any]) -> List[Any]:
+        contexts: List[Any] = []
+        for key in (
+            "metadata",
+            "document_metadata",
             "contextual_metadata",
             "fallback_fields",
             "manual_annotations",
@@ -603,31 +603,31 @@ class GraphSyncService:
             value = evidence_output.get(key)
             if isinstance(value, (dict, list)):
                 contexts.append(value)
-		contexts.append(evidence_output)
-		return contexts
+        contexts.append(evidence_output)
+        return contexts
 
-	@staticmethod
-	def _extract_structural_variant_hint(payload: Any) -> Optional[Dict[str, Any]]:
-		if isinstance(payload, dict):
-			hint = payload.get("_structural_variant")
-			if isinstance(hint, dict):
-				return hint
-		return None
+    @staticmethod
+    def _extract_structural_variant_hint(payload: Any) -> Optional[Dict[str, Any]]:
+        if isinstance(payload, dict):
+            hint = payload.get("_structural_variant")
+            if isinstance(hint, dict):
+                return hint
+        return None
 
-	def _resolve_core_fields(
-		self,
-		evidence_output: Dict[str, Any],
-		extracted_candidates: Dict[str, Dict[str, Any]],
-	) -> tuple[Dict[str, Optional[str]], Dict[str, Dict[str, Any]]]:
+    def _resolve_core_fields(
+        self,
+        evidence_output: Dict[str, Any],
+        extracted_candidates: Dict[str, Dict[str, Any]],
+    ) -> tuple[Dict[str, Optional[str]], Dict[str, Dict[str, Any]]]:
         fused: Dict[str, Optional[str]] = {}
         details: Dict[str, Dict[str, Any]] = {}
         fallback_payloads = self._collect_fallback_contexts(evidence_output)
-		for field, meta in extracted_candidates.items():
-			raw_value = meta.get("value")
-			normalized = self._normalize_string(raw_value)
-			if normalized:
-				fused[field] = normalized
-				details[field] = {
+        for field, meta in extracted_candidates.items():
+            raw_value = meta.get("value")
+            normalized = self._normalize_string(raw_value)
+            if normalized:
+                fused[field] = normalized
+                details[field] = {
                     "source": meta.get("source"),
                     "status": "resolved",
                 }
@@ -653,55 +653,55 @@ class GraphSyncService:
                 }
                 continue
 
-			fused[field] = None
-			details[field] = {
-				"source": None,
-				"status": "missing",
-				"reasons": reasons or ["not_found"],
-				"aliases_checked": self._FIELD_ALIAS_MAP.get(field, []),
-			}
+            fused[field] = None
+            details[field] = {
+                "source": None,
+                "status": "missing",
+                "reasons": reasons or ["not_found"],
+                "aliases_checked": self._FIELD_ALIAS_MAP.get(field, []),
+            }
 
-		if not fused.get("variant_hgvs_c"):
-			structural_hint = self._resolve_structural_hint(
-				evidence_output,
-				transcript_id=fused.get("transcript_id"),
-				disease_name=fused.get("disease_name"),
-			)
-			if structural_hint:
-				payload = structural_hint.to_payload()
-				builder = payload.get("synthetic_hgvs")
-				if builder:
-					fused["variant_hgvs_c"] = builder
-					if not fused.get("variant_descriptor"):
-						fused["variant_descriptor"] = builder
-				fused["_structural_variant"] = payload
-				variant_details = details.get("variant_hgvs_c", {}).copy()
-				variant_details.update(
-					{
-						"source": payload.get("source"),
-						"status": "synthetic_structural",
-						"structural_hint": payload,
-					}
-				)
-				details["variant_hgvs_c"] = variant_details
+        if not fused.get("variant_hgvs_c"):
+            structural_hint = self._resolve_structural_hint(
+                evidence_output,
+                transcript_id=fused.get("transcript_id"),
+                disease_name=fused.get("disease_name"),
+            )
+            if structural_hint:
+                payload = structural_hint.to_payload()
+                builder = payload.get("synthetic_hgvs")
+                if builder:
+                    fused["variant_hgvs_c"] = builder
+                    if not fused.get("variant_descriptor"):
+                        fused["variant_descriptor"] = builder
+                fused["_structural_variant"] = payload
+                variant_details = details.get("variant_hgvs_c", {}).copy()
+                variant_details.update(
+                    {
+                        "source": payload.get("source"),
+                        "status": "synthetic_structural",
+                        "structural_hint": payload,
+                    }
+                )
+                details["variant_hgvs_c"] = variant_details
 
-		return fused, details
+        return fused, details
 
-	def _resolve_structural_hint(
-		self,
-		evidence_output: Dict[str, Any],
-		transcript_id: Optional[str],
-		disease_name: Optional[str],
-	) -> Optional[StructuralVariantParseResult]:
-		try:
-			return parse_structural_variant(
-				evidence_output,
-				transcript_id=transcript_id,
-				disease_name=disease_name,
-			)
-		except Exception as exc:  # pragma: no cover - defensive guard
-			logger.warning("Structural variant parser failed: {}", exc)
-			return None
+    def _resolve_structural_hint(
+        self,
+        evidence_output: Dict[str, Any],
+        transcript_id: Optional[str],
+        disease_name: Optional[str],
+    ) -> Optional[StructuralVariantParseResult]:
+        try:
+            return parse_structural_variant(
+                evidence_output,
+                transcript_id=transcript_id,
+                disease_name=disease_name,
+            )
+        except Exception as exc:  # pragma: no cover - defensive guard
+            logger.warning("Structural variant parser failed: {}", exc)
+            return None
 
     def _search_aliases(self, payloads: List[Any], aliases: List[str]) -> Optional[str]:
         if not aliases:
@@ -745,9 +745,9 @@ class GraphSyncService:
             return "review", "below_threshold"
         return "review", "low_confidence"
 
-	def _archive_failure_case(
-		self,
-		document_id: str,
+    def _archive_failure_case(
+        self,
+        document_id: str,
         reason: str,
         missing_fields: List[str],
         resolution_details: Dict[str, Dict[str, Any]],
@@ -766,60 +766,60 @@ class GraphSyncService:
         except Exception as exc:  # pragma: no cover - 仅记录日志
             logger.warning("Failed to archive failure case for {}: {}", document_id, exc)
 
-	def _track_missing_fields(self, missing_fields: List[str]) -> None:
-		if not missing_fields:
-			return
-		for field in missing_fields:
-			self._MISSING_FIELD_COUNTER[field] += 1
-			count = self._MISSING_FIELD_COUNTER[field]
-			threshold = max(1, self._MISSING_FIELD_ALERT_THRESHOLD)
-			if threshold and count % threshold == 0:
-				logger.warning(
-					"Core field {} missing {} times; consider targeted extraction tuning",
-					field,
-					count,
-				)
+    def _track_missing_fields(self, missing_fields: List[str]) -> None:
+        if not missing_fields:
+            return
+        for field in missing_fields:
+            self._MISSING_FIELD_COUNTER[field] += 1
+            count = self._MISSING_FIELD_COUNTER[field]
+            threshold = max(1, self._MISSING_FIELD_ALERT_THRESHOLD)
+            if threshold and count % threshold == 0:
+                logger.warning(
+                    "Core field {} missing {} times; consider targeted extraction tuning",
+                    field,
+                    count,
+                )
 
-	def _mark_pending_manual_review(
-		self,
-		document_id: UUID,
-		detail: Dict[str, Any],
-		resolution_details: Dict[str, Dict[str, Any]],
-	) -> None:
-		try:
-			self._pg.update_document(document_id, status="pending_manual_review")
-		except Exception as exc:  # pragma: no cover - defensive logging only
-			logger.warning("Failed to mark document {} pending review: {}", document_id, exc)
+    def _mark_pending_manual_review(
+        self,
+        document_id: UUID,
+        detail: Dict[str, Any],
+        resolution_details: Dict[str, Dict[str, Any]],
+    ) -> None:
+        try:
+            self._pg.update_document(document_id, status="pending_manual_review")
+        except Exception as exc:  # pragma: no cover - defensive logging only
+            logger.warning("Failed to mark document {} pending review: {}", document_id, exc)
 
-		log_payload = {
-			"category": "non_standard_variant",
-			"detail": detail,
-			"field_resolution": resolution_details,
-		}
-		task_record = None
-		try:
-			task_record = self._pg.create_task(
-				document_id=document_id,
-				task_type="manual_review",
-				status="pending_manual_review",
-				result=log_payload,
-			)
-		except Exception as exc:  # pragma: no cover
-			logger.warning("Failed to enqueue manual review task for {}: {}", document_id, exc)
+        log_payload = {
+            "category": "non_standard_variant",
+            "detail": detail,
+            "field_resolution": resolution_details,
+        }
+        task_record = None
+        try:
+            task_record = self._pg.create_task(
+                document_id=document_id,
+                task_type="manual_review",
+                status="pending_manual_review",
+                result=log_payload,
+            )
+        except Exception as exc:  # pragma: no cover
+            logger.warning("Failed to enqueue manual review task for {}: {}", document_id, exc)
 
-		append_log = getattr(self._pg, "append_task_log", None)
-		if callable(append_log):
-			try:
-				append_log(
-					document_id=document_id,
-					status="pending_manual_review",
-					category="manual_review",
-					payload=log_payload,
-					missing_fields_detail=detail,
-					task_id=getattr(task_record, "task_id", None),
-				)
-			except Exception as exc:  # pragma: no cover
-				logger.warning("Failed to append manual review log for {}: {}", document_id, exc)
+        append_log = getattr(self._pg, "append_task_log", None)
+        if callable(append_log):
+            try:
+                append_log(
+                    document_id=document_id,
+                    status="pending_manual_review",
+                    category="manual_review",
+                    payload=log_payload,
+                    missing_fields_detail=detail,
+                    task_id=getattr(task_record, "task_id", None),
+                )
+            except Exception as exc:  # pragma: no cover
+                logger.warning("Failed to append manual review log for {}: {}", document_id, exc)
 
     def _log_document_summary(self, document_id: str, success: bool, summary: Dict[str, Any]) -> None:
         log = logger.info if success else logger.warning
@@ -838,173 +838,173 @@ class GraphSyncService:
 
     # ==================== Neo4j 写入 ====================
 
-	def _sync_to_neo4j(
-		self,
-		document_id: str,
-		evidence_id: str,
-		gene_symbol: str,
-		variant_hgvs_c: str,
-		variant_hgvs_p: str,
-		variation_id: Optional[int],
-		transcript_id: str,
-		disease_name: str,
-		icd10: str,
-		phenotype_desc: str,
-		species: str,
-		strength: str,
-		classification: str,
-		overall_conf: float,
-		structural_hint: Optional[Dict[str, Any]] = None,
-	) -> None:
-		"""将实体和关系写入 Neo4j"""
-		logger.info(
-			"Neo4j syncing evidence {} (doc {}) gene={} variant={} classification={} strength={}",
-			evidence_id,
-			document_id,
-			gene_symbol or "-",
-			variant_hgvs_c or "-",
-			classification or "-",
-			strength or "-",
-		)
-		logger.debug("Ensuring document node {} exists", document_id)
-		neo = self._neo4j
-		variant_structural_key = None
-		variant_exon_range = None
-		variant_structural_type = None
-		variant_transcript = transcript_id
-		if isinstance(structural_hint, dict):
-			variant_structural_key = structural_hint.get("structural_key")
-			variant_exon_range = structural_hint.get("exon_range")
-			variant_structural_type = structural_hint.get("structural_type")
-			variant_transcript = structural_hint.get("transcript_id") or variant_transcript
+    def _sync_to_neo4j(
+        self,
+        document_id: str,
+        evidence_id: str,
+        gene_symbol: str,
+        variant_hgvs_c: str,
+        variant_hgvs_p: str,
+        variation_id: Optional[int],
+        transcript_id: str,
+        disease_name: str,
+        icd10: str,
+        phenotype_desc: str,
+        species: str,
+        strength: str,
+        classification: str,
+        overall_conf: float,
+        structural_hint: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """将实体和关系写入 Neo4j"""
+        logger.info(
+            "Neo4j syncing evidence {} (doc {}) gene={} variant={} classification={} strength={}",
+            evidence_id,
+            document_id,
+            gene_symbol or "-",
+            variant_hgvs_c or "-",
+            classification or "-",
+            strength or "-",
+        )
+        logger.debug("Ensuring document node {} exists", document_id)
+        neo = self._neo4j
+        variant_structural_key = None
+        variant_exon_range = None
+        variant_structural_type = None
+        variant_transcript = transcript_id
+        if isinstance(structural_hint, dict):
+            variant_structural_key = structural_hint.get("structural_key")
+            variant_exon_range = structural_hint.get("exon_range")
+            variant_structural_type = structural_hint.get("structural_type")
+            variant_transcript = structural_hint.get("transcript_id") or variant_transcript
 
-		neo.upsert_document(str(document_id))
+        neo.upsert_document(str(document_id))
 
-		if gene_symbol:
-			logger.debug("Upserting gene node {}", gene_symbol)
-			neo.upsert_gene(gene_symbol)
+        if gene_symbol:
+            logger.debug("Upserting gene node {}", gene_symbol)
+            neo.upsert_gene(gene_symbol)
 
-		variant_node_present = bool(
-			variant_hgvs_c or variant_structural_key or (variant_transcript and variant_exon_range)
-		)
-		if variant_node_present:
-			logger.debug(
-				"Upserting variant node {} (hgvs_p={}) variation_id={} structural_key={} exon_range={}",
-				variant_hgvs_c or variant_structural_key or "-",
-				variant_hgvs_p or "-",
-				variation_id or "-",
-				variant_structural_key or "-",
-				variant_exon_range or "-",
-			)
-			neo.upsert_variant(
-				variant_hgvs_c or None,
-				variation_id=variation_id,
-				hgvs_p=variant_hgvs_p or None,
-				structural_key=variant_structural_key,
-				transcript_id=variant_transcript or None,
-				exon_range=variant_exon_range,
-				structural_type=variant_structural_type,
-			)
-			if gene_symbol:
-				logger.debug(
-					"Linking gene {} to variant {} (variation_id={})",
-					gene_symbol,
-					variant_hgvs_c or variant_structural_key or "-",
-					variation_id or "-",
-				)
-				neo.link_gene_variant(
-					gene_symbol,
-					variant_hgvs_c or None,
-					variation_id=variation_id,
-					structural_key=variant_structural_key,
-					transcript_id=variant_transcript or None,
-					exon_range=variant_exon_range,
-				)
-			entity_key = None
-			entity_value = None
-			if variant_hgvs_c:
-				entity_key = "hgvs_c"
-				entity_value = variant_hgvs_c
-			elif variant_structural_key:
-				entity_key = "structural_key"
-				entity_value = variant_structural_key
-			if entity_key and entity_value:
-				logger.debug("Linking document {} to variant {} via {}", document_id, entity_value, entity_key)
-				neo.link_document_entity(str(document_id), "Variant", entity_key, entity_value)
+        variant_node_present = bool(
+            variant_hgvs_c or variant_structural_key or (variant_transcript and variant_exon_range)
+        )
+        if variant_node_present:
+            logger.debug(
+                "Upserting variant node {} (hgvs_p={}) variation_id={} structural_key={} exon_range={}",
+                variant_hgvs_c or variant_structural_key or "-",
+                variant_hgvs_p or "-",
+                variation_id or "-",
+                variant_structural_key or "-",
+                variant_exon_range or "-",
+            )
+            neo.upsert_variant(
+                variant_hgvs_c or None,
+                variation_id=variation_id,
+                hgvs_p=variant_hgvs_p or None,
+                structural_key=variant_structural_key,
+                transcript_id=variant_transcript or None,
+                exon_range=variant_exon_range,
+                structural_type=variant_structural_type,
+            )
+            if gene_symbol:
+                logger.debug(
+                    "Linking gene {} to variant {} (variation_id={})",
+                    gene_symbol,
+                    variant_hgvs_c or variant_structural_key or "-",
+                    variation_id or "-",
+                )
+                neo.link_gene_variant(
+                    gene_symbol,
+                    variant_hgvs_c or None,
+                    variation_id=variation_id,
+                    structural_key=variant_structural_key,
+                    transcript_id=variant_transcript or None,
+                    exon_range=variant_exon_range,
+                )
+            entity_key = None
+            entity_value = None
+            if variant_hgvs_c:
+                entity_key = "hgvs_c"
+                entity_value = variant_hgvs_c
+            elif variant_structural_key:
+                entity_key = "structural_key"
+                entity_value = variant_structural_key
+            if entity_key and entity_value:
+                logger.debug("Linking document {} to variant {} via {}", document_id, entity_value, entity_key)
+                neo.link_document_entity(str(document_id), "Variant", entity_key, entity_value)
 
-		if transcript_id and gene_symbol:
-			logger.debug("Upserting transcript {} and linking to gene {}", transcript_id, gene_symbol)
-			neo.upsert_transcript(transcript_id)
-			neo.link_gene_transcript(gene_symbol, transcript_id)
+        if transcript_id and gene_symbol:
+            logger.debug("Upserting transcript {} and linking to gene {}", transcript_id, gene_symbol)
+            neo.upsert_transcript(transcript_id)
+            neo.link_gene_transcript(gene_symbol, transcript_id)
 
-		if disease_name:
-			logger.debug("Upserting disease {} (icd10={})", disease_name, icd10 or "-")
-			neo.upsert_disease(disease_name, icd10_code=icd10 or None)
-			if gene_symbol:
-				logger.debug("Linking disease {} with gene {}", disease_name, gene_symbol)
-				neo.link_disease_gene(disease_name, gene_symbol)
-			neo.link_document_entity(str(document_id), "Disease", "name", disease_name)
+        if disease_name:
+            logger.debug("Upserting disease {} (icd10={})", disease_name, icd10 or "-")
+            neo.upsert_disease(disease_name, icd10_code=icd10 or None)
+            if gene_symbol:
+                logger.debug("Linking disease {} with gene {}", disease_name, gene_symbol)
+                neo.link_disease_gene(disease_name, gene_symbol)
+            neo.link_document_entity(str(document_id), "Disease", "name", disease_name)
 
-		if phenotype_desc:
-			logger.debug("Upserting phenotype {}", phenotype_desc)
-			neo.upsert_phenotype(phenotype_desc)
-			if variant_node_present:
-				logger.debug(
-					"Linking variant {} (variation_id={}) with phenotype {}",
-					variant_hgvs_c or variant_structural_key or "-",
-					variation_id or "-",
-					phenotype_desc,
-				)
-				neo.link_variant_phenotype(
-					variant_hgvs_c or None,
-					phenotype_desc,
-					variation_id=variation_id,
-					structural_key=variant_structural_key,
-					transcript_id=variant_transcript or None,
-					exon_range=variant_exon_range,
-				)
-			neo.link_document_entity(str(document_id), "Phenotype", "description", phenotype_desc)
+        if phenotype_desc:
+            logger.debug("Upserting phenotype {}", phenotype_desc)
+            neo.upsert_phenotype(phenotype_desc)
+            if variant_node_present:
+                logger.debug(
+                    "Linking variant {} (variation_id={}) with phenotype {}",
+                    variant_hgvs_c or variant_structural_key or "-",
+                    variation_id or "-",
+                    phenotype_desc,
+                )
+                neo.link_variant_phenotype(
+                    variant_hgvs_c or None,
+                    phenotype_desc,
+                    variation_id=variation_id,
+                    structural_key=variant_structural_key,
+                    transcript_id=variant_transcript or None,
+                    exon_range=variant_exon_range,
+                )
+            neo.link_document_entity(str(document_id), "Phenotype", "description", phenotype_desc)
 
-		if species:
-			logger.debug("Upserting species {}", species)
-			neo.upsert_species(species)
+        if species:
+            logger.debug("Upserting species {}", species)
+            neo.upsert_species(species)
 
-		logger.debug(
-			"Upserting evidence node {} with strength={}, classification={}, confidence={}",
-			evidence_id,
-			strength or "-",
-			classification or "-",
-			overall_conf,
-		)
-		neo.upsert_evidence(
-			evidence_id,
-			evidence_strength=strength,
-			classification=classification,
-			confidence=overall_conf,
-		)
-		if variant_node_present:
-			logger.debug(
-				"Linking variant {} (variation_id={}) to evidence {}",
-				variant_hgvs_c or variant_structural_key or "-",
-				variation_id or "-",
-				evidence_id,
-			)
-			neo.link_variant_evidence(
-				variant_hgvs_c or None,
-				evidence_id,
-				variation_id=variation_id,
-				structural_key=variant_structural_key,
-				transcript_id=variant_transcript or None,
-				exon_range=variant_exon_range,
-			)
-		logger.debug("Linking evidence {} to document {}", evidence_id, document_id)
-		neo.link_evidence_document(evidence_id, str(document_id))
+        logger.debug(
+            "Upserting evidence node {} with strength={}, classification={}, confidence={}",
+            evidence_id,
+            strength or "-",
+            classification or "-",
+            overall_conf,
+        )
+        neo.upsert_evidence(
+            evidence_id,
+            evidence_strength=strength,
+            classification=classification,
+            confidence=overall_conf,
+        )
+        if variant_node_present:
+            logger.debug(
+                "Linking variant {} (variation_id={}) to evidence {}",
+                variant_hgvs_c or variant_structural_key or "-",
+                variation_id or "-",
+                evidence_id,
+            )
+            neo.link_variant_evidence(
+                variant_hgvs_c or None,
+                evidence_id,
+                variation_id=variation_id,
+                structural_key=variant_structural_key,
+                transcript_id=variant_transcript or None,
+                exon_range=variant_exon_range,
+            )
+        logger.debug("Linking evidence {} to document {}", evidence_id, document_id)
+        neo.link_evidence_document(evidence_id, str(document_id))
 
-		if gene_symbol:
-			logger.debug("Linking document {} to gene {}", document_id, gene_symbol)
-			neo.link_document_entity(str(document_id), "Gene", "symbol", gene_symbol)
+        if gene_symbol:
+            logger.debug("Linking document {} to gene {}", document_id, gene_symbol)
+            neo.link_document_entity(str(document_id), "Gene", "symbol", gene_symbol)
 
-		logger.debug("Neo4j entity writes completed for evidence {}", evidence_id)
+        logger.debug("Neo4j entity writes completed for evidence {}", evidence_id)
 
     # ==================== 批量同步 ====================
 
@@ -1038,34 +1038,34 @@ class GraphSyncService:
         records = self._pg.get_evidence_for_document(document_id)
         synced = 0
         failed = 0
-		for rec in records:
-			logger.debug(
-				"Resyncing evidence {} for document {} (gene={}, variant={}, classification={})",
-				rec.evidence_id,
-				document_id,
-				getattr(rec, "gene_symbol", "") or "-",
-				getattr(rec, "variant_hgvs_c", "") or "-",
-				getattr(rec, "evidence_classification", "") or "-",
-			)
-			try:
-				structural_hint = self._extract_structural_variant_hint(getattr(rec, "extracted_fields", None))
-				self._sync_to_neo4j(
-					document_id=document_id,
-					evidence_id=str(rec.evidence_id),
-					gene_symbol=getattr(rec, "gene_symbol", "") or "",
-					variant_hgvs_c=getattr(rec, "variant_hgvs_c", "") or "",
-					variant_hgvs_p=getattr(rec, "variant_hgvs_p", "") or "",
-					variation_id=getattr(rec, "clinvar_variation_id", None),
-					transcript_id=getattr(rec, "transcript_id", "") or "",
-					disease_name=getattr(rec, "disease_name", "") or "",
-					icd10=getattr(rec, "icd10_code", "") or "",
-					phenotype_desc=getattr(rec, "phenotype", "") or "",
-					species=getattr(rec, "species", "") or "",
-					strength=getattr(rec, "evidence_strength", "") or "",
-					classification=getattr(rec, "evidence_classification", "") or "",
-					overall_conf=getattr(rec, "overall_confidence", 0.0) or 0.0,
-					structural_hint=structural_hint,
-				)
+        for rec in records:
+            logger.debug(
+                "Resyncing evidence {} for document {} (gene={}, variant={}, classification={})",
+                rec.evidence_id,
+                document_id,
+                getattr(rec, "gene_symbol", "") or "-",
+                getattr(rec, "variant_hgvs_c", "") or "-",
+                getattr(rec, "evidence_classification", "") or "-",
+            )
+            try:
+                structural_hint = self._extract_structural_variant_hint(getattr(rec, "extracted_fields", None))
+                self._sync_to_neo4j(
+                    document_id=document_id,
+                    evidence_id=str(rec.evidence_id),
+                    gene_symbol=getattr(rec, "gene_symbol", "") or "",
+                    variant_hgvs_c=getattr(rec, "variant_hgvs_c", "") or "",
+                    variant_hgvs_p=getattr(rec, "variant_hgvs_p", "") or "",
+                    variation_id=getattr(rec, "clinvar_variation_id", None),
+                    transcript_id=getattr(rec, "transcript_id", "") or "",
+                    disease_name=getattr(rec, "disease_name", "") or "",
+                    icd10=getattr(rec, "icd10_code", "") or "",
+                    phenotype_desc=getattr(rec, "phenotype", "") or "",
+                    species=getattr(rec, "species", "") or "",
+                    strength=getattr(rec, "evidence_strength", "") or "",
+                    classification=getattr(rec, "evidence_classification", "") or "",
+                    overall_conf=getattr(rec, "overall_confidence", 0.0) or 0.0,
+                    structural_hint=structural_hint,
+                )
                 synced += 1
             except Exception as e:
                 logger.error("Resync failed for evidence {}: {}", rec.evidence_id, e)

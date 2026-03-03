@@ -110,3 +110,57 @@ class TaskListResponse(BaseModel):
 				"count": 1,
 			}
 		}
+
+
+class PaperTaskItemResponse(BaseModel):
+	paper_task_id: str = Field(..., description="Paper task UUIDv4")
+	filename: Optional[str] = Field(None, description="Original filename")
+	status: str = Field(..., description="Paper status")
+	error_code: Optional[str] = Field(None, description="Error code when applicable")
+	duplicate_of: Optional[str] = Field(None, description="Historical paper_task_id when duplicated")
+	document_id: Optional[str] = Field(None, description="Document UUID when available")
+	celery_task_id: Optional[str] = Field(None, description="Celery task id for non-duplicate processing")
+
+
+class TaskRequestCreateResponse(BaseModel):
+	request_id: str = Field(..., description="Request UUIDv4")
+	status: str = Field(..., description="Request status")
+	papers: List[PaperTaskItemResponse] = Field(default_factory=list, description="Paper task results")
+
+
+class TaskRequestStatusResponse(BaseModel):
+	request_id: str = Field(..., description="Request UUIDv4")
+	status: str = Field(..., description="Aggregated request status")
+	papers: List[PaperTaskItemResponse] = Field(default_factory=list, description="Current paper task list")
+
+
+class PubMedCandidateItem(BaseModel):
+	pmid: str = Field(..., description="PubMed id")
+	title: str = Field(..., description="Article title")
+	journal: str = Field(..., description="Journal name")
+	pub_date: str = Field(..., description="Publication date")
+
+
+class PubMedCandidateSearchRequest(BaseModel):
+	task_form: str = Field(..., description="Natural-language task form")
+	target: str = Field(..., description="Target gene/variant or objective")
+	disease: str = Field(..., description="Disease name")
+	country: str = Field("不限", description="Country filter (ISO/alias)")
+	language: str = Field("auto", description="Language preference")
+	source: str = Field("pubmed", description="Data source, MVP supports pubmed only")
+	candidate_limit: int = Field(15, ge=1, le=15, description="Candidate limit, max 15")
+
+
+class PubMedCandidateSearchResponse(BaseModel):
+	task_form: str = Field(..., description="Echoed task form")
+	candidates: List[PubMedCandidateItem] = Field(default_factory=list, description="Candidate papers")
+
+
+class PubMedSelectionSubmitRequest(BaseModel):
+	task_form: str = Field(..., description="Natural-language task form")
+	selected_pmids: List[str] = Field(..., min_length=1, description="Selected PubMed IDs, 1~10")
+	target: str = Field(..., description="Target gene/variant or objective")
+	disease: str = Field(..., description="Disease name")
+	country: str = Field("不限", description="Country filter")
+	language: str = Field("auto", description="Language preference")
+	source: str = Field("pubmed", description="Data source")

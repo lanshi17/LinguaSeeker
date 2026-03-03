@@ -14,6 +14,10 @@ from sqlalchemy.orm import Session, sessionmaker, joinedload
 from src.config import settings as cfg
 from src.database.models import (
 	Base,
+	TaskRequest,
+	PaperTask,
+	PaperTaskLog,
+	SentenceAlignment,
 	Document,
 	Entity,
 	EntityDocumentMapping,
@@ -301,6 +305,207 @@ class PostgresClient:
 				missing_fields_detail=missing_fields_detail,
 			)
 			session.add(entry)
+			session.flush()
+			return entry
+
+	# -------------------- Task Requests / Paper Tasks (M0/M1) --------------------
+	def create_task_request(
+		self,
+		task_form_text: str,
+		status: str = "queued",
+		metadata: Optional[Dict[str, Any]] = None,
+	) -> TaskRequest:
+		with self.session_scope() as session:
+			entry = TaskRequest(
+				task_form_text=task_form_text,
+				status=status,
+				request_metadata=metadata,
+			)
+			session.add(entry)
+			session.flush()
+			return entry
+
+	def get_task_request(self, request_id: Union[UUID, str]) -> Optional[TaskRequest]:
+		request_uuid = self._coerce_uuid(request_id)
+		with self.session_scope() as session:
+			return session.get(TaskRequest, request_uuid)
+
+	def update_task_request(self, request_id: Union[UUID, str], **fields: Any) -> Optional[TaskRequest]:
+		request_uuid = self._coerce_uuid(request_id)
+		with self.session_scope() as session:
+			entry = session.get(TaskRequest, request_uuid)
+			if not entry:
+				return None
+			for key, value in fields.items():
+				if key == "metadata":
+					setattr(entry, "request_metadata", value)
+				elif hasattr(entry, key):
+					setattr(entry, key, value)
+			session.flush()
+			return entry
+
+	def create_paper_task(
+		self,
+		request_id: Union[UUID, str],
+		status: str = "queued",
+		document_id: Optional[Union[UUID, str]] = None,
+		original_filename: Optional[str] = None,
+		file_hash: Optional[str] = None,
+		error_code: Optional[str] = None,
+		duplicate_of: Optional[Union[UUID, str]] = None,
+		celery_task_id: Optional[str] = None,
+		fulltext_unavailable: str = "false",
+		warning_codes: Optional[List[str]] = None,
+		node_trace: Optional[Dict[str, Any]] = None,
+	) -> PaperTask:
+		request_uuid = self._coerce_uuid(request_id)
+		document_uuid = self._coerce_uuid(document_id) if document_id is not None else None
+		duplicate_uuid = self._coerce_uuid(duplicate_of) if duplicate_of is not None else None
+		with self.session_scope() as session:
+			entry = PaperTask(
+				request_id=request_uuid,
+				document_id=document_uuid,
+				original_filename=original_filename,
+				file_hash=file_hash,
+				status=status,
+				error_code=error_code,
+				duplicate_of=duplicate_uuid,
+				celery_task_id=celery_task_id,
+				fulltext_unavailable=fulltext_unavailable,
+				warning_codes=warning_codes,
+				node_trace=node_trace,
+			)
+			session.add(entry)
+			session.flush()
+			return entry
+
+	def get_paper_task(self, paper_task_id: Union[UUID, str]) -> Optional[PaperTask]:
+		paper_uuid = self._coerce_uuid(paper_task_id)
+		with self.session_scope() as session:
+			return session.get(PaperTask, paper_uuid)
+
+	def list_paper_tasks_by_request(self, request_id: Union[UUID, str]) -> List[PaperTask]:
+		request_uuid = self._coerce_uuid(request_id)
+		with self.session_scope() as session:
+			return (
+				session.query(PaperTask)
+				.filter(PaperTask.request_id == request_uuid)
+				.order_by(PaperTask.created_at.asc())
+				.all()
+			)
+
+	def update_paper_task(self, paper_task_id: Union[UUID, str], **fields: Any) -> Optional[PaperTask]:
+		paper_uuid = self._coerce_uuid(paper_task_id)
+		with self.session_scope() as session:
+			entry = session.get(PaperTask, paper_uuid)
+			if not entry:
+				return None
+			for key, value in fields.items():
+				if hasattr(entry, key):
+					setattr(entry, key, value)
+			session.flush()
+			return entry
+
+	def append_paper_task_log(
+		self,
+		paper_task_id: Union[UUID, str],
+		status: str,
+		node: Optional[str] = None,
+		error_code: Optional[str] = None,
+		message: Optional[str] = None,
+		payload: Optional[Dict[str, Any]] = None,
+	) -> PaperTaskLog:
+		paper_uuid = self._coerce_uuid(paper_task_id)
+		with self.session_scope() as session:
+			entry = PaperTaskLog(
+				paper_task_id=paper_uuid,
+				status=status,
+				node=node,
+				error_code=error_code,
+				message=message,
+				payload=payload,
+			)
+			session.add(entry)
+			session.flush()
+			return entry
+
+	def create_sentence_alignment(
+		self,
+		paper_task_id: Union[UUID, str],
+		source_sentence: str,
+		en_sentence: str,
+		source_start: Optional[int] = None,
+		source_end: Optional[int] = None,
+		en_start: Optional[int] = None,
+		en_end: Optional[int] = None,
+	) -> SentenceAlignment:
+		paper_uuid = self._coerce_uuid(paper_task_id)
+		with self.session_scope() as session:
+			entry = SentenceAlignment(
+				paper_task_id=paper_uuid,
+				source_sentence=source_sentence,
+				en_sentence=en_sentence,
+				source_start=source_start,
+				source_end=source_end,
+				en_start=en_start,
+				en_end=en_end,
+			)
+			session.add(entry)
+			session.flush()
+			return entry
+
+	def find_latest_paper_task_by_hash(self, file_hash: str) -> Optional[PaperTask]:
+		with self.session_scope() as session:
+			return (
+				session.query(PaperTask)
+				.filter(PaperTask.file_hash == file_hash)
+				.order_by(PaperTask.created_at.desc())
+				.first()
+			)
+
+	def refresh_task_request_status(self, request_id: Union[UUID, str]) -> Optional[TaskRequest]:
+		request_uuid = self._coerce_uuid(request_id)
+		with self.session_scope() as session:
+			entry = session.get(TaskRequest, request_uuid)
+			if not entry:
+				return None
+			papers: List[PaperTask] = (
+				session.query(PaperTask)
+				.filter(PaperTask.request_id == request_uuid)
+				.order_by(PaperTask.created_at.asc())
+				.all()
+			)
+			if not papers:
+				entry.status = "failed"
+				session.flush()
+				return entry
+
+			statuses = [p.status for p in papers]
+			has_running = any(s == "running" for s in statuses)
+			has_queued = any(s == "queued" for s in statuses)
+			has_failed = any(s == "failed" for s in statuses)
+			success_count = sum(1 for s in statuses if s == "success")
+			all_success = success_count == len(papers)
+			all_duplicates = all(
+				p.status == "success" and (p.error_code or "") == "FILE_DUPLICATE"
+				for p in papers
+			)
+
+			if all_success:
+				entry.status = "success"
+			elif has_running:
+				entry.status = "running"
+			elif has_queued:
+				entry.status = "queued"
+			elif has_failed and success_count > 0:
+				entry.status = "partial_failed"
+			elif has_failed:
+				entry.status = "failed"
+			elif all_duplicates:
+				entry.status = "success"
+			else:
+				entry.status = "queued"
+
 			session.flush()
 			return entry
 

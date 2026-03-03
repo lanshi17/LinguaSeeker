@@ -95,7 +95,7 @@ def stub_llms(monkeypatch):
     monkeypatch.setattr(EvidenceAgent, "get_evidence_llm", lambda self: DummyLLM(evidence_json))
     monkeypatch.setattr(EvidenceAgent, "get_arbitration_llm", lambda self: DummyLLM(arbitration_json))
     monkeypatch.setattr(agent, "rag", DummyRag())
-    monkeypatch.setattr("src.component.agents.search_knowledge_base", DummyTool())
+    monkeypatch.setattr("src.domain.agent.workflow.search_knowledge_base", DummyTool())
 
 def _make_state(markdown_content: str, image_paths: List[str]) -> ProcessingState:
     return {
@@ -153,6 +153,7 @@ def test_tool():
     #test save_intermediate_md load_intermediate_md
     test_content = "# 测试内容\n这是一些测试内容。"
     test_filepath = "test_intermediate.md"
+    Path(test_filepath).write_text(test_content, encoding="utf-8")
     loaded_content = load_intermediate_md.invoke({"file_path": test_filepath})
     assert loaded_content == test_content, "保存和加载的中间文件内容不匹配"
     os.remove(test_filepath)
