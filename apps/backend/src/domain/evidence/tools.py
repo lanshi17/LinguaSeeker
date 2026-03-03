@@ -5,6 +5,11 @@ from loguru import logger
 
 from src.domain.enums import EvidenceStrength
 from src.domain.evidence.classifier import EvidenceClassifier
+from src.domain.evidence.evaluation_framework import (
+    determine_evidence_strength as determine_evidence_strength_framework,
+    determine_strength_by_oddpath as determine_strength_by_oddpath_framework,
+    evaluate_extraction_metrics as evaluate_extraction_metrics_framework,
+)
 from src.domain.models import EvidenceStrengthClassification
 from src.domain.agent.rag import RAGComponent
 
@@ -101,11 +106,11 @@ def determine_evidence_strength_from_oddspath_impl(oddspath: float) -> str:
         证据强度等级字符串
     
     OddsPath 映射规则:
-    - <0.053: BS3_very_strong
+    - <0.0029: BS3_very_strong
+    - <0.053: BS3
     - <0.23: BS3_moderate
-    - <0.48: BS3_supporting
-    - 0.48-2.1: 不明确
-    - >2.1: PS3_supporting
+    - <=1.0: BS3_supporting
+    - <=4.3: PS3_supporting
     - >4.3: PS3_moderate
     - >18.7: PS3
     - >350: PS3_very_strong
@@ -114,14 +119,14 @@ def determine_evidence_strength_from_oddspath_impl(oddspath: float) -> str:
         logger.debug("Determining evidence strength from OddsPath: {}", oddspath)
         if oddspath < 0:
             return "invalid_oddspath"
-        elif oddspath < 0.053:
+        elif oddspath < 0.0029:
             return "BS3_very_strong"
+        elif oddspath < 0.053:
+            return "BS3"
         elif oddspath < 0.23:
             return "BS3_moderate"
-        elif oddspath < 0.48:
+        elif oddspath <= 1.0:
             return "BS3_supporting"
-        elif oddspath <= 2.1:
-            return "inconclusive"
         elif oddspath <= 4.3:
             return "PS3_supporting"
         elif oddspath <= 18.7:
@@ -133,6 +138,74 @@ def determine_evidence_strength_from_oddspath_impl(oddspath: float) -> str:
     except Exception as e:
         logger.error(f"确定证据强度失败: {e}")
         return "error"
+
+
+def determine_strength_by_oddpath_impl(
+    oddspath: float,
+    is_perfect_binary: Optional[bool] = None,
+) -> str:
+    """
+    根据 OddsPath 返回通用强度等级:
+    Supporting / Moderate / Strong / Very Strong
+    """
+    try:
+        logger.debug(
+            "Determining generic strength from OddsPath: {} perfect_binary={}",
+            oddspath,
+            is_perfect_binary,
+        )
+        return determine_strength_by_oddpath_framework(oddspath, is_perfect_binary)
+    except Exception as e:
+        logger.error(f"通用证据强度判定失败: {e}")
+        return "Supporting"
+
+
+def determine_evidence_strength_impl(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    四步法总控判定，返回:
+    - use_ps3_bs3
+    - strength (通用强度)
+    - directional_strength (PS3_*/BS3_*)
+    - path/reason 等辅助字段
+    """
+    try:
+        logger.debug("Determining evidence strength with four-step framework")
+        return determine_evidence_strength_framework(data)
+    except Exception as e:
+        logger.error(f"四步法证据强度判定失败: {e}")
+        return {
+            "use_ps3_bs3": False,
+            "strength": "No PS3/BS3",
+            "directional_strength": "No PS3/BS3",
+            "path": "not_applicable",
+            "reason": "internal_error",
+        }
+
+
+def evaluate_extraction_metrics_impl(
+    benchmark_items: List[Dict[str, Any]],
+    model_items: List[Dict[str, Any]],
+    match_fields: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """计算抽取评估指标（标准总数、输出总数、正确计数、假断言、字段遗漏、准确率）。"""
+    try:
+        logger.debug("Evaluating extraction metrics")
+        metrics = evaluate_extraction_metrics_framework(
+            benchmark_items,
+            model_items,
+            tuple(match_fields) if match_fields else ("gene", "variant", "disease", "assay_type"),
+        )
+        return metrics.to_dict()
+    except Exception as e:
+        logger.error(f"抽取指标评估失败: {e}")
+        return {
+            "benchmark_total": 0,
+            "model_output_total": 0,
+            "correct_count": 0,
+            "false_assertions": 0,
+            "field_omissions": 0,
+            "accuracy": 0.0,
+        }
 
 def determine_max_evidence_from_controls_impl(control_variants_count: int) -> str:
     """
@@ -273,6 +346,9 @@ load_intermediate_md_tool = tool(load_intermediate_md_impl)
 OddsPath_Calculator_tool = tool(OddsPath_Calculator_impl)
 determine_evidence_strength_from_oddspath_tool = tool(determine_evidence_strength_from_oddspath_impl)
 determine_max_evidence_from_controls_tool = tool(determine_max_evidence_from_controls_impl)
+determine_strength_by_oddpath_tool = tool(determine_strength_by_oddpath_impl)
+determine_evidence_strength_tool = tool(determine_evidence_strength_impl)
+evaluate_extraction_metrics_tool = tool(evaluate_extraction_metrics_impl)
 validate_ps3_step1_tool = tool(validate_ps3_step1_impl)
 validate_ps3_step2_tool = tool(validate_ps3_step2_impl)
 search_knowledge_base_tool = tool(search_knowledge_base_impl)
@@ -286,6 +362,18 @@ determine_evidence_strength_from_oddspath = ToolProxy(
 determine_max_evidence_from_controls = ToolProxy(
     determine_max_evidence_from_controls_impl,
     determine_max_evidence_from_controls_tool,
+)
+determine_strength_by_oddpath = ToolProxy(
+    determine_strength_by_oddpath_impl,
+    determine_strength_by_oddpath_tool,
+)
+determine_evidence_strength = ToolProxy(
+    determine_evidence_strength_impl,
+    determine_evidence_strength_tool,
+)
+evaluate_extraction_metrics = ToolProxy(
+    evaluate_extraction_metrics_impl,
+    evaluate_extraction_metrics_tool,
 )
 validate_ps3_step1 = ToolProxy(validate_ps3_step1_impl, validate_ps3_step1_tool)
 validate_ps3_step2 = ToolProxy(validate_ps3_step2_impl, validate_ps3_step2_tool)

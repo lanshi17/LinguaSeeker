@@ -5,6 +5,7 @@ import pytest
 
 from src.domain.evidence import aggregator as aggregator_module
 from src.domain.evidence import classifier as classifier_module
+from src.domain.evidence import evaluation_framework as framework_module
 from src.domain.evidence import tools as tools_module
 
 
@@ -29,14 +30,93 @@ def test_odds_path_calculator_boundary_clamp() -> None:
 
 
 def test_determine_evidence_strength_from_oddspath() -> None:
-    assert tools_module.determine_evidence_strength_from_oddspath(0.02) == "BS3_very_strong"
+    assert tools_module.determine_evidence_strength_from_oddspath(0.02) == "BS3"
     assert tools_module.determine_evidence_strength_from_oddspath(0.1) == "BS3_moderate"
     assert tools_module.determine_evidence_strength_from_oddspath(0.3) == "BS3_supporting"
-    assert tools_module.determine_evidence_strength_from_oddspath(1.0) == "inconclusive"
+    assert tools_module.determine_evidence_strength_from_oddspath(1.0) == "BS3_supporting"
     assert tools_module.determine_evidence_strength_from_oddspath(3.0) == "PS3_supporting"
     assert tools_module.determine_evidence_strength_from_oddspath(5.0) == "PS3_moderate"
     assert tools_module.determine_evidence_strength_from_oddspath(20.0) == "PS3"
     assert tools_module.determine_evidence_strength_from_oddspath(400.0) == "PS3_very_strong"
+
+
+def test_determine_strength_by_oddpath_generic() -> None:
+    assert framework_module.determine_strength_by_oddpath(0.001) == "Very Strong"
+    assert framework_module.determine_strength_by_oddpath(0.01) == "Strong"
+    assert framework_module.determine_strength_by_oddpath(0.1) == "Moderate"
+    assert framework_module.determine_strength_by_oddpath(1.5) == "Supporting"
+    assert framework_module.determine_strength_by_oddpath(10.0) == "Moderate"
+    assert framework_module.determine_strength_by_oddpath(100.0) == "Strong"
+    assert framework_module.determine_strength_by_oddpath(400.0) == "Very Strong"
+
+
+def test_determine_evidence_strength_no_ps3_bs3() -> None:
+    result = framework_module.determine_evidence_strength({"assay_suitable": "no"})
+    assert result["use_ps3_bs3"] is False
+    assert result["strength"] == "No PS3/BS3"
+    assert result["path"] == "not_applicable"
+
+
+def test_determine_evidence_strength_control_count_path() -> None:
+    data = {
+        "assay_suitable": "yes",
+        "ps3_step_3": {
+            "checkpoint_3a": {
+                "basic_controls_present": True,
+                "replicates_used": True,
+            },
+            "checkpoint_3c": {"positive_controls_used": True},
+        },
+        "ps3_step_4": {
+            "oddspath_data": {"computable": False},
+            "control_count_data": {"pathogenic_count": 4, "benign_count": 8},
+        },
+    }
+    result = framework_module.determine_evidence_strength(data)
+    assert result["use_ps3_bs3"] is True
+    assert result["strength"] == "Moderate"
+    assert result["directional_strength"] == "PS3_moderate"
+    assert result["path"] == "control_count"
+
+
+def test_determine_evidence_strength_oddspath_path() -> None:
+    data = {
+        "assay_suitable": "yes",
+        "functional_evidence_aim": "benign",
+        "ps3_step_3": {
+            "checkpoint_3a": {
+                "basic_controls_present": True,
+                "replicates_used": True,
+            },
+            "checkpoint_3c": {"positive_controls_used": True},
+        },
+        "ps3_step_4": {
+            "oddspath_data": {"computable": True, "oddspath": 0.01},
+        },
+    }
+    result = framework_module.determine_evidence_strength(data)
+    assert result["use_ps3_bs3"] is True
+    assert result["strength"] == "Strong"
+    assert result["directional_strength"] == "BS3"
+    assert result["path"] == "oddspath"
+
+
+def test_evaluate_extraction_metrics() -> None:
+    benchmark_items = [
+        {"gene": "BRCA1", "variant": "c.68_69del", "disease": "Breast cancer", "assay_type": "reporter"},
+        {"gene": "CFTR", "variant": "c.1521_1523delCTT", "disease": "CF", "assay_type": "chloride"},
+    ]
+    model_items = [
+        {"gene": "BRCA1", "variant": "c.68_69del", "disease": "Breast cancer", "assay_type": "reporter"},
+        {"gene": "TP53", "variant": "c.743G>A", "disease": "Li-Fraumeni", "assay_type": "transactivation"},
+    ]
+    metrics = framework_module.evaluate_extraction_metrics(benchmark_items, model_items)
+    assert metrics.benchmark_total == 2
+    assert metrics.model_output_total == 2
+    assert metrics.correct_count == 1
+    assert metrics.false_assertions == 1
+    assert metrics.field_omissions == 1
+    assert metrics.accuracy == 0.5
 
 
 def test_determine_max_evidence_from_controls() -> None:

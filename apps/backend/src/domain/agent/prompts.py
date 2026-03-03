@@ -192,17 +192,18 @@ Your final output MUST be a JSON object. The top-level key will be `functional_e
 
 * **Sub-step 4c: Correlate OddsPath (if statistical analyses were sufficient).**
     * **Internal Information:** Extract the OddsPath value calculated in the paper for this variant. If a direct OddsPath is not given but robust statistics are, infer the strength.
-    * **Internal Judgment Basis:** Apply ACMG guidelines for OddsPath interpretation (e.g., assuming standard thresholds: PS3: OddsPath > 4.3 = moderate, > 2.0 = supporting, and extremely high OddsPath (ClinGen SVI often cites >18.7 and >350) can be upgraded to PS3 or PS3_very_strong. BS3: OddsPath < 1/4.3 = moderate, < 1/2.0 = supporting, and exceptionally low OddsPath (<1/18.7) can be treated as BS3_very_strong.)
+    * **Internal Judgment Basis:** Apply ACMG guidelines for OddsPath interpretation (project thresholds): PS3 supporting when OddsPath > 1.0 and <= 4.3, PS3 moderate when > 4.3 and <= 18.7, PS3 strong when > 18.7 and <= 350, PS3 very strong when > 350; BS3 supporting when OddsPath >= 0.23 and <= 1.0, BS3 moderate when >= 0.053 and < 0.23, BS3 strong when >= 0.0029 and < 0.053, BS3 very strong when < 0.0029.
     * **Internal Decision Logic (Typical Outcomes):**
         * For PS3 (Pathogenic):
             * OddsPath very high (e.g., > 18.7 and especially > 350): **PS3_very_strong**
             * OddsPath strong (e.g., > 18.7 but not yet meeting very-strong lab policies): **PS3**
             * OddsPath moderate (e.g., > 4.3 and <= 18.7): **PS3_moderate**
-            * OddsPath supporting (e.g., > 2.0 and <= 4.3): **PS3_supporting**
+            * OddsPath supporting (e.g., > 1.0 and <= 4.3): **PS3_supporting**
         * For BS3 (Benign):
-            * OddsPath very low (e.g., < 1/18.7): **BS3_very_strong**
-            * OddsPath moderate (e.g., < 1/4.3 and >= 1/18.7): **BS3_moderate**
-            * OddsPath supporting (e.g., < 1/2.0 and >= 1/4.3): **BS3_supporting**
+            * OddsPath very low (e.g., < 0.0029): **BS3_very_strong**
+            * OddsPath strong (e.g., >= 0.0029 and < 0.053): **BS3**
+            * OddsPath moderate (e.g., >= 0.053 and < 0.23): **BS3_moderate**
+            * OddsPath supporting (e.g., >= 0.23 and <= 1.0): **BS3_supporting**
 """
 
 QUESTION_TEMPLATE_3 = """
@@ -622,11 +623,11 @@ Can you calculate OddsPath from the reported statistics?
 
 | OddsPath Range | Evidence Strength |
 |----------------|-------------------|
-| < 0.053        | BS3_very_strong  |
+| < 0.0029       | BS3_very_strong  |
+| 0.0029 - 0.053 | BS3              |
 | 0.053 - 0.23   | BS3_moderate     |
-| 0.23 - 0.48    | BS3_supporting   |
-| 0.48 - 2.1     | Inconclusive (不明确) |
-| 2.1 - 4.3      | PS3_supporting   |
+| 0.23 - 1.0     | BS3_supporting   |
+| 1.0 - 4.3      | PS3_supporting   |
 | 4.3 - 18.7     | PS3_moderate     |
 | 18.7 - 350     | PS3              |
 | > 350          | PS3_very_strong  |
@@ -1057,11 +1058,10 @@ def get_feedback_refinement_prompt(
 # ==================== PS3 评分标准常量 ====================
 
 ODDSPATH_THRESHOLDS = {
-    "BS3_very_strong": 0.053,
+    "BS3_very_strong": 0.0029,
     "BS3": 0.053,
     "BS3_moderate": 0.23,
-    "BS3_supporting": 0.48,
-    "inconclusive_upper": 2.1,
+    "BS3_supporting": 1.0,
     "PS3_supporting": 4.3,
     "PS3_moderate": 18.7,
     "PS3": 350,

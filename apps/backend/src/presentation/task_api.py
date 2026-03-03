@@ -22,19 +22,34 @@ from src.service.dtos import (
     PubMedCandidateSearchRequest,
     PubMedCandidateSearchResponse,
     PubMedSelectionSubmitRequest,
-	PaperTaskItemResponse,
-	TaskRequestCreateResponse,
-	TaskRequestStatusResponse,
+    PaperTaskItemResponse,
+    TaskRequestCreateResponse,
+    TaskRequestStatusResponse,
     TaskCreateRequest,
     TaskCreateResponse,
     TaskListItem,
     TaskListResponse,
     TaskStatusResponse,
     ValidationErrorResponse,
+    InteractionStartRequest,
+    InteractionStartResponse,
+    InteractionRespondRequest,
+    InteractionRespondResponse,
 )
 from src.service.enum import TaskStatus
+from src.domain.agent.interaction import InteractionAgent
 
 router = APIRouter(prefix="/tasks", tags=["Task"])
+
+_interaction_agent: Optional[InteractionAgent] = None
+
+
+def get_interaction_agent() -> InteractionAgent:
+    global _interaction_agent
+    if _interaction_agent is None:
+        _interaction_agent = InteractionAgent()
+    return _interaction_agent
+
 
 MAX_UPLOAD_FILES = 10
 MAX_UPLOAD_FILE_SIZE_BYTES = 10 * 1024 * 1024
@@ -157,7 +172,63 @@ def _paper_item_model(entry: Any) -> PaperTaskItemResponse:
 
 
 def _synthetic_hash_from_pmid(pmid: str) -> str:
-	return hashlib.sha256(f"pmid:{pmid}".encode("utf-8")).hexdigest()
+    return hashlib.sha256(f"pmid:{pmid}".encode("utf-8")).hexdigest()
+
+
+@router.post(
+    "/interaction/start",
+    summary="Start interaction for task clarification",
+    description=(
+        "Start a clarification session with the interaction agent.\n"
+        "The agent will extract structured task form fields from natural-language input.\n"
+        "Returns immediately if input is clear, or asks a clarification question (max 2 rounds)."
+    ),
+    response_model=InteractionStartResponse,
+    responses={
+        400: {"model": ErrorResponse, "description": "Invalid input."},
+        500: {"model": ErrorResponse, "description": "Agent processing failed."},
+    },
+)
+async def start_interaction(payload: InteractionStartRequest) -> InteractionStartResponse:
+    if not payload.user_input or not payload.user_input.strip():
+        raise HTTPException(status_code=400, detail="user_input is required")
+
+    agent = get_interaction_agent()
+    try:
+        result = await agent.start_interaction(payload.user_input)
+        return InteractionStartResponse(**result)
+    except Exception as exc:
+        logger.exception("Interaction agent start failed: {}", exc)
+        raise HTTPException(status_code=500, detail="Agent processing failed")
+
+
+@router.post(
+    "/interaction/respond",
+    summary="Respond to clarification question",
+    description=(
+        "Continue a clarification session by responding to the agent's question.\n"
+        "Returns structured task form when ready, or asks another question (max 2 rounds total)."
+    ),
+    response_model=InteractionRespondResponse,
+    responses={
+        400: {"model": ErrorResponse, "description": "Invalid session_id or user_response."},
+        404: {"model": ErrorResponse, "description": "Session not found."},
+        500: {"model": ErrorResponse, "description": "Agent processing failed."},
+    },
+)
+async def respond_interaction(payload: InteractionRespondRequest) -> InteractionRespondResponse:
+    if not payload.user_response or not payload.user_response.strip():
+        raise HTTPException(status_code=400, detail="user_response is required")
+
+    agent = get_interaction_agent()
+    try:
+        result = await agent.respond_interaction(payload.session_id, payload.user_response)
+        return InteractionRespondResponse(**result)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        logger.exception("Interaction agent respond failed: {}", exc)
+        raise HTTPException(status_code=500, detail="Agent processing failed")
 
 
 @router.post(
@@ -181,7 +252,11 @@ def create_task(payload: TaskCreateRequest) -> TaskCreateResponse:
         raise HTTPException(status_code=400, detail="file_paths is required")
 
     try:
-        logger.debug("Queueing task for file_paths: {} output_root: {}", payload.file_paths, payload.output_root)
+        logger.debug(
+            "Queueing task for file_paths: {} output_root: {}",
+            payload.file_paths,
+            payload.output_root,
+        )
         async_result = process_pdf_task.delay(payload.file_paths, payload.output_root)
     except Exception as exc:
         logger.exception("Failed to queue task: {}", exc)
@@ -199,16 +274,23 @@ def create_task(payload: TaskCreateRequest) -> TaskCreateResponse:
     description="Search PubMed candidate papers by task form and filters (MVP source: pubmed only).",
     response_model=PubMedCandidateSearchResponse,
     responses={
-        400: {"model": ErrorResponse, "description": "Invalid query or unsupported source/country."},
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid query or unsupported source/country.",
+        },
         504: {"model": ErrorResponse, "description": "PubMed fetch timeout."},
     },
 )
-async def search_pubmed_candidates(payload: PubMedCandidateSearchRequest) -> PubMedCandidateSearchResponse:
+async def search_pubmed_candidates(
+    payload: PubMedCandidateSearchRequest,
+) -> PubMedCandidateSearchResponse:
     if payload.source.lower() != "pubmed":
         raise HTTPException(status_code=400, detail="Fetch no result: source must be pubmed in MVP")
     query = f"{payload.target} {payload.disease}".strip()
     if not query:
-        raise HTTPException(status_code=400, detail="INPUT_INVALID: target and disease are required")
+        raise HTTPException(
+            status_code=400, detail="INPUT_INVALID: target and disease are required"
+        )
     service = get_pubmed_service()
     try:
         rows = await service.search_candidates(
@@ -352,7 +434,10 @@ def submit_pubmed_selection(payload: PubMedSelectionSubmitRequest) -> TaskReques
     ),
     response_model=TaskRequestCreateResponse,
     responses={
-        400: {"model": ErrorResponse, "description": "Invalid input or upload constraints violated."},
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid input or upload constraints violated.",
+        },
         503: {"model": ErrorResponse, "description": "Storage/database/queue unavailable."},
     },
 )
@@ -567,7 +652,9 @@ def get_task_status(
     elif async_result.successful():
         result_payload = async_result.result
         if isinstance(result_payload, dict):
-            response.file_size_bytes = response.file_size_bytes or result_payload.get("file_size_bytes")
+            response.file_size_bytes = response.file_size_bytes or result_payload.get(
+                "file_size_bytes"
+            )
             response.processing_duration_seconds = (
                 response.processing_duration_seconds
                 or result_payload.get("processing_duration_seconds")

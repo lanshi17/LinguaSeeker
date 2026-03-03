@@ -75,6 +75,7 @@
 5. `confidence`（0~1）
 6. `errors`（结构化）
 7. `created_at`
+8. `evaluation_metrics`（可选，含 benchmark_total/model_output_total/correct_count/false_assertions/field_omissions/accuracy）
 
 ## 4. API 契约
 ### 4.1 创建请求

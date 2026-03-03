@@ -173,10 +173,10 @@ def test_OddsPath_Calculator():
 def test_determine_evidence_strength_from_oddspath():
     """测试根据 OddsPath 确定证据强度"""
     test_cases = [
-        (0.02, "BS3_very_strong"),
+        (0.002, "BS3_very_strong"),
+        (0.02, "BS3"),
         (0.1, "BS3_moderate"),
-        (0.3, "BS3_supporting"),
-        (0.6, "inconclusive"),
+        (0.6, "BS3_supporting"),
         (3.0, "PS3_supporting"),
         (10.0, "PS3_moderate"),
         (100.0, "PS3"),

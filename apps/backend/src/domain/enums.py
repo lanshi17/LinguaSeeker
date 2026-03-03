@@ -95,10 +95,10 @@ ODDSPATH_STRENGTH_MAP: List[Tuple[float, str]] = [
     (350.0,  EvidenceStrength.PS3_VERY_STRONG.value),
     (18.7,   EvidenceStrength.PS3.value),
     (4.3,    EvidenceStrength.PS3_MODERATE.value),
-    (2.1,    EvidenceStrength.PS3_SUPPORTING.value),
-    (0.48,   EvidenceStrength.INCONCLUSIVE.value),
+    (1.0,    EvidenceStrength.PS3_SUPPORTING.value),
     (0.23,   EvidenceStrength.BS3_SUPPORTING.value),
     (0.053,  EvidenceStrength.BS3_MODERATE.value),
+    (0.0029, EvidenceStrength.BS3.value),
 ]
 
 
