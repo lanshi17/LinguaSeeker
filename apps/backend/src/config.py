@@ -149,6 +149,13 @@ class Settings(BaseSettings):
     firecrawl_base_url: str
     firecrawl_api_key: Optional[str] = None
 
+    # ==================== 邮箱配置 ====================
+    smtp_host: str
+    smtp_port: int
+    smtp_user: str
+    smtp_password: str
+    smtp_from_email: str
+
     # 额外示例：列表类型
     allowed_hosts: List[str] = ["localhost"]
 

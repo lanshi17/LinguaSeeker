@@ -1,0 +1,47 @@
+Project: Multi-ACMG Evidence Platform
+Date: 2026-03-03
+Owner: Spec-driven build
+Status: SPEC_FROZEN
+
+Completed:
+- Created and finalized six specification documents:
+  - docs/PRD.md
+  - docs/APP_FLOW.md
+  - docs/TECH_STACK.md
+  - docs/FRONTEND_GUIDELINES.md
+  - docs/BACKEND_STRUCTURE.md
+  - docs/IMPLEMENTATION_PLAN.md
+- Removed quality module direction from MVP scope (Quality API must be 404).
+- Frozen request/paper state model and retry matrix.
+- Frozen dedup policy (global SHA-256, FILE_DUPLICATE as success).
+- Frozen logging contract (failed + error_code + log_link).
+- Frozen retention policy:
+  - task form + structured metadata: permanent
+  - original files: no auto delete
+  - intermediates/logs: 7 days
+- Frozen KG integration direction:
+  - independent KG service
+  - Celery event trigger
+  - PostgreSQL source of truth
+  - full backfill + incremental + retry queue
+
+Key Locked Decisions:
+- MVP source: PubMed only.
+- Candidate list cap: 15 total, page_size default=10, max=15.
+- User selection cap: min=1, max=10.
+- Upload limits: <=10 files, <=10MB per file, <=50MB total.
+- IDs: request_id and paper_task_id are UUIDv4.
+- Success metrics:
+  - fixed 100-paper acceptance set per release
+  - literature-level success >=95%
+  - per-paper E2E <=30 minutes from worker start
+
+Open Items:
+- None at requirement level (core assumptions closed).
+
+Next Execution Steps:
+1) M0: Schema and API contract migration.
+2) M1: Implement 5-node workflow and dedup/log contracts.
+3) M2: Implement interaction flow + frontend pages + PDF merge export.
+4) M3: Standalone KG service + event consumer + backfill script.
+5) M4: Run fixed 100-paper acceptance and publish release report.
