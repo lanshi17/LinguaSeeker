@@ -9,8 +9,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 from loguru import logger
-from src.health import check_all_connections 
-from src.config  import settings as cfg
+from src.health import check_all_connections
+from src.config import settings as cfg
 from fastapi import APIRouter, File, Request, Response, HTTPException, UploadFile, Query, Path
 from pydantic import BaseModel, Field, HttpUrl
 from src.database.redis_client import (
@@ -25,6 +25,7 @@ from src.database.minio_client import MinIOClient
 from src.database.enum import MinioBucketNameEnum
 from src.database.models import MinioObjectRefModel
 from src.presentation.error_contract import build_log_link
+from src.utils.sanitizers import sanitize_filename
 
 router = APIRouter()
 
@@ -46,7 +47,9 @@ class HealthResponse(BaseModel):
 
 class PDFHashCheckResponse(BaseModel):
     exists: bool = Field(..., description="Whether the hash is present in cache or index.")
-    result: Optional[Dict[str, Any]] = Field(None, description="Cached processing result, if available.")
+    result: Optional[Dict[str, Any]] = Field(
+        None, description="Cached processing result, if available."
+    )
 
     class Config:
         json_schema_extra = {
@@ -71,7 +74,7 @@ class UploadQueuedResponse(BaseModel):
                 "task_id": "1f6a8b7a-1b87-4d75-8c72-6f2f6a1a9c2e",
                 "filename": "sample.pdf",
                 "document_id": "9f2b2a1c-8f55-4e24-8ad8-45ad1354edcb",
-                "upload_key": "9f2b2a1c-8f55-4e24-8ad8-45ad1354edcb/sample.pdf",
+                "upload_key": "9f2b2a1c-8f55-4e24-8ad8-45ad1354edcb/5ec66f4ab80f4f96abfce394c5a8f47a.pdf",
             }
         }
 
@@ -121,8 +124,9 @@ async def health_check():
     return {
         "status": overall_status,
         "details": checks,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
 
 @router.get(
     "/pdf/check_hash",
@@ -136,7 +140,7 @@ async def health_check():
     },
 )
 async def check_pdf_hash(
-    hash: str = Query(..., min_length=32, description="SHA-256 hash of the PDF content.")
+    hash: str = Query(..., min_length=32, description="SHA-256 hash of the PDF content."),
 ):
     """Check whether a PDF hash exists and return cached result if available."""
     try:
@@ -147,7 +151,8 @@ async def check_pdf_hash(
     except Exception as exc:
         logger.warning("Redis check failed for hash {}: {}", hash, exc)
         return {"exists": False}
- 
+
+
 @router.post(
     "/pdf/upload",
     tags=["File"],
@@ -166,7 +171,9 @@ async def check_pdf_hash(
 async def upload_pdf(
     request: Request,
     file: Optional[UploadFile] = File(None, description="Single PDF file field named 'file'."),
-    files: Optional[List[UploadFile]] = File(None, description="Alternative multi-file field; only one is allowed."),
+    files: Optional[List[UploadFile]] = File(
+        None, description="Alternative multi-file field; only one is allowed."
+    ),
 ):
     """Upload a single PDF and return either cached result or async task info."""
     if file is None and files:
@@ -185,7 +192,7 @@ async def upload_pdf(
 
     if file.content_type not in {"application/pdf", "application/octet-stream"}:
         raise HTTPException(status_code=400, detail="Invalid PDF file.")
-    
+
     pdf_data = await file.read()
     logger.debug(
         "Received PDF upload filename: {} content_type: {} size: {} bytes",
@@ -194,6 +201,7 @@ async def upload_pdf(
         len(pdf_data),
     )
     pdf_hash = hashlib.sha256(pdf_data).hexdigest()
+    safe_filename = sanitize_filename(file.filename or f"{pdf_hash}.pdf")
     try:
         postgres_client = get_postgres_client()
     except Exception as exc:
@@ -222,7 +230,7 @@ async def upload_pdf(
             else:
                 return {
                     "status": "cached",
-                    "filename": file.filename,
+                    "filename": safe_filename,
                     "document_id": cached_document_id,
                     "result": cached,
                 }
@@ -260,14 +268,17 @@ async def upload_pdf(
 
     if upload_ref is None:
         try:
+            storage_key = MinIOClient.build_literature_object_key(
+                file_hash=pdf_hash,
+                original_filename=safe_filename,
+            )
             upload_ref = await minio_client.upload_literature_upload(
-                filename=file.filename or f"{pdf_hash}.pdf",
+                storage_key=storage_key,
                 payload=pdf_data,
                 content_type=file.content_type or "application/pdf",
-                object_prefix=pdf_hash,
                 metadata={
                     "hash": pdf_hash,
-                    "filename": file.filename or "",
+                    "uploaded_at": datetime.now(timezone.utc).isoformat(),
                 },
             )
         except Exception as exc:
@@ -279,9 +290,9 @@ async def upload_pdf(
         try:
             new_document_id = uuid4()
             created_document = postgres_client.create_document(
-                title=file.filename or pdf_hash,
+                title=safe_filename,
                 document_id=new_document_id,
-                original_filename=file.filename or None,
+                original_filename=safe_filename,
                 pmid=None,
                 local_path=upload_ref.object_key,
                 file_hash=pdf_hash,
@@ -306,11 +317,11 @@ async def upload_pdf(
     else:
         if existing_document is not None:
             document_id = str(existing_document.document_id)
-            if not getattr(existing_document, "original_filename", None) and file.filename:
+            if not getattr(existing_document, "original_filename", None):
                 try:
                     postgres_client.update_document(
                         existing_document.document_id,
-                        original_filename=file.filename,
+                        original_filename=safe_filename,
                     )
                 except Exception as exc:
                     logger.warning(
@@ -318,7 +329,7 @@ async def upload_pdf(
                         existing_document.document_id,
                         exc,
                     )
-    
+
     # 处理解析文件,调用service进行处理
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
         tmp_file.write(pdf_data)
@@ -337,7 +348,7 @@ async def upload_pdf(
     return {
         "status": "queued",
         "task_id": async_result.id,
-        "filename": file.filename,
+        "filename": safe_filename,
         "document_id": document_id,
         "upload_key": upload_ref.object_key,
     }
@@ -356,7 +367,7 @@ async def upload_pdf(
     },
 )
 async def download_processed_result_file(
-        document_id: str = Path(..., description="Document UUID."),
+    document_id: str = Path(..., description="Document UUID."),
     object_path: str = Path(..., description="Relative path within the result bucket."),
 ):
     """Download a processed file from object storage as raw bytes."""
@@ -389,7 +400,9 @@ async def download_processed_result_file(
     },
 )
 async def reissue_log_link(
-    request_id: str = Query(..., min_length=8, description="Request id used to regenerate log link."),
+    request_id: str = Query(
+        ..., min_length=8, description="Request id used to regenerate log link."
+    ),
 ):
     rate_key = f"log_reissue:{request_id}"
     try:
@@ -408,6 +421,3 @@ async def reissue_log_link(
         request_id=request_id,
         log_link=build_log_link(request_id),
     )
-    
-    
-    

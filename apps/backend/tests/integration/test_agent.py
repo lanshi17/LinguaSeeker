@@ -7,7 +7,6 @@ from src.domain.models import AgentRequest, EvidenceOutput
 
 from src.domain.agent.workflow import (
     EvidenceAgent,
-   
     search_knowledge_base,
 )
 from src.domain.evidence.tools import (
@@ -23,12 +22,14 @@ from src.utils.timer import Timer, timer
 import src.utils.exceptions as exc
 import src.utils.file_utils as file_utils
 from src.config import settings
-from src.domain.agent.rag import RAGComponent 
+from src.domain.agent.rag import RAGComponent
 import pytest
+
 cfg = settings
 
-rag=RAGComponent()
+rag = RAGComponent()
 agent = EvidenceAgent(rag_component=rag)
+
 
 class DummyResponse:
     def __init__(self, content: str):
@@ -75,27 +76,36 @@ class DummyTool:
 
 @pytest.fixture(autouse=True)
 def stub_llms(monkeypatch):
-    evidence_json = json.dumps({
-        "overall_assessment": {"final_recommendation": "approved", "key_strengths": []},
-        "ps3_step_1": {"score": 25},
-        "ps3_step_2": {"score": 25},
-        "ps3_step_3": {"score": 25},
-        "ps3_step_4": {"score": 25, "final_evidence_strength": "PS3"},
-    })
-    arbitration_json = json.dumps({
-        "arbitration_score": 90.0,
-        "feedback": "ok",
-        "final_decision": "approved",
-        "score_adjustment": 0,
-    })
+    evidence_json = json.dumps(
+        {
+            "overall_assessment": {"final_recommendation": "approved", "key_strengths": []},
+            "ps3_step_1": {"score": 25},
+            "ps3_step_2": {"score": 25},
+            "ps3_step_3": {"score": 25},
+            "ps3_step_4": {"score": 25, "final_evidence_strength": "PS3"},
+        }
+    )
+    arbitration_json = json.dumps(
+        {
+            "arbitration_score": 90.0,
+            "feedback": "ok",
+            "final_decision": "approved",
+            "score_adjustment": 0,
+        }
+    )
 
     monkeypatch.setattr(EvidenceAgent, "get_translation_llm", lambda self: DummyLLM("translated"))
     monkeypatch.setattr(EvidenceAgent, "get_format_llm", lambda self: DummyLLM("formatted"))
-    monkeypatch.setattr(EvidenceAgent, "get_vlm", lambda self: DummyLLM("Image description: A test image."))
+    monkeypatch.setattr(
+        EvidenceAgent, "get_vlm", lambda self: DummyLLM("Image description: A test image.")
+    )
     monkeypatch.setattr(EvidenceAgent, "get_evidence_llm", lambda self: DummyLLM(evidence_json))
-    monkeypatch.setattr(EvidenceAgent, "get_arbitration_llm", lambda self: DummyLLM(arbitration_json))
+    monkeypatch.setattr(
+        EvidenceAgent, "get_arbitration_llm", lambda self: DummyLLM(arbitration_json)
+    )
     monkeypatch.setattr(agent, "rag", DummyRag())
     monkeypatch.setattr("src.domain.agent.workflow.search_knowledge_base", DummyTool())
+
 
 def _make_state(markdown_content: str, image_paths: List[str]) -> ProcessingState:
     return {
@@ -106,17 +116,25 @@ def _make_state(markdown_content: str, image_paths: List[str]) -> ProcessingStat
         "enable_vlm": True,
         "vlm_results": [],
         "ps3_evidence": {},
+        "extracted_fields": {},
         "evidence_sources": [],
         "knowledge_context": "",
-        "arbitration_score": 0.0,
+        "field_confidence_scores": {},
+        "overall_confidence": 0.0,
+        "evidence_classification": "",
+        "acmg_evidence_levels": [],
+        "arbitration_confidence": 0.0,
         "arbitration_feedback": "",
         "iteration_count": 0,
         "max_iterations": 2,
+        "needs_manual_review": False,
         "status": "pending",
         "output": None,
     }
 
+
 # ==================== LLM 客户端配置test====================
+
 
 @pytest.mark.unit
 def test_llm_client_configuration():
@@ -125,12 +143,20 @@ def test_llm_client_configuration():
     arbitration_llm = agent.get_arbitration_llm()
     translation_llm = agent.get_translation_llm()
     format_llm = agent.get_format_llm()
-    vlm= agent.get_vlm()
-    
-    evidence_base = getattr(evidence_llm, "bound", None) or getattr(evidence_llm, "llm", None) or evidence_llm
-    evidence_model = getattr(evidence_base, "model_name", None) or getattr(evidence_base, "model", None)
-    arbitration_model = getattr(arbitration_llm, "model_name", None) or getattr(arbitration_llm, "model", None)
-    translation_model = getattr(translation_llm, "model_name", None) or getattr(translation_llm, "model", None)
+    vlm = agent.get_vlm()
+
+    evidence_base = (
+        getattr(evidence_llm, "bound", None) or getattr(evidence_llm, "llm", None) or evidence_llm
+    )
+    evidence_model = getattr(evidence_base, "model_name", None) or getattr(
+        evidence_base, "model", None
+    )
+    arbitration_model = getattr(arbitration_llm, "model_name", None) or getattr(
+        arbitration_llm, "model", None
+    )
+    translation_model = getattr(translation_llm, "model_name", None) or getattr(
+        translation_llm, "model", None
+    )
     format_model = getattr(format_llm, "model_name", None) or getattr(format_llm, "model", None)
     vlm_model = getattr(vlm, "model_name", None) or getattr(vlm, "model", None)
 
@@ -146,11 +172,12 @@ def test_llm_client_configuration():
     assert vlm_model == "qwen3-vl-flash", "视觉 LLM 模型名称不匹配"
     logger.debug("LLM 客户端配置测试通过。")
 
-#========================= tools--test ====================
+
+# ========================= tools--test ====================
 @pytest.mark.unit
 def test_tool():
     """测试工具函数"""
-    #test save_intermediate_md load_intermediate_md
+    # test save_intermediate_md load_intermediate_md
     test_content = "# 测试内容\n这是一些测试内容。"
     test_filepath = "test_intermediate.md"
     Path(test_filepath).write_text(test_content, encoding="utf-8")
@@ -158,7 +185,8 @@ def test_tool():
     assert loaded_content == test_content, "保存和加载的中间文件内容不匹配"
     os.remove(test_filepath)
     logger.debug("工具函数测试通过。")
-    
+
+
 @pytest.mark.unit
 def test_OddsPath_Calculator():
     """测试 OddsPath 计算器"""
@@ -168,6 +196,7 @@ def test_OddsPath_Calculator():
     expected = (P2 * (1 - P1)) / ((1 - P2) * P1)
     assert abs(result - expected) < 1e-6, "OddsPath 计算结果不正确"
     logger.debug("OddsPath 计算器测试通过。")
+
 
 @pytest.mark.unit
 def test_determine_evidence_strength_from_oddspath():
@@ -184,9 +213,12 @@ def test_determine_evidence_strength_from_oddspath():
     ]
     for odds, expected_strength in test_cases:
         strength = determine_evidence_strength_from_oddspath.invoke({"oddspath": odds})
-        assert strength == expected_strength, f"Odds: {odds}, 预期强度: {expected_strength}, 实际强度: {strength}"
+        assert strength == expected_strength, (
+            f"Odds: {odds}, 预期强度: {expected_strength}, 实际强度: {strength}"
+        )
     logger.debug("根据 OddsPath 确定证据强度测试通过。")
-    
+
+
 @pytest.mark.unit
 def test_determine_max_evidence_from_controls():
     """测试根据对照组确定最大证据强度"""
@@ -197,11 +229,16 @@ def test_determine_max_evidence_from_controls():
         (11, "max_moderate"),
     ]
     for controls, expected_classification in test_cases:
-        classification = determine_max_evidence_from_controls.invoke({"control_variants_count": controls})
-        assert classification == expected_classification, f"Controls: {controls}, 预期分类: {expected_classification}, 实际分类: {classification}"
+        classification = determine_max_evidence_from_controls.invoke(
+            {"control_variants_count": controls}
+        )
+        assert classification == expected_classification, (
+            f"Controls: {controls}, 预期分类: {expected_classification}, 实际分类: {classification}"
+        )
     logger.debug("根据对照组确定最大证据强度测试通过。")
 
-@pytest.mark.unit 
+
+@pytest.mark.unit
 def test_validate_ps3():
     """测试验证 PS3 证据强度-两个步骤"""
     result1 = validate_ps3_step1.invoke({"disease_mechanism_clarity": "clear"})
@@ -209,20 +246,24 @@ def test_validate_ps3():
     assert result1.get("step1_pass") is True
     assert result2.get("step2_pass") is True
     logger.debug("验证 PS3 证据强度测试通过。")
-    
+
+
 @pytest.mark.asyncio
 async def test_search_knowledge_base():
     query = "Explain the concept of reinforcement learning."
-    response = await search_knowledge_base.ainvoke({
-        "query": query,
-        "top_k": 5,
-    })
+    response = await search_knowledge_base.ainvoke(
+        {
+            "query": query,
+            "top_k": 5,
+        }
+    )
     assert isinstance(response, list)
     logger.info("知识库搜索测试通过。")
-    
- # ==================== 处理步骤函数 --test====================
- #步骤一：翻译 Markdown 内容
-@pytest.mark.unit 
+
+
+# ==================== 处理步骤函数 --test====================
+# 步骤一：翻译 Markdown 内容
+@pytest.mark.unit
 def test_translate_markdown():
     """测试翻译 Markdown 内容"""
     test_content = "# 标题\n这是一些中文内容。"
@@ -231,12 +272,13 @@ def test_translate_markdown():
     translated_content = result.get("translated_md")
     assert isinstance(translated_content, str) and translated_content, "翻译内容不正确"
     logger.debug("翻译 Markdown 内容测试通过。")
-    
-#步骤二：图片描述生成
+
+
+# 步骤二：图片描述生成
 @pytest.mark.unit
 def test_describe_images():
     """测试图片描述生成"""
-    #准备测试图片
+    # 准备测试图片
     test_image_path = "test_image.jpg"
     with open(test_image_path, "wb") as f:
         f.write(b"test")
@@ -258,8 +300,9 @@ def test_describe_images_disabled():
     result = agent.describe_images(state)
     assert result.get("image_descriptions") == []
     logger.debug("VLM 禁用情况下成功跳过图片描述")
-    
-#步骤4: 证据提取+RAG
+
+
+# 步骤4: 证据提取+RAG
 @pytest.mark.asyncio
 async def test_extract_ps3_evidence():
     """测试提取 PS3 证据"""
@@ -272,8 +315,9 @@ async def test_extract_ps3_evidence():
     assert evidence is not None, "提取的证据为空"
     assert isinstance(evidence, dict), "提取的证据格式不正确"
     logger.debug("提取 PS3 证据测试通过。")
-    
-#步骤5: 仲裁评分
+
+
+# 步骤5: 仲裁评分
 @pytest.mark.unit
 def test_arbitrate_score():
     """测试仲裁评分"""
@@ -295,12 +339,13 @@ def test_arbitrate_score():
     assert 0.0 <= score <= 100.0, "仲裁得分范围不正确"
     assert isinstance(feedback, str), "反馈类型不正确"
     logger.debug("仲裁评分测试通过。")
-    
-#=================================agent集成测试=================================
+
+
+# =================================agent集成测试=================================
 @pytest.mark.integration
 def test_process_medical_evidence():
     """集成测试医学证据处理流程"""
-    #准备测试输入
+    # 准备测试输入
     timer = Timer("医学证据处理流程集成测试")
     timer.start()
     test_markdown_content = "# 标题\n这是一些中文内容，包含功能性研究结果。"
@@ -315,14 +360,19 @@ def test_process_medical_evidence():
         top_p=0.9,
         stream=False,
     )
-    
-    #调用处理函数
-    response: EvidenceOutput = agent.process_medical_evidence(test_markdown_content, [test_image_path])
-    
-    #断言结果
+
+    # 调用处理函数
+    response: EvidenceOutput = agent.process_medical_evidence(
+        test_markdown_content, [test_image_path]
+    )
+
+    # 断言结果
     assert response is not None, "输出结果为空"
     assert hasattr(response, "ps3_evidence"), "输出结果格式不正确"
-    
+    assert "entity_extractions" in response.ps3_evidence
+    assert "relation_extractions" in response.ps3_evidence
+    assert "experiment_info_extractions" in response.ps3_evidence
+
     logger.debug("医学证据处理流程集成测试通过。{}", response)
     os.remove(test_image_path)
     timer.stop()

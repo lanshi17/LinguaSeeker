@@ -38,6 +38,7 @@ from src.service.dtos import (
 )
 from src.service.enum import TaskStatus
 from src.domain.agent.interaction import InteractionAgent
+from src.utils.sanitizers import sanitize_filename
 
 router = APIRouter(prefix="/tasks", tags=["Task"])
 
@@ -470,7 +471,7 @@ async def create_task_request_by_upload(
     paper_entries: List[Any] = []
 
     for upload in files:
-        filename = upload.filename or ""
+        filename = sanitize_filename(upload.filename or "")
         suffix = Path(filename).suffix.lower()
         if suffix not in ALLOWED_SUFFIXES:
             raise HTTPException(status_code=400, detail="Unsupported file type. Allowed: PDF, DOCX")
@@ -508,12 +509,18 @@ async def create_task_request_by_upload(
             continue
 
         try:
+            storage_key = MinIOClient.build_literature_object_key(
+                file_hash=file_hash,
+                original_filename=filename or f"{file_hash}{suffix}",
+            )
             upload_ref = await minio.upload_literature_upload(
-                filename=filename or f"{file_hash}{suffix}",
+                storage_key=storage_key,
                 payload=payload,
                 content_type=upload.content_type or "application/octet-stream",
-                object_prefix=file_hash,
-                metadata={"hash": file_hash, "filename": filename},
+                metadata={
+                    "hash": file_hash,
+                    "uploaded_at": datetime.now(timezone.utc).isoformat(),
+                },
             )
         except Exception as exc:
             logger.exception("Failed to upload file to object storage: {}", exc)

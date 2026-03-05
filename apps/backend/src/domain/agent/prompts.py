@@ -3,6 +3,7 @@
 包含翻译、图片描述、排版融合、证据提取、仲裁评分和反馈微调等步骤的提示词
 支持11个标准化证据字段的结构化提取
 """
+
 from typing import List, Dict, Any
 import json
 
@@ -439,10 +440,10 @@ QUESTION_TEMPLATE_6 = """
 def get_translation_prompt(markdown_content: str) -> str:
     """
     生成翻译 Markdown 为英文的提示词
-    
+
     Args:
         markdown_content: 待翻译的 Markdown 内容
-    
+
     Returns:
         格式化的提示词
     """
@@ -456,10 +457,10 @@ def get_translation_prompt(markdown_content: str) -> str:
 def get_image_description_prompt(image_index: int) -> str:
     """
     生成图片描述的提示词
-    
+
     Args:
         image_index: 图片索引（从1开始）
-    
+
     Returns:
         格式化的提示词
     """
@@ -476,19 +477,18 @@ def get_image_description_prompt(image_index: int) -> str:
 def get_layout_fusion_prompt(translated_md: str, image_descriptions: List[str]) -> str:
     """
     生成排版融合的提示词
-    
+
     Args:
         translated_md: 翻译后的 Markdown 内容
         image_descriptions: 图片描述列表
-    
+
     Returns:
         格式化的提示词
     """
-    image_section = "\n".join([
-        f"### Image {i+1} Description\n{desc}"
-        for i, desc in enumerate(image_descriptions)
-    ])
-    
+    image_section = "\n".join(
+        [f"### Image {i + 1} Description\n{desc}" for i, desc in enumerate(image_descriptions)]
+    )
+
     return f"""请将以下内容融合为一份格式清晰、结构完整的医学文档：
 
 ## Translated Medical Document
@@ -513,12 +513,12 @@ def get_ps3_evidence_extraction_prompt(
 ) -> str:
     """
     生成 PS3 证据提取的提示词
-    
+
     Args:
         translated_md: 翻译后的 Markdown 文档
         image_descriptions: 图片描述列表
         knowledge_context: 可选的知识库检索结果上下文
-    
+
     Returns:
         格式化的提示词
     """
@@ -535,7 +535,7 @@ The following documents from the knowledge base may provide relevant guidance fo
 
 ---
 """
-    
+
     image_section = "\n".join(
         [f"### Image {i + 1} Description\n{desc}" for i, desc in enumerate(image_descriptions)]
     )
@@ -661,6 +661,8 @@ Count the total number of control variants (benign + pathogenic) used:
 6. **Strict JSON only**: use double quotes for keys/strings, no trailing commas, no extra text
 7. **Evidence annotations**: every conclusion must cite evidence IDs; each evidence quote MUST be an exact substring from the medical document
 8. **Confidence scoring**: For each extracted field, assign confidence 0-100; evidence with overall confidence >= 85 is considered valid
+9. **Entity/Relation/Experiment extraction**: provide `entity_extractions`, `relation_extractions`, and `experiment_info_extractions` arrays when evidence is available
+10. **Position-ready spans**: every `text` in those arrays must be an exact substring and should include `evidence_ref` to anchor offsets
 
 ## OUTPUT FORMAT (valid JSON only)
 {{{{
@@ -697,6 +699,64 @@ Count the total number of control variants (benign + pathogenic) used:
             "tex_wrapped": ["$n = 3$", "$44\\%$"]
         }}}},
         "image_ref": "fig1"
+    }}}}],
+    "entity_extractions": [{{{{
+        "id": "ENT1",
+        "type": "gene|variant|protein|disease|transcript|experiment",
+        "text": "Exact substring from the document",
+        "evidence_ref": "E1",
+        "locator": {{{{
+            "file": "en_format.md",
+            "start": null,
+            "end": null,
+            "char_start": null,
+            "char_end": null,
+            "line_start": null,
+            "line_end": null
+        }}}}
+    }}}}],
+    "relation_extractions": [{{{{
+        "id": "REL1",
+        "type": "gene_variant|variant_disease|gene_disease|custom",
+        "evidence_ref": "E1",
+        "arguments": [{{{{
+            "entity_id": "ENT1",
+            "type": "gene|variant|disease|protein|transcript",
+            "text": "Exact substring from the document",
+            "locator": {{{{
+                "file": "en_format.md",
+                "start": null,
+                "end": null,
+                "char_start": null,
+                "char_end": null,
+                "line_start": null,
+                "line_end": null
+            }}}}
+        }}}}],
+        "locator": {{{{
+            "file": "en_format.md",
+            "start": null,
+            "end": null,
+            "char_start": null,
+            "char_end": null,
+            "line_start": null,
+            "line_end": null
+        }}}}
+    }}}}],
+    "experiment_info_extractions": [{{{{
+        "id": "EXP1",
+        "category": "method|result|conclusion",
+        "text": "Exact substring from the document",
+        "evidence_ref": "E1",
+        "locator": {{{{
+            "file": "en_format.md",
+            "start": null,
+            "end": null,
+            "char_start": null,
+            "char_end": null,
+            "line_start": null,
+            "line_end": null
+        }}}}
     }}}}],
   "ps3_step_1": {{{{
     "disease_mechanism_clarity": "clear|partial|unclear",
@@ -880,7 +940,7 @@ def get_ps3_evidence_feedback_prompt(
 ) -> str:
     """
     生成基于仲裁反馈的 PS3 证据修订提示词
-    
+
     Args:
         translated_md: 翻译后的 Markdown 文档
         image_descriptions: 图片描述列表
@@ -931,25 +991,25 @@ def get_arbitration_prompt(
     image_descriptions: List[str],
     ps3_evidence: Dict[str, Any],
     calculated_score: float,
-  final_recommendation: str,
-  knowledge_context: str = "",
+    final_recommendation: str,
+    knowledge_context: str = "",
 ) -> str:
     """
     生成仲裁评分的提示词
-    
+
     Args:
         translated_md: 翻译后的 Markdown 文档
         image_descriptions: 图片描述列表
         ps3_evidence: PS3 证据评估结果
         calculated_score: 计算得到的分数
         final_recommendation: 初步建议
-    
+
     Returns:
         格式化的提示词
     """
     knowledge_section = ""
     if knowledge_context:
-      knowledge_section = f"""
+        knowledge_section = f"""
   ## REFERENCE KNOWLEDGE BASE DOCUMENTS
   {knowledge_context}
 
@@ -1001,13 +1061,13 @@ def get_feedback_refinement_prompt(
     translated_md: str,
     image_descriptions: List[str],
     arbitration_feedback: str,
-  arbitration_confidence: float,
+    arbitration_confidence: float,
     weaknesses: List[str],
-    improvements: List[str]
+    improvements: List[str],
 ) -> str:
     """
     生成反馈微调的提示词
-    
+
     Args:
         translated_md: 翻译后的 Markdown 文档
         image_descriptions: 图片描述列表
@@ -1015,13 +1075,17 @@ def get_feedback_refinement_prompt(
         arbitration_confidence: 仲裁置信度
         weaknesses: 关键弱点列表
         improvements: 改进建议列表
-    
+
     Returns:
         格式化的提示词
     """
-    weaknesses_str = ', '.join(weaknesses) if weaknesses else '未指明'
-    improvements_str = '\n'.join(f'- {sugg}' for sugg in improvements) if improvements else '请根据仲裁反馈进行改进'
-    
+    weaknesses_str = ", ".join(weaknesses) if weaknesses else "未指明"
+    improvements_str = (
+        "\n".join(f"- {sugg}" for sugg in improvements)
+        if improvements
+        else "请根据仲裁反馈进行改进"
+    )
+
     image_section = "\n".join(
         [f"### Image {i + 1} Description\n{desc}" for i, desc in enumerate(image_descriptions)]
     )
@@ -1070,8 +1134,8 @@ ODDSPATH_THRESHOLDS = {
 
 CONTROL_VARIANTS_THRESHOLDS = {
     "max_supporting": 10,  # ≤10个对照变异，最高 supporting
-    "max_moderate": 11,    # ≥11个对照变异，最高 moderate
+    "max_moderate": 11,  # ≥11个对照变异，最高 moderate
 }
 
 ARBITRATION_CONFIDENCE_THRESHOLD = 0.85  # 仲裁置信度及格线
-ARBITRATION_SCORE_THRESHOLD = 85.0      # 仲裁得分（0-100）及格线
+ARBITRATION_SCORE_THRESHOLD = 85.0  # 仲裁得分（0-100）及格线

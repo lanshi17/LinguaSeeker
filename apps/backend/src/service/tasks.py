@@ -24,7 +24,6 @@ from src.domain.agent.workflow import EvidenceAgent
 from src.domain.models import (
     EvidenceOutput,
     MinerURequest,
-    MinerUResponse,
     PipelineFiles,
     PipelineResult,
 )
@@ -47,7 +46,7 @@ cfg = settings
 _mineru = MinerUComponent()
 _agents = EvidenceAgent()
 _qdrant_manager = QdrantManager()
-_REBUILD_EMPTY_KB = getattr(cfg, "rebuild_empty_knowledge_base", False)
+_REBUILD_EMPTY_KB = getattr(cfg, "rebuild_empty_knowledge_base", True)
 _HGVS_TOKEN_PATTERN = re.compile(r"(?:[A-Z]{2}_\d+\.\d+:)?[cgp]\.[A-Za-z0-9_+\-*><=()\[\];:]+")
 
 # ---------------------------------------------------------------------------
@@ -275,7 +274,7 @@ def _sync_evidence_to_graph(
             }
         except Exception as general_exc:
             logger.error(
-                "Graph sync attempt %s/%s failed for document %s: %s",
+                "Graph sync attempt {}/{} failed for document {}: {}",
                 attempt,
                 max_attempts,
                 document_id,
@@ -550,12 +549,17 @@ async def _store_outputs_in_minio(
 def _log_node_start(
     postgres: Any, paper_task_id: str, node: str, extra: Optional[Dict[str, Any]] = None
 ) -> None:
+    task_id = str(paper_task_id or "").strip()
+    if not task_id:
+        logger.debug("Skip node {} start log: empty paper_task_id", node)
+        return
+
     try:
         payload: Dict[str, Any] = {"node_retry_policy": _get_node_policy(node)}
         if extra:
             payload.update(extra)
         postgres.append_paper_task_log(
-            paper_task_id,
+            task_id,
             status="running",
             node=node,
             message=f"Node {node} started",
@@ -575,10 +579,15 @@ def _log_node_end(
     error_code: Optional[str] = None,
     message: Optional[str] = None,
 ) -> None:
+    task_id = str(paper_task_id or "").strip()
+    if not task_id:
+        logger.debug("Skip node {} end log: empty paper_task_id", node)
+        return
+
     try:
         status = "running" if success else "failed"
         postgres.append_paper_task_log(
-            paper_task_id,
+            task_id,
             status=status,
             node=node,
             error_code=error_code,
@@ -720,6 +729,7 @@ def run_node_translation(
         "evidence_classification": "",
         "acmg_evidence_levels": [],
         "arbitration_confidence": 0.0,
+        "arbitration_score": 0.0,
         "arbitration_feedback": "",
         "iteration_count": 0,
         "max_iterations": 1,
@@ -776,6 +786,7 @@ def run_node_translation(
 def run_node_extraction(
     postgres: Any,
     paper_task_id: str,
+    source_text: str,
     en_text: str,
     image_paths: List[str],
     node_trace: Dict[str, str],
@@ -787,8 +798,9 @@ def run_node_extraction(
             "extraction",
             "process_medical_evidence",
             _agents.process_medical_evidence,
-            markdown_content=en_text,
+            markdown_content=source_text or en_text,
             image_paths=image_paths,
+            translated_md=en_text,
         )
     except Exception as ext_exc:
         _log_node_end(
@@ -840,94 +852,6 @@ def run_node_acmg(
 
     _log_node_end(postgres, paper_task_id, "acmg", success=True)
     return graph_sync_result, _update_node_trace(node_trace, "acmg", "success")
-
-
-async def run_fastapi_pipeline(
-    file_paths: List[str],
-    output_root: Optional[Path] = None,
-    keep_tmp_runs: int = 3,
-    hash_file_paths: bool = False,
-    document_id: Optional[str] = None,
-) -> PipelineResult:
-    """FastAPI-friendly pipeline wrapper based on pipline.py."""
-    if not file_paths:
-        raise exc.ValidationException("file_paths is empty")
-
-    logger.debug(
-        "Pipeline start file_paths: {} output_root: {} keep_tmp_runs: {}",
-        file_paths,
-        str(output_root) if output_root else None,
-        keep_tmp_runs,
-    )
-
-    _disable_proxies()
-
-    document_id = document_id or str(uuid4())
-
-    with Timer("pipeline_total"):
-        try:
-            await init_knowledge_base_if_needed()
-        except Exception as e:
-            logger.exception("Knowledge base init failed, continue: {}", e)
-
-        mineru_request = MinerURequest(file_paths=file_paths)
-        mineru_response: Optional[MinerUResponse]
-        try:
-            mineru_response, parsing_attempt = await _run_async_with_node_policy(
-                "parsing",
-                "mineru_pipeline",
-                lambda: asyncio.to_thread(_mineru.minerU_pipeline, mineru_request),
-            )
-        except Exception as e:
-            logger.exception("MinerU parsing failed: {}", e)
-            raise exc.ParsingException(str(e))
-
-        if not mineru_response or not mineru_response.folder_path:
-            raise exc.ParsingException("MinerU did not return parsed folder")
-
-        logger.debug("MinerU parsing done, folder: {}", mineru_response.folder_path)
-        logger.debug("Parsing completed with attempts={}", parsing_attempt)
-        origin_md_content, origin_image_paths = _collect_mineru_assets(mineru_response.folder_path)
-        logger.debug("Markdown preview: {}", origin_md_content[:100])
-        logger.debug("Image paths: {}", origin_image_paths)
-
-        try:
-            agent_response, extraction_attempt = await _run_async_with_node_policy(
-                "extraction",
-                "process_medical_evidence",
-                lambda: asyncio.to_thread(
-                    _agents.process_medical_evidence,
-                    markdown_content=origin_md_content,
-                    image_paths=origin_image_paths,
-                ),
-            )
-        except Exception as e:
-            logger.exception("Evidence processing failed: {}", e)
-            raise exc.ReasoningException(str(e))
-
-        logger.debug("Extraction completed with attempts={}", extraction_attempt)
-
-        if not agent_response or getattr(agent_response, "status", None) == "failed":
-            raise exc.ReasoningException("Evidence processing failed")
-
-        saved_files = await _store_outputs_in_minio(
-            agent_response,
-            origin_image_paths,
-            document_id,
-        )
-        logger.debug("Outputs stored in MinIO with document_id: {}", document_id)
-
-        tmp_dir = Path(os.environ.get("PWD", str(Path.cwd()))) / "tmp"
-        file_utils.cleanup_old_temp_folders(str(tmp_dir), keep_latest=keep_tmp_runs)
-        logger.debug("Temp cleanup complete in {}", str(tmp_dir))
-
-        return PipelineResult(
-            document_id=document_id,
-            output_dir=f"{cfg.minio_results_bucket}/{document_id}",
-            mineru_folder=mineru_response.folder_path,
-            files=saved_files,
-            evidence=agent_response,
-        )
 
 
 @celery_app.task(
@@ -1020,6 +944,7 @@ def process_pdf_task(
         agent_response, node_trace = run_node_extraction(
             postgres,
             paper_task_id or "",
+            source_text,
             en_text,
             image_paths,
             node_trace,
@@ -1279,6 +1204,7 @@ def process_pubmed_paper_task(
         agent_response, node_trace = run_node_extraction(
             postgres,
             paper_task_id,
+            source_text,
             en_text,
             [],
             node_trace,

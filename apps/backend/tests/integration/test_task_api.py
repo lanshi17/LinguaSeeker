@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from pathlib import Path
+from typing import Any, Dict, Generator, List, Tuple
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -14,7 +15,7 @@ import src.presentation.task_api as task_api
 
 
 @pytest.fixture()
-def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
+def client(monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None, None]:
     async def _ensure_buckets(self) -> None:
         return None
 
@@ -30,7 +31,9 @@ def task_prefix() -> str:
     return f"{cfg.api_prefix}/tasks"
 
 
-def test_create_task_success(client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str) -> None:
+def test_create_task_success(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
     class DummyAsyncResult:
         def __init__(self) -> None:
             self.id = "task-123"
@@ -51,7 +54,9 @@ def test_create_task_success(client: TestClient, monkeypatch: pytest.MonkeyPatch
     assert payload["status"] == "PENDING"
 
 
-def test_get_task_status_success(client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str) -> None:
+def test_get_task_status_success(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
     class DummyAsyncResult:
         def __init__(self, task_id: str) -> None:
             self.id = task_id
@@ -64,7 +69,9 @@ def test_get_task_status_success(client: TestClient, monkeypatch: pytest.MonkeyP
         def successful(self) -> bool:
             return True
 
-    monkeypatch.setattr(task_api, "AsyncResult", lambda task_id, app=None: DummyAsyncResult(task_id))
+    monkeypatch.setattr(
+        task_api, "AsyncResult", lambda task_id, app=None: DummyAsyncResult(task_id)
+    )
 
     response = client.get(f"{task_prefix}/task-200")
     assert response.status_code == 200
@@ -75,7 +82,9 @@ def test_get_task_status_success(client: TestClient, monkeypatch: pytest.MonkeyP
     assert "result" not in payload
 
 
-def test_get_task_status_failure(client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str) -> None:
+def test_get_task_status_failure(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
     class DummyAsyncResult:
         def __init__(self, task_id: str) -> None:
             self.id = task_id
@@ -88,7 +97,9 @@ def test_get_task_status_failure(client: TestClient, monkeypatch: pytest.MonkeyP
         def successful(self) -> bool:
             return False
 
-    monkeypatch.setattr(task_api, "AsyncResult", lambda task_id, app=None: DummyAsyncResult(task_id))
+    monkeypatch.setattr(
+        task_api, "AsyncResult", lambda task_id, app=None: DummyAsyncResult(task_id)
+    )
 
     response = client.get(f"{task_prefix}/task-500")
     assert response.status_code == 200
@@ -98,7 +109,9 @@ def test_get_task_status_failure(client: TestClient, monkeypatch: pytest.MonkeyP
     assert payload["error"] == "boom"
 
 
-def test_list_tasks_with_results(client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str) -> None:
+def test_list_tasks_with_results(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
     metas: List[Dict[str, Any]] = [
         {
             "task_id": "task-1",
@@ -145,7 +158,9 @@ def test_create_task_request_upload_duplicate_success(
         def __init__(self) -> None:
             self.paper_entries: List[Any] = []
 
-        def create_task_request(self, task_form_text: str, status: str, metadata: Dict[str, Any]) -> Any:
+        def create_task_request(
+            self, task_form_text: str, status: str, metadata: Dict[str, Any]
+        ) -> Any:
             assert task_form_text == "Find BRCA1 PS3 evidence"
             return SimpleNamespace(request_id=request_id, status=status)
 
@@ -175,11 +190,16 @@ def test_create_task_request_upload_duplicate_success(
             return SimpleNamespace(request_id=request_id, status="success")
 
     class DummyMinio:
+        @staticmethod
+        def build_literature_object_key(file_hash: str, original_filename: str | None) -> str:
+            suffix = Path(original_filename or "file.pdf").suffix or ".bin"
+            return f"{file_hash}/dummy{suffix}"
+
         async def upload_literature_upload(self, **_: Any) -> Any:
             return SimpleNamespace(object_key="unused")
 
     monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
-    monkeypatch.setattr(task_api, "MinIOClient", lambda: DummyMinio())
+    monkeypatch.setattr(task_api, "MinIOClient", DummyMinio)
 
     response = client.post(
         f"{task_prefix}/requests/upload",
@@ -195,10 +215,18 @@ def test_create_task_request_upload_duplicate_success(
     assert payload["papers"][0]["duplicate_of"] == str(historical_id)
 
 
+@pytest.mark.parametrize(
+    "upload_filename",
+    [
+        "测试文件_123.pdf",
+        "贵州省Waardenburg综合征新发变异 1 例及文献回顾_岳慧玲.pdf",
+    ],
+)
 def test_create_task_request_upload_enqueue_non_duplicate(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
     task_prefix: str,
+    upload_filename: str,
 ) -> None:
     request_id = uuid4()
     paper_task_id = uuid4()
@@ -255,18 +283,26 @@ def test_create_task_request_upload_enqueue_non_duplicate(
         def refresh_task_request_status(self, _: Any) -> Any:
             return SimpleNamespace(request_id=request_id, status="queued")
 
+    upload_kwargs: Dict[str, Any] = {}
+
     class DummyMinio:
-        async def upload_literature_upload(self, **_: Any) -> Any:
-            return SimpleNamespace(object_key="hash/new.pdf")
+        @staticmethod
+        def build_literature_object_key(file_hash: str, original_filename: str | None) -> str:
+            suffix = Path(original_filename or "file.pdf").suffix or ".bin"
+            return f"{file_hash}/dummy{suffix}"
+
+        async def upload_literature_upload(self, **kwargs: Any) -> Any:
+            upload_kwargs.update(kwargs)
+            return SimpleNamespace(object_key=kwargs.get("storage_key", "hash/new.pdf"))
 
     monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
-    monkeypatch.setattr(task_api, "MinIOClient", lambda: DummyMinio())
+    monkeypatch.setattr(task_api, "MinIOClient", DummyMinio)
     monkeypatch.setattr(task_api, "process_pdf_task", DummyProcessTask())
 
     response = client.post(
         f"{task_prefix}/requests/upload",
         data={"task_form": "Evaluate LDLR CNV"},
-        files=[("files", ("new.pdf", b"%PDF-1.7 new", "application/pdf"))],
+        files=[("files", (upload_filename, b"%PDF-1.7 new", "application/pdf"))],
     )
     assert response.status_code == 200
     payload = response.json()
@@ -274,8 +310,17 @@ def test_create_task_request_upload_enqueue_non_duplicate(
     assert payload["papers"][0]["status"] == "queued"
     assert payload["papers"][0]["celery_task_id"] == "celery-paper-1"
 
+    metadata = upload_kwargs["metadata"]
+    assert "storage_key" in upload_kwargs
+    assert "filename" not in metadata
+    assert "uploaded_at" in metadata
+    assert upload_kwargs["storage_key"].startswith(f"{metadata['hash']}/")
+    assert upload_kwargs["storage_key"].endswith(".pdf")
 
-def test_get_task_request_status(client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str) -> None:
+
+def test_get_task_request_status(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
     request_id = uuid4()
     paper_task_id = uuid4()
 
@@ -311,7 +356,9 @@ def test_search_pubmed_candidates_success(
     task_prefix: str,
 ) -> None:
     class DummyPubMedService:
-        async def search_candidates(self, query: str, country: str, candidate_limit: int) -> List[Any]:
+        async def search_candidates(
+            self, query: str, country: str, candidate_limit: int
+        ) -> List[Any]:
             assert "BRCA1" in query
             assert country == "不限"
             assert candidate_limit == 5
@@ -369,7 +416,9 @@ def test_search_pubmed_candidates_no_result_maps_error_contract(
     assert payload["error_code"] == "FETCH_NO_RESULT"
 
 
-def test_submit_pubmed_selection(client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str) -> None:
+def test_submit_pubmed_selection(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
     request_id = uuid4()
     paper_task_id = uuid4()
     document_id = uuid4()

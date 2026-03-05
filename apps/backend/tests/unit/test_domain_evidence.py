@@ -103,12 +103,27 @@ def test_determine_evidence_strength_oddspath_path() -> None:
 
 def test_evaluate_extraction_metrics() -> None:
     benchmark_items = [
-        {"gene": "BRCA1", "variant": "c.68_69del", "disease": "Breast cancer", "assay_type": "reporter"},
+        {
+            "gene": "BRCA1",
+            "variant": "c.68_69del",
+            "disease": "Breast cancer",
+            "assay_type": "reporter",
+        },
         {"gene": "CFTR", "variant": "c.1521_1523delCTT", "disease": "CF", "assay_type": "chloride"},
     ]
     model_items = [
-        {"gene": "BRCA1", "variant": "c.68_69del", "disease": "Breast cancer", "assay_type": "reporter"},
-        {"gene": "TP53", "variant": "c.743G>A", "disease": "Li-Fraumeni", "assay_type": "transactivation"},
+        {
+            "gene": "BRCA1",
+            "variant": "c.68_69del",
+            "disease": "Breast cancer",
+            "assay_type": "reporter",
+        },
+        {
+            "gene": "TP53",
+            "variant": "c.743G>A",
+            "disease": "Li-Fraumeni",
+            "assay_type": "transactivation",
+        },
     ]
     metrics = framework_module.evaluate_extraction_metrics(benchmark_items, model_items)
     assert metrics.benchmark_total == 2
@@ -138,6 +153,17 @@ def test_classifier_mappings() -> None:
     assert classifier_module.EvidenceClassifier.score_to_classification(85.0) == "Pathogenic"
 
 
+def test_classifier_oddspath_threshold_boundaries() -> None:
+    assert classifier_module.EvidenceClassifier.oddspath_to_strength(0.0029) == "BS3"
+    assert classifier_module.EvidenceClassifier.oddspath_to_strength(0.053) == "BS3_moderate"
+    assert classifier_module.EvidenceClassifier.oddspath_to_strength(0.23) == "BS3_supporting"
+    assert classifier_module.EvidenceClassifier.oddspath_to_strength(1.0) == "BS3_supporting"
+    assert classifier_module.EvidenceClassifier.oddspath_to_strength(4.3) == "PS3_supporting"
+    assert classifier_module.EvidenceClassifier.oddspath_to_strength(18.7) == "PS3_moderate"
+    assert classifier_module.EvidenceClassifier.oddspath_to_strength(350.0) == "PS3"
+    assert classifier_module.EvidenceClassifier.oddspath_to_strength(351.0) == "PS3_very_strong"
+
+
 def test_classifier_classify_with_fields() -> None:
     ps3_evidence = {
         "ps3_step_1": {"score": 30, "evidence_refs": ["s1"]},
@@ -163,7 +189,9 @@ def test_classifier_validate_with_arbitration() -> None:
         "ps3_step_4": {"score": 20, "final_evidence_strength": "PS3"},
     }
     arbitration = {"arbitration_score": 90, "score_adjustment": 10, "final_decision": "approve"}
-    result = classifier_module.EvidenceClassifier.validate_with_arbitration(ps3_evidence, arbitration)
+    result = classifier_module.EvidenceClassifier.validate_with_arbitration(
+        ps3_evidence, arbitration
+    )
     assert result["adjusted_score"] == 90.0
     assert result["final_classification"] == "Pathogenic"
     assert result["final_is_valid"] is True
@@ -177,12 +205,16 @@ def test_classifier_validity_reason_missing_fields() -> None:
     result = classifier_module.EvidenceClassifier.classify(ps3_evidence, extracted_fields=None)
     assert result.overall_score == 0.0
     assert result.is_valid is False
-    assert result.validity_reason in {"missing_extractions", "no_structured_fields", "no_scoring_signal"}
+    assert result.validity_reason in {
+        "missing_extractions",
+        "no_structured_fields",
+        "no_scoring_signal",
+    }
 
 
 def test_aggregate_variant_group(monkeypatch: pytest.MonkeyPatch) -> None:
     class FakePostgres:
-        def search_evidence_by_gene(self, *_: object, **__: object) -> list:
+        def search_evidence_by_gene(self, *_: object, **__: object) -> list[object]:
             return []
 
     monkeypatch.setattr(aggregator_module, "get_postgres_client", lambda: FakePostgres())
@@ -226,7 +258,7 @@ def test_aggregate_variant_group(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_aggregate_by_gene(monkeypatch: pytest.MonkeyPatch) -> None:
     class FakePostgres:
-        def search_evidence_by_gene(self, *_: object, **__: object) -> list:
+        def search_evidence_by_gene(self, *_: object, **__: object) -> list[object]:
             return [
                 SimpleNamespace(
                     evidence_id=1,

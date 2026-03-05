@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Mapping, cast
 import asyncio
 import base64
 import json
@@ -6,7 +6,11 @@ import re
 from pathlib import Path
 from loguru import logger
 from src.domain.enums import ProcessingState
-from src.domain.models import EvidenceOutput
+from src.domain.models import (
+    EvidenceOutput,
+    EvidenceStrengthClassification,
+    ExtractedEvidenceFields,
+)
 from src.domain.agent import prompts
 from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_anthropic import ChatAnthropic
@@ -21,7 +25,8 @@ from src.domain.evidence.tools import (
 from src.utils.timer import timer
 from src.utils.evidence_annotation import enrich_evidence_json
 from src.config import settings
-from .rag import RAGComponent 
+from .rag import RAGComponent
+
 cfg = settings
 
 
@@ -115,7 +120,9 @@ class EvidenceAgent:
         current = ""
         for unit in paragraph_units:
             candidate = unit if not current else f"{current}\n\n{unit}"
-            if self._estimate_tokens(candidate) <= max_tokens and (max_chars is None or len(candidate) <= max_chars):
+            if self._estimate_tokens(candidate) <= max_tokens and (
+                max_chars is None or len(candidate) <= max_chars
+            ):
                 current = candidate
                 continue
 
@@ -152,33 +159,39 @@ class EvidenceAgent:
 
                 for result in search_response.results:
                     payload = result.payload or {}
-                    retrieved_docs.append({
-                        "content": payload.get("content", ""),
-                        "file_path": payload.get("file_path", ""),
-                        "score": result.score,
-                        "source": "rag",
-                    })
+                    retrieved_docs.append(
+                        {
+                            "content": payload.get("content", ""),
+                            "file_path": payload.get("file_path", ""),
+                            "score": result.score,
+                            "source": "rag",
+                        }
+                    )
         except Exception as e:
             logger.error(f"知识库检索失败: {e}")
             raise RuntimeError("知识库检索失败") from e
 
         for query in search_queries:
             try:
-                tool_results = await search_knowledge_base.ainvoke({
-                    "query": query,
-                    "top_k": 3,
-                })
+                tool_results = await search_knowledge_base.ainvoke(
+                    {
+                        "query": query,
+                        "top_k": 3,
+                    }
+                )
             except Exception as e:
                 logger.error(f"工具检索失败 '{query}': {e}")
                 raise RuntimeError("工具检索失败") from e
 
             for result in tool_results:
-                retrieved_docs.append({
-                    "content": result.get("content", ""),
-                    "file_path": result.get("file_path", ""),
-                    "score": result.get("score", 0),
-                    "source": "tool",
-                })
+                retrieved_docs.append(
+                    {
+                        "content": result.get("content", ""),
+                        "file_path": result.get("file_path", ""),
+                        "score": result.get("score", 0),
+                        "source": "tool",
+                    }
+                )
 
         seen_content = set()
         unique_docs = []
@@ -190,10 +203,16 @@ class EvidenceAgent:
 
         top_docs = unique_docs[:5]
 
-        knowledge_context = "\n\n".join([
-            f"[参考文档 {i+1}] (相似度: {doc['score']:.3f})\n{doc['content'][:1000]}..."
-            for i, doc in enumerate(top_docs)
-        ]) if top_docs else "未检索到相关知识库文档"
+        knowledge_context = (
+            "\n\n".join(
+                [
+                    f"[参考文档 {i + 1}] (相似度: {doc['score']:.3f})\n{doc['content'][:1000]}..."
+                    for i, doc in enumerate(top_docs)
+                ]
+            )
+            if top_docs
+            else "未检索到相关知识库文档"
+        )
 
         logger.info(f"知识库检索完成，获取 {len(top_docs)} 个相关文档")
         return knowledge_context
@@ -203,7 +222,9 @@ class EvidenceAgent:
             asyncio.get_running_loop()
         except RuntimeError:
             return asyncio.run(self._retrieve_knowledge_context(search_queries))
-        raise RuntimeError("_retrieve_knowledge_context_sync cannot run inside a running event loop")
+        raise RuntimeError(
+            "_retrieve_knowledge_context_sync cannot run inside a running event loop"
+        )
 
     # ==================== LLM 客户端配置 ====================
     def get_translation_llm(self):
@@ -266,7 +287,7 @@ class EvidenceAgent:
 
     def _invoke_with_tools(
         self,
-        llm: ChatAnthropic,
+        llm: Any,
         messages: List[Any],
         max_rounds: int = 4,
     ):
@@ -285,9 +306,17 @@ class EvidenceAgent:
             current_messages.append(response)
             tool_messages: List[ToolMessage] = []
             for call in tool_calls:
-                tool_name = call.get("name") if isinstance(call, dict) else getattr(call, "name", None)
-                tool_args = call.get("args") if isinstance(call, dict) else getattr(call, "args", None)
-                tool_call_id = call.get("id") if isinstance(call, dict) else getattr(call, "id", None)
+                if isinstance(call, dict):
+                    call_dict = cast(Dict[str, Any], call)
+                    tool_name_candidate = call_dict.get("name")
+                    tool_args = call_dict.get("args")
+                    tool_call_id = call_dict.get("id")
+                else:
+                    tool_name_candidate = getattr(call, "name", None)
+                    tool_args = getattr(call, "args", None)
+                    tool_call_id = getattr(call, "id", None)
+
+                tool_name = tool_name_candidate if isinstance(tool_name_candidate, str) else ""
 
                 if isinstance(tool_args, str):
                     try:
@@ -295,7 +324,7 @@ class EvidenceAgent:
                     except json.JSONDecodeError:
                         tool_args = {}
 
-                tool_impl = tool_map.get(tool_name)
+                tool_impl = tool_map.get(tool_name) if tool_name else None
                 if tool_impl is None:
                     result_payload = {"error": f"Unknown tool: {tool_name}"}
                 else:
@@ -328,10 +357,7 @@ class EvidenceAgent:
                 return ""
 
         if isinstance(content, list):
-            parts = [
-                text for item in content
-                if (text := self._message_content_to_text(item))
-            ]
+            parts = [text for item in content if (text := self._message_content_to_text(item))]
             return "\n".join(parts).strip()
 
         if isinstance(content, dict):
@@ -355,18 +381,245 @@ class EvidenceAgent:
 
         return str(content).strip()
 
+    def _collect_json_object_candidates(self, content: str) -> List[str]:
+        candidates: List[str] = []
+        seen: set[str] = set()
+
+        def push(candidate: str) -> None:
+            normalized = candidate.strip()
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                candidates.append(normalized)
+
+        text = content.strip()
+        push(text)
+
+        for match in re.finditer(r"```(?:json)?\s*(.*?)\s*```", text, re.IGNORECASE | re.DOTALL):
+            push(match.group(1))
+
+        brace_stack = 0
+        start_idx: Optional[int] = None
+        in_string = False
+        escaped = False
+        for index, char in enumerate(text):
+            if in_string:
+                if escaped:
+                    escaped = False
+                    continue
+                if char == "\\":
+                    escaped = True
+                    continue
+                if char == '"':
+                    in_string = False
+                continue
+
+            if char == '"':
+                in_string = True
+                continue
+
+            if char == "{":
+                if brace_stack == 0:
+                    start_idx = index
+                brace_stack += 1
+                continue
+
+            if char == "}" and brace_stack > 0:
+                brace_stack -= 1
+                if brace_stack == 0 and start_idx is not None:
+                    push(text[start_idx : index + 1])
+                    start_idx = None
+
+        greedy = re.search(r"\{.*\}", text, re.DOTALL)
+        if greedy:
+            push(greedy.group())
+
+        return candidates
+
+    def _try_parse_json_dict(self, candidate: str) -> Optional[Dict[str, Any]]:
+        normalized = candidate.strip()
+        variants = [normalized]
+
+        trailing_comma_fixed = re.sub(r",\s*([}\]])", r"\1", normalized)
+        if trailing_comma_fixed != normalized:
+            variants.append(trailing_comma_fixed)
+
+        decoder = json.JSONDecoder()
+        for variant in variants:
+            try:
+                parsed = json.loads(variant)
+                if isinstance(parsed, dict):
+                    return parsed
+            except json.JSONDecodeError:
+                for index, char in enumerate(variant):
+                    if char != "{":
+                        continue
+                    try:
+                        parsed_obj, _ = decoder.raw_decode(variant[index:])
+                    except json.JSONDecodeError:
+                        continue
+                    if isinstance(parsed_obj, dict):
+                        return parsed_obj
+
+        return None
+
     def _extract_json_payload(self, content: str) -> Dict[str, Any]:
         if not content:
             raise RuntimeError("LLM 响应为空，无法解析 JSON")
 
-        content = content.strip()
+        parse_errors: List[str] = []
+        for candidate in self._collect_json_object_candidates(content):
+            parsed = self._try_parse_json_dict(candidate)
+            if parsed is not None:
+                return parsed
+
+            try:
+                json.loads(candidate)
+            except json.JSONDecodeError as exc:
+                parse_errors.append(f"line {exc.lineno}, col {exc.colno}: {exc.msg}")
+
+        if parse_errors:
+            raise RuntimeError(f"无法从响应中提取有效 JSON（{parse_errors[-1]}）")
+
+        raise RuntimeError("无法从响应中提取 JSON")
+
+    def get_json_repair_llm(self):
+        """获取 JSON 修复 LLM 客户端（不启用工具调用）"""
+        logger.info("Initializing JSON repair LLM")
+        return ChatAnthropic(
+            model_name=self.cfg.evidence_model,
+            api_key=SecretStr(self.cfg.evidence_api_key),
+            base_url=self._normalize_anthropic_base_url(self.cfg.evidence_base_url),
+            temperature=0.0,
+            timeout=self.cfg.llm_timeout,
+            streaming=False,
+            stop=["\n\nHuman:"],
+        )
+
+    def _parse_json_payload_with_repair(self, content: str, stage_name: str) -> Dict[str, Any]:
         try:
-            return json.loads(content)
-        except json.JSONDecodeError:
-            match = re.search(r"\{.*\}", content, re.DOTALL)
-            if not match:
-                raise RuntimeError("无法从响应中提取 JSON")
-            return json.loads(match.group())
+            return self._extract_json_payload(content)
+        except RuntimeError as parse_exc:
+            snippet = content[:1200]
+            logger.warning(
+                "{} JSON parse failed, attempting repair fallback: {} | content_len={} | snippet={}...",
+                stage_name,
+                parse_exc,
+                len(content),
+                snippet,
+            )
+
+        repair_prompt = (
+            "You are a strict JSON repair engine.\n"
+            "Fix the malformed JSON-like content below and return exactly one valid JSON object.\n"
+            "Rules:\n"
+            "1) Return JSON only, no markdown/code fences/explanations.\n"
+            "2) Keep original keys and values whenever possible.\n"
+            "3) Keep numeric/boolean/null types unchanged whenever possible.\n"
+            "4) If malformed punctuation exists (missing commas, trailing commas, quote issues), minimally repair it.\n"
+            "\n"
+            "Input content:\n"
+            f"{content}"
+        )
+
+        try:
+            repair_llm = self.get_json_repair_llm()
+            repair_response = repair_llm.invoke([HumanMessage(content=repair_prompt)])
+            repaired_content = self._message_content_to_text(repair_response.content)
+            repaired_payload = self._extract_json_payload(repaired_content)
+            logger.info("{} JSON repair fallback succeeded", stage_name)
+            return repaired_payload
+        except Exception as repair_exc:
+            logger.error("{} JSON repair fallback failed: {}", stage_name, repair_exc)
+            raise RuntimeError(f"{stage_name} JSON 解析失败") from repair_exc
+
+    @staticmethod
+    def _coerce_optional_float(value: Any) -> Optional[float]:
+        if value is None:
+            return None
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, str):
+            cleaned = value.strip()
+            if not cleaned:
+                return None
+            try:
+                return float(cleaned)
+            except ValueError:
+                return None
+        return None
+
+    @staticmethod
+    def _normalize_optional_string(value: Any) -> Optional[str]:
+        if isinstance(value, str):
+            cleaned = value.strip()
+            return cleaned or None
+        return None
+
+    def _extract_output_contract_fields(
+        self,
+        state: Mapping[str, Any],
+        final_strength: Optional[str],
+    ) -> Dict[str, Any]:
+        ps3_evidence = state.get("ps3_evidence", {})
+        if not isinstance(ps3_evidence, dict):
+            ps3_evidence = {}
+
+        extracted_fields = state.get("extracted_fields")
+        if not isinstance(extracted_fields, dict):
+            extracted_fields = {}
+
+        nested_extracted = ps3_evidence.get("extracted_fields")
+        if not extracted_fields and isinstance(nested_extracted, dict):
+            extracted_fields = nested_extracted
+
+        evidence_quality = ps3_evidence.get("evidence_quality")
+        quality_payload = evidence_quality if isinstance(evidence_quality, dict) else {}
+
+        raw_quality_scores = quality_payload.get("field_confidence_scores")
+        field_confidence_scores = raw_quality_scores if isinstance(raw_quality_scores, dict) else {}
+
+        derived_confidence: Optional[float] = None
+        if extracted_fields:
+            try:
+                normalized_fields = ExtractedEvidenceFields(**extracted_fields)
+                derived_scores = normalized_fields.compute_field_confidence_scores()
+                if not field_confidence_scores:
+                    field_confidence_scores = derived_scores
+                derived_confidence = normalized_fields.compute_overall_confidence()
+            except Exception as exc:
+                logger.warning("Failed to derive confidence from extracted_fields: {}", exc)
+
+        overall_confidence = self._coerce_optional_float(quality_payload.get("overall_confidence"))
+        if overall_confidence is None and derived_confidence is not None:
+            overall_confidence = round(derived_confidence, 2)
+        if overall_confidence is None:
+            overall_confidence = 0.0
+
+        evidence_classification = (
+            self._normalize_optional_string(quality_payload.get("evidence_classification")) or ""
+        )
+
+        raw_acmg_levels = quality_payload.get("acmg_evidence_levels")
+        acmg_evidence_levels: List[str] = []
+        if isinstance(raw_acmg_levels, list):
+            acmg_evidence_levels = [
+                level.strip()
+                for level in raw_acmg_levels
+                if isinstance(level, str) and level.strip()
+            ]
+        if not acmg_evidence_levels:
+            acmg_evidence_levels = EvidenceStrengthClassification.determine_acmg_levels(
+                {"final_evidence_strength": final_strength or "inconclusive"},
+                overall_confidence,
+            )
+
+        return {
+            "extracted_fields": extracted_fields,
+            "field_confidence_scores": field_confidence_scores,
+            "overall_confidence": overall_confidence,
+            "evidence_classification": evidence_classification,
+            "acmg_evidence_levels": acmg_evidence_levels,
+        }
 
     # ==================== 处理步骤函数 ====================
     @timer("步骤1: 翻译")
@@ -374,11 +627,16 @@ class EvidenceAgent:
         """翻译 Markdown 为英文"""
         logger.info("开始翻译 Markdown 为英文...")
 
+        existing_translation = state.get("translated_md", "")
+        if isinstance(existing_translation, str) and existing_translation.strip():
+            logger.info("检测到已有英文翻译，跳过翻译步骤")
+            return state
+
         llm = self.get_translation_llm()
-        markdown_content = state.get('markdown_content', '')
+        markdown_content = state.get("markdown_content", "")
         if not markdown_content.strip():
             logger.warning("Markdown 内容为空，跳过翻译")
-            state['translated_md'] = ""
+            state["translated_md"] = ""
             return state
         max_tokens = 8192
         prompt_overhead = len(prompts.get_translation_prompt(""))
@@ -401,7 +659,7 @@ class EvidenceAgent:
                 logger.error(f"翻译分段 {idx}/{len(segments)} 失败: {e}")
                 raise RuntimeError(f"翻译分段 {idx} 失败") from e
 
-        state['translated_md'] = "\n\n".join(translated_segments)
+        state["translated_md"] = "\n\n".join(translated_segments)
         logger.info(f"翻译完成，字数: {len(state['translated_md'])}")
 
         return state
@@ -429,17 +687,17 @@ class EvidenceAgent:
 
         for idx, img_path in enumerate(image_paths):
             try:
-                with open(img_path, 'rb') as f:
+                with open(img_path, "rb") as f:
                     img_data = base64.b64encode(f.read()).decode()
 
                 ext = Path(img_path).suffix.lower()
                 media_type = {
-                    '.jpg': 'images/jpeg',
-                    '.jpeg': 'images/jpeg',
-                    '.png': 'images/png',
-                    '.gif': 'images/gif',
-                    '.webp': 'images/webp',
-                }.get(ext, 'images/jpeg')
+                    ".jpg": "images/jpeg",
+                    ".jpeg": "images/jpeg",
+                    ".png": "images/png",
+                    ".gif": "images/gif",
+                    ".webp": "images/webp",
+                }.get(ext, "images/jpeg")
 
                 prompt = prompts.get_image_description_prompt(idx + 1)
 
@@ -448,23 +706,20 @@ class EvidenceAgent:
                         {"type": "text", "text": prompt},
                         {
                             "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{media_type};base64,{img_data}"
-                            },
+                            "image_url": {"url": f"data:{media_type};base64,{img_data}"},
                         },
                     ]
                 )
 
                 response = llm.invoke([message])
                 descriptions.append(self._message_content_to_text(response.content))
-                logger.info(f"图片 {idx+1} 描述完成")
+                logger.info(f"图片 {idx + 1} 描述完成")
             except Exception as e:
                 logger.error(f"处理图片 {img_path} 失败: {e}")
                 raise RuntimeError(f"图片处理失败: {img_path}") from e
 
-        state['image_descriptions'] = descriptions
+        state["image_descriptions"] = descriptions
         return state
-
 
     @timer("步骤4: 证据提取+RAG")
     async def extract_ps3_evidence(self, state: ProcessingState) -> ProcessingState:
@@ -494,26 +749,26 @@ class EvidenceAgent:
 
         try:
             content = self._message_content_to_text(response.content)
-            evidence_json = self._extract_json_payload(content)
-            state['ps3_evidence'] = evidence_json
+            evidence_json = self._parse_json_payload_with_repair(content, "证据提取")
+            state["ps3_evidence"] = evidence_json
 
-            overall = evidence_json.get('overall_assessment', {})
-            state['evidence_sources'] = overall.get('key_strengths', [])
+            overall = evidence_json.get("overall_assessment", {})
+            state["evidence_sources"] = overall.get("key_strengths", [])
 
             total_score = (
-                evidence_json.get('ps3_step_1', {}).get('score', 0)
-                + evidence_json.get('ps3_step_2', {}).get('score', 0)
-                + evidence_json.get('ps3_step_3', {}).get('score', 0)
-                + evidence_json.get('ps3_step_4', {}).get('score', 0)
+                evidence_json.get("ps3_step_1", {}).get("score", 0)
+                + evidence_json.get("ps3_step_2", {}).get("score", 0)
+                + evidence_json.get("ps3_step_3", {}).get("score", 0)
+                + evidence_json.get("ps3_step_4", {}).get("score", 0)
             )
-            evidence_json['calculated_total_score'] = total_score
+            evidence_json["calculated_total_score"] = total_score
 
             logger.info(f"PS3 证据提取完成，总分: {total_score}/100")
             logger.info(
                 f"最终证据强度: {evidence_json.get('ps3_step_4', {}).get('final_evidence_strength', 'inconclusive')}"
             )
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON 解析失败: {e}")
+        except RuntimeError as e:
+            logger.error(f"证据提取 JSON 解析失败: {e}")
             raise RuntimeError("证据提取 JSON 解析失败") from e
 
         return state
@@ -548,7 +803,7 @@ class EvidenceAgent:
 
         try:
             content = self._message_content_to_text(response.content)
-            evidence_json = self._extract_json_payload(content)
+            evidence_json = self._parse_json_payload_with_repair(content, "证据反馈")
             total_score = (
                 evidence_json.get("ps3_step_1", {}).get("score", 0)
                 + evidence_json.get("ps3_step_2", {}).get("score", 0)
@@ -557,7 +812,7 @@ class EvidenceAgent:
             )
             evidence_json["calculated_total_score"] = total_score
             state["ps3_evidence"] = evidence_json
-        except json.JSONDecodeError as e:
+        except RuntimeError as e:
             logger.error(f"证据反馈 JSON 解析失败: {e}")
             raise RuntimeError("证据反馈 JSON 解析失败") from e
 
@@ -568,19 +823,19 @@ class EvidenceAgent:
 
         llm = self.get_arbitration_llm()
 
-        ps3_evidence = state['ps3_evidence']
-        calculated_score = ps3_evidence.get('calculated_total_score', 0)
-        overall_assessment = ps3_evidence.get('overall_assessment', {})
-        final_recommendation = overall_assessment.get('final_recommendation', 'needs_refinement')
+        ps3_evidence = state["ps3_evidence"]
+        calculated_score = ps3_evidence.get("calculated_total_score", 0)
+        overall_assessment = ps3_evidence.get("overall_assessment", {})
+        final_recommendation = overall_assessment.get("final_recommendation", "needs_refinement")
 
         search_queries = self._get_default_rag_queries()
         knowledge_context = self._retrieve_knowledge_context_sync(search_queries)
         state["knowledge_context"] = knowledge_context
 
         prompt = prompts.get_arbitration_prompt(
-            state['translated_md'],
+            state["translated_md"],
             state.get("image_descriptions", []),
-            state['ps3_evidence'],
+            state["ps3_evidence"],
             calculated_score,
             final_recommendation,
             knowledge_context=knowledge_context,
@@ -594,23 +849,23 @@ class EvidenceAgent:
 
         try:
             content = self._message_content_to_text(response.content)
-            arbitration_result = self._extract_json_payload(content)
-            raw_confidence = arbitration_result.get('confidence', None)
+            arbitration_result = self._parse_json_payload_with_repair(content, "仲裁")
+            raw_confidence = arbitration_result.get("confidence", None)
 
             confidence = 0.0
             if isinstance(raw_confidence, (int, float)):
                 confidence = float(raw_confidence)
 
             confidence = max(0.0, min(1.0, confidence))
-            state['arbitration_confidence'] = confidence
-            state['arbitration_score'] = round(confidence * 100.0, 2)
-            state['arbitration_feedback'] = arbitration_result.get('feedback', '')
+            state["arbitration_confidence"] = confidence
+            state["arbitration_score"] = round(confidence * 100.0, 2)
+            state["arbitration_feedback"] = arbitration_result.get("feedback", "")
 
             logger.info(f"仲裁置信度: {state['arbitration_confidence']:.2f}")
             logger.info(
                 f"初步得分: {calculated_score}, 最终决策: {arbitration_result.get('final_decision', 'unknown')}"
             )
-        except json.JSONDecodeError as e:
+        except RuntimeError as e:
             logger.error(f"仲裁 JSON 解析失败: {e}，使用计算得分")
             raise RuntimeError("仲裁 JSON 解析失败") from e
 
@@ -619,13 +874,11 @@ class EvidenceAgent:
         logger.info(f"仲裁完成，最终置信度: {state['arbitration_confidence']:.2f}")
         return state
 
-    
-
     @staticmethod
     def route_decision(state: ProcessingState) -> str:
         """路由决策：是否通过、继续迭代或标记人工复核"""
-        raw_score = state.get('arbitration_score')
-        raw_confidence = state.get('arbitration_confidence')
+        raw_score = state.get("arbitration_score")
+        raw_confidence = state.get("arbitration_confidence")
 
         score: Optional[float] = None
         confidence: Optional[float] = None
@@ -656,16 +909,14 @@ class EvidenceAgent:
     @staticmethod
     def finish_approved(state: ProcessingState) -> ProcessingState:
         """标记为审核通过"""
-        result = dict(state)
-        result['status'] = 'approved'
-        return result  # type: ignore
+        state["status"] = "approved"
+        return state
 
     @staticmethod
     def finish_manual(state: ProcessingState) -> ProcessingState:
         """标记为需要人工复核"""
-        result = dict(state)
-        result['status'] = 'manual_review'
-        return result  # type: ignore
+        state["status"] = "manual_review"
+        return state
 
     def build_evidence_workflow(self):
         """构建医学证据提取工作流"""
@@ -702,6 +953,7 @@ class EvidenceAgent:
         self,
         markdown_content: str,
         image_paths: List[str],
+        translated_md: str = "",
         max_iterations: int = 2,
         **kwargs,
     ) -> EvidenceOutput:
@@ -709,26 +961,35 @@ class EvidenceAgent:
         logger.info(f"开始处理医学证据（图片: {len(image_paths)} 张，迭代限制: {max_iterations}）")
 
         initial_state: ProcessingState = {
-            'markdown_content': markdown_content,
-            'image_paths': image_paths,
-            'translated_md': '',
-            'image_descriptions': [],
-            'enable_vlm': bool(self.cfg.vlm_enable),
-            'vlm_results': [],
-            'ps3_evidence': {},
-            'evidence_sources': [],
-            'knowledge_context': '',
-            'arbitration_confidence': 0.0,
-            'arbitration_feedback': '',
-            'iteration_count': 0,
-            'max_iterations': max_iterations,
-            'status': 'pending',
-            'output': None,
+            "markdown_content": markdown_content,
+            "image_paths": image_paths,
+            "translated_md": translated_md or "",
+            "image_descriptions": [],
+            "enable_vlm": bool(self.cfg.vlm_enable),
+            "vlm_results": [],
+            "ps3_evidence": {},
+            "extracted_fields": {},
+            "evidence_sources": [],
+            "knowledge_context": "",
+            "field_confidence_scores": {},
+            "overall_confidence": 0.0,
+            "evidence_classification": "",
+            "acmg_evidence_levels": [],
+            "arbitration_confidence": 0.0,
+            "arbitration_score": 0.0,
+            "arbitration_feedback": "",
+            "iteration_count": 0,
+            "max_iterations": max_iterations,
+            "needs_manual_review": False,
+            "status": "pending",
+            "output": None,
         }
 
         workflow = self.build_evidence_workflow()
         try:
             final_state = workflow.invoke(initial_state)
+            if not isinstance(final_state, dict):
+                raise RuntimeError("Evidence workflow returned non-dict state")
         except Exception as e:
             logger.error(f"医学证据处理失败: {e}")
             return EvidenceOutput(
@@ -739,28 +1000,39 @@ class EvidenceAgent:
                 status="failed",
                 origin_format_md=markdown_content,
                 en_format_md=initial_state.get("translated_md", ""),
+                extracted_fields={},
+                field_confidence_scores={},
+                overall_confidence=0.0,
+                evidence_classification="",
+                acmg_evidence_levels=[],
             )
 
         final_evidence_strength = None
-        if 'ps3_step_4' in final_state.get('ps3_evidence', {}):
-            final_evidence_strength = final_state['ps3_evidence']['ps3_step_4'].get(
-                'final_evidence_strength',
-                'inconclusive',
+        if "ps3_step_4" in final_state.get("ps3_evidence", {}):
+            final_evidence_strength = final_state["ps3_evidence"]["ps3_step_4"].get(
+                "final_evidence_strength",
+                "inconclusive",
             )
 
-        final_state['ps3_evidence'] = enrich_evidence_json(
-            final_state.get('ps3_evidence', {}),
-            final_state.get('translated_md', ''),
+        final_state["ps3_evidence"] = enrich_evidence_json(
+            final_state.get("ps3_evidence", {}),
+            final_state.get("translated_md", ""),
         )
+        contract_fields = self._extract_output_contract_fields(final_state, final_evidence_strength)
 
         output = EvidenceOutput(
-            ps3_evidence=final_state['ps3_evidence'],
-            arbitration_confidence=final_state.get('arbitration_confidence'),
-            image_descriptions=final_state['image_descriptions'],
+            ps3_evidence=final_state["ps3_evidence"],
+            arbitration_confidence=final_state.get("arbitration_confidence"),
+            image_descriptions=final_state["image_descriptions"],
             final_evidence_strength=final_evidence_strength,
-            status=final_state['status'],
-            origin_format_md=final_state['markdown_content'],
-            en_format_md=final_state['translated_md'],
+            status=final_state["status"],
+            origin_format_md=final_state["markdown_content"],
+            en_format_md=final_state["translated_md"],
+            extracted_fields=contract_fields["extracted_fields"],
+            field_confidence_scores=contract_fields["field_confidence_scores"],
+            overall_confidence=contract_fields["overall_confidence"],
+            evidence_classification=contract_fields["evidence_classification"],
+            acmg_evidence_levels=contract_fields["acmg_evidence_levels"],
         )
 
         logger.info(
@@ -771,6 +1043,6 @@ class EvidenceAgent:
         return output
 
 
-
-
-logger.debug(f"LLM配置: LLM模式: {cfg.llm_mode}, 证据模型: {cfg.evidence_model}, 仲裁模型: {cfg.arbitration_model}")
+logger.debug(
+    f"LLM配置: LLM模式: {cfg.llm_mode}, 证据模型: {cfg.evidence_model}, 仲裁模型: {cfg.arbitration_model}"
+)

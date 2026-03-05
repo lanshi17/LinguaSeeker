@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import hashlib
+from types import SimpleNamespace
+from typing import Any, Dict, Generator
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -10,7 +14,7 @@ from src.database.minio_client import MinIOClient
 
 
 @pytest.fixture()
-def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
+def client(monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None, None]:
     async def _ensure_buckets(self) -> None:
         return None
 
@@ -88,3 +92,60 @@ def test_log_reissue_rate_limit(client: TestClient, monkeypatch: pytest.MonkeyPa
     payload = response.json()
     assert payload["status"] == "failed"
     assert payload["error_code"] == "INPUT_INVALID"
+
+
+def test_pdf_upload_chinese_filename_keeps_metadata_ascii(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    upload_filename = "贵州省Waardenburg综合征新发变异 1 例及文献回顾_岳慧玲.pdf"
+    payload = b"%PDF-1.7 chinese-name"
+    file_hash = hashlib.sha256(payload).hexdigest()
+
+    captured_upload: Dict[str, Any] = {}
+
+    class DummyPostgres:
+        def find_document_by_hash(self, _: str) -> None:
+            return None
+
+        def create_document(self, **kwargs: Any) -> Any:
+            return SimpleNamespace(document_id=kwargs["document_id"])
+
+    class DummyAsyncResult:
+        id = "celery-task-1"
+
+    class DummyTask:
+        def apply_async(self, *args: Any, **kwargs: Any) -> DummyAsyncResult:
+            return DummyAsyncResult()
+
+    class DummyMinio:
+        @staticmethod
+        def build_literature_object_key(file_hash: str, original_filename: str | None) -> str:
+            return f"{file_hash}/dummy.pdf"
+
+        async def file_exists(self, bucket: str, object_key: str) -> bool:
+            return False
+
+        async def upload_literature_upload(self, **kwargs: Any) -> Any:
+            captured_upload.update(kwargs)
+            return SimpleNamespace(object_key=kwargs["storage_key"])
+
+    monkeypatch.setattr(api_module, "get_postgres_client", lambda: DummyPostgres())
+    monkeypatch.setattr(api_module, "get_cached_pdf_result", lambda _: None)
+    monkeypatch.setattr(api_module, "process_pdf_task", DummyTask())
+    monkeypatch.setattr(api_module, "MinIOClient", DummyMinio)
+
+    response = client.post(
+        f"{cfg.api_prefix}/pdf/upload",
+        files=[("file", (upload_filename, payload, "application/pdf"))],
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "queued"
+    assert body["filename"] == upload_filename
+    assert body["upload_key"].startswith(f"{file_hash}/")
+
+    metadata = captured_upload["metadata"]
+    assert metadata["hash"] == file_hash
+    assert "uploaded_at" in metadata
+    assert "filename" not in metadata

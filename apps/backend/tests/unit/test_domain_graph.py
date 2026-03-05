@@ -262,7 +262,7 @@ def test_graph_sync_evidence(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
         "final_evidence_strength": "PS3",
         "arbitration_score": 88.0,
     }
-    result = service.sync_evidence(1, evidence_output)
+    result = service.sync_evidence("00000000-0000-0000-0000-000000000001", evidence_output)
 
     assert result["pg_evidence_id"] == 123
     assert result["neo4j_synced"] is True
@@ -273,6 +273,123 @@ def test_graph_sync_evidence(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
     assert fake_pg.kwargs["is_valid"] == "true"
     assert "variant" in calls
     assert "evidence" in calls
+
+
+def test_graph_sync_backfills_nested_ps3_payload_fields(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    class NoopNeo4j:
+        def __getattr__(self, _: str) -> Any:
+            return lambda *args, **kwargs: None
+
+    class CapturePostgres:
+        def __init__(self) -> None:
+            self.kwargs: Dict[str, Any] = {}
+
+        def create_evidence_record(self, **kwargs: Any) -> Any:
+            self.kwargs = kwargs
+            return SimpleNamespace(evidence_id=66)
+
+        def get_evidence_for_document(self, *_: Any, **__: Any) -> List[Any]:
+            return []
+
+    pg = CapturePostgres()
+    monkeypatch.setattr(sync_module, "get_neo4j_client", lambda: NoopNeo4j())
+    monkeypatch.setattr(sync_module, "get_postgres_client", lambda: pg)
+    monkeypatch.setattr(
+        sync_module,
+        "get_variation_data_service",
+        lambda: DummyVariationService(),
+    )
+    monkeypatch.setattr(
+        sync_module.GraphSyncService,
+        "_FAILURE_ARCHIVE_PATH",
+        tmp_path / "failures.jsonl",
+    )
+
+    service = sync_module.GraphSyncService()
+    evidence_output = {
+        "ps3_evidence": {
+            "extracted_fields": {
+                "gene": {"symbol": "GENE"},
+                "variant": {"hgvs_c": "c.1A>T", "hgvs_p": "p.K1N"},
+                "transcript_id": {"transcript_id": "NM_1"},
+                "disease_chpo": {"disease_name": "D1"},
+            },
+            "evidence_quality": {
+                "overall_confidence": 86.0,
+                "evidence_classification": "Pathogenic",
+                "acmg_evidence_levels": ["PS3"],
+            },
+        },
+        "final_evidence_strength": "PS3",
+    }
+    result = service.sync_evidence("00000000-0000-0000-0000-000000000001", evidence_output)
+
+    assert result["pg_evidence_id"] == 66
+    assert pg.kwargs["gene_symbol"] == "GENE"
+    assert pg.kwargs["overall_confidence"] == 86.0
+    assert pg.kwargs["evidence_classification"] == "Pathogenic"
+    assert pg.kwargs["acmg_levels"] == {"levels": ["PS3"]}
+    assert isinstance(pg.kwargs["extracted_fields"], dict)
+
+
+def test_graph_sync_coerces_non_string_varchar_fields(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    class NoopNeo4j:
+        def __getattr__(self, _: str) -> Any:
+            return lambda *args, **kwargs: None
+
+    class CapturePostgres:
+        def __init__(self) -> None:
+            self.kwargs: Dict[str, Any] = {}
+
+        def create_evidence_record(self, **kwargs: Any) -> Any:
+            self.kwargs = kwargs
+            return SimpleNamespace(evidence_id=77)
+
+        def get_evidence_for_document(self, *_: Any, **__: Any) -> List[Any]:
+            return []
+
+    pg = CapturePostgres()
+    monkeypatch.setattr(sync_module, "get_neo4j_client", lambda: NoopNeo4j())
+    monkeypatch.setattr(sync_module, "get_postgres_client", lambda: pg)
+    monkeypatch.setattr(
+        sync_module,
+        "get_variation_data_service",
+        lambda: DummyVariationService(variation_id=None),
+    )
+    monkeypatch.setattr(
+        sync_module.GraphSyncService,
+        "_FAILURE_ARCHIVE_PATH",
+        tmp_path / "failures.jsonl",
+    )
+
+    service = sync_module.GraphSyncService()
+    result = service.sync_evidence(
+        "00000000-0000-0000-0000-000000000001",
+        {
+            "extracted_fields": {
+                "gene": {"symbol": "GENE"},
+                "variant": {"hgvs_c": "c.1A>T", "hgvs_p": "p.K1N"},
+                "transcript_id": {"transcript_id": "NM_1"},
+                "disease_chpo": {"disease_name": "D1"},
+            },
+            "ps3_evidence": {},
+            "overall_confidence": 90.0,
+            "evidence_classification": {"label": "Pathogenic" * 20},
+            "final_evidence_strength": ["PS3"] * 40,
+        },
+    )
+
+    assert result["pg_evidence_id"] == 77
+    assert isinstance(pg.kwargs["evidence_classification"], str)
+    assert len(pg.kwargs["evidence_classification"]) <= 100
+    assert isinstance(pg.kwargs["evidence_strength"], str)
+    assert len(pg.kwargs["evidence_strength"]) <= 50
 
 
 def test_graph_sync_structural_variant_fallback(
@@ -407,6 +524,8 @@ def test_graph_sync_structural_variant_fallback(
     assert pg.updated and pg.updated[0]["fields"].get("status") == "pending_manual_review"
     assert pg.tasks and pg.tasks[0]["status"] == "pending_manual_review"
     assert pg.logs and pg.logs[0]["status"] == "pending_manual_review"
+
+
 def test_graph_sync_skips_when_core_fields_missing(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -437,7 +556,7 @@ def test_graph_sync_skips_when_core_fields_missing(
     monkeypatch.setattr(sync_module.GraphSyncService, "_FAILURE_ARCHIVE_PATH", archive_path)
     service = sync_module.GraphSyncService()
     result = service.sync_evidence(
-        1,
+        "00000000-0000-0000-0000-000000000001",
         {
             "ps3_evidence": {},
             "overall_confidence": 10.0,

@@ -7,7 +7,7 @@ import pytest
 
 from src.domain.graph.sync import SchemaSyncError
 from src.service import tasks as tasks_module
-from src.domain.models import EvidenceOutput, MinerUResponse, PipelineFiles, PipelineResult
+from src.domain.models import EvidenceOutput, PipelineFiles
 import src.utils.exceptions as exc
 
 
@@ -94,51 +94,6 @@ async def test_init_knowledge_base_if_needed_runs_init(monkeypatch: pytest.Monke
     assert called["init"] is True
 
 
-@pytest.mark.asyncio
-async def test_run_fastapi_pipeline_success(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, mineru_folder: Path
-) -> None:
-    async def fake_init() -> bool:
-        return True
-
-    monkeypatch.setattr(tasks_module, "init_knowledge_base_if_needed", fake_init)
-
-    class FakeMinerU:
-        def minerU_pipeline(self, _: Any) -> MinerUResponse:
-            return MinerUResponse(
-                task_id="t1",
-                status="done",
-                message="ok",
-                folder_path=str(mineru_folder),
-            )
-
-    class FakeAgent:
-        def process_medical_evidence(
-            self, markdown_content: str, image_paths: List[str]
-        ) -> EvidenceOutput:
-            return _make_evidence_output()
-
-    monkeypatch.setattr(tasks_module, "_mineru", FakeMinerU())
-    monkeypatch.setattr(tasks_module, "_agents", FakeAgent())
-    monkeypatch.setattr(
-        tasks_module.file_utils,
-        "cleanup_old_temp_folders",
-        lambda *_, **__: None,
-    )
-
-    result = await tasks_module.run_fastapi_pipeline(["file.pdf"], output_root=tmp_path)
-    assert result.output_dir
-    assert result.mineru_folder
-    assert result.files
-    assert result.evidence
-
-
-@pytest.mark.asyncio
-async def test_run_fastapi_pipeline_empty_paths() -> None:
-    with pytest.raises(tasks_module.exc.ValidationException):
-        await tasks_module.run_fastapi_pipeline([])
-
-
 def test_process_pdf_task(monkeypatch: pytest.MonkeyPatch) -> None:
     evidence = _make_evidence_output(ps3_evidence={"ok": True})
     saved_files = PipelineFiles(
@@ -166,7 +121,14 @@ def test_process_pdf_task(monkeypatch: pytest.MonkeyPatch) -> None:
         nt["translation"] = "success"
         return md, "en text", nt, []
 
-    def fake_extraction(pg: Any, ptid: str, en: str, imgs: List[str], nt: Dict[str, str]) -> Any:
+    def fake_extraction(
+        pg: Any,
+        ptid: str,
+        source: str,
+        en: str,
+        imgs: List[str],
+        nt: Dict[str, str],
+    ) -> Any:
         nt["extraction"] = "success"
         return evidence, nt
 
@@ -192,6 +154,86 @@ def test_process_pdf_task(monkeypatch: pytest.MonkeyPatch) -> None:
     result = tasks_module.process_pdf_task(["file.pdf"])
     assert result["document_id"]
     assert result["graph_sync_result"] == {"pg_evidence_id": 1, "neo4j_synced": True}
+
+
+def test_process_pdf_task_origin_md_uses_source_text(monkeypatch: pytest.MonkeyPatch) -> None:
+    source_md = "这是中文原文。"
+    translated_md = "This is English translation."
+    captured: Dict[str, Any] = {}
+
+    class FakeAgent:
+        def process_medical_evidence(
+            self,
+            markdown_content: str,
+            image_paths: List[str],
+            translated_md: str = "",
+        ) -> EvidenceOutput:
+            output = _make_evidence_output(ps3_evidence={"ok": True})
+            output.origin_format_md = markdown_content
+            output.en_format_md = translated_md
+            output.status = "success"
+            return output
+
+    class FakePostgres:
+        def append_paper_task_log(self, *_: Any, **__: Any) -> None:
+            return None
+
+    def fake_acquisition(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+        nt["acquisition"] = "success"
+        return fps, nt
+
+    async def fake_parsing(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+        nt["parsing"] = "success"
+        return source_md, [], nt
+
+    def fake_translation(pg: Any, ptid: str, md: str, nt: Dict[str, str]) -> Any:
+        nt["translation"] = "success"
+        return source_md, translated_md, nt, []
+
+    def fake_acmg(pg: Any, ptid: str, did: str, resp: Any, nt: Dict[str, str]) -> Any:
+        nt["acmg"] = "success"
+        return {"neo4j_synced": True}, nt
+
+    async def fake_store(
+        agent_response: EvidenceOutput,
+        origin_image_paths: List[str],
+        document_id: str,
+    ) -> PipelineFiles:
+        captured["origin_format_md"] = agent_response.origin_format_md
+        captured["en_format_md"] = agent_response.en_format_md
+        return PipelineFiles(
+            origin_md_path="/tmp/orig.md",
+            en_md_path="/tmp/en.md",
+            image_desc_path="/tmp/image_desc.txt",
+            ps3_evidence_path="/tmp/ps3.json",
+            image_dir="/tmp/images",
+            origin_md_url="",
+            en_md_url="",
+            image_desc_url="",
+            ps3_evidence_url="",
+            image_urls=[],
+        )
+
+    async def fake_init_kb() -> bool:
+        return True
+
+    monkeypatch.setattr(tasks_module, "_agents", FakeAgent())
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
+    monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
+    monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
+    monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
+    monkeypatch.setattr(tasks_module, "run_node_acmg", fake_acmg)
+    monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store)
+    monkeypatch.setattr(tasks_module, "init_knowledge_base_if_needed", fake_init_kb)
+    monkeypatch.setattr(
+        tasks_module.file_utils,
+        "cleanup_old_temp_folders",
+        lambda *_, **__: None,
+    )
+
+    tasks_module.process_pdf_task(["fake.pdf"])
+    assert captured["origin_format_md"] == source_md
+    assert captured["en_format_md"] == translated_md
 
 
 def test_sync_evidence_to_graph_retries_transient_error(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -328,12 +370,12 @@ def test_process_pubmed_paper_task_success(monkeypatch: pytest.MonkeyPatch) -> N
 
     class FakeAgent:
         def process_medical_evidence(
-            self, markdown_content: str, image_paths: List[str]
+            self, markdown_content: str, image_paths: List[str], translated_md: str = ""
         ) -> EvidenceOutput:
             assert "LDLR study" in markdown_content
             assert image_paths == []
             output = _make_evidence_output(ps3_evidence={"ok": True})
-            output.en_format_md = "LDLR translated abstract"
+            output.en_format_md = translated_md or "LDLR translated abstract"
             return output
 
     class FakePostgres:
@@ -459,6 +501,18 @@ class _FakePostgresForNodes:
 
     def append_paper_task_log(self, paper_task_id: str, **kwargs: Any) -> None:
         self.logs.append({"paper_task_id": paper_task_id, **kwargs})
+
+
+def test_log_node_start_skips_when_task_id_empty() -> None:
+    fake_pg = _FakePostgresForNodes()
+    tasks_module._log_node_start(fake_pg, "", "acmg")
+    assert fake_pg.logs == []
+
+
+def test_log_node_end_skips_when_task_id_empty() -> None:
+    fake_pg = _FakePostgresForNodes()
+    tasks_module._log_node_end(fake_pg, "", "acmg", success=True)
+    assert fake_pg.logs == []
 
 
 def test_detect_language_english() -> None:

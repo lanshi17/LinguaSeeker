@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from io import BytesIO
 import json
 import os
@@ -13,6 +14,7 @@ from minio.error import S3Error
 from src.config import settings as cfg
 from src.database.enum import MinioBucketNameEnum
 from src.database.models import MinioObjectRefModel
+from src.utils.sanitizers import build_storage_key, filter_ascii_metadata
 from src.utils.exceptions import StoreException
 
 
@@ -73,6 +75,10 @@ class MinIOClient:
     def build_processed_image_key(document_id: str, filename: str) -> str:
         return f"{document_id}/images/{filename}"
 
+    @staticmethod
+    def build_literature_object_key(file_hash: str, original_filename: Optional[str]) -> str:
+        return build_storage_key(file_hash=file_hash, filename=original_filename)
+
     async def upload_file(
         self,
         bucket: str,
@@ -88,6 +94,7 @@ class MinIOClient:
             file_data.seek(0, os.SEEK_END)
             file_size = file_data.tell()
             file_data.seek(0)
+            safe_metadata = filter_ascii_metadata(metadata)
 
             self.client.put_object(
                 bucket_name=bucket,
@@ -95,7 +102,7 @@ class MinIOClient:
                 data=file_data,
                 length=file_size,
                 content_type=content_type or "application/octet-stream",
-                metadata=metadata,
+                metadata=safe_metadata or None,
             )
 
             protocol = "https" if self.secure else "http"
@@ -136,11 +143,12 @@ class MinIOClient:
     async def get_file_metadata(self, bucket: str, object_key: str) -> Dict[str, str]:
         try:
             stat = self.client.stat_object(bucket_name=bucket, object_name=object_key)
+            last_modified = stat.last_modified.isoformat() if stat.last_modified else ""
             metadata = {
                 "size": str(stat.size),
-                "etag": stat.etag,
+                "etag": stat.etag or "",
                 "content_type": stat.content_type or "application/octet-stream",
-                "last_modified": stat.last_modified.isoformat(),
+                "last_modified": last_modified,
             }
             if stat.metadata:
                 metadata.update(stat.metadata)
@@ -184,7 +192,8 @@ class MinIOClient:
             if force:
                 objects = self.client.list_objects(bucket, recursive=True)
                 for obj in objects:
-                    self.client.remove_object(bucket, obj.object_name)
+                    if obj.object_name:
+                        self.client.remove_object(bucket, obj.object_name)
             self.client.remove_bucket(bucket)
             return True
         except S3Error as exc:
@@ -202,13 +211,14 @@ class MinIOClient:
         method: str = "GET",
     ) -> str:
         try:
+            expires = timedelta(seconds=expires_in)
             if method == "GET":
                 url = self.client.presigned_get_object(
-                    bucket_name=bucket, object_name=object_key, expires=expires_in
+                    bucket_name=bucket, object_name=object_key, expires=expires
                 )
             elif method == "PUT":
                 url = self.client.presigned_put_object(
-                    bucket_name=bucket, object_name=object_key, expires=expires_in
+                    bucket_name=bucket, object_name=object_key, expires=expires
                 )
             else:
                 raise ValueError(f"Unsupported method: {method}")
@@ -227,7 +237,9 @@ class MinIOClient:
             from minio.commonconfig import CopySource
 
             copy_source = CopySource(source_bucket, source_key)
-            self.client.copy_object(bucket_name=dest_bucket, object_name=dest_key, source=copy_source)
+            self.client.copy_object(
+                bucket_name=dest_bucket, object_name=dest_key, source=copy_source
+            )
             return True
         except S3Error as exc:
             if exc.code == "NoSuchKey":
@@ -237,6 +249,8 @@ class MinIOClient:
     async def get_object_size(self, bucket: str, object_key: str) -> int:
         try:
             stat = self.client.stat_object(bucket_name=bucket, object_name=object_key)
+            if stat.size is None:
+                raise IOError(f"Failed to get object size: {bucket}/{object_key} has unknown size")
             return stat.size
         except S3Error as exc:
             if exc.code == "NoSuchKey":
@@ -327,13 +341,20 @@ class MinIOClient:
 
     async def upload_literature_upload(
         self,
-        filename: str,
         payload: bytes,
         content_type: str,
+        storage_key: Optional[str] = None,
+        filename: Optional[str] = None,
         object_prefix: Optional[str] = None,
         metadata: Optional[Dict[str, str]] = None,
     ) -> MinioObjectRefModel:
-        object_key = f"{object_prefix}/{filename}" if object_prefix else filename
+        if storage_key:
+            object_key = storage_key
+        elif filename:
+            object_key = f"{object_prefix}/{filename}" if object_prefix else filename
+        else:
+            raise ValueError("storage_key or filename is required for literature upload")
+
         return await self.upload_bytes(
             bucket=MinioBucketNameEnum.LITERATURE_UPLOADS,
             object_key=object_key,

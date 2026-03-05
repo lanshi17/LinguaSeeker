@@ -3,8 +3,10 @@
 将 PS3/BS3 证据强度评估、分数分类、ACMG 映射、仲裁验证
 封装为 EvidenceClassifier 类，实现高内聚低耦合。
 """
+
 from __future__ import annotations
 
+from importlib import import_module
 from typing import Any, Dict, List, Optional, Tuple
 
 from loguru import logger
@@ -14,14 +16,8 @@ from src.domain.enums import (
     EvidenceClassification,
     EvidenceStrength,
     EVIDENCE_VALIDITY_THRESHOLD,
-    ODDSPATH_STRENGTH_MAP,
     SCORE_CLASSIFICATION_MAP,
 )
-from src.domain.models import (
-    ExtractedEvidenceFields,
-    EvidenceStrengthClassification,
-)
-
 
 
 class EvidenceClassifier:
@@ -40,13 +36,13 @@ class EvidenceClassifier:
 
     _STRENGTH_TO_ACMG: Dict[str, List[str]] = {
         EvidenceStrength.PS3_VERY_STRONG.value: [ACMGEvidenceLevel.PVS1.value],
-        EvidenceStrength.PS3.value:              [ACMGEvidenceLevel.PS3.value],
-        EvidenceStrength.PS3_MODERATE.value:     [ACMGEvidenceLevel.PM1.value],
-        EvidenceStrength.PS3_SUPPORTING.value:   [ACMGEvidenceLevel.PP3.value],
-        EvidenceStrength.BS3_VERY_STRONG.value:  [ACMGEvidenceLevel.BS3.value],
-        EvidenceStrength.BS3.value:              [ACMGEvidenceLevel.BS3.value],
-        EvidenceStrength.BS3_MODERATE.value:     [ACMGEvidenceLevel.BS2.value],
-        EvidenceStrength.BS3_SUPPORTING.value:   [ACMGEvidenceLevel.BP4.value],
+        EvidenceStrength.PS3.value: [ACMGEvidenceLevel.PS3.value],
+        EvidenceStrength.PS3_MODERATE.value: [ACMGEvidenceLevel.PM1.value],
+        EvidenceStrength.PS3_SUPPORTING.value: [ACMGEvidenceLevel.PP3.value],
+        EvidenceStrength.BS3_VERY_STRONG.value: [ACMGEvidenceLevel.BS3.value],
+        EvidenceStrength.BS3.value: [ACMGEvidenceLevel.BS3.value],
+        EvidenceStrength.BS3_MODERATE.value: [ACMGEvidenceLevel.BS2.value],
+        EvidenceStrength.BS3_SUPPORTING.value: [ACMGEvidenceLevel.BP4.value],
     }
 
     # ==================== OddsPath 映射 ====================
@@ -57,12 +53,26 @@ class EvidenceClassifier:
         if oddspath < 0:
             logger.warning("OddsPath < 0, returning inconclusive strength")
             return EvidenceStrength.INCONCLUSIVE.value
-        for threshold, strength in ODDSPATH_STRENGTH_MAP:
-            if oddspath > threshold:
-                logger.debug("OddsPath {} mapped to strength {}", oddspath, strength)
-                return strength
-        logger.debug("OddsPath {} mapped to default BS3_very_strong", oddspath)
-        return EvidenceStrength.BS3_VERY_STRONG.value
+
+        if oddspath < 0.0029:
+            strength = EvidenceStrength.BS3_VERY_STRONG.value
+        elif oddspath < 0.053:
+            strength = EvidenceStrength.BS3.value
+        elif oddspath < 0.23:
+            strength = EvidenceStrength.BS3_MODERATE.value
+        elif oddspath <= 1.0:
+            strength = EvidenceStrength.BS3_SUPPORTING.value
+        elif oddspath <= 4.3:
+            strength = EvidenceStrength.PS3_SUPPORTING.value
+        elif oddspath <= 18.7:
+            strength = EvidenceStrength.PS3_MODERATE.value
+        elif oddspath <= 350:
+            strength = EvidenceStrength.PS3.value
+        else:
+            strength = EvidenceStrength.PS3_VERY_STRONG.value
+
+        logger.debug("OddsPath {} mapped to strength {}", oddspath, strength)
+        return strength
 
     # ==================== 对照变异数 → 最大证据强度 ====================
 
@@ -101,7 +111,7 @@ class EvidenceClassifier:
         cls,
         ps3_evidence: Dict[str, Any],
         extracted_fields: Optional[Dict[str, Any]] = None,
-    ) -> EvidenceStrengthClassification:
+    ) -> Any:
         """
         对 LLM 提取的证据进行完整的强度分类。
 
@@ -120,7 +130,8 @@ class EvidenceClassifier:
         field_confidence = 0.0
         if extracted_fields:
             try:
-                fields_model = ExtractedEvidenceFields(**extracted_fields)
+                fields_model_cls = _load_extracted_fields_model()
+                fields_model = fields_model_cls(**extracted_fields)
                 field_confidence = fields_model.compute_overall_confidence()
             except Exception:
                 logger.warning("无法解析 extracted_fields，跳过字段置信度计算")
@@ -130,9 +141,7 @@ class EvidenceClassifier:
 
         # 3) 综合评分 (PS3: 60% + 字段置信度: 40%)
         overall_score = (
-            total_score * 0.6 + field_confidence * 0.4
-            if field_confidence > 0
-            else total_score
+            total_score * 0.6 + field_confidence * 0.4 if field_confidence > 0 else total_score
         )
 
         # 4) 分类
@@ -188,10 +197,15 @@ class EvidenceClassifier:
 
         logger.info(
             "证据分类完成: score={:.1f}, classification={}, acmg={}, valid={}",
-            overall_score, classification, acmg_levels, is_valid,
+            overall_score,
+            classification,
+            acmg_levels,
+            is_valid,
         )
 
-        return EvidenceStrengthClassification(
+        classification_model_cls = _load_evidence_strength_classification_model()
+
+        return classification_model_cls(
             overall_score=round(overall_score, 2),
             classification=classification,
             acmg_levels=acmg_levels,
@@ -310,6 +324,7 @@ class EvidenceClassifier:
 
 # ==================== 模块级工具函数 (供外部直接使用) ====================
 
+
 def _lookup_threshold(score: float, mapping: List[Tuple[float, str]]) -> str:
     """在 (threshold, label) 降序列表中查找分数对应的分类。"""
     for threshold, label in mapping:
@@ -326,6 +341,16 @@ def strength_to_acmg_levels(strength: str) -> List[str]:
 # ==================== 单例 ====================
 
 _classifier: Optional[EvidenceClassifier] = None
+
+
+def _load_extracted_fields_model() -> Any:
+    models_module = import_module("src.domain.models")
+    return getattr(models_module, "ExtractedEvidenceFields")
+
+
+def _load_evidence_strength_classification_model() -> Any:
+    models_module = import_module("src.domain.models")
+    return getattr(models_module, "EvidenceStrengthClassification")
 
 
 def get_evidence_classifier() -> EvidenceClassifier:

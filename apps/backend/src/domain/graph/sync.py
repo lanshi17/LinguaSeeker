@@ -3,6 +3,7 @@
 在 Pipeline 产出证据后，将结构化数据同步写入 Neo4j 图数据库和 PostgreSQL，
 保持两侧数据的一致性。
 """
+
 from __future__ import annotations
 
 import json
@@ -20,8 +21,8 @@ from src.database.neo4j_client import get_neo4j_client, Neo4jClient
 from src.database.postgre_client import get_postgres_client, PostgresClient
 from src.domain.variant import get_variation_data_service, VariationDataService
 from src.domain.graph.structural_variant_parser import (
-	parse_structural_variant,
-	StructuralVariantParseResult,
+    parse_structural_variant,
+    StructuralVariantParseResult,
 )
 from src.utils.exceptions import ValidationException
 
@@ -51,7 +52,13 @@ class GraphSyncService:
     }
     _FIELD_ALIAS_MAP: Dict[str, List[str]] = {
         "gene_symbol": ["gene_symbol", "gene", "geneSymbol", "symbol"],
-        "variant_hgvs_c": ["variant_hgvs_c", "hgvs_c", "c_hgvs", "cdna_change", "variant_descriptor"],
+        "variant_hgvs_c": [
+            "variant_hgvs_c",
+            "hgvs_c",
+            "c_hgvs",
+            "cdna_change",
+            "variant_descriptor",
+        ],
         "variant_hgvs_p": ["variant_hgvs_p", "hgvs_p", "protein_change", "aa_change"],
         "variant_descriptor": ["variant_descriptor", "hgvs", "hgvs_form"],
         "transcript_id": ["transcript_id", "transcript", "transcriptId"],
@@ -68,7 +75,9 @@ class GraphSyncService:
         self._pg: PostgresClient = get_postgres_client()
         self._variants: VariationDataService = get_variation_data_service()
         self._validity_threshold: float = getattr(settings, "evidence_validity_threshold", 85.0)
-        self._review_floor: float = getattr(settings, "evidence_review_floor", max(self._validity_threshold - 20, 0.0))
+        self._review_floor: float = getattr(
+            settings, "evidence_review_floor", max(self._validity_threshold - 20, 0.0)
+        )
         logger.info("GraphSyncService initialized")
 
     # ==================== 核心同步入口 ====================
@@ -93,16 +102,44 @@ class GraphSyncService:
         logger.info("Syncing evidence for document {}", raw_document_id)
         evidence_keys = list(evidence_output.keys()) if isinstance(evidence_output, dict) else []
         logger.debug("Full evidence_output keys: {}", evidence_keys)
+        ps3 = self._normalize_ps3_payload(evidence_output.get("ps3_evidence"))
+        extracted_payload = evidence_output.get("extracted_fields")
+        if extracted_payload is None:
+            nested_extracted = ps3.get("extracted_fields")
+            if isinstance(nested_extracted, dict):
+                extracted_payload = nested_extracted
+                logger.debug(
+                    "Using ps3_evidence.extracted_fields fallback for document {}",
+                    raw_document_id,
+                )
         extracted = self._sanitize_extracted_fields(
-            evidence_output.get("extracted_fields"),
+            extracted_payload,
             document_id=raw_document_id,
         )
         logger.debug("Extracted fields sanitized: {}", bool(extracted))
-        ps3 = self._normalize_ps3_payload(evidence_output.get("ps3_evidence"))
-        classification = evidence_output.get("evidence_classification", "")
-        overall_conf = self._coerce_confidence(evidence_output.get("overall_confidence"))
-        acmg_levels = evidence_output.get("acmg_evidence_levels") or []
-        strength = evidence_output.get("final_evidence_strength", "")
+        evidence_quality = self._as_dict(ps3.get("evidence_quality"))
+        classification = (
+            self._normalize_string(evidence_output.get("evidence_classification"))
+            or self._normalize_string(evidence_quality.get("evidence_classification"))
+            or ""
+        )
+        overall_conf_source = evidence_output.get("overall_confidence")
+        if overall_conf_source is None:
+            overall_conf_source = evidence_quality.get("overall_confidence")
+        overall_conf = self._coerce_confidence(overall_conf_source)
+        acmg_levels_source = evidence_output.get("acmg_evidence_levels")
+        if not isinstance(acmg_levels_source, list):
+            acmg_levels_source = evidence_quality.get("acmg_evidence_levels")
+        acmg_levels = (
+            [
+                level.strip()
+                for level in acmg_levels_source
+                if isinstance(level, str) and level.strip()
+            ]
+            if isinstance(acmg_levels_source, list)
+            else []
+        )
+        strength = self._normalize_string(evidence_output.get("final_evidence_strength")) or ""
         arbitration_score = self._coerce_optional_float(evidence_output.get("arbitration_score"))
 
         # 提取各字段
@@ -148,7 +185,9 @@ class GraphSyncService:
                 "section_present": bool(variant_info),
             },
         }
-        fused_core, resolution_details = self._resolve_core_fields(evidence_output, extracted_candidates)
+        fused_core, resolution_details = self._resolve_core_fields(
+            evidence_output, extracted_candidates
+        )
 
         gene_symbol = fused_core.get("gene_symbol") or ""
         variant_hgvs_c = fused_core.get("variant_hgvs_c") or ""
@@ -167,7 +206,9 @@ class GraphSyncService:
         species = self._normalize_string(species_info.get("species_name")) or ""
         phenotype_desc = self._normalize_string(phenotype_info.get("phenotype_description")) or ""
 
-        variant_descriptor = fused_core.get("variant_descriptor") or variant_hgvs_c or variant_hgvs_p or ""
+        variant_descriptor = (
+            fused_core.get("variant_descriptor") or variant_hgvs_c or variant_hgvs_p or ""
+        )
         validity_status, validity_reason = self._determine_validity_status(overall_conf, extracted)
 
         variation_id: Optional[int] = None
@@ -328,6 +369,19 @@ class GraphSyncService:
             integrity_context["pending_manual_review"] = manual_review_detail
 
         # 1) --- PostgreSQL ---
+        # Apply field length truncation as safety layer to prevent DB constraint violations
+        gene_symbol_safe = self._truncate_field(gene_symbol, 100) if gene_symbol else None
+        variant_hgvs_c_safe = self._truncate_field(variant_hgvs_c, 500) if variant_hgvs_c else None
+        variant_hgvs_p_safe = self._truncate_field(variant_hgvs_p, 500) if variant_hgvs_p else None
+        protein_change_safe = self._truncate_field(protein_change, 500) if protein_change else None
+        transcript_id_safe = self._truncate_field(transcript_id, 100) if transcript_id else None
+        ref_genome_safe = self._truncate_field(ref_genome, 50) if ref_genome else None
+        disease_name_safe = self._truncate_field(disease_name, 500) if disease_name else None
+        icd10_safe = self._truncate_field(icd10, 50) if icd10 else None
+        species_safe = self._truncate_field(species, 100) if species else None
+        strength_safe = self._truncate_field(strength, 50) if strength else None
+        classification_safe = self._truncate_field(classification, 100) if classification else None
+
         try:
             logger.debug(
                 "Attempting to create evidence record with extracted_fields: {}",
@@ -335,19 +389,19 @@ class GraphSyncService:
             )
             pg_record = self._pg.create_evidence_record(
                 document_id=uuid_document_id,
-                gene_symbol=gene_symbol or None,
-                variant_hgvs_c=variant_hgvs_c or None,
-                variant_hgvs_p=variant_hgvs_p or None,
-                protein_change=protein_change or None,
+                gene_symbol=gene_symbol_safe,
+                variant_hgvs_c=variant_hgvs_c_safe,
+                variant_hgvs_p=variant_hgvs_p_safe,
+                protein_change=protein_change_safe,
                 clinvar_variation_id=variation_id,
-                transcript_id=transcript_id or None,
-                reference_genome=ref_genome or None,
-                disease_name=disease_name or None,
-                icd10_code=icd10 or None,
-                species=species or None,
+                transcript_id=transcript_id_safe,
+                reference_genome=ref_genome_safe,
+                disease_name=disease_name_safe,
+                icd10_code=icd10_safe,
+                species=species_safe,
                 phenotype=phenotype_desc or None,
-                evidence_strength=strength or None,
-                evidence_classification=classification or None,
+                evidence_strength=strength_safe,
+                evidence_classification=classification_safe,
                 overall_confidence=overall_conf,
                 arbitration_score=arbitration_score,
                 is_valid=validity_status,
@@ -419,7 +473,9 @@ class GraphSyncService:
                 try:
                     doc_entity = get_doc(uuid_document_id)
                 except Exception as exc:
-                    logger.warning("Failed to fetch document %s metadata: %s", canonical_document_id, exc)
+                    logger.warning(
+                        "Failed to fetch document %s metadata: %s", canonical_document_id, exc
+                    )
             self._variants.record_internal_citation(
                 variation_id=variation_id,
                 document_id=canonical_document_id,
@@ -502,7 +558,8 @@ class GraphSyncService:
             normalized = dict(payload)
         else:
             logger.warning(
-                "ps3_evidence payload is not a dict (type=%s), defaulting to empty JSON", type(payload)
+                "ps3_evidence payload is not a dict (type=%s), defaulting to empty JSON",
+                type(payload),
             )
             normalized = {}
         normalized.setdefault("annotation_schema_version", "1.0")
@@ -560,12 +617,16 @@ class GraphSyncService:
                 context[key] = value
         return context
 
-    def _sanitize_extracted_fields(self, payload: Any, document_id: Optional[str] = None) -> Dict[str, Any]:
+    def _sanitize_extracted_fields(
+        self, payload: Any, document_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         if isinstance(payload, dict):
             return payload
         log_id = document_id or "unknown"
         if payload is None:
-            logger.warning("extracted_fields missing for document {}, defaulting to empty dict", log_id)
+            logger.warning(
+                "extracted_fields missing for document {}, defaulting to empty dict", log_id
+            )
         else:
             logger.warning(
                 "extracted_fields payload is not a dict for document {} (type={}), defaulting to empty dict",
@@ -590,6 +651,31 @@ class GraphSyncService:
             return cleaned or None
         except Exception:
             return None
+
+    @staticmethod
+    def _truncate_field(value: Any, max_length: int) -> Optional[str]:
+        """Truncate string field to max_length to prevent database constraint violations.
+
+        Args:
+            value: The string value to truncate
+            max_length: Maximum allowed length
+
+        Returns:
+            Truncated string or None if input is None
+        """
+        normalized = GraphSyncService._normalize_string(value)
+        if normalized is None:
+            return None
+        if len(normalized) > max_length:
+            logger.warning(
+                "Field value exceeds {} characters (len={}), truncating: {} → {}",
+                max_length,
+                len(normalized),
+                normalized[:50] + "..." if len(normalized) > 50 else normalized,
+                normalized[: max_length - 3] + "..." if max_length > 3 else normalized[:max_length],
+            )
+            return normalized[:max_length]
+        return normalized
 
     def _collect_fallback_contexts(self, evidence_output: Dict[str, Any]) -> List[Any]:
         contexts: List[Any] = []
@@ -643,7 +729,9 @@ class GraphSyncService:
             elif raw_value not in (None, ""):
                 reasons.append("invalid_type")
 
-            alias_value = self._search_aliases(fallback_payloads, self._FIELD_ALIAS_MAP.get(field, []))
+            alias_value = self._search_aliases(
+                fallback_payloads, self._FIELD_ALIAS_MAP.get(field, [])
+            )
             if alias_value:
                 fused[field] = alias_value
                 details[field] = {
@@ -716,9 +804,14 @@ class GraphSyncService:
         if isinstance(payload, dict):
             for key, value in payload.items():
                 if key in aliases:
-                    normalized = self._normalize_string(value)
-                    if normalized:
-                        return normalized
+                    if isinstance(value, str):
+                        normalized = self._normalize_string(value)
+                        if normalized:
+                            return normalized
+                    elif isinstance(value, (int, float, bool)):
+                        normalized = self._normalize_string(str(value))
+                        if normalized:
+                            return normalized
                 if isinstance(value, (dict, list)):
                     nested = self._scan_payload(value, aliases)
                     if nested:
@@ -821,7 +914,9 @@ class GraphSyncService:
             except Exception as exc:  # pragma: no cover
                 logger.warning("Failed to append manual review log for {}: {}", document_id, exc)
 
-    def _log_document_summary(self, document_id: str, success: bool, summary: Dict[str, Any]) -> None:
+    def _log_document_summary(
+        self, document_id: str, success: bool, summary: Dict[str, Any]
+    ) -> None:
         log = logger.info if success else logger.warning
         log(
             "Document {} sync summary status={} gene={} variant_c={} variant_p={} disease={} transcript={} confidence={} validity={}",
@@ -929,11 +1024,18 @@ class GraphSyncService:
                 entity_key = "structural_key"
                 entity_value = variant_structural_key
             if entity_key and entity_value:
-                logger.debug("Linking document {} to variant {} via {}", document_id, entity_value, entity_key)
+                logger.debug(
+                    "Linking document {} to variant {} via {}",
+                    document_id,
+                    entity_value,
+                    entity_key,
+                )
                 neo.link_document_entity(str(document_id), "Variant", entity_key, entity_value)
 
         if transcript_id and gene_symbol:
-            logger.debug("Upserting transcript {} and linking to gene {}", transcript_id, gene_symbol)
+            logger.debug(
+                "Upserting transcript {} and linking to gene {}", transcript_id, gene_symbol
+            )
             neo.upsert_transcript(transcript_id)
             neo.link_gene_transcript(gene_symbol, transcript_id)
 
@@ -1014,13 +1116,17 @@ class GraphSyncService:
         evidence_outputs: List[Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
         """批量同步多条证据（同一文档的多条提取结果）"""
-        logger.info("Batch syncing {} evidence item(s) for document {}", len(evidence_outputs), document_id)
+        logger.info(
+            "Batch syncing {} evidence item(s) for document {}", len(evidence_outputs), document_id
+        )
         results = []
         for idx, ev in enumerate(evidence_outputs):
             logger.debug("Batch sync started for document {} item {}", document_id, idx)
             try:
                 r = self.sync_evidence(document_id, ev)
-                logger.debug("Batch sync completed for document {} item {}: {}", document_id, idx, r)
+                logger.debug(
+                    "Batch sync completed for document {} item {}: {}", document_id, idx, r
+                )
                 results.append(r)
             except Exception as e:
                 logger.error("Batch sync failed at index {}: {}", idx, e)
@@ -1048,7 +1154,9 @@ class GraphSyncService:
                 getattr(rec, "evidence_classification", "") or "-",
             )
             try:
-                structural_hint = self._extract_structural_variant_hint(getattr(rec, "extracted_fields", None))
+                structural_hint = self._extract_structural_variant_hint(
+                    getattr(rec, "extracted_fields", None)
+                )
                 self._sync_to_neo4j(
                     document_id=document_id,
                     evidence_id=str(rec.evidence_id),
@@ -1071,7 +1179,9 @@ class GraphSyncService:
                 logger.error("Resync failed for evidence {}: {}", rec.evidence_id, e)
                 failed += 1
 
-        logger.info("Resync document {}: {}/{} ok, {} failed", document_id, synced, len(records), failed)
+        logger.info(
+            "Resync document {}: {}/{} ok, {} failed", document_id, synced, len(records), failed
+        )
         return {"total": len(records), "synced": synced, "failed": failed}
 
 
