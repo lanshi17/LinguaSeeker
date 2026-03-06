@@ -57,6 +57,9 @@ class TaskStatusResponse(BaseModel):
     processing_steps: Optional[Dict[str, Dict[str, Any]]] = Field(
         None, description="Detailed per-step processing state"
     )
+    parsing_metadata: Optional[Dict[str, Any]] = Field(
+        None, description="Document parsing metadata when available"
+    )
     paper_task_id: Optional[str] = Field(None, description="Paper task UUID when available")
     document_id: Optional[str] = Field(
         None, description="Document id associated with the task result"
@@ -85,6 +88,13 @@ class TaskStatusResponse(BaseModel):
                         "message": "Node acquisition completed",
                         "error_code": None,
                     }
+                },
+                "parsing_metadata": {
+                    "parser_backend": "mineru",
+                    "parser_task_id": "mineru-task-1",
+                    "mineru_folder": "/tmp/mineru-output",
+                    "image_count": 3,
+                    "markdown_object_key": "doc-1/parsing/parsed_markdown.md",
                 },
                 "paper_task_id": "6f03f2f8-58b0-48e1-9600-a4d1464580bc",
                 "document_id": "c525fcfa-6dd9-4c9d-8d42-bd7c5a52fa7a",
@@ -205,6 +215,13 @@ class PubMedSelectionSubmitRequest(BaseModel):
     country: str = Field("不限", description="Country filter")
     language: str = Field("auto", description="Language preference")
     source: str = Field("pubmed", description="Data source")
+
+
+class WebLiteratureCrawlRequest(BaseModel):
+    task_form: str = Field(..., description="Natural-language task form")
+    urls: List[str] = Field(..., min_length=1, description="Selected web URLs, 1~10")
+    source: str = Field("web", description="Data source")
+    force_refresh: bool = Field(False, description="Bypass URL fingerprint dedup when true")
 
 
 class InteractionStartRequest(BaseModel):

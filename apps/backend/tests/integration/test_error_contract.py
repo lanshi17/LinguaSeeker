@@ -94,6 +94,21 @@ def test_log_reissue_rate_limit(client: TestClient, monkeypatch: pytest.MonkeyPa
     assert payload["error_code"] == "INPUT_INVALID"
 
 
+def test_download_processed_result_not_found_returns_resource_not_found(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class DummyMinio:
+        async def download_processed_result(self, object_key: str) -> bytes:
+            raise FileNotFoundError(object_key)
+
+    monkeypatch.setattr(api_module, "MinIOClient", DummyMinio)
+    response = client.get(f"{cfg.api_prefix}/results/doc-1/path/to/file.json")
+    assert response.status_code == 404
+    payload = response.json()
+    assert payload["status"] == "failed"
+    assert payload["error_code"] == "RESOURCE_NOT_FOUND"
+
+
 def test_pdf_upload_chinese_filename_keeps_metadata_ascii(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -10,18 +10,22 @@ from celery.result import AsyncResult
 from fastapi import APIRouter, HTTPException, Path as ApiPath, Query, UploadFile, File, Form
 from loguru import logger
 from pydantic import BaseModel, Field
+from sqlalchemy.exc import IntegrityError
 
 from src.celery_app import celery_app
+from src.database.enum import MinioBucketNameEnum
 from src.database.minio_client import MinIOClient
 from src.database.postgre_client import get_postgres_client
 from src.database.redis_client import list_celery_task_meta
-from src.domain.literature.pubmed_service import get_pubmed_service
-from src.service.tasks import process_pdf_task, process_pubmed_paper_task
+from src.domain.literature import get_literature_acquisition_agent, get_pubmed_service
+from src.presentation.error_contract import contract_http_exception
+from src.service.tasks import process_pdf_task, process_pubmed_paper_task, process_web_page_task
 from src.service.dtos import (
     PubMedCandidateItem,
     PubMedCandidateSearchRequest,
     PubMedCandidateSearchResponse,
     PubMedSelectionSubmitRequest,
+    WebLiteratureCrawlRequest,
     PaperTaskItemResponse,
     TaskRequestCreateResponse,
     TaskRequestStatusResponse,
@@ -62,6 +66,115 @@ def get_interaction_agent() -> InteractionAgent:
 MAX_UPLOAD_FILES = 10
 MAX_UPLOAD_FILE_SIZE_BYTES = 10 * 1024 * 1024
 MAX_UPLOAD_TOTAL_BYTES = 50 * 1024 * 1024
+
+
+async def _prevalidate_upload_files(files: List[UploadFile]) -> List[Dict[str, Any]]:
+    total_bytes = 0
+    prepared_uploads: List[Dict[str, Any]] = []
+
+    for upload in files:
+        filename = sanitize_filename(upload.filename or "")
+        suffix = Path(filename).suffix.lower()
+        if suffix not in ALLOWED_SUFFIXES:
+            raise contract_http_exception(
+                400,
+                "FILE_TYPE_UNSUPPORTED",
+                "Unsupported file type. Allowed: PDF, DOCX",
+            )
+
+        payload = await upload.read()
+        file_size = len(payload)
+        if file_size > MAX_UPLOAD_FILE_SIZE_BYTES:
+            raise contract_http_exception(
+                400, "FILE_TOO_LARGE", "File too large. Max 10MB per file"
+            )
+
+        total_bytes += file_size
+        if total_bytes > MAX_UPLOAD_TOTAL_BYTES:
+            raise contract_http_exception(
+                400,
+                "FILE_TOO_LARGE",
+                "Total upload size exceeded. Max 50MB",
+            )
+
+        prepared_uploads.append(
+            {
+                "upload": upload,
+                "filename": filename,
+                "suffix": suffix,
+                "payload": payload,
+                "file_hash": hashlib.sha256(payload).hexdigest(),
+            }
+        )
+
+    return prepared_uploads
+
+
+def _has_successful_historical_paper(historical_paper: Any) -> bool:
+    return (
+        historical_paper is not None and str(getattr(historical_paper, "status", "")) == "success"
+    )
+
+
+def _create_duplicate_paper_entry(
+    postgres: Any,
+    *,
+    request_id: Any,
+    document_id: Any,
+    original_filename: Optional[str],
+    file_hash: str,
+    historical_paper: Any,
+    message: str,
+) -> Any:
+    paper_entry = postgres.create_paper_task(
+        request_id=request_id,
+        document_id=document_id,
+        original_filename=original_filename,
+        file_hash=file_hash,
+        status="success",
+        error_code="FILE_DUPLICATE",
+        duplicate_of=(historical_paper.paper_task_id if historical_paper else None),
+    )
+    postgres.append_paper_task_log(
+        paper_entry.paper_task_id,
+        status="success",
+        node="dedup",
+        error_code="FILE_DUPLICATE",
+        message=message,
+    )
+    return paper_entry
+
+
+def _create_managed_upload_temp_file(
+    *,
+    payload: bytes,
+    suffix: str,
+    paper_task_id: Any,
+) -> str:
+    workdir = Path.cwd() / "tmp" / f"run_upload_{paper_task_id}"
+    workdir.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=workdir, delete=False, suffix=suffix) as tmp_file:
+        tmp_file.write(payload)
+        return tmp_file.name
+
+
+def _cleanup_upload_temp_file(temp_path: Optional[str]) -> None:
+    if not temp_path:
+        return
+    temp_file = Path(temp_path)
+    try:
+        if temp_file.exists():
+            temp_file.unlink()
+        parent = temp_file.parent
+        if parent.name.startswith("run_upload_") and parent.exists():
+            for entry in parent.iterdir():
+                if entry.exists():
+                    return
+            parent.rmdir()
+    except OSError as exc:
+        logger.warning("Failed to cleanup temporary upload file {}: {}", temp_path, exc)
+
+
 ALLOWED_SUFFIXES = {".pdf", ".docx"}
 
 
@@ -380,34 +493,62 @@ def submit_pubmed_selection(payload: PubMedSelectionSubmitRequest) -> TaskReques
         synthetic_hash = _synthetic_hash_from_pmid(pmid)
         historical_paper = postgres.find_latest_paper_task_by_hash(synthetic_hash)
 
-        if existing_document is not None:
-            paper_entry = postgres.create_paper_task(
+        if existing_document is not None and _has_successful_historical_paper(historical_paper):
+            paper_entry = _create_duplicate_paper_entry(
+                postgres,
                 request_id=request_entry.request_id,
                 document_id=existing_document.document_id,
                 original_filename=f"PMID:{pmid}",
                 file_hash=synthetic_hash,
-                status="success",
-                error_code="FILE_DUPLICATE",
-                duplicate_of=(historical_paper.paper_task_id if historical_paper else None),
-            )
-            postgres.append_paper_task_log(
-                paper_entry.paper_task_id,
-                status="success",
-                node="dedup",
-                error_code="FILE_DUPLICATE",
+                historical_paper=historical_paper,
                 message=f"Duplicate PMID detected: {pmid}",
             )
             paper_entries.append(paper_entry)
             continue
 
-        document = postgres.create_document(
-            title=f"PMID:{pmid}",
-            original_filename=f"PMID:{pmid}",
-            pmid=pmid,
-            local_path=None,
-            file_hash=synthetic_hash,
-            status="queued",
-        )
+        try:
+            document = postgres.create_document(
+                title=f"PMID:{pmid}",
+                original_filename=f"PMID:{pmid}",
+                pmid=pmid,
+                local_path=None,
+                file_hash=synthetic_hash,
+                status="queued",
+            )
+        except IntegrityError as exc:
+            logger.warning("PubMed document create conflict for {}: {}", pmid, exc)
+            existing_document = postgres.get_document_by_pmid(
+                pmid
+            ) or postgres.find_document_by_hash(synthetic_hash)
+            historical_paper = postgres.find_latest_paper_task_by_hash(synthetic_hash)
+            if existing_document is not None and _has_successful_historical_paper(historical_paper):
+                paper_entry = _create_duplicate_paper_entry(
+                    postgres,
+                    request_id=request_entry.request_id,
+                    document_id=existing_document.document_id,
+                    original_filename=f"PMID:{pmid}",
+                    file_hash=synthetic_hash,
+                    historical_paper=historical_paper,
+                    message=f"Duplicate PMID detected after concurrent create: {pmid}",
+                )
+            else:
+                paper_entry = postgres.create_paper_task(
+                    request_id=request_entry.request_id,
+                    document_id=(existing_document.document_id if existing_document else None),
+                    original_filename=f"PMID:{pmid}",
+                    file_hash=synthetic_hash,
+                    status="failed",
+                    error_code="INTERNAL_ERROR",
+                )
+                postgres.append_paper_task_log(
+                    paper_entry.paper_task_id,
+                    status="failed",
+                    node="document",
+                    error_code="INTERNAL_ERROR",
+                    message="Concurrent document creation conflict",
+                )
+            paper_entries.append(paper_entry)
+            continue
         paper_entry = postgres.create_paper_task(
             request_id=request_entry.request_id,
             document_id=document.document_id,
@@ -446,6 +587,169 @@ def submit_pubmed_selection(payload: PubMedSelectionSubmitRequest) -> TaskReques
 
 
 @router.post(
+    "/requests/web/crawl",
+    summary="Create request by web crawl",
+    description=(
+        "Create a request from selected web URLs, apply URL-fingerprint dedup, "
+        "and enqueue one Celery task per non-duplicate page."
+    ),
+    response_model=TaskRequestCreateResponse,
+    responses={
+        400: {"model": ErrorResponse, "description": "Invalid input or unsupported source."},
+        503: {"model": ErrorResponse, "description": "Database/queue unavailable."},
+    },
+)
+def create_task_request_by_web_crawl(
+    payload: WebLiteratureCrawlRequest,
+) -> TaskRequestCreateResponse:
+    if payload.source.lower() != "web":
+        raise HTTPException(status_code=400, detail="INPUT_INVALID: source must be web")
+
+    urls = [str(url).strip() for url in payload.urls if str(url).strip()]
+    if not urls:
+        raise HTTPException(status_code=400, detail="INPUT_INVALID: urls is required")
+    if len(urls) > 10:
+        raise HTTPException(status_code=400, detail="INPUT_INVALID: urls max is 10")
+
+    agent = get_literature_acquisition_agent()
+    plan_items = agent.plan_web_request(urls)
+    postgres = get_postgres_client()
+    request_entry = postgres.create_task_request(
+        task_form_text=payload.task_form,
+        status="queued",
+        metadata={
+            "entry": "web",
+            "source": payload.source,
+            "url_count": len(plan_items),
+            "force_refresh": payload.force_refresh,
+        },
+    )
+    request_id = str(request_entry.request_id)
+
+    paper_entries: List[Any] = []
+    for plan_item in plan_items:
+        existing_document = None
+        historical_paper = None
+        if not payload.force_refresh:
+            existing_document = postgres.find_document_by_hash(plan_item.fingerprint)
+            historical_paper = postgres.find_latest_paper_task_by_hash(plan_item.fingerprint)
+
+        if existing_document is not None and _has_successful_historical_paper(historical_paper):
+            existing_document_id = str(existing_document.document_id)
+            duplicate_of = str(historical_paper.paper_task_id) if historical_paper else None
+            paper_entry = postgres.create_paper_task(
+                request_id=request_id,
+                document_id=existing_document_id,
+                original_filename=plan_item.display_name,
+                file_hash=plan_item.fingerprint,
+                status="success",
+                error_code="FILE_DUPLICATE",
+                duplicate_of=duplicate_of,
+            )
+            postgres.append_paper_task_log(
+                str(paper_entry.paper_task_id),
+                status="success",
+                node="dedup",
+                error_code="FILE_DUPLICATE",
+                message=f"Duplicate web URL detected: {plan_item.normalized_value}",
+            )
+            paper_entries.append(paper_entry)
+            continue
+
+        try:
+            document = postgres.create_document(
+                title=plan_item.display_name,
+                original_filename=plan_item.display_name,
+                local_path=plan_item.normalized_value,
+                file_hash=plan_item.fingerprint,
+                status="queued",
+                summary=f"Queued web crawl source: {plan_item.normalized_value}",
+            )
+        except IntegrityError as exc:
+            logger.warning(
+                "Web document create conflict for {}: {}",
+                plan_item.normalized_value,
+                exc,
+            )
+            existing_document = postgres.find_document_by_hash(plan_item.fingerprint)
+            historical_paper = postgres.find_latest_paper_task_by_hash(plan_item.fingerprint)
+            if existing_document is not None and _has_successful_historical_paper(historical_paper):
+                existing_document_id = str(existing_document.document_id)
+                duplicate_of = str(historical_paper.paper_task_id) if historical_paper else None
+                paper_entry = postgres.create_paper_task(
+                    request_id=request_id,
+                    document_id=existing_document_id,
+                    original_filename=plan_item.display_name,
+                    file_hash=plan_item.fingerprint,
+                    status="success",
+                    error_code="FILE_DUPLICATE",
+                    duplicate_of=duplicate_of,
+                )
+                postgres.append_paper_task_log(
+                    str(paper_entry.paper_task_id),
+                    status="success",
+                    node="dedup",
+                    error_code="FILE_DUPLICATE",
+                    message=f"Duplicate web URL detected after concurrent create: {plan_item.normalized_value}",
+                )
+            else:
+                paper_entry = postgres.create_paper_task(
+                    request_id=request_id,
+                    document_id=(str(existing_document.document_id) if existing_document else None),
+                    original_filename=plan_item.display_name,
+                    file_hash=plan_item.fingerprint,
+                    status="failed",
+                    error_code="INTERNAL_ERROR",
+                )
+                postgres.append_paper_task_log(
+                    str(paper_entry.paper_task_id),
+                    status="failed",
+                    node="document",
+                    error_code="INTERNAL_ERROR",
+                    message="Concurrent document creation conflict",
+                )
+            paper_entries.append(paper_entry)
+            continue
+        document_id = str(document.document_id)
+        paper_entry = postgres.create_paper_task(
+            request_id=request_id,
+            document_id=document_id,
+            original_filename=plan_item.display_name,
+            file_hash=plan_item.fingerprint,
+            status="queued",
+        )
+        paper_task_id = str(paper_entry.paper_task_id)
+        postgres.append_paper_task_log(
+            paper_task_id,
+            status="queued",
+            node="acquisition",
+            message=f"Web page queued: {plan_item.normalized_value}",
+            payload={"url": plan_item.normalized_value, "source": "web"},
+        )
+
+        async_result = process_web_page_task.apply_async(
+            args=[
+                plan_item.normalized_value,
+                document_id,
+                paper_task_id,
+                request_id,
+            ]
+        )
+        paper_entry = postgres.update_paper_task(
+            paper_task_id,
+            celery_task_id=async_result.id,
+        )
+        paper_entries.append(paper_entry)
+
+    request_entry = postgres.refresh_task_request_status(request_id) or request_entry
+    return TaskRequestCreateResponse(
+        request_id=str(getattr(request_entry, "request_id", request_id)),
+        status=str(getattr(request_entry, "status", "queued")),
+        papers=[_paper_item_model(item) for item in paper_entries],
+    )
+
+
+@router.post(
     "/requests/upload",
     summary="Create request by upload",
     description=(
@@ -467,11 +771,15 @@ async def create_task_request_by_upload(
 ) -> TaskRequestCreateResponse:
     normalized_form = (task_form or "").strip()
     if not normalized_form:
-        raise HTTPException(status_code=400, detail="Task form text is required")
+        raise contract_http_exception(400, "INPUT_INVALID", "Task form text is required")
     if not files:
-        raise HTTPException(status_code=400, detail="At least one file is required")
+        raise contract_http_exception(400, "INPUT_INVALID", "At least one file is required")
     if len(files) > MAX_UPLOAD_FILES:
-        raise HTTPException(status_code=400, detail=f"Too many files: max {MAX_UPLOAD_FILES}")
+        raise contract_http_exception(
+            400,
+            "INPUT_INVALID",
+            f"Too many files: max {MAX_UPLOAD_FILES}",
+        )
 
     try:
         postgres = get_postgres_client()
@@ -480,53 +788,42 @@ async def create_task_request_by_upload(
         logger.exception("Failed to initialize dependencies for upload request: {}", exc)
         raise HTTPException(status_code=503, detail="Dependency unavailable")
 
+    prepared_uploads = await _prevalidate_upload_files(files)
+
     request_entry = postgres.create_task_request(
         task_form_text=normalized_form,
         status="queued",
-        metadata={"entry": "upload", "paper_count": len(files)},
+        metadata={"entry": "upload", "paper_count": len(prepared_uploads)},
     )
 
-    total_bytes = 0
     paper_entries: List[Any] = []
 
-    for upload in files:
-        filename = sanitize_filename(upload.filename or "")
-        suffix = Path(filename).suffix.lower()
-        if suffix not in ALLOWED_SUFFIXES:
-            raise HTTPException(status_code=400, detail="Unsupported file type. Allowed: PDF, DOCX")
-
-        payload = await upload.read()
-        file_size = len(payload)
-        if file_size > MAX_UPLOAD_FILE_SIZE_BYTES:
-            raise HTTPException(status_code=400, detail="File too large. Max 10MB per file")
-        total_bytes += file_size
-        if total_bytes > MAX_UPLOAD_TOTAL_BYTES:
-            raise HTTPException(status_code=400, detail="Total upload size exceeded. Max 50MB")
-
-        file_hash = hashlib.sha256(payload).hexdigest()
+    for prepared in prepared_uploads:
+        upload = prepared["upload"]
+        filename = prepared["filename"]
+        suffix = prepared["suffix"]
+        payload = prepared["payload"]
+        file_hash = prepared["file_hash"]
         existing_document = postgres.find_document_by_hash(file_hash)
         historical_paper = postgres.find_latest_paper_task_by_hash(file_hash)
 
-        if existing_document is not None:
-            paper_entry = postgres.create_paper_task(
+        if existing_document is not None and _has_successful_historical_paper(historical_paper):
+            paper_entry = _create_duplicate_paper_entry(
+                postgres,
                 request_id=request_entry.request_id,
                 document_id=existing_document.document_id,
                 original_filename=filename or None,
                 file_hash=file_hash,
-                status="success",
-                error_code="FILE_DUPLICATE",
-                duplicate_of=(historical_paper.paper_task_id if historical_paper else None),
-            )
-            postgres.append_paper_task_log(
-                paper_entry.paper_task_id,
-                status="success",
-                node="dedup",
-                error_code="FILE_DUPLICATE",
+                historical_paper=historical_paper,
                 message="Duplicate file detected by SHA-256",
             )
             paper_entries.append(paper_entry)
             continue
 
+        upload_ref = None
+        document = None
+        paper_entry = None
+        tmp_path = None
         try:
             storage_key = MinIOClient.build_literature_object_key(
                 file_hash=file_hash,
@@ -543,28 +840,119 @@ async def create_task_request_by_upload(
             )
         except Exception as exc:
             logger.exception("Failed to upload file to object storage: {}", exc)
-            raise HTTPException(status_code=503, detail="Failed to store uploaded file")
-
-        document = postgres.create_document(
-            title=filename or file_hash,
-            original_filename=filename or None,
-            local_path=upload_ref.object_key,
-            file_hash=file_hash,
-            status="queued",
-        )
-        paper_entry = postgres.create_paper_task(
-            request_id=request_entry.request_id,
-            document_id=document.document_id,
-            original_filename=filename or None,
-            file_hash=file_hash,
-            status="queued",
-        )
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
-            tmp_file.write(payload)
-            tmp_path = tmp_file.name
+            paper_entry = postgres.create_paper_task(
+                request_id=request_entry.request_id,
+                original_filename=filename or None,
+                file_hash=file_hash,
+                status="failed",
+                error_code="INTERNAL_ERROR",
+            )
+            postgres.append_paper_task_log(
+                paper_entry.paper_task_id,
+                status="failed",
+                node="upload",
+                error_code="INTERNAL_ERROR",
+                message="Failed to store uploaded file",
+            )
+            paper_entries.append(paper_entry)
+            continue
 
         try:
+            document = postgres.create_document(
+                title=filename or file_hash,
+                original_filename=filename or None,
+                local_path=upload_ref.object_key,
+                file_hash=file_hash,
+                status="queued",
+            )
+        except IntegrityError as exc:
+            logger.warning("Document create conflict for hash {}: {}", file_hash, exc)
+            existing_document = postgres.find_document_by_hash(file_hash)
+            historical_paper = postgres.find_latest_paper_task_by_hash(file_hash)
+            if upload_ref is not None:
+                try:
+                    await minio.delete_file(
+                        MinioBucketNameEnum.LITERATURE_UPLOADS.value,
+                        upload_ref.object_key,
+                    )
+                except Exception as cleanup_exc:
+                    logger.warning(
+                        "Failed to cleanup duplicate upload object {}: {}",
+                        upload_ref.object_key,
+                        cleanup_exc,
+                    )
+            if existing_document is not None and _has_successful_historical_paper(historical_paper):
+                paper_entry = _create_duplicate_paper_entry(
+                    postgres,
+                    request_id=request_entry.request_id,
+                    document_id=existing_document.document_id,
+                    original_filename=filename or None,
+                    file_hash=file_hash,
+                    historical_paper=historical_paper,
+                    message="Duplicate file detected after concurrent create",
+                )
+            else:
+                paper_entry = postgres.create_paper_task(
+                    request_id=request_entry.request_id,
+                    document_id=(existing_document.document_id if existing_document else None),
+                    original_filename=filename or None,
+                    file_hash=file_hash,
+                    status="failed",
+                    error_code="INTERNAL_ERROR",
+                )
+                postgres.append_paper_task_log(
+                    paper_entry.paper_task_id,
+                    status="failed",
+                    node="document",
+                    error_code="INTERNAL_ERROR",
+                    message="Concurrent document creation conflict",
+                )
+            paper_entries.append(paper_entry)
+            continue
+        except Exception as exc:
+            logger.exception("Failed to create document for {}: {}", filename, exc)
+            if upload_ref is not None:
+                try:
+                    await minio.delete_file(
+                        MinioBucketNameEnum.LITERATURE_UPLOADS.value,
+                        upload_ref.object_key,
+                    )
+                except Exception as cleanup_exc:
+                    logger.warning(
+                        "Failed to cleanup upload object {} after document error: {}",
+                        upload_ref.object_key,
+                        cleanup_exc,
+                    )
+            paper_entry = postgres.create_paper_task(
+                request_id=request_entry.request_id,
+                original_filename=filename or None,
+                file_hash=file_hash,
+                status="failed",
+                error_code="INTERNAL_ERROR",
+            )
+            postgres.append_paper_task_log(
+                paper_entry.paper_task_id,
+                status="failed",
+                node="document",
+                error_code="INTERNAL_ERROR",
+                message="Failed to create document record",
+            )
+            paper_entries.append(paper_entry)
+            continue
+
+        try:
+            paper_entry = postgres.create_paper_task(
+                request_id=request_entry.request_id,
+                document_id=document.document_id,
+                original_filename=filename or None,
+                file_hash=file_hash,
+                status="queued",
+            )
+            tmp_path = _create_managed_upload_temp_file(
+                payload=payload,
+                suffix=suffix,
+                paper_task_id=paper_entry.paper_task_id,
+            )
             async_result = process_pdf_task.apply_async(
                 args=[[tmp_path]],
                 kwargs={
@@ -575,12 +963,33 @@ async def create_task_request_by_upload(
                 },
             )
         except Exception as exc:
-            logger.exception("Failed to enqueue paper task {}: {}", paper_entry.paper_task_id, exc)
-            postgres.update_paper_task(
-                paper_entry.paper_task_id,
-                status="failed",
-                error_code="INTERNAL_ERROR",
+            logger.exception(
+                "Failed to enqueue paper task {}: {}",
+                paper_entry.paper_task_id if paper_entry else filename,
+                exc,
             )
+            if paper_entry is None:
+                paper_entry = postgres.create_paper_task(
+                    request_id=request_entry.request_id,
+                    document_id=(document.document_id if document is not None else None),
+                    original_filename=filename or None,
+                    file_hash=file_hash,
+                    status="failed",
+                    error_code="INTERNAL_ERROR",
+                )
+            else:
+                paper_entry = postgres.update_paper_task(
+                    paper_entry.paper_task_id,
+                    status="failed",
+                    error_code="INTERNAL_ERROR",
+                )
+            if document is not None:
+                postgres.update_document(
+                    document.document_id,
+                    status="failed",
+                    summary="Task queue unavailable",
+                )
+            _cleanup_upload_temp_file(tmp_path)
             postgres.append_paper_task_log(
                 paper_entry.paper_task_id,
                 status="failed",
@@ -588,7 +997,8 @@ async def create_task_request_by_upload(
                 error_code="INTERNAL_ERROR",
                 message="Task queue unavailable",
             )
-            raise HTTPException(status_code=503, detail="Task queue unavailable")
+            paper_entries.append(paper_entry)
+            continue
 
         paper_entry = postgres.update_paper_task(
             paper_entry.paper_task_id,
@@ -602,6 +1012,13 @@ async def create_task_request_by_upload(
             payload={"celery_task_id": async_result.id},
         )
         paper_entries.append(paper_entry)
+
+    request_entry = postgres.refresh_task_request_status(request_entry.request_id) or request_entry
+    return TaskRequestCreateResponse(
+        request_id=str(getattr(request_entry, "request_id", request_entry.request_id)),
+        status=str(getattr(request_entry, "status", "queued")),
+        papers=[_paper_item_model(item) for item in paper_entries],
+    )
 
     request_entry = postgres.refresh_task_request_status(request_entry.request_id)
     return TaskRequestCreateResponse(
@@ -624,12 +1041,12 @@ def get_task_request_status(
     try:
         request_uuid = UUID(request_id)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid request_id")
+        raise contract_http_exception(400, "INPUT_INVALID", "Invalid request_id")
 
     postgres = get_postgres_client()
     request_entry = postgres.refresh_task_request_status(request_uuid)
     if request_entry is None:
-        raise HTTPException(status_code=404, detail="Request not found")
+        raise contract_http_exception(404, "RESOURCE_NOT_FOUND", "Request not found")
     papers = postgres.list_paper_tasks_by_request(request_uuid)
     return TaskRequestStatusResponse(
         request_id=str(request_entry.request_id),
@@ -658,7 +1075,7 @@ def get_task_status(
     async_result = AsyncResult(task_id, app=celery_app)
 
     if async_result is None:
-        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+        raise contract_http_exception(404, "RESOURCE_NOT_FOUND", f"Task {task_id} not found")
 
     meta = _safe_task_meta(async_result)
     metrics = _extract_task_metrics(meta)
@@ -669,6 +1086,7 @@ def get_task_status(
         workflow_status_description=None,
         progress_percentage=None,
         processing_steps=None,
+        parsing_metadata=None,
         paper_task_id=None,
         document_id=None,
         file_size_bytes=metrics.get("file_size_bytes"),
@@ -731,6 +1149,30 @@ def get_task_status(
         if details_payload:
             response.error_details = details_payload
 
+        if response.parsing_metadata is None:
+            get_latest_log = getattr(postgres, "get_latest_paper_task_log", None)
+            if callable(get_latest_log):
+                parsing_log = get_latest_log(
+                    getattr(paper_entry, "paper_task_id", None), node="parsing"
+                )
+                parsing_payload = getattr(parsing_log, "payload", None)
+                if isinstance(parsing_payload, dict):
+                    nested_metadata = parsing_payload.get("parsing_metadata")
+                    if isinstance(nested_metadata, dict):
+                        response.parsing_metadata = nested_metadata
+                    elif any(
+                        key in parsing_payload
+                        for key in (
+                            "parser_backend",
+                            "parser_task_id",
+                            "mineru_folder",
+                            "image_count",
+                            "markdown_object_key",
+                            "image_object_keys",
+                        )
+                    ):
+                        response.parsing_metadata = parsing_payload
+
     if async_result.failed():
         response.error = str(async_result.result)
         if response.error_details is None:
@@ -768,11 +1210,14 @@ def get_task_status(
                     response.progress_percentage = calculate_progress_percentage(
                         response.processing_steps
                     )
+            progress_percentage = result_payload.get("progress_percentage")
             if response.progress_percentage is None and isinstance(
-                result_payload.get("progress_percentage"),
-                (float, int),
+                progress_percentage, (float, int)
             ):
-                response.progress_percentage = float(result_payload.get("progress_percentage"))
+                response.progress_percentage = float(progress_percentage)
+            parsing_metadata = result_payload.get("parsing_metadata")
+            if isinstance(parsing_metadata, dict):
+                response.parsing_metadata = parsing_metadata
         logger.debug("Task succeeded: {}", task_id)
     else:
         logger.debug("Task status: {} status: {}", task_id, async_result.status)

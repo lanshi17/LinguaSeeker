@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
+from sqlalchemy.exc import IntegrityError
 from fastapi.testclient import TestClient
 
 import main
@@ -108,6 +109,106 @@ def test_get_task_status_failure(
     assert payload["task_id"] == "task-500"
     assert payload["status"] == "FAILURE"
     assert payload["error"] == "boom"
+
+
+def test_get_task_status_with_parsing_metadata(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
+    class DummyAsyncResult:
+        def __init__(self, task_id: str) -> None:
+            self.id = task_id
+            self.status = "SUCCESS"
+            self.result = {
+                "document_id": "doc-parse-1",
+                "mineru_folder": "/tmp/mineru-output",
+                "parsing_metadata": {
+                    "parser_backend": "mineru",
+                    "parser_task_id": "mineru-task-1",
+                    "mineru_folder": "/tmp/mineru-output",
+                    "image_count": 2,
+                    "markdown_object_key": "doc-parse-1/parsing/parsed_markdown.md",
+                },
+            }
+
+        def failed(self) -> bool:
+            return False
+
+        def successful(self) -> bool:
+            return True
+
+    monkeypatch.setattr(
+        task_api, "AsyncResult", lambda task_id, app=None: DummyAsyncResult(task_id)
+    )
+
+    response = client.get(f"{task_prefix}/task-parse-meta")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["task_id"] == "task-parse-meta"
+    assert payload["status"] == "SUCCESS"
+    assert payload["document_id"] == "doc-parse-1"
+    assert payload["parsing_metadata"]["parser_backend"] == "mineru"
+    assert payload["parsing_metadata"]["image_count"] == 2
+
+
+def test_get_task_status_parsing_metadata_falls_back_to_db_log(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
+    paper_task_id = uuid4()
+    document_id = uuid4()
+
+    class DummyAsyncResult:
+        def __init__(self, task_id: str) -> None:
+            self.id = task_id
+            self.status = "STARTED"
+            self.result = None
+
+        def failed(self) -> bool:
+            return False
+
+        def successful(self) -> bool:
+            return False
+
+    class DummyPostgres:
+        def get_paper_task_by_celery_task_id(self, _: str) -> Any:
+            return SimpleNamespace(
+                paper_task_id=paper_task_id,
+                document_id=document_id,
+                workflow_status="PROCESSING_PDF",
+                processing_steps={"parsing": {"status": "COMPLETED"}},
+                file_size_bytes=2048,
+                processing_duration_seconds=1.2,
+                error_code=None,
+                error_details=None,
+                node_trace={"parsing": "success"},
+                created_at=datetime(2026, 3, 1, 8, 0, 0, tzinfo=timezone.utc),
+                updated_at=datetime(2026, 3, 1, 8, 0, 2, tzinfo=timezone.utc),
+            )
+
+        def get_latest_paper_task_log(
+            self, paper_task_id_value: Any, node: str | None = None
+        ) -> Any:
+            assert str(paper_task_id_value) == str(paper_task_id)
+            assert node == "parsing"
+            return SimpleNamespace(
+                payload={
+                    "parser_backend": "mineru",
+                    "parser_task_id": "mineru-task-1",
+                    "mineru_folder": "/tmp/mineru-output",
+                    "image_count": 2,
+                }
+            )
+
+    monkeypatch.setattr(
+        task_api, "AsyncResult", lambda task_id, app=None: DummyAsyncResult(task_id)
+    )
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+
+    response = client.get(f"{task_prefix}/task-parse-db")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["task_id"] == "task-parse-db"
+    assert payload["parsing_metadata"]["parser_backend"] == "mineru"
+    assert payload["parsing_metadata"]["image_count"] == 2
 
 
 def test_get_task_status_with_processing_steps_and_progress(
@@ -277,7 +378,7 @@ def test_create_task_request_upload_duplicate_success(
             return SimpleNamespace(document_id=document_id)
 
         def find_latest_paper_task_by_hash(self, _: str) -> Any:
-            return SimpleNamespace(paper_task_id=historical_id)
+            return SimpleNamespace(paper_task_id=historical_id, status="success")
 
         def create_paper_task(self, **kwargs: Any) -> Any:
             entry = SimpleNamespace(
@@ -386,6 +487,12 @@ def test_create_task_request_upload_enqueue_non_duplicate(
                 celery_task_id=kwargs.get("celery_task_id"),
             )
 
+        def update_task_request(self, _: Any, **__: Any) -> Any:
+            return SimpleNamespace(request_id=request_id, status="failed")
+
+        def update_document(self, _: Any, **__: Any) -> Any:
+            return SimpleNamespace(document_id=document_id, status="failed")
+
         def append_paper_task_log(self, *_: Any, **__: Any) -> Any:
             return None
 
@@ -425,6 +532,302 @@ def test_create_task_request_upload_enqueue_non_duplicate(
     assert "uploaded_at" in metadata
     assert upload_kwargs["storage_key"].startswith(f"{metadata['hash']}/")
     assert upload_kwargs["storage_key"].endswith(".pdf")
+
+
+def test_create_task_request_upload_invalid_file_does_not_create_request(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    task_prefix: str,
+) -> None:
+    class DummyPostgres:
+        def create_task_request(self, *_: Any, **__: Any) -> Any:
+            raise AssertionError("request should not be created before full validation")
+
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+
+    response = client.post(
+        f"{task_prefix}/requests/upload",
+        data={"task_form": "Find BRCA1 PS3 evidence"},
+        files=[("files", ("bad.exe", b"MZ", "application/octet-stream"))],
+    )
+
+    assert response.status_code == 400
+    assert response.json()["error_code"] == "FILE_TYPE_UNSUPPORTED"
+
+
+def test_create_task_request_upload_enqueue_failure_records_failed_paper(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    task_prefix: str,
+) -> None:
+    request_id = uuid4()
+    document_id = uuid4()
+    paper_task_id = uuid4()
+
+    class DummyProcessTask:
+        def apply_async(self, args: Any, kwargs: Dict[str, Any]) -> Any:
+            raise RuntimeError("queue unavailable")
+
+    class DummyPostgres:
+        def create_task_request(self, *_: Any, **__: Any) -> Any:
+            return SimpleNamespace(request_id=request_id, status="queued")
+
+        def find_document_by_hash(self, _: str) -> Any:
+            return None
+
+        def find_latest_paper_task_by_hash(self, _: str) -> Any:
+            return None
+
+        def create_document(self, **_: Any) -> Any:
+            return SimpleNamespace(document_id=document_id)
+
+        def create_paper_task(self, **kwargs: Any) -> Any:
+            return SimpleNamespace(
+                paper_task_id=paper_task_id,
+                original_filename=kwargs.get("original_filename"),
+                status=kwargs.get("status"),
+                error_code=kwargs.get("error_code"),
+                duplicate_of=kwargs.get("duplicate_of"),
+                document_id=document_id,
+                celery_task_id=None,
+            )
+
+        def update_paper_task(self, _: Any, **kwargs: Any) -> Any:
+            return SimpleNamespace(
+                paper_task_id=paper_task_id,
+                original_filename="new.pdf",
+                status=kwargs.get("status", "failed"),
+                error_code=kwargs.get("error_code"),
+                duplicate_of=None,
+                document_id=document_id,
+                celery_task_id=kwargs.get("celery_task_id"),
+            )
+
+        def update_task_request(self, _: Any, **__: Any) -> Any:
+            return SimpleNamespace(request_id=request_id, status="failed")
+
+        def update_document(self, _: Any, **__: Any) -> Any:
+            return SimpleNamespace(document_id=document_id, status="failed")
+
+        def append_paper_task_log(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def refresh_task_request_status(self, _: Any) -> Any:
+            return SimpleNamespace(request_id=request_id, status="failed")
+
+    class DummyMinio:
+        @staticmethod
+        def build_literature_object_key(file_hash: str, original_filename: str | None) -> str:
+            suffix = Path(original_filename or "file.pdf").suffix or ".bin"
+            return f"{file_hash}/dummy{suffix}"
+
+        async def upload_literature_upload(self, **kwargs: Any) -> Any:
+            return SimpleNamespace(object_key=kwargs.get("storage_key", "hash/new.pdf"))
+
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+    monkeypatch.setattr(task_api, "MinIOClient", DummyMinio)
+    monkeypatch.setattr(task_api, "process_pdf_task", DummyProcessTask())
+
+    response = client.post(
+        f"{task_prefix}/requests/upload",
+        data={"task_form": "Evaluate LDLR CNV"},
+        files=[("files", ("sample.pdf", b"%PDF-1.7 new", "application/pdf"))],
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "failed"
+    assert payload["papers"][0]["status"] == "failed"
+    assert payload["papers"][0]["error_code"] == "INTERNAL_ERROR"
+
+
+def test_create_task_request_upload_partial_failure_returns_partial_failed(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    task_prefix: str,
+) -> None:
+    request_id = uuid4()
+    document_1 = uuid4()
+    document_2 = uuid4()
+    paper_1 = uuid4()
+    paper_2 = uuid4()
+    enqueue_calls = {"count": 0}
+
+    class DummyAsyncResult:
+        id = "celery-paper-1"
+
+    class DummyProcessTask:
+        def apply_async(self, args: Any, kwargs: Dict[str, Any]) -> Any:
+            enqueue_calls["count"] += 1
+            if enqueue_calls["count"] == 2:
+                raise RuntimeError("queue unavailable")
+            return DummyAsyncResult()
+
+    class DummyPostgres:
+        def __init__(self) -> None:
+            self.doc_count = 0
+            self.paper_count = 0
+
+        def create_task_request(self, *_: Any, **__: Any) -> Any:
+            return SimpleNamespace(request_id=request_id, status="queued")
+
+        def find_document_by_hash(self, _: str) -> Any:
+            return None
+
+        def find_latest_paper_task_by_hash(self, _: str) -> Any:
+            return None
+
+        def create_document(self, **_: Any) -> Any:
+            self.doc_count += 1
+            return SimpleNamespace(document_id=document_1 if self.doc_count == 1 else document_2)
+
+        def create_paper_task(self, **kwargs: Any) -> Any:
+            self.paper_count += 1
+            return SimpleNamespace(
+                paper_task_id=paper_1 if self.paper_count == 1 else paper_2,
+                original_filename=kwargs.get("original_filename"),
+                status=kwargs.get("status", "queued"),
+                error_code=kwargs.get("error_code"),
+                duplicate_of=kwargs.get("duplicate_of"),
+                document_id=kwargs.get("document_id"),
+                celery_task_id=None,
+            )
+
+        def update_paper_task(self, paper_task_id_value: Any, **kwargs: Any) -> Any:
+            return SimpleNamespace(
+                paper_task_id=paper_task_id_value,
+                original_filename="sample.pdf",
+                status=kwargs.get("status", "queued"),
+                error_code=kwargs.get("error_code"),
+                duplicate_of=None,
+                document_id=document_1 if str(paper_task_id_value) == str(paper_1) else document_2,
+                celery_task_id=kwargs.get("celery_task_id"),
+            )
+
+        def update_document(self, document_id_value: Any, **__: Any) -> Any:
+            return SimpleNamespace(document_id=document_id_value, status="failed")
+
+        def update_task_request(self, _: Any, **__: Any) -> Any:
+            return SimpleNamespace(request_id=request_id, status="partial_failed")
+
+        def append_paper_task_log(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def refresh_task_request_status(self, _: Any) -> Any:
+            return SimpleNamespace(request_id=request_id, status="partial_failed")
+
+    class DummyMinio:
+        @staticmethod
+        def build_literature_object_key(file_hash: str, original_filename: str | None) -> str:
+            suffix = Path(original_filename or "file.pdf").suffix or ".bin"
+            return f"{file_hash}/dummy{suffix}"
+
+        async def upload_literature_upload(self, **kwargs: Any) -> Any:
+            return SimpleNamespace(object_key=kwargs.get("storage_key", "hash/new.pdf"))
+
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+    monkeypatch.setattr(task_api, "MinIOClient", DummyMinio)
+    monkeypatch.setattr(task_api, "process_pdf_task", DummyProcessTask())
+
+    response = client.post(
+        f"{task_prefix}/requests/upload",
+        data={"task_form": "Evaluate LDLR CNV"},
+        files=[
+            ("files", ("sample-1.pdf", b"%PDF-1.7 first", "application/pdf")),
+            ("files", ("sample-2.pdf", b"%PDF-1.7 second", "application/pdf")),
+        ],
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "partial_failed"
+    assert payload["papers"][0]["status"] == "queued"
+    assert payload["papers"][1]["status"] == "failed"
+
+
+def test_create_task_request_upload_integrity_conflict_recovers_duplicate(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    task_prefix: str,
+) -> None:
+    request_id = uuid4()
+    document_id = uuid4()
+    historical_paper_id = uuid4()
+
+    class DummyPostgres:
+        def create_task_request(self, *_: Any, **__: Any) -> Any:
+            return SimpleNamespace(request_id=request_id, status="queued")
+
+        def find_document_by_hash(self, _: str) -> Any:
+            return None
+
+        def find_latest_paper_task_by_hash(self, _: str) -> Any:
+            return None
+
+        def create_document(self, **_: Any) -> Any:
+            raise IntegrityError("insert", {}, Exception("duplicate key"))
+
+        def create_paper_task(self, **kwargs: Any) -> Any:
+            return SimpleNamespace(
+                paper_task_id=historical_paper_id,
+                original_filename=kwargs.get("original_filename"),
+                status=kwargs.get("status"),
+                error_code=kwargs.get("error_code"),
+                duplicate_of=kwargs.get("duplicate_of"),
+                document_id=kwargs.get("document_id"),
+                celery_task_id=None,
+            )
+
+        def append_paper_task_log(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def refresh_task_request_status(self, _: Any) -> Any:
+            return SimpleNamespace(request_id=request_id, status="success")
+
+    dummy_pg = DummyPostgres()
+    state = {"document_lookups": 0, "paper_lookups": 0}
+
+    def find_document_by_hash(_: str) -> Any:
+        state["document_lookups"] += 1
+        if state["document_lookups"] >= 2:
+            return SimpleNamespace(document_id=document_id)
+        return None
+
+    def find_latest_paper_task_by_hash(_: str) -> Any:
+        state["paper_lookups"] += 1
+        if state["paper_lookups"] >= 2:
+            return SimpleNamespace(paper_task_id=historical_paper_id, status="success")
+        return None
+
+    dummy_pg.find_document_by_hash = find_document_by_hash
+    dummy_pg.find_latest_paper_task_by_hash = find_latest_paper_task_by_hash
+
+    class DummyMinio:
+        @staticmethod
+        def build_literature_object_key(file_hash: str, original_filename: str | None) -> str:
+            suffix = Path(original_filename or "file.pdf").suffix or ".bin"
+            return f"{file_hash}/dummy{suffix}"
+
+        async def upload_literature_upload(self, **kwargs: Any) -> Any:
+            return SimpleNamespace(object_key=kwargs.get("storage_key", "hash/new.pdf"))
+
+        async def delete_file(self, bucket: Any, object_key: str) -> bool:
+            return True
+
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: dummy_pg)
+    monkeypatch.setattr(task_api, "MinIOClient", DummyMinio)
+
+    response = client.post(
+        f"{task_prefix}/requests/upload",
+        data={"task_form": "Evaluate LDLR CNV"},
+        files=[("files", ("sample.pdf", b"%PDF-1.7 same", "application/pdf"))],
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "success"
+    assert payload["papers"][0]["status"] == "success"
+    assert payload["papers"][0]["error_code"] == "FILE_DUPLICATE"
 
 
 def test_get_task_request_status(
@@ -601,3 +1004,150 @@ def test_submit_pubmed_selection(
     assert payload["request_id"] == str(request_id)
     assert payload["papers"][0]["paper_task_id"] == str(paper_task_id)
     assert payload["papers"][0]["celery_task_id"] == "pubmed-task-1"
+
+
+def test_create_task_request_web_crawl_duplicate_success(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    task_prefix: str,
+) -> None:
+    request_id = uuid4()
+    paper_task_id = uuid4()
+    historical_id = uuid4()
+    document_id = uuid4()
+
+    class DummyPostgres:
+        def create_task_request(
+            self, task_form_text: str, status: str, metadata: Dict[str, Any]
+        ) -> Any:
+            assert task_form_text == "Find BRCA1 assay evidence"
+            assert metadata["entry"] == "web"
+            assert metadata["url_count"] == 1
+            return SimpleNamespace(request_id=request_id, status=status)
+
+        def find_document_by_hash(self, _: str) -> Any:
+            return SimpleNamespace(document_id=document_id)
+
+        def find_latest_paper_task_by_hash(self, _: str) -> Any:
+            return SimpleNamespace(paper_task_id=historical_id, status="success")
+
+        def create_paper_task(self, **kwargs: Any) -> Any:
+            return SimpleNamespace(
+                paper_task_id=paper_task_id,
+                original_filename=kwargs.get("original_filename"),
+                status=kwargs.get("status"),
+                error_code=kwargs.get("error_code"),
+                duplicate_of=kwargs.get("duplicate_of"),
+                document_id=kwargs.get("document_id"),
+                celery_task_id=None,
+            )
+
+        def append_paper_task_log(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def refresh_task_request_status(self, _: Any) -> Any:
+            return SimpleNamespace(request_id=request_id, status="success")
+
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+
+    response = client.post(
+        f"{task_prefix}/requests/web/crawl",
+        json={
+            "task_form": "Find BRCA1 assay evidence",
+            "urls": ["https://example.org/brca1-study"],
+            "source": "web",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "success"
+    assert payload["request_id"] == str(request_id)
+    assert payload["papers"][0]["status"] == "success"
+    assert payload["papers"][0]["error_code"] == "FILE_DUPLICATE"
+    assert payload["papers"][0]["duplicate_of"] == str(historical_id)
+
+
+def test_create_task_request_web_crawl_enqueue_non_duplicate(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    task_prefix: str,
+) -> None:
+    request_id = uuid4()
+    paper_task_id = uuid4()
+    document_id = uuid4()
+
+    class DummyAsyncResult:
+        id = "web-task-1"
+
+    class DummyProcessWebTask:
+        def apply_async(self, args: List[Any]) -> DummyAsyncResult:
+            assert args[0] == "https://example.org/ldlr-functional-assay"
+            assert args[1] == str(document_id)
+            assert args[2] == str(paper_task_id)
+            assert args[3] == str(request_id)
+            return DummyAsyncResult()
+
+    class DummyPostgres:
+        def create_task_request(
+            self, task_form_text: str, status: str, metadata: Dict[str, Any]
+        ) -> Any:
+            assert task_form_text == "Find LDLR functional evidence"
+            assert metadata["entry"] == "web"
+            assert metadata["url_count"] == 1
+            return SimpleNamespace(request_id=request_id, status="queued")
+
+        def find_document_by_hash(self, _: str) -> Any:
+            return None
+
+        def find_latest_paper_task_by_hash(self, _: str) -> Any:
+            return None
+
+        def create_document(self, **kwargs: Any) -> Any:
+            assert kwargs["title"] == "https://example.org/ldlr-functional-assay"
+            assert kwargs["local_path"] == "https://example.org/ldlr-functional-assay"
+            return SimpleNamespace(document_id=document_id)
+
+        def create_paper_task(self, **kwargs: Any) -> Any:
+            return SimpleNamespace(
+                paper_task_id=paper_task_id,
+                original_filename=kwargs.get("original_filename"),
+                status=kwargs.get("status"),
+                error_code=kwargs.get("error_code"),
+                duplicate_of=kwargs.get("duplicate_of"),
+                document_id=kwargs.get("document_id"),
+                celery_task_id=None,
+            )
+
+        def append_paper_task_log(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def update_paper_task(self, _: Any, **kwargs: Any) -> Any:
+            return SimpleNamespace(
+                paper_task_id=paper_task_id,
+                original_filename="https://example.org/ldlr-functional-assay",
+                status="queued",
+                error_code=None,
+                duplicate_of=None,
+                document_id=document_id,
+                celery_task_id=kwargs.get("celery_task_id"),
+            )
+
+        def refresh_task_request_status(self, _: Any) -> Any:
+            return SimpleNamespace(request_id=request_id, status="queued")
+
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+    monkeypatch.setattr(task_api, "process_web_page_task", DummyProcessWebTask())
+
+    response = client.post(
+        f"{task_prefix}/requests/web/crawl",
+        json={
+            "task_form": "Find LDLR functional evidence",
+            "urls": ["https://example.org/ldlr-functional-assay"],
+            "source": "web",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "queued"
+    assert payload["papers"][0]["paper_task_id"] == str(paper_task_id)
+    assert payload["papers"][0]["celery_task_id"] == "web-task-1"

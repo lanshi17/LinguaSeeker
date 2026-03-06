@@ -84,6 +84,35 @@ def initialize_schema(db_name: Optional[str] = None, schema_name: Optional[str] 
     Base.metadata.create_all(engine)
 
 
+def _derive_request_status(
+    *,
+    total_count: int,
+    duplicate_count: int,
+    success_count: int,
+    success_non_duplicate_count: int,
+    failed_count: int,
+    running_count: int,
+    queued_count: int,
+) -> str:
+    if total_count <= 0:
+        return "failed"
+    if running_count > 0:
+        return "running"
+    if queued_count > 0:
+        return "queued"
+    if failed_count > 0 and success_count > 0:
+        return "partial_failed"
+    if failed_count > 0:
+        return "failed"
+    if duplicate_count == total_count:
+        return "success"
+    if success_count == total_count:
+        return "success"
+    if success_non_duplicate_count > 0 or duplicate_count > 0:
+        return "success"
+    return "queued"
+
+
 def get_engine(db_name: Optional[str] = None):
     conninfo = _build_conninfo(db_name)
     return create_engine(
@@ -224,6 +253,15 @@ class PostgresClient:
             if not document:
                 return False
             session.delete(document)
+            return True
+
+    def delete_paper_task(self, paper_task_id: Union[UUID, str]) -> bool:
+        paper_uuid = self._coerce_uuid(paper_task_id)
+        with self.session_scope() as session:
+            paper_task = session.get(PaperTask, paper_uuid)
+            if not paper_task:
+                return False
+            session.delete(paper_task)
             return True
 
     # -------------------- Tasks --------------------
@@ -460,6 +498,19 @@ class PostgresClient:
             session.flush()
             return entry
 
+    def get_latest_paper_task_log(
+        self,
+        paper_task_id: Union[UUID, str],
+        *,
+        node: Optional[str] = None,
+    ) -> Optional[PaperTaskLog]:
+        paper_uuid = self._coerce_uuid(paper_task_id)
+        with self.session_scope() as session:
+            query = session.query(PaperTaskLog).filter(PaperTaskLog.paper_task_id == paper_uuid)
+            if node is not None:
+                query = query.filter(PaperTaskLog.node == node)
+            return query.order_by(PaperTaskLog.created_at.desc()).first()
+
     def create_sentence_alignment(
         self,
         paper_task_id: Union[UUID, str],
@@ -512,30 +563,25 @@ class PostgresClient:
                 return entry
 
             statuses = [str(p.status) for p in papers]
-            has_running = any(s == "running" for s in statuses)
-            has_queued = any(s == "queued" for s in statuses)
-            has_failed = any(s == "failed" for s in statuses)
             success_count = sum(1 for s in statuses if s == "success")
-            all_success = success_count == len(papers)
-            all_duplicates = all(
-                str(p.status) == "success" and str(p.error_code or "") == "FILE_DUPLICATE"
+            duplicate_count = sum(
+                1
                 for p in papers
+                if str(p.status) == "success" and str(p.error_code or "") == "FILE_DUPLICATE"
             )
+            failed_count = sum(1 for s in statuses if s == "failed")
+            running_count = sum(1 for s in statuses if s == "running")
+            queued_count = sum(1 for s in statuses if s == "queued")
 
-            if all_success:
-                entry.status = "success"
-            elif has_running:
-                entry.status = "running"
-            elif has_queued:
-                entry.status = "queued"
-            elif has_failed and success_count > 0:
-                entry.status = "partial_failed"
-            elif has_failed:
-                entry.status = "failed"
-            elif all_duplicates:
-                entry.status = "success"
-            else:
-                entry.status = "queued"
+            entry.status = _derive_request_status(
+                total_count=len(papers),
+                duplicate_count=duplicate_count,
+                success_count=success_count,
+                success_non_duplicate_count=(success_count - duplicate_count),
+                failed_count=failed_count,
+                running_count=running_count,
+                queued_count=queued_count,
+            )
 
             session.flush()
             return entry

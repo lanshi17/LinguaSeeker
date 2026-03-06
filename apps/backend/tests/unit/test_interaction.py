@@ -203,6 +203,57 @@ class TestInteractionAgent:
         assert agent._normalize_anthropic_base_url("https://api.test.com") == "https://api.test.com"
         assert agent._normalize_anthropic_base_url("") == ""
 
+    @pytest.mark.asyncio
+    async def test_session_rehydrates_across_agent_instances(self, mock_config, mock_llm_response):
+        class FakeRedisConnection:
+            def __init__(self) -> None:
+                self.data = {}
+
+            def set(self, key, value, ex=None):
+                self.data[key] = value
+
+            def get(self, key):
+                return self.data.get(key)
+
+            def delete(self, key):
+                self.data.pop(key, None)
+
+        fake_redis = FakeRedisConnection()
+
+        class FakeRedisClient:
+            def get_connection(self):
+                return fake_redis
+
+        clarification_response = MagicMock()
+        clarification_response.content = """```json
+{
+  "needs_clarification": true,
+  "clarification_question": "What disease are you researching?",
+  "extracted_fields": {
+    "goal": "functional evidence",
+    "disease": null,
+    "country": null,
+    "language": null
+  }
+}
+```"""
+
+        with patch("src.domain.agent.interaction.ChatAnthropic"):
+            with patch("src.domain.agent.interaction.RedisClient", return_value=FakeRedisClient()):
+                agent_a = InteractionAgent(cfg=mock_config)
+                agent_b = InteractionAgent(cfg=mock_config)
+
+        agent_a.llm = MagicMock()
+        agent_a.llm.ainvoke = AsyncMock(return_value=clarification_response)
+        start_result = await agent_a.start_interaction("I need functional evidence")
+
+        agent_b.llm = MagicMock()
+        agent_b.llm.ainvoke = AsyncMock(return_value=mock_llm_response)
+        result = await agent_b.respond_interaction(start_result["session_id"], "LDLR variant")
+
+        assert result["ready"] is True
+        assert result["task_form"]["disease"] == "LDLR variant"
+
 
 class TestTaskFormStructured:
     """Test TaskFormStructured model"""

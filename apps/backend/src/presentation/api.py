@@ -24,7 +24,7 @@ from src.service.tasks import process_pdf_task
 from src.database.minio_client import MinIOClient
 from src.database.enum import MinioBucketNameEnum
 from src.database.models import MinioObjectRefModel
-from src.presentation.error_contract import build_log_link
+from src.presentation.error_contract import build_log_link, contract_http_exception
 from src.utils.sanitizers import sanitize_filename
 
 router = APIRouter()
@@ -372,14 +372,14 @@ async def download_processed_result_file(
 ):
     """Download a processed file from object storage as raw bytes."""
     if not object_path:
-        raise HTTPException(status_code=400, detail="object_path is required")
+        raise contract_http_exception(400, "INPUT_INVALID", "object_path is required")
 
     object_key = f"{document_id}/{object_path}"
     minio_client = MinIOClient()
     try:
         payload = await minio_client.download_processed_result(object_key)
     except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Result file not found")
+        raise contract_http_exception(404, "RESOURCE_NOT_FOUND", "Result file not found")
     except Exception as exc:
         logger.exception("Failed to download result file {}: {}", object_key, exc)
         raise HTTPException(status_code=503, detail="Failed to fetch result file")

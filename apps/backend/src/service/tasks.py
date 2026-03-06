@@ -1,7 +1,9 @@
 import asyncio
+import hashlib
 import json
 import os
 import re
+import shutil
 import sys
 import time
 from datetime import datetime, timezone
@@ -18,17 +20,17 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.domain.mineru.component import MinerUComponent
-from src.domain.mineru.component import run_paddleocr_fallback
+from src.domain.agent.document_parsing import collect_parsing_assets, get_document_parsing_agent
 from src.domain.agent.workflow import EvidenceAgent
 from src.domain.models import (
+    DocumentParsingArtifact,
+    DocumentParsingResult,
     EvidenceOutput,
-    MinerURequest,
     PipelineFiles,
     PipelineResult,
 )
 from src.domain.graph.sync import SchemaSyncError, get_graph_sync_service
-from src.domain.literature.pubmed_service import get_pubmed_service
+from src.domain.literature import get_firecrawl_service, get_pubmed_service
 from src.database.qdrant_client import QdrantManager, initialize_knowledge_base
 from src.database.minio_client import MinIOClient
 from src.database.postgre_client import get_postgres_client
@@ -53,7 +55,6 @@ from src.service.enum import (
 
 cfg = settings
 
-_mineru = MinerUComponent()
 _agents = EvidenceAgent()
 _qdrant_manager = QdrantManager()
 _REBUILD_EMPTY_KB = getattr(cfg, "rebuild_empty_knowledge_base", True)
@@ -572,10 +573,19 @@ async def init_knowledge_base_if_needed() -> bool:
 
 
 def _collect_mineru_assets(folder_path: str) -> tuple[str, List[str]]:
-    origin_folder = file_utils.get_all_files_in_directory(folder_path)
-    origin_md_content = origin_folder.get(str(Path(folder_path) / "full.md"), "")
-    origin_image_paths = [str(p) for p in Path(folder_path).rglob("*.jpg") if p.is_file()]
-    return origin_md_content, origin_image_paths
+    return collect_parsing_assets(folder_path)
+
+
+def _cleanup_managed_upload_paths(file_paths: List[str]) -> None:
+    for file_path in file_paths:
+        temp_file = Path(file_path)
+        parent = temp_file.parent
+        if parent.name.startswith("run_upload_"):
+            try:
+                if parent.exists():
+                    shutil.rmtree(parent)
+            except OSError as exc:
+                logger.warning("Failed to cleanup managed upload dir {}: {}", parent, exc)
 
 
 async def _store_outputs_in_minio(
@@ -640,6 +650,72 @@ async def _store_outputs_in_minio(
         ps3_evidence_url=f"{cfg.api_prefix}/results/{document_id}/ps3_evidence.json",
         image_urls=image_urls,
     )
+
+
+async def _store_parsing_artifacts_in_minio(
+    parsing_result: DocumentParsingResult,
+    document_id: str,
+) -> DocumentParsingArtifact:
+    minio_client = MinIOClient()
+    await minio_client.ensure_buckets()
+
+    markdown_ref = await minio_client.upload_processed_result_bytes(
+        document_id=document_id,
+        object_name="parsing/parsed_markdown.md",
+        payload=parsing_result.markdown_content.encode("utf-8"),
+        content_type="text/markdown; charset=utf-8",
+    )
+
+    image_object_keys: List[str] = []
+    image_urls: List[str] = []
+    for image_path in parsing_result.image_paths:
+        image_file = Path(image_path)
+        content_type = mimetypes.guess_type(image_file.name)[0] or "application/octet-stream"
+        image_ref = await minio_client.upload_processed_result_bytes(
+            document_id=document_id,
+            object_name=f"parsing/images/{image_file.name}",
+            payload=image_file.read_bytes(),
+            content_type=content_type,
+        )
+        image_object_keys.append(image_ref.object_key)
+        image_urls.append(f"{cfg.api_prefix}/results/{document_id}/{image_ref.object_key}")
+
+    return DocumentParsingArtifact(
+        markdown_object_key=markdown_ref.object_key,
+        markdown_url=f"{cfg.api_prefix}/results/{document_id}/{markdown_ref.object_key}",
+        image_object_keys=image_object_keys,
+        image_urls=image_urls,
+    )
+
+
+async def _store_acquired_web_content(
+    document_id: str,
+    url: str,
+    markdown_content: str,
+    metadata: Optional[Dict[str, Any]] = None,
+) -> str:
+    minio_client = MinIOClient()
+    await minio_client.ensure_buckets()
+
+    url_hash = hashlib.sha256(f"url:{url}".encode("utf-8")).hexdigest()
+    raw_name = Path(str(url).split("?", 1)[0].rstrip("/")).name or "web-source"
+    safe_name = re.sub(r"[^a-zA-Z0-9._-]+", "-", raw_name).strip("-.") or "web-source"
+    filename = f"{Path(safe_name).stem}.md"
+    storage_key = minio_client.build_literature_object_key(url_hash, filename)
+
+    upload_ref = await minio_client.upload_literature_upload(
+        payload=markdown_content.encode("utf-8"),
+        content_type="text/markdown; charset=utf-8",
+        storage_key=storage_key,
+        filename=filename,
+        metadata={
+            "source": "web",
+            "source_url": str(url),
+            "provider": str((metadata or {}).get("provider") or "firecrawl"),
+            "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+    return upload_ref.object_key
 
 
 # ---------------------------------------------------------------------------
@@ -747,7 +823,7 @@ async def run_node_parsing(
     paper_task_id: str,
     file_paths: List[str],
     node_trace: Dict[str, str],
-) -> Tuple[str, List[str], Dict[str, str]]:
+) -> Tuple[DocumentParsingResult, Dict[str, str]]:
     _log_node_start(postgres, paper_task_id, "parsing")
 
     has_docx = any(_is_docx(fp) for fp in file_paths)
@@ -762,30 +838,24 @@ async def run_node_parsing(
         )
         raise exc.ParsingException("DOCX parsing is not supported — terminal failure")
 
-    mineru_request = MinerURequest(file_paths=file_paths)
     try:
-        mineru_response, attempt = await _run_async_with_node_policy(
+        parsing_result, attempt = await _run_async_with_node_policy(
             "parsing",
-            "mineru_pipeline",
-            lambda: asyncio.to_thread(_mineru.minerU_pipeline, mineru_request),
+            "parse_documents",
+            lambda: asyncio.to_thread(get_document_parsing_agent().parse_documents, file_paths),
         )
-    except Exception as mineru_exc:
-        logger.warning("MinerU failed, attempting PaddleOCR fallback: {}", mineru_exc)
-        try:
-            mineru_response = run_paddleocr_fallback(file_paths)
-            attempt = 1
-        except Exception as ocr_exc:
-            _log_node_end(
-                postgres,
-                paper_task_id,
-                "parsing",
-                success=False,
-                error_code="PARSE_FAILED",
-                message=f"MinerU + PaddleOCR both failed: {ocr_exc}",
-            )
-            raise exc.ParsingException(f"All parsers failed: {ocr_exc}") from ocr_exc
+    except Exception as parsing_exc:
+        _log_node_end(
+            postgres,
+            paper_task_id,
+            "parsing",
+            success=False,
+            error_code="PARSE_FAILED",
+            message=str(parsing_exc),
+        )
+        raise exc.ParsingException(str(parsing_exc)) from parsing_exc
 
-    if not mineru_response or not mineru_response.folder_path:
+    if not parsing_result or not parsing_result.mineru_folder:
         _log_node_end(
             postgres,
             paper_task_id,
@@ -796,9 +866,18 @@ async def run_node_parsing(
         )
         raise exc.ParsingException("Parser returned no folder")
 
-    md_content, image_paths = _collect_mineru_assets(mineru_response.folder_path)
-    _log_node_end(postgres, paper_task_id, "parsing", success=True, attempt=attempt)
-    return md_content, image_paths, _update_node_trace(node_trace, "parsing", "success")
+    _log_node_end(
+        postgres,
+        paper_task_id,
+        "parsing",
+        success=True,
+        attempt=attempt,
+        message=(
+            f"Parsed with {parsing_result.parser_backend}; "
+            f"images={parsing_result.image_count}; task_id={parsing_result.parser_task_id or 'n/a'}"
+        ),
+    )
+    return parsing_result, _update_node_trace(node_trace, "parsing", "success")
 
 
 def run_node_translation(
@@ -1060,15 +1139,37 @@ def process_pdf_task(
         )
 
         # --- Node 2: Parsing ---
-        md_content, image_paths, node_trace = asyncio.run(
+        parsing_result, node_trace = asyncio.run(
             run_node_parsing(postgres, paper_task_id or "", validated_paths, node_trace)
         )
+        parsing_artifacts = asyncio.run(
+            _store_parsing_artifacts_in_minio(parsing_result, document_id)
+        )
+        parsing_result.artifacts = parsing_artifacts
+        parsing_metadata = {
+            "parser_backend": parsing_result.parser_backend,
+            "parser_task_id": parsing_result.parser_task_id,
+            "mineru_folder": parsing_result.mineru_folder,
+            "image_count": parsing_result.image_count,
+            "markdown_object_key": parsing_artifacts.markdown_object_key,
+            "markdown_url": parsing_artifacts.markdown_url,
+            "image_object_keys": parsing_artifacts.image_object_keys,
+            "image_urls": parsing_artifacts.image_urls,
+        }
+        if paper_task_id:
+            postgres.append_paper_task_log(
+                paper_task_id,
+                status="success",
+                node="parsing",
+                message="Parsing artifacts stored",
+                payload=parsing_metadata,
+            )
 
         # --- Node 3: Translation ---
         source_text, en_text, node_trace, translation_warnings = run_node_translation(
             postgres,
             paper_task_id or "",
-            md_content,
+            parsing_result.markdown_content,
             node_trace,
         )
 
@@ -1078,12 +1179,14 @@ def process_pdf_task(
             paper_task_id or "",
             source_text,
             en_text,
-            image_paths,
+            parsing_result.image_paths,
             node_trace,
         )
 
         # Store outputs in MinIO
-        saved_files = asyncio.run(_store_outputs_in_minio(agent_response, image_paths, document_id))
+        saved_files = asyncio.run(
+            _store_outputs_in_minio(agent_response, parsing_result.image_paths, document_id)
+        )
 
         # --- Node 5: ACMG / Graph Sync ---
         graph_sync_result, node_trace = run_node_acmg(
@@ -1101,7 +1204,8 @@ def process_pdf_task(
         result = PipelineResult(
             document_id=document_id,
             output_dir=f"{cfg.minio_results_bucket}/{document_id}",
-            mineru_folder="",
+            mineru_folder=parsing_result.mineru_folder,
+            parsing_metadata=parsing_metadata,
             files=saved_files,
             evidence=agent_response,
         )
@@ -1118,6 +1222,8 @@ def process_pdf_task(
             if graph_sync_result is not None:
                 payload["graph_sync_result"] = graph_sync_result
             payload.setdefault("workflow_status", WorkflowStatus.completed.value)
+            payload.setdefault("mineru_folder", parsing_result.mineru_folder)
+            payload.setdefault("parsing_metadata", parsing_metadata)
 
         if paper_task_id and postgres is not None:
             try:
@@ -1168,16 +1274,17 @@ def process_pdf_task(
             except Exception as cache_exc:
                 logger.warning("Failed to cache result for hash {}: {}", file_hash, cache_exc)
 
+        _cleanup_managed_upload_paths(file_paths)
         tmp_dir = Path(os.environ.get("PWD", str(Path.cwd()))) / "tmp"
         file_utils.cleanup_old_temp_folders(str(tmp_dir), keep_latest=3)
 
         logger.debug("Celery task complete")
         return payload
     except Exception as exc_outer:
+        retry_count = int(getattr(self.request, "retries", 0))
+        max_retries = int(getattr(self, "max_retries", 0))
         if paper_task_id and postgres is not None:
             try:
-                retry_count = int(getattr(self.request, "retries", 0))
-                max_retries = int(getattr(self, "max_retries", 0))
                 if retry_count >= max_retries:
                     error_code = map_error_code(500, str(exc_outer))
                     end_time = datetime.now(timezone.utc)
@@ -1207,6 +1314,8 @@ def process_pdf_task(
                         postgres.refresh_task_request_status(request_id)
             except Exception as mark_exc:
                 logger.warning("Unable to mark paper task {} failed: {}", paper_task_id, mark_exc)
+        if retry_count >= max_retries:
+            _cleanup_managed_upload_paths(file_paths)
         raise
 
 
@@ -1519,6 +1628,304 @@ def process_pubmed_paper_task(
         "document_id": document_id,
         "paper_task_id": paper_task_id,
         "fulltext_unavailable": True,
+        "status": "success",
+        "files": files.model_dump() if hasattr(files, "model_dump") else files,
+        "graph_sync_result": graph_sync_result,
+    }
+
+
+@celery_app.task(
+    name="tasks.process_web_page",
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 2, "countdown": 300, "queue": "retry"},
+    retry_jitter=True,
+)
+def process_web_page_task(
+    self,
+    url: str,
+    document_id: str,
+    paper_task_id: str,
+    request_id: str,
+) -> Dict[str, Any]:
+    postgres = get_postgres_client()
+    start_time = datetime.now(timezone.utc)
+    node_trace: Dict[str, str] = {}
+
+    postgres.update_paper_task(
+        paper_task_id,
+        status="running",
+        workflow_status=WorkflowStatus.processing_literature.value,
+        processing_steps=default_processing_steps(),
+        error_details=None,
+    )
+    postgres.update_task_request(request_id, status="running")
+    postgres.append_paper_task_log(
+        paper_task_id,
+        status="running",
+        node="pipeline",
+        message=f"Web crawl pipeline started for URL:{url}",
+        payload={"node_retry_policy": _build_node_policy_snapshot(), "source": "web"},
+    )
+
+    _log_node_start(postgres, paper_task_id, "acquisition")
+    acquisition_policy_override: Optional[Dict[str, int]] = None
+    if int(getattr(self, "max_retries", 0)) == 0:
+        acquisition_policy = _get_node_policy("acquisition")
+        acquisition_policy_override = {
+            "max_retries": 0,
+            "delay": 0,
+            "timeout": acquisition_policy["timeout"],
+        }
+
+    try:
+        crawl_result, acquisition_attempt = asyncio.run(
+            _run_async_with_node_policy(
+                "acquisition",
+                "fetch_web_markdown",
+                lambda: get_firecrawl_service().scrape_markdown(url),
+                policy_override=acquisition_policy_override,
+            )
+        )
+        _log_node_end(
+            postgres,
+            paper_task_id,
+            "acquisition",
+            success=True,
+            attempt=acquisition_attempt,
+        )
+        node_trace = _update_node_trace(node_trace, "acquisition", "success")
+    except Exception as acq_exc:
+        error_code = map_error_code(500, f"Fetch timeout while crawling web page: {acq_exc}")
+        _log_node_end(
+            postgres,
+            paper_task_id,
+            "acquisition",
+            success=False,
+            error_code=error_code,
+            message=f"Web crawl failed: {acq_exc}",
+        )
+        node_trace = _update_node_trace(node_trace, "acquisition", "failed")
+        retry_count = int(getattr(self.request, "retries", 0))
+        max_retries = int(getattr(self, "max_retries", 0))
+        if retry_count >= max_retries:
+            postgres.update_paper_task(
+                paper_task_id,
+                status="failed",
+                workflow_status=WorkflowStatus.failed.value,
+                error_code=error_code,
+                node_trace=node_trace,
+                processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                error_details={"error_code": error_code, "message": str(acq_exc)},
+            )
+            postgres.refresh_task_request_status(request_id)
+        raise
+
+    markdown_content = str(getattr(crawl_result, "markdown", "") or "").strip()
+    if not markdown_content:
+        error_code = "FETCH_NO_RESULT"
+        postgres.update_paper_task(
+            paper_task_id,
+            status="failed",
+            workflow_status=WorkflowStatus.failed.value,
+            error_code=error_code,
+            node_trace=_update_node_trace(node_trace, "acquisition", "failed"),
+            processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+            error_details={"error_code": error_code, "message": "No usable web crawl payload"},
+        )
+        postgres.refresh_task_request_status(request_id)
+        return {
+            "source_url": url,
+            "document_id": document_id,
+            "paper_task_id": paper_task_id,
+            "status": "failed",
+            "error_code": error_code,
+        }
+
+    acquisition_object_key = asyncio.run(
+        _store_acquired_web_content(
+            document_id=document_id,
+            url=str(getattr(crawl_result, "final_url", None) or url),
+            markdown_content=markdown_content,
+            metadata=getattr(crawl_result, "metadata", None),
+        )
+    )
+
+    document_identifier: Any = document_id
+    try:
+        document_identifier = UUID(str(document_id))
+    except (TypeError, ValueError, AttributeError):
+        document_identifier = document_id
+
+    postgres.update_document(
+        document_identifier,
+        title=str(getattr(crawl_result, "title", None) or url),
+        local_path=acquisition_object_key,
+        summary=f"Web crawl content acquired from {str(getattr(crawl_result, 'final_url', None) or url)}",
+    )
+
+    node_trace = _update_node_trace(node_trace, "parsing", "markdown_direct")
+    _update_processing_step_status(
+        postgres,
+        paper_task_id,
+        step="parsing",
+        status=ProcessingStepStatus.skipped,
+        workflow_status=WorkflowStatus.processing_pdf,
+        message="Parsing skipped: markdown acquired directly from web crawl",
+    )
+
+    try:
+        source_text, en_text, node_trace, translation_warnings = run_node_translation(
+            postgres,
+            paper_task_id,
+            markdown_content,
+            node_trace,
+        )
+    except Exception as trans_exc:
+        node_trace = _update_node_trace(node_trace, "translation", "failed")
+        retry_count = int(getattr(self.request, "retries", 0))
+        max_retries = int(getattr(self, "max_retries", 0))
+        if retry_count >= max_retries:
+            error_code = map_error_code(500, str(trans_exc))
+            postgres.update_paper_task(
+                paper_task_id,
+                status="failed",
+                workflow_status=WorkflowStatus.failed.value,
+                error_code=error_code,
+                node_trace=node_trace,
+                processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                error_details={"error_code": error_code, "message": str(trans_exc)},
+            )
+            postgres.refresh_task_request_status(request_id)
+        raise
+
+    try:
+        agent_response, node_trace = run_node_extraction(
+            postgres,
+            paper_task_id,
+            source_text,
+            en_text,
+            [],
+            node_trace,
+        )
+    except Exception as ext_exc:
+        retry_count = int(getattr(self.request, "retries", 0))
+        max_retries = int(getattr(self, "max_retries", 0))
+        if retry_count >= max_retries:
+            error_code = map_error_code(500, str(ext_exc))
+            postgres.update_paper_task(
+                paper_task_id,
+                status="failed",
+                workflow_status=WorkflowStatus.failed.value,
+                error_code=error_code,
+                node_trace=node_trace,
+                processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                error_details={"error_code": error_code, "message": str(ext_exc)},
+            )
+            postgres.refresh_task_request_status(request_id)
+        raise
+
+    if not agent_response or getattr(agent_response, "status", None) == "failed":
+        error_code = "EVIDENCE_EXTRACTION_FAILED"
+        postgres.update_paper_task(
+            paper_task_id,
+            status="failed",
+            workflow_status=WorkflowStatus.failed.value,
+            error_code=error_code,
+            node_trace=node_trace,
+            processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+            error_details={
+                "error_code": error_code,
+                "message": "Evidence processing returned failed status",
+            },
+        )
+        postgres.append_paper_task_log(
+            paper_task_id,
+            status="failed",
+            node="extraction",
+            error_code=error_code,
+            message="Evidence processing returned failed status",
+        )
+        postgres.refresh_task_request_status(request_id)
+        return {
+            "source_url": url,
+            "document_id": document_id,
+            "paper_task_id": paper_task_id,
+            "status": "failed",
+            "error_code": error_code,
+        }
+
+    files = asyncio.run(_store_outputs_in_minio(agent_response, [], document_id))
+
+    try:
+        graph_sync_result, node_trace = run_node_acmg(
+            postgres,
+            paper_task_id,
+            document_id,
+            agent_response,
+            node_trace,
+        )
+    except Exception as acmg_exc:
+        logger.warning("Graph sync failed for web URL {}: {}", url, acmg_exc)
+        graph_sync_result = None
+        node_trace = _update_node_trace(node_trace, "acmg", "failed")
+        _update_processing_step_status(
+            postgres,
+            paper_task_id,
+            step="classification",
+            status=ProcessingStepStatus.skipped,
+            workflow_status=WorkflowStatus.classifying,
+            message="Graph sync failed but pipeline continued",
+            error_code="GRAPH_SYNC_FAILED",
+        )
+
+    warning_codes = _persist_alignments_and_warnings(
+        postgres,
+        paper_task_id,
+        source_text=source_text,
+        en_text=en_text,
+        base_warnings=translation_warnings,
+    )
+
+    postgres.update_document(
+        document_identifier,
+        status="success",
+        title=str(getattr(crawl_result, "title", None) or url),
+        local_path=acquisition_object_key,
+        summary=f"Web crawl content acquired from {str(getattr(crawl_result, 'final_url', None) or url)}",
+    )
+    postgres.update_paper_task(
+        paper_task_id,
+        status="success",
+        workflow_status=WorkflowStatus.completed.value,
+        error_code=None,
+        error_details=None,
+        node_trace=node_trace,
+        warning_codes=warning_codes,
+        processing_steps=_get_paper_task_processing_steps(
+            postgres,
+            paper_task_id,
+            node_trace=node_trace,
+        ),
+        processing_duration_seconds=(datetime.now(timezone.utc) - start_time).total_seconds(),
+    )
+    postgres.append_paper_task_log(
+        paper_task_id,
+        status="success",
+        node="acmg",
+        message=f"Web crawl pipeline completed for URL:{url}",
+        payload={
+            "source_url": url,
+            "final_url": str(getattr(crawl_result, "final_url", None) or url),
+            "graph_sync_result": graph_sync_result,
+        },
+    )
+    postgres.refresh_task_request_status(request_id)
+    return {
+        "source_url": url,
+        "final_url": str(getattr(crawl_result, "final_url", None) or url),
+        "document_id": document_id,
+        "paper_task_id": paper_task_id,
         "status": "success",
         "files": files.model_dump() if hasattr(files, "model_dump") else files,
         "graph_sync_result": graph_sync_result,

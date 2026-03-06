@@ -1,6 +1,7 @@
+import asyncio
 import json
-from typing import Dict, List, Optional
-from uuid import uuid4
+from typing import Any, Dict, List, Optional
+from uuid import UUID, uuid4
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -8,6 +9,7 @@ from loguru import logger
 from pydantic import BaseModel, SecretStr
 
 from src.config import settings
+from src.database.redis_client import RedisClient
 
 cfg = settings
 
@@ -30,6 +32,9 @@ class InteractionAgent:
     def __init__(self, cfg=settings):
         self.cfg = cfg
         self._sessions: Dict[str, SessionState] = {}
+        self._session_locks: Dict[str, asyncio.Lock] = {}
+        self._session_ttl_seconds = int(getattr(cfg, "interaction_session_ttl_seconds", 3600))
+        self._redis_client: Optional[RedisClient] = None
 
         anthropic_base_url = self._normalize_anthropic_base_url(cfg.evidence_base_url)
         self.llm = ChatAnthropic(
@@ -42,6 +47,79 @@ class InteractionAgent:
         )
         logger.info("InteractionAgent initialized with model: {}", cfg.evidence_model)
 
+    def _session_key(self, session_id: str) -> str:
+        return f"interaction:session:{session_id}"
+
+    def _normalize_session_id(self, session_id: str) -> str:
+        normalized = str(session_id or "").strip()
+        try:
+            UUID(normalized)
+        except Exception as exc:
+            raise ValueError(f"Invalid session_id: {session_id}") from exc
+        return normalized
+
+    def _get_session_lock(self, session_id: str) -> asyncio.Lock:
+        return self._session_locks.setdefault(session_id, asyncio.Lock())
+
+    def _get_redis_connection(self):
+        try:
+            if self._redis_client is None:
+                self._redis_client = RedisClient()
+            return self._redis_client.get_connection()
+        except Exception as exc:
+            logger.warning("Interaction session store unavailable, fallback to memory: {}", exc)
+            return None
+
+    def _save_session(self, state: SessionState) -> None:
+        self._sessions[state.session_id] = state
+        redis_conn = self._get_redis_connection()
+        if redis_conn is None:
+            return
+        try:
+            redis_conn.set(
+                self._session_key(state.session_id),
+                state.model_dump_json(),
+                ex=self._session_ttl_seconds,
+            )
+        except Exception as exc:
+            logger.warning("Failed to persist interaction session {}: {}", state.session_id, exc)
+
+    def _load_session(self, session_id: str) -> Optional[SessionState]:
+        state = self._sessions.get(session_id)
+        if state is not None:
+            return state
+
+        redis_conn = self._get_redis_connection()
+        if redis_conn is None:
+            return None
+
+        try:
+            payload = redis_conn.get(self._session_key(session_id))
+            if payload is None:
+                return None
+            if not isinstance(payload, (str, bytes, bytearray)):
+                return None
+            serialized_payload: str | bytes | bytearray = payload
+            if isinstance(serialized_payload, bytes):
+                serialized_payload = serialized_payload.decode("utf-8")
+            state = SessionState.model_validate_json(serialized_payload)
+            self._sessions[session_id] = state
+            return state
+        except Exception as exc:
+            logger.warning("Failed to load interaction session {}: {}", session_id, exc)
+            return None
+
+    def _delete_session(self, session_id: str) -> None:
+        self._sessions.pop(session_id, None)
+        self._session_locks.pop(session_id, None)
+        redis_conn = self._get_redis_connection()
+        if redis_conn is None:
+            return
+        try:
+            redis_conn.delete(self._session_key(session_id))
+        except Exception as exc:
+            logger.warning("Failed to delete interaction session {}: {}", session_id, exc)
+
     def _normalize_anthropic_base_url(self, base_url: str) -> str:
         if not base_url:
             return base_url
@@ -50,7 +128,7 @@ class InteractionAgent:
             cleaned = cleaned[:-3]
         return cleaned
 
-    async def start_interaction(self, user_input: str) -> Dict:
+    async def start_interaction(self, user_input: str) -> Dict[str, Any]:
         session_id = str(uuid4())
         history = [{"role": "user", "content": user_input}]
 
@@ -62,7 +140,8 @@ class InteractionAgent:
             history=history,
             extracted_fields=result["extracted_fields"],
         )
-        self._sessions[session_id] = state
+        self._get_session_lock(session_id)
+        self._save_session(state)
 
         if result["ready"]:
             task_form = self._finalize_task_form(result["extracted_fields"])
@@ -75,6 +154,7 @@ class InteractionAgent:
             }
 
         state.history.append({"role": "assistant", "content": result["question"]})
+        self._save_session(state)
         return {
             "session_id": session_id,
             "ready": False,
@@ -83,48 +163,55 @@ class InteractionAgent:
             "round": 1,
         }
 
-    async def respond_interaction(self, session_id: str, user_response: str) -> Dict:
-        if session_id not in self._sessions:
-            raise ValueError(f"Invalid session_id: {session_id}")
+    async def respond_interaction(self, session_id: str, user_response: str) -> Dict[str, Any]:
+        normalized_session_id = self._normalize_session_id(session_id)
+        async with self._get_session_lock(normalized_session_id):
+            state = self._load_session(normalized_session_id)
+            if state is None:
+                raise ValueError(f"Invalid session_id: {session_id}")
 
-        state = self._sessions[session_id]
-        if state.round >= 2:
-            task_form = self._finalize_task_form(state.extracted_fields)
+            if state.round >= 2:
+                task_form = self._finalize_task_form(state.extracted_fields)
+                self._save_session(state)
+                return {
+                    "ready": True,
+                    "task_form": task_form.model_dump(),
+                    "question": None,
+                    "round": state.round,
+                }
+
+            state.history.append({"role": "user", "content": user_response})
+
+            result = await self._analyze_input(user_response, state.history)
+
+            state.extracted_fields.update(
+                {k: v for k, v in result["extracted_fields"].items() if v is not None}
+            )
+
+            if result["ready"] or state.round >= 2:
+                task_form = self._finalize_task_form(state.extracted_fields)
+                state.round = state.round + 1
+                self._save_session(state)
+                return {
+                    "ready": True,
+                    "task_form": task_form.model_dump(),
+                    "question": None,
+                    "round": state.round,
+                }
+
+            state.round += 1
+            state.history.append({"role": "assistant", "content": result["question"]})
+            self._save_session(state)
             return {
-                "ready": True,
-                "task_form": task_form.model_dump(),
-                "question": None,
+                "ready": False,
+                "task_form": None,
+                "question": result["question"],
                 "round": state.round,
             }
 
-        state.history.append({"role": "user", "content": user_response})
-
-        result = await self._analyze_input(user_response, state.history)
-
-        state.extracted_fields.update(
-            {k: v for k, v in result["extracted_fields"].items() if v is not None}
-        )
-
-        if result["ready"] or state.round >= 2:
-            task_form = self._finalize_task_form(state.extracted_fields)
-            state.round = state.round + 1
-            return {
-                "ready": True,
-                "task_form": task_form.model_dump(),
-                "question": None,
-                "round": state.round,
-            }
-
-        state.round += 1
-        state.history.append({"role": "assistant", "content": result["question"]})
-        return {
-            "ready": False,
-            "task_form": None,
-            "question": result["question"],
-            "round": state.round,
-        }
-
-    async def _analyze_input(self, user_input: str, history: List[Dict]) -> Dict:
+    async def _analyze_input(
+        self, user_input: str, history: List[Dict[str, str]]
+    ) -> Dict[str, Any]:
         system_prompt = """You are a genetics literature search assistant. Extract the following fields from user input:
 - goal: Research objective or evidence type (e.g., "functional evidence", "pathogenicity", "PS3 evidence")
 - disease: Disease, gene, or variant name (e.g., "LDLR gene variant", "familial hypercholesterolemia")
@@ -161,7 +248,13 @@ Extract the fields and determine if clarification is needed."""
 
         try:
             response = await self.llm.ainvoke(messages)
-            content = response.content.strip()
+            raw_content = response.content
+            if isinstance(raw_content, str):
+                content = raw_content.strip()
+            elif isinstance(raw_content, list):
+                content = " ".join(str(item) for item in raw_content).strip()
+            else:
+                content = str(raw_content).strip()
 
             if content.startswith("```json"):
                 content = content[7:]
@@ -192,7 +285,7 @@ Extract the fields and determine if clarification is needed."""
                 "extracted_fields": {},
             }
 
-    def _finalize_task_form(self, extracted_fields: Dict) -> TaskFormStructured:
+    def _finalize_task_form(self, extracted_fields: Dict[str, Any]) -> TaskFormStructured:
         return TaskFormStructured(
             goal=extracted_fields.get("goal") or "evidence synthesis",
             disease=extracted_fields.get("disease") or "unspecified",

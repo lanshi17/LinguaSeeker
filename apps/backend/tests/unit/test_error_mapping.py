@@ -1,10 +1,17 @@
 from __future__ import annotations
 
-from src.presentation.error_contract import map_error_code, normalize_error_code
+from src.presentation.error_contract import (
+    contract_http_exception,
+    extract_error_contract,
+    map_error_code,
+    normalize_error_code,
+)
 
 
 def test_map_error_code_file_type_unsupported() -> None:
-    assert map_error_code(415, "Content-Type must be multipart/form-data") == "FILE_TYPE_UNSUPPORTED"
+    assert (
+        map_error_code(415, "Content-Type must be multipart/form-data") == "FILE_TYPE_UNSUPPORTED"
+    )
 
 
 def test_map_error_code_graph_sync_failed() -> None:
@@ -37,3 +44,15 @@ def test_normalize_error_code_rejects_non_frozen() -> None:
 
 def test_normalize_error_code_accepts_frozen() -> None:
     assert normalize_error_code("GRAPH_SYNC_FAILED", 500, "x") == "GRAPH_SYNC_FAILED"
+
+
+def test_normalize_error_code_accepts_resource_not_found() -> None:
+    assert normalize_error_code("RESOURCE_NOT_FOUND", 404, "x") == "RESOURCE_NOT_FOUND"
+
+
+def test_extract_error_contract_prefers_explicit_code() -> None:
+    exc = contract_http_exception(404, "RESOURCE_NOT_FOUND", "Request not found")
+    error_code, detail, errors = extract_error_contract(exc.status_code, exc.detail)
+    assert error_code == "RESOURCE_NOT_FOUND"
+    assert detail == "Request not found"
+    assert errors is None

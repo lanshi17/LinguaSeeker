@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
+
+from fastapi import HTTPException
 
 from src.config import settings as cfg
 
@@ -25,6 +27,7 @@ FROZEN_ERROR_CODES = {
     "GRAPH_SYNC_FAILED",
     "TASK_TIMEOUT",
     "INTERNAL_ERROR",
+    "RESOURCE_NOT_FOUND",
 }
 
 
@@ -107,7 +110,27 @@ def normalize_error_code(error_code: Optional[str], fallback_status: int, detail
     return map_error_code(fallback_status, detail)
 
 
-def failed_payload(error_code: str, detail: str, request_id: str, errors: Optional[Any] = None) -> Dict[str, Any]:
+def contract_http_exception(status_code: int, error_code: str, detail: str) -> HTTPException:
+    normalized_error_code = normalize_error_code(error_code, status_code, detail)
+    return HTTPException(
+        status_code=status_code,
+        detail={"error_code": normalized_error_code, "detail": detail},
+    )
+
+
+def extract_error_contract(status_code: int, detail: Any) -> Tuple[str, str, Optional[Any]]:
+    if isinstance(detail, dict):
+        message = str(detail.get("detail") or detail.get("message") or "")
+        explicit_code = normalize_error_code(detail.get("error_code"), status_code, message)
+        return explicit_code, message, detail.get("errors")
+
+    detail_text = detail if isinstance(detail, str) else str(detail)
+    return map_error_code(status_code, detail_text), detail_text, None
+
+
+def failed_payload(
+    error_code: str, detail: str, request_id: str, errors: Optional[Any] = None
+) -> Dict[str, Any]:
     payload: Dict[str, Any] = {
         "status": "failed",
         "error_code": error_code,

@@ -4,6 +4,7 @@ from typing import List, Optional
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     # ==================== 应用配置 ====================
     app_name: str
@@ -14,21 +15,22 @@ class Settings(BaseSettings):
     debug: bool = False
     api_host: str = "0.0.0.0"
     api_port: int = 8000
+    clear_proxy_env_on_startup: bool = False
 
     # ==================== LLM配置 ====================
     mt_api_key: str
     mt_base_url: str
     mt_model: str
-    
+
     format_api_key: str
     format_base_url: str
     format_model: str
-    
+
     vlm_api_key: str
     vlm_base_url: str
     vlm_model: str
     vlm_enable: bool = False
-    
+
     evidence_api_key: str
     evidence_base_url: str
     evidence_model: str
@@ -42,7 +44,6 @@ class Settings(BaseSettings):
     llm_timeout: int = 60
     llm_max_retries: int = 3
     llm_mode: str = "api"
-
 
     # ==================== 证据分类配置 ====================
     evidence_validity_threshold: float = 85.0  # 证据有效性阈值
@@ -59,7 +60,7 @@ class Settings(BaseSettings):
     embedding_model: str
     embedding_dimension: int
     embedding_batch_size: int = 10
-    
+
     # ==================== Rerank 配置 ====================
     rerank_api_key: Optional[str] = None
     rerank_base_url: Optional[str] = None
@@ -82,6 +83,7 @@ class Settings(BaseSettings):
     redis_password: Optional[str] = None
     redis_db: int = 0
     redis_max_connections: int = 20
+    interaction_session_ttl_seconds: int = 3600
 
     # ==================== PostgreSQL配置 ====================
     postgres_host: str = Field(validation_alias=AliasChoices("POSTGRES_HOST", "PGHOST"))
@@ -103,6 +105,9 @@ class Settings(BaseSettings):
     # ==================== 向量数据库选择 ====================
     vector_db: str
     knowledge_docs_dir: str
+    retrieval_api_key: Optional[str] = None
+    retrieval_base_url: Optional[str] = None
+    retrieval_model: Optional[str] = None
 
     # ==================== Qdrant配置 ====================
     qdrant_host: str
@@ -179,9 +184,9 @@ class Settings(BaseSettings):
         env_file=[".env.local"],
         env_file_encoding="utf-8",
         case_sensitive=False,
-        # 严格模式，要求所有字段都有值或默认值
-        # extra='forbid'
+        extra="ignore",
     )
+
 
 # Ensure all required environment variables are set in .env.local before instantiating Settings
 settings = Settings()  # type: ignore[call-arg]
