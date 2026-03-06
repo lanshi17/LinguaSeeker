@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
@@ -51,18 +52,156 @@ class GraphSyncService:
         "disease_name": "disease_name",
     }
     _FIELD_ALIAS_MAP: Dict[str, List[str]] = {
-        "gene_symbol": ["gene_symbol", "gene", "geneSymbol", "symbol"],
+        "gene_symbol": [
+            "gene_symbol",
+            "gene",
+            "geneSymbol",
+            "symbol",
+            "gene_name",
+            "hugo_symbol",
+            "hgnc_symbol",
+            "hgnc_gene_symbol",
+            "approved_symbol",
+            "official_gene_symbol",
+            "gene_id",
+            "GeneID",
+            "GENEINFO",
+            "GeneSymbol",
+            "entrez_gene",
+            "ncbi_gene",
+            "locus",
+            "locus_symbol",
+            "gene_locus",
+            "gene_abbreviation",
+        ],
         "variant_hgvs_c": [
             "variant_hgvs_c",
             "hgvs_c",
             "c_hgvs",
             "cdna_change",
             "variant_descriptor",
+            "CLNHGVS",
+            "coding_change",
+            "coding_dna_change",
+            "c_notation",
+            "c_dot",
+            "cDNA_change",
+            "cdna_variant",
+            "cds_change",
+            "nucleotide_change",
+            "nucleotide_variant",
+            "coding_sequence",
+            "transcript_variant",
+            "HGVSc",
+            "hgvs_coding",
+            "coding_hgvs",
+            "c_nomenclature",
+            "HGVSc_VEP",
+            "HGVS_CODING",
+            "dna_change",
+            "mutation_cdna",
+            "cdna_mutation",
+            "coding_mutation",
+            "transcript_change",
+            "c_variant",
+            "coding_variant",
         ],
-        "variant_hgvs_p": ["variant_hgvs_p", "hgvs_p", "protein_change", "aa_change"],
-        "variant_descriptor": ["variant_descriptor", "hgvs", "hgvs_form"],
-        "transcript_id": ["transcript_id", "transcript", "transcriptId"],
-        "disease_name": ["disease_name", "disease", "condition", "diseaseLabel"],
+        "variant_hgvs_p": [
+            "variant_hgvs_p",
+            "hgvs_p",
+            "protein_change",
+            "aa_change",
+            "amino_acid_change",
+            "amino_acid_substitution",
+            "aa_substitution",
+            "p_notation",
+            "p_dot",
+            "protein_variant",
+            "protein_mutation",
+            "aa_variant",
+            "aa_mutation",
+            "HGVSp",
+            "hgvs_protein",
+            "protein_hgvs",
+            "p_nomenclature",
+            "ProteinChange",
+            "HGVSp_VEP",
+            "HGVS_PROTEIN",
+            "AAChange",
+            "Protein_Change",
+            "amino_acid_alteration",
+            "peptide_change",
+            "residue_change",
+            "mutation_protein",
+            "protein_alteration",
+            "protein_consequence",
+        ],
+        "variant_descriptor": [
+            "variant_descriptor",
+            "hgvs",
+            "hgvs_form",
+            "variant_name",
+            "variant_notation",
+            "variant_id",
+        ],
+        "transcript_id": [
+            "transcript_id",
+            "transcript",
+            "transcriptId",
+            "refseq_id",
+            "refseq",
+            "refseq_transcript",
+            "nm_number",
+            "nm_id",
+            "NM",
+            "transcript_accession",
+            "accession_number",
+            "transcript_version",
+            "mrna_accession",
+            "mrna_id",
+            "mrna",
+            "mrna_reference",
+            "ensembl_transcript",
+            "ensembl_transcript_id",
+            "ENST",
+            "transcript_reference",
+            "reference_transcript",
+            "canonical_transcript",
+            "transcript_name",
+            "isoform",
+            "isoform_id",
+            "Feature",
+            "Transcript_ID",
+        ],
+        "disease_name": [
+            "disease_name",
+            "disease",
+            "condition",
+            "diseaseLabel",
+            "disorder",
+            "clinical_diagnosis",
+            "diagnosis",
+            "clinical_phenotype",
+            "disease_phenotype",
+            "CLNDN",
+            "PhenotypeList",
+            "condition_name",
+            "clinical_condition",
+            "disease_term",
+            "disease_label",
+            "mondo_term",
+            "mondo_label",
+            "omim_phenotype",
+            "omim_disorder",
+            "orphanet_disorder",
+            "indication",
+            "presentation",
+            "syndrome",
+            "pathology",
+            "medical_condition",
+            "disorder_name",
+            "disease_description",
+        ],
     }
     _MISSING_FIELD_COUNTER: Counter[str] = Counter()
     _MISSING_FIELD_ALERT_THRESHOLD: int = getattr(settings, "evidence_failure_alert_threshold", 5)
@@ -293,11 +432,27 @@ class GraphSyncService:
                 structural_hint,
             )
             if not can_continue:
+                field_diagnostics = {
+                    field: {
+                        "status": resolution_details.get(field, {}).get("status", "unknown"),
+                        "aliases_checked": resolution_details.get(field, {}).get(
+                            "aliases_checked",
+                            [],
+                        ),
+                        "reasons": resolution_details.get(field, {}).get("reasons", []),
+                        "source": resolution_details.get(field, {}).get("source"),
+                    }
+                    for field in missing_core_fields
+                }
                 logger.warning(
-                    "Skipping evidence insert for document {} due to missing core fields {} | context={}",
+                    "Skipping evidence insert for document {} | "
+                    "missing_core_fields={} | per_field_diagnostics={} | "
+                    "structural_hint={} | validity={}",
                     canonical_document_id,
                     missing_core_fields,
-                    integrity_context,
+                    field_diagnostics,
+                    structural_hint,
+                    validity_status,
                 )
                 self._log_document_summary(
                     canonical_document_id,
@@ -751,6 +906,9 @@ class GraphSyncService:
                 "aliases_checked": self._FIELD_ALIAS_MAP.get(field, []),
             }
 
+        # Phase 3: cross-field inference for still-missing core fields
+        self._infer_missing_fields(fused, details, evidence_output)
+
         if not fused.get("variant_hgvs_c"):
             structural_hint = self._resolve_structural_hint(
                 evidence_output,
@@ -776,6 +934,116 @@ class GraphSyncService:
                 details["variant_hgvs_c"] = variant_details
 
         return fused, details
+
+    _RE_TRANSCRIPT_FROM_HGVS = re.compile(
+        r"((?:NM_|NR_|XM_|XR_|ENST)\d+(?:\.\d+)?)\s*:",
+        re.IGNORECASE,
+    )
+    _RE_GENE_SYMBOL = re.compile(r"\b([A-Z][A-Z0-9]{1,12})\b")
+
+    def _infer_missing_fields(
+        self,
+        fused: Dict[str, Optional[str]],
+        details: Dict[str, Dict[str, Any]],
+        evidence_output: Dict[str, Any],
+    ) -> None:
+        if not fused.get("transcript_id") and fused.get("variant_hgvs_c"):
+            inferred = self._extract_transcript_from_hgvs(fused["variant_hgvs_c"])
+            if inferred:
+                fused["transcript_id"] = inferred
+                details["transcript_id"] = {
+                    "source": "inferred_from_hgvs_c",
+                    "status": "inferred",
+                    "inferred_from": fused["variant_hgvs_c"],
+                }
+                logger.info(
+                    "Inferred transcript_id={} from variant_hgvs_c={}",
+                    inferred,
+                    fused["variant_hgvs_c"],
+                )
+
+        if not fused.get("disease_name"):
+            disease_fields = evidence_output.get("extracted_fields", {})
+            for section_key in ("disease_chpo", "disease_icd10"):
+                section = disease_fields.get(section_key, {})
+                if isinstance(section, dict):
+                    for candidate_key in (
+                        "disease_name",
+                        "name",
+                        "label",
+                        "description",
+                        "condition",
+                        "diagnosis",
+                        "disorder",
+                    ):
+                        val = self._normalize_string(section.get(candidate_key))
+                        if val:
+                            fused["disease_name"] = val
+                            details["disease_name"] = {
+                                "source": f"inferred_from_{section_key}.{candidate_key}",
+                                "status": "inferred",
+                            }
+                            logger.info(
+                                "Inferred disease_name={} from {}.{}",
+                                val,
+                                section_key,
+                                candidate_key,
+                            )
+                            break
+                if fused.get("disease_name"):
+                    break
+
+        if not fused.get("gene_symbol"):
+            inferred_gene = self._extract_gene_from_context(evidence_output)
+            if inferred_gene:
+                fused["gene_symbol"] = inferred_gene
+                details["gene_symbol"] = {
+                    "source": "inferred_from_context",
+                    "status": "inferred",
+                }
+                logger.info("Inferred gene_symbol={} from context", inferred_gene)
+
+    @staticmethod
+    def _extract_transcript_from_hgvs(hgvs_str: Optional[str]) -> Optional[str]:
+        if not hgvs_str:
+            return None
+        match = GraphSyncService._RE_TRANSCRIPT_FROM_HGVS.search(hgvs_str)
+        return match.group(1) if match else None
+
+    def _extract_gene_from_context(
+        self,
+        evidence_output: Dict[str, Any],
+    ) -> Optional[str]:
+        extracted = evidence_output.get("extracted_fields", {})
+        gene_section = extracted.get("gene", {})
+        if isinstance(gene_section, dict):
+            for key in ("name", "label", "gene_name", "hugo_symbol"):
+                val = self._normalize_string(gene_section.get(key))
+                if val and self._RE_GENE_SYMBOL.fullmatch(val):
+                    return val
+
+        variant_section = extracted.get("variant", {})
+        if isinstance(variant_section, dict):
+            quote = variant_section.get("evidence_quote", "")
+            if isinstance(quote, str):
+                match = self._RE_GENE_SYMBOL.search(quote)
+                if match:
+                    candidate = match.group(1)
+                    if len(candidate) >= 2 and candidate not in (
+                        "THE",
+                        "AND",
+                        "FOR",
+                        "NOT",
+                        "DNA",
+                        "RNA",
+                        "PCR",
+                        "SNP",
+                        "VUS",
+                        "HET",
+                        "HOM",
+                    ):
+                        return candidate
+        return None
 
     def _resolve_structural_hint(
         self,

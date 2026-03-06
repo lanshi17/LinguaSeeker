@@ -39,7 +39,7 @@ def mock_llm_response():
 @pytest.fixture
 def agent(mock_config):
     """Create InteractionAgent with mocked LLM"""
-    with patch("src.domain.agent.interaction.ChatAnthropic") as mock_chat:
+    with patch("src.domain.agent.interaction.ChatOpenAI") as mock_chat:
         mock_llm_instance = MagicMock()
         mock_chat.return_value = mock_llm_instance
         agent = InteractionAgent(cfg=mock_config)
@@ -191,18 +191,6 @@ class TestInteractionAgent:
         assert task_form.country == "不限"
         assert task_form.language == "auto"
 
-    def test_normalize_anthropic_base_url(self, agent):
-        """Test base URL normalization"""
-        assert (
-            agent._normalize_anthropic_base_url("https://api.test.com/v1") == "https://api.test.com"
-        )
-        assert (
-            agent._normalize_anthropic_base_url("https://api.test.com/v1/")
-            == "https://api.test.com"
-        )
-        assert agent._normalize_anthropic_base_url("https://api.test.com") == "https://api.test.com"
-        assert agent._normalize_anthropic_base_url("") == ""
-
     @pytest.mark.asyncio
     async def test_session_rehydrates_across_agent_instances(self, mock_config, mock_llm_response):
         class FakeRedisConnection:
@@ -238,7 +226,7 @@ class TestInteractionAgent:
 }
 ```"""
 
-        with patch("src.domain.agent.interaction.ChatAnthropic"):
+        with patch("src.domain.agent.interaction.ChatOpenAI"):
             with patch("src.domain.agent.interaction.RedisClient", return_value=FakeRedisClient()):
                 agent_a = InteractionAgent(cfg=mock_config)
                 agent_b = InteractionAgent(cfg=mock_config)

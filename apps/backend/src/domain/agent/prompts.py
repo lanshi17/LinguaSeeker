@@ -24,16 +24,82 @@ EVIDENCE_FIELDS = [
 ]
 
 EVIDENCE_FIELD_RULES = """
+### ⚠️ CRITICAL CORE FIELDS (MANDATORY) ⚠️
+
+The following 4 fields are CRITICAL for downstream graph synchronization and evidence record integrity. You MUST exhaustively search the entire document (title, abstract, methods, results, tables, figures, supplementary data) for these fields before reporting them as absent or with low confidence.
+
+**CRITICAL FIELD 1: Gene Symbol (gene_symbol)**
+- Why Critical: Required for variant annotation and gene-disease linking in graph database
+- Exhaustive Search Strategy:
+  - Check TITLE: gene names explicitly mentioned
+  - Check ABSTRACT: genes in study context
+  - Check METHODS & RESULTS: gene nomenclature in variant descriptions
+  - Check VARIANT NOMENCLATURE: Extract from HGVS strings (e.g., "BRCA1 c.68_69delAG" → gene = BRCA1)
+  - Check FIGURE LEGENDS: genes mentioned in figure descriptions
+  - Check TABLES: gene columns in variant summary tables
+  - Check SUPPLEMENTARY DATA: gene annotations if provided
+- Fallback Inference: If gene not explicitly stated but variant HGVS available, extract gene symbol from HGVS string
+- Confidence Rule: 0 ONLY if gene is genuinely absent from entire document after exhaustive search; otherwise ≥60
+
+**CRITICAL FIELD 2: Transcript ID (transcript_id)**
+- Why Critical: Essential for variant curation and protein effect interpretation
+- Exhaustive Search Strategy:
+  - Check METHODS SECTION: often specifies transcript used (e.g., "using RefSeq NM_000527.4")
+  - Check VARIANT NOMENCLATURE: HGVS strings often contain transcript ID (e.g., "NM_000527.4:c.1234C>T" → transcript = NM_000527.4)
+  - Check VARIANT TABLES: dedicated transcript ID column
+  - Check SUPPLEMENTARY DATA: variant annotation tables with transcript information
+  - Check FIGURE ANNOTATIONS: variant descriptions in figures may include transcript
+  - Check RESULTS TEXT: variant descriptions may reference specific transcripts
+- Fallback Inference: If HGVS is available (c. nomenclature), extract transcript ID from HGVS string format
+- Fallback Strategy: If no explicit transcript but gene + variant available, use gene's canonical transcript (RefSeq or Ensembl canonical)
+- Confidence Rule: 95+ if explicitly listed with NM_ or ENST prefix; 60-70 if inferred from HGVS; 50 if using canonical fallback; 0 ONLY after exhaustive search
+
+**CRITICAL FIELD 3: Variant HGVS (variant_hgvs) - c. and p. nomenclature**
+- Why Critical: Foundation for all variant-level analyses and phenotype association
+- Exhaustive Search Strategy:
+  - Check TITLE: variant designation often in title
+  - Check ABSTRACT: variant nomenclature in study summary
+  - Check RESULTS SECTION: primary source for variant descriptions
+  - Check VARIANT TABLES: dedicated columns for c. (cDNA) and p. (protein) nomenclature
+  - Check FIGURE ANNOTATIONS: variants described in figure captions
+  - Check METHODS: sometimes reference variants as examples
+  - Check SUPPLEMENTARY TABLES: extended variant lists with HGVS
+  - Extract BOTH c. (cDNA) and p. (protein) forms when both are available
+- Fallback Strategy: If only one form available, attempt to infer the other using genetic code and reference sequence
+- Confidence Rule: 95+ if full HGVS with both c. and p. forms; 80-94 if only one form clear; 0 only after exhaustive search fails
+
+**CRITICAL FIELD 4: Disease Name (disease_name)**
+- Why Critical: Essential for variant-disease association and clinical context in graph
+- Exhaustive Search Strategy:
+  - Check TITLE: disease name usually in title
+  - Check ABSTRACT INTRODUCTION: clinical context established early
+  - Check INTRODUCTION SECTION: disease description and background
+  - Check CLINICAL DESCRIPTION: patient phenotypes and disease manifestations
+  - Check PATIENT COHORT DESCRIPTION: disease criteria and clinical features
+  - Check Discussion: disease interpretation and clinical implications
+  - Cross-reference with: Disease_CHPO and Disease_ICD10 fields (extract disease name from these if explicit)
+  - Check TABLES: disease columns or patient characteristics
+- Fallback Strategy: If disease not explicitly named, extract from phenotype descriptions and clinical features
+- Confidence Rule: 95+ if explicit disease name with standard terminology; 70-80 if inferred from phenotypes; 0 ONLY after exhaustive search
+
+**General Confidence Guidance for Core Fields**:
+- Assign confidence 0 ONLY after documented exhaustive search of entire document
+- If field found but context unclear, assign confidence 50-70 with clear reasoning
+- Prefer fallback/inferred values (confidence 50-80) over missing/null (confidence 0)
+- Document all search locations and fallback logic in reasoning field
+
+---
+
 ### STRUCTURED EVIDENCE FIELD EXTRACTION RULES
 
 You MUST extract the following 11 standardized fields from the document. For each field, provide confidence (0-100) and the exact quote from the document supporting the extraction.
 
-**1. Gene**
+**1. Gene** (CORE FIELD - see Critical Core Fields section above)
 - Extract: gene symbol (e.g., BRCA1, TP53, VWF), full name, NCBI Gene ID, Ensembl ID
 - Look for: gene names mentioned in title, abstract, methods, results
 - Confidence: 95+ if explicitly stated with standard nomenclature; 70-94 if inferred; <70 if ambiguous
 
-**2. Transcript_ID**
+**2. Transcript_ID** (CORE FIELD - see Critical Core Fields section above)
 - Extract: RefSeq transcript ID (NM_xxxxxx.x) or Ensembl transcript ID (ENST...)
 - Look for: methods section, variant nomenclature context
 - Confidence: 95+ if explicitly listed; 50 if only gene name given (infer canonical); 0 if completely absent
@@ -68,7 +134,7 @@ You MUST extract the following 11 standardized fields from the document. For eac
 - Look for: clinical presentation, patient description, case reports
 - Confidence: 90+ if detailed phenotype with HPO terms; 60 if general description only
 
-**9. Variant**
+**9. Variant** (CORE FIELD - see Critical Core Fields section above)
 - Extract: HGVS cDNA (c.), protein (p.), genomic (g.) nomenclature, chromosome, position, ref/alt alleles, variant type, rsID, ClinVar ID
 - Look for: title, abstract, results, variant tables
 - Confidence: 95+ if full HGVS with coordinates; 70-94 if partial; <70 if ambiguous
@@ -810,21 +876,23 @@ Count the total number of control variants (benign + pathogenic) used:
         "evidence_refs": ["E4"],
     "score": 0-25
   }}}},
-  "extracted_fields": {{{{
-    "gene": {{{{
-      "symbol": "GENE_SYMBOL",
-      "full_name": "Full gene name or null",
-      "ncbi_gene_id": "NCBI ID or null",
-      "ensembl_id": "Ensembl ID or null",
-      "confidence": 0-100,
-      "evidence_quote": "exact quote from document"
-    }}}},
-    "transcript_id": {{{{
-      "transcript_id": "NM_xxxxxx.x or null",
-      "source": "RefSeq|Ensembl|null",
-      "confidence": 0-100,
-      "evidence_quote": "exact quote or null"
-    }}}},
+   "extracted_fields": {{{{
+     "gene": {{{{
+       "symbol": "GENE_SYMBOL",
+       "full_name": "Full gene name or null",
+       "ncbi_gene_id": "NCBI ID or null",
+       "ensembl_id": "Ensembl ID or null",
+       "confidence": 0-100,
+       "evidence_quote": "exact quote from document",
+       "_note": "CORE FIELD - See 'Critical Core Fields' section. Exhaustively search title, abstract, variant nomenclature, figures before reporting absent."
+     }}}},
+     "transcript_id": {{{{
+       "transcript_id": "NM_xxxxxx.x or null",
+       "source": "RefSeq|Ensembl|null",
+       "confidence": 0-100,
+       "evidence_quote": "exact quote or null",
+       "_note": "CORE FIELD - See 'Critical Core Fields' section. Extract from HGVS or methods. Infer from canonical transcript if needed."
+     }}}},
     "reference_genome_version": {{{{
       "version": "GRCh37|GRCh38|hg19|hg38|null",
       "confidence": 0-100,
@@ -841,14 +909,15 @@ Count the total number of control variants (benign + pathogenic) used:
       "confidence": 0-100,
       "evidence_quote": "exact quote"
     }}}},
-    "disease_chpo": {{{{
-      "disease_name": "disease name",
-      "chpo_id": "CHPO ID or null",
-      "omim_id": "OMIM ID or null",
-      "inheritance_pattern": "AD|AR|XL|XD|null",
-      "confidence": 0-100,
-      "evidence_quote": "exact quote"
-    }}}},
+     "disease_chpo": {{{{
+       "disease_name": "disease name",
+       "chpo_id": "CHPO ID or null",
+       "omim_id": "OMIM ID or null",
+       "inheritance_pattern": "AD|AR|XL|XD|null",
+       "confidence": 0-100,
+       "evidence_quote": "exact quote",
+       "_note": "disease_name is CORE FIELD - See 'Critical Core Fields' section. Search title, abstract, clinical description, patient cohort exhaustively. Also check Disease_ICD10."
+     }}}},
     "disease_icd10": {{{{
       "disease_name": "disease name",
       "icd10_code": "ICD-10 code or null",
@@ -869,20 +938,21 @@ Count the total number of control variants (benign + pathogenic) used:
       "confidence": 0-100,
       "evidence_quote": "exact quote"
     }}}},
-    "variant": {{{{
-      "hgvs_c": "c.xxx or null",
-      "hgvs_p": "p.xxx or null",
-      "hgvs_g": "g.xxx or null",
-      "chromosome": "chr or null",
-      "position": null,
-      "ref_allele": "ref or null",
-      "alt_allele": "alt or null",
-      "variant_type": "missense|nonsense|frameshift|splicing|other|null",
-      "rs_id": "rsID or null",
-      "clinvar_id": "ClinVar ID or null",
-      "confidence": 0-100,
-      "evidence_quote": "exact quote"
-    }}}},
+     "variant": {{{{
+       "hgvs_c": "c.xxx or null",
+       "hgvs_p": "p.xxx or null",
+       "hgvs_g": "g.xxx or null",
+       "chromosome": "chr or null",
+       "position": null,
+       "ref_allele": "ref or null",
+       "alt_allele": "alt or null",
+       "variant_type": "missense|nonsense|frameshift|splicing|other|null",
+       "rs_id": "rsID or null",
+       "clinvar_id": "ClinVar ID or null",
+       "confidence": 0-100,
+       "evidence_quote": "exact quote",
+       "_note": "CORE FIELD - See 'Critical Core Fields' section. Extract BOTH c. (cDNA) and p. (protein) nomenclature. Search title, abstract, results, variant tables, figures exhaustively."
+     }}}},
     "negative_positive_control": {{{{
       "has_negative_control": true|false,
       "has_positive_control": true|false,

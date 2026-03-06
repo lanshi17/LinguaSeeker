@@ -7,39 +7,60 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # ==================== 应用配置 ====================
-    app_name: str
-    app_version: str
-    api_prefix: str
-    cors_origins: str
-    environment: str
-    debug: bool = False
+    app_name: str = "ACMG-PS3 Intelligence System"
+    app_version: str = "2.0.0"
+    api_prefix: str = "/api/v1"
+    cors_origins: str = '["http://localhost:3000", "http://localhost:8080"]'
+    environment: str = "development"  # development | staging | production
+    debug: bool = True
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     clear_proxy_env_on_startup: bool = False
 
     # ==================== LLM配置 ====================
+    
+    # 文献获取智能体
+    retrieval_api_key: str
+    retrieval_base_url: str
+    retrieval_model: str
+    
+    # 文档解析智能体
+    parsing_api_key: str
+    parsing_base_url: str
+    parsing_model: str
+    
+    # 多语种翻译智能体
     mt_api_key: str
     mt_base_url: str
     mt_model: str
 
+    # 多功能排版智能体
     format_api_key: str
     format_base_url: str
     format_model: str
 
+    # 图片提取智能体
     vlm_api_key: str
     vlm_base_url: str
     vlm_model: str
     vlm_enable: bool = False
 
+    # 证据提取智能体
     evidence_api_key: str
     evidence_base_url: str
     evidence_model: str
 
+    # ACMG分类智能体
+    classification_api_key: str
+    classification_base_url: str
+    classification_model: str
+
+    # 专家裁决智能体
     arbitration_api_key: str
     arbitration_model: str
     arbitration_base_url: str
 
-    llm_temperature: float = 0.0
+    llm_temperature: float = 0.7
     llm_max_tokens: int = 2000
     llm_timeout: int = 60
     llm_max_retries: int = 3
@@ -69,16 +90,16 @@ class Settings(BaseSettings):
     rerank_score_threshold: float = 0.7
 
     # ==================== MinerU 配置 ====================
-    mineru_mode: str
-    mineru_api_url: str
-    mineru_api_token: str
-    mineru_version: str
-    mineru_download_dir: str
+    mineru_mode: str = "api"  # api | local
+    mineru_api_url: str = "http://localhost:8080"
+    mineru_api_token: Optional[str] = None
+    mineru_version: Optional[str] = None
+    mineru_download_dir: Optional[str] = None
     mineru_timeout: int = 300
     mineru_max_file_size_mb: int = 100
 
     # ==================== Redis配置 ====================
-    redis_host: str
+    redis_host: str = "localhost"
     redis_port: int = 6379
     redis_password: Optional[str] = None
     redis_db: int = 0
@@ -86,37 +107,42 @@ class Settings(BaseSettings):
     interaction_session_ttl_seconds: int = 3600
 
     # ==================== PostgreSQL配置 ====================
-    postgres_host: str = Field(validation_alias=AliasChoices("POSTGRES_HOST", "PGHOST"))
+    postgres_host: str = Field(default="localhost", validation_alias=AliasChoices("POSTGRES_HOST", "PGHOST"))
     postgres_port: int = Field(5432, validation_alias=AliasChoices("POSTGRES_PORT", "PGPORT"))
-    postgres_db: str = Field(validation_alias=AliasChoices("POSTGRES_DB", "PGDATABASE"))
-    postgres_user: str = Field(validation_alias=AliasChoices("POSTGRES_USER", "PGUSER"))
+    postgres_db: str = Field(default="acmg_ps3", validation_alias=AliasChoices("POSTGRES_DB", "PGDATABASE"))
+    postgres_user: str = Field(default="postgres", validation_alias=AliasChoices("POSTGRES_USER", "PGUSER"))
     postgres_password: str = Field(validation_alias=AliasChoices("POSTGRES_PASSWORD", "PGPASSWORD"))
-    postgres_pool_size: int = 20
-    postgres_max_overflow: int = 30
+    postgres_pool_size: int = 10
+    postgres_max_overflow: int = 20
 
     # ==================== Neo4j配置 ====================
-    neo4j_uri: str
-    neo4j_user: str
+    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_user: str = "neo4j"
     neo4j_password: str
-    neo4j_database: str
+    neo4j_database: str = "neo4j"
     neo4j_max_connection_lifetime: int = 3600
     neo4j_max_connection_pool_size: int = 50
 
     # ==================== 向量数据库选择 ====================
-    vector_db: str
-    knowledge_docs_dir: str
-    retrieval_api_key: Optional[str] = None
-    retrieval_base_url: Optional[str] = None
-    retrieval_model: Optional[str] = None
+    vector_db: str = "qdrant"  # qdrant | milvus
+    knowledge_docs_dir: str = "./knowledge_docs"
+    
+    # ==================== Embedding配置 ====================
+    embedding_provider: str = "nomic"  # nomic | openai
+    embedding_base_url: str = ""
+    embedding_api_key: str = ""
+    embedding_model: str = "nomic-embed-text"
+    embedding_dimension: int = 1536
+    embedding_batch_size: int = 32
 
     # ==================== Qdrant配置 ====================
-    qdrant_host: str
+    qdrant_host: str = "localhost"
     qdrant_port: int = 6333
     qdrant_https: bool = False
     qdrant_verify_ssl: bool = True
-    qdrant_collection_name: str
+    qdrant_collection_name: str = "paper_chunks"
     qdrant_api_key: Optional[str] = None
-    qdrant_dimension: int
+    qdrant_dimension: int = 1536
     qdrant_prefer_grpc: bool = True
     qdrant_top_k: int = 5
     qdrant_score_threshold: float = 0.7
@@ -124,25 +150,21 @@ class Settings(BaseSettings):
     qdrant_retry_delay: float = 1.0
 
     # ==================== Milvus配置 ====================
-    milvus_host: str
-    milvus_port: int
-    milvus_collection_name: str
-    milvus_dimension: int
-    milvus_index_type: str
-    milvus_metric_type: str
+    milvus_host: str = "localhost"
+    milvus_port: int = 19530
+    milvus_collection_name: str = "paper_chunks"
+    milvus_dimension: int = 1536
+    milvus_index_type: str = "IVF_FLAT"
+    milvus_metric_type: str = "L2"
 
     # ==================== MinIO配置 ====================
-    minio_endpoint: str
-    minio_access_key: str
-    minio_secret_key: str
-    minio_api: str
-    minio_path: str
+    minio_endpoint: str = "localhost:9000"
+    minio_access_key: str = "your-minio-access-key"
+    minio_secret_key: str = "your-minio-secret-key"
     minio_bucket_name: str = "processed-results"
     minio_uploads_bucket: str = "literature-uploads"
     minio_results_bucket: str = "processed-results"
-    minio_secure: bool = True
-    minio_root_user: str
-    minio_root_password: str
+    minio_secure: bool = False  # 根据.env.example，默认为false
 
     # ==================== 任务配置 ====================
     max_reasoning_iterations: int = 3
@@ -165,16 +187,16 @@ class Settings(BaseSettings):
 
     # ==================== 爬取配置 ====================
     pubmed_api_key: Optional[str] = None
-    pubmed_base_url: str
-    firecrawl_base_url: str
+    pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
+    firecrawl_base_url: str = "https://api.firecrawl.dev/v0"
     firecrawl_api_key: Optional[str] = None
 
     # ==================== 邮箱配置 ====================
-    smtp_host: str
-    smtp_port: int
-    smtp_user: str
-    smtp_password: str
-    smtp_from_email: str
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
 
     # 额外示例：列表类型
     allowed_hosts: List[str] = ["localhost"]

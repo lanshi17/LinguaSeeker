@@ -3,8 +3,8 @@ import json
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
 from loguru import logger
 from pydantic import BaseModel, SecretStr
 
@@ -36,14 +36,12 @@ class InteractionAgent:
         self._session_ttl_seconds = int(getattr(cfg, "interaction_session_ttl_seconds", 3600))
         self._redis_client: Optional[RedisClient] = None
 
-        anthropic_base_url = self._normalize_anthropic_base_url(cfg.evidence_base_url)
-        self.llm = ChatAnthropic(
-            model_name=cfg.evidence_model,
+        self.llm = ChatOpenAI(
+            model=cfg.evidence_model,
             api_key=SecretStr(cfg.evidence_api_key),
-            base_url=anthropic_base_url,
+            base_url=cfg.evidence_base_url,
             temperature=0.3,
             timeout=cfg.llm_timeout,
-            stop=["\n\nHuman:"],
         )
         logger.info("InteractionAgent initialized with model: {}", cfg.evidence_model)
 
@@ -119,14 +117,6 @@ class InteractionAgent:
             redis_conn.delete(self._session_key(session_id))
         except Exception as exc:
             logger.warning("Failed to delete interaction session {}: {}", session_id, exc)
-
-    def _normalize_anthropic_base_url(self, base_url: str) -> str:
-        if not base_url:
-            return base_url
-        cleaned = base_url.rstrip("/")
-        if cleaned.endswith("/v1"):
-            cleaned = cleaned[:-3]
-        return cleaned
 
     async def start_interaction(self, user_input: str) -> Dict[str, Any]:
         session_id = str(uuid4())

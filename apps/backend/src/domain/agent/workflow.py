@@ -13,7 +13,6 @@ from src.domain.models import (
 )
 from src.domain.agent import prompts
 from langchain_core.messages import HumanMessage, ToolMessage
-from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
 from pydantic import SecretStr
@@ -37,16 +36,6 @@ class EvidenceAgent:
         self.cfg = cfg
         self.rag = rag_component or RAGComponent()
         logger.info("EvidenceAgent initialized")
-
-    def _normalize_anthropic_base_url(self, base_url: str) -> str:
-        if not base_url:
-            logger.debug("Anthropic base URL is empty")
-            return base_url
-        cleaned = base_url.rstrip("/")
-        if cleaned.endswith("/v1"):
-            cleaned = cleaned[:-3]
-        logger.debug("Normalized Anthropic base URL: {}", cleaned)
-        return cleaned
 
     def _estimate_tokens(self, text: str) -> int:
         if not text:
@@ -260,29 +249,26 @@ class EvidenceAgent:
     def get_evidence_llm(self):
         """获取证据提取 LLM 客户端（支持工具调用）"""
         logger.info("Initializing evidence LLM")
-        llm = ChatAnthropic(
-            model_name=self.cfg.evidence_model,
+        llm = ChatOpenAI(
+            model=self.cfg.evidence_model,
             api_key=SecretStr(self.cfg.evidence_api_key),
-            base_url=self._normalize_anthropic_base_url(self.cfg.evidence_base_url),
+            base_url=self.cfg.evidence_base_url,
             temperature=0.0,
             timeout=self.cfg.llm_timeout,
             streaming=True,
-            stop=["\n\nHuman:"],
         )
         return llm.bind_tools(get_evidence_tools())
 
     def get_arbitration_llm(self):
         """获取仲裁 LLM 客户端"""
         logger.info("Initializing arbitration LLM")
-        return ChatAnthropic(
-            model_name=self.cfg.arbitration_model,
+        return ChatOpenAI(
+            model=self.cfg.arbitration_model,
             api_key=SecretStr(self.cfg.arbitration_api_key),
-            base_url=self._normalize_anthropic_base_url(self.cfg.arbitration_base_url),
+            base_url=self.cfg.arbitration_base_url,
             temperature=0.0,
             timeout=self.cfg.llm_timeout,
-            stop=["\n\nHuman:"],
             streaming=True,
-            thinking={"type": "enabled"},
         )
 
     def _invoke_with_tools(
@@ -343,7 +329,7 @@ class EvidenceAgent:
         return response
 
     def _message_content_to_text(self, content: Any) -> str:
-        """Normalize LangChain/Anthropic message content into plain text."""
+        """Normalize LangChain message content into plain text."""
         if content is None:
             return ""
 
@@ -485,14 +471,13 @@ class EvidenceAgent:
     def get_json_repair_llm(self):
         """获取 JSON 修复 LLM 客户端（不启用工具调用）"""
         logger.info("Initializing JSON repair LLM")
-        return ChatAnthropic(
-            model_name=self.cfg.evidence_model,
+        return ChatOpenAI(
+            model=self.cfg.evidence_model,
             api_key=SecretStr(self.cfg.evidence_api_key),
-            base_url=self._normalize_anthropic_base_url(self.cfg.evidence_base_url),
+            base_url=self.cfg.evidence_base_url,
             temperature=0.0,
             timeout=self.cfg.llm_timeout,
             streaming=False,
-            stop=["\n\nHuman:"],
         )
 
     def _parse_json_payload_with_repair(self, content: str, stage_name: str) -> Dict[str, Any]:

@@ -33,7 +33,12 @@ CREATE TABLE IF NOT EXISTS tasks (
     progress DOUBLE PRECISION,
     result JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    workflow_status VARCHAR(80),
+    processing_steps JSONB,
+    file_size_bytes BIGINT,
+    processing_duration_seconds DOUBLE PRECISION,
+    error_details JSONB
 );
 
 -- 3b. task_logs
@@ -75,13 +80,20 @@ CREATE TABLE IF NOT EXISTS paper_tasks (
     warning_codes JSONB,
     node_trace JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    workflow_status VARCHAR(80),
+    processing_steps JSONB,
+    file_size_bytes BIGINT,
+    processing_duration_seconds DOUBLE PRECISION,
+    error_details JSONB
 );
 
 CREATE INDEX IF NOT EXISTS ix_paper_tasks_request_id ON paper_tasks (request_id);
 CREATE INDEX IF NOT EXISTS ix_paper_tasks_status ON paper_tasks (status);
 CREATE INDEX IF NOT EXISTS ix_paper_tasks_file_hash ON paper_tasks (file_hash);
 CREATE INDEX IF NOT EXISTS ix_paper_tasks_celery_task_id ON paper_tasks (celery_task_id);
+CREATE INDEX IF NOT EXISTS ix_paper_tasks_workflow_status ON paper_tasks (workflow_status);
+CREATE INDEX IF NOT EXISTS ix_tasks_workflow_status ON tasks (workflow_status);
 
 -- 3e. paper_task_logs
 CREATE TABLE IF NOT EXISTS paper_task_logs (

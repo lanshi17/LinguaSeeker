@@ -570,3 +570,251 @@ def test_graph_sync_skips_when_core_fields_missing(
     assert archive_path.exists()
     assert "missing_core_fields" in archive_path.read_text()
     assert "gene_symbol" in result["missing_fields"]
+
+
+class TestExtractTranscriptFromHgvs:
+    def test_refseq_with_version(self):
+        result = sync_module.GraphSyncService._extract_transcript_from_hgvs("NM_000527.4:c.123A>G")
+        assert result == "NM_000527.4"
+
+    def test_refseq_without_version(self):
+        result = sync_module.GraphSyncService._extract_transcript_from_hgvs("NM_000527:c.456T>C")
+        assert result == "NM_000527"
+
+    def test_ensembl_transcript(self):
+        result = sync_module.GraphSyncService._extract_transcript_from_hgvs(
+            "ENST00000374690.8:c.789G>A"
+        )
+        assert result == "ENST00000374690.8"
+
+    def test_xm_transcript(self):
+        result = sync_module.GraphSyncService._extract_transcript_from_hgvs(
+            "XM_017012345.2:c.100del"
+        )
+        assert result == "XM_017012345.2"
+
+    def test_no_transcript(self):
+        result = sync_module.GraphSyncService._extract_transcript_from_hgvs("c.123A>G")
+        assert result is None
+
+    def test_none_input(self):
+        result = sync_module.GraphSyncService._extract_transcript_from_hgvs(None)
+        assert result is None
+
+    def test_empty_string(self):
+        result = sync_module.GraphSyncService._extract_transcript_from_hgvs("")
+        assert result is None
+
+
+class TestInferMissingFields:
+    def _make_service(self, monkeypatch, tmp_path):
+        monkeypatch.setattr(
+            sync_module,
+            "get_neo4j_client",
+            lambda: type("N", (), {"__getattr__": lambda s, _: lambda *a, **kw: None})(),
+        )
+        monkeypatch.setattr(
+            sync_module,
+            "get_postgres_client",
+            lambda: type("P", (), {"__getattr__": lambda s, _: lambda *a, **kw: None})(),
+        )
+        monkeypatch.setattr(
+            sync_module, "get_variation_data_service", lambda: DummyVariationService()
+        )
+        monkeypatch.setattr(
+            sync_module.GraphSyncService, "_FAILURE_ARCHIVE_PATH", tmp_path / "f.jsonl"
+        )
+        return sync_module.GraphSyncService()
+
+    def test_infer_transcript_from_hgvs_c(self, monkeypatch, tmp_path):
+        svc = self._make_service(monkeypatch, tmp_path)
+        fused = {
+            "gene_symbol": "BRCA1",
+            "variant_hgvs_c": "NM_007294.4:c.5266dupC",
+            "variant_hgvs_p": None,
+            "transcript_id": None,
+            "disease_name": "Breast cancer",
+            "variant_descriptor": None,
+        }
+        details: dict = {
+            k: {"source": None, "status": "missing"} for k in fused if fused[k] is None
+        }
+        svc._infer_missing_fields(fused, details, {"extracted_fields": {}})
+        assert fused["transcript_id"] == "NM_007294.4"
+        assert details["transcript_id"]["status"] == "inferred"
+        assert details["transcript_id"]["source"] == "inferred_from_hgvs_c"
+
+    def test_infer_disease_from_chpo(self, monkeypatch, tmp_path):
+        svc = self._make_service(monkeypatch, tmp_path)
+        fused = {
+            "gene_symbol": "LDLR",
+            "variant_hgvs_c": "c.100A>G",
+            "variant_hgvs_p": None,
+            "transcript_id": "NM_000527.5",
+            "disease_name": None,
+            "variant_descriptor": None,
+        }
+        details: dict = {"disease_name": {"source": None, "status": "missing"}}
+        evidence_output = {
+            "extracted_fields": {
+                "disease_chpo": {
+                    "disease_name": "Familial hypercholesterolemia",
+                    "hpo_id": "HP:0003124",
+                },
+            }
+        }
+        svc._infer_missing_fields(fused, details, evidence_output)
+        assert fused["disease_name"] == "Familial hypercholesterolemia"
+        assert "disease_chpo" in details["disease_name"]["source"]
+
+    def test_infer_disease_from_icd10(self, monkeypatch, tmp_path):
+        svc = self._make_service(monkeypatch, tmp_path)
+        fused = {
+            "gene_symbol": "LDLR",
+            "variant_hgvs_c": "c.100A>G",
+            "variant_hgvs_p": None,
+            "transcript_id": "NM_000527.5",
+            "disease_name": None,
+            "variant_descriptor": None,
+        }
+        details: dict = {"disease_name": {"source": None, "status": "missing"}}
+        evidence_output = {
+            "extracted_fields": {
+                "disease_chpo": {},
+                "disease_icd10": {
+                    "diagnosis": "Type 2 diabetes mellitus",
+                },
+            }
+        }
+        svc._infer_missing_fields(fused, details, evidence_output)
+        assert fused["disease_name"] == "Type 2 diabetes mellitus"
+        assert "disease_icd10" in details["disease_name"]["source"]
+
+    def test_infer_gene_from_extracted_gene_section(self, monkeypatch, tmp_path):
+        svc = self._make_service(monkeypatch, tmp_path)
+        fused = {
+            "gene_symbol": None,
+            "variant_hgvs_c": "c.100A>G",
+            "variant_hgvs_p": None,
+            "transcript_id": "NM_000527.5",
+            "disease_name": "FH",
+            "variant_descriptor": None,
+        }
+        details: dict = {"gene_symbol": {"source": None, "status": "missing"}}
+        evidence_output = {
+            "extracted_fields": {
+                "gene": {"name": "LDLR"},
+            }
+        }
+        svc._infer_missing_fields(fused, details, evidence_output)
+        assert fused["gene_symbol"] == "LDLR"
+        assert details["gene_symbol"]["status"] == "inferred"
+
+    def test_no_inference_when_fields_present(self, monkeypatch, tmp_path):
+        svc = self._make_service(monkeypatch, tmp_path)
+        fused = {
+            "gene_symbol": "TP53",
+            "variant_hgvs_c": "NM_000546.6:c.743G>A",
+            "variant_hgvs_p": "p.Arg248Gln",
+            "transcript_id": "NM_000546.6",
+            "disease_name": "Li-Fraumeni syndrome",
+            "variant_descriptor": None,
+        }
+        original = dict(fused)
+        details: dict = {}
+        svc._infer_missing_fields(fused, details, {"extracted_fields": {}})
+        assert fused == original
+
+
+class TestExpandedAliasResolution:
+    def _make_service(self, monkeypatch, tmp_path):
+        class MinimalNeo4j:
+            def create_variant_node(self, **kw):
+                return None
+
+            def create_gene_node(self, **kw):
+                return None
+
+            def create_disease_node(self, **kw):
+                return None
+
+            def create_evidence_node(self, **kw):
+                return None
+
+            def create_relationship(self, *a, **kw):
+                return None
+
+            def merge_node(self, *a, **kw):
+                return None
+
+        class CapturePostgres:
+            def __init__(self):
+                self.kwargs = {}
+
+            def create_evidence_record(self, **kw):
+                self.kwargs = kw
+                from types import SimpleNamespace
+
+                return SimpleNamespace(evidence_id=42)
+
+            def update_document(self, *a, **kw):
+                pass
+
+            def create_task(self, *a, **kw):
+                return 1
+
+            def append_task_log(self, *a, **kw):
+                pass
+
+        fake_pg = CapturePostgres()
+        monkeypatch.setattr(sync_module, "get_neo4j_client", lambda: MinimalNeo4j())
+        monkeypatch.setattr(sync_module, "get_postgres_client", lambda: fake_pg)
+        monkeypatch.setattr(
+            sync_module, "get_variation_data_service", lambda: DummyVariationService()
+        )
+        monkeypatch.setattr(
+            sync_module.GraphSyncService, "_FAILURE_ARCHIVE_PATH", tmp_path / "f.jsonl"
+        )
+        return sync_module.GraphSyncService(), fake_pg
+
+    def test_resolves_hugo_symbol_alias(self, monkeypatch, tmp_path):
+        svc, fake_pg = self._make_service(monkeypatch, tmp_path)
+        evidence = {
+            "ps3_evidence": {"functional_data": "ok"},
+            "overall_confidence": 80.0,
+            "evidence_classification": "PS3",
+            "extracted_fields": {
+                "gene": {"hugo_symbol": "BRCA2"},
+                "transcript_id": {"refseq_transcript": "NM_000059.4"},
+                "variant": {
+                    "hgvs_c": "c.5946delT",
+                    "hgvs_p": "p.Ser1982fs",
+                },
+                "disease_chpo": {"clinical_diagnosis": "Hereditary breast cancer"},
+            },
+        }
+        result = svc.sync_evidence("00000000-0000-0000-0000-000000000002", evidence)
+        assert result.get("skipped") is not True
+        assert fake_pg.kwargs.get("gene_symbol") == "BRCA2"
+        assert fake_pg.kwargs.get("transcript_id") == "NM_000059.4"
+        assert fake_pg.kwargs.get("disease_name") == "Hereditary breast cancer"
+
+    def test_resolves_coding_dna_change_alias(self, monkeypatch, tmp_path):
+        svc, fake_pg = self._make_service(monkeypatch, tmp_path)
+        evidence = {
+            "ps3_evidence": {"data": "present"},
+            "overall_confidence": 75.0,
+            "evidence_classification": "PS3_Moderate",
+            "extracted_fields": {
+                "gene": {"symbol": "MLH1"},
+                "transcript_id": {"transcript": "NM_000249.4"},
+                "variant": {
+                    "coding_dna_change": "c.199G>A",
+                    "amino_acid_change": "p.Gly67Arg",
+                },
+                "disease_chpo": {"disorder": "Lynch syndrome"},
+            },
+        }
+        result = svc.sync_evidence("00000000-0000-0000-0000-000000000003", evidence)
+        assert result.get("skipped") is not True
+        assert fake_pg.kwargs.get("gene_symbol") == "MLH1"

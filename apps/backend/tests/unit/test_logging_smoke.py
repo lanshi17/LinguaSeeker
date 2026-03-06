@@ -51,8 +51,6 @@ class DummyVariationService:
 
 def test_workflow_helpers_smoke() -> None:
     agent = EvidenceAgent(rag_component=cast(Any, DummyRag()))
-    assert agent._normalize_anthropic_base_url("") == ""
-    assert agent._normalize_anthropic_base_url("https://example.com/v1") == "https://example.com"
     assert agent._estimate_tokens("hello") > 0
     chunks = agent._split_paragraph("hello world")
     assert len(chunks) == 1

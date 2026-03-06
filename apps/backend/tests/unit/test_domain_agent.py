@@ -70,13 +70,6 @@ def test_ps3_evidence_prompt_includes_knowledge_context() -> None:
     assert "kb" in prompt
 
 
-def test_normalize_anthropic_base_url() -> None:
-    agent = EvidenceAgent()
-    assert agent._normalize_anthropic_base_url("https://a.com/v1/") == "https://a.com"
-    assert agent._normalize_anthropic_base_url("https://a.com/") == "https://a.com"
-    assert agent._normalize_anthropic_base_url("") == ""
-
-
 def test_estimate_tokens_ascii_and_unicode() -> None:
     agent = EvidenceAgent()
     assert agent._estimate_tokens("abcd") == 1
