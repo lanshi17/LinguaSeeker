@@ -539,7 +539,9 @@ class GraphSyncService:
         try:
             return float(value)
         except (TypeError, ValueError):
-            logger.warning("Invalid overall_confidence value %r, defaulting to %s", value, default)
+            logger.warning(
+                "Invalid overall_confidence value {!r}, defaulting to {}", value, default
+            )
             return default
 
     @staticmethod
@@ -549,7 +551,7 @@ class GraphSyncService:
         try:
             return float(value)
         except (TypeError, ValueError):
-            logger.warning("Invalid float-like value %r, defaulting to None", value)
+            logger.warning("Invalid float-like value {!r}, defaulting to None", value)
             return None
 
     @staticmethod
@@ -558,7 +560,7 @@ class GraphSyncService:
             normalized = dict(payload)
         else:
             logger.warning(
-                "ps3_evidence payload is not a dict (type=%s), defaulting to empty JSON",
+                "ps3_evidence payload is not a dict (type={}), defaulting to empty JSON",
                 type(payload),
             )
             normalized = {}

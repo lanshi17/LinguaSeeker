@@ -759,7 +759,7 @@ Count the total number of control variants (benign + pathogenic) used:
         }}}}
     }}}}],
   "ps3_step_1": {{{{
-    "disease_mechanism_clarity": "clear|partial|unclear",
+    "disease_mechanism_clarity": "yes|no",
     "can_proceed": true|false,
     "explanation": "Detailed explanation of the pathogenic mechanism found in document",
         "evidence_refs": ["E1"],

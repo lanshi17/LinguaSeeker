@@ -861,9 +861,10 @@ class EvidenceAgent:
             state["arbitration_score"] = round(confidence * 100.0, 2)
             state["arbitration_feedback"] = arbitration_result.get("feedback", "")
 
-            logger.info(f"仲裁置信度: {state['arbitration_confidence']:.2f}")
             logger.info(
-                f"初步得分: {calculated_score}, 最终决策: {arbitration_result.get('final_decision', 'unknown')}"
+                "仲裁完成，置信度: {:.2f}，仲裁得分: {:.1f}",
+                state["arbitration_confidence"],
+                state["arbitration_score"],
             )
         except RuntimeError as e:
             logger.error(f"仲裁 JSON 解析失败: {e}，使用计算得分")
@@ -871,12 +872,11 @@ class EvidenceAgent:
 
         self._apply_arbitration_feedback(state)
 
-        logger.info(f"仲裁完成，最终置信度: {state['arbitration_confidence']:.2f}")
+        logger.debug("仲裁反馈长度: {}", len(state.get("arbitration_feedback", "")))
         return state
 
     @staticmethod
     def route_decision(state: ProcessingState) -> str:
-        """路由决策：是否通过、继续迭代或标记人工复核"""
         raw_score = state.get("arbitration_score")
         raw_confidence = state.get("arbitration_confidence")
 
@@ -893,17 +893,25 @@ class EvidenceAgent:
         except (TypeError, ValueError):
             confidence = None
 
-        logger.info("路由决策: score=%s, confidence=%s", score, confidence)
+        logger.info("路由决策: score={}, confidence={}", score, confidence)
 
         if score is not None and score >= prompts.ARBITRATION_SCORE_THRESHOLD:
-            logger.info("✓ 仲裁得分 >= %.1f，通过审核", prompts.ARBITRATION_SCORE_THRESHOLD)
+            logger.info(
+                "路由结果: approved（score {:.1f} >= {:.1f}）",
+                score,
+                prompts.ARBITRATION_SCORE_THRESHOLD,
+            )
             return "approved"
 
         if confidence is not None and confidence >= prompts.ARBITRATION_CONFIDENCE_THRESHOLD:
-            logger.info("✓ 仲裁置信度 >= %.2f，通过审核", prompts.ARBITRATION_CONFIDENCE_THRESHOLD)
+            logger.info(
+                "路由结果: approved（confidence {:.2f} >= {:.2f}）",
+                confidence,
+                prompts.ARBITRATION_CONFIDENCE_THRESHOLD,
+            )
             return "approved"
 
-        logger.warning("评分/置信度未达标，标记人工复核")
+        logger.warning("路由结果: manual_review（score={}, confidence={}）", score, confidence)
         return "manual_review"
 
     @staticmethod
@@ -958,7 +966,7 @@ class EvidenceAgent:
         **kwargs,
     ) -> EvidenceOutput:
         """处理医学证据的主函数"""
-        logger.info(f"开始处理医学证据（图片: {len(image_paths)} 张，迭代限制: {max_iterations}）")
+        logger.info("开始处理医学证据（图片: {} 张）", len(image_paths))
 
         initial_state: ProcessingState = {
             "markdown_content": markdown_content,

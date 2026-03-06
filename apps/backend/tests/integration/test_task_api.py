@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Tuple
 from types import SimpleNamespace
@@ -107,6 +108,114 @@ def test_get_task_status_failure(
     assert payload["task_id"] == "task-500"
     assert payload["status"] == "FAILURE"
     assert payload["error"] == "boom"
+
+
+def test_get_task_status_with_processing_steps_and_progress(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
+    class DummyAsyncResult:
+        def __init__(self, task_id: str) -> None:
+            self.id = task_id
+            self.status = "STARTED"
+            self.result = None
+
+        def failed(self) -> bool:
+            return False
+
+        def successful(self) -> bool:
+            return False
+
+    class DummyPostgres:
+        def get_paper_task_by_celery_task_id(self, _: str) -> Any:
+            return SimpleNamespace(
+                paper_task_id=uuid4(),
+                document_id=uuid4(),
+                workflow_status="TRANSLATING",
+                processing_steps={
+                    "acquisition": {"status": "COMPLETED"},
+                    "parsing": {"status": "COMPLETED"},
+                    "translation": {"status": "RUNNING"},
+                    "extraction": {"status": "PENDING"},
+                    "classification": {"status": "PENDING"},
+                    "adjudication": {"status": "PENDING"},
+                },
+                file_size_bytes=2048,
+                processing_duration_seconds=7.8,
+                error_code=None,
+                error_details=None,
+                created_at=datetime(2026, 3, 1, 8, 0, 0, tzinfo=timezone.utc),
+                updated_at=datetime(2026, 3, 1, 8, 0, 7, tzinfo=timezone.utc),
+            )
+
+    monkeypatch.setattr(
+        task_api, "AsyncResult", lambda task_id, app=None: DummyAsyncResult(task_id)
+    )
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+
+    response = client.get(f"{task_prefix}/task-step-1")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["task_id"] == "task-step-1"
+    assert payload["status"] == "STARTED"
+    assert payload["workflow_status"] == "TRANSLATING"
+    assert payload["progress_percentage"] > 0
+    assert payload["processing_steps"]["translation"]["status"] == "RUNNING"
+    assert payload["file_size_bytes"] == 2048
+    assert payload["processing_duration_seconds"] == 7.8
+
+
+def test_get_task_status_with_error_details(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
+    class DummyAsyncResult:
+        def __init__(self, task_id: str) -> None:
+            self.id = task_id
+            self.status = "FAILURE"
+            self.result = "pipeline failed"
+
+        def failed(self) -> bool:
+            return True
+
+        def successful(self) -> bool:
+            return False
+
+    class DummyPostgres:
+        def get_paper_task_by_celery_task_id(self, _: str) -> Any:
+            return SimpleNamespace(
+                paper_task_id=uuid4(),
+                document_id=uuid4(),
+                workflow_status="FAILED",
+                processing_steps={
+                    "acquisition": {"status": "COMPLETED"},
+                    "parsing": {"status": "COMPLETED"},
+                    "translation": {"status": "COMPLETED"},
+                    "extraction": {
+                        "status": "FAILED",
+                        "error_code": "EVIDENCE_EXTRACTION_FAILED",
+                    },
+                    "classification": {"status": "PENDING"},
+                    "adjudication": {"status": "PENDING"},
+                },
+                file_size_bytes=1024,
+                processing_duration_seconds=3.2,
+                error_code="EVIDENCE_EXTRACTION_FAILED",
+                error_details={"message": "entity extraction error"},
+                created_at=datetime(2026, 3, 1, 8, 0, 0, tzinfo=timezone.utc),
+                updated_at=datetime(2026, 3, 1, 8, 0, 3, tzinfo=timezone.utc),
+            )
+
+    monkeypatch.setattr(
+        task_api, "AsyncResult", lambda task_id, app=None: DummyAsyncResult(task_id)
+    )
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+
+    response = client.get(f"{task_prefix}/task-step-2")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "FAILURE"
+    assert payload["workflow_status"] == "FAILED"
+    assert payload["processing_steps"]["extraction"]["status"] == "FAILED"
+    assert payload["error_details"]["error_code"] == "EVIDENCE_EXTRACTION_FAILED"
 
 
 def test_list_tasks_with_results(

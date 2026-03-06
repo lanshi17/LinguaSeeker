@@ -14,8 +14,6 @@ from src.domain.evidence.tools import (
     OddsPath_Calculator,
     determine_evidence_strength_from_oddspath,
     determine_max_evidence_from_controls,
-    validate_ps3_step1,
-    validate_ps3_step2,
 )
 import os
 from src.utils.timer import Timer, timer
@@ -123,6 +121,7 @@ def _make_state(markdown_content: str, image_paths: List[str]) -> ProcessingStat
         "overall_confidence": 0.0,
         "evidence_classification": "",
         "acmg_evidence_levels": [],
+        "arbitration_score": 0.0,
         "arbitration_confidence": 0.0,
         "arbitration_feedback": "",
         "iteration_count": 0,
@@ -236,16 +235,6 @@ def test_determine_max_evidence_from_controls():
             f"Controls: {controls}, 预期分类: {expected_classification}, 实际分类: {classification}"
         )
     logger.debug("根据对照组确定最大证据强度测试通过。")
-
-
-@pytest.mark.unit
-def test_validate_ps3():
-    """测试验证 PS3 证据强度-两个步骤"""
-    result1 = validate_ps3_step1.invoke({"disease_mechanism_clarity": "clear"})
-    result2 = validate_ps3_step2.invoke({"assay_suitable": "yes"})
-    assert result1.get("step1_pass") is True
-    assert result2.get("step2_pass") is True
-    logger.debug("验证 PS3 证据强度测试通过。")
 
 
 @pytest.mark.asyncio

@@ -36,7 +36,14 @@ from src.service.dtos import (
     InteractionRespondRequest,
     InteractionRespondResponse,
 )
-from src.service.enum import TaskStatus
+from src.service.enum import (
+    TaskStatus,
+    WorkflowStatus,
+    calculate_progress_percentage,
+    coerce_workflow_status,
+    normalize_processing_steps,
+    workflow_status_description,
+)
 from src.domain.agent.interaction import InteractionAgent
 from src.utils.sanitizers import sanitize_filename
 
@@ -107,7 +114,19 @@ def _safe_task_meta(async_result: AsyncResult) -> Dict[str, Any]:
     except Exception as exc:
         logger.warning("Failed to read task meta for {}: {}", async_result.id, exc)
         return {}
-    return meta or {}
+    if isinstance(meta, dict):
+        return meta
+    return {}
+
+
+def _as_iso_datetime(value: Any) -> Optional[str]:
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.isoformat()
+    if isinstance(value, str):
+        return value
+    return None
 
 
 def _build_task_list_item(meta: Dict[str, Any], include_result: bool) -> TaskListItem:
@@ -646,15 +665,78 @@ def get_task_status(
     response = TaskStatusResponse(
         task_id=task_id,
         status=TaskStatus.from_celery(async_result.status),
+        workflow_status=None,
+        workflow_status_description=None,
+        progress_percentage=None,
+        processing_steps=None,
+        paper_task_id=None,
         document_id=None,
         file_size_bytes=metrics.get("file_size_bytes"),
         processing_duration_seconds=metrics.get("processing_duration_seconds"),
         created_at=metrics.get("created_at"),
         updated_at=metrics.get("updated_at"),
         error=None,
+        error_details=None,
     )
+
+    try:
+        postgres = get_postgres_client()
+        paper_entry = postgres.get_paper_task_by_celery_task_id(task_id)
+    except Exception as db_exc:
+        logger.warning("Failed to load paper task for {}: {}", task_id, db_exc)
+        paper_entry = None
+
+    if paper_entry is not None:
+        response.paper_task_id = str(getattr(paper_entry, "paper_task_id", "") or "") or None
+        document_id = getattr(paper_entry, "document_id", None)
+        if document_id is not None:
+            response.document_id = str(document_id)
+
+        db_file_size = getattr(paper_entry, "file_size_bytes", None)
+        if db_file_size is not None:
+            response.file_size_bytes = db_file_size
+
+        db_duration = getattr(paper_entry, "processing_duration_seconds", None)
+        if db_duration is not None:
+            response.processing_duration_seconds = db_duration
+
+        response.created_at = response.created_at or _as_iso_datetime(
+            getattr(paper_entry, "created_at", None)
+        )
+        response.updated_at = (
+            _as_iso_datetime(getattr(paper_entry, "updated_at", None)) or response.updated_at
+        )
+
+        processing_steps = normalize_processing_steps(
+            getattr(paper_entry, "processing_steps", None),
+            node_trace=getattr(paper_entry, "node_trace", None),
+        )
+        response.processing_steps = processing_steps
+        response.progress_percentage = calculate_progress_percentage(processing_steps)
+
+        workflow_status = coerce_workflow_status(
+            getattr(paper_entry, "workflow_status", None),
+            default=WorkflowStatus.pending,
+        )
+        response.workflow_status = workflow_status
+        response.workflow_status_description = workflow_status_description(workflow_status)
+
+        error_code = getattr(paper_entry, "error_code", None)
+        error_details = getattr(paper_entry, "error_details", None)
+        details_payload: Dict[str, Any] = {}
+        if isinstance(error_details, dict):
+            details_payload.update(error_details)
+        if error_code:
+            details_payload.setdefault("error_code", error_code)
+        if details_payload:
+            response.error_details = details_payload
+
     if async_result.failed():
         response.error = str(async_result.result)
+        if response.error_details is None:
+            response.error_details = {"message": response.error}
+        else:
+            response.error_details.setdefault("message", response.error)
         logger.debug("Task failed: {} error: {}", task_id, response.error)
     elif async_result.successful():
         result_payload = async_result.result
@@ -671,9 +753,43 @@ def get_task_status(
             doc_value = result_payload.get("document_id")
             if doc_value is not None:
                 response.document_id = str(doc_value)
+            if response.workflow_status is None:
+                workflow_value = result_payload.get("workflow_status")
+                if workflow_value is not None:
+                    workflow_status = coerce_workflow_status(workflow_value)
+                    response.workflow_status = workflow_status
+                    response.workflow_status_description = workflow_status_description(
+                        workflow_status
+                    )
+            if response.processing_steps is None:
+                payload_steps = result_payload.get("processing_steps")
+                if payload_steps is not None:
+                    response.processing_steps = normalize_processing_steps(payload_steps)
+                    response.progress_percentage = calculate_progress_percentage(
+                        response.processing_steps
+                    )
+            if response.progress_percentage is None and isinstance(
+                result_payload.get("progress_percentage"),
+                (float, int),
+            ):
+                response.progress_percentage = float(result_payload.get("progress_percentage"))
         logger.debug("Task succeeded: {}", task_id)
     else:
         logger.debug("Task status: {} status: {}", task_id, async_result.status)
+
+    if response.workflow_status is None:
+        if response.status == TaskStatus.success:
+            response.workflow_status = WorkflowStatus.completed
+        elif response.status == TaskStatus.failure:
+            response.workflow_status = WorkflowStatus.failed
+        elif response.status in (TaskStatus.started, TaskStatus.retry):
+            response.workflow_status = WorkflowStatus.processing_pdf
+        else:
+            response.workflow_status = WorkflowStatus.pending
+        response.workflow_status_description = workflow_status_description(response.workflow_status)
+
+    if response.processing_steps is not None and response.progress_percentage is None:
+        response.progress_percentage = calculate_progress_percentage(response.processing_steps)
 
     return response
 

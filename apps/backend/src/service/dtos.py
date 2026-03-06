@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
-from src.service.enum import TaskStatus
+from src.service.enum import TaskStatus, WorkflowStatus
 
 
 class ValidationErrorDetail(BaseModel):
@@ -45,6 +45,19 @@ class TaskCreateResponse(BaseModel):
 class TaskStatusResponse(BaseModel):
     task_id: str = Field(..., description="Celery task id")
     status: TaskStatus = Field(..., description="Task status")
+    workflow_status: Optional[WorkflowStatus] = Field(
+        None, description="Detailed workflow stage status"
+    )
+    workflow_status_description: Optional[str] = Field(
+        None, description="Human-readable workflow stage description"
+    )
+    progress_percentage: Optional[float] = Field(
+        None, ge=0, le=100, description="Workflow completion percentage"
+    )
+    processing_steps: Optional[Dict[str, Dict[str, Any]]] = Field(
+        None, description="Detailed per-step processing state"
+    )
+    paper_task_id: Optional[str] = Field(None, description="Paper task UUID when available")
     document_id: Optional[str] = Field(
         None, description="Document id associated with the task result"
     )
@@ -55,18 +68,32 @@ class TaskStatusResponse(BaseModel):
     created_at: Optional[str] = Field(None, description="Task creation timestamp if available")
     updated_at: Optional[str] = Field(None, description="Task update timestamp if available")
     error: Optional[str] = Field(None, description="Error message if failed")
+    error_details: Optional[Dict[str, Any]] = Field(None, description="Structured error details")
 
     class Config:
         json_schema_extra = {
             "example": {
                 "task_id": "1f6a8b7a-1b87-4d75-8c72-6f2f6a1a9c2e",
                 "status": "SUCCESS",
+                "workflow_status": "COMPLETED",
+                "workflow_status_description": "Workflow completed successfully.",
+                "progress_percentage": 100.0,
+                "processing_steps": {
+                    "acquisition": {
+                        "status": "COMPLETED",
+                        "updated_at": "2026-02-10T08:00:01+00:00",
+                        "message": "Node acquisition completed",
+                        "error_code": None,
+                    }
+                },
+                "paper_task_id": "6f03f2f8-58b0-48e1-9600-a4d1464580bc",
                 "document_id": "c525fcfa-6dd9-4c9d-8d42-bd7c5a52fa7a",
                 "file_size_bytes": 1048576,
                 "processing_duration_seconds": 12.3,
                 "created_at": "2026-02-10T08:00:00+00:00",
                 "updated_at": "2026-02-10T08:00:12+00:00",
                 "error": None,
+                "error_details": None,
             }
         }
 

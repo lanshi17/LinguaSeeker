@@ -6,6 +6,7 @@ PS3/BS3 评估框架工具函数。
 2. OddsPath -> 通用强度分级
 3. 文本抽取结果评估指标计算
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -108,31 +109,72 @@ def _read_nested(item: Mapping[str, Any], field_path: str) -> Any:
     return current
 
 
+def evaluate_disease_mechanism_defined(data: Mapping[str, Any]) -> bool:
+    step1 = _get_dict(data.get("ps3_step_1"))
+    mechanism_defined = data.get("disease_mechanism_defined")
+    if mechanism_defined is None:
+        mechanism_defined = data.get(
+            "disease_mechanism_clarity",
+            step1.get("disease_mechanism_clarity"),
+        )
+
+    if isinstance(mechanism_defined, str):
+        token = mechanism_defined.strip().lower()
+        if token in {"yes", "defined", "clear", "true", "y", "1"}:
+            return True
+        if token in {"no", "undefined", "unclear", "partial", "false", "n", "0"}:
+            return False
+        return False
+    return _as_bool(mechanism_defined)
+
+
 def evaluate_assay_validity_approved(data: Mapping[str, Any]) -> bool:
     step2 = _get_dict(data.get("ps3_step_2"))
     assay_suitable = (
-        data.get("assay_suitable")
-        or data.get("approved_assay")
-        or step2.get("assay_suitable")
+        data.get("assay_suitable") or data.get("approved_assay") or step2.get("assay_suitable")
     )
     if isinstance(assay_suitable, str):
         return assay_suitable.strip().lower() == "yes"
     return _as_bool(assay_suitable)
 
 
-def evaluate_assay_validity_control(data: Mapping[str, Any]) -> bool:
+def evaluate_assay_validity_basic_controls(data: Mapping[str, Any]) -> bool:
     step3 = _get_dict(data.get("ps3_step_3"))
     checkpoint_3a = _get_dict(step3.get("checkpoint_3a"))
-    checkpoint_3b = _get_dict(step3.get("checkpoint_3b"))
 
-    controls_present = _as_bool(
-        data.get("basic_controls_present", checkpoint_3a.get("basic_controls_present"))
+    basic_controls_present = data.get(
+        "basic_controls_present",
+        checkpoint_3a.get("basic_controls_present"),
     )
-    replicates_used = _as_bool(data.get("replicates_used", checkpoint_3a.get("replicates_used")))
-    method_validated = _as_bool(data.get("method_validated", checkpoint_3b.get("method_validated")))
+    positive_controls_present = data.get(
+        "positive_controls_present",
+        checkpoint_3a.get("positive_controls_present"),
+    )
+    negative_controls_present = data.get(
+        "negative_controls_present",
+        checkpoint_3a.get("negative_controls_present"),
+    )
+    if positive_controls_present is None and negative_controls_present is None:
+        controls_present = _as_bool(basic_controls_present)
+    else:
+        controls_present = _as_bool(positive_controls_present) and _as_bool(
+            negative_controls_present
+        )
 
-    # 3a 通过即可继续；3a 不足时允许 3b 通过作为替代路径。
-    return (controls_present and replicates_used) or method_validated
+    replicates_used = _as_bool(data.get("replicates_used", checkpoint_3a.get("replicates_used")))
+    return controls_present and replicates_used
+
+
+def evaluate_assay_validity_verified_method(data: Mapping[str, Any]) -> bool:
+    step3 = _get_dict(data.get("ps3_step_3"))
+    checkpoint_3b = _get_dict(step3.get("checkpoint_3b"))
+    return _as_bool(data.get("method_validated", checkpoint_3b.get("method_validated")))
+
+
+def evaluate_assay_validity_control(data: Mapping[str, Any]) -> bool:
+    return evaluate_assay_validity_basic_controls(data) or evaluate_assay_validity_verified_method(
+        data
+    )
 
 
 def evaluate_assay_contains_known_variants(data: Mapping[str, Any]) -> bool:
@@ -198,7 +240,9 @@ def calculate_oddpath(
     if oddspath is None:
         oddspath = _safe_float(data.get("oddspath"))
     if oddspath is None:
-        oddspath = _calculate_oddspath_from_p1_p2(oddspath_data) or _calculate_oddspath_from_p1_p2(data)
+        oddspath = _calculate_oddspath_from_p1_p2(oddspath_data) or _calculate_oddspath_from_p1_p2(
+            data
+        )
 
     can_calculate = oddspath is not None
     return can_calculate, oddspath, is_perfect_binary
@@ -272,11 +316,20 @@ def _map_generic_to_directional_strength(
 def determine_evidence_strength(data: Mapping[str, Any]) -> Dict[str, Any]:
     """
     四步法总控流程:
-    1) 方法适用性
-    2) 对照/重复有效性
-    3) 已知变异对照
+    1) 疾病机制是否明确定义
+    2) 方法适用性
+    3) 实验有效性（3a 基本对照/重复；不足时 3b 方法验证）
     4) OddsPath 或对照变异计数
     """
+    if not evaluate_disease_mechanism_defined(data):
+        return {
+            "use_ps3_bs3": False,
+            "strength": NO_PS3_BS3,
+            "directional_strength": NO_PS3_BS3,
+            "path": "not_applicable",
+            "reason": "disease_mechanism_not_defined",
+        }
+
     if not evaluate_assay_validity_approved(data):
         return {
             "use_ps3_bs3": False,
@@ -286,30 +339,36 @@ def determine_evidence_strength(data: Mapping[str, Any]) -> Dict[str, Any]:
             "reason": "assay_not_approved",
         }
 
-    if not evaluate_assay_validity_control(data):
+    basic_controls_valid = evaluate_assay_validity_basic_controls(data)
+    method_validated = evaluate_assay_validity_verified_method(data)
+    if not basic_controls_valid and not method_validated:
         return {
             "use_ps3_bs3": False,
             "strength": NO_PS3_BS3,
             "directional_strength": NO_PS3_BS3,
             "path": "not_applicable",
-            "reason": "controls_or_replicates_insufficient",
+            "reason": "assay_validity_insufficient",
         }
 
-    if not evaluate_assay_contains_known_variants(data):
-        direction = _resolve_direction(data, odds_path=None)
-        directional_strength = _map_generic_to_directional_strength(SUPPORTING, direction)
-        return {
-            "use_ps3_bs3": True,
-            "strength": SUPPORTING,
-            "directional_strength": directional_strength,
-            "path": "no_known_variants",
-            "reason": "known_variants_missing",
-        }
+    known_variants_present = evaluate_assay_contains_known_variants(data)
 
     can_calculate_oddpath, oddspath, is_perfect_binary = calculate_oddpath(data)
     if not can_calculate_oddpath or oddspath is None:
         pathogenic_count, benign_count = count_pathogenic_benign_variants(data)
         total_count = pathogenic_count + benign_count
+        if total_count <= 0:
+            return {
+                "use_ps3_bs3": False,
+                "strength": NO_PS3_BS3,
+                "directional_strength": NO_PS3_BS3,
+                "path": "control_count",
+                "reason": "control_variants_missing",
+                "known_variants_present": known_variants_present,
+                "pathogenic_count": pathogenic_count,
+                "benign_count": benign_count,
+                "total_count": total_count,
+            }
+
         strength = MODERATE if total_count > 10 else SUPPORTING
         direction = _resolve_direction(data, odds_path=None)
         directional_strength = _map_generic_to_directional_strength(strength, direction)
@@ -319,6 +378,7 @@ def determine_evidence_strength(data: Mapping[str, Any]) -> Dict[str, Any]:
             "directional_strength": directional_strength,
             "path": "control_count",
             "reason": "oddspath_not_computable",
+            "known_variants_present": known_variants_present,
             "pathogenic_count": pathogenic_count,
             "benign_count": benign_count,
             "total_count": total_count,
@@ -333,6 +393,7 @@ def determine_evidence_strength(data: Mapping[str, Any]) -> Dict[str, Any]:
         "directional_strength": directional_strength,
         "path": "oddspath",
         "reason": "oddspath_computed",
+        "known_variants_present": known_variants_present,
         "oddspath": oddspath,
         "is_perfect_binary": is_perfect_binary,
     }
@@ -352,6 +413,7 @@ def evaluate_extraction_metrics(
     - field_omissions
     - accuracy
     """
+
     def _signature(item: Mapping[str, Any]) -> Tuple[str, ...]:
         values = tuple(_normalize_token(_read_nested(item, field)) for field in match_fields)
         return values

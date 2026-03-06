@@ -6,7 +6,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 import mimetypes
 
@@ -39,6 +39,16 @@ import src.utils.file_utils as file_utils
 from src.config import settings
 from src.celery_app import celery_app
 from src.database.redis_client import cache_pdf_result
+from src.service.enum import (
+    PROCESSING_NODE_TO_STEP,
+    ProcessingStepStatus,
+    STEP_TO_WORKFLOW_STATUS,
+    WorkflowStatus,
+    calculate_progress_percentage,
+    default_processing_steps,
+    merge_processing_step_update,
+    normalize_processing_steps,
+)
 
 
 cfg = settings
@@ -157,12 +167,95 @@ def _build_node_policy_snapshot() -> Dict[str, Dict[str, int]]:
     return {node: _get_node_policy(node) for node in _DEFAULT_NODE_POLICY.keys()}
 
 
+def _update_processing_step_status(
+    postgres: Any,
+    paper_task_id: str,
+    *,
+    step: str,
+    status: ProcessingStepStatus,
+    message: Optional[str] = None,
+    error_code: Optional[str] = None,
+    workflow_status: Optional[WorkflowStatus] = None,
+) -> None:
+    task_id = str(paper_task_id or "").strip()
+    if not task_id:
+        return
+
+    try:
+        if not hasattr(postgres, "update_paper_task") or not hasattr(postgres, "get_paper_task"):
+            return
+
+        paper_entry = postgres.get_paper_task(task_id)
+        node_trace = getattr(paper_entry, "node_trace", None) if paper_entry is not None else None
+        processing_steps = normalize_processing_steps(
+            getattr(paper_entry, "processing_steps", None) if paper_entry is not None else None,
+            node_trace=node_trace,
+        )
+
+        canonical_step = PROCESSING_NODE_TO_STEP.get(step.lower(), step.lower())
+        processing_steps = merge_processing_step_update(
+            processing_steps,
+            step=canonical_step,
+            status=status,
+            message=message,
+            error_code=error_code,
+        )
+
+        target_workflow_status = workflow_status
+        if target_workflow_status is None:
+            if status == ProcessingStepStatus.failed:
+                target_workflow_status = WorkflowStatus.failed
+            else:
+                target_workflow_status = STEP_TO_WORKFLOW_STATUS.get(
+                    canonical_step,
+                    WorkflowStatus.pending,
+                )
+
+        postgres.update_paper_task(
+            task_id,
+            workflow_status=target_workflow_status.value,
+            processing_steps=processing_steps,
+        )
+    except Exception as status_exc:
+        logger.warning(
+            "Failed to update processing step {} for {}: {}",
+            step,
+            paper_task_id,
+            status_exc,
+        )
+
+
+def _get_paper_task_processing_steps(
+    postgres: Any,
+    paper_task_id: str,
+    *,
+    node_trace: Optional[Dict[str, str]] = None,
+) -> Dict[str, Dict[str, Any]]:
+    task_id = str(paper_task_id or "").strip()
+    if not task_id:
+        return normalize_processing_steps(None, node_trace=node_trace)
+
+    try:
+        if not hasattr(postgres, "get_paper_task"):
+            return normalize_processing_steps(None, node_trace=node_trace)
+        paper_entry = postgres.get_paper_task(task_id)
+        if paper_entry is None:
+            return normalize_processing_steps(None, node_trace=node_trace)
+        return normalize_processing_steps(
+            getattr(paper_entry, "processing_steps", None),
+            node_trace=node_trace or getattr(paper_entry, "node_trace", None),
+        )
+    except Exception:
+        return normalize_processing_steps(None, node_trace=node_trace)
+
+
 async def _run_async_with_node_policy(
     node: str,
     operation: str,
     runner: Callable[[], Awaitable[Any]],
+    policy_override: Optional[Dict[str, int]] = None,
 ) -> Tuple[Any, int]:
-    policy = _get_node_policy(node)
+    policy = policy_override or _get_node_policy(node)
     max_attempts = policy["max_retries"] + 1
     last_exc: Optional[Exception] = None
 
@@ -195,12 +288,20 @@ def _run_sync_with_node_policy(
     operation: str,
     func: Callable[..., Any],
     *args: Any,
+    policy_override: Optional[Dict[str, int]] = None,
     **kwargs: Any,
 ) -> Tuple[Any, int]:
     async def _runner() -> Any:
         return await asyncio.to_thread(func, *args, **kwargs)
 
-    return asyncio.run(_run_async_with_node_policy(node, operation, _runner))
+    return asyncio.run(
+        _run_async_with_node_policy(
+            node,
+            operation,
+            _runner,
+            policy_override=policy_override,
+        )
+    )
 
 
 def _sync_evidence_to_graph(
@@ -463,7 +564,7 @@ async def init_knowledge_base_if_needed() -> bool:
             return False
     else:
         logger.info(
-            "Collection {} has %s vectors, skipping init.",
+            "Collection {} has {} vectors, skipping init.",
             cfg.qdrant_collection_name,
             info.vectors_count,
         )
@@ -565,6 +666,13 @@ def _log_node_start(
             message=f"Node {node} started",
             payload=payload,
         )
+        _update_processing_step_status(
+            postgres,
+            task_id,
+            step=node,
+            status=ProcessingStepStatus.running,
+            message=f"Node {node} started",
+        )
     except Exception as log_exc:
         logger.warning("Failed to log node {} start for {}: {}", node, paper_task_id, log_exc)
 
@@ -593,6 +701,14 @@ def _log_node_end(
             error_code=error_code,
             message=message or (f"Node {node} completed" if success else f"Node {node} failed"),
             payload={"attempt": attempt},
+        )
+        _update_processing_step_status(
+            postgres,
+            task_id,
+            step=node,
+            status=(ProcessingStepStatus.completed if success else ProcessingStepStatus.failed),
+            error_code=error_code,
+            message=message or (f"Node {node} completed" if success else f"Node {node} failed"),
         )
     except Exception as log_exc:
         logger.warning("Failed to log node {} end for {}: {}", node, paper_task_id, log_exc)
@@ -825,6 +941,14 @@ def run_node_extraction(
         raise exc.ReasoningException("Evidence processing failed")
 
     _log_node_end(postgres, paper_task_id, "extraction", success=True, attempt=attempt)
+    _update_processing_step_status(
+        postgres,
+        paper_task_id,
+        step="adjudication",
+        status=ProcessingStepStatus.completed,
+        workflow_status=WorkflowStatus.adjudicating,
+        message=f"Adjudication completed with status: {getattr(agent_response, 'status', 'unknown')}",
+    )
     return agent_response, _update_node_trace(node_trace, "extraction", "success")
 
 
@@ -895,7 +1019,15 @@ def process_pdf_task(
     if paper_task_id:
         try:
             postgres = get_postgres_client()
-            postgres.update_paper_task(paper_task_id, status="running")
+            postgres.update_paper_task(
+                paper_task_id,
+                status="running",
+                workflow_status=WorkflowStatus.pending.value,
+                processing_steps=default_processing_steps(),
+                file_size_bytes=file_size_bytes,
+                processing_duration_seconds=None,
+                error_details=None,
+            )
             postgres.append_paper_task_log(
                 paper_task_id,
                 status="running",
@@ -976,7 +1108,7 @@ def process_pdf_task(
         if hasattr(result, "model_dump"):
             payload = result.model_dump()
         else:
-            payload = result  # type: ignore[assignment]
+            payload = {}
         if isinstance(payload, dict):
             if file_size_bytes is not None:
                 payload.setdefault("file_size_bytes", file_size_bytes)
@@ -985,9 +1117,16 @@ def process_pdf_task(
             payload.setdefault("updated_at", end_time.isoformat())
             if graph_sync_result is not None:
                 payload["graph_sync_result"] = graph_sync_result
+            payload.setdefault("workflow_status", WorkflowStatus.completed.value)
 
         if paper_task_id and postgres is not None:
             try:
+                processing_steps = _get_paper_task_processing_steps(
+                    postgres,
+                    paper_task_id,
+                    node_trace=node_trace,
+                )
+                progress_percentage = calculate_progress_percentage(processing_steps)
                 warning_codes = _persist_alignments_and_warnings(
                     postgres,
                     paper_task_id,
@@ -998,9 +1137,14 @@ def process_pdf_task(
                 postgres.update_paper_task(
                     paper_task_id,
                     status="success",
+                    workflow_status=WorkflowStatus.completed.value,
                     error_code=None,
+                    error_details=None,
                     warning_codes=warning_codes or None,
                     node_trace=node_trace,
+                    processing_steps=processing_steps,
+                    file_size_bytes=file_size_bytes,
+                    processing_duration_seconds=processing_duration_seconds,
                 )
                 postgres.append_paper_task_log(
                     paper_task_id,
@@ -1008,6 +1152,9 @@ def process_pdf_task(
                     node="acmg",
                     message="Paper task completed",
                 )
+                if isinstance(payload, dict):
+                    payload.setdefault("processing_steps", processing_steps)
+                    payload.setdefault("progress_percentage", progress_percentage)
                 if request_id:
                     postgres.refresh_task_request_status(request_id)
             except Exception as success_exc:
@@ -1033,11 +1180,21 @@ def process_pdf_task(
                 max_retries = int(getattr(self, "max_retries", 0))
                 if retry_count >= max_retries:
                     error_code = map_error_code(500, str(exc_outer))
+                    end_time = datetime.now(timezone.utc)
+                    processing_duration_seconds = (end_time - start_time).total_seconds()
+                    error_details = {
+                        "error_code": error_code,
+                        "message": str(exc_outer),
+                    }
                     postgres.update_paper_task(
                         paper_task_id,
                         status="failed",
+                        workflow_status=WorkflowStatus.failed.value,
                         error_code=error_code,
                         node_trace=node_trace,
+                        processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                        processing_duration_seconds=processing_duration_seconds,
+                        error_details=error_details,
                     )
                     postgres.append_paper_task_log(
                         paper_task_id,
@@ -1082,12 +1239,16 @@ def process_pubmed_paper_task(
     request_id: str,
 ) -> Dict[str, Any]:
     postgres = get_postgres_client()
+    start_time = datetime.now(timezone.utc)
     node_trace: Dict[str, str] = {}
 
     postgres.update_paper_task(
         paper_task_id,
         status="running",
+        workflow_status=WorkflowStatus.processing_literature.value,
+        processing_steps=default_processing_steps(),
         fulltext_unavailable="true",
+        error_details=None,
     )
     postgres.update_task_request(request_id, status="running")
     postgres.append_paper_task_log(
@@ -1100,12 +1261,21 @@ def process_pubmed_paper_task(
 
     # --- Node 1: Acquisition (PubMed fetch) ---
     _log_node_start(postgres, paper_task_id, "acquisition")
+    acquisition_policy_override: Optional[Dict[str, int]] = None
+    if int(getattr(self, "max_retries", 0)) == 0:
+        acquisition_policy = _get_node_policy("acquisition")
+        acquisition_policy_override = {
+            "max_retries": 0,
+            "delay": 0,
+            "timeout": acquisition_policy["timeout"],
+        }
     try:
         article, acquisition_attempt = asyncio.run(
             _run_async_with_node_policy(
                 "acquisition",
                 "fetch_pubmed_metadata_abstract",
                 lambda: get_pubmed_service().fetch_article_metadata_abstract(pmid),
+                policy_override=acquisition_policy_override,
             )
         )
         _log_node_end(
@@ -1133,8 +1303,11 @@ def process_pubmed_paper_task(
             postgres.update_paper_task(
                 paper_task_id,
                 status="failed",
+                workflow_status=WorkflowStatus.failed.value,
                 error_code=error_code,
                 node_trace=node_trace,
+                processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                error_details={"error_code": error_code, "message": str(acq_exc)},
             )
             postgres.refresh_task_request_status(request_id)
         raise
@@ -1153,8 +1326,11 @@ def process_pubmed_paper_task(
         postgres.update_paper_task(
             paper_task_id,
             status="failed",
+            workflow_status=WorkflowStatus.failed.value,
             error_code=error_code,
             node_trace=node_trace,
+            processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+            error_details={"error_code": error_code, "message": "No usable PubMed payload"},
         )
         postgres.refresh_task_request_status(request_id)
         return {
@@ -1175,6 +1351,14 @@ def process_pubmed_paper_task(
 
     # --- Node 2: Parsing (skipped — metadata/abstract fallback) ---
     node_trace = _update_node_trace(node_trace, "parsing", "fallback_metadata_abstract")
+    _update_processing_step_status(
+        postgres,
+        paper_task_id,
+        step="parsing",
+        status=ProcessingStepStatus.skipped,
+        workflow_status=WorkflowStatus.processing_pdf,
+        message="Parsing skipped: using metadata/abstract fallback",
+    )
 
     # --- Node 3: Translation ---
     try:
@@ -1193,8 +1377,11 @@ def process_pubmed_paper_task(
             postgres.update_paper_task(
                 paper_task_id,
                 status="failed",
+                workflow_status=WorkflowStatus.failed.value,
                 error_code=error_code,
                 node_trace=node_trace,
+                processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                error_details={"error_code": error_code, "message": str(trans_exc)},
             )
             postgres.refresh_task_request_status(request_id)
         raise
@@ -1217,8 +1404,11 @@ def process_pubmed_paper_task(
             postgres.update_paper_task(
                 paper_task_id,
                 status="failed",
+                workflow_status=WorkflowStatus.failed.value,
                 error_code=error_code,
                 node_trace=node_trace,
+                processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                error_details={"error_code": error_code, "message": str(ext_exc)},
             )
             postgres.refresh_task_request_status(request_id)
         raise
@@ -1228,8 +1418,14 @@ def process_pubmed_paper_task(
         postgres.update_paper_task(
             paper_task_id,
             status="failed",
+            workflow_status=WorkflowStatus.failed.value,
             error_code=error_code,
             node_trace=node_trace,
+            processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+            error_details={
+                "error_code": error_code,
+                "message": "Evidence processing returned failed status",
+            },
         )
         postgres.append_paper_task_log(
             paper_task_id,
@@ -1262,6 +1458,15 @@ def process_pubmed_paper_task(
         logger.warning("Graph sync failed for PubMed PMID:{}: {}", pmid, acmg_exc)
         graph_sync_result = None
         node_trace = _update_node_trace(node_trace, "acmg", "failed")
+        _update_processing_step_status(
+            postgres,
+            paper_task_id,
+            step="classification",
+            status=ProcessingStepStatus.skipped,
+            workflow_status=WorkflowStatus.classifying,
+            message="Graph sync failed but pipeline continued",
+            error_code="GRAPH_SYNC_FAILED",
+        )
 
     base_warnings = ["FULLTEXT_UNAVAILABLE"] + translation_warnings
     warning_codes = _persist_alignments_and_warnings(
@@ -1272,17 +1477,31 @@ def process_pubmed_paper_task(
         base_warnings=base_warnings,
     )
 
+    document_identifier: Any = document_id
+    try:
+        document_identifier = UUID(str(document_id))
+    except (TypeError, ValueError, AttributeError):
+        document_identifier = document_id
+
     postgres.update_document(
-        document_id,
+        document_identifier,
         status="success",
         summary=f"PubMed metadata/abstract fallback used for PMID:{pmid}",
     )
     postgres.update_paper_task(
         paper_task_id,
         status="success",
+        workflow_status=WorkflowStatus.completed.value,
         error_code=None,
+        error_details=None,
         node_trace=node_trace,
         warning_codes=warning_codes,
+        processing_steps=_get_paper_task_processing_steps(
+            postgres,
+            paper_task_id,
+            node_trace=node_trace,
+        ),
+        processing_duration_seconds=(datetime.now(timezone.utc) - start_time).total_seconds(),
     )
     postgres.append_paper_task_log(
         paper_task_id,

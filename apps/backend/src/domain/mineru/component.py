@@ -495,7 +495,7 @@ class MinerUComponent:
         try:
             # 列出解压目录下的所有文件
             all_files = file_utils.get_all_files_in_directory(extracted_folder)
-            logger.debug(f"解压目录下的所有文件: {all_files}")
+            logger.debug(f"解压目录下的文件数量: {len(all_files)} 个")
             # 找到.md文件以验证解压成功
             md_file_path = file_utils.find_file_in_directory(extracted_folder, ".md")
             logger.debug(f"找到的.md文件路径: {md_file_path}")

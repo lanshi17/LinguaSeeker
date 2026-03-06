@@ -51,14 +51,32 @@ def test_determine_strength_by_oddpath_generic() -> None:
 
 
 def test_determine_evidence_strength_no_ps3_bs3() -> None:
-    result = framework_module.determine_evidence_strength({"assay_suitable": "no"})
+    result = framework_module.determine_evidence_strength(
+        {
+            "disease_mechanism_clarity": "yes",
+            "assay_suitable": "no",
+        }
+    )
     assert result["use_ps3_bs3"] is False
     assert result["strength"] == "No PS3/BS3"
     assert result["path"] == "not_applicable"
 
 
+def test_determine_evidence_strength_requires_disease_mechanism() -> None:
+    result = framework_module.determine_evidence_strength(
+        {
+            "disease_mechanism_clarity": "no",
+            "assay_suitable": "yes",
+        }
+    )
+    assert result["use_ps3_bs3"] is False
+    assert result["strength"] == "No PS3/BS3"
+    assert result["reason"] == "disease_mechanism_not_defined"
+
+
 def test_determine_evidence_strength_control_count_path() -> None:
     data = {
+        "disease_mechanism_clarity": "yes",
         "assay_suitable": "yes",
         "ps3_step_3": {
             "checkpoint_3a": {
@@ -79,8 +97,30 @@ def test_determine_evidence_strength_control_count_path() -> None:
     assert result["path"] == "control_count"
 
 
+def test_determine_evidence_strength_control_count_requires_variants() -> None:
+    data = {
+        "disease_mechanism_clarity": "yes",
+        "assay_suitable": "yes",
+        "ps3_step_3": {
+            "checkpoint_3a": {
+                "basic_controls_present": True,
+                "replicates_used": True,
+            },
+        },
+        "ps3_step_4": {
+            "oddspath_data": {"computable": False},
+            "control_count_data": {"pathogenic_count": 0, "benign_count": 0},
+        },
+    }
+    result = framework_module.determine_evidence_strength(data)
+    assert result["use_ps3_bs3"] is False
+    assert result["strength"] == "No PS3/BS3"
+    assert result["reason"] == "control_variants_missing"
+
+
 def test_determine_evidence_strength_oddspath_path() -> None:
     data = {
+        "disease_mechanism_clarity": "yes",
         "assay_suitable": "yes",
         "functional_evidence_aim": "benign",
         "ps3_step_3": {
@@ -138,13 +178,6 @@ def test_determine_max_evidence_from_controls() -> None:
     assert tools_module.determine_max_evidence_from_controls(0) == "no_evidence"
     assert tools_module.determine_max_evidence_from_controls(5) == "max_supporting"
     assert tools_module.determine_max_evidence_from_controls(11) == "max_moderate"
-
-
-def test_validate_ps3_steps() -> None:
-    assert tools_module.validate_ps3_step1("clear")["step1_pass"] is True
-    assert tools_module.validate_ps3_step1("unclear")["can_proceed"] is False
-    assert tools_module.validate_ps3_step2("yes")["step2_pass"] is True
-    assert tools_module.validate_ps3_step2("no")["can_proceed"] is False
 
 
 def test_classifier_mappings() -> None:

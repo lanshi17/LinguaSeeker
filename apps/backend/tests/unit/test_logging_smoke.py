@@ -75,8 +75,6 @@ def test_tools_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     assert tools_module.OddsPath_Calculator.invoke({"P1": 0.2, "P2": 0.4}) > 0
     assert tools_module.determine_evidence_strength_from_oddspath.invoke({"oddspath": 0.1})
     assert tools_module.determine_max_evidence_from_controls.invoke({"control_variants_count": 3})
-    assert tools_module.validate_ps3_step1.invoke({"disease_mechanism_clarity": "clear"})["can_proceed"]
-    assert tools_module.validate_ps3_step2.invoke({"assay_suitable": "yes"})["can_proceed"]
 
     class FakeSearchResponse:
         def __init__(self) -> None:
@@ -174,7 +172,9 @@ def test_association_service_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
             return [{"disease": "d", "doc_ids": [1]}]
 
         def find_variant_evidence_graph(self, *_: Any, **__: Any) -> List[Dict[str, Any]]:
-            return [{"g": {"symbol": "GENE"}, "p": {"description": "ph"}, "doc": {"document_id": 1}}]
+            return [
+                {"g": {"symbol": "GENE"}, "p": {"description": "ph"}, "doc": {"document_id": 1}}
+            ]
 
     class FakePostgres:
         def search_evidence_by_gene(self, *_: Any, **__: Any) -> List[Any]:
@@ -235,7 +235,7 @@ def test_graph_search_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     assert engine.search_by_variant("c.1A>T").nodes
     assert engine.search_by_gene("GENE").nodes
     assert engine.search_multi(gene_symbol="GENE").nodes
-    assert engine.get_document_evidence(1).document_count == 0
+    assert engine.get_document_evidence("1").document_count == 0
 
 
 def test_graph_sync_smoke(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -296,10 +296,12 @@ def test_graph_sync_smoke(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> No
         "get_variation_data_service",
         lambda: DummyVariationService(),
     )
-    monkeypatch.setattr(sync_module.GraphSyncService, "_FAILURE_ARCHIVE_PATH", tmp_path / "failures.jsonl")
+    monkeypatch.setattr(
+        sync_module.GraphSyncService, "_FAILURE_ARCHIVE_PATH", tmp_path / "failures.jsonl"
+    )
     svc = sync_module.GraphSyncService()
     result = svc.sync_evidence(
-        1,
+        "1",
         {
             "ps3_evidence": {},
             "arbitration_score": 0.0,
@@ -374,7 +376,9 @@ async def test_graph_api_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(graph_api_module, "get_graph_search_engine", lambda: FakeEngine())
     monkeypatch.setattr(graph_api_module, "get_entity_association_analyzer", lambda: FakeAnalyzer())
-    monkeypatch.setattr(graph_api_module, "get_evidence_aggregation_engine", lambda: FakeAggregation())
+    monkeypatch.setattr(
+        graph_api_module, "get_evidence_aggregation_engine", lambda: FakeAggregation()
+    )
     monkeypatch.setattr(graph_api_module, "get_graph_sync_service", lambda: FakeSync())
     monkeypatch.setattr(graph_api_module, "get_neo4j_client", lambda: FakeNeo4j())
 
@@ -389,7 +393,7 @@ async def test_graph_api_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     assert (await graph_api_module.search_evidence(req)).code == 0
     assert (await graph_api_module.search_by_gene("GENE")).code == 0
     assert (await graph_api_module.search_by_variant("c.1A>T")).code == 0
-    assert (await graph_api_module.get_document_evidence(1)).code == 0
+    assert (await graph_api_module.get_document_evidence("1")).code == 0
     assert (await graph_api_module.analyze_gene_associations("GENE")).code == 0
     assert (await graph_api_module.analyze_variant_associations("c.1A>T")).code == 0
     assert (await graph_api_module.get_co_occurrence_matrix("GENE")).code == 0
@@ -401,4 +405,4 @@ async def test_graph_api_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
         await graph_api_module.quality_overview(gene_symbol=None)
     assert quality_exc.value.status_code == 404
     assert (await graph_api_module.graph_statistics()).code == 0
-    assert (await graph_api_module.resync_document(1)).code == 0
+    assert (await graph_api_module.resync_document("1")).code == 0
