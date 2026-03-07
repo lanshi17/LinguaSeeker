@@ -99,6 +99,11 @@ async def test_init_knowledge_base_if_needed_skips_when_exists(
         return True
 
     monkeypatch.setattr(tasks_module._qdrant_manager, "check_collection_exists", fake_check)
+    monkeypatch.setattr(
+        tasks_module._qdrant_manager,
+        "get_collection_info",
+        lambda: SimpleNamespace(vectors_count=1),
+    )
     called: Dict[str, Any] = {"init": False}
 
     async def fake_init(_: str) -> None:

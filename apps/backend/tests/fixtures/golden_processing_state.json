@@ -1,0 +1,267 @@
+{
+  "markdown_content": "# Synthetic translated source\n\n- Functional assay summary",
+  "image_paths": [
+    "/tmp/doc-golden-001/page_1.png",
+    "/tmp/doc-golden-001/page_2.png"
+  ],
+  "translated_md": "# Synthetic translated source\n\n- Functional assay summary",
+  "image_descriptions": [
+    "Figure 1 shows strong reduction in activity.",
+    "Table 2 summarizes pathogenic control outcomes."
+  ],
+  "ps3_evidence": {
+    "ps3_step_1": {
+      "score": 90.0,
+      "summary": "Validated assay and disease mechanism."
+    },
+    "ps3_step_2": {
+      "score": 86.0,
+      "summary": "Control cohort is appropriate."
+    },
+    "ps3_step_3": {
+      "score": 88.0,
+      "summary": "Observed effect direction is consistent."
+    },
+    "ps3_step_4": {
+      "score": 88.0,
+      "final_evidence_strength": "PS3",
+      "oddspath_data": {
+        "OddsPath": 28.4,
+        "functional_evidence_aim": "pathogenic"
+      }
+    },
+    "overall_assessment": {
+      "total_score": 88.0,
+      "reasoning": "Synthetic reference example for regression testing."
+    }
+  },
+  "extracted_fields": {
+    "gene": {
+      "symbol": "BRCA1",
+      "confidence": 98.0
+    },
+    "transcript_id": {
+      "transcript_id": "NM_007294.4",
+      "confidence": 96.0
+    },
+    "reference_genome_version": {
+      "version": "GRCh38",
+      "confidence": 95.0
+    },
+    "experiment_data": {
+      "assay_type": "homologous_recombination_activity",
+      "confidence": 92.0
+    },
+    "disease_chpo": {
+      "disease_name": "Hereditary breast and ovarian cancer syndrome",
+      "confidence": 89.0
+    },
+    "disease_icd10": {
+      "disease_name": "Hereditary breast and ovarian cancer syndrome",
+      "confidence": 87.0
+    },
+    "species": {
+      "species_name": "Homo sapiens",
+      "is_human": true,
+      "confidence": 99.0
+    },
+    "phenotype": {
+      "phenotype_description": "Reduced DNA repair capacity in patient-derived cells",
+      "confidence": 90.0
+    },
+    "variant": {
+      "confidence": 94.0
+    },
+    "negative_positive_control": {
+      "confidence": 88.0
+    },
+    "pedigree_information": {
+      "confidence": 84.0
+    }
+  },
+  "evidence_sources": [
+    {
+      "type": "figure",
+      "identifier": "Figure 1"
+    },
+    {
+      "type": "table",
+      "identifier": "Table 2"
+    }
+  ],
+  "knowledge_context": "Synthetic knowledge context used for regression coverage.",
+  "field_confidence_scores": {
+    "gene": 98.0,
+    "transcript_id": 96.0,
+    "reference_genome_version": 95.0,
+    "experiment_data": 92.0,
+    "disease_chpo": 89.0,
+    "disease_icd10": 87.0,
+    "species": 99.0,
+    "phenotype": 90.0,
+    "variant": 94.0,
+    "negative_positive_control": 88.0,
+    "pedigree_information": 84.0
+  },
+  "overall_confidence": 92.0,
+  "evidence_classification": "Pathogenic",
+  "acmg_evidence_levels": [
+    "PS3"
+  ],
+  "arbitration_confidence": 0.91,
+  "arbitration_score": 88.0,
+  "arbitration_feedback": "Approved in synthetic regression scenario.",
+  "iteration_count": 1,
+  "max_iterations": 2,
+  "needs_manual_review": false,
+  "enable_vlm": false,
+  "vlm_results": [],
+  "status": "approved",
+  "output": {
+    "ps3_evidence": {
+      "ps3_step_1": {
+        "score": 90.0,
+        "summary": "Validated assay and disease mechanism."
+      },
+      "ps3_step_2": {
+        "score": 86.0,
+        "summary": "Control cohort is appropriate."
+      },
+      "ps3_step_3": {
+        "score": 88.0,
+        "summary": "Observed effect direction is consistent."
+      },
+      "ps3_step_4": {
+        "score": 88.0,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "OddsPath": 28.4,
+          "functional_evidence_aim": "pathogenic"
+        }
+      },
+      "overall_assessment": {
+        "total_score": 88.0,
+        "reasoning": "Synthetic reference example for regression testing."
+      }
+    },
+    "arbitration_confidence": 0.91,
+    "image_descriptions": [
+      "Figure 1 shows strong reduction in activity.",
+      "Table 2 summarizes pathogenic control outcomes."
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": "# Synthetic source\n\n- Functional assay summary",
+    "en_format_md": "# Synthetic translated source\n\n- Functional assay summary",
+    "extracted_fields": {
+      "gene": {
+        "symbol": "BRCA1",
+        "confidence": 98.0
+      },
+      "transcript_id": {
+        "transcript_id": "NM_007294.4",
+        "confidence": 96.0
+      },
+      "reference_genome_version": {
+        "version": "GRCh38",
+        "confidence": 95.0
+      },
+      "experiment_data": {
+        "assay_type": "homologous_recombination_activity",
+        "confidence": 92.0
+      },
+      "disease_chpo": {
+        "disease_name": "Hereditary breast and ovarian cancer syndrome",
+        "confidence": 89.0
+      },
+      "disease_icd10": {
+        "disease_name": "Hereditary breast and ovarian cancer syndrome",
+        "confidence": 87.0
+      },
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 99.0
+      },
+      "phenotype": {
+        "phenotype_description": "Reduced DNA repair capacity in patient-derived cells",
+        "confidence": 90.0
+      },
+      "variant": {
+        "confidence": 94.0
+      },
+      "negative_positive_control": {
+        "confidence": 88.0
+      },
+      "pedigree_information": {
+        "confidence": 84.0
+      }
+    },
+    "field_confidence_scores": {
+      "gene": 98.0,
+      "transcript_id": 96.0,
+      "reference_genome_version": 95.0,
+      "experiment_data": 92.0,
+      "disease_chpo": 89.0,
+      "disease_icd10": 87.0,
+      "species": 99.0,
+      "phenotype": 90.0,
+      "variant": 94.0,
+      "negative_positive_control": 88.0,
+      "pedigree_information": 84.0
+    },
+    "overall_confidence": 92.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  "node_trace": {
+    "acquisition": "fallback_metadata_abstract",
+    "parsing": "success",
+    "translation": "skipped_english",
+    "extraction": "success",
+    "acmg": "success"
+  },
+  "processing_steps": {
+    "acquisition": {
+      "status": "SKIPPED",
+      "updated_at": "2026-03-07T12:00:00+08:00",
+      "message": "Metadata fallback used",
+      "error_code": null
+    },
+    "parsing": {
+      "status": "COMPLETED",
+      "updated_at": "2026-03-07T12:01:00+08:00",
+      "message": "Parsing completed",
+      "error_code": null
+    },
+    "translation": {
+      "status": "SKIPPED",
+      "updated_at": "2026-03-07T12:02:00+08:00",
+      "message": "English source detected",
+      "error_code": null
+    },
+    "extraction": {
+      "status": "COMPLETED",
+      "updated_at": "2026-03-07T12:03:00+08:00",
+      "message": "Evidence extracted",
+      "error_code": null
+    },
+    "classification": {
+      "status": "COMPLETED",
+      "updated_at": "2026-03-07T12:04:00+08:00",
+      "message": "Evidence classified",
+      "error_code": null
+    },
+    "adjudication": {
+      "status": "COMPLETED",
+      "updated_at": "2026-03-07T12:05:00+08:00",
+      "message": "Adjudication approved",
+      "error_code": null
+    }
+  },
+  "paper_task_id": "paper-golden-001",
+  "document_id": "doc-golden-001",
+  "request_id": "request-golden-001"
+}

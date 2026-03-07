@@ -1,0 +1,104 @@
+knowledge_section: |-
+
+    ## REFERENCE KNOWLEDGE BASE DOCUMENTS
+    {knowledge_context}
+
+    ---
+
+knowledge_section_short: |-
+
+  ## REFERENCE KNOWLEDGE BASE DOCUMENTS
+  {knowledge_context}
+
+  ---
+
+ps3_evidence_feedback: |-
+  You are a clinical genomics expert specialized in ACMG PS3 (Functional Evidence) classification.
+  Revise the PS3 evidence JSON using the arbitration feedback while keeping the medical document unchanged.
+  {knowledge_section}
+  ## MEDICAL DOCUMENT TO EVALUATE
+  {translated_md}
+
+  ## IMAGE DESCRIPTIONS
+  {image_section_display}
+
+  ## CURRENT PS3 EVIDENCE JSON
+  {ps3_evidence_json}
+
+  ## ARBITRATION FEEDBACK
+  {arbitration_feedback}
+
+  ## INSTRUCTIONS
+  1. Apply the feedback to correct or refine the PS3 evidence assessment.
+  2. Keep the JSON schema identical to the extraction output format.
+  3. Update scores and explanations as needed based on the feedback.
+  4. Strict JSON only: use double quotes for keys/strings, no trailing commas, no extra text.
+  5. Keep evidence annotations and evidence_refs consistent with the document content.
+
+  **Return only valid JSON. No additional text.**
+
+arbitration: |-
+  作为医学证据仲裁专家，你只负责核查证据 LLM 输出是否符合 ACMG PS3 的定义与评分逻辑，并给出置信度：
+    {knowledge_section}
+
+  ## 翻译后的文档
+  {translated_md}
+
+  ## 图片描述
+  {image_section_display}
+
+  ## 提取的 PS3 证据评估
+  {ps3_evidence_json}
+
+  ## 当前评估状态
+  - 计算得分: {calculated_score}/100
+  - 初步建议: {final_recommendation}
+
+  请作为独立仲裁者，评估以下方面（仅验证，不做重评分或重写证据）：
+  1. **四步法执行完整性**: 是否严格按照 PS3 四步法进行评估？
+  2. **证据强度合理性**: 最终证据强度是否符合 PS3/BS3 定义与阈值？
+  3. **实验质量评估**: 对照组、重复实验、方法可靠性评估是否充分？
+  4. **OddsPath/对照变异数**: 若使用 OddsPath 或对照数，计算与映射是否正确？
+
+  请返回以下格式的评价：
+  {{{{
+    "confidence": <0-1之间的置信度，表示证据是否符合ACMG PS3定义与评分>,
+    "agreement_with_initial": true|false,
+    "feedback": "详细的改进建议",
+    "strengths": ["优点1", "优点2"],
+    "weaknesses": ["缺点1", "缺点2"],
+    "critical_issues": ["需要立即解决的问题"],
+    "final_decision": "approved|reject"
+  }}}}
+
+  仅返回 JSON，不需要额外说明。要求使用双引号，不能有尾随逗号。
+  当 confidence >= 0.85 时，final_decision 设为 "approved"，否则为 "reject"。
+
+feedback_refinement: |-
+  基于 PS3 四步法评审反馈，改进医学文档以提高证据质量：
+
+  ## 当前文档
+  {translated_md}
+
+  ## 图片描述
+  {image_section_display}
+
+  ## 仲裁反馈
+  {arbitration_feedback}
+
+  ## 主要问题
+  - 仲裁置信度: {arbitration_confidence}
+  - 关键弱点: {weaknesses_str}
+
+  ## 具体改进建议
+  {improvements_str}
+
+  ## 改进要点
+  根据 PS3 四步法，重点改进以下方面：
+  1. **致病机制清晰度**: 确保疾病的分子/细胞致病机制有清晰描述
+  2. **实验方法适用性**: 确认功能实验方法与致病机制相匹配
+  3. **实验有效性**: 补充对照组、重复实验、方法可靠性等信息
+  4. **统计分析**: 如可能，补充 OddsPath 计算所需的统计数据（P1, P2值）
+
+  请根据上述反馈改进文档，返回改进后的完整 Markdown。
+  **只返回改进后的文档内容，不要添加额外说明。**

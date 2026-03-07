@@ -18,17 +18,17 @@ class Settings(BaseSettings):
     clear_proxy_env_on_startup: bool = False
 
     # ==================== LLM配置 ====================
-    
+
     # 文献获取智能体
     retrieval_api_key: str
     retrieval_base_url: str
     retrieval_model: str
-    
+
     # 文档解析智能体
     parsing_api_key: str
     parsing_base_url: str
     parsing_model: str
-    
+
     # 多语种翻译智能体
     mt_api_key: str
     mt_base_url: str
@@ -107,10 +107,16 @@ class Settings(BaseSettings):
     interaction_session_ttl_seconds: int = 3600
 
     # ==================== PostgreSQL配置 ====================
-    postgres_host: str = Field(default="localhost", validation_alias=AliasChoices("POSTGRES_HOST", "PGHOST"))
+    postgres_host: str = Field(
+        default="localhost", validation_alias=AliasChoices("POSTGRES_HOST", "PGHOST")
+    )
     postgres_port: int = Field(5432, validation_alias=AliasChoices("POSTGRES_PORT", "PGPORT"))
-    postgres_db: str = Field(default="acmg_ps3", validation_alias=AliasChoices("POSTGRES_DB", "PGDATABASE"))
-    postgres_user: str = Field(default="postgres", validation_alias=AliasChoices("POSTGRES_USER", "PGUSER"))
+    postgres_db: str = Field(
+        default="acmg_ps3", validation_alias=AliasChoices("POSTGRES_DB", "PGDATABASE")
+    )
+    postgres_user: str = Field(
+        default="postgres", validation_alias=AliasChoices("POSTGRES_USER", "PGUSER")
+    )
     postgres_password: str = Field(validation_alias=AliasChoices("POSTGRES_PASSWORD", "PGPASSWORD"))
     postgres_pool_size: int = 10
     postgres_max_overflow: int = 20
@@ -126,7 +132,7 @@ class Settings(BaseSettings):
     # ==================== 向量数据库选择 ====================
     vector_db: str = "qdrant"  # qdrant | milvus
     knowledge_docs_dir: str = "./knowledge_docs"
-    
+
     # ==================== Embedding配置 ====================
     embedding_provider: str = "nomic"  # nomic | openai
     embedding_base_url: str = ""
@@ -184,6 +190,12 @@ class Settings(BaseSettings):
     node_acmg_max_retries: int = 1
     node_acmg_delay_seconds: int = 180
     node_acmg_timeout_seconds: int = 900
+    use_agent_workflow_pdf: bool = False
+    use_agent_workflow_pubmed: bool = False
+    use_agent_workflow_web: bool = False
+
+    def use_agent_workflow(self, task_type: str) -> bool:
+        return getattr(self, f"use_agent_workflow_{task_type.lower()}", False)
 
     # ==================== 爬取配置 ====================
     pubmed_api_key: Optional[str] = None

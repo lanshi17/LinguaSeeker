@@ -1,0 +1,153 @@
+oddspath_thresholds:
+  BS3_very_strong: 0.0029
+  BS3: 0.053
+  BS3_moderate: 0.23
+  BS3_supporting: 1.0
+  PS3_supporting: 4.3
+  PS3_moderate: 18.7
+  PS3: 350
+  PS3_very_strong: 350
+
+control_variants_thresholds:
+  max_supporting: 10
+  max_moderate: 11
+
+arbitration_confidence_threshold: 0.85
+arbitration_score_threshold: 85.0
+
+evidence_field_rules: |
+
+  ### ⚠️ CRITICAL CORE FIELDS (MANDATORY) ⚠️
+
+  The following 4 fields are CRITICAL for downstream graph synchronization and evidence record integrity. You MUST exhaustively search the entire document (title, abstract, methods, results, tables, figures, supplementary data) for these fields before reporting them as absent or with low confidence.
+
+  **CRITICAL FIELD 1: Gene Symbol (gene_symbol)**
+  - Why Critical: Required for variant annotation and gene-disease linking in graph database
+  - Exhaustive Search Strategy:
+    - Check TITLE: gene names explicitly mentioned
+    - Check ABSTRACT: genes in study context
+    - Check METHODS & RESULTS: gene nomenclature in variant descriptions
+    - Check VARIANT NOMENCLATURE: Extract from HGVS strings (e.g., "BRCA1 c.68_69delAG" → gene = BRCA1)
+    - Check FIGURE LEGENDS: genes mentioned in figure descriptions
+    - Check TABLES: gene columns in variant summary tables
+    - Check SUPPLEMENTARY DATA: gene annotations if provided
+  - Fallback Inference: If gene not explicitly stated but variant HGVS available, extract gene symbol from HGVS string
+  - Confidence Rule: 0 ONLY if gene is genuinely absent from entire document after exhaustive search; otherwise ≥60
+
+  **CRITICAL FIELD 2: Transcript ID (transcript_id)**
+  - Why Critical: Essential for variant curation and protein effect interpretation
+  - Exhaustive Search Strategy:
+    - Check METHODS SECTION: often specifies transcript used (e.g., "using RefSeq NM_000527.4")
+    - Check VARIANT NOMENCLATURE: HGVS strings often contain transcript ID (e.g., "NM_000527.4:c.1234C>T" → transcript = NM_000527.4)
+    - Check VARIANT TABLES: dedicated transcript ID column
+    - Check SUPPLEMENTARY DATA: variant annotation tables with transcript information
+    - Check FIGURE ANNOTATIONS: variant descriptions in figures may include transcript
+    - Check RESULTS TEXT: variant descriptions may reference specific transcripts
+  - Fallback Inference: If HGVS is available (c. nomenclature), extract transcript ID from HGVS string format
+  - Fallback Strategy: If no explicit transcript but gene + variant available, use gene's canonical transcript (RefSeq or Ensembl canonical)
+  - Confidence Rule: 95+ if explicitly listed with NM_ or ENST prefix; 60-70 if inferred from HGVS; 50 if using canonical fallback; 0 ONLY after exhaustive search
+
+  **CRITICAL FIELD 3: Variant HGVS (variant_hgvs) - c. and p. nomenclature**
+  - Why Critical: Foundation for all variant-level analyses and phenotype association
+  - Exhaustive Search Strategy:
+    - Check TITLE: variant designation often in title
+    - Check ABSTRACT: variant nomenclature in study summary
+    - Check RESULTS SECTION: primary source for variant descriptions
+    - Check VARIANT TABLES: dedicated columns for c. (cDNA) and p. (protein) nomenclature
+    - Check FIGURE ANNOTATIONS: variants described in figure captions
+    - Check METHODS: sometimes reference variants as examples
+    - Check SUPPLEMENTARY TABLES: extended variant lists with HGVS
+    - Extract BOTH c. (cDNA) and p. (protein) forms when both are available
+  - Fallback Strategy: If only one form available, attempt to infer the other using genetic code and reference sequence
+  - Confidence Rule: 95+ if full HGVS with both c. and p. forms; 80-94 if only one form clear; 0 only after exhaustive search fails
+
+  **CRITICAL FIELD 4: Disease Name (disease_name)**
+  - Why Critical: Essential for variant-disease association and clinical context in graph
+  - Exhaustive Search Strategy:
+    - Check TITLE: disease name usually in title
+    - Check ABSTRACT INTRODUCTION: clinical context established early
+    - Check INTRODUCTION SECTION: disease description and background
+    - Check CLINICAL DESCRIPTION: patient phenotypes and disease manifestations
+    - Check PATIENT COHORT DESCRIPTION: disease criteria and clinical features
+    - Check Discussion: disease interpretation and clinical implications
+    - Cross-reference with: Disease_CHPO and Disease_ICD10 fields (extract disease name from these if explicit)
+    - Check TABLES: disease columns or patient characteristics
+  - Fallback Strategy: If disease not explicitly named, extract from phenotype descriptions and clinical features
+  - Confidence Rule: 95+ if explicit disease name with standard terminology; 70-80 if inferred from phenotypes; 0 ONLY after exhaustive search
+
+  **General Confidence Guidance for Core Fields**:
+  - Assign confidence 0 ONLY after documented exhaustive search of entire document
+  - If field found but context unclear, assign confidence 50-70 with clear reasoning
+  - Prefer fallback/inferred values (confidence 50-80) over missing/null (confidence 0)
+  - Document all search locations and fallback logic in reasoning field
+
+  ---
+
+  ### STRUCTURED EVIDENCE FIELD EXTRACTION RULES
+
+  You MUST extract the following 11 standardized fields from the document. For each field, provide confidence (0-100) and the exact quote from the document supporting the extraction.
+
+  **1. Gene** (CORE FIELD - see Critical Core Fields section above)
+  - Extract: gene symbol (e.g., BRCA1, TP53, VWF), full name, NCBI Gene ID, Ensembl ID
+  - Look for: gene names mentioned in title, abstract, methods, results
+  - Confidence: 95+ if explicitly stated with standard nomenclature; 70-94 if inferred; <70 if ambiguous
+
+  **2. Transcript_ID** (CORE FIELD - see Critical Core Fields section above)
+  - Extract: RefSeq transcript ID (NM_xxxxxx.x) or Ensembl transcript ID (ENST...)
+  - Look for: methods section, variant nomenclature context
+  - Confidence: 95+ if explicitly listed; 50 if only gene name given (infer canonical); 0 if completely absent
+
+  **3. Reference_Genome_Version**
+  - Extract: GRCh37/hg19, GRCh38/hg38, or other assembly versions
+  - Look for: methods section, variant coordinates, supplementary materials
+  - Confidence: 95+ if explicitly stated; 50 if inferred from coordinate format; 0 if absent
+
+  **4. Experiment_Data**
+  - Extract: assay type, method description, key findings, statistical data (p-values, CI, effect sizes), sample size, cell line, model organism
+  - Look for: methods & results sections, figures, tables
+  - Confidence: 95+ if comprehensive methods with statistics; 70-94 if partial; <70 if vague
+
+  **5. Disease_CHPO** (Chinese Human Phenotype Ontology)
+  - Extract: disease name, CHPO ID if available, OMIM ID, inheritance pattern (AD/AR/XL/XD)
+  - Look for: introduction, discussion, clinical data sections
+  - Confidence: 90+ if standard disease terminology used; 60 if only phenotype described
+
+  **6. Disease_ICD10**
+  - Extract: ICD-10 code, disease classification
+  - Look for: clinical context, diagnosis information
+  - Confidence: 90+ if ICD-10 code explicitly given; 60 if mappable from disease name; 0 if not determinable
+
+  **7. Species**
+  - Extract: species name, whether human sample
+  - Look for: methods section, sample description
+  - Confidence: 95+ if explicitly stated; 80 if inferred from context (e.g., patient samples = human)
+
+  **8. Phenotype**
+  - Extract: phenotype description, HPO IDs, severity (mild/moderate/severe), onset age
+  - Look for: clinical presentation, patient description, case reports
+  - Confidence: 90+ if detailed phenotype with HPO terms; 60 if general description only
+
+  **9. Variant** (CORE FIELD - see Critical Core Fields section above)
+  - Extract: HGVS cDNA (c.), protein (p.), genomic (g.) nomenclature, chromosome, position, ref/alt alleles, variant type, rsID, ClinVar ID
+  - Look for: title, abstract, results, variant tables
+  - Confidence: 95+ if full HGVS with coordinates; 70-94 if partial; <70 if ambiguous
+
+  **10. Negative_Positive_Control**
+  - Extract: presence of negative/positive controls, descriptions, control variant list, total count
+  - Look for: methods section, experimental design, control experiments
+  - Confidence: 90+ if both controls present with details; 60 if only one type; <60 if absent/unclear
+
+  **11. Pedigree_Information**
+  - Extract: presence of pedigree data, family size, affected count, segregation data, inheritance pattern
+  - Look for: family studies, pedigree figures, segregation analysis
+  - Confidence: 90+ if detailed pedigree; 50 if family history mentioned briefly; 0 if absent
+
+oddspath_reference_text: |-
+  PS3 supporting when OddsPath > 1.0 and <= 4.3
+  BS3 very strong when < 0.0029
+  | < 0.0029       | BS3_very_strong  |
+  | 0.23 - 1.0     | BS3_supporting   |
+  | 18.7 - 350     | PS3              |
+  "BS3_very_strong": 0.0029
+  "PS3_supporting": 4.3
+  "PS3": 350

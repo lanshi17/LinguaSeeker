@@ -1,0 +1,24 @@
+{
+  "markdown_content": "# Parsed markdown\n\nSynthetic content for regression tests.",
+  "image_paths": [
+    "/tmp/doc-golden-001/page_1.png",
+    "/tmp/doc-golden-001/page_2.png"
+  ],
+  "mineru_folder": "mineru/doc-golden-001",
+  "parser_backend": "mineru",
+  "parser_task_id": "mineru-task-golden-001",
+  "image_count": 2,
+  "warnings": [],
+  "artifacts": {
+    "markdown_object_key": "results/doc-golden-001/parsed_markdown.md",
+    "markdown_url": "/api/v1/results/doc-golden-001/parsed_markdown.md",
+    "image_object_keys": [
+      "results/doc-golden-001/images/page_1.png",
+      "results/doc-golden-001/images/page_2.png"
+    ],
+    "image_urls": [
+      "/api/v1/results/doc-golden-001/images/page_1.png",
+      "/api/v1/results/doc-golden-001/images/page_2.png"
+    ]
+  }
+}

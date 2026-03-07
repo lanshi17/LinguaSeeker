@@ -1,0 +1,99 @@
+{
+  "ps3_evidence": {
+    "ps3_step_1": {
+      "score": 90.0,
+      "summary": "Validated assay and disease mechanism."
+    },
+    "ps3_step_2": {
+      "score": 86.0,
+      "summary": "Control cohort is appropriate."
+    },
+    "ps3_step_3": {
+      "score": 88.0,
+      "summary": "Observed effect direction is consistent."
+    },
+    "ps3_step_4": {
+      "score": 88.0,
+      "final_evidence_strength": "PS3",
+      "oddspath_data": {
+        "OddsPath": 28.4,
+        "functional_evidence_aim": "pathogenic"
+      }
+    },
+    "overall_assessment": {
+      "total_score": 88.0,
+      "reasoning": "Synthetic reference example for regression testing."
+    }
+  },
+  "arbitration_confidence": 0.91,
+  "image_descriptions": [
+    "Figure 1 shows strong reduction in activity.",
+    "Table 2 summarizes pathogenic control outcomes."
+  ],
+  "final_evidence_strength": "PS3",
+  "status": "success",
+  "origin_format_md": "# Synthetic source\n\n- Functional assay summary",
+  "en_format_md": "# Synthetic translated source\n\n- Functional assay summary",
+  "extracted_fields": {
+    "gene": {
+      "symbol": "BRCA1",
+      "confidence": 98.0
+    },
+    "transcript_id": {
+      "transcript_id": "NM_007294.4",
+      "confidence": 96.0
+    },
+    "reference_genome_version": {
+      "version": "GRCh38",
+      "confidence": 95.0
+    },
+    "experiment_data": {
+      "assay_type": "homologous_recombination_activity",
+      "confidence": 92.0
+    },
+    "disease_chpo": {
+      "disease_name": "Hereditary breast and ovarian cancer syndrome",
+      "confidence": 89.0
+    },
+    "disease_icd10": {
+      "disease_name": "Hereditary breast and ovarian cancer syndrome",
+      "confidence": 87.0
+    },
+    "species": {
+      "species_name": "Homo sapiens",
+      "is_human": true,
+      "confidence": 99.0
+    },
+    "phenotype": {
+      "phenotype_description": "Reduced DNA repair capacity in patient-derived cells",
+      "confidence": 90.0
+    },
+    "variant": {
+      "confidence": 94.0
+    },
+    "negative_positive_control": {
+      "confidence": 88.0
+    },
+    "pedigree_information": {
+      "confidence": 84.0
+    }
+  },
+  "field_confidence_scores": {
+    "gene": 98.0,
+    "transcript_id": 96.0,
+    "reference_genome_version": 95.0,
+    "experiment_data": 92.0,
+    "disease_chpo": 89.0,
+    "disease_icd10": 87.0,
+    "species": 99.0,
+    "phenotype": 90.0,
+    "variant": 94.0,
+    "negative_positive_control": 88.0,
+    "pedigree_information": 84.0
+  },
+  "overall_confidence": 92.0,
+  "evidence_classification": "Pathogenic",
+  "acmg_evidence_levels": [
+    "PS3"
+  ]
+}

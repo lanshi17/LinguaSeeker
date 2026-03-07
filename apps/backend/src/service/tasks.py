@@ -9,7 +9,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID, uuid4
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, cast
 import mimetypes
 
 from loguru import logger
@@ -1057,6 +1057,87 @@ def run_node_acmg(
     return graph_sync_result, _update_node_trace(node_trace, "acmg", "success")
 
 
+def _run_supervisor_pipeline(
+    *,
+    source: str,
+    document_id: str,
+    paper_task_id: str,
+    request_id: str,
+    postgres: Any,
+    file_paths: Optional[List[str]] = None,
+    pmids: Optional[List[str]] = None,
+    urls: Optional[List[str]] = None,
+    file_hash: Optional[str] = None,
+    file_size_bytes: Optional[int] = None,
+) -> Dict[str, Any]:
+    async def _invoke() -> Dict[str, Any]:
+        from src.agents.supervisor import compile_supervisor
+        from src.state.global_state import SupervisorState
+
+        graph = compile_supervisor()
+        initial_state: SupervisorState = cast(
+            SupervisorState,
+            cast(
+                object,
+                {
+                    "request_id": request_id or "",
+                    "paper_task_id": int(paper_task_id) if str(paper_task_id).isdigit() else 0,
+                    "document_id": int(document_id) if str(document_id).isdigit() else 0,
+                    "celery_task_id": "",
+                    "source": source,
+                    "file_paths": file_paths or [],
+                    "urls": urls or [],
+                    "pmids": pmids or [],
+                    "current_node": "route_by_source",
+                    "workflow_status": WorkflowStatus.pending.value,
+                    "processing_steps": default_processing_steps(),
+                    "node_trace": {},
+                    "retries": {},
+                    "warnings": [],
+                    "errors": [],
+                    "requires_human_review": False,
+                    "parsing_result": None,
+                    "parser_backend": None,
+                    "markdown_content": None,
+                    "image_paths": [],
+                    "sentence_alignments": None,
+                    "translated_markdown": None,
+                    "image_descriptions": None,
+                    "evidence_output": None,
+                    "extracted_fields": None,
+                    "arbitration_confidence": None,
+                    "final_evidence_strength": None,
+                    "acmg_result": None,
+                    "evidence_sources": [],
+                    "output_files": None,
+                    "final_result": None,
+                    "_inner_processing_state": None,
+                },
+            ),
+        )
+        final_state = await graph.ainvoke(initial_state)
+        evidence_output = final_state.get("evidence_output")
+        payload: Dict[str, Any] = {
+            "document_id": document_id,
+            "paper_task_id": paper_task_id,
+            "request_id": request_id,
+            "status": "failed"
+            if final_state.get("workflow_status") == WorkflowStatus.failed.value
+            else "success",
+            "workflow_status": final_state.get("workflow_status"),
+            "node_trace": final_state.get("node_trace", {}),
+            "graph_sync_result": {},
+        }
+        if source == "upload":
+            payload["file_hash"] = file_hash
+            payload["file_size_bytes"] = file_size_bytes
+        if isinstance(evidence_output, EvidenceOutput):
+            payload["evidence"] = evidence_output.model_dump(mode="json")
+        return payload
+
+    return asyncio.run(_invoke())
+
+
 @celery_app.task(
     name="tasks.process_pdf",
     bind=True,
@@ -1129,6 +1210,18 @@ def process_pdf_task(
 
         if postgres is None:
             postgres = get_postgres_client()
+
+        if cfg.use_agent_workflow("pdf"):
+            return _run_supervisor_pipeline(
+                source="upload",
+                document_id=document_id,
+                paper_task_id=paper_task_id or "",
+                request_id=request_id or "",
+                postgres=postgres,
+                file_paths=file_paths,
+                file_hash=file_hash,
+                file_size_bytes=file_size_bytes,
+            )
 
         # --- Node 1: Acquisition ---
         validated_paths, node_trace = run_node_acquisition(
@@ -1350,6 +1443,16 @@ def process_pubmed_paper_task(
     postgres = get_postgres_client()
     start_time = datetime.now(timezone.utc)
     node_trace: Dict[str, str] = {}
+
+    if cfg.use_agent_workflow("pubmed"):
+        return _run_supervisor_pipeline(
+            source="pubmed",
+            document_id=document_id or "",
+            paper_task_id=paper_task_id or "",
+            request_id=request_id or "",
+            postgres=postgres,
+            pmids=[pmid],
+        )
 
     postgres.update_paper_task(
         paper_task_id,
@@ -1651,6 +1754,16 @@ def process_web_page_task(
     postgres = get_postgres_client()
     start_time = datetime.now(timezone.utc)
     node_trace: Dict[str, str] = {}
+
+    if cfg.use_agent_workflow("web"):
+        return _run_supervisor_pipeline(
+            source="web",
+            document_id=document_id or "",
+            paper_task_id=paper_task_id or "",
+            request_id=request_id or "",
+            postgres=postgres,
+            urls=[url],
+        )
 
     postgres.update_paper_task(
         paper_task_id,
