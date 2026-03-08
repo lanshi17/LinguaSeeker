@@ -1151,3 +1151,73 @@ def test_create_task_request_web_crawl_enqueue_non_duplicate(
     assert payload["status"] == "queued"
     assert payload["papers"][0]["paper_task_id"] == str(paper_task_id)
     assert payload["papers"][0]["celery_task_id"] == "web-task-1"
+
+
+def test_resume_paper_task_success(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    task_prefix: str,
+) -> None:
+    request_id = uuid4()
+    paper_task_id = uuid4()
+
+    class DummyAsyncResult:
+        id = "resume-task-1"
+
+    class DummyResumeTask:
+        def apply_async(self, args: List[Any]) -> DummyAsyncResult:
+            assert args[0] == str(paper_task_id)
+            return DummyAsyncResult()
+
+    class DummyPostgres:
+        def get_paper_task(self, pid: str) -> Any:
+            assert pid == str(paper_task_id)
+            return SimpleNamespace(
+                paper_task_id=paper_task_id,
+                request_id=request_id,
+                status="running",
+                workflow_status="PENDING",
+            )
+
+        def update_paper_task(self, pid: str, **kwargs: Any) -> Any:
+            assert pid == str(paper_task_id)
+            assert kwargs["celery_task_id"] == "resume-task-1"
+            assert kwargs["status"] == "running"
+            return None
+
+        def append_paper_task_log(self, pid: str, **kwargs: Any) -> Any:
+            assert pid == str(paper_task_id)
+            assert kwargs["node"] == "resume"
+            assert kwargs["status"] == "running"
+            return None
+
+        def refresh_task_request_status(self, rid: str) -> Any:
+            assert rid == str(request_id)
+            return None
+
+    monkeypatch.setattr(task_api, "resume_supervisor_task", DummyResumeTask())
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+
+    response = client.post(f"{task_prefix}/papers/{paper_task_id}/resume")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["task_id"] == "resume-task-1"
+    assert payload["status"] == "PENDING"
+
+
+def test_resume_paper_task_not_found(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    task_prefix: str,
+) -> None:
+    paper_task_id = uuid4()
+
+    class DummyPostgres:
+        def get_paper_task(self, _: str) -> Any:
+            return None
+
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+
+    response = client.post(f"{task_prefix}/papers/{paper_task_id}/resume")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Paper task not found"

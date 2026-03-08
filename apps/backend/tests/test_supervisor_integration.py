@@ -221,3 +221,379 @@ def test_non_pdf_tasks_flag_on_use_supervisor_path(
 
     assert called["supervisor"] is True
     assert result["status"] == "success"
+
+
+def test_run_supervisor_pipeline_passes_interrupt_flag(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: Dict[str, Any] = {}
+
+    class FakeGraph:
+        async def ainvoke(
+            self, _state: Any, config: Dict[str, Any] | None = None
+        ) -> Dict[str, Any]:
+            captured["ainvoke_config"] = config
+            return {
+                "workflow_status": "completed",
+                "node_trace": {},
+                "evidence_output": None,
+            }
+
+    def fake_compile_supervisor(
+        *,
+        interrupt_before_human_review: bool = False,
+        checkpointer: Any | None = None,
+    ) -> FakeGraph:
+        captured["interrupt_before_human_review"] = interrupt_before_human_review
+        captured["checkpointer"] = checkpointer
+        return FakeGraph()
+
+    import src.agents.supervisor as supervisor_module
+
+    monkeypatch.setattr(
+        tasks_module.cfg,
+        "agent_workflow_interrupt_before_human_review",
+        True,
+        raising=False,
+    )
+    monkeypatch.setattr(supervisor_module, "compile_supervisor", fake_compile_supervisor)
+
+    result = tasks_module._run_supervisor_pipeline(
+        source="upload",
+        document_id="1",
+        paper_task_id="2",
+        request_id="req-1",
+        postgres=SimpleNamespace(),
+        file_paths=["/tmp/paper.pdf"],
+    )
+
+    assert captured["interrupt_before_human_review"] is True
+    assert captured["checkpointer"] is not None
+    assert captured["ainvoke_config"] == {"configurable": {"thread_id": "req-1"}}
+    assert result["status"] == "success"
+
+
+def test_run_supervisor_pipeline_falls_back_thread_id(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: Dict[str, Any] = {}
+
+    class FakeGraph:
+        async def ainvoke(
+            self, _state: Any, config: Dict[str, Any] | None = None
+        ) -> Dict[str, Any]:
+            captured["ainvoke_config"] = config
+            return {
+                "workflow_status": "completed",
+                "node_trace": {},
+                "evidence_output": None,
+            }
+
+    def fake_compile_supervisor(
+        *,
+        interrupt_before_human_review: bool = False,
+        checkpointer: Any | None = None,
+    ) -> FakeGraph:
+        captured["interrupt_before_human_review"] = interrupt_before_human_review
+        captured["checkpointer"] = checkpointer
+        return FakeGraph()
+
+    import src.agents.supervisor as supervisor_module
+
+    monkeypatch.setattr(
+        tasks_module.cfg,
+        "agent_workflow_interrupt_before_human_review",
+        True,
+        raising=False,
+    )
+    monkeypatch.setattr(supervisor_module, "compile_supervisor", fake_compile_supervisor)
+
+    result = tasks_module._run_supervisor_pipeline(
+        source="upload",
+        document_id="doc-1",
+        paper_task_id="paper-2",
+        request_id="",
+        postgres=SimpleNamespace(),
+        file_paths=["/tmp/paper.pdf"],
+    )
+
+    assert captured["interrupt_before_human_review"] is True
+    assert captured["checkpointer"] is not None
+    assert captured["ainvoke_config"] == {"configurable": {"thread_id": "paper-2"}}
+    assert result["status"] == "success"
+
+
+def test_run_supervisor_pipeline_falls_back_to_document_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: Dict[str, Any] = {}
+
+    class FakeGraph:
+        async def ainvoke(
+            self, _state: Any, config: Dict[str, Any] | None = None
+        ) -> Dict[str, Any]:
+            captured["ainvoke_config"] = config
+            return {
+                "workflow_status": "completed",
+                "node_trace": {},
+                "evidence_output": None,
+            }
+
+    def fake_compile_supervisor(
+        *,
+        interrupt_before_human_review: bool = False,
+        checkpointer: Any | None = None,
+    ) -> FakeGraph:
+        captured["interrupt_before_human_review"] = interrupt_before_human_review
+        captured["checkpointer"] = checkpointer
+        return FakeGraph()
+
+    import src.agents.supervisor as supervisor_module
+
+    monkeypatch.setattr(
+        tasks_module.cfg,
+        "agent_workflow_interrupt_before_human_review",
+        True,
+        raising=False,
+    )
+    monkeypatch.setattr(supervisor_module, "compile_supervisor", fake_compile_supervisor)
+
+    result = tasks_module._run_supervisor_pipeline(
+        source="upload",
+        document_id="doc-1",
+        paper_task_id="",
+        request_id="",
+        postgres=SimpleNamespace(),
+        file_paths=["/tmp/paper.pdf"],
+    )
+
+    assert captured["interrupt_before_human_review"] is True
+    assert captured["checkpointer"] is not None
+    assert captured["ainvoke_config"] == {"configurable": {"thread_id": "doc-1"}}
+    assert result["status"] == "success"
+
+
+def test_run_supervisor_pipeline_uses_default_thread_id_when_all_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: Dict[str, Any] = {}
+
+    class FakeGraph:
+        async def ainvoke(
+            self, _state: Any, config: Dict[str, Any] | None = None
+        ) -> Dict[str, Any]:
+            captured["ainvoke_config"] = config
+            return {
+                "workflow_status": "completed",
+                "node_trace": {},
+                "evidence_output": None,
+            }
+
+    def fake_compile_supervisor(
+        *,
+        interrupt_before_human_review: bool = False,
+        checkpointer: Any | None = None,
+    ) -> FakeGraph:
+        captured["interrupt_before_human_review"] = interrupt_before_human_review
+        captured["checkpointer"] = checkpointer
+        return FakeGraph()
+
+    import src.agents.supervisor as supervisor_module
+
+    monkeypatch.setattr(
+        tasks_module.cfg,
+        "agent_workflow_interrupt_before_human_review",
+        True,
+        raising=False,
+    )
+    monkeypatch.setattr(supervisor_module, "compile_supervisor", fake_compile_supervisor)
+
+    result = tasks_module._run_supervisor_pipeline(
+        source="upload",
+        document_id="",
+        paper_task_id="",
+        request_id="",
+        postgres=SimpleNamespace(),
+        file_paths=["/tmp/paper.pdf"],
+    )
+
+    assert captured["interrupt_before_human_review"] is True
+    assert captured["checkpointer"] is not None
+    assert captured["ainvoke_config"] == {"configurable": {"thread_id": "supervisor-thread"}}
+    assert result["status"] == "success"
+
+
+def test_run_supervisor_pipeline_reuses_checkpointer_when_interrupt_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: Dict[str, Any] = {"checkpointers": []}
+
+    class FakeGraph:
+        async def ainvoke(
+            self, _state: Any, config: Dict[str, Any] | None = None
+        ) -> Dict[str, Any]:
+            captured["ainvoke_config"] = config
+            return {
+                "workflow_status": "completed",
+                "node_trace": {},
+                "evidence_output": None,
+            }
+
+    def fake_compile_supervisor(
+        *,
+        interrupt_before_human_review: bool = False,
+        checkpointer: Any | None = None,
+    ) -> FakeGraph:
+        captured["interrupt_before_human_review"] = interrupt_before_human_review
+        captured["checkpointers"].append(checkpointer)
+        return FakeGraph()
+
+    import src.agents.supervisor as supervisor_module
+
+    monkeypatch.setattr(
+        tasks_module.cfg,
+        "agent_workflow_interrupt_before_human_review",
+        True,
+        raising=False,
+    )
+    monkeypatch.setattr(tasks_module, "_supervisor_memory_checkpointer", None, raising=False)
+    monkeypatch.setattr(supervisor_module, "compile_supervisor", fake_compile_supervisor)
+
+    tasks_module._run_supervisor_pipeline(
+        source="upload",
+        document_id="d1",
+        paper_task_id="p1",
+        request_id="r1",
+        postgres=SimpleNamespace(),
+        file_paths=["/tmp/paper.pdf"],
+    )
+    tasks_module._run_supervisor_pipeline(
+        source="upload",
+        document_id="d2",
+        paper_task_id="p2",
+        request_id="r2",
+        postgres=SimpleNamespace(),
+        file_paths=["/tmp/paper.pdf"],
+    )
+
+    assert captured["interrupt_before_human_review"] is True
+    assert len(captured["checkpointers"]) == 2
+    assert captured["checkpointers"][0] is captured["checkpointers"][1]
+
+
+def test_run_supervisor_pipeline_marks_pending_review_status(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeGraph:
+        async def ainvoke(
+            self, _state: Any, config: Dict[str, Any] | None = None
+        ) -> Dict[str, Any]:
+            return {
+                "workflow_status": "PENDING",
+                "requires_human_review": True,
+                "node_trace": {"arbitration": "success"},
+                "evidence_output": None,
+            }
+
+    def fake_compile_supervisor(
+        *,
+        interrupt_before_human_review: bool = False,
+        checkpointer: Any | None = None,
+    ) -> FakeGraph:
+        return FakeGraph()
+
+    import src.agents.supervisor as supervisor_module
+
+    monkeypatch.setattr(supervisor_module, "compile_supervisor", fake_compile_supervisor)
+
+    result = tasks_module._run_supervisor_pipeline(
+        source="upload",
+        document_id="1",
+        paper_task_id="2",
+        request_id="req-review",
+        postgres=SimpleNamespace(),
+        file_paths=["/tmp/paper.pdf"],
+    )
+
+    assert result["status"] == "pending_review"
+    assert result["requires_human_review"] is True
+
+
+def test_resume_supervisor_pipeline_success(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: Dict[str, Any] = {}
+
+    class FakeGraph:
+        async def ainvoke(
+            self,
+            _state: Any,
+            config: Dict[str, Any] | None = None,
+        ) -> Dict[str, Any]:
+            captured["ainvoke_config"] = config
+            return {
+                "workflow_status": "COMPLETED",
+                "requires_human_review": False,
+                "node_trace": {"human_review": "completed"},
+                "evidence_output": {"summary": "ok"},
+            }
+
+    def fake_compile_supervisor(
+        *,
+        interrupt_before_human_review: bool = False,
+        checkpointer: Any | None = None,
+    ) -> FakeGraph:
+        captured["interrupt_before_human_review"] = interrupt_before_human_review
+        captured["checkpointer"] = checkpointer
+        return FakeGraph()
+
+    import src.agents.supervisor as supervisor_module
+
+    monkeypatch.setattr(supervisor_module, "compile_supervisor", fake_compile_supervisor)
+    monkeypatch.setattr(tasks_module, "_supervisor_memory_checkpointer", object(), raising=False)
+
+    result = tasks_module._resume_supervisor_pipeline(
+        source="upload",
+        document_id="doc-1",
+        paper_task_id="paper-2",
+        request_id="req-3",
+        postgres=SimpleNamespace(),
+    )
+
+    assert captured["interrupt_before_human_review"] is True
+    assert captured["checkpointer"] is tasks_module._supervisor_memory_checkpointer
+    assert captured["ainvoke_config"] == {"configurable": {"thread_id": "req-3"}}
+    assert result["status"] == "success"
+    assert result["workflow_status"] == "COMPLETED"
+
+
+def test_resume_supervisor_pipeline_without_checkpoint_returns_failed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeGraph:
+        async def ainvoke(
+            self,
+            _state: Any,
+            config: Dict[str, Any] | None = None,
+        ) -> Dict[str, Any]:
+            from langgraph.errors import EmptyInputError
+
+            raise EmptyInputError("no checkpoint")
+
+    def fake_compile_supervisor(
+        *,
+        interrupt_before_human_review: bool = False,
+        checkpointer: Any | None = None,
+    ) -> FakeGraph:
+        return FakeGraph()
+
+    import src.agents.supervisor as supervisor_module
+
+    monkeypatch.setattr(supervisor_module, "compile_supervisor", fake_compile_supervisor)
+    monkeypatch.setattr(tasks_module, "_supervisor_memory_checkpointer", object(), raising=False)
+
+    result = tasks_module._resume_supervisor_pipeline(
+        source="upload",
+        document_id="doc-1",
+        paper_task_id="paper-2",
+        request_id="req-3",
+        postgres=SimpleNamespace(),
+    )
+
+    assert result["status"] == "failed"
+    assert result["error_code"] == "RESOURCE_NOT_FOUND"
+    assert "No paused workflow state found" in result["error_message"]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, TypedDict
+from typing import Any, NotRequired, Optional, TypedDict
 
 from src.domain.enums import ProcessingState
 from src.domain.models import (
@@ -44,6 +44,16 @@ class SupervisorState(TypedDict):
     output_files: Optional[PipelineFiles]
     final_result: Optional[dict[str, Any]]
     _inner_processing_state: Optional[ProcessingState]
+    user_input: NotRequired[str]
+    user_response: NotRequired[str]
+    session_id: NotRequired[str]
+    question: NotRequired[str | None]
+    task_form: NotRequired[dict[str, Any]]
+    interaction_ready: NotRequired[bool]
+    goal: NotRequired[str]
+    disease: NotRequired[str]
+    country: NotRequired[str]
+    language: NotRequired[str]
 
 
 __all__ = ["SupervisorState"]

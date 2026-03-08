@@ -39,12 +39,12 @@ def _map_error_code_by_detail(detail: str) -> Optional[str]:
     text = (detail or "").lower()
     if "graph sync" in text:
         return "GRAPH_SYNC_FAILED"
-    if "parse failed" in text or "parsing failed" in text:
-        return "PARSE_FAILED"
     if "ocr failed" in text:
         return "OCR_FAILED"
     if "ocr timeout" in text:
         return "OCR_TIMEOUT"
+    if "parse failed" in text or "parsing failed" in text:
+        return "PARSE_FAILED"
     if "translation failed" in text:
         return "TRANSLATION_FAILED"
     if "translation empty" in text:

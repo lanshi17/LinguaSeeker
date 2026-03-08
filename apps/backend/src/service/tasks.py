@@ -13,6 +13,8 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, cast
 import mimetypes
 
 from loguru import logger
+from langchain_core.runnables.config import RunnableConfig
+from langgraph.errors import EmptyInputError
 
 # Ensure the project root (which contains the `src` package) is importable when this file
 # is invoked directly with `python -m src.service.tasks` or similar.
@@ -144,6 +146,8 @@ _DEFAULT_NODE_POLICY: Dict[str, Dict[str, int]] = {
     "extraction": {"max_retries": 2, "delay": 300, "timeout": 1800},
     "acmg": {"max_retries": 1, "delay": 180, "timeout": 900},
 }
+
+_supervisor_memory_checkpointer: Any | None = None
 
 
 def _get_node_policy(node: str) -> Dict[str, int]:
@@ -429,7 +433,8 @@ def _schedule_evidence_retry(document_id: str, payload: Dict[str, Any], reason: 
         max_retries,
         reason,
     )
-    retry_graph_sync_task.apply_async(
+    celery_app.send_task(
+        "tasks.retry_graph_sync",
         args=[document_id, retry_payload],
         countdown=delay_seconds,
         queue="retry",
@@ -1057,6 +1062,73 @@ def run_node_acmg(
     return graph_sync_result, _update_node_trace(node_trace, "acmg", "success")
 
 
+def _build_supervisor_checkpointer(enable_interrupt: bool) -> Any | None:
+    if not enable_interrupt:
+        return None
+    global _supervisor_memory_checkpointer
+    if _supervisor_memory_checkpointer is not None:
+        return _supervisor_memory_checkpointer
+
+    from langgraph.checkpoint.memory import MemorySaver
+
+    _supervisor_memory_checkpointer = MemorySaver()
+    return _supervisor_memory_checkpointer
+
+
+def _resolve_supervisor_thread_id(
+    request_id: str,
+    paper_task_id: str,
+    document_id: str,
+) -> str:
+    for candidate in (request_id, paper_task_id, document_id):
+        normalized = str(candidate or "").strip()
+        if normalized:
+            return normalized
+    return "supervisor-thread"
+
+
+def _build_supervisor_payload(
+    *,
+    final_state: Dict[str, Any],
+    source: str,
+    document_id: str,
+    paper_task_id: str,
+    request_id: str,
+    file_hash: Optional[str] = None,
+    file_size_bytes: Optional[int] = None,
+) -> Dict[str, Any]:
+    evidence_output = final_state.get("evidence_output")
+    requires_human_review = bool(final_state.get("requires_human_review"))
+    workflow_status = str(final_state.get("workflow_status") or "")
+    status = "failed" if workflow_status == WorkflowStatus.failed.value else "success"
+    if status == "success" and requires_human_review:
+        status = "pending_review"
+
+    payload: Dict[str, Any] = {
+        "document_id": document_id,
+        "paper_task_id": paper_task_id,
+        "request_id": request_id,
+        "status": status,
+        "workflow_status": workflow_status,
+        "requires_human_review": requires_human_review,
+        "node_trace": final_state.get("node_trace", {}),
+        "graph_sync_result": final_state.get("graph_sync_result", {}),
+    }
+    if source == "upload":
+        payload["file_hash"] = file_hash
+        payload["file_size_bytes"] = file_size_bytes
+    if isinstance(evidence_output, EvidenceOutput):
+        payload["evidence"] = evidence_output.model_dump(mode="json")
+    elif isinstance(evidence_output, dict):
+        payload["evidence"] = evidence_output
+
+    if status == "failed":
+        payload["error_code"] = str(final_state.get("error_code") or "INTERNAL_ERROR")
+        payload["error_message"] = str(final_state.get("error_message") or "")
+
+    return payload
+
+
 def _run_supervisor_pipeline(
     *,
     source: str,
@@ -1074,7 +1146,22 @@ def _run_supervisor_pipeline(
         from src.agents.supervisor import compile_supervisor
         from src.state.global_state import SupervisorState
 
-        graph = compile_supervisor()
+        checkpointer = _build_supervisor_checkpointer(
+            cfg.agent_workflow_interrupt_before_human_review
+        )
+        graph = compile_supervisor(
+            interrupt_before_human_review=cfg.agent_workflow_interrupt_before_human_review,
+            checkpointer=checkpointer,
+        )
+        invoke_config: RunnableConfig = {
+            "configurable": {
+                "thread_id": _resolve_supervisor_thread_id(
+                    request_id=request_id,
+                    paper_task_id=paper_task_id,
+                    document_id=document_id,
+                )
+            }
+        }
         initial_state: SupervisorState = cast(
             SupervisorState,
             cast(
@@ -1115,27 +1202,186 @@ def _run_supervisor_pipeline(
                 },
             ),
         )
-        final_state = await graph.ainvoke(initial_state)
-        evidence_output = final_state.get("evidence_output")
-        payload: Dict[str, Any] = {
-            "document_id": document_id,
-            "paper_task_id": paper_task_id,
-            "request_id": request_id,
-            "status": "failed"
-            if final_state.get("workflow_status") == WorkflowStatus.failed.value
-            else "success",
-            "workflow_status": final_state.get("workflow_status"),
-            "node_trace": final_state.get("node_trace", {}),
-            "graph_sync_result": {},
-        }
-        if source == "upload":
-            payload["file_hash"] = file_hash
-            payload["file_size_bytes"] = file_size_bytes
-        if isinstance(evidence_output, EvidenceOutput):
-            payload["evidence"] = evidence_output.model_dump(mode="json")
-        return payload
+        final_state = await graph.ainvoke(initial_state, config=invoke_config)
+        return _build_supervisor_payload(
+            final_state=cast(Dict[str, Any], final_state),
+            source=source,
+            document_id=document_id,
+            paper_task_id=paper_task_id,
+            request_id=request_id,
+            file_hash=file_hash,
+            file_size_bytes=file_size_bytes,
+        )
 
     return asyncio.run(_invoke())
+
+
+def _resume_supervisor_pipeline(
+    *,
+    source: str,
+    document_id: str,
+    paper_task_id: str,
+    request_id: str,
+    postgres: Any,
+) -> Dict[str, Any]:
+    del postgres
+
+    async def _resume() -> Dict[str, Any]:
+        from src.agents.supervisor import compile_supervisor
+
+        checkpointer = _build_supervisor_checkpointer(True)
+        graph = compile_supervisor(
+            interrupt_before_human_review=True,
+            checkpointer=checkpointer,
+        )
+        invoke_config: RunnableConfig = {
+            "configurable": {
+                "thread_id": _resolve_supervisor_thread_id(
+                    request_id=request_id,
+                    paper_task_id=paper_task_id,
+                    document_id=document_id,
+                )
+            }
+        }
+        try:
+            final_state = await graph.ainvoke(None, config=invoke_config)
+        except EmptyInputError:
+            return {
+                "document_id": document_id,
+                "paper_task_id": paper_task_id,
+                "request_id": request_id,
+                "status": "failed",
+                "workflow_status": WorkflowStatus.failed.value,
+                "requires_human_review": False,
+                "node_trace": {},
+                "graph_sync_result": {},
+                "error_code": "RESOURCE_NOT_FOUND",
+                "error_message": "No paused workflow state found for resume",
+            }
+        except Exception as resume_exc:
+            logger.exception(
+                "Failed to resume supervisor workflow for paper_task_id={}", paper_task_id
+            )
+            return {
+                "document_id": document_id,
+                "paper_task_id": paper_task_id,
+                "request_id": request_id,
+                "status": "failed",
+                "workflow_status": WorkflowStatus.failed.value,
+                "requires_human_review": False,
+                "node_trace": {},
+                "graph_sync_result": {},
+                "error_code": "INTERNAL_ERROR",
+                "error_message": str(resume_exc),
+            }
+
+        return _build_supervisor_payload(
+            final_state=cast(Dict[str, Any], final_state),
+            source=source,
+            document_id=document_id,
+            paper_task_id=paper_task_id,
+            request_id=request_id,
+        )
+
+    return asyncio.run(_resume())
+
+
+@celery_app.task(
+    name="tasks.resume_supervisor",
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 3, "countdown": 30, "queue": "retry"},
+    retry_jitter=True,
+)
+def resume_supervisor_task(self, paper_task_id: str) -> Dict[str, Any]:
+    del self
+
+    postgres = get_postgres_client()
+    paper_task = postgres.get_paper_task(paper_task_id)
+    if paper_task is None:
+        raise ValueError(f"Paper task not found: {paper_task_id}")
+
+    request_id = str(getattr(paper_task, "request_id", "") or "")
+    document_value = getattr(paper_task, "document_id", None)
+    document_id = str(document_value) if document_value is not None else ""
+    source = "upload" if document_id else "pubmed"
+
+    postgres.update_paper_task(
+        paper_task_id,
+        status="running",
+        workflow_status=WorkflowStatus.pending.value,
+        error_details=None,
+    )
+    postgres.append_paper_task_log(
+        paper_task_id,
+        status="running",
+        node="resume",
+        message="Supervisor resume requested",
+    )
+
+    result = _resume_supervisor_pipeline(
+        source=source,
+        document_id=document_id,
+        paper_task_id=paper_task_id,
+        request_id=request_id,
+        postgres=postgres,
+    )
+    status = str(result.get("status") or "").lower()
+
+    if status == "failed":
+        error_code = str(result.get("error_code") or "INTERNAL_ERROR")
+        error_message = str(result.get("error_message") or "Supervisor resume failed")
+        postgres.update_paper_task(
+            paper_task_id,
+            status="failed",
+            workflow_status=WorkflowStatus.failed.value,
+            error_code=error_code,
+            error_details={"error_code": error_code, "message": error_message},
+            node_trace=result.get("node_trace") or {},
+        )
+        postgres.append_paper_task_log(
+            paper_task_id,
+            status="failed",
+            node="resume",
+            error_code=error_code,
+            message=error_message,
+        )
+    elif status == "pending_review":
+        postgres.update_paper_task(
+            paper_task_id,
+            status="running",
+            workflow_status=WorkflowStatus.pending.value,
+            error_code=None,
+            error_details=None,
+            node_trace=result.get("node_trace") or {},
+        )
+        postgres.append_paper_task_log(
+            paper_task_id,
+            status="running",
+            node="resume",
+            message="Supervisor resumed and waiting for human review",
+            payload={"workflow_status": result.get("workflow_status")},
+        )
+    else:
+        postgres.update_paper_task(
+            paper_task_id,
+            status="success",
+            workflow_status=WorkflowStatus.completed.value,
+            error_code=None,
+            error_details=None,
+            node_trace=result.get("node_trace") or {},
+        )
+        postgres.append_paper_task_log(
+            paper_task_id,
+            status="success",
+            node="resume",
+            message="Supervisor resume completed",
+            payload={"workflow_status": result.get("workflow_status")},
+        )
+
+    if request_id:
+        postgres.refresh_task_request_status(request_id)
+    return result
 
 
 @celery_app.task(

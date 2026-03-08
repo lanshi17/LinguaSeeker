@@ -22,6 +22,7 @@ from src.api.dependencies import contract_http_exception
 from src.services.task_manager import (
     process_pdf_task,
     process_pubmed_paper_task,
+    resume_supervisor_task,
     process_web_page_task,
 )
 from src.service.dtos import (
@@ -1092,6 +1093,73 @@ def get_task_request_status(
         status=_status_str(request_entry.status),
         papers=[_paper_item_model(item) for item in papers],
     )
+
+
+@router.post(
+    "/papers/{paper_task_id}/resume",
+    response_model=TaskCreateResponse,
+    summary="Resume interrupted supervisor workflow",
+    responses={
+        404: {"description": "Paper task not found"},
+        409: {"description": "Paper task already finalized"},
+    },
+)
+def resume_paper_task(
+    paper_task_id: str = ApiPath(..., description="Paper task ID"),
+) -> TaskCreateResponse:
+    try:
+        parsed_paper_task_id = UUID(paper_task_id)
+    except ValueError:
+        raise contract_http_exception(400, "INPUT_INVALID", "Invalid paper_task_id")
+
+    postgres = get_postgres_client()
+    paper_task = postgres.get_paper_task(str(parsed_paper_task_id))
+    if paper_task is None:
+        raise HTTPException(status_code=404, detail="Paper task not found")
+
+    workflow_status = coerce_workflow_status(
+        getattr(paper_task, "workflow_status", None),
+        default=WorkflowStatus.pending,
+    )
+    paper_status = str(getattr(paper_task, "status", "") or "").lower()
+    if paper_status == "success" or workflow_status in {
+        WorkflowStatus.completed,
+        WorkflowStatus.failed,
+    }:
+        raise contract_http_exception(
+            status_code=409,
+            error_code="INVALID_STATE",
+            detail="Paper task already finalized",
+        )
+
+    try:
+        resume_task = cast(Any, resume_supervisor_task)
+        async_result = resume_task.apply_async(
+            args=[str(parsed_paper_task_id)],
+        )
+    except Exception as exc:
+        logger.exception("Failed to enqueue resume task for paper_task_id=%s", paper_task_id)
+        raise HTTPException(status_code=503, detail="Failed to enqueue resume task") from exc
+
+    postgres.update_paper_task(
+        str(parsed_paper_task_id),
+        celery_task_id=async_result.id,
+        status="running",
+        workflow_status=WorkflowStatus.pending.value,
+    )
+    postgres.append_paper_task_log(
+        str(parsed_paper_task_id),
+        status="running",
+        node="resume",
+        message="Supervisor resume task queued",
+        payload={"celery_task_id": async_result.id},
+    )
+
+    request_id = str(getattr(paper_task, "request_id", "") or "")
+    if request_id:
+        postgres.refresh_task_request_status(request_id)
+
+    return TaskCreateResponse(task_id=async_result.id, status=TaskStatus.pending)
 
 
 @router.get(

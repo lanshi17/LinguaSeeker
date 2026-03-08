@@ -22,6 +22,11 @@ def test_map_error_code_parse_failed() -> None:
     assert map_error_code(500, "Parsing failed: invalid layout") == "PARSE_FAILED"
 
 
+def test_map_error_code_ocr_failed_precedence_over_parsing_wrapper() -> None:
+    detail = "Parsing failed: All parsers failed: ocr failed: PaddleOCR unavailable — OCR_FAILED"
+    assert map_error_code(500, detail) == "OCR_FAILED"
+
+
 def test_map_error_code_translation_failed() -> None:
     assert map_error_code(500, "Translation failed: empty output") == "TRANSLATION_FAILED"
 

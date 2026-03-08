@@ -2,6 +2,7 @@ import requests
 from typing import List, Dict, Any, Callable, Optional
 import time
 import json
+from pathlib import Path
 from uuid import uuid4
 from src.domain.mineru.constants import (
     mineru_response_code,
@@ -42,18 +43,121 @@ def paddleocr_available() -> bool:
     return _paddleocr_available
 
 
+def _extract_ocr_text_lines(ocr_payload: Any) -> List[str]:
+    collected_lines: List[str] = []
+
+    if isinstance(ocr_payload, str):
+        normalized = ocr_payload.strip()
+        if normalized:
+            collected_lines.append(normalized)
+        return collected_lines
+
+    if isinstance(ocr_payload, dict):
+        text_value = ocr_payload.get("text")
+        if isinstance(text_value, str):
+            normalized = text_value.strip()
+            if normalized:
+                collected_lines.append(normalized)
+        for key, value in ocr_payload.items():
+            if key == "text":
+                continue
+            collected_lines.extend(_extract_ocr_text_lines(value))
+        return collected_lines
+
+    if isinstance(ocr_payload, (list, tuple)):
+        if len(ocr_payload) == 2 and isinstance(ocr_payload[0], str):
+            normalized = ocr_payload[0].strip()
+            if normalized:
+                collected_lines.append(normalized)
+            return collected_lines
+        for item in ocr_payload:
+            collected_lines.extend(_extract_ocr_text_lines(item))
+
+    return collected_lines
+
+
 def run_paddleocr_fallback(file_paths: List[str]) -> MinerUResponse:
     """Run PaddleOCR as fallback when MinerU fails.
 
     Raises ``exc.ParsingException`` with code ``OCR_FAILED`` when the
     PaddleOCR package is not installed.
     """
-    if not _paddleocr_available:
-        raise exc.ParsingException("PaddleOCR is not installed — OCR_FAILED")
+    if not _paddleocr_available or _PaddleOCR is None:
+        raise exc.ParsingException("ocr failed: PaddleOCR is not installed — OCR_FAILED")
 
-    raise NotImplementedError(
-        "PaddleOCR integration is stubbed out. "
-        "Install paddleocr and implement run_paddleocr_fallback to enable."
+    normalized_paths = [str(path).strip() for path in file_paths if str(path).strip()]
+    if not normalized_paths:
+        raise exc.ParsingException(
+            "ocr failed: no input files provided for fallback OCR — OCR_FAILED"
+        )
+
+    for file_path in normalized_paths:
+        if not Path(file_path).exists():
+            raise exc.ParsingException(
+                f"ocr failed: input file not found: {file_path} — OCR_FAILED"
+            )
+
+    try:
+        ocr_model = _PaddleOCR(use_angle_cls=True, lang="en", show_log=False)
+    except Exception as init_error:
+        raise exc.ParsingException(
+            f"ocr failed: failed to initialize PaddleOCR: {init_error} — OCR_FAILED"
+        ) from init_error
+
+    try:
+        fallback_root = Path(
+            file_utils.ensure_directory_exists(
+                f"{cfg.mineru_download_dir}/paddleocr_fallback/{uuid4().hex}"
+            )
+        )
+    except OSError as directory_error:
+        raise exc.ParsingException(
+            f"ocr failed: unable to prepare fallback output directory: {directory_error} — OCR_FAILED"
+        ) from directory_error
+
+    markdown_sections: List[str] = []
+
+    for file_index, file_path in enumerate(normalized_paths, start=1):
+        file_name = Path(file_path).name
+        try:
+            ocr_payload = ocr_model.ocr(file_path, cls=True)
+        except Exception as ocr_error:
+            raise exc.ParsingException(
+                f"ocr failed: PaddleOCR failed for {file_name}: {ocr_error} — OCR_FAILED"
+            ) from ocr_error
+
+        text_lines = _extract_ocr_text_lines(ocr_payload)
+        if not text_lines:
+            raise exc.ParsingException(
+                f"ocr failed: PaddleOCR returned no text for {file_name} — OCR_FAILED"
+            )
+
+        file_markdown_name = f"{file_index:03d}_{Path(file_path).stem}.md"
+        try:
+            (fallback_root / file_markdown_name).write_text(
+                "\n".join(text_lines).strip() + "\n",
+                encoding="utf-8",
+            )
+        except OSError as write_error:
+            raise exc.ParsingException(
+                f"ocr failed: failed to write markdown for {file_name}: {write_error} — OCR_FAILED"
+            ) from write_error
+
+        markdown_sections.append(f"## {file_name}\n\n" + "\n".join(text_lines).strip())
+
+    merged_markdown = "\n\n---\n\n".join(markdown_sections).strip() + "\n"
+    try:
+        (fallback_root / "full.md").write_text(merged_markdown, encoding="utf-8")
+    except OSError as write_error:
+        raise exc.ParsingException(
+            f"ocr failed: failed to write merged markdown: {write_error} — OCR_FAILED"
+        ) from write_error
+
+    return MinerUResponse(
+        task_id=f"paddleocr-fallback-{uuid4().hex}",
+        status="done",
+        message="PaddleOCR fallback completed",
+        folder_path=str(fallback_root),
     )
 
 

@@ -193,6 +193,7 @@ class Settings(BaseSettings):
     use_agent_workflow_pdf: bool = False
     use_agent_workflow_pubmed: bool = False
     use_agent_workflow_web: bool = False
+    agent_workflow_interrupt_before_human_review: bool = False
 
     def use_agent_workflow(self, task_type: str) -> bool:
         return getattr(self, f"use_agent_workflow_{task_type.lower()}", False)
