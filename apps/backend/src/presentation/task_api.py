@@ -3,7 +3,7 @@ import hashlib
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 from uuid import UUID
 
 from celery.result import AsyncResult
@@ -14,12 +14,16 @@ from sqlalchemy.exc import IntegrityError
 
 from src.celery_app import celery_app
 from src.database.enum import MinioBucketNameEnum
-from src.database.minio_client import MinIOClient
-from src.database.postgre_client import get_postgres_client
-from src.database.redis_client import list_celery_task_meta
+from src.infrastructure.minio import MinIOClient
+from src.infrastructure.postgres import get_postgres_client
+from src.infrastructure.redis import list_celery_task_meta
 from src.domain.literature import get_literature_acquisition_agent, get_pubmed_service
-from src.presentation.error_contract import contract_http_exception
-from src.service.tasks import process_pdf_task, process_pubmed_paper_task, process_web_page_task
+from src.api.dependencies import contract_http_exception
+from src.services.task_manager import (
+    process_pdf_task,
+    process_pubmed_paper_task,
+    process_web_page_task,
+)
 from src.service.dtos import (
     PubMedCandidateItem,
     PubMedCandidateSearchRequest,
@@ -176,6 +180,27 @@ def _cleanup_upload_temp_file(temp_path: Optional[str]) -> None:
 
 
 ALLOWED_SUFFIXES = {".pdf", ".docx"}
+
+
+def _uuid_str(value: Any) -> str:
+    return str(cast(UUID, cast(object, value)))
+
+
+def _uuid_value(value: Any) -> UUID:
+    return cast(UUID, cast(object, value))
+
+
+def _uuid_optional_str(value: Any) -> Optional[str]:
+    return None if value is None else _uuid_str(value)
+
+
+def _status_str(value: Any, default: str = "queued") -> str:
+    raw = cast(Optional[str], cast(object, value))
+    return raw or default
+
+
+def _celery_task(task: Any) -> Any:
+    return cast(Any, task)
 
 
 class ErrorResponse(BaseModel):
@@ -390,7 +415,7 @@ def create_task(payload: TaskCreateRequest) -> TaskCreateResponse:
             payload.file_paths,
             payload.output_root,
         )
-        async_result = process_pdf_task.delay(payload.file_paths, payload.output_root)
+        async_result = _celery_task(process_pdf_task).delay(payload.file_paths, payload.output_root)
     except Exception as exc:
         logger.exception("Failed to queue task: {}", exc)
         raise HTTPException(status_code=503, detail="Task queue unavailable")
@@ -486,18 +511,24 @@ def submit_pubmed_selection(payload: PubMedSelectionSubmitRequest) -> TaskReques
             "selected_count": len(pmids),
         },
     )
+    request_entry_id = _uuid_str(request_entry.request_id)
 
     paper_entries: List[Any] = []
     for pmid in pmids:
         existing_document = postgres.get_document_by_pmid(pmid)
         synthetic_hash = _synthetic_hash_from_pmid(pmid)
         historical_paper = postgres.find_latest_paper_task_by_hash(synthetic_hash)
+        existing_document_id = (
+            _uuid_optional_str(existing_document.document_id)
+            if existing_document is not None
+            else None
+        )
 
         if existing_document is not None and _has_successful_historical_paper(historical_paper):
             paper_entry = _create_duplicate_paper_entry(
                 postgres,
-                request_id=request_entry.request_id,
-                document_id=existing_document.document_id,
+                request_id=request_entry_id,
+                document_id=existing_document_id,
                 original_filename=f"PMID:{pmid}",
                 file_hash=synthetic_hash,
                 historical_paper=historical_paper,
@@ -524,8 +555,8 @@ def submit_pubmed_selection(payload: PubMedSelectionSubmitRequest) -> TaskReques
             if existing_document is not None and _has_successful_historical_paper(historical_paper):
                 paper_entry = _create_duplicate_paper_entry(
                     postgres,
-                    request_id=request_entry.request_id,
-                    document_id=existing_document.document_id,
+                    request_id=request_entry_id,
+                    document_id=existing_document_id,
                     original_filename=f"PMID:{pmid}",
                     file_hash=synthetic_hash,
                     historical_paper=historical_paper,
@@ -533,15 +564,15 @@ def submit_pubmed_selection(payload: PubMedSelectionSubmitRequest) -> TaskReques
                 )
             else:
                 paper_entry = postgres.create_paper_task(
-                    request_id=request_entry.request_id,
-                    document_id=(existing_document.document_id if existing_document else None),
+                    request_id=request_entry_id,
+                    document_id=existing_document_id,
                     original_filename=f"PMID:{pmid}",
                     file_hash=synthetic_hash,
                     status="failed",
                     error_code="INTERNAL_ERROR",
                 )
                 postgres.append_paper_task_log(
-                    paper_entry.paper_task_id,
+                    _uuid_str(paper_entry.paper_task_id),
                     status="failed",
                     node="document",
                     error_code="INTERNAL_ERROR",
@@ -549,39 +580,41 @@ def submit_pubmed_selection(payload: PubMedSelectionSubmitRequest) -> TaskReques
                 )
             paper_entries.append(paper_entry)
             continue
+        document_id = _uuid_str(document.document_id)
         paper_entry = postgres.create_paper_task(
-            request_id=request_entry.request_id,
-            document_id=document.document_id,
+            request_id=request_entry_id,
+            document_id=document_id,
             original_filename=f"PMID:{pmid}",
             file_hash=synthetic_hash,
             status="queued",
         )
+        paper_task_id = _uuid_str(paper_entry.paper_task_id)
         postgres.append_paper_task_log(
-            paper_entry.paper_task_id,
+            paper_task_id,
             status="queued",
             node="acquisition",
             message=f"PubMed paper queued: {pmid}",
             payload={"pmid": pmid},
         )
 
-        async_result = process_pubmed_paper_task.apply_async(
+        async_result = _celery_task(process_pubmed_paper_task).apply_async(
             args=[
                 pmid,
-                str(document.document_id),
-                str(paper_entry.paper_task_id),
-                str(request_entry.request_id),
+                document_id,
+                paper_task_id,
+                request_entry_id,
             ],
         )
         paper_entry = postgres.update_paper_task(
-            paper_entry.paper_task_id,
+            paper_task_id,
             celery_task_id=async_result.id,
         )
         paper_entries.append(paper_entry)
 
-    request_entry = postgres.refresh_task_request_status(request_entry.request_id)
+    request_entry = postgres.refresh_task_request_status(request_entry_id)
     return TaskRequestCreateResponse(
-        request_id=str(request_entry.request_id),
-        status=request_entry.status,
+        request_id=str(getattr(request_entry, "request_id", request_entry_id)),
+        status=_status_str(getattr(request_entry, "status", None)),
         papers=[_paper_item_model(item) for item in paper_entries],
     )
 
@@ -727,7 +760,7 @@ def create_task_request_by_web_crawl(
             payload={"url": plan_item.normalized_value, "source": "web"},
         )
 
-        async_result = process_web_page_task.apply_async(
+        async_result = _celery_task(process_web_page_task).apply_async(
             args=[
                 plan_item.normalized_value,
                 document_id,
@@ -795,6 +828,7 @@ async def create_task_request_by_upload(
         status="queued",
         metadata={"entry": "upload", "paper_count": len(prepared_uploads)},
     )
+    request_entry_id = _uuid_str(request_entry.request_id)
 
     paper_entries: List[Any] = []
 
@@ -806,12 +840,17 @@ async def create_task_request_by_upload(
         file_hash = prepared["file_hash"]
         existing_document = postgres.find_document_by_hash(file_hash)
         historical_paper = postgres.find_latest_paper_task_by_hash(file_hash)
+        existing_document_id = (
+            _uuid_optional_str(existing_document.document_id)
+            if existing_document is not None
+            else None
+        )
 
         if existing_document is not None and _has_successful_historical_paper(historical_paper):
             paper_entry = _create_duplicate_paper_entry(
                 postgres,
-                request_id=request_entry.request_id,
-                document_id=existing_document.document_id,
+                request_id=request_entry_id,
+                document_id=existing_document_id,
                 original_filename=filename or None,
                 file_hash=file_hash,
                 historical_paper=historical_paper,
@@ -841,14 +880,14 @@ async def create_task_request_by_upload(
         except Exception as exc:
             logger.exception("Failed to upload file to object storage: {}", exc)
             paper_entry = postgres.create_paper_task(
-                request_id=request_entry.request_id,
+                request_id=request_entry_id,
                 original_filename=filename or None,
                 file_hash=file_hash,
                 status="failed",
                 error_code="INTERNAL_ERROR",
             )
             postgres.append_paper_task_log(
-                paper_entry.paper_task_id,
+                _uuid_str(paper_entry.paper_task_id),
                 status="failed",
                 node="upload",
                 error_code="INTERNAL_ERROR",
@@ -884,8 +923,8 @@ async def create_task_request_by_upload(
             if existing_document is not None and _has_successful_historical_paper(historical_paper):
                 paper_entry = _create_duplicate_paper_entry(
                     postgres,
-                    request_id=request_entry.request_id,
-                    document_id=existing_document.document_id,
+                    request_id=request_entry_id,
+                    document_id=existing_document_id,
                     original_filename=filename or None,
                     file_hash=file_hash,
                     historical_paper=historical_paper,
@@ -893,15 +932,15 @@ async def create_task_request_by_upload(
                 )
             else:
                 paper_entry = postgres.create_paper_task(
-                    request_id=request_entry.request_id,
-                    document_id=(existing_document.document_id if existing_document else None),
+                    request_id=request_entry_id,
+                    document_id=existing_document_id,
                     original_filename=filename or None,
                     file_hash=file_hash,
                     status="failed",
                     error_code="INTERNAL_ERROR",
                 )
                 postgres.append_paper_task_log(
-                    paper_entry.paper_task_id,
+                    _uuid_str(paper_entry.paper_task_id),
                     status="failed",
                     node="document",
                     error_code="INTERNAL_ERROR",
@@ -924,14 +963,14 @@ async def create_task_request_by_upload(
                         cleanup_exc,
                     )
             paper_entry = postgres.create_paper_task(
-                request_id=request_entry.request_id,
+                request_id=request_entry_id,
                 original_filename=filename or None,
                 file_hash=file_hash,
                 status="failed",
                 error_code="INTERNAL_ERROR",
             )
             postgres.append_paper_task_log(
-                paper_entry.paper_task_id,
+                _uuid_str(paper_entry.paper_task_id),
                 status="failed",
                 node="document",
                 error_code="INTERNAL_ERROR",
@@ -940,38 +979,42 @@ async def create_task_request_by_upload(
             paper_entries.append(paper_entry)
             continue
 
+        document_id = _uuid_str(document.document_id)
         try:
             paper_entry = postgres.create_paper_task(
-                request_id=request_entry.request_id,
-                document_id=document.document_id,
+                request_id=request_entry_id,
+                document_id=document_id,
                 original_filename=filename or None,
                 file_hash=file_hash,
                 status="queued",
             )
+            paper_task_id = _uuid_str(paper_entry.paper_task_id)
             tmp_path = _create_managed_upload_temp_file(
                 payload=payload,
                 suffix=suffix,
-                paper_task_id=paper_entry.paper_task_id,
+                paper_task_id=paper_task_id,
             )
-            async_result = process_pdf_task.apply_async(
+            async_result = _celery_task(process_pdf_task).apply_async(
                 args=[[tmp_path]],
                 kwargs={
                     "file_hash": file_hash,
-                    "document_id": str(document.document_id),
-                    "paper_task_id": str(paper_entry.paper_task_id),
-                    "request_id": str(request_entry.request_id),
+                    "document_id": document_id,
+                    "paper_task_id": paper_task_id,
+                    "request_id": request_entry_id,
                 },
             )
         except Exception as exc:
             logger.exception(
                 "Failed to enqueue paper task {}: {}",
-                paper_entry.paper_task_id if paper_entry else filename,
+                _uuid_str(paper_entry.paper_task_id) if paper_entry else filename,
                 exc,
             )
             if paper_entry is None:
                 paper_entry = postgres.create_paper_task(
-                    request_id=request_entry.request_id,
-                    document_id=(document.document_id if document is not None else None),
+                    request_id=request_entry_id,
+                    document_id=_uuid_optional_str(document.document_id)
+                    if document is not None
+                    else None,
                     original_filename=filename or None,
                     file_hash=file_hash,
                     status="failed",
@@ -979,19 +1022,22 @@ async def create_task_request_by_upload(
                 )
             else:
                 paper_entry = postgres.update_paper_task(
-                    paper_entry.paper_task_id,
+                    _uuid_str(paper_entry.paper_task_id),
                     status="failed",
                     error_code="INTERNAL_ERROR",
                 )
             if document is not None:
                 postgres.update_document(
-                    document.document_id,
+                    _uuid_value(document.document_id),
                     status="failed",
                     summary="Task queue unavailable",
                 )
             _cleanup_upload_temp_file(tmp_path)
+            if paper_entry is None:
+                raise RuntimeError("paper entry missing after queue failure")
+            failed_paper_task_id = _uuid_str(paper_entry.paper_task_id)
             postgres.append_paper_task_log(
-                paper_entry.paper_task_id,
+                failed_paper_task_id,
                 status="failed",
                 node="queue",
                 error_code="INTERNAL_ERROR",
@@ -1001,11 +1047,11 @@ async def create_task_request_by_upload(
             continue
 
         paper_entry = postgres.update_paper_task(
-            paper_entry.paper_task_id,
+            paper_task_id,
             celery_task_id=async_result.id,
         )
         postgres.append_paper_task_log(
-            paper_entry.paper_task_id,
+            paper_task_id,
             status="queued",
             node="queue",
             message="Paper task queued",
@@ -1013,17 +1059,10 @@ async def create_task_request_by_upload(
         )
         paper_entries.append(paper_entry)
 
-    request_entry = postgres.refresh_task_request_status(request_entry.request_id) or request_entry
+    request_entry = postgres.refresh_task_request_status(request_entry_id) or request_entry
     return TaskRequestCreateResponse(
-        request_id=str(getattr(request_entry, "request_id", request_entry.request_id)),
-        status=str(getattr(request_entry, "status", "queued")),
-        papers=[_paper_item_model(item) for item in paper_entries],
-    )
-
-    request_entry = postgres.refresh_task_request_status(request_entry.request_id)
-    return TaskRequestCreateResponse(
-        request_id=str(request_entry.request_id),
-        status=request_entry.status,
+        request_id=str(getattr(request_entry, "request_id", request_entry_id)),
+        status=_status_str(getattr(request_entry, "status", None)),
         papers=[_paper_item_model(item) for item in paper_entries],
     )
 
@@ -1050,7 +1089,7 @@ def get_task_request_status(
     papers = postgres.list_paper_tasks_by_request(request_uuid)
     return TaskRequestStatusResponse(
         request_id=str(request_entry.request_id),
-        status=request_entry.status,
+        status=_status_str(request_entry.status),
         papers=[_paper_item_model(item) for item in papers],
     )
 
@@ -1097,6 +1136,7 @@ def get_task_status(
         error_details=None,
     )
 
+    postgres = None
     try:
         postgres = get_postgres_client()
         paper_entry = postgres.get_paper_task_by_celery_task_id(task_id)
@@ -1149,7 +1189,7 @@ def get_task_status(
         if details_payload:
             response.error_details = details_payload
 
-        if response.parsing_metadata is None:
+        if response.parsing_metadata is None and postgres is not None:
             get_latest_log = getattr(postgres, "get_latest_paper_task_log", None)
             if callable(get_latest_log):
                 parsing_log = get_latest_log(

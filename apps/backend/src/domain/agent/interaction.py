@@ -9,7 +9,7 @@ from loguru import logger
 from pydantic import BaseModel, SecretStr
 
 from src.config import settings
-from src.database.redis_client import RedisClient
+from src.infrastructure.redis import RedisClient
 
 cfg = settings
 

@@ -13,10 +13,11 @@ from uuid import uuid4
 from loguru import logger
 from datetime import datetime
 from typing import Callable, Optional, Dict, Any
-import src.presentation.api as api_routers
-import src.presentation.task_api as task_api_routers
-import src.presentation.graph_api as evidence_api_routers
-from src.presentation.error_contract import (
+from src.api.routes.core import router as api_routers
+from src.api.routes.stream import router as stream_api_routers
+from src.api.routes.task import router as task_api_routers
+from src.api.routes.evidence import router as evidence_api_routers
+from src.api.dependencies import (
     extract_error_contract,
     failed_payload,
     map_error_code,
@@ -24,7 +25,7 @@ from src.presentation.error_contract import (
 )
 from src.utils.exceptions import ACMGException, TaskNotFoundException, ValidationException
 from src.health import check_all_connections
-from src.database.minio_client import MinIOClient
+from src.infrastructure.minio import MinIOClient
 from src.config import settings as cfg  # 导入配置实例
 
 
@@ -133,9 +134,10 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
-app.include_router(api_routers.router, prefix=cfg.api_prefix)
-app.include_router(task_api_routers.router, prefix=cfg.api_prefix)
-app.include_router(evidence_api_routers.router, prefix=cfg.api_prefix)
+app.include_router(api_routers, prefix=cfg.api_prefix)
+app.include_router(task_api_routers, prefix=cfg.api_prefix)
+app.include_router(evidence_api_routers, prefix=cfg.api_prefix)
+app.include_router(stream_api_routers, prefix=cfg.api_prefix)
 
 
 @app.exception_handler(ACMGException)

@@ -31,16 +31,16 @@ from src.domain.models import (
 )
 from src.domain.graph.sync import SchemaSyncError, get_graph_sync_service
 from src.domain.literature import get_firecrawl_service, get_pubmed_service
-from src.database.qdrant_client import QdrantManager, initialize_knowledge_base
-from src.database.minio_client import MinIOClient
-from src.database.postgre_client import get_postgres_client
-from src.presentation.error_contract import map_error_code
+from src.tools.db.qdrant_tool import QdrantManager, initialize_knowledge_base
+from src.infrastructure.minio import MinIOClient
+from src.infrastructure.postgres import get_postgres_client
+from src.api.dependencies import map_error_code
 from src.utils.timer import Timer
 import src.utils.exceptions as exc
 import src.utils.file_utils as file_utils
 from src.config import settings
 from src.celery_app import celery_app
-from src.database.redis_client import cache_pdf_result
+from src.infrastructure.redis import cache_pdf_result
 from src.service.enum import (
     PROCESSING_NODE_TO_STEP,
     ProcessingStepStatus,

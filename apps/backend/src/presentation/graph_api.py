@@ -3,6 +3,7 @@
 提供基于 Gene / Variant / Protein Change 的多文档图谱检索、
 实体关联分析、证据聚合和质量监控接口。
 """
+
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -11,7 +12,7 @@ from fastapi import APIRouter, HTTPException, Path, Query
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from src.database.neo4j_client import get_neo4j_client
+from src.infrastructure.neo4j import get_neo4j_client
 from src.domain.graph.association_service import get_entity_association_analyzer
 from src.domain.evidence.aggregator import get_evidence_aggregation_engine
 from src.domain.graph.search import get_graph_search_engine
@@ -22,6 +23,7 @@ from src.domain.graph.sync import get_graph_sync_service
 
 class EvidenceSearchRequest(BaseModel):
     """证据搜索请求"""
+
     gene_symbol: Optional[str] = Field(None, description="基因符号，如 BRCA1")
     variant: Optional[str] = Field(None, description="变异 HGVS c./p. 描述")
     protein_change: Optional[str] = Field(None, description="蛋白变化描述")
@@ -44,6 +46,7 @@ class EvidenceSearchRequest(BaseModel):
 
 class EvidenceSearchResponse(BaseModel):
     """证据搜索响应"""
+
     code: int = 0
     message: str = "ok"
     data: Dict[str, Any] = Field(default_factory=dict)
@@ -54,6 +57,7 @@ class EvidenceSearchResponse(BaseModel):
 
 class AggregationResponse(BaseModel):
     """聚合响应"""
+
     code: int = 0
     message: str = "ok"
     data: Dict[str, Any] = Field(default_factory=dict)
@@ -64,6 +68,7 @@ class AggregationResponse(BaseModel):
 
 class QualityOverviewResponse(BaseModel):
     """质量监控响应"""
+
     code: int = 0
     message: str = "ok"
     data: Dict[str, Any] = Field(default_factory=dict)
@@ -91,7 +96,9 @@ def _parse_document_identifier(raw_id: str) -> tuple[str, Optional[int]]:
     return normalized, None
 
 
-def _inject_document_identifier(payload: Dict[str, Any], normalized: str, numeric: Optional[int]) -> Dict[str, Any]:
+def _inject_document_identifier(
+    payload: Dict[str, Any], normalized: str, numeric: Optional[int]
+) -> Dict[str, Any]:
     identifier: Any = numeric if numeric is not None else normalized
     if identifier:
         payload["document_id"] = identifier
@@ -103,6 +110,7 @@ def _inject_document_identifier(payload: Dict[str, Any], normalized: str, numeri
 
 
 # ==================== 图谱检索 ====================
+
 
 @router.post(
     "/search",
@@ -122,7 +130,9 @@ def _inject_document_identifier(payload: Dict[str, Any], normalized: str, numeri
 async def search_evidence(req: EvidenceSearchRequest):
     """Run a multi-document graph search with structured filters."""
     if not any([req.gene_symbol, req.variant, req.protein_change]):
-        raise HTTPException(status_code=400, detail="至少需要提供 gene_symbol / variant / protein_change 之一")
+        raise HTTPException(
+            status_code=400, detail="至少需要提供 gene_symbol / variant / protein_change 之一"
+        )
 
     try:
         logger.info("Evidence search request received")
@@ -217,6 +227,7 @@ async def get_document_evidence(
 
 
 # ==================== 实体关联分析 ====================
+
 
 @router.get(
     "/association/gene/{gene_symbol}",
@@ -317,6 +328,7 @@ async def get_evidence_chains(
 
 # ==================== 证据聚合 ====================
 
+
 @router.post(
     "/aggregate",
     response_model=AggregationResponse,
@@ -404,6 +416,7 @@ async def aggregate_by_variant(
 
 # ==================== 质量监控 ====================
 
+
 @router.get(
     "/quality",
     summary="证据质量监控概览（MVP已下线）",
@@ -421,6 +434,7 @@ async def quality_overview(
 
 
 # ==================== 图数据库 ====================
+
 
 @router.get(
     "/graph/stats",

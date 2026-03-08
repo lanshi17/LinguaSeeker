@@ -4,8 +4,8 @@ from qdrant_client import QdrantClient
 from functools import lru_cache
 
 from src.config import settings as cfg
-from src.database.redis_client import redis_client
-from src.database.minio_client import MinIOClient
+from src.infrastructure.redis import redis_client
+from src.infrastructure.minio import MinIOClient
 
 
 @lru_cache(maxsize=1)

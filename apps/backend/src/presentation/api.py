@@ -6,25 +6,25 @@ import itertools
 import mimetypes
 import tempfile
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union
-from uuid import uuid4
+from typing import Any, Dict, List, Optional, Union, cast
+from uuid import UUID, uuid4
 from loguru import logger
 from src.health import check_all_connections
 from src.config import settings as cfg
 from fastapi import APIRouter, File, Request, Response, HTTPException, UploadFile, Query, Path
 from pydantic import BaseModel, Field, HttpUrl
-from src.database.redis_client import (
+from src.infrastructure.redis import (
     check_pdf_hash as redis_check_pdf_hash,
     get_cached_pdf_result,
     delete_cached_pdf_result,
     redis_client,
 )
-from src.database.postgre_client import get_postgres_client
-from src.service.tasks import process_pdf_task
-from src.database.minio_client import MinIOClient
+from src.infrastructure.postgres import get_postgres_client
+from src.services.task_manager import process_pdf_task
+from src.infrastructure.minio import MinIOClient
 from src.database.enum import MinioBucketNameEnum
 from src.database.models import MinioObjectRefModel
-from src.presentation.error_contract import build_log_link, contract_http_exception
+from src.api.dependencies import build_log_link, contract_http_exception
 from src.utils.sanitizers import sanitize_filename
 
 router = APIRouter()
@@ -247,22 +247,32 @@ async def upload_pdf(
     except Exception as exc:
         logger.exception("MinIO client init failed: {}", exc)
         raise HTTPException(status_code=503, detail="Object storage unavailable")
-    upload_ref = None
-    if existing_document and existing_document.local_path:
+    upload_ref: Optional[MinioObjectRefModel] = None
+    existing_local_path = (
+        cast(Optional[str], cast(object, existing_document.local_path))
+        if existing_document is not None
+        else None
+    )
+    existing_document_id = (
+        cast(Optional[UUID], cast(object, existing_document.document_id))
+        if existing_document is not None
+        else None
+    )
+    if existing_document is not None and existing_local_path:
         try:
             if await minio_client.file_exists(
                 MinioBucketNameEnum.LITERATURE_UPLOADS.value,
-                existing_document.local_path,
+                existing_local_path,
             ):
                 upload_ref = MinioObjectRefModel(
                     bucket=MinioBucketNameEnum.LITERATURE_UPLOADS,
-                    object_key=existing_document.local_path,
+                    object_key=existing_local_path,
                     content_type=file.content_type or "application/pdf",
                 )
         except Exception as exc:
             logger.warning(
                 "MinIO existence check failed for {}: {}. Will re-upload.",
-                existing_document.local_path,
+                existing_local_path,
                 exc,
             )
 
@@ -303,30 +313,34 @@ async def upload_pdf(
         except Exception as exc:
             logger.exception("Failed to insert document record for hash {}: {}", pdf_hash, exc)
             raise HTTPException(status_code=503, detail="PostgreSQL insert failed")
-    elif upload_ref and existing_document.local_path != upload_ref.object_key:
+    elif (
+        upload_ref is not None
+        and existing_document_id is not None
+        and existing_local_path != upload_ref.object_key
+    ):
         try:
             postgres_client.update_document(
-                existing_document.document_id,
+                existing_document_id,
                 local_path=upload_ref.object_key,
                 status="uploaded",
             )
-            document_id = str(existing_document.document_id)
+            document_id = str(existing_document_id)
         except Exception as exc:
             logger.exception("Failed to update document record for hash {}: {}", pdf_hash, exc)
             raise HTTPException(status_code=503, detail="PostgreSQL update failed")
     else:
-        if existing_document is not None:
-            document_id = str(existing_document.document_id)
+        if existing_document is not None and existing_document_id is not None:
+            document_id = str(existing_document_id)
             if not getattr(existing_document, "original_filename", None):
                 try:
                     postgres_client.update_document(
-                        existing_document.document_id,
+                        existing_document_id,
                         original_filename=safe_filename,
                     )
                 except Exception as exc:
                     logger.warning(
                         "Failed to update original filename for document {}: {}",
-                        existing_document.document_id,
+                        existing_document_id,
                         exc,
                     )
 
@@ -337,7 +351,7 @@ async def upload_pdf(
 
     try:
         logger.debug("Enqueueing Celery task for tmp path: {}", tmp_file_path)
-        async_result = process_pdf_task.apply_async(
+        async_result = cast(Any, process_pdf_task).apply_async(
             args=[[tmp_file_path]],
             kwargs={"file_hash": pdf_hash, "document_id": document_id},
         )
@@ -407,7 +421,7 @@ async def reissue_log_link(
     rate_key = f"log_reissue:{request_id}"
     try:
         redis_conn = redis_client.get_connection()
-        hit_count = int(redis_conn.incr(rate_key))
+        hit_count = int(cast(Any, redis_conn.incr(rate_key)))
         if hit_count == 1:
             redis_conn.expire(rate_key, 60)
     except Exception as exc:
@@ -420,4 +434,5 @@ async def reissue_log_link(
     return LogLinkReissueResponse(
         request_id=request_id,
         log_link=build_log_link(request_id),
+        expires_in_seconds=24 * 60 * 60,
     )
