@@ -1,0 +1,60 @@
+{
+  "timestamp": "2026-02-02T17:13:03.702874",
+  "steps": {
+    "connectivity": {
+      "postgresql": {
+        "status": "success",
+        "version": "PostgreSQL 18.1 (Debian 18.1-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+        "existing_tables": [],
+        "missing_tables": [
+          "documents",
+          "parsing_tasks",
+          "evidence_records",
+          "agent_logs"
+        ],
+        "timestamp": "2026-02-02T17:13:03.729009"
+      },
+      "neo4j": {
+        "status": "port_reachable",
+        "port_reachable": true,
+        "timestamp": "2026-02-02T17:13:03.729244"
+      },
+      "qdrant": {
+        "status": "port_reachable",
+        "port_reachable": true,
+        "timestamp": "2026-02-02T17:13:03.729341"
+      },
+      "minio": {
+        "status": "port_reachable",
+        "port_reachable": true,
+        "timestamp": "2026-02-02T17:13:03.729422"
+      },
+      "summary": {
+        "total_tests": 4,
+        "passed_tests": 4,
+        "failed_tests": 0,
+        "timestamp": "2026-02-02T17:13:03.729427"
+      }
+    },
+    "mock_data": {
+      "documents_count": 20,
+      "parsing_tasks_count": 20,
+      "evidence_records_count": 100,
+      "agent_logs_count": 40
+    },
+    "statistics": {
+      "total_documents": 20,
+      "total_tasks": 20,
+      "total_evidence": 100,
+      "total_logs": 40,
+      "timestamp": "2026-02-02T17:13:03.733103"
+    },
+    "operations": null
+  },
+  "summary": {
+    "total_steps": 4,
+    "successful_steps": 4,
+    "failed_steps": 0,
+    "pipeline_status": "success"
+  }
+}
