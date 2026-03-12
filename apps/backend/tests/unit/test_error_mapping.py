@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.presentation.error_contract import (
+from src.api.dependencies import (
     contract_http_exception,
     extract_error_contract,
     map_error_code,

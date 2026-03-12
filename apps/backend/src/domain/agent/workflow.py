@@ -649,6 +649,66 @@ class EvidenceAgent:
 
         return state
 
+    @staticmethod
+    def _get_image_media_type(img_path: str) -> str:
+        ext = Path(img_path).suffix.lower()
+        return {
+            ".jpg": "images/jpeg",
+            ".jpeg": "images/jpeg",
+            ".png": "images/png",
+            ".gif": "images/gif",
+            ".webp": "images/webp",
+        }.get(ext, "images/jpeg")
+
+    @staticmethod
+    def _encode_image(img_path: str) -> tuple[str, str]:
+        with open(img_path, "rb") as f:
+            img_data = base64.b64encode(f.read()).decode()
+        media_type = EvidenceAgent._get_image_media_type(img_path)
+        return img_data, media_type
+
+    def _describe_images_batch(self, vlm: Any, paths: list[str], start_index: int = 0) -> list[str]:
+        content: list[Any] = [
+            {
+                "type": "text",
+                "text": prompts.get_batch_image_description_prompt(len(paths)),
+            }
+        ]
+        batch_image_inputs: list[dict[str, Any]] = []
+
+        for img_path in paths:
+            img_data, media_type = self._encode_image(img_path)
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:{media_type};base64,{img_data}"},
+                }
+            )
+            batch_image_inputs.append(
+                {"path": img_path, "base64": img_data, "mime_type": media_type}
+            )
+
+        response = vlm.invoke([HumanMessage(content=content)])
+        raw_text = self._message_content_to_text(response.content)
+
+        descriptions: list[str] = []
+        current_desc_lines: list[str] = []
+        for line in raw_text.split("\n"):
+            stripped = line.strip()
+            if stripped.lower().startswith("figure ") and ":" in stripped:
+                if current_desc_lines:
+                    descriptions.append("\n".join(current_desc_lines).strip())
+                current_desc_lines = [stripped.split(":", 1)[1].strip()]
+            elif stripped:
+                current_desc_lines.append(stripped)
+        if current_desc_lines:
+            descriptions.append("\n".join(current_desc_lines).strip())
+
+        if len(descriptions) < len(paths):
+            descriptions.extend([""] * (len(paths) - len(descriptions)))
+
+        return descriptions[: len(paths)]
+
     @timer("步骤2: 图片描述")
     def describe_images(self, state: ProcessingState) -> ProcessingState:
         """使用 VLM 生成图片描述"""
@@ -667,43 +727,57 @@ class EvidenceAgent:
 
         logger.info(f"开始处理 {len(image_paths)} 张图片...")
 
-        llm = self.get_vlm()
-        descriptions = []
+        vlm = self.get_vlm()
+        max_batch = self.cfg.vlm_max_batch_images
+        descriptions: list[str] = []
+        image_inputs: list[dict[str, Any]] = []
 
-        for idx, img_path in enumerate(image_paths):
+        for batch_start in range(0, len(image_paths), max_batch):
+            batch_paths = image_paths[batch_start : batch_start + max_batch]
             try:
-                with open(img_path, "rb") as f:
-                    img_data = base64.b64encode(f.read()).decode()
-
-                ext = Path(img_path).suffix.lower()
-                media_type = {
-                    ".jpg": "images/jpeg",
-                    ".jpeg": "images/jpeg",
-                    ".png": "images/png",
-                    ".gif": "images/gif",
-                    ".webp": "images/webp",
-                }.get(ext, "images/jpeg")
-
-                prompt = prompts.get_image_description_prompt(idx + 1)
-
-                message = HumanMessage(
-                    content=[
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:{media_type};base64,{img_data}"},
-                        },
-                    ]
+                batch_descs = self._describe_images_batch(vlm, batch_paths, start_index=batch_start)
+                descriptions.extend(batch_descs)
+                for img_path in batch_paths:
+                    img_data, media_type = self._encode_image(img_path)
+                    image_inputs.append(
+                        {"path": img_path, "base64": img_data, "mime_type": media_type}
+                    )
+                logger.info(
+                    f"批量描述完成: 图片 {batch_start + 1}-{batch_start + len(batch_paths)}"
                 )
-
-                response = llm.invoke([message])
-                descriptions.append(self._message_content_to_text(response.content))
-                logger.info(f"图片 {idx + 1} 描述完成")
-            except Exception as e:
-                logger.error(f"处理图片 {img_path} 失败: {e}")
-                raise RuntimeError(f"图片处理失败: {img_path}") from e
+            except Exception:
+                logger.warning(
+                    f"批量描述失败，回退到逐张处理: 图片 {batch_start + 1}-{batch_start + len(batch_paths)}"
+                )
+                for idx, img_path in enumerate(batch_paths):
+                    try:
+                        img_data, media_type = self._encode_image(img_path)
+                        prompt = prompts.get_image_description_prompt(batch_start + idx + 1)
+                        message = HumanMessage(
+                            content=[
+                                {"type": "text", "text": prompt},
+                                {
+                                    "type": "image_url",
+                                    "image_url": {"url": f"data:{media_type};base64,{img_data}"},
+                                },
+                            ]
+                        )
+                        response = vlm.invoke([message])
+                        descriptions.append(self._message_content_to_text(response.content))
+                        image_inputs.append(
+                            {
+                                "path": img_path,
+                                "base64": img_data,
+                                "mime_type": media_type,
+                            }
+                        )
+                        logger.info(f"图片 {batch_start + idx + 1} 描述完成（逐张）")
+                    except Exception as e:
+                        logger.error(f"处理图片 {img_path} 失败: {e}")
+                        raise RuntimeError(f"图片处理失败: {img_path}") from e
 
         state["image_descriptions"] = descriptions
+        state["image_inputs"] = image_inputs
         return state
 
     @timer("步骤4: 证据提取+RAG")
@@ -825,6 +899,14 @@ class EvidenceAgent:
             final_recommendation,
             knowledge_context=knowledge_context,
         )
+
+        graph_context = state.get("graph_context")
+        if isinstance(graph_context, dict) and graph_context.get("reasoning_summary"):
+            prompt += (
+                "\n\n--- Knowledge Graph Reasoning Context ---\n"
+                + graph_context["reasoning_summary"]
+                + "\n--- End Knowledge Graph Context ---\n"
+            )
 
         try:
             response = llm.invoke([HumanMessage(content=prompt)])

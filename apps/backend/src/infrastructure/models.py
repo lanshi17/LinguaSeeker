@@ -22,7 +22,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import declarative_base, relationship
 
-from src.database.enum import MinioBucketNameEnum
+from src.infrastructure.enum import MinioBucketNameEnum
 
 Base = declarative_base()
 

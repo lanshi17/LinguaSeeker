@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Tuple
 
 import pytest
 
-from src.database import neo4j_client as neo4j_module
+from src.infrastructure import neo4j as neo4j_module
 
 
 class FakeRecord:
@@ -51,10 +51,14 @@ class FakeDriver:
         return None
 
 
-def _make_client(monkeypatch: pytest.MonkeyPatch, responses: List[List[Dict[str, Any]]]) -> Tuple[neo4j_module.Neo4jClient, FakeDriver]:
+def _make_client(
+    monkeypatch: pytest.MonkeyPatch, responses: List[List[Dict[str, Any]]]
+) -> Tuple[neo4j_module.Neo4jClient, FakeDriver]:
     fake_driver = FakeDriver(responses)
     monkeypatch.setattr(neo4j_module.GraphDatabase, "driver", lambda *args, **kwargs: fake_driver)
-    client = neo4j_module.Neo4jClient(uri="bolt://localhost", user="neo4j", password="pass", database="neo4j")
+    client = neo4j_module.Neo4jClient(
+        uri="bolt://localhost", user="neo4j", password="pass", database="neo4j"
+    )
     return client, fake_driver
 
 
@@ -95,7 +99,11 @@ def test_link_gene_variant(monkeypatch: pytest.MonkeyPatch) -> None:
 
     query, params = driver.session_obj.calls[-1]
     assert "HAS_VARIANT" in query
-    assert params == {"gene_symbol": "GENE1", "variant_hgvs_c": "c.1A>T", "props": {"source": "unit"}}
+    assert params == {
+        "gene_symbol": "GENE1",
+        "variant_hgvs_c": "c.1A>T",
+        "props": {"source": "unit"},
+    }
 
 
 def test_find_multi_document_evidence_no_conditions(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -121,7 +129,13 @@ def test_find_multi_document_evidence_with_gene(monkeypatch: pytest.MonkeyPatch)
 def test_get_graph_statistics(monkeypatch: pytest.MonkeyPatch) -> None:
     client, _driver = _make_client(
         monkeypatch,
-        [[{"label": "Gene", "count": 2}, {"label": "HAS_VARIANT", "count": 3}, {"label": None, "count": 1}]],
+        [
+            [
+                {"label": "Gene", "count": 2},
+                {"label": "HAS_VARIANT", "count": 3},
+                {"label": None, "count": 1},
+            ]
+        ],
     )
 
     stats = client.get_graph_statistics()

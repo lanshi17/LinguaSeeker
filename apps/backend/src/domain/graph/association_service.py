@@ -12,8 +12,8 @@ from typing import Any, Dict, List, Optional, Set
 
 from loguru import logger
 
-from src.database.neo4j_client import get_neo4j_client, Neo4jClient
-from src.database.postgre_client import get_postgres_client, PostgresClient
+from src.infrastructure.neo4j import get_neo4j_client, Neo4jClient
+from src.infrastructure.postgres import get_postgres_client, PostgresClient
 from src.domain.evidence.dtos import AssociationReport, EntityLink
 
 

@@ -3,6 +3,7 @@ from src.services.task_manager import (
     process_pdf_task,
     process_pubmed_paper_task,
     process_web_page_task,
+    resume_supervisor_task,
 )
 
 __all__ = [
@@ -10,4 +11,5 @@ __all__ = [
     "process_pdf_task",
     "process_pubmed_paper_task",
     "process_web_page_task",
+    "resume_supervisor_task",
 ]

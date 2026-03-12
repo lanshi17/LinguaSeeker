@@ -3,8 +3,8 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 from main import app
-from src.service.dtos import PaperTaskItemResponse, TaskRequestStatusResponse, TaskStatusResponse
-from src.service.enum import TaskStatus, WorkflowStatus
+from src.services.dtos import PaperTaskItemResponse, TaskRequestStatusResponse, TaskStatusResponse
+from src.services.enum import TaskStatus, WorkflowStatus
 
 
 def test_stream_route_emits_terminal_status(monkeypatch) -> None:

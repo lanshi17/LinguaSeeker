@@ -12,8 +12,8 @@ from fastapi.testclient import TestClient
 
 import main
 from src.config import settings as cfg
-from src.database.minio_client import MinIOClient
-import src.presentation.task_api as task_api
+from src.infrastructure.minio import MinIOClient
+import src.api.routes.task as task_api
 
 
 @pytest.fixture()

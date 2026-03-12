@@ -12,7 +12,7 @@ from src.domain.evidence import aggregator as aggregator_module
 from src.domain.graph import association_service as assoc_module
 from src.domain.graph import search as search_module
 from src.domain.graph import sync as sync_module
-from src.presentation import graph_api as graph_api_module
+from src.api.routes import evidence as graph_api_module
 
 
 class DummyRag:

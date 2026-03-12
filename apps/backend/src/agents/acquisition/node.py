@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from src.domain.literature.acquisition_agent import get_literature_acquisition_agent
-from src.service.enum import (
+from src.services.enum import (
     ProcessingStepStatus,
     derive_workflow_status,
     merge_processing_step_update,

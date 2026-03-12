@@ -7,8 +7,8 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from src.database.postgre_client import get_postgres_client
-from src.database.redis_client import (
+from src.infrastructure.postgres import get_postgres_client
+from src.infrastructure.redis import (
     redis_client,
     PDF_RESULT_KEY_PREFIX,
     PDF_HASH_KEY_PREFIX,

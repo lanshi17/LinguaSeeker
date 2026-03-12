@@ -9,15 +9,15 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from src.database.postgre_client import get_postgres_client
-from src.database.redis_client import (
+from src.infrastructure.postgres import get_postgres_client
+from src.infrastructure.redis import (
     redis_client,
     PDF_HASH_KEY_PREFIX,
     PDF_RESULT_KEY_PREFIX,
 )
-from src.database.minio_client import MinIOClient
-from src.database.enum import MinioBucketNameEnum
-from src.database.neo4j_client import get_neo4j_client
+from src.infrastructure.minio import MinIOClient
+from src.infrastructure.enum import MinioBucketNameEnum
+from src.infrastructure.neo4j import get_neo4j_client
 
 
 def _iter_chunks(items: List[str], size: int) -> Iterable[List[str]]:

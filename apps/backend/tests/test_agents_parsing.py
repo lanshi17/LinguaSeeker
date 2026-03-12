@@ -5,7 +5,7 @@ from typing import Any, cast
 from src.domain.agent.document_parsing import DocumentParsingAgent as LegacyDocumentParsingAgent
 from src.domain.mineru.component import MinerUComponent as LegacyMinerUComponent
 from src.domain.models import DocumentParsingResult
-from src.service.enum import default_processing_steps
+from src.services.enum import default_processing_steps
 from src.state.global_state import SupervisorState
 
 

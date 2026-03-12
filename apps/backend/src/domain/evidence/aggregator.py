@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from loguru import logger
 
-from src.database.postgre_client import get_postgres_client
+from src.infrastructure.postgres import get_postgres_client
 from src.domain.enums import (
     EVIDENCE_VALIDITY_THRESHOLD,
     EvidenceClassification,

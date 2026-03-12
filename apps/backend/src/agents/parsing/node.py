@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any, cast
 
 from src.domain.agent.document_parsing import get_document_parsing_agent
-from src.service.enum import (
+from src.services.enum import (
     ProcessingStepStatus,
     derive_workflow_status,
     merge_processing_step_update,

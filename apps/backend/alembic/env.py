@@ -7,8 +7,8 @@ from typing import Any, Dict
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from src.database.models import Base
-from src.database.postgre_client import get_database_url
+from src.infrastructure.models import Base
+from src.infrastructure.postgres import get_database_url
 
 config = context.config
 

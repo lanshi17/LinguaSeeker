@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     vlm_base_url: str
     vlm_model: str
     vlm_enable: bool = False
+    vlm_max_batch_images: int = 10
 
     # 证据提取智能体
     evidence_api_key: str

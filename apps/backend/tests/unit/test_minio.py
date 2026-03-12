@@ -9,9 +9,9 @@ from datetime import datetime, timezone
 
 from minio.error import S3Error
 
-from src.database.minio_client import MinIOClient
-from src.database.enum import MinioBucketNameEnum
-from src.database.models import MinioObjectRefModel
+from src.infrastructure.minio import MinIOClient
+from src.infrastructure.enum import MinioBucketNameEnum
+from src.infrastructure.models import MinioObjectRefModel
 from src.utils.exceptions import StoreException
 
 
@@ -146,7 +146,7 @@ def fake_minio_client(monkeypatch):
 	def fake_minio_factory(*args, **kwargs):
 		return fake
 
-	monkeypatch.setattr("src.database.minio_client.Minio", fake_minio_factory)
+	monkeypatch.setattr("src.infrastructure.minio.Minio", fake_minio_factory)
 	return fake
 
 

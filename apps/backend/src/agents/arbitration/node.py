@@ -46,6 +46,7 @@ def run_arbitration_node(state: SupervisorState) -> SupervisorState:
             "ps3_evidence": ps3_evidence,
             "extracted_fields": _structured_fields_value(updated.get("extracted_fields")),
             "arbitration_confidence": updated.get("arbitration_confidence"),
+            "graph_context": updated.get("graph_context"),
             "status": updated.get("workflow_status", "pending") or "pending",
         }
     )

@@ -531,6 +531,32 @@ def get_image_description_prompt(image_index: int) -> str:
     return render_prompt_template("extraction", "image_description", image_index=image_index)
 
 
+def get_batch_image_description_prompt(image_count: int) -> str:
+    """
+    生成批量图片描述的提示词
+
+    Args:
+        image_count: 批量处理的图片数量
+
+    Returns:
+        格式化的提示词
+    """
+    return (
+        f"You are analyzing {image_count} scientific figure(s) from a research paper. "
+        "For EACH figure, provide a detailed description covering:\n"
+        "1. Figure type (e.g., bar chart, Western blot, microscopy image, flow cytometry plot)\n"
+        "2. Key data shown (axes, labels, conditions, samples)\n"
+        "3. Main findings or trends visible\n"
+        "4. Any statistical information (p-values, error bars, significance markers)\n\n"
+        "Format your response as a numbered list matching the figure order:\n"
+        "Figure 1: [description]\n"
+        "Figure 2: [description]\n"
+        "...\n\n"
+        "Be specific and quantitative where possible. "
+        "Focus on information relevant to functional evidence assessment."
+    )
+
+
 def get_layout_fusion_prompt(translated_md: str, image_descriptions: List[str]) -> str:
     """
     生成排版融合的提示词

@@ -5,7 +5,7 @@ MinerU 相关常量已迁移至 mineru_constants.py。
 """
 
 from enum import Enum
-from typing import TypedDict, List, Dict, Any, Optional, Tuple
+from typing import TypedDict, List, Dict, Any, Optional, Tuple, NotRequired
 
 try:
     from src.config import settings as _settings  # type: ignore
@@ -157,6 +157,8 @@ class ProcessingState(TypedDict):
     # VLM 相关
     enable_vlm: bool  # 是否启用（默认关闭）
     vlm_results: List[Dict[str, Any]]  # VLM 提取结果
+    image_inputs: NotRequired[List[Dict[str, Any]]]  # 批量 VLM 输入（path, base64, mime_type）
+    graph_context: NotRequired[Optional[Dict[str, Any]]]  # 知识图谱推理上下文
 
     # 最终结果
     status: str  # "pending", "approved", "manual_review"

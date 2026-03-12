@@ -8,9 +8,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 import main
-import src.presentation.api as api_module
+import src.api.routes.core as api_module
 from src.config import settings as cfg
-from src.database.minio_client import MinIOClient
+from src.infrastructure.minio import MinIOClient
 
 
 @pytest.fixture()

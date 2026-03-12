@@ -6,12 +6,12 @@ from src.domain.enums import ProcessingState
 
 
 def test_db_tool_reexports_legacy_clients() -> None:
-    from src.database.neo4j_client import Neo4jClient as LegacyNeo4jClient
-    from src.database.neo4j_client import get_neo4j_client as legacy_get_neo4j_client
-    from src.database.postgre_client import PostgresClient as LegacyPostgresClient
-    from src.database.postgre_client import get_postgres_client as legacy_get_postgres_client
-    from src.database.qdrant_client import QdrantManager as LegacyQdrantManager
-    from src.database.qdrant_client import get_qdrant_manager as legacy_get_qdrant_manager
+    from src.infrastructure.neo4j import Neo4jClient as LegacyNeo4jClient
+    from src.infrastructure.neo4j import get_neo4j_client as legacy_get_neo4j_client
+    from src.infrastructure.postgres import PostgresClient as LegacyPostgresClient
+    from src.infrastructure.postgres import get_postgres_client as legacy_get_postgres_client
+    from src.infrastructure.qdrant import QdrantManager as LegacyQdrantManager
+    from src.infrastructure.qdrant import get_qdrant_manager as legacy_get_qdrant_manager
     from src.tools.db.neo4j_tool import Neo4jClient, get_neo4j_client
     from src.tools.db.postgres_tool import PostgresClient, get_postgres_client
     from src.tools.db.qdrant_tool import QdrantManager, get_qdrant_manager
@@ -25,8 +25,8 @@ def test_db_tool_reexports_legacy_clients() -> None:
 
 
 def test_file_tool_reexports_parser_and_storage_helpers() -> None:
-    from src.database.minio_client import MinIOClient as LegacyMinIOClient
-    from src.database.minio_client import get_minio_client as legacy_get_minio_client
+    from src.infrastructure.minio import MinIOClient as LegacyMinIOClient
+    from src.infrastructure.minio import get_minio_client as legacy_get_minio_client
     from src.domain.agent.document_parsing import DocumentParsingAgent as LegacyDocumentParsingAgent
     from src.domain.agent.document_parsing import collect_parsing_assets as legacy_collect_assets
     from src.domain.agent.document_parsing import (

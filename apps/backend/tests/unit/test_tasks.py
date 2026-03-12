@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from src.domain.graph.sync import SchemaSyncError
-from src.service import tasks as tasks_module
+from src.services import task_manager as tasks_module
 from src.domain.models import (
     DocumentParsingArtifact,
     DocumentParsingResult,

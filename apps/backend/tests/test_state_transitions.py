@@ -4,9 +4,9 @@ import ast
 import inspect
 import textwrap
 
-from src.database.models import PaperTask
-from src.database.postgre_client import PostgresClient
-from src.service.enum import (
+from src.infrastructure.models import PaperTask
+from src.infrastructure.postgres import PostgresClient
+from src.services.enum import (
     PROCESSING_STEP_ORDER,
     ProcessingStepStatus,
     WorkflowStatus,
@@ -65,6 +65,7 @@ class TestProcessingStepTransitions:
             "parsing",
             "translation",
             "extraction",
+            "reasoning",
             "classification",
             "adjudication",
         )

@@ -1,5 +1,5 @@
 from src.domain.variant import VariationDataService, get_variation_data_service
-from src.service.tasks import _attempt_hgvs_correction
+from src.services.task_manager import _attempt_hgvs_correction
 
 
 def attempt_hgvs_correction(source_text: str, translated_text: str) -> tuple[str, bool]:

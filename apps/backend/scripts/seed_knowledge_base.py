@@ -12,7 +12,7 @@ sys.path.insert(0, str(project_root))
 from loguru import logger
 
 from src.config import settings as cfg
-from src.database.qdrant_client import QdrantManager
+from src.infrastructure.qdrant import QdrantManager
 
 
 def _parse_args() -> argparse.Namespace:

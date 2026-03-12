@@ -8,7 +8,7 @@ from src.domain.literature import LiteratureAcquisitionAgent as LegacyLiterature
 from src.domain.literature import get_firecrawl_service as legacy_get_firecrawl_service
 from src.domain.literature import get_pubmed_service as legacy_get_pubmed_service
 from src.domain.literature.acquisition_agent import AcquisitionPlanItem
-from src.service.enum import default_processing_steps
+from src.services.enum import default_processing_steps
 from src.state.global_state import SupervisorState
 from src.utils.exceptions import ValidationException
 

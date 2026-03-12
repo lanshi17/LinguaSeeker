@@ -6,8 +6,8 @@ from typing import Any, Dict, List, Optional
 from loguru import logger
 
 from src.config import settings as cfg
-from src.database.postgre_client import get_postgres_client, PostgresClient
-from src.database.models import ClinGenEvidenceProfile, ClinVarVariation, VariationCitation
+from src.infrastructure.postgres import get_postgres_client, PostgresClient
+from src.infrastructure.models import ClinGenEvidenceProfile, ClinVarVariation, VariationCitation
 from src.domain.variant.clinvar_client import ClinVarClient, ClinVarVariantSummary
 from src.domain.variant.clingen_client import ClinGenEviRepoClient, ClinGenInterpretation
 

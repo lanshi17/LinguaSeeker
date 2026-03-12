@@ -11,8 +11,8 @@ from uuid import UUID
 
 from loguru import logger
 
-from src.database.neo4j_client import get_neo4j_client
-from src.database.postgre_client import get_postgres_client
+from src.infrastructure.neo4j import get_neo4j_client
+from src.infrastructure.postgres import get_postgres_client
 from src.domain.variant import get_variation_data_service, VariationDataService
 
 

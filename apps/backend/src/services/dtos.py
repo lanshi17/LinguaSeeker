@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
-from src.service.enum import TaskStatus, WorkflowStatus
+from src.services.enum import TaskStatus, WorkflowStatus
 
 
 class ValidationErrorDetail(BaseModel):

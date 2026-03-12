@@ -27,6 +27,7 @@ class WorkflowStatus(str, Enum):
     processing_pdf = "PROCESSING_PDF"
     translating = "TRANSLATING"
     extracting_evidence = "EXTRACTING_EVIDENCE"
+    reasoning = "REASONING"
     classifying = "CLASSIFYING"
     adjudicating = "ADJUDICATING"
     completed = "COMPLETED"
@@ -39,6 +40,7 @@ WORKFLOW_STATUS_DESCRIPTIONS: Dict[WorkflowStatus, str] = {
     WorkflowStatus.processing_pdf: "Parsing uploaded document content.",
     WorkflowStatus.translating: "Translating non-English content into English.",
     WorkflowStatus.extracting_evidence: "Extracting entities, relations, and PS3/BS3 evidence.",
+    WorkflowStatus.reasoning: "Querying knowledge graph for variant-gene-disease evidence context.",
     WorkflowStatus.classifying: "Applying ACMG PS3/BS3 classification rules.",
     WorkflowStatus.adjudicating: "Resolving evidence conflicts with adjudication logic.",
     WorkflowStatus.completed: "Workflow completed successfully.",
@@ -68,6 +70,12 @@ WORKFLOW_STATUS_TRANSITIONS: Dict[WorkflowStatus, tuple[WorkflowStatus, ...]] = 
         WorkflowStatus.failed,
     ),
     WorkflowStatus.extracting_evidence: (
+        WorkflowStatus.reasoning,
+        WorkflowStatus.classifying,
+        WorkflowStatus.adjudicating,
+        WorkflowStatus.failed,
+    ),
+    WorkflowStatus.reasoning: (
         WorkflowStatus.classifying,
         WorkflowStatus.adjudicating,
         WorkflowStatus.failed,
@@ -102,6 +110,7 @@ PROCESSING_STEP_ORDER: tuple[str, ...] = (
     "parsing",
     "translation",
     "extraction",
+    "reasoning",
     "classification",
     "adjudication",
 )
@@ -112,9 +121,11 @@ PROCESSING_NODE_TO_STEP: Dict[str, str] = {
     "parsing": "parsing",
     "translation": "translation",
     "extraction": "extraction",
+    "reasoning": "reasoning",
     "acmg": "classification",
     "classification": "classification",
     "adjudication": "adjudication",
+    "arbitration": "adjudication",
 }
 
 
@@ -123,6 +134,7 @@ STEP_TO_WORKFLOW_STATUS: Dict[str, WorkflowStatus] = {
     "parsing": WorkflowStatus.processing_pdf,
     "translation": WorkflowStatus.translating,
     "extraction": WorkflowStatus.extracting_evidence,
+    "reasoning": WorkflowStatus.reasoning,
     "classification": WorkflowStatus.classifying,
     "adjudication": WorkflowStatus.adjudicating,
 }

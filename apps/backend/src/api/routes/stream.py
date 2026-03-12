@@ -2,8 +2,8 @@ import asyncio
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
-from src.presentation.task_api import get_task_request_status, get_task_status
-from src.service.enum import TaskStatus
+from src.api.routes.task import get_task_request_status, get_task_status
+from src.services.enum import TaskStatus
 
 router = APIRouter(prefix="/stream", tags=["Stream"])
 

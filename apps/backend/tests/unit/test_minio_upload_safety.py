@@ -5,9 +5,9 @@ from typing import Any
 
 import pytest
 
-from src.database.enum import MinioBucketNameEnum
-from src.database.minio_client import MinIOClient
-from src.database.models import MinioObjectRefModel
+from src.infrastructure.enum import MinioBucketNameEnum
+from src.infrastructure.minio import MinIOClient
+from src.infrastructure.models import MinioObjectRefModel
 
 
 class FakeMinio:
@@ -44,7 +44,7 @@ class FakeMinio:
 @pytest.fixture()
 def fake_minio(monkeypatch: pytest.MonkeyPatch) -> FakeMinio:
     fake = FakeMinio()
-    monkeypatch.setattr("src.database.minio_client.Minio", lambda *args, **kwargs: fake)
+    monkeypatch.setattr("src.infrastructure.minio.Minio", lambda *args, **kwargs: fake)
     return fake
 
 

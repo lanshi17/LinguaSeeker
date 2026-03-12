@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError, OperationalError
 from loguru import logger
 
 from src.config import settings as cfg
-from src.database.postgre_client import (
+from src.infrastructure.postgres import (
     Base,
     PostgresClient,
     _derive_request_status,

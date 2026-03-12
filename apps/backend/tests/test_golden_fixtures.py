@@ -13,7 +13,7 @@ from src.domain.models import (
     ExtractedEvidenceFields,
     PipelineResult,
 )
-from src.service.enum import PROCESSING_STEP_ORDER
+from src.services.enum import PROCESSING_STEP_ORDER
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 

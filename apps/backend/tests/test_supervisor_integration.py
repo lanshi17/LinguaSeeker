@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Dict, List
+from typing import Any, AsyncIterator, Dict, List
 
 import pytest
 
@@ -12,7 +12,24 @@ from src.domain.models import (
     EvidenceOutput,
     PipelineFiles,
 )
-from src.service import tasks as tasks_module
+from src.services import task_manager as tasks_module
+
+
+class _FakeGraphBase:
+    """Base class providing ``astream`` backed by ``ainvoke``."""
+
+    async def ainvoke(self, _state: Any, config: Dict[str, Any] | None = None) -> Dict[str, Any]:
+        raise NotImplementedError
+
+    async def astream(
+        self,
+        state: Any,
+        *,
+        config: Dict[str, Any] | None = None,
+        stream_mode: str = "values",
+    ) -> AsyncIterator[Dict[str, Dict[str, Any]]]:
+        result = await self.ainvoke(state, config=config)
+        yield {"__result__": result}
 
 
 def _make_evidence_output(ps3_evidence: Dict[str, Any] | None = None) -> EvidenceOutput:
@@ -226,7 +243,7 @@ def test_non_pdf_tasks_flag_on_use_supervisor_path(
 def test_run_supervisor_pipeline_passes_interrupt_flag(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: Dict[str, Any] = {}
 
-    class FakeGraph:
+    class FakeGraph(_FakeGraphBase):
         async def ainvoke(
             self, _state: Any, config: Dict[str, Any] | None = None
         ) -> Dict[str, Any]:
@@ -274,7 +291,7 @@ def test_run_supervisor_pipeline_passes_interrupt_flag(monkeypatch: pytest.Monke
 def test_run_supervisor_pipeline_falls_back_thread_id(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: Dict[str, Any] = {}
 
-    class FakeGraph:
+    class FakeGraph(_FakeGraphBase):
         async def ainvoke(
             self, _state: Any, config: Dict[str, Any] | None = None
         ) -> Dict[str, Any]:
@@ -324,7 +341,7 @@ def test_run_supervisor_pipeline_falls_back_to_document_id(
 ) -> None:
     captured: Dict[str, Any] = {}
 
-    class FakeGraph:
+    class FakeGraph(_FakeGraphBase):
         async def ainvoke(
             self, _state: Any, config: Dict[str, Any] | None = None
         ) -> Dict[str, Any]:
@@ -374,7 +391,7 @@ def test_run_supervisor_pipeline_uses_default_thread_id_when_all_empty(
 ) -> None:
     captured: Dict[str, Any] = {}
 
-    class FakeGraph:
+    class FakeGraph(_FakeGraphBase):
         async def ainvoke(
             self, _state: Any, config: Dict[str, Any] | None = None
         ) -> Dict[str, Any]:
@@ -424,7 +441,7 @@ def test_run_supervisor_pipeline_reuses_checkpointer_when_interrupt_enabled(
 ) -> None:
     captured: Dict[str, Any] = {"checkpointers": []}
 
-    class FakeGraph:
+    class FakeGraph(_FakeGraphBase):
         async def ainvoke(
             self, _state: Any, config: Dict[str, Any] | None = None
         ) -> Dict[str, Any]:
@@ -480,7 +497,7 @@ def test_run_supervisor_pipeline_reuses_checkpointer_when_interrupt_enabled(
 def test_run_supervisor_pipeline_marks_pending_review_status(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    class FakeGraph:
+    class FakeGraph(_FakeGraphBase):
         async def ainvoke(
             self, _state: Any, config: Dict[str, Any] | None = None
         ) -> Dict[str, Any]:
@@ -518,7 +535,7 @@ def test_run_supervisor_pipeline_marks_pending_review_status(
 def test_resume_supervisor_pipeline_success(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: Dict[str, Any] = {}
 
-    class FakeGraph:
+    class FakeGraph(_FakeGraphBase):
         async def ainvoke(
             self,
             _state: Any,
@@ -564,7 +581,7 @@ def test_resume_supervisor_pipeline_success(monkeypatch: pytest.MonkeyPatch) -> 
 def test_resume_supervisor_pipeline_without_checkpoint_returns_failed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    class FakeGraph:
+    class FakeGraph(_FakeGraphBase):
         async def ainvoke(
             self,
             _state: Any,
@@ -573,6 +590,18 @@ def test_resume_supervisor_pipeline_without_checkpoint_returns_failed(
             from langgraph.errors import EmptyInputError
 
             raise EmptyInputError("no checkpoint")
+
+        async def astream(
+            self,
+            state: Any,
+            *,
+            config: Dict[str, Any] | None = None,
+            stream_mode: str = "values",
+        ) -> AsyncIterator[Dict[str, Dict[str, Any]]]:
+            from langgraph.errors import EmptyInputError
+
+            raise EmptyInputError("no checkpoint")
+            yield  # type: ignore[misc]
 
     def fake_compile_supervisor(
         *,

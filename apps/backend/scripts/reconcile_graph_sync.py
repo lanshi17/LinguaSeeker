@@ -4,8 +4,8 @@ import argparse
 
 from loguru import logger
 
-from src.database.postgre_client import get_postgres_client
-from src.database.models import EvidenceRecord
+from src.infrastructure.postgres import get_postgres_client
+from src.infrastructure.models import EvidenceRecord
 from src.domain.graph.sync import GraphSyncService
 
 

@@ -1,5 +1,5 @@
 import pytest
-from src.database.qdrant_client import QdrantManager
+from src.infrastructure.qdrant import QdrantManager
 from pathlib import Path
 import os
 from icecream import ic

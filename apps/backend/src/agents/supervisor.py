@@ -10,6 +10,7 @@ from src.agents.arbitration import run_arbitration_node
 from src.agents.extraction import run_extraction_node
 from src.agents.interaction import run_interaction_node
 from src.agents.parsing import run_parsing_node
+from src.agents.reasoning.node import run_reasoning_node
 from src.domain.agent.workflow import EvidenceAgent
 from src.domain.enums import ProcessingState
 from src.state.global_state import SupervisorState
@@ -139,6 +140,7 @@ def build_supervisor_graph() -> StateGraph[SupervisorState]:
     graph.add_node("parsing", run_parsing_node)
     graph.add_node("translation", translation)
     graph.add_node("extraction", run_extraction_node)
+    graph.add_node("reasoning", run_reasoning_node)
     graph.add_node("arbitration", run_arbitration_node)
     graph.add_node("finalize", finalize)
     graph.add_node("finalize_failed", finalize_failed)
@@ -162,7 +164,8 @@ def build_supervisor_graph() -> StateGraph[SupervisorState]:
         {"translation": "translation", "finalize_failed": "finalize_failed"},
     )
     graph.add_edge("translation", "extraction")
-    graph.add_edge("extraction", "arbitration")
+    graph.add_edge("extraction", "reasoning")
+    graph.add_edge("reasoning", "arbitration")
     graph.add_conditional_edges(
         "arbitration",
         _route_after_arbitration,

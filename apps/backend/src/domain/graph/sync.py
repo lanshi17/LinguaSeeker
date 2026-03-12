@@ -18,8 +18,8 @@ from loguru import logger
 from sqlalchemy.exc import ProgrammingError as SAProgrammingError, SQLAlchemyError
 
 from src.config import settings
-from src.database.neo4j_client import get_neo4j_client, Neo4jClient
-from src.database.postgre_client import get_postgres_client, PostgresClient
+from src.infrastructure.neo4j import get_neo4j_client, Neo4jClient
+from src.infrastructure.postgres import get_postgres_client, PostgresClient
 from src.domain.variant import get_variation_data_service, VariationDataService
 from src.domain.graph.structural_variant_parser import (
     parse_structural_variant,
