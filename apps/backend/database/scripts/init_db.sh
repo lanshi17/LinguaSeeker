@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 
 if [ -f "$ROOT_DIR/.env.local" ]; then
   set -a
@@ -15,8 +15,8 @@ fi
 : "${POSTGRES_USER:?POSTGRES_USER is required}"
 : "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}"
 
-SCHEMA_SQL="$ROOT_DIR/sql/init_database_schema.sql"
-SEED_SQL="$ROOT_DIR/sql/seed_data.sql"
+SCHEMA_SQL="$ROOT_DIR/database/sql/init_database_schema.sql"
+SEED_SQL="$ROOT_DIR/database/sql/seed_data.sql"
 
 if [ ! -f "$SCHEMA_SQL" ]; then
   echo "Missing schema SQL: $SCHEMA_SQL" >&2

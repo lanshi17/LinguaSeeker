@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 
 if [ -f "$ROOT_DIR/.env.local" ]; then
   set -a
@@ -15,7 +15,7 @@ fi
 : "${POSTGRES_USER:?POSTGRES_USER is required}"
 : "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}"
 
-CLEAN_SQL="$ROOT_DIR/sql/cleanup_orphan_records.sql"
+CLEAN_SQL="$ROOT_DIR/database/sql/cleanup_orphan_records.sql"
 
 if [ ! -f "$CLEAN_SQL" ]; then
   echo "Missing cleanup SQL: $CLEAN_SQL" >&2
