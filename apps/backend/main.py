@@ -4,15 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from contextlib import asynccontextmanager
-import asyncio
 import json
 import sys
 import os
-from pathlib import Path
 from uuid import uuid4
 from loguru import logger
 from datetime import datetime
-from typing import Callable, Optional, Dict, Any
+from typing import Dict, Any
 from src.api.routes.core import router as api_routers
 from src.api.routes.stream import router as stream_api_routers
 from src.api.routes.task import router as task_api_routers
@@ -20,7 +18,6 @@ from src.api.routes.evidence import router as evidence_api_routers
 from src.api.dependencies import (
     extract_error_contract,
     failed_payload,
-    map_error_code,
     normalize_error_code,
 )
 from src.utils.exceptions import ACMGException, TaskNotFoundException, ValidationException
@@ -98,6 +95,12 @@ def _parse_cors_origins(origins: str) -> list[str]:
         return []
     if origins.strip() == "*":
         return ["*"]
+    try:
+        parsed = json.loads(origins)
+        if isinstance(parsed, list):
+            return [str(o).strip() for o in parsed if str(o).strip()]
+    except (json.JSONDecodeError, ValueError):
+        pass
     return [origin.strip() for origin in origins.split(",") if origin.strip()]
 
 
@@ -106,16 +109,26 @@ _cors_options = _build_cors_options(_parse_cors_origins(cfg.cors_origins))
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    checks = check_all_connections()
-    failed = [name for name, ok in checks.items() if not ok]
-    if failed:
-        logger.warning("Startup connectivity check failed: {}", ", ".join(failed))
-    else:
-        logger.info("Startup connectivity check passed")
     try:
-        await MinIOClient().ensure_buckets()
+        checks = check_all_connections()
+        failed = [name for name, ok in checks.items() if not ok]
+        if failed:
+            logger.warning("Startup connectivity check failed: {}", ", ".join(failed))
+        else:
+            logger.info("Startup connectivity check passed")
     except Exception as exc:
-        logger.warning("MinIO bucket init failed: {}", exc)
+        logger.error("Startup connectivity check error: {}", exc)
+        raise
+
+    try:
+        minio_client = MinIOClient()
+        logger.info("MinIO client initialized with endpoint: {}", cfg.minio_endpoint)
+        await minio_client.ensure_buckets()
+        logger.info("MinIO buckets verified successfully")
+    except Exception as exc:
+        logger.error("MinIO initialization failed: {}", exc)
+        raise RuntimeError(f"Failed to initialize MinIO storage: {exc}") from exc
+
     yield
 
 

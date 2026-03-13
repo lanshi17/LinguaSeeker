@@ -350,7 +350,7 @@ def _synthetic_hash_from_pmid(pmid: str) -> str:
 )
 async def start_interaction(payload: InteractionStartRequest) -> InteractionStartResponse:
     if not payload.user_input or not payload.user_input.strip():
-        raise HTTPException(status_code=400, detail="user_input is required")
+        raise contract_http_exception(400, "INPUT_INVALID", "user_input is required")
 
     agent = get_interaction_agent()
     try:
@@ -358,7 +358,7 @@ async def start_interaction(payload: InteractionStartRequest) -> InteractionStar
         return InteractionStartResponse(**result)
     except Exception as exc:
         logger.exception("Interaction agent start failed: {}", exc)
-        raise HTTPException(status_code=500, detail="Agent processing failed")
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Agent processing failed")
 
 
 @router.post(
@@ -377,17 +377,17 @@ async def start_interaction(payload: InteractionStartRequest) -> InteractionStar
 )
 async def respond_interaction(payload: InteractionRespondRequest) -> InteractionRespondResponse:
     if not payload.user_response or not payload.user_response.strip():
-        raise HTTPException(status_code=400, detail="user_response is required")
+        raise contract_http_exception(400, "INPUT_INVALID", "user_response is required")
 
     agent = get_interaction_agent()
     try:
         result = await agent.respond_interaction(payload.session_id, payload.user_response)
         return InteractionRespondResponse(**result)
     except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise contract_http_exception(404, "RESOURCE_NOT_FOUND", str(exc))
     except Exception as exc:
         logger.exception("Interaction agent respond failed: {}", exc)
-        raise HTTPException(status_code=500, detail="Agent processing failed")
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Agent processing failed")
 
 
 @router.post(
@@ -408,7 +408,7 @@ async def respond_interaction(payload: InteractionRespondRequest) -> Interaction
 def create_task(payload: TaskCreateRequest) -> TaskCreateResponse:
     """Queue a new processing task and return the task metadata."""
     if not payload.file_paths:
-        raise HTTPException(status_code=400, detail="file_paths is required")
+        raise contract_http_exception(400, "INPUT_INVALID", "file_paths is required")
 
     try:
         logger.debug(
@@ -419,7 +419,7 @@ def create_task(payload: TaskCreateRequest) -> TaskCreateResponse:
         async_result = _celery_task(process_pdf_task).delay(payload.file_paths, payload.output_root)
     except Exception as exc:
         logger.exception("Failed to queue task: {}", exc)
-        raise HTTPException(status_code=503, detail="Task queue unavailable")
+        raise contract_http_exception(503, "INTERNAL_ERROR", "Task queue unavailable")
     logger.debug("Task queued: {} status: {}", async_result.id, async_result.status)
     return TaskCreateResponse(
         task_id=async_result.id,
@@ -444,12 +444,10 @@ async def search_pubmed_candidates(
     payload: PubMedCandidateSearchRequest,
 ) -> PubMedCandidateSearchResponse:
     if payload.source.lower() != "pubmed":
-        raise HTTPException(status_code=400, detail="Fetch no result: source must be pubmed in MVP")
+        raise contract_http_exception(400, "INPUT_INVALID", "source must be pubmed in MVP")
     query = f"{payload.target} {payload.disease}".strip()
     if not query:
-        raise HTTPException(
-            status_code=400, detail="INPUT_INVALID: target and disease are required"
-        )
+        raise contract_http_exception(400, "INPUT_INVALID", "target and disease are required")
     service = get_pubmed_service()
     try:
         rows = await service.search_candidates(
@@ -458,13 +456,13 @@ async def search_pubmed_candidates(
             candidate_limit=payload.candidate_limit,
         )
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise contract_http_exception(400, "INPUT_INVALID", str(exc))
     except Exception as exc:
-        logger.warning("PubMed candidate fetch failed: {}", exc)
-        raise HTTPException(status_code=504, detail="Fetch timeout while querying PubMed")
+        logger.exception("PubMed candidate fetch failed: {}", exc)
+        raise contract_http_exception(504, "FETCH_TIMEOUT", "Fetch timeout while querying PubMed")
 
     if not rows:
-        raise HTTPException(status_code=400, detail="Fetch no result from PubMed")
+        raise contract_http_exception(400, "FETCH_NO_RESULT", "Fetch no result from PubMed")
 
     return PubMedCandidateSearchResponse(
         task_form=payload.task_form,
@@ -492,12 +490,12 @@ async def search_pubmed_candidates(
 )
 def submit_pubmed_selection(payload: PubMedSelectionSubmitRequest) -> TaskRequestCreateResponse:
     if payload.source.lower() != "pubmed":
-        raise HTTPException(status_code=400, detail="Fetch no result: source must be pubmed in MVP")
+        raise contract_http_exception(400, "INPUT_INVALID", "source must be pubmed in MVP")
     pmids = [str(p).strip() for p in payload.selected_pmids if str(p).strip()]
     if not pmids:
-        raise HTTPException(status_code=400, detail="INPUT_INVALID: selected_pmids is required")
+        raise contract_http_exception(400, "INPUT_INVALID", "selected_pmids is required")
     if len(pmids) > 10:
-        raise HTTPException(status_code=400, detail="INPUT_INVALID: selected_pmids max is 10")
+        raise contract_http_exception(400, "INPUT_INVALID", "selected_pmids max is 10")
 
     postgres = get_postgres_client()
     request_entry = postgres.create_task_request(
@@ -637,13 +635,13 @@ def create_task_request_by_web_crawl(
     payload: WebLiteratureCrawlRequest,
 ) -> TaskRequestCreateResponse:
     if payload.source.lower() != "web":
-        raise HTTPException(status_code=400, detail="INPUT_INVALID: source must be web")
+        raise contract_http_exception(400, "INPUT_INVALID", "source must be web")
 
     urls = [str(url).strip() for url in payload.urls if str(url).strip()]
     if not urls:
-        raise HTTPException(status_code=400, detail="INPUT_INVALID: urls is required")
+        raise contract_http_exception(400, "INPUT_INVALID", "urls is required")
     if len(urls) > 10:
-        raise HTTPException(status_code=400, detail="INPUT_INVALID: urls max is 10")
+        raise contract_http_exception(400, "INPUT_INVALID", "urls max is 10")
 
     agent = get_literature_acquisition_agent()
     plan_items = agent.plan_web_request(urls)
@@ -783,6 +781,12 @@ def create_task_request_by_web_crawl(
     )
 
 
+# TODO(P1): create_task_request_by_upload mixes sync PostgresClient calls with async MinIO calls.
+#   This blocks the event loop during postgres operations under concurrent load.
+#   Fix: Either wrap postgres calls with `await anyio.to_thread.run_sync()`
+#   or migrate PostgresClient to AsyncSession. See architecture refactor plan.
+
+
 @router.post(
     "/requests/upload",
     summary="Create request by upload",
@@ -820,7 +824,7 @@ async def create_task_request_by_upload(
         minio = MinIOClient()
     except Exception as exc:
         logger.exception("Failed to initialize dependencies for upload request: {}", exc)
-        raise HTTPException(status_code=503, detail="Dependency unavailable")
+        raise contract_http_exception(503, "INTERNAL_ERROR", "Dependency unavailable")
 
     prepared_uploads = await _prevalidate_upload_files(files)
 
@@ -1115,7 +1119,7 @@ def resume_paper_task(
     postgres = get_postgres_client()
     paper_task = postgres.get_paper_task(str(parsed_paper_task_id))
     if paper_task is None:
-        raise HTTPException(status_code=404, detail="Paper task not found")
+        raise contract_http_exception(404, "RESOURCE_NOT_FOUND", "Paper task not found")
 
     workflow_status = coerce_workflow_status(
         getattr(paper_task, "workflow_status", None),
@@ -1137,9 +1141,9 @@ def resume_paper_task(
         async_result = resume_task.apply_async(
             args=[str(parsed_paper_task_id)],
         )
-    except Exception as exc:
+    except Exception:
         logger.exception("Failed to enqueue resume task for paper_task_id=%s", paper_task_id)
-        raise HTTPException(status_code=503, detail="Failed to enqueue resume task") from exc
+        raise contract_http_exception(503, "INTERNAL_ERROR", "Failed to enqueue resume task")
 
     postgres.update_paper_task(
         str(parsed_paper_task_id),

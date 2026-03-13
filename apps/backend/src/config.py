@@ -1,14 +1,30 @@
 # config.py
-from typing import List, Optional
+from dataclasses import dataclass
+from typing import List, Literal, Optional
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# ==================== LLM Triplet Resolver ====================
+
+LLMRole = Literal[
+    "retrieval", "parsing", "mt", "format", "vlm", "evidence", "classification", "arbitration"
+]
+
+
+@dataclass(frozen=True)
+class LLMTriplet:
+    """Immutable LLM configuration triplet (api_key, base_url, model)."""
+
+    api_key: str
+    base_url: str
+    model: str
 
 
 class Settings(BaseSettings):
     # ==================== 应用配置 ====================
     app_name: str = "ACMG-PS3 Intelligence System"
-    app_version: str = "2.0.0"
+    app_version: str = "2.1.0"
     api_prefix: str = "/api/v1"
     cors_origins: str = '["http://localhost:3000", "http://localhost:8080"]'
     environment: str = "development"  # development | staging | production
@@ -74,14 +90,6 @@ class Settings(BaseSettings):
     evidence_retry_delay_seconds: int = 600  # 解析失败重试的延迟
     evidence_failure_alert_threshold: int = 5  # 同一字段失败多少次后告警
     evidence_failure_archive_path: str = "logs/evidence_failure_archive.jsonl"
-
-    # ==================== Embedding配置 ====================
-    embedding_provider: str
-    embedding_base_url: str
-    embedding_api_key: str
-    embedding_model: str
-    embedding_dimension: int
-    embedding_batch_size: int = 10
 
     # ==================== Rerank 配置 ====================
     rerank_api_key: Optional[str] = None
@@ -166,12 +174,37 @@ class Settings(BaseSettings):
 
     # ==================== MinIO配置 ====================
     minio_endpoint: str = "localhost:9000"
-    minio_access_key: str = "your-minio-access-key"
-    minio_secret_key: str = "your-minio-secret-key"
+    minio_access_key: str
+    minio_secret_key: str
     minio_bucket_name: str = "processed-results"
     minio_uploads_bucket: str = "literature-uploads"
     minio_results_bucket: str = "processed-results"
     minio_secure: bool = False  # 根据.env.example，默认为false
+
+    @field_validator("minio_access_key", "minio_secret_key")
+    @classmethod
+    def validate_minio_credentials(cls, v: str, info) -> str:
+        """Reject placeholder MinIO credentials to prevent misconfiguration."""
+        if not v:
+            raise ValueError(f"{info.field_name} is required for MinIO connection")
+
+        # List of known placeholder values
+        placeholders = [
+            "your-minio-access-key",
+            "your-minio-secret-key",
+            "minio-access-key",
+            "minio-secret-key",
+            "change-me",
+            "changeme",
+        ]
+
+        if v.lower() in placeholders:
+            raise ValueError(
+                f"Placeholder value detected for MinIO credential '{info.field_name}'. "
+                f"Please set a valid MinIO credential in your environment configuration."
+            )
+
+        return v
 
     # ==================== 任务配置 ====================
     max_reasoning_iterations: int = 3
@@ -224,5 +257,60 @@ class Settings(BaseSettings):
     )
 
 
-# Ensure all required environment variables are set in .env.local before instantiating Settings
-settings = Settings()  # type: ignore[call-arg]
+def resolve_llm_triplet(settings: Settings, role: LLMRole) -> LLMTriplet:
+    """Resolve LLM configuration triplet for a given role.
+
+    Args:
+        settings: Settings instance containing LLM configurations
+        role: LLM role name (retrieval/parsing/mt/format/vlm/evidence/classification/arbitration)
+
+    Returns:
+        LLMTriplet containing (api_key, base_url, model) for the role
+
+    Raises:
+        ValueError: If role is invalid
+    """
+    valid_roles: set[str] = {
+        "retrieval",
+        "parsing",
+        "mt",
+        "format",
+        "vlm",
+        "evidence",
+        "classification",
+        "arbitration",
+    }
+
+    if role not in valid_roles:
+        raise ValueError(f"Invalid LLM role: {role}. Valid roles: {', '.join(sorted(valid_roles))}")
+
+    return LLMTriplet(
+        api_key=getattr(settings, f"{role}_api_key"),
+        base_url=getattr(settings, f"{role}_base_url"),
+        model=getattr(settings, f"{role}_model"),
+    )
+
+
+_settings: Settings | None = None
+
+
+def get_settings() -> Settings:
+    """
+    Get or create the Settings instance.
+
+    Settings are loaded from environment variables (via pydantic-settings).
+    This factory pattern allows basedpyright to typecheck cleanly while
+    deferring instantiation until first use.
+    """
+    global _settings
+    if _settings is None:
+        _settings = Settings()  # pyright: ignore[reportCallIssue]
+    return _settings
+
+
+# For backward compatibility, expose a module-level settings variable
+# that is lazily evaluated via __getattr__
+def __getattr__(name: str):
+    if name == "settings":
+        return get_settings()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

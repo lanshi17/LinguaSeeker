@@ -6,9 +6,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, Path, Query
 from loguru import logger
 from pydantic import BaseModel, Field
 
@@ -17,6 +17,7 @@ from src.domain.graph.association_service import get_entity_association_analyzer
 from src.domain.evidence.aggregator import get_evidence_aggregation_engine
 from src.domain.graph.search import get_graph_search_engine
 from src.domain.graph.sync import get_graph_sync_service
+from src.api.dependencies import contract_http_exception
 
 # ==================== 请求/响应模型 ====================
 
@@ -130,8 +131,8 @@ def _inject_document_identifier(
 async def search_evidence(req: EvidenceSearchRequest):
     """Run a multi-document graph search with structured filters."""
     if not any([req.gene_symbol, req.variant, req.protein_change]):
-        raise HTTPException(
-            status_code=400, detail="至少需要提供 gene_symbol / variant / protein_change 之一"
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "至少需要提供 gene_symbol / variant / protein_change 之一"
         )
 
     try:
@@ -148,8 +149,8 @@ async def search_evidence(req: EvidenceSearchRequest):
         logger.debug("Evidence search result: {} evidence", result.total_evidence)
         return EvidenceSearchResponse(data=result.to_dict())
     except Exception as e:
-        logger.error("Evidence search failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Evidence search failed: {}", e)
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Evidence search failed")
 
 
 @router.get(
@@ -172,8 +173,8 @@ async def search_by_gene(
         logger.debug("Gene search result: {} evidence", result.total_evidence)
         return EvidenceSearchResponse(data=result.to_dict())
     except Exception as e:
-        logger.error("Gene search failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Gene search failed: {}", e)
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Gene search failed")
 
 
 @router.get(
@@ -196,8 +197,8 @@ async def search_by_variant(
         logger.debug("Variant search result: {} evidence", result.total_evidence)
         return EvidenceSearchResponse(data=result.to_dict())
     except Exception as e:
-        logger.error("Variant search failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Variant search failed: {}", e)
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Variant search failed")
 
 
 @router.get(
@@ -222,8 +223,8 @@ async def get_document_evidence(
         payload = _inject_document_identifier(result.to_dict(), normalized_id, numeric_id)
         return EvidenceSearchResponse(data=payload)
     except Exception as e:
-        logger.error("Document evidence retrieval failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Document evidence retrieval failed: {}", e)
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Document evidence retrieval failed")
 
 
 # ==================== 实体关联分析 ====================
@@ -249,8 +250,8 @@ async def analyze_gene_associations(
         logger.debug("Gene association result: {} link(s)", len(report.links))
         return EvidenceSearchResponse(data=report.to_dict())
     except Exception as e:
-        logger.error("Gene association analysis failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Gene association analysis failed: {}", e)
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Gene association analysis failed")
 
 
 @router.get(
@@ -273,8 +274,8 @@ async def analyze_variant_associations(
         logger.debug("Variant association result: {} link(s)", len(report.links))
         return EvidenceSearchResponse(data=report.to_dict())
     except Exception as e:
-        logger.error("Variant association analysis failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Variant association analysis failed: {}", e)
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Variant association analysis failed")
 
 
 @router.get(
@@ -297,8 +298,10 @@ async def get_co_occurrence_matrix(
         logger.debug("Co-occurrence matrix size: {}", len(matrix))
         return EvidenceSearchResponse(data={"gene_symbol": gene_symbol, "matrix": matrix})
     except Exception as e:
-        logger.error("Co-occurrence matrix failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Co-occurrence matrix failed: {}", e)
+        raise contract_http_exception(
+            500, "INTERNAL_ERROR", "Co-occurrence matrix computation failed"
+        )
 
 
 @router.get(
@@ -322,8 +325,8 @@ async def get_evidence_chains(
         logger.debug("Evidence chains found: {}", len(chains))
         return EvidenceSearchResponse(data={"gene_symbol": gene_symbol, "chains": chains})
     except Exception as e:
-        logger.error("Evidence chain detection failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Evidence chain detection failed: {}", e)
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Evidence chain detection failed")
 
 
 # ==================== 证据聚合 ====================
@@ -358,8 +361,8 @@ async def aggregate_evidence(req: EvidenceSearchRequest):
         logger.debug("Aggregation result: {} variant(s)", len(report.variants))
         return AggregationResponse(data=report.to_dict())
     except Exception as e:
-        logger.error("Evidence aggregation failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Evidence aggregation failed: {}", e)
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Evidence aggregation failed")
 
 
 @router.get(
@@ -382,8 +385,8 @@ async def aggregate_by_gene(
         logger.debug("Gene aggregation result: {} variant(s)", len(report.variants))
         return AggregationResponse(data=report.to_dict())
     except Exception as e:
-        logger.error("Gene aggregation failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Gene aggregation failed: {}", e)
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Gene aggregation failed")
 
 
 @router.get(
@@ -402,7 +405,7 @@ async def aggregate_by_variant(
 ):
     """Aggregate evidence for a single variant or protein change."""
     if not variant and not protein_change:
-        raise HTTPException(status_code=400, detail="需要提供 variant 或 protein_change")
+        raise contract_http_exception(400, "INPUT_INVALID", "需要提供 variant 或 protein_change")
     try:
         logger.info("Variant aggregation request")
         eng = get_evidence_aggregation_engine()
@@ -410,8 +413,8 @@ async def aggregate_by_variant(
         logger.debug("Variant aggregation result: {} variant(s)", len(report.variants))
         return AggregationResponse(data=report.to_dict())
     except Exception as e:
-        logger.error("Variant aggregation failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Variant aggregation failed: {}", e)
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Variant aggregation failed")
 
 
 # ==================== 质量监控 ====================
@@ -430,7 +433,7 @@ async def quality_overview(
 ):
     """Quality API is out of MVP scope and intentionally unavailable."""
     logger.info("Quality overview request rejected (MVP disabled)")
-    raise HTTPException(status_code=404, detail="Quality API removed in MVP")
+    raise contract_http_exception(404, "RESOURCE_NOT_FOUND", "Quality API removed in MVP")
 
 
 # ==================== 图数据库 ====================
@@ -454,8 +457,8 @@ async def graph_statistics():
         logger.debug("Graph statistics entries: {}", len(stats))
         return EvidenceSearchResponse(data={"statistics": stats})
     except Exception as e:
-        logger.error("Graph statistics failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Graph statistics failed: {}", e)
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Graph statistics lookup failed")
 
 
 @router.post(
@@ -478,5 +481,5 @@ async def resync_document(
         logger.debug("Resync result: {}", result)
         return EvidenceSearchResponse(data=result)
     except Exception as e:
-        logger.error("Document resync failed: {}", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Document resync failed: {}", e)
+        raise contract_http_exception(500, "INTERNAL_ERROR", "Document resync failed")

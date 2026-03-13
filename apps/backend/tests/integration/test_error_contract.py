@@ -164,3 +164,38 @@ def test_pdf_upload_chinese_filename_keeps_metadata_ascii(
     assert metadata["hash"] == file_hash
     assert "uploaded_at" in metadata
     assert "filename" not in metadata
+
+
+def test_check_pdf_hash_redis_failure_returns_internal_error(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that Redis failures in check_pdf_hash return INTERNAL_ERROR."""
+
+    def failing_get_cached_pdf_result(_hash: str) -> None:
+        raise ConnectionError("Redis unavailable")
+
+    monkeypatch.setattr(api_module, "get_cached_pdf_result", failing_get_cached_pdf_result)
+    response = client.get(f"{cfg.api_prefix}/pdf/check_hash?hash={'a' * 64}")
+    assert response.status_code == 503
+    payload = response.json()
+    assert payload["status"] == "failed"
+    assert payload["error_code"] == "INTERNAL_ERROR"
+    assert "log_link" in payload
+
+
+def test_log_reissue_redis_failure_returns_internal_error(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that Redis failures in reissue_log_link return INTERNAL_ERROR."""
+
+    class FakeRedisClient:
+        def get_connection(self) -> None:
+            raise ConnectionError("Redis unavailable")
+
+    monkeypatch.setattr(api_module, "redis_client", FakeRedisClient())
+    response = client.get(f"{cfg.api_prefix}/logs/reissue?request_id=req-99999")
+    assert response.status_code == 503
+    payload = response.json()
+    assert payload["status"] == "failed"
+    assert payload["error_code"] == "INTERNAL_ERROR"
+    assert "log_link" in payload

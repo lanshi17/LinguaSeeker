@@ -94,7 +94,9 @@ class DummySyncService:
 def _patch_dependencies(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(graph_api, "get_graph_search_engine", lambda: DummySearchEngine())
     monkeypatch.setattr(graph_api, "get_entity_association_analyzer", lambda: DummyAnalyzer())
-    monkeypatch.setattr(graph_api, "get_evidence_aggregation_engine", lambda: DummyAggregationEngine())
+    monkeypatch.setattr(
+        graph_api, "get_evidence_aggregation_engine", lambda: DummyAggregationEngine()
+    )
     monkeypatch.setattr(graph_api, "get_neo4j_client", lambda: DummyNeo4jClient())
     monkeypatch.setattr(graph_api, "get_graph_sync_service", lambda: DummySyncService())
 
@@ -108,7 +110,9 @@ def test_search_evidence_requires_params(client: TestClient, evidence_prefix: st
     assert "log_link" in payload
 
 
-def test_search_evidence_success(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_search_evidence_success(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.post(f"{evidence_prefix}/search", json={"gene_symbol": "BRCA1"})
     assert response.status_code == 200
@@ -116,63 +120,81 @@ def test_search_evidence_success(client: TestClient, monkeypatch: pytest.MonkeyP
     assert payload["data"]["total_evidence"] == 2
 
 
-def test_search_by_gene(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_search_by_gene(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.get(f"{evidence_prefix}/search/gene/BRCA1")
     assert response.status_code == 200
     assert response.json()["data"]["gene"] == "BRCA1"
 
 
-def test_search_by_variant(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_search_by_variant(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.get(f"{evidence_prefix}/search/variant/BRCA1:c.68_69del")
     assert response.status_code == 200
     assert response.json()["data"]["variant"] == "BRCA1:c.68_69del"
 
 
-def test_get_document_evidence(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_get_document_evidence(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.get(f"{evidence_prefix}/document/12")
     assert response.status_code == 200
     assert response.json()["data"]["document_id"] == 12
 
 
-def test_association_gene(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_association_gene(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.get(f"{evidence_prefix}/association/gene/TP53")
     assert response.status_code == 200
     assert response.json()["data"]["links"][0]["gene"] == "TP53"
 
 
-def test_association_variant(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_association_variant(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.get(f"{evidence_prefix}/association/variant/TP53:c.123A>G")
     assert response.status_code == 200
     assert response.json()["data"]["links"][0]["variant"] == "TP53:c.123A>G"
 
 
-def test_co_occurrence_matrix(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_co_occurrence_matrix(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.get(f"{evidence_prefix}/co-occurrence/BRCA1")
     assert response.status_code == 200
     assert response.json()["data"]["gene_symbol"] == "BRCA1"
 
 
-def test_evidence_chains(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_evidence_chains(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.get(f"{evidence_prefix}/evidence-chains/BRCA1?min_documents=3")
     assert response.status_code == 200
     assert response.json()["data"]["chains"][0]["min_documents"] == 3
 
 
-def test_aggregate_evidence(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_aggregate_evidence(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.post(f"{evidence_prefix}/aggregate", json={"gene_symbol": "BRCA1"})
     assert response.status_code == 200
     assert response.json()["data"]["variants"][0]["id"] == "v1"
 
 
-def test_aggregate_by_gene(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_aggregate_by_gene(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.get(f"{evidence_prefix}/aggregate/gene/BRCA1")
     assert response.status_code == 200
@@ -188,32 +210,40 @@ def test_aggregate_by_variant_requires_params(client: TestClient, evidence_prefi
     assert "log_link" in payload
 
 
-def test_aggregate_by_variant(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_aggregate_by_variant(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.get(f"{evidence_prefix}/aggregate/variant?variant=BRCA1:c.68_69del")
     assert response.status_code == 200
     assert response.json()["data"]["variants"][0]["variant"] == "BRCA1:c.68_69del"
 
 
-def test_quality_overview(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_quality_overview(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.get(f"{evidence_prefix}/quality?gene_symbol=BRCA1")
     assert response.status_code == 404
     payload = response.json()
     assert payload["status"] == "failed"
-    assert payload["error_code"] == "INPUT_INVALID"
+    assert payload["error_code"] == "RESOURCE_NOT_FOUND"
     assert payload["detail"] == "Quality API removed in MVP"
     assert "log_link" in payload
 
 
-def test_graph_statistics(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_graph_statistics(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.get(f"{evidence_prefix}/graph/stats")
     assert response.status_code == 200
     assert response.json()["data"]["statistics"][0]["label"] == "Gene"
 
 
-def test_resync_document(client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str) -> None:
+def test_resync_document(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+) -> None:
     _patch_dependencies(monkeypatch)
     response = client.post(f"{evidence_prefix}/sync/document/42")
     assert response.status_code == 200

@@ -9,7 +9,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID, uuid4
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, cast
+from typing import Any, Awaitable, Callable, Dict, List, Literal, Optional, Tuple, TypedDict, cast
 import mimetypes
 
 from loguru import logger
@@ -61,6 +61,73 @@ _agents = EvidenceAgent()
 _qdrant_manager = QdrantManager()
 _REBUILD_EMPTY_KB = getattr(cfg, "rebuild_empty_knowledge_base", True)
 _HGVS_TOKEN_PATTERN = re.compile(r"(?:[A-Z]{2}_\d+\.\d+:)?[cgp]\.[A-Za-z0-9_+\-*><=()\[\];:]+")
+
+# ---------------------------------------------------------------------------
+# Pipeline exception handling: structured outcome schema
+# ---------------------------------------------------------------------------
+
+
+class PipelineIssue(TypedDict):
+    """Structured representation of a non-fatal pipeline issue (warning or error).
+
+    Attributes:
+        kind: Issue severity - 'warning' for non-critical issues, 'error' for failures
+        step: Pipeline step where issue occurred (e.g. 'init_kb', 'cache_result')
+        message: Human-readable description
+        exception_type: Optional exception class name (e.g. 'RuntimeError')
+    """
+
+    kind: Literal["warning", "error"]
+    step: str
+    message: str
+    exception_type: Optional[str]
+
+
+class PipelineOutcome(TypedDict):
+    """Accumulator for non-fatal issues during pipeline execution.
+
+    Attributes:
+        errors: List of non-fatal errors encountered
+        warnings: List of warnings encountered
+    """
+
+    errors: List[PipelineIssue]
+    warnings: List[PipelineIssue]
+
+
+def _make_empty_outcome() -> PipelineOutcome:
+    """Create an empty pipeline outcome accumulator."""
+    return {"errors": [], "warnings": []}
+
+
+def _record_issue(
+    outcome: PipelineOutcome,
+    *,
+    kind: Literal["warning", "error"],
+    step: str,
+    message: str,
+    exception: Optional[Exception] = None,
+) -> None:
+    """Record a non-fatal issue in the pipeline outcome.
+
+    Args:
+        outcome: Pipeline outcome accumulator to update
+        kind: 'warning' or 'error'
+        step: Pipeline step identifier
+        message: Human-readable issue description
+        exception: Optional exception instance for type extraction
+    """
+    issue: PipelineIssue = {
+        "kind": kind,
+        "step": step,
+        "message": message,
+        "exception_type": type(exception).__name__ if exception else None,
+    }
+    if kind == "warning":
+        outcome["warnings"].append(issue)
+    else:
+        outcome["errors"].append(issue)
+
 
 # ---------------------------------------------------------------------------
 # M1 utility helpers
@@ -1482,6 +1549,7 @@ def process_pdf_task(
     document_id = document_id or str(uuid4())
     postgres = None
     node_trace: Dict[str, str] = {}
+    pipeline_outcome = _make_empty_outcome()
 
     if paper_task_id:
         try:
@@ -1505,7 +1573,14 @@ def process_pdf_task(
             if request_id:
                 postgres.update_task_request(request_id, status="running")
         except Exception as init_exc:
-            logger.warning("Unable to mark paper task {} running: {}", paper_task_id, init_exc)
+            logger.exception("Unable to mark paper task {} running: {}", paper_task_id, init_exc)
+            _record_issue(
+                pipeline_outcome,
+                kind="warning",
+                step="init_db_status",
+                message=f"Failed to update initial task status: {init_exc}",
+                exception=init_exc,
+            )
 
     try:
         _disable_proxies()
@@ -1514,6 +1589,13 @@ def process_pdf_task(
             asyncio.run(init_knowledge_base_if_needed())
         except Exception as kb_exc:
             logger.exception("Knowledge base init failed, continue: {}", kb_exc)
+            _record_issue(
+                pipeline_outcome,
+                kind="warning",
+                step="init_kb",
+                message=f"Knowledge base initialization failed: {kb_exc}",
+                exception=kb_exc,
+            )
 
         if postgres is None:
             postgres = get_postgres_client()
@@ -1624,6 +1706,7 @@ def process_pdf_task(
             payload.setdefault("workflow_status", WorkflowStatus.completed.value)
             payload.setdefault("mineru_folder", parsing_result.mineru_folder)
             payload.setdefault("parsing_metadata", parsing_metadata)
+            payload.setdefault("pipeline_outcome", pipeline_outcome)
 
         if paper_task_id and postgres is not None:
             try:
@@ -1661,18 +1744,32 @@ def process_pdf_task(
                 if isinstance(payload, dict):
                     payload.setdefault("processing_steps", processing_steps)
                     payload.setdefault("progress_percentage", progress_percentage)
-                if request_id:
-                    postgres.refresh_task_request_status(request_id)
+                    if request_id:
+                        postgres.refresh_task_request_status(request_id)
             except Exception as success_exc:
-                logger.warning(
+                logger.exception(
                     "Unable to mark paper task {} success: {}", paper_task_id, success_exc
+                )
+                _record_issue(
+                    pipeline_outcome,
+                    kind="warning",
+                    step="mark_success_db",
+                    message=f"Failed to persist success status to DB: {success_exc}",
+                    exception=success_exc,
                 )
 
         if file_hash:
             try:
                 cache_pdf_result(file_hash, payload)
             except Exception as cache_exc:
-                logger.warning("Failed to cache result for hash {}: {}", file_hash, cache_exc)
+                logger.exception("Failed to cache result for hash {}: {}", file_hash, cache_exc)
+                _record_issue(
+                    pipeline_outcome,
+                    kind="warning",
+                    step="cache_result",
+                    message=f"Failed to cache result in Redis: {cache_exc}",
+                    exception=cache_exc,
+                )
 
         _cleanup_managed_upload_paths(file_paths)
         tmp_dir = Path(os.environ.get("PWD", str(Path.cwd()))) / "tmp"

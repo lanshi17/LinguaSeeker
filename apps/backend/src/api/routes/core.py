@@ -1,18 +1,14 @@
-import asyncio
-import base64
 import hashlib
-import io
-import itertools
 import mimetypes
+import os
 import tempfile
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Union, cast
 from uuid import UUID, uuid4
 from loguru import logger
+from pydantic import BaseModel, Field
 from src.health import check_all_connections
-from src.config import settings as cfg
 from fastapi import APIRouter, File, Request, Response, HTTPException, UploadFile, Query, Path
-from pydantic import BaseModel, Field, HttpUrl
 from src.infrastructure.redis import (
     check_pdf_hash as redis_check_pdf_hash,
     get_cached_pdf_result,
@@ -149,8 +145,14 @@ async def check_pdf_hash(
             return {"exists": True, "result": cached}
         return {"exists": redis_check_pdf_hash(hash)}
     except Exception as exc:
-        logger.warning("Redis check failed for hash {}: {}", hash, exc)
-        return {"exists": False}
+        logger.exception("Redis check failed for hash {}: {}", hash, exc)
+        raise contract_http_exception(503, "INTERNAL_ERROR", "Cache backend unavailable")
+
+
+# TODO(P1): upload_pdf mixes sync PostgresClient calls with async MinIO calls (await).
+#   This blocks the event loop during postgres operations under concurrent load.
+#   Fix: Either wrap postgres calls with `await anyio.to_thread.run_sync()`
+#   or migrate PostgresClient to AsyncSession. See architecture refactor plan.
 
 
 @router.post(
@@ -206,7 +208,7 @@ async def upload_pdf(
         postgres_client = get_postgres_client()
     except Exception as exc:
         logger.exception("PostgreSQL client init failed: {}", exc)
-        raise HTTPException(status_code=503, detail="PostgreSQL unavailable")
+        raise contract_http_exception(503, "INTERNAL_ERROR", "PostgreSQL unavailable")
     existing_document = None
     try:
         cached = get_cached_pdf_result(pdf_hash)
@@ -246,7 +248,7 @@ async def upload_pdf(
         minio_client = MinIOClient()
     except Exception as exc:
         logger.exception("MinIO client init failed: {}", exc)
-        raise HTTPException(status_code=503, detail="Object storage unavailable")
+        raise contract_http_exception(503, "INTERNAL_ERROR", "Object storage unavailable")
     upload_ref: Optional[MinioObjectRefModel] = None
     existing_local_path = (
         cast(Optional[str], cast(object, existing_document.local_path))
@@ -293,7 +295,9 @@ async def upload_pdf(
             )
         except Exception as exc:
             logger.exception("Failed to upload PDF to MinIO: {}", exc)
-            raise HTTPException(status_code=503, detail="Failed to store PDF in object storage")
+            raise contract_http_exception(
+                503, "INTERNAL_ERROR", "Failed to store PDF in object storage"
+            )
 
     document_id = None
     if existing_document is None:
@@ -312,7 +316,7 @@ async def upload_pdf(
             document_id = str(created_document.document_id)
         except Exception as exc:
             logger.exception("Failed to insert document record for hash {}: {}", pdf_hash, exc)
-            raise HTTPException(status_code=503, detail="PostgreSQL insert failed")
+            raise contract_http_exception(503, "INTERNAL_ERROR", "PostgreSQL insert failed")
     elif (
         upload_ref is not None
         and existing_document_id is not None
@@ -327,7 +331,7 @@ async def upload_pdf(
             document_id = str(existing_document_id)
         except Exception as exc:
             logger.exception("Failed to update document record for hash {}: {}", pdf_hash, exc)
-            raise HTTPException(status_code=503, detail="PostgreSQL update failed")
+            raise contract_http_exception(503, "INTERNAL_ERROR", "PostgreSQL update failed")
     else:
         if existing_document is not None and existing_document_id is not None:
             document_id = str(existing_document_id)
@@ -357,7 +361,11 @@ async def upload_pdf(
         )
     except Exception as exc:
         logger.exception("Failed to enqueue Celery task: {}", exc)
-        raise HTTPException(status_code=503, detail="Task queue unavailable")
+        try:
+            os.unlink(tmp_file_path)
+        except OSError:
+            pass
+        raise contract_http_exception(503, "INTERNAL_ERROR", "Task queue unavailable")
     logger.debug("Celery task queued: {}", async_result.id)
     return {
         "status": "queued",
@@ -396,7 +404,7 @@ async def download_processed_result_file(
         raise contract_http_exception(404, "RESOURCE_NOT_FOUND", "Result file not found")
     except Exception as exc:
         logger.exception("Failed to download result file {}: {}", object_key, exc)
-        raise HTTPException(status_code=503, detail="Failed to fetch result file")
+        raise contract_http_exception(503, "INTERNAL_ERROR", "Failed to fetch result file")
 
     content_type = mimetypes.guess_type(object_path)[0] or "application/octet-stream"
     return Response(content=payload, media_type=content_type)
@@ -425,8 +433,8 @@ async def reissue_log_link(
         if hit_count == 1:
             redis_conn.expire(rate_key, 60)
     except Exception as exc:
-        logger.warning("Failed to apply reissue rate limit for {}: {}", request_id, exc)
-        raise HTTPException(status_code=503, detail="Rate limiter unavailable")
+        logger.exception("Failed to apply reissue rate limit for {}: {}", request_id, exc)
+        raise contract_http_exception(503, "INTERNAL_ERROR", "Rate limiter unavailable")
 
     if hit_count > 1:
         raise HTTPException(status_code=429, detail="Reissue rate limit exceeded")

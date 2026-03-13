@@ -8,7 +8,7 @@ from langchain_openai import ChatOpenAI
 from loguru import logger
 from pydantic import BaseModel, SecretStr
 
-from src.config import settings
+from src.config import settings, resolve_llm_triplet
 from src.infrastructure.redis import RedisClient
 
 cfg = settings
@@ -36,14 +36,15 @@ class InteractionAgent:
         self._session_ttl_seconds = int(getattr(cfg, "interaction_session_ttl_seconds", 3600))
         self._redis_client: Optional[RedisClient] = None
 
+        llm_config = resolve_llm_triplet(cfg, "evidence")
         self.llm = ChatOpenAI(
-            model=cfg.evidence_model,
-            api_key=SecretStr(cfg.evidence_api_key),
-            base_url=cfg.evidence_base_url,
+            model=llm_config.model,
+            api_key=SecretStr(llm_config.api_key),
+            base_url=llm_config.base_url,
             temperature=0.3,
             timeout=cfg.llm_timeout,
         )
-        logger.info("InteractionAgent initialized with model: {}", cfg.evidence_model)
+        logger.info("InteractionAgent initialized with model: {}", llm_config.model)
 
     def _session_key(self, session_id: str) -> str:
         return f"interaction:session:{session_id}"

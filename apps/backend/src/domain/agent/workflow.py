@@ -23,7 +23,7 @@ from src.domain.evidence.tools import (
 )
 from src.utils.timer import timer
 from src.utils.evidence_annotation import enrich_evidence_json
-from src.config import settings
+from src.config import settings, resolve_llm_triplet
 from .rag import RAGComponent
 
 cfg = settings
@@ -219,40 +219,44 @@ class EvidenceAgent:
     def get_translation_llm(self):
         """获取翻译 LLM 客户端"""
         logger.info("Initializing translation LLM")
+        llm_config = resolve_llm_triplet(self.cfg, "mt")
         return ChatOpenAI(
-            model=self.cfg.mt_model,
-            api_key=SecretStr(self.cfg.mt_api_key),
-            base_url=self.cfg.mt_base_url,
+            model=llm_config.model,
+            api_key=SecretStr(llm_config.api_key),
+            base_url=llm_config.base_url,
             temperature=0.0,
         )
 
     def get_format_llm(self):
         """获取排版 LLM 客户端"""
         logger.info("Initializing format LLM")
+        llm_config = resolve_llm_triplet(self.cfg, "format")
         return ChatOpenAI(
-            model=self.cfg.format_model,
-            api_key=SecretStr(self.cfg.format_api_key),
-            base_url=self.cfg.format_base_url,
+            model=llm_config.model,
+            api_key=SecretStr(llm_config.api_key),
+            base_url=llm_config.base_url,
             temperature=0.0,
         )
 
     def get_vlm(self):
         """获取支持视觉的 LLM 客户端"""
         logger.info("Initializing VLM")
+        llm_config = resolve_llm_triplet(self.cfg, "vlm")
         return ChatOpenAI(
-            model=self.cfg.vlm_model,
-            api_key=SecretStr(self.cfg.vlm_api_key),
-            base_url=self.cfg.vlm_base_url,
+            model=llm_config.model,
+            api_key=SecretStr(llm_config.api_key),
+            base_url=llm_config.base_url,
             temperature=0.0,
         )
 
     def get_evidence_llm(self):
         """获取证据提取 LLM 客户端（支持工具调用）"""
         logger.info("Initializing evidence LLM")
+        llm_config = resolve_llm_triplet(self.cfg, "evidence")
         llm = ChatOpenAI(
-            model=self.cfg.evidence_model,
-            api_key=SecretStr(self.cfg.evidence_api_key),
-            base_url=self.cfg.evidence_base_url,
+            model=llm_config.model,
+            api_key=SecretStr(llm_config.api_key),
+            base_url=llm_config.base_url,
             temperature=0.0,
             timeout=self.cfg.llm_timeout,
             streaming=True,
@@ -262,10 +266,11 @@ class EvidenceAgent:
     def get_arbitration_llm(self):
         """获取仲裁 LLM 客户端"""
         logger.info("Initializing arbitration LLM")
+        llm_config = resolve_llm_triplet(self.cfg, "arbitration")
         return ChatOpenAI(
-            model=self.cfg.arbitration_model,
-            api_key=SecretStr(self.cfg.arbitration_api_key),
-            base_url=self.cfg.arbitration_base_url,
+            model=llm_config.model,
+            api_key=SecretStr(llm_config.api_key),
+            base_url=llm_config.base_url,
             temperature=0.0,
             timeout=self.cfg.llm_timeout,
             streaming=True,
@@ -471,10 +476,11 @@ class EvidenceAgent:
     def get_json_repair_llm(self):
         """获取 JSON 修复 LLM 客户端（不启用工具调用）"""
         logger.info("Initializing JSON repair LLM")
+        llm_config = resolve_llm_triplet(self.cfg, "evidence")
         return ChatOpenAI(
-            model=self.cfg.evidence_model,
-            api_key=SecretStr(self.cfg.evidence_api_key),
-            base_url=self.cfg.evidence_base_url,
+            model=llm_config.model,
+            api_key=SecretStr(llm_config.api_key),
+            base_url=llm_config.base_url,
             temperature=0.0,
             timeout=self.cfg.llm_timeout,
             streaming=False,

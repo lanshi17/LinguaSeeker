@@ -10,7 +10,7 @@ services:
     volumes:
       - ./qdrant_data:/qdrant/storage
     environment:
-      - QDRANT_API_KEY=EDhs@gJcftnT3sBU
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
     networks:
       - acmg_network
 

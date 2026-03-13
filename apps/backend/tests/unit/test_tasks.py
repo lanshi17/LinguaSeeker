@@ -1045,3 +1045,151 @@ def test_paddleocr_available_false() -> None:
     from src.domain.mineru.component import paddleocr_available
 
     assert paddleocr_available() is False
+
+
+def test_process_pdf_task_accumulates_non_fatal_kb_init_warning(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    evidence = _make_evidence_output(ps3_evidence={"ok": True})
+
+    def fake_acquisition(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+        nt["acquisition"] = "success"
+        return fps, nt
+
+    async def fake_parsing(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+        nt["parsing"] = "success"
+        return _make_parsing_result("/tmp/mineru-output"), nt
+
+    def fake_translation(pg: Any, ptid: str, md: str, nt: Dict[str, str]) -> Any:
+        nt["translation"] = "success"
+        return md, "en text", nt, []
+
+    def fake_extraction(
+        pg: Any, ptid: str, source: str, en: str, imgs: List[str], nt: Dict[str, str]
+    ) -> Any:
+        nt["extraction"] = "success"
+        return evidence, nt
+
+    def fake_acmg(pg: Any, ptid: str, did: str, resp: Any, nt: Dict[str, str]) -> Any:
+        nt["acmg"] = "success"
+        return {"pg_evidence_id": 1, "neo4j_synced": True}, nt
+
+    async def fake_store(*_: Any, **__: Any) -> PipelineFiles:
+        return PipelineFiles(
+            origin_md_path="/tmp/orig.md",
+            en_md_path="/tmp/en.md",
+            image_desc_path="/tmp/image_desc.txt",
+            ps3_evidence_path="/tmp/ps3.json",
+            image_dir="/tmp/images",
+            origin_md_url="",
+            en_md_url="",
+            image_desc_url="",
+            ps3_evidence_url="",
+            image_urls=[],
+        )
+
+    async def fake_store_parsing(*_: Any, **__: Any) -> DocumentParsingArtifact:
+        return DocumentParsingArtifact(
+            markdown_object_key="doc-1/parsing/parsed_markdown.md",
+            markdown_url="/api/v1/results/doc-1/doc-1/parsing/parsed_markdown.md",
+            image_object_keys=[],
+        )
+
+    async def fake_init_kb_fails() -> bool:
+        raise RuntimeError("Qdrant connection refused")
+
+    monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
+    monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
+    monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
+    monkeypatch.setattr(tasks_module, "run_node_extraction", fake_extraction)
+    monkeypatch.setattr(tasks_module, "run_node_acmg", fake_acmg)
+    monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store)
+    monkeypatch.setattr(tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing)
+    monkeypatch.setattr(tasks_module, "init_knowledge_base_if_needed", fake_init_kb_fails)
+    monkeypatch.setattr(tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None)
+
+    result = _invoke_bound_task(tasks_module.process_pdf_task, ["file.pdf"])
+
+    assert result["document_id"]
+    assert "pipeline_outcome" in result
+    outcome = result["pipeline_outcome"]
+    assert len(outcome["warnings"]) == 1
+    warning = outcome["warnings"][0]
+    assert warning["kind"] == "warning"
+    assert warning["step"] == "init_kb"
+    assert "Knowledge base initialization failed" in warning["message"]
+    assert warning["exception_type"] == "RuntimeError"
+
+
+def test_process_pdf_task_accumulates_non_fatal_cache_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    evidence = _make_evidence_output(ps3_evidence={"ok": True})
+
+    def fake_acquisition(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+        nt["acquisition"] = "success"
+        return fps, nt
+
+    async def fake_parsing(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+        nt["parsing"] = "success"
+        return _make_parsing_result("/tmp/mineru-output"), nt
+
+    def fake_translation(pg: Any, ptid: str, md: str, nt: Dict[str, str]) -> Any:
+        nt["translation"] = "success"
+        return md, "en text", nt, []
+
+    def fake_extraction(
+        pg: Any, ptid: str, source: str, en: str, imgs: List[str], nt: Dict[str, str]
+    ) -> Any:
+        nt["extraction"] = "success"
+        return evidence, nt
+
+    def fake_acmg(pg: Any, ptid: str, did: str, resp: Any, nt: Dict[str, str]) -> Any:
+        nt["acmg"] = "success"
+        return {"pg_evidence_id": 1, "neo4j_synced": True}, nt
+
+    async def fake_store(*_: Any, **__: Any) -> PipelineFiles:
+        return PipelineFiles(
+            origin_md_path="/tmp/orig.md",
+            en_md_path="/tmp/en.md",
+            image_desc_path="/tmp/image_desc.txt",
+            ps3_evidence_path="/tmp/ps3.json",
+            image_dir="/tmp/images",
+            origin_md_url="",
+            en_md_url="",
+            image_desc_url="",
+            ps3_evidence_url="",
+            image_urls=[],
+        )
+
+    async def fake_store_parsing(*_: Any, **__: Any) -> DocumentParsingArtifact:
+        return DocumentParsingArtifact(
+            markdown_object_key="doc-1/parsing/parsed_markdown.md",
+            markdown_url="/api/v1/results/doc-1/doc-1/parsing/parsed_markdown.md",
+            image_object_keys=[],
+        )
+
+    def fake_cache_fails(*_: Any, **__: Any) -> None:
+        raise ConnectionError("Redis unavailable")
+
+    monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
+    monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
+    monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
+    monkeypatch.setattr(tasks_module, "run_node_extraction", fake_extraction)
+    monkeypatch.setattr(tasks_module, "run_node_acmg", fake_acmg)
+    monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store)
+    monkeypatch.setattr(tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing)
+    monkeypatch.setattr(tasks_module, "cache_pdf_result", fake_cache_fails)
+    monkeypatch.setattr(tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None)
+
+    result = _invoke_bound_task(tasks_module.process_pdf_task, ["file.pdf"], file_hash="abc123")
+
+    assert result["document_id"]
+    assert "pipeline_outcome" in result
+    outcome = result["pipeline_outcome"]
+    assert len(outcome["warnings"]) == 1
+    warning = outcome["warnings"][0]
+    assert warning["kind"] == "warning"
+    assert warning["step"] == "cache_result"
+    assert "Failed to cache result in Redis" in warning["message"]
+    assert warning["exception_type"] == "ConnectionError"

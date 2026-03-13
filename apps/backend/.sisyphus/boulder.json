@@ -1,10 +1,10 @@
 {
-  "active_plan": "/mnt/data/Documents/Graduate/02_Research/05_Multi-ACMG-dev-yangzs/apps/backend/.sisyphus/plans/acmg-agent-refactor.md",
-  "started_at": "2026-03-07T03:56:10.202Z",
+  "active_plan": "/mnt/data/Documents/Graduate/02_Research/05_Multi-ACMG-dev-yangzs/apps/backend/.sisyphus/plans/p2-code-quality.md",
+  "started_at": "2026-03-12T13:16:39.855Z",
   "session_ids": [
-    "ses_33cdadbf8ffef2nE52qpvy8S5B"
+    "ses_31de8858effenXMZ6T59OHLRU4"
   ],
-  "plan_name": "acmg-agent-refactor",
+  "plan_name": "p2-code-quality",
   "agent": "atlas",
   "worktree_path": "/mnt/data/Documents/Graduate/02_Research/05_Multi-ACMG-dev-yangzs/apps/backend"
 }
