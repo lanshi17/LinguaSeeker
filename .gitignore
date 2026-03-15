@@ -106,3 +106,7 @@ hs_err_pid*
 **/*/.work_logs.sh
 
 .work_logs.sh
+
+# Opencode / agent artifacts
+.sisyphus/
+worktrees/
