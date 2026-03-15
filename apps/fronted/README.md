@@ -1,123 +1,163 @@
-# Multi-ACGM-fronted
+# ACMG-PS3 Intelligence System Frontend
 
-A React-based frontend application for the Multi-ACGM project that enables processing and analysis of PDF documents using advanced AI techniques.
+这是一个用于ACMG-PS3证据标准智能系统的前端应用，提供PDF上传、证据检索、分析和可视化等功能。
 
-## Features
+## 功能特性
 
-- PDF Upload and Processing
-- Advanced Document Analysis
-- Interactive Visualization
-- Real-time Status Monitoring
+- **PDF上传与处理**：支持PDF文档上传并进行自动化处理
+- **证据检索**：基于基因符号、变异等条件检索科学证据
+- **证据分析**：包括基因关联分析、共现矩阵、证据链检测等
+- **质量监控**：实时监控证据质量和完整性
+- **可视化展示**：以图表形式展示证据关系和统计数据
+- **结果下载**：支持分析结果的下载和导出
 
-## Architecture
+## 技术栈
 
-This application follows a modern React + TypeScript + Vite architecture with the following key components:
+- React 19.x
+- TypeScript
+- React Router DOM
+- D3.js
+- Lucide React Icons
 
-- **Frontend Framework**: React 18 with TypeScript
-- **Build Tool**: Vite for fast development
-- **Styling**: Tailwind CSS
-- **State Management**: Zustand
-- **Routing**: React Router DOM
-- **HTTP Client**: Axios
+## 环境要求
 
-## PDF Upload Functionality
+- Node.js >= 18.0.0
+- npm 或 yarn
 
-### Upload Endpoint
+## 安装与运行
 
-The application supports PDF uploads via a single unified endpoint:
+### 1. 克隆项目
 
-```
-POST /api/v1/pdf/upload
-```
-
-### Upload Method
-
-- **Form Data Upload**: The application exclusively uses `multipart/form-data` format for PDF uploads
-- **File Parameter**: The PDF file should be sent as the `file` parameter
-- **Content Type**: `application/pdf` files are accepted
-
-### Example Request
-
-```javascript
-const formData = new FormData();
-formData.append('file', pdfFile);
-
-const response = await axios.post('/api/v1/pdf/upload', formData, {
-  headers: {
-    'Content-Type': 'multipart/form-data'
-  }
-});
+```bash
+git clone <repository-url>
+cd apps/fronted
 ```
 
-## Project Structure
+### 2. 安装依赖
 
-```
-src/
-├── components/          # Reusable UI components
-├── pages/              # Page components
-├── services/           # API services
-├── utils/              # Utility functions
-├── store/              # State management (Zustand)
-├── hooks/              # Custom React hooks
-├── types/              # TypeScript type definitions
-└── assets/             # Static assets
-```
-
-## Environment Variables
-
-The application uses the following environment variables:
-
-- `VITE_API_BASE_URL` - Base URL for the backend API
-- `VITE_APP_TITLE` - Application title
-
-## Development Setup
-
-1. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Copy environment variables:
+### 3. 配置环境变量
+
+复制示例环境文件：
+
 ```bash
 cp .env.local.example .env.local
 ```
 
-3. Start the development server:
+编辑 `.env.local` 文件，配置后端API地址：
+
+```env
+VITE_API_BASE_URL=http://localhost:8000/api/v1
+```
+
+### 4. 启动开发服务器
+
 ```bash
 npm run dev
 ```
 
-## Building for Production
+应用将在 `http://localhost:5173` 上运行。
 
-To build the application for production:
+### 5. 构建生产版本
 
 ```bash
 npm run build
 ```
 
-## API Documentation
+## 主要页面
 
-For detailed API documentation, refer to the `api_docs/` directory.
+- `/` - 首页
+- `/pdf/upload` - PDF上传页面
+- `/tasks/status` - 任务状态页面
+- `/evidence/search` - 证据检索页面
+- `/evidence/aggregate` - 证据聚合页面
+- `/evidence/association` - 基因关联分析页面
+- `/evidence/co-occurrence` - 共现矩阵页面
+- `/evidence/chains` - 证据链检测页面
+- `/evidence/quality` - 证据质量监控页面
+- `/evidence/graph-stats` - 图数据库统计页面
+- `/results/:documentId` - 结果查看页面
 
-## Technologies Used
+## API 集成
 
-- [React](https://reactjs.org/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Vite](https://vitejs.dev/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Axios](https://axios-http.com/)
-- [Zustand](https://zustand-demo.pmnd.rs/)
-- [React Router DOM](https://reactrouter.com/)
-- [Lucide React](https://lucide.dev/)
+前端通过 `src/services/apiService.ts` 与后端API通信，支持以下主要功能：
 
-## Contributing
+- 健康检查
+- PDF上传和哈希检查
+- 任务管理和状态查询
+- 证据检索和聚合
+- 基因/变异关联分析
+- 共现分析和证据链检测
+- 质量评估和图统计
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## 目录结构
 
-## License
+```
+src/
+├── components/     # 可复用UI组件
+├── pages/         # 页面组件
+├── services/      # API服务
+├── types/         # TypeScript类型定义
+├── hooks/         # 自定义React Hooks
+├── utils/         # 工具函数
+├── router/        # 路由配置
+└── assets/        # 静态资源
+```
 
-This project is licensed under the MIT License.
+## 开发指南
+
+### 前端开发宪法原则
+
+为确保代码质量和一致性，所有前端开发必须遵循[前端开发宪法原则](FRONTEND_CONSTITUTION.md)。在开始开发前，请务必仔细阅读并理解这些原则。
+
+参阅[开发指南](DEVELOPMENT_GUIDELINES.md)了解快速入门要点和代码审查清单。
+
+### 添加新页面
+
+1. 在 `src/pages/` 目录下创建新页面组件
+2. 在 `src/router/index.tsx` 中添加路由配置
+3. 如需要，更新类型定义
+
+### API 调用
+
+所有API调用都通过 `src/services/apiService.ts` 进行：
+
+```typescript
+import { healthCheck, searchEvidence } from '../services/apiService';
+
+// 示例：健康检查
+const health = await healthCheck();
+
+// 示例：证据检索
+const results = await searchEvidence({
+  gene_symbol: 'BRCA1',
+  min_confidence: 90
+});
+```
+
+## 故障排除
+
+### 常见问题
+
+1. **API连接失败**：检查后端服务是否运行，以及 `VITE_API_BASE_URL` 配置是否正确
+2. **跨域错误**：确保后端API设置了正确的CORS头部
+3. **构建错误**：运行 `npm run lint` 检查代码质量问题
+4. **类型错误**：运行 `npx tsc --noEmit` 检查TypeScript类型错误
+
+### 调试
+
+- 使用浏览器开发者工具查看网络请求
+- 检查控制台是否有错误信息
+- 运行 `npm run diagnose` 进行基本诊断
+- 运行 `npx tsc --noEmit` 检查TypeScript类型问题
+
+## 贡献
+
+欢迎提交Issue和Pull Request来改进此项目。
+
+## 许可证
+
+[在此处添加许可证信息]

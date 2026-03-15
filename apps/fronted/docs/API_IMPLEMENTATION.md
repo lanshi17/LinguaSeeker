@@ -145,10 +145,14 @@ const handleUpload = async (file: File) => {
 import { fetchByPMID, pollTaskStatus } from './services/api';
 
 const handlePMIDSubmit = async (pmid: string) => {
-  const response = await fetchByPMID({ pmid, priority: 0 });
-  
-  const status = await pollTaskStatus(response.task_id, onProgress);
-  // 处理结果...
+  // 注意：此功能在后端API中未实现
+  try {
+    const response = await fetchByPMID({ pmid, priority: 0 });
+    const status = await pollTaskStatus(response.task_id, onProgress);
+    // 处理结果...
+  } catch (error) {
+    console.error('后端API暂不支持通过PMID获取文档', error);
+  }
 };
 ```
 
@@ -182,12 +186,12 @@ const MyComponent = () => {
 | 方法 | 端点 | 描述 |
 |------|------|------|
 | POST | `/pdf/upload` | FormData 上传 |
-| POST | `/pdf/fetch-by-pmid` | 通过 PMID 获取 |
-| POST | `/pdf/fetch-by-doi` | 通过 DOI 获取 |
+| POST | `/pdf/fetch-by-pmid` | 通过 PMID 获取 | ❌ 未实现 |
+| POST | `/pdf/fetch-by-doi` | 通过 DOI 获取 | ❌ 未实现 |
 | GET | `/tasks/{task_id}` | 获取任务状态 |
-| DELETE | `/tasks/{task_id}` | 取消任务 |
+| DELETE | `/tasks/{task_id}` | 取消任务 | ❌ 未实现 |
 | GET | `/tasks/{task_id}/progress` | 获取实时进度 |
-| POST | `/tasks/{task_id}/retry` | 重试任务 |
+| POST | `/tasks/{task_id}/retry` | 重试任务 | ❌ 未实现 |
 
 ## 特性
 

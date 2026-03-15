@@ -21,16 +21,16 @@
 | 端点 | 方法 | 实现状态 | 函数名 |
 |------|------|---------|--------|
 | `/api/v1/pdf/upload` | POST | ✅ 已实现 | `uploadPDFForm` |
-| `/api/v1/pdf/fetch-by-pmid` | POST | ✅ 已实现 | `fetchByPMID` |
-| `/api/v1/pdf/fetch-by-doi` | POST | ✅ 已实现 | `fetchByDOI` |
+| `/api/v1/pdf/fetch-by-pmid` | POST | ❌ 未实现 | `fetchByPMID` |
+| `/api/v1/pdf/fetch-by-doi` | POST | ❌ 未实现 | `fetchByDOI` |
 | `/api/v1/tasks/{task_id}` | GET | ✅ 已实现 | `getTaskStatus` |
-| `/api/v1/tasks/{task_id}` | DELETE | ✅ 已实现 | `cancelTask` |
+| `/api/v1/tasks/{task_id}` | DELETE | ❌ 未实现 | `cancelTask` |
 | `/api/v1/tasks/{task_id}/progress` | GET | ✅ 已实现 | `getTaskProgress` |
-| `/api/v1/tasks/{task_id}/retry` | POST | ✅ 已实现 | `retryTask` |
+| `/api/v1/tasks/{task_id}/retry` | POST | ❌ 未实现 | `retryTask` |
 | `/api/v1/{task_id}` | GET | ✅ 已实现 | `getTaskStatusLegacy` (遗留) |
-| `/api/v1/{task_id}` | DELETE | ✅ 已实现 | `cancelTaskLegacy` (遗留) |
+| `/api/v1/{task_id}` | DELETE | ❌ 未实现 | `cancelTaskLegacy` (遗留) |
 
-**实现进度**: 10/10 (100%)
+**实现进度**: 6/10 (60%)
 
 ### 3. 新增工具函数
 
