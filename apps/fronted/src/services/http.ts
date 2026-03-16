@@ -51,10 +51,11 @@ export async function requestJson<T>(
   options: RequestOptions = {}
 ): Promise<T> {
   const url = buildUrl(path);
+  const hasJsonBody = init.body !== undefined;
   const res = await fetch(url, {
     ...init,
     headers: {
-      'content-type': 'application/json',
+      ...(hasJsonBody ? { 'content-type': 'application/json' } : {}),
       ...(options.headers ?? {}),
       ...(init.headers ?? {})
     },

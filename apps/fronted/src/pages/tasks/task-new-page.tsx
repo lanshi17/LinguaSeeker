@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { interactionRespond, interactionStart, uploadTaskRequest } from '../../services/api';
+import { uploadTaskRequest } from '../../services/api';
 import { ApiError } from '../../services/http';
+import { AgentClarificationChat } from '../../components/chat/agent-clarification-chat';
 import { useTaskFlowStore } from '../../store/useTaskFlowStore';
 import { useToastStore } from '../../store/useToastStore';
 import { validateUploadFiles } from '../../utils/validation';
@@ -16,7 +17,7 @@ function buildUserInput(form: TaskFormStructured) {
 export const TaskNewPage: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToastStore();
-  const { taskForm, interactionSessionId, interactionRound, setTaskForm, setInteraction } = useTaskFlowStore();
+  const { taskForm, interactionRound } = useTaskFlowStore();
 
   const [draft, setDraft] = useState<TaskFormStructured>(() =>
     taskForm ?? {
@@ -27,61 +28,12 @@ export const TaskNewPage: React.FC = () => {
     }
   );
 
-  const [question, setQuestion] = useState<string | null>(null);
-  const [answer, setAnswer] = useState<string>('');
   const [busy, setBusy] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
 
   const ready = Boolean(taskForm);
-  const canClarify = interactionRound < 2;
 
   const userInput = useMemo(() => buildUserInput(draft), [draft]);
-
-  const start = async () => {
-    if (!draft.goal.trim() || !draft.disease.trim()) {
-      toast.pushToast({ level: 'warning', title: 'Missing fields', message: 'Goal and disease are required', ttlMs: 5000 });
-      return;
-    }
-
-    setBusy(true);
-    try {
-      const res = await interactionStart({ user_input: userInput });
-      setInteraction(res.session_id, res.round);
-      setQuestion(res.question);
-      if (res.task_form) {
-        setTaskForm(res.task_form);
-      }
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.detail ?? err.message : 'Failed to start interaction';
-      toast.pushToast({ level: 'error', title: 'Interaction failed', message: msg, ttlMs: 8000 });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const respond = async () => {
-    if (!interactionSessionId) return;
-    if (!answer.trim()) {
-      toast.pushToast({ level: 'warning', title: 'Empty response', message: 'Please answer the question', ttlMs: 5000 });
-      return;
-    }
-
-    setBusy(true);
-    try {
-      const res = await interactionRespond({ session_id: interactionSessionId, user_response: answer });
-      setInteraction(interactionSessionId, res.round);
-      setQuestion(res.question);
-      setAnswer('');
-      if (res.task_form) {
-        setTaskForm(res.task_form);
-      }
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.detail ?? err.message : 'Failed to respond';
-      toast.pushToast({ level: 'error', title: 'Interaction failed', message: msg, ttlMs: 8000 });
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const submitUpload = async () => {
     if (!taskForm) return;
@@ -163,69 +115,8 @@ export const TaskNewPage: React.FC = () => {
           </div>
 
           <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={start}
-              disabled={busy || !canClarify}
-              style={{
-                padding: '10px 14px',
-                borderRadius: 12,
-                border: '1px solid var(--border)',
-                background: 'rgba(124,92,255,0.18)',
-                color: 'var(--text)',
-                cursor: busy ? 'not-allowed' : 'pointer'
-              }}
-            >
-              Start clarification
-            </button>
-            {!canClarify ? (
-              <div className="muted" style={{ alignSelf: 'center' }}>
-                Max clarification rounds reached.
-              </div>
-            ) : null}
+            <AgentClarificationChat draft={draft} userInput={userInput} busy={busy} setBusy={setBusy} />
           </div>
-
-          {question ? (
-            <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-              <div style={{ fontWeight: 800 }}>Question</div>
-              <div className="muted" style={{ marginTop: 6 }}>
-                {question}
-              </div>
-              <div style={{ marginTop: 10 }}>
-                <textarea
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  rows={4}
-                  style={{
-                    width: '100%',
-                    padding: 10,
-                    borderRadius: 12,
-                    border: '1px solid var(--border)',
-                    background: 'transparent',
-                    color: 'var(--text)'
-                  }}
-                  placeholder="Your answer"
-                />
-              </div>
-              <div style={{ marginTop: 10 }}>
-                <button
-                  type="button"
-                  onClick={respond}
-                  disabled={busy || !canClarify}
-                  style={{
-                    padding: '10px 14px',
-                    borderRadius: 12,
-                    border: '1px solid var(--border)',
-                    background: 'rgba(255,255,255,0.06)',
-                    color: 'var(--text)',
-                    cursor: busy ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  Send answer
-                </button>
-              </div>
-            </div>
-          ) : null}
         </div>
       </div>
 

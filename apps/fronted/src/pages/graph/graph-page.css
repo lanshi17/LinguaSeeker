@@ -1,0 +1,76 @@
+.graph-console {
+  margin-top: 18px;
+}
+
+.graph-console__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.graph-console__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.graph-console__input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+}
+
+.graph-console__field {
+  display: block;
+}
+
+.graph-console__input:focus-visible {
+  outline: 2px solid rgba(124, 92, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.graph-console__btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.graph-console__btn:hover:not([disabled]) {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.graph-console__btn:focus-visible {
+  outline: 2px solid rgba(124, 92, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.graph-console__btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.graph-console__btn--primary {
+  background: rgba(124, 92, 255, 0.18);
+}
+
+.graph-console__btn--primary:hover:not([disabled]) {
+  background: rgba(124, 92, 255, 0.26);
+}
+
+.graph-console__pre {
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.22);
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.4;
+}

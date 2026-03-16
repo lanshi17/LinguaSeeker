@@ -82,3 +82,15 @@ export async function getEvidenceDocument(documentId: string, options: ApiCallOp
     signal: options.signal
   });
 }
+
+export async function getEvidenceGraphStats(options: ApiCallOptions = {}) {
+  return requestGetJson<EvidenceSearchResponse>('/evidence/graph/stats', {
+    signal: options.signal
+  });
+}
+
+export async function resyncEvidenceDocument(documentId: string, options: ApiCallOptions = {}) {
+  return requestJson<EvidenceSearchResponse>(`/evidence/sync/document/${encodeURIComponent(documentId)}`, {
+    method: 'POST'
+  }, { signal: options.signal });
+}
