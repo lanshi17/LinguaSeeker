@@ -63,7 +63,7 @@ TypeScript 中的 `.ts` 文件：
 ## 启动命令
 
 ```bash
-cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-fronted/apps/fronted
+cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-frontend/apps/frontend
 npm run dev
 ```
 

@@ -30,7 +30,7 @@
 
 ```bash
 git clone <repository-url>
-cd apps/fronted
+cd apps/frontend
 ```
 
 ### 2. 安装依赖

@@ -6,7 +6,7 @@
 
 运行后端检查脚本：
 ```bash
-cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-fronted/apps/fronted
+cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-frontend/apps/frontend
 npm run check-backend
 ```
 
@@ -177,7 +177,7 @@ curl http://localhost:8000/docs  # API 文档
 
 ### 步骤 3: 启动前端
 ```bash
-cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-fronted/apps/fronted
+cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-frontend/apps/frontend
 npm run dev
 
 # 你应该看到：

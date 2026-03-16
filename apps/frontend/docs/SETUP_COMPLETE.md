@@ -42,7 +42,7 @@ uvicorn main:app --reload --port 8000
 
 ### 启动前端
 ```bash
-cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-fronted/apps/fronted
+cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-frontend/apps/frontend
 npm run dev
 ```
 
@@ -84,7 +84,7 @@ npm run check-backend
 ## 文件结构
 
 ```
-fronted/
+frontend/
 ├── .env                      # 环境变量
 ├── .env.development         # 开发环境配置
 ├── .env.production          # 生产环境配置

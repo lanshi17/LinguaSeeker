@@ -28,7 +28,7 @@ curl http://localhost:8000/
 
 ```bash
 # 进入前端目录
-cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-fronted/apps/fronted
+cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-frontend/apps/frontend
 
 # 安装依赖（首次运行）
 npm install

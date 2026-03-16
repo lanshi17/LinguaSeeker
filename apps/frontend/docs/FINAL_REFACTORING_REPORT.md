@@ -1,6 +1,6 @@
 # 前端代码重构完成报告
 
-## 项目：Multi-ACMG-fronted
+## 项目：Multi-ACMG-frontend
 
 ### 重构目标
 解决历史代码遗留问题，使项目符合前端开发宪法原则。

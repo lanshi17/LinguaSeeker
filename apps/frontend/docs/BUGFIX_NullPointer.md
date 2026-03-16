@@ -97,7 +97,7 @@ if (data.evidence_annotations) {
 ## 重启命令
 
 ```bash
-cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-fronted/apps/fronted
+cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-frontend/apps/frontend
 npm run dev
 ```
 

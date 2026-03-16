@@ -24,7 +24,7 @@ Ctrl + C
 ### 步骤 2: 清除缓存
 
 ```bash
-cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-fronted/apps/fronted
+cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-frontend/apps/frontend
 
 # 清除 Vite 缓存
 rm -rf node_modules/.vite
@@ -136,7 +136,7 @@ const API_BASE_URL = '/api/v1'  // 应该是相对路径
 
 ```bash
 #!/bin/bash
-cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-fronted/apps/fronted
+cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-frontend/apps/frontend
 
 echo "🧹 清理缓存..."
 rm -rf node_modules/.vite

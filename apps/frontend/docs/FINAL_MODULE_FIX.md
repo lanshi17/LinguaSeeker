@@ -67,7 +67,7 @@ TypeScript 接口可以在运行时模块中导出，虽然它们只存在于编
 ## 启动命令
 
 ```bash
-cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-fronted/apps/fronted
+cd /mnt/data/Documents/Graduate/02_Research/03_Multi-ACMG-frontend/apps/frontend
 npm run dev
 ```
 
