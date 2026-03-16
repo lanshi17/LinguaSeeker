@@ -87,7 +87,14 @@
 ### Task 3.1: Clean up tests/ directory: move non-test artifacts out; single toolchain
 - **Steps**:
   - [x] Unblock pytest collection by ignoring non-test artifacts (at least `tests/src/` and `tests/test_qdrant_fix.py`) via root `pyproject.toml` `[tool.pytest.ini_options]`.
+  - [x] Forward-fix committed secrets in `database/podman-compose.yml` (use `${REDIS_PASSWORD}` / `${NEO4J_PASSWORD}`; do not commit plaintext).
+  - [x] Forward-fix committed secrets in `database/scripts/setup/verify_services.sh` (use `${REDIS_PASSWORD}` / `${NEO4J_PASSWORD}`; **do not echo secret values**).
   - [ ] Move files out of `tests/` that are not tests (md/json/scripts) into `docs/` or `tools/` (keep repo conventions).
+    - [x] `tests/TEST_PIPELINE_README.md` -> `docs/test-artifacts/TEST_PIPELINE_README.md` (git mv)
+    - [x] `tests/README.md` -> `docs/test-artifacts/tests-README.md` (git mv)
+    - [ ] `tests/main.py` -> `tools/qdrant/test_pipeline_main.py` (git mv)
+    - [ ] `tests/docker-compose.yml` -> `tools/qdrant/docker-compose.yml` (git mv)
+    - [ ] `tests/.python-version` -> `.python-version` (git mv)
   - [ ] Remove duplicate venv dirs from version control if tracked.
   - [ ] Decide whether `tests/pyproject.toml` is needed; consolidate to root tooling if possible.
 - **Verify**:

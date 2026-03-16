@@ -95,10 +95,12 @@ python main.py --help
 ## 配置要求
 
 流水线使用以下数据库配置（基于修复后的设置）：
-- PostgreSQL: localhost:5432, 用户: yangzs, 密码: ***REMOVED***
-- Neo4j: bolt://localhost:7687, 用户: neo4j, 密码: ***REMOVED***
-- Qdrant: localhost:6333, API密钥: EDhs@gJcftnT3sBU
-- MinIO: localhost:9000, 访问密钥: yangzs, 秘密密钥: ***REMOVED***
+- PostgreSQL: localhost:5432, 用户: yangzs, 密码: ${POSTGRES_PASSWORD}
+- Neo4j: bolt://localhost:7687, 用户: neo4j, 密码: ${NEO4J_PASSWORD}
+- Qdrant: localhost:6333, API密钥: ${QDRANT_API_KEY}
+- MinIO: localhost:9000, 访问密钥: yangzs, 秘密密钥: ${MINIO_SECRET_KEY}
+
+**重要提示**: 必须在运行测试前通过 `export` 设置上述环境变量。绝不应在此文档或任何源代码中提交明文密码。
 
 ## 错误处理
 

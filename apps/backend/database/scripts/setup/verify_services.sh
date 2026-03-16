@@ -17,7 +17,9 @@ fi
 echo
 
 echo "2. 检查 Redis..."
-if podman exec acmg_redis redis-cli -a kSZyW5xUr@?YzzRx ping | grep -q "PONG"; then
+if [ -z "${REDIS_PASSWORD}" ]; then
+    echo "⚠️  Redis: REDIS_PASSWORD 未设置"
+elif podman exec acmg_redis redis-cli -a "${REDIS_PASSWORD}" ping | grep -q "PONG"; then
     echo "✅ Redis: 连接正常"
 else
     echo "❌ Redis: 连接失败"
@@ -41,7 +43,9 @@ fi
 echo
 
 echo "5. 检查 Neo4j..."
-if curl -u neo4j:***REMOVED*** -H "Content-Type: application/json" -d '{"statements":[{"statement":"RETURN 1 as result"}]}' -s http://localhost:7474/db/neo4j/tx/commit | grep -q "result"; then
+if [ -z "${NEO4J_PASSWORD}" ]; then
+    echo "⚠️  Neo4j: NEO4J_PASSWORD 未设置"
+elif curl -u "neo4j:${NEO4J_PASSWORD}" -H "Content-Type: application/json" -d '{"statements":[{"statement":"RETURN 1 as result"}]}' -s http://localhost:7474/db/neo4j/tx/commit | grep -q "result"; then
     echo "✅ Neo4j: 连接正常 (服务运行中)"
 else
     echo "❌ Neo4j: 连接失败"
