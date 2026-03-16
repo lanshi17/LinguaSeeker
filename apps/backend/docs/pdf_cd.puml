@@ -1,0 +1,53 @@
+@startuml PDFClassDiagram
+title PDF Module Class Diagram
+
+package "DTO" {
+  class DocumentUploadEntity {
+    + userId : Long
+    - username : String
+    - password : String
+    + DocumentUploadEntity()
+    + getUsername() : String
+    + setUsername(username: String)
+    + getPassword() : String
+    + setPassword(password: String)
+  }
+}
+
+package "Service" {
+  class DocumentUploadService {
+    + createDocumentUpload(documentUpload: DocumentUploadEntity) : DocumentUploadEntity
+    + getDocumentUploadById(id: Long) : DocumentUploadEntity
+    + updateDocumentUpload(documentUpload: DocumentUploadEntity) : DocumentUploadEntity
+    + deleteDocumentUpload(id: Long)
+  }
+}
+
+
+package "Controller" {
+  abstract class BaseController {
+    - __init__(self, config: Type[AppConfig])
+    {abstract}+ registerRoutes(self)
+    {abstract}+ getRoutes(self):ApiRoutes
+  }
+
+  class UploadController{
+    + __init__(self, config: Type[AppConfig], documentUploadService: DocumentUploadService)
+    + registerRoutes(self)
+    + getRoutes(self):ApiRoutes
+  }
+  BaseController  <|-- UploadController
+}
+
+package "Repository" {
+  class UploadRepository {
+    + save(documentUpload: DocumentUploadEntity) : DocumentUploadEntity
+    + findById(id: Long) : DocumentUploadEntity
+    + deleteById(id: Long)
+  }
+}
+
+UploadController --> UploadService: uses
+UploadService --> DocumentUploadEntity: manages
+
+@enduml

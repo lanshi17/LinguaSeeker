@@ -161,31 +161,3 @@ class FileProcessingException(ACMGException):
 
     def __init__(self, message: str):
         super().__init__(message=f"File processing failed: {message}", code="FILE_PROCESSING_ERROR")
-    
-class RerankConfigurationError(ACMGException):
-    """Rerank 配置异常类"""
-
-    def __init__(self, message: str):
-        super().__init__(message=f"Rerank configuration error: {message}", code="RERANK_CONFIGURATION_ERROR")
-        
-class RerankAPIError(ACMGException):
-    """Rerank API 调用异常类"""
-
-    def __init__(self, message: str):
-        super().__init__(message=f"Rerank API error: {message}", code="RERANK_API_ERROR")
-class QdrantException(ACMGException):
-    """Qdrant 操作异常类"""
-
-    def __init__(self, message: str):
-        super().__init__(message=f"Qdrant operation failed: {message}", code="QDRANT_ERROR")
-class EmbeddingException(ACMGException):
-    """Embedding 操作异常类"""
-
-    def __init__(self, message: str):
-        super().__init__(message=f"Embedding operation failed: {message}", code="EMBEDDING_ERROR")
-
-class VectorDBConnectionError(ACMGException):
-    """向量数据库连接异常类"""
-
-    def __init__(self, message: str):
-        super().__init__(message=f"Vector DB connection failed: {message}", code="VECTOR_DB_CONNECTION_ERROR")

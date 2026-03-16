@@ -1,0 +1,223 @@
+.agent-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.agent-chat__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.agent-chat__title {
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+.agent-chat__meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.agent-chat__pill {
+  font-size: 12px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.agent-chat__transcript {
+  height: 320px;
+  max-height: 52vh;
+  overflow: auto;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 12px;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.08)),
+    radial-gradient(100% 120% at 10% 0%, rgba(124, 92, 255, 0.12), transparent 60%);
+}
+
+.agent-chat__row {
+  display: flex;
+  margin: 10px 0;
+}
+
+.agent-chat__bubble {
+  max-width: min(820px, 86%);
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  line-height: 1.35;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.agent-chat__bubble[data-role='assistant'] {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.agent-chat__bubble[data-role='user'] {
+  background: rgba(124, 92, 255, 0.18);
+  border-color: rgba(124, 92, 255, 0.32);
+}
+
+.agent-chat__bubble[data-role='system'] {
+  background: rgba(82, 196, 26, 0.12);
+  border-color: rgba(82, 196, 26, 0.28);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.agent-chat__bubble[data-role='error'] {
+  background: rgba(255, 77, 79, 0.12);
+  border-color: rgba(255, 77, 79, 0.28);
+}
+
+.agent-chat__row[data-role='user'] {
+  justify-content: flex-end;
+}
+
+.agent-chat__row[data-role='assistant'],
+.agent-chat__row[data-role='system'],
+.agent-chat__row[data-role='error'] {
+  justify-content: flex-start;
+}
+
+.agent-chat__composer {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.agent-chat__textarea {
+  flex: 1;
+  min-width: 260px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text);
+  resize: vertical;
+}
+
+.agent-chat__textarea:focus-visible {
+  outline: 2px solid rgba(124, 92, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.agent-chat__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.agent-chat__btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.agent-chat__btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.agent-chat__btn:focus-visible {
+  outline: 2px solid rgba(124, 92, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.agent-chat__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.agent-chat__btn--primary {
+  background: rgba(124, 92, 255, 0.18);
+}
+
+.agent-chat__btn--primary:hover:not(:disabled) {
+  background: rgba(124, 92, 255, 0.26);
+}
+
+.agent-chat__btn--danger {
+  background: rgba(255, 77, 79, 0.12);
+}
+
+.agent-chat__btn--danger:hover:not(:disabled) {
+  background: rgba(255, 77, 79, 0.18);
+}
+
+.agent-chat__empty {
+  color: var(--muted);
+  font-size: 13px;
+  padding: 18px 10px;
+}
+
+.agent-chat__quick-replies {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.agent-chat__link {
+  margin-left: 10px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.agent-chat__link:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.agent-chat__link:focus-visible {
+  outline: 2px solid rgba(124, 92, 255, 0.7);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.agent-chat__link:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.agent-chat__chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.agent-chat__chip:focus-visible {
+  outline: 2px solid rgba(124, 92, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.agent-chat__chip:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.agent-chat__chip:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -6,9 +6,6 @@ import tempfile
 from pathlib import Path
 from typing import Dict, Any
 import requests
-from requests.adapters import HTTPAdapter
-from requests.exceptions import SSLError
-from urllib3.util.retry import Retry
 from loguru import logger
 from .exceptions import FileProcessingException, SuppressAndLog
 
@@ -17,14 +14,7 @@ from .exceptions import FileProcessingException, SuppressAndLog
 DEFAULT_DOWNLOAD_TIMEOUT = 300
 
 
-def download_file(
-    url: str, 
-    destination: str, 
-    timeout: int = DEFAULT_DOWNLOAD_TIMEOUT,
-    retries: int = 3,
-    backoff_factor: float = 0.5,
-    allow_insecure_fallback: bool = False,
-) -> str:
+def download_file(url: str, destination: str, timeout: int = DEFAULT_DOWNLOAD_TIMEOUT) -> str:
     """Download a file from a URL to a destination path.
     
     Args:
@@ -40,30 +30,8 @@ def download_file(
     """
     try:
         logger.info(f"Downloading file from {url}")
-        session = requests.Session()
-        retry = Retry(
-            total=retries,
-            read=retries,
-            connect=retries,
-            backoff_factor=backoff_factor,
-            status_forcelist=[500, 502, 503, 504],
-            allowed_methods=["GET"],
-            raise_on_status=False,
-        )
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount("https://", adapter)
-        session.mount("http://", adapter)
-
-        try:
-            response = session.get(url, stream=True, timeout=timeout)
-            response.raise_for_status()
-        except SSLError as e:
-            if allow_insecure_fallback:
-                logger.warning(f"SSL error detected, retrying without verification: {e}")
-                response = session.get(url, stream=True, timeout=timeout, verify=False)
-                response.raise_for_status()
-            else:
-                raise
+        response = requests.get(url, stream=True, timeout=timeout)
+        response.raise_for_status()
         
         with open(destination, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
@@ -146,81 +114,15 @@ def find_file_in_directory(directory: str, extension: str) -> str:
         raise FileProcessingException(f"Error searching for file: {e}")
 
 
-def get_all_files_in_directory(directory: str) -> Dict[str, str]:
-    """获取目录下所有文件的完整路径Dict。
+def create_temp_directory(prefix: str = "mineru_") -> str:
+    """Create a temporary directory.
     
     Args:
-        directory: 目标目录路径。
+        prefix: Prefix for the temporary directory name
         
     Returns:
-        包含所有文件完整路径的字典，键为文件路径，值为文件内容。
+        Path to the created directory
     """
-    files_dict = {}
-    try:
-        path = Path(directory)
-        for file_path in path.rglob("*"):
-            if file_path.is_file():
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    content = f.read()
-                    files_dict[str(file_path)] = content
-                    logger.debug(f"Loaded file: {file_path}")
-        return files_dict
-    except Exception as e:
-        logger.error(f"Error reading files in directory {directory}: {e}")
-        raise FileProcessingException(f"Error reading files: {e}")
-    
-
-def ensure_directory_exists(directory: str) -> str:
-    """确保目录存在，如果不存在则创建它。
-    
-    Args:
-        directory: 目标目录路径。
-        
-    Returns:
-        目标目录路径。
-    """
-    os.makedirs(directory, exist_ok=True)
-    logger.info(f"Directory ensured: {directory}")
-    return directory
-
-def copy_file_to_directory(file_path: str, destination_directory: str) -> str:
-    """将文件复制到指定目录。
-    
-    Args:
-        file_path: 源文件路径。
-        destination_directory: 目标目录路径。   
-    """
-    try:
-        from shutil import copy2
-        ensure_directory_exists(destination_directory)
-        destination_path = Path(destination_directory) / Path(file_path).name
-        copy2(file_path, destination_path)
-        logger.info(f"Copied file {file_path} to {destination_path}")
-        return str(destination_path)
-    except Exception as e:
-        logger.error(f"Error copying file {file_path} to {destination_directory}: {e}")
-        raise FileProcessingException(f"Error copying file: {e}")
-
-def cleanup_old_temp_folders(temp_root: str, keep_latest: int = 3) -> None:
-    """清理临时文件夹，只保留最近的几个运行文件夹。
-    
-    Args:
-        temp_root: 临时文件夹根目录路径。
-        keep_latest: 保留的最新运行文件夹数量。
-    """
-    try:
-        temp_path = Path(temp_root)
-        if not temp_path.exists() or not temp_path.is_dir():
-            logger.warning(f"Temporary root directory does not exist: {temp_root}")
-            return
-        
-        run_dirs = [d for d in temp_path.iterdir() if d.is_dir() and d.name.startswith("run_")]
-        run_dirs.sort(key=lambda d: d.stat().st_mtime, reverse=True)
-        
-        for old_dir in run_dirs[keep_latest:]:
-            from shutil import rmtree
-            rmtree(old_dir)
-            logger.info(f"Removed old temporary folder: {old_dir}")
-    except Exception as e:
-        logger.error(f"Error cleaning up temporary folders in {temp_root}: {e}")
-        raise FileProcessingException(f"Error cleaning up temp folders: {e}")
+    temp_dir = tempfile.mkdtemp(prefix=prefix)
+    logger.info(f"Created temporary directory: {temp_dir}")
+    return temp_dir

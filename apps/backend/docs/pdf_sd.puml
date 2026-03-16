@@ -1,0 +1,20 @@
+@startuml PDF_Document_Upload_Process
+title PDF Document Upload Process
+actor User
+participant "Frontend" as FE
+participant "Backend API" as BE
+database "Database" as DB
+participant "File Storage" as FS
+User -> FE: Select PDF file to upload
+FE -> BE: POST /upload/file/pdf with PDF file
+BE -> BE: Validate file type and size
+alt Valid PDF
+    BE -> FS: Store PDF file
+    FS --> BE: Return file storage path
+    BE -> DB: Save document metadata (filename, path, upload time)
+    DB --> BE: Confirm metadata saved
+    BE --> FE: Return success response with document ID
+else Invalid PDF
+    BE --> FE: Return error response (invalid file type/size)
+end
+@enduml
