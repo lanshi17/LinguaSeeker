@@ -152,19 +152,12 @@
 - `failed`
 
 ## 8. 错误码与告警
-### 8.1 基础错误码（冻结首版）
-`INPUT_INVALID, FILE_TOO_LARGE, FILE_TYPE_UNSUPPORTED, FILE_DUPLICATE, FETCH_TIMEOUT, FETCH_NO_RESULT, FULLTEXT_UNAVAILABLE, PARSE_FAILED, OCR_FAILED, OCR_TIMEOUT, TRANSLATION_FAILED, TRANSLATION_EMPTY, ALIGNMENT_FAILED, ENTITY_EXTRACTION_FAILED, EVIDENCE_EXTRACTION_FAILED, ACMG_RULE_UNSUPPORTED, ACMG_PARSE_FAILED, GRAPH_SYNC_FAILED, TASK_TIMEOUT, INTERNAL_ERROR`
 
-### 8.2 Warning 码
-`HGVS_AUTOCORRECT_FAILED`
+**单一来源**：见 [`docs/CONSTANTS.md`](CONSTANTS.md)（错误码 / warning 码）。
 
 ## 9. 幂等与事件
-- 幂等键格式（冻结）：
-1. 请求级：`req:{request_id}`
-2. 文献级：`req:{request_id}:paper:{paper_sha256}`
-3. 步骤级：`req:{request_id}:paper:{paper_sha256}:step:{step}:v{schema_version}`
-- KG 事件载荷最小字段：
-`request_id, paper_id, step, status, timestamp, idempotency_key`
+
+**单一来源**：见 [`docs/CONSTANTS.md`](CONSTANTS.md)（幂等键格式 / KG 事件载荷最小字段）。
 - KG 失败处理：重试队列（沿用 ACMG 节点级重试策略）
 - KG 首次上线：支持“全量回灌 + 增量更新”，脚本触发，支持断点续跑
 
