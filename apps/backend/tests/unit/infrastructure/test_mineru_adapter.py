@@ -1,17 +1,24 @@
 # test mineru adapter
 # batch_id=288b2e54-8df6-40f0-aa82-e695b300e384
 import pytest
-from src.infrastructure.adapters.mineru.mineru_adapter_impl import MinerUAdapterImpl as MineruAdapter
+from infrastructure.adapters.mineru.mineru_adapter_impl import (
+    MinerUAdapterImpl as MineruAdapter,
+)
 from typing import Any
-from src.infrastructure.adapters.mineru.mineru_adapter_interface import MinerUAdapterInterface
-from src.domain.impl.pdf_parser import PDFParser
+from infrastructure.adapters.mineru.mineru_adapter_interface import (
+    MinerUAdapterInterface,
+)
+from domain.impl.pdf_parser import PDFParser
 import os
 from icecream import ic
 from datetime import datetime, timezone
-from src.config.app_config import AppConfig
+from configs.app_config import AppConfig
 from loguru import logger
-cfg=AppConfig().from_env()
+
+cfg = AppConfig().from_env()
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "../../fixtures")
+
+
 def test_mineru_adapter_parse_pdf():
     adapter = MineruAdapter()
     pdf_path = os.path.join(TEST_DATA_DIR, "test_zh.pdf")
@@ -33,4 +40,4 @@ def test_mineru_adapter_parse_invalid_pdf():
     document_id = "test-invalid-document-id-456"
     with pytest.raises(Exception) as exc_info:
         adapter.mineru_parse([invalid_pdf_path])
-    logger.info(f"Expected exception for invalid PDF: {exc_info.value}")    
+    logger.info(f"Expected exception for invalid PDF: {exc_info.value}")
