@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "celery>=5.4.0",
+    "crawl4ai>=0.8.0",
     "dotenv>=0.9.9",
     "fastapi>=0.128.0",
     "lingua-language-detector>=2.1.1",
@@ -16,6 +17,8 @@ dependencies = [
     "python-multipart>=0.0.22",
     "redis>=5.0.0",
     "requests>=2.32.5",
+    "selenium>=4.15.0",
+    "webdriver-manager>=4.0.0",
 ]
 
 [project.optional-dependencies]
@@ -68,8 +71,13 @@ url = "https://pypi.org/simple/"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 markers = [
+    "unit: marks tests as unit tests",
+    "integration: marks tests as integration tests",
+    "asyncio: marks tests as asyncio-compatible",
     "integration: tests that hit external services like MinIO",
 ]
+addopts = "--ignore=tests/test_qdrant_fix.py --ignore=tools"
+norecursedirs = [".git", ".venv", "venv", "tools"]
 
 [dependency-groups]
 dev = [
@@ -77,13 +85,3 @@ dev = [
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
 ]
-
-[tool.pytest.ini_options]
-markers = [
-    "unit: marks tests as unit tests",
-    "integration: marks tests as integration tests",
-    "asyncio: marks tests as asyncio-compatible",
-]
-asyncio_mode = "auto"
-addopts = "--ignore=tests/test_qdrant_fix.py --ignore=tools"
-norecursedirs = [".git", ".venv", "venv", "tools"]
