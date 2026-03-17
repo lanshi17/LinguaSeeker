@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from typing import Type
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
-from src.config.app_config import AppConfig
+from src.configs.app_config import AppConfig
 from loguru import logger
 from src.utils.exceptions import ControllerException
 

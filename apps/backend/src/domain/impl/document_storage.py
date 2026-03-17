@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import os
 
 from src.infrastructure.store.minio_store import MinIOStore
-from src.config.database_config import DatabaseConfig
+from src.configs.database_config import DatabaseConfig
 from src.utils.exceptions import StoreException
 from src.utils.logger import Logger
 

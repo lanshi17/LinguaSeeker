@@ -146,5 +146,5 @@ class DatabaseConfig:
         return cfg
 
 # 全局数据库配置实例
-# from config.database_config import DatabaseConfig
+# from src.configs.database_config import DatabaseConfig
 # database_config = DatabaseConfig.from_env()

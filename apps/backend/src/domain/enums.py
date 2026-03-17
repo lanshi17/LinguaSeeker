@@ -76,6 +76,23 @@ class EvidenceClassification(str, Enum):
     BENIGN = "Benign"
 
 
+# ================================ 任务状态枚举 ===================================
+
+
+class TaskStatus(str, Enum):
+    """文档处理任务状态"""
+
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+    @classmethod
+    def is_terminal(cls, status: "TaskStatus") -> bool:
+        return status in {cls.COMPLETED, cls.FAILED, cls.CANCELLED}
+
+
 # ==================== 分数-分类映射 ====================
 
 SCORE_CLASSIFICATION_MAP: List[Tuple[float, str]] = [

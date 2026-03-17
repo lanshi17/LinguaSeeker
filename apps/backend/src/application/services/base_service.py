@@ -1,6 +1,6 @@
 # base service.py--基础服务类
 from abc import ABC, abstractmethod
-from config.app_config import AppConfig
+from src.configs.app_config import AppConfig
 cfg = AppConfig.from_env()
 
 

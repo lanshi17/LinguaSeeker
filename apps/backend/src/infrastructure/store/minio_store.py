@@ -1,6 +1,6 @@
 from typing import Optional, List, Tuple
 from .base_store import BaseStore
-from src.config.database_config import DatabaseConfig
+from src.configs.database_config import DatabaseConfig
 from src.utils.logger import Logger
 from src.utils.exceptions import StoreException
 import os

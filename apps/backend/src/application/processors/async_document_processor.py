@@ -4,8 +4,8 @@ from celery.result import AsyncResult
 from loguru import logger
 
 from src.utils.celery_tasks import process_pdf_document, celery_app
-from src.domain.models.document_task import DocumentTask, TaskStatus
-from src.domain.enums.task_status import TaskStatus as TaskStatusEnum
+from src.domain.task_models.document_task import DocumentTask, TaskStatus
+from src.domain.enums import TaskStatus as TaskStatusEnum
 
 
 class AsyncDocumentProcessor:

@@ -1,158 +1,168 @@
 networks:
-  acmg-network:
-    driver: bridge
+    acmg-network:
+        driver: bridge
 
 volumes:
-  postgres_data:
-  redis_data:
-  neo4j_data:
-  qdrant_storage:
-  neo4j_logs:
-  neo4j_import:
-  neo4j_plugins:
+    postgres_data:
+    redis_data:
+    neo4j_data:
+    qdrant_storage:
+    neo4j_logs:
+    neo4j_import:
+    neo4j_plugins:
 
 services:
-  # PostgreSQL 服务
-  postgresql:
-    image: docker.io/library/postgres:18
-    container_name: acmg_postgres
-    env_file:
-      - ./config/.env
-    environment:
-      - NO_PROXY=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
-      - no_proxy=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
-    volumes:
-      - postgres_data:/var/lib/postgresql
-      - ./init-scripts:/docker-entrypoint-initdb.d:ro
-    ports:
-      - "5432:5432"
-    networks:
-      - acmg-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U acmg_user -d acmg_ps3"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
+    # PostgreSQL 服务
+    postgresql:
+        image: docker.io/library/postgres:18
+        container_name: acmg_postgres
+        env_file:
+            - ./config/.env
+        environment:
+            - NO_PROXY=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
+            - no_proxy=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
+        volumes:
+            - postgres_data:/var/lib/postgresql
+            - ./init-scripts:/docker-entrypoint-initdb.d:ro
+        ports:
+            - "5432:5432"
+        networks:
+            - acmg-network
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U acmg_user -d acmg_ps3"]
+            interval: 30s
+            timeout: 30s
+            retries: 3
 
-  # Redis 服务
-  redis:
-    image: docker.io/library/redis:8
-    container_name: acmg_redis
-    env_file:
-      - ./config/.env
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
-    environment:
-      - NO_PROXY=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
-      - no_proxy=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    networks:
-      - acmg-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
+    # Redis 服务
+    redis:
+        image: docker.io/library/redis:8
+        container_name: acmg_redis
+        env_file:
+            - ./config/.env
+        command:
+            [
+                "/bin/sh",
+                "-c",
+                'redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"',
+            ]
+        environment:
+            - NO_PROXY=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
+            - no_proxy=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
+        volumes:
+            - redis_data:/data
+        ports:
+            - "6379:6379"
+        networks:
+            - acmg-network
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", 'redis-cli -a "$$REDIS_PASSWORD" ping']
+            interval: 30s
+            timeout: 30s
+            retries: 3
 
-  # Neo4j 服务
-  neo4j:
-    image: docker.io/neo4j:community
-    container_name: acmg_neo4j
-    stop_grace_period: 60s
-    env_file:
-      - ./config/.env.neo4j
-    volumes:
-      - neo4j_data:/data
-      - neo4j_logs:/logs
-      - neo4j_import:/import
-      - neo4j_plugins:/plugins
-    ports:
-      - "7474:7474"
-      - "7687:7687"
-    networks:
-      - acmg-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "cypher-shell -u neo4j -p '${NEO4J_PASSWORD}' 'RETURN 1'"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
+    # Neo4j 服务
+    neo4j:
+        image: docker.io/neo4j:community
+        container_name: acmg_neo4j
+        stop_grace_period: 60s
+        env_file:
+            - ./config/.env.neo4j
+        volumes:
+            - neo4j_data:/data
+            - neo4j_logs:/logs
+            - neo4j_import:/import
+            - neo4j_plugins:/plugins
+        ports:
+            - "7474:7474"
+            - "7687:7687"
+        networks:
+            - acmg-network
+        restart: unless-stopped
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "cypher-shell -u neo4j -p '${NEO4J_PASSWORD}' 'RETURN 1'",
+                ]
+            interval: 30s
+            timeout: 30s
+            retries: 3
 
-  # Qdrant 服务
-  qdrant:
-    image: docker.io/qdrant/qdrant:gpu-nvidia-latest
-    container_name: acmg_qdrant
-    command: ["/init_script/qdrant_init.sh"]
-    env_file:
-      - ./config/.env
-    environment:
-      - QDRANT__GPU__INDEXING=1
-      - QDRANT__TELEMETRY_DISABLED=true
-      - QDRANT__SERVICE__ENABLE_CORS=true
-      # gRPC Configuration
-      - QDRANT__SERVICE__GRPC_ENABLED=true
-      - QDRANT__SERVICE__HTTP_PORT=6333
-      - QDRANT__SERVICE__GRPC_PORT=6334
-      # TLS Configuration - Enabled with generated certificates
-      - QDRANT__SERVICE__ENABLE_TLS=true
-      - QDRANT__SERVICE__TLS_CERT_FILE=/qdrant/certs/qdrant.crt
-      - QDRANT__SERVICE__TLS_KEY_FILE=/qdrant/certs/qdrant.key
-      # Additional gRPC settings for secure connections
-      - QDRANT__SERVICE__GRPC_TLS_CONFIG__CERT_FILE=/qdrant/certs/qdrant.crt
-      - QDRANT__SERVICE__GRPC_TLS_CONFIG__KEY_FILE=/qdrant/certs/qdrant.key
-      # HTTP TLS Configuration
-      - QDRANT__SERVICE__HTTP_TLS_CONFIG__CERT_FILE=/qdrant/certs/qdrant.crt
-      - QDRANT__SERVICE__HTTP_TLS_CONFIG__KEY_FILE=/qdrant/certs/qdrant.key
-      # 代理绕过设置
-      - NO_PROXY=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
-      - no_proxy=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
-    volumes:
-      - qdrant_storage:/qdrant/storage
-      - ./qdrant/certs:/qdrant/certs:ro
-      - ./scripts/qdrant/qdrant_init.sh:/init_script/qdrant_init.sh:ro
-    ports:
-      - "6333:6333"
-      - "6334:6334"
-    networks:
-      - acmg-network
-    devices:
-      - nvidia.com/gpu=all
-    security_opt:
-      - label=disable
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pgrep -x qdrant || exit 1"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
+    # Qdrant 服务
+    qdrant:
+        image: docker.io/qdrant/qdrant:gpu-nvidia-latest
+        container_name: acmg_qdrant
+        command: ["/init_script/qdrant_init.sh"]
+        env_file:
+            - ./config/.env
+        environment:
+            - QDRANT__GPU__INDEXING=1
+            - QDRANT__TELEMETRY_DISABLED=true
+            - QDRANT__SERVICE__ENABLE_CORS=true
+            # gRPC Configuration
+            - QDRANT__SERVICE__GRPC_ENABLED=true
+            - QDRANT__SERVICE__HTTP_PORT=6333
+            - QDRANT__SERVICE__GRPC_PORT=6334
+            # TLS Configuration - Enabled with generated certificates
+            - QDRANT__SERVICE__ENABLE_TLS=true
+            - QDRANT__SERVICE__TLS_CERT_FILE=/qdrant/certs/qdrant.crt
+            - QDRANT__SERVICE__TLS_KEY_FILE=/qdrant/certs/qdrant.key
+            # Additional gRPC settings for secure connections
+            - QDRANT__SERVICE__GRPC_TLS_CONFIG__CERT_FILE=/qdrant/certs/qdrant.crt
+            - QDRANT__SERVICE__GRPC_TLS_CONFIG__KEY_FILE=/qdrant/certs/qdrant.key
+            # HTTP TLS Configuration
+            - QDRANT__SERVICE__HTTP_TLS_CONFIG__CERT_FILE=/qdrant/certs/qdrant.crt
+            - QDRANT__SERVICE__HTTP_TLS_CONFIG__KEY_FILE=/qdrant/certs/qdrant.key
+            # 代理绕过设置
+            - NO_PROXY=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
+            - no_proxy=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
+        volumes:
+            - qdrant_storage:/qdrant/storage
+            - ./qdrant/certs:/qdrant/certs:ro
+            - ./scripts/qdrant/qdrant_init.sh:/init_script/qdrant_init.sh:ro
+        ports:
+            - "6333:6333"
+            - "6334:6334"
+        networks:
+            - acmg-network
+        devices:
+            - nvidia.com/gpu=all
+        security_opt:
+            - label=disable
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", "pgrep -x qdrant || exit 1"]
+            interval: 30s
+            timeout: 30s
+            retries: 3
 
-  # MinIO 服务
-  minio:
-    image: quay.io/minio/aistor/minio:latest
-    container_name: acmg_minio
-    env_file:
-      - ./config/.env
-    environment:
-      - NO_PROXY=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
-      - no_proxy=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
-    volumes:
-      - ./minio/data:/data:Z
-      - ./minio/minio.license:/minio.license
-      - ./minio/certs:/etc/minio/certs
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    networks:
-      - acmg-network
-    command: ["server", "/data", "--console-address", ":9001"]
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
-      interval: 30s
-      timeout: 30s
-      retries: 5
-      start_period: 60s
+    # MinIO 服务
+    minio:
+        image: quay.io/minio/aistor/minio:latest
+        container_name: acmg_minio
+        env_file:
+            - ./config/.env
+        environment:
+            - NO_PROXY=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
+            - no_proxy=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.local
+        volumes:
+            - ./minio/data:/data:Z
+            - ./minio/minio.license:/minio.license
+            - ./minio/certs:/etc/minio/certs
+        ports:
+            - "9000:9000"
+            - "9001:9001"
+        networks:
+            - acmg-network
+        command: ["server", "/data", "--console-address", ":9001"]
+        restart: unless-stopped
+        healthcheck:
+            test:
+                ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+            interval: 30s
+            timeout: 30s
+            retries: 5
+            start_period: 60s
