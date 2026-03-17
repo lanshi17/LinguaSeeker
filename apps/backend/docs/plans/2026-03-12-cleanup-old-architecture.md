@@ -1,5 +1,7 @@
 # Cleanup Old Architecture — Consolidate Shim Layers (方案 B)
 
+Status: IN_PROGRESS
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Move real code from old naming (`src/database/`, `src/presentation/`, `src/service/`) into new naming (`src/infrastructure/`, `src/api/`, `src/services/`), remove shim layers and migration tests.

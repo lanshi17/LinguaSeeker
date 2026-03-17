@@ -1,5 +1,8 @@
 # 7.1 流式输出 — Streaming Output Implementation Plan
 
+Status: PENDING (P1 post-optimization)
+Prerequisites: M1 主工作流完成
+
 ## Problem
 
 `_run_supervisor_pipeline` uses `graph.ainvoke()` which blocks until the entire graph completes.
