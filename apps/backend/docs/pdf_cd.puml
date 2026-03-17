@@ -1,5 +1,14 @@
 @startuml PDFClassDiagram
-title PDF Module Class Diagram
+' [OUTDATED] This diagram reflects an older architecture (presentation/* controllers,
+' DocumentUploadEntity/Service/Repository). Current implementation uses:
+' - FastAPI routes under src/api/routes (e.g. /api/v1/pdf/upload, /api/v1/tasks/requests/upload)
+' - Task orchestration in src/services/task_manager.py
+' - Storage/clients in src/infrastructure/*
+'
+' If you need an updated diagram, regenerate based on src/api/routes/{core,task}.py and
+' src/services/task_manager.py.
+
+title [OUTDATED] PDF Module Class Diagram
 
 package "DTO" {
   class DocumentUploadEntity {
