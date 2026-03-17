@@ -1,6 +1,6 @@
-# ACMG-PS3 智能评级系统 - 后端服务 v2.0
+# ACMG-PS3 智能评级系统 - 后端服务 v2.1
 
-基于 GraphRAG 与 LangGraph 的变异致病性智能分类系统（四层架构：Controller / Service / Domain / Repository）。
+基于 GraphRAG 与 LangGraph 的变异致病性智能分类系统（六边形架构：API / Application / Domain / Infrastructure）。
 
 ## 🎯 技术栈
 
@@ -15,6 +15,12 @@
 | **向量数据库** | **Qdrant（默认）** |
 | **关系型数据库** | **PostgreSQL** |
 | **对象存储** | **MinIO** |
+| **缓存** | **Redis** |
+| **异步任务** | **Celery** |
+| **架构模式** | **六边形架构（Hexagonal Architecture）** |
+| **领域驱动设计** | **DDD（Domain-Driven Design）** |
+| **依赖管理** | **uv** |
+| **语言检测** | **lingua-language-detector** |
 
 ## 🚀 快速开始
 
@@ -35,12 +41,10 @@ uv run python check_config.py
 
 ### 2. 启动服务（使用 uv）
 ```bash
-# 方式1: 使用启动脚本
-chmod +x start.sh
-./start.sh
-
-# 方式2: 直接运行
+# 推荐方式：使用主入口
 uv run python main.py
+
+# 注意：app.py 是旧版入口，已废弃
 ```
 
 ### 3. 访问服务
@@ -57,7 +61,7 @@ uv run python main.py
   - 快速响应，成本经济
   - 用于：实体提取、证据初步验证、Cypher查询生成
   - API格式：Anthropic标准消息格式
-  
+
 - **仲裁模型 - Claude 3.5 Sonnet/Opus** (Anthropic原生格式)
   - 复杂推理能力强
   - 用于：最终ACMG评级决策、证据冲突仲裁、高风险判断
@@ -71,7 +75,7 @@ uv run python main.py
 
 **使用示例**：
 ```python
-from src.service.llm_service import LLMService, LLMProvider
+from src.application.services.llm_service import LLMService
 
 # 配置双LLM (统一Anthropic格式)
 config = {
@@ -87,144 +91,290 @@ entities = await service.extract_entities(text, ["Gene", "Variant"])
 rating = await service.generate_final_rating(evidence, gene, variant)
 ```
 
-详细文档：[src/service/LLM_SERVICE_GUIDE.md](src/service/LLM_SERVICE_GUIDE.md)
+详细文档：[src/application/services/llm_service.py](src/application/services/llm_service.py)
 
 ### 解析模式
 
-- **解析模式**：MinerU（Magic-PDF）支持 API 调用（前期）与本地部署（后期）。
+- **MinerU（Magic-PDF）**：支持 API 调用（前期）与本地部署（后期）
+- **适配器模式**：通过 `src/infrastructure/adapters/mineru/` 实现解耦
 
 ## 📁 项目结构
 
-本项目采用**四层架构设计**：
+本项目采用**六边形架构（Hexagonal Architecture）**，遵循 DDD（领域驱动设计）原则：
 
 ```
 backend/
-├── main.py                 # 应用入口
-├── pyproject.toml         # 项目配置和依赖
+├── main.py                 # 应用入口（FastAPI）- 推荐使用
+├── app.py                  # 旧版入口（已废弃，建议删除）
+├── pyproject.toml          # 项目配置和依赖
 └── src/
-    ├── controller/        # Controller/Web层 - 接收HTTP请求
+    ├── api/                # API层 - HTTP路由和依赖注入
+    │   ├── routes/         # 路由定义
+    │   │   ├── core.py     # 核心路由
+    │   │   ├── task.py     # 任务路由
+    │   │   ├── evidence.py # 证据路由
+    │   │   └── stream.py   # 流式路由
+    │   └── dependencies.py # 依赖注入和错误处理
+    │
+    ├── presentation/       # 表现层 - 控制器
+    │   ├── upload_controller.py
     │   ├── task_controller.py
-    │   ├── document_controller.py
-    │   ├── variant_controller.py
-    │   ├── report_controller.py
-    │   └── graph_controller.py
+    │   └── base_controller.py
     │
-    ├── service/          # Service层 - 业务逻辑和应用服务
-    │   ├── parser_service.py              # P1.0 智能解析
-    │   ├── graph_builder_service.py       # P2.0 图谱构建
-    │   ├── reasoning_service.py           # P3.0 循环推理
-    │   ├── task_orchestration_service.py  # 任务编排
-    │   └── llm_service.py                 # LLM调用封装
+    ├── application/        # 应用层 - 业务流程编排
+    │   ├── services/       # 应用服务
+    │   │   ├── document_service.py     # 文档处理服务
+    │   │   ├── embedding_service.py    # 向量化服务
+    │   │   ├── llm_service.py          # LLM服务
+    │   │   ├── rerank_service.py       # 重排序服务
+    │   │   └── base_service.py         # 服务基类
+    │   ├── processors/     # 处理器
+    │   │   └── async_document_processor.py
+    │   └── dtos/           # 数据传输对象
+    │       └── document_dto.py
     │
-    ├── domain/           # Domain/Entity层 - 领域模型和核心业务逻辑
-    │   ├── entities/                      # 实体
-    │   │   ├── task.py                    # 任务实体
-    │   │   ├── report.py                  # 报告实体
-    │   │   ├── graph_entities.py          # 图数据库实体
-    │   │   └── vector_entity.py           # 向量实体
-    │   └── value_objects/                 # 值对象
-    │       └── rating.py                  # 评级结果值对象
+    ├── domain/             # 领域层 - 核心业务逻辑
+    │   ├── models.py       # 领域模型
+    │   ├── enums.py        # 枚举定义
+    │   ├── abc/            # 抽象接口
+    │   │   └── document_parser.py
+    │   ├── agent/          # Agent领域逻辑
+    │   │   ├── workflow.py
+    │   │   ├── rag.py
+    │   │   ├── interaction.py
+    │   │   └── prompts.py
+    │   ├── evidence/       # 证据领域
+    │   │   ├── aggregator.py
+    │   │   ├── classifier.py
+    │   │   ├── evaluation_framework.py
+    │   │   └── tools.py
+    │   ├── graph/          # 图谱领域
+    │   │   ├── search.py
+    │   │   ├── sync.py
+    │   │   └── association_service.py
+    │   ├── literature/     # 文献领域
+    │   │   ├── pubmed_service.py
+    │   │   ├── firecrawl_service.py
+    │   │   └── acquisition_agent.py
+    │   ├── variant/        # 变异领域
+    │   │   ├── service.py
+    │   │   ├── clinvar_client.py
+    │   │   └── clingen_client.py
+    │   ├── mineru/         # MinerU领域
+    │   │   ├── component.py
+    │   │   └── constants.py
+    │   └── impl/           # 领域实现（应移至Infrastructure）
+    │       ├── document_storage.py
+    │       └── pdf_parser.py
     │
-    ├── repository/       # Repository/Dao层 - 数据持久化
-    │   ├── postgresql_repository.py       # PostgreSQL仓储
-    │   ├── neo4j_repository.py            # Neo4j图数据库仓储
-    │   ├── qdrant_repository.py           # Qdrant向量数据库仓储（默认）
-    │   └── milvus_repository.py           # Milvus向量数据库仓储（可选）
+    ├── infrastructure/     # 基础设施层 - 外部依赖实现
+    │   ├── adapters/       # 适配器
+    │   │   └── mineru/
+    │   │       ├── mineru_adapter_interface.py
+    │   │       ├── mineru_adapter_impl.py
+    │   │       └── mineru_mapping.py
+    │   ├── store/          # 存储适配器
+    │   │   ├── base_store.py
+    │   │   └── minio_store.py
+    │   ├── minio.py        # MinIO客户端
+    │   ├── neo4j.py        # Neo4j客户端
+    │   ├── postgres.py     # PostgreSQL客户端
+    │   ├── qdrant.py       # Qdrant客户端
+    │   ├── redis.py        # Redis客户端
+    │   └── models.py       # 数据库模型
     │
-    ├── config/           # 配置管理
-    │   ├── app_config.py                 # 应用配置
-    │   └── database_config.py            # 数据库配置
+    ├── agents/             # Agent编排层 - LangGraph工作流
+    │   ├── parsing/        # 解析Agent
+    │   │   ├── node.py
+    │   │   ├── mineru_tool.py
+    │   │   └── translation_tool.py
+    │   ├── extraction/     # 抽取Agent
+    │   │   ├── node.py
+    │   │   ├── extraction_tool.py
+    │   │   └── validator_tool.py
+    │   ├── reasoning/      # 推理Agent
+    │   │   └── node.py
+    │   ├── arbitration/    # 仲裁Agent
+    │   │   ├── node.py
+    │   │   ├── ps3_bs3_evaluator.py
+    │   │   └── rule_checker.py
+    │   ├── acquisition/    # 文献获取Agent
+    │   │   ├── node.py
+    │   │   ├── pubmed_tool.py
+    │   │   └── firecrawl_tool.py
+    │   ├── interaction/    # 交互Agent
+    │   │   ├── node.py
+    │   │   └── prompts.py
+    │   └── supervisor.py   # Agent监督器
     │
-    └── utils/            # 工具类
-        ├── logger.py                     # 日志工具
-        ├── exceptions.py                 # 异常定义
-        ├── validators.py                 # 数据验证
-        ├── text_processor.py             # 文本处理
-        └── container.py                  # 依赖注入容器
+    ├── tools/              # 工具层 - 外部服务封装（与Infrastructure有重叠）
+    │   ├── db/             # 数据库工具
+    │   │   ├── neo4j_tool.py
+    │   │   ├── postgres_tool.py
+    │   │   └── qdrant_tool.py
+    │   ├── external/       # 外部API工具
+    │   │   ├── clinvar_tool.py
+    │   │   └── translation_api.py
+    │   └── file/           # 文件处理工具
+    │       ├── minio_tool.py
+    │       └── pdf_parser.py
+    │
+    ├── knowledge/          # 知识层 - 领域知识
+    │   ├── prompts/        # Prompt模板
+    │   │   ├── loader.py
+    │   │   ├── system.yaml
+    │   │   ├── extraction.yaml
+    │   │   ├── arbitration.yaml
+    │   │   └── acmg_rules.yaml
+    │   └── ontologies/     # 本体定义
+    │
+    ├── state/              # 状态管理
+    │   ├── schemas.py      # 状态模式
+    │   └── global_state.py # 全局状态
+    │
+    ├── configs/            # 配置管理
+    │   ├── app_config.py
+    │   └── database_config.py
+    │
+    ├── utils/              # 工具类
+    │   ├── exceptions.py
+    │   ├── logger.py
+    │   ├── file_utils.py
+    │   ├── evidence_annotation.py
+    │   ├── pipeline_utils.py
+    │   ├── sanitizers.py
+    │   ├── timer.py
+    │   ├── celery_config.py
+    │   └── celery_tasks.py
+    │
+    ├── config.py           # 配置（与configs/重复，建议删除）
+    ├── health.py           # 健康检查
+    └── celery_app.py       # Celery应用
 ```
 
 ## 架构说明
 
-### 1. Controller/Web层
-- 职责：接收HTTP请求，参数验证，调用Service层，返回响应
-- 文件：
-  - `task_controller.py`: 任务管理API
-  - `document_controller.py`: 文档上传和解析API
-  - `variant_controller.py`: 变异查询和评级API
-  - `report_controller.py`: 报告查询和导出API
-  - `graph_controller.py`: 知识图谱查询API
+### 六边形架构分层
 
-### 2. Service层
-- 职责：实现业务逻辑，协调多个领域服务和数据访问
-- 对应DFD的三个主要流程：
-  - **P1.0 智能解析** (`parser_service.py`)
-    - 接收上传（PDF/PMID）
-    - MinerU解析（PDF → Markdown）
-    - 数据分块与向量化
-  
-  - **P2.0 图谱构建** (`graph_builder_service.py`)
-    - 实体抽取（Gene, Variant, Method, Evidence）
-    - 关系构建（创建Neo4j节点和边）
-  
-  - **P3.0 循环推理** (`reasoning_service.py`)
-    - 查询生成/规划
-    - 混合检索（Graph + Vector）
-    - 证据验证与评分
-    - 评级决策
+#### 1. API层 (`src/api/`)
+- **职责**：HTTP路由定义、依赖注入、请求验证
+- **文件**：
+  - `routes/core.py` - 核心API路由
+  - `routes/task.py` - 任务管理路由
+  - `routes/evidence.py` - 证据查询路由
+  - `routes/stream.py` - 流式响应路由
+  - `dependencies.py` - 依赖注入和错误处理
 
-  - **任务编排** (`task_orchestration_service.py`)
-    - 协调上述三个流程的完整工作流
+#### 2. 表现层 (`src/presentation/`)
+- **职责**：控制器逻辑，协调API层和应用层
+- **文件**：
+  - `upload_controller.py` - 文档上传控制器
+  - `task_controller.py` - 任务控制器
+  - `base_controller.py` - 基础控制器
 
-  - **LLM服务** (`llm_service.py`)
-    - DeepSeek (Anthropic兼容): 主力模型，用于快速任务
-    - Claude (Anthropic原生): 仲裁模型，用于关键决策
-    - 双LLM协作与共识机制
-    - 统一Anthropic消息格式
+#### 3. 应用层 (`src/application/`)
+- **职责**：业务流程编排，协调领域层和基础设施层
+- **服务**：
+  - `document_service.py` - 文档处理（上传、解析、存储）
+  - `embedding_service.py` - 文本向量化
+  - `llm_service.py` - LLM调用封装（DeepSeek + Claude）
+  - `rerank_service.py` - 检索结果重排序
 
-### 3. Domain/Entity层
-- 职责：定义核心业务模型和数据结构
-- 实体：
-  - `Task`: 任务实体（PostgreSQL）
-  - `Report`: 报告实体（PostgreSQL）
-  - `Paper/Gene/Variant/Evidence`: 图数据库节点（Neo4j）
-  - `VectorDocument`: 向量文档（Qdrant/Milvus）
-- 值对象：
-  - `RatingResult`: 评级结果
-  - `EvidenceLevel`: 证据等级枚举
+#### 4. 领域层 (`src/domain/`)
+- **职责**：核心业务逻辑，与技术实现无关
+- **子域**：
+  - **Agent领域** (`agent/`) - Agent工作流定义
+  - **证据领域** (`evidence/`) - 证据聚合、分类、评估
+  - **图谱领域** (`graph/`) - 知识图谱搜索和同步
+  - **文献领域** (`literature/`) - PubMed/Firecrawl文献获取
+  - **变异领域** (`variant/`) - ClinVar/ClinGen变异查询
+  - **MinerU领域** (`mineru/`) - PDF解析领域逻辑
 
-### 4. Repository/Dao层
-- 职责：数据持久化操作，封装数据库访问
-- 三个数据源：
-  - **PostgreSQL** (`postgresql_repository.py`)
-    - 存储任务状态和报告
-  - **Neo4j** (`neo4j_repository.py`)
-    - 存储知识图谱（Paper-Gene-Variant-Evidence关系）
-  - **Qdrant** (`qdrant_repository.py`)
-    - 默认向量库，存储文本向量，支持语义检索
-  - **Milvus** (`milvus_repository.py`)
-    - 备用向量库，可按需切换
+#### 5. 基础设施层 (`src/infrastructure/`)
+- **职责**：外部依赖实现（数据库、存储、第三方服务）
+- **适配器**：
+  - `minio.py` - MinIO对象存储
+  - `neo4j.py` - Neo4j图数据库
+  - `postgres.py` - PostgreSQL关系数据库
+  - `qdrant.py` - Qdrant向量数据库
+  - `redis.py` - Redis缓存
+  - `adapters/mineru/` - MinerU适配器
 
-## 数据流转
+#### 6. Agent编排层 (`src/agents/`)
+- **职责**：LangGraph工作流节点和工具定义
+- **Agent类型**：
+  - **解析Agent** (`parsing/`) - PDF解析和翻译
+  - **抽取Agent** (`extraction/`) - 实体抽取和验证
+  - **推理Agent** (`reasoning/`) - 证据推理
+  - **仲裁Agent** (`arbitration/`) - ACMG评级仲裁
+  - **获取Agent** (`acquisition/`) - 文献获取（PubMed/Firecrawl）
+  - **交互Agent** (`interaction/`) - 用户交互
+
+#### 7. 工具层 (`src/tools/`)
+- **职责**：外部服务封装（与Infrastructure有重叠）
+- **分类**：
+  - `db/` - 数据库工具
+  - `external/` - 外部API工具
+  - `file/` - 文件处理工具
+
+#### 8. 知识层 (`src/knowledge/`)
+- **职责**：领域知识和Prompt模板
+- **内容**：
+  - `prompts/` - ACMG规则、系统提示、抽取提示、仲裁提示
+  - `ontologies/` - 本体定义
+
+### 架构问题说明
+
+⚠️ **当前架构存在以下问题**：
+
+1. **双入口文件**：
+   - `main.py` - 主入口（推荐使用）
+   - `app.py` - 旧版入口（已废弃，建议删除）
+
+2. **重复目录**：
+   - `src/config.py` 与 `src/configs/` - 配置重复（建议删除 `src/config.py`）
+   - `src/domain/impl/` - 领域实现应移至 `infrastructure/`
+   - `src/tools/` 与 `src/infrastructure/` - 职责重叠（建议合并）
+
+3. **分层边界模糊**：
+   - `tools/` 层与 `infrastructure/` 层功能重复
+   - `domain/impl/` 违反领域层纯度原则（包含技术实现细节）
+
+### 数据流转
 
 ```
-用户请求 
-  → Controller (参数验证)
-    → Service (业务逻辑)
-      → Repository (数据访问)
-        → 数据库 (PostgreSQL / Neo4j / Qdrant/Milvus)
+用户请求
+  → API层 (路由 + 依赖注入)
+    → 表现层 (控制器)
+      → 应用层 (业务编排)
+        → 领域层 (核心逻辑)
+          → 基础设施层 (外部依赖)
+            → 数据库/存储 (PostgreSQL/Neo4j/Qdrant/MinIO)
+```
+
+### Agent工作流
+
+```
+文献获取 (acquisition)
+  → PDF解析 (parsing)
+    → 实体抽取 (extraction)
+      → 证据推理 (reasoning)
+        → ACMG仲裁 (arbitration)
+          → 生成报告
 ```
 
 ## 技术栈
 
 ## 📚 文档与参考
 
-- **LLM服务指南**: [src/service/LLM_SERVICE_GUIDE.md](src/service/LLM_SERVICE_GUIDE.md) - 详细的LLM使用文档
-- **LLM更新总结**: [LLM_SERVICE_UPDATE_SUMMARY.md](LLM_SERVICE_UPDATE_SUMMARY.md) - v2.1.0更新说明
 - **部署指南**: [DEPLOYMENT.md](DEPLOYMENT.md) - 生产环境部署文档
 - **API 文档**: http://localhost:8000/docs - 交互式API文档
 - **Qdrant 文档**: https://qdrant.tech/documentation/ - 向量数据库文档
 - **Anthropic API**: https://docs.anthropic.com/ - Claude API官方文档
 - **DeepSeek API**: https://platform.deepseek.com/docs - DeepSeek API文档
+- **LangGraph**: https://langchain-ai.github.io/langgraph/ - Agent工作流框架
+- **六边形架构**: 本项目采用六边形架构（端口-适配器模式），实现业务逻辑与技术实现的解耦
+- **DDD**: 领域驱动设计，通过子域划分和限界上下文管理复杂业务逻辑
 
 ## 🔧 配置
 
@@ -298,10 +448,24 @@ MINIO_ENDPOINT="minio.example.com:9000"
 - `POST /api/documents/upload` - 上传PDF
 - `POST /api/variants/query` - 查询变异评级
 - `POST /api/graph/nl-query` - 自然语言查询图谱
+- `POST /api/evidence/search` - 证据检索
+- `GET /api/stream/{task_id}` - 流式任务状态
+- `GET /` - 健康检查
 
 完整文档: http://localhost:8000/docs
 
 ## 📝 更新日志
+
+### v2.1.1 (2026-03-17)
+**架构文档更新**
+
+✨ 更新内容：
+- ✅ 更新项目结构为六边形架构（Hexagonal Architecture）
+- ✅ 详细说明各层职责和文件组织
+- ✅ 标注当前架构存在的问题（双入口、重复目录、边界模糊）
+- ✅ 更新数据流转和Agent工作流说明
+- ✅ 补充API端点文档
+- ✅ 更新技术栈（Redis、Celery、DDD、uv、语言检测）
 
 ### v2.1.0 (2024-12-18)
 **LLM服务重大升级 - 自定义Anthropic格式支持**
@@ -337,3 +501,21 @@ MINIO_ENDPOINT="minio.example.com:9000"
 
 ### v2.0.0
 初始版本，基于GraphRAG和LangGraph的ACMG-PS3智能评级系统
+
+## 🎓 架构演进路线
+
+本项目经历了从**四层架构**到**六边形架构**的演进：
+
+1. **v2.0.0** - 初期采用传统的 Controller/Service/Domain/Repository 四层架构
+2. **v2.1.0** - 引入 LangGraph Agent 编排，开始向六边形架构过渡
+3. **v2.1.1** - 正式采用六边形架构，明确各层职责
+
+**未来优化方向**：
+- ✅ 清理重复代码（`app.py`、`src/config.py`、`src/domain/impl/`）
+- ✅ 合并 `tools/` 和 `infrastructure/` 层
+- ✅ 完善领域模型和仓储接口
+- ✅ 统一配置管理（使用 `src/configs/`）
+
+---
+
+**最后更新**: 2026-03-17
