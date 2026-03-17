@@ -81,4 +81,12 @@ tmp/
 *.whl
 
 **/.work_logs.sh
-**/*/*.bin
+**/*.bin
+**/*.bin.*
+**/*.bkp
+**/logs/
+**/logs/**
+**/log/
+**/log.*
+**/log/**
+**/log_*
