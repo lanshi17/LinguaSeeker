@@ -66,18 +66,16 @@
 3. `log_link`
 
 ### 5.2 必须前端内置识别的关键错误码
-1. `INPUT_INVALID`
-2. `FILE_TOO_LARGE`
-3. `FILE_TYPE_UNSUPPORTED`
-4. `FILE_DUPLICATE`
-5. `FETCH_NO_RESULT`
-6. `PARSE_FAILED`
-7. `TRANSLATION_FAILED`
-8. `EVIDENCE_EXTRACTION_FAILED`
-9. `ACMG_PARSE_FAILED`
-10. `INTERNAL_ERROR`
+
+**单一来源**：见 [`docs/CONSTANTS.md`](CONSTANTS.md)（错误码）。
+
+（前端仍可在实现中维护“关键错误码子集”列表，但文档层面不再重复列举。）
 
 ### 5.3 Warning 展示
+
+**单一来源**：见 [`docs/CONSTANTS.md`](CONSTANTS.md)（warning 码）。
+
+展示规则：
 1. `HGVS_AUTOCORRECT_FAILED` 不阻断流程。
 2. 前端以黄色 warning 样式展示，并在证据详情可展开查看。
 
