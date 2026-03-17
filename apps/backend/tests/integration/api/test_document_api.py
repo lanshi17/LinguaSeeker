@@ -24,8 +24,8 @@ from application.dtos.document_dto import DocumentUploadDTO
 from domain.impl.pdf_parser import PDFParser
 from infrastructure.adapters.mineru import MinerUAdapterImpl
 from infrastructure.store.minio_store import MinIOStore
-from config.app_config import AppConfig
-from config.database_config import DatabaseConfig
+from configs.app_config import AppConfig
+from configs.database_config import DatabaseConfig
 
 
 @pytest.fixture
@@ -85,7 +85,7 @@ def mock_minio_store():
         "documents/test_zh/test-doc-id/content.html",
         "documents/test_zh/test-doc-id/images/page_1.png",
         "documents/test_zh/test-doc-id/images/page_2.png",
-        "documents/test_zh/test-doc-id/metadata.json"
+        "documents/test_zh/test-doc-id/metadata.json",
     ]
 
     return store
@@ -96,11 +96,7 @@ class TestDocumentAPIIntegration:
 
     @pytest.mark.asyncio
     async def test_upload_pdf_success_flow(
-        self,
-        test_pdf_file,
-        mock_app_config,
-        mock_mineru_adapter,
-        mock_minio_store
+        self, test_pdf_file, mock_app_config, mock_mineru_adapter, mock_minio_store
     ):
         """Test complete PDF upload workflow with mocked external dependencies"""
 
@@ -108,13 +104,12 @@ class TestDocumentAPIIntegration:
         with open(test_pdf_file, "rb") as f:
             file_content = f.read()
 
-        upload_file = UploadFile(
-            filename="test_zh.pdf",
-            file=io.BytesIO(file_content)
-        )
+        upload_file = UploadFile(filename="test_zh.pdf", file=io.BytesIO(file_content))
 
         # Step 2: Create UploadController with mocked dependencies
-        with patch('presentation.upload_controller.DocumentService') as MockDocumentService:
+        with patch(
+            "presentation.upload_controller.DocumentService"
+        ) as MockDocumentService:
             # Setup mock document service
             mock_doc_service = MockDocumentService.return_value
             mock_doc_service.process_pdf_document.return_value = {
@@ -123,11 +118,11 @@ class TestDocumentAPIIntegration:
                 "minio_prefix": "documents/test_zh/test-uuid-12345",
                 "minio_files": [
                     "documents/test_zh/test-uuid-12345/content.html",
-                    "documents/test_zh/test-uuid-12345/images/page_1.png"
+                    "documents/test_zh/test-uuid-12345/images/page_1.png",
                 ],
                 "file_count": 2,
                 "processed_at": "2024-01-01T00:00:00Z",
-                "mineru_file_id": "test-file-id-12345"
+                "mineru_file_id": "test-file-id-12345",
             }
 
             controller = UploadController(config=mock_app_config)
@@ -150,14 +145,12 @@ class TestDocumentAPIIntegration:
             assert call_args.filename == "test_zh.pdf"
             assert call_args.size == len(file_content)
 
-
     @pytest.mark.asyncio
     async def test_upload_pdf_invalid_file_type(self, mock_app_config):
         """Test upload with non-PDF file"""
 
         upload_file = UploadFile(
-            filename="test.txt",
-            file=io.BytesIO(b"Not a PDF file")
+            filename="test.txt", file=io.BytesIO(b"Not a PDF file")
         )
 
         controller = UploadController(config=mock_app_config)
@@ -167,7 +160,6 @@ class TestDocumentAPIIntegration:
 
         assert "Unsupported file type" in str(exc_info.value)
 
-
     @pytest.mark.asyncio
     async def test_upload_pdf_file_too_large(self, mock_app_config):
         """Test upload with file exceeding size limit"""
@@ -176,8 +168,7 @@ class TestDocumentAPIIntegration:
         large_content = b"x" * (mock_app_config.max_upload_size + 1)
 
         upload_file = UploadFile(
-            filename="large_file.pdf",
-            file=io.BytesIO(large_content)
+            filename="large_file.pdf", file=io.BytesIO(large_content)
         )
 
         controller = UploadController(config=mock_app_config)
@@ -187,13 +178,8 @@ class TestDocumentAPIIntegration:
 
         assert "File size exceeds the maximum limit" in str(exc_info.value)
 
-
     def test_document_service_process_pdf_document(
-        self,
-        test_pdf_file,
-        mock_mineru_adapter,
-        mock_minio_store,
-        mock_db_config
+        self, test_pdf_file, mock_mineru_adapter, mock_minio_store, mock_db_config
     ):
         """Test DocumentService.process_pdf_document with mocked dependencies"""
 
@@ -205,7 +191,7 @@ class TestDocumentAPIIntegration:
             filename="test_zh.pdf",
             content=file_content,
             size=len(file_content),
-            content_type="application/pdf"
+            content_type="application/pdf",
         )
 
         # Create temporary file for processing
@@ -217,9 +203,16 @@ class TestDocumentAPIIntegration:
 
         try:
             # Create DocumentService with mocked dependencies
-            with patch('application.services.document_service.MinerUAdapterImpl', return_value=mock_mineru_adapter), \
-                 patch('application.services.document_service.MinIOStore', return_value=mock_minio_store):
-
+            with (
+                patch(
+                    "application.services.document_service.MinerUAdapterImpl",
+                    return_value=mock_mineru_adapter,
+                ),
+                patch(
+                    "application.services.document_service.MinIOStore",
+                    return_value=mock_minio_store,
+                ),
+            ):
                 service = DocumentService(db_config=mock_db_config)
                 service.mineru_adapter = mock_mineru_adapter
                 service.minio_store = mock_minio_store
@@ -242,19 +235,15 @@ class TestDocumentAPIIntegration:
             if os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
 
-
     def test_pdf_parser_without_language_configuration(
-        self,
-        test_pdf_file,
-        mock_mineru_adapter
+        self, test_pdf_file, mock_mineru_adapter
     ):
         """Test PDFParser.parse without language pre-processing"""
 
         parser = PDFParser(mineru_adapter=mock_mineru_adapter)
 
         result = parser.parse(
-            file_path=str(test_pdf_file),
-            document_id="test-doc-id-123"
+            file_path=str(test_pdf_file), document_id="test-doc-id-123"
         )
 
         # Verify result
@@ -265,8 +254,9 @@ class TestDocumentAPIIntegration:
         assert "detected_languages" not in result
 
         # Verify MinerU adapter was called without language config
-        mock_mineru_adapter.apply_upload_urls.assert_called_once_with([str(test_pdf_file)])
-
+        mock_mineru_adapter.apply_upload_urls.assert_called_once_with(
+            [str(test_pdf_file)]
+        )
 
     def test_minio_store_download_and_extract_zip(self, mock_db_config):
         """Test MinIO store download and extract ZIP functionality"""
@@ -274,10 +264,11 @@ class TestDocumentAPIIntegration:
         mock_zip_url = "https://mock-download-url.com/result.zip"
         mock_prefix = "documents/test/test-uuid"
 
-        with patch('infrastructure.store.minio_store.Minio') as MockMinio, \
-             patch('infrastructure.store.minio_store.requests') as mock_requests, \
-             patch('infrastructure.store.minio_store.zipfile.ZipFile') as MockZipFile:
-
+        with (
+            patch("infrastructure.store.minio_store.Minio") as MockMinio,
+            patch("infrastructure.store.minio_store.requests") as mock_requests,
+            patch("infrastructure.store.minio_store.zipfile.ZipFile") as MockZipFile,
+        ):
             # Setup mocks
             mock_client = MockMinio.return_value
             mock_client.bucket_exists.return_value = True
@@ -293,10 +284,10 @@ class TestDocumentAPIIntegration:
             store = MinIOStore(db_config=mock_db_config)
 
             # Mock the extract_and_upload_zip to return expected files
-            with patch.object(store, 'extract_and_upload_zip') as mock_extract:
+            with patch.object(store, "extract_and_upload_zip") as mock_extract:
                 mock_extract.return_value = [
                     f"{mock_prefix}/content.html",
-                    f"{mock_prefix}/images/page_1.png"
+                    f"{mock_prefix}/images/page_1.png",
                 ]
 
                 result = store.download_and_extract_zip(mock_zip_url, mock_prefix)
@@ -306,7 +297,6 @@ class TestDocumentAPIIntegration:
                 assert f"{mock_prefix}/content.html" in result
                 assert f"{mock_prefix}/images/page_1.png" in result
 
-
     @pytest.mark.asyncio
     async def test_end_to_end_integration_with_mocks(
         self,
@@ -314,7 +304,7 @@ class TestDocumentAPIIntegration:
         mock_app_config,
         mock_db_config,
         mock_mineru_adapter,
-        mock_minio_store
+        mock_minio_store,
     ):
         """
         End-to-end integration test simulating the complete workflow:
@@ -326,15 +316,17 @@ class TestDocumentAPIIntegration:
             file_content = f.read()
 
         # Step 2: Create upload file
-        upload_file = UploadFile(
-            filename="test_zh.pdf",
-            file=io.BytesIO(file_content)
-        )
+        upload_file = UploadFile(filename="test_zh.pdf", file=io.BytesIO(file_content))
 
         # Step 3: Setup complete mock chain
-        with patch('presentation.upload_controller.DocumentService') as MockDocService, \
-             patch.object(uuid, 'uuid4', return_value=uuid.UUID('12345678-1234-5678-1234-567812345678')):
-
+        with (
+            patch("presentation.upload_controller.DocumentService") as MockDocService,
+            patch.object(
+                uuid,
+                "uuid4",
+                return_value=uuid.UUID("12345678-1234-5678-1234-567812345678"),
+            ),
+        ):
             # Configure document service mock
             mock_service_instance = MockDocService.return_value
 
@@ -355,14 +347,16 @@ class TestDocumentAPIIntegration:
                         f"{minio_prefix}/content.html",
                         f"{minio_prefix}/images/page_1.png",
                         f"{minio_prefix}/images/page_2.png",
-                        f"{minio_prefix}/metadata.json"
+                        f"{minio_prefix}/metadata.json",
                     ],
                     "file_count": 4,
                     "processed_at": "2024-01-01T00:00:00+00:00",
-                    "mineru_file_id": "test-file-id-12345"
+                    "mineru_file_id": "test-file-id-12345",
                 }
 
-            mock_service_instance.process_pdf_document.side_effect = mock_process_pdf_document
+            mock_service_instance.process_pdf_document.side_effect = (
+                mock_process_pdf_document
+            )
 
             # Step 4: Execute upload
             controller = UploadController(config=mock_app_config)
@@ -373,7 +367,10 @@ class TestDocumentAPIIntegration:
             assert result["filename"] == "test_zh.pdf"
             assert result["size"] == len(file_content)
             assert result["document_id"] == "12345678-1234-5678-1234-567812345678"
-            assert "documents/test_zh/12345678-1234-5678-1234-567812345678" in result["minio_prefix"]
+            assert (
+                "documents/test_zh/12345678-1234-5678-1234-567812345678"
+                in result["minio_prefix"]
+            )
             assert result["file_count"] == 4
             assert len(result["minio_files"]) == 4
 
@@ -397,14 +394,13 @@ class TestDocumentAPIErrorHandling:
         with open(test_pdf_file, "rb") as f:
             file_content = f.read()
 
-        upload_file = UploadFile(
-            filename="test_zh.pdf",
-            file=io.BytesIO(file_content)
-        )
+        upload_file = UploadFile(filename="test_zh.pdf", file=io.BytesIO(file_content))
 
-        with patch('presentation.upload_controller.DocumentService') as MockDocService:
+        with patch("presentation.upload_controller.DocumentService") as MockDocService:
             mock_service = MockDocService.return_value
-            mock_service.process_pdf_document.side_effect = Exception("MinerU processing failed")
+            mock_service.process_pdf_document.side_effect = Exception(
+                "MinerU processing failed"
+            )
 
             controller = UploadController(config=mock_app_config)
 
@@ -413,7 +409,6 @@ class TestDocumentAPIErrorHandling:
 
             assert "Internal Server Error" in str(exc_info.value)
 
-
     @pytest.mark.asyncio
     async def test_minio_storage_failure(self, test_pdf_file, mock_app_config):
         """Test handling of MinIO storage failure"""
@@ -421,14 +416,13 @@ class TestDocumentAPIErrorHandling:
         with open(test_pdf_file, "rb") as f:
             file_content = f.read()
 
-        upload_file = UploadFile(
-            filename="test_zh.pdf",
-            file=io.BytesIO(file_content)
-        )
+        upload_file = UploadFile(filename="test_zh.pdf", file=io.BytesIO(file_content))
 
-        with patch('presentation.upload_controller.DocumentService') as MockDocService:
+        with patch("presentation.upload_controller.DocumentService") as MockDocService:
             mock_service = MockDocService.return_value
-            mock_service.process_pdf_document.side_effect = Exception("MinIO upload failed")
+            mock_service.process_pdf_document.side_effect = Exception(
+                "MinIO upload failed"
+            )
 
             controller = UploadController(config=mock_app_config)
 
