@@ -81,3 +81,4 @@ tmp/
 *.whl
 
 **/.work_logs.sh
+**/*/*.bin
