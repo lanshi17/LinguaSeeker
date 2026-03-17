@@ -83,6 +83,7 @@ tmp/
 **/.work_logs.sh
 **/*.bin
 **/*.bin.*
+**/*.meta
 **/*.bkp
 **/logs/
 **/logs/**
