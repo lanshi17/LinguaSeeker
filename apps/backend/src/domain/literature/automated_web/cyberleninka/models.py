@@ -1,12 +1,12 @@
-# src/domain/literature/hans_publishers/models.py
-"""Pydantic models for Hans Publishers service."""
+# src/domain/literature/cyberleninka/models.py
+"""Pydantic models for CyberLeninka service."""
 
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
 # Constants
-BASE_URL = "https://www.hanspub.org/"
+BASE_URL = "https://cyberleninka.ru/"
 
 
 class SearchParams(BaseModel):
@@ -15,7 +15,7 @@ class SearchParams(BaseModel):
     keyword: Union[str, List[str]]  # Can be single keyword or list
     filters: Dict[str, Any] = Field(
         default_factory=dict
-    )  # e.g., {"subject": ["临床医学"]}
+    )  # e.g., {"subject": ["Математика"]}
     limit: int = 20
 
     @field_validator("limit")
@@ -60,14 +60,14 @@ class DownloadResponse(BaseModel):
     warnings: List[str] = Field(default_factory=list)
 
 
-class HansPubPayload(BaseModel):
-    """Unified payload model for Hans Publishers workflow."""
+class CyberleninkaPayload(BaseModel):
+    """Unified payload model for CyberLeninka workflow."""
 
     action: Literal["search", "download"] = "search"
     base_url: str = BASE_URL
 
     # Search parameters
-    search_params: Optional[SearchParams] = None
+    search_params: SearchParams
 
     # Download selection
     selected_index: int = 0
@@ -78,8 +78,8 @@ class HansPubPayload(BaseModel):
     download_path: str = "./downloads"
 
     # LLM configuration
-    llm_provider: str = "ollama"
-    llm_api_token: Optional[str] = None
+    llm_provider: str = Field(default_factory=lambda: "deepseek")
+    llm_api_token: Optional[str] = Field(default_factory=lambda: None)
     llm_extra_headers: Optional[Dict[str, str]] = None
 
     # Timeout
@@ -90,8 +90,6 @@ class HansPubPayload(BaseModel):
     @property
     def keyword(self) -> List[str]:
         """Get keyword as list."""
-        if self.search_params is None:
-            return []
         if isinstance(self.search_params.keyword, str):
             return [self.search_params.keyword]
         return self.search_params.keyword
@@ -99,13 +97,27 @@ class HansPubPayload(BaseModel):
     @property
     def subjects(self) -> List[str]:
         """Get subjects from filters."""
-        if self.search_params is None:
-            return []
         return self.search_params.filters.get("subject", [])
 
     @property
     def max_results(self) -> int:
         """Get max results from search_params limit."""
-        if self.search_params is None:
-            return 20
         return self.search_params.limit
+
+    @property
+    def effective_llm_provider(self) -> str:
+        """Get effective LLM provider (fallback to config)."""
+        if self.llm_provider != "deepseek":
+            return self.llm_provider
+        from ..config import AutomatedWebConfig
+
+        return AutomatedWebConfig.get_default_llm_provider()
+
+    @property
+    def effective_llm_api_token(self) -> Optional[str]:
+        """Get effective LLM API token (fallback to config)."""
+        if self.llm_api_token:
+            return self.llm_api_token
+        from ..config import AutomatedWebConfig
+
+        return AutomatedWebConfig.get_default_llm_api_key()

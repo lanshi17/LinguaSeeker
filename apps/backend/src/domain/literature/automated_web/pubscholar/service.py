@@ -218,8 +218,8 @@ If missing, use null. Return strictly valid JSON.
 """
 
         llm_strategy = _build_llm_strategy(
-            provider=payload.llm_provider,
-            token=payload.llm_api_token,
+            provider=payload.effective_llm_provider,
+            token=payload.effective_llm_api_token,
             schema=PaperList.model_json_schema(),
             instruction=instruction,
             extra_headers=payload.llm_extra_headers,
@@ -317,8 +317,8 @@ Return JSON with key pdf_urls (array of URLs).
 If a URL is relative, convert it to absolute based on the page URL.
 """
             llm_strategy = _build_llm_strategy(
-                provider=payload.llm_provider,
-                token=payload.llm_api_token,
+                provider=payload.effective_llm_provider,
+                token=payload.effective_llm_api_token,
                 schema={
                     "type": "object",
                     "properties": {

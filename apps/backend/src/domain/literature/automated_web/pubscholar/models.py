@@ -120,8 +120,8 @@ class PubScholarPayload(BaseModel):
     download_path: str = "./downloads"
 
     # LLM configuration
-    llm_provider: str = "ollama"
-    llm_api_token: Optional[str] = None
+    llm_provider: str = Field(default_factory=lambda: "deepseek")
+    llm_api_token: Optional[str] = Field(default_factory=lambda: None)
     llm_extra_headers: Optional[Dict[str, str]] = None
 
     # Timeout
@@ -177,3 +177,21 @@ class PubScholarPayload(BaseModel):
             llm_extra_headers=self.llm_extra_headers,
             timeout_ms=self.timeout_ms,
         )
+
+    @property
+    def effective_llm_provider(self) -> str:
+        """Get effective LLM provider (fallback to config)."""
+        if self.llm_provider != "deepseek":
+            return self.llm_provider
+        from ..config import AutomatedWebConfig
+
+        return AutomatedWebConfig.get_default_llm_provider()
+
+    @property
+    def effective_llm_api_token(self) -> Optional[str]:
+        """Get effective LLM API token (fallback to config)."""
+        if self.llm_api_token:
+            return self.llm_api_token
+        from ..config import AutomatedWebConfig
+
+        return AutomatedWebConfig.get_default_llm_api_key()

@@ -8,7 +8,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # ==================== LLM Triplet Resolver ====================
 
 LLMRole = Literal[
-    "retrieval", "parsing", "mt", "format", "vlm", "evidence", "classification", "arbitration"
+    "retrieval",
+    "parsing",
+    "mt",
+    "format",
+    "vlm",
+    "evidence",
+    "classification",
+    "arbitration",
 ]
 
 
@@ -119,14 +126,18 @@ class Settings(BaseSettings):
     postgres_host: str = Field(
         default="localhost", validation_alias=AliasChoices("POSTGRES_HOST", "PGHOST")
     )
-    postgres_port: int = Field(5432, validation_alias=AliasChoices("POSTGRES_PORT", "PGPORT"))
+    postgres_port: int = Field(
+        5432, validation_alias=AliasChoices("POSTGRES_PORT", "PGPORT")
+    )
     postgres_db: str = Field(
         default="acmg_ps3", validation_alias=AliasChoices("POSTGRES_DB", "PGDATABASE")
     )
     postgres_user: str = Field(
         default="postgres", validation_alias=AliasChoices("POSTGRES_USER", "PGUSER")
     )
-    postgres_password: str = Field(validation_alias=AliasChoices("POSTGRES_PASSWORD", "PGPASSWORD"))
+    postgres_password: str = Field(
+        validation_alias=AliasChoices("POSTGRES_PASSWORD", "PGPASSWORD")
+    )
     postgres_pool_size: int = 10
     postgres_max_overflow: int = 20
 
@@ -232,11 +243,9 @@ class Settings(BaseSettings):
     def use_agent_workflow(self, task_type: str) -> bool:
         return getattr(self, f"use_agent_workflow_{task_type.lower()}", False)
 
-    # ==================== 爬取配置 ====================
+    # ==================== 文献获取配置 ====================
     pubmed_api_key: Optional[str] = None
     pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
-    firecrawl_base_url: str = "https://api.firecrawl.dev/v0"
-    firecrawl_api_key: Optional[str] = None
 
     # ==================== 邮箱配置 ====================
     smtp_host: str = "smtp.gmail.com"
@@ -282,7 +291,9 @@ def resolve_llm_triplet(settings: Settings, role: LLMRole) -> LLMTriplet:
     }
 
     if role not in valid_roles:
-        raise ValueError(f"Invalid LLM role: {role}. Valid roles: {', '.join(sorted(valid_roles))}")
+        raise ValueError(
+            f"Invalid LLM role: {role}. Valid roles: {', '.join(sorted(valid_roles))}"
+        )
 
     return LLMTriplet(
         api_key=getattr(settings, f"{role}_api_key"),

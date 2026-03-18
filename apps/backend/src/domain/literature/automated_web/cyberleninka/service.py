@@ -1,11 +1,11 @@
-# src/domain/literature/pubscholar.py
-from __future__ import annotations
+# src/domain/literature/cyberleninka/service.py
+"""CyberLeninka service implementation."""
 
 import json
 import logging
 import os
 import re
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin, urlparse
 
 import httpx
@@ -18,89 +18,45 @@ from crawl4ai import (
     LLMConfig,
     LLMExtractionStrategy,
 )
-from pydantic import BaseModel, Field, validator
+
+try:
+    from .locators import (
+        XPATH_DOWNLOAD_BTN,
+        XPATH_RESULTS,
+        XPATH_SEARCH_BUTTON,
+        XPATH_SEARCH_INPUT,
+        XPATH_SUBJECT_FILTER,
+    )
+    from .models import (
+        BASE_URL,
+        CyberleninkaPayload,
+        DownloadResponse,
+        PaperItem,
+        PaperList,
+        SearchResponse,
+    )
+except ImportError:
+    from locators import (
+        XPATH_DOWNLOAD_BTN,
+        XPATH_RESULTS,
+        XPATH_SEARCH_BUTTON,
+        XPATH_SEARCH_INPUT,
+        XPATH_SUBJECT_FILTER,
+    )
+    from models import (
+        BASE_URL,
+        CyberleninkaPayload,
+        DownloadResponse,
+        PaperItem,
+        PaperList,
+        SearchResponse,
+    )
 
 log = logging.getLogger(__name__)
 
-BASE_URL = "https://www.hanspub.org/"
 
-# ===== XPaths from user =====
-XPATH_SEARCH_INPUT = '//*[@id="ctl00_WebUserControl_Seach1_Txtsearch"]'
-XPATH_SEARCH_BUTTON = (
-    '//*[@id="ctl00_WebUserControl_Seach1_Panel_search"]/div/div/button'
-)
-XPATH_RESULTS_CONTAINER = '//*[@id="aspnetForm"]/div[3]/div/div[2]/div[2]'
-XPATH_PDF_LINK = '//*[@id="aritsear"]/div[1]/div/p[3]/a[3]'
-
-
-# ===== Models =====
-class SearchParams(BaseModel):
-    keyword: List[str] = Field(..., min_length=1)
-    filters: Dict[str, List[str]] = Field(default_factory=dict)
-    limit: int = 20
-
-    @validator("limit")
-    def limit_range(cls, v):
-        return max(1, min(v, 50))
-
-
-class SearchPayload(BaseModel):
-    action: Literal["search"] = "search"
-    base_url: str = BASE_URL
-    search_params: SearchParams
-    download_path: str = "./downloads"
-
-    llm_provider: str = "ollama"  # open-source first
-    llm_api_token: Optional[str] = None
-    llm_extra_headers: Optional[Dict[str, str]] = None
-    timeout_ms: int = 80000
-
-
-class DownloadPayload(BaseModel):
-    action: Literal["download"] = "download"
-    base_url: str = BASE_URL
-    search_params: Optional[SearchParams] = None
-
-    selected_index: int = 0
-    selected_title: Optional[str] = None
-    detail_link: Optional[str] = None
-
-    download_path: str = "./downloads"
-    llm_provider: str = "ollama"
-    llm_api_token: Optional[str] = None
-    llm_extra_headers: Optional[Dict[str, str]] = None
-    timeout_ms: int = 80000
-
-
-class PaperItem(BaseModel):
-    title: str
-    authors: Optional[str] = None
-    year: Optional[str] = None
-    journal: Optional[str] = None
-    subject: Optional[str] = None
-    detail_link: Optional[str] = None
-
-
-class PaperList(BaseModel):
-    items: List[PaperItem] = Field(default_factory=list)
-
-
-class SearchResponse(BaseModel):
-    success: bool
-    items: List[Dict[str, Any]] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
-    raw_excerpt: Optional[str] = None
-
-
-class DownloadResponse(BaseModel):
-    success: bool
-    pdf_url: Optional[str] = None
-    file_path: Optional[str] = None
-    warnings: List[str] = Field(default_factory=list)
-
-
-# ===== Helpers =====
 def _safe_json_loads(text: str) -> Dict[str, Any]:
+    """Safely parse JSON, attempting to extract JSON from mixed content."""
     if not text:
         return {}
     try:
@@ -113,6 +69,7 @@ def _safe_json_loads(text: str) -> Dict[str, Any]:
 
 
 def _sanitize_filename(name: str) -> str:
+    """Sanitize filename by removing invalid characters."""
     name = re.sub(r'[\\/:*?"<>|]+', "_", name)
     name = re.sub(r"\s+", " ", name).strip()
     return (name or "paper")[:120]
@@ -124,7 +81,8 @@ def _build_llm_strategy(
     schema: Dict[str, Any],
     instruction: str,
     extra_headers: Optional[Dict[str, str]] = None,
-):
+) -> LLMExtractionStrategy:
+    """Build LLM extraction strategy."""
     if provider != "ollama" and not token:
         raise ValueError(f"LLM provider {provider} requires api_token")
     extra_args = {"temperature": 0, "top_p": 0.9, "max_tokens": 2000}
@@ -141,6 +99,7 @@ def _build_llm_strategy(
 
 
 def _build_search_js(keywords: List[str], subjects: List[str]) -> str:
+    """Build JavaScript code for search interaction."""
     query = " ".join([k.strip() for k in keywords if k and k.strip()])
     return f"""
 (async () => {{
@@ -173,13 +132,19 @@ def _build_search_js(keywords: List[str], subjects: List[str]) -> str:
   click({json.dumps(XPATH_SEARCH_BUTTON)});
   await sleep(1200);
 
+  // Subject filter (best-effort)
   const subjects = {json.dumps(subjects)};
-  for (const s of subjects) {{
-      clickByText(s);
-      await sleep(400);
+  if (subjects.length) {{
+      click({json.dumps(XPATH_SUBJECT_FILTER)});
+      await sleep(200);
+      for (const s of subjects) {{
+          clickByText(s);
+          await sleep(200);
+      }}
   }}
 
-  const container = $x({json.dumps(XPATH_RESULTS_CONTAINER)});
+  // reduce DOM for LLM extraction
+  const container = $x({json.dumps(XPATH_RESULTS)});
   if (container) {{
       document.body.innerHTML = container.outerHTML;
   }}
@@ -188,37 +153,44 @@ def _build_search_js(keywords: List[str], subjects: List[str]) -> str:
 
 
 def _wait_for_xpath(xpath: str) -> str:
+    """Build JavaScript wait condition for XPath."""
     return f"""() => !!document.evaluate({json.dumps(xpath)}, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue"""
 
 
 def _extract_pdf_link(html: str, base_url: str) -> Optional[str]:
-    # First try XPath via lxml (if installed)
+    """Extract PDF link from HTML."""
+    # Try XPath first
     try:
         from lxml import etree
 
         tree = etree.HTML(html)
-        nodes = tree.xpath(XPATH_PDF_LINK)
-        if nodes and hasattr(nodes[0], "get"):
-            href = nodes[0].get("href")
-            if href:
-                return urljoin(base_url, href)
+        nodes = tree.xpath(XPATH_DOWNLOAD_BTN)
+        if nodes:
+            node = nodes[0]
+            if hasattr(node, "get"):
+                href = node.get("href") or node.get("data-href") or node.get("data-url")
+                if href:
+                    return urljoin(base_url, href)
+                onclick = node.get("onclick") or ""
+                m = re.search(r"(https?://[^'\"\\s]+\\.pdf)", onclick)
+                if m:
+                    return m.group(1)
     except Exception:
         pass
 
-    # Fallback: find pdf-like links in #aritsear
+    # Fallback: search for pdf links
     soup = BeautifulSoup(html, "html.parser")
-    container = soup.select_one("#aritsear")
-    if container:
-        for a in container.find_all("a", href=True):
-            href = a["href"]
-            if "pdf" in href.lower():
-                return urljoin(base_url, href)
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        if ".pdf" in href.lower():
+            return urljoin(base_url, href)
     return None
 
 
 def _choose_item(
     items: List[Dict[str, Any]], selected_index: int, selected_title: Optional[str]
-):
+) -> Optional[Dict[str, Any]]:
+    """Choose an item from search results by index or title."""
     if selected_title:
         for it in items:
             if selected_title in (it.get("title") or ""):
@@ -228,59 +200,59 @@ def _choose_item(
     return None
 
 
-# ===== Service =====
-class HansPubService:
-    def __init__(self, headless: bool = True):
-        self.browser_config = BrowserConfig(headless=headless, java_script_enabled=True)
+class CyberLeninkaService:
+    """Service for interacting with CyberLeninka."""
 
-    async def search(self, req: SearchPayload) -> SearchResponse:
+    def __init__(self, headless: bool = True, base_url: str = BASE_URL):
+        self.browser_config = BrowserConfig(headless=headless, java_script_enabled=True)
+        self.base_url = base_url.rstrip("/")
+
+    async def search(self, payload: CyberleninkaPayload) -> SearchResponse:
+        """Search for papers using unified payload."""
         warnings = []
-        keywords = req.search_params.keyword
-        subjects = (
-            req.search_params.filters.get("subject", [])
-            if req.search_params.filters
-            else []
-        )
+        keywords = payload.keyword
+        subjects = payload.subjects
 
         js_code = _build_search_js(keywords, subjects)
+
         instruction = f"""
-Extract up to {req.search_params.limit} papers from the search results.
+Extract up to {payload.max_results} papers from the search results list.
 Return JSON with key "items".
 Each item fields: title, authors, year, journal, subject, detail_link.
-detail_link is the URL to the article detail page (if present); if missing, null.
+detail_link should be the URL to the paper detail page if present.
 Return strictly valid JSON.
 """
 
         llm_strategy = _build_llm_strategy(
-            provider=req.llm_provider,
-            token=req.llm_api_token,
+            provider=payload.effective_llm_provider,
+            token=payload.effective_llm_api_token,
             schema=PaperList.model_json_schema(),
             instruction=instruction,
-            extra_headers=req.llm_extra_headers,
+            extra_headers=payload.llm_extra_headers,
         )
 
         crawler_config = CrawlerRunConfig(
             cache_mode=CacheMode.BYPASS,
             js_code=[js_code],
-            wait_for=_wait_for_xpath(XPATH_RESULTS_CONTAINER),
-            page_timeout=req.timeout_ms,
+            wait_for=_wait_for_xpath(XPATH_RESULTS),
+            page_timeout=payload.timeout_ms,
             word_count_threshold=1,
             extraction_strategy=llm_strategy,
         )
 
         async with AsyncWebCrawler(config=self.browser_config) as crawler:
-            result = await crawler.arun(url=req.base_url, config=crawler_config)
+            result = await crawler.arun(url=payload.base_url, config=crawler_config)
 
         if not result.success:
             return SearchResponse(
                 success=False, warnings=[result.error_message or "crawl_failed"]
             )
 
-        payload = _safe_json_loads(result.extracted_content)
-        raw_items = payload.get("items", [])
+        payload_data = _safe_json_loads(result.extracted_content)
+        raw_items = payload_data.get("items", [])
         items: List[Dict[str, Any]] = []
 
-        for idx, raw in enumerate(raw_items[: req.search_params.limit]):
+        for idx, raw in enumerate(raw_items[: payload.max_results]):
             try:
                 item = PaperItem.model_validate(raw)
                 items.append({**item.model_dump(), "index": idx})
@@ -292,32 +264,31 @@ Return strictly valid JSON.
             items=items,
             warnings=warnings,
             raw_excerpt=(result.markdown[:1000] if result.markdown else None),
+            total_count=len(items),
         )
 
-    async def download(self, req: DownloadPayload) -> DownloadResponse:
+    async def download(self, payload: CyberleninkaPayload) -> DownloadResponse:
+        """Download a paper PDF using unified payload."""
         warnings = []
-        detail_link = req.detail_link
+        detail_link = payload.detail_link
 
         # if detail_link not provided, re-search and pick item
         if not detail_link:
-            if not req.search_params:
-                return DownloadResponse(
-                    success=False, warnings=["missing_search_params_or_detail_link"]
-                )
-            search_req = SearchPayload(
-                base_url=req.base_url,
-                search_params=req.search_params,
-                download_path=req.download_path,
-                llm_provider=req.llm_provider,
-                llm_api_token=req.llm_api_token,
-                llm_extra_headers=req.llm_extra_headers,
-                timeout_ms=req.timeout_ms,
+            search_payload = CyberleninkaPayload(
+                action="search",
+                base_url=payload.base_url,
+                search_params=payload.search_params,
+                llm_provider=payload.llm_provider,
+                llm_api_token=payload.llm_api_token,
+                llm_extra_headers=payload.llm_extra_headers,
+                timeout_ms=payload.timeout_ms,
             )
-            search_res = await self.search(search_req)
+            search_res = await self.search(search_payload)
             if not search_res.items:
                 return DownloadResponse(success=False, warnings=["no_search_results"])
+
             chosen = _choose_item(
-                search_res.items, req.selected_index, req.selected_title
+                search_res.items, payload.selected_index, payload.selected_title
             )
             if not chosen:
                 return DownloadResponse(
@@ -328,11 +299,10 @@ Return strictly valid JSON.
         if not detail_link:
             return DownloadResponse(success=False, warnings=["missing_detail_link"])
 
-        # crawl detail page for PDF
         crawler_config = CrawlerRunConfig(
             cache_mode=CacheMode.BYPASS,
-            wait_for=_wait_for_xpath(XPATH_PDF_LINK),
-            page_timeout=req.timeout_ms,
+            wait_for=_wait_for_xpath(XPATH_DOWNLOAD_BTN),
+            page_timeout=payload.timeout_ms,
         )
 
         async with AsyncWebCrawler(config=self.browser_config) as crawler:
@@ -342,14 +312,14 @@ Return strictly valid JSON.
         if not pdf_url:
             return DownloadResponse(success=False, warnings=["pdf_not_found"])
 
-        os.makedirs(req.download_path, exist_ok=True)
+        os.makedirs(payload.download_path, exist_ok=True)
         filename = (
             _sanitize_filename(
-                req.selected_title or os.path.basename(urlparse(pdf_url).path)
+                payload.selected_title or os.path.basename(urlparse(pdf_url).path)
             )
             + ".pdf"
         )
-        file_path = os.path.join(req.download_path, filename)
+        file_path = os.path.join(payload.download_path, filename)
 
         try:
             async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
@@ -363,22 +333,3 @@ Return strictly valid JSON.
         return DownloadResponse(
             success=True, pdf_url=pdf_url, file_path=file_path, warnings=warnings
         )
-
-
-# ===== Entry =====
-async def hanspub_workflow(payload: Dict[str, Any]) -> Dict[str, Any]:
-    action = payload.get("action", "search")
-
-    service = HansPubService()
-
-    if action == "search":
-        req = SearchPayload.model_validate(payload)
-        res = await service.search(req)
-        return res.model_dump()
-
-    if action == "download":
-        req = DownloadPayload.model_validate(payload)
-        res = await service.download(req)
-        return res.model_dump()
-
-    return {"success": False, "warnings": ["unknown_action"]}
