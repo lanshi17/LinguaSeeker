@@ -5,11 +5,11 @@ from loguru import logger
 from pydantic import BaseModel
 
 from src.presentation.base_controller import BaseController
-from src.domain.models.document_task import TaskStatusResponse
+from src.domain.task_models.document_task import TaskStatusResponse
 from src.application.processors.async_document_processor import (
     get_async_document_processor,
 )
-from src.config.app_config import AppConfig
+from src.configs.app_config import AppConfig
 
 
 class TaskController(BaseController):

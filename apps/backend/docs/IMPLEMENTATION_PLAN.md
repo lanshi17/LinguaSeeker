@@ -13,6 +13,8 @@
 
 ## 3. 分阶段执行
 ## Phase M0：规格冻结与基线准备
+→ 架构清理：[plans/2026-03-12-cleanup-old-architecture.md](plans/2026-03-12-cleanup-old-architecture.md)
+
 ### 目标
 1. 冻结所有常量与状态机
 2. 定义新增表结构与 API 契约
@@ -30,6 +32,8 @@
 3. 状态/错误码文档与实现一致
 
 ## Phase M1：主工作流落地
+→ 细化方案：[plans/2026-03-06-phase-3-document-parsing.md](plans/2026-03-06-phase-3-document-parsing.md)
+
 ### 目标
 1. 完成 5 节点主链路
 2. 支持上传与 PubMed 候选两条入口
@@ -51,6 +55,8 @@
 3. 失败链路可定位到日志
 
 ## Phase M2：交互与前端闭环
+→ 架构基础：[plans/langgraph-refactor-plan.md](plans/langgraph-refactor-plan.md)
+
 ### 目标
 1. 交互 Agent 两轮澄清机制
 2. 任务单落库与请求级聚合
@@ -70,6 +76,11 @@
 3. 前端无 quality 模块残留
 
 ## Phase M3：KG 独立服务
+→ 架构基础：[plans/langgraph-refactor-plan.md](plans/langgraph-refactor-plan.md)
+→ P1 后优化（待实施）：
+- 7.1 流式输出：[plans/streaming-output-plan.md](plans/streaming-output-plan.md)
+- 7.3 KG 推理节点：[plans/2026-03-12-multimodal-and-reasoning.md](plans/2026-03-12-multimodal-and-reasoning.md)
+
 ### 目标
 1. KG 服务独立部署
 2. 主服务事件触发 KG 更新
@@ -87,6 +98,9 @@
 3. 全量回灌可在中断后继续
 
 ## Phase M4：验收与发布
+→ P1 后优化（待实施）：
+- 7.2 多模态批处理：[plans/2026-03-12-multimodal-and-reasoning.md](plans/2026-03-12-multimodal-and-reasoning.md)
+
 ### 目标
 1. 达到发布口径的可量化指标
 2. 输出稳定版发布物

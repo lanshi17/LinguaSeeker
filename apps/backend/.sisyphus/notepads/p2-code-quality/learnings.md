@@ -732,3 +732,84 @@ R  apps/backend/tests/docker-compose.yml -> apps/backend/tools/qdrant/docker-com
 - ✅ `uv run pytest -q` completes successfully (500 tests pass, infrastructure failures isolated)
 - ✅ `git status --porcelain` shows only intended renames
 - ✅ No regressions in test discovery or execution
+
+## P2 Task 3.1 Verify Step: Fixed Pytest Collection ImportErrors (2026-03-17)
+
+### Issue Summary
+`uv run pytest -q` was failing at collection phase with 3 `ModuleNotFoundError` errors:
+- `tests/integration/api/test_document_api.py`: `ModuleNotFoundError: No module named 'config.app_config'; 'config' is not a package`
+- `tests/unit/infrastructure/test_mineru_adapter.py`: `ModuleNotFoundError: No module named 'src.config.app_config'; 'src.config' is not a package`
+- `tests/unit/infrastructure/test_minio_store.py`: `ModuleNotFoundError: No module named 'config.database_config'; 'config' is not a package`
+
+### Root Cause
+The repo structure has:
+- `src/config.py` (module file)
+- `src/configs/` (package with `app_config.py` and `database_config.py`)
+
+Tests were importing from wrong location, causing Python to fail:
+1. `from config.app_config` → tries to import from `src/config.py` package, but it's a MODULE, not a package
+2. `from src.config.app_config` → same issue, shadowed by module
+3. `from src.infrastructure...` → `src/` is already in `sys.path` (added by `tests/conftest.py`), so `src.` prefix causes imports to fail
+
+### Files Fixed
+1. **`tests/integration/api/test_document_api.py`**:
+   - Line 27: `from config.app_config import AppConfig` → `from configs.app_config import AppConfig`
+   - Line 28: `from config.database_config import DatabaseConfig` → `from configs.database_config import DatabaseConfig`
+
+2. **`tests/unit/infrastructure/test_mineru_adapter.py`**:
+   - Line 4: `from src.infrastructure.adapters.mineru...` → `from infrastructure.adapters.mineru...` (removed `src.` prefix)
+   - Line 6: `from src.infrastructure.adapters.mineru...` → `from infrastructure.adapters.mineru...` (removed `src.` prefix)
+   - Line 7: `from src.domain.impl...` → `from domain.impl...` (removed `src.` prefix)
+   - Line 11: `from src.config.app_config import AppConfig` → `from configs.app_config import AppConfig` (fixed module path)
+
+3. **`tests/unit/infrastructure/test_minio_store.py`**:
+   - Line 8: `from config.database_config import DatabaseConfig, MinIOConfig` → `from configs.database_config import DatabaseConfig, MinIOConfig`
+   - Removed duplicate imports (lines 11-12 had `from unittest import mock` + `from unittest.mock import ...`)
+
+### Verification Results
+
+**Before fix:**
+```
+ERROR tests/integration/api/test_document_api.py
+ERROR tests/unit/infrastructure/test_mineru_adapter.py
+ERROR tests/unit/infrastructure/test_minio_store.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!!
+18 warnings, 3 errors in 2.95s
+```
+
+**After fix:**
+```
+uv run pytest -q
+26 failed, 519 passed, 8 skipped, 38 warnings in 11.92s
+```
+
+**Specific file collection (no errors):**
+```
+$ uv run pytest tests/integration/api/test_document_api.py tests/unit/infrastructure/test_mineru_adapter.py tests/unit/infrastructure/test_minio_store.py -q --co
+24 tests collected in 0.24s
+```
+
+### Key Learning: Pytest sys.path Injection Pattern
+
+The repo uses `tests/conftest.py` to inject `<repo>/src` into `sys.path`:
+```python
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+```
+
+This means:
+- Modules under `src/` are imported as **top-level** modules
+- `from configs.app_config import AppConfig` works (not `from src.configs...`)
+- `from infrastructure.store.minio_store import MinIOStore` works (not `from src.infrastructure...`)
+- `from config.app_config` does NOT work (file `config.py` shadows package `configs/`)
+
+### Resolution Strategy
+1. Search for bad import patterns: `from config.` and `from src.` in test files
+2. Replace with correct paths based on sys.path injection
+3. Check for module shadowing (e.g., `config.py` preventing `configs/` import)
+4. Verify pytest collection passes with no `ModuleNotFoundError`
+
+### Notes
+- No changes to production code (`src/**`) were needed
+- No changes to `tests/conftest.py` sys.path strategy were needed
+- All 3 test files now collect successfully
+- Task unblocked verification gate: `uv run pytest -q` now completes (collection phase passes)

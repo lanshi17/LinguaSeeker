@@ -1,5 +1,8 @@
 # Implementation Plan: 7.2 Multimodal Batch VLM & 7.3 Knowledge Graph Reasoning Node
 
+Status: PENDING (P1 post-optimization)
+Prerequisites: M1 主工作流完成
+
 ## Overview
 
 Two post-P1 optimizations from `langgraph-refactor-plan.md` Section 七:

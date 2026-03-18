@@ -95,12 +95,8 @@ flowchart LR
 3. `failed`：无成功文献且存在失败。
 
 ## 7. 重试与终止流程
-### 7.1 节点级重试配置
-1. 获取：`2 / 300s / 900s`
-2. 解析：`1 / 600s / 1800s`
-3. 翻译：`2 / 120s / 1200s`
-4. 提取：`2 / 300s / 1800s`
-5. ACMG：`1 / 180s / 900s`
+
+**单一来源**：见 [`docs/CONSTANTS.md`](CONSTANTS.md)（节点级重试参数）。
 
 ### 7.2 失败终止与重开
 1. 节点最终失败：`paper_task=failed`，不自动重跑。
@@ -121,17 +117,12 @@ flowchart LR
 - 主工作流完成后通过 Celery 事件触发 KG 更新。
 
 ### 9.2 事件最小载荷
-- `request_id`
-- `paper_id`
-- `step`
-- `status`
-- `timestamp`
-- `idempotency_key`
+
+**单一来源**：见 [`docs/CONSTANTS.md`](CONSTANTS.md)（KG 事件载荷最小字段）。
 
 ### 9.3 幂等键
-1. `req:{request_id}`
-2. `req:{request_id}:paper:{paper_sha256}`
-3. `req:{request_id}:paper:{paper_sha256}:step:{step}:v{schema_version}`
+
+**单一来源**：见 [`docs/CONSTANTS.md`](CONSTANTS.md)（幂等键格式）。
 
 ### 9.4 首次上线与失败恢复
 1. 首次全量回灌由脚本触发。

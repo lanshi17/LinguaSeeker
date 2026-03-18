@@ -1,5 +1,12 @@
 @startuml PDF_Document_Upload_Process
-title PDF Document Upload Process
+' [OUTDATED] This sequence uses the legacy endpoint /upload/file/pdf and generic storage steps.
+' Current upload endpoints are:
+' - POST /api/v1/pdf/upload (single PDF)
+' - POST /api/v1/tasks/requests/upload (task_form + files (PDF/DOCX))
+'
+' If you need an updated diagram, regenerate based on src/api/routes/core.py and src/api/routes/task.py.
+
+title [OUTDATED] PDF Document Upload Process
 actor User
 participant "Frontend" as FE
 participant "Backend API" as BE

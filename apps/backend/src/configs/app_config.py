@@ -260,5 +260,5 @@ class AppConfig:
         return cfg
 
 # 全局应用配置示例
-# from config.app_config import AppConfig
+# from src.configs.app_config import AppConfig
 # app_config = AppConfig.from_env()

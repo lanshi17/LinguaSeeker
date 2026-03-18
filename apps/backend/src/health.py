@@ -1,11 +1,12 @@
-from loguru import logger
-import psycopg2
-from qdrant_client import QdrantClient
 from functools import lru_cache
 
+import psycopg2
+from loguru import logger
+from qdrant_client import QdrantClient
+
 from src.config import settings as cfg
-from src.infrastructure.redis import redis_client
 from src.infrastructure.minio import MinIOClient
+from src.infrastructure.redis import redis_client
 
 
 @lru_cache(maxsize=1)
@@ -28,6 +29,7 @@ def _get_qdrant_client() -> QdrantClient:
         https=cfg.qdrant_https,
         prefer_grpc=cfg.qdrant_prefer_grpc,
         verify=cfg.qdrant_verify_ssl,
+        check_compatibility=False,
     )
 
 

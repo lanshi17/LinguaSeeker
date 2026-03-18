@@ -1,7 +1,7 @@
 # Celery 配置
 from celery import Celery
 from kombu import Exchange, Queue
-from src.config.app_config import AppConfig
+from src.configs.app_config import AppConfig
 
 cfg = AppConfig.from_env()
 

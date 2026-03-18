@@ -64,29 +64,20 @@
 4. 响应返回 `duplicate_of=<历史paper_task_id>`
 
 ## 6. 节点级重试策略（固定）
-| 节点 | max_retries | delay | timeout |
-|---|---:|---:|---:|
-| 获取 | 2 | 300s | 900s |
-| 解析 | 1 | 600s | 1800s |
-| 翻译 | 2 | 120s | 1200s |
-| 提取 | 2 | 300s | 1800s |
-| ACMG | 1 | 180s | 900s |
+
+**单一来源**：见 [`docs/CONSTANTS.md`](CONSTANTS.md)（节点级重试参数）。
 
 补充：
 1. 自动重跑关闭，最终失败默认终止。
 2. 仅运维脚本可手动重开（复用原 `paper_task_id`）。
 
 ## 7. 幂等策略
-1. 请求级：`req:{request_id}`
-2. 文献级：`req:{request_id}:paper:{paper_sha256}`
-3. 步骤级：`req:{request_id}:paper:{paper_sha256}:step:{step}:v{schema_version}`
+
+**单一来源**：见 [`docs/CONSTANTS.md`](CONSTANTS.md)（幂等键格式）。
 
 ## 8. 错误码与告警
-### 8.1 基础错误码（20 个）
-`INPUT_INVALID, FILE_TOO_LARGE, FILE_TYPE_UNSUPPORTED, FILE_DUPLICATE, FETCH_TIMEOUT, FETCH_NO_RESULT, FULLTEXT_UNAVAILABLE, PARSE_FAILED, OCR_FAILED, OCR_TIMEOUT, TRANSLATION_FAILED, TRANSLATION_EMPTY, ALIGNMENT_FAILED, ENTITY_EXTRACTION_FAILED, EVIDENCE_EXTRACTION_FAILED, ACMG_RULE_UNSUPPORTED, ACMG_PARSE_FAILED, GRAPH_SYNC_FAILED, TASK_TIMEOUT, INTERNAL_ERROR`
 
-### 8.2 Warning
-`HGVS_AUTOCORRECT_FAILED`
+**单一来源**：见 [`docs/CONSTANTS.md`](CONSTANTS.md)（错误码 / warning 码）。
 
 ## 9. 存储策略
 ### 9.1 PostgreSQL

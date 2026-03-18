@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File
 from typing import Any, Dict
 from src.utils.logger import Logger
 from src.application.dtos.document_dto import DocumentUploadDTO, DocumentProcessResultDTO
-from src.config.app_config import AppConfig
+from src.configs.app_config import AppConfig
 from src.utils.exceptions import FileUploadError
 from src.application.services.document_service import DocumentService
 import tempfile
