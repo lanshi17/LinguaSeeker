@@ -10,7 +10,7 @@ from pydantic import SecretStr
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.http import models as rest
 
-from src.config import settings as cfg
+from src.config import app_config as cfg
 from src.infrastructure.dtos import (
     QdrantCollectionInfoDto,
     QdrantHealthResponseDto,
@@ -24,30 +24,30 @@ from src.utils.file_utils import get_all_files_in_directory
 class QdrantManager:
     """Qdrant 向量数据库管理类"""
 
-    def __init__(self, collection_name: str = cfg.qdrant_collection_name):
+    def __init__(self, collection_name: str = cfg.qdrant.collection_name):
         """初始化 Qdrant 管理器"""
         self.client = self._create_client()
         self.collection_name = collection_name
         self.embedding_size = (
-            cfg.qdrant_dimension
-        )  # 使用 config.py 中的 qdrant_dimension
+            cfg.qdrant.dimension
+        )  # 使用 config.py 中的 qdrant.dimension
         self.distance = rest.Distance.COSINE
-        self.top_k = getattr(cfg, "qdrant_top_k", 5)  # 默认值 5
-        self.score_threshold = getattr(cfg, "qdrant_score_threshold", 0.7)  # 默认值 0.7
-        self.max_retries = getattr(cfg, "qdrant_max_retries", 3)  # 默认值 3
-        self.retry_delay = getattr(cfg, "qdrant_retry_delay", 1.0)  # 默认值 1.0
+        self.top_k = cfg.qdrant.top_k  # 从新配置获取
+        self.score_threshold = cfg.qdrant.score_threshold  # 从新配置获取
+        self.max_retries = cfg.qdrant.max_retries  # 从新配置获取
+        self.retry_delay = cfg.qdrant.retry_delay  # 从新配置获取
         self._embedding_client: Optional[OpenAIEmbeddings] = None
 
     def _get_embedding_client(self) -> OpenAIEmbeddings:
         """获取 Embedding 客户端"""
         if self._embedding_client is None:
-            provider = getattr(cfg, "embedding_provider", "openai").lower()
+            provider = cfg.embedding.provider.lower()
             check_embedding_ctx_length = provider == "openai"
-            dimensions = getattr(cfg, "embedding_dimension", None)
+            dimensions = cfg.embedding.dimension
             self._embedding_client = OpenAIEmbeddings(
-                model=cfg.embedding_model,
-                api_key=SecretStr(cfg.embedding_api_key),
-                base_url=cfg.embedding_base_url,
+                model=cfg.embedding.model_name,
+                api_key=SecretStr(cfg.embedding.api_key),
+                base_url=cfg.embedding.base_url,
                 tiktoken_enabled=(provider == "openai"),
                 check_embedding_ctx_length=check_embedding_ctx_length,
                 dimensions=dimensions,
@@ -79,16 +79,16 @@ class QdrantManager:
 
     def _create_client(self) -> AsyncQdrantClient:
         """创建 Qdrant 客户端"""
-        api_key = cfg.qdrant_api_key
+        api_key = cfg.qdrant.api_key
         if isinstance(api_key, SecretStr):
             api_key = api_key.get_secret_value()
         return AsyncQdrantClient(
-            host=cfg.qdrant_host,
-            port=cfg.qdrant_port,
+            host=cfg.qdrant.host,
+            port=cfg.qdrant.port,
             api_key=api_key or None,
-            prefer_grpc=cfg.qdrant_prefer_grpc,
-            https=cfg.qdrant_https,
-            verify=cfg.qdrant_verify_ssl,
+            prefer_grpc=cfg.qdrant.prefer_grpc,
+            https=cfg.qdrant.https,
+            verify=cfg.qdrant.verify_ssl,
             check_compatibility=False,
         )
 
@@ -100,7 +100,7 @@ class QdrantManager:
     # ==================== 集合管理 ====================
 
     async def create_collection_if_not_exists(
-        self, collection_name: str = cfg.qdrant_collection_name
+        self, collection_name: str = cfg.qdrant.collection_name
     ) -> None:
         """如果集合不存在则创建 Qdrant 集合"""
         try:
@@ -331,10 +331,10 @@ async def initialize_knowledge_base(knowledge_docs_dir: str) -> Dict[str, int]:
     logger.info("=" * 60)
 
     # 1. 检查配置
-    logger.info(f"Qdrant 服务: {cfg.qdrant_host}:{cfg.qdrant_port}")
-    logger.info(f"集合名称: {cfg.qdrant_collection_name}")
-    logger.info(f"向量维度: {cfg.qdrant_dimension}")
-    logger.info(f"Embedding 模型: {cfg.embedding_model}")
+    logger.info(f"Qdrant 服务: {cfg.qdrant.host}:{cfg.qdrant.port}")
+    logger.info(f"集合名称: {cfg.qdrant.collection_name}")
+    logger.info(f"向量维度: {cfg.qdrant.dimension}")
+    logger.info(f"Embedding 模型: {cfg.embedding.model_name}")
 
     # 2. 创建管理器
     try:

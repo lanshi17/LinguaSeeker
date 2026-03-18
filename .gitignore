@@ -113,3 +113,4 @@ worktrees/
 
 # Local MinIO data (runtime artifacts)
 /apps/backend/database/minio/data/
+.aider*

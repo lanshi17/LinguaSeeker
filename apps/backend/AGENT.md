@@ -16,6 +16,18 @@ If any conflict appears, resolve by priority:
 3. `docs/APP_FLOW.md`
 4. Remaining docs
 
+## Project Rules
+1. The project must use **uv** exclusively for dependency installation and management; the use of other tools such as pip or conda is prohibited.
+2. With the exception of the main entry file, all business code must be placed in **src/**.
+3. All documentation must be centralized in **docs/**.
+4. All test files must be centralized in **tests/**.
+5. Upon completion of each task milestone, the project progress must be recorded in the root directory’s **progress.txt** file.
+6. Each debugging session or iterative troubleshooting effort must be reviewed and documented in **lesson.md**.
+7. Logging must be implemented using **loguru**, with log files stored in **logs/** and named by date and time (e.g., YYYY-MM-DD_HHMMSS.log); the testing framework must be **pytest**.
+8. Scripts related to initialization and startup must be centralized in **scripts/**.
+9. Database-related files must be centralized in **database/**.
+10. Any ambiguous requirements must be clarified through consultation and confirmation; making assumptions on one’s own is strictly prohibited.
+
 ## 2. Scope (MVP)
 Implement the main 5-node workflow:
 1. Literature acquisition

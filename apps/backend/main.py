@@ -1,29 +1,35 @@
+import json
+import os
+import sys
+from contextlib import asynccontextmanager
+from datetime import datetime
+from typing import Any, Dict
+from uuid import uuid4
+
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-from contextlib import asynccontextmanager
-import json
-import sys
-import os
-from uuid import uuid4
 from loguru import logger
-from datetime import datetime
-from typing import Dict, Any
-from src.api.routes.core import router as api_routers
-from src.api.routes.stream import router as stream_api_routers
-from src.api.routes.task import router as task_api_routers
-from src.api.routes.evidence import router as evidence_api_routers
+
 from src.api.dependencies import (
     extract_error_contract,
     failed_payload,
     normalize_error_code,
 )
-from src.utils.exceptions import ACMGException, TaskNotFoundException, ValidationException
+from src.api.routes.core import router as api_routers
+from src.api.routes.evidence import router as evidence_api_routers
+from src.api.routes.stream import router as stream_api_routers
+from src.api.routes.task import router as task_api_routers
+from src.config import app_config as cfg  # 导入配置实例
 from src.health import check_all_connections
 from src.infrastructure.minio import MinIOClient
-from src.config import settings as cfg  # 导入配置实例
+from src.utils.exceptions import (
+    ACMGException,
+    TaskNotFoundException,
+    ValidationException,
+)
 
 
 def _is_production_environment(environment: str) -> bool:
@@ -50,7 +56,7 @@ def _build_cors_options(origins: list[str]) -> Dict[str, Any]:
 def _build_root_payload() -> Dict[str, Any]:
     return {
         "name": cfg.app_name,
-        "version": getattr(cfg, "app_version", "unknown"),
+        "version": cfg.app_version,
         "status": "ok",
     }
 
@@ -63,7 +69,7 @@ def _maybe_clear_proxy_env() -> None:
     os.environ.pop("all_proxy", None)
 
 
-_loguru_runtime = _build_loguru_runtime_options(cfg.environment, cfg.debug)
+_loguru_runtime = _build_loguru_runtime_options(cfg.environment.value, cfg.debug)
 # 添加一个 sink 到文件，实现滚动和保留策略
 # 这里使用 "a" 模式追加，每天凌晨滚动，保留最近7天的日志
 logger.add(
@@ -104,7 +110,9 @@ def _parse_cors_origins(origins: str) -> list[str]:
     return [origin.strip() for origin in origins.split(",") if origin.strip()]
 
 
-_cors_options = _build_cors_options(_parse_cors_origins(cfg.cors_origins))
+_cors_options = _build_cors_options(
+    _parse_cors_origins('["http://localhost:3000", "http://localhost:8080"]')
+)
 
 
 @asynccontextmanager
@@ -122,7 +130,7 @@ async def lifespan(_: FastAPI):
 
     try:
         minio_client = MinIOClient()
-        logger.info("MinIO client initialized with endpoint: {}", cfg.minio_endpoint)
+        logger.info("MinIO client initialized with endpoint: {}", cfg.minio.endpoint)
         await minio_client.ensure_buckets()
         logger.info("MinIO buckets verified successfully")
     except Exception as exc:
@@ -207,4 +215,4 @@ if __name__ == "__main__":
     import uvicorn
 
     # 配置可以从 .env 或环境变量自动加载
-    uvicorn.run(app, host=cfg.api_host, port=cfg.api_port, env_file=".env.local")
+    uvicorn.run(app, host=cfg.host, port=cfg.port, env_file=".env.local")

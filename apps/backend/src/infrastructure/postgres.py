@@ -9,38 +9,38 @@ from loguru import logger
 from sqlalchemy import create_engine, func
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.engine import URL
-from sqlalchemy.orm import Session, sessionmaker, joinedload
+from sqlalchemy.orm import Session, joinedload, sessionmaker
 
-from src.config import settings as cfg
+from src.config import app_config as cfg
 from src.infrastructure.models import (
     Base,
-    TaskRequest,
-    PaperTask,
-    PaperTaskLog,
-    SentenceAlignment,
+    ClinGenEvidenceProfile,
+    ClinVarVariation,
     Document,
     Entity,
     EntityDocumentMapping,
     EvidenceRecord,
     GraphEdgeCache,
     GraphNodeCache,
+    PaperTask,
+    PaperTaskLog,
+    SentenceAlignment,
     Task,
     TaskLog,
+    TaskRequest,
     User,
-    ClinVarVariation,
     VariationCitation,
-    ClinGenEvidenceProfile,
 )
 
 
 def _build_database_url(db_name: Optional[str] = None) -> str:
     url = URL.create(
         drivername="postgresql+psycopg2",
-        username=cfg.postgres_user,
-        password=cfg.postgres_password or "",
-        host=cfg.postgres_host,
-        port=cfg.postgres_port,
-        database=db_name or cfg.postgres_db,
+        username=cfg.postgresql.user,
+        password=cfg.postgresql.password or "",
+        host=cfg.postgresql.host,
+        port=cfg.postgresql.port,
+        database=db_name or cfg.postgresql.database,
     )
     return url.render_as_string(hide_password=False)
 
@@ -51,22 +51,24 @@ def get_database_url(db_name: Optional[str] = None) -> str:
 
 def _build_conninfo(db_name: Optional[str] = None) -> str:
     return (
-        f"host={cfg.postgres_host} "
-        f"port={cfg.postgres_port} "
-        f"dbname={db_name or cfg.postgres_db} "
-        f"user={cfg.postgres_user} "
-        f"password={cfg.postgres_password}"
+        f"host={cfg.postgresql.host} "
+        f"port={cfg.postgresql.port} "
+        f"dbname={db_name or cfg.postgresql.database} "
+        f"user={cfg.postgresql.user} "
+        f"password={cfg.postgresql.password}"
     )
 
 
 def ensure_database_exists(db_name: Optional[str] = None) -> None:
-    target_db = db_name or cfg.postgres_db
+    target_db = db_name or cfg.postgresql.database
     conninfo = _build_conninfo("postgres")
     try:
         with psycopg2.connect(conninfo) as conn:
             conn.autocommit = True
             with conn.cursor() as cur:
-                cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (target_db,))
+                cur.execute(
+                    "SELECT 1 FROM pg_database WHERE datname = %s", (target_db,)
+                )
                 exists = cur.fetchone()
                 if not exists:
                     cur.execute(f'CREATE DATABASE "{target_db}"')
@@ -76,7 +78,9 @@ def ensure_database_exists(db_name: Optional[str] = None) -> None:
         raise
 
 
-def initialize_schema(db_name: Optional[str] = None, schema_name: Optional[str] = None) -> None:
+def initialize_schema(
+    db_name: Optional[str] = None, schema_name: Optional[str] = None
+) -> None:
     ensure_database_exists(db_name)
     engine = get_engine(db_name)
     if schema_name:
@@ -118,8 +122,8 @@ def get_engine(db_name: Optional[str] = None):
     return create_engine(
         "postgresql+psycopg2://",
         creator=lambda: psycopg2.connect(conninfo),
-        pool_size=cfg.postgres_pool_size,
-        max_overflow=cfg.postgres_max_overflow,
+        pool_size=cfg.postgresql.pool_size,
+        max_overflow=cfg.postgresql.max_overflow,
         pool_pre_ping=True,
         future=True,
     )
@@ -220,7 +224,11 @@ class PostgresClient:
 
     def find_document_by_hash(self, file_hash: str) -> Optional[Document]:
         with self.session_scope() as session:
-            return session.query(Document).filter(Document.file_hash == file_hash).one_or_none()
+            return (
+                session.query(Document)
+                .filter(Document.file_hash == file_hash)
+                .one_or_none()
+            )
 
     def list_documents(
         self,
@@ -232,7 +240,9 @@ class PostgresClient:
             query = session.query(Document)
             if status:
                 query = query.filter(Document.status == status)
-            return query.order_by(Document.document_id).offset(offset).limit(limit).all()
+            return (
+                query.order_by(Document.document_id).offset(offset).limit(limit).all()
+            )
 
     def update_document(self, document_id: UUID, **fields: Any) -> Optional[Document]:
         document_id = self._coerce_uuid(document_id)
@@ -410,8 +420,12 @@ class PostgresClient:
         node_trace: Optional[Dict[str, Any]] = None,
     ) -> PaperTask:
         request_uuid = self._coerce_uuid(request_id)
-        document_uuid = self._coerce_uuid(document_id) if document_id is not None else None
-        duplicate_uuid = self._coerce_uuid(duplicate_of) if duplicate_of is not None else None
+        document_uuid = (
+            self._coerce_uuid(document_id) if document_id is not None else None
+        )
+        duplicate_uuid = (
+            self._coerce_uuid(duplicate_of) if duplicate_of is not None else None
+        )
         with self.session_scope() as session:
             entry = PaperTask(
                 request_id=request_uuid,
@@ -440,7 +454,9 @@ class PostgresClient:
         with self.session_scope() as session:
             return session.get(PaperTask, paper_uuid)
 
-    def get_paper_task_by_celery_task_id(self, celery_task_id: str) -> Optional[PaperTask]:
+    def get_paper_task_by_celery_task_id(
+        self, celery_task_id: str
+    ) -> Optional[PaperTask]:
         if not celery_task_id:
             return None
         with self.session_scope() as session:
@@ -451,7 +467,9 @@ class PostgresClient:
                 .first()
             )
 
-    def list_paper_tasks_by_request(self, request_id: Union[UUID, str]) -> List[PaperTask]:
+    def list_paper_tasks_by_request(
+        self, request_id: Union[UUID, str]
+    ) -> List[PaperTask]:
         request_uuid = self._coerce_uuid(request_id)
         with self.session_scope() as session:
             return (
@@ -506,7 +524,9 @@ class PostgresClient:
     ) -> Optional[PaperTaskLog]:
         paper_uuid = self._coerce_uuid(paper_task_id)
         with self.session_scope() as session:
-            query = session.query(PaperTaskLog).filter(PaperTaskLog.paper_task_id == paper_uuid)
+            query = session.query(PaperTaskLog).filter(
+                PaperTaskLog.paper_task_id == paper_uuid
+            )
             if node is not None:
                 query = query.filter(PaperTaskLog.node == node)
             return query.order_by(PaperTaskLog.created_at.desc()).first()
@@ -545,7 +565,9 @@ class PostgresClient:
                 .first()
             )
 
-    def refresh_task_request_status(self, request_id: Union[UUID, str]) -> Optional[TaskRequest]:
+    def refresh_task_request_status(
+        self, request_id: Union[UUID, str]
+    ) -> Optional[TaskRequest]:
         request_uuid = self._coerce_uuid(request_id)
         with self.session_scope() as session:
             entry = session.get(TaskRequest, request_uuid)
@@ -567,7 +589,8 @@ class PostgresClient:
             duplicate_count = sum(
                 1
                 for p in papers
-                if str(p.status) == "success" and str(p.error_code or "") == "FILE_DUPLICATE"
+                if str(p.status) == "success"
+                and str(p.error_code or "") == "FILE_DUPLICATE"
             )
             failed_count = sum(1 for s in statuses if s == "failed")
             running_count = sum(1 for s in statuses if s == "running")
@@ -644,7 +667,9 @@ class PostgresClient:
             result = session.execute(upsert_stmt)
             return list(result.scalars().all())
 
-    def batch_upsert_entity_document_mappings(self, mappings: Sequence[Dict[str, Any]]) -> int:
+    def batch_upsert_entity_document_mappings(
+        self, mappings: Sequence[Dict[str, Any]]
+    ) -> int:
         if not mappings:
             return 0
         insert_stmt = pg_insert(EntityDocumentMapping).values(
@@ -717,7 +742,9 @@ class PostgresClient:
             result = session.execute(upsert_stmt)
             return result.scalar_one()
 
-    def get_graph_node_cache_by_neo4j_id(self, neo4j_node_id: int) -> Optional[GraphNodeCache]:
+    def get_graph_node_cache_by_neo4j_id(
+        self, neo4j_node_id: int
+    ) -> Optional[GraphNodeCache]:
         with self.session_scope() as session:
             return (
                 session.query(GraphNodeCache)
@@ -772,7 +799,9 @@ class PostgresClient:
                 .one_or_none()
             )
 
-    def upsert_clinvar_variation(self, variation_id: int, **fields: Any) -> ClinVarVariation:
+    def upsert_clinvar_variation(
+        self, variation_id: int, **fields: Any
+    ) -> ClinVarVariation:
         with self.session_scope() as session:
             variation = session.get(ClinVarVariation, variation_id)
             if not variation:
@@ -945,7 +974,9 @@ class PostgresClient:
         with self.session_scope() as session:
             return session.get(EvidenceRecord, evidence_id)
 
-    def search_evidence_by_gene(self, gene_symbol: str, limit: int = 50) -> List[EvidenceRecord]:
+    def search_evidence_by_gene(
+        self, gene_symbol: str, limit: int = 50
+    ) -> List[EvidenceRecord]:
         with self.session_scope() as session:
             return (
                 session.query(EvidenceRecord)
@@ -965,7 +996,9 @@ class PostgresClient:
         with self.session_scope() as session:
             query = session.query(EvidenceRecord)
             if clinvar_variation_id is not None:
-                query = query.filter(EvidenceRecord.clinvar_variation_id == clinvar_variation_id)
+                query = query.filter(
+                    EvidenceRecord.clinvar_variation_id == clinvar_variation_id
+                )
             if variant:
                 query = query.filter(
                     (EvidenceRecord.variant_hgvs_c == variant)
@@ -973,7 +1006,11 @@ class PostgresClient:
                 )
             if protein_change:
                 query = query.filter(EvidenceRecord.protein_change == protein_change)
-            return query.order_by(EvidenceRecord.overall_confidence.desc()).limit(limit).all()
+            return (
+                query.order_by(EvidenceRecord.overall_confidence.desc())
+                .limit(limit)
+                .all()
+            )
 
     def search_evidence_multi(
         self,
@@ -997,16 +1034,26 @@ class PostgresClient:
                     | (EvidenceRecord.variant_hgvs_p == variant)
                 )
             if clinvar_variation_id is not None:
-                query = query.filter(EvidenceRecord.clinvar_variation_id == clinvar_variation_id)
+                query = query.filter(
+                    EvidenceRecord.clinvar_variation_id == clinvar_variation_id
+                )
             if protein_change:
                 query = query.filter(EvidenceRecord.protein_change == protein_change)
             if disease_name:
-                query = query.filter(EvidenceRecord.disease_name.ilike(f"%{disease_name}%"))
+                query = query.filter(
+                    EvidenceRecord.disease_name.ilike(f"%{disease_name}%")
+                )
             if min_confidence is not None:
-                query = query.filter(EvidenceRecord.overall_confidence >= min_confidence)
+                query = query.filter(
+                    EvidenceRecord.overall_confidence >= min_confidence
+                )
             if only_valid:
                 query = query.filter(EvidenceRecord.is_valid == "true")
-            return query.order_by(EvidenceRecord.overall_confidence.desc()).limit(limit).all()
+            return (
+                query.order_by(EvidenceRecord.overall_confidence.desc())
+                .limit(limit)
+                .all()
+            )
 
     def get_evidence_for_document(self, document_id: UUID) -> List[EvidenceRecord]:
         document_id = self._coerce_uuid(document_id)
@@ -1018,7 +1065,9 @@ class PostgresClient:
                 .all()
             )
 
-    def update_evidence_record(self, evidence_id: int, **fields: Any) -> Optional[EvidenceRecord]:
+    def update_evidence_record(
+        self, evidence_id: int, **fields: Any
+    ) -> Optional[EvidenceRecord]:
         with self.session_scope() as session:
             record = session.get(EvidenceRecord, evidence_id)
             if not record:

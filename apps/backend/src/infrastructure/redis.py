@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import redis
 
-from src.config import settings as cfg
+from src.config import app_config as cfg
 
 DEFAULT_CACHE_TTL_SECONDS = 86400
 PDF_HASH_KEY_PREFIX = "pdf:hash:"
@@ -20,11 +20,11 @@ class RedisClient:
         """Get Redis connection with proper authentication."""
         # Create connection with authentication
         connection = redis.Redis(
-            host=cfg.redis_host,
-            port=cfg.redis_port,
-            db=cfg.redis_db,
-            password=cfg.redis_password,  # This handles authentication
-            max_connections=cfg.redis_max_connections,
+            host=cfg.redis.host,
+            port=cfg.redis.port,
+            db=cfg.redis.db,
+            password=cfg.redis.password,  # This handles authentication
+            max_connections=cfg.redis.max_connections,
             decode_responses=False,  # Keep responses as bytes to handle all types
             socket_connect_timeout=5,
             socket_timeout=5,
@@ -50,7 +50,9 @@ def _result_key(pdf_hash: str) -> str:
     return f"{PDF_RESULT_KEY_PREFIX}{pdf_hash}"
 
 
-def store_pdf_hash(pdf_hash: str, expiration: Optional[int] = DEFAULT_CACHE_TTL_SECONDS) -> None:
+def store_pdf_hash(
+    pdf_hash: str, expiration: Optional[int] = DEFAULT_CACHE_TTL_SECONDS
+) -> None:
     """Store the PDF hash in Redis with an optional expiration time (default 1 day)."""
     redis_conn = redis_client.get_connection()
     redis_conn.set(_hash_key(pdf_hash), "processed", ex=expiration)
