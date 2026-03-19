@@ -9,10 +9,16 @@ from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Environment(str, Enum):
-    DEVELOPMENT = "development"
-    STAGING = "staging"
-    PRODUCTION = "production"
+LLMRole = Literal[
+    "retrieval",
+    "parsing",
+    "mt",
+    "format",
+    "vlm",
+    "evidence",
+    "classification",
+    "arbitration",
+]
 
 
 class VectorBackend(str, Enum):
@@ -836,8 +842,7 @@ class Settings(BaseSettings):
         default="postgres", validation_alias=AliasChoices("POSTGRES_USER", "PGUSER")
     )
     postgres_password: str = Field(
-        alias="POSTGRES_PASSWORD",
-        validation_alias=AliasChoices("POSTGRES_PASSWORD", "PGPASSWORD"),
+        validation_alias=AliasChoices("POSTGRES_PASSWORD", "PGPASSWORD")
     )
     postgres_pool_size: int = 10
     postgres_max_overflow: int = 20
@@ -949,11 +954,9 @@ class Settings(BaseSettings):
     def use_agent_workflow(self, task_type: str) -> bool:
         return getattr(self, f"use_agent_workflow_{task_type.lower()}", False)
 
-    # ==================== 爬取配置 ====================
+    # ==================== 文献获取配置 ====================
     pubmed_api_key: Optional[str] = None
-    pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"  # Updated to match .env.local
-    firecrawl_base_url: str = "https://api.firecrawl.dev/v0"
-    firecrawl_api_key: Optional[str] = None
+    pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 
     # ==================== 邮箱配置 ====================
     smtp_host: str = "smtp.exmail.qq.com"

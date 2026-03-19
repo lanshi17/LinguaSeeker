@@ -104,3 +104,4 @@
 : 1770023328:0;git branch -D copilot/varied-ostrich
 : 1770023451:0;git checkout yangzs && git merge -f dev\
 
+: 1773719862:0;uv add crawl4ai
