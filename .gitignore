@@ -109,6 +109,7 @@ hs_err_pid*
 
 # Opencode / agent artifacts
 .sisyphus/
+.worktrees/
 worktrees/
 
 # Local MinIO data (runtime artifacts)
