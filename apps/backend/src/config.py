@@ -1,9 +1,9 @@
 """主配置文件 - 整合所有配置项"""
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -23,34 +23,180 @@ class VectorBackend(str, Enum):
 
 
 @dataclass
-class LLMConfig:
-    """大语言模型配置"""
+class BaseLLMConfig:
+    """基础 LLM 配置"""
 
-    # OCR-LLM
-    ocr_provider: str = "qwen"
-    ocr_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    ocr_api_key: Optional[str] = None
-    ocr_model: str = "qwen-vl-ocr-latest"
-    ocr_batch_size: int = (
+    api_key: Optional[str] = None
+    base_url: str = "https://api.openai.com/v1"
+    model: str = "gpt-3.5-turbo"
+    temperature: float = 0.0
+    max_tokens: int = 2000
+    timeout: int = 60
+    max_retries: int = 3
+
+
+@dataclass
+class AgentConfig(BaseLLMConfig):
+    """智能体基础配置"""
+
+    enabled: bool = True
+
+
+@dataclass
+class RetrievalAgentConfig(AgentConfig):
+    """文献获取智能体配置"""
+
+    api_key: Optional[str] = None
+    base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model: str = "qwen3.5-flash"
+
+
+@dataclass
+class ParsingAgentConfig(AgentConfig):
+    """文档解析智能体配置"""
+
+    api_key: Optional[str] = None
+    base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model: str = "qwen3.5-flash"
+
+
+@dataclass
+class TranslationAgentConfig(AgentConfig):
+    """多语种翻译智能体配置"""
+
+    api_key: Optional[str] = None
+    base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model: str = "qwen-mt-flash"
+
+
+@dataclass
+class FormattingAgentConfig(AgentConfig):
+    """多功能排版智能体配置"""
+
+    api_key: Optional[str] = None
+    base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model: str = "qwen3.5-flash"
+
+
+@dataclass
+class VLMAgentConfig(AgentConfig):
+    """图片提取智能体配置"""
+
+    api_key: Optional[str] = None
+    base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model: str = "qwen3-vl-flash"
+    enabled: bool = False
+
+
+@dataclass
+class EvidenceAgentConfig(AgentConfig):
+    """证据提取智能体配置"""
+
+    api_key: Optional[str] = None
+    base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model: str = "qwen3.5-plus"
+
+
+@dataclass
+class ClassificationAgentConfig(AgentConfig):
+    """ACMG分类智能体配置"""
+
+    api_key: Optional[str] = None
+    base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model: str = "qwen3.5-plus"
+
+
+@dataclass
+class ArbitrationAgentConfig(AgentConfig):
+    """专家裁决智能体配置"""
+
+    api_key: Optional[str] = None
+    base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model: str = "qwen3-max"
+
+
+@dataclass
+class OCRConfig(BaseLLMConfig):
+    """OCR 配置"""
+
+    provider: str = "qwen"
+    base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    api_key: Optional[str] = None
+    model: str = "qwen-vl-ocr-latest"
+    batch_size: int = (
         1  # Number of pages to process in one API call (1 = single page for accuracy)
     )
 
-    # MT-LLM
-    mt_api_key: Optional[str] = None
-    mt_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    mt_model: str = "qwen-mt-plus"
 
-    # 主力LLM - DeepSeek-V3.2
-    primary_provider: str = "deepseek"
-    deepseek_api_key: Optional[str] = None
-    deepseek_base_url: str = "https://api.deepseek.com"
-    deepseek_model: str = "deepseek-chat"
+@dataclass
+class MTConfig(BaseLLMConfig):
+    """机器翻译配置"""
 
-    # 仲裁LLM - Claude
-    arbiter_provider: str = "claude"
-    claude_api_key: Optional[str] = None
-    anthropic_base_url: str = "https://api.anthropic.com"
-    claude_model: str = "claude-3-5-sonnet-20241022"  # 或 claude-opus-4.5
+    api_key: Optional[str] = None
+    base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model: str = "qwen-mt-plus"
+
+
+@dataclass
+class PrimaryLLMConfig(BaseLLMConfig):
+    """主力LLM配置"""
+
+    provider: str = "deepseek"
+    api_key: Optional[str] = None
+    base_url: str = "https://api.deepseek.com"
+    model: str = "deepseek-chat"
+
+
+@dataclass
+class ArbiterLLMConfig(BaseLLMConfig):
+    """仲裁LLM配置"""
+
+    provider: str = "claude"
+    api_key: Optional[str] = None
+    base_url: str = "https://api.anthropic.com"
+    model: str = "claude-3-5-sonnet-20241022"
+
+
+@dataclass
+class MinerUServiceConfig:
+    """MinerU服务配置"""
+
+    batch_url: Optional[str] = "https://mineru.net/api/v4/file-urls/batch"
+    api_url: Optional[str] = "https://mineru.net/api/v4/extract/task"
+    model_version: str = "vlm"
+    api_token: Optional[str] = ""
+    pipeline_id: Optional[str] = ""
+    timeout: int = 300
+    max_file_size_mb: int = 100
+
+
+@dataclass
+class LLMConfig:
+    """大语言模型配置聚合类"""
+
+    # 智能体配置
+    retrieval_agent: RetrievalAgentConfig = field(default_factory=RetrievalAgentConfig)
+    parsing_agent: ParsingAgentConfig = field(default_factory=ParsingAgentConfig)
+    translation_agent: TranslationAgentConfig = field(
+        default_factory=TranslationAgentConfig
+    )
+    formatting_agent: FormattingAgentConfig = field(
+        default_factory=FormattingAgentConfig
+    )
+    vlm_agent: VLMAgentConfig = field(default_factory=VLMAgentConfig)
+    evidence_agent: EvidenceAgentConfig = field(default_factory=EvidenceAgentConfig)
+    classification_agent: ClassificationAgentConfig = field(
+        default_factory=ClassificationAgentConfig
+    )
+    arbitration_agent: ArbitrationAgentConfig = field(
+        default_factory=ArbitrationAgentConfig
+    )
+
+    # 特定功能配置
+    ocr: OCRConfig = field(default_factory=OCRConfig)
+    mt: MTConfig = field(default_factory=MTConfig)
+    primary: PrimaryLLMConfig = field(default_factory=PrimaryLLMConfig)
+    arbiter: ArbiterLLMConfig = field(default_factory=ArbiterLLMConfig)
 
     # 通用配置
     temperature: float = 0
@@ -58,14 +204,8 @@ class LLMConfig:
     timeout: int = 60
     max_retries: int = 3
 
-    # MinerU SDK / Service
-    mineru_batch_url: Optional[str] = "https://mineru.net/api/v4/file-urls/batch"
-    mineru_api_url: Optional[str] = "https://mineru.net/api/v4/extract/task"
-    mineru_model_version: str = "vlm"
-    mineru_api_token: Optional[str] = ""
-    mineru_pipeline_id: Optional[str] = ""
-    mineru_timeout: int = 300
-    mineru_max_file_size_mb: int = 100
+    # MinerU 配置
+    mineru: MinerUServiceConfig = field(default_factory=MinerUServiceConfig)
 
 
 @dataclass
@@ -313,31 +453,8 @@ class AppConfig:
             os.getenv("TASK_TIMEOUT_SECONDS", cfg.task_timeout_seconds)
         )
 
-        # LLM配置
-        llm = cfg.llm
-        # OCR LLM配置
-        llm.ocr_provider = os.getenv("OCR_PROVIDER", llm.ocr_provider)
-        llm.ocr_base_url = os.getenv("OCR_BASE_URL", llm.ocr_base_url)
-        llm.ocr_api_key = os.getenv("OCR_API_KEY", llm.ocr_api_key)
-        llm.ocr_model = os.getenv("OCR_MODEL", llm.ocr_model)
-        llm.ocr_batch_size = int(os.getenv("OCR_BATCH_SIZE", llm.ocr_batch_size))
-
-        # MT-LLM配置
-        llm.mt_api_key = os.getenv("MT_LLM_API_KEY", llm.mt_api_key)
-        llm.mt_base_url = os.getenv("MT_LLM_BASE_URL", llm.mt_base_url)
-        llm.mt_model = os.getenv("MT_LLM_MODEL", llm.mt_model)
-
-        # 主力LLM配置
-        llm.deepseek_api_key = os.getenv("DEEPSEEK_API_KEY", llm.deepseek_api_key)
-        llm.deepseek_base_url = os.getenv("DEEPSEEK_BASE_URL", llm.deepseek_base_url)
-        llm.deepseek_model = os.getenv("DEEPSEEK_MODEL", llm.deepseek_model)
-        llm.claude_api_key = os.getenv("CLAUDE_API_KEY", llm.claude_api_key)
-        llm.anthropic_base_url = os.getenv("ANTHROPIC_BASE_URL", llm.anthropic_base_url)
-        llm.claude_model = os.getenv("CLAUDE_MODEL", llm.claude_model)
-        llm.temperature = float(os.getenv("LLM_TEMPERATURE", llm.temperature))
-        llm.max_tokens = int(os.getenv("LLM_MAX_TOKENS", llm.max_tokens))
-        llm.timeout = int(os.getenv("LLM_TIMEOUT", llm.timeout))
-        llm.max_retries = int(os.getenv("LLM_MAX_RETRIES", llm.max_retries))
+        # 加载 LLM 配置
+        cls._load_llm_config(cfg.llm)
 
         # Embedding配置
         embedding = cfg.embedding
@@ -360,23 +477,17 @@ class AppConfig:
         rerank.instruct = os.getenv("RERANK_INSTRUCT", rerank.instruct)
 
         # MinerU配置（环境变量）
-        mineru = cfg.mineru
-        mineru.api_url = os.getenv("MINERU_API_URL", mineru.api_url)
-        mineru.batch_url = os.getenv("MINERU_BATCH_URL", mineru.batch_url)
-        mineru.task_batch_url = os.getenv(
-            "MINERU_TASK_BATCH_URL", mineru.task_batch_url
+        mineru_cfg = cfg.llm.mineru  # 使用新的配置结构
+        mineru_cfg.api_url = os.getenv("MINERU_API_URL", mineru_cfg.api_url)
+        mineru_cfg.batch_url = os.getenv("MINERU_BATCH_URL", mineru_cfg.batch_url)
+        mineru_cfg.api_token = os.getenv("MINERU_API_TOKEN", mineru_cfg.api_token)
+        mineru_cfg.model_version = os.getenv(
+            "MINERU_MODEL_VERSION", mineru_cfg.model_version
         )
-        mineru.status_url = os.getenv("MINERU_STATUS_URL", mineru.status_url)
-        mineru.batch_status_url = os.getenv(
-            "MINERU_BATCH_STATUS_URL", mineru.batch_status_url
+        mineru_cfg.timeout = int(os.getenv("MINERU_TIMEOUT", mineru_cfg.timeout))
+        mineru_cfg.max_file_size_mb = int(
+            os.getenv("MINERU_MAX_FILE_SIZE_MB", mineru_cfg.max_file_size_mb)
         )
-        mineru.api_token = os.getenv("MINERU_API_TOKEN", mineru.api_token)
-        mineru.pipeline_id = os.getenv("MINERU_PIPELINE_ID", mineru.pipeline_id)
-        mineru.timeout = int(os.getenv("MINERU_TIMEOUT", mineru.timeout))
-        mineru.max_file_size_mb = int(
-            os.getenv("MINERU_MAX_FILE_SIZE_MB", mineru.max_file_size_mb)
-        )
-        mineru.model_version = os.getenv("MINERU_MODEL_VERSION", mineru.model_version)
 
         # Redis配置
         cfg.redis = RedisConfig(
@@ -528,17 +639,87 @@ class AppConfig:
 
         return cfg
 
+    @classmethod
+    def _load_llm_config(cls, llm_config: LLMConfig):
+        """加载 LLM 配置的辅助方法"""
+        # OCR 配置
+        llm_config.ocr.provider = os.getenv("OCR_PROVIDER", llm_config.ocr.provider)
+        llm_config.ocr.base_url = os.getenv("OCR_BASE_URL", llm_config.ocr.base_url)
+        llm_config.ocr.api_key = os.getenv("OCR_API_KEY", llm_config.ocr.api_key)
+        llm_config.ocr.model = os.getenv("OCR_MODEL", llm_config.ocr.model)
+        llm_config.ocr.batch_size = int(
+            os.getenv("OCR_BATCH_SIZE", llm_config.ocr.batch_size)
+        )
+
+        # MT 配置
+        llm_config.mt.api_key = os.getenv("MT_LLM_API_KEY", llm_config.mt.api_key)
+        llm_config.mt.base_url = os.getenv("MT_LLM_BASE_URL", llm_config.mt.base_url)
+        llm_config.mt.model = os.getenv("MT_LLM_MODEL", llm_config.mt.model)
+
+        # 智能体配置
+        cls._load_agent_config(llm_config.retrieval_agent, "RETRIEVAL")
+        cls._load_agent_config(llm_config.parsing_agent, "PARSING")
+        cls._load_agent_config(
+            llm_config.translation_agent, "MT"
+        )  # Note: MT uses different naming
+        cls._load_agent_config(llm_config.formatting_agent, "FORMAT")
+        cls._load_vlm_agent_config(llm_config.vlm_agent, "VLM")
+        cls._load_agent_config(llm_config.evidence_agent, "EVIDENCE")
+        cls._load_agent_config(llm_config.classification_agent, "CLASSIFICATION")
+        cls._load_agent_config(llm_config.arbitration_agent, "ARBITRATION")
+
+        # 主力LLM配置
+        llm_config.primary.api_key = os.getenv(
+            "DEEPSEEK_API_KEY", llm_config.primary.api_key
+        )
+        llm_config.primary.base_url = os.getenv(
+            "DEEPSEEK_BASE_URL", llm_config.primary.base_url
+        )
+        llm_config.primary.model = os.getenv("DEEPSEEK_MODEL", llm_config.primary.model)
+        llm_config.arbiter.api_key = os.getenv(
+            "CLAUDE_API_KEY", llm_config.arbiter.api_key
+        )
+        llm_config.arbiter.base_url = os.getenv(
+            "ANTHROPIC_BASE_URL", llm_config.arbiter.base_url
+        )
+        llm_config.arbiter.model = os.getenv("CLAUDE_MODEL", llm_config.arbiter.model)
+
+        # 通用配置
+        llm_config.temperature = float(
+            os.getenv("LLM_TEMPERATURE", llm_config.temperature)
+        )
+        llm_config.max_tokens = int(os.getenv("LLM_MAX_TOKENS", llm_config.max_tokens))
+        llm_config.timeout = int(os.getenv("LLM_TIMEOUT", llm_config.timeout))
+        llm_config.max_retries = int(
+            os.getenv("LLM_MAX_RETRIES", llm_config.max_retries)
+        )
+
+    @classmethod
+    def _load_agent_config(cls, agent_config: AgentConfig, prefix: str):
+        """加载智能体配置的辅助方法"""
+        agent_config.api_key = os.getenv(f"{prefix}_API_KEY", agent_config.api_key)
+        agent_config.base_url = os.getenv(f"{prefix}_BASE_URL", agent_config.base_url)
+        agent_config.model = os.getenv(f"{prefix}_MODEL", agent_config.model)
+
+    @classmethod
+    def _load_vlm_agent_config(cls, vlm_config: VLMAgentConfig, prefix: str):
+        """加载VLM智能体配置的辅助方法（包含enabled标志）"""
+        cls._load_agent_config(vlm_config, prefix)
+        vlm_config.enabled = cls._str_to_bool(
+            os.getenv(f"{prefix}_ENABLE"), vlm_config.enabled
+        )
+
 
 # Pydantic配置类（保留原有兼容性）
 class Settings(BaseSettings):
     # ==================== 应用配置 ====================
     app_name: str = "ACMG-PS3 Intelligence System"
-    app_version: str = "2.1.0"
+    app_version: str = "3.0.0"
     api_prefix: str = "/api/v1"
-    cors_origins: str = '["http://localhost:3000", "http://localhost:8000"]'
+    cors_origins: str = '["*"]'  # Updated to match .env.local
     environment: str = "development"  # development | staging | production
-    debug: bool = True
-    api_host: str = "0.0.0.0"
+    debug: bool = False  # Updated to match .env.local
+    api_host: str = "localhost"  # Updated to match .env.local
     api_port: int = 8000
     clear_proxy_env_on_startup: bool = False
 
@@ -586,7 +767,24 @@ class Settings(BaseSettings):
     arbitration_model: str
     arbitration_base_url: str
 
-    llm_temperature: float = 0.7
+    # OCR 配置
+    ocr_provider: str = "qwen"
+    ocr_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    ocr_api_key: Optional[str] = None
+    ocr_model: str = "qwen-vl-ocr-latest"
+    ocr_batch_size: int = 1
+
+    # 主力LLM配置
+    deepseek_api_key: Optional[str] = None
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_model: str = "deepseek-chat"
+
+    # 仲裁LLM配置
+    claude_api_key: Optional[str] = None
+    anthropic_base_url: str = "https://api.anthropic.com"
+    claude_model: str = "claude-3-5-sonnet-20241022"
+
+    llm_temperature: float = 0.0  # Updated to match .env.local
     llm_max_tokens: int = 2000
     llm_timeout: int = 60
     llm_max_retries: int = 3
@@ -609,10 +807,10 @@ class Settings(BaseSettings):
 
     # ==================== MinerU 配置 ====================
     mineru_mode: str = "api"  # api | local
-    mineru_api_url: str = "http://localhost:8080"
+    mineru_api_url: str = "https://mineru.net/api/v4/extract/task"
     mineru_api_token: Optional[str] = None
     mineru_version: Optional[str] = None
-    mineru_download_dir: Optional[str] = None
+    mineru_download_dir: Optional[str] = "./tmp/mineru_downloads"
     mineru_timeout: int = 300
     mineru_max_file_size_mb: int = 100
 
@@ -657,22 +855,22 @@ class Settings(BaseSettings):
     knowledge_docs_dir: str = "./knowledge_docs"
 
     # ==================== Embedding配置 ====================
-    embedding_provider: str = "nomic"  # nomic | openai
-    embedding_base_url: str = ""
-    embedding_api_key: str = ""
-    embedding_model: str = "nomic-embed-text"
+    embedding_provider: str = "qwen"  # Updated to match .env.local
+    embedding_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"  # Updated to match .env.local
+    embedding_api_key: str = ""  # Updated to match .env.local
+    embedding_model: str = "text-embedding-v4"  # Updated to match .env.local
     embedding_dimension: int = 1536
-    embedding_batch_size: int = 32
+    embedding_batch_size: int = 10  # Updated to match .env.local
 
     # ==================== Qdrant配置 ====================
     qdrant_host: str = "localhost"
     qdrant_port: int = 6333
-    qdrant_https: bool = False
-    qdrant_verify_ssl: bool = True
-    qdrant_collection_name: str = "paper_chunks"
-    qdrant_api_key: Optional[str] = None
+    qdrant_https: bool = True  # Updated to match .env.local
+    qdrant_verify_ssl: bool = False  # Updated to match .env.local
+    qdrant_collection_name: str = "acmg_paper_chunks"  # Updated to match .env.local
+    qdrant_api_key: Optional[str] = None  # Will be populated from env
     qdrant_dimension: int = 1536
-    qdrant_prefer_grpc: bool = True
+    qdrant_prefer_grpc: bool = False  # Updated to match .env.local
     qdrant_top_k: int = 5
     qdrant_score_threshold: float = 0.7
     qdrant_max_retries: int = 3
@@ -695,10 +893,10 @@ class Settings(BaseSettings):
     minio_endpoint: str = "localhost:9000"
     minio_access_key: str
     minio_secret_key: str
-    minio_bucket_name: str = "processed-results"
+    minio_bucket_name: str = "acmg-bucket"  # Updated to match .env.local
     minio_uploads_bucket: str = "literature-uploads"
     minio_results_bucket: str = "processed-results"
-    minio_secure: bool = False  # 根据.env.example，默认为false
+    minio_secure: bool = False  # Updated to match .env.local (was true in .env.local but false is default for local)
 
     @field_validator("minio_access_key", "minio_secret_key")
     @classmethod
@@ -753,13 +951,13 @@ class Settings(BaseSettings):
 
     # ==================== 爬取配置 ====================
     pubmed_api_key: Optional[str] = None
-    pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
+    pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"  # Updated to match .env.local
     firecrawl_base_url: str = "https://api.firecrawl.dev/v0"
     firecrawl_api_key: Optional[str] = None
 
     # ==================== 邮箱配置 ====================
-    smtp_host: str = "smtp.gmail.com"
-    smtp_port: int = 587
+    smtp_host: str = "smtp.exmail.qq.com"
+    smtp_port: int = 465
     smtp_user: str = ""
     smtp_password: str = ""
     smtp_from_email: str = ""
@@ -781,7 +979,7 @@ def resolve_llm_triplet(settings: Settings, role: str) -> tuple[str, str, str]:
 
     Args:
         settings: Settings instance containing LLM configurations
-        role: LLM role name (retrieval/parsing/mt/format/vlm/evidence/classification/arbitration)
+        role: LLM role name (retrieval/parsing/mt/format/vlm/evidence/classification/arbitration/ocr)
 
     Returns:
         tuple containing (api_key, base_url, model) for the role
@@ -798,21 +996,111 @@ def resolve_llm_triplet(settings: Settings, role: str) -> tuple[str, str, str]:
         "evidence",
         "classification",
         "arbitration",
+        "ocr",  # Added OCR role
     }
 
     if role not in valid_roles:
         raise ValueError(
             f"Invalid LLM role: {role}. Valid roles: {', '.join(sorted(valid_roles))}"
         )
-        raise ValueError(
-            f"Invalid LLM role: {role}. Valid roles: {', '.join(sorted(valid_roles))}"
-        )
 
-    api_key = getattr(settings, f"{role}_api_key")
-    base_url = getattr(settings, f"{role}_base_url")
-    model = getattr(settings, f"{role}_model")
+    # Handle special cases for roles that have different attribute naming
+    if role == "ocr":
+        api_key = getattr(settings, f"{role}_api_key")
+        base_url = getattr(settings, f"{role}_base_url")
+        model = getattr(settings, f"{role}_model")
+    else:
+        api_key = getattr(settings, f"{role}_api_key")
+        base_url = getattr(settings, f"{role}_base_url")
+        model = getattr(settings, f"{role}_model")
 
     return api_key, base_url, model
+
+
+class ConfigManager:
+    """配置管理器 - 提供更高级的配置操作接口"""
+
+    def __init__(self, settings: Settings):
+        self.settings = settings
+
+    def get_agent_config(self, role: str) -> dict:
+        """获取指定角色的智能体配置"""
+        if role not in {
+            "retrieval",
+            "parsing",
+            "mt",
+            "format",
+            "vlm",
+            "evidence",
+            "classification",
+            "arbitration",
+        }:
+            raise ValueError(f"Unknown agent role: {role}")
+
+        return {
+            "api_key": getattr(self.settings, f"{role}_api_key"),
+            "base_url": getattr(self.settings, f"{role}_base_url"),
+            "model": getattr(self.settings, f"{role}_model"),
+            "temperature": self.settings.llm_temperature,
+            "max_tokens": self.settings.llm_max_tokens,
+            "timeout": self.settings.llm_timeout,
+            "max_retries": self.settings.llm_max_retries,
+        }
+
+    def get_database_config(self, db_type: str) -> dict:
+        """获取数据库配置"""
+        if db_type == "redis":
+            return {
+                "host": self.settings.redis_host,
+                "port": self.settings.redis_port,
+                "password": self.settings.redis_password,
+                "db": self.settings.redis_db,
+                "max_connections": self.settings.redis_max_connections,
+            }
+        elif db_type == "postgresql":
+            return {
+                "host": self.settings.postgres_host,
+                "port": self.settings.postgres_port,
+                "database": self.settings.postgres_db,
+                "user": self.settings.postgres_user,
+                "password": self.settings.postgres_password,
+                "pool_size": self.settings.postgres_pool_size,
+                "max_overflow": self.settings.postgres_max_overflow,
+            }
+        elif db_type == "neo4j":
+            return {
+                "uri": self.settings.neo4j_uri,
+                "user": self.settings.neo4j_user,
+                "password": self.settings.neo4j_password,
+                "database": self.settings.neo4j_database,
+            }
+        else:
+            raise ValueError(f"Unknown database type: {db_type}")
+
+    def get_vector_db_config(self) -> dict:
+        """获取向量数据库配置"""
+        if self.settings.vector_db.lower() == "qdrant":
+            return {
+                "provider": "qdrant",
+                "host": self.settings.qdrant_host,
+                "port": self.settings.qdrant_port,
+                "https": self.settings.qdrant_https,
+                "verify_ssl": self.settings.qdrant_verify_ssl,
+                "collection_name": self.settings.qdrant_collection_name,
+                "api_key": self.settings.qdrant_api_key,
+                "dimension": self.settings.qdrant_dimension,
+                "prefer_grpc": self.settings.qdrant_prefer_grpc,
+            }
+        elif self.settings.vector_db.lower() == "milvus":
+            return {
+                "provider": "milvus",
+                "host": self.settings.milvus_host,
+                "port": self.settings.milvus_port,
+                "collection_name": self.settings.milvus_collection_name,
+                "dimension": self.settings.milvus_dimension,
+            }
+        else:
+            raise ValueError(f"Unknown vector database: {self.settings.vector_db}")
 
 
 _settings: Settings | None = None
