@@ -143,3 +143,41 @@ podman-compose down
 # 警告：这将删除所有数据卷！
 podman-compose down -v
 ```
+
+## Neo4j 服务故障排查
+
+### 问题现象
+
+Neo4j 容器持续报告认证失败：
+```
+WARN [bolt-xxx] The client is unauthorized due to authentication failure.
+```
+
+### 问题原因
+
+从日志可见，Neo4j 在启动过程中因多次认证失败而关闭：
+```
+WARN [bolt-6774] The client has provided incorrect authentication details too many times in a row.
+INFO Neo4j Server shutdown initiated by request
+```
+
+### 解决方法
+
+1. **重置 Neo4j 密码**：由于 Neo4j 在首次启动时设置了密码，可能需要重新设置
+2. **检查配置文件**：确认 `config/.env.neo4j` 中的认证信息正确
+3. **重启服务**：使用 `podman-compose restart neo4j` 重启服务
+
+### 验证连接
+
+```bash
+# 测试 Neo4j 连接
+podman exec -it acmg_neo4j cypher-shell -u neo4j -p '<password>' 'RETURN 1'
+```
+
+注意：Neo4j 社区版在首次启动时会强制要求更改默认密码，这可能是导致认证失败的原因之一。
+
+## 当前状态
+
+Neo4j 服务目前处于 `unhealthy` 状态。尽管已重置密码并更新了配置文件，但服务仍然报告认证失败。从日志可见，即使密码已更改，Neo4j 仍在尝试使用旧密码进行内部连接，导致持续的认证失败。
+
+可能需要完全重建 Neo4j 容器以确保新密码生效，或者检查是否有其他服务组件在使用旧的认证凭据连接到 Neo4j。
