@@ -23,6 +23,15 @@ class VectorBackend(str, Enum):
 
 
 @dataclass
+class LLMTriplet:
+    """Normalized LLM connection triplet for callers/tests."""
+
+    api_key: Optional[str] = None
+    base_url: str = "https://api.openai.com/v1"
+    model: str = "gpt-3.5-turbo"
+
+
+@dataclass
 class BaseLLMConfig:
     """基础 LLM 配置"""
 
@@ -974,15 +983,15 @@ class Settings(BaseSettings):
     )
 
 
-def resolve_llm_triplet(settings: Settings, role: str) -> tuple[str, str, str]:
-    """Resolve LLM configuration triplet for a given role.
+def resolve_llm_triplet(settings: Settings, role: str) -> LLMTriplet:
+    """Resolve LLM configuration triplet for a specific role.
 
     Args:
         settings: Settings instance containing LLM configurations
         role: LLM role name (retrieval/parsing/mt/format/vlm/evidence/classification/arbitration/ocr)
 
     Returns:
-        tuple containing (api_key, base_url, model) for the role
+        LLMTriplet containing (api_key, base_url, model) for the role
 
     Raises:
         ValueError: If role is invalid
@@ -1004,17 +1013,11 @@ def resolve_llm_triplet(settings: Settings, role: str) -> tuple[str, str, str]:
             f"Invalid LLM role: {role}. Valid roles: {', '.join(sorted(valid_roles))}"
         )
 
-    # Handle special cases for roles that have different attribute naming
-    if role == "ocr":
-        api_key = getattr(settings, f"{role}_api_key")
-        base_url = getattr(settings, f"{role}_base_url")
-        model = getattr(settings, f"{role}_model")
-    else:
-        api_key = getattr(settings, f"{role}_api_key")
-        base_url = getattr(settings, f"{role}_base_url")
-        model = getattr(settings, f"{role}_model")
+    api_key = getattr(settings, f"{role}_api_key")
+    base_url = getattr(settings, f"{role}_base_url")
+    model = getattr(settings, f"{role}_model")
 
-    return api_key, base_url, model
+    return LLMTriplet(api_key=api_key, base_url=base_url, model=model)
 
 
 class ConfigManager:

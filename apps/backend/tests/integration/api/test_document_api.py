@@ -248,14 +248,16 @@ class TestDocumentAPIIntegration:
 
         # Verify result
         assert result["file_id"] == "test-file-id-12345"
-        assert result["full_zip_url"] == "https://mock-download-url.com/result.zip"
+        assert result["full_zip_url"] == "https://mock-result-url.com/result.zip"
         assert result["state"] == "completed"
         assert result["document_id"] == "test-doc-id-123"
         assert "detected_languages" not in result
 
-        # Verify MinerU adapter was called without language config
-        mock_mineru_adapter.apply_upload_urls.assert_called_once_with(
-            [str(test_pdf_file)]
+        # Verify MinerU adapter was called through the unified parse API
+        mock_mineru_adapter.mineru_parse.assert_called_once_with(
+            files=[str(test_pdf_file)],
+            poll_interval=2.0,
+            timeout_seconds=300.0,
         )
 
     def test_minio_store_download_and_extract_zip(self, mock_db_config):
