@@ -2,8 +2,9 @@
 # 定义与MinerU服务交互的统一接口
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
+
+from src.config import AppConfig, MinerUConfig
 from src.utils.logger import Logger
-from src.configs.app_config import AppConfig
 
 cfg = AppConfig.from_env()
 
@@ -21,7 +22,11 @@ class MinerUAdapterInterface(ABC):
         Args:
             config: 应用配置对象,默认从环境变量加载
         """
-        self.config = config.mineru
+        mineru_config = config.mineru
+        if mineru_config is None:
+            raise ValueError("MinerU configuration is required")
+
+        self.config: MinerUConfig = mineru_config
         self.header = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.config.api_token}",
