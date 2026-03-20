@@ -5,8 +5,9 @@ import json
 import logging
 import os
 import re
+from html import unescape
 from typing import Any, Dict, List, Optional
-from urllib.parse import urljoin, urlparse
+from urllib.parse import parse_qs, quote_plus, urljoin, urlparse
 
 import httpx
 from bs4 import BeautifulSoup
@@ -188,6 +189,12 @@ def _extract_pdf_links_by_html(html: str, base_url: str) -> List[str]:
         href = a["href"].strip()
         if ".pdf" in href.lower():
             links.append(urljoin(base_url, href))
+    for meta in soup.find_all("meta"):
+        name = (meta.get("name") or "").lower()
+        if name == "citation_pdf_url":
+            content = (meta.get("content") or "").strip()
+            if content:
+                links.append(urljoin(base_url, content))
     return list(dict.fromkeys(links))
 
 
@@ -197,10 +204,160 @@ class PubScholarService:
     def __init__(self, headless: bool = True, base_url: str = BASE_URL):
         self.browser_config = BrowserConfig(headless=headless, java_script_enabled=True)
         self.base_url = base_url.rstrip("/")
+        self._user_agent = "Mozilla/5.0"
+
+    @staticmethod
+    def _decode_duckduckgo_link(href: str) -> str:
+        if not href:
+            return ""
+        value = unescape(href)
+        if value.startswith("//"):
+            value = f"https:{value}"
+        parsed = urlparse(value)
+        if "duckduckgo.com" in (parsed.netloc or ""):
+            target = parse_qs(parsed.query).get("uddg", [])
+            if target:
+                return target[0]
+        return value
+
+    async def _duckduckgo_search(
+        self, query: str, limit: int = 10
+    ) -> List[Dict[str, str]]:
+        if not query.strip():
+            return []
+        url = "https://html.duckduckgo.com/html/"
+        headers = {
+            "user-agent": self._user_agent,
+            "accept": "text/html,application/xhtml+xml",
+            "referer": f"https://duckduckgo.com/?q={quote_plus(query)}",
+        }
+        async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
+            resp = await client.get(url, params={"q": query}, headers=headers)
+            resp.raise_for_status()
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        results: List[Dict[str, str]] = []
+        seen = set()
+        for anchor in soup.select("a.result__a"):
+            href = self._decode_duckduckgo_link(anchor.get("href") or "")
+            if not href or href in seen:
+                continue
+            seen.add(href)
+            title = anchor.get_text(" ", strip=True) or href
+            results.append({"title": title, "url": href})
+            if len(results) >= limit:
+                break
+        return results
+
+    async def _search_via_duckduckgo(
+        self, payload: PubScholarPayload
+    ) -> List[PaperItem]:
+        query = payload.keyword.strip()
+        if not query:
+            return []
+        # Prefer pubscholar pages first, then relax to broader academic links.
+        queries = [
+            f"site:pubscholar.cn/literatures {query}",
+            f"site:pubscholar.cn {query}",
+            f"{query} 学术 论文",
+        ]
+        raw_hits: List[Dict[str, str]] = []
+        for q in queries:
+            try:
+                hits = await self._duckduckgo_search(
+                    q, limit=max(payload.max_results, 8)
+                )
+            except Exception:
+                hits = []
+            raw_hits.extend(hits)
+            if len(raw_hits) >= payload.max_results:
+                break
+
+        dedup: List[PaperItem] = []
+        seen = set()
+        subjects = payload.search_params.filters.get("subject", [])
+        for hit in raw_hits:
+            link = hit.get("url") or ""
+            if not link or link in seen:
+                continue
+            seen.add(link)
+            try:
+                dedup.append(
+                    PaperItem(
+                        title=hit.get("title") or link,
+                        source_link=link,
+                        has_full_text=(
+                            True
+                            if re.search(r"\.pdf(?:$|[?#])", link, re.IGNORECASE)
+                            else None
+                        ),
+                        subjects=subjects if isinstance(subjects, list) else None,
+                    )
+                )
+            except Exception:
+                continue
+            if len(dedup) >= payload.max_results:
+                break
+        return dedup
+
+    async def _download_from_candidates(
+        self,
+        candidates: List[str],
+        payload: PubScholarPayload,
+    ) -> tuple[Optional[str], Optional[str], List[str]]:
+        warnings: List[str] = []
+        queue = [c for c in candidates if c]
+        visited = set()
+        os.makedirs(payload.download_path, exist_ok=True)
+        title = payload.selected_title or payload.keyword or "paper"
+        filename = _sanitize_filename(title) + ".pdf"
+        file_path = os.path.join(payload.download_path, filename)
+
+        async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            while queue:
+                current = queue.pop(0)
+                if current in visited:
+                    continue
+                visited.add(current)
+                try:
+                    resp = await client.get(
+                        current,
+                        headers={"user-agent": self._user_agent, "accept": "*/*"},
+                    )
+                    if resp.status_code >= 400:
+                        warnings.append(f"download_http_{resp.status_code}:{current}")
+                        continue
+                    content = resp.content
+                    if content.startswith(b"%PDF"):
+                        with open(file_path, "wb") as f:
+                            f.write(content)
+                        return file_path, str(resp.url), warnings
+                    ctype = (resp.headers.get("content-type") or "").lower()
+                    if "html" in ctype or b"<html" in content[:2048].lower():
+                        extra = _extract_pdf_links_by_html(
+                            resp.text or "", str(resp.url)
+                        )
+                        for link in extra:
+                            if link not in visited:
+                                queue.append(link)
+                except Exception as exc:
+                    warnings.append(f"download_probe_failed:{current}:{exc}")
+        return None, None, warnings
 
     async def search(self, payload: PubScholarPayload) -> SearchResponse:
         """Search for papers using unified payload."""
         warnings = []
+        fallback_items = await self._search_via_duckduckgo(payload)
+        if fallback_items:
+            warnings.append("fallback_search:duckduckgo")
+            return SearchResponse(
+                success=True,
+                items=fallback_items[: payload.max_results],
+                warnings=warnings,
+                raw_excerpt=None,
+                total_count=min(len(fallback_items), payload.max_results),
+            )
+
         internal_filters = payload.to_search_filters()
 
         js_code = _build_search_js(
@@ -216,53 +373,68 @@ Extract at most {payload.max_results} items into JSON following the schema.
 Fields: title, authors, year, journal, paper_type, language, has_full_text, source_link (journal official page), subjects.
 If missing, use null. Return strictly valid JSON.
 """
+        items: List[PaperItem] = []
+        raw_excerpt: Optional[str] = None
 
-        llm_strategy = _build_llm_strategy(
-            provider=payload.effective_llm_provider,
-            token=payload.effective_llm_api_token,
-            schema=PaperList.model_json_schema(),
-            instruction=instruction,
-            extra_headers=payload.llm_extra_headers,
-        )
-
-        crawler_config = CrawlerRunConfig(
-            cache_mode=CacheMode.BYPASS,
-            js_code=[js_code],
-            wait_for=_wait_for_results_js(),
-            page_timeout=payload.timeout_ms,
-            word_count_threshold=1,
-            extraction_strategy=llm_strategy,
-            markdown_generator=DefaultMarkdownGenerator(
-                content_filter=PruningContentFilter(
-                    threshold=0.5, threshold_type="fixed", min_word_threshold=0
-                ),
-                options={"ignore_links": False},
-            ),
-        )
-
-        async with AsyncWebCrawler(config=self.browser_config) as crawler:
-            result = await crawler.arun(url=payload.base_url, config=crawler_config)
-
-        if not result.success:
-            return SearchResponse(
-                success=False, warnings=[result.error_message or "crawl_failed"]
+        try:
+            llm_strategy = _build_llm_strategy(
+                provider=payload.effective_llm_provider,
+                token=payload.effective_llm_api_token,
+                schema=PaperList.model_json_schema(),
+                instruction=instruction,
+                extra_headers=payload.llm_extra_headers,
             )
 
-        payload_data = _safe_json_loads(result.extracted_content)
-        items = []
-        for raw in payload_data.get("items", [])[: payload.max_results]:
-            try:
-                items.append(PaperItem.model_validate(raw))
-            except Exception as e:
-                warnings.append(f"item_parse_error: {e}")
+            crawler_config = CrawlerRunConfig(
+                cache_mode=CacheMode.BYPASS,
+                js_code=[js_code],
+                wait_for=_wait_for_results_js(),
+                page_timeout=payload.timeout_ms,
+                word_count_threshold=1,
+                extraction_strategy=llm_strategy,
+                markdown_generator=DefaultMarkdownGenerator(
+                    content_filter=PruningContentFilter(
+                        threshold=0.5, threshold_type="fixed", min_word_threshold=0
+                    ),
+                    options={"ignore_links": False},
+                ),
+            )
+
+            async with AsyncWebCrawler(config=self.browser_config) as crawler:
+                result = await crawler.arun(url=payload.base_url, config=crawler_config)
+
+            if result.success:
+                payload_data = _safe_json_loads(result.extracted_content)
+                extracted_items: List[Dict[str, Any]] = []
+                if isinstance(payload_data, list):
+                    extracted_items = [
+                        item for item in payload_data if isinstance(item, dict)
+                    ]
+                elif isinstance(payload_data, dict):
+                    raw_items = payload_data.get("items", [])
+                    if isinstance(raw_items, list):
+                        extracted_items = [
+                            item for item in raw_items if isinstance(item, dict)
+                        ]
+
+                for raw in extracted_items[: payload.max_results]:
+                    try:
+                        items.append(PaperItem.model_validate(raw))
+                    except Exception as e:
+                        warnings.append(f"item_parse_error: {e}")
+
+                if result.markdown:
+                    raw_excerpt = result.markdown.fit_markdown[:1000]
+            else:
+                warnings.append(result.error_message or "crawl_failed")
+        except Exception as exc:
+            warnings.append(f"crawl_failed:{exc}")
 
         return SearchResponse(
-            success=True,
+            success=bool(items),
             items=items,
             warnings=warnings,
-            raw_excerpt=(
-                result.markdown.fit_markdown[:1000] if result.markdown else None
-            ),
+            raw_excerpt=raw_excerpt,
             total_count=len(items),
         )
 
@@ -301,65 +473,76 @@ If missing, use null. Return strictly valid JSON.
         if not source_link:
             return DownloadResponse(success=False, warnings=["missing_source_link"])
 
-        # 2) Try to find PDF by rules first
-        async with AsyncWebCrawler(config=self.browser_config) as crawler:
-            base_url = source_link
-            result = await crawler.arun(
-                url=source_link, config=CrawlerRunConfig(cache_mode=CacheMode.BYPASS)
-            )
-            pdf_links = _extract_pdf_links_by_html(result.cleaned_html, base_url)
+        pdf_links: List[str] = []
+        if ".pdf" in source_link.lower():
+            pdf_links.append(source_link)
 
-        # 3) If rules fail, use LLM fallback
+        # 2) Direct HTTP parse first (no browser dependency)
         if not pdf_links:
-            instruction = """
-Extract all PDF URLs from the given page.
-Return JSON with key pdf_urls (array of URLs).
-If a URL is relative, convert it to absolute based on the page URL.
-"""
-            llm_strategy = _build_llm_strategy(
-                provider=payload.effective_llm_provider,
-                token=payload.effective_llm_api_token,
-                schema={
-                    "type": "object",
-                    "properties": {
-                        "pdf_urls": {"type": "array", "items": {"type": "string"}}
-                    },
-                },
-                instruction=instruction,
-                extra_headers=payload.llm_extra_headers,
-            )
-            async with AsyncWebCrawler(config=self.browser_config) as crawler:
-                llm_res = await crawler.arun(
-                    url=source_link,
-                    config=CrawlerRunConfig(
-                        cache_mode=CacheMode.BYPASS, extraction_strategy=llm_strategy
-                    ),
-                )
-            payload_data = _safe_json_loads(llm_res.extracted_content)
-            pdf_links = payload_data.get("pdf_urls", [])
+            try:
+                async with httpx.AsyncClient(
+                    timeout=30, follow_redirects=True
+                ) as client:
+                    page = await client.get(
+                        source_link,
+                        headers={
+                            "user-agent": self._user_agent,
+                            "accept": "text/html,application/xhtml+xml",
+                        },
+                    )
+                    if page.status_code < 400:
+                        pdf_links.extend(
+                            _extract_pdf_links_by_html(page.text, str(page.url))
+                        )
+            except Exception as exc:
+                warnings.append(f"http_parse_failed:{exc}")
+
+        # 3) Browser+LLM fallback if needed
+        if not pdf_links:
+            try:
+                async with AsyncWebCrawler(config=self.browser_config) as crawler:
+                    result = await crawler.arun(
+                        url=source_link,
+                        config=CrawlerRunConfig(cache_mode=CacheMode.BYPASS),
+                    )
+                    if result.success:
+                        pdf_links.extend(
+                            _extract_pdf_links_by_html(result.cleaned_html, source_link)
+                        )
+            except Exception as exc:
+                warnings.append(f"crawl_parse_failed:{exc}")
+
+        # 4) Generic PDF search fallback for hard anti-bot pages
+        if not pdf_links:
+            query = payload.selected_title or payload.keyword
+            try:
+                hits = await self._duckduckgo_search(f"{query} filetype:pdf", limit=10)
+                for hit in hits:
+                    url = hit.get("url") or ""
+                    if re.search(r"\.pdf(?:$|[?#])", url, re.IGNORECASE):
+                        pdf_links.append(url)
+            except Exception as exc:
+                warnings.append(f"pdf_search_failed:{exc}")
+            if pdf_links:
+                warnings.append("fallback_pdf:duckduckgo")
 
         if not pdf_links:
-            return DownloadResponse(success=False, warnings=["pdf_not_found"])
+            return DownloadResponse(
+                success=False, warnings=warnings + ["pdf_not_found"]
+            )
 
-        # 4) Download PDF
-        pdf_url = pdf_links[0]
-        os.makedirs(payload.download_path, exist_ok=True)
-        title = payload.selected_title or payload.keyword or "paper"
-        filename = _sanitize_filename(title) + ".pdf"
-        file_path = os.path.join(payload.download_path, filename)
-
-        try:
-            async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
-                async with client.stream("GET", pdf_url) as resp:
-                    ctype = resp.headers.get("content-type", "").lower()
-                    if "pdf" not in ctype:
-                        warnings.append(f"non_pdf_content_type: {ctype}")
-                    with open(file_path, "wb") as f:
-                        async for chunk in resp.aiter_bytes():
-                            f.write(chunk)
-        except Exception as e:
-            return DownloadResponse(success=False, warnings=[f"download_failed: {e}"])
+        file_path, final_pdf_url, dl_warnings = await self._download_from_candidates(
+            pdf_links, payload
+        )
+        warnings.extend(dl_warnings)
+        if not file_path:
+            return DownloadResponse(
+                success=False, warnings=warnings + ["download_failed"]
+            )
 
         return DownloadResponse(
-            success=True, pdf_url=pdf_url, file_path=file_path, warnings=warnings
+            success=True,
+            pdf_url=final_pdf_url,
+            file_path=file_path,
+            warnings=warnings,
         )

@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import aiofiles
 import httpx
 
-from .schemas import ApiResponse, PmcMeta, PmcParams, PmcPayload
+from .models import ApiResponse, PmcMeta, PmcParams, PmcPayload
 
 
 def _normalize_pmcid(pmcid: str) -> str:

@@ -1,7 +1,7 @@
 # src/domain/literature/api/jstage_http/workflow.py
 from typing import Any, Dict
 
-from .schemas import JStagePayload
+from .models import JStagePayload
 from .service import JStageHttpService
 
 

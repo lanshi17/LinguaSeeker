@@ -1,7 +1,7 @@
 # src/domain/literature/api/pmc_http/workflow.py
 from typing import Any, Dict
 
-from .schemas import PmcPayload
+from .models import PmcPayload
 from .service import PmcHttpService
 
 

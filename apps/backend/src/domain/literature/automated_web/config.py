@@ -1,8 +1,16 @@
 """Base configuration for automated web crawlers."""
 
+from dataclasses import dataclass
 from typing import Optional
 
-from src.config import LLMTriplet, get_settings, resolve_llm_triplet
+from src.config import get_settings, resolve_llm_triplet
+
+
+@dataclass(frozen=True)
+class LLMTriplet:
+    api_key: Optional[str]
+    base_url: str
+    model: str
 
 
 class AutomatedWebConfig:
@@ -17,7 +25,8 @@ class AutomatedWebConfig:
     def get_retrieval_config(cls) -> LLMTriplet:
         """Get retrieval LLM configuration from Settings."""
         settings = cls.get_settings()
-        return resolve_llm_triplet(settings, "retrieval")
+        api_key, base_url, model = resolve_llm_triplet(settings, "retrieval")
+        return LLMTriplet(api_key=api_key, base_url=base_url, model=model)
 
     @classmethod
     def get_default_llm_provider(cls) -> str:

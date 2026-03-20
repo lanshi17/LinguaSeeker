@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
 
-from .schemas import ApiResponse, CrossrefMeta, CrossrefParams, CrossrefPayload
+from .models import ApiResponse, CrossrefMeta, CrossrefParams, CrossrefPayload
 
 RESERVED_KEYS = {"query", "filter", "select", "rows", "cursor"}
 

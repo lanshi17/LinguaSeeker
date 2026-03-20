@@ -53,7 +53,7 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-def _safe_json_loads(text: str) -> Dict[str, Any]:
+def _safe_json_loads(text: str) -> Any:
     """Safely parse JSON, attempting to extract JSON from mixed content."""
     if not text:
         return {}
@@ -172,6 +172,13 @@ def _extract_pdf_link(html: str, base_url: str) -> Optional[str]:
             href = a["href"]
             if "pdf" in href.lower():
                 return urljoin(base_url, href)
+
+    # Broad fallback: scan all anchors for direct PDF href.
+    for a in soup.find_all("a", href=True):
+        href = a["href"].strip()
+        lowered = href.lower()
+        if ".pdf" in lowered or "pdf.hanspub.org" in lowered:
+            return urljoin(base_url, href)
     return None
 
 
@@ -186,6 +193,41 @@ def _choose_item(
     if 0 <= selected_index < len(items):
         return items[selected_index]
     return None
+
+
+def _fallback_extract_items_from_html(
+    html_text: str,
+    base_url: str,
+    limit: int,
+) -> List[Dict[str, Any]]:
+    soup = BeautifulSoup(html_text or "", "html.parser")
+    seen_links = set()
+    items: List[Dict[str, Any]] = []
+    for a in soup.find_all("a", href=True):
+        href = str(a.get("href") or "").strip()
+        if "paperinformation?paperid=" not in href:
+            continue
+        detail_link = urljoin(base_url, href)
+        if detail_link in seen_links:
+            continue
+        seen_links.add(detail_link)
+        title = re.sub(r"\s+", " ", a.get_text(" ", strip=True)).strip()
+        if not title:
+            title = f"Hans Paper {len(items) + 1}"
+        items.append(
+            {
+                "title": title,
+                "authors": None,
+                "year": None,
+                "journal": None,
+                "subject": None,
+                "detail_link": detail_link,
+                "index": len(items),
+            }
+        )
+        if len(items) >= max(1, limit):
+            break
+    return items
 
 
 class HansPubService:
@@ -236,7 +278,13 @@ Return strictly valid JSON.
             )
 
         payload_data = _safe_json_loads(result.extracted_content)
-        raw_items = payload_data.get("items", [])
+        raw_items: List[Dict[str, Any]] = []
+        if isinstance(payload_data, list):
+            raw_items = [item for item in payload_data if isinstance(item, dict)]
+        elif isinstance(payload_data, dict):
+            items_value = payload_data.get("items", [])
+            if isinstance(items_value, list):
+                raw_items = [item for item in items_value if isinstance(item, dict)]
         items: List[Dict[str, Any]] = []
 
         for idx, raw in enumerate(raw_items[: payload.max_results]):
@@ -245,6 +293,16 @@ Return strictly valid JSON.
                 items.append({**item.model_dump(), "index": idx})
             except Exception as e:
                 warnings.append(f"item_parse_error: {e}")
+
+        if not items:
+            fallback_items = _fallback_extract_items_from_html(
+                html_text=str(getattr(result, "cleaned_html", None) or ""),
+                base_url=payload.base_url,
+                limit=payload.max_results,
+            )
+            if fallback_items:
+                warnings.append("fallback_html_items_used")
+                items = fallback_items
 
         return SearchResponse(
             success=True,
@@ -317,10 +375,30 @@ Return strictly valid JSON.
 
         try:
             async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
-                async with client.stream("GET", pdf_url) as resp:
+                headers = {
+                    "Referer": detail_link,
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+                }
+                async with client.stream("GET", pdf_url, headers=headers) as resp:
+                    resp.raise_for_status()
+                    content_type = (resp.headers.get("content-type") or "").lower()
+                    first_bytes = b""
                     with open(file_path, "wb") as f:
                         async for chunk in resp.aiter_bytes():
+                            if not first_bytes and chunk:
+                                first_bytes = chunk[:8]
                             f.write(chunk)
+                    if not first_bytes.startswith(b"%PDF"):
+                        try:
+                            os.remove(file_path)
+                        except OSError:
+                            pass
+                        return DownloadResponse(
+                            success=False,
+                            warnings=[f"non_pdf_response:{content_type or 'unknown'}"],
+                        )
+                    if "pdf" not in content_type:
+                        warnings.append(f"non_pdf_content_type:{content_type}")
         except Exception as e:
             return DownloadResponse(success=False, warnings=[f"download_failed: {e}"])
 

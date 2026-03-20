@@ -1,7 +1,7 @@
 # src/domain/literature/api/crossref_http/workflow.py
 from typing import Any, Dict
 
-from .schemas import CrossrefPayload
+from .models import CrossrefPayload
 from .service import CrossrefHttpService
 
 

@@ -3,11 +3,10 @@
 import os
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 
 LLMRole = Literal[
     "retrieval",
@@ -26,6 +25,14 @@ class VectorBackend(str, Enum):
 
     QDRANT = "qdrant"
     MILVUS = "milvus"
+
+
+class Environment(str, Enum):
+    """应用运行环境"""
+
+    DEVELOPMENT = "development"
+    STAGING = "staging"
+    PRODUCTION = "production"
 
 
 @dataclass

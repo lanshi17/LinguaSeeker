@@ -10,7 +10,7 @@ from urllib.parse import quote
 
 import httpx
 
-from .schemas import ApiResponse, DoajMeta, DoajPayload, DoajSearchParams
+from .models import ApiResponse, DoajMeta, DoajPayload, DoajSearchParams
 
 
 def _validate_query(q: str) -> Optional[str]:

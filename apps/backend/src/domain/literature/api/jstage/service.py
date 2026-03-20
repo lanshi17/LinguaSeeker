@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
 
-from .schemas import ApiResponse, JStageMeta, JStageParams, JStagePayload
+from .models import ApiResponse, JStageMeta, JStageParams, JStagePayload
 
 NS = {
     "atom": "http://www.w3.org/2005/Atom",
@@ -253,7 +253,10 @@ class JStageHttpService:
 
             root = ET.fromstring(xml_text or "")
             status, message = _parse_status(root)
-            if status != "0":
+            status_text = str(status or "")
+            if status_text == "WARN_002":
+                warnings.append(f"{status_text}:{message or status_text}")
+            elif status_text != "0":
                 if status == "ERR_001":
                     warnings.append("no_results")
                     break

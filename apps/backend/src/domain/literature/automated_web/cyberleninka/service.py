@@ -6,7 +6,7 @@ import logging
 import os
 import re
 from typing import Any, Dict, List, Optional
-from urllib.parse import urljoin, urlparse
+from urllib.parse import quote_plus, urljoin, urlparse
 
 import httpx
 from bs4 import BeautifulSoup
@@ -55,7 +55,7 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-def _safe_json_loads(text: str) -> Dict[str, Any]:
+def _safe_json_loads(text: str) -> Any:
     """Safely parse JSON, attempting to extract JSON from mixed content."""
     if not text:
         return {}
@@ -184,6 +184,12 @@ def _extract_pdf_link(html: str, base_url: str) -> Optional[str]:
         href = a["href"]
         if ".pdf" in href.lower():
             return urljoin(base_url, href)
+    for meta in soup.find_all("meta"):
+        name = (meta.get("name") or "").lower()
+        if name == "citation_pdf_url":
+            content = (meta.get("content") or "").strip()
+            if content:
+                return urljoin(base_url, content)
     return None
 
 
@@ -206,9 +212,110 @@ class CyberLeninkaService:
     def __init__(self, headless: bool = True, base_url: str = BASE_URL):
         self.browser_config = BrowserConfig(headless=headless, java_script_enabled=True)
         self.base_url = base_url.rstrip("/")
+        self.search_api_url = f"{self.base_url}/api/search"
 
-    async def search(self, payload: CyberleninkaPayload) -> SearchResponse:
-        """Search for papers using unified payload."""
+    @staticmethod
+    def _strip_tags(value: str) -> str:
+        if not value:
+            return ""
+        return re.sub(r"<[^>]+>", "", value).strip()
+
+    async def _search_via_public_api(
+        self, payload: CyberleninkaPayload
+    ) -> SearchResponse:
+        warnings: List[str] = []
+        query = " ".join([k.strip() for k in payload.keyword if k and k.strip()])
+        if not query:
+            return SearchResponse(success=False, warnings=["empty_query"])
+
+        request_payload: Dict[str, Any] = {
+            "mode": "articles",
+            "q": query,
+            "size": min(payload.max_results, 50),
+            "from": 0,
+        }
+        if payload.subjects:
+            request_payload["catalogs"] = payload.subjects
+
+        headers = {
+            "user-agent": "Mozilla/5.0",
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "referer": f"{self.base_url}/search?q={quote_plus(query)}",
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
+                resp = await client.post(
+                    self.search_api_url, json=request_payload, headers=headers
+                )
+                resp.raise_for_status()
+                data = resp.json()
+        except Exception as exc:
+            return SearchResponse(success=False, warnings=[f"api_search_failed:{exc}"])
+
+        raw_items = data.get("articles") if isinstance(data, dict) else []
+        if not isinstance(raw_items, list):
+            raw_items = []
+        items: List[Dict[str, Any]] = []
+        for idx, raw in enumerate(raw_items[: payload.max_results]):
+            if not isinstance(raw, dict):
+                continue
+            title = self._strip_tags(str(raw.get("name") or "")) or "Untitled"
+            authors_raw = raw.get("authors")
+            authors = None
+            if isinstance(authors_raw, list):
+                authors = ", ".join([str(a) for a in authors_raw if a])
+            elif isinstance(authors_raw, str):
+                authors = authors_raw
+            detail_link = raw.get("link")
+            if detail_link:
+                detail_link = urljoin(self.base_url + "/", str(detail_link))
+            catalogs_value = raw.get("catalogs")
+            subject_value: Optional[str]
+            if isinstance(catalogs_value, list):
+                subject_parts: List[str] = []
+                for entry in catalogs_value:
+                    if isinstance(entry, dict):
+                        candidate = (
+                            entry.get("name")
+                            or entry.get("title")
+                            or entry.get("label")
+                            or entry.get("value")
+                        )
+                        if candidate:
+                            subject_parts.append(str(candidate))
+                    elif entry:
+                        subject_parts.append(str(entry))
+                subject_value = ", ".join(subject_parts) if subject_parts else None
+            elif catalogs_value:
+                subject_value = str(catalogs_value)
+            else:
+                subject_value = None
+            item: Dict[str, Any] = {
+                "title": title,
+                "authors": authors,
+                "year": str(raw.get("year")) if raw.get("year") else None,
+                "journal": raw.get("journal"),
+                "subject": subject_value,
+                "detail_link": detail_link,
+                "index": idx,
+            }
+            try:
+                validated = PaperItem.model_validate(item)
+                items.append({**validated.model_dump(), "index": idx})
+            except Exception as exc:
+                warnings.append(f"item_parse_error:{exc}")
+
+        return SearchResponse(
+            success=bool(items),
+            items=items,
+            warnings=warnings,
+            raw_excerpt=None,
+            total_count=len(items),
+        )
+
+    async def _search_via_crawler(self, payload: CyberleninkaPayload) -> SearchResponse:
         warnings = []
         keywords = payload.keyword
         subjects = payload.subjects
@@ -249,7 +356,13 @@ Return strictly valid JSON.
             )
 
         payload_data = _safe_json_loads(result.extracted_content)
-        raw_items = payload_data.get("items", [])
+        raw_items: List[Dict[str, Any]] = []
+        if isinstance(payload_data, list):
+            raw_items = [item for item in payload_data if isinstance(item, dict)]
+        elif isinstance(payload_data, dict):
+            items_value = payload_data.get("items", [])
+            if isinstance(items_value, list):
+                raw_items = [item for item in items_value if isinstance(item, dict)]
         items: List[Dict[str, Any]] = []
 
         for idx, raw in enumerate(raw_items[: payload.max_results]):
@@ -260,12 +373,36 @@ Return strictly valid JSON.
                 warnings.append(f"item_parse_error: {e}")
 
         return SearchResponse(
-            success=True,
+            success=bool(items),
             items=items,
             warnings=warnings,
             raw_excerpt=(result.markdown[:1000] if result.markdown else None),
             total_count=len(items),
         )
+
+    async def _fetch_detail_html(self, detail_link: str, timeout_ms: int) -> str:
+        headers = {
+            "user-agent": "Mozilla/5.0",
+            "accept": "text/html,application/xhtml+xml",
+            "referer": self.base_url,
+        }
+        async with httpx.AsyncClient(
+            timeout=max(30, int(timeout_ms / 1000)), follow_redirects=True
+        ) as client:
+            resp = await client.get(detail_link, headers=headers)
+            resp.raise_for_status()
+            return resp.text
+
+    async def search(self, payload: CyberleninkaPayload) -> SearchResponse:
+        """Search for papers using unified payload."""
+        api_result = await self._search_via_public_api(payload)
+        if api_result.success and api_result.items:
+            return api_result
+
+        crawler_result = await self._search_via_crawler(payload)
+        if api_result.warnings:
+            crawler_result.warnings = api_result.warnings + crawler_result.warnings
+        return crawler_result
 
     async def download(self, payload: CyberleninkaPayload) -> DownloadResponse:
         """Download a paper PDF using unified payload."""
@@ -298,19 +435,31 @@ Return strictly valid JSON.
 
         if not detail_link:
             return DownloadResponse(success=False, warnings=["missing_detail_link"])
+        pdf_url: Optional[str] = None
+        detail_html = ""
+        try:
+            detail_html = await self._fetch_detail_html(detail_link, payload.timeout_ms)
+            pdf_url = _extract_pdf_link(detail_html, detail_link)
+        except Exception as exc:
+            warnings.append(f"detail_fetch_failed:{exc}")
 
-        crawler_config = CrawlerRunConfig(
-            cache_mode=CacheMode.BYPASS,
-            wait_for=_wait_for_xpath(XPATH_DOWNLOAD_BTN),
-            page_timeout=payload.timeout_ms,
-        )
-
-        async with AsyncWebCrawler(config=self.browser_config) as crawler:
-            result = await crawler.arun(url=detail_link, config=crawler_config)
-
-        pdf_url = _extract_pdf_link(result.cleaned_html, detail_link)
         if not pdf_url:
-            return DownloadResponse(success=False, warnings=["pdf_not_found"])
+            detail_clean = detail_link.rstrip("/")
+            pdf_candidate = f"{detail_clean}/pdf"
+            try:
+                async with httpx.AsyncClient(
+                    timeout=30, follow_redirects=True
+                ) as client:
+                    probe = await client.get(pdf_candidate)
+                    if probe.status_code < 400 and probe.content.startswith(b"%PDF"):
+                        pdf_url = str(probe.url)
+            except Exception:
+                pass
+
+        if not pdf_url:
+            return DownloadResponse(
+                success=False, warnings=warnings + ["pdf_not_found"]
+            )
 
         os.makedirs(payload.download_path, exist_ok=True)
         filename = (
@@ -324,11 +473,29 @@ Return strictly valid JSON.
         try:
             async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
                 async with client.stream("GET", pdf_url) as resp:
+                    resp.raise_for_status()
+                    stream = resp.aiter_bytes()
+                    first_chunk = await anext(stream, b"")
+                    if not first_chunk:
+                        return DownloadResponse(
+                            success=False,
+                            pdf_url=pdf_url,
+                            warnings=warnings + ["download_empty"],
+                        )
+                    if not first_chunk.startswith(b"%PDF"):
+                        return DownloadResponse(
+                            success=False,
+                            pdf_url=pdf_url,
+                            warnings=warnings + ["download_not_pdf"],
+                        )
                     with open(file_path, "wb") as f:
-                        async for chunk in resp.aiter_bytes():
+                        f.write(first_chunk)
+                        async for chunk in stream:
                             f.write(chunk)
         except Exception as e:
-            return DownloadResponse(success=False, warnings=[f"download_failed: {e}"])
+            return DownloadResponse(
+                success=False, warnings=warnings + [f"download_failed: {e}"]
+            )
 
         return DownloadResponse(
             success=True, pdf_url=pdf_url, file_path=file_path, warnings=warnings

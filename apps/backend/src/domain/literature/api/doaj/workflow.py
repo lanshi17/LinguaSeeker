@@ -1,11 +1,13 @@
-# src/domain/literature/api/biorxiv_http/workflow.py
+# src/domain/literature/api/doaj_http/workflow.py
 from typing import Any, Dict
 
-from .schemas import BiorxivPayload
-from .service import BiorxivHttpService
+from .models import DoajPayload
+from .service import DoajHttpService
 
 
-async def biorxiv_http_workflow(payload: Dict[str, Any]) -> Dict[str, Any]:
-    req = BiorxivPayload.model_validate(payload)
-    async with BiorxivHttpService(req) as svc:
-        return (await svc.execute(req)).model_dump()
+async def doaj_http_workflow(payload: Dict[str, Any]) -> Dict[str, Any]:
+    req = DoajPayload.model_validate(payload)
+    async with DoajHttpService(req) as svc:
+        if req.action == "search":
+            return (await svc.search(req)).model_dump()
+    return {"success": False, "warnings": ["unknown_action"]}

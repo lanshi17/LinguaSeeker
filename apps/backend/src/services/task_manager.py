@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import json
+import mimetypes
 import os
 import re
 import shutil
@@ -8,13 +9,24 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    TypedDict,
+    cast,
+)
 from uuid import UUID, uuid4
-from typing import Any, Awaitable, Callable, Dict, List, Literal, Optional, Tuple, TypedDict, cast
-import mimetypes
 
-from loguru import logger
+import httpx
 from langchain_core.runnables.config import RunnableConfig
 from langgraph.errors import EmptyInputError
+from loguru import logger
 
 # Ensure the project root (which contains the `src` package) is importable when this file
 # is invoked directly with `python -m src.services.task_manager` or similar.
@@ -22,8 +34,22 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.domain.agent.document_parsing import collect_parsing_assets, get_document_parsing_agent
+import src.utils.exceptions as exc
+import src.utils.file_utils as file_utils
+from src.api.dependencies import map_error_code
+from src.celery_app import celery_app
+from src.config import settings
+from src.domain.agent.document_parsing import (
+    collect_parsing_assets,
+    get_document_parsing_agent,
+)
 from src.domain.agent.workflow import EvidenceAgent
+from src.domain.graph.sync import SchemaSyncError, get_graph_sync_service
+from src.domain.literature import (
+    get_firecrawl_service,
+    get_pubmed_service,
+    literature_unified_workflow,
+)
 from src.domain.models import (
     DocumentParsingArtifact,
     DocumentParsingResult,
@@ -31,36 +57,30 @@ from src.domain.models import (
     PipelineFiles,
     PipelineResult,
 )
-from src.domain.graph.sync import SchemaSyncError, get_graph_sync_service
-from src.domain.literature import get_firecrawl_service, get_pubmed_service
-from src.tools.db.qdrant_tool import QdrantManager, initialize_knowledge_base
 from src.infrastructure.minio import MinIOClient
 from src.infrastructure.postgres import get_postgres_client
-from src.api.dependencies import map_error_code
-from src.utils.timer import Timer
-import src.utils.exceptions as exc
-import src.utils.file_utils as file_utils
-from src.config import settings
-from src.celery_app import celery_app
 from src.infrastructure.redis import cache_pdf_result
 from src.services.enum import (
     PROCESSING_NODE_TO_STEP,
-    ProcessingStepStatus,
     STEP_TO_WORKFLOW_STATUS,
+    ProcessingStepStatus,
     WorkflowStatus,
     calculate_progress_percentage,
     default_processing_steps,
     merge_processing_step_update,
     normalize_processing_steps,
 )
-
+from src.tools.db.qdrant_tool import QdrantManager, initialize_knowledge_base
+from src.utils.timer import Timer
 
 cfg = settings
 
 _agents = EvidenceAgent()
 _qdrant_manager = QdrantManager()
 _REBUILD_EMPTY_KB = getattr(cfg, "rebuild_empty_knowledge_base", True)
-_HGVS_TOKEN_PATTERN = re.compile(r"(?:[A-Z]{2}_\d+\.\d+:)?[cgp]\.[A-Za-z0-9_+\-*><=()\[\];:]+")
+_HGVS_TOKEN_PATTERN = re.compile(
+    r"(?:[A-Z]{2}_\d+\.\d+:)?[cgp]\.[A-Za-z0-9_+\-*><=()\[\];:]+"
+)
 
 # ---------------------------------------------------------------------------
 # Pipeline exception handling: structured outcome schema
@@ -192,14 +212,23 @@ def _attempt_hgvs_correction(
         if prefix and prefix in corrected.lower():
             idx = corrected.lower().index(prefix)
             end = idx
-            while end < len(corrected) and corrected[end] not in (" ", "\n", "\t", ",", ".", ";"):
+            while end < len(corrected) and corrected[end] not in (
+                " ",
+                "\n",
+                "\t",
+                ",",
+                ".",
+                ";",
+            ):
                 end += 1
             corrected = corrected[:idx] + token + corrected[end:]
         else:
             still_missing.append(token)
 
     if still_missing:
-        block = "\n\n[HGVS Reference]\n" + "\n".join(f"- {tok}" for tok in still_missing)
+        block = "\n\n[HGVS Reference]\n" + "\n".join(
+            f"- {tok}" for tok in still_missing
+        )
         corrected += block
 
     all_restored = len(still_missing) == 0
@@ -254,13 +283,21 @@ def _update_processing_step_status(
         return
 
     try:
-        if not hasattr(postgres, "update_paper_task") or not hasattr(postgres, "get_paper_task"):
+        if not hasattr(postgres, "update_paper_task") or not hasattr(
+            postgres, "get_paper_task"
+        ):
             return
 
         paper_entry = postgres.get_paper_task(task_id)
-        node_trace = getattr(paper_entry, "node_trace", None) if paper_entry is not None else None
+        node_trace = (
+            getattr(paper_entry, "node_trace", None)
+            if paper_entry is not None
+            else None
+        )
         processing_steps = normalize_processing_steps(
-            getattr(paper_entry, "processing_steps", None) if paper_entry is not None else None,
+            getattr(paper_entry, "processing_steps", None)
+            if paper_entry is not None
+            else None,
             node_trace=node_trace,
         )
 
@@ -381,7 +418,9 @@ def _sync_evidence_to_graph(
 ) -> Optional[Dict[str, Any]]:
     """Push extracted evidence into PostgreSQL + Neo4j via GraphSyncService."""
     if not evidence_output:
-        logger.debug("Graph sync skipped for document {}: empty evidence payload", document_id)
+        logger.debug(
+            "Graph sync skipped for document {}: empty evidence payload", document_id
+        )
         return None
 
     payload: Any = evidence_output
@@ -417,7 +456,9 @@ def _sync_evidence_to_graph(
                 if result.get("retryable"):
                     _schedule_evidence_retry(document_id, payload, reason)
             else:
-                logger.info("Graph sync finished for document {}: {}", document_id, result)
+                logger.info(
+                    "Graph sync finished for document {}: {}", document_id, result
+                )
             return result
         except SchemaSyncError as schema_exc:
             logger.error(
@@ -475,7 +516,9 @@ def _materialize_retry_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
         return dict(payload)
 
 
-def _schedule_evidence_retry(document_id: str, payload: Dict[str, Any], reason: str) -> None:
+def _schedule_evidence_retry(
+    document_id: str, payload: Dict[str, Any], reason: str
+) -> None:
     max_retries = getattr(cfg, "evidence_retry_limit", 0)
     if max_retries <= 0:
         logger.debug("Quality retry disabled, skip scheduling for {}", document_id)
@@ -553,7 +596,9 @@ def _detect_warning_codes(source_text: str, en_text: str) -> List[str]:
     }
     if source_hgvs_tokens:
         en_text_lower = (en_text or "").lower()
-        missing_count = sum(1 for token in source_hgvs_tokens if token.lower() not in en_text_lower)
+        missing_count = sum(
+            1 for token in source_hgvs_tokens if token.lower() not in en_text_lower
+        )
         if missing_count == len(source_hgvs_tokens):
             warnings.append("HGVS_AUTOCORRECT_FAILED")
     return warnings
@@ -580,7 +625,9 @@ def _persist_alignments_and_warnings(
             )
         except Exception as exc:
             logger.warning(
-                "Failed to persist sentence alignment for paper {}: {}", paper_task_id, exc
+                "Failed to persist sentence alignment for paper {}: {}",
+                paper_task_id,
+                exc,
             )
 
     merged = list(base_warnings or [])
@@ -599,14 +646,17 @@ def _disable_proxies() -> None:
 @Timer("init_knowledge_base")
 async def init_knowledge_base_if_needed() -> bool:
     try:
-        exists = await _qdrant_manager.check_collection_exists(cfg.qdrant_collection_name)
+        exists = await _qdrant_manager.check_collection_exists(
+            cfg.qdrant_collection_name
+        )
     except Exception as e:
         logger.warning("Qdrant not reachable, skip knowledge base init: {}", e)
         return False
 
     if not exists:
         logger.info(
-            "Collection {} missing, initializing knowledge base...", cfg.qdrant_collection_name
+            "Collection {} missing, initializing knowledge base...",
+            cfg.qdrant_collection_name,
         )
         try:
             await initialize_knowledge_base(cfg.knowledge_docs_dir)
@@ -657,7 +707,9 @@ def _cleanup_managed_upload_paths(file_paths: List[str]) -> None:
                 if parent.exists():
                     shutil.rmtree(parent)
             except OSError as exc:
-                logger.warning("Failed to cleanup managed upload dir {}: {}", parent, exc)
+                logger.warning(
+                    "Failed to cleanup managed upload dir {}: {}", parent, exc
+                )
 
 
 async def _store_outputs_in_minio(
@@ -668,10 +720,16 @@ async def _store_outputs_in_minio(
     minio_client = MinIOClient()
     await minio_client.ensure_buckets()
 
-    origin_md_key = minio_client.build_processed_object_key(document_id, "original_format.md")
+    origin_md_key = minio_client.build_processed_object_key(
+        document_id, "original_format.md"
+    )
     en_md_key = minio_client.build_processed_object_key(document_id, "en_format.md")
-    image_desc_key = minio_client.build_processed_object_key(document_id, "image_descriptions.txt")
-    ps3_evidence_key = minio_client.build_processed_object_key(document_id, "ps3_evidence.json")
+    image_desc_key = minio_client.build_processed_object_key(
+        document_id, "image_descriptions.txt"
+    )
+    ps3_evidence_key = minio_client.build_processed_object_key(
+        document_id, "ps3_evidence.json"
+    )
     image_dir_key = minio_client.build_processed_object_key(document_id, "images")
 
     await minio_client.upload_processed_result_bytes(
@@ -695,7 +753,9 @@ async def _store_outputs_in_minio(
         content_type="text/plain; charset=utf-8",
     )
 
-    await minio_client.upload_processed_result_json(document_id, agent_response.ps3_evidence)
+    await minio_client.upload_processed_result_json(
+        document_id, agent_response.ps3_evidence
+    )
 
     image_urls: List[str] = []
     for img_path in origin_image_paths:
@@ -742,7 +802,9 @@ async def _store_parsing_artifacts_in_minio(
     image_urls: List[str] = []
     for image_path in parsing_result.image_paths:
         image_file = Path(image_path)
-        content_type = mimetypes.guess_type(image_file.name)[0] or "application/octet-stream"
+        content_type = (
+            mimetypes.guess_type(image_file.name)[0] or "application/octet-stream"
+        )
         image_ref = await minio_client.upload_processed_result_bytes(
             document_id=document_id,
             object_name=f"parsing/images/{image_file.name}",
@@ -750,7 +812,9 @@ async def _store_parsing_artifacts_in_minio(
             content_type=content_type,
         )
         image_object_keys.append(image_ref.object_key)
-        image_urls.append(f"{cfg.api_prefix}/results/{document_id}/{image_ref.object_key}")
+        image_urls.append(
+            f"{cfg.api_prefix}/results/{document_id}/{image_ref.object_key}"
+        )
 
     return DocumentParsingArtifact(
         markdown_object_key=markdown_ref.object_key,
@@ -790,6 +854,203 @@ async def _store_acquired_web_content(
     return upload_ref.object_key
 
 
+def _resolve_download_path(downloads: List[Dict[str, Any]]) -> Optional[Path]:
+    for item in downloads:
+        if not isinstance(item, dict):
+            continue
+        candidate = str(
+            item.get("file_path") or item.get("path") or item.get("saved_path") or ""
+        ).strip()
+        if not candidate:
+            continue
+        file_path = Path(candidate)
+        if file_path.is_file():
+            return file_path
+    return None
+
+
+def _resolve_download_url(downloads: List[Dict[str, Any]]) -> Optional[str]:
+    for item in downloads:
+        if not isinstance(item, dict):
+            continue
+        for key in ("pdf_url", "doc_url", "url"):
+            candidate = str(item.get(key) or "").strip()
+            if candidate.startswith("http://") or candidate.startswith("https://"):
+                return candidate
+    return None
+
+
+def _is_pdf_file(path: Path) -> bool:
+    try:
+        return path.is_file() and path.read_bytes().startswith(b"%PDF-")
+    except Exception:
+        return False
+
+
+def _safe_pdf_filename(source: str, stem: str) -> str:
+    normalized = re.sub(r"[^a-zA-Z0-9._-]+", "-", str(stem or "").strip()).strip("-.")
+    if not normalized:
+        normalized = f"{source}-paper"
+    if not normalized.lower().endswith(".pdf"):
+        normalized = f"{normalized}.pdf"
+    return normalized
+
+
+async def _download_url_to_file(url: str, target: Path) -> Tuple[bool, Optional[str]]:
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            async with client.stream("GET", url) as response:
+                response.raise_for_status()
+                with target.open("wb") as output:
+                    async for chunk in response.aiter_bytes(1024 * 1024):
+                        if chunk:
+                            output.write(chunk)
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
+
+
+async def _try_download_and_store_literature_pdf(
+    *,
+    document_id: str,
+    source: Literal["pubmed", "web"],
+    query: str,
+    identifiers: List[str],
+    detail_link: Optional[str] = None,
+    selected_title: Optional[str] = None,
+) -> Dict[str, Any]:
+    if not document_id:
+        return {"downloaded": False, "reason": "document_id_missing"}
+
+    download_dir = Path("/tmp/literature-downloads") / document_id
+    download_dir.mkdir(parents=True, exist_ok=True)
+
+    payload: Dict[str, Any] = {
+        "action": "download",
+        "query": str(query or ""),
+        "identifiers": [str(item).strip() for item in identifiers if str(item).strip()],
+        "prefer": "auto",
+        "download_path": str(download_dir),
+        "selected_index": 0,
+        "raw": False,
+    }
+    if detail_link:
+        payload["detail_link"] = str(detail_link)
+    if selected_title:
+        payload["selected_title"] = str(selected_title)
+
+    try:
+        response = await literature_unified_workflow(payload)
+    except Exception as exc:
+        shutil.rmtree(download_dir, ignore_errors=True)
+        return {
+            "downloaded": False,
+            "reason": "unified_workflow_error",
+            "error": str(exc),
+        }
+
+    route = response.get("route") if isinstance(response, dict) else {}
+    warnings = list(
+        (response.get("warnings") if isinstance(response, dict) else []) or []
+    )
+    downloads = list(
+        (response.get("downloads") if isinstance(response, dict) else []) or []
+    )
+
+    file_path = _resolve_download_path(downloads)
+    if file_path is None:
+        fallback_url = _resolve_download_url(downloads)
+        if fallback_url:
+            fallback_name = _safe_pdf_filename(source, selected_title or document_id)
+            candidate = download_dir / fallback_name
+            ok, error = await _download_url_to_file(fallback_url, candidate)
+            if not ok:
+                warnings.append(f"download_url_failed:{error}")
+            elif candidate.is_file():
+                file_path = candidate
+
+    if file_path is None or not file_path.is_file():
+        shutil.rmtree(download_dir, ignore_errors=True)
+        return {
+            "downloaded": False,
+            "reason": "pdf_not_found",
+            "route": route,
+            "warnings": warnings,
+            "downloads_count": len(downloads),
+        }
+
+    if not _is_pdf_file(file_path):
+        shutil.rmtree(download_dir, ignore_errors=True)
+        return {
+            "downloaded": False,
+            "reason": "invalid_pdf_signature",
+            "route": route,
+            "warnings": warnings,
+            "downloads_count": len(downloads),
+            "local_file_path": str(file_path),
+        }
+
+    payload_bytes = file_path.read_bytes()
+    file_hash = hashlib.sha256(payload_bytes).hexdigest()
+    filename = _safe_pdf_filename(source, file_path.name)
+    storage_key = MinIOClient.build_literature_object_key(file_hash, filename)
+    provider = None
+    if isinstance(route, dict):
+        used = route.get("used")
+        if used == "api":
+            provider = route.get("api_provider")
+        elif used == "web":
+            provider = route.get("web_provider")
+
+    upload_ref = None
+    try:
+        minio_client = MinIOClient()
+        await minio_client.ensure_buckets()
+        upload_ref = await minio_client.upload_literature_upload(
+            payload=payload_bytes,
+            content_type="application/pdf",
+            storage_key=storage_key,
+            filename=filename,
+            metadata={
+                "source": source,
+                "provider": str(provider or ""),
+                "route_used": str(route.get("used") if isinstance(route, dict) else ""),
+                "route_reason": str(
+                    route.get("reason") if isinstance(route, dict) else ""
+                ),
+                "uploaded_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+    except Exception as exc:
+        shutil.rmtree(download_dir, ignore_errors=True)
+        return {
+            "downloaded": False,
+            "reason": "minio_upload_failed",
+            "error": str(exc),
+            "route": route,
+            "warnings": warnings,
+            "local_file_path": str(file_path),
+        }
+    finally:
+        shutil.rmtree(download_dir, ignore_errors=True)
+
+    return {
+        "downloaded": True,
+        "route": route,
+        "provider": provider,
+        "warnings": warnings,
+        "downloads_count": len(downloads),
+        "local_file_name": filename,
+        "sha256": file_hash,
+        "size_bytes": len(payload_bytes),
+        "object_key": upload_ref.object_key if upload_ref else None,
+        "bucket": str(getattr(upload_ref.bucket, "value", upload_ref.bucket))
+        if upload_ref
+        else None,
+    }
+
+
 # ---------------------------------------------------------------------------
 # 5-node pipeline runners  (acquisition → parsing → translation → extraction → acmg)
 # ---------------------------------------------------------------------------
@@ -822,7 +1083,9 @@ def _log_node_start(
             message=f"Node {node} started",
         )
     except Exception as log_exc:
-        logger.warning("Failed to log node {} start for {}: {}", node, paper_task_id, log_exc)
+        logger.warning(
+            "Failed to log node {} start for {}: {}", node, paper_task_id, log_exc
+        )
 
 
 def _log_node_end(
@@ -847,22 +1110,32 @@ def _log_node_end(
             status=status,
             node=node,
             error_code=error_code,
-            message=message or (f"Node {node} completed" if success else f"Node {node} failed"),
+            message=message
+            or (f"Node {node} completed" if success else f"Node {node} failed"),
             payload={"attempt": attempt},
         )
         _update_processing_step_status(
             postgres,
             task_id,
             step=node,
-            status=(ProcessingStepStatus.completed if success else ProcessingStepStatus.failed),
+            status=(
+                ProcessingStepStatus.completed
+                if success
+                else ProcessingStepStatus.failed
+            ),
             error_code=error_code,
-            message=message or (f"Node {node} completed" if success else f"Node {node} failed"),
+            message=message
+            or (f"Node {node} completed" if success else f"Node {node} failed"),
         )
     except Exception as log_exc:
-        logger.warning("Failed to log node {} end for {}: {}", node, paper_task_id, log_exc)
+        logger.warning(
+            "Failed to log node {} end for {}: {}", node, paper_task_id, log_exc
+        )
 
 
-def _update_node_trace(node_trace: Dict[str, str], node: str, outcome: str) -> Dict[str, str]:
+def _update_node_trace(
+    node_trace: Dict[str, str], node: str, outcome: str
+) -> Dict[str, str]:
     node_trace[node] = outcome
     return node_trace
 
@@ -914,7 +1187,9 @@ async def run_node_parsing(
         parsing_result, attempt = await _run_async_with_node_policy(
             "parsing",
             "parse_documents",
-            lambda: asyncio.to_thread(get_document_parsing_agent().parse_documents, file_paths),
+            lambda: asyncio.to_thread(
+                get_document_parsing_agent().parse_documents, file_paths
+            ),
         )
     except Exception as parsing_exc:
         _log_node_end(
@@ -1226,7 +1501,9 @@ async def _stream_supervisor_graph(
     prev_node: str | None = None
 
     try:
-        async for chunk in graph.astream(initial_state, config=config, stream_mode="updates"):
+        async for chunk in graph.astream(
+            initial_state, config=config, stream_mode="updates"
+        ):
             for node_name, node_output in chunk.items():
                 if prev_node in _SUPERVISOR_PROGRESS_NODES:
                     _log_node_end(postgres, paper_task_id, prev_node, success=True)
@@ -1294,8 +1571,12 @@ def _run_supervisor_pipeline(
                 object,
                 {
                     "request_id": request_id or "",
-                    "paper_task_id": int(paper_task_id) if str(paper_task_id).isdigit() else 0,
-                    "document_id": int(document_id) if str(document_id).isdigit() else 0,
+                    "paper_task_id": int(paper_task_id)
+                    if str(paper_task_id).isdigit()
+                    else 0,
+                    "document_id": int(document_id)
+                    if str(document_id).isdigit()
+                    else 0,
                     "celery_task_id": "",
                     "source": source,
                     "file_paths": file_paths or [],
@@ -1388,7 +1669,8 @@ def _resume_supervisor_pipeline(
             }
         except Exception as resume_exc:
             logger.exception(
-                "Failed to resume supervisor workflow for paper_task_id={}", paper_task_id
+                "Failed to resume supervisor workflow for paper_task_id={}",
+                paper_task_id,
             )
             return {
                 "document_id": document_id,
@@ -1573,7 +1855,9 @@ def process_pdf_task(
             if request_id:
                 postgres.update_task_request(request_id, status="running")
         except Exception as init_exc:
-            logger.exception("Unable to mark paper task {} running: {}", paper_task_id, init_exc)
+            logger.exception(
+                "Unable to mark paper task {} running: {}", paper_task_id, init_exc
+            )
             _record_issue(
                 pipeline_outcome,
                 kind="warning",
@@ -1667,7 +1951,9 @@ def process_pdf_task(
 
         # Store outputs in MinIO
         saved_files = asyncio.run(
-            _store_outputs_in_minio(agent_response, parsing_result.image_paths, document_id)
+            _store_outputs_in_minio(
+                agent_response, parsing_result.image_paths, document_id
+            )
         )
 
         # --- Node 5: ACMG / Graph Sync ---
@@ -1698,7 +1984,9 @@ def process_pdf_task(
         if isinstance(payload, dict):
             if file_size_bytes is not None:
                 payload.setdefault("file_size_bytes", file_size_bytes)
-            payload.setdefault("processing_duration_seconds", processing_duration_seconds)
+            payload.setdefault(
+                "processing_duration_seconds", processing_duration_seconds
+            )
             payload.setdefault("created_at", start_time.isoformat())
             payload.setdefault("updated_at", end_time.isoformat())
             if graph_sync_result is not None:
@@ -1748,7 +2036,9 @@ def process_pdf_task(
                         postgres.refresh_task_request_status(request_id)
             except Exception as success_exc:
                 logger.exception(
-                    "Unable to mark paper task {} success: {}", paper_task_id, success_exc
+                    "Unable to mark paper task {} success: {}",
+                    paper_task_id,
+                    success_exc,
                 )
                 _record_issue(
                     pipeline_outcome,
@@ -1762,7 +2052,9 @@ def process_pdf_task(
             try:
                 cache_pdf_result(file_hash, payload)
             except Exception as cache_exc:
-                logger.exception("Failed to cache result for hash {}: {}", file_hash, cache_exc)
+                logger.exception(
+                    "Failed to cache result for hash {}: {}", file_hash, cache_exc
+                )
                 _record_issue(
                     pipeline_outcome,
                     kind="warning",
@@ -1785,7 +2077,9 @@ def process_pdf_task(
                 if retry_count >= max_retries:
                     error_code = map_error_code(500, str(exc_outer))
                     end_time = datetime.now(timezone.utc)
-                    processing_duration_seconds = (end_time - start_time).total_seconds()
+                    processing_duration_seconds = (
+                        end_time - start_time
+                    ).total_seconds()
                     error_details = {
                         "error_code": error_code,
                         "message": str(exc_outer),
@@ -1796,7 +2090,9 @@ def process_pdf_task(
                         workflow_status=WorkflowStatus.failed.value,
                         error_code=error_code,
                         node_trace=node_trace,
-                        processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                        processing_steps=normalize_processing_steps(
+                            None, node_trace=node_trace
+                        ),
                         processing_duration_seconds=processing_duration_seconds,
                         error_details=error_details,
                     )
@@ -1810,7 +2106,9 @@ def process_pdf_task(
                     if request_id:
                         postgres.refresh_task_request_status(request_id)
             except Exception as mark_exc:
-                logger.warning("Unable to mark paper task {} failed: {}", paper_task_id, mark_exc)
+                logger.warning(
+                    "Unable to mark paper task {} failed: {}", paper_task_id, mark_exc
+                )
         if retry_count >= max_retries:
             _cleanup_managed_upload_paths(file_paths)
         raise
@@ -1908,21 +2206,27 @@ def process_pubmed_paper_task(
             paper_task_id,
             "acquisition",
             success=False,
-            error_code=map_error_code(500, f"Fetch timeout while querying PubMed: {acq_exc}"),
+            error_code=map_error_code(
+                500, f"Fetch timeout while querying PubMed: {acq_exc}"
+            ),
             message=f"PubMed fetch failed: {acq_exc}",
         )
         node_trace = _update_node_trace(node_trace, "acquisition", "failed")
         retry_count = int(getattr(self.request, "retries", 0))
         max_retries = int(getattr(self, "max_retries", 0))
         if retry_count >= max_retries:
-            error_code = map_error_code(500, f"Fetch timeout while querying PubMed: {acq_exc}")
+            error_code = map_error_code(
+                500, f"Fetch timeout while querying PubMed: {acq_exc}"
+            )
             postgres.update_paper_task(
                 paper_task_id,
                 status="failed",
                 workflow_status=WorkflowStatus.failed.value,
                 error_code=error_code,
                 node_trace=node_trace,
-                processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                processing_steps=normalize_processing_steps(
+                    None, node_trace=node_trace
+                ),
                 error_details={"error_code": error_code, "message": str(acq_exc)},
             )
             postgres.refresh_task_request_status(request_id)
@@ -1946,7 +2250,10 @@ def process_pubmed_paper_task(
             error_code=error_code,
             node_trace=node_trace,
             processing_steps=normalize_processing_steps(None, node_trace=node_trace),
-            error_details={"error_code": error_code, "message": "No usable PubMed payload"},
+            error_details={
+                "error_code": error_code,
+                "message": "No usable PubMed payload",
+            },
         )
         postgres.refresh_task_request_status(request_id)
         return {
@@ -1956,6 +2263,24 @@ def process_pubmed_paper_task(
             "status": "failed",
             "error_code": error_code,
         }
+
+    pubmed_pdf_result = asyncio.run(
+        _try_download_and_store_literature_pdf(
+            document_id=document_id,
+            source="pubmed",
+            query=f"PMID:{pmid}",
+            identifiers=[str(pmid), str(getattr(article, "doi", "") or "")],
+            selected_title=str(getattr(article, "title", None) or f"PMID-{pmid}"),
+        )
+    )
+    pubmed_fulltext_unavailable = not bool(pubmed_pdf_result.get("downloaded"))
+    postgres.append_paper_task_log(
+        paper_task_id,
+        status="running",
+        node="acquisition",
+        message=f"PubMed fulltext download {'succeeded' if not pubmed_fulltext_unavailable else 'unavailable'} for PMID:{pmid}",
+        payload={"pdf_download": pubmed_pdf_result},
+    )
 
     markdown_content = (
         f"# {article.title or f'PMID:{pmid}'}\n\n"
@@ -1996,7 +2321,9 @@ def process_pubmed_paper_task(
                 workflow_status=WorkflowStatus.failed.value,
                 error_code=error_code,
                 node_trace=node_trace,
-                processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                processing_steps=normalize_processing_steps(
+                    None, node_trace=node_trace
+                ),
                 error_details={"error_code": error_code, "message": str(trans_exc)},
             )
             postgres.refresh_task_request_status(request_id)
@@ -2023,7 +2350,9 @@ def process_pubmed_paper_task(
                 workflow_status=WorkflowStatus.failed.value,
                 error_code=error_code,
                 node_trace=node_trace,
-                processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                processing_steps=normalize_processing_steps(
+                    None, node_trace=node_trace
+                ),
                 error_details={"error_code": error_code, "message": str(ext_exc)},
             )
             postgres.refresh_task_request_status(request_id)
@@ -2084,7 +2413,9 @@ def process_pubmed_paper_task(
             error_code="GRAPH_SYNC_FAILED",
         )
 
-    base_warnings = ["FULLTEXT_UNAVAILABLE"] + translation_warnings
+    base_warnings = list(translation_warnings)
+    if pubmed_fulltext_unavailable:
+        base_warnings.insert(0, "FULLTEXT_UNAVAILABLE")
     warning_codes = _persist_alignments_and_warnings(
         postgres,
         paper_task_id,
@@ -2099,17 +2430,24 @@ def process_pubmed_paper_task(
     except (TypeError, ValueError, AttributeError):
         document_identifier = document_id
 
-    postgres.update_document(
-        document_identifier,
-        status="success",
-        summary=f"PubMed metadata/abstract fallback used for PMID:{pmid}",
-    )
+    document_update_fields: Dict[str, Any] = {
+        "status": "success",
+        "summary": (
+            f"PubMed metadata/abstract fallback used for PMID:{pmid}"
+            if pubmed_fulltext_unavailable
+            else f"PubMed fulltext PDF acquired for PMID:{pmid}"
+        ),
+    }
+    if pubmed_pdf_result.get("object_key"):
+        document_update_fields["local_path"] = pubmed_pdf_result.get("object_key")
+    postgres.update_document(document_identifier, **document_update_fields)
     postgres.update_paper_task(
         paper_task_id,
         status="success",
         workflow_status=WorkflowStatus.completed.value,
         error_code=None,
         error_details=None,
+        fulltext_unavailable=pubmed_fulltext_unavailable,
         node_trace=node_trace,
         warning_codes=warning_codes,
         processing_steps=_get_paper_task_processing_steps(
@@ -2117,7 +2455,9 @@ def process_pubmed_paper_task(
             paper_task_id,
             node_trace=node_trace,
         ),
-        processing_duration_seconds=(datetime.now(timezone.utc) - start_time).total_seconds(),
+        processing_duration_seconds=(
+            datetime.now(timezone.utc) - start_time
+        ).total_seconds(),
     )
     postgres.append_paper_task_log(
         paper_task_id,
@@ -2125,7 +2465,8 @@ def process_pubmed_paper_task(
         node="acmg",
         message=f"PubMed fallback completed for PMID:{pmid}",
         payload={
-            "fulltext_unavailable": True,
+            "fulltext_unavailable": pubmed_fulltext_unavailable,
+            "pdf_download": pubmed_pdf_result,
             "graph_sync_result": graph_sync_result,
         },
     )
@@ -2134,7 +2475,8 @@ def process_pubmed_paper_task(
         "pmid": pmid,
         "document_id": document_id,
         "paper_task_id": paper_task_id,
-        "fulltext_unavailable": True,
+        "fulltext_unavailable": pubmed_fulltext_unavailable,
+        "pdf_download": pubmed_pdf_result,
         "status": "success",
         "files": files.model_dump() if hasattr(files, "model_dump") else files,
         "graph_sync_result": graph_sync_result,
@@ -2213,7 +2555,9 @@ def process_web_page_task(
         )
         node_trace = _update_node_trace(node_trace, "acquisition", "success")
     except Exception as acq_exc:
-        error_code = map_error_code(500, f"Fetch timeout while crawling web page: {acq_exc}")
+        error_code = map_error_code(
+            500, f"Fetch timeout while crawling web page: {acq_exc}"
+        )
         _log_node_end(
             postgres,
             paper_task_id,
@@ -2232,7 +2576,9 @@ def process_web_page_task(
                 workflow_status=WorkflowStatus.failed.value,
                 error_code=error_code,
                 node_trace=node_trace,
-                processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                processing_steps=normalize_processing_steps(
+                    None, node_trace=node_trace
+                ),
                 error_details={"error_code": error_code, "message": str(acq_exc)},
             )
             postgres.refresh_task_request_status(request_id)
@@ -2248,7 +2594,10 @@ def process_web_page_task(
             error_code=error_code,
             node_trace=_update_node_trace(node_trace, "acquisition", "failed"),
             processing_steps=normalize_processing_steps(None, node_trace=node_trace),
-            error_details={"error_code": error_code, "message": "No usable web crawl payload"},
+            error_details={
+                "error_code": error_code,
+                "message": "No usable web crawl payload",
+            },
         )
         postgres.refresh_task_request_status(request_id)
         return {
@@ -2267,6 +2616,26 @@ def process_web_page_task(
             metadata=getattr(crawl_result, "metadata", None),
         )
     )
+    final_url = str(getattr(crawl_result, "final_url", None) or url)
+    crawl_title = str(getattr(crawl_result, "title", None) or final_url)
+    web_pdf_result = asyncio.run(
+        _try_download_and_store_literature_pdf(
+            document_id=document_id,
+            source="web",
+            query=crawl_title,
+            identifiers=[final_url],
+            detail_link=final_url,
+            selected_title=crawl_title,
+        )
+    )
+    web_fulltext_unavailable = not bool(web_pdf_result.get("downloaded"))
+    postgres.append_paper_task_log(
+        paper_task_id,
+        status="running",
+        node="acquisition",
+        message=f"Web fulltext download {'succeeded' if not web_fulltext_unavailable else 'unavailable'} for URL:{final_url}",
+        payload={"pdf_download": web_pdf_result, "final_url": final_url},
+    )
 
     document_identifier: Any = document_id
     try:
@@ -2274,11 +2643,15 @@ def process_web_page_task(
     except (TypeError, ValueError, AttributeError):
         document_identifier = document_id
 
+    acquisition_summary = f"Web crawl content acquired from {final_url}"
+    if not web_fulltext_unavailable and web_pdf_result.get("object_key"):
+        acquisition_summary = f"{acquisition_summary}; fulltext PDF stored at {web_pdf_result.get('object_key')}"
+
     postgres.update_document(
         document_identifier,
-        title=str(getattr(crawl_result, "title", None) or url),
+        title=crawl_title,
         local_path=acquisition_object_key,
-        summary=f"Web crawl content acquired from {str(getattr(crawl_result, 'final_url', None) or url)}",
+        summary=acquisition_summary,
     )
 
     node_trace = _update_node_trace(node_trace, "parsing", "markdown_direct")
@@ -2310,7 +2683,9 @@ def process_web_page_task(
                 workflow_status=WorkflowStatus.failed.value,
                 error_code=error_code,
                 node_trace=node_trace,
-                processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                processing_steps=normalize_processing_steps(
+                    None, node_trace=node_trace
+                ),
                 error_details={"error_code": error_code, "message": str(trans_exc)},
             )
             postgres.refresh_task_request_status(request_id)
@@ -2336,7 +2711,9 @@ def process_web_page_task(
                 workflow_status=WorkflowStatus.failed.value,
                 error_code=error_code,
                 node_trace=node_trace,
-                processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+                processing_steps=normalize_processing_steps(
+                    None, node_trace=node_trace
+                ),
                 error_details={"error_code": error_code, "message": str(ext_exc)},
             )
             postgres.refresh_task_request_status(request_id)
@@ -2396,20 +2773,23 @@ def process_web_page_task(
             error_code="GRAPH_SYNC_FAILED",
         )
 
+    base_warnings = list(translation_warnings)
+    if web_fulltext_unavailable:
+        base_warnings.append("FULLTEXT_UNAVAILABLE")
     warning_codes = _persist_alignments_and_warnings(
         postgres,
         paper_task_id,
         source_text=source_text,
         en_text=en_text,
-        base_warnings=translation_warnings,
+        base_warnings=base_warnings,
     )
 
     postgres.update_document(
         document_identifier,
         status="success",
-        title=str(getattr(crawl_result, "title", None) or url),
+        title=crawl_title,
         local_path=acquisition_object_key,
-        summary=f"Web crawl content acquired from {str(getattr(crawl_result, 'final_url', None) or url)}",
+        summary=acquisition_summary,
     )
     postgres.update_paper_task(
         paper_task_id,
@@ -2417,6 +2797,7 @@ def process_web_page_task(
         workflow_status=WorkflowStatus.completed.value,
         error_code=None,
         error_details=None,
+        fulltext_unavailable=web_fulltext_unavailable,
         node_trace=node_trace,
         warning_codes=warning_codes,
         processing_steps=_get_paper_task_processing_steps(
@@ -2424,7 +2805,9 @@ def process_web_page_task(
             paper_task_id,
             node_trace=node_trace,
         ),
-        processing_duration_seconds=(datetime.now(timezone.utc) - start_time).total_seconds(),
+        processing_duration_seconds=(
+            datetime.now(timezone.utc) - start_time
+        ).total_seconds(),
     )
     postgres.append_paper_task_log(
         paper_task_id,
@@ -2433,16 +2816,20 @@ def process_web_page_task(
         message=f"Web crawl pipeline completed for URL:{url}",
         payload={
             "source_url": url,
-            "final_url": str(getattr(crawl_result, "final_url", None) or url),
+            "final_url": final_url,
+            "fulltext_unavailable": web_fulltext_unavailable,
+            "pdf_download": web_pdf_result,
             "graph_sync_result": graph_sync_result,
         },
     )
     postgres.refresh_task_request_status(request_id)
     return {
         "source_url": url,
-        "final_url": str(getattr(crawl_result, "final_url", None) or url),
+        "final_url": final_url,
         "document_id": document_id,
         "paper_task_id": paper_task_id,
+        "fulltext_unavailable": web_fulltext_unavailable,
+        "pdf_download": web_pdf_result,
         "status": "success",
         "files": files.model_dump() if hasattr(files, "model_dump") else files,
         "graph_sync_result": graph_sync_result,
