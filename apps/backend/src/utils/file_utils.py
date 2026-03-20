@@ -1,6 +1,7 @@
 """File utility functions for downloading and extracting files."""
 
 import os
+import shutil
 import tempfile
 import zipfile
 from pathlib import Path
@@ -15,8 +16,36 @@ from .exceptions import FileProcessingException, SuppressAndLog
 DEFAULT_DOWNLOAD_TIMEOUT = 300
 
 
+def ensure_directory_exists(path: str) -> str:
+    try:
+        os.makedirs(path, exist_ok=True)
+        return path
+    except OSError as e:
+        logger.error(f"Failed to create directory {path}: {e}")
+        raise FileProcessingException(f"Failed to create directory: {e}")
+
+
+def cleanup_old_temp_folders(base_dir: str, keep_latest: int = 3) -> None:
+    path = Path(base_dir)
+    if not path.exists() or not path.is_dir():
+        return
+
+    directories = [entry for entry in path.iterdir() if entry.is_dir()]
+    directories.sort(key=lambda entry: entry.stat().st_mtime, reverse=True)
+
+    for old_dir in directories[max(keep_latest, 0) :]:
+        try:
+            shutil.rmtree(old_dir)
+            logger.info(f"Removed old temp directory: {old_dir}")
+        except OSError as e:
+            logger.warning(f"Failed to remove temp directory {old_dir}: {e}")
+
+
 def download_file(
-    url: str, destination: str, timeout: int = DEFAULT_DOWNLOAD_TIMEOUT
+    url: str,
+    destination: str,
+    timeout: int = DEFAULT_DOWNLOAD_TIMEOUT,
+    allow_insecure_fallback: bool = False,
 ) -> str:
     """Download a file from a URL to a destination path.
 
@@ -44,8 +73,36 @@ def download_file(
         logger.info(f"File downloaded successfully to {destination}")
         return destination
     except requests.RequestException as e:
-        logger.error(f"Failed to download file from {url}: {e}")
-        raise FileProcessingException(f"Failed to download file: {e}")
+        if not allow_insecure_fallback:
+            logger.error(f"Failed to download file from {url}: {e}")
+            raise FileProcessingException(f"Failed to download file: {e}")
+
+        logger.warning(
+            f"Download failed with TLS verification enabled for {url}, retrying insecurely: {e}"
+        )
+
+        try:
+            insecure_response = requests.get(
+                url,
+                stream=True,
+                timeout=timeout,
+                verify=False,
+            )
+            insecure_response.raise_for_status()
+
+            with open(destination, "wb") as f:
+                for chunk in insecure_response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+
+            logger.info(
+                f"File downloaded successfully to {destination} with insecure fallback"
+            )
+            return destination
+        except requests.RequestException as insecure_error:
+            logger.error(f"Failed to download file from {url}: {insecure_error}")
+            raise FileProcessingException(f"Failed to download file: {insecure_error}")
+
     except IOError as e:
         logger.error(f"Failed to save downloaded file to {destination}: {e}")
         raise FileProcessingException(f"Failed to save file: {e}")

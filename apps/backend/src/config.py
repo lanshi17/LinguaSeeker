@@ -244,15 +244,11 @@ class MinerUConfig:
     status_url: str = "https://mineru.net/api/v4/extract/task/"  # https://mineru.net/api/v4/extract/task/{task_id}
     batch_status_url: str = "https://mineru.net/api/v4/extract-results/batch/"  # https://mineru.net/api/v4/extract-results/batch/{batch_id}
     model_version: str = "vlm"
-    extra_formats: list[str] = None
+    extra_formats: list[str] = field(default_factory=lambda: ["html"])
     api_token: str = ""
     pipeline_id: str = ""
     timeout: int = 300
     max_file_size_mb: int = 100
-
-    def __post_init__(self):
-        if self.extra_formats is None:
-            self.extra_formats = ["html"]
 
 
 @dataclass
@@ -329,17 +325,26 @@ class QdrantConfig:
 
 @dataclass
 class MinIOConfig:
-    """MinIO对象存储配置"""
+    """MinIO配置"""
 
     endpoint: str = "localhost:9000"
-    access_key: str = ""  # 根凭证
-    secret_key: str = ""  # 根凭证
-    bucket_name: str = "acmg-documents"
+    access_key: str = "minioadmin"
+    secret_key: str = "minioadmin"
+    bucket_name: str = "acmg-bucket"
     uploads_bucket: str = "literature-uploads"
     results_bucket: str = "processed-results"
     api: str = "s3v4"
-    path: str = "auto"
-    secure: bool = False  # 是否启用SSL/TLS
+    path: str = "/"
+    secure: bool = True
+
+
+@dataclass(frozen=True)
+class LLMTriplet:
+    """Resolved LLM configuration triplet for a role."""
+
+    api_key: str
+    base_url: str
+    model: str
 
 
 class AppConfig:
@@ -358,10 +363,10 @@ class AppConfig:
         self.port: int = 8000
 
         # 服务配置
-        self.llm: Optional[LLMConfig] = LLMConfig()
-        self.embedding: Optional[EmbeddingConfig] = EmbeddingConfig()
-        self.rerank: Optional[RerankConfig] = RerankConfig()
-        self.mineru: Optional[MinerUConfig] = MinerUConfig()
+        self.llm: LLMConfig = LLMConfig()
+        self.embedding: EmbeddingConfig = EmbeddingConfig()
+        self.rerank: RerankConfig = RerankConfig()
+        self.mineru: MinerUConfig = MinerUConfig()
 
         # 数据库配置
         self.redis: RedisConfig = RedisConfig()
@@ -974,7 +979,7 @@ class Settings(BaseSettings):
     )
 
 
-def resolve_llm_triplet(settings: Settings, role: str) -> tuple[str, str, str]:
+def resolve_llm_triplet(settings: Settings, role: str) -> LLMTriplet:
     """Resolve LLM configuration triplet for a given role.
 
     Args:
@@ -982,7 +987,7 @@ def resolve_llm_triplet(settings: Settings, role: str) -> tuple[str, str, str]:
         role: LLM role name (retrieval/parsing/mt/format/vlm/evidence/classification/arbitration/ocr)
 
     Returns:
-        tuple containing (api_key, base_url, model) for the role
+        LLMTriplet containing the api key, base url, and model for the role
 
     Raises:
         ValueError: If role is invalid
@@ -1014,7 +1019,7 @@ def resolve_llm_triplet(settings: Settings, role: str) -> tuple[str, str, str]:
         base_url = getattr(settings, f"{role}_base_url")
         model = getattr(settings, f"{role}_model")
 
-    return api_key, base_url, model
+    return LLMTriplet(api_key=api_key, base_url=base_url, model=model)
 
 
 class ConfigManager:
@@ -1023,7 +1028,7 @@ class ConfigManager:
     def __init__(self, settings: Settings):
         self.settings = settings
 
-    def get_agent_config(self, role: str) -> dict:
+    def get_agent_config(self, role: str) -> dict[str, Any]:
         """获取指定角色的智能体配置"""
         if role not in {
             "retrieval",
@@ -1047,7 +1052,7 @@ class ConfigManager:
             "max_retries": self.settings.llm_max_retries,
         }
 
-    def get_database_config(self, db_type: str) -> dict:
+    def get_database_config(self, db_type: str) -> dict[str, Any]:
         """获取数据库配置"""
         if db_type == "redis":
             return {
@@ -1077,7 +1082,7 @@ class ConfigManager:
         else:
             raise ValueError(f"Unknown database type: {db_type}")
 
-    def get_vector_db_config(self) -> dict:
+    def get_vector_db_config(self) -> dict[str, Any]:
         """获取向量数据库配置"""
         if self.settings.vector_db.lower() == "qdrant":
             return {
