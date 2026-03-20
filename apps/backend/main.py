@@ -61,6 +61,14 @@ def _build_root_payload() -> Dict[str, Any]:
     }
 
 
+def _build_api_prefix() -> str:
+    base = str(getattr(cfg, "api_prefix", "") or "").rstrip("/")
+    version = str(getattr(cfg, "api_version", "") or "").strip("/")
+    if version and not base.endswith(f"/{version}"):
+        return f"{base}/{version}"
+    return base or ""
+
+
 def _maybe_clear_proxy_env() -> None:
     if not getattr(cfg, "clear_proxy_env_on_startup", False):
         return
@@ -155,10 +163,12 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
-app.include_router(api_routers, prefix=cfg.api_prefix)
-app.include_router(task_api_routers, prefix=cfg.api_prefix)
-app.include_router(evidence_api_routers, prefix=cfg.api_prefix)
-app.include_router(stream_api_routers, prefix=cfg.api_prefix)
+_api_prefix = _build_api_prefix()
+
+app.include_router(api_routers, prefix=_api_prefix)
+app.include_router(task_api_routers, prefix=_api_prefix)
+app.include_router(evidence_api_routers, prefix=_api_prefix)
+app.include_router(stream_api_routers, prefix=_api_prefix)
 
 
 @app.exception_handler(ACMGException)

@@ -9,12 +9,18 @@ ACMG-PS3 智能评级系统 - 后端核心模块
 - utils: 工具层，包含通用工具函数和辅助类
 """
 
-# 导入核心配置
-from .config import settings
-
 __all__ = [
     "settings",
 ]
+
+
+def __getattr__(name: str):
+    if name == "settings":
+        from .config import get_settings
+
+        return get_settings()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 # 版本信息
 __version__ = "1.0.0"
