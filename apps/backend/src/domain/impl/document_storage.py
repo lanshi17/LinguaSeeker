@@ -5,8 +5,8 @@ from typing import Any, Dict, Optional
 from datetime import datetime, timezone
 import os
 
+from src.config import AppConfig
 from src.infrastructure.store.minio_store import MinIOStore
-from src.configs.database_config import DatabaseConfig
 from src.utils.exceptions import StoreException
 from src.utils.logger import Logger
 
@@ -17,11 +17,11 @@ class DocumentStorage:
     def __init__(
         self,
         store: Optional[MinIOStore] = None,
-        db_config: Optional[DatabaseConfig] = None,
+        config: Optional[AppConfig] = None,
     ):
         self.logger = Logger.get_logger("DocumentStorage")
         self._minio_store: Optional[MinIOStore] = store
-        self._db_config = db_config or DatabaseConfig.from_env()
+        self._config = config or AppConfig.from_env()
         self._store_init_error: Optional[Exception] = None
         if self._minio_store:
             self.logger.info("DocumentStorage initialized with injected MinIOStore")
@@ -62,7 +62,6 @@ class DocumentStorage:
             "minio_files": uploaded_files,
         }
 
-
     def _store_zip_result(self, zip_url: Optional[str], object_prefix: str):
         if not zip_url:
             raise ValueError("MinerU did not return a ZIP URL")
@@ -81,7 +80,7 @@ class DocumentStorage:
     def _get_minio_store(self) -> MinIOStore:
         if self._minio_store is None:
             try:
-                self._minio_store = MinIOStore(self._db_config)
+                self._minio_store = MinIOStore(self._config)
                 self._store_init_error = None
                 self.logger.info("Lazy-initialized MinIOStore instance")
             except StoreException as exc:

@@ -69,10 +69,12 @@ class InteractionAgent:
         return self._session_locks.setdefault(session_id, asyncio.Lock())
 
     def _get_redis_connection(self):
+        redis_client = self._redis_client
+        if redis_client is None:
+            return None
+
         try:
-            if self._redis_client is None:
-                self._redis_client = RedisClient()
-            return self._redis_client.get_connection()
+            return redis_client.get_connection()
         except Exception as exc:
             logger.warning(
                 "Interaction session store unavailable, fallback to memory: {}", exc

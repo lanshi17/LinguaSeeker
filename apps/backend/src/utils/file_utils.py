@@ -2,10 +2,9 @@
 
 import os
 import shutil
-import tempfile
 import zipfile
 from pathlib import Path
-from typing import Any, Dict
+from typing import Dict
 
 import requests
 from loguru import logger
@@ -14,6 +13,35 @@ from .exceptions import FileProcessingException, SuppressAndLog
 
 # Default timeout for file downloads (in seconds)
 DEFAULT_DOWNLOAD_TIMEOUT = 300
+
+
+def ensure_directory_exists(path: str, *, mode: int = 0o755) -> str:
+    directory = Path(path)
+    directory.mkdir(parents=True, exist_ok=True)
+    try:
+        directory.chmod(mode)
+    except OSError:
+        pass
+    return str(directory)
+
+
+def cleanup_old_temp_folders(root_path: str, *, keep_latest: int = 3) -> None:
+    root = Path(root_path)
+    if not root.exists() or not root.is_dir():
+        return
+
+    entries = sorted(
+        (entry for entry in root.iterdir()),
+        key=lambda entry: entry.stat().st_mtime,
+        reverse=True,
+    )
+
+    for entry in entries[max(keep_latest, 0) :]:
+        with SuppressAndLog(OSError):
+            if entry.is_dir():
+                shutil.rmtree(entry)
+            else:
+                entry.unlink()
 
 
 def download_file(
@@ -36,29 +64,35 @@ def download_file(
         logger.info(f"File downloaded successfully to {destination}")
         return destination
     except requests.RequestException as e:
-        if allow_insecure_fallback:
-            logger.warning(f"Retrying download without SSL verification for {url}: {e}")
-            try:
-                response = requests.get(url, stream=True, timeout=timeout, verify=False)
-                response.raise_for_status()
+        if not allow_insecure_fallback:
+            logger.error(f"Failed to download file from {url}: {e}")
+            raise FileProcessingException(f"Failed to download file: {e}")
 
-                with open(destination, "wb") as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            f.write(chunk)
+        logger.warning(
+            f"Download failed with TLS verification enabled for {url}, retrying insecurely: {e}"
+        )
 
-                logger.info(f"File downloaded successfully to {destination}")
-                return destination
-            except requests.RequestException as fallback_error:
-                logger.error(
-                    f"Failed insecure fallback download from {url}: {fallback_error}"
-                )
-                raise FileProcessingException(
-                    f"Failed to download file: {fallback_error}"
-                )
+        try:
+            insecure_response = requests.get(
+                url,
+                stream=True,
+                timeout=timeout,
+                verify=False,
+            )
+            insecure_response.raise_for_status()
 
-        logger.error(f"Failed to download file from {url}: {e}")
-        raise FileProcessingException(f"Failed to download file: {e}")
+            with open(destination, "wb") as f:
+                for chunk in insecure_response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+
+            logger.info(
+                f"File downloaded successfully to {destination} with insecure fallback"
+            )
+            return destination
+        except requests.RequestException as insecure_error:
+            logger.error(f"Failed to download file from {url}: {insecure_error}")
+            raise FileProcessingException(f"Failed to download file: {insecure_error}")
     except IOError as e:
         logger.error(f"Failed to save downloaded file to {destination}: {e}")
         raise FileProcessingException(f"Failed to save file: {e}")
@@ -163,32 +197,3 @@ def get_all_files_in_directory(
             continue
 
     return files
-
-
-def ensure_directory_exists(path: str, *, mode: int = 0o755) -> str:
-    directory = Path(path)
-    directory.mkdir(parents=True, exist_ok=True)
-    try:
-        directory.chmod(mode)
-    except OSError:
-        pass
-    return str(directory)
-
-
-def cleanup_old_temp_folders(root_path: str, *, keep_latest: int = 3) -> None:
-    root = Path(root_path)
-    if not root.exists() or not root.is_dir():
-        return
-
-    entries = sorted(
-        (entry for entry in root.iterdir()),
-        key=lambda entry: entry.stat().st_mtime,
-        reverse=True,
-    )
-
-    for entry in entries[max(keep_latest, 0) :]:
-        with SuppressAndLog(OSError):
-            if entry.is_dir():
-                shutil.rmtree(entry)
-            else:
-                entry.unlink()
