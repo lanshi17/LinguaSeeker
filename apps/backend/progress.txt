@@ -511,3 +511,24 @@ Notes:
 - M1 milestone is feature-complete for the backend.
 - `run_fastapi_pipeline` is preserved but no longer called from Celery tasks.
 - PaddleOCR stub raises `NotImplementedError` when package is installed but implementation is pending.
+
+---
+
+Implementation Update: 2026-03-20 (cleanup-old-architecture stale package description cleanup)
+
+Completed:
+- Removed outdated architecture-layer wording from `src/__init__.py` that still described legacy `database`, `presentation`, and `service` layers.
+- Kept the cleanup scoped to documentation/naming only so the branch does not expand beyond the completed shim-removal plan.
+
+Files:
+- src/__init__.py
+
+Validation:
+- `lsp_diagnostics src/__init__.py` → clean.
+- Code-path search confirmed no remaining `src.service`, `src.database`, `src.presentation`, or `src.configs` imports in `src/`.
+- Code-path search confirmed no remaining legacy architecture wording (`service layer`, `presentation layer`, `database layer`, `表现层`, `服务层`, `数据访问层`) in `src/`.
+- `uv run python -m pytest tests/test_legacy_architecture_cleanup.py -q` → `5 passed`.
+
+Notes:
+- This is a narrow follow-up cleanup after the plan’s recorded completion, not a new refactor wave.
+- Broader runtime/config/task-manager changes in this worktree remain intentionally out of scope for this cleanup slice.
