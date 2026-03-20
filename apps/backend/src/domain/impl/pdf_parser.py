@@ -22,6 +22,16 @@ class PDFParser(DocumentParser):
         self.mineru_adapter = mineru_adapter or MinerUAdapterImpl()
         logger.info("PDFParser initialized with MinerU adapter")
 
+    def validate(self, content: Any) -> bool:
+        """验证PDF内容或输入数据是否有效"""
+        if isinstance(content, bytes):
+            return bool(content) and content.startswith(b"%PDF")
+
+        if isinstance(content, str):
+            return bool(content.strip())
+
+        return False
+
     def parse(
         self,
         file_path: str,
@@ -54,6 +64,12 @@ class PDFParser(DocumentParser):
         try:
             logger.info(f"Parsing PDF file: {file_path}")
 
+            with open(file_path, "rb") as file:
+                header = file.read(4)
+
+            if not self.validate(header):
+                raise ParseException(f"Invalid PDF file: {file_path}")
+
             # 调用MinerU流水线处理
             result = self.mineru_adapter.mineru_parse(
                 files=[file_path],
@@ -67,6 +83,8 @@ class PDFParser(DocumentParser):
 
             return result
 
+        except ParseException:
+            raise
         except Exception as exc:
             logger.error(f"Unexpected MinerU parsing error for {file_path}: {exc}")
             raise ParseException(str(exc)) from exc
