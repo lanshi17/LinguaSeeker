@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any, Dict
 
 from .models import UnpaywallPayload
@@ -23,12 +24,15 @@ async def unpaywall_workflow(payload: Dict[str, Any]) -> Dict[str, Any]:
     service = UnpaywallService(email=req.email)
 
     if req.action == "doi":
-        return service.doi_query(req).model_dump()
+        result = await asyncio.to_thread(service.doi_query, req)
+        return result.model_dump()
 
     if req.action == "query":
-        return service.query(req).model_dump()
+        result = await asyncio.to_thread(service.query, req)
+        return result.model_dump()
 
     if req.action == "download":
-        return service.download(req).model_dump()
+        result = await asyncio.to_thread(service.download, req)
+        return result.model_dump()
 
     return {"success": False, "warnings": ["unknown_action"]}

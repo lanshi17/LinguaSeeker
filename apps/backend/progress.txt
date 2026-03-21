@@ -525,3 +525,15 @@ Notes:
   - automated_web gateway: `WebGatewayRequest -> call_auto_web_gateway`
 - Updated unified literature workflow to consume only the two unified gateways.
 - Updated workflow tests to patch unified gateway dispatchers (3 passed).
+
+2026-03-21 MVP-Literature hardening
+Completed:
+- Restricted unified literature workflow to MVP-compatible routing (PMC only) and disabled web/non-PMC providers in unified entry.
+- Removed cross-provider fallback behavior (unpaywall/crossref/web fallback) from unified workflow.
+- Unified workflow now returns failure when search/download yields no usable result (`FETCH_NO_RESULT` / `FULLTEXT_UNAVAILABLE` warning markers).
+- Fixed async blocking in `src/domain/literature/api/unpaywall/workflow.py` by offloading sync service calls to `asyncio.to_thread`.
+- Reworked `tests/test_literature_unified_workflow.py` to match MVP constraints and new routing behavior.
+
+Validation:
+- `uv run pytest -q tests/test_literature_unified_workflow.py tests/test_api_gateway_download.py tests/unit/test_literature_acquisition_agent.py`
+- Result: 10 passed.
