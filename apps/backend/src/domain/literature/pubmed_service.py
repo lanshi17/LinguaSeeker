@@ -1,16 +1,36 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any, Dict, List, Optional
-from xml.etree import ElementTree as ET
+import xml.etree.ElementTree as ET
 
 import httpx
 
-from src.config import settings
+from src.config import settings as cfg
 
 
-@dataclass(frozen=True)
+_COUNTRY_MAP: Dict[str, str] = {
+    "不限": "ALL",
+    "all": "ALL",
+    "us": "US",
+    "uk": "UK",
+    "ca": "CA",
+    "au": "AU",
+    "nz": "NZ",
+    "ie": "IE",
+    "sg": "SG",
+    "in": "IN",
+    "za": "ZA",
+    "ng": "NG",
+    "cn": "CN",
+    "my": "MY",
+    "hk": "HK",
+    "mo": "MO",
+    "tw": "TW",
+}
+
+
+@dataclass
 class PubMedCandidate:
     pmid: str
     title: str
@@ -18,196 +38,144 @@ class PubMedCandidate:
     pub_date: str
 
 
-@dataclass(frozen=True)
+@dataclass
 class PubMedArticle:
     pmid: str
     title: str
     journal: str
     pub_date: str
     abstract: str
-    doi: Optional[str] = None
 
 
 class PubMedService:
-    def __init__(
-        self,
-        *,
-        base_url: Optional[str] = None,
-        api_key: Optional[str] = None,
-        timeout: float = 20.0,
-    ) -> None:
-        self._base_url = (base_url or settings.pubmed_base_url).rstrip("/")
-        self._api_key = api_key or settings.pubmed_api_key
-        self._timeout = timeout
+    def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None) -> None:
+        self.base_url = (base_url or cfg.pubmed_base_url).rstrip("/")
+        self.api_key = api_key or cfg.pubmed_api_key
+
+    @staticmethod
+    def normalize_country(country: str) -> str:
+        normalized = (country or "不限").strip().lower()
+        if normalized in _COUNTRY_MAP:
+            return _COUNTRY_MAP[normalized]
+        upper = (country or "").strip().upper()
+        if upper in _COUNTRY_MAP.values():
+            return upper
+        raise ValueError("Fetch no result: unsupported country mapping")
 
     async def search_candidates(
         self,
         query: str,
-        country: str = "不限",
+        country: str,
         candidate_limit: int = 15,
     ) -> List[PubMedCandidate]:
-        normalized_query = str(query or "").strip()
-        if not normalized_query:
-            raise ValueError("query is required")
-
-        limit = max(1, min(int(candidate_limit or 15), 15))
-        term = normalized_query
-        normalized_country = str(country or "").strip()
-        if normalized_country and normalized_country not in {"不限", "all", "auto"}:
-            term = f"({normalized_query}) AND ({normalized_country}[Affiliation])"
-
-        search_resp = await self._request_json(
-            "/esearch.fcgi",
-            params={
-                "db": "pubmed",
-                "retmode": "json",
-                "retmax": limit,
-                "sort": "relevance",
-                "term": term,
-            },
-        )
-        id_list = (
-            (search_resp.get("esearchresult") or {}).get("idlist")
-            if isinstance(search_resp, dict)
-            else None
-        ) or []
-        pmids = [str(pmid).strip() for pmid in id_list if str(pmid).strip()]
-        if not pmids:
+        country_code = self.normalize_country(country)
+        term = (query or "").strip()
+        if not term:
             return []
 
-        summary_resp = await self._request_json(
-            "/esummary.fcgi",
-            params={
+        if country_code != "ALL":
+            term = f"({term}) AND ({country_code}[ad])"
+
+        params: Dict[str, Any] = {
+            "db": "pubmed",
+            "term": term,
+            "retmax": max(1, min(candidate_limit, 15)),
+            "retmode": "json",
+            "sort": "pub date",
+        }
+        if self.api_key:
+            params["api_key"] = self.api_key
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            esearch_resp = await client.get(f"{self.base_url}/esearch.fcgi", params=params)
+            esearch_resp.raise_for_status()
+            esearch_payload = esearch_resp.json()
+
+            pmids: List[str] = (
+                esearch_payload.get("esearchresult", {}).get("idlist", []) or []
+            )
+            if not pmids:
+                return []
+
+            summary_params: Dict[str, Any] = {
                 "db": "pubmed",
-                "retmode": "json",
                 "id": ",".join(pmids),
-            },
-        )
-        result = (
-            (summary_resp or {}).get("result") if isinstance(summary_resp, dict) else {}
-        )
-        rows: List[PubMedCandidate] = []
+                "retmode": "json",
+            }
+            if self.api_key:
+                summary_params["api_key"] = self.api_key
+            summary_resp = await client.get(f"{self.base_url}/esummary.fcgi", params=summary_params)
+            summary_resp.raise_for_status()
+            summary_payload = summary_resp.json()
+
+        records = summary_payload.get("result", {})
+        candidates: List[PubMedCandidate] = []
         for pmid in pmids:
-            item = result.get(pmid) if isinstance(result, dict) else None
-            if not isinstance(item, dict):
+            row = records.get(pmid, {})
+            if not row:
                 continue
-            rows.append(
+            candidates.append(
                 PubMedCandidate(
                     pmid=pmid,
-                    title=str(item.get("title") or f"PMID:{pmid}"),
-                    journal=str(
-                        item.get("fulljournalname") or item.get("source") or ""
-                    ),
-                    pub_date=str(item.get("pubdate") or ""),
+                    title=str(row.get("title") or "").strip(),
+                    journal=str(row.get("fulljournalname") or row.get("source") or "").strip(),
+                    pub_date=str(row.get("pubdate") or "").strip(),
                 )
             )
-        return rows
+        return candidates
 
-    async def fetch_article_metadata_abstract(
-        self, pmid: str
-    ) -> Optional[PubMedArticle]:
+    async def fetch_article_metadata_abstract(self, pmid: str) -> Optional[PubMedArticle]:
         normalized_pmid = str(pmid or "").strip()
         if not normalized_pmid:
-            raise ValueError("pmid is required")
-
-        summary_resp = await self._request_json(
-            "/esummary.fcgi",
-            params={
-                "db": "pubmed",
-                "retmode": "json",
-                "id": normalized_pmid,
-            },
-        )
-        result = (
-            (summary_resp or {}).get("result") if isinstance(summary_resp, dict) else {}
-        )
-        item = result.get(normalized_pmid) if isinstance(result, dict) else None
-        if not isinstance(item, dict):
             return None
 
-        title = str(item.get("title") or f"PMID:{normalized_pmid}")
-        journal = str(item.get("fulljournalname") or item.get("source") or "")
-        pub_date = str(item.get("pubdate") or "")
+        summary_params: Dict[str, Any] = {
+            "db": "pubmed",
+            "id": normalized_pmid,
+            "retmode": "json",
+        }
+        if self.api_key:
+            summary_params["api_key"] = self.api_key
 
-        xml_text = await self._request_text(
-            "/efetch.fcgi",
-            params={
-                "db": "pubmed",
-                "retmode": "xml",
-                "id": normalized_pmid,
-            },
-        )
-        abstract, doi = self._parse_abstract_and_doi(xml_text)
+        fetch_params: Dict[str, Any] = {
+            "db": "pubmed",
+            "id": normalized_pmid,
+            "retmode": "xml",
+        }
+        if self.api_key:
+            fetch_params["api_key"] = self.api_key
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            summary_resp = await client.get(f"{self.base_url}/esummary.fcgi", params=summary_params)
+            summary_resp.raise_for_status()
+            summary_payload = summary_resp.json()
+
+            fetch_resp = await client.get(f"{self.base_url}/efetch.fcgi", params=fetch_params)
+            fetch_resp.raise_for_status()
+            fetch_xml = fetch_resp.text
+
+        row = summary_payload.get("result", {}).get(normalized_pmid, {})
+        if not row:
+            return None
+
+        abstract_fragments: List[str] = []
+        try:
+            root = ET.fromstring(fetch_xml)
+            for node in root.findall(".//Abstract/AbstractText"):
+                text = "".join(node.itertext()).strip()
+                if text:
+                    abstract_fragments.append(text)
+        except ET.ParseError:
+            abstract_fragments = []
+
+        abstract_text = "\n\n".join(abstract_fragments).strip()
         return PubMedArticle(
             pmid=normalized_pmid,
-            title=title,
-            journal=journal,
-            pub_date=pub_date,
-            abstract=abstract,
-            doi=doi,
+            title=str(row.get("title") or "").strip(),
+            journal=str(row.get("fulljournalname") or row.get("source") or "").strip(),
+            pub_date=str(row.get("pubdate") or "").strip(),
+            abstract=abstract_text,
         )
-
-    async def _request_json(
-        self,
-        path: str,
-        *,
-        params: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        merged = dict(params)
-        if self._api_key:
-            merged["api_key"] = self._api_key
-        async with httpx.AsyncClient(
-            timeout=self._timeout, follow_redirects=True
-        ) as client:
-            response = await client.get(f"{self._base_url}{path}", params=merged)
-            response.raise_for_status()
-            payload = response.json()
-        return payload if isinstance(payload, dict) else {}
-
-    async def _request_text(
-        self,
-        path: str,
-        *,
-        params: Dict[str, Any],
-    ) -> str:
-        merged = dict(params)
-        if self._api_key:
-            merged["api_key"] = self._api_key
-        async with httpx.AsyncClient(
-            timeout=self._timeout, follow_redirects=True
-        ) as client:
-            response = await client.get(f"{self._base_url}{path}", params=merged)
-            response.raise_for_status()
-            return response.text
-
-    @staticmethod
-    def _parse_abstract_and_doi(xml_text: str) -> tuple[str, Optional[str]]:
-        abstract_parts: List[str] = []
-        doi: Optional[str] = None
-        if not xml_text:
-            return "", None
-        try:
-            root = ET.fromstring(xml_text)
-        except ET.ParseError:
-            return "", None
-
-        for node in root.findall(".//AbstractText"):
-            content = "".join(node.itertext()).strip()
-            if content:
-                label = node.attrib.get("Label")
-                if label:
-                    abstract_parts.append(f"{label}: {content}")
-                else:
-                    abstract_parts.append(content)
-        for article_id in root.findall(".//ArticleId"):
-            id_type = str(article_id.attrib.get("IdType") or "").lower()
-            if id_type == "doi":
-                value = "".join(article_id.itertext()).strip()
-                if value:
-                    doi = value
-                    break
-
-        return "\n\n".join(abstract_parts), doi
 
 
 _pubmed_service: Optional[PubMedService] = None

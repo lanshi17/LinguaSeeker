@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import html
-import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
-from urllib.parse import urlparse
 
 import httpx
+
+from src.config import settings
 
 
 @dataclass(frozen=True)
@@ -18,57 +17,76 @@ class FirecrawlMarkdownResult:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-def _strip_html_to_markdown(content: str) -> str:
-    if not content:
-        return ""
-    text = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", content)
-    text = re.sub(r"(?i)<br\s*/?>", "\n", text)
-    text = re.sub(r"(?i)</(p|div|section|article|li|h1|h2|h3|h4|h5|h6)>", "\n\n", text)
-    text = re.sub(r"(?is)<[^>]+>", " ", text)
-    text = html.unescape(text)
-    text = re.sub(r"\r", "\n", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    text = re.sub(r"[ \t]{2,}", " ", text)
-    return text.strip()
-
-
-def _extract_title(html_text: str, fallback_url: str) -> str:
-    if html_text:
-        match = re.search(r"(?is)<title[^>]*>(.*?)</title>", html_text)
-        if match:
-            title = html.unescape(match.group(1)).strip()
-            if title:
-                return title
-    parsed = urlparse(fallback_url)
-    return parsed.netloc or fallback_url
-
-
 class FirecrawlService:
-    def __init__(self, timeout: float = 25.0) -> None:
-        self._timeout = timeout
+    def __init__(
+        self,
+        *,
+        base_url: Optional[str] = None,
+        api_key: Optional[str] = None,
+        timeout_seconds: int = 60,
+    ) -> None:
+        self._base_url = (
+            base_url or settings.firecrawl_base_url or "https://api.firecrawl.dev"
+        ).rstrip("/")
+        self._api_key = (api_key or settings.firecrawl_api_key or "").strip()
+        self._timeout_seconds = timeout_seconds
 
     async def scrape_markdown(self, url: str) -> FirecrawlMarkdownResult:
         normalized_url = str(url or "").strip()
         if not normalized_url:
-            raise ValueError("url is required")
+            raise ValueError("INPUT_INVALID: url is required")
+        if not self._api_key:
+            raise RuntimeError("INPUT_INVALID: firecrawl_api_key is not configured")
 
-        async with httpx.AsyncClient(
-            timeout=self._timeout, follow_redirects=True
-        ) as client:
-            response = await client.get(normalized_url)
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "url": normalized_url,
+            "formats": ["markdown"],
+            "onlyMainContent": True,
+        }
+
+        async with httpx.AsyncClient(timeout=self._timeout_seconds) as client:
+            response = await client.post(
+                f"{self._base_url}/v1/scrape",
+                headers=headers,
+                json=payload,
+            )
             response.raise_for_status()
-            body = response.text
-            final_url = str(response.url)
-            content_type = str(response.headers.get("content-type") or "")
+            body = response.json()
 
-        markdown = _strip_html_to_markdown(body)
-        title = _extract_title(body, final_url)
+        if isinstance(body, dict) and body.get("success") is False:
+            raise RuntimeError(str(body.get("error") or "Fetch no result from Firecrawl"))
+
+        data = body.get("data", body) if isinstance(body, dict) else {}
+        if not isinstance(data, dict):
+            raise RuntimeError("Fetch no result from Firecrawl")
+
+        metadata = data.get("metadata")
+        if not isinstance(metadata, dict):
+            metadata = {}
+
+        markdown = str(data.get("markdown") or data.get("content") or "").strip()
+        if not markdown:
+            raise RuntimeError("Fetch no result from Firecrawl")
+
+        title = str(data.get("title") or metadata.get("title") or normalized_url)
+        final_url = str(
+            data.get("finalUrl")
+            or data.get("final_url")
+            or metadata.get("finalUrl")
+            or metadata.get("url")
+            or normalized_url
+        )
+        merged_metadata = {**metadata, "provider": "firecrawl", "source_url": normalized_url}
         return FirecrawlMarkdownResult(
             source_url=normalized_url,
             final_url=final_url,
             title=title,
             markdown=markdown,
-            metadata={"provider": "httpx", "content_type": content_type},
+            metadata=merged_metadata,
         )
 
 
