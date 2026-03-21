@@ -1,7 +1,5 @@
 from enum import Enum
 
-from src.config import settings as cfg
-
 
 class DatabaseTypeEnum(str, Enum):
     QDRANT = "qdrant"
@@ -57,8 +55,8 @@ class MinioObjectStatusEnum(str, Enum):
 
 
 class MinioBucketNameEnum(str, Enum):
-    LITERATURE_UPLOADS = cfg.minio_uploads_bucket
-    PROCESSED_RESULTS = cfg.minio_results_bucket
+    LITERATURE_UPLOADS = "literature-uploads"
+    PROCESSED_RESULTS = "processed-results"
 
 
 class Neo4jEntityTypeEnum(str, Enum):
