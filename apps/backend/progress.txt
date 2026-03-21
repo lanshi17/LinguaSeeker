@@ -428,16 +428,150 @@ Final Wave verification executed in current repo environment:
   - blocker: large existing warning/error set across `src/`
   - full output saved at `/home/lanshi/.local/share/opencode/tool-output/tool_d0ec2c9be001WGyjqYfzLrdcnJ`
 - F2 `uv run ruff check src/ tests/`
-  - blocker: `ruff` is not runnable in current repo environment (`Failed to spawn: 'ruff'`)
+  - `ruff` is now runnable in the current repo environment
+  - current blocker: full-repo lint still reports many violations across `src/` and `tests/`
+  - full output saved at `/home/lanshi/.local/share/opencode/tool-output/tool_d0fbe3dff0015J6xmoIF4YDrcz`
 - F3 `uv run pytest -q`
-  - blocker: import-time `Settings()` validation requires 28 environment variables in the current environment
-  - full output saved at `/home/lanshi/.local/share/opencode/tool-output/tool_d0ec2c41d001Z42yQPvwlL4WUl`
+  - import-time settings/bootstrap blocker is resolved
+  - current blocker: collection now stops on 3 remaining import errors:
+    - `tests/integration/test_cyberleninka.py` → `ModuleNotFoundError: cyberleninka`
+    - `tests/integration/test_hans_publishers.py` → `ImportError: cannot import name 'Subject' from 'pubscholar_enums'`
+    - `tests/integration/test_pubscholar_scraper.py` → `ModuleNotFoundError: locators`
 - F4 `uv run python -c "import src.config; import main"`
-  - blocker: same missing-settings validation as F3
+  - passes successfully (`smoke-ok`)
 
-Next required stabilization work before Final Wave can turn green:
-1. Make `ruff` runnable in the current repo environment.
-2. Add a test/smoke-safe settings bootstrap so full-suite imports do not fail during collection.
-3. Re-run F1-F4 after environment/tooling stabilization.
+Stabilization work completed in this batch:
+1. Added repo-local Ruff dev tooling and synced the environment so `uv run ruff` works in this checkout.
+2. Removed the import-time `Settings()` bootstrap failure by making config and early consumers lazy/runtime-safe:
+   - `src/__init__.py`
+   - `src/config.py`
+   - `src/infrastructure/enum.py`
+   - `src/domain/enums.py`
+   - `src/domain/agent/workflow.py`
+   - `src/domain/graph/sync.py`
+3. Restored `literature_unified_workflow` export in `src/domain/literature/__init__.py`.
+4. Updated `.env.example` with test-safe values for `VLM_ENABLE`, `MINIO_ACCESS_KEY`, and `MINIO_SECRET_KEY` so smoke/test bootstrap no longer fails on placeholder parsing/credential guards.
+
+Next required work before Final Wave can turn fully green:
+1. Triage or isolate the 3 remaining collection/import errors in the literature integration tests.
+2. Decide whether full-repo Ruff cleanup is in scope, since Ruff is now runnable but reports broad existing violations.
+3. Re-run F1–F4 after those blockers are addressed.
 
 ---
+
+Implementation Update: 2026-03-21 (single .env for database stack + startup credential recovery)
+
+Completed:
+- Converted `database` stack back to a single env file strategy for Neo4j/Redis/MinIO by using only `database/config/.env` (removed temporary `database/config/.env.neo4j`).
+- Fixed Neo4j healthcheck to parse user/password from `NEO4J_AUTH` (`user/password`) instead of relying on separate `NEO4J_USER/NEO4J_PASSWORD` env keys.
+- Updated `database/scripts/setup/verify_services.sh` to derive Neo4j auth from `NEO4J_AUTH`.
+- Sanitized `database/config/.env` and `database/config/.env.example` to strict `KEY=VALUE` lines (removed inline comments in values that were being injected literally by Podman env-file parsing).
+- Aligned app startup MinIO credentials in `.env.local` (`MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`) with current local MinIO root credentials.
+- Recreated services: `redis`, `minio`, `neo4j`.
+
+Verification:
+- Container env inspection:
+  - `acmg_redis`: `REDIS_PASSWORD=kSZyW5xUr@?YzzRx`
+  - `acmg_minio`: `MINIO_ROOT_USER=yangzs`, `MINIO_ROOT_PASSWORD=***REMOVED***`
+- Health status polling:
+  - `acmg_redis`: healthy
+  - `acmg_minio`: healthy
+  - `acmg_neo4j`: healthy
+- Runtime connectivity check with `.env.local`:
+  - `uv run python -c "... redis ping + minio list buckets ..."`
+  - result: `redis_ping True`, `minio_bucket_count 0`
+- App startup smoke:
+  - `timeout 25s uv run uvicorn main:app --port 8000 --env-file .env.local`
+  - result: startup connectivity passed, MinIO buckets ensured; process exited only because `127.0.0.1:8000` already in use.
+
+Implementation Update: 2026-03-21 (Celery Redis auth recovery)
+
+Completed:
+- Added dotenv fallback loading of `.env.local` in `AppConfig._load_dotenv()` so non-uvicorn entrypoints (like Celery CLI) get local credentials without requiring manual `ENV_FILE` export.
+- Added regression test `tests/unit/test_app_config_env_loading.py` to verify `AppConfig.from_env()` loads `.env.local` by default when present.
+
+Verification:
+- `uv run pytest -q tests/unit/test_app_config_env_loading.py tests/unit/test_celery.py`
+  - result: `2 passed`
+- `timeout 20s uv run celery -A src.celery_app.celery_app worker -l info --concurrency 1`
+  - worker shows `transport: redis://:**@localhost:6379/0`
+  - runtime log confirms `Connected to redis://:**@localhost:6379/0`
+  - no `Authentication required` error observed
+
+
+Implementation Update: 2026-03-21 (PostgreSQL legacy-public-schema conflict fix)
+
+Completed:
+- Reproduced startup failure in `get_postgres_client()` caused by `tasks.document_id -> documents.document_id` FK creation against a legacy `public.documents` table that only had `id`.
+- Added configurable PostgreSQL schema isolation support:
+  - `PostgreSQLConfig.schema` in `src/config.py`
+  - env loading for `POSTGRES_SCHEMA`
+  - `_build_conninfo(..., include_schema=True)` now injects `options='-c search_path=<schema>'` for non-`public` schemas.
+  - `ensure_schema_exists()` in `src/infrastructure/postgres.py`, called by `initialize_schema()` before `Base.metadata.create_all(...)`.
+- Set local runtime to isolated schema via `.env.local`:
+  - `POSTGRES_SCHEMA="acmg_app"`
+- Added regression test:
+  - `tests/unit/test_postgres_schema_search_path.py` ensures conninfo includes `search_path` when schema is configured.
+
+Verification:
+- `uv run pytest -q tests/unit/test_postgres_schema_search_path.py tests/unit/test_app_config_env_loading.py tests/unit/test_celery.py`
+  - result: `3 passed`
+- `uv run python -m py_compile src/config.py src/infrastructure/postgres.py tests/unit/test_postgres_schema_search_path.py tests/unit/test_app_config_env_loading.py`
+  - result: pass
+- `uv run python -c "from src.infrastructure.postgres import get_postgres_client; get_postgres_client(); print('postgres-client-ok')"`
+  - result: pass, schema init successful
+- `psql` validation:
+  - `information_schema.tables` shows app tables created under `acmg_app` schema (including `documents`, `tasks`, `task_requests`, `paper_tasks`, etc.)
+
+
+Implementation Update: 2026-03-21 (database unified initialization and management)
+
+Completed:
+- Added single management entrypoint: `database/scripts/dbctl.sh`.
+- Unified command surface into one CLI:
+  - lifecycle: `up/down/restart/ps/logs`
+  - initialization: `init`
+  - validation: `check`
+  - maintenance: `backup/cleanup`
+  - destructive reset: `reset --yes`
+- Removed legacy fragmented scripts:
+  - deleted `database/scripts/{init_db.sh,backup_db.sh,run_cleanup_sql.sh}`
+  - deleted `database/scripts/setup/` (entire directory)
+  - deleted legacy qdrant helper scripts except runtime init hook
+- Kept runtime dependency:
+  - `database/scripts/qdrant/qdrant_init.sh` (still mounted by compose)
+- Cleaned database directory docs:
+  - rewrote `database/README.md` around `dbctl.sh`
+  - rewrote `database/sql/README.md` around unified CLI
+  - removed stale `database/lesson.md` and `database/leesons.md`
+- Added implementation plan record:
+  - `docs/plans/2026-03-21-database-unified-management.md`
+
+Verification:
+- `bash -n database/scripts/dbctl.sh` -> pass
+- `database/scripts/dbctl.sh ps` -> pass
+- `database/scripts/dbctl.sh check` -> all services `[ok]`
+- `database/scripts/dbctl.sh init` -> `schema-initialized` + `seed-applied`
+
+
+Implementation Update: 2026-03-21 (PostgreSQL schema auto-init robustness fix)
+
+Completed:
+- Fixed env loading path in `src/config.py`:
+  - `.env/.env.<env>/.env.local` are now resolved from project root (based on `src/config.py` location), not current working directory.
+  - `ENV_FILE` keeps highest priority; for relative paths, project-root candidate is preferred with cwd fallback.
+- Hardened PostgreSQL initialization in `src/infrastructure/postgres.py`:
+  - `initialize_schema()` now always resolves effective schema (`schema_name` or configured `POSTGRES_SCHEMA`) and applies `schema_translate_map` for non-public schemas.
+  - `_build_conninfo()` now sets `search_path=<schema>,public` when schema is configured.
+- Added/updated targeted unit tests:
+  - `tests/unit/test_app_config_env_loading.py`
+  - `tests/unit/test_postgres_schema_search_path.py`
+  - `tests/unit/test_postgres_initialize_schema.py`
+
+Verification:
+- `uv run pytest -q tests/unit/test_app_config_env_loading.py tests/unit/test_postgres_schema_search_path.py tests/unit/test_postgres_initialize_schema.py`
+  - result: `3 passed`
+- Reproduced non-project-cwd startup behavior before/after fix using:
+  - `uv run --project ... python -c "from src.infrastructure import postgres; ..."`
+  - result after fix: schema resolves to `acmg_app`, conninfo includes `search_path=acmg_app,public`.
+- Restarted uvicorn on `127.0.0.1:8000` with updated code.

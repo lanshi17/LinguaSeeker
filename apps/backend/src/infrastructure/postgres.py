@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 from uuid import UUID
@@ -32,6 +33,20 @@ from src.infrastructure.models import (
     VariationCitation,
 )
 
+_SCHEMA_NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def _get_schema_name() -> Optional[str]:
+    schema = str(getattr(cfg.postgresql, "schema", "public") or "public").strip()
+    if not schema:
+        return "public"
+    if not _SCHEMA_NAME_PATTERN.match(schema):
+        raise ValueError(
+            f"Invalid PostgreSQL schema name: {schema!r}. "
+            "Use letters, digits and underscore only, and start with a letter/underscore."
+        )
+    return schema
+
 
 def _build_database_url(db_name: Optional[str] = None) -> str:
     url = URL.create(
@@ -49,19 +64,25 @@ def get_database_url(db_name: Optional[str] = None) -> str:
     return _build_database_url(db_name)
 
 
-def _build_conninfo(db_name: Optional[str] = None) -> str:
-    return (
+def _build_conninfo(db_name: Optional[str] = None, include_schema: bool = True) -> str:
+    conninfo = (
         f"host={cfg.postgresql.host} "
         f"port={cfg.postgresql.port} "
         f"dbname={db_name or cfg.postgresql.database} "
         f"user={cfg.postgresql.user} "
         f"password={cfg.postgresql.password}"
     )
+    if include_schema:
+        schema = _get_schema_name()
+        if schema and schema != "public":
+            # Keep public as fallback for extensions/functions while forcing app schema first.
+            conninfo += f" options='-c search_path={schema},public'"
+    return conninfo
 
 
 def ensure_database_exists(db_name: Optional[str] = None) -> None:
     target_db = db_name or cfg.postgresql.database
-    conninfo = _build_conninfo("postgres")
+    conninfo = _build_conninfo("postgres", include_schema=False)
     try:
         with psycopg2.connect(conninfo) as conn:
             conn.autocommit = True
@@ -78,13 +99,36 @@ def ensure_database_exists(db_name: Optional[str] = None) -> None:
         raise
 
 
+def ensure_schema_exists(
+    db_name: Optional[str] = None, schema_name: Optional[str] = None
+) -> None:
+    target_schema = schema_name or _get_schema_name()
+    if not target_schema or target_schema == "public":
+        return
+
+    conninfo = _build_conninfo(db_name or cfg.postgresql.database, include_schema=False)
+    try:
+        with psycopg2.connect(conninfo) as conn:
+            conn.autocommit = True
+            with conn.cursor() as cur:
+                cur.execute(f'CREATE SCHEMA IF NOT EXISTS "{target_schema}"')
+    except Exception as exc:
+        logger.warning(
+            "Failed to ensure PostgreSQL schema exists ({}): {}", target_schema, exc
+        )
+        raise
+
+
 def initialize_schema(
     db_name: Optional[str] = None, schema_name: Optional[str] = None
 ) -> None:
+    target_schema = schema_name or _get_schema_name()
     ensure_database_exists(db_name)
+    ensure_schema_exists(db_name, target_schema)
     engine = get_engine(db_name)
-    if schema_name:
-        engine = engine.execution_options(schema_translate_map={None: schema_name})
+    if target_schema and target_schema != "public":
+        # Ensure metadata DDL always targets configured schema, regardless of process search_path/cwd.
+        engine = engine.execution_options(schema_translate_map={None: target_schema})
     Base.metadata.create_all(engine)
 
 

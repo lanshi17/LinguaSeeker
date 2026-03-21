@@ -129,10 +129,10 @@
 - [ ] `uv run basedpyright src/` passes with no NEW errors *(current blocker: large existing warning/error set across `src/`; see `/home/lanshi/.local/share/opencode/tool-output/tool_d0ec2c9be001WGyjqYfzLrdcnJ`)*
 
 ### F2: Lint gate
-- [ ] `uv run ruff check src/ tests/` passes *(current blocker: `ruff` not runnable in this repo environment: `Failed to spawn: 'ruff'`)*
+- [ ] `uv run ruff check src/ tests/` passes *(current blocker: Ruff is now runnable, but the full repo still has many lint violations; see `/home/lanshi/.local/share/opencode/tool-output/tool_d0fbe3dff0015J6xmoIF4YDrcz`)*
 
 ### F3: Test gate
-- [ ] `uv run pytest -q` passes *(current blocker: import-time `Settings()` validation requires 28 env vars in current environment; see `/home/lanshi/.local/share/opencode/tool-output/tool_d0ec2c41d001Z42yQPvwlL4WUl`)*
+- [ ] `uv run pytest -q` passes *(current blocker: import-time settings bootstrap is fixed, but full collection still stops on 3 remaining import errors: `tests/integration/test_cyberleninka.py` (`ModuleNotFoundError: cyberleninka`), `tests/integration/test_hans_publishers.py` (`cannot import name Subject from pubscholar_enums`), and `tests/integration/test_pubscholar_scraper.py` (`ModuleNotFoundError: locators`))*
 
 ### F4: Smoke import gate
-- [ ] `uv run python -c "import src.config; import main"` succeeds *(current blocker: same missing-settings validation as F3)*
+- [x] `uv run python -c "import src.config; import main"` succeeds (`smoke-ok`)

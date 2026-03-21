@@ -13,6 +13,7 @@ from src.domain.literature.pubmed_service import (
     PubMedArticle,
     get_pubmed_service,
 )
+from src.domain.literature.unified import literature_unified_workflow
 
 __all__ = [
     "FirecrawlMarkdownResult",
@@ -24,4 +25,5 @@ __all__ = [
     "get_firecrawl_service",
     "get_literature_acquisition_agent",
     "get_pubmed_service",
+    "literature_unified_workflow",
 ]
