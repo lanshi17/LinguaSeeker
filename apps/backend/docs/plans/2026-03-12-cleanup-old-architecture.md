@@ -1,6 +1,6 @@
 # Cleanup Old Architecture — Consolidate Shim Layers (方案 B)
 
-Status: COMPLETED (targeted migration scope verified; broader integration follow-up remains)
+Status: IN_PROGRESS
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
@@ -9,10 +9,6 @@ Status: COMPLETED (targeted migration scope verified; broader integration follow
 **Architecture:** The project has a dual-naming problem. Real code lives in `src/database/`, `src/presentation/`, `src/service/` while shim layers in `src/infrastructure/`, `src/api/`, `src/services/` just re-export from the real locations. We consolidate by moving real code to the new names, updating all imports, and deleting old directories + migration tests.
 
 **Tech Stack:** Python 3.11+, FastAPI, SQLAlchemy, Pydantic, pytest
-
-> **Completion note (2026-03-19):** The targeted scope of this plan is complete in the cleanup worktree. Verified with: `from main import app` → `OK`; `uv run pytest tests/test_legacy_architecture_cleanup.py -q` → `5 passed`; focused post-migration checks (`tests/test_llm_config_resolver.py`, `tests/unit/test_interaction.py`, `tests/unit/domain/test_document_parser.py`, `tests/unit/test_mineru_fallback.py`, `tests/test_supervisor_integration.py`, `tests/unit/infrastructure/test_minio_store.py::TestMinIOStore::test_upload_file`) → green; legacy-import grep for `src.database`, `src.service`, `src.presentation`, and `src.configs` → empty; changed-file `lsp_diagnostics(severity='error')` → clean.
->
-> **Broader suite note:** The original `pytest tests/ -v --timeout=30` command in this plan is stale because `pytest-timeout` is not installed in this repo. Running `uv run pytest tests/ -v` still surfaces broader integration/system failures (for example MinerU/MinIO live integrations, Celery/Redis, PostgreSQL, Qdrant/RAG, and task-pipeline integration). Those remaining failures were not required to validate the shim-layer/stale-import cleanup itself and should be tracked as follow-up work outside this plan.
 
 ---
 

@@ -1,4 +1,20 @@
-# init-domain--领域层初始化
-from .impl import *
-from .abc import *
-from .models import *
+"""Domain package initializer.
+
+Avoid importing all subpackages eagerly because some legacy modules depend on
+optional infrastructure settings that may be unavailable in lightweight flows.
+"""
+
+try:
+    from .impl import *  # type: ignore[F403]
+except Exception:
+    pass
+
+try:
+    from .abc import *  # type: ignore[F403]
+except Exception:
+    pass
+
+try:
+    from .models import *  # type: ignore[F403]
+except Exception:
+    pass

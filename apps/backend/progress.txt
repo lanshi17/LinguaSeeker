@@ -511,24 +511,29 @@ Notes:
 - M1 milestone is feature-complete for the backend.
 - `run_fastapi_pipeline` is preserved but no longer called from Celery tasks.
 - PaddleOCR stub raises `NotImplementedError` when package is installed but implementation is pending.
+- Implemented unified literature metadata workflow with API-first routing, automated web fallback, and standardized JSON normalization across providers.
+- Fixed API literature module compatibility imports (`.schemas` -> `.models`) for crossref/jstage/pmc/doaj and corrected DOAJ workflow entrypoint.
+- Added unified literature metadata routing stack:
+  - `src/domain/literature/unified/workflow.py` (prefer=auto/api/web routing)
+  - `src/domain/literature/gateway/api_gateway.py` (existing API workflow adapters)
+  - `src/domain/literature/gateway/web_gateway.py` (automated web adapters)
+  - `src/domain/literature/unified/normalizers.py` (standardized metadata JSON)
+- Added smoke-safe package exports for `src.domain` and `src.domain.literature` to prevent unrelated optional dependency failures from blocking literature imports.
+- Added tests: `tests/test_literature_unified_workflow.py` -> 3 passed.
+- Refactored gateway layer to unified dispatchers:
+  - API gateway: `ApiGatewayRequest -> call_api_gateway`
+  - automated_web gateway: `WebGatewayRequest -> call_auto_web_gateway`
+- Updated unified literature workflow to consume only the two unified gateways.
+- Updated workflow tests to patch unified gateway dispatchers (3 passed).
 
----
-
-Implementation Update: 2026-03-20 (cleanup-old-architecture stale package description cleanup)
-
+2026-03-21 MVP-Literature hardening
 Completed:
-- Removed outdated architecture-layer wording from `src/__init__.py` that still described legacy `database`, `presentation`, and `service` layers.
-- Kept the cleanup scoped to documentation/naming only so the branch does not expand beyond the completed shim-removal plan.
-
-Files:
-- src/__init__.py
+- Restricted unified literature workflow to MVP-compatible routing (PMC only) and disabled web/non-PMC providers in unified entry.
+- Removed cross-provider fallback behavior (unpaywall/crossref/web fallback) from unified workflow.
+- Unified workflow now returns failure when search/download yields no usable result (`FETCH_NO_RESULT` / `FULLTEXT_UNAVAILABLE` warning markers).
+- Fixed async blocking in `src/domain/literature/api/unpaywall/workflow.py` by offloading sync service calls to `asyncio.to_thread`.
+- Reworked `tests/test_literature_unified_workflow.py` to match MVP constraints and new routing behavior.
 
 Validation:
-- `lsp_diagnostics src/__init__.py` → clean.
-- Code-path search confirmed no remaining `src.service`, `src.database`, `src.presentation`, or `src.configs` imports in `src/`.
-- Code-path search confirmed no remaining legacy architecture wording (`service layer`, `presentation layer`, `database layer`, `表现层`, `服务层`, `数据访问层`) in `src/`.
-- `uv run python -m pytest tests/test_legacy_architecture_cleanup.py -q` → `5 passed`.
-
-Notes:
-- This is a narrow follow-up cleanup after the plan’s recorded completion, not a new refactor wave.
-- Broader runtime/config/task-manager changes in this worktree remain intentionally out of scope for this cleanup slice.
+- `uv run pytest -q tests/test_literature_unified_workflow.py tests/test_api_gateway_download.py tests/unit/test_literature_acquisition_agent.py`
+- Result: 10 passed.

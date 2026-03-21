@@ -3,16 +3,21 @@
 import os
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
-class Environment(str, Enum):
-    DEVELOPMENT = "development"
-    STAGING = "staging"
-    PRODUCTION = "production"
+LLMRole = Literal[
+    "retrieval",
+    "parsing",
+    "mt",
+    "format",
+    "vlm",
+    "evidence",
+    "classification",
+    "arbitration",
+]
 
 
 class VectorBackend(str, Enum):
@@ -22,13 +27,12 @@ class VectorBackend(str, Enum):
     MILVUS = "milvus"
 
 
-@dataclass
-class LLMTriplet:
-    """Normalized LLM connection triplet for callers/tests."""
+class Environment(str, Enum):
+    """应用运行环境"""
 
-    api_key: Optional[str] = None
-    base_url: str = "https://api.openai.com/v1"
-    model: str = "gpt-3.5-turbo"
+    DEVELOPMENT = "development"
+    STAGING = "staging"
+    PRODUCTION = "production"
 
 
 @dataclass
@@ -253,11 +257,15 @@ class MinerUConfig:
     status_url: str = "https://mineru.net/api/v4/extract/task/"  # https://mineru.net/api/v4/extract/task/{task_id}
     batch_status_url: str = "https://mineru.net/api/v4/extract-results/batch/"  # https://mineru.net/api/v4/extract-results/batch/{batch_id}
     model_version: str = "vlm"
-    extra_formats: list[str] = field(default_factory=lambda: ["html"])
+    extra_formats: list[str] = None
     api_token: str = ""
     pipeline_id: str = ""
     timeout: int = 300
     max_file_size_mb: int = 100
+
+    def __post_init__(self):
+        if self.extra_formats is None:
+            self.extra_formats = ["html"]
 
 
 @dataclass
@@ -334,26 +342,17 @@ class QdrantConfig:
 
 @dataclass
 class MinIOConfig:
-    """MinIO配置"""
+    """MinIO对象存储配置"""
 
     endpoint: str = "localhost:9000"
-    access_key: str = "minioadmin"
-    secret_key: str = "minioadmin"
-    bucket_name: str = "acmg-bucket"
+    access_key: str = ""  # 根凭证
+    secret_key: str = ""  # 根凭证
+    bucket_name: str = "acmg-documents"
     uploads_bucket: str = "literature-uploads"
     results_bucket: str = "processed-results"
     api: str = "s3v4"
-    path: str = "/"
-    secure: bool = True
-
-
-@dataclass(frozen=True)
-class LLMTriplet:
-    """Resolved LLM configuration triplet for a role."""
-
-    api_key: str
-    base_url: str
-    model: str
+    path: str = "auto"
+    secure: bool = False  # 是否启用SSL/TLS
 
 
 class AppConfig:
@@ -372,10 +371,10 @@ class AppConfig:
         self.port: int = 8000
 
         # 服务配置
-        self.llm: LLMConfig = LLMConfig()
-        self.embedding: EmbeddingConfig = EmbeddingConfig()
-        self.rerank: RerankConfig = RerankConfig()
-        self.mineru: MinerUConfig = MinerUConfig()
+        self.llm: Optional[LLMConfig] = LLMConfig()
+        self.embedding: Optional[EmbeddingConfig] = EmbeddingConfig()
+        self.rerank: Optional[RerankConfig] = RerankConfig()
+        self.mineru: Optional[MinerUConfig] = MinerUConfig()
 
         # 数据库配置
         self.redis: RedisConfig = RedisConfig()
@@ -850,8 +849,7 @@ class Settings(BaseSettings):
         default="postgres", validation_alias=AliasChoices("POSTGRES_USER", "PGUSER")
     )
     postgres_password: str = Field(
-        alias="POSTGRES_PASSWORD",
-        validation_alias=AliasChoices("POSTGRES_PASSWORD", "PGPASSWORD"),
+        validation_alias=AliasChoices("POSTGRES_PASSWORD", "PGPASSWORD")
     )
     postgres_pool_size: int = 10
     postgres_max_overflow: int = 20
@@ -963,11 +961,9 @@ class Settings(BaseSettings):
     def use_agent_workflow(self, task_type: str) -> bool:
         return getattr(self, f"use_agent_workflow_{task_type.lower()}", False)
 
-    # ==================== 爬取配置 ====================
+    # ==================== 文献获取配置 ====================
     pubmed_api_key: Optional[str] = None
-    pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"  # Updated to match .env.local
-    firecrawl_base_url: str = "https://api.firecrawl.dev/v0"
-    firecrawl_api_key: Optional[str] = None
+    pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 
     # ==================== 邮箱配置 ====================
     smtp_host: str = "smtp.exmail.qq.com"
@@ -988,7 +984,7 @@ class Settings(BaseSettings):
     )
 
 
-def resolve_llm_triplet(settings: Settings, role: str) -> LLMTriplet:
+def resolve_llm_triplet(settings: Settings, role: str) -> tuple[str, str, str]:
     """Resolve LLM configuration triplet for a given role.
 
     Args:
@@ -996,7 +992,7 @@ def resolve_llm_triplet(settings: Settings, role: str) -> LLMTriplet:
         role: LLM role name (retrieval/parsing/mt/format/vlm/evidence/classification/arbitration/ocr)
 
     Returns:
-        LLMTriplet containing the api key, base url, and model for the role
+        tuple containing (api_key, base_url, model) for the role
 
     Raises:
         ValueError: If role is invalid
@@ -1018,11 +1014,17 @@ def resolve_llm_triplet(settings: Settings, role: str) -> LLMTriplet:
             f"Invalid LLM role: {role}. Valid roles: {', '.join(sorted(valid_roles))}"
         )
 
-    api_key = getattr(settings, f"{role}_api_key")
-    base_url = getattr(settings, f"{role}_base_url")
-    model = getattr(settings, f"{role}_model")
+    # Handle special cases for roles that have different attribute naming
+    if role == "ocr":
+        api_key = getattr(settings, f"{role}_api_key")
+        base_url = getattr(settings, f"{role}_base_url")
+        model = getattr(settings, f"{role}_model")
+    else:
+        api_key = getattr(settings, f"{role}_api_key")
+        base_url = getattr(settings, f"{role}_base_url")
+        model = getattr(settings, f"{role}_model")
 
-    return LLMTriplet(api_key=api_key, base_url=base_url, model=model)
+    return api_key, base_url, model
 
 
 class ConfigManager:
@@ -1031,7 +1033,7 @@ class ConfigManager:
     def __init__(self, settings: Settings):
         self.settings = settings
 
-    def get_agent_config(self, role: str) -> dict[str, Any]:
+    def get_agent_config(self, role: str) -> dict:
         """获取指定角色的智能体配置"""
         if role not in {
             "retrieval",
@@ -1055,7 +1057,7 @@ class ConfigManager:
             "max_retries": self.settings.llm_max_retries,
         }
 
-    def get_database_config(self, db_type: str) -> dict[str, Any]:
+    def get_database_config(self, db_type: str) -> dict:
         """获取数据库配置"""
         if db_type == "redis":
             return {
@@ -1085,7 +1087,7 @@ class ConfigManager:
         else:
             raise ValueError(f"Unknown database type: {db_type}")
 
-    def get_vector_db_config(self) -> dict[str, Any]:
+    def get_vector_db_config(self) -> dict:
         """获取向量数据库配置"""
         if self.settings.vector_db.lower() == "qdrant":
             return {

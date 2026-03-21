@@ -1,31 +1,15 @@
 # Celery 配置
-from urllib.parse import quote
-
 from celery import Celery
 from kombu import Exchange, Queue
-
-from src.config import AppConfig
+from src.configs.app_config import AppConfig
 
 cfg = AppConfig.from_env()
-
-
-def _build_redis_url() -> str:
-    if cfg.redis.host.startswith("redis://") or cfg.redis.host.startswith("rediss://"):
-        return cfg.redis.host
-
-    password_segment = (
-        f":{quote(cfg.redis.password, safe='')}@" if cfg.redis.password else ""
-    )
-    return f"redis://{password_segment}{cfg.redis.host}:{cfg.redis.port}/{cfg.redis.db}"
-
-
-redis_url = _build_redis_url()
 
 # 创建 Celery 应用
 celery_app = Celery(
     "document_processing",
-    broker=redis_url,
-    backend=redis_url,
+    broker=cfg.redis.broker_url if hasattr(cfg, "redis") else "redis://localhost:6379/0",
+    backend=cfg.redis.result_backend if hasattr(cfg, "redis") else "redis://localhost:6379/1",
 )
 
 # Celery 配置

@@ -33,21 +33,13 @@ class InteractionAgent:
         self.cfg = cfg
         self._sessions: Dict[str, SessionState] = {}
         self._session_locks: Dict[str, asyncio.Lock] = {}
-        self._session_ttl_seconds = int(
-            getattr(cfg, "interaction_session_ttl_seconds", 3600)
-        )
-        try:
-            self._redis_client: Optional[RedisClient] = RedisClient()
-        except Exception as exc:
-            logger.warning(
-                "Interaction session store unavailable, fallback to memory: {}", exc
-            )
-            self._redis_client = None
+        self._session_ttl_seconds = int(getattr(cfg, "interaction_session_ttl_seconds", 3600))
+        self._redis_client: Optional[RedisClient] = None
 
         llm_config = resolve_llm_triplet(cfg, "evidence")
         self.llm = ChatOpenAI(
             model=llm_config.model,
-            api_key=SecretStr(llm_config.api_key or ""),
+            api_key=SecretStr(llm_config.api_key),
             base_url=llm_config.base_url,
             temperature=0.3,
             timeout=cfg.llm_timeout,
@@ -69,16 +61,12 @@ class InteractionAgent:
         return self._session_locks.setdefault(session_id, asyncio.Lock())
 
     def _get_redis_connection(self):
-        redis_client = self._redis_client
-        if redis_client is None:
-            return None
-
         try:
-            return redis_client.get_connection()
+            if self._redis_client is None:
+                self._redis_client = RedisClient()
+            return self._redis_client.get_connection()
         except Exception as exc:
-            logger.warning(
-                "Interaction session store unavailable, fallback to memory: {}", exc
-            )
+            logger.warning("Interaction session store unavailable, fallback to memory: {}", exc)
             return None
 
     def _save_session(self, state: SessionState) -> None:
@@ -93,9 +81,7 @@ class InteractionAgent:
                 ex=self._session_ttl_seconds,
             )
         except Exception as exc:
-            logger.warning(
-                "Failed to persist interaction session {}: {}", state.session_id, exc
-            )
+            logger.warning("Failed to persist interaction session {}: {}", state.session_id, exc)
 
     def _load_session(self, session_id: str) -> Optional[SessionState]:
         state = self._sessions.get(session_id)
@@ -131,9 +117,7 @@ class InteractionAgent:
         try:
             redis_conn.delete(self._session_key(session_id))
         except Exception as exc:
-            logger.warning(
-                "Failed to delete interaction session {}: {}", session_id, exc
-            )
+            logger.warning("Failed to delete interaction session {}: {}", session_id, exc)
 
     async def start_interaction(self, user_input: str) -> Dict[str, Any]:
         session_id = str(uuid4())
@@ -170,9 +154,7 @@ class InteractionAgent:
             "round": 1,
         }
 
-    async def respond_interaction(
-        self, session_id: str, user_response: str
-    ) -> Dict[str, Any]:
+    async def respond_interaction(self, session_id: str, user_response: str) -> Dict[str, Any]:
         normalized_session_id = self._normalize_session_id(session_id)
         async with self._get_session_lock(normalized_session_id):
             state = self._load_session(normalized_session_id)
@@ -242,9 +224,7 @@ Return ONLY valid JSON with this structure:
   }
 }"""
 
-        history_text = "\n".join(
-            [f"{msg['role']}: {msg['content']}" for msg in history]
-        )
+        history_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history])
         user_message = f"""Conversation history:
 {history_text}
 
@@ -296,9 +276,7 @@ Extract the fields and determine if clarification is needed."""
                 "extracted_fields": {},
             }
 
-    def _finalize_task_form(
-        self, extracted_fields: Dict[str, Any]
-    ) -> TaskFormStructured:
+    def _finalize_task_form(self, extracted_fields: Dict[str, Any]) -> TaskFormStructured:
         return TaskFormStructured(
             goal=extracted_fields.get("goal") or "evidence synthesis",
             disease=extracted_fields.get("disease") or "unspecified",

@@ -69,9 +69,7 @@ services:
         container_name: acmg_neo4j
         stop_grace_period: 60s
         env_file:
-            - ./config/.env
-        environment:
-            - NEO4J_AUTH=neo4j/***REMOVED***
+            - ./config/.env.neo4j
         volumes:
             - neo4j_data:/data
             - neo4j_logs:/logs
@@ -84,7 +82,11 @@ services:
             - acmg-network
         restart: unless-stopped
         healthcheck:
-            test: ["CMD-SHELL", "cypher-shell -u 'neo4j' -p '***REMOVED***' 'RETURN 1' || exit 1"]
+            test:
+                [
+                    "CMD-SHELL",
+                    "cypher-shell -u neo4j -p '${NEO4J_PASSWORD}' 'RETURN 1'",
+                ]
             interval: 30s
             timeout: 30s
             retries: 3
