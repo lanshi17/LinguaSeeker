@@ -7,11 +7,6 @@ MinerU 相关常量已迁移至 mineru_constants.py。
 from enum import Enum
 from typing import TypedDict, List, Dict, Any, Optional, Tuple, NotRequired
 
-try:
-    from src.config import settings as _settings  # type: ignore
-except Exception:  # pragma: no cover - 配置加载失败时使用默认阈值
-    _settings = None
-
 
 # ================================ 证据强度枚举 ===================================
 
@@ -105,9 +100,17 @@ SCORE_CLASSIFICATION_MAP: List[Tuple[float, str]] = [
     (0.0, EvidenceClassification.BENIGN.value),
 ]
 
-EVIDENCE_VALIDITY_THRESHOLD = (
-    getattr(_settings, "evidence_validity_threshold", 85.0) if _settings is not None else 85.0
-)
+
+def get_evidence_validity_threshold() -> float:
+    try:
+        from src.config import settings as _settings  # type: ignore
+
+        return float(getattr(_settings, "evidence_validity_threshold", 85.0))
+    except Exception:
+        return 85.0
+
+
+EVIDENCE_VALIDITY_THRESHOLD = 85.0
 
 
 # ==================== OddsPath → 证据强度 ====================
@@ -174,7 +177,9 @@ class ProcessingState(TypedDict):
     # VLM 相关
     enable_vlm: bool  # 是否启用（默认关闭）
     vlm_results: List[Dict[str, Any]]  # VLM 提取结果
-    image_inputs: NotRequired[List[Dict[str, Any]]]  # 批量 VLM 输入（path, base64, mime_type）
+    image_inputs: NotRequired[
+        List[Dict[str, Any]]
+    ]  # 批量 VLM 输入（path, base64, mime_type）
     graph_context: NotRequired[Optional[Dict[str, Any]]]  # 知识图谱推理上下文
 
     # 最终结果

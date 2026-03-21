@@ -23,17 +23,19 @@ from src.domain.evidence.tools import (
 )
 from src.utils.timer import timer
 from src.utils.evidence_annotation import enrich_evidence_json
-from src.config import settings, resolve_llm_triplet
+from src.config import Settings, get_settings, resolve_llm_triplet
 from .rag import RAGComponent
-
-cfg = settings
 
 
 class EvidenceAgent:
     """医学证据处理 Agent"""
 
-    def __init__(self, cfg=settings, rag_component: Optional[RAGComponent] = None):
-        self.cfg = cfg
+    def __init__(
+        self,
+        cfg: Optional[Settings] = None,
+        rag_component: Optional[RAGComponent] = None,
+    ):
+        self.cfg = cfg or get_settings()
         self.rag = rag_component or RAGComponent()
         logger.info("EvidenceAgent initialized")
 
@@ -64,7 +66,9 @@ class EvidenceAgent:
             logger.debug("Paragraph fits in a single chunk")
             return [paragraph]
 
-        sentences = [s for s in re.split(r"(?<=[。！？.!?])\s+", paragraph.strip()) if s]
+        sentences = [
+            s for s in re.split(r"(?<=[。！？.!?])\s+", paragraph.strip()) if s
+        ]
         chunks: List[str] = []
         current = ""
         for sentence in sentences:
@@ -103,7 +107,9 @@ class EvidenceAgent:
         paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
         paragraph_units: List[str] = []
         for paragraph in paragraphs:
-            paragraph_units.extend(self._split_paragraph(paragraph, max_tokens, max_chars))
+            paragraph_units.extend(
+                self._split_paragraph(paragraph, max_tokens, max_chars)
+            )
 
         segments: List[str] = []
         current = ""
@@ -307,7 +313,9 @@ class EvidenceAgent:
                     tool_args = getattr(call, "args", None)
                     tool_call_id = getattr(call, "id", None)
 
-                tool_name = tool_name_candidate if isinstance(tool_name_candidate, str) else ""
+                tool_name = (
+                    tool_name_candidate if isinstance(tool_name_candidate, str) else ""
+                )
 
                 if isinstance(tool_args, str):
                     try:
@@ -348,7 +356,11 @@ class EvidenceAgent:
                 return ""
 
         if isinstance(content, list):
-            parts = [text for item in content if (text := self._message_content_to_text(item))]
+            parts = [
+                text
+                for item in content
+                if (text := self._message_content_to_text(item))
+            ]
             return "\n".join(parts).strip()
 
         if isinstance(content, dict):
@@ -385,7 +397,9 @@ class EvidenceAgent:
         text = content.strip()
         push(text)
 
-        for match in re.finditer(r"```(?:json)?\s*(.*?)\s*```", text, re.IGNORECASE | re.DOTALL):
+        for match in re.finditer(
+            r"```(?:json)?\s*(.*?)\s*```", text, re.IGNORECASE | re.DOTALL
+        ):
             push(match.group(1))
 
         brace_stack = 0
@@ -486,7 +500,9 @@ class EvidenceAgent:
             streaming=False,
         )
 
-    def _parse_json_payload_with_repair(self, content: str, stage_name: str) -> Dict[str, Any]:
+    def _parse_json_payload_with_repair(
+        self, content: str, stage_name: str
+    ) -> Dict[str, Any]:
         try:
             return self._extract_json_payload(content)
         except RuntimeError as parse_exc:
@@ -567,7 +583,9 @@ class EvidenceAgent:
         quality_payload = evidence_quality if isinstance(evidence_quality, dict) else {}
 
         raw_quality_scores = quality_payload.get("field_confidence_scores")
-        field_confidence_scores = raw_quality_scores if isinstance(raw_quality_scores, dict) else {}
+        field_confidence_scores = (
+            raw_quality_scores if isinstance(raw_quality_scores, dict) else {}
+        )
 
         derived_confidence: Optional[float] = None
         if extracted_fields:
@@ -578,16 +596,23 @@ class EvidenceAgent:
                     field_confidence_scores = derived_scores
                 derived_confidence = normalized_fields.compute_overall_confidence()
             except Exception as exc:
-                logger.warning("Failed to derive confidence from extracted_fields: {}", exc)
+                logger.warning(
+                    "Failed to derive confidence from extracted_fields: {}", exc
+                )
 
-        overall_confidence = self._coerce_optional_float(quality_payload.get("overall_confidence"))
+        overall_confidence = self._coerce_optional_float(
+            quality_payload.get("overall_confidence")
+        )
         if overall_confidence is None and derived_confidence is not None:
             overall_confidence = round(derived_confidence, 2)
         if overall_confidence is None:
             overall_confidence = 0.0
 
         evidence_classification = (
-            self._normalize_optional_string(quality_payload.get("evidence_classification")) or ""
+            self._normalize_optional_string(
+                quality_payload.get("evidence_classification")
+            )
+            or ""
         )
 
         raw_acmg_levels = quality_payload.get("acmg_evidence_levels")
@@ -645,7 +670,9 @@ class EvidenceAgent:
                 response = llm.invoke([HumanMessage(content=prompt)])
                 content = self._message_content_to_text(response.content)
                 translated_segments.append(content)
-                logger.info(f"翻译分段 {idx}/{len(segments)} 完成，字数: {len(content)}")
+                logger.info(
+                    f"翻译分段 {idx}/{len(segments)} 完成，字数: {len(content)}"
+                )
             except Exception as e:
                 logger.error(f"翻译分段 {idx}/{len(segments)} 失败: {e}")
                 raise RuntimeError(f"翻译分段 {idx} 失败") from e
@@ -673,7 +700,9 @@ class EvidenceAgent:
         media_type = EvidenceAgent._get_image_media_type(img_path)
         return img_data, media_type
 
-    def _describe_images_batch(self, vlm: Any, paths: list[str], start_index: int = 0) -> list[str]:
+    def _describe_images_batch(
+        self, vlm: Any, paths: list[str], start_index: int = 0
+    ) -> list[str]:
         content: list[Any] = [
             {
                 "type": "text",
@@ -741,7 +770,9 @@ class EvidenceAgent:
         for batch_start in range(0, len(image_paths), max_batch):
             batch_paths = image_paths[batch_start : batch_start + max_batch]
             try:
-                batch_descs = self._describe_images_batch(vlm, batch_paths, start_index=batch_start)
+                batch_descs = self._describe_images_batch(
+                    vlm, batch_paths, start_index=batch_start
+                )
                 descriptions.extend(batch_descs)
                 for img_path in batch_paths:
                     img_data, media_type = self._encode_image(img_path)
@@ -758,18 +789,24 @@ class EvidenceAgent:
                 for idx, img_path in enumerate(batch_paths):
                     try:
                         img_data, media_type = self._encode_image(img_path)
-                        prompt = prompts.get_image_description_prompt(batch_start + idx + 1)
+                        prompt = prompts.get_image_description_prompt(
+                            batch_start + idx + 1
+                        )
                         message = HumanMessage(
                             content=[
                                 {"type": "text", "text": prompt},
                                 {
                                     "type": "image_url",
-                                    "image_url": {"url": f"data:{media_type};base64,{img_data}"},
+                                    "image_url": {
+                                        "url": f"data:{media_type};base64,{img_data}"
+                                    },
                                 },
                             ]
                         )
                         response = vlm.invoke([message])
-                        descriptions.append(self._message_content_to_text(response.content))
+                        descriptions.append(
+                            self._message_content_to_text(response.content)
+                        )
                         image_inputs.append(
                             {
                                 "path": img_path,
@@ -844,7 +881,9 @@ class EvidenceAgent:
             asyncio.get_running_loop()
         except RuntimeError:
             return asyncio.run(self.extract_ps3_evidence(state))
-        raise RuntimeError("extract_ps3_evidence_sync cannot run inside a running event loop")
+        raise RuntimeError(
+            "extract_ps3_evidence_sync cannot run inside a running event loop"
+        )
 
     def _apply_arbitration_feedback(self, state: ProcessingState) -> None:
         arbitration_feedback = state.get("arbitration_feedback", "").strip()
@@ -891,7 +930,9 @@ class EvidenceAgent:
         ps3_evidence = state["ps3_evidence"]
         calculated_score = ps3_evidence.get("calculated_total_score", 0)
         overall_assessment = ps3_evidence.get("overall_assessment", {})
-        final_recommendation = overall_assessment.get("final_recommendation", "needs_refinement")
+        final_recommendation = overall_assessment.get(
+            "final_recommendation", "needs_refinement"
+        )
 
         search_queries = self._get_default_rag_queries()
         knowledge_context = self._retrieve_knowledge_context_sync(search_queries)
@@ -976,7 +1017,10 @@ class EvidenceAgent:
             )
             return "approved"
 
-        if confidence is not None and confidence >= prompts.ARBITRATION_CONFIDENCE_THRESHOLD:
+        if (
+            confidence is not None
+            and confidence >= prompts.ARBITRATION_CONFIDENCE_THRESHOLD
+        ):
             logger.info(
                 "路由结果: approved（confidence {:.2f} >= {:.2f}）",
                 confidence,
@@ -984,7 +1028,9 @@ class EvidenceAgent:
             )
             return "approved"
 
-        logger.warning("路由结果: manual_review（score={}, confidence={}）", score, confidence)
+        logger.warning(
+            "路由结果: manual_review（score={}, confidence={}）", score, confidence
+        )
         return "manual_review"
 
     @staticmethod
@@ -1099,7 +1145,9 @@ class EvidenceAgent:
             final_state.get("ps3_evidence", {}),
             final_state.get("translated_md", ""),
         )
-        contract_fields = self._extract_output_contract_fields(final_state, final_evidence_strength)
+        contract_fields = self._extract_output_contract_fields(
+            final_state, final_evidence_strength
+        )
 
         output = EvidenceOutput(
             ps3_evidence=final_state["ps3_evidence"],
@@ -1124,6 +1172,4 @@ class EvidenceAgent:
         return output
 
 
-logger.debug(
-    f"LLM配置: LLM模式: {cfg.llm_mode}, 证据模型: {cfg.evidence_model}, 仲裁模型: {cfg.arbitration_model}"
-)
+logger.debug("EvidenceAgent workflow module loaded")

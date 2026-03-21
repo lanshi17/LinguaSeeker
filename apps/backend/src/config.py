@@ -3,28 +3,10 @@
 import os
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-LLMRole = Literal[
-    "retrieval",
-    "parsing",
-    "mt",
-    "format",
-    "vlm",
-    "evidence",
-    "classification",
-    "arbitration",
-]
-
-
-class VectorBackend(str, Enum):
-    """向量数据库后端选择"""
-
-    QDRANT = "qdrant"
-    MILVUS = "milvus"
 
 
 class Environment(str, Enum):
@@ -33,6 +15,13 @@ class Environment(str, Enum):
     DEVELOPMENT = "development"
     STAGING = "staging"
     PRODUCTION = "production"
+
+
+class VectorBackend(str, Enum):
+    """向量数据库后端选择"""
+
+    QDRANT = "qdrant"
+    MILVUS = "milvus"
 
 
 @dataclass
@@ -1116,25 +1105,29 @@ class ConfigManager:
 _settings: Settings | None = None
 
 
-def get_settings() -> Settings:
-    """
-    Get or create the Settings instance.
+class _LazySettingsProxy:
+    def __getattr__(self, name: str) -> Any:
+        return getattr(get_settings(), name)
 
-    Settings are loaded from environment variables (via pydantic-settings).
-    This factory pattern allows basedpyright to typecheck cleanly while
-    deferring instantiation until first use.
-    """
+    def __repr__(self) -> str:
+        if _settings is None:
+            return "<LazySettingsProxy unresolved>"
+        return repr(_settings)
+
+
+settings = _LazySettingsProxy()
+
+
+def get_settings() -> Settings:
     global _settings
     if _settings is None:
-        _settings = Settings()  # pyright: ignore[reportCallIssue]
+        _settings = cast(Settings, Settings())
     return _settings
 
 
-# 对于向后兼容性，暴露一个模块级别的配置变量
-# 通过 __getattr__ 懒加载
 def __getattr__(name: str):
     if name == "settings":
-        return get_settings()
+        return settings
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
