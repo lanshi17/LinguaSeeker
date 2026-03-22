@@ -1,85 +1,70 @@
-# Database Management
+# database/ 管理说明（代码对齐版）
 
-`database/` 目录统一由一个入口管理：`database/scripts/dbctl.sh`。
+`database/` 通过统一脚本 `database/scripts/dbctl.sh` 管理容器生命周期、初始化、检查与维护。
 
-## Directory Layout
+## 目录结构
 
 ```text
 database/
-├── alembic/                     # PostgreSQL migration scripts
+├── podman-compose.yml
+├── alembic/
 ├── alembic.ini
 ├── config/
-│   ├── .env                     # database stack env (for containers)
+│   ├── .env
 │   ├── .env.example
 │   ├── containers.conf
 │   └── qdrant_config.json
-├── init-scripts/                # optional PostgreSQL init mount directory
+├── scripts/
+│   ├── dbctl.sh
+│   └── qdrant/qdrant_init.sh
+├── sql/
+│   ├── init_database_schema.sql
+│   ├── seed_data.sql
+│   ├── cleanup_orphan_records.sql
+│   └── 其他历史修复脚本
 ├── minio/
 │   ├── certs/
 │   ├── data/
 │   └── minio.license
-├── podman-compose.yml
-├── qdrant/
-│   └── certs/
-├── scripts/
-│   ├── dbctl.sh                 # unified management entrypoint
-│   └── qdrant/
-│       └── qdrant_init.sh       # container runtime init hook (mounted by compose)
-└── sql/
-    ├── cleanup_orphan_records.sql
-    ├── init_database_schema.sql
-    ├── seed_data.sql
-    └── README.md
+└── qdrant/
+    └── certs/
 ```
 
-## Unified Entry
+## 统一入口
 
 ```bash
-./database/scripts/dbctl.sh <command> [args]
+./database/scripts/dbctl.sh <command>
 ```
 
-Env loading order:
+支持命令（来自脚本实装）：
+
+- `up [service...]`
+- `down [args...]`
+- `restart [service...]`
+- `ps`
+- `logs [service...]`
+- `init`
+- `check`
+- `backup [dir]`
+- `cleanup`
+- `reset --yes`（破坏性操作）
+
+## 环境变量加载顺序
+
 1. `database/config/.env`
-2. `.env.local` (if exists)
-3. `ENV_FILE` (if set, highest priority)
+2. 根目录 `.env.local`
+3. `ENV_FILE` 指定文件（最高优先级）
 
-## Commands
-
-```bash
-# lifecycle
-./database/scripts/dbctl.sh up [service...]
-./database/scripts/dbctl.sh down [compose-down-args...]
-./database/scripts/dbctl.sh restart [service...]
-./database/scripts/dbctl.sh ps
-./database/scripts/dbctl.sh logs [service...]
-
-# initialization and health
-./database/scripts/dbctl.sh init
-./database/scripts/dbctl.sh check
-
-# maintenance
-./database/scripts/dbctl.sh backup [output_dir]
-./database/scripts/dbctl.sh cleanup
-
-# destructive reset (requires explicit confirmation)
-./database/scripts/dbctl.sh reset --yes
-```
-
-## Recommended Workflow
+## 一次完整初始化
 
 ```bash
-# 1) start stack
 ./database/scripts/dbctl.sh up
-
-# 2) initialize/upgrade schema and seed
 ./database/scripts/dbctl.sh init
-
-# 3) verify services and credentials
 ./database/scripts/dbctl.sh check
 ```
 
-## Notes
+## 说明
 
-- `reset --yes` will remove compose volumes and clear `database/minio/data`.
-- `init` uses the backend ORM initializer and then applies `sql/seed_data.sql` if present.
-- Keep `database/config/.env` values as plain `KEY=VALUE` lines (no inline comments in value lines).
+- `init` 会调用 `src.infrastructure.postgres.initialize_schema()` 并执行 `sql/seed_data.sql`。
+- `cleanup` 仅执行 `sql/cleanup_orphan_records.sql`。
+- `reset --yes` 会清理卷并清空 `database/minio/data`。

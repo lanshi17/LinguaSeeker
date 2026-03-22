@@ -1,10 +1,10 @@
-# ACMG-PS3 Intelligence System Frontend
+# ACMG-Lingua 多语种文献证据提取平台 - 前端服务
 
-这是一个用于ACMG-PS3证据标准智能系统的前端应用，提供PDF上传、证据检索、分析和可视化等功能。
+这是一个用于 ACMG-Lingua 多语种文献证据提取平台的前端应用，提供 PDF 上传、证据检索、分析和可视化等功能。
 
 ## 功能特性
 
-- **PDF上传与处理**：支持PDF文档上传并进行自动化处理
+- **PDF 上传与处理**：支持 PDF 文档上传并进行自动化处理
 - **证据检索**：基于基因符号、变异等条件检索科学证据
 - **证据分析**：包括基因关联分析、共现矩阵、证据链检测等
 - **质量监控**：实时监控证据质量和完整性
@@ -18,6 +18,7 @@
 - React Router DOM
 - D3.js
 - Lucide React Icons
+- Vite
 
 ## 环境要求
 
@@ -47,7 +48,7 @@ npm install
 cp .env.local.example .env.local
 ```
 
-编辑 `.env.local` 文件，配置后端API地址：
+编辑 `.env.local` 文件，配置后端 API 地址：
 
 ```env
 VITE_API_BASE_URL=http://localhost:8000/api/v1
@@ -70,7 +71,7 @@ npm run build
 ## 主要页面
 
 - `/` - 首页
-- `/pdf/upload` - PDF上传页面
+- `/pdf/upload` - PDF 上传页面
 - `/tasks/status` - 任务状态页面
 - `/evidence/search` - 证据检索页面
 - `/evidence/aggregate` - 证据聚合页面
@@ -83,10 +84,10 @@ npm run build
 
 ## API 集成
 
-前端通过 `src/services/apiService.ts` 与后端API通信，支持以下主要功能：
+前端通过 `src/services/apiService.ts` 与后端 API 通信，支持以下主要功能：
 
 - 健康检查
-- PDF上传和哈希检查
+- PDF 上传和哈希检查
 - 任务管理和状态查询
 - 证据检索和聚合
 - 基因/变异关联分析
@@ -97,11 +98,11 @@ npm run build
 
 ```
 src/
-├── components/     # 可复用UI组件
+├── components/     # 可复用 UI 组件
 ├── pages/         # 页面组件
-├── services/      # API服务
-├── types/         # TypeScript类型定义
-├── hooks/         # 自定义React Hooks
+├── services/      # API 服务
+├── types/         # TypeScript 类型定义
+├── hooks/         # 自定义 React Hooks
 ├── utils/         # 工具函数
 ├── router/        # 路由配置
 └── assets/        # 静态资源
@@ -111,9 +112,9 @@ src/
 
 ### 前端开发宪法原则
 
-为确保代码质量和一致性，所有前端开发必须遵循[前端开发宪法原则](FRONTEND_CONSTITUTION.md)。在开始开发前，请务必仔细阅读并理解这些原则。
+为确保代码质量和一致性，所有前端开发必须遵循 [前端开发宪法原则](FRONTEND_CONSTITUTION.md)。在开始开发前，请务必仔细阅读并理解这些原则。
 
-参阅[开发指南](DEVELOPMENT_GUIDELINES.md)了解快速入门要点和代码审查清单。
+参阅 [开发指南](DEVELOPMENT_GUIDELINES.md) 了解快速入门要点和代码审查清单。
 
 ### 添加新页面
 
@@ -123,7 +124,7 @@ src/
 
 ### API 调用
 
-所有API调用都通过 `src/services/apiService.ts` 进行：
+所有 API 调用都通过 `src/services/apiService.ts` 进行：
 
 ```typescript
 import { healthCheck, searchEvidence } from '../services/apiService';
@@ -142,22 +143,26 @@ const results = await searchEvidence({
 
 ### 常见问题
 
-1. **API连接失败**：检查后端服务是否运行，以及 `VITE_API_BASE_URL` 配置是否正确
-2. **跨域错误**：确保后端API设置了正确的CORS头部
+1. **API 连接失败**：检查后端服务是否运行，以及 `VITE_API_BASE_URL` 配置是否正确
+2. **跨域错误**：确保后端 API 设置了正确的 CORS 头部
 3. **构建错误**：运行 `npm run lint` 检查代码质量问题
-4. **类型错误**：运行 `npx tsc --noEmit` 检查TypeScript类型错误
+4. **类型错误**：运行 `npx tsc --noEmit` 检查 TypeScript 类型错误
 
 ### 调试
 
 - 使用浏览器开发者工具查看网络请求
 - 检查控制台是否有错误信息
 - 运行 `npm run diagnose` 进行基本诊断
-- 运行 `npx tsc --noEmit` 检查TypeScript类型问题
+- 运行 `npx tsc --noEmit` 检查 TypeScript 类型问题
 
 ## 贡献
 
-欢迎提交Issue和Pull Request来改进此项目。
+欢迎提交 Issue 和 Pull Request 来改进此项目。
 
 ## 许可证
 
 [在此处添加许可证信息]
+
+---
+
+**最后更新**: 2026-03-22 (v3.0)

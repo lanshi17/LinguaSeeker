@@ -98,7 +98,9 @@ async def test_init_knowledge_base_if_needed_skips_when_exists(
     async def fake_check(_: str) -> bool:
         return True
 
-    monkeypatch.setattr(tasks_module._qdrant_manager, "check_collection_exists", fake_check)
+    monkeypatch.setattr(
+        tasks_module._qdrant_manager, "check_collection_exists", fake_check
+    )
     monkeypatch.setattr(
         tasks_module._qdrant_manager,
         "get_collection_info",
@@ -116,11 +118,15 @@ async def test_init_knowledge_base_if_needed_skips_when_exists(
 
 
 @pytest.mark.asyncio
-async def test_init_knowledge_base_if_needed_runs_init(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_init_knowledge_base_if_needed_runs_init(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     async def fake_check(_: str) -> bool:
         return False
 
-    monkeypatch.setattr(tasks_module._qdrant_manager, "check_collection_exists", fake_check)
+    monkeypatch.setattr(
+        tasks_module._qdrant_manager, "check_collection_exists", fake_check
+    )
     called: Dict[str, Any] = {"init": False}
 
     async def fake_init(_: str) -> None:
@@ -147,11 +153,17 @@ def test_process_pdf_task(monkeypatch: pytest.MonkeyPatch) -> None:
         image_urls=[],
     )
 
+    class FakePostgres:
+        def append_paper_task_log(self, *_: Any, **__: Any) -> None:
+            return None
+
     def fake_acquisition(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
         nt["acquisition"] = "success"
         return fps, nt
 
-    async def fake_parsing(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+    async def fake_parsing(
+        pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]
+    ) -> Any:
         nt["parsing"] = "success"
         return _make_parsing_result("/tmp/mineru-output"), nt
 
@@ -184,17 +196,18 @@ def test_process_pdf_task(monkeypatch: pytest.MonkeyPatch) -> None:
             image_object_keys=["doc-1/parsing/images/img.jpg"],
         )
 
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
     monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
     monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
     monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
     monkeypatch.setattr(tasks_module, "run_node_extraction", fake_extraction)
     monkeypatch.setattr(tasks_module, "run_node_acmg", fake_acmg)
     monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store)
-    monkeypatch.setattr(tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing)
     monkeypatch.setattr(
-        tasks_module.file_utils,
-        "cleanup_old_temp_folders",
-        lambda *_, **__: None,
+        tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing
+    )
+    monkeypatch.setattr(
+        tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None
     )
 
     result = _invoke_bound_task(tasks_module.process_pdf_task, ["file.pdf"])
@@ -210,11 +223,17 @@ def test_process_pdf_task_cleans_managed_temp_dir_on_success(
     temp_file = _make_managed_upload_file(tmp_path)
     temp_dir = Path(temp_file).parent
 
+    class FakePostgres:
+        def append_paper_task_log(self, *_: Any, **__: Any) -> None:
+            return None
+
     def fake_acquisition(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
         nt["acquisition"] = "success"
         return fps, nt
 
-    async def fake_parsing(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+    async def fake_parsing(
+        pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]
+    ) -> Any:
         nt["parsing"] = "success"
         return _make_parsing_result("/tmp/mineru-output"), nt
 
@@ -253,14 +272,19 @@ def test_process_pdf_task_cleans_managed_temp_dir_on_success(
             image_object_keys=[],
         )
 
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
     monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
     monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
     monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
     monkeypatch.setattr(tasks_module, "run_node_extraction", fake_extraction)
     monkeypatch.setattr(tasks_module, "run_node_acmg", fake_acmg)
     monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store)
-    monkeypatch.setattr(tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing)
-    monkeypatch.setattr(tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None)
+    monkeypatch.setattr(
+        tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing
+    )
+    monkeypatch.setattr(
+        tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None
+    )
 
     _invoke_bound_task(tasks_module.process_pdf_task, [temp_file])
 
@@ -274,16 +298,25 @@ def test_process_pdf_task_cleans_managed_temp_dir_on_final_failure(
     temp_file = _make_managed_upload_file(tmp_path)
     temp_dir = Path(temp_file).parent
 
+    class FakePostgres:
+        def append_paper_task_log(self, *_: Any, **__: Any) -> None:
+            return None
+
     def fake_acquisition(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
         nt["acquisition"] = "success"
         return fps, nt
 
-    async def fake_parsing(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+    async def fake_parsing(
+        pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]
+    ) -> Any:
         raise exc.ParsingException("parse failed")
 
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
     monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
     monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
-    monkeypatch.setattr(tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None)
+    monkeypatch.setattr(
+        tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None
+    )
     setattr(tasks_module.process_pdf_task, "max_retries", 0)
 
     with pytest.raises(exc.ParsingException):
@@ -292,7 +325,9 @@ def test_process_pdf_task_cleans_managed_temp_dir_on_final_failure(
     assert not temp_dir.exists()
 
 
-def test_process_pdf_task_origin_md_uses_source_text(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_process_pdf_task_origin_md_uses_source_text(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     source_md = "这是中文原文。"
     translated_md = "This is English translation."
     captured: Dict[str, Any] = {}
@@ -318,7 +353,9 @@ def test_process_pdf_task_origin_md_uses_source_text(monkeypatch: pytest.MonkeyP
         nt["acquisition"] = "success"
         return fps, nt
 
-    async def fake_parsing(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+    async def fake_parsing(
+        pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]
+    ) -> Any:
         nt["parsing"] = "success"
         return DocumentParsingResult(
             markdown_content=source_md,
@@ -379,7 +416,9 @@ def test_process_pdf_task_origin_md_uses_source_text(monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
     monkeypatch.setattr(tasks_module, "run_node_acmg", fake_acmg)
     monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store)
-    monkeypatch.setattr(tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing)
+    monkeypatch.setattr(
+        tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing
+    )
     monkeypatch.setattr(tasks_module, "init_knowledge_base_if_needed", fake_init_kb)
     monkeypatch.setattr(
         tasks_module.file_utils,
@@ -392,12 +431,16 @@ def test_process_pdf_task_origin_md_uses_source_text(monkeypatch: pytest.MonkeyP
     assert captured["en_format_md"] == translated_md
 
 
-def test_sync_evidence_to_graph_retries_transient_error(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_sync_evidence_to_graph_retries_transient_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class FlakySync:
         def __init__(self) -> None:
             self.calls = 0
 
-        def sync_evidence(self, document_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        def sync_evidence(
+            self, document_id: str, payload: Dict[str, Any]
+        ) -> Dict[str, Any]:
             self.calls += 1
             if self.calls < 2:
                 raise RuntimeError("temporary failure")
@@ -412,8 +455,12 @@ def test_sync_evidence_to_graph_retries_transient_error(monkeypatch: pytest.Monk
 
 def test_sync_evidence_to_graph_schema_error(monkeypatch: pytest.MonkeyPatch) -> None:
     class BrokenSync:
-        def sync_evidence(self, document_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-            raise SchemaSyncError("missing column", context={"document_id": document_id})
+        def sync_evidence(
+            self, document_id: str, payload: Dict[str, Any]
+        ) -> Dict[str, Any]:
+            raise SchemaSyncError(
+                "missing column", context={"document_id": document_id}
+            )
 
     monkeypatch.setattr(tasks_module, "get_graph_sync_service", lambda: BrokenSync())
     result = tasks_module._sync_evidence_to_graph("doc-99", {"ok": True})
@@ -422,7 +469,9 @@ def test_sync_evidence_to_graph_schema_error(monkeypatch: pytest.MonkeyPatch) ->
     assert result["context"]["document_id"] == "doc-99"
 
 
-def test_sync_evidence_to_graph_schedules_quality_retry(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_sync_evidence_to_graph_schedules_quality_retry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class RetrySync:
         def sync_evidence(self, *_: Any, **__: Any) -> Dict[str, Any]:
             return {
@@ -544,7 +593,9 @@ def test_process_pubmed_paper_task_success(monkeypatch: pytest.MonkeyPatch) -> N
             self.alignments: List[Dict[str, Any]] = []
 
         def update_paper_task(self, paper_task_id: str, **fields: Any) -> Any:
-            self.paper_updates.append({"paper_task_id": paper_task_id, "fields": fields})
+            self.paper_updates.append(
+                {"paper_task_id": paper_task_id, "fields": fields}
+            )
             return None
 
         def update_task_request(self, *_: Any, **__: Any) -> Any:
@@ -584,7 +635,9 @@ def test_process_pubmed_paper_task_success(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setattr(tasks_module, "get_pubmed_service", lambda: FakePubMedService())
     monkeypatch.setattr(tasks_module, "_agents", FakeAgent())
     monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store_outputs)
-    monkeypatch.setattr(tasks_module, "_sync_evidence_to_graph", lambda *_: {"neo4j_synced": True})
+    monkeypatch.setattr(
+        tasks_module, "_sync_evidence_to_graph", lambda *_: {"neo4j_synced": True}
+    )
 
     result = _invoke_bound_task(
         tasks_module.process_pubmed_paper_task,
@@ -598,7 +651,9 @@ def test_process_pubmed_paper_task_success(monkeypatch: pytest.MonkeyPatch) -> N
     assert result["fulltext_unavailable"] is True
     assert fake_pg.paper_updates[-1]["fields"]["status"] == "success"
     assert "warning_codes" in fake_pg.paper_updates[-1]["fields"]
-    assert "FULLTEXT_UNAVAILABLE" in fake_pg.paper_updates[-1]["fields"]["warning_codes"]
+    assert (
+        "FULLTEXT_UNAVAILABLE" in fake_pg.paper_updates[-1]["fields"]["warning_codes"]
+    )
     assert len(fake_pg.alignments) >= 1
     assert any(log.get("node") == "acmg" for log in fake_pg.logs)
 
@@ -616,7 +671,9 @@ def test_process_pubmed_paper_task_fetch_timeout_marks_failed(
             self.logs: List[Dict[str, Any]] = []
 
         def update_paper_task(self, paper_task_id: str, **fields: Any) -> Any:
-            self.paper_updates.append({"paper_task_id": paper_task_id, "fields": fields})
+            self.paper_updates.append(
+                {"paper_task_id": paper_task_id, "fields": fields}
+            )
             return None
 
         def update_task_request(self, *_: Any, **__: Any) -> Any:
@@ -677,7 +734,9 @@ def test_process_web_page_task_success(monkeypatch: pytest.MonkeyPatch) -> None:
             self.alignments: List[Dict[str, Any]] = []
 
         def update_paper_task(self, paper_task_id: str, **fields: Any) -> Any:
-            self.paper_updates.append({"paper_task_id": paper_task_id, "fields": fields})
+            self.paper_updates.append(
+                {"paper_task_id": paper_task_id, "fields": fields}
+            )
             return None
 
         def update_task_request(self, *_: Any, **__: Any) -> Any:
@@ -717,13 +776,17 @@ def test_process_web_page_task_success(monkeypatch: pytest.MonkeyPatch) -> None:
 
     fake_pg = FakePostgres()
     monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: fake_pg)
-    monkeypatch.setattr(tasks_module, "get_firecrawl_service", lambda: FakeFirecrawlService())
+    monkeypatch.setattr(
+        tasks_module, "get_firecrawl_service", lambda: FakeFirecrawlService()
+    )
     monkeypatch.setattr(tasks_module, "_agents", FakeAgent())
     monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store_outputs)
     monkeypatch.setattr(
         tasks_module, "_store_acquired_web_content", fake_store_acquired_web_content
     )
-    monkeypatch.setattr(tasks_module, "_sync_evidence_to_graph", lambda *_: {"neo4j_synced": True})
+    monkeypatch.setattr(
+        tasks_module, "_sync_evidence_to_graph", lambda *_: {"neo4j_synced": True}
+    )
 
     result = _invoke_bound_task(
         tasks_module.process_web_page_task,
@@ -737,7 +800,8 @@ def test_process_web_page_task_success(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result["source_url"] == "https://example.org/ldlr-web-study"
     assert fake_pg.paper_updates[-1]["fields"]["status"] == "success"
     assert any(
-        item["fields"].get("workflow_status") == "COMPLETED" for item in fake_pg.paper_updates
+        item["fields"].get("workflow_status") == "COMPLETED"
+        for item in fake_pg.paper_updates
     )
     assert any(
         item["fields"].get("local_path") == "literature/web/ldlr-web-study.md"
@@ -848,7 +912,9 @@ def test_run_node_acquisition_missing_file() -> None:
     node_trace: Dict[str, str] = {}
 
     with pytest.raises(exc.ValidationException):
-        tasks_module.run_node_acquisition(fake_pg, "paper-1", ["/nonexistent/file.pdf"], node_trace)
+        tasks_module.run_node_acquisition(
+            fake_pg, "paper-1", ["/nonexistent/file.pdf"], node_trace
+        )
     assert len(fake_pg.logs) == 2
     assert fake_pg.logs[1].get("error_code") == "INPUT_INVALID"
 
@@ -859,7 +925,9 @@ async def test_run_node_parsing_docx_terminal() -> None:
     node_trace: Dict[str, str] = {}
 
     with pytest.raises(exc.ParsingException, match="DOCX"):
-        await tasks_module.run_node_parsing(fake_pg, "paper-1", ["report.docx"], node_trace)
+        await tasks_module.run_node_parsing(
+            fake_pg, "paper-1", ["report.docx"], node_trace
+        )
     assert fake_pg.logs[1].get("error_code") == "PARSE_FAILED"
 
 
@@ -877,7 +945,9 @@ async def test_run_node_parsing_returns_structured_result(
         parsing_result.image_count = 1
         return parsing_result, 1
 
-    monkeypatch.setattr(tasks_module, "_run_async_with_node_policy", fake_run_async_with_policy)
+    monkeypatch.setattr(
+        tasks_module, "_run_async_with_node_policy", fake_run_async_with_policy
+    )
 
     parsing_result, result_trace = await tasks_module.run_node_parsing(
         fake_pg,
@@ -894,7 +964,9 @@ async def test_run_node_parsing_returns_structured_result(
     assert result_trace["parsing"] == "success"
 
 
-def test_process_pdf_task_persists_parsing_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_process_pdf_task_persists_parsing_metadata(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     evidence = _make_evidence_output(ps3_evidence={"ok": True})
     parsing_result = _make_parsing_result("/tmp/mineru-output")
 
@@ -902,7 +974,9 @@ def test_process_pdf_task_persists_parsing_metadata(monkeypatch: pytest.MonkeyPa
         nt["acquisition"] = "success"
         return fps, nt
 
-    async def fake_parsing(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+    async def fake_parsing(
+        pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]
+    ) -> Any:
         nt["parsing"] = "success"
         return parsing_result, nt
 
@@ -949,7 +1023,9 @@ def test_process_pdf_task_persists_parsing_metadata(monkeypatch: pytest.MonkeyPa
         fake_store_parsing,
         raising=False,
     )
-    monkeypatch.setattr(tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None)
+    monkeypatch.setattr(
+        tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None
+    )
 
     result = _invoke_bound_task(tasks_module.process_pdf_task, ["file.pdf"])
     assert result["mineru_folder"] == "/tmp/mineru-output"
@@ -968,7 +1044,9 @@ def test_process_pdf_task_parsing_artifacts_saved_before_extraction(
         nt["acquisition"] = "success"
         return fps, nt
 
-    async def fake_parsing(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+    async def fake_parsing(
+        pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]
+    ) -> Any:
         events.append("parsing")
         nt["parsing"] = "success"
         return parsing_result, nt
@@ -1018,7 +1096,9 @@ def test_process_pdf_task_parsing_artifacts_saved_before_extraction(
         fake_store_parsing,
         raising=False,
     )
-    monkeypatch.setattr(tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None)
+    monkeypatch.setattr(
+        tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None
+    )
 
     _invoke_bound_task(tasks_module.process_pdf_task, ["file.pdf"])
 
@@ -1056,7 +1136,9 @@ def test_process_pdf_task_accumulates_non_fatal_kb_init_warning(
         nt["acquisition"] = "success"
         return fps, nt
 
-    async def fake_parsing(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+    async def fake_parsing(
+        pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]
+    ) -> Any:
         nt["parsing"] = "success"
         return _make_parsing_result("/tmp/mineru-output"), nt
 
@@ -1104,9 +1186,15 @@ def test_process_pdf_task_accumulates_non_fatal_kb_init_warning(
     monkeypatch.setattr(tasks_module, "run_node_extraction", fake_extraction)
     monkeypatch.setattr(tasks_module, "run_node_acmg", fake_acmg)
     monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store)
-    monkeypatch.setattr(tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing)
-    monkeypatch.setattr(tasks_module, "init_knowledge_base_if_needed", fake_init_kb_fails)
-    monkeypatch.setattr(tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None)
+    monkeypatch.setattr(
+        tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing
+    )
+    monkeypatch.setattr(
+        tasks_module, "init_knowledge_base_if_needed", fake_init_kb_fails
+    )
+    monkeypatch.setattr(
+        tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None
+    )
 
     result = _invoke_bound_task(tasks_module.process_pdf_task, ["file.pdf"])
 
@@ -1130,7 +1218,9 @@ def test_process_pdf_task_accumulates_non_fatal_cache_failure(
         nt["acquisition"] = "success"
         return fps, nt
 
-    async def fake_parsing(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+    async def fake_parsing(
+        pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]
+    ) -> Any:
         nt["parsing"] = "success"
         return _make_parsing_result("/tmp/mineru-output"), nt
 
@@ -1178,11 +1268,17 @@ def test_process_pdf_task_accumulates_non_fatal_cache_failure(
     monkeypatch.setattr(tasks_module, "run_node_extraction", fake_extraction)
     monkeypatch.setattr(tasks_module, "run_node_acmg", fake_acmg)
     monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store)
-    monkeypatch.setattr(tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing)
+    monkeypatch.setattr(
+        tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing
+    )
     monkeypatch.setattr(tasks_module, "cache_pdf_result", fake_cache_fails)
-    monkeypatch.setattr(tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None)
+    monkeypatch.setattr(
+        tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None
+    )
 
-    result = _invoke_bound_task(tasks_module.process_pdf_task, ["file.pdf"], file_hash="abc123")
+    result = _invoke_bound_task(
+        tasks_module.process_pdf_task, ["file.pdf"], file_hash="abc123"
+    )
 
     assert result["document_id"]
     assert "pipeline_outcome" in result

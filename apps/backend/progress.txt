@@ -652,6 +652,77 @@ Notes:
 
 ---
 
+Implementation Update: 2026-03-22 (Final Wave pytest functional blocker reduction)
+
+Completed:
+- Cleared a broad set of repo-wide pytest functional blockers without deleting functional coverage.
+- Added/updated minimal compatibility and utility behavior in production code:
+  - `src/config.py`
+    - added `_LazySettingsProxy.use_agent_workflow()` compatibility method
+    - added `DatabaseConfig` + global `database_config` compatibility export
+  - `src/domain/impl/pdf_parser.py`
+    - added `validate()`
+    - added PDF signature validation before MinerU parse
+  - `src/utils/file_utils.py`
+    - added `cleanup_old_temp_folders()`
+    - added `ensure_directory_exists()`
+  - `app.py`
+    - reduced to compatibility shim re-exporting `main.app`
+  - `src/domain/graph/sync.py`
+    - fixed failure-archive path precedence so class-level monkeypatches work in tests
+- Completed legacy architecture cleanup required by tests:
+  - removed `src/presentation/`
+  - removed `tests/integration/api/test_document_api.py`
+  - rewired residual `src.configs` / `configs` imports in active files to `src.config`
+- Converted live-service tests to explicit integration-style gates instead of letting default unit runs fail on missing services:
+  - `tests/unit/infrastructure/test_mineru_adapter.py`
+  - `tests/unit/infrastructure/test_minio_store.py`
+  - `tests/unit/test_celery.py`
+  - `tests/unit/test_postgre.py`
+  - `tests/unit/test_qdrant.py`
+  - `tests/unit/test_rag.py`
+- Fixed functional unit tests that should remain in the default suite:
+  - `tests/unit/test_interaction.py`
+    - widened Redis patch scope for session rehydration test
+  - `tests/unit/test_tasks.py`
+    - aligned early `process_pdf_task*` tests with the file's existing fake-postgres pattern
+    - restored the success-path temp-dir cleanup test after drift during debugging
+    - repaired `test_process_pdf_task_origin_md_uses_source_text` function header
+- Fixed the real MinerU fallback code gap exercised by tests:
+  - `tests/unit/test_mineru_fallback.py` now passes via `ensure_directory_exists()` implementation.
+
+Validation:
+- Focused regressions now passing/skipping as intended:
+  - `tests/test_supervisor_integration.py` + `tests/unit/domain/test_document_parser.py` + `tests/test_legacy_architecture_cleanup.py::test_legacy_app_module_re_exports_main_app` -> `16 passed`
+  - `tests/test_legacy_architecture_cleanup.py` -> `5 passed`
+  - `tests/unit/infrastructure/test_mineru_adapter.py` -> `1 passed, 1 skipped`
+  - `tests/unit/infrastructure/test_minio_store.py` -> `12 passed, 1 skipped`
+  - `tests/unit/test_celery.py` + `tests/unit/test_domain_graph.py` -> `24 passed, 1 skipped`
+  - `tests/unit/test_interaction.py` -> `10 passed`
+  - `tests/unit/test_postgre.py` -> `4 passed, 11 skipped`
+  - `tests/unit/test_qdrant.py` -> `1 skipped`
+  - `tests/unit/test_mineru_fallback.py` -> `4 passed`
+- Changed-file diagnostics clean on the latest touched test files and utility/parser/app files, except for pre-existing broad type debt in files like `src/config.py` / `src/domain/graph/sync.py`.
+- Full-suite progression evidence:
+  - `uv run pytest --maxfail=20` now advances to 94%+ of the suite with no named failures exposed before timeout.
+  - Latest visible progression reaches through:
+    - all integration suites
+    - legacy cleanup
+    - supervisor/integration/tool/graph/celery/interactions
+    - postgre/qdrant/mineru fallback/task-manager areas
+  - Current blocker is no longer an early functional failure cluster, but total suite runtime / any possible remaining very-late failures beyond the 120s command timeout.
+
+Notes:
+- Following explicit user confirmation, the cleanup policy for this phase is:
+  - keep functional tests
+  - gate or remove only environment-dependent / outdated tests
+  - continue prioritizing project functionality over forcing live external-service tests in the default run
+- Remaining likely work after this milestone:
+  - confirm whether the final 95%-100% slice contains any real failures or only runtime overrun
+  - then address repo-wide non-functional debt (`basedpyright`, `ruff`), especially heavy files like `src/config.py`
+
+---
+
 Implementation Update: 2026-03-22 (Docs cleanup + persistent docs refresh)
 
 Completed:
@@ -765,3 +836,32 @@ Completed:
 Verification:
 - Search checks in active docs (`docs/`, excluding `archive/`) show no residual old policy strings (`15/10`, `1~10`, `default=10,max=15`, etc.).
 - Updated contract values are now consistent across product, flow, backend API contract, frontend constraints, and implementation plan docs.
+
+---
+
+Implementation Update: 2026-03-22 (Recursive README refresh aligned to actual code)
+
+Completed:
+- Recursively refreshed existing project README files to match current repository implementation.
+- Updated files:
+  - `README.md`
+  - `docs/README.md`
+  - `docs/plans/README.md`
+  - `database/README.md`
+  - `database/sql/README.md`
+  - `src/agents/README.md`
+  - `src/api/README.md`
+  - `src/application/README.md`
+  - `src/configs/README.md`
+  - `src/domain/README.md`
+  - `src/infrastructure/README.md`
+  - `src/knowledge/README.md`
+  - `src/state/README.md`
+  - `src/tools/README.md`
+  - `src/utils/README.md`
+- Replaced stale architecture examples/snippets with code-aligned module maps, route snapshots, and current entrypoints.
+
+Verification:
+- README refresh scope excludes third-party/cached paths (`.venv`, `.pytest_cache`) and only targets repository-owned docs.
+- File lists and endpoint snapshots were generated from current source files before rewriting.
+- `git status --short` shows documentation/progress updates for this milestone.
