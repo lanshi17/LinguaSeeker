@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# ACMG-PS3 Intelligence System Frontend Quick Start Script
+# ACMG-Lingua Frontend Quick Start Script
 
 echo "==========================================="
-echo "ACMG-PS3 Intelligence System Frontend Setup"
+echo "ACMG-Lingua Frontend Setup"
 echo "==========================================="
 
 echo ""

@@ -1,4 +1,4 @@
-# ACMG-PS3 Intelligence System 前端实现总结
+# ACMG-Lingua 前端实现总结
 
 ## 完成的功能清单
 
@@ -18,7 +18,7 @@
 ### 2. 页面组件实现
 
 #### 首页 (HomePage)
-- 系统标题: "ACMG-PS3 Intelligence System"
+- 系统标题: "ACMG-Lingua"
 - 导航菜单: 4个功能入口卡片
 - 系统特性展示: 4个核心特性
 - API文档链接

@@ -1,4 +1,4 @@
-# ACMG-PS3 Intelligence System 前端实现总结报告
+# ACMG-Lingua 前端实现总结报告
 
 ## 项目概述
 本项目是一个用于ACMG-PS3证据标准智能系统的前端应用，旨在为用户提供PDF上传、证据检索、分析和可视化等功能。

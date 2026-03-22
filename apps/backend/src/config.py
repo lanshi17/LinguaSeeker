@@ -366,7 +366,7 @@ class AppConfig:
     """应用配置"""
 
     def __init__(self):
-        self.app_name: str = "ACMG-PS3 Intelligence System"
+        self.app_name: str = "ACMG-Lingua"
         self.app_version: str = "1.0.0"
         self.environment: Environment = Environment.DEVELOPMENT
         self.debug: bool = True
@@ -753,7 +753,7 @@ class AppConfig:
 # Pydantic配置类（保留原有兼容性）
 class Settings(BaseSettings):
     # ==================== 应用配置 ====================
-    app_name: str = "ACMG-PS3 Intelligence System"
+    app_name: str = "ACMG-Lingua"
     app_version: str = "3.0.0"
     api_prefix: str = "/api/v1"
     cors_origins: str = '["*"]'  # Updated to match .env.local
