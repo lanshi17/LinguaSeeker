@@ -1,5 +1,8 @@
 # Implementation Plan: 7.2 Multimodal Batch VLM & 7.3 Knowledge Graph Reasoning Node
 
+> **Plan Status:** `P1_EXT_DRAFT (requires v1.0 compatibility review before execution)`
+> **Conflict Rule:** If this extension conflicts with frozen docs, frozen docs take precedence and this plan must be revised first.
+
 Status: PENDING (P1 post-optimization)
 Prerequisites: M1 主工作流完成
 

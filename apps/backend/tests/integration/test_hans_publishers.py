@@ -1,31 +1,20 @@
 """Integration tests for Hans Publishers service."""
 
-import sys
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-# Add the hans_publishers directory to sys.path for direct module imports
-hans_dir = (
-    Path(__file__).parent.parent.parent
-    / "src"
-    / "domain"
-    / "literature"
-    / "hans_publishers"
+from src.domain.literature.automated_web.hans_publishers.enums import Subject
+from src.domain.literature.automated_web.hans_publishers.hans_publishers import (
+    hanspub_workflow,
 )
-sys.path.insert(0, str(hans_dir))
-
-# Now import directly (modules will use absolute imports)
-from enums import Subject
-from hans_publishers import hanspub_workflow
-from locators import (
+from src.domain.literature.automated_web.hans_publishers.locators import (
     XPATH_PDF_LINK,
     XPATH_RESULTS_CONTAINER,
     XPATH_SEARCH_BUTTON,
     XPATH_SEARCH_INPUT,
 )
-from models import (
+from src.domain.literature.automated_web.hans_publishers.models import (
     BASE_URL,
     DownloadResponse,
     HansPubPayload,
@@ -34,7 +23,7 @@ from models import (
     SearchParams,
     SearchResponse,
 )
-from service import (
+from src.domain.literature.automated_web.hans_publishers.service import (
     HansPubService,
     _build_search_js,
     _choose_item,
@@ -96,7 +85,7 @@ class TestHansPubPayload:
         assert payload.action == "search"
         assert payload.base_url == BASE_URL
         assert payload.download_path == "./downloads"
-        assert payload.llm_provider == "ollama"
+        assert payload.llm_provider == "deepseek"
         assert payload.selected_index == 0
 
     def test_search_action(self):
@@ -212,6 +201,7 @@ class TestDownloadResponse:
             file_path="./downloads/paper.pdf",
         )
         assert resp.success is True
+        assert resp.pdf_url is not None
         assert "paper.pdf" in resp.pdf_url
 
 
@@ -228,7 +218,7 @@ class TestSafeJsonLoads:
         assert result == {}
 
     def test_none_input(self):
-        result = _safe_json_loads(None)
+        result = _safe_json_loads("")
         assert result == {}
 
     def test_json_in_mixed_content(self):
@@ -330,6 +320,7 @@ class TestChooseItem:
             {"title": "Paper 2", "index": 1},
         ]
         chosen = _choose_item(items, selected_index=1, selected_title=None)
+        assert chosen is not None
         assert chosen["title"] == "Paper 2"
 
     def test_choose_by_title(self):
@@ -338,6 +329,7 @@ class TestChooseItem:
             {"title": "Paper 2", "index": 1},
         ]
         chosen = _choose_item(items, selected_index=0, selected_title="Paper 2")
+        assert chosen is not None
         assert chosen["title"] == "Paper 2"
 
     def test_invalid_index(self):
@@ -382,10 +374,14 @@ class TestHansPubService:
                 filters={"subject": ["临床医学", "生物学"]},
                 limit=10,
             ),
+            llm_provider="ollama",
+            llm_api_token="test-token",
         )
 
         with patch.object(service, "browser_config"):
-            with patch("service.AsyncWebCrawler") as mock_crawler_cls:
+            with patch(
+                "src.domain.literature.automated_web.hans_publishers.service.AsyncWebCrawler"
+            ) as mock_crawler_cls:
                 mock_crawler = AsyncMock()
                 mock_crawler.arun = AsyncMock(return_value=mock_result)
                 mock_crawler_cls.return_value.__aenter__.return_value = mock_crawler
@@ -408,10 +404,14 @@ class TestHansPubService:
         payload = HansPubPayload(
             action="search",
             search_params=SearchParams(keyword="test"),
+            llm_provider="ollama",
+            llm_api_token="test-token",
         )
 
         with patch.object(service, "browser_config"):
-            with patch("service.AsyncWebCrawler") as mock_crawler_cls:
+            with patch(
+                "src.domain.literature.automated_web.hans_publishers.service.AsyncWebCrawler"
+            ) as mock_crawler_cls:
                 mock_crawler = AsyncMock()
                 mock_crawler.arun = AsyncMock(return_value=mock_result)
                 mock_crawler_cls.return_value.__aenter__.return_value = mock_crawler
@@ -439,7 +439,9 @@ class TestHanspubWorkflow:
             "llm_provider": "ollama",
         }
 
-        with patch("hans_publishers.HansPubService") as MockService:
+        with patch(
+            "src.domain.literature.automated_web.hans_publishers.hans_publishers.HansPubService"
+        ) as MockService:
             mock_service = MockService.return_value
             mock_service.search = AsyncMock(
                 return_value=SearchResponse(
@@ -470,7 +472,9 @@ class TestHanspubWorkflow:
             "llm_provider": "ollama",
         }
 
-        with patch("hans_publishers.HansPubService") as MockService:
+        with patch(
+            "src.domain.literature.automated_web.hans_publishers.hans_publishers.HansPubService"
+        ) as MockService:
             mock_service = MockService.return_value
             mock_service.download = AsyncMock(
                 return_value=DownloadResponse(
@@ -494,7 +498,9 @@ class TestHanspubWorkflow:
             # Missing search_params and detail_link
         }
 
-        with patch("hans_publishers.HansPubService") as MockService:
+        with patch(
+            "src.domain.literature.automated_web.hans_publishers.hans_publishers.HansPubService"
+        ) as MockService:
             mock_service = MockService.return_value
             mock_service.download = AsyncMock(
                 return_value=DownloadResponse(
@@ -514,7 +520,9 @@ class TestHanspubWorkflow:
             "search_params": {"keyword": "test", "limit": 10},
         }
 
-        with patch("hans_publishers.HansPubService") as MockService:
+        with patch(
+            "src.domain.literature.automated_web.hans_publishers.hans_publishers.HansPubService"
+        ) as MockService:
             mock_service = MockService.return_value
             mock_service.search = AsyncMock(
                 return_value=SearchResponse(success=True, items=[])

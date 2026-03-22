@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 from src.utils.logger import Logger
-from src.configs.app_config import AppConfig
+from src.config import AppConfig
 
 cfg = AppConfig.from_env()
 

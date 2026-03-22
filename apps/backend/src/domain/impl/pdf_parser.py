@@ -22,6 +22,10 @@ class PDFParser(DocumentParser):
         self.mineru_adapter = mineru_adapter or MinerUAdapterImpl()
         logger.info("PDFParser initialized with MinerU adapter")
 
+    def validate(self, content: str) -> bool:
+        """Validate parser input content."""
+        return bool(content and content.strip())
+
     def parse(
         self,
         file_path: str,
@@ -53,6 +57,12 @@ class PDFParser(DocumentParser):
 
         try:
             logger.info(f"Parsing PDF file: {file_path}")
+
+            if file_path.lower().endswith(".pdf"):
+                with open(file_path, "rb") as pdf_file:
+                    header = pdf_file.read(5)
+                if not header.startswith(b"%PDF-"):
+                    raise ParseException(f"Invalid PDF signature: {file_path}")
 
             # 调用MinerU流水线处理
             result = self.mineru_adapter.mineru_parse(

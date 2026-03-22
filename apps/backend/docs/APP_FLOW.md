@@ -2,7 +2,7 @@
 
 ## 1. 总览
 系统由两个工作流组成：
-1. 主工作流（业务闭环）：文献获取 -> 文档解析 -> 多语言处理 -> 证据提取 -> ACMG 判定
+1. 主工作流（业务闭环）：文献获取 -> 文档解析 -> 多语言处理 -> 证据提取 -> ACMG 分类 -> 专家裁决
 2. KG 工作流（独立服务）：从 PostgreSQL 读取结构化证据，构建/更新 Neo4j 图谱
 
 主工作流最小执行单元是“单篇文献”，由 Celery 执行。请求级通过 `request_id` 聚合多个 `paper_task_id`。
@@ -16,10 +16,10 @@
 5. 生成 `request_id`（UUIDv4）。
 
 ### 2.2 分支选择
-1. 用户上传文献：直接进入解析流程，跳过文献获取。
-2. 用户不上传：进入文献获取（MVP 仅 PubMed）。
-3. 候选列表返回最多 15 条，分页 `default=10, max=50`。
-4. 用户至少选择 1 条、最多选择 10 条。
+1. 用户上传文献（PDF/DOCX）：直接进入解析流程，跳过文献获取。
+2. 用户不上传：进入文献获取（多源 API + 爬取）。
+3. 候选列表返回最多 20 条，分页 `default=5, max=5`。
+4. 用户至少选择 1 条、最多选择 5 条。
 5. 用户未选择且未上传：返回 `failed + INPUT_INVALID`，流程终止。
 
 ## 3. 主工作流（单篇文献）
@@ -29,41 +29,49 @@ flowchart TD
     B --> C[Node2 文档解析]
     C --> D[Node3 多语言处理]
     D --> E[Node4 证据提取]
-    E --> F[Node5 ACMG判定]
-    F --> G[Persist Result + Emit KG Event]
+    E --> F[Node5 ACMG分类]
+    F --> G[Node6 专家裁决]
+    G --> H[Persist Result + Emit KG Event + Output Traceable JSON]
 ```
 
 ## 4. 节点执行细则
 ### 4.1 Node1 文献获取
-- MVP 仅 PubMed。
+- 支持数据源：
+1. API：`biopython/pubmed`、`pmc`、`crossref`、`doaj`、`jstage`、`unpaywall`
+2. 爬取：`hans_publishers`、`pubscholar`、`cyberleninka`
+- 调用顺序由调度智能体动态决定。
 - 国家过滤依赖 ISO 映射表，不允许降级到语种近似。
 - 国家无命中：`FETCH_NO_RESULT`。
-- 付费墙全文不可得：标记 `fulltext_unavailable`，降级摘要证据继续。
+- 全文不可得：标记 `fulltext_unavailable`，降级摘要证据继续。
 
-### 4.2 Node2 文档解析
+### 4.2 Node2 文档解析（`pdf-parser-service`）
 - 输入：PDF/DOCX。
 - PDF：优先 MinerU，失败回退 PaddleOCR-VL-1.5。
 - DOCX：解析失败直接 `PARSE_FAILED`。
-- 抽取范围：正文、表格、图注。
+- 输出：结构化 `md` 与抽取图片 `jpg`，写入 MinIO。
 
-### 4.3 Node3 多语言处理
+### 4.3 Node3 多语言处理（`translation-service`）
 - 原文英文：直接跳过。
 - 非英文：全文翻译为英文。
-- 保留术语英文表达，构建 alignment 记录。
-- 翻译破坏 HGVS/基因符号时自动纠正。
-- 自动纠正失败：添加 `HGVS_AUTOCORRECT_FAILED`，流程继续。
+- 输出：英文 `md` 写入 MinIO。
+- 向量化：`BGE-M3` 写入 Qdrant。
+- 对齐信息：写入 PostgreSQL alignment 表。
 
-### 4.4 Node4 证据提取
-- 句级关系抽取。
-- 支持跨句合并推理。
-- 显式标注否定/不确定表达。
-- 标准化：HGVS + HGNC + 疾病本体（MONDO>OMIM>MeSH）。
+### 4.4 Node4 证据提取（`evidence-extraction-service`）
+- 基础框架：`scispaCy + LlamaIndex`。
+- 实体识别：基因、变异、蛋白、疾病、实验术语。
+- 关系抽取：基因-变异-疾病关系。
+- 实验信息抽取：方法、结果、结论。
+- 检索策略：关键词检索 + 向量检索 + `juniper-bge-reranker-large_v2` 精排。
 
-### 4.5 Node5 ACMG 判定
-- MVP 仅输出 PS3/BS3。
-- 全自动判定。
-- 输出规则触发明细。
-- 冲突证据全部保留并按文献并列展示。
+### 4.5 Node5 ACMG 分类
+- 基于 ACMG 指南知识库（RAG）进行分类。
+- 输出分类结果、关键证据与推理过程。
+- v1.0 范围：仅 PS3/BS3。
+
+### 4.6 Node6 专家裁决
+- 基于 RAG 汇总多源证据。
+- 输出证据强度与裁决说明。
 
 ## 5. 去重与重复文件流程
 ```mermaid
@@ -94,16 +102,12 @@ flowchart LR
 2. `success`：全部文献成功，或全部为 `FILE_DUPLICATE` 成功跳过。
 3. `failed`：无成功文献且存在失败。
 
-## 7. 重试与终止流程
-
-**单一来源**：见 [`docs/CONSTANTS.md`](CONSTANTS.md)（节点级重试参数）。
-
-### 7.2 失败终止与重开
-1. 节点最终失败：`paper_task=failed`，不自动重跑。
-2. 业务用户无手动重开权限。
-3. 运维通过脚本重开，复用原 `paper_task_id`。
-4. 状态流：`failed -> queued -> running -> ...`
-5. 记录普通任务日志：`reopened_by_ops_script`。
+## 7. 调度与重试
+1. 节点顺序固定为 6 节点。
+2. 源级调用顺序与源级重试由 LLM 调度策略动态决定。
+3. 节点级默认重试模板与兜底上限见 [`docs/CONSTANTS.md`](CONSTANTS.md)。
+4. 节点最终失败：`paper_task=failed`，不自动重跑。
+5. 运维通过脚本重开，复用原 `paper_task_id`，记录 `reopened_by_ops_script`。
 
 ## 8. 错误与日志链路
 1. API 失败响应固定：`failed + error_code + log_link`
@@ -113,26 +117,15 @@ flowchart LR
 5. 任意已登录用户可重签发。
 
 ## 9. KG 独立工作流
-### 9.1 触发方式
-- 主工作流完成后通过 Celery 事件触发 KG 更新。
+1. 主工作流完成后通过 Celery 事件触发 KG 更新。
+2. 事件最小载荷、幂等键见 [`docs/CONSTANTS.md`](CONSTANTS.md)。
+3. 首次全量回灌由脚本触发，支持断点续跑。
 
-### 9.2 事件最小载荷
-
-**单一来源**：见 [`docs/CONSTANTS.md`](CONSTANTS.md)（KG 事件载荷最小字段）。
-
-### 9.3 幂等键
-
-**单一来源**：见 [`docs/CONSTANTS.md`](CONSTANTS.md)（幂等键格式）。
-
-### 9.4 首次上线与失败恢复
-1. 首次全量回灌由脚本触发。
-2. 支持断点续跑。
-3. 失败进入重试队列，重试参数沿用 ACMG 节点级策略。
-
-## 10. 报告导出流程
-1. 先渲染“对照阅读页”（双语同时高亮）。
-2. 再渲染“证据表 + ACMG + 冲突说明”页。
-3. 合并为单个 PDF 输出。
+## 10. 输出与导出
+1. JSON 返回完整溯源链（节点输入输出、证据定位、来源元数据）。
+2. 渲染“对照阅读页”（双语同时高亮）。
+3. 渲染“证据表 + ACMG 分类 + 专家裁决 + 冲突说明”页。
+4. 合并为单个 PDF 输出。
 
 ## 11. 生命周期与清理
 1. 任务单文本+结构化元数据：永久保存。

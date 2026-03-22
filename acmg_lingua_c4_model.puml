@@ -1,0 +1,191 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title ACMG-Lingua System - Container Diagram
+
+Person(user, "Clinical Geneticist", "A medical professional who needs to interpret genetic variants")
+
+System_Boundary(system, "ACMG-Lingua System") {
+  Container(api, "FastAPI", "Python, FastAPI", "RESTful API layer with dependency injection")
+  Container(web_ui, "Web UI", "React, Streamlit", "User interface for task management")
+
+  Container_Boundary(backend, "Backend Services") {
+    Container(agent_system, "LangGraph Agents", "Python, LangGraph", "Multi-agent system for evidence processing (parsing, extraction, reasoning, arbitration)")
+    Container(llm_service, "LLM Service", "Anthropic SDK", "Manages DeepSeek (primary) and Claude (arbitration) LLMs with unified Anthropic format")
+    Container(document_processing, "Document Processing", "MinerU, PDF Parser", "Handles PDF parsing and preprocessing with adapter pattern")
+    Container(embedding_service, "Embedding Service", "Sentence Transformers", "Generates vector embeddings for RAG")
+    Container(rerank_service, "Rerank Service", "Custom reranking", "Re-ranks retrieval results for improved relevance")
+
+    Container(graph_db, "Neo4j", "Graph Database", "Stores knowledge graph relationships")
+    Container(vector_db, "Qdrant", "Vector Database", "Stores document embeddings for semantic search")
+    Container(relational_db, "PostgreSQL", "Relational DB", "Stores structured data, metadata, and task information")
+    Container(object_storage, "MinIO", "Object Storage", "Stores documents and artifacts")
+    Container(cache, "Redis", "In-Memory Cache", "Caches frequent queries and temporary data")
+    Container(message_queue, "Celery", "Message Queue", "Handles asynchronous tasks and background jobs")
+  }
+}
+
+System_Ext(pubmed, "PubMed", "Literature database")
+System_Ext(clinvar, "ClinVar", "Variant database")
+System_Ext(clingen, "ClinGen", "Variant database")
+System_Ext(firecrawl, "Firecrawl", "Web scraping service")
+
+Rel(user, api, "Uses", "HTTPS")
+Rel(user, web_ui, "Interacts with", "HTTPS")
+
+Rel(api, agent_system, "Orchestrates", "Internal API")
+Rel(api, document_processing, "Processes documents", "Internal API")
+Rel(api, llm_service, "Requests inference", "Internal API")
+Rel(api, message_queue, "Queues async tasks", "Internal API")
+
+Rel(agent_system, document_processing, "Processes documents", "Internal API")
+Rel(agent_system, embedding_service, "Generates embeddings", "Internal API")
+Rel(agent_system, llm_service, "Requests inference", "Internal API")
+Rel(agent_system, rerank_service, "Re-ranks results", "Internal API")
+Rel(agent_system, cache, "Caches results", "Internal API")
+
+Rel(document_processing, object_storage, "Stores/Retrieves documents", "S3 API")
+Rel(embedding_service, vector_db, "Stores/Retrieves embeddings", "gRPC/HTTP")
+Rel(agent_system, graph_db, "Stores/Queries knowledge", "Bolt protocol")
+Rel(agent_system, relational_db, "Stores/Queries metadata", "SQL")
+Rel(message_queue, relational_db, "Updates task status", "SQL")
+
+Rel(agent_system, pubmed, "Queries literature", "API")
+Rel(agent_system, clinvar, "Queries variant data", "API")
+Rel(agent_system, clingen, "Queries variant data", "API")
+Rel(agent_system, firecrawl, "Fetches web content", "API")
+
+@enduml
+
+' Component Level Diagram
+title ACMG-Lingua System - Component Diagram
+
+Container_Boundary(backend_system, "Backend Services") {
+  Component_Boundary(api_layer, "API Layer") {
+    Component(core_router, "Core Router", "FastAPI Router", "Core API endpoints")
+    Component(task_router, "Task Router", "FastAPI Router", "Task management endpoints")
+    Component(evidence_router, "Evidence Router", "FastAPI Router", "Evidence query endpoints")
+    Component(stream_router, "Stream Router", "FastAPI Router", "Streaming endpoints")
+  }
+
+  Component_Boundary(application_layer, "Application Layer") {
+    Component(document_service, "Document Service", "Python", "Document processing and storage")
+    Component(embedding_service, "Embedding Service", "Python", "Vector embedding generation")
+    Component(llm_service, "LLM Service", "Python", "LLM orchestration and inference")
+    Component(rerank_service, "Rerank Service", "Python", "Result reranking")
+  }
+
+  Component_Boundary(domain_layer, "Domain Layer") {
+    Component_Boundary(agent_domain, "Agent Domain") {
+      Component(parsing_agent, "Parsing Agent", "LangGraph", "PDF parsing and text extraction")
+      Component(extraction_agent, "Extraction Agent", "LangGraph", "Entity and evidence extraction")
+      Component(reasoning_agent, "Reasoning Agent", "LangGraph", "Evidence reasoning and analysis")
+      Component(arbitration_agent, "Arbitration Agent", "LangGraph", "ACMG classification arbitration")
+      Component(acquisition_agent, "Acquisition Agent", "LangGraph", "Literature acquisition")
+    }
+
+    Component_Boundary(evidence_domain, "Evidence Domain") {
+      Component(evidence_aggregator, "Evidence Aggregator", "Python", "Evidence aggregation")
+      Component(evidence_classifier, "Evidence Classifier", "Python", "Evidence classification")
+    }
+
+    Component_Boundary(graph_domain, "Graph Domain") {
+      Component(graph_search, "Graph Search", "Python", "Knowledge graph search")
+      Component(graph_sync, "Graph Sync", "Python", "Graph synchronization")
+    }
+
+    Component_Boundary(literature_domain, "Literature Domain") {
+      Component(pubmed_service, "PubMed Service", "Python", "PubMed API integration")
+      Component(firecrawl_service, "Firecrawl Service", "Python", "Web scraping integration")
+    }
+
+    Component_Boundary(variant_domain, "Variant Domain") {
+      Component(variant_service, "Variant Service", "Python", "Variant data processing")
+      Component(clinvar_client, "ClinVar Client", "Python", "ClinVar API client")
+      Component(clingen_client, "ClinGen Client", "Python", "ClinGen API client")
+    }
+  }
+
+  Component_Boundary(infrastructure_layer, "Infrastructure Layer") {
+    Component(minio_client, "MinIO Client", "Python", "Object storage client")
+    Component(neo4j_client, "Neo4j Client", "Python", "Graph database client")
+    Component(postgres_client, "PostgreSQL Client", "Python", "Relational database client")
+    Component(qdrant_client, "Qdrant Client", "Python", "Vector database client")
+    Component(redis_client, "Redis Client", "Python", "Cache client")
+    Component(mineru_adapter, "MinerU Adapter", "Python", "MinerU PDF parsing adapter")
+  }
+
+  Component_Boundary(tools_layer, "Tools Layer") {
+    Component_Boundary(db_tools, "Database Tools") {
+      Component(neo4j_tool, "Neo4j Tool", "Python", "Neo4j database operations")
+      Component(postgres_tool, "PostgreSQL Tool", "Python", "PostgreSQL operations")
+      Component(qdrant_tool, "Qdrant Tool", "Python", "Qdrant vector operations")
+    }
+
+    Component_Boundary(external_tools, "External Tools") {
+      Component(clinvar_tool, "ClinVar Tool", "Python", "ClinVar API integration")
+      Component(translation_api, "Translation API", "Python", "Translation service")
+    }
+
+    Component_Boundary(file_tools, "File Tools") {
+      Component(minio_tool, "MinIO Tool", "Python", "MinIO storage operations")
+      Component(pdf_parser, "PDF Parser", "Python", "PDF parsing utilities")
+    }
+  }
+
+  Component_Boundary(knowledge_layer, "Knowledge Layer") {
+    Component(prompt_loader, "Prompt Loader", "Python", "Prompt template loading")
+    Component(acmg_rules, "ACMG Rules", "YAML", "ACMG classification rules")
+  }
+
+  Component_Boundary(state_layer, "State Layer") {
+    Component(state_schemas, "State Schemas", "Python", "State schema definitions")
+    Component(global_state, "Global State", "Python", "Global state management")
+  }
+
+  Component_Boundary(utils_layer, "Utilities Layer") {
+    Component(logger, "Logger", "Loguru", "Logging utilities")
+    Component(timer, "Timer", "Python", "Performance timing")
+    Component(sanitizers, "Sanitizers", "Python", "Input sanitization")
+    Component(exceptions, "Exceptions", "Python", "Custom exception handling")
+    Component(task_manager, "Task Manager", "Python", "Task orchestration")
+    Component(report_generator, "Report Generator", "Python", "Report generation")
+  }
+}
+
+Rel(core_router, task_router, "Shares dependencies", "Internal")
+Rel(core_router, evidence_router, "Shares dependencies", "Internal")
+Rel(core_router, stream_router, "Shares dependencies", "Internal")
+
+Rel(core_router, document_service, "Calls", "Internal API")
+Rel(task_router, document_service, "Calls", "Internal API")
+Rel(evidence_router, evidence_aggregator, "Calls", "Internal API")
+
+Rel(document_service, embedding_service, "Uses", "Internal API")
+Rel(document_service, llm_service, "Uses", "Internal API")
+Rel(document_service, rerank_service, "Uses", "Internal API")
+
+Rel(parsing_agent, mineru_adapter, "Uses", "Internal API")
+Rel(extraction_agent, llm_service, "Uses", "Internal API")
+Rel(reasoning_agent, graph_search, "Uses", "Internal API")
+Rel(arbitration_agent, acmg_rules, "Uses", "Internal API")
+
+Rel(evidence_aggregator, evidence_classifier, "Calls", "Internal API")
+Rel(graph_search, neo4j_client, "Uses", "Internal API")
+Rel(pubmed_service, external_tools, "Uses", "Internal API")
+
+Rel(minio_client, minio_tool, "Uses", "Internal API")
+Rel(neo4j_client, neo4j_tool, "Uses", "Internal API")
+Rel(postgres_client, postgres_tool, "Uses", "Internal API")
+Rel(qdrant_client, qdrant_tool, "Uses", "Internal API")
+Rel(redis_client, cache, "Uses", "Internal API")
+
+Rel(prompt_loader, acmg_rules, "Loads", "Internal API")
+Rel(state_schemas, global_state, "Defines", "Internal API")
+
+Rel(logger, utils_layer, "Used by", "Internal API")
+Rel(timer, utils_layer, "Used by", "Internal API")
+
+@enduml

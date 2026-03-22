@@ -1,5 +1,8 @@
 # ACMGFlow LangGraph 重构实施方案
 
+> **Plan Status:** `LEGACY (pre-v1.0 baseline)`
+> **Conflict Rule:** This plan is historical reference only. Frozen docs (`PRD/APP_FLOW/TECH_STACK/BACKEND_STRUCTURE`) are authoritative.
+
 ## 文档信息
 
 - **创建日期**: 2026-03-06

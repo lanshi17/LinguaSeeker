@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Generator
 from uuid import uuid4
+import os
 
 import psycopg2
 import pytest
@@ -24,6 +25,15 @@ from src.infrastructure.postgres import (
 
 def _postgres_conninfo(db_name: str) -> str:
     return _build_conninfo(db_name)
+
+
+def _should_run_postgres_tests() -> bool:
+    return bool(os.getenv("RUN_POSTGRES_TESTS"))
+
+
+def _require_postgres_service() -> None:
+    if not _should_run_postgres_tests():
+        pytest.skip("Set RUN_POSTGRES_TESTS to run PostgreSQL-dependent tests")
 
 
 @pytest.fixture(scope="session")
@@ -134,6 +144,7 @@ def test_build_database_url() -> None:
 
 @pytest.mark.unit
 def test_direct_connection() -> None:
+    _require_postgres_service()
     conn = psycopg2.connect(
         host=cfg.postgres_host,
         port=cfg.postgres_port,
@@ -302,6 +313,7 @@ def test_graph_cache_upserts(test_engine) -> None:
 
 
 def test_get_postgres_client_singleton() -> None:
+    _require_postgres_service()
     client_a = get_postgres_client()
     client_b = get_postgres_client()
     assert client_a is client_b

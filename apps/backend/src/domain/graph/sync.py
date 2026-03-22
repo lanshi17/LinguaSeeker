@@ -223,13 +223,18 @@ class GraphSyncService:
         self._missing_field_alert_threshold: int = int(
             getattr(cfg, "evidence_failure_alert_threshold", 5)
         )
-        self._failure_archive_path: Path = Path(
-            getattr(
-                cfg,
-                "evidence_failure_archive_path",
-                "logs/evidence_failure_archive.jsonl",
-            )
-        ).expanduser()
+        configured_archive_path = getattr(
+            cfg,
+            "evidence_failure_archive_path",
+            None,
+        )
+        archive_path_value = (
+            configured_archive_path
+            if configured_archive_path
+            and str(configured_archive_path) != "logs/evidence_failure_archive.jsonl"
+            else self._FAILURE_ARCHIVE_PATH
+        )
+        self._failure_archive_path: Path = Path(archive_path_value).expanduser()
         logger.info("GraphSyncService initialized")
 
     # ==================== 核心同步入口 ====================

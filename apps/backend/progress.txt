@@ -575,3 +575,193 @@ Verification:
   - `uv run --project ... python -c "from src.infrastructure import postgres; ..."`
   - result after fix: schema resolves to `acmg_app`, conninfo includes `search_path=acmg_app,public`.
 - Restarted uvicorn on `127.0.0.1:8000` with updated code.
+
+---
+
+Implementation Update: 2026-03-22 (Final Wave literature import blocker recovery)
+
+Completed:
+- Fixed the three remaining literature integration test collection/import blockers identified in the prior Final Wave note:
+  - `tests/integration/test_cyberleninka.py`
+  - `tests/integration/test_hans_publishers.py`
+  - `tests/integration/test_pubscholar_scraper.py`
+- Repointed stale test imports to real package modules under `src.domain.literature.automated_web.*` instead of legacy top-level/script-style imports.
+- Removed Hans `Subject` import collision by importing from the correct Hans package module rather than relying on ambiguous top-level `enums` resolution.
+- Updated stale test expectations and patch targets to current implementation behavior:
+  - payload default `llm_provider` now asserted as `deepseek`
+  - workflow tests patch real package paths
+  - service tests stub the correct pre-crawler paths (`_search_via_public_api` for CyberLeninka, `_search_via_duckduckgo` for PubScholar)
+- Added explicit `llm_api_token="test-token"` in affected service tests to avoid unrelated config fallback bug during mocked crawler-path verification.
+- Cleaned changed-file type issues in the three edited tests so file-local diagnostics are now error-free.
+
+Validation:
+- Changed-file diagnostics:
+  - `lsp_diagnostics tests/integration/test_cyberleninka.py --severity error` -> clean
+  - `lsp_diagnostics tests/integration/test_hans_publishers.py --severity error` -> clean
+  - `lsp_diagnostics tests/integration/test_pubscholar_scraper.py --severity error` -> clean
+- Targeted regression:
+  - `uv run pytest -q tests/integration/test_cyberleninka.py tests/integration/test_hans_publishers.py tests/integration/test_pubscholar_scraper.py`
+  - result: `146 passed`
+- Broader Final Wave slice:
+  - `uv run pytest -q tests/integration`
+  - result: `8 failed, 217 passed, 1 skipped, 18 warnings`
+
+Remaining blockers after this recovery slice:
+- The prior literature collection/import blockers are resolved.
+- Current broader integration failures are now concentrated in `tests/integration/api/test_document_api.py`, including:
+  - `mock_app_config` fixture missing controller-required `api_prefix` / `api_version`
+  - outdated patch target assumptions around `application.services.document_service.MinerUAdapterImpl`
+  - one parser expectation mismatch for returned ZIP URL (`mock-download-url` vs `mock-result-url`)
+- These are separate downstream integration issues, not regressions from the literature import-blocker fix.
+
+---
+
+Implementation Update: 2026-03-22 (Document API integration recovery)
+
+Completed:
+- Fixed the downstream `tests/integration/api/test_document_api.py` failures revealed after the literature Final Wave blockers were cleared.
+- Updated the test module to import current package paths via `src.*` so runtime objects and test assertions reference the same classes/modules.
+- Brought `mock_app_config` in line with current controller requirements by adding:
+  - `api_prefix`
+  - `api_version`
+  - `host`
+  - `port`
+- Updated document-service integration coverage to match the current dependency-injection design:
+  - instantiate `DocumentService()` directly
+  - inject `PDFParser(mineru_adapter=mock_mineru_adapter)`
+  - inject mocked `document_storage`
+- Updated mocked `minio_files` payload shape in the service test to match the current `DocumentProcessResultDTO` contract (`dict`, not `list`).
+- Updated PDF parser assertions to current MinerU adapter behavior:
+  - expect `mineru_parse(...)` call rather than legacy `apply_upload_urls(...)`
+  - align ZIP URL assertion to the mock return value (`mock-result-url`)
+- Tightened a few upload/end-to-end assertions so file-local type diagnostics are clean while preserving behavior checks.
+
+Validation:
+- Changed-file diagnostics:
+  - `lsp_diagnostics tests/integration/api/test_document_api.py --severity error` -> clean
+- Targeted regression:
+  - `uv run pytest -q tests/integration/api/test_document_api.py`
+  - result: `9 passed, 2 warnings`
+- Broader integration slice:
+  - `uv run pytest -q tests/integration`
+  - result: `225 passed, 1 skipped, 16 warnings`
+
+Notes:
+- The previously recorded `tests/integration/api/test_document_api.py` blocker set is now resolved.
+- Remaining warnings in the integration slice are deprecation/warning noise (primarily Pydantic v2 config deprecations and dependency warnings), not failing blockers for this recovery slice.
+
+---
+
+Implementation Update: 2026-03-22 (Docs cleanup + persistent docs refresh)
+
+Completed:
+- Organized and normalized core docs under `docs/` to align with frozen MVP specs.
+- Fixed cross-document inconsistency on candidate pagination/total limits:
+  - `docs/APP_FLOW.md`: `default=10, max=15`
+  - `docs/BACKEND_STRUCTURE.md`: total candidates `<=15`
+- Updated persistence-facing documentation:
+  - added `docs/README.md` as docs index + long-term maintenance rules + frozen doc set.
+  - refined `docs/EVALUATION_FRAMEWORK.md` evidence-source wording to `PubMed (MVP)`.
+- Removed outdated historical test artifact docs:
+  - deleted `docs/archive/test-artifacts-2026-01/` (all files).
+
+Verification:
+- `grep` check confirms no remaining `max=50` / `总候选 <=50` drift in active docs.
+- `find docs/archive -type f` confirms removed outdated test-artifact files.
+- `git diff -- docs progress.txt` confirms changes are limited to documentation and progress record.
+
+---
+
+Implementation Update: 2026-03-22 (v1.0 workflow re-baseline: multi-source + 6-node pipeline)
+
+Completed:
+- Updated frozen spec docs to align with confirmed v1.0 target workflow:
+  - multi-source literature acquisition (API + crawler adapters)
+  - 6-node pipeline: acquisition -> parsing -> translation -> extraction -> ACMG classification -> expert arbitration
+  - upload scope explicitly retained as PDF/DOCX
+  - parser/translation/extraction defined as independent microservices
+- Reworked core docs:
+  - `docs/PRD.md`
+  - `docs/APP_FLOW.md`
+  - `docs/TECH_STACK.md`
+  - `docs/BACKEND_STRUCTURE.md`
+  - `docs/IMPLEMENTATION_PLAN.md`
+  - `docs/CONSTANTS.md`
+  - `docs/FRONTEND_GUIDELINES.md`
+  - `docs/EVALUATION_FRAMEWORK.md`
+  - `docs/README.md`
+- Added required change-control artifacts:
+  - `docs/RELEASE_NOTES.md`
+  - `docs/BACKWARD_IMPACT.md`
+- Kept prior docs cleanup result: obsolete `docs/archive/test-artifacts-2026-01/` remains removed.
+
+Verification:
+- Cross-doc keyword checks confirm new baseline terms are present (`多源`, `6 节点`, `专家裁决`, `PDF、DOCX`, `BGE-M3`, `scispaCy`, `LlamaIndex`).
+- Legacy baseline checks confirm no active frozen-doc residue for `仅 PubMed`, `主流程 5 节点`, or fixed retry phrasing.
+- `git status --short docs progress.txt` shows only documentation/progress files changed for this milestone.
+
+---
+
+Implementation Update: 2026-03-22 (Plans directory sync to v1.0, conflict-proofing)
+
+Completed:
+- Synchronized `docs/plans/` with the new v1.0 baseline and added explicit plan-state governance.
+- Added status/conflict headers to existing plan files:
+  - `ACTIVE`: acquisition design/implementation, database unified management
+  - `P1_EXT_DRAFT`: multimodal-and-reasoning, streaming-output
+  - `LEGACY/HISTORICAL`: phase-3-document-parsing, langgraph-refactor, cleanup-old-architecture
+- Added plans index and execution guardrail document:
+  - `docs/plans/README.md`
+  - includes precedence rules and current status matrix.
+- Added new active baseline rollout plan:
+  - `docs/plans/2026-03-22-v1.0-multi-source-6node-rollout.md`
+- Updated docs root index to direct plan execution through plans status index:
+  - `docs/README.md` now points to `plans/README.md`.
+
+Verification:
+- Status headers check confirms every plan file has explicit `Plan Status` marker.
+- Keyword scan shows historical conflicting terms (e.g., `quality`) only remain in files now marked `LEGACY`.
+- Plan execution入口 now has single-source guidance via `docs/plans/README.md`.
+
+---
+
+Implementation Update: 2026-03-22 (Docs cleanup: archive + merge + delete for lean docs)
+
+Completed:
+- Archived outdated docs to reduce active-doc noise:
+  - moved legacy plan files to `docs/archive/2026-03-22-legacy-plans/`
+  - moved outdated UML diagrams to `docs/archive/2026-03-22-outdated-diagrams/`
+- Merged overlapping change-control docs:
+  - merged `docs/RELEASE_NOTES.md` + `docs/BACKWARD_IMPACT.md` into `docs/CHANGE_CONTROL.md`
+  - removed original two files after merge
+- Merged and removed redundant quick-reference doc:
+  - moved key PS3/BS3 threshold content into `docs/EVALUATION_FRAMEWORK.md` (Appendix A)
+  - deleted `docs/PS3_BS3_QUICK_REFERENCE.txt`
+- Updated indexes for clean navigation:
+  - `docs/README.md`
+  - `docs/plans/README.md`
+
+Verification:
+- Active `docs/plans/` now contains only active execution plans + index.
+- Reference scan confirms removed files are not used as active links in docs root/indexes.
+- Docs tree now keeps frozen specs + active plans in top-level, historical content in `docs/archive/`.
+
+---
+
+Implementation Update: 2026-03-22 (Candidate selection policy update)
+
+Completed:
+- Updated frozen docs for new candidate selection policy:
+  - candidate pool max: `20`
+  - pagination: `5` items per page
+  - user selection range: `1~5`
+- Updated files:
+  - `docs/PRD.md`
+  - `docs/APP_FLOW.md`
+  - `docs/BACKEND_STRUCTURE.md`
+  - `docs/FRONTEND_GUIDELINES.md`
+  - `docs/IMPLEMENTATION_PLAN.md`
+
+Verification:
+- Search checks in active docs (`docs/`, excluding `archive/`) show no residual old policy strings (`15/10`, `1~10`, `default=10,max=15`, etc.).
+- Updated contract values are now consistent across product, flow, backend API contract, frontend constraints, and implementation plan docs.

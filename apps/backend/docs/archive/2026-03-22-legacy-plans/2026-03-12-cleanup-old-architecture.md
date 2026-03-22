@@ -1,5 +1,8 @@
 # Cleanup Old Architecture — Consolidate Shim Layers (方案 B)
 
+> **Plan Status:** `HISTORICAL`
+> **Conflict Rule:** This file records an architecture cleanup track. For product/workflow rules, frozen docs take precedence.
+
 Status: IN_PROGRESS
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

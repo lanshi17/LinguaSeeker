@@ -1,6 +1,6 @@
 from typing import Optional, List, Tuple
 from .base_store import BaseStore
-from src.configs.database_config import DatabaseConfig
+from src.config import DatabaseConfig
 from src.utils.logger import Logger
 from src.utils.exceptions import StoreException
 import os
@@ -14,6 +14,7 @@ import ssl
 from urllib3.exceptions import SSLError as Urllib3SSLError, MaxRetryError
 from requests.exceptions import SSLError as RequestsSSLError
 
+
 class MinIOStore(BaseStore):
     """MinIO对象存储实现类"""
 
@@ -23,7 +24,9 @@ class MinIOStore(BaseStore):
         self.logger = Logger.get_logger("MinIOStore")
 
         # 初始化MinIO客户端
-        endpoint, secure = self._sanitize_endpoint(self.config.endpoint, self.config.secure)
+        endpoint, secure = self._sanitize_endpoint(
+            self.config.endpoint, self.config.secure
+        )
         try:
             self._initialize_client(endpoint, secure)
         except Exception as exc:
@@ -47,7 +50,9 @@ class MinIOStore(BaseStore):
             self.logger.error(f"Failed to initialize MinIO client: {exc}")
             raise StoreException(f"MinIO initialization failed: {exc}") from exc
 
-    def _sanitize_endpoint(self, raw_endpoint: str, secure_flag: bool) -> Tuple[str, bool]:
+    def _sanitize_endpoint(
+        self, raw_endpoint: str, secure_flag: bool
+    ) -> Tuple[str, bool]:
         """Normalize endpoint to host:port and derive secure flag if scheme is provided."""
         endpoint = (raw_endpoint or "").strip()
         if not endpoint:
@@ -62,7 +67,9 @@ class MinIOStore(BaseStore):
         final_secure = secure_flag
         if parts.scheme:
             if parts.scheme not in ("http", "https"):
-                raise StoreException(f"Unsupported MinIO endpoint scheme: {parts.scheme}")
+                raise StoreException(
+                    f"Unsupported MinIO endpoint scheme: {parts.scheme}"
+                )
             final_secure = parts.scheme == "https"
 
         if parts.path and parts.path not in ("", "/"):
@@ -87,7 +94,7 @@ class MinIOStore(BaseStore):
             endpoint,
             access_key=self.config.access_key,
             secret_key=self.config.secret_key,
-            secure=secure
+            secure=secure,
         )
         self.logger.info(
             "MinIO client initialized: endpoint=%s (raw=%s), secure=%s",
@@ -143,11 +150,7 @@ class MinIOStore(BaseStore):
                 tmp_file_path = tmp_file.name
 
             # 上传到MinIO
-            self.client.fput_object(
-                self.config.bucket_name,
-                destination,
-                tmp_file_path
-            )
+            self.client.fput_object(self.config.bucket_name, destination, tmp_file_path)
 
             # 清理临时文件
             os.remove(tmp_file_path)
@@ -175,14 +178,10 @@ class MinIOStore(BaseStore):
                 tmp_file_path = tmp_file.name
 
             # 从MinIO下载
-            self.client.fget_object(
-                self.config.bucket_name,
-                source,
-                tmp_file_path
-            )
+            self.client.fget_object(self.config.bucket_name, source, tmp_file_path)
 
             # 读取数据
-            with open(tmp_file_path, 'rb') as f:
+            with open(tmp_file_path, "rb") as f:
                 data = f.read()
 
             # 清理临时文件
@@ -197,7 +196,9 @@ class MinIOStore(BaseStore):
             self.logger.error(f"Unexpected error retrieving from MinIO: {e}")
             raise StoreException(f"Retrieve operation failed: {e}")
 
-    def upload_file(self, file_path: str, object_name: str, content_type: Optional[str] = None) -> None:
+    def upload_file(
+        self, file_path: str, object_name: str, content_type: Optional[str] = None
+    ) -> None:
         """上传文件到MinIO存储
 
         Args:
@@ -213,9 +214,11 @@ class MinIOStore(BaseStore):
                 self.config.bucket_name,
                 object_name,
                 file_path,
-                content_type=content_type
+                content_type=content_type,
             )
-            self.logger.info(f"Successfully uploaded file to MinIO: {file_path} -> {object_name}")
+            self.logger.info(
+                f"Successfully uploaded file to MinIO: {file_path} -> {object_name}"
+            )
         except S3Error as e:
             self.logger.error(f"Failed to upload file to MinIO: {e}")
             raise StoreException(f"MinIO upload failed: {e}")
@@ -232,11 +235,11 @@ class MinIOStore(BaseStore):
             os.makedirs(os.path.dirname(destination_path), exist_ok=True)
 
             self.client.fget_object(
-                self.config.bucket_name,
-                object_name,
-                destination_path
+                self.config.bucket_name, object_name, destination_path
             )
-            self.logger.info(f"Successfully downloaded file from MinIO: {object_name} -> {destination_path}")
+            self.logger.info(
+                f"Successfully downloaded file from MinIO: {object_name} -> {destination_path}"
+            )
         except S3Error as e:
             self.logger.error(f"Failed to download file from MinIO: {e}")
             raise StoreException(f"MinIO download failed: {e}")
@@ -265,9 +268,7 @@ class MinIOStore(BaseStore):
         """
         try:
             objects = self.client.list_objects(
-                self.config.bucket_name,
-                prefix=prefix,
-                recursive=True
+                self.config.bucket_name, prefix=prefix, recursive=True
             )
             file_list = [obj.object_name for obj in objects]
             self.logger.info(f"Listed {len(file_list)} files with prefix: {prefix}")
@@ -276,7 +277,9 @@ class MinIOStore(BaseStore):
             self.logger.error(f"Failed to list files in MinIO: {e}")
             raise StoreException(f"MinIO list failed: {e}")
 
-    def extract_and_upload_zip(self, zip_file_path: str, base_object_name: str) -> List[str]:
+    def extract_and_upload_zip(
+        self, zip_file_path: str, base_object_name: str
+    ) -> List[str]:
         """解压ZIP文件并上传所有内容到MinIO
 
         Args:
@@ -295,10 +298,12 @@ class MinIOStore(BaseStore):
 
             # 创建临时目录用于解压
             temp_extract_dir = tempfile.mkdtemp(prefix="mineru_extract_")
-            self.logger.info(f"Extracting ZIP to temporary directory: {temp_extract_dir}")
+            self.logger.info(
+                f"Extracting ZIP to temporary directory: {temp_extract_dir}"
+            )
 
             # 解压ZIP文件
-            with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+            with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
                 zip_ref.extractall(temp_extract_dir)
 
             # 遍历解压后的文件并上传到MinIO
@@ -308,13 +313,17 @@ class MinIOStore(BaseStore):
                     # 计算相对路径
                     relative_path = os.path.relpath(local_file_path, temp_extract_dir)
                     # 构建MinIO对象名称
-                    object_name = f"{base_object_name}/{relative_path}".replace("\\", "/")
+                    object_name = f"{base_object_name}/{relative_path}".replace(
+                        "\\", "/"
+                    )
 
                     # 上传文件
                     self.upload_file(local_file_path, object_name)
                     uploaded_files.append(object_name)
 
-            self.logger.info(f"Successfully extracted and uploaded {len(uploaded_files)} files from ZIP")
+            self.logger.info(
+                f"Successfully extracted and uploaded {len(uploaded_files)} files from ZIP"
+            )
             return uploaded_files
 
         except zipfile.BadZipFile as e:
@@ -327,10 +336,13 @@ class MinIOStore(BaseStore):
             # 清理临时目录
             if temp_extract_dir and os.path.exists(temp_extract_dir):
                 import shutil
+
                 shutil.rmtree(temp_extract_dir, ignore_errors=True)
                 self.logger.info(f"Cleaned up temporary extraction directory")
 
-    def download_and_extract_zip(self, zip_url: str, base_object_name: str) -> List[str]:
+    def download_and_extract_zip(
+        self, zip_url: str, base_object_name: str
+    ) -> List[str]:
         """从URL下载ZIP文件，解压并上传到MinIO
 
         Args:
@@ -350,7 +362,7 @@ class MinIOStore(BaseStore):
             response = requests.get(zip_url, stream=True, timeout=300)
             response.raise_for_status()
 
-            with open(temp_zip_path, 'wb') as f:
+            with open(temp_zip_path, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
 

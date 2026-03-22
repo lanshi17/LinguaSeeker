@@ -55,7 +55,9 @@ class TestInteractionAgent:
         """Test starting interaction with clear input that needs no clarification"""
         agent.llm.ainvoke = AsyncMock(return_value=mock_llm_response)
 
-        result = await agent.start_interaction("I need functional evidence for LDLR variant")
+        result = await agent.start_interaction(
+            "I need functional evidence for LDLR variant"
+        )
 
         assert result["ready"] is True
         assert result["task_form"] is not None
@@ -92,7 +94,9 @@ class TestInteractionAgent:
         assert "session_id" in result
 
     @pytest.mark.asyncio
-    async def test_respond_interaction_completes_after_one_round(self, agent, mock_llm_response):
+    async def test_respond_interaction_completes_after_one_round(
+        self, agent, mock_llm_response
+    ):
         """Test responding to clarification and completing task form"""
         # First start with vague input
         clarification_response = MagicMock()
@@ -192,7 +196,9 @@ class TestInteractionAgent:
         assert task_form.language == "auto"
 
     @pytest.mark.asyncio
-    async def test_session_rehydrates_across_agent_instances(self, mock_config, mock_llm_response):
+    async def test_session_rehydrates_across_agent_instances(
+        self, mock_config, mock_llm_response
+    ):
         class FakeRedisConnection:
             def __init__(self) -> None:
                 self.data = {}
@@ -227,17 +233,24 @@ class TestInteractionAgent:
 ```"""
 
         with patch("src.domain.agent.interaction.ChatOpenAI"):
-            with patch("src.domain.agent.interaction.RedisClient", return_value=FakeRedisClient()):
+            with patch(
+                "src.domain.agent.interaction.RedisClient",
+                return_value=FakeRedisClient(),
+            ):
                 agent_a = InteractionAgent(cfg=mock_config)
                 agent_b = InteractionAgent(cfg=mock_config)
 
-        agent_a.llm = MagicMock()
-        agent_a.llm.ainvoke = AsyncMock(return_value=clarification_response)
-        start_result = await agent_a.start_interaction("I need functional evidence")
+                agent_a.llm = MagicMock()
+                agent_a.llm.ainvoke = AsyncMock(return_value=clarification_response)
+                start_result = await agent_a.start_interaction(
+                    "I need functional evidence"
+                )
 
-        agent_b.llm = MagicMock()
-        agent_b.llm.ainvoke = AsyncMock(return_value=mock_llm_response)
-        result = await agent_b.respond_interaction(start_result["session_id"], "LDLR variant")
+                agent_b.llm = MagicMock()
+                agent_b.llm.ainvoke = AsyncMock(return_value=mock_llm_response)
+                result = await agent_b.respond_interaction(
+                    start_result["session_id"], "LDLR variant"
+                )
 
         assert result["ready"] is True
         assert result["task_form"]["disease"] == "LDLR variant"

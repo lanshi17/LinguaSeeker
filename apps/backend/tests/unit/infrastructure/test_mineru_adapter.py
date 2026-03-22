@@ -1,24 +1,31 @@
 # test mineru adapter
 # batch_id=288b2e54-8df6-40f0-aa82-e695b300e384
 import pytest
-from infrastructure.adapters.mineru.mineru_adapter_impl import (
+from src.infrastructure.adapters.mineru.mineru_adapter_impl import (
     MinerUAdapterImpl as MineruAdapter,
 )
 from typing import Any
-from infrastructure.adapters.mineru.mineru_adapter_interface import (
+from src.infrastructure.adapters.mineru.mineru_adapter_interface import (
     MinerUAdapterInterface,
 )
-from domain.impl.pdf_parser import PDFParser
+from src.domain.impl.pdf_parser import PDFParser
 import os
 from icecream import ic
 from datetime import datetime, timezone
-from configs.app_config import AppConfig
+from src.config import AppConfig
 from loguru import logger
 
 cfg = AppConfig().from_env()
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "../../fixtures")
+MINERU_TOKEN = (
+    (cfg.mineru.api_token if cfg.mineru and cfg.mineru.api_token else "")
+    or os.getenv("MINERU_API_TOKEN", "")
+).strip()
+HAS_MINERU_TOKEN = bool(MINERU_TOKEN)
 
 
+@pytest.mark.integration
+@pytest.mark.skip(reason="Requires live MinerU service credentials")
 def test_mineru_adapter_parse_pdf():
     adapter = MineruAdapter()
     pdf_path = os.path.join(TEST_DATA_DIR, "test_zh.pdf")

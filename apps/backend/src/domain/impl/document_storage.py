@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import os
 
 from src.infrastructure.store.minio_store import MinIOStore
-from src.configs.database_config import DatabaseConfig
+from src.config import DatabaseConfig
 from src.utils.exceptions import StoreException
 from src.utils.logger import Logger
 
@@ -61,7 +61,6 @@ class DocumentStorage:
             "minio_prefix": object_prefix,
             "minio_files": uploaded_files,
         }
-
 
     def _store_zip_result(self, zip_url: Optional[str], object_prefix: str):
         if not zip_url:

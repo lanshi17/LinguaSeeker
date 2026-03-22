@@ -1,6 +1,7 @@
 """File utility functions for downloading and extracting files."""
 
 import os
+import shutil
 import tempfile
 import zipfile
 from pathlib import Path
@@ -164,3 +165,25 @@ def create_temp_directory(prefix: str = "mineru_") -> str:
     temp_dir = tempfile.mkdtemp(prefix=prefix)
     logger.info(f"Created temporary directory: {temp_dir}")
     return temp_dir
+
+
+def ensure_directory_exists(directory: str) -> str:
+    path = Path(directory)
+    path.mkdir(parents=True, exist_ok=True)
+    return str(path)
+
+
+def cleanup_old_temp_folders(base_dir: str, keep_latest: int = 3) -> None:
+    path = Path(base_dir)
+    if not path.exists() or not path.is_dir():
+        return
+
+    subdirs = [child for child in path.iterdir() if child.is_dir()]
+    if len(subdirs) <= keep_latest:
+        return
+
+    subdirs.sort(key=lambda child: child.stat().st_mtime, reverse=True)
+    for stale_dir in subdirs[keep_latest:]:
+        with SuppressAndLog(OSError):
+            shutil.rmtree(stale_dir)
+            logger.info(f"Removed stale temp directory: {stale_dir}")

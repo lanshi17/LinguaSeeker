@@ -1,5 +1,8 @@
 # Acquisition Strategy + Adapter Design
 
+> **Plan Status:** `ACTIVE (v1.0 aligned)`
+> **Conflict Rule:** Frozen docs define final contract; this plan implements within that contract.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Refactor literature acquisition so multiple API/web retrieval strategies are selected through a strategy + adapter architecture while preserving the current external gateway/API surface.

@@ -23,15 +23,21 @@
 
 `queued/running/success/failed`
 
-## 4. 节点级重试参数（Node Retry Parameters）
+## 4. 节点级默认重试模板与兜底上限（Node Retry Defaults and Caps）
 
-| 节点 | max_retries | delay | timeout |
-|---|---:|---:|---:|
-| 获取 | 2 | 300s | 900s |
-| 解析 | 1 | 600s | 1800s |
-| 翻译 | 2 | 120s | 1200s |
-| 提取 | 2 | 300s | 1800s |
-| ACMG | 1 | 180s | 900s |
+> 说明：
+> 1. 节点顺序固定为 6 节点。
+> 2. 源级调用顺序与源级重试由 LLM 调度策略动态决定。
+> 3. 下表为节点级默认模板与系统兜底上限；运行时可在上限内动态调整。
+
+| 节点 | default_retries | retries_cap | default_delay | timeout |
+|---|---:|---:|---:|---:|
+| 获取 | 2 | 5 | 300s | 900s |
+| 解析 | 1 | 3 | 600s | 1800s |
+| 翻译 | 2 | 4 | 120s | 1200s |
+| 提取 | 2 | 4 | 300s | 1800s |
+| ACMG分类 | 1 | 3 | 180s | 900s |
+| 专家裁决 | 1 | 3 | 180s | 900s |
 
 ## 5. 幂等键格式（Idempotency Keys）
 

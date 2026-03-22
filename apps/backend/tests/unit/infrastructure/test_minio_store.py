@@ -5,9 +5,9 @@ import tempfile
 import os
 import ssl
 from unittest.mock import Mock, patch, MagicMock
-from configs.database_config import DatabaseConfig, MinIOConfig
-from infrastructure.store.minio_store import MinIOStore
-from utils.exceptions import StoreException
+from src.config import DatabaseConfig, MinIOConfig
+from src.infrastructure.store.minio_store import MinIOStore
+from src.utils.exceptions import StoreException
 from io import BytesIO
 
 
@@ -28,7 +28,7 @@ def mock_db_config():
 @pytest.fixture
 def minio_store(mock_db_config):
     """创建MinIOStore实例"""
-    with patch("infrastructure.store.minio_store.Minio") as mock_minio:
+    with patch("src.infrastructure.store.minio_store.Minio") as mock_minio:
         mock_client = MagicMock()
         mock_minio.return_value = mock_client
         mock_client.bucket_exists.return_value = True
@@ -43,7 +43,7 @@ class TestMinIOStore:
 
     def test_initialization(self, mock_db_config):
         """测试MinIO存储初始化"""
-        with patch("infrastructure.store.minio_store.Minio") as mock_minio:
+        with patch("src.infrastructure.store.minio_store.Minio") as mock_minio:
             mock_client = MagicMock()
             mock_minio.return_value = mock_client
             mock_client.bucket_exists.return_value = False
@@ -64,7 +64,7 @@ class TestMinIOStore:
     def test_initialization_with_url_and_path_endpoint(self, mock_db_config):
         """测试带协议和路径的endpoint被正确解析"""
         mock_db_config.minio.endpoint = "https://storage.internal:9443/minio"
-        with patch("infrastructure.store.minio_store.Minio") as mock_minio:
+        with patch("src.infrastructure.store.minio_store.Minio") as mock_minio:
             mock_client = MagicMock()
             mock_minio.return_value = mock_client
             mock_client.bucket_exists.return_value = True
@@ -82,7 +82,7 @@ class TestMinIOStore:
         """测试无协议endpoint沿用配置secure标志"""
         mock_db_config.minio.endpoint = "minio:9000/path/to/service"
         mock_db_config.minio.secure = True
-        with patch("infrastructure.store.minio_store.Minio") as mock_minio:
+        with patch("src.infrastructure.store.minio_store.Minio") as mock_minio:
             mock_client = MagicMock()
             mock_minio.return_value = mock_client
             mock_client.bucket_exists.return_value = True
@@ -109,7 +109,7 @@ class TestMinIOStore:
             return client
 
         with patch(
-            "infrastructure.store.minio_store.Minio", side_effect=_minio_ctor
+            "src.infrastructure.store.minio_store.Minio", side_effect=_minio_ctor
         ) as mock_minio:
             store = MinIOStore(mock_db_config)
 
@@ -228,7 +228,7 @@ class TestMinIOStore:
                 assert mock_upload.call_count == 2
                 assert len(uploaded_files) == 2
 
-    @patch("infrastructure.store.minio_store.requests.get")
+    @patch("src.infrastructure.store.minio_store.requests.get")
     def test_download_and_extract_zip(self, mock_get, minio_store):
         """测试从URL下载并解压ZIP"""
         import zipfile
@@ -267,7 +267,9 @@ class TestMinIOStoreIntegration:
 
     @pytest.mark.integration
     @pytest.mark.skipif(
-        os.getenv("MINIO_ENDPOINT") is None, reason="MinIO not configured"
+        not os.getenv("MINIO_ENDPOINT")
+        or os.getenv("MINIO_ENDPOINT") == "localhost:9000",
+        reason="MinIO integration service not configured",
     )
     def test_real_minio_connection(self):
         """测试实际的MinIO连接（集成测试）"""

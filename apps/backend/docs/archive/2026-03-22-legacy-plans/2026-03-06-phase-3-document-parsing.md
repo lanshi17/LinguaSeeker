@@ -1,5 +1,8 @@
 # Phase-3 Document Parsing Implementation Plan
 
+> **Plan Status:** `LEGACY (pre-v1.0 baseline)`
+> **Conflict Rule:** If any section conflicts with frozen docs (`PRD/APP_FLOW/TECH_STACK/BACKEND_STRUCTURE`), frozen docs take precedence.
+
 ## Decision
 
 - Chosen approach: add a lightweight `DocumentParsingAgent` plus a structured `DocumentParsingResult`.

@@ -1,32 +1,21 @@
 """Integration tests for CyberLeninka service."""
 
-import sys
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-# Add the cyberleninka directory to sys.path for direct module imports
-cyberleninka_dir = (
-    Path(__file__).parent.parent.parent
-    / "src"
-    / "domain"
-    / "literature"
-    / "cyberleninka"
+from src.domain.literature.automated_web.cyberleninka.cyberleninka import (
+    cyberleninka_workflow,
 )
-sys.path.insert(0, str(cyberleninka_dir))
-
-# Now import directly (modules will use absolute imports)
-from cyberleninka import cyberleninka_workflow
-from enums import Subject
-from locators import (
+from src.domain.literature.automated_web.cyberleninka.enums import Subject
+from src.domain.literature.automated_web.cyberleninka.locators import (
     XPATH_DOWNLOAD_BTN,
     XPATH_RESULTS,
     XPATH_SEARCH_BUTTON,
     XPATH_SEARCH_INPUT,
     XPATH_SUBJECT_FILTER,
 )
-from models import (
+from src.domain.literature.automated_web.cyberleninka.models import (
     BASE_URL,
     CyberleninkaPayload,
     DownloadResponse,
@@ -35,7 +24,7 @@ from models import (
     SearchParams,
     SearchResponse,
 )
-from service import (
+from src.domain.literature.automated_web.cyberleninka.service import (
     CyberLeninkaService,
     _build_search_js,
     _choose_item,
@@ -96,7 +85,7 @@ class TestCyberleninkaPayload:
         assert payload.action == "search"
         assert payload.base_url == BASE_URL
         assert payload.download_path == "./downloads"
-        assert payload.llm_provider == "ollama"
+        assert payload.llm_provider == "deepseek"
         assert payload.selected_index == 0
 
     def test_search_action(self):
@@ -216,6 +205,7 @@ class TestDownloadResponse:
             file_path="./downloads/paper.pdf",
         )
         assert resp.success is True
+        assert resp.pdf_url is not None
         assert "paper.pdf" in resp.pdf_url
 
 
@@ -232,7 +222,7 @@ class TestSafeJsonLoads:
         assert result == {}
 
     def test_none_input(self):
-        result = _safe_json_loads(None)
+        result = _safe_json_loads("")
         assert result == {}
 
     def test_json_in_mixed_content(self):
@@ -336,6 +326,7 @@ class TestChooseItem:
             {"title": "Paper 2", "index": 1},
         ]
         chosen = _choose_item(items, selected_index=1, selected_title=None)
+        assert chosen is not None
         assert chosen["title"] == "Paper 2"
 
     def test_choose_by_title(self):
@@ -344,6 +335,7 @@ class TestChooseItem:
             {"title": "Paper 2", "index": 1},
         ]
         chosen = _choose_item(items, selected_index=0, selected_title="Paper 2")
+        assert chosen is not None
         assert chosen["title"] == "Paper 2"
 
     def test_invalid_index(self):
@@ -387,19 +379,32 @@ class TestCyberLeninkaService:
                 filters={"subject": ["Информатика"]},
                 limit=10,
             ),
+            llm_provider="ollama",
+            llm_api_token="test-token",
         )
 
         with patch.object(service, "browser_config"):
-            with patch("service.AsyncWebCrawler") as mock_crawler_cls:
-                mock_crawler = AsyncMock()
-                mock_crawler.arun = AsyncMock(return_value=mock_result)
-                mock_crawler_cls.return_value.__aenter__.return_value = mock_crawler
+            with patch.object(
+                service,
+                "_search_via_public_api",
+                AsyncMock(
+                    return_value=SearchResponse(
+                        success=False, warnings=["api_search_failed"]
+                    )
+                ),
+            ):
+                with patch(
+                    "src.domain.literature.automated_web.cyberleninka.service.AsyncWebCrawler"
+                ) as mock_crawler_cls:
+                    mock_crawler = AsyncMock()
+                    mock_crawler.arun = AsyncMock(return_value=mock_result)
+                    mock_crawler_cls.return_value.__aenter__.return_value = mock_crawler
 
-                result = await service.search(payload)
+                    result = await service.search(payload)
 
-                assert result.success is True
-                assert len(result.items) == 1
-                assert result.total_count == 1
+                    assert result.success is True
+                    assert len(result.items) == 1
+                    assert result.total_count == 1
 
     @pytest.mark.asyncio
     async def test_search_failure(self):
@@ -413,18 +418,31 @@ class TestCyberLeninkaService:
         payload = CyberleninkaPayload(
             action="search",
             search_params=SearchParams(keyword="test"),
+            llm_provider="ollama",
+            llm_api_token="test-token",
         )
 
         with patch.object(service, "browser_config"):
-            with patch("service.AsyncWebCrawler") as mock_crawler_cls:
-                mock_crawler = AsyncMock()
-                mock_crawler.arun = AsyncMock(return_value=mock_result)
-                mock_crawler_cls.return_value.__aenter__.return_value = mock_crawler
+            with patch.object(
+                service,
+                "_search_via_public_api",
+                AsyncMock(
+                    return_value=SearchResponse(
+                        success=False, warnings=["api_search_failed"]
+                    )
+                ),
+            ):
+                with patch(
+                    "src.domain.literature.automated_web.cyberleninka.service.AsyncWebCrawler"
+                ) as mock_crawler_cls:
+                    mock_crawler = AsyncMock()
+                    mock_crawler.arun = AsyncMock(return_value=mock_result)
+                    mock_crawler_cls.return_value.__aenter__.return_value = mock_crawler
 
-                result = await service.search(payload)
+                    result = await service.search(payload)
 
-                assert result.success is False
-                assert "crawl_failed" in result.warnings
+                    assert result.success is False
+                    assert "crawl_failed" in result.warnings
 
 
 class TestCyberleninkaWorkflow:
@@ -444,7 +462,9 @@ class TestCyberleninkaWorkflow:
             "llm_provider": "ollama",
         }
 
-        with patch("cyberleninka.CyberLeninkaService") as MockService:
+        with patch(
+            "src.domain.literature.automated_web.cyberleninka.cyberleninka.CyberLeninkaService"
+        ) as MockService:
             mock_service = MockService.return_value
             mock_service.search = AsyncMock(
                 return_value=SearchResponse(
@@ -475,7 +495,9 @@ class TestCyberleninkaWorkflow:
             "llm_provider": "ollama",
         }
 
-        with patch("cyberleninka.CyberLeninkaService") as MockService:
+        with patch(
+            "src.domain.literature.automated_web.cyberleninka.cyberleninka.CyberLeninkaService"
+        ) as MockService:
             mock_service = MockService.return_value
             mock_service.download = AsyncMock(
                 return_value=DownloadResponse(
@@ -497,7 +519,9 @@ class TestCyberleninkaWorkflow:
             "action": "download",
         }
 
-        with patch("cyberleninka.CyberLeninkaService") as MockService:
+        with patch(
+            "src.domain.literature.automated_web.cyberleninka.cyberleninka.CyberLeninkaService"
+        ) as MockService:
             mock_service = MockService.return_value
             mock_service.download = AsyncMock(
                 return_value=DownloadResponse(
@@ -516,7 +540,9 @@ class TestCyberleninkaWorkflow:
             "search_params": {"keyword": "test", "limit": 10},
         }
 
-        with patch("cyberleninka.CyberLeninkaService") as MockService:
+        with patch(
+            "src.domain.literature.automated_web.cyberleninka.cyberleninka.CyberLeninkaService"
+        ) as MockService:
             mock_service = MockService.return_value
             mock_service.search = AsyncMock(
                 return_value=SearchResponse(success=True, items=[])

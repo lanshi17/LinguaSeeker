@@ -5,7 +5,7 @@
 ## 3.1 文献证据评估方法
 
 ### 证据来源
-1. 科学文献：PubMed 等数据库获取的全文或摘要证据。
+1. 科学文献：多源数据库/API/爬取渠道获取的全文或摘要证据（v1.0）。
 2. 基因变异信息：文献中出现的基因、变异（HGVS）。
 3. 实验方法与结果：功能实验设计、对照、重复、统计结果。
 4. 疾病关联：基因-变异-疾病关系与机制描述。
@@ -79,3 +79,17 @@
 - `false_assertions = model_output_total - correct_count`
 - `field_omissions = benchmark_total - correct_count`
 - `accuracy = correct_count / benchmark_total`（当 `benchmark_total = 0` 时记为 `0.0`）
+
+## 附录 A：PS3/BS3 快速阈值（合并自原速查表）
+
+### OddsPath 阈值（致病方向，PS3）
+1. `> 350`：Very Strong（`PS3_very_strong`）
+2. `(18.7, 350]`：Strong（`PS3`）
+3. `(4.3, 18.7]`：Moderate（`PS3_moderate`）
+4. `(1.0, 4.3]`：Supporting（`PS3_supporting`）
+
+### OddsPath 阈值（良性方向，BS3）
+1. `[0.23, 1.0)`：Supporting（`BS3_supporting`）
+2. `[0.053, 0.23)`：Moderate（`BS3_moderate`）
+3. `[0.0029, 0.053)`：Strong（`BS3`）
+4. `< 0.0029`：Very Strong（`BS3_very_strong`）

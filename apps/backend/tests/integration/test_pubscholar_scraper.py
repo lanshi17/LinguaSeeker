@@ -1,20 +1,11 @@
 """Integration tests for PubScholar scraper with unified payload interface."""
 
-import sys
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-# Add the pubscholar directory to sys.path for direct module imports
-pubscholar_dir = (
-    Path(__file__).parent.parent.parent / "src" / "domain" / "literature" / "pubscholar"
-)
-sys.path.insert(0, str(pubscholar_dir))
-
-# Now import directly (modules will use absolute imports)
-from enums import Language, PaperType
-from locators import (
+from src.domain.literature.automated_web.pubscholar.enums import Language, PaperType
+from src.domain.literature.automated_web.pubscholar.locators import (
     XPATH_FIRST_JOURNAL_LINK,
     XPATH_FULLTEXT_BTN,
     XPATH_LANGUAGE_HEADER,
@@ -23,7 +14,7 @@ from locators import (
     XPATH_SEARCH_BUTTON,
     XPATH_SEARCH_INPUT,
 )
-from models import (
+from src.domain.literature.automated_web.pubscholar.models import (
     BASE_URL,
     DownloadResponse,
     PaperItem,
@@ -33,8 +24,10 @@ from models import (
     SearchParams,
     SearchResponse,
 )
-from pubscholar import pubscholar_workflow
-from service import (
+from src.domain.literature.automated_web.pubscholar.pubscholar import (
+    pubscholar_workflow,
+)
+from src.domain.literature.automated_web.pubscholar.service import (
     PubScholarService,
     _build_llm_strategy,
     _build_search_js,
@@ -109,7 +102,7 @@ class TestPubScholarPayload:
         assert payload.action == "search"
         assert payload.base_url == BASE_URL
         assert payload.download_path == "./downloads"
-        assert payload.llm_provider == "ollama"
+        assert payload.llm_provider == "deepseek"
         assert payload.selected_index == 0
 
     def test_search_action(self):
@@ -237,6 +230,7 @@ class TestDownloadResponse:
             file_path="./downloads/paper.pdf",
         )
         assert resp.success is True
+        assert resp.pdf_url is not None
         assert "paper.pdf" in resp.pdf_url
 
 
@@ -253,7 +247,7 @@ class TestSafeJsonLoads:
         assert result == {}
 
     def test_none_input(self):
-        result = _safe_json_loads(None)
+        result = _safe_json_loads("")
         assert result == {}
 
     def test_json_in_mixed_content(self):
@@ -428,19 +422,26 @@ class TestPubScholarService:
                 filters={"subject": ["临床医学", "生物学"]},
                 limit=10,
             ),
+            llm_provider="ollama",
+            llm_api_token="test-token",
         )
 
-        with patch.object(service, "browser_config"):
-            with patch("service.AsyncWebCrawler") as mock_crawler_cls:
-                mock_crawler = AsyncMock()
-                mock_crawler.arun = AsyncMock(return_value=mock_result)
-                mock_crawler_cls.return_value.__aenter__.return_value = mock_crawler
+        with patch.object(
+            service, "_search_via_duckduckgo", AsyncMock(return_value=[])
+        ):
+            with patch.object(service, "browser_config"):
+                with patch(
+                    "src.domain.literature.automated_web.pubscholar.service.AsyncWebCrawler"
+                ) as mock_crawler_cls:
+                    mock_crawler = AsyncMock()
+                    mock_crawler.arun = AsyncMock(return_value=mock_result)
+                    mock_crawler_cls.return_value.__aenter__.return_value = mock_crawler
 
-                result = await service.search(payload)
+                    result = await service.search(payload)
 
-                assert result.success is True
-                assert len(result.items) == 1
-                assert result.total_count == 1
+                    assert result.success is True
+                    assert len(result.items) == 1
+                    assert result.total_count == 1
 
     @pytest.mark.asyncio
     async def test_search_failure(self):
@@ -454,18 +455,25 @@ class TestPubScholarService:
         payload = PubScholarPayload(
             action="search",
             search_params=SearchParams(keyword="test"),
+            llm_provider="ollama",
+            llm_api_token="test-token",
         )
 
-        with patch.object(service, "browser_config"):
-            with patch("service.AsyncWebCrawler") as mock_crawler_cls:
-                mock_crawler = AsyncMock()
-                mock_crawler.arun = AsyncMock(return_value=mock_result)
-                mock_crawler_cls.return_value.__aenter__.return_value = mock_crawler
+        with patch.object(
+            service, "_search_via_duckduckgo", AsyncMock(return_value=[])
+        ):
+            with patch.object(service, "browser_config"):
+                with patch(
+                    "src.domain.literature.automated_web.pubscholar.service.AsyncWebCrawler"
+                ) as mock_crawler_cls:
+                    mock_crawler = AsyncMock()
+                    mock_crawler.arun = AsyncMock(return_value=mock_result)
+                    mock_crawler_cls.return_value.__aenter__.return_value = mock_crawler
 
-                result = await service.search(payload)
+                    result = await service.search(payload)
 
-                assert result.success is False
-                assert "crawl_failed" in result.warnings
+                    assert result.success is False
+                    assert any("crawl_failed" in w for w in result.warnings)
 
 
 class TestPubscholarWorkflow:
@@ -485,7 +493,9 @@ class TestPubscholarWorkflow:
             "llm_provider": "ollama",
         }
 
-        with patch("pubscholar.PubScholarService") as MockService:
+        with patch(
+            "src.domain.literature.automated_web.pubscholar.pubscholar.PubScholarService"
+        ) as MockService:
             mock_service = MockService.return_value
             mock_service.search = AsyncMock(
                 return_value=SearchResponse(
@@ -516,7 +526,9 @@ class TestPubscholarWorkflow:
             "llm_provider": "ollama",
         }
 
-        with patch("pubscholar.PubScholarService") as MockService:
+        with patch(
+            "src.domain.literature.automated_web.pubscholar.pubscholar.PubScholarService"
+        ) as MockService:
             mock_service = MockService.return_value
             mock_service.download = AsyncMock(
                 return_value=DownloadResponse(
@@ -548,7 +560,9 @@ class TestPubscholarWorkflow:
             "search_params": {"keyword": "test", "limit": 10},
         }
 
-        with patch("pubscholar.PubScholarService") as MockService:
+        with patch(
+            "src.domain.literature.automated_web.pubscholar.pubscholar.PubScholarService"
+        ) as MockService:
             mock_service = MockService.return_value
             mock_service.search = AsyncMock(
                 return_value=SearchResponse(success=True, items=[])

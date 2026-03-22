@@ -353,6 +353,15 @@ class MinIOConfig:
     secure: bool = False  # 是否启用SSL/TLS
 
 
+@dataclass
+class DatabaseConfig:
+    minio: MinIOConfig
+
+    @classmethod
+    def from_env(cls) -> "DatabaseConfig":
+        return cls(minio=AppConfig.from_env().minio)
+
+
 class AppConfig:
     """应用配置"""
 
@@ -1126,6 +1135,9 @@ class _LazySettingsProxy:
     def __getattr__(self, name: str) -> Any:
         return getattr(get_settings(), name)
 
+    def use_agent_workflow(self, task_type: str) -> bool:
+        return get_settings().use_agent_workflow(task_type)
+
     def __repr__(self) -> str:
         if _settings is None:
             return "<LazySettingsProxy unresolved>"
@@ -1150,3 +1162,4 @@ def __getattr__(name: str):
 
 # 全局配置实例
 app_config = AppConfig.from_env()
+database_config = DatabaseConfig.from_env()

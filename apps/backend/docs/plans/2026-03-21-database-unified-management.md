@@ -1,5 +1,8 @@
 # Database Unified Management Implementation Plan
 
+> **Plan Status:** `ACTIVE (platform operations)`
+> **Conflict Rule:** Product/workflow contract still follows frozen docs; this plan only governs ops/tooling implementation.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Provide a single operational entrypoint for database stack lifecycle, initialization, health checks, reset, backup, and cleanup while removing fragmented legacy scripts.

@@ -1,86 +1,79 @@
 # 实施计划（IMPLEMENTATION_PLAN）
 
 ## 1. 目标与策略
-本计划以“先跑通完整主链路，再拆分服务与强化工程化”为原则，按发布号推进。  
+本计划以“先跑通完整主链路，再强化多源调度与微服务稳定性”为原则，按 `v1.0` 发布号推进。  
 交付标准以 PRD/APP_FLOW/BACKEND_STRUCTURE 为唯一准入规范。
 
 ## 2. 里程碑总览
 1. M0：规格冻结与数据迁移设计
-2. M1：主工作流 5 节点落地（PubMed + 上传）
+2. M1：主工作流 6 节点落地（多源获取 + 上传）
 3. M2：交互 Agent + 请求级编排 + 前端闭环
 4. M3：KG 独立服务 + 事件同步
 5. M4：验收与发布（固定 100 篇）
 
 ## 3. 分阶段执行
 ## Phase M0：规格冻结与基线准备
-→ 架构清理：[plans/2026-03-12-cleanup-old-architecture.md](plans/2026-03-12-cleanup-old-architecture.md)
-
 ### 目标
-1. 冻结所有常量与状态机
+1. 冻结 `v1.0` 常量与状态机
 2. 定义新增表结构与 API 契约
-3. 清理与删除 quality 相关接口
+3. 固化多源获取、6 节点、微服务边界
 
 ### 任务
 1. 建立/迁移表：`task_requests`, `paper_tasks`, `paper_task_logs`, `sentence_alignments`
 2. 固化错误码与 warning 码
-3. 固化重试参数与幂等键格式
-4. 下线 `quality API`（返回 404）
+3. 固化节点级默认重试模板、兜底上限与幂等键格式
+4. 固化 release note 与 backward impact 文档
 
 ### 验收
 1. 迁移脚本可重复执行
-2. OpenAPI 中无 quality 入口
-3. 状态/错误码文档与实现一致
+2. 文档与实现的状态/错误码一致
+3. 多源与 6 节点契约在文档中单一且一致
 
 ## Phase M1：主工作流落地
-→ 细化方案：[plans/2026-03-06-phase-3-document-parsing.md](plans/2026-03-06-phase-3-document-parsing.md)
-
 ### 目标
-1. 完成 5 节点主链路
-2. 支持上传与 PubMed 候选两条入口
+1. 完成 6 节点主链路
+2. 支持上传与多源候选两条入口
 3. 完成去重、失败、重试、日志链路
 
 ### 任务
-1. 实现节点链：
-   获取 -> 解析 -> 翻译 -> 提取 -> ACMG
-2. 实现 DOCX/PDF 处理差异（DOCX 失败即终止）
-3. 实现 MinerU -> PaddleOCR 回退
-4. 实现翻译跳过与 HGVS 自动纠正
-5. 实现全库 SHA-256 去重与 `duplicate_of`
-6. 实现 `failed + error_code + log_link` 响应规范
-7. 实现 `log_link` 重签发与限流
+1. 实现节点链：获取 -> 解析 -> 翻译 -> 提取 -> ACMG分类 -> 专家裁决
+2. 实现获取层多源适配：
+   - API：`biopython/pubmed`、`pmc`、`crossref`、`doaj`、`jstage`、`unpaywall`
+   - Crawler：`hans_publishers`、`pubscholar`、`cyberleninka`
+3. 实现 LLM 调度策略：源级调用顺序与源级重试
+4. 实现 DOCX/PDF 处理差异（DOCX 失败即终止）
+5. 实现 MinerU -> PaddleOCR 回退
+6. 实现翻译跳过、英文 md 落 MinIO、BGE-M3 入 Qdrant
+7. 实现证据提取服务（scispaCy + LlamaIndex + 混合检索 + reranker）
+8. 实现全库 SHA-256 去重与 `duplicate_of`
+9. 实现 `failed + error_code + log_link` 响应规范
 
 ### 验收
 1. 单篇任务可端到端执行
 2. 重复文件路径正确计入成功
 3. 失败链路可定位到日志
+4. 输出 JSON 含完整溯源链
 
 ## Phase M2：交互与前端闭环
-→ 架构基础：[plans/langgraph-refactor-plan.md](plans/langgraph-refactor-plan.md)
-
 ### 目标
 1. 交互 Agent 两轮澄清机制
 2. 任务单落库与请求级聚合
-3. 前端双页签结果与 PDF 导出
+3. 前端结果页呈现 ACMG 分类 + 专家裁决
 
 ### 任务
 1. 交互 Agent 输出任务单字段（目标/疾病/国家/语种）
 2. 默认值白名单注入策略实现
 3. 请求状态聚合（queued/running/partial_failed/failed/success）
-4. 候选列表分页（10/15）与选择约束（1~10）
-5. 结果页双语同时高亮
-6. 合并导出 PDF（两页）
+4. 候选列表分页（5/5）与选择约束（1~5）
+5. 展示多源来源标签与节点进度
+6. 合并导出 PDF（对照阅读页 + 证据/分类/裁决页）
 
 ### 验收
 1. 从输入到导出 PDF 一次完成
 2. 空选择无上传返回 `INPUT_INVALID`
-3. 前端无 quality 模块残留
+3. 节点状态、错误码、log_link 可回溯
 
 ## Phase M3：KG 独立服务
-→ 架构基础：[plans/langgraph-refactor-plan.md](plans/langgraph-refactor-plan.md)
-→ P1 后优化（待实施）：
-- 7.1 流式输出：[plans/streaming-output-plan.md](plans/streaming-output-plan.md)
-- 7.3 KG 推理节点：[plans/2026-03-12-multimodal-and-reasoning.md](plans/2026-03-12-multimodal-and-reasoning.md)
-
 ### 目标
 1. KG 服务独立部署
 2. 主服务事件触发 KG 更新
@@ -89,7 +82,7 @@
 ### 任务
 1. 建立 KG 事件消费者
 2. 定义事件 payload 与幂等处理
-3. 配置重试队列（沿用 ACMG 参数）
+3. 配置重试队列（沿用专家裁决节点默认模板）
 4. 实现回灌脚本（断点续跑）
 
 ### 验收
@@ -98,12 +91,9 @@
 3. 全量回灌可在中断后继续
 
 ## Phase M4：验收与发布
-→ P1 后优化（待实施）：
-- 7.2 多模态批处理：[plans/2026-03-12-multimodal-and-reasoning.md](plans/2026-03-12-multimodal-and-reasoning.md)
-
 ### 目标
 1. 达到发布口径的可量化指标
-2. 输出稳定版发布物
+2. 输出 `v1.0` 稳定版发布物
 
 ### 任务
 1. 固定 100 篇验收集锁定（同发布号不变）
@@ -121,15 +111,15 @@
 ## 4. 工作分解（后端/前端/运维）
 ### 后端
 1. 表结构与迁移
-2. 工作流节点重构
-3. 请求聚合与状态机
+2. 6 节点工作流重构
+3. 多源适配器 + 调度策略
 4. 错误码与日志体系
 5. KG 事件生产
 
 ### 前端
 1. 任务创建与候选选择 UI
-2. 请求监控页
-3. 对照阅读页与证据页
+2. 请求监控页（节点进度可视化）
+3. 对照阅读页与证据/分类/裁决页
 4. PDF 导出入口
 5. 错误/日志/重签发交互
 
@@ -140,10 +130,10 @@
 4. KG 全量回灌脚本
 
 ## 5. 风险与应对
-1. PubMed 命中不足导致请求失败：前端提示并允许改写条件重试
-2. 多语言翻译不稳定：自动纠正 + warning 机制
-3. OCR 失败率波动：MinerU + PaddleOCR 双通道
-4. `log_link` 可分享风险：保持短时效（24h）+ 重签发限流
+1. 多源接口稳定性波动：源健康检查 + 降级策略
+2. 爬取合规风险：白名单与授权审计
+3. 翻译不稳定：术语保护 + warning 机制
+4. OCR 失败率波动：MinerU + PaddleOCR 双通道
 5. 原始文件长期保留带来的存储增长：运维手动清理机制
 
 ## 6. 完成定义（Definition of Done）
