@@ -1,4 +1,4 @@
-# 前端实现规范（FRONTEND_GUIDELINES）
+# ACMG-Lingua 前端实现规范（FRONTEND_GUIDELINES）
 
 ## 1. 目标
 前端必须满足三件事：

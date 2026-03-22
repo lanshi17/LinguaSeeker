@@ -1,4 +1,4 @@
-# 技术栈规范（TECH_STACK）
+# ACMG-Lingua 技术栈规范（TECH_STACK）
 
 ## 1. 总体原则
 1. v1.0 优先稳定可运行，保留可追溯链路。

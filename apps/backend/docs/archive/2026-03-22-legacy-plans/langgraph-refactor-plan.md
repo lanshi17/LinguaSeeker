@@ -1,4 +1,4 @@
-# ACMGFlow LangGraph 重构实施方案
+# ACMG-Lingua LangGraph 重构实施方案
 
 > **Plan Status:** `LEGACY (pre-v1.0 baseline)`
 > **Conflict Rule:** This plan is historical reference only. Frozen docs (`PRD/APP_FLOW/TECH_STACK/BACKEND_STRUCTURE`) are authoritative.
@@ -16,7 +16,7 @@
 
 ### 1.1 重构目标
 
-将现有 ACMGFlow 后端从"Celery 驱动的线性 Pipeline"重构为"LangGraph 编排的智能体协作系统"，实现：
+将现有 ACMG-Lingua 后端从"Celery 驱动的线性 Pipeline"重构为"LangGraph 编排的智能体协作系统"，实现：
 
 1. **智能路由**：基于证据质量/置信度自动决策（人工复核 vs 自动通过）
 2. **状态显性化**：全局状态可追溯、可审计、可中断恢复

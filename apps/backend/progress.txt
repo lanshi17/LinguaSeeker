@@ -1,4 +1,4 @@
-Project: Multi-ACMG Evidence Platform
+Project: ACMG-Lingua
 Date: 2026-03-03
 Owner: Spec-driven build
 Status: SPEC_FROZEN
@@ -865,3 +865,82 @@ Verification:
 - README refresh scope excludes third-party/cached paths (`.venv`, `.pytest_cache`) and only targets repository-owned docs.
 - File lists and endpoint snapshots were generated from current source files before rewriting.
 - `git status --short` shows documentation/progress updates for this milestone.
+
+---
+
+Implementation Update: 2026-03-22 (Config module type/lint cleanup)
+
+Completed:
+- Reduced `src/config.py` from a large basedpyright hotspot to a clean file without changing runtime behavior.
+- Type-safety fixes applied:
+  - `MinerUConfig.extra_formats` now uses `field(default_factory=lambda: ["html"])` instead of a `None` default under a non-optional annotation.
+  - `AppConfig` service config attributes are now typed as non-optional where they are always initialized:
+    - `self.llm: LLMConfig`
+    - `self.embedding: EmbeddingConfig`
+    - `self.rerank: RerankConfig`
+    - `self.mineru: MinerUConfig`
+  - `AppConfig.from_env()` now has explicit return type `-> "AppConfig"`.
+  - `ConfigManager` return types now use concrete generic annotations instead of bare `dict`:
+    - `get_agent_config()`
+    - `get_database_config()`
+    - `get_vector_db_config()`
+  - `get_vector_db_config()` return type was widened to include `None` because `qdrant_api_key` may be absent.
+- Static-analysis compatibility fixes applied:
+  - removed unused `typing.Dict` and later unused `typing.cast` imports.
+  - introduced `_build_settings()` helper so the `Settings()` callsite is isolated with a local pyright ignore instead of contaminating the main accessor.
+  - `get_settings()` now initializes through `_build_settings()`.
+
+Validation:
+- `lsp_diagnostics src/config.py --severity error` -> clean
+- `uv run ruff check src/config.py` -> passed
+
+Notes:
+- This milestone targets non-functional cleanup only; no intended runtime behavior changes beyond preserving the existing config initialization path with stricter static typing.
+- Broader repo-wide basedpyright/ruff debt may still remain in other files, but the `src/config.py` hotspot is now cleared.
+
+---
+
+Implementation Update: 2026-03-22 (Fix MinerU success path incorrectly triggering OCR fallback)
+
+Completed:
+- Fixed a parsing regression in `src/domain/mineru/component.py` where `minerU_pipeline` called `file_utils.download_file(...)` with an unsupported keyword argument (`allow_insecure_fallback`).
+- This bug raised a runtime exception after MinerU reported `done`, which caused upstream logic to incorrectly enter local PaddleOCR fallback.
+- Added unit regression test:
+  - `tests/unit/test_mineru_pipeline_download.py::test_mineru_pipeline_downloads_from_full_zip_url`
+  - Verifies pipeline can download using `extract_result[0].full_zip_url`, unzip, and return `MinerUResponse` without falling into fallback logic.
+
+Verification:
+- `uv run pytest -q tests/unit/test_mineru_pipeline_download.py tests/unit/test_document_parsing_agent.py` -> passed (3 tests)
+- `uv run pytest -q tests/unit/test_tasks.py -k "run_node_parsing"` -> passed (2 tests)
+
+Impact:
+- When MinerU returns `state=done` with `full_zip_url`, parsing now continues on MinerU output as expected and no longer misfires OCR fallback due to this internal exception.
+
+---
+
+Implementation Update: 2026-03-22 (Project naming unified to ACMG-Lingua)
+
+Completed:
+- Standardized project naming to `ACMG-Lingua` in active docs and repository entry docs.
+- Updated key files:
+  - `README.md`
+  - `docs/PRD.md`
+  - `docs/APP_FLOW.md`
+  - `docs/TECH_STACK.md`
+  - `docs/BACKEND_STRUCTURE.md`
+  - `docs/FRONTEND_GUIDELINES.md`
+  - `docs/IMPLEMENTATION_PLAN.md`
+  - `docs/README.md`
+- Also replaced legacy project alias wording in archived refactor plan:
+  - `docs/archive/2026-03-22-legacy-plans/langgraph-refactor-plan.md`
+- Updated progress header project name:
+  - `progress.txt` (`Project: ACMG-Lingua`)
+
+Verification:
+- Repository-wide name scan (excluding dependency/cache dirs) confirms removal of old aliases:
+  - `ACMG-PS3 Intelligence System`
+  - `ACMG PS3 Intelligence System`
+  - `Multi-ACMG Evidence Platform`
+  - `ACMGFlow`
+  - `ACMG Lingua`
+- `ACMG-Lingua` naming is now consistently present in the main documentation headers and project descriptor lines.

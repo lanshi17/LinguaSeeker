@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, List, Optional
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -254,15 +254,14 @@ class MinerUConfig:
     status_url: str = "https://mineru.net/api/v4/extract/task/"  # https://mineru.net/api/v4/extract/task/{task_id}
     batch_status_url: str = "https://mineru.net/api/v4/extract-results/batch/"  # https://mineru.net/api/v4/extract-results/batch/{batch_id}
     model_version: str = "vlm"
-    extra_formats: list[str] = None
+    extra_formats: list[str] = field(default_factory=lambda: ["html"])
     api_token: str = ""
     pipeline_id: str = ""
     timeout: int = 300
     max_file_size_mb: int = 100
 
     def __post_init__(self):
-        if self.extra_formats is None:
-            self.extra_formats = ["html"]
+        pass
 
 
 @dataclass
@@ -378,10 +377,10 @@ class AppConfig:
         self.port: int = 8000
 
         # 服务配置
-        self.llm: Optional[LLMConfig] = LLMConfig()
-        self.embedding: Optional[EmbeddingConfig] = EmbeddingConfig()
-        self.rerank: Optional[RerankConfig] = RerankConfig()
-        self.mineru: Optional[MinerUConfig] = MinerUConfig()
+        self.llm: LLMConfig = LLMConfig()
+        self.embedding: EmbeddingConfig = EmbeddingConfig()
+        self.rerank: RerankConfig = RerankConfig()
+        self.mineru: MinerUConfig = MinerUConfig()
 
         # 数据库配置
         self.redis: RedisConfig = RedisConfig()
@@ -464,7 +463,7 @@ class AppConfig:
                     load_dotenv(dotenv_path=env_file_path, override=True)
 
     @classmethod
-    def from_env(cls):
+    def from_env(cls) -> "AppConfig":
         """从环境变量加载配置"""
         cls._load_dotenv()
         cfg = cls()
@@ -1048,7 +1047,7 @@ class ConfigManager:
     def __init__(self, settings: Settings):
         self.settings = settings
 
-    def get_agent_config(self, role: str) -> dict:
+    def get_agent_config(self, role: str) -> dict[str, str | int | float | None]:
         """获取指定角色的智能体配置"""
         if role not in {
             "retrieval",
@@ -1072,7 +1071,7 @@ class ConfigManager:
             "max_retries": self.settings.llm_max_retries,
         }
 
-    def get_database_config(self, db_type: str) -> dict:
+    def get_database_config(self, db_type: str) -> dict[str, str | int | None]:
         """获取数据库配置"""
         if db_type == "redis":
             return {
@@ -1102,7 +1101,7 @@ class ConfigManager:
         else:
             raise ValueError(f"Unknown database type: {db_type}")
 
-    def get_vector_db_config(self) -> dict:
+    def get_vector_db_config(self) -> dict[str, str | int | bool | None]:
         """获取向量数据库配置"""
         if self.settings.vector_db.lower() == "qdrant":
             return {
@@ -1128,6 +1127,10 @@ class ConfigManager:
             raise ValueError(f"Unknown vector database: {self.settings.vector_db}")
 
 
+def _build_settings() -> Settings:
+    return Settings()  # pyright: ignore[reportCallIssue]
+
+
 _settings: Settings | None = None
 
 
@@ -1150,7 +1153,7 @@ settings = _LazySettingsProxy()
 def get_settings() -> Settings:
     global _settings
     if _settings is None:
-        _settings = cast(Settings, Settings())
+        _settings = _build_settings()
     return _settings
 
 

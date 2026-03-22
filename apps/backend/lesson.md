@@ -30,3 +30,10 @@
 - Fix: load dotenv files from project root (derived from `src/config.py`) independent of cwd; keep `ENV_FILE` override support.
 - Hardening: `initialize_schema()` now applies explicit schema translation for non-public schemas even when caller does not pass `schema_name`; DB conninfo search_path includes `schema,public`.
 - Prevention: avoid cwd-coupled config resolution for long-running services and workers; keep schema-targeting explicit during DDL operations.
+
+2026-03-22 - MinerU success path was masked as parser failure and wrongly triggered PaddleOCR fallback
+- Symptom: logs showed MinerU batch status reached `done` with valid `full_zip_url`, but parsing still failed and retried with `ocr failed: PaddleOCR is not installed — OCR_FAILED`.
+- Root cause: `src/domain/mineru/component.py::minerU_pipeline` passed an unsupported kwarg (`allow_insecure_fallback=True`) to `file_utils.download_file`, causing a runtime `TypeError` right after MinerU completion.
+- Why behavior looked confusing: the parser wrapper catches MinerU exceptions and then tries PaddleOCR fallback, so the surfaced error became OCR-related instead of the real download-call bug.
+- Fix: remove unsupported kwarg and keep the download call signature aligned with `src/utils/file_utils.py::download_file(url, destination, timeout=...)`.
+- Prevention: add focused regression tests for the MinerU “done + full_zip_url” branch and avoid passing non-existent helper kwargs without updating shared utility signatures and tests together.

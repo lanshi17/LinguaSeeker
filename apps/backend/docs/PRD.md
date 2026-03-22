@@ -1,8 +1,8 @@
-# 多语种遗传证据平台 PRD
+# ACMG-Lingua PRD（多语种遗传证据平台）
 
 ## 1. 文档信息
 - 文档名称：Product Requirements Document (PRD)
-- 项目代号：Multi-ACMG Evidence Platform
+- 项目名称：ACMG-Lingua
 - 发布号：`v1.0`
 - 当前状态：`v1.0` 规格冻结（多源获取 + 六节点工作流）
 

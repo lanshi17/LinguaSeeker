@@ -1,4 +1,4 @@
-# 实施计划（IMPLEMENTATION_PLAN）
+# ACMG-Lingua 实施计划（IMPLEMENTATION_PLAN）
 
 ## 1. 目标与策略
 本计划以“先跑通完整主链路，再强化多源调度与微服务稳定性”为原则，按 `v1.0` 发布号推进。  

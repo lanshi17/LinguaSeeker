@@ -1,30 +1,32 @@
-import requests
-from typing import List, Dict, Any, Callable, Optional
-import time
 import json
+import time
 from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 from uuid import uuid4
-from src.domain.mineru.constants import (
-    mineru_response_code,
-    MINERU_TASK_STATE_MAP,
-    MINERU_ERROR_DETAIL_MAP,
-    MINERU_API_CODE_SUCCESS,
-)
+
+import requests
 from loguru import logger
+
+from src.config import settings as cfg
+from src.domain.mineru.constants import (
+    MINERU_API_CODE_SUCCESS,
+    MINERU_ERROR_DETAIL_MAP,
+    MINERU_TASK_STATE_MAP,
+    mineru_response_code,
+)
 from src.domain.models import (
-    FileUploadItem,
+    ApiResponse,
+    BatchStatusData,
     BatchUploadRequest,
     BatchUploadResponseData,
-    ApiResponse,
     FileExtractResult,
+    FileUploadItem,
     MinerURequest,
     MinerUResponse,
-    BatchStatusData,
 )
-from src.config import settings as cfg
-from src.utils.timer import Timer
-from src.utils import file_utils
 from src.utils import exceptions as exc
+from src.utils import file_utils
+from src.utils.timer import Timer
 
 # ---------------------------------------------------------------------------
 # PaddleOCR pluggable fallback
@@ -83,7 +85,9 @@ def run_paddleocr_fallback(file_paths: List[str]) -> MinerUResponse:
     PaddleOCR package is not installed.
     """
     if not _paddleocr_available or _PaddleOCR is None:
-        raise exc.ParsingException("ocr failed: PaddleOCR is not installed — OCR_FAILED")
+        raise exc.ParsingException(
+            "ocr failed: PaddleOCR is not installed — OCR_FAILED"
+        )
 
     normalized_paths = [str(path).strip() for path in file_paths if str(path).strip()]
     if not normalized_paths:
@@ -200,16 +204,21 @@ class MinerUComponent:
 
         # 步骤 1: 准备请求
         apply_url = "https://mineru.net/api/v4/file-urls/batch"
-        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token}",
+        }
 
         # 构建标准化请求体
         try:
             files_data = [
-                FileUploadItem(name=path.split("/")[-1].split("\\")[-1]) for path in file_paths
+                FileUploadItem(name=path.split("/")[-1].split("\\")[-1])
+                for path in file_paths
             ]
 
             request = BatchUploadRequest(
-                files=[item.model_dump() for item in files_data], **(common_params or {})
+                files=[item.model_dump() for item in files_data],
+                **(common_params or {}),
             )
             request_body = request.model_dump(exclude_none=True)
         except Exception as e:
@@ -306,7 +315,10 @@ class MinerUComponent:
             tuple: (success: bool, status_info: BatchStatusData or None, error_message: str or None)
         """
         status_url = f"https://mineru.net/api/v4/extract-results/batch/{batch_id}"
-        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token}",
+        }
 
         try:
             response = requests.get(status_url, headers=headers)
@@ -340,7 +352,9 @@ class MinerUComponent:
                 else:
                     return False, None, "No data in response"
             except Exception as e:
-                logger.warning(f"Failed to parse as BatchStatusData: {e}, returning raw data")
+                logger.warning(
+                    f"Failed to parse as BatchStatusData: {e}, returning raw data"
+                )
                 return False, None, f"Failed to parse status data: {e}"
 
         except requests.exceptions.RequestException as e:
@@ -351,7 +365,11 @@ class MinerUComponent:
             return False, None, f"Execution error while querying status: {e}"
 
     def upload_local_files_batch_with_callback(
-        self, token: str, file_paths: list, callback_url: str, common_params: dict = None
+        self,
+        token: str,
+        file_paths: list,
+        callback_url: str,
+        common_params: dict = None,
     ) -> tuple[bool, Optional[str], Optional[str]]:
         """
         通过 Mineru API 批量上传本地文件，并设置 callback URL 接收解析结果（推荐方式）。
@@ -382,7 +400,8 @@ class MinerUComponent:
         # 构建标准化请求体
         try:
             files_data = [
-                FileUploadItem(name=path.split("/")[-1].split("\\")[-1]) for path in file_paths
+                FileUploadItem(name=path.split("/")[-1].split("\\")[-1])
+                for path in file_paths
             ]
 
             request = BatchUploadRequest(
@@ -395,7 +414,10 @@ class MinerUComponent:
             return False, None, f"Failed to build request: {e}"
 
         apply_url = "https://mineru.net/api/v4/file-urls/batch"
-        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token}",
+        }
 
         try:
             print(f"正在申请上传链接（callback: {callback_url}）...")
@@ -528,7 +550,9 @@ class MinerUComponent:
 
             time.sleep(interval)
 
-        print(f"\n达到最大轮询次数 ({max_attempts})，任务可能仍在进行中。请稍后再检查。")
+        print(
+            f"\n达到最大轮询次数 ({max_attempts})，任务可能仍在进行中。请稍后再检查。"
+        )
         return status_data
 
     @Timer("mineru上传文件")
@@ -547,7 +571,9 @@ class MinerUComponent:
         logger.debug(f"初始状态: {status_info}")
         # 轮询等待解析完成
         try:
-            final_status = self.poll_batch_status_until_done(token=token, batch_id=batch_id)
+            final_status = self.poll_batch_status_until_done(
+                token=token, batch_id=batch_id
+            )
             logger.debug(f"最终状态: {final_status}")
         except Exception as e:
             logger.exception(f"轮询过程中出现错误: {e}")
@@ -572,7 +598,6 @@ class MinerUComponent:
             file_utils.download_file(
                 download_url,
                 f"{download_folder}/{download_zip_path}.zip",
-                allow_insecure_fallback=True,
             )
             logger.debug(f"结果已下载到: {download_folder}")
         except exc.FileProcessingException as e:
@@ -587,7 +612,9 @@ class MinerUComponent:
             )
             logger.debug(f"解压目录: {extracted_folder}")
             # uuid as extract folder name
-            file_utils.extract_zip(f"{download_folder}/{download_zip_path}.zip", extracted_folder)
+            file_utils.extract_zip(
+                f"{download_folder}/{download_zip_path}.zip", extracted_folder
+            )
             logger.debug(f"结果已解压到: {extracted_folder}")
         except exc.FileProcessingException as e:
             logger.exception(f"解压结果时出现错误: {e}")

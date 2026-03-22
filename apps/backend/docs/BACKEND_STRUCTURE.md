@@ -1,4 +1,4 @@
-# 后端结构规范（BACKEND_STRUCTURE）
+# ACMG-Lingua 后端结构规范（BACKEND_STRUCTURE）
 
 ## 1. 架构分层
 采用五层结构：

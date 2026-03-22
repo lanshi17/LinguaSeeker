@@ -1,6 +1,6 @@
-# ACMG Lingua Backend
+# ACMG-Lingua Backend
 
-本仓库是 ACMG Lingua 的后端服务代码库，当前实现以 `FastAPI + Celery + LangGraph + PostgreSQL/Neo4j/Qdrant/MinIO/Redis` 为主。
+本仓库是 ACMG-Lingua 的后端服务代码库，当前实现以 `FastAPI + Celery + LangGraph + PostgreSQL/Neo4j/Qdrant/MinIO/Redis` 为主。
 
 ## 当前入口与运行方式
 
