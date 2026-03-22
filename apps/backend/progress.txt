@@ -944,3 +944,24 @@ Verification:
   - `ACMGFlow`
   - `ACMG Lingua`
 - `ACMG-Lingua` naming is now consistently present in the main documentation headers and project descriptor lines.
+
+---
+
+Implementation Update: 2026-03-23 (Current branch verification after legacy document API trace recovery)
+
+Completed:
+- Re-established the current source of truth after discovering the previously referenced legacy integration target no longer exists.
+- Confirmed `tests/integration/api/test_document_api.py` remains intentionally removed:
+  - enforced by `tests/test_legacy_architecture_cleanup.py`
+- Confirmed no document-API restoration work is required in the current branch state.
+- No source or test code changes were needed in this verification pass.
+
+Verification:
+- `uv run pytest -q tests/integration` -> `216 passed, 1 skipped`
+- Full-suite verification was launched via persistent PTY because synchronous runs timed out before completion.
+- PTY session `pty_d0e0ac2b` (`uv run pytest -q`) exited with code `0`.
+
+Notes:
+- The retained PTY buffer only captured progress output rather than pytest's final textual summary, but the process exit code was successful.
+- Per current instruction, waiting on additional terminal output was skipped once the long-running verification had effectively stalled from an output perspective.
+- This update records the current branch as free of the previously investigated legacy document-API integration blocker.

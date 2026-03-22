@@ -1,670 +1,595 @@
-# ACMG PS3/BS3 Workflow Optimization (Microservices + Status Migration)
+# ACMG PS3/BS3 Workflow Optimization (Docs-Aligned Microservice Cutover)
 
 ## TL;DR
-> **Summary**: Split the current monolith Celery pipeline into dedicated parsing/translation/extraction microservices (Celery as the cross-service bus), migrate backend `workflow_status` values to the user-facing state machine, and persist MinerU parsing outputs (sanitized response + parsing manifest) to Postgres without storing any URLs.
-> **Deliverables**:
-> - Parsing/translation/extraction microservices (each: Celery worker + minimal FastAPI health/metrics)
-> - Versioned Celery task names + explicit queue routing per microservice
-> - `workflow_status` migration to new enum values (keeping existing `processing_steps`)
-> - Postgres persistence for MinerU `mineru_response_sanitized` + `parsing_manifest` (hybrid spill policy)
-> - API response URL generation from MinIO object_keys (no URLs stored in Postgres)
-> - Observability baseline (Prometheus metrics endpoints + correlation IDs)
-> - Contract/idempotency/integration tests using existing infra compose
+> **Summary**: Align the PS3/BS3 backend plan to the frozen docs in `docs/` and the current codebase by delivering a 6-node single-paper LangGraph/Celery workflow, request-level aggregation, parser/translation/extraction microservices, durable provenance, and the v1.0 status/error/retry contracts.
+> **Primary constraints from frozen specs**:
+> - Workflow is fixed to **6 nodes**: acquisition → parsing → translation → extraction → ACMG classification → arbitration
+> - Request status set is **exactly** `queued/running/partial_failed/failed/success`
+> - Paper status set is **exactly** `queued/running/success/failed`
+> - Every `request_id` and `paper_task_id` is **UUIDv4**
+> - Celery unit of execution is **one task per paper**
+> - Parser fallback is **MinerU → PaddleOCR-VL-1.5**
+> - Translation/extraction/arbitration model routing must follow `docs/TECH_STACK.md`
+> - Output must preserve **full evidence-source explainability** and return `failed + error_code + log_link` on failures
+> **Repository constraints from `AGENTS.md`**:
+> - Use **uv** only
+> - Keep business code in `src/`, tests in `tests/`, docs in `docs/`
+> - Update `progress.txt` after each milestone
+> - Record debugging/troubleshooting lessons in `lesson.md`
+> - Logging must use **loguru** and log files must live under `logs/`
 > **Effort**: XL
-> **Parallel**: YES — 4 waves
-> **Critical Path**: Contracts/queues → DB + status migration → parsing microservice → translation microservice → extraction microservice → supervisor/orchestrator cutover → tests/observability
-
-## Context
-### Original Request
-- End-to-end “优化计划” for ACMG PS3/BS3 workflow with Celery orchestration, node status to frontend, and explicit requirement: “mineru返回数据保存的文件和目录, 将mineru的返回的响应json存入pgsql”.
-
-### Interview Summary (decisions locked)
-- Microservice delivery: **一次性全拆** now (parsing / translation / extraction as separate microservices).
-- Cross-service bus: **Celery** (each microservice runs a worker + minimal FastAPI for health/metrics).
-- MinerU persistence: store **sanitized final MinerU response + executor-generated parsing manifest** as JSONB on **existing `paper_tasks`**; **do NOT store any URLs** (upload/presigned/api paths).
-- Parsing manifest size: **Hybrid threshold**
-  - If `image_count <= 200`: store `image_object_keys` inline in JSONB
-  - If `image_count > 200`: store only `images_prefix + image_count + image_keys_manifest_object_key + sha256` and put full list JSON into MinIO
-- Workflow status alignment: **migrate backend `workflow_status` values** to the user-facing state machine, while **keeping existing `processing_steps`** as fine-grained progress.
-- Provenance: **轻量溯源** only (MinIO object_keys + key params + timing/status/error codes + DB IDs; no full LLM prompt/response bodies).
-- API URL policy: **server-generate URLs** at response time from stored object_keys; Postgres/logs store object_keys only.
-
-### Metis Review (gaps addressed)
-- Resolved via plan defaults (no further user decisions needed):
-  - Use **Alembic** for DB schema changes (already present in `apps/backend/database/alembic/*`) even though runtime also uses `Base.metadata.create_all()`.
-  - Define strict DTO envelopes + schema_version for Celery payloads.
-  - Define compatibility strategy for API/workflow status migration (dual-read/dual-write window).
-
-### Oracle Review (guardrails incorporated)
-- Use versioned, fully-qualified task names (`parsing.parse_document.v1`) and dedicated queues per microservice.
-- Postgres is canonical for progress; Celery is at-least-once → design idempotency.
-- Enforce strict Pydantic validation + schema_version envelope.
-- Avoid storing sensitive payloads in Redis result backend (`ignore_result=True`).
-
-## Work Objectives
-### Core Objective
-Implement a microservice-based PS3/BS3 pipeline (parsing/translation/extraction) with durable, user-facing workflow statuses and full provenance via Postgres + MinIO object keys, while eliminating URL persistence and hardening correctness (idempotency/retries/timeouts).
-
-### Deliverables
-1) **New workflow_status values** (user state machine) applied across DB rows, enums, API responses, and supervisor graph.
-2) **New Postgres columns** on `paper_tasks` for MinerU parsing persistence:
-   - `mineru_response_sanitized` JSONB
-   - `parsing_manifest` JSONB (hybrid spill)
-3) **Microservices**
-   - `parsing-service`: consumes MinIO upload object_key(s), runs MinerU/PaddleOCR fallback, uploads artifacts, writes `mineru_response_sanitized` + `parsing_manifest`
-   - `translation-service`: consumes markdown object_key, outputs English markdown object_key
-   - `extraction-service`: consumes English markdown + images, outputs evidence JSON object_key
-4) **Celery contract + routing**
-   - versioned task names + per-service queues + explicit routing
-5) **API compatibility**
-   - continue to serve `get_task_status` and websocket stream with new workflow_status; URLs derived from object_keys
-6) **Observability baseline**
-   - `/metrics` endpoints + correlation IDs
-7) **Tests**
-   - contract tests for DTO envelopes
-   - idempotency tests
-   - state migration tests
-   - integration test using `apps/backend/database/podman-compose.yml`
-
-### Definition of Done (agent-verifiable)
-- `pytest` passes locally for backend test suite (including updated status transition tests).
-- New columns exist and are populated after parsing stage.
-- No Postgres JSON persisted fields contain any of:
-  - `http://` or `https://`
-  - `/results/` API paths
-  - MinerU upstream URL fields (`download_url`, `full_zip_url`, `file_urls`)
-- `apps/backend/.work_logs.sh` is confirmed git-ignored and must never be committed; any secrets found there must be rotated outside this repo.
-- Workflow status stored in `paper_tasks.workflow_status` uses ONLY the new user-facing values.
-- Microservice Celery workers can process a sample PDF end-to-end using only IDs + object_keys in Celery messages.
-- `/api/v1/task/{id}` (or existing status endpoint) returns URLs (derived) without storing them.
-
-### Must Have
-- Strictly versioned DTO envelopes for cross-service Celery tasks.
-- Idempotent stage execution (at-least-once safe).
-- Preserve existing `processing_steps` and progress percentage logic.
-
-### Must NOT Have (guardrails)
-- Must NOT store presigned URLs, MinIO direct URLs, or API-path URLs in Postgres JSON.
-- Must NOT put document text, images, or LLM prompts/responses into Redis result backend.
-- Must NOT rely on Celery result backend for user-facing progress.
-
-## Verification Strategy
-> ZERO HUMAN INTERVENTION — all verification is agent-executed.
-- Test decision: **tests-after** (existing pytest suite; add/adjust tests alongside changes)
-- QA policy: every task below includes agent-executed QA scenarios (Bash only; no frontend/Playwright coverage assumed in this repo).
-- Evidence artifacts: executor stores logs/screenshots under `.sisyphus/evidence/task-{N}-{slug}.{ext}`
-
-## Execution Strategy
-### Parallel Execution Waves
-Wave 1 (Foundations / contracts / migrations)
-- Task routing + DTO contract package
-- WorkflowStatus migration design + dual-read compatibility
-- DB migrations for new columns
-
-Wave 2 (Microservices scaffolding)
-- Parsing microservice (MinerU + persistence + idempotency)
-- Translation microservice
-- Extraction microservice
-
-Wave 3 (Orchestrator + supervisor cutover)
-- Update supervisor/orchestrator to call microservice tasks
-- Fix extraction→adjudication coupling
-- URL generation policy in API responses
-
-Wave 4 (Observability + hardening + integration tests)
-- Prometheus metrics
-- Integration/contract/idempotency tests
-- Retry/timeout tuning + Redis visibility_timeout
-
-### Dependency Matrix (high level)
-- DTO contracts + queues (Wave 1) block all microservices.
-- DB columns (Wave 1) block parsing microservice persistence.
-- Parsing microservice blocks translation/extraction downstream.
-- Orchestrator cutover blocks E2E integration tests.
-
-## TODOs
-
-> NOTE: All file paths are under `apps/backend/` unless otherwise stated.
-
-- [ ] 0. Plan-wide invariants (contracts, idempotency, no-URL persistence)
-
-  **What to do**:
-   - Enforce: Celery payloads are IDs + MinIO object_keys only (never markdown text/images).
-   - Enforce: Postgres is canonical for workflow/progress; Celery result backend is not used for UX.
-   - Enforce: “no URLs in Postgres” (no `http(s)://`, no `/results/` paths, no MinerU upstream URL fields).
-   - Enforce at-least-once safety: every stage task must be idempotent (deterministic output keys + safe re-run).
-   - Enforce concurrency rule: At most ONE active stage task mutates a given `paper_task_id` at a time (or else JSONB `processing_steps` read-modify-write will lose updates; current `PostgresClient.update_paper_task()` has no CAS/locking).
-
-  **Recommended Agent Profile**:
-  - Category: `unspecified-high`
-  - Skills: [`verification-before-completion`]
-
-  **Parallelization**: Can Parallel: N/A (applies to all tasks)
-
-  **References**:
-  - Current URL-producing helpers: `src/services/task_manager.py::_store_parsing_artifacts_in_minio`, `_store_outputs_in_minio`
-  - MinIO key builders: `src/infrastructure/minio.py` (object_key builders)
-
-  **Acceptance Criteria**:
-  - [ ] All later tasks include explicit checks for URL-free persistence and idempotency.
-
-  **QA Scenarios**:
-  ```
-  Scenario: URL persistence guard
-    Tool: Bash
-    Steps: Add a shared helper in tests that asserts serialized JSON has no URL substrings
-    Expected: Used by parsing/translation/extraction tests
-    Evidence: .sisyphus/evidence/task-0-guard.txt
-  ```
-
-- [ ] 1. Define new workflow_status enum + compatibility mapping
-
-  **What to do**:
-  1) Replace OLD `WorkflowStatus` values in `src/services/enum.py` with the new user-facing state machine values:
-     - `PENDING`, `DOWNLOADING`, `PARSING`, `TRANSLATING`, `EXTRACTING`, `CLASSIFYING`, `ADJUDICATING`, `SUCCESS`, `FAILURE`
-     - Keep names UPPERCASE to match existing style.
-  2) Update/replace:
-     - `WORKFLOW_STATUS_TRANSITIONS`
-     - `STEP_TO_WORKFLOW_STATUS` mapping so steps map to new coarse statuses.
-  3) Decide how `processing_steps` steps map:
-     - acquisition step → `DOWNLOADING`
-     - parsing step → `PARSING`
-     - translation step → `TRANSLATING`
-     - extraction step → `EXTRACTING`
-     - reasoning/classification step → `CLASSIFYING`
-     - adjudication step → `ADJUDICATING`
-  4) Add a **compatibility shim** function (same module) that can coerce old persisted values to new ones for a transition window (for reading existing rows), then plan a one-time DB backfill.
-
-  **Must NOT do**:
-  - Do not rename `processing_steps` step keys; keep step keys stable.
-
-  **Recommended Agent Profile**:
-  - Category: `unspecified-high` — Reason: cross-cutting enums + tests.
-  - Skills: [`systematic-debugging`] — to handle transition test fallout.
-
-  **Parallelization**: Can Parallel: YES | Wave 1 | Blocks: 2,3,7 | Blocked By: —
-
-  **References**:
-  - Enum definitions: `src/services/enum.py`
-  - Tests: `tests/test_state_transitions.py`
-  - Supervisor literals: `src/agents/supervisor.py` (currently uses lowercase "completed"/"failed")
-
-  **Acceptance Criteria**:
-  - [ ] `pytest apps/backend/tests/test_state_transitions.py -q` passes after updates.
-
-  **QA Scenarios**:
-  ```
-  Scenario: Derive workflow status from processing_steps
-    Tool: Bash
-    Steps:
-      1) Run: pytest tests/test_state_transitions.py::test_derive_workflow_status_* -q
-    Expected: PASS
-    Evidence: .sisyphus/evidence/task-1-workflow-status.txt
-
-  Scenario: Coerce old persisted values
-    Tool: Bash
-    Steps:
-      1) Add/Run unit tests that feed old values like PROCESSING_PDF into coercion fn
-    Expected: PASS (mapped to PARSING)
-    Evidence: .sisyphus/evidence/task-1-coerce-old.txt
-  ```
-
-- [ ] 2. Add Alembic migration for `paper_tasks` MinerU persistence columns
-
-  **What to do**:
-  1) Create new Alembic revision under `database/alembic/versions/` to add to `paper_tasks`:
-     - `mineru_response_sanitized` JSONB NULL
-     - `parsing_manifest` JSONB NULL
-     - Add indexed scalar columns (REQUIRED):
-       - `parser_backend` String(50) NULL
-       - `parser_task_id` String(100) NULL
-       - `mineru_folder` Text NULL  (debug-only local path; NOT a URL; may be omitted from API responses)
-     - Create indexes:
-       - `ix_paper_tasks_parser_backend`
-       - `ix_paper_tasks_parser_task_id`
-  2) Update SQLAlchemy model `PaperTask` in `src/infrastructure/models.py` to include these new columns.
-  3) Decide migration toolchain policy:
-     - Use Alembic for prod/dev DB migrations.
-     - Keep `Base.metadata.create_all()` for local bootstrap but ensure it includes new columns.
-
-  **Must NOT do**:
-  - Do not store URL fields in these columns.
-
-  **Recommended Agent Profile**:
-  - Category: `unspecified-high` — Reason: DB schema + migration correctness.
-  - Skills: [`systematic-debugging`] — migration/test interplay.
-
-  **Parallelization**: Can Parallel: YES | Wave 1 | Blocks: 4 | Blocked By: —
-
-  **References**:
-  - Models: `src/infrastructure/models.py` (PaperTask around lines ~393+)
-  - Alembic config: `database/alembic.ini`, `database/alembic/env.py`
-  - Prior migration pattern: `database/alembic/versions/20260306_01_task_status_workflow_fields.py`
-
-  **Acceptance Criteria**:
-  - [ ] Running Alembic upgrade (command used in repo) applies new columns.
-  - [ ] SQLAlchemy model reflects new columns.
-
-  **QA Scenarios**:
-  ```
-  Scenario: Migration applies cleanly
-    Tool: Bash
-    Steps:
-      1) Start infra via podman-compose (or docker-compose equivalent)
-      2) Run alembic upgrade head
-    Expected: DB has new columns on paper_tasks
-    Evidence: .sisyphus/evidence/task-2-alembic.txt
-
-  Scenario: Local bootstrap still works
-    Tool: Bash
-    Steps:
-      1) Run a short script that calls initialize_schema() against empty DB
-    Expected: Tables created with new columns
-    Evidence: .sisyphus/evidence/task-2-create-all.txt
-  ```
-
-- [ ] 3. Define cross-service Celery DTO envelopes + task name/queue conventions
-
-   **What to do**:
-   1) Create a shared “contracts” module/package inside backend repo at `src/contracts/`:
-      - Pydantic DTOs with `schema_version`.
-      - Task name constants and queue names.
-   2) Define versioned Celery task names:
-      - `parsing.parse_document.v1`
-      - `translation.translate_markdown.v1`
-      - `extraction.extract_evidence.v1`
-   3) Define dedicated queues (names are FINAL; no alternatives):
-      - `q.parsing`, `q.translation`, `q.extraction`, plus existing `retry`.
-   4) Update `src/celery_app.py` to register queues + routes for these tasks, and set broker transport options:
-      - `broker_transport_options = {"visibility_timeout": cfg.task_timeout_seconds + 600}` (MUST be > hard time limit)
-      - Add `task_default_queue = "default"` unchanged.
-   5) For all stage tasks, set Celery options:
-      - `ignore_result=True`
-      - `acks_late=True`
-      - `task_reject_on_worker_lost=True`
-      - `soft_time_limit = cfg.node_<stage>_timeout_seconds`
-      - `time_limit = cfg.node_<stage>_timeout_seconds + 60` (cleanup grace)
-   6) Enforce JSON-only serialization (already configured) and explicitly forbid pickle/yaml.
-
-  **Must NOT do**:
-  - Do not pass large payloads (markdown text, images) through Celery messages.
-
-  **Recommended Agent Profile**:
-  - Category: `unspecified-high` — Reason: cross-service interface design.
-  - Skills: [`test-driven-development`] — contract tests first.
-
-  **Parallelization**: Can Parallel: YES | Wave 1 | Blocks: 4,5,6 | Blocked By: —
-
-  **References**:
-  - Existing Celery app: `src/celery_app.py`
-  - Existing task naming: `src/services/task_manager.py` (`@celery_app.task(name="tasks.process_pdf")`)
-
-  **Acceptance Criteria**:
-  - [ ] Contract DTOs validate golden payload fixtures.
-  - [ ] Celery routes contain explicit mapping for new task names.
-
-  **QA Scenarios**:
-  ```
-  Scenario: DTO schema validation
-    Tool: Bash
-    Steps:
-      1) Run pytest tests/contracts/test_parsing_dto.py -q
-    Expected: PASS
-    Evidence: .sisyphus/evidence/task-3-contract-dto.txt
-
-  Scenario: Celery route config
-    Tool: Bash
-    Steps:
-      1) Run a unit test that imports celery_app and asserts task_routes entries exist
-    Expected: PASS
-    Evidence: .sisyphus/evidence/task-3-celery-routes.txt
-  ```
-
-- [ ] 4. Implement parsing microservice worker (MinerU + persistence)
-
-  **What to do**:
-  1) Create a new service module (in-repo) `src/microservices/parsing/` with:
-     - Celery task handler for `parsing.parse_document.v1`
-     - Minimal FastAPI app for `/healthz` and `/metrics`
-  2) Input to task: `{paper_task_id, document_id, upload_bucket, upload_object_key, idempotency_key, schema_version}`.
-  3) Implement idempotency:
-     - Deterministic MinIO keys for outputs under `{document_id}/parsing/...`.
-     - If outputs already exist (`minio.file_exists`), short-circuit success and just ensure DB fields are populated.
-  4) Run MinerU parse (existing agent `DocumentParsingAgent`) and upload artifacts via existing MinIO client.
-   5) Persist to Postgres on `paper_tasks`:
-      - `mineru_response_sanitized` (allowlist fields; exclude URLs) with this exact JSON shape:
-        ```json
-        {
-          "schema_version": 1,
-          "parser_backend": "mineru|paddleocr",
-          "parser_task_id": "<batch_id or paddleocr-fallback-...>",
-          "status": "done|failed",
-          "message": "<human-readable summary>",
-          "received_at": "<ISO8601 UTC>",
-          "warnings": ["<warning_code>"]
-        }
-        ```
-        Notes:
-        - Do NOT include any of: `download_url`, `full_zip_url`, `file_urls`.
-        - Do NOT include any local filesystem paths.
-      - `parsing_manifest` with hybrid spill policy, exact JSON shape:
-        ```json
-        {
-          "schema_version": 1,
-          "markdown_object_key": "<document_id>/parsing/parsed_markdown.md",
-          "images_prefix": "<document_id>/parsing/images/",
-          "image_count": 123,
-          "image_object_keys": ["..."],
-          "image_keys_manifest_object_key": "<document_id>/parsing/image_keys_manifest.json",
-          "image_keys_manifest_sha256": "<hex>",
-          "content_type": {
-            "markdown": "text/markdown",
-            "image": "image/jpeg"
-          }
-        }
-        ```
-        Rules:
-        - If `image_count <= 200`: persist `image_object_keys` and set manifest_object_key fields to null/omit.
-        - If `image_count > 200`: omit `image_object_keys` (or store only a short prefix list of first 5 for debug) AND persist `image_keys_manifest_object_key` + sha256.
-        - Store object_keys/prefixes only; do NOT store URLs.
-  6) Ensure `parsing_manifest` only contains object_keys / prefixes, never URLs.
-
-  **Must NOT do**:
-  - Must not write `mineru_folder` raw filesystem paths into manifest unless explicitly allowed (store relative path or omit). Prefer: store `mineru_folder` for debugging only, but mark as local-path, not URL.
-
-  **Recommended Agent Profile**:
-  - Category: `deep` — Reason: integrates MinerU, MinIO, Postgres, idempotency.
-  - Skills: [`systematic-debugging`, `verification-before-completion`] 
-
-  **Parallelization**: Can Parallel: YES | Wave 2 | Blocks: 5,6 | Blocked By: 2,3
-
-  **References**:
-  - MinerU pipeline: `src/domain/mineru/component.py`
-  - Parsing agent: `src/domain/agent/document_parsing.py`
-  - MinIO helpers: `src/infrastructure/minio.py` (buckets: `minio_uploads_bucket="literature-uploads"`, `minio_results_bucket="processed-results"` in `src/config.py`)
-  - Postgres update API: `src/infrastructure/postgres.py::update_paper_task`
-
-  **Acceptance Criteria**:
-  - [ ] Running parsing task writes object_keys to MinIO and JSONB fields to Postgres; no URLs stored.
-
-  **QA Scenarios**:
-  ```
-  Scenario: Parse PDF end-to-end
-    Tool: Bash
-    Steps:
-      1) Start infra stack
-      2) Enqueue parsing.parse_document.v1 with a known PDF in MinIO
-      3) Poll paper_tasks row
-    Expected:
-      - mineru_response_sanitized IS NOT NULL
-      - parsing_manifest IS NOT NULL
-      - parsing_manifest contains only object_keys/prefixes
-    Evidence: .sisyphus/evidence/task-4-parsing-e2e.txt
-
-  Scenario: Idempotent replay
-    Tool: Bash
-    Steps:
-      1) Run same task twice with same idempotency_key
-    Expected:
-      - Second run does not duplicate artifacts
-      - DB state remains consistent
-    Evidence: .sisyphus/evidence/task-4-idempotency.txt
-  ```
-
-- [ ] 5. Implement translation microservice worker
-
-  **What to do**:
-  1) Create `src/microservices/translation/` with Celery task `translation.translate_markdown.v1` + FastAPI health/metrics.
-  2) Input: `{paper_task_id, document_id, markdown_object_key, schema_version, idempotency_key}`.
-  3) Fetch markdown bytes from MinIO, run existing translation toolchain (`src/agents/parsing/translation_tool.py` + `src/tools/external/translation_api.py`).
-   4) Write output English markdown to deterministic object_key: `{document_id}/en_format.md` (match existing monolith convention in `src/services/task_manager.py`).
-  5) Update `processing_steps.translation` status and `workflow_status`.
-
-  **Must NOT do**:
-  - Must not store translated markdown text in Postgres.
-
-  **Recommended Agent Profile**:
-  - Category: `unspecified-high`
-  - Skills: [`test-driven-development`]
-
-  **Parallelization**: Can Parallel: YES | Wave 2 | Blocks: 6 | Blocked By: 3,4
-
-  **References**:
-  - Translation wrappers: `src/agents/parsing/translation_tool.py`, `src/tools/external/translation_api.py`
-  - Existing monolith behavior: `src/services/task_manager.py::run_node_translation`
-
-  **Acceptance Criteria**:
-  - [ ] Translation task produces English markdown object_key and updates progress in Postgres.
-
-  **QA Scenarios**:
-  ```
-  Scenario: Translate non-English markdown
-    Tool: Bash
-    Steps:
-      1) Put a small markdown file in MinIO
-      2) Run translation.translate_markdown.v1
-    Expected: Output object exists; DB updated; no URLs stored
-    Evidence: .sisyphus/evidence/task-5-translation.txt
-
-  Scenario: Skip English
-    Tool: Bash
-    Steps:
-      1) Run task with English markdown
-    Expected: Marks translation step SKIPPED; workflow_status advances appropriately
-    Evidence: .sisyphus/evidence/task-5-skip-en.txt
-  ```
-
-- [ ] 6. Implement extraction microservice worker
-
-  **What to do**:
-  1) Create `src/microservices/extraction/` with Celery task `extraction.extract_evidence.v1` + FastAPI health/metrics.
-  2) Input: `{paper_task_id, document_id, en_markdown_object_key, image_prefix_or_keys, schema_version, idempotency_key}`.
-  3) Fetch inputs from MinIO, run existing extraction tool/agent (`src/agents/extraction/extraction_tool.py`).
-  4) Write evidence output JSON to deterministic key `{document_id}/ps3_evidence.json`.
-  5) Update `processing_steps.extraction` only; **do not** mark adjudication completed (fix existing coupling).
-
-  **Must NOT do**:
-  - Must not set adjudication step status here.
-
-  **Recommended Agent Profile**:
-  - Category: `deep`
-  - Skills: [`systematic-debugging`]
-
-  **Parallelization**: Can Parallel: YES | Wave 2 | Blocks: 7 | Blocked By: 3,5
-
-  **References**:
-  - Extraction wrappers: `src/agents/extraction/extraction_tool.py`
-  - Bug to remove: `src/services/task_manager.py::run_node_extraction` currently marks adjudication completed.
-
-  **Acceptance Criteria**:
-  - [ ] Extraction task writes evidence JSON to MinIO and updates only extraction-related progress.
-
-  **QA Scenarios**:
-  ```
-  Scenario: Extract evidence from translated markdown
-    Tool: Bash
-    Steps:
-      1) Seed MinIO with en markdown + images
-      2) Run extraction.extract_evidence.v1
-    Expected: ps3_evidence.json exists; DB updated; adjudication step untouched
-    Evidence: .sisyphus/evidence/task-6-extraction.txt
-
-  Scenario: Retryable failure classification
-    Tool: Bash
-    Steps:
-      1) Simulate transient MinIO failure (mock)
-    Expected: Task retries according to policy; eventual success updates DB
-    Evidence: .sisyphus/evidence/task-6-retry.txt
-  ```
-
-- [ ] 7. Update orchestrator/supervisor to dispatch microservice tasks + migrate status semantics
-
-  **What to do**:
-  1) Update `src/services/task_manager.py` and/or `src/agents/supervisor.py` to:
-     - Replace in-process parsing/translation/extraction execution with `celery_app.send_task(...)` to microservice task names.
-     - Use only IDs + object_keys in messages.
-  2) Resolve supervisor status semantics:
-     - `SupervisorState.workflow_status` is `str` and supervisor currently uses lowercase literals `"completed"` / `"failed"`.
-     - Align supervisor to new enum values (`SUCCESS` / `FAILURE`) and ensure all writes to DB use the new values.
-  3) Handle human review:
-     - User state machine does not include `PENDING_REVIEW`. Keep `requires_human_review` boolean as the flag, and keep `workflow_status` at the last completed stage (default to `ADJUDICATING`) while `requires_human_review=True`.
-     - Keep API payload `status="pending_review"` if needed, but do not add a new workflow_status value.
-  4) Remove/fix extraction→adjudication coupling globally.
-
-  **Recommended Agent Profile**:
-  - Category: `deep`
-  - Skills: [`systematic-debugging`, `verification-before-completion`]
-
-  **Parallelization**: Can Parallel: NO | Wave 3 | Blocks: 8,9 | Blocked By: 4,5,6,1
-
-  **References**:
-  - Supervisor graph: `src/agents/supervisor.py`
-  - Supervisor state: `src/state/global_state.py`
-  - Orchestrator: `src/services/task_manager.py`
-
-  **Acceptance Criteria**:
-  - [ ] End-to-end pipeline (upload→success) works via microservices.
-  - [ ] `paper_tasks.workflow_status` uses only new values; `requires_human_review` path works.
-
-  **QA Scenarios**:
-  ```
-  Scenario: Upload PDF triggers microservice chain
-    Tool: Bash
-    Steps:
-      1) Call upload endpoint
-      2) Observe Celery tasks enqueued to q.parsing/q.translation/q.extraction
-    Expected: paper_task progresses through statuses and completes
-    Evidence: .sisyphus/evidence/task-7-e2e.txt
-
-  Scenario: Human review gating
-    Tool: Bash
-    Steps:
-      1) Force arbitration to set requires_human_review
-    Expected: workflow_status remains stable; API returns pending_review status
-    Evidence: .sisyphus/evidence/task-7-human-review.txt
-  ```
-
-- [ ] 8. Enforce “no URLs in Postgres” across persistence paths
-
-  **What to do**:
-  1) Identify all DB writes that store `parsing_metadata` / `PipelineFiles` or similar structures.
-  2) Ensure persisted JSON excludes URL keys:
-     - in logs (`paper_task_logs.payload`)
-     - in new `mineru_response_sanitized` / `parsing_manifest`
-     - in any `tasks.result` / `paper_tasks.node_trace`
-  3) Update API layer to generate URLs on the fly from object_keys:
-     - For example, `f"{cfg.api_prefix}/results/{document_id}/{object_key}"`.
-
-  **Recommended Agent Profile**:
-  - Category: `unspecified-high`
-  - Skills: [`systematic-debugging`]
-
-  **Parallelization**: Can Parallel: YES | Wave 3 | Blocks: 9 | Blocked By: 4,7
-
-  **References**:
-  - Current URL generation: `src/services/task_manager.py::_store_parsing_artifacts_in_minio`, `_store_outputs_in_minio`
-  - API status response: `src/api/routes/task.py::get_task_status`
-
-  **Acceptance Criteria**:
-  - [ ] Grep over DB JSON payloads in tests shows no `http` or `/results/` stored.
-
-  **QA Scenarios**:
-  ```
-  Scenario: Verify persisted payloads contain no URLs
-    Tool: Bash
-    Steps:
-      1) Run integration test that stores parsing metadata
-      2) Query DB JSONB for 'http' and '/results/'
-    Expected: 0 matches
-    Evidence: .sisyphus/evidence/task-8-no-urls.txt
-  ```
-
-- [ ] 9. Observability baseline: metrics + correlation IDs
-
-  **What to do**:
-   1) Add `prometheus_client` (REQUIRED) to deps. Do NOT add `prometheus-fastapi-instrumentator` (keep dependencies minimal; implement FastAPI metrics endpoint manually using `prometheus_client`).
-  2) For orchestrator and each microservice FastAPI app:
-     - Expose `/metrics`.
-  3) Add Celery signal instrumentation:
-     - task runtime histogram by stage
-     - success/failure/retry counters by stage + error_code
-  4) Add correlation IDs:
-     - propagate `{paper_task_id, document_id, request_id, celery_task_id}` in logs.
-
-  **Must NOT do**:
-  - Do not label Prometheus metrics with `document_id` (cardinality risk).
-
-  **Recommended Agent Profile**:
-  - Category: `unspecified-high`
-  - Skills: [`verification-before-completion`]
-
-  **Parallelization**: Can Parallel: YES | Wave 4 | Blocks: 10 | Blocked By: 7
-
-  **References**:
-  - FastAPI entrypoint: `main.py`
-  - Health checks: `src/health.py`
-
-  **Acceptance Criteria**:
-  - [ ] `/metrics` responds for each service.
-
-  **QA Scenarios**:
-  ```
-  Scenario: Metrics endpoint availability
-    Tool: Bash
-    Steps:
-      1) Start services
-      2) curl /metrics
-    Expected: 200 OK and Prometheus text format
-    Evidence: .sisyphus/evidence/task-9-metrics.txt
-  ```
-
-- [ ] 10. Integration + contract + idempotency test suite for microservices
-
-  **What to do**:
-  1) Add contract tests validating DTO envelopes against golden payloads.
-  2) Add idempotency tests: run same stage twice and assert no duplication.
-  3) Add integration tests that spin up Postgres/Redis/MinIO using `database/podman-compose.yml` (or docker-compose) and run a worker.
-  4) Add migration tests for old→new workflow_status coercion/backfill.
-
-  **Recommended Agent Profile**:
-  - Category: `deep`
-  - Skills: [`test-driven-development`, `verification-before-completion`]
-
-  **Parallelization**: Can Parallel: YES | Wave 4 | Blocks: — | Blocked By: 4,5,6,7,8
-
-  **Acceptance Criteria**:
-  - [ ] `pytest -q` passes.
-
-  **QA Scenarios**:
-  ```
-  Scenario: End-to-end integration
-    Tool: Bash
-    Steps:
-      1) Start infra stack
-      2) Run integration pytest markers
-    Expected: PASS
-    Evidence: .sisyphus/evidence/task-10-integration.txt
-  ```
-
-## Final Verification Wave (4 parallel agents, ALL must APPROVE)
-- [ ] F1. Plan Compliance Audit — oracle
-- [ ] F2. Code Quality Review — unspecified-high
-- [ ] F3. Real Manual QA — unspecified-high
-- [ ] F4. Scope Fidelity Check — deep
-
-## Commit Strategy
-- Frequent atomic commits per numbered task.
-- Suggested prefixes:
-  - `feat(workflow-status): ...`
-  - `feat(db): ...`
-  - `feat(celery): ...`
-  - `feat(parsing-svc): ...`
-  - `feat(translation-svc): ...`
-  - `feat(extraction-svc): ...`
-  - `test(contracts): ...`
-
-## Success Criteria
-- New microservice pipeline runs end-to-end.
-- Backend stores no URLs in Postgres.
-- `workflow_status` uses the new user-facing state machine values.
-- MinerU response and parsing manifest are persisted per requirements.
+> **Parallel**: YES — 5 waves
+> **Critical path**: contracts/constants alignment → data model/status migration → parsing microservice persistence → translation/extraction cutover → supervisor/API/status aggregation → verification and release evidence
+
+## Why this plan was updated
+The previous `.sisyphus` plan was partially based on older assumptions and code-local terminology. The frozen product specs now take priority. This updated plan treats the following documents as authoritative in this order:
+1. `docs/PRD.md`
+2. `docs/BACKEND_STRUCTURE.md`
+3. `docs/APP_FLOW.md`
+4. `docs/TECH_STACK.md`
+5. `docs/IMPLEMENTATION_PLAN.md`
+6. `docs/CONSTANTS.md`
+7. `docs/CHANGE_CONTROL.md`
+
+## Codebase reality check (2026-03-22)
+### Current structure already present
+- Entry points: `main.py`, `src/main.py`, `app.py`
+- Business code roots already exist: `src/api`, `src/application`, `src/domain`, `src/infrastructure`, `src/services`, `src/state`
+- Tests already centralized under `tests/`
+- Main orchestration lives in `src/agents/supervisor.py`
+- Task execution and many pipeline details currently live in `src/services/task_manager.py`
+
+### Current gaps vs frozen docs
+1. `src/agents/supervisor.py` still uses non-doc status literals like `completed` / `failed` for workflow progression.
+2. Current runtime shape appears to be an 8-node internal graph (`route_by_source`, `interaction`, `acquisition`, `parsing`, `translation`, `extraction`, `reasoning`, `arbitration`, finalize paths), while the product contract is a 6-node business workflow.
+3. The docs require request-level and paper-level public states, but the code also carries internal workflow/progress concepts that need explicit mapping instead of leaking raw internals.
+4. `docs/BACKEND_STRUCTURE.md` defines five layers (`api`, `application`, `domain`, `infrastructure`, `infra`) and the repo already contains `application/`; plan work should prefer that target shape instead of growing more logic in `services/` unless intentionally transitional.
+5. Logging currently writes `logs/app_YYYYMMDD.log`; repository rules require timestamped log files under `logs/` using loguru. This needs explicit convergence work.
+6. Release acceptance and backward compatibility now require complete provenance, source trace, retry policy, retention policy, and change-control discipline.
+
+## Locked decisions for this plan
+1. **Spec-first**: if implementation and docs disagree, update implementation toward docs unless the docs are formally changed.
+2. **6-node public contract, richer internal execution allowed**: internal helper nodes may exist, but API/database/public progress must map cleanly to the 6-node business workflow.
+3. **Microservices stay in-repo first**: create parser/translation/extraction service modules inside this repo before any multi-repo split.
+4. **Postgres is canonical for user-visible state**; Celery result backend is not a UX source of truth.
+5. **MinIO/Postgres provenance stores object keys and trace data, not presigned URLs**.
+6. **Migration safety over refactor purity**: introduce compatibility shims where needed, then cut over.
+7. **No silent scope drift**: any change to statuses, retries, retention, error codes, or acceptance metrics requires matching docs + change-control updates.
+
+## Final target architecture
+### Public workflow contract (must match docs)
+1. Acquisition
+2. Parsing
+3. Translation
+4. Extraction
+5. ACMG Classification
+6. Arbitration
+
+### Service boundaries
+- **Main service**: FastAPI + request aggregation + upload/candidate APIs + Celery orchestration + traceable JSON responses
+- **pdf-parser-service**: MinerU first, PaddleOCR fallback, writes markdown/jpg to MinIO and parser metadata to PostgreSQL
+- **translation-service**: translate non-English markdown to English, write aligned output to MinIO/Qdrant/PostgreSQL
+- **evidence-extraction-service**: entity/relation/experiment extraction + retrieval augmentation
+- **KG service**: separate service triggered by Celery events, reading PostgreSQL and updating Neo4j
+
+### Canonical state model
+- **Request states**: `queued/running/partial_failed/failed/success`
+- **Paper states**: `queued/running/success/failed`
+- **Internal processing steps**: allowed for progress UI and diagnostics, but must map to the public contract without inventing unsupported public states
+
+### Mandatory data/provenance outcomes
+- Persist natural-language task form and structured metadata
+- Persist `source_trace`, node input/output summaries, evidence spans, alignment coordinates, timing, and status
+- Persist parser outputs/manifest without storing URLs
+- Return `log_link` as a signed temporary URL with 24h validity and 1/minute reissue limit
+
+## Workstreams
+1. **Contract alignment** — statuses, IDs, error codes, retries, provenance, API response shape
+2. **Data model + storage alignment** — request/paper/evidence/alignment/log fields and migration safety
+3. **Workflow cutover** — 6-node business flow with request aggregation and one Celery task per paper
+4. **Microservice extraction** — parser/translation/extraction microservices with deterministic contracts
+5. **Compliance + observability** — retention, logs, metrics, signed links, change-control, progress tracking
+6. **Verification** — unit, contract, integration, acceptance-set, and rollback evidence
+
+## Execution waves
+### Wave 0 — Freeze the contracts before code moves
+Goal: remove ambiguity so later implementation cannot drift.
+
+Deliverables:
+- Single mapping document from current code terms to frozen product terms
+- Explicit public/internal state translation rules
+- Task/message DTO envelope definitions with `schema_version`
+- File-path list of exactly where status, retry, error, and provenance logic currently lives
+
+Blocking outputs:
+- No implementation starts before the state/error/retry mapping is written down.
+- No microservice task name or payload is introduced ad hoc.
+
+### Wave 1 — Data and status convergence
+Goal: make persistence and API responses reflect frozen status/error/retry rules.
+
+Deliverables:
+- UUIDv4 enforcement for `request_id` and `paper_task_id`
+- Request/paper status convergence in DB, enums, serializers, and tests
+- Persistence fields for parser metadata/manifest/source trace/alignment evidence as required by docs
+- Compatibility layer for reading older rows during migration
+
+### Wave 2 — Parsing microservice and artifact persistence
+Goal: deliver the most constrained stage first because downstream work depends on parser outputs.
+
+Deliverables:
+- Dedicated parsing Celery task + minimal service app
+- MinerU first, PaddleOCR fallback
+- Markdown/jpg artifacts in MinIO
+- Sanitized parser response JSON + parsing manifest persisted to PostgreSQL
+- DOCX terminal failure behavior
+
+### Wave 3 — Translation and extraction microservices
+Goal: make multilingual and evidence steps conform to v1.0 rules.
+
+Deliverables:
+- Translation task that skips English, translates non-English, writes English markdown to MinIO
+- Qdrant BGE-M3 writes and PostgreSQL sentence alignment persistence
+- HGVS autocorrect warning path (`HGVS_AUTOCORRECT_FAILED`)
+- Extraction task using the existing extraction toolchain with proper evidence output storage and no adjudication coupling
+
+### Wave 4 — Orchestrator/API/request aggregation cutover
+Goal: expose the new workflow through stable public contracts.
+
+Deliverables:
+- One Celery task per paper
+- Request aggregation from multiple `paper_task_id`s
+- Upload dedup rules with SHA-256 and `FILE_DUPLICATE`
+- Candidate pagination constraints (<=20 total, page_size=5, selection 1..5)
+- Failure response contract `status=failed + error_code + log_link`
+- Status endpoints, log-link reissue endpoint, and traceable JSON output
+
+### Wave 5 — KG integration, observability, acceptance, release evidence
+Goal: finish the system obligations required by the docs, not just the happy path.
+
+Deliverables:
+- KG event emission and retry handling
+- `/metrics` and correlation IDs
+- retention/cleanup scripts
+- progress/lesson documentation updates per milestone
+- acceptance-run evidence for 6-language support, >=95% literature success rate, <=30-minute per paper runtime
+
+## Detailed task plan
+
+### Task 1: Write the contract delta document inside the plan itself
+**Files:**
+- Modify: `.sisyphus/plans/acmg-ps3-bs3-workflow-optimization.md`
+- Read for reference: `docs/PRD.md`, `docs/BACKEND_STRUCTURE.md`, `docs/APP_FLOW.md`, `docs/TECH_STACK.md`, `docs/CONSTANTS.md`, `docs/CHANGE_CONTROL.md`
+
+**Implementation notes:**
+- Capture exactly which code concepts are public contract vs internal implementation detail.
+- Record a table mapping current code statuses and nodes to the frozen 6-node model.
+- Record any doc-vs-code mismatches that must be resolved before or during implementation.
+
+**Acceptance criteria:**
+- Every later task in this plan references frozen terms, not improvised ones.
+- There is no unresolved ambiguity about status sets, retry defaults, or error code source of truth.
+
+**QA:**
+- Tool: Bash
+- Setup: none
+- Run: `python - <<'PY'
+from pathlib import Path
+text = Path('.sisyphus/plans/acmg-ps3-bs3-workflow-optimization.md').read_text()
+assert 'queued/running/partial_failed/failed/success' in text
+assert 'queued/running/success/failed' in text
+assert 'docs/PRD.md' in text and 'docs/CONSTANTS.md' in text
+print('contract delta plan assertions passed')
+PY`
+- Expected: script prints `contract delta plan assertions passed`
+
+### Task 2: Normalize status and ID contracts across code paths
+**Files:**
+- Modify: `src/services/enum.py`
+- Modify: `src/agents/supervisor.py`
+- Modify: `src/state/global_state.py`
+- Modify: `src/api/routes/task.py`
+- Modify: `src/services/task_manager.py`
+- Test: `tests/test_state_transitions.py`
+- Test: `tests/test_state_schema.py`
+
+**Implementation notes:**
+- Keep public request/paper statuses exactly as frozen in docs.
+- If an internal `workflow_status` enum remains, define it as an internal progress concept and provide a one-way mapping to public states.
+- Remove lowercase public terminal states like `completed` from user-facing outputs.
+- Ensure all generated IDs are UUIDv4.
+
+**Acceptance criteria:**
+- Public API responses never expose unsupported status values.
+- Existing rows can still be read during migration.
+- State transition tests cover partial failure, all-success, and all-duplicate cases.
+
+**QA:**
+- Tool: Bash
+- Setup: none
+- Run:
+  1. `uv run pytest tests/test_state_transitions.py -q`
+  2. `uv run pytest tests/test_state_schema.py -q`
+- Expected: both commands pass; no public status outside the frozen request/paper sets appears in assertions or serialized payload fixtures
+
+### Task 3: Align persistence models with the documented minimum fields
+**Files:**
+- Modify: `src/infrastructure/models.py`
+- Modify: `src/infrastructure/postgres.py`
+- Modify: `database/alembic/versions/<new_revision>.py`
+- Test: `tests/integration/` migration coverage or dedicated migration tests
+
+**Implementation notes:**
+- Ensure `task_requests`, `paper_tasks`, `paper_task_logs`, `sentence_alignments`, and evidence output storage meet the documented minimum field set.
+- Add parser metadata fields needed for sanitized MinerU persistence.
+- Preserve `source_trace`, `duplicate_of`, `fulltext_unavailable`, warnings, and trace chain requirements.
+- Avoid storing presigned URLs in structured JSON columns.
+
+**Acceptance criteria:**
+- New schema can be applied and local bootstrap still works.
+- Required provenance fields exist and are writable.
+
+**QA:**
+- Tool: Bash
+- Setup:
+  1. `./database/scripts/dbctl.sh up`
+  2. `./database/scripts/dbctl.sh init`
+- Run:
+  1. `uv run pytest tests/integration -k "migration or postgres or schema" -q`
+  2. `uv run python - <<'PY'
+from src.infrastructure.models import PaperTask
+required = {'duplicate_of', 'fulltext_unavailable'}
+actual = {c.name for c in PaperTask.__table__.columns}
+missing = required - actual
+assert not missing, missing
+print('PaperTask required columns present')
+PY`
+- Expected: migration-related tests pass and the schema inspection script prints `PaperTask required columns present`
+
+### Task 4: Extract parser work into an in-repo microservice
+**Files:**
+- Create: `src/microservices/parsing/__init__.py`
+- Create: `src/microservices/parsing/app.py`
+- Create: `src/microservices/parsing/tasks.py`
+- Modify: `src/celery_app.py`
+- Modify: `src/domain/agent/document_parsing.py`
+- Modify: `src/infrastructure/minio.py`
+- Modify: `src/services/task_manager.py`
+- Test: `tests/test_agents_parsing.py`
+- Test: `tests/test_supervisor_integration.py` or create `tests/integration/test_parsing_microservice.py`
+
+**Implementation notes:**
+- Use versioned task names and explicit queues.
+- Celery payloads must carry IDs/object keys, not raw markdown/image blobs.
+- PDF path: MinerU then PaddleOCR fallback.
+- DOCX parse failure remains terminal.
+- Persist sanitized parser response and manifest to PostgreSQL; artifacts go to MinIO.
+
+**Acceptance criteria:**
+- Parsing succeeds for a sample PDF with persisted parser metadata.
+- DOCX failure path yields the documented error contract.
+- No URL fields are persisted in parser JSON.
+
+**QA:**
+- Tool: Bash
+- Setup:
+  1. `./database/scripts/dbctl.sh up`
+  2. `./database/scripts/dbctl.sh init`
+- Run:
+  1. `uv run pytest tests/test_agents_parsing.py -q`
+  2. `uv run pytest tests/test_supervisor_integration.py -k parsing -q` or `uv run pytest tests/integration/test_parsing_microservice.py -q`
+- Expected: parsing tests pass; at least one integration path proves parser artifact persistence and DOCX terminal-failure handling
+
+### Task 5: Extract translation work into an in-repo microservice
+**Files:**
+- Create: `src/microservices/translation/__init__.py`
+- Create: `src/microservices/translation/app.py`
+- Create: `src/microservices/translation/tasks.py`
+- Modify: `src/celery_app.py`
+- Modify: `src/agents/parsing/translation_tool.py`
+- Modify: `src/tools/external/translation_api.py`
+- Modify: `src/services/task_manager.py`
+- Test: `tests/test_agents_parsing.py`
+- Test: `tests/test_literature_unified_workflow.py`
+
+**Implementation notes:**
+- Route translation work to `MT_MODEL`.
+- Skip translation when source text is English.
+- Persist English markdown to MinIO and sentence alignments to PostgreSQL.
+- Vectorize with BGE-M3 into Qdrant.
+- If HGVS autocorrect fails, continue with warning `HGVS_AUTOCORRECT_FAILED`.
+
+**Acceptance criteria:**
+- English documents skip translation.
+- Non-English documents produce English markdown, Qdrant vectors, and alignment rows.
+- Warning behavior matches docs.
+
+**QA:**
+- Tool: Bash
+- Setup:
+  1. `./database/scripts/dbctl.sh up`
+  2. `./database/scripts/dbctl.sh init`
+- Run:
+  1. `uv run pytest tests/test_agents_parsing.py -k translation -q`
+  2. `uv run pytest tests/test_literature_unified_workflow.py -k translation -q`
+- Expected: one test proves English skip behavior, one test proves translated markdown/alignment persistence, and warning handling is asserted for HGVS correction failure
+
+### Task 6: Extract evidence work into an in-repo microservice
+**Files:**
+- Create: `src/microservices/extraction/__init__.py`
+- Create: `src/microservices/extraction/app.py`
+- Create: `src/microservices/extraction/tasks.py`
+- Modify: `src/celery_app.py`
+- Modify: `src/agents/extraction/`
+- Modify: `src/services/task_manager.py`
+- Test: `tests/test_agents_extraction.py`
+- Test: `tests/test_pipeline_parity.py`
+
+**Implementation notes:**
+- Route evidence extraction to `EVIDENCE_MODEL` plus the existing scispaCy/LlamaIndex stack.
+- Preserve retrieval strategy expectations from docs: keyword + vector + reranker.
+- Persist evidence outputs, confidence, errors, and trace chain.
+- Do not let extraction mark arbitration complete.
+
+**Acceptance criteria:**
+- Evidence JSON is persisted and traceable.
+- Extraction state updates only extraction-related progress.
+
+**QA:**
+- Tool: Bash
+- Setup:
+  1. `./database/scripts/dbctl.sh up`
+  2. `./database/scripts/dbctl.sh init`
+- Run:
+  1. `uv run pytest tests/test_agents_extraction.py -q`
+  2. `uv run pytest tests/test_pipeline_parity.py -k extraction -q`
+- Expected: extraction tests pass and parity/integration checks confirm arbitration is not prematurely marked complete
+### Task 7: Rework supervisor/orchestrator around the 6-node business flow
+**Files:**
+- Modify: `src/agents/supervisor.py`
+- Modify: `src/services/task_manager.py`
+- Modify: `src/domain/literature/`
+- Modify: `src/application/` modules as needed for request orchestration
+- Test: `tests/test_supervisor.py`
+- Test: `tests/test_supervisor_e2e.py`
+- Test: `tests/test_supervisor_integration.py`
+
+**Implementation notes:**
+- Keep internal helper nodes if needed, but ensure the persisted/public progression is the 6-node contract.
+- One Celery task per paper.
+- Respect source selection flow: upload skips acquisition, search path goes through candidate selection.
+- Support `fulltext_unavailable=true` fallback to metadata+abstract evidence.
+
+**Acceptance criteria:**
+- Upload and literature-selection paths both work.
+- Public node/status summaries align with docs.
+- Arbitration remains the final business node before success/failure aggregation.
+
+**QA:**
+- Tool: Bash
+- Setup:
+  1. `./database/scripts/dbctl.sh up`
+  2. `./database/scripts/dbctl.sh init`
+- Run:
+  1. `uv run pytest tests/test_supervisor.py -q`
+  2. `uv run pytest tests/test_supervisor_e2e.py -q`
+  3. `uv run pytest tests/test_supervisor_integration.py -q`
+- Expected: supervisor unit/e2e/integration tests pass and the visible node progression maps cleanly to acquisition → parsing → translation → extraction → ACMG classification → arbitration
+
+### Task 8: Implement request aggregation and dedup exactly per docs
+**Files:**
+- Modify: `src/api/routes/core.py`
+- Modify: `src/api/routes/task.py`
+- Modify: `src/services/task_manager.py`
+- Modify: `src/infrastructure/postgres.py`
+- Test: `tests/test_task_manager_pdf_download.py`
+- Test: `tests/test_api_gateway_download.py`
+- Test: `tests/test_supervisor_integration.py`
+
+**Implementation notes:**
+- Enforce upload limits: max 10 files, 10MB each, 50MB total.
+- Deduplicate by global SHA-256.
+- Duplicate behavior must create a new `paper_task_id`, set paper status `success`, set `error_code=FILE_DUPLICATE`, set `duplicate_of`, and skip pipeline nodes.
+- If all papers in a request are duplicates, request status must still be `success`.
+- Empty execute selection with no upload must return `failed + INPUT_INVALID`.
+
+**Acceptance criteria:**
+- Duplicate uploads count in both success numerator and denominator.
+- Request aggregation correctly produces `partial_failed`, `failed`, and `success`.
+
+**QA:**
+- Tool: Bash
+- Setup:
+  1. `./database/scripts/dbctl.sh up`
+  2. `./database/scripts/dbctl.sh init`
+- Run:
+  1. `uv run pytest tests/test_task_manager_pdf_download.py -q`
+  2. `uv run pytest tests/test_api_gateway_download.py -q`
+  3. `uv run pytest tests/test_supervisor_integration.py -k "duplicate or request" -q`
+- Expected: dedup and request aggregation tests pass, including all-duplicate → request success and mixed outcome → `partial_failed`
+
+### Task 9: Implement API contracts for status, logs, and traceable output
+**Files:**
+- Modify: `src/api/routes/task.py`
+- Modify: `src/api/dependencies.py`
+- Modify: `main.py`
+- Modify: `src/health.py`
+- Test: `tests/test_stream_route.py`
+- Test: `tests/test_stream_supervisor.py`
+- Test: `tests/test_node_error_handling.py`
+
+**Implementation notes:**
+- Required endpoints per docs: create request, list candidates, execute request, request status, paper-task status, log-link reissue.
+- Failure payload must always include `status=failed`, `error_code`, and `log_link`.
+- Log-link reissue must enforce 1/minute per `paper_task_id` and 24-hour signed URL validity.
+- JSON output must include node input/output summaries, evidence coordinates, source links/metadata, and alignment positions.
+
+**Acceptance criteria:**
+- API contracts match documented fields and limits.
+- Old clients tolerate additive provenance fields.
+
+**QA:**
+- Tool: Bash
+- Setup:
+  1. `./database/scripts/dbctl.sh up`
+  2. `./database/scripts/dbctl.sh init`
+- Run:
+  1. `uv run pytest tests/test_stream_route.py -q`
+  2. `uv run pytest tests/test_stream_supervisor.py -q`
+  3. `uv run pytest tests/test_node_error_handling.py -q`
+- Expected: API/stream/error-contract tests pass and failed responses include `status`, `error_code`, and `log_link`
+
+### Task 10: Align observability, retention, and runtime hygiene with repo rules
+**Files:**
+- Modify: `main.py`
+- Modify: `src/health.py`
+- Modify: `scripts/` cleanup or ops scripts
+- Modify: `progress.txt`
+- Modify: `lesson.md`
+- Test: `tests/` coverage for retention/ops logic where practical
+
+**Implementation notes:**
+- Keep loguru as the logging framework.
+- Write logs under `logs/` with timestamped filenames that satisfy repository rules.
+- Add `/metrics` endpoints and stage metrics without high-cardinality labels.
+- Add cleanup paths for 7-day parser intermediates and runtime logs.
+- After each implementation milestone, update `progress.txt`; for debugging sessions, record outcomes in `lesson.md`.
+
+**Acceptance criteria:**
+- Runtime logs and cleanup behavior match repo policy.
+- Milestone-tracking files are part of the implementation process, not an afterthought.
+
+**QA:**
+- Tool: Bash
+- Setup: none
+- Run:
+  1. `uv run pytest tests -k "health or retention or minio_config_validation" -q`
+  2. `uv run python - <<'PY'
+from pathlib import Path
+assert Path('progress.txt').exists(), 'progress.txt missing'
+print('progress.txt exists')
+PY`
+- Expected: relevant observability/retention tests pass and the repository tracking file check passes
+
+### Task 11: Implement KG event contract and backfill path
+**Files:**
+- Modify: `src/domain/graph/sync.py`
+- Modify: KG event producers/consumers under `src/` or adjacent service code
+- Modify: `scripts/` backfill scripts
+- Test: `tests/integration/` KG event coverage
+
+**Implementation notes:**
+- Main service emits Celery events after pipeline completion.
+- KG reads PostgreSQL and updates Neo4j.
+- Backfill must resume from checkpoint.
+- KG retry queue uses ACMG/arbitration retry policy.
+
+**Acceptance criteria:**
+- Incremental eventing works.
+- Backfill resumes cleanly after interruption.
+
+**QA:**
+- Tool: Bash
+- Setup:
+  1. `./database/scripts/dbctl.sh up`
+  2. `./database/scripts/dbctl.sh init`
+- Run:
+  1. `uv run pytest tests/integration -k "graph or kg or backfill" -q`
+- Expected: KG-related integration tests pass, including retry/backfill resume assertions where implemented
+
+### Task 12: Verification and release gate
+**Files:**
+- Modify/Add tests under `tests/`
+- Modify: `docs/CHANGE_CONTROL.md` if any contract changed during implementation
+- Modify: `progress.txt`
+- Modify: `lesson.md` as needed
+
+**Implementation notes:**
+- Verify unit, contract, integration, and acceptance scenarios.
+- Use `uv run pytest` for test execution.
+- Confirm six-language support, >=95% literature-level success rate, <=30-minute paper runtime, and traceable output chain.
+- If statuses/error codes/retries/retention changed, update docs before shipping.
+
+**Acceptance criteria:**
+- Release evidence exists for all acceptance gates.
+- No undocumented contract drift remains.
+
+**QA:**
+- Tool: Bash
+- Setup:
+  1. `./database/scripts/dbctl.sh up`
+  2. `./database/scripts/dbctl.sh init`
+- Run:
+  1. `uv run pytest -q`
+  2. `uv run python - <<'PY'
+from pathlib import Path
+text = Path('docs/CHANGE_CONTROL.md').read_text()
+assert 'v1.0' in text
+print('change control checked')
+PY`
+- Expected: full test suite passes or only documented pre-existing failures remain; change-control validation script prints `change control checked`
+## Cross-cutting invariants
+1. Never store presigned URLs or frontend result URLs in Postgres JSON payloads.
+2. Never let Celery result backend become the user-visible source of truth.
+3. Never break the frozen request/paper status sets.
+4. Never bypass UUIDv4 generation.
+5. Never use non-`uv` dependency workflows.
+6. Never expand scope beyond PS3/BS3 for ACMG v1.0.
+7. Never degrade country mapping to language-only approximation.
+8. Never reopen business tasks automatically; reopen is ops-script-only and reuses the original `paper_task_id`.
+
+## Required verification matrix
+### Contract verification
+- `tests/test_state_schema.py`
+- `tests/test_state_transitions.py`
+- API payload tests for error contract and status serialization
+
+### Workflow verification
+- upload path
+- search/candidate/execute path
+- duplicate upload path
+- `fulltext_unavailable` fallback path
+- DOCX parse terminal failure path
+- translation skip vs translate path
+- arbitration/human-review path if retained as an internal flag
+
+### Data verification
+- UUIDv4 IDs
+- SHA-256 dedup
+- alignment persistence
+- evidence trace chain persistence
+- no-URL JSON persistence checks
+
+### Acceptance verification
+- fixed acceptance set mechanics
+- success-rate computation includes `FILE_DUPLICATE`
+- per-paper duration measured from worker start
+- six-language path coverage
+
+## Commit strategy for implementation phase
+- `feat(status-contract): ...`
+- `feat(schema): ...`
+- `feat(parsing-service): ...`
+- `feat(translation-service): ...`
+- `feat(extraction-service): ...`
+- `feat(request-aggregation): ...`
+- `feat(api-contract): ...`
+- `feat(observability): ...`
+- `test(release-gate): ...`
+
+## Definition of done
+- Public API behavior matches `docs/PRD.md`, `docs/BACKEND_STRUCTURE.md`, `docs/APP_FLOW.md`, `docs/TECH_STACK.md`, `docs/CONSTANTS.md`, and `docs/CHANGE_CONTROL.md`.
+- The 6-node PS3/BS3 workflow runs with one Celery task per paper and request-level aggregation.
+- Parser/translation/extraction service boundaries are in place and testable.
+- Dedup, retry, failure, log-link, retention, and provenance rules are implemented as documented.
+- `progress.txt` and `lesson.md` are updated during execution, not retroactively.
+- Verification evidence proves the release acceptance gate, or clearly records any gap.
+
+## Open risks to watch during implementation
+1. Existing code may depend on undocumented internal workflow states; isolate rather than leak them.
+2. Migration may require dual-read compatibility for legacy status/progress fields.
+3. Logging filename policy in `main.py` currently appears non-compliant with repo rules and may need coordinated change.
+4. `src/application/` vs `src/services/` ownership needs deliberate convergence to avoid deepening architectural drift.
+5. The current supervisor graph includes internal nodes not named in the docs; mapping mistakes here can create frontend/status confusion.
+6. Acceptance-gate metrics require real measurement plumbing, not inferred values.
+
