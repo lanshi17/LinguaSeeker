@@ -7,7 +7,15 @@ from typing import Any, Dict, List, Optional, cast
 from uuid import UUID
 
 from celery.result import AsyncResult
-from fastapi import APIRouter, HTTPException, Path as ApiPath, Query, UploadFile, File, Form
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    Path as ApiPath,
+    Query,
+    UploadFile,
+    File,
+    Form,
+)
 from loguru import logger
 from pydantic import BaseModel, Field
 from sqlalchemy.exc import IntegrityError
@@ -44,6 +52,9 @@ from src.services.dtos import (
     InteractionStartResponse,
     InteractionRespondRequest,
     InteractionRespondResponse,
+    ConfirmationContractRequest,
+    ConfirmationContractResponse,
+    BranchOption,
 )
 from src.services.enum import (
     TaskStatus,
@@ -66,6 +77,44 @@ def get_interaction_agent() -> InteractionAgent:
     if _interaction_agent is None:
         _interaction_agent = InteractionAgent()
     return _interaction_agent
+
+
+def _shape_start_response(agent_result: Dict[str, Any]) -> Dict[str, Any]:
+    """Shape agent result for M2 contract: add needs_clarification and clarification_question."""
+    shaped = dict(agent_result)
+    if not shaped.get("ready"):
+        shaped["needs_clarification"] = True
+        shaped["clarification_question"] = shaped.get("question")
+    return shaped
+
+
+def _shape_respond_response(agent_result: Dict[str, Any]) -> Dict[str, Any]:
+    """Shape agent result for M2 contract: add task_form_ready, request_payload, task_form_payload."""
+    shaped = dict(agent_result)
+    if shaped.get("ready"):
+        shaped["task_form_ready"] = True
+        task_form = shaped.get("task_form")
+        if isinstance(task_form, dict):
+            required_fields = ("goal", "disease", "country", "language")
+            missing_fields = [
+                field for field in required_fields if not task_form.get(field)
+            ]
+            if missing_fields:
+                raise contract_http_exception(
+                    500,
+                    "INTERNAL_ERROR",
+                    f"Interaction agent returned incomplete task form: missing {', '.join(missing_fields)}",
+                )
+            shaped["request_payload"] = {
+                "task_form_text": json.dumps(task_form, ensure_ascii=False)
+            }
+            shaped["task_form_payload"] = {
+                "goal": task_form["goal"],
+                "disease": task_form["disease"],
+                "country": task_form["country"],
+                "language": task_form["language"],
+            }
+    return shaped
 
 
 MAX_UPLOAD_FILES = 10
@@ -117,7 +166,8 @@ async def _prevalidate_upload_files(files: List[UploadFile]) -> List[Dict[str, A
 
 def _has_successful_historical_paper(historical_paper: Any) -> bool:
     return (
-        historical_paper is not None and str(getattr(historical_paper, "status", "")) == "success"
+        historical_paper is not None
+        and str(getattr(historical_paper, "status", "")) == "success"
     )
 
 
@@ -158,7 +208,9 @@ def _create_managed_upload_temp_file(
 ) -> str:
     workdir = Path.cwd() / "tmp" / f"run_upload_{paper_task_id}"
     workdir.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(dir=workdir, delete=False, suffix=suffix) as tmp_file:
+    with tempfile.NamedTemporaryFile(
+        dir=workdir, delete=False, suffix=suffix
+    ) as tmp_file:
         tmp_file.write(payload)
         return tmp_file.name
 
@@ -348,14 +400,17 @@ def _synthetic_hash_from_pmid(pmid: str) -> str:
         500: {"model": ErrorResponse, "description": "Agent processing failed."},
     },
 )
-async def start_interaction(payload: InteractionStartRequest) -> InteractionStartResponse:
+async def start_interaction(
+    payload: InteractionStartRequest,
+) -> InteractionStartResponse:
     if not payload.user_input or not payload.user_input.strip():
         raise contract_http_exception(400, "INPUT_INVALID", "user_input is required")
 
     agent = get_interaction_agent()
     try:
         result = await agent.start_interaction(payload.user_input)
-        return InteractionStartResponse(**result)
+        shaped_result = _shape_start_response(result)
+        return InteractionStartResponse(**shaped_result)
     except Exception as exc:
         logger.exception("Interaction agent start failed: {}", exc)
         raise contract_http_exception(500, "INTERNAL_ERROR", "Agent processing failed")
@@ -370,24 +425,100 @@ async def start_interaction(payload: InteractionStartRequest) -> InteractionStar
     ),
     response_model=InteractionRespondResponse,
     responses={
-        400: {"model": ErrorResponse, "description": "Invalid session_id or user_response."},
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid session_id or user_response.",
+        },
         404: {"model": ErrorResponse, "description": "Session not found."},
         500: {"model": ErrorResponse, "description": "Agent processing failed."},
     },
 )
-async def respond_interaction(payload: InteractionRespondRequest) -> InteractionRespondResponse:
+async def respond_interaction(
+    payload: InteractionRespondRequest,
+) -> InteractionRespondResponse:
     if not payload.user_response or not payload.user_response.strip():
         raise contract_http_exception(400, "INPUT_INVALID", "user_response is required")
 
     agent = get_interaction_agent()
     try:
-        result = await agent.respond_interaction(payload.session_id, payload.user_response)
-        return InteractionRespondResponse(**result)
+        result = await agent.respond_interaction(
+            payload.session_id, payload.user_response
+        )
+        shaped_result = _shape_respond_response(result)
+        return InteractionRespondResponse(**shaped_result)
     except ValueError as exc:
         raise contract_http_exception(404, "RESOURCE_NOT_FOUND", str(exc))
     except Exception as exc:
         logger.exception("Interaction agent respond failed: {}", exc)
         raise contract_http_exception(500, "INTERNAL_ERROR", "Agent processing failed")
+
+
+@router.post(
+    "/interaction/confirm",
+    summary="Confirm task form and persist request",
+    description=(
+        "Confirm a complete task form and persist it to the task_request table.\n"
+        "Required fields: goal, disease, country, language in task_form_payload.\n"
+        "Returns request_id for status tracking and available_branches for M2 workflow."
+    ),
+    response_model=ConfirmationContractResponse,
+    responses={
+        400: {"model": ErrorResponse, "description": "Missing required fields."},
+        500: {"model": ErrorResponse, "description": "Database persistence failed."},
+    },
+)
+async def confirm_task_form(
+    payload: ConfirmationContractRequest,
+) -> ConfirmationContractResponse:
+    """Validate and persist complete task form, return request_id and branches."""
+    task_form_payload = payload.task_form_payload
+
+    # Validate required fields
+    required_fields = {"goal", "disease", "country", "language"}
+    missing_fields = [
+        field for field in required_fields if not task_form_payload.get(field)
+    ]
+
+    if missing_fields:
+        raise contract_http_exception(
+            400,
+            "INPUT_INVALID",
+            f"Required fields missing: {', '.join(missing_fields)}",
+        )
+
+    # Persist task form to database
+    postgres = get_postgres_client()
+    task_form_text = json.dumps(task_form_payload, ensure_ascii=False)
+    metadata = {
+        "source": "interaction",
+        "interaction_flow": True,
+    }
+
+    try:
+        request_entry = postgres.create_task_request(
+            task_form_text=task_form_text,
+            status="queued",
+            metadata=metadata,
+        )
+        request_id = _uuid_str(request_entry.request_id)
+    except Exception as exc:
+        logger.exception("Failed to persist task form: {}", exc)
+        raise contract_http_exception(
+            500, "INTERNAL_ERROR", "Failed to persist task form"
+        )
+
+    # Return confirmation with available branches
+    available_branches = [
+        BranchOption(source="pubmed"),
+        BranchOption(source="web"),
+        BranchOption(source="upload"),
+    ]
+
+    return ConfirmationContractResponse(
+        confirmed=True,
+        request_id=request_id,
+        available_branches=available_branches,
+    )
 
 
 @router.post(
@@ -416,7 +547,9 @@ def create_task(payload: TaskCreateRequest) -> TaskCreateResponse:
             payload.file_paths,
             payload.output_root,
         )
-        async_result = _celery_task(process_pdf_task).delay(payload.file_paths, payload.output_root)
+        async_result = _celery_task(process_pdf_task).delay(
+            payload.file_paths, payload.output_root
+        )
     except Exception as exc:
         logger.exception("Failed to queue task: {}", exc)
         raise contract_http_exception(503, "INTERNAL_ERROR", "Task queue unavailable")
@@ -443,11 +576,40 @@ def create_task(payload: TaskCreateRequest) -> TaskCreateResponse:
 async def search_pubmed_candidates(
     payload: PubMedCandidateSearchRequest,
 ) -> PubMedCandidateSearchResponse:
+    # M2 Contract: accept either request_id (reuse) or task_form (legacy)
+    if not payload.request_id and not payload.task_form:
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "Either request_id or task_form is required"
+        )
+
+    # Determine task_form and request_id for response
+    response_request_id = None
+    response_task_form = ""
+
+    if payload.request_id:
+        # M2 Reuse path: fetch confirmed request
+        postgres = get_postgres_client()
+        request_entry = postgres.get_task_request(payload.request_id)
+        if request_entry is None:
+            raise contract_http_exception(
+                400, "INPUT_INVALID", f"Request {payload.request_id} not found"
+            )
+        response_request_id = payload.request_id
+        task_form_text = request_entry.task_form_text
+        response_task_form = str(task_form_text) if task_form_text is not None else ""
+    else:
+        # Legacy path: use provided task_form (no request_id)
+        response_task_form = (payload.task_form or "").strip()
+
     if payload.source.lower() != "pubmed":
-        raise contract_http_exception(400, "INPUT_INVALID", "source must be pubmed in MVP")
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "source must be pubmed in MVP"
+        )
     query = f"{payload.target} {payload.disease}".strip()
     if not query:
-        raise contract_http_exception(400, "INPUT_INVALID", "target and disease are required")
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "target and disease are required"
+        )
     service = get_pubmed_service()
     try:
         rows = await service.search_candidates(
@@ -459,13 +621,18 @@ async def search_pubmed_candidates(
         raise contract_http_exception(400, "INPUT_INVALID", str(exc))
     except Exception as exc:
         logger.exception("PubMed candidate fetch failed: {}", exc)
-        raise contract_http_exception(504, "FETCH_TIMEOUT", "Fetch timeout while querying PubMed")
+        raise contract_http_exception(
+            504, "FETCH_TIMEOUT", "Fetch timeout while querying PubMed"
+        )
 
     if not rows:
-        raise contract_http_exception(400, "FETCH_NO_RESULT", "Fetch no result from PubMed")
+        raise contract_http_exception(
+            400, "FETCH_NO_RESULT", "Fetch no result from PubMed"
+        )
 
     return PubMedCandidateSearchResponse(
-        task_form=payload.task_form,
+        request_id=response_request_id,
+        task_form=response_task_form,
         candidates=[
             PubMedCandidateItem(
                 pmid=item.pmid,
@@ -484,16 +651,25 @@ async def search_pubmed_candidates(
     description="Create request and paper tasks from selected PubMed candidates (1~10), with per-paper dedup and task queueing.",
     response_model=TaskRequestCreateResponse,
     responses={
-        400: {"model": ErrorResponse, "description": "Invalid selection or unsupported source."},
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid selection or unsupported source.",
+        },
         503: {"model": ErrorResponse, "description": "Dependency unavailable."},
     },
 )
-def submit_pubmed_selection(payload: PubMedSelectionSubmitRequest) -> TaskRequestCreateResponse:
+def submit_pubmed_selection(
+    payload: PubMedSelectionSubmitRequest,
+) -> TaskRequestCreateResponse:
     if payload.source.lower() != "pubmed":
-        raise contract_http_exception(400, "INPUT_INVALID", "source must be pubmed in MVP")
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "source must be pubmed in MVP"
+        )
     pmids = [str(p).strip() for p in payload.selected_pmids if str(p).strip()]
     if not pmids:
-        raise contract_http_exception(400, "INPUT_INVALID", "selected_pmids is required")
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "selected_pmids is required"
+        )
     if len(pmids) > 10:
         raise contract_http_exception(400, "INPUT_INVALID", "selected_pmids max is 10")
 
@@ -523,7 +699,9 @@ def submit_pubmed_selection(payload: PubMedSelectionSubmitRequest) -> TaskReques
             else None
         )
 
-        if existing_document is not None and _has_successful_historical_paper(historical_paper):
+        if existing_document is not None and _has_successful_historical_paper(
+            historical_paper
+        ):
             paper_entry = _create_duplicate_paper_entry(
                 postgres,
                 request_id=request_entry_id,
@@ -551,7 +729,9 @@ def submit_pubmed_selection(payload: PubMedSelectionSubmitRequest) -> TaskReques
                 pmid
             ) or postgres.find_document_by_hash(synthetic_hash)
             historical_paper = postgres.find_latest_paper_task_by_hash(synthetic_hash)
-            if existing_document is not None and _has_successful_historical_paper(historical_paper):
+            if existing_document is not None and _has_successful_historical_paper(
+                historical_paper
+            ):
                 paper_entry = _create_duplicate_paper_entry(
                     postgres,
                     request_id=request_entry_id,
@@ -627,7 +807,10 @@ def submit_pubmed_selection(payload: PubMedSelectionSubmitRequest) -> TaskReques
     ),
     response_model=TaskRequestCreateResponse,
     responses={
-        400: {"model": ErrorResponse, "description": "Invalid input or unsupported source."},
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid input or unsupported source.",
+        },
         503: {"model": ErrorResponse, "description": "Database/queue unavailable."},
     },
 )
@@ -664,11 +847,17 @@ def create_task_request_by_web_crawl(
         historical_paper = None
         if not payload.force_refresh:
             existing_document = postgres.find_document_by_hash(plan_item.fingerprint)
-            historical_paper = postgres.find_latest_paper_task_by_hash(plan_item.fingerprint)
+            historical_paper = postgres.find_latest_paper_task_by_hash(
+                plan_item.fingerprint
+            )
 
-        if existing_document is not None and _has_successful_historical_paper(historical_paper):
+        if existing_document is not None and _has_successful_historical_paper(
+            historical_paper
+        ):
             existing_document_id = str(existing_document.document_id)
-            duplicate_of = str(historical_paper.paper_task_id) if historical_paper else None
+            duplicate_of = (
+                str(historical_paper.paper_task_id) if historical_paper else None
+            )
             paper_entry = postgres.create_paper_task(
                 request_id=request_id,
                 document_id=existing_document_id,
@@ -704,10 +893,16 @@ def create_task_request_by_web_crawl(
                 exc,
             )
             existing_document = postgres.find_document_by_hash(plan_item.fingerprint)
-            historical_paper = postgres.find_latest_paper_task_by_hash(plan_item.fingerprint)
-            if existing_document is not None and _has_successful_historical_paper(historical_paper):
+            historical_paper = postgres.find_latest_paper_task_by_hash(
+                plan_item.fingerprint
+            )
+            if existing_document is not None and _has_successful_historical_paper(
+                historical_paper
+            ):
                 existing_document_id = str(existing_document.document_id)
-                duplicate_of = str(historical_paper.paper_task_id) if historical_paper else None
+                duplicate_of = (
+                    str(historical_paper.paper_task_id) if historical_paper else None
+                )
                 paper_entry = postgres.create_paper_task(
                     request_id=request_id,
                     document_id=existing_document_id,
@@ -727,7 +922,11 @@ def create_task_request_by_web_crawl(
             else:
                 paper_entry = postgres.create_paper_task(
                     request_id=request_id,
-                    document_id=(str(existing_document.document_id) if existing_document else None),
+                    document_id=(
+                        str(existing_document.document_id)
+                        if existing_document
+                        else None
+                    ),
                     original_filename=plan_item.display_name,
                     file_hash=plan_item.fingerprint,
                     status="failed",
@@ -791,7 +990,8 @@ def create_task_request_by_web_crawl(
     "/requests/upload",
     summary="Create request by upload",
     description=(
-        "Create a request with natural-language task form and upload files (PDF/DOCX).\n"
+        "Create a request with natural-language task form and upload files (PDF/DOCX),\n"
+        "or reuse a confirmed request by request_id (M2 handoff from confirmation endpoint).\n"
         "Applies global SHA-256 dedup, one Celery task per non-duplicate paper, and request-level status aggregation."
     ),
     response_model=TaskRequestCreateResponse,
@@ -800,18 +1000,32 @@ def create_task_request_by_web_crawl(
             "model": ErrorResponse,
             "description": "Invalid input or upload constraints violated.",
         },
-        503: {"model": ErrorResponse, "description": "Storage/database/queue unavailable."},
+        503: {
+            "model": ErrorResponse,
+            "description": "Storage/database/queue unavailable.",
+        },
     },
 )
 async def create_task_request_by_upload(
-    task_form: str = Form(..., description="Natural-language task form text."),
+    task_form: Optional[str] = Form(
+        None, description="Natural-language task form text (legacy path)."
+    ),
+    request_id: Optional[str] = Form(
+        None,
+        description="Confirmed request_id from confirmation endpoint (M2 handoff).",
+    ),
     files: List[UploadFile] = File(..., description="Uploaded files (PDF/DOCX)."),
 ) -> TaskRequestCreateResponse:
-    normalized_form = (task_form or "").strip()
-    if not normalized_form:
-        raise contract_http_exception(400, "INPUT_INVALID", "Task form text is required")
+    # M2 Contract: either request_id (reuse path) or task_form (legacy path) required
+    if not request_id and not task_form:
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "Either request_id or task_form is required"
+        )
+
     if not files:
-        raise contract_http_exception(400, "INPUT_INVALID", "At least one file is required")
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "At least one file is required"
+        )
     if len(files) > MAX_UPLOAD_FILES:
         raise contract_http_exception(
             400,
@@ -823,17 +1037,35 @@ async def create_task_request_by_upload(
         postgres = get_postgres_client()
         minio = MinIOClient()
     except Exception as exc:
-        logger.exception("Failed to initialize dependencies for upload request: {}", exc)
+        logger.exception(
+            "Failed to initialize dependencies for upload request: {}", exc
+        )
         raise contract_http_exception(503, "INTERNAL_ERROR", "Dependency unavailable")
 
     prepared_uploads = await _prevalidate_upload_files(files)
 
-    request_entry = postgres.create_task_request(
-        task_form_text=normalized_form,
-        status="queued",
-        metadata={"entry": "upload", "paper_count": len(prepared_uploads)},
-    )
-    request_entry_id = _uuid_str(request_entry.request_id)
+    # M2 Contract: reuse existing request if request_id provided, else create new
+    if request_id:
+        # Reuse path: fetch existing confirmed request
+        request_entry = postgres.get_task_request(request_id)
+        if request_entry is None:
+            raise contract_http_exception(
+                400, "INPUT_INVALID", f"Request {request_id} not found"
+            )
+        request_entry_id = _uuid_str(request_entry.request_id)
+    else:
+        # Legacy path: create new request from task_form
+        normalized_form = (task_form or "").strip()
+        if not normalized_form:
+            raise contract_http_exception(
+                400, "INPUT_INVALID", "Task form text is required"
+            )
+        request_entry = postgres.create_task_request(
+            task_form_text=normalized_form,
+            status="queued",
+            metadata={"entry": "upload", "paper_count": len(prepared_uploads)},
+        )
+        request_entry_id = _uuid_str(request_entry.request_id)
 
     paper_entries: List[Any] = []
 
@@ -851,7 +1083,9 @@ async def create_task_request_by_upload(
             else None
         )
 
-        if existing_document is not None and _has_successful_historical_paper(historical_paper):
+        if existing_document is not None and _has_successful_historical_paper(
+            historical_paper
+        ):
             paper_entry = _create_duplicate_paper_entry(
                 postgres,
                 request_id=request_entry_id,
@@ -925,7 +1159,9 @@ async def create_task_request_by_upload(
                         upload_ref.object_key,
                         cleanup_exc,
                     )
-            if existing_document is not None and _has_successful_historical_paper(historical_paper):
+            if existing_document is not None and _has_successful_historical_paper(
+                historical_paper
+            ):
                 paper_entry = _create_duplicate_paper_entry(
                     postgres,
                     request_id=request_entry_id,
@@ -1064,7 +1300,9 @@ async def create_task_request_by_upload(
         )
         paper_entries.append(paper_entry)
 
-    request_entry = postgres.refresh_task_request_status(request_entry_id) or request_entry
+    request_entry = (
+        postgres.refresh_task_request_status(request_entry_id) or request_entry
+    )
     return TaskRequestCreateResponse(
         request_id=str(getattr(request_entry, "request_id", request_entry_id)),
         status=_status_str(getattr(request_entry, "status", None)),
@@ -1142,8 +1380,12 @@ def resume_paper_task(
             args=[str(parsed_paper_task_id)],
         )
     except Exception:
-        logger.exception("Failed to enqueue resume task for paper_task_id=%s", paper_task_id)
-        raise contract_http_exception(503, "INTERNAL_ERROR", "Failed to enqueue resume task")
+        logger.exception(
+            "Failed to enqueue resume task for paper_task_id=%s", paper_task_id
+        )
+        raise contract_http_exception(
+            503, "INTERNAL_ERROR", "Failed to enqueue resume task"
+        )
 
     postgres.update_paper_task(
         str(parsed_paper_task_id),
@@ -1186,7 +1428,9 @@ def get_task_status(
     async_result = AsyncResult(task_id, app=celery_app)
 
     if async_result is None:
-        raise contract_http_exception(404, "RESOURCE_NOT_FOUND", f"Task {task_id} not found")
+        raise contract_http_exception(
+            404, "RESOURCE_NOT_FOUND", f"Task {task_id} not found"
+        )
 
     meta = _safe_task_meta(async_result)
     metrics = _extract_task_metrics(meta)
@@ -1217,7 +1461,9 @@ def get_task_status(
         paper_entry = None
 
     if paper_entry is not None:
-        response.paper_task_id = str(getattr(paper_entry, "paper_task_id", "") or "") or None
+        response.paper_task_id = (
+            str(getattr(paper_entry, "paper_task_id", "") or "") or None
+        )
         document_id = getattr(paper_entry, "document_id", None)
         if document_id is not None:
             response.document_id = str(document_id)
@@ -1234,7 +1480,8 @@ def get_task_status(
             getattr(paper_entry, "created_at", None)
         )
         response.updated_at = (
-            _as_iso_datetime(getattr(paper_entry, "updated_at", None)) or response.updated_at
+            _as_iso_datetime(getattr(paper_entry, "updated_at", None))
+            or response.updated_at
         )
 
         processing_steps = normalize_processing_steps(
@@ -1249,7 +1496,9 @@ def get_task_status(
             default=WorkflowStatus.pending,
         )
         response.workflow_status = workflow_status
-        response.workflow_status_description = workflow_status_description(workflow_status)
+        response.workflow_status_description = workflow_status_description(
+            workflow_status
+        )
 
         error_code = getattr(paper_entry, "error_code", None)
         error_details = getattr(paper_entry, "error_details", None)
@@ -1302,8 +1551,12 @@ def get_task_status(
                 response.processing_duration_seconds
                 or result_payload.get("processing_duration_seconds")
             )
-            response.created_at = response.created_at or result_payload.get("created_at")
-            response.updated_at = response.updated_at or result_payload.get("updated_at")
+            response.created_at = response.created_at or result_payload.get(
+                "created_at"
+            )
+            response.updated_at = response.updated_at or result_payload.get(
+                "updated_at"
+            )
             doc_value = result_payload.get("document_id")
             if doc_value is not None:
                 response.document_id = str(doc_value)
@@ -1318,7 +1571,9 @@ def get_task_status(
             if response.processing_steps is None:
                 payload_steps = result_payload.get("processing_steps")
                 if payload_steps is not None:
-                    response.processing_steps = normalize_processing_steps(payload_steps)
+                    response.processing_steps = normalize_processing_steps(
+                        payload_steps
+                    )
                     response.progress_percentage = calculate_progress_percentage(
                         response.processing_steps
                     )
@@ -1343,10 +1598,14 @@ def get_task_status(
             response.workflow_status = WorkflowStatus.processing_pdf
         else:
             response.workflow_status = WorkflowStatus.pending
-        response.workflow_status_description = workflow_status_description(response.workflow_status)
+        response.workflow_status_description = workflow_status_description(
+            response.workflow_status
+        )
 
     if response.processing_steps is not None and response.progress_percentage is None:
-        response.progress_percentage = calculate_progress_percentage(response.processing_steps)
+        response.progress_percentage = calculate_progress_percentage(
+            response.processing_steps
+        )
 
     return response
 
@@ -1367,7 +1626,9 @@ def list_tasks(
     limit: int = Query(50, ge=1, le=200, description="Max number of items to return."),
     cursor: int = Query(0, ge=0, description="Scan cursor for pagination."),
     status: Optional[TaskStatus] = Query(None, description="Filter by task status."),
-    include_result: bool = Query(False, description="Include result payloads in list items."),
+    include_result: bool = Query(
+        False, description="Include result payloads in list items."
+    ),
 ) -> TaskListResponse:
     """Return a paginated list of tasks from Redis task meta."""
     if limit < 1 or limit > 200:

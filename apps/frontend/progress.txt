@@ -1,0 +1,20 @@
+2026-03-23 — M2 task-creation frontend handoff slice completed
+- Added frontend M2 contract/state support in `src/types/api.ts`, `src/services/api.ts`, and `src/store/useTaskFlowStore.ts` for confirmation, confirmed request IDs, task-form payload persistence, and request_id-based upload/candidate handoff.
+- Implemented `/tasks/new` clarification → editable confirmation → branch gating UX in `src/pages/tasks/task-new-page.tsx` and `src/components/chat/agent-clarification-chat.tsx`.
+- Rewired `src/pages/tasks/pubmed-candidates-page.tsx` to prefer confirmed `request_id` for candidate search and submit while preserving legacy task-form fallback.
+- Added focused frontend tests:
+  - `src/store/__tests__/useTaskFlowStore.test.ts`
+  - `src/services/__tests__/api.test.ts`
+  - `src/pages/tasks/__tests__/pubmed-candidates-page.test.tsx`
+- Verification evidence:
+  - `npm run test:run -- src/store/__tests__/useTaskFlowStore.test.ts src/services/__tests__/api.test.ts` → 3 tests passed
+  - `npm run test:run -- src/pages/tasks/__tests__/pubmed-candidates-page.test.tsx` → 3 tests passed
+  - `npm run build` → passed
+  - changed-file diagnostics clean for:
+    - `src/types/api.ts`
+    - `src/services/api.ts`
+    - `src/store/useTaskFlowStore.ts`
+    - `src/pages/tasks/task-new-page.tsx`
+    - `src/components/chat/agent-clarification-chat.tsx`
+    - `src/pages/tasks/pubmed-candidates-page.tsx`
+    - `src/pages/tasks/__tests__/pubmed-candidates-page.test.tsx`

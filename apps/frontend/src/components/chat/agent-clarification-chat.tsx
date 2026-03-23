@@ -26,6 +26,10 @@ function createMessage(role: ChatRole, text: string): ChatMessage {
   };
 }
 
+function isRecordPayload(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 type AgentClarificationChatProps = {
   draft: TaskFormStructured;
   userInput: string;
@@ -36,7 +40,7 @@ type AgentClarificationChatProps = {
 export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ draft, userInput, busy, setBusy }) => {
   const navigate = useNavigate();
   const toast = useToastStore();
-  const { taskForm, interactionSessionId, interactionRound, entryMode, setTaskForm, setInteraction, setEntryMode } = useTaskFlowStore();
+  const { taskForm, interactionSessionId, interactionRound, entryMode, setTaskForm, setInteraction, setEntryMode, setTaskFormPayload, setConfirmedRequestId } = useTaskFlowStore();
 
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -63,6 +67,8 @@ export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ 
   const clearInteractionAndForm = () => {
     setInteraction(null, 0);
     setTaskForm(null);
+    setTaskFormPayload(null);
+    setConfirmedRequestId(null);
   };
 
   const resetTranscript = () => {
@@ -120,7 +126,10 @@ export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ 
       }
       if (res.task_form) {
         setTaskForm(res.task_form);
-        append('system', '任务表单已就绪：可以进入下一步（上传/检索文献）。');
+        if ('task_form_payload' in res && isRecordPayload(res.task_form_payload)) {
+          setTaskFormPayload(res.task_form_payload);
+        }
+        append('system', '任务表单已就绪：请审阅确认后进入下一步。');
       }
       if (!res.question && !res.task_form) {
         append('error', '后端未返回问题也未返回任务表单。请点击 Restart 重新开始。');
@@ -170,7 +179,10 @@ export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ 
       }
       if (res.task_form) {
         setTaskForm(res.task_form);
-        append('system', '任务表单已就绪：可以进入下一步（上传/检索文献）。');
+        if ('task_form_payload' in res && isRecordPayload(res.task_form_payload)) {
+          setTaskFormPayload(res.task_form_payload);
+        }
+        append('system', '任务表单已就绪：请审阅确认后进入下一步。');
       }
       if (!res.question && !res.task_form) {
         append('error', '后端未返回问题也未返回任务表单。请点击 Restart 重新开始。');
@@ -215,13 +227,13 @@ export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ 
             </div>
           )}
         </div>
-        <div className="agent-chat__meta" aria-label="Chat meta">
+        <fieldset className="agent-chat__meta" aria-label="Chat meta">
           <div className="agent-chat__pill" aria-live="polite" aria-atomic="true">
             Rounds: {interactionRound}/2
           </div>
           {entryMode ? <div className="agent-chat__pill">Mode: {entryMode}</div> : <div className="agent-chat__pill">Mode: not set</div>}
           {taskForm ? <div className="agent-chat__pill">Task form: ready</div> : <div className="agent-chat__pill">Task form: pending</div>}
-        </div>
+        </fieldset>
       </div>
 
       <div
@@ -245,14 +257,14 @@ export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ 
                   </button>
                 </div>
               ) : null}
-              <div className="agent-chat__quick-replies" role="group" aria-label="Entry mode">
+              <fieldset className="agent-chat__quick-replies" aria-label="Entry mode">
                 <button type="button" className="agent-chat__chip" onClick={chooseDocuments} disabled={busy}>
                   解析文档
                 </button>
                 <button type="button" className="agent-chat__chip" onClick={chooseGraph} disabled={busy}>
                   检索图谱
                 </button>
-              </div>
+              </fieldset>
             </div>
           </div>
         ) : null}

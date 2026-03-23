@@ -5,6 +5,8 @@ import {
 } from './http';
 
 import type {
+  ConfirmationContractRequest,
+  ConfirmationContractResponse,
   EvidenceSearchResponse,
   InteractionRespondRequest,
   InteractionRespondResponse,
@@ -41,6 +43,13 @@ export async function interactionRespond(payload: InteractionRespondRequest, opt
   }, { signal: options.signal });
 }
 
+export async function confirmTaskForm(payload: ConfirmationContractRequest, options: ApiCallOptions = {}) {
+  return requestJson<ConfirmationContractResponse>('/tasks/interaction/confirm', {
+    method: 'POST',
+    body: payload
+  }, { signal: options.signal });
+}
+
 export async function pubmedCandidateSearch(payload: PubMedCandidateSearchRequest, options: ApiCallOptions = {}) {
   return requestJson<PubMedCandidateSearchResponse>('/tasks/requests/pubmed/candidates', {
     method: 'POST',
@@ -55,9 +64,13 @@ export async function pubmedSelectionSubmit(payload: PubMedSelectionSubmitReques
   }, { signal: options.signal });
 }
 
-export async function uploadTaskRequest(taskForm: TaskFormStructured, files: File[], options: ApiCallOptions = {}) {
+export async function uploadTaskRequest(taskFormOrRequestId: TaskFormStructured | string, files: File[], options: ApiCallOptions = {}) {
   const formData = new FormData();
-  formData.append('task_form', stringifyTaskForm(taskForm));
+  if (typeof taskFormOrRequestId === 'string') {
+    formData.append('request_id', taskFormOrRequestId);
+  } else {
+    formData.append('task_form', stringifyTaskForm(taskFormOrRequestId));
+  }
   files.forEach((file) => {
     formData.append('files', file);
   });

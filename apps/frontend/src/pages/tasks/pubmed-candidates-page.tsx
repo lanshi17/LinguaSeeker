@@ -13,7 +13,7 @@ const MAX_SELECT = 10;
 export const PubmedCandidatesPage: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToastStore();
-  const { taskForm } = useTaskFlowStore();
+  const { taskForm, confirmedRequestId } = useTaskFlowStore();
 
   const [candidates, setCandidates] = useState<PubMedCandidateItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -25,15 +25,16 @@ export const PubmedCandidatesPage: React.FC = () => {
   const selectedList = useMemo(() => Array.from(selected), [selected]);
 
   useEffect(() => {
-    if (!taskForm) return;
+    if (!taskForm && !confirmedRequestId) return;
     let cancelled = false;
     setLoading(true);
     pubmedCandidateSearch({
-      task_form: stringifyTaskForm(taskForm),
-      target: taskForm.goal,
-      disease: taskForm.disease,
-      country: taskForm.country,
-      language: taskForm.language,
+      request_id: confirmedRequestId ?? undefined,
+      task_form: taskForm ? stringifyTaskForm(taskForm) : undefined,
+      target: taskForm?.goal ?? '',
+      disease: taskForm?.disease ?? '',
+      country: taskForm?.country,
+      language: taskForm?.language,
       source: 'pubmed',
       candidate_limit: 15
     })
@@ -50,7 +51,7 @@ export const PubmedCandidatesPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [taskForm, toast]);
+  }, [taskForm, confirmedRequestId, toast]);
 
   const toggle = (pmid: string) => {
     setSelected((prev) => {
@@ -69,7 +70,7 @@ export const PubmedCandidatesPage: React.FC = () => {
   };
 
   const submit = async () => {
-    if (!taskForm) return;
+    if (!taskForm && !confirmedRequestId) return;
     if (!selectionValid) {
       toast.pushToast({ level: 'warning', title: 'Invalid selection', message: 'Select 1–10 PMIDs', ttlMs: 6000 });
       return;
@@ -77,15 +78,16 @@ export const PubmedCandidatesPage: React.FC = () => {
     setLoading(true);
     try {
       const res = await pubmedSelectionSubmit({
-        task_form: stringifyTaskForm(taskForm),
+        request_id: confirmedRequestId ?? undefined,
+        task_form: taskForm ? stringifyTaskForm(taskForm) : undefined,
         selected_pmids: selectedList,
-        target: taskForm.goal,
-        disease: taskForm.disease,
-        country: taskForm.country,
-        language: taskForm.language,
+        target: taskForm?.goal ?? '',
+        disease: taskForm?.disease ?? '',
+        country: taskForm?.country,
+        language: taskForm?.language,
         source: 'pubmed'
       });
-      navigate(`/requests/${encodeURIComponent(res.request_id)}`);
+      navigate(`/requests/${encodeURIComponent(res.request_id ?? confirmedRequestId ?? 'unknown')}`);
     } catch (err) {
       const msg = err instanceof ApiError ? err.detail ?? err.message : 'Submit failed';
       toast.pushToast({ level: 'error', title: 'Submit failed', message: msg, ttlMs: 9000 });
@@ -94,14 +96,14 @@ export const PubmedCandidatesPage: React.FC = () => {
     }
   };
 
-  if (!taskForm) {
+  if (!taskForm && !confirmedRequestId) {
     return (
       <div className="panel">
         <div className="panel-header">
           <div style={{ fontWeight: 900 }}>PubMed candidates</div>
         </div>
         <div className="panel-body">
-          <div className="muted">Task form not found. Please create a task first.</div>
+          <div className="muted">Confirmation state or task form not found. Please create a task first.</div>
           <div style={{ marginTop: 10 }}>
             <Link to="/tasks/new">Go to task creation</Link>
           </div>
