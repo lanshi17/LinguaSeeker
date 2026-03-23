@@ -78,6 +78,7 @@ services:
             - neo4j_logs:/logs
             - neo4j_import:/import
             - neo4j_plugins:/plugins
+            - ./neo4j/conf/neo4j.conf:/var/lib/neo4j/conf/neo4j.conf:ro
         ports:
             - "7474:7474"
             - "7687:7687"
