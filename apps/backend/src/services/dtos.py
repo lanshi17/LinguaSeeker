@@ -38,7 +38,10 @@ class TaskCreateResponse(BaseModel):
 
     class Config:
         json_schema_extra = {
-            "example": {"task_id": "1f6a8b7a-1b87-4d75-8c72-6f2f6a1a9c2e", "status": "PENDING"}
+            "example": {
+                "task_id": "1f6a8b7a-1b87-4d75-8c72-6f2f6a1a9c2e",
+                "status": "PENDING",
+            }
         }
 
 
@@ -60,18 +63,28 @@ class TaskStatusResponse(BaseModel):
     parsing_metadata: Optional[Dict[str, Any]] = Field(
         None, description="Document parsing metadata when available"
     )
-    paper_task_id: Optional[str] = Field(None, description="Paper task UUID when available")
+    paper_task_id: Optional[str] = Field(
+        None, description="Paper task UUID when available"
+    )
     document_id: Optional[str] = Field(
         None, description="Document id associated with the task result"
     )
-    file_size_bytes: Optional[int] = Field(None, description="Total input file size in bytes")
+    file_size_bytes: Optional[int] = Field(
+        None, description="Total input file size in bytes"
+    )
     processing_duration_seconds: Optional[float] = Field(
         None, description="Processing duration in seconds"
     )
-    created_at: Optional[str] = Field(None, description="Task creation timestamp if available")
-    updated_at: Optional[str] = Field(None, description="Task update timestamp if available")
+    created_at: Optional[str] = Field(
+        None, description="Task creation timestamp if available"
+    )
+    updated_at: Optional[str] = Field(
+        None, description="Task update timestamp if available"
+    )
     error: Optional[str] = Field(None, description="Error message if failed")
-    error_details: Optional[Dict[str, Any]] = Field(None, description="Structured error details")
+    error_details: Optional[Dict[str, Any]] = Field(
+        None, description="Structured error details"
+    )
 
     class Config:
         json_schema_extra = {
@@ -111,17 +124,27 @@ class TaskStatusResponse(BaseModel):
 class TaskListItem(BaseModel):
     task_id: str = Field(..., description="Celery task id")
     status: TaskStatus = Field(..., description="Task status")
-    date_done: Optional[str] = Field(None, description="Completion timestamp if available")
+    date_done: Optional[str] = Field(
+        None, description="Completion timestamp if available"
+    )
     document_id: Optional[str] = Field(
         None, description="Document id associated with the task result"
     )
-    file_size_bytes: Optional[int] = Field(None, description="Total input file size in bytes")
+    file_size_bytes: Optional[int] = Field(
+        None, description="Total input file size in bytes"
+    )
     processing_duration_seconds: Optional[float] = Field(
         None, description="Processing duration in seconds"
     )
-    created_at: Optional[str] = Field(None, description="Task creation timestamp if available")
-    updated_at: Optional[str] = Field(None, description="Task update timestamp if available")
-    result: Optional[Dict[str, Any]] = Field(None, description="Task result if completed")
+    created_at: Optional[str] = Field(
+        None, description="Task creation timestamp if available"
+    )
+    updated_at: Optional[str] = Field(
+        None, description="Task update timestamp if available"
+    )
+    result: Optional[Dict[str, Any]] = Field(
+        None, description="Task result if completed"
+    )
     error: Optional[str] = Field(None, description="Error message if failed")
 
 
@@ -191,7 +214,10 @@ class PubMedCandidateItem(BaseModel):
 
 
 class PubMedCandidateSearchRequest(BaseModel):
-    task_form: str = Field(..., description="Natural-language task form")
+    request_id: Optional[str] = Field(
+        None, description="Confirmed request ID for M2 handoff"
+    )
+    task_form: Optional[str] = Field(None, description="Natural-language task form")
     target: str = Field(..., description="Target gene/variant or objective")
     disease: str = Field(..., description="Disease name")
     country: str = Field("不限", description="Country filter (ISO/alias)")
@@ -201,6 +227,9 @@ class PubMedCandidateSearchRequest(BaseModel):
 
 
 class PubMedCandidateSearchResponse(BaseModel):
+    request_id: Optional[str] = Field(
+        None, description="Request ID for M2 handoff continuity"
+    )
     task_form: str = Field(..., description="Echoed task form")
     candidates: List[PubMedCandidateItem] = Field(
         default_factory=list, description="Candidate papers"
@@ -209,7 +238,9 @@ class PubMedCandidateSearchResponse(BaseModel):
 
 class PubMedSelectionSubmitRequest(BaseModel):
     task_form: str = Field(..., description="Natural-language task form")
-    selected_pmids: List[str] = Field(..., min_length=1, description="Selected PubMed IDs, 1~10")
+    selected_pmids: List[str] = Field(
+        ..., min_length=1, description="Selected PubMed IDs, 1~10"
+    )
     target: str = Field(..., description="Target gene/variant or objective")
     disease: str = Field(..., description="Disease name")
     country: str = Field("不限", description="Country filter")
@@ -221,11 +252,15 @@ class WebLiteratureCrawlRequest(BaseModel):
     task_form: str = Field(..., description="Natural-language task form")
     urls: List[str] = Field(..., min_length=1, description="Selected web URLs, 1~10")
     source: str = Field("web", description="Data source")
-    force_refresh: bool = Field(False, description="Bypass URL fingerprint dedup when true")
+    force_refresh: bool = Field(
+        False, description="Bypass URL fingerprint dedup when true"
+    )
 
 
 class InteractionStartRequest(BaseModel):
-    user_input: str = Field(..., description="Natural-language user input for task clarification")
+    user_input: str = Field(
+        ..., description="Natural-language user input for task clarification"
+    )
 
 
 class TaskFormStructured(BaseModel):
@@ -243,13 +278,26 @@ class InteractionStartResponse(BaseModel):
     task_form: Optional[TaskFormStructured] = Field(
         None, description="Structured task form when ready"
     )
-    question: Optional[str] = Field(None, description="Clarification question when not ready")
-    round: int = Field(..., description="Current clarification round (0=ready, 1-2=clarifying)")
+    question: Optional[str] = Field(
+        None, description="Clarification question when not ready"
+    )
+    round: int = Field(
+        ..., description="Current clarification round (0=ready, 1-2=clarifying)"
+    )
+    # M2 Contract: First-round clarification semantics
+    needs_clarification: Optional[bool] = Field(
+        None, description="M2: True if clarification needed (round 1)"
+    )
+    clarification_question: Optional[str] = Field(
+        None, description="M2: Clarification question (mirrors 'question' field)"
+    )
 
 
 class InteractionRespondRequest(BaseModel):
     session_id: str = Field(..., description="Session UUIDv4 from start_interaction")
-    user_response: str = Field(..., description="User response to clarification question")
+    user_response: str = Field(
+        ..., description="User response to clarification question"
+    )
 
 
 class InteractionRespondResponse(BaseModel):
@@ -259,5 +307,37 @@ class InteractionRespondResponse(BaseModel):
     task_form: Optional[TaskFormStructured] = Field(
         None, description="Structured task form when ready"
     )
-    question: Optional[str] = Field(None, description="Clarification question when not ready")
-    round: int = Field(..., description="Current clarification round (0=ready, 1-2=clarifying)")
+    question: Optional[str] = Field(
+        None, description="Clarification question when not ready"
+    )
+    round: int = Field(
+        ..., description="Current clarification round (0=ready, 1-2=clarifying)"
+    )
+    # M2 Contract: Second-round task-form-ready semantics
+    task_form_ready: Optional[bool] = Field(
+        None, description="M2: True if task form is ready for submission (round 2+)"
+    )
+    request_payload: Optional[Dict[str, Any]] = Field(
+        None, description="M2: Payload for task persistence (contains task_form_text)"
+    )
+    task_form_payload: Optional[Dict[str, Any]] = Field(
+        None, description="M2: Enriched payload for candidates/submit workflow"
+    )
+
+
+class ConfirmationContractRequest(BaseModel):
+    task_form_payload: Dict[str, Any] = Field(
+        ..., description="Complete task form with goal, disease, country, language"
+    )
+
+
+class BranchOption(BaseModel):
+    source: str = Field(..., description="Source type: pubmed, web, or upload")
+
+
+class ConfirmationContractResponse(BaseModel):
+    confirmed: bool = Field(..., description="True when task form is persisted")
+    request_id: str = Field(..., description="Request UUIDv4 for status queries")
+    available_branches: List[BranchOption] = Field(
+        ..., description="Available literature source options"
+    )

@@ -15,6 +15,8 @@ export type InteractionStartResponse = {
   task_form: TaskFormStructured | null;
   question: string | null;
   round: number;
+  needs_clarification?: boolean | null;
+  clarification_question?: string | null;
 };
 
 export type InteractionRespondRequest = {
@@ -27,6 +29,23 @@ export type InteractionRespondResponse = {
   task_form: TaskFormStructured | null;
   question: string | null;
   round: number;
+  task_form_ready?: boolean | null;
+  request_payload?: Record<string, unknown> | null;
+  task_form_payload?: Record<string, unknown> | null;
+};
+
+export type BranchOption = {
+  source: string;
+};
+
+export type ConfirmationContractRequest = {
+  task_form_payload: Record<string, unknown>;
+};
+
+export type ConfirmationContractResponse = {
+  confirmed: boolean;
+  request_id: string;
+  available_branches: BranchOption[];
 };
 
 export type PubMedCandidateItem = {
@@ -37,7 +56,8 @@ export type PubMedCandidateItem = {
 };
 
 export type PubMedCandidateSearchRequest = {
-  task_form: string;
+  request_id?: string;
+  task_form?: string;
   target: string;
   disease: string;
   country?: string;
@@ -47,12 +67,14 @@ export type PubMedCandidateSearchRequest = {
 };
 
 export type PubMedCandidateSearchResponse = {
+  request_id?: string;
   task_form: string;
   candidates: PubMedCandidateItem[];
 };
 
 export type PubMedSelectionSubmitRequest = {
-  task_form: string;
+  request_id?: string;
+  task_form?: string;
   selected_pmids: string[];
   target: string;
   disease: string;

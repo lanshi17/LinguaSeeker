@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { uploadTaskRequest } from '../../services/api';
+import { confirmTaskForm, uploadTaskRequest } from '../../services/api';
 import { ApiError } from '../../services/http';
 import { AgentClarificationChat } from '../../components/chat/agent-clarification-chat';
 import { useTaskFlowStore } from '../../store/useTaskFlowStore';
@@ -17,7 +17,7 @@ function buildUserInput(form: TaskFormStructured) {
 export const TaskNewPage: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToastStore();
-  const { taskForm, interactionRound } = useTaskFlowStore();
+  const { taskForm, interactionRound, taskFormPayload, confirmedRequestId, setConfirmedRequestId } = useTaskFlowStore();
 
   const [draft, setDraft] = useState<TaskFormStructured>(() =>
     taskForm ?? {
@@ -28,6 +28,12 @@ export const TaskNewPage: React.FC = () => {
     }
   );
 
+  useEffect(() => {
+    if (taskForm) {
+      setDraft(taskForm);
+    }
+  }, [taskForm]);
+
   const [busy, setBusy] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
 
@@ -35,8 +41,15 @@ export const TaskNewPage: React.FC = () => {
 
   const userInput = useMemo(() => buildUserInput(draft), [draft]);
 
+  const handleDraftChange = (updates: Partial<TaskFormStructured>) => {
+    setDraft((s) => ({ ...s, ...updates }));
+    if (confirmedRequestId) {
+      setConfirmedRequestId(null);
+    }
+  };
+
   const submitUpload = async () => {
-    if (!taskForm) return;
+    if (!confirmedRequestId && !taskForm) return;
     const validation = validateUploadFiles(files);
     if (!validation.ok) {
       toast.pushToast({
@@ -50,11 +63,30 @@ export const TaskNewPage: React.FC = () => {
 
     setBusy(true);
     try {
-      const res = await uploadTaskRequest(taskForm, files);
+      const res = await uploadTaskRequest(confirmedRequestId || taskForm!, files);
       navigate(`/requests/${encodeURIComponent(res.request_id)}`);
     } catch (err) {
       const msg = err instanceof ApiError ? err.detail ?? err.message : 'Upload failed';
       toast.pushToast({ level: 'error', title: 'Upload failed', message: msg, ttlMs: 9000 });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleConfirm = async () => {
+    setBusy(true);
+    try {
+      const payload = { ...(taskFormPayload || {}), ...draft };
+      const res = await confirmTaskForm({ task_form_payload: payload });
+      if (res.confirmed) {
+        setConfirmedRequestId(res.request_id);
+        toast.pushToast({ level: 'success', title: 'Task Confirmed', message: 'Ready for upload or candidates', ttlMs: 3000 });
+      } else {
+        toast.pushToast({ level: 'warning', title: 'Not Confirmed', message: 'Could not confirm task', ttlMs: 5000 });
+      }
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.detail ?? err.message : 'Confirmation failed';
+      toast.pushToast({ level: 'error', title: 'Confirm failed', message: msg, ttlMs: 8000 });
     } finally {
       setBusy(false);
     }
@@ -80,7 +112,7 @@ export const TaskNewPage: React.FC = () => {
               <div className="muted">Goal</div>
               <input
                 value={draft.goal}
-                onChange={(e) => setDraft((s) => ({ ...s, goal: e.target.value }))}
+                onChange={(e) => handleDraftChange({ goal: e.target.value })}
                 style={{ width: '100%', padding: 10, borderRadius: 12, border: '1px solid var(--border)' }}
                 placeholder="e.g., Evaluate PS3 evidence for variant ..."
               />
@@ -89,7 +121,7 @@ export const TaskNewPage: React.FC = () => {
               <div className="muted">Disease</div>
               <input
                 value={draft.disease}
-                onChange={(e) => setDraft((s) => ({ ...s, disease: e.target.value }))}
+                onChange={(e) => handleDraftChange({ disease: e.target.value })}
                 style={{ width: '100%', padding: 10, borderRadius: 12, border: '1px solid var(--border)' }}
                 placeholder="e.g., cystic fibrosis"
               />
@@ -100,7 +132,7 @@ export const TaskNewPage: React.FC = () => {
               <div className="muted">Country</div>
               <input
                 value={draft.country}
-                onChange={(e) => setDraft((s) => ({ ...s, country: e.target.value }))}
+                onChange={(e) => handleDraftChange({ country: e.target.value })}
                 style={{ width: '100%', padding: 10, borderRadius: 12, border: '1px solid var(--border)' }}
               />
             </label>
@@ -108,7 +140,7 @@ export const TaskNewPage: React.FC = () => {
               <div className="muted">Language</div>
               <input
                 value={draft.language}
-                onChange={(e) => setDraft((s) => ({ ...s, language: e.target.value }))}
+                onChange={(e) => handleDraftChange({ language: e.target.value })}
                 style={{ width: '100%', padding: 10, borderRadius: 12, border: '1px solid var(--border)' }}
               />
             </label>
@@ -131,51 +163,82 @@ export const TaskNewPage: React.FC = () => {
           {!ready ? (
             <div className="muted">Waiting for structured task form from backend...</div>
           ) : (
-            <div className="row">
-              <div className="col" style={{ minWidth: 320 }}>
-                <div style={{ fontWeight: 800 }}>Upload PDFs/DOCX</div>
-                <div className="muted" style={{ marginTop: 6 }}>
-                  Max 10 files, 10MB each, 50MB total.
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {confirmedRequestId ? (
+                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(82,196,26,0.1)', color: '#237804' }}>
+                  <span style={{ fontWeight: 'bold' }}>✓ Confirmed!</span> Request ID: {confirmedRequestId}
                 </div>
-                <div style={{ marginTop: 10 }}>
-                  <input
-                    type="file"
-                    multiple
-                    accept=".pdf,.docx"
-                    onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-                  />
-                </div>
-                {files.length > 0 ? (
-                  <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
-                    Selected: {files.map((f) => f.name).join(', ')}
-                  </div>
-                ) : null}
-                <div style={{ marginTop: 10 }}>
+              ) : (
+                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(250,173,20,0.1)', color: '#ad6800' }}>
+                  <div style={{ marginBottom: '8px' }}>Please review and confirm the task form before continuing.</div>
                   <button
                     type="button"
-                    onClick={submitUpload}
-                    disabled={busy || files.length === 0}
+                    onClick={handleConfirm}
+                    disabled={busy}
                     style={{
-                      padding: '10px 14px',
-                      borderRadius: 12,
+                      padding: '8px 16px',
+                      borderRadius: '6px',
                       border: '1px solid var(--border)',
-                      background: 'rgba(82,196,26,0.16)',
-                      color: 'var(--text)',
+                      background: 'var(--bg-elevated)',
                       cursor: busy ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    Submit upload
+                    Confirm Task Form
                   </button>
                 </div>
-              </div>
+              )}
 
-              <div className="col" style={{ minWidth: 320 }}>
-                <div style={{ fontWeight: 800 }}>PubMed candidates</div>
-                <div className="muted" style={{ marginTop: 6 }}>
-                  Search literature, select 1–10 PMIDs.
+              <div className="row">
+                <div className="col" style={{ minWidth: 320 }}>
+                  <div style={{ fontWeight: 800 }}>Upload PDFs/DOCX</div>
+                  <div className="muted" style={{ marginTop: 6 }}>
+                    Max 10 files, 10MB each, 50MB total.
+                  </div>
+                  <div style={{ marginTop: 10 }}>
+                    <input
+                      type="file"
+                      multiple
+                      accept=".pdf,.docx"
+                      onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+                    />
+                  </div>
+                  {files.length > 0 ? (
+                    <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+                      Selected: {files.map((f) => f.name).join(', ')}
+                    </div>
+                  ) : null}
+                  <div style={{ marginTop: 10 }}>
+                    <button
+                      type="button"
+                      onClick={submitUpload}
+                      disabled={busy || files.length === 0 || !confirmedRequestId}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: 12,
+                        border: '1px solid var(--border)',
+                        background: 'rgba(82,196,26,0.16)',
+                        color: 'var(--text)',
+                        cursor: (busy || !confirmedRequestId) ? 'not-allowed' : 'pointer',
+                        opacity: (!confirmedRequestId || files.length === 0) ? 0.5 : 1
+                      }}
+                    >
+                      Submit upload
+                    </button>
+                  </div>
                 </div>
-                <div style={{ marginTop: 10 }}>
-                  <Link to="/tasks/pubmed/candidates">Go to candidates</Link>
+
+                <div className="col" style={{ minWidth: 320 }}>
+                  <div style={{ fontWeight: 800 }}>PubMed candidates</div>
+                  <div className="muted" style={{ marginTop: 6 }}>
+                    Search literature, select 1–10 PMIDs.
+                  </div>
+                  <div style={{ marginTop: 10 }}>
+                    {confirmedRequestId ? (
+                      <Link to="/tasks/pubmed/candidates">Go to candidates</Link>
+                    ) : (
+                      <span className="muted" style={{ fontSize: 12 }}>Confirmation required</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
