@@ -2,8 +2,204 @@ import pytest
 
 from src.domain.literature.gateway.api_gateway import (
     ApiGatewayRequest,
+    ApiGatewayResult,
     call_api_gateway,
 )
+from src.domain.literature.gateway.base import ProviderAdapter
+from src.domain.literature.gateway.registry import ProviderAdapterRegistry
+
+
+@pytest.mark.asyncio
+async def test_gateway_routes_pmc_search_through_registry_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class DummyPMCAdapter(ProviderAdapter):
+        provider = "pmc"
+
+        async def execute(self, request: ApiGatewayRequest) -> ApiGatewayResult:
+            assert request.provider == "pmc"
+            assert request.action == "search"
+            assert request.identifiers == {"pmid": "12345678"}
+            return ApiGatewayResult(
+                provider="pmc",
+                success=True,
+                items=[{"pmcid": "PMC7654321", "title": "Registry article"}],
+                warnings=["adapter-warning"],
+                meta={"routed": "registry"},
+            )
+
+    registry = ProviderAdapterRegistry([DummyPMCAdapter()])
+
+    monkeypatch.setattr(
+        "src.domain.literature.gateway.api_gateway.get_api_provider_registry",
+        lambda: registry,
+    )
+
+    result = await call_api_gateway(
+        ApiGatewayRequest(
+            provider="pmc",
+            action="search",
+            identifiers={"pmid": "12345678"},
+        )
+    )
+
+    assert result.provider == "pmc"
+    assert result.success is True
+    assert result.items == [{"pmcid": "PMC7654321", "title": "Registry article"}]
+    assert result.warnings == ["adapter-warning"]
+    assert result.meta == {"routed": "registry"}
+
+
+@pytest.mark.asyncio
+async def test_gateway_routes_jstage_download_through_registry_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class DummyJStageAdapter(ProviderAdapter):
+        provider = "jstage"
+
+        async def execute(self, request: ApiGatewayRequest) -> ApiGatewayResult:
+            assert request.provider == "jstage"
+            assert request.action == "download"
+            assert (
+                request.detail_link
+                == "https://www.jstage.jst.go.jp/article/test/_article"
+            )
+            return ApiGatewayResult(
+                provider="jstage",
+                success=True,
+                items=[],
+                downloads=[
+                    {
+                        "pdf_url": "https://www.jstage.jst.go.jp/article/test/_pdf",
+                        "file_path": "/tmp/jstage-downloads/jstage-paper.pdf",
+                    }
+                ],
+                warnings=["adapter-warning"],
+                meta={"routed": "registry"},
+            )
+
+    registry = ProviderAdapterRegistry([DummyJStageAdapter()])
+
+    monkeypatch.setattr(
+        "src.domain.literature.gateway.api_gateway.get_api_provider_registry",
+        lambda: registry,
+    )
+
+    result = await call_api_gateway(
+        ApiGatewayRequest(
+            provider="jstage",
+            action="download",
+            detail_link="https://www.jstage.jst.go.jp/article/test/_article",
+            download_path="/tmp/jstage-downloads",
+        )
+    )
+
+    assert result.provider == "jstage"
+    assert result.success is True
+    assert result.downloads == [
+        {
+            "pdf_url": "https://www.jstage.jst.go.jp/article/test/_pdf",
+            "file_path": "/tmp/jstage-downloads/jstage-paper.pdf",
+        }
+    ]
+    assert result.warnings == ["adapter-warning"]
+    assert result.meta == {"routed": "registry"}
+
+
+@pytest.mark.asyncio
+async def test_gateway_routes_doaj_download_through_registry_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class DummyDoajAdapter(ProviderAdapter):
+        provider = "doaj"
+
+        async def execute(self, request: ApiGatewayRequest) -> ApiGatewayResult:
+            assert request.provider == "doaj"
+            assert request.action == "download"
+            assert request.detail_link == "https://example.org/doaj-paper"
+            return ApiGatewayResult(
+                provider="doaj",
+                success=True,
+                items=[],
+                downloads=[
+                    {
+                        "pdf_url": "https://example.org/paper.pdf",
+                        "file_path": "/tmp/doaj-downloads/doaj-paper.pdf",
+                    }
+                ],
+                warnings=["adapter-warning"],
+                meta={"routed": "registry"},
+            )
+
+    registry = ProviderAdapterRegistry([DummyDoajAdapter()])
+
+    monkeypatch.setattr(
+        "src.domain.literature.gateway.api_gateway.get_api_provider_registry",
+        lambda: registry,
+    )
+
+    result = await call_api_gateway(
+        ApiGatewayRequest(
+            provider="doaj",
+            action="download",
+            detail_link="https://example.org/doaj-paper",
+            download_path="/tmp/doaj-downloads",
+        )
+    )
+
+    assert result.provider == "doaj"
+    assert result.success is True
+    assert result.downloads == [
+        {
+            "pdf_url": "https://example.org/paper.pdf",
+            "file_path": "/tmp/doaj-downloads/doaj-paper.pdf",
+        }
+    ]
+    assert result.warnings == ["adapter-warning"]
+    assert result.meta == {"routed": "registry"}
+
+
+@pytest.mark.asyncio
+async def test_gateway_routes_unpaywall_search_through_registry_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class DummyUnpaywallAdapter(ProviderAdapter):
+        provider = "unpaywall"
+
+        async def execute(self, request: ApiGatewayRequest) -> ApiGatewayResult:
+            assert request.provider == "unpaywall"
+            assert request.action == "search"
+            assert request.query == "breast cancer"
+            assert request.limit == 4
+            return ApiGatewayResult(
+                provider="unpaywall",
+                success=True,
+                items=[{"doi": "10.1000/unpaywall-1", "title": "Open article"}],
+                warnings=["adapter-warning"],
+                meta={"routed": "registry"},
+            )
+
+    registry = ProviderAdapterRegistry([DummyUnpaywallAdapter()])
+
+    monkeypatch.setattr(
+        "src.domain.literature.gateway.api_gateway.get_api_provider_registry",
+        lambda: registry,
+    )
+
+    result = await call_api_gateway(
+        ApiGatewayRequest(
+            provider="unpaywall",
+            action="search",
+            query="breast cancer",
+            limit=4,
+        )
+    )
+
+    assert result.provider == "unpaywall"
+    assert result.success is True
+    assert result.items == [{"doi": "10.1000/unpaywall-1", "title": "Open article"}]
+    assert result.warnings == ["adapter-warning"]
+    assert result.meta == {"routed": "registry"}
 
 
 @pytest.mark.asyncio
@@ -97,6 +293,100 @@ async def test_doaj_download_supported_from_search_links(
     assert result.success is True
     assert len(result.downloads) == 1
     assert result.downloads[0]["pdf_url"] == "https://example.org/paper.pdf"
+
+
+@pytest.mark.asyncio
+async def test_gateway_routes_crossref_search_through_registry_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class DummyCrossrefAdapter(ProviderAdapter):
+        provider = "crossref"
+
+        async def execute(self, request: ApiGatewayRequest) -> ApiGatewayResult:
+            assert request.provider == "crossref"
+            assert request.action == "search"
+            assert request.query == "ldlr"
+            assert request.identifiers == {"doi": "10.1000/xyz-123"}
+            return ApiGatewayResult(
+                provider="crossref",
+                success=True,
+                items=[{"doi": "10.1000/xyz-123", "title": "Registry LDLR paper"}],
+                warnings=["adapter-warning"],
+                meta={"routed": "registry"},
+            )
+
+    registry = ProviderAdapterRegistry([DummyCrossrefAdapter()])
+
+    monkeypatch.setattr(
+        "src.domain.literature.gateway.api_gateway.get_api_provider_registry",
+        lambda: registry,
+    )
+
+    result = await call_api_gateway(
+        ApiGatewayRequest(
+            provider="crossref",
+            action="search",
+            query="ldlr",
+            identifiers={"doi": "10.1000/xyz-123"},
+        )
+    )
+
+    assert result.provider == "crossref"
+    assert result.success is True
+    assert result.items == [{"doi": "10.1000/xyz-123", "title": "Registry LDLR paper"}]
+    assert result.warnings == ["adapter-warning"]
+    assert result.meta == {"routed": "registry"}
+
+
+@pytest.mark.asyncio
+async def test_crossref_search_dispatch_preserves_gateway_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_crossref(
+        query,
+        limit,
+        raw,
+        filter_expr,
+        api_params,
+    ):  # type: ignore[no-untyped-def]
+        assert query == "ldlr"
+        assert limit == 7
+        assert raw is True
+        assert filter_expr == "doi:10.1000/xyz-123"
+        assert api_params == {"mailto": "tests@example.org"}
+        return ApiGatewayResult(
+            provider="crossref",
+            success=True,
+            items=[{"doi": "10.1000/xyz-123", "title": "LDLR paper"}],
+            warnings=["crossref-warning"],
+            raw={"provider": "crossref"},
+            meta={"total": 1},
+        )
+
+    monkeypatch.setattr(
+        "src.domain.literature.gateway.api_gateway.call_crossref",
+        fake_crossref,
+    )
+
+    result = await call_api_gateway(
+        ApiGatewayRequest(
+            provider="crossref",
+            action="search",
+            query="ldlr",
+            identifiers={"doi": "10.1000/xyz-123"},
+            limit=7,
+            raw=True,
+            params={"mailto": "tests@example.org"},
+        )
+    )
+
+    assert result.provider == "crossref"
+    assert result.success is True
+    assert result.items == [{"doi": "10.1000/xyz-123", "title": "LDLR paper"}]
+    assert result.downloads == []
+    assert result.warnings == ["crossref-warning"]
+    assert result.raw == {"provider": "crossref"}
+    assert result.meta == {"total": 1}
 
 
 @pytest.mark.asyncio

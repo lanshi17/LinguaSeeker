@@ -28,7 +28,7 @@ data/
 - 针对修复后的数据库配置进行了优化
 - 支持PostgreSQL、Neo4j、Qdrant和MinIO的连接测试
 - 当相应库不可用时，回退到端口连通性测试
-- 使用正确的认证凭据（用户名: yangzs, 密码: ***REMOVED***）
+- 使用正确的认证凭据（用户名: yangzs, 密码: 36j7Tec@4rV3W2bR）
 
 ### 2. 自适应数据库操作测试 (`adaptive_database_operations_test.py`)
 - 自动检测可用的数据库连接方法（psql或psycopg2）
@@ -104,10 +104,10 @@ python src/mock_data_generator_offline.py
 ## 修复后配置
 
 根据数据库修复工作，测试代码使用以下配置：
-- PostgreSQL: localhost:5432, 用户: yangzs, 密码: ***REMOVED***
-- Neo4j: bolt://localhost:7687, 用户: neo4j, 密码: ***REMOVED***
+- PostgreSQL: localhost:5432, 用户: yangzs, 密码: 36j7Tec@4rV3W2bR
+- Neo4j: bolt://localhost:7687, 用户: neo4j, 密码: @bjdnEZfx543aGQZ
 - Qdrant: localhost:6333, API密钥: EDhs@gJcftnT3sBU
-- MinIO: localhost:9000, 访问密钥: yangzs, 秘密密钥: ***REMOVED***
+- MinIO: localhost:9000, 访问密钥: yangzs, 秘密密钥: 4tdnU45mYsYEK37#
 
 ## 部署建议
 

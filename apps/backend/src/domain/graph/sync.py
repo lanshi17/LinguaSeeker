@@ -17,7 +17,7 @@ from uuid import UUID
 from loguru import logger
 from sqlalchemy.exc import ProgrammingError as SAProgrammingError, SQLAlchemyError
 
-from src.config import settings
+from src.config import get_settings
 from src.infrastructure.neo4j import get_neo4j_client, Neo4jClient
 from src.infrastructure.postgres import get_postgres_client, PostgresClient
 from src.domain.variant import get_variation_data_service, VariationDataService
@@ -204,19 +204,44 @@ class GraphSyncService:
         ],
     }
     _MISSING_FIELD_COUNTER: Counter[str] = Counter()
-    _MISSING_FIELD_ALERT_THRESHOLD: int = getattr(settings, "evidence_failure_alert_threshold", 5)
+    _MISSING_FIELD_ALERT_THRESHOLD: int = 5
     _FAILURE_ARCHIVE_PATH: Path = Path(
-        getattr(settings, "evidence_failure_archive_path", "logs/evidence_failure_archive.jsonl")
+        "logs/evidence_failure_archive.jsonl"
     ).expanduser()
 
     def __init__(self) -> None:
+        cfg = get_settings()
         self._neo4j: Neo4jClient = get_neo4j_client()
         self._pg: PostgresClient = get_postgres_client()
         self._variants: VariationDataService = get_variation_data_service()
-        self._validity_threshold: float = getattr(settings, "evidence_validity_threshold", 85.0)
-        self._review_floor: float = getattr(
-            settings, "evidence_review_floor", max(self._validity_threshold - 20, 0.0)
+        self._validity_threshold: float = getattr(
+            cfg, "evidence_validity_threshold", 85.0
         )
+        self._review_floor: float = getattr(
+            cfg, "evidence_review_floor", max(self._validity_threshold - 20, 0.0)
+        )
+        self._missing_field_alert_threshold: int = int(
+            getattr(
+                cfg,
+                "evidence_failure_alert_threshold",
+                self._MISSING_FIELD_ALERT_THRESHOLD,
+            )
+        )
+        configured_failure_archive_path = getattr(
+            cfg,
+            "evidence_failure_archive_path",
+            None,
+        )
+        configured_fields = set(getattr(cfg, "model_fields_set", set()))
+        if (
+            configured_failure_archive_path
+            and "evidence_failure_archive_path" in configured_fields
+        ):
+            self._failure_archive_path = Path(
+                configured_failure_archive_path
+            ).expanduser()
+        else:
+            self._failure_archive_path = self._FAILURE_ARCHIVE_PATH.expanduser()
         logger.info("GraphSyncService initialized")
 
     # ==================== 核心同步入口 ====================
@@ -239,7 +264,9 @@ class GraphSyncService:
 
         raw_document_id = str(document_id).strip()
         logger.info("Syncing evidence for document {}", raw_document_id)
-        evidence_keys = list(evidence_output.keys()) if isinstance(evidence_output, dict) else []
+        evidence_keys = (
+            list(evidence_output.keys()) if isinstance(evidence_output, dict) else []
+        )
         logger.debug("Full evidence_output keys: {}", evidence_keys)
         ps3 = self._normalize_ps3_payload(evidence_output.get("ps3_evidence"))
         extracted_payload = evidence_output.get("extracted_fields")
@@ -278,8 +305,12 @@ class GraphSyncService:
             if isinstance(acmg_levels_source, list)
             else []
         )
-        strength = self._normalize_string(evidence_output.get("final_evidence_strength")) or ""
-        arbitration_score = self._coerce_optional_float(evidence_output.get("arbitration_score"))
+        strength = (
+            self._normalize_string(evidence_output.get("final_evidence_strength")) or ""
+        )
+        arbitration_score = self._coerce_optional_float(
+            evidence_output.get("arbitration_score")
+        )
 
         # 提取各字段
         gene_info = self._as_dict(extracted.get("gene"))
@@ -341,14 +372,25 @@ class GraphSyncService:
             structural_hint = structural_candidate
             if isinstance(extracted, dict):
                 extracted["_structural_variant"] = structural_candidate
-        icd10 = self._normalize_string(disease_info.get("icd10_code")) if disease_info else ""
+        icd10 = (
+            self._normalize_string(disease_info.get("icd10_code"))
+            if disease_info
+            else ""
+        )
         species = self._normalize_string(species_info.get("species_name")) or ""
-        phenotype_desc = self._normalize_string(phenotype_info.get("phenotype_description")) or ""
+        phenotype_desc = (
+            self._normalize_string(phenotype_info.get("phenotype_description")) or ""
+        )
 
         variant_descriptor = (
-            fused_core.get("variant_descriptor") or variant_hgvs_c or variant_hgvs_p or ""
+            fused_core.get("variant_descriptor")
+            or variant_hgvs_c
+            or variant_hgvs_p
+            or ""
         )
-        validity_status, validity_reason = self._determine_validity_status(overall_conf, extracted)
+        validity_status, validity_reason = self._determine_validity_status(
+            overall_conf, extracted
+        )
 
         variation_id: Optional[int] = None
         if variant_hgvs_c:
@@ -357,7 +399,9 @@ class GraphSyncService:
                 if variation:
                     variation_id = int(variation.variation_id)
             except Exception as exc:
-                logger.warning("ClinVar resolution failed for {}: {}", variant_hgvs_c, exc)
+                logger.warning(
+                    "ClinVar resolution failed for {}: {}", variant_hgvs_c, exc
+                )
 
         logger.debug(
             "Evidence payload summary for document {} => gene={}, variant_c={}, variant_p={}, strength={}, classification={}, confidence={}",
@@ -398,7 +442,9 @@ class GraphSyncService:
                 uuid_document_id = UUID(int=int(raw_document_id))
             else:
                 logger.error("Invalid document_id format: {}", raw_document_id)
-                raise ValueError(f"Invalid document_id format: {raw_document_id}") from exc
+                raise ValueError(
+                    f"Invalid document_id format: {raw_document_id}"
+                ) from exc
 
         canonical_document_id = str(uuid_document_id)
         document_id = canonical_document_id
@@ -434,7 +480,9 @@ class GraphSyncService:
             if not can_continue:
                 field_diagnostics = {
                     field: {
-                        "status": resolution_details.get(field, {}).get("status", "unknown"),
+                        "status": resolution_details.get(field, {}).get(
+                            "status", "unknown"
+                        ),
                         "aliases_checked": resolution_details.get(field, {}).get(
                             "aliases_checked",
                             [],
@@ -525,17 +573,31 @@ class GraphSyncService:
 
         # 1) --- PostgreSQL ---
         # Apply field length truncation as safety layer to prevent DB constraint violations
-        gene_symbol_safe = self._truncate_field(gene_symbol, 100) if gene_symbol else None
-        variant_hgvs_c_safe = self._truncate_field(variant_hgvs_c, 500) if variant_hgvs_c else None
-        variant_hgvs_p_safe = self._truncate_field(variant_hgvs_p, 500) if variant_hgvs_p else None
-        protein_change_safe = self._truncate_field(protein_change, 500) if protein_change else None
-        transcript_id_safe = self._truncate_field(transcript_id, 100) if transcript_id else None
+        gene_symbol_safe = (
+            self._truncate_field(gene_symbol, 100) if gene_symbol else None
+        )
+        variant_hgvs_c_safe = (
+            self._truncate_field(variant_hgvs_c, 500) if variant_hgvs_c else None
+        )
+        variant_hgvs_p_safe = (
+            self._truncate_field(variant_hgvs_p, 500) if variant_hgvs_p else None
+        )
+        protein_change_safe = (
+            self._truncate_field(protein_change, 500) if protein_change else None
+        )
+        transcript_id_safe = (
+            self._truncate_field(transcript_id, 100) if transcript_id else None
+        )
         ref_genome_safe = self._truncate_field(ref_genome, 50) if ref_genome else None
-        disease_name_safe = self._truncate_field(disease_name, 500) if disease_name else None
+        disease_name_safe = (
+            self._truncate_field(disease_name, 500) if disease_name else None
+        )
         icd10_safe = self._truncate_field(icd10, 50) if icd10 else None
         species_safe = self._truncate_field(species, 100) if species else None
         strength_safe = self._truncate_field(strength, 50) if strength else None
-        classification_safe = self._truncate_field(classification, 100) if classification else None
+        classification_safe = (
+            self._truncate_field(classification, 100) if classification else None
+        )
 
         try:
             logger.debug(
@@ -629,7 +691,9 @@ class GraphSyncService:
                     doc_entity = get_doc(uuid_document_id)
                 except Exception as exc:
                     logger.warning(
-                        "Failed to fetch document %s metadata: %s", canonical_document_id, exc
+                        "Failed to fetch document %s metadata: %s",
+                        canonical_document_id,
+                        exc,
                     )
             self._variants.record_internal_citation(
                 variation_id=variation_id,
@@ -665,7 +729,11 @@ class GraphSyncService:
             neo4j_ok = True
         except Exception as e:
             logger.error("Neo4j sync failed for evidence {}: {}", evidence_id, e)
-        logger.info("Sync complete for document {} (neo4j_ok={})", canonical_document_id, neo4j_ok)
+        logger.info(
+            "Sync complete for document {} (neo4j_ok={})",
+            canonical_document_id,
+            neo4j_ok,
+        )
         self._log_document_summary(
             canonical_document_id,
             success=True,
@@ -695,7 +763,9 @@ class GraphSyncService:
             return float(value)
         except (TypeError, ValueError):
             logger.warning(
-                "Invalid overall_confidence value {!r}, defaulting to {}", value, default
+                "Invalid overall_confidence value {!r}, defaulting to {}",
+                value,
+                default,
             )
             return default
 
@@ -749,7 +819,9 @@ class GraphSyncService:
     ) -> bool:
         if not structural_hint:
             return False
-        if not structural_hint.get("exon_range") or not structural_hint.get("transcript_id"):
+        if not structural_hint.get("exon_range") or not structural_hint.get(
+            "transcript_id"
+        ):
             return False
         return set(missing_fields).issubset({"variant_hgvs"})
 
@@ -765,7 +837,9 @@ class GraphSyncService:
         return set(missing_fields).issubset({"variant_hgvs"})
 
     @staticmethod
-    def _snapshot_context(document_id: str, **fields: Optional[str]) -> Dict[str, Optional[str]]:
+    def _snapshot_context(
+        document_id: str, **fields: Optional[str]
+    ) -> Dict[str, Optional[str]]:
         context = {"document_id": document_id}
         for key, value in fields.items():
             if isinstance(value, str) and len(value) > 256:
@@ -782,7 +856,8 @@ class GraphSyncService:
         log_id = document_id or "unknown"
         if payload is None:
             logger.warning(
-                "extracted_fields missing for document {}, defaulting to empty dict", log_id
+                "extracted_fields missing for document {}, defaulting to empty dict",
+                log_id,
             )
         else:
             logger.warning(
@@ -829,7 +904,9 @@ class GraphSyncService:
                 max_length,
                 len(normalized),
                 normalized[:50] + "..." if len(normalized) > 50 else normalized,
-                normalized[: max_length - 3] + "..." if max_length > 3 else normalized[:max_length],
+                normalized[: max_length - 3] + "..."
+                if max_length > 3
+                else normalized[:max_length],
             )
             return normalized[:max_length]
         return normalized
@@ -1123,11 +1200,13 @@ class GraphSyncService:
                 "resolution_details": resolution_details,
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
-            self._FAILURE_ARCHIVE_PATH.parent.mkdir(parents=True, exist_ok=True)
-            with self._FAILURE_ARCHIVE_PATH.open("a", encoding="utf-8") as fp:
+            self._failure_archive_path.parent.mkdir(parents=True, exist_ok=True)
+            with self._failure_archive_path.open("a", encoding="utf-8") as fp:
                 fp.write(json.dumps(payload, ensure_ascii=False) + "\n")
-        except Exception as exc:  # pragma: no cover - 仅记录日志
-            logger.warning("Failed to archive failure case for {}: {}", document_id, exc)
+        except Exception as exc:  # pragma: no cover - defensive logging only
+            logger.warning(
+                "Failed to archive failure case for {}: {}", document_id, exc
+            )
 
     def _track_missing_fields(self, missing_fields: List[str]) -> None:
         if not missing_fields:
@@ -1135,7 +1214,7 @@ class GraphSyncService:
         for field in missing_fields:
             self._MISSING_FIELD_COUNTER[field] += 1
             count = self._MISSING_FIELD_COUNTER[field]
-            threshold = max(1, self._MISSING_FIELD_ALERT_THRESHOLD)
+            threshold = max(1, self._missing_field_alert_threshold)
             if threshold and count % threshold == 0:
                 logger.warning(
                     "Core field {} missing {} times; consider targeted extraction tuning",
@@ -1152,7 +1231,9 @@ class GraphSyncService:
         try:
             self._pg.update_document(document_id, status="pending_manual_review")
         except Exception as exc:  # pragma: no cover - defensive logging only
-            logger.warning("Failed to mark document {} pending review: {}", document_id, exc)
+            logger.warning(
+                "Failed to mark document {} pending review: {}", document_id, exc
+            )
 
         log_payload = {
             "category": "non_standard_variant",
@@ -1168,7 +1249,9 @@ class GraphSyncService:
                 result=log_payload,
             )
         except Exception as exc:  # pragma: no cover
-            logger.warning("Failed to enqueue manual review task for {}: {}", document_id, exc)
+            logger.warning(
+                "Failed to enqueue manual review task for {}: {}", document_id, exc
+            )
 
         append_log = getattr(self._pg, "append_task_log", None)
         if callable(append_log):
@@ -1182,7 +1265,9 @@ class GraphSyncService:
                     task_id=getattr(task_record, "task_id", None),
                 )
             except Exception as exc:  # pragma: no cover
-                logger.warning("Failed to append manual review log for {}: {}", document_id, exc)
+                logger.warning(
+                    "Failed to append manual review log for {}: {}", document_id, exc
+                )
 
     def _log_document_summary(
         self, document_id: str, success: bool, summary: Dict[str, Any]
@@ -1241,7 +1326,9 @@ class GraphSyncService:
             variant_structural_key = structural_hint.get("structural_key")
             variant_exon_range = structural_hint.get("exon_range")
             variant_structural_type = structural_hint.get("structural_type")
-            variant_transcript = structural_hint.get("transcript_id") or variant_transcript
+            variant_transcript = (
+                structural_hint.get("transcript_id") or variant_transcript
+            )
 
         neo.upsert_document(str(document_id))
 
@@ -1250,7 +1337,9 @@ class GraphSyncService:
             neo.upsert_gene(gene_symbol)
 
         variant_node_present = bool(
-            variant_hgvs_c or variant_structural_key or (variant_transcript and variant_exon_range)
+            variant_hgvs_c
+            or variant_structural_key
+            or (variant_transcript and variant_exon_range)
         )
         if variant_node_present:
             logger.debug(
@@ -1300,11 +1389,15 @@ class GraphSyncService:
                     entity_value,
                     entity_key,
                 )
-                neo.link_document_entity(str(document_id), "Variant", entity_key, entity_value)
+                neo.link_document_entity(
+                    str(document_id), "Variant", entity_key, entity_value
+                )
 
         if transcript_id and gene_symbol:
             logger.debug(
-                "Upserting transcript {} and linking to gene {}", transcript_id, gene_symbol
+                "Upserting transcript {} and linking to gene {}",
+                transcript_id,
+                gene_symbol,
             )
             neo.upsert_transcript(transcript_id)
             neo.link_gene_transcript(gene_symbol, transcript_id)
@@ -1313,7 +1406,9 @@ class GraphSyncService:
             logger.debug("Upserting disease {} (icd10={})", disease_name, icd10 or "-")
             neo.upsert_disease(disease_name, icd10_code=icd10 or None)
             if gene_symbol:
-                logger.debug("Linking disease {} with gene {}", disease_name, gene_symbol)
+                logger.debug(
+                    "Linking disease {} with gene {}", disease_name, gene_symbol
+                )
                 neo.link_disease_gene(disease_name, gene_symbol)
             neo.link_document_entity(str(document_id), "Disease", "name", disease_name)
 
@@ -1335,7 +1430,9 @@ class GraphSyncService:
                     transcript_id=variant_transcript or None,
                     exon_range=variant_exon_range,
                 )
-            neo.link_document_entity(str(document_id), "Phenotype", "description", phenotype_desc)
+            neo.link_document_entity(
+                str(document_id), "Phenotype", "description", phenotype_desc
+            )
 
         if species:
             logger.debug("Upserting species {}", species)
@@ -1387,7 +1484,9 @@ class GraphSyncService:
     ) -> List[Dict[str, Any]]:
         """批量同步多条证据（同一文档的多条提取结果）"""
         logger.info(
-            "Batch syncing {} evidence item(s) for document {}", len(evidence_outputs), document_id
+            "Batch syncing {} evidence item(s) for document {}",
+            len(evidence_outputs),
+            document_id,
         )
         results = []
         for idx, ev in enumerate(evidence_outputs):
@@ -1395,12 +1494,17 @@ class GraphSyncService:
             try:
                 r = self.sync_evidence(document_id, ev)
                 logger.debug(
-                    "Batch sync completed for document {} item {}: {}", document_id, idx, r
+                    "Batch sync completed for document {} item {}: {}",
+                    document_id,
+                    idx,
+                    r,
                 )
                 results.append(r)
             except Exception as e:
                 logger.error("Batch sync failed at index {}: {}", idx, e)
-                results.append({"pg_evidence_id": None, "neo4j_synced": False, "error": str(e)})
+                results.append(
+                    {"pg_evidence_id": None, "neo4j_synced": False, "error": str(e)}
+                )
         return results
 
     # ==================== 重新同步 ====================
@@ -1450,7 +1554,11 @@ class GraphSyncService:
                 failed += 1
 
         logger.info(
-            "Resync document {}: {}/{} ok, {} failed", document_id, synced, len(records), failed
+            "Resync document {}: {}/{} ok, {} failed",
+            document_id,
+            synced,
+            len(records),
+            failed,
         )
         return {"total": len(records), "synced": synced, "failed": failed}
 

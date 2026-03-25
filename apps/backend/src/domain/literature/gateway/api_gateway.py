@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import re
-from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
 from urllib.parse import urljoin
+
+if TYPE_CHECKING:
+    from src.domain.literature.gateway.registry import ProviderAdapterRegistry
 
 import httpx
 
@@ -14,35 +16,7 @@ from src.domain.literature.api.doaj.workflow import doaj_http_workflow
 from src.domain.literature.api.jstage.workflow import jstage_http_workflow
 from src.domain.literature.api.pmc.workflow import pmc_http_workflow
 from src.domain.literature.api.unpaywall.workflow import unpaywall_workflow
-
-ApiProvider = Literal["crossref", "unpaywall", "pmc", "jstage", "doaj"]
-ActionStrategy = Literal["search", "download"]
-
-
-@dataclass
-class ApiGatewayRequest:
-    provider: ApiProvider
-    action: ActionStrategy = "search"
-    query: Optional[str] = None
-    identifiers: Dict[str, Optional[str]] = field(default_factory=dict)
-    limit: int = 20
-    raw: bool = False
-    params: Dict[str, Any] = field(default_factory=dict)
-    download_path: str = "./downloads"
-    selected_index: int = 0
-    selected_title: Optional[str] = None
-    detail_link: Optional[str] = None
-
-
-@dataclass
-class ApiGatewayResult:
-    provider: str
-    success: bool
-    items: List[Dict[str, Any]]
-    warnings: List[str]
-    downloads: List[Dict[str, Any]] = field(default_factory=list)
-    raw: Any = None
-    meta: Any = None
+from src.domain.literature.gateway.contracts import ApiGatewayRequest, ApiGatewayResult
 
 
 def _merge_payload(
@@ -360,10 +334,11 @@ async def call_pmc_metadata(
         if isinstance(res, Exception):
             warnings.append(f"pmc_metadata_error:{res}")
             continue
-        items.extend(res.get("items") or [])
-        warnings.extend(res.get("warnings") or [])
+        response_payload = cast(dict[str, Any], res)
+        items.extend(response_payload.get("items") or [])
+        warnings.extend(response_payload.get("warnings") or [])
         if raw:
-            raw_payloads.append(res)
+            raw_payloads.append(response_payload)
 
     return ApiGatewayResult(
         provider="pmc",
@@ -405,7 +380,11 @@ async def call_pmc_for_pmid(
 ) -> ApiGatewayResult:
     search_term = f"{pmid}[pmid]"
     search_result = await call_pmc_search(search_term, limit, raw, api_params)
-    pmcids = [item.get("pmcid") for item in search_result.items if item.get("pmcid")]
+    pmcids = [
+        pmcid
+        for item in search_result.items
+        if isinstance((pmcid := item.get("pmcid")), str)
+    ]
     if not pmcids:
         return search_result
     metadata_result = await call_pmc_metadata(pmcids[:limit], raw, api_params)
@@ -432,13 +411,17 @@ async def call_pmc_download(
         search_result = await call_pmc_search(f"{pmid}[pmid]", limit, False, api_params)
         warnings.extend(search_result.warnings)
         pmcids = [
-            item.get("pmcid") for item in search_result.items if item.get("pmcid")
+            found_pmcid
+            for item in search_result.items
+            if isinstance((found_pmcid := item.get("pmcid")), str)
         ]
     else:
         search_result = await call_pmc_search(query or "", limit, False, api_params)
         warnings.extend(search_result.warnings)
         pmcids = [
-            item.get("pmcid") for item in search_result.items if item.get("pmcid")
+            found_pmcid
+            for item in search_result.items
+            if isinstance((found_pmcid := item.get("pmcid")), str)
         ]
 
     if not pmcids:
@@ -768,6 +751,42 @@ async def call_doaj_download(
     )
 
 
+def get_api_provider_registry() -> "ProviderAdapterRegistry":
+    from src.domain.literature.gateway.adapters.crossref_adapter import CrossrefAdapter
+    from src.domain.literature.gateway.adapters.doaj_adapter import DoajAdapter
+    from src.domain.literature.gateway.adapters.jstage_adapter import JStageAdapter
+    from src.domain.literature.gateway.adapters.pmc_adapter import PMCAdapter
+    from src.domain.literature.gateway.adapters.unpaywall_adapter import (
+        UnpaywallAdapter,
+    )
+    from src.domain.literature.gateway.registry import ProviderAdapterRegistry
+
+    return ProviderAdapterRegistry(
+        [
+            PMCAdapter(
+                metadata_call=call_pmc_metadata,
+                search_call=call_pmc_search,
+                pmid_call=call_pmc_for_pmid,
+            ),
+            JStageAdapter(
+                search_call=call_jstage,
+                download_call=call_jstage_download,
+            ),
+            DoajAdapter(
+                search_call=call_doaj,
+                download_call=call_doaj_download,
+            ),
+            UnpaywallAdapter(
+                search_call=call_unpaywall,
+                download_call=call_unpaywall_download,
+            ),
+            CrossrefAdapter(
+                search_call=call_crossref,
+            ),
+        ]
+    )
+
+
 async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
     provider = request.provider
     identifiers = request.identifiers or {}
@@ -775,6 +794,9 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
 
     if request.action == "download":
         if provider == "unpaywall":
+            registry = get_api_provider_registry()
+            if registry.supports(provider):
+                return await registry.get(provider).execute(request)
             return await call_unpaywall_download(
                 request.query,
                 identifiers.get("doi"),
@@ -784,6 +806,7 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
                 request.selected_index,
                 api_params,
             )
+
         if provider == "pmc":
             return await call_pmc_download(
                 request.query,
@@ -794,6 +817,9 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
                 api_params,
             )
         if provider == "jstage":
+            registry = get_api_provider_registry()
+            if registry.supports(provider):
+                return await registry.get(provider).execute(request)
             return await call_jstage_download(
                 request.query,
                 request.limit,
@@ -804,7 +830,11 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
                 request.detail_link,
                 api_params,
             )
+
         if provider == "doaj":
+            registry = get_api_provider_registry()
+            if registry.supports(provider):
+                return await registry.get(provider).execute(request)
             return await call_doaj_download(
                 request.query,
                 request.limit,
@@ -824,6 +854,9 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
         )
 
     if provider == "unpaywall":
+        registry = get_api_provider_registry()
+        if registry.supports(provider):
+            return await registry.get(provider).execute(request)
         return await call_unpaywall(
             request.query,
             identifiers.get("doi"),
@@ -833,6 +866,9 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
         )
 
     if provider == "pmc":
+        registry = get_api_provider_registry()
+        if registry.supports(provider):
+            return await registry.get(provider).execute(request)
         pmcid = identifiers.get("pmcid")
         pmid = identifiers.get("pmid")
         if pmcid:
@@ -847,7 +883,9 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
             api_params,
         )
         pmcids = [
-            item.get("pmcid") for item in search_result.items if item.get("pmcid")
+            found_pmcid
+            for item in search_result.items
+            if isinstance((found_pmcid := item.get("pmcid")), str)
         ]
         if not pmcids:
             return search_result
@@ -860,6 +898,9 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
         return metadata_result
 
     if provider == "jstage":
+        registry = get_api_provider_registry()
+        if registry.supports(provider):
+            return await registry.get(provider).execute(request)
         return await call_jstage(
             request.query,
             request.limit,
@@ -868,6 +909,9 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
         )
 
     if provider == "doaj":
+        registry = get_api_provider_registry()
+        if registry.supports(provider):
+            return await registry.get(provider).execute(request)
         return await call_doaj(
             request.query,
             request.limit,
@@ -875,10 +919,22 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
             api_params,
         )
 
-    return await call_crossref(
-        request.query,
-        request.limit,
-        request.raw,
-        _crossref_filter_from_identifiers(identifiers),
-        api_params,
+    if provider == "crossref":
+        registry = get_api_provider_registry()
+        if registry.supports(provider):
+            return await registry.get(provider).execute(request)
+        return await call_crossref(
+            request.query,
+            request.limit,
+            request.raw,
+            _crossref_filter_from_identifiers(identifiers),
+            api_params,
+        )
+
+    return ApiGatewayResult(
+        provider=provider,
+        success=False,
+        items=[],
+        downloads=[],
+        warnings=[f"{provider}_unsupported"],
     )

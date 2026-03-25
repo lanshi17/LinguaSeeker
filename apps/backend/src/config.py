@@ -966,26 +966,21 @@ class Settings(BaseSettings):
 
     # 使用 SettingsConfigDict (Pydantic V2)
     model_config = SettingsConfigDict(
-        env_file=[".env.local"],
+        env_file=[".env.local", ".env.test", ".env.example"],
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
     )
 
 
-def resolve_llm_triplet(settings: Settings, role: str) -> tuple[str, str, str]:
-    """Resolve LLM configuration triplet for a given role.
+@dataclass(frozen=True)
+class LLMTriplet:
+    api_key: str
+    base_url: str
+    model: str
 
-    Args:
-        settings: Settings instance containing LLM configurations
-        role: LLM role name (retrieval/parsing/mt/format/vlm/evidence/classification/arbitration/ocr)
 
-    Returns:
-        tuple containing (api_key, base_url, model) for the role
-
-    Raises:
-        ValueError: If role is invalid
-    """
+def resolve_llm_triplet(settings: Settings, role: str) -> LLMTriplet:
     valid_roles: set[str] = {
         "retrieval",
         "parsing",
@@ -1013,7 +1008,7 @@ def resolve_llm_triplet(settings: Settings, role: str) -> tuple[str, str, str]:
         base_url = getattr(settings, f"{role}_base_url")
         model = getattr(settings, f"{role}_model")
 
-    return api_key, base_url, model
+    return LLMTriplet(api_key=api_key, base_url=base_url, model=model)
 
 
 class ConfigManager:
