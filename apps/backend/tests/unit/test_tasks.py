@@ -639,6 +639,43 @@ def test_process_pubmed_paper_task_success(monkeypatch: pytest.MonkeyPatch) -> N
         tasks_module, "_sync_evidence_to_graph", lambda *_: {"neo4j_synced": True}
     )
 
+    source_trace = [
+        {
+            "provider": "pmc",
+            "attempt": 1,
+            "success": True,
+            "items_count": 0,
+            "downloads_count": 1,
+            "warnings": [],
+            "error": None,
+        }
+    ]
+
+    async def fake_pdf_download(*_: Any, **__: Any) -> Dict[str, Any]:
+        return {
+            "downloaded": True,
+            "route": {
+                "used": "api",
+                "api_provider": "pmc",
+                "reason": "api_provider:pmc",
+            },
+            "provider": "pmc",
+            "warnings": [],
+            "downloads_count": 1,
+            "source_trace": source_trace,
+            "local_file_name": "paper.pdf",
+            "sha256": "abc",
+            "size_bytes": 128,
+            "object_key": "literature/mock/object.pdf",
+            "bucket": "literature-uploads",
+        }
+
+    monkeypatch.setattr(
+        tasks_module,
+        "_try_download_and_store_literature_pdf",
+        fake_pdf_download,
+    )
+
     result = _invoke_bound_task(
         tasks_module.process_pubmed_paper_task,
         pmid="12345678",
@@ -648,12 +685,14 @@ def test_process_pubmed_paper_task_success(monkeypatch: pytest.MonkeyPatch) -> N
     )
 
     assert result["status"] == "success"
-    assert result["fulltext_unavailable"] is True
+    assert result["fulltext_unavailable"] is False
+    assert result["pdf_download"]["source_trace"] == source_trace
     assert fake_pg.paper_updates[-1]["fields"]["status"] == "success"
+    assert fake_pg.paper_updates[-1]["fields"]["node_trace"]["acquisition_detail"] == {
+        "provider": "pmc",
+        "source_trace": source_trace,
+    }
     assert "warning_codes" in fake_pg.paper_updates[-1]["fields"]
-    assert (
-        "FULLTEXT_UNAVAILABLE" in fake_pg.paper_updates[-1]["fields"]["warning_codes"]
-    )
     assert len(fake_pg.alignments) >= 1
     assert any(log.get("node") == "acmg" for log in fake_pg.logs)
 
@@ -788,6 +827,43 @@ def test_process_web_page_task_success(monkeypatch: pytest.MonkeyPatch) -> None:
         tasks_module, "_sync_evidence_to_graph", lambda *_: {"neo4j_synced": True}
     )
 
+    source_trace = [
+        {
+            "provider": "crossref",
+            "attempt": 1,
+            "success": True,
+            "items_count": 0,
+            "downloads_count": 1,
+            "warnings": [],
+            "error": None,
+        }
+    ]
+
+    async def fake_pdf_download(*_: Any, **__: Any) -> Dict[str, Any]:
+        return {
+            "downloaded": True,
+            "route": {
+                "used": "api",
+                "api_provider": "crossref",
+                "reason": "api_provider:crossref",
+            },
+            "provider": "crossref",
+            "warnings": [],
+            "downloads_count": 1,
+            "source_trace": source_trace,
+            "local_file_name": "paper.pdf",
+            "sha256": "abc",
+            "size_bytes": 128,
+            "object_key": "literature/mock/object.pdf",
+            "bucket": "literature-uploads",
+        }
+
+    monkeypatch.setattr(
+        tasks_module,
+        "_try_download_and_store_literature_pdf",
+        fake_pdf_download,
+    )
+
     result = _invoke_bound_task(
         tasks_module.process_web_page_task,
         url="https://example.org/ldlr-web-study",
@@ -798,7 +874,12 @@ def test_process_web_page_task_success(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert result["status"] == "success"
     assert result["source_url"] == "https://example.org/ldlr-web-study"
+    assert result["pdf_download"]["source_trace"] == source_trace
     assert fake_pg.paper_updates[-1]["fields"]["status"] == "success"
+    assert fake_pg.paper_updates[-1]["fields"]["node_trace"]["acquisition_detail"] == {
+        "provider": "crossref",
+        "source_trace": source_trace,
+    }
     assert any(
         item["fields"].get("workflow_status") == "COMPLETED"
         for item in fake_pg.paper_updates

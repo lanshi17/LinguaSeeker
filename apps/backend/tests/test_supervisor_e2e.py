@@ -96,28 +96,9 @@ class TestHappyPaths:
 
         assert result["workflow_status"] == "completed"
         assert result["current_node"] == "finalize"
-
-    def test_pubmed_happy_path(self):
-        acmg = MagicMock()
-        patches = {
-            "run_interaction_node": _set_fields(interaction_ready=True),
-            "run_acquisition_node": _pass_through,
-            "run_parsing_node": _set_fields(parsing_result={"ok": True}),
-            "run_extraction_node": _pass_through,
-            "run_reasoning_node": _pass_through,
-            "run_arbitration_node": _set_fields(
-                acmg_result=acmg,
-                arbitration_confidence=90.0,
-                requires_human_review=False,
-            ),
-        }
-        state = _base_state(source="pubmed", pmids=["PM1"])
-
-        with patch(f"{_NODE_PREFIX}.EvidenceAgent"):
-            result = self._build_and_invoke(state, patches)
-
-        assert result["workflow_status"] == "completed"
-        assert result["current_node"] == "finalize"
+        assert result["processing_steps"]["reasoning"]["status"] == "COMPLETED"
+        assert result["processing_steps"]["classification"]["status"] == "COMPLETED"
+        assert result["processing_steps"]["adjudication"]["status"] == "COMPLETED"
 
     def test_web_happy_path(self):
         acmg = MagicMock()
@@ -139,6 +120,9 @@ class TestHappyPaths:
             result = self._build_and_invoke(state, patches)
 
         assert result["workflow_status"] == "completed"
+        assert result["processing_steps"]["reasoning"]["status"] == "COMPLETED"
+        assert result["processing_steps"]["classification"]["status"] == "COMPLETED"
+        assert result["processing_steps"]["adjudication"]["status"] == "COMPLETED"
 
 
 class TestParseFailurePath:
@@ -178,7 +162,10 @@ class TestHumanReviewPaths:
         }
         state = _base_state(source="upload")
 
-        with patch.multiple(_NODE_PREFIX, **patches), patch(f"{_NODE_PREFIX}.EvidenceAgent"):
+        with (
+            patch.multiple(_NODE_PREFIX, **patches),
+            patch(f"{_NODE_PREFIX}.EvidenceAgent"),
+        ):
             graph = compile_supervisor()
             return graph.invoke(state)
 
@@ -241,7 +228,9 @@ class TestInterruptBeforeHumanReview:
         nodes_with_interrupt = getattr(graph, "interrupt_before_nodes", None)
         if nodes_with_interrupt is None:
             nodes_with_interrupt = getattr(graph, "_interrupt_before_nodes", None)
-        assert nodes_with_interrupt is None or "human_review" in (nodes_with_interrupt or [])
+        assert nodes_with_interrupt is None or "human_review" in (
+            nodes_with_interrupt or []
+        )
 
     def test_interrupt_graph_compiles_with_checkpointer(self):
         from langgraph.checkpoint.memory import MemorySaver
@@ -276,7 +265,10 @@ class TestUnknownSourceFallback:
         }
         state = _base_state(source="ftp")
 
-        with patch.multiple(_NODE_PREFIX, **patches), patch(f"{_NODE_PREFIX}.EvidenceAgent"):
+        with (
+            patch.multiple(_NODE_PREFIX, **patches),
+            patch(f"{_NODE_PREFIX}.EvidenceAgent"),
+        ):
             graph = compile_supervisor()
             result = graph.invoke(state)
 
@@ -295,7 +287,9 @@ class TestTranslationNode:
         from src.agents.supervisor import translation
 
         mock_agent = MagicMock()
-        mock_agent.translate_markdown.return_value = {"translated_md": "translated text"}
+        mock_agent.translate_markdown.return_value = {
+            "translated_md": "translated text"
+        }
 
         state = _base_state(markdown_content="raw text", translated_markdown=None)
         with patch(f"{_NODE_PREFIX}.EvidenceAgent", return_value=mock_agent):

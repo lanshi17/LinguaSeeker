@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from src.domain.evidence.classifier import EvidenceClassifier as LegacyEvidenceClassifier
+from src.domain.evidence.classifier import (
+    EvidenceClassifier as LegacyEvidenceClassifier,
+)
 from src.domain.evidence.evaluation_framework import (
     calculate_oddpath as legacy_calculate_oddpath,
 )
@@ -92,6 +94,7 @@ def test_run_arbitration_node_maps_processing_state(monkeypatch) -> None:
 
     result = arbitration_node.run_arbitration_node(state)
 
+    assert result["current_node"] == "arbitration"
     assert result["arbitration_confidence"] == 0.91
     assert result["final_evidence_strength"] == "PS3"
     assert result["requires_human_review"] is False

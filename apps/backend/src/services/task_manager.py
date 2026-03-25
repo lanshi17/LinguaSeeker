@@ -612,6 +612,7 @@ def _persist_alignments_and_warnings(
     base_warnings: Optional[List[str]] = None,
 ) -> List[str]:
     alignments = _build_sentence_alignments(source_text, en_text)
+    alignment_persist_failed = False
     for item in alignments:
         try:
             postgres.create_sentence_alignment(
@@ -624,6 +625,7 @@ def _persist_alignments_and_warnings(
                 en_end=item["en_end"],
             )
         except Exception as exc:
+            alignment_persist_failed = True
             logger.warning(
                 "Failed to persist sentence alignment for paper {}: {}",
                 paper_task_id,
@@ -631,8 +633,9 @@ def _persist_alignments_and_warnings(
             )
 
     merged = list(base_warnings or [])
+    if alignment_persist_failed:
+        merged.append("ALIGNMENT_PERSIST_FAILED")
     merged.extend(_detect_warning_codes(source_text, en_text))
-    # 保持顺序去重
     deduped = list(dict.fromkeys([code for code in merged if code]))
     return deduped
 
@@ -957,6 +960,13 @@ async def _try_download_and_store_literature_pdf(
     downloads = list(
         (response.get("downloads") if isinstance(response, dict) else []) or []
     )
+    raw_payload = response.get("raw") if isinstance(response, dict) else None
+    api_payload = raw_payload.get("api") if isinstance(raw_payload, dict) else None
+    source_trace = []
+    if isinstance(api_payload, dict):
+        trace_value = api_payload.get("source_trace")
+        if isinstance(trace_value, list):
+            source_trace = trace_value
 
     file_path = _resolve_download_path(downloads)
     if file_path is None:
@@ -1019,6 +1029,7 @@ async def _try_download_and_store_literature_pdf(
                 "route_reason": str(
                     route.get("reason") if isinstance(route, dict) else ""
                 ),
+                "source_trace": json.dumps(source_trace, ensure_ascii=False),
                 "uploaded_at": datetime.now(timezone.utc).isoformat(),
             },
         )
@@ -1041,6 +1052,7 @@ async def _try_download_and_store_literature_pdf(
         "provider": provider,
         "warnings": warnings,
         "downloads_count": len(downloads),
+        "source_trace": source_trace,
         "local_file_name": filename,
         "sha256": file_hash,
         "size_bytes": len(payload_bytes),
@@ -1134,8 +1146,8 @@ def _log_node_end(
 
 
 def _update_node_trace(
-    node_trace: Dict[str, str], node: str, outcome: str
-) -> Dict[str, str]:
+    node_trace: Dict[str, Any], node: str, outcome: str
+) -> Dict[str, Any]:
     node_trace[node] = outcome
     return node_trace
 
@@ -2144,7 +2156,7 @@ def process_pubmed_paper_task(
 ) -> Dict[str, Any]:
     postgres = get_postgres_client()
     start_time = datetime.now(timezone.utc)
-    node_trace: Dict[str, str] = {}
+    node_trace: Dict[str, Any] = {}
 
     if cfg.use_agent_workflow("pubmed"):
         return _run_supervisor_pipeline(
@@ -2274,6 +2286,12 @@ def process_pubmed_paper_task(
         )
     )
     pubmed_fulltext_unavailable = not bool(pubmed_pdf_result.get("downloaded"))
+    source_trace = pubmed_pdf_result.get("source_trace")
+    if isinstance(source_trace, list):
+        node_trace["acquisition_detail"] = {
+            "provider": str(pubmed_pdf_result.get("provider") or ""),
+            "source_trace": source_trace,
+        }
     postgres.append_paper_task_log(
         paper_task_id,
         status="running",
@@ -2499,7 +2517,7 @@ def process_web_page_task(
 ) -> Dict[str, Any]:
     postgres = get_postgres_client()
     start_time = datetime.now(timezone.utc)
-    node_trace: Dict[str, str] = {}
+    node_trace: Dict[str, Any] = {}
 
     if cfg.use_agent_workflow("web"):
         return _run_supervisor_pipeline(
@@ -2629,6 +2647,12 @@ def process_web_page_task(
         )
     )
     web_fulltext_unavailable = not bool(web_pdf_result.get("downloaded"))
+    source_trace = web_pdf_result.get("source_trace")
+    if isinstance(source_trace, list):
+        node_trace["acquisition_detail"] = {
+            "provider": str(web_pdf_result.get("provider") or ""),
+            "source_trace": source_trace,
+        }
     postgres.append_paper_task_log(
         paper_task_id,
         status="running",

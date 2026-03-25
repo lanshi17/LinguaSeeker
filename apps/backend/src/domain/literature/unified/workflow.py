@@ -10,6 +10,7 @@ from src.domain.literature.gateway.api_gateway import (
 )
 from src.domain.literature.unified.models import (
     ApiProvider,
+    UnifiedLiteratureItem,
     UnifiedLiteratureRequest,
     UnifiedLiteratureResponse,
     UnifiedRouteInfo,
@@ -24,12 +25,20 @@ PMID_PATTERN = re.compile(r"PMID[:\s]*([0-9]{5,9})", re.IGNORECASE)
 class IdentifierInfo(Dict[str, Optional[str]]):
     pass
 
+
+DEFAULT_PROVIDER_RETRIES = {
+    "search": 2,
+    "download": 2,
+}
+
+
 def _extract_identifiers(texts: List[str]) -> IdentifierInfo:
-    info: IdentifierInfo = {
-        "doi": None,
-        "pmcid": None,
-        "pmid": None,
-    }
+    info: IdentifierInfo = IdentifierInfo(
+        doi=None,
+        pmcid=None,
+        pmid=None,
+    )
+
     for text in texts:
         if not text:
             continue
@@ -53,9 +62,20 @@ def _extract_identifiers(texts: List[str]) -> IdentifierInfo:
 def _select_api_provider(
     request: UnifiedLiteratureRequest, identifiers: IdentifierInfo
 ) -> ApiProvider:
-    # MVP is PubMed-only; download/search metadata routing should stay on PMC.
-    if request.api_provider == "pmc":
+    if request.api_provider:
+        return request.api_provider
+
+    if identifiers.get("pmcid") or identifiers.get("pmid"):
         return "pmc"
+
+    if identifiers.get("doi"):
+        if request.action == "download":
+            return "unpaywall"
+        return "crossref"
+
+    if request.prefer == "api":
+        return "crossref"
+
     return "pmc"
 
 
@@ -66,13 +86,16 @@ def _build_query(request: UnifiedLiteratureRequest) -> str:
 
 
 def _api_response_to_raw(result: ApiGatewayResult) -> Dict[str, Any]:
+    meta = dict(result.meta or {})
     return {
         "success": result.success,
         "items": result.items,
         "downloads": result.downloads,
         "warnings": result.warnings,
         "raw": result.raw,
-        "meta": result.meta,
+        "meta": meta,
+        "source_trace": meta.get("source_trace", []),
+        "attempts": meta.get("attempts"),
     }
 
 
@@ -95,7 +118,59 @@ async def _execute_api(
         selected_title=request.selected_title,
         detail_link=request.detail_link,
     )
-    return await call_api_gateway(gateway_request)
+
+    attempts = DEFAULT_PROVIDER_RETRIES[request.action]
+    source_trace: List[Dict[str, Any]] = []
+    last_exception: Exception | None = None
+
+    for attempt in range(1, attempts + 1):
+        try:
+            result = await call_api_gateway(gateway_request)
+        except Exception as exc:
+            last_exception = exc
+            source_trace.append(
+                {
+                    "provider": provider,
+                    "attempt": attempt,
+                    "success": False,
+                    "items_count": 0,
+                    "downloads_count": 0,
+                    "warnings": [],
+                    "error": str(exc),
+                }
+            )
+            if attempt == attempts:
+                raise
+            continue
+
+        source_trace.append(
+            {
+                "provider": provider,
+                "attempt": attempt,
+                "success": result.success,
+                "items_count": len(result.items),
+                "downloads_count": len(result.downloads),
+                "warnings": result.warnings,
+                "error": None,
+            }
+        )
+        result.meta = dict(result.meta or {})
+        result.meta["source_trace"] = source_trace
+        result.meta["attempts"] = attempt
+
+        has_result = (
+            bool(result.downloads)
+            if request.action == "download"
+            else bool(result.items)
+        )
+        if result.success and has_result:
+            return result
+        if attempt == attempts:
+            return result
+
+    if last_exception is not None:
+        raise last_exception
+    raise RuntimeError("provider execution failed without result")
 
 
 def _build_api_response(
@@ -106,7 +181,7 @@ def _build_api_response(
     warnings: List[str],
     raw_payload: Dict[str, Any],
     api_result: ApiGatewayResult,
-    api_items: List[Dict[str, Any]],
+    api_items: List[UnifiedLiteratureItem],
 ) -> UnifiedLiteratureResponse:
     if request.action == "download":
         return UnifiedLiteratureResponse(

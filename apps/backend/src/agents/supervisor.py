@@ -13,6 +13,11 @@ from src.agents.parsing import run_parsing_node
 from src.agents.reasoning.node import run_reasoning_node
 from src.domain.agent.workflow import EvidenceAgent
 from src.domain.enums import ProcessingState
+from src.services.enum import (
+    ProcessingStepStatus,
+    merge_processing_step_update,
+    normalize_processing_steps,
+)
 from src.state.global_state import SupervisorState
 
 
@@ -42,6 +47,35 @@ def _to_float(value: object) -> float | None:
         except ValueError:
             return None
     return None
+
+
+def _mark_step(
+    state: dict[str, Any],
+    *,
+    step: str,
+    status: ProcessingStepStatus,
+    message: str | None = None,
+    node_name: str | None = None,
+) -> None:
+    processing_steps = merge_processing_step_update(
+        state.get("processing_steps"),
+        step=step,
+        status=status,
+        message=message,
+    )
+    state["processing_steps"] = processing_steps
+
+    if node_name:
+        node_trace = _dict_value(state.get("node_trace"))
+        node_trace[node_name] = status.value.lower()
+        state["node_trace"] = node_trace
+
+
+def _finalize_processing_steps(state: dict[str, Any]) -> None:
+    state["processing_steps"] = normalize_processing_steps(
+        state.get("processing_steps"),
+        node_trace=_dict_value(state.get("node_trace")),
+    )
 
 
 def _is_low_confidence(value: object) -> bool:
@@ -82,7 +116,9 @@ def translation(state: SupervisorState) -> SupervisorState:
             "status": updated.get("workflow_status", "pending") or "pending",
         }
     )
-    final_state = agent.translate_markdown(cast(ProcessingState, cast(object, inner_state)))
+    final_state = agent.translate_markdown(
+        cast(ProcessingState, cast(object, inner_state))
+    )
     updated["_inner_processing_state"] = final_state
     updated["translated_markdown"] = final_state.get("translated_md") or updated.get(
         "markdown_content", ""
@@ -92,6 +128,28 @@ def translation(state: SupervisorState) -> SupervisorState:
 
 def finalize(state: SupervisorState) -> SupervisorState:
     updated = dict(state)
+    _mark_step(
+        updated,
+        step="reasoning",
+        status=ProcessingStepStatus.completed,
+        message="Reasoning completed",
+        node_name="reasoning",
+    )
+    _mark_step(
+        updated,
+        step="classification",
+        status=ProcessingStepStatus.completed,
+        message="Classification completed",
+        node_name="acmg",
+    )
+    _mark_step(
+        updated,
+        step="adjudication",
+        status=ProcessingStepStatus.completed,
+        message="Adjudication completed",
+        node_name="arbitration",
+    )
+    _finalize_processing_steps(updated)
     updated["current_node"] = "finalize"
     updated["workflow_status"] = "completed"
     return cast(SupervisorState, cast(object, updated))
