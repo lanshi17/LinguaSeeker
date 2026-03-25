@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional, Mapping, cast
+from typing import List, Dict, Any, Optional, Mapping, cast, get_args, get_origin
 import asyncio
 import base64
 import json
@@ -15,7 +15,7 @@ from src.domain.agent import prompts
 from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
-from pydantic import SecretStr
+from pydantic import SecretStr, ValidationError
 from src.domain.evidence.tools import (
     search_knowledge_base,
     get_evidence_tools,
@@ -562,6 +562,42 @@ class EvidenceAgent:
             return cleaned or None
         return None
 
+    @staticmethod
+    def _extract_model_type(annotation: Any) -> Any:
+        origin = get_origin(annotation)
+        if origin is None:
+            return annotation
+        for candidate in get_args(annotation):
+            if candidate is not type(None):
+                return candidate
+        return None
+
+    def _sanitize_extracted_fields_for_validation(
+        self, extracted_fields: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        sanitized: Dict[str, Any] = {}
+        for field_name, field_info in ExtractedEvidenceFields.model_fields.items():
+            section = extracted_fields.get(field_name)
+            if not isinstance(section, dict):
+                continue
+
+            model_type = self._extract_model_type(field_info.annotation)
+            if model_type is None or not hasattr(model_type, "model_validate"):
+                sanitized[field_name] = section
+                continue
+
+            try:
+                model_type.model_validate(section)
+            except ValidationError:
+                logger.debug(
+                    "Skipping invalid extracted_fields section {} during confidence derivation",
+                    field_name,
+                )
+                continue
+
+            sanitized[field_name] = section
+        return sanitized
+
     def _extract_output_contract_fields(
         self,
         state: Mapping[str, Any],
@@ -590,7 +626,9 @@ class EvidenceAgent:
         derived_confidence: Optional[float] = None
         if extracted_fields:
             try:
-                normalized_fields = ExtractedEvidenceFields(**extracted_fields)
+                normalized_fields = ExtractedEvidenceFields.model_validate(
+                    self._sanitize_extracted_fields_for_validation(extracted_fields)
+                )
                 derived_scores = normalized_fields.compute_field_confidence_scores()
                 if not field_confidence_scores:
                     field_confidence_scores = derived_scores

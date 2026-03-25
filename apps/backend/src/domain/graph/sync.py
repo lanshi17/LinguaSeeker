@@ -538,6 +538,12 @@ class GraphSyncService:
                     for field, details in resolution_details.items()
                     if field in self._CORE_FIELD_LABELS
                 )
+                if retryable and self._has_definitive_missing_core_fields(
+                    evidence_output,
+                    missing_core_fields,
+                    overall_conf,
+                ):
+                    retryable = False
                 return {
                     "pg_evidence_id": None,
                     "neo4j_synced": False,
@@ -1010,6 +1016,16 @@ class GraphSyncService:
         re.IGNORECASE,
     )
     _RE_GENE_SYMBOL = re.compile(r"\b([A-Z][A-Z0-9]{1,12})\b")
+    _RE_GENE_FROM_VARIANT_CONTEXT = re.compile(
+        r"\b([A-Z][A-Z0-9]{1,12})\b\s*(?=(?:NM_|NR_|XM_|XR_|ENST|c\.|p\.))",
+        re.IGNORECASE,
+    )
+    _NON_RETRYABLE_MISSING_FIELD_SECTIONS: Dict[str, tuple[str, ...]] = {
+        "gene_symbol": ("gene",),
+        "variant_hgvs": ("variant",),
+        "transcript_id": ("transcript_id",),
+        "disease_name": ("disease_chpo", "disease_icd10"),
+    }
 
     def _infer_missing_fields(
         self,
@@ -1094,26 +1110,54 @@ class GraphSyncService:
 
         variant_section = extracted.get("variant", {})
         if isinstance(variant_section, dict):
-            quote = variant_section.get("evidence_quote", "")
-            if isinstance(quote, str):
-                match = self._RE_GENE_SYMBOL.search(quote)
+            for key in ("variant_descriptor", "variant_name", "evidence_quote"):
+                candidate_text = variant_section.get(key, "")
+                if not isinstance(candidate_text, str):
+                    continue
+                match = self._RE_GENE_FROM_VARIANT_CONTEXT.search(candidate_text)
                 if match:
-                    candidate = match.group(1)
-                    if len(candidate) >= 2 and candidate not in (
-                        "THE",
-                        "AND",
-                        "FOR",
-                        "NOT",
-                        "DNA",
-                        "RNA",
-                        "PCR",
-                        "SNP",
-                        "VUS",
-                        "HET",
-                        "HOM",
-                    ):
+                    candidate = self._normalize_string(match.group(1))
+                    if candidate and self._RE_GENE_SYMBOL.fullmatch(candidate):
                         return candidate
         return None
+
+    def _has_definitive_missing_core_fields(
+        self,
+        evidence_output: Dict[str, Any],
+        missing_fields: List[str],
+        overall_conf: float,
+    ) -> bool:
+        if overall_conf > 0:
+            return False
+
+        extracted = self._as_dict(evidence_output.get("extracted_fields"))
+        if not extracted:
+            ps3 = self._normalize_ps3_payload(evidence_output.get("ps3_evidence"))
+            extracted = self._as_dict(ps3.get("extracted_fields"))
+        if not extracted:
+            return False
+
+        for field in missing_fields:
+            source_sections = self._NON_RETRYABLE_MISSING_FIELD_SECTIONS.get(field)
+            if not source_sections:
+                return False
+
+            explicit_absence = False
+            for section_name in source_sections:
+                section = self._as_dict(extracted.get(section_name))
+                if not section:
+                    continue
+
+                note = self._normalize_string(section.get("_note"))
+                confidence = self._coerce_optional_float(section.get("confidence"))
+                if note or confidence == 0.0:
+                    explicit_absence = True
+                    break
+
+            if not explicit_absence:
+                return False
+
+        return True
 
     def _resolve_structural_hint(
         self,

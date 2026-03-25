@@ -572,6 +572,82 @@ def test_graph_sync_skips_when_core_fields_missing(
     assert "gene_symbol" in result["missing_fields"]
 
 
+def test_graph_sync_real_case_noise_does_not_infer_hgvs_as_gene(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    class NoopNeo4j:
+        def __getattr__(self, _: str) -> Any:
+            return lambda *args, **kwargs: None
+
+    class GuardedPostgres:
+        def create_evidence_record(self, **_: Any) -> Any:
+            raise AssertionError("create_evidence_record should not run for skipped evidence")
+
+        def get_evidence_for_document(self, *_: Any, **__: Any) -> List[Any]:
+            return []
+
+    monkeypatch.setattr(sync_module, "get_neo4j_client", lambda: NoopNeo4j())
+    monkeypatch.setattr(sync_module, "get_postgres_client", lambda: GuardedPostgres())
+    monkeypatch.setattr(
+        sync_module,
+        "get_variation_data_service",
+        lambda: DummyVariationService(),
+    )
+    monkeypatch.setattr(
+        sync_module.GraphSyncService,
+        "_FAILURE_ARCHIVE_PATH",
+        tmp_path / "failures.jsonl",
+    )
+
+    service = sync_module.GraphSyncService()
+    result = service.sync_evidence(
+        "00000000-0000-0000-0000-000000000001",
+        {
+            "overall_confidence": 0.0,
+            "evidence_classification": "Uncertain Significance",
+            "ps3_evidence": {
+                "evidence_quality": {
+                    "overall_confidence": 0.0,
+                    "evidence_classification": "Uncertain Significance",
+                    "classification_reasoning": (
+                        "No gene symbol, transcript ID, or variant HGVS nomenclature is provided."
+                    ),
+                },
+            },
+            "extracted_fields": {
+                "gene": {
+                    "symbol": None,
+                    "confidence": 0.0,
+                    "_note": "No gene symbol explicitly mentioned in document.",
+                },
+                "transcript_id": {
+                    "transcript_id": None,
+                    "confidence": 0.0,
+                    "_note": "No transcript ID mentioned.",
+                },
+                "variant": {
+                    "hgvs_c": None,
+                    "hgvs_p": None,
+                    "confidence": 0.0,
+                    "evidence_quote": "[HGVS Reference]\n- c.jpg)",
+                    "_note": "No c. or p. notation available.",
+                },
+                "disease_chpo": {
+                    "disease_name": "Waardenburg's syndrome; Hirschsprung's disease",
+                    "confidence": 80.0,
+                },
+            },
+        },
+    )
+
+    assert result["skipped"] is True
+    assert result["reason"] == "missing_core_fields"
+    assert result["retryable"] is False
+    assert result["context"]["gene_symbol"] == ""
+    assert result["context"]["field_resolution"]["gene_symbol"]["status"] == "missing"
+    assert "gene_symbol" in result["missing_fields"]
+
+
 class TestExtractTranscriptFromHgvs:
     def test_refseq_with_version(self):
         result = sync_module.GraphSyncService._extract_transcript_from_hgvs("NM_000527.4:c.123A>G")

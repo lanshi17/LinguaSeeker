@@ -199,6 +199,63 @@ def test_extract_output_contract_fields_uses_state_extracted_fields_fallback() -
     assert fields["acmg_evidence_levels"]
 
 
+def test_extract_output_contract_fields_salvages_valid_sections_when_some_are_null() -> None:
+    agent = EvidenceAgent()
+    state = _make_processing_state(
+        ps3_evidence={
+            "evidence_quality": {
+                "overall_confidence": 0.0,
+            },
+        },
+        extracted_fields={
+            "gene": {
+                "symbol": None,
+                "confidence": 0.0,
+            },
+            "transcript_id": {
+                "transcript_id": None,
+                "confidence": 0.0,
+            },
+            "experiment_data": {
+                "assay_type": None,
+                "confidence": 0.0,
+            },
+            "disease_chpo": {
+                "disease_name": "Waardenburg's syndrome; Hirschsprung's disease",
+                "confidence": 80.0,
+            },
+            "species": {
+                "species_name": "Homo sapiens",
+                "is_human": True,
+                "confidence": 95.0,
+            },
+            "phenotype": {
+                "phenotype_description": "characteristic face and abdominal distention",
+                "confidence": 85.0,
+            },
+            "variant": {
+                "hgvs_c": None,
+                "confidence": 0.0,
+                "evidence_quote": "[HGVS Reference]\n- c.jpg)",
+            },
+        },
+        field_confidence_scores={},
+        overall_confidence=0.0,
+        evidence_classification="",
+        acmg_evidence_levels=[],
+    )
+
+    fields = agent._extract_output_contract_fields(state, "inconclusive")
+
+    assert fields["overall_confidence"] == 0.0
+    assert fields["field_confidence_scores"]["gene"] == 0.0
+    assert fields["field_confidence_scores"]["transcript_id"] == 0.0
+    assert fields["field_confidence_scores"]["experiment_data"] == 0.0
+    assert fields["field_confidence_scores"]["disease_chpo"] == 80.0
+    assert fields["field_confidence_scores"]["species"] == 95.0
+    assert fields["field_confidence_scores"]["phenotype"] == 85.0
+
+
 def test_build_context_limits_chars() -> None:
     rag = RAGComponent()
     results = [

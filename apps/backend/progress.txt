@@ -203,6 +203,36 @@ Additional Regression:
 
 ---
 
+Investigation Note: 2026-03-25 (Multi-variant graph sync limitation)
+
+Observed from a ClinVar-sourced PDF E2E run:
+- document_id: `db3b70f2-b6d5-46cb-bfca-af7f63b3dab4`
+- graph sync completed successfully for this paper:
+  - PostgreSQL evidence_record created
+  - Neo4j sync returned `neo4j_ok=True`
+- extracted core metadata was usable:
+  - gene_symbol=`BARD1`
+  - transcript_id=`NM_000465.2`
+  - disease_name=`Breast cancer, hereditary`
+
+Observed limitation:
+- multiple variants in one paper were collapsed into a single semicolon-joined string before graph persistence:
+  - `variant_hgvs_c = c.1972C>T; c.1935_1954dup; c.1526T>C`
+  - `variant_hgvs_p = p.Arg658Cys; p.Glu652fs; p.Ile509Thr`
+- ClinVar resolution was executed against the joined cDNA string as if it were one variant and returned "not found".
+- current `GraphSyncService` / `EvidenceRecord` flow writes one evidence record per sync call, so Neo4j also receives one merged variant representation for this paper.
+
+Conclusion:
+- this case is no longer a Neo4j insertion failure.
+- the current issue is multi-variant normalization and persistence granularity.
+- downstream ClinVar linking and graph retrieval can be inaccurate for papers that report multiple variants in one document.
+
+Deferred follow-up direction:
+- preferred future behavior: one paper with multiple extracted variants should fan out into multiple `EvidenceRecord` rows and multiple variant-level graph links, while preserving a backward-compatible top-level sync result for callers.
+- this note records the issue only; no code change was implemented for multi-variant fan-out in this step.
+
+---
+
 Implementation Update: 2026-03-03 (Failure contract unification - step 2)
 
 Completed:
