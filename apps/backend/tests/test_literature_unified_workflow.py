@@ -5,17 +5,16 @@ from src.domain.literature.unified.workflow import literature_unified_workflow
 
 
 @pytest.mark.asyncio
-async def test_unified_workflow_routes_to_pmc_for_doi(monkeypatch):
+async def test_unified_workflow_routes_to_crossref_for_doi(monkeypatch):
     async def fake_api_gateway(request):
-        assert request.provider == "pmc"
+        assert request.provider == "crossref"
         assert request.identifiers.get("doi") == "10.1000/xyz-123"
         return ApiGatewayResult(
-            provider="pmc",
+            provider="crossref",
             success=True,
             items=[
                 {
                     "title": "Example paper",
-                    "pmcid": "PMC1234567",
                     "doi": "10.1000/xyz-123",
                     "journal_title": "Nature",
                     "year": "2023",
@@ -24,7 +23,7 @@ async def test_unified_workflow_routes_to_pmc_for_doi(monkeypatch):
                 }
             ],
             warnings=[],
-            raw={"provider": "pmc"},
+            raw={"provider": "crossref"},
         )
 
     monkeypatch.setattr(
@@ -42,10 +41,20 @@ async def test_unified_workflow_routes_to_pmc_for_doi(monkeypatch):
 
     assert result["success"] is True
     assert result["route"]["used"] == "api"
-    assert result["route"]["api_provider"] == "pmc"
-    assert result["items"][0]["doi"] == "10.1000/xyz-123"
+    assert result["route"]["api_provider"] == "crossref"
     assert result["items"][0]["title"] == "Example paper"
-    assert "api" in result["raw"]
+    assert result["items"][0]["doi"] == "10.1000/xyz-123"
+    assert result["raw"]["api"]["source_trace"] == [
+        {
+            "provider": "crossref",
+            "attempt": 1,
+            "success": True,
+            "items_count": 1,
+            "downloads_count": 0,
+            "warnings": [],
+            "error": None,
+        }
+    ]
 
 
 @pytest.mark.asyncio

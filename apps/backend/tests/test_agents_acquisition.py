@@ -4,7 +4,9 @@ from typing import Any, cast
 
 import pytest
 
-from src.domain.literature import LiteratureAcquisitionAgent as LegacyLiteratureAcquisitionAgent
+from src.domain.literature import (
+    LiteratureAcquisitionAgent as LegacyLiteratureAcquisitionAgent,
+)
 from src.domain.literature import get_firecrawl_service as legacy_get_firecrawl_service
 from src.domain.literature import get_pubmed_service as legacy_get_pubmed_service
 from src.domain.literature.acquisition_agent import AcquisitionPlanItem
@@ -50,6 +52,11 @@ def test_run_acquisition_node_upload_marks_success(tmp_path) -> None:
 
     assert result["current_node"] == "acquisition"
     assert result["node_trace"]["acquisition"] == "success"
+    assert result["node_trace"]["acquisition_detail"] == {
+        "source": "upload",
+        "count": 1,
+        "items": [{"file_path": str(pdf_path)}],
+    }
     assert result["processing_steps"]["acquisition"]["status"] == "COMPLETED"
     assert result["file_paths"] == [str(pdf_path)]
 
@@ -112,4 +119,16 @@ def test_run_acquisition_node_pubmed_maps_plan(monkeypatch) -> None:
     assert result["pmids"] == ["12345"]
     assert acquisition_plan[0]["fingerprint"] == "pmid:12345"
     assert result["node_trace"]["acquisition"] == "success"
+    assert result["node_trace"]["acquisition_detail"] == {
+        "source": "pubmed",
+        "count": 1,
+        "items": [
+            {
+                "source": "pubmed",
+                "normalized_value": "12345",
+                "fingerprint": "pmid:12345",
+                "metadata": {"pmid": "12345"},
+            }
+        ],
+    }
     assert result["processing_steps"]["acquisition"]["status"] == "COMPLETED"

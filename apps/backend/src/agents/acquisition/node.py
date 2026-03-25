@@ -28,9 +28,42 @@ def _node_trace_map(value: object) -> dict[str, Any]:
     return {}
 
 
-def _mark_acquisition_success(updated: dict[str, Any], message: str) -> None:
+def _build_upload_acquisition_detail(file_paths: list[str]) -> dict[str, Any]:
+    return {
+        "source": "upload",
+        "count": len(file_paths),
+        "items": [{"file_path": path} for path in file_paths],
+    }
+
+
+def _build_planned_acquisition_detail(
+    source: str,
+    plan_items: list[dict[str, Any]],
+) -> dict[str, Any]:
+    return {
+        "source": source,
+        "count": len(plan_items),
+        "items": [
+            {
+                "source": item.get("source"),
+                "normalized_value": item.get("normalized_value"),
+                "fingerprint": item.get("fingerprint"),
+                "metadata": dict(item.get("metadata") or {}),
+            }
+            for item in plan_items
+        ],
+    }
+
+
+def _mark_acquisition_success(
+    updated: dict[str, Any],
+    message: str,
+    acquisition_detail: dict[str, Any] | None = None,
+) -> None:
     node_trace = _node_trace_map(updated.get("node_trace"))
     node_trace["acquisition"] = "success"
+    if acquisition_detail is not None:
+        node_trace["acquisition_detail"] = acquisition_detail
     updated["node_trace"] = node_trace
 
     processing_steps = normalize_processing_steps(
@@ -57,7 +90,11 @@ def run_acquisition_node(state: SupervisorState) -> SupervisorState:
         missing = [path for path in file_paths if not Path(path).is_file()]
         if missing:
             raise ValidationException(f"Files not found: {', '.join(missing)}")
-        _mark_acquisition_success(updated, "Acquisition completed")
+        _mark_acquisition_success(
+            updated,
+            "Acquisition completed",
+            acquisition_detail=_build_upload_acquisition_detail(file_paths),
+        )
         return cast(SupervisorState, cast(object, updated))
 
     agent = get_literature_acquisition_agent()
@@ -72,8 +109,13 @@ def run_acquisition_node(state: SupervisorState) -> SupervisorState:
     else:
         raise ValidationException(f"Unsupported acquisition source: {source}")
 
-    updated["acquisition_plan"] = [asdict(item) for item in plan_items]
-    _mark_acquisition_success(updated, "Acquisition completed")
+    acquisition_plan = [asdict(item) for item in plan_items]
+    updated["acquisition_plan"] = acquisition_plan
+    _mark_acquisition_success(
+        updated,
+        "Acquisition completed",
+        acquisition_detail=_build_planned_acquisition_detail(source, acquisition_plan),
+    )
     return cast(SupervisorState, cast(object, updated))
 
 

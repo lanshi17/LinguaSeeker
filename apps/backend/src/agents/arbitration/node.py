@@ -34,7 +34,9 @@ def run_arbitration_node(state: SupervisorState) -> SupervisorState:
     updated: dict[str, Any] = dict(state)
     existing_output = updated.get("evidence_output")
     ps3_evidence = (
-        existing_output.ps3_evidence if isinstance(existing_output, EvidenceOutput) else {}
+        existing_output.ps3_evidence
+        if isinstance(existing_output, EvidenceOutput)
+        else {}
     )
     inner_state = _dict_value(updated.get("_inner_processing_state"))
     inner_state.update(
@@ -44,7 +46,9 @@ def run_arbitration_node(state: SupervisorState) -> SupervisorState:
             "image_paths": _string_list(updated.get("image_paths")),
             "image_descriptions": _string_list(updated.get("image_descriptions")),
             "ps3_evidence": ps3_evidence,
-            "extracted_fields": _structured_fields_value(updated.get("extracted_fields")),
+            "extracted_fields": _structured_fields_value(
+                updated.get("extracted_fields")
+            ),
             "arbitration_confidence": updated.get("arbitration_confidence"),
             "graph_context": updated.get("graph_context"),
             "status": updated.get("workflow_status", "pending") or "pending",
@@ -52,7 +56,9 @@ def run_arbitration_node(state: SupervisorState) -> SupervisorState:
     )
 
     agent = EvidenceAgent()
-    final_state = agent.arbitrate_score(cast(ProcessingState, cast(object, inner_state)))
+    final_state = agent.arbitrate_score(
+        cast(ProcessingState, cast(object, inner_state))
+    )
     decision = agent.route_decision(final_state)
     final_strength = _dict_value(
         _dict_value(final_state.get("ps3_evidence")).get("ps3_step_4")
@@ -62,7 +68,7 @@ def run_arbitration_node(state: SupervisorState) -> SupervisorState:
         extracted_fields=_structured_fields_value(updated.get("extracted_fields")),
     )
 
-    updated["current_node"] = "arbitrate"
+    updated["current_node"] = "arbitration"
     updated["_inner_processing_state"] = final_state
     updated["arbitration_confidence"] = final_state.get("arbitration_confidence")
     updated["final_evidence_strength"] = final_strength
