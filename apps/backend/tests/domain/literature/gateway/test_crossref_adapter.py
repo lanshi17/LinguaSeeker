@@ -1,147 +1,70 @@
-from dataclasses import dataclass
-from typing import Any
-
 import pytest
 
-from src.domain.literature.gateway.adapters.crossref_adapter import (
-    CrossrefGatewayAdapter,
-)
-from src.domain.literature.gateway.api_gateway import (
-    ApiGatewayRequest,
-    ApiGatewayResult,
-)
-
-
-@dataclass
-class _RecordedCall:
-    args: tuple[Any, ...]
-    kwargs: dict[str, Any]
-
-
-async def _unexpected_search(*args: Any, **kwargs: Any) -> ApiGatewayResult:
-    raise AssertionError(f"search should not be called: args={args}, kwargs={kwargs}")
-
-
-def _unsupported_download_result() -> ApiGatewayResult:
-    return ApiGatewayResult(
-        provider="crossref",
-        success=False,
-        items=[],
-        downloads=[],
-        warnings=["crossref_download_unsupported"],
-    )
+from src.domain.literature.gateway.contracts import ApiGatewayRequest, ApiGatewayResult
+from src.domain.literature.gateway.adapters.crossref_adapter import CrossrefAdapter
 
 
 @pytest.mark.asyncio
-async def test_crossref_adapter_delegates_search_with_doi_filter() -> None:
-    recorded: _RecordedCall | None = None
-
-    async def fake_search(
+async def test_crossref_adapter_routes_search_through_existing_helper(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_call_crossref(
         query: str | None,
         limit: int,
         raw: bool,
-        filter_expr: str | None,
-        api_params: dict[str, Any] | None,
+        filter_expr: str | None = None,
+        api_params: dict[str, str] | None = None,
     ) -> ApiGatewayResult:
-        nonlocal recorded
-        recorded = _RecordedCall((query, limit, raw, filter_expr, api_params), {})
+        assert query == "ldlr"
+        assert limit == 7
+        assert raw is True
+        assert filter_expr == "doi:10.1000/xyz-123"
+        assert api_params == {"mailto": "tests@example.org"}
         return ApiGatewayResult(
             provider="crossref",
             success=True,
-            items=[{"doi": "10.1000/xyz-123", "title": "Crossref result"}],
-            warnings=[],
+            items=[{"doi": "10.1000/xyz-123", "title": "LDLR paper"}],
+            warnings=["crossref-warning"],
+            raw={"provider": "crossref"},
+            meta={"total": 1},
         )
 
-    adapter = CrossrefGatewayAdapter(
-        search_fn=fake_search,
-        unsupported_download_factory=_unsupported_download_result,
+    monkeypatch.setattr(
+        "src.domain.literature.gateway.adapters.crossref_adapter.call_crossref",
+        fake_call_crossref,
     )
 
-    result = await adapter.execute(
-        ApiGatewayRequest(
-            provider="crossref",
-            action="search",
-            query="familial hypercholesterolemia",
-            identifiers={"doi": "10.1000/xyz-123", "issn": "1234-5678"},
-            limit=9,
-            raw=True,
-            params={"source": "crossref-freeze"},
-        )
-    )
-
-    assert recorded is not None
-    assert recorded.args == (
-        "familial hypercholesterolemia",
-        9,
-        True,
-        "doi:10.1000/xyz-123",
-        {"source": "crossref-freeze"},
-    )
-    assert result.provider == "crossref"
-    assert result.success is True
-    assert result.items == [{"doi": "10.1000/xyz-123", "title": "Crossref result"}]
-    assert result.warnings == []
-
-
-@pytest.mark.asyncio
-async def test_crossref_adapter_falls_back_to_issn_filter_when_doi_missing() -> None:
-    recorded: _RecordedCall | None = None
-
-    async def fake_search(
-        query: str | None,
-        limit: int,
-        raw: bool,
-        filter_expr: str | None,
-        api_params: dict[str, Any] | None,
-    ) -> ApiGatewayResult:
-        nonlocal recorded
-        recorded = _RecordedCall((query, limit, raw, filter_expr, api_params), {})
-        return ApiGatewayResult(
-            provider="crossref",
-            success=True,
-            items=[{"issn": "1234-5678", "title": "ISSN fallback"}],
-            warnings=[],
-        )
-
-    adapter = CrossrefGatewayAdapter(
-        search_fn=fake_search,
-        unsupported_download_factory=_unsupported_download_result,
-    )
-
+    adapter = CrossrefAdapter()
     result = await adapter.execute(
         ApiGatewayRequest(
             provider="crossref",
             action="search",
             query="ldlr",
-            identifiers={"issn": "1234-5678"},
-            limit=5,
-            raw=False,
-            params={"source": "issn-freeze"},
+            identifiers={"doi": "10.1000/xyz-123"},
+            limit=7,
+            raw=True,
+            params={"mailto": "tests@example.org"},
         )
     )
 
-    assert recorded is not None
-    assert recorded.args == (
-        "ldlr",
-        5,
-        False,
-        "issn:1234-5678",
-        {"source": "issn-freeze"},
-    )
     assert result.provider == "crossref"
     assert result.success is True
-    assert result.items == [{"issn": "1234-5678", "title": "ISSN fallback"}]
+    assert result.items == [{"doi": "10.1000/xyz-123", "title": "LDLR paper"}]
+    assert result.warnings == ["crossref-warning"]
+    assert result.raw == {"provider": "crossref"}
+    assert result.meta == {"total": 1}
 
 
 @pytest.mark.asyncio
-async def test_crossref_adapter_marks_download_as_unsupported() -> None:
-    adapter = CrossrefGatewayAdapter(
-        search_fn=_unexpected_search,
-        unsupported_download_factory=_unsupported_download_result,
-    )
+async def test_crossref_adapter_download_remains_unsupported() -> None:
+    adapter = CrossrefAdapter()
 
     result = await adapter.execute(
-        ApiGatewayRequest(provider="crossref", action="download", query="ldlr")
+        ApiGatewayRequest(
+            provider="crossref",
+            action="download",
+            query="ldlr",
+        )
     )
 
     assert result.provider == "crossref"

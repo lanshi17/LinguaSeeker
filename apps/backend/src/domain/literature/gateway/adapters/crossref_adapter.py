@@ -1,48 +1,51 @@
-from typing import Any, Awaitable, Callable, Dict, Optional
+from __future__ import annotations
 
-from src.domain.literature.gateway.base import LiteratureGatewayAdapter
+from typing import Any, Awaitable, Callable, Optional, override
 
-CrossrefSearchCallable = Callable[
-    [Optional[str], int, bool, Optional[str], Optional[Dict[str, Any]]],
-    Awaitable[Any],
+from src.domain.literature.gateway.base import ProviderAdapter
+from src.domain.literature.gateway.contracts import ApiGatewayRequest, ApiGatewayResult
+
+CrossrefSearchCall = Callable[
+    [str | None, int, bool, str | None, Optional[dict[str, Any]]],
+    Awaitable[ApiGatewayResult],
 ]
-CrossrefUnsupportedDownloadFactory = Callable[[], Any]
 
 
-class CrossrefGatewayAdapter(LiteratureGatewayAdapter):
+async def call_crossref(
+    query: str | None,
+    limit: int,
+    raw: bool,
+    filter_expr: str | None = None,
+    api_params: Optional[dict[str, Any]] = None,
+) -> ApiGatewayResult:
+    raise NotImplementedError("Crossref search helper is not configured")
+
+
+class CrossrefAdapter(ProviderAdapter):
     provider: str = "crossref"
 
-    def __init__(
-        self,
-        search_fn: CrossrefSearchCallable,
-        unsupported_download_factory: CrossrefUnsupportedDownloadFactory,
-    ) -> None:
-        self._search_fn = search_fn
-        self._unsupported_download_factory = unsupported_download_factory
+    def __init__(self, search_call: CrossrefSearchCall | None = None) -> None:
+        self._search_call = search_call or call_crossref
 
-    async def execute(self, request: Any) -> Any:
-        identifiers = request.identifiers or {}
-        api_params = request.params or {}
-
+    @override
+    async def execute(self, request: ApiGatewayRequest) -> ApiGatewayResult:
         if request.action == "download":
-            return self._unsupported_download_factory()
+            return ApiGatewayResult(
+                provider="crossref",
+                success=False,
+                items=[],
+                warnings=["crossref_download_unsupported"],
+                downloads=[],
+            )
 
-        return await self._search_fn(
+        identifiers = request.identifiers or {}
+        filter_expr = None
+        if doi := identifiers.get("doi"):
+            filter_expr = f"doi:{doi}"
+        return await self._search_call(
             request.query,
             request.limit,
             request.raw,
-            _crossref_filter_from_identifiers(identifiers),
-            api_params,
+            filter_expr,
+            request.params or {},
         )
-
-
-def _crossref_filter_from_identifiers(
-    identifiers: Dict[str, Optional[str]],
-) -> Optional[str]:
-    doi = identifiers.get("doi")
-    issn = identifiers.get("issn")
-    if doi:
-        return f"doi:{doi}"
-    if issn:
-        return f"issn:{issn}"
-    return None

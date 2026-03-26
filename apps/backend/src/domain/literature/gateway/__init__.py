@@ -1,19 +1,13 @@
 from .api_gateway import ApiGatewayRequest, ApiGatewayResult, call_api_gateway
-from .base import LiteratureGatewayAdapter
-from .registry import (
-    DuplicateGatewayProviderError,
-    GatewayAdapterRegistry,
-    UnknownGatewayProviderError,
-)
+from .base import ProviderAdapter
+from .registry import ProviderAdapterRegistry
 from .web_gateway import WebGatewayRequest, WebGatewayResult, call_auto_web_gateway
 
 __all__ = [
     "ApiGatewayRequest",
     "ApiGatewayResult",
-    "DuplicateGatewayProviderError",
-    "GatewayAdapterRegistry",
-    "LiteratureGatewayAdapter",
-    "UnknownGatewayProviderError",
+    "ProviderAdapter",
+    "ProviderAdapterRegistry",
     "WebGatewayRequest",
     "WebGatewayResult",
     "call_api_gateway",

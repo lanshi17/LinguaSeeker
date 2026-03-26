@@ -37,3 +37,10 @@
 - Why behavior looked confusing: the parser wrapper catches MinerU exceptions and then tries PaddleOCR fallback, so the surfaced error became OCR-related instead of the real download-call bug.
 - Fix: remove unsupported kwarg and keep the download call signature aligned with `src/utils/file_utils.py::download_file(url, destination, timeout=...)`.
 - Prevention: add focused regression tests for the MinerU “done + full_zip_url” branch and avoid passing non-existent helper kwargs without updating shared utility signatures and tests together.
+
+2026-03-26 - merge verification must catch compatibility import regressions before finalizing conflict resolution
+- Symptom: focused merge verification failed during `tests/unit/test_domain_graph.py` collection with `ImportError: cannot import name 'DatabaseConfig' from 'src.config'` after the staged acquisition-adapter merge looked otherwise resolved.
+- Root cause: the merge kept the newer `src.config` structure but dropped the legacy `DatabaseConfig` export that older MinIO/document-storage code still imported.
+- Additional root cause: the merged graph-sync version regressed noisy-HGVS handling, making an explicit-missing-fields case incorrectly `retryable=True`.
+- Fix: restore `DatabaseConfig` compatibility (and point legacy consumers at the existing compatibility wrapper), plus reintroduce the non-retryable missing-core-field logic and safer gene inference for noisy variant text.
+- Prevention: before ending any merge, run targeted tests that cover both compatibility imports and domain skip-path behavior, not just newly added adapter tests.

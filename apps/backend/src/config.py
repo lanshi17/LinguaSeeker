@@ -3,8 +3,7 @@
 import os
 from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -23,13 +22,6 @@ class VectorBackend(str, Enum):
 
     QDRANT = "qdrant"
     MILVUS = "milvus"
-
-
-@dataclass(frozen=True)
-class LLMTriplet:
-    api_key: str
-    base_url: str
-    model: str
 
 
 @dataclass
@@ -254,14 +246,15 @@ class MinerUConfig:
     status_url: str = "https://mineru.net/api/v4/extract/task/"  # https://mineru.net/api/v4/extract/task/{task_id}
     batch_status_url: str = "https://mineru.net/api/v4/extract-results/batch/"  # https://mineru.net/api/v4/extract-results/batch/{batch_id}
     model_version: str = "vlm"
-    extra_formats: list[str] = field(default_factory=lambda: ["html"])
+    extra_formats: list[str] = None
     api_token: str = ""
     pipeline_id: str = ""
     timeout: int = 300
     max_file_size_mb: int = 100
 
     def __post_init__(self):
-        pass
+        if self.extra_formats is None:
+            self.extra_formats = ["html"]
 
 
 @dataclass
@@ -282,7 +275,6 @@ class PostgreSQLConfig:
     host: str = "localhost"
     port: int = 5432
     database: str = "acmg_ps3"
-    schema: str = "public"
     user: str = "postgres"
     password: str = ""
     pool_size: int = 10
@@ -365,7 +357,7 @@ class AppConfig:
     """应用配置"""
 
     def __init__(self):
-        self.app_name: str = "ACMG-Lingua"
+        self.app_name: str = "ACMG-PS3 Intelligence System"
         self.app_version: str = "1.0.0"
         self.environment: Environment = Environment.DEVELOPMENT
         self.debug: bool = True
@@ -377,10 +369,10 @@ class AppConfig:
         self.port: int = 8000
 
         # 服务配置
-        self.llm: LLMConfig = LLMConfig()
-        self.embedding: EmbeddingConfig = EmbeddingConfig()
-        self.rerank: RerankConfig = RerankConfig()
-        self.mineru: MinerUConfig = MinerUConfig()
+        self.llm: Optional[LLMConfig] = LLMConfig()
+        self.embedding: Optional[EmbeddingConfig] = EmbeddingConfig()
+        self.rerank: Optional[RerankConfig] = RerankConfig()
+        self.mineru: Optional[MinerUConfig] = MinerUConfig()
 
         # 数据库配置
         self.redis: RedisConfig = RedisConfig()
@@ -414,11 +406,6 @@ class AppConfig:
         self.node_acmg_timeout_seconds: int = 900
 
     @staticmethod
-    def _project_root() -> Path:
-        # src/config.py -> <project_root>/src/config.py
-        return Path(__file__).resolve().parents[1]
-
-    @staticmethod
     def _str_to_bool(value: Optional[str], default: bool) -> bool:
         if value is None:
             return default
@@ -432,38 +419,24 @@ class AppConfig:
             # python-dotenv is optional; skip if unavailable
             pass
         else:
-            project_root = AppConfig._project_root()
-
             # 基础.env
-            load_dotenv(dotenv_path=project_root / ".env")
+            load_dotenv()
 
             # 环境特定配置（如 .env.development）
             env_name = os.getenv("ENVIRONMENT", "development").lower()
-            env_path = project_root / f".env.{env_name}"
-            if env_path.exists():
+            env_path = os.path.join(os.getcwd(), f".env.{env_name}")
+            if os.path.exists(env_path):
                 load_dotenv(dotenv_path=env_path, override=True)
-
-            # 本地开发默认覆盖（例如 Celery/脚本启动时未显式传 --env-file）
-            env_local_path = project_root / ".env.local"
-            if env_local_path.exists():
-                load_dotenv(dotenv_path=env_local_path, override=True)
 
             # 显式ENV_FILE优先级最高
             env_file = os.getenv("ENV_FILE")
             if env_file:
-                env_file_path = Path(env_file)
-                if not env_file_path.is_absolute():
-                    root_candidate = project_root / env_file_path
-                    cwd_candidate = Path.cwd() / env_file_path
-                    if root_candidate.exists():
-                        env_file_path = root_candidate
-                    else:
-                        env_file_path = cwd_candidate
-                if env_file_path.exists():
+                env_file_path = os.path.join(os.getcwd(), env_file)
+                if os.path.exists(env_file_path):
                     load_dotenv(dotenv_path=env_file_path, override=True)
 
     @classmethod
-    def from_env(cls) -> "AppConfig":
+    def from_env(cls):
         """从环境变量加载配置"""
         cls._load_dotenv()
         cfg = cls()
@@ -542,7 +515,6 @@ class AppConfig:
         cfg.postgresql.host = os.getenv("POSTGRES_HOST", cfg.postgresql.host)
         cfg.postgresql.port = int(os.getenv("POSTGRES_PORT", cfg.postgresql.port))
         cfg.postgresql.database = os.getenv("POSTGRES_DB", cfg.postgresql.database)
-        cfg.postgresql.schema = os.getenv("POSTGRES_SCHEMA", cfg.postgresql.schema)
         cfg.postgresql.user = os.getenv("POSTGRES_USER", cfg.postgresql.user)
         cfg.postgresql.password = os.getenv(
             "POSTGRES_PASSWORD", cfg.postgresql.password
@@ -752,7 +724,7 @@ class AppConfig:
 # Pydantic配置类（保留原有兼容性）
 class Settings(BaseSettings):
     # ==================== 应用配置 ====================
-    app_name: str = "ACMG-Lingua"
+    app_name: str = "ACMG-PS3 Intelligence System"
     app_version: str = "3.0.0"
     api_prefix: str = "/api/v1"
     cors_origins: str = '["*"]'  # Updated to match .env.local
@@ -1010,6 +982,13 @@ class Settings(BaseSettings):
     )
 
 
+@dataclass(frozen=True)
+class LLMTriplet:
+    api_key: str
+    base_url: str
+    model: str
+
+
 def resolve_llm_triplet(settings: Settings, role: str) -> LLMTriplet:
     valid_roles: set[str] = {
         "retrieval",
@@ -1047,7 +1026,7 @@ class ConfigManager:
     def __init__(self, settings: Settings):
         self.settings = settings
 
-    def get_agent_config(self, role: str) -> dict[str, str | int | float | None]:
+    def get_agent_config(self, role: str) -> dict:
         """获取指定角色的智能体配置"""
         if role not in {
             "retrieval",
@@ -1071,7 +1050,7 @@ class ConfigManager:
             "max_retries": self.settings.llm_max_retries,
         }
 
-    def get_database_config(self, db_type: str) -> dict[str, str | int | None]:
+    def get_database_config(self, db_type: str) -> dict:
         """获取数据库配置"""
         if db_type == "redis":
             return {
@@ -1101,7 +1080,7 @@ class ConfigManager:
         else:
             raise ValueError(f"Unknown database type: {db_type}")
 
-    def get_vector_db_config(self) -> dict[str, str | int | bool | None]:
+    def get_vector_db_config(self) -> dict:
         """获取向量数据库配置"""
         if self.settings.vector_db.lower() == "qdrant":
             return {
@@ -1127,19 +1106,12 @@ class ConfigManager:
             raise ValueError(f"Unknown vector database: {self.settings.vector_db}")
 
 
-def _build_settings() -> Settings:
-    return Settings()  # pyright: ignore[reportCallIssue]
-
-
 _settings: Settings | None = None
 
 
 class _LazySettingsProxy:
     def __getattr__(self, name: str) -> Any:
         return getattr(get_settings(), name)
-
-    def use_agent_workflow(self, task_type: str) -> bool:
-        return get_settings().use_agent_workflow(task_type)
 
     def __repr__(self) -> str:
         if _settings is None:
@@ -1153,7 +1125,7 @@ settings = _LazySettingsProxy()
 def get_settings() -> Settings:
     global _settings
     if _settings is None:
-        _settings = _build_settings()
+        _settings = cast(Settings, Settings())
     return _settings
 
 
@@ -1165,4 +1137,3 @@ def __getattr__(name: str):
 
 # 全局配置实例
 app_config = AppConfig.from_env()
-database_config = DatabaseConfig.from_env()

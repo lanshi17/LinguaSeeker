@@ -995,3 +995,21 @@ Notes:
 - The retained PTY buffer only captured progress output rather than pytest's final textual summary, but the process exit code was successful.
 - Per current instruction, waiting on additional terminal output was skipped once the long-running verification had effectively stalled from an output perspective.
 - This update records the current branch as free of the previously investigated legacy document-API integration blocker.
+
+---
+
+Implementation Update: 2026-03-26 (acquisition adapter merge resolution)
+
+Completed:
+- Finalized the in-progress merge that brought the verified acquisition-adapter rollout into `yangzs-agents`.
+- Kept the provider-adapter gateway structure and adapter test coverage for PMC / Crossref / JStage / DOAJ / Unpaywall.
+- Preserved the stricter graph-sync skip behavior for noisy HGVS evidence so missing core fields remain non-retryable when the payload explicitly indicates fields are absent.
+- Restored legacy `DatabaseConfig` compatibility for MinIO/document storage imports during merge verification.
+
+Verification:
+- `uv run pytest -q tests/unit/test_domain_graph.py` -> `25 passed, 2 warnings`
+- `uv run pytest -q tests/test_api_gateway_download.py tests/domain/literature/gateway tests/test_agents_acquisition.py` -> `26 passed`
+
+Notes:
+- Focused verification for the merged gateway/acquisition/graph-sync paths is green.
+

@@ -73,6 +73,40 @@ def test_run_acquisition_node_upload_raises_for_missing_files() -> None:
         )
 
 
+def test_run_acquisition_node_upload_does_not_instantiate_planner(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    from src.agents.acquisition import node as acquisition_node
+
+    pdf_path = tmp_path / "upload.pdf"
+    pdf_path.write_text("synthetic")
+
+    monkeypatch.setattr(
+        acquisition_node,
+        "get_literature_acquisition_agent",
+        lambda: (_ for _ in ()).throw(AssertionError("planner should not be used")),
+    )
+
+    result = acquisition_node.run_acquisition_node(
+        cast(
+            SupervisorState,
+            cast(
+                object,
+                {
+                    "source": "upload",
+                    "file_paths": [str(pdf_path)],
+                    "node_trace": {},
+                    "processing_steps": default_processing_steps(),
+                },
+            ),
+        )
+    )
+
+    assert result["current_node"] == "acquisition"
+    assert result["processing_steps"]["acquisition"]["status"] == "COMPLETED"
+    assert "acquisition_plan" not in result
+
+
 def test_run_acquisition_node_pubmed_maps_plan(monkeypatch) -> None:
     from src.agents.acquisition import node as acquisition_node
 

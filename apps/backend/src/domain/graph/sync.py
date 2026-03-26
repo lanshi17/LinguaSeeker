@@ -221,20 +221,27 @@ class GraphSyncService:
             cfg, "evidence_review_floor", max(self._validity_threshold - 20, 0.0)
         )
         self._missing_field_alert_threshold: int = int(
-            getattr(cfg, "evidence_failure_alert_threshold", 5)
+            getattr(
+                cfg,
+                "evidence_failure_alert_threshold",
+                self._MISSING_FIELD_ALERT_THRESHOLD,
+            )
         )
-        configured_archive_path = getattr(
+        configured_failure_archive_path = getattr(
             cfg,
             "evidence_failure_archive_path",
             None,
         )
-        archive_path_value = (
-            configured_archive_path
-            if configured_archive_path
-            and str(configured_archive_path) != "logs/evidence_failure_archive.jsonl"
-            else self._FAILURE_ARCHIVE_PATH
-        )
-        self._failure_archive_path: Path = Path(archive_path_value).expanduser()
+        configured_fields = set(getattr(cfg, "model_fields_set", set()))
+        if (
+            configured_failure_archive_path
+            and "evidence_failure_archive_path" in configured_fields
+        ):
+            self._failure_archive_path = Path(
+                configured_failure_archive_path
+            ).expanduser()
+        else:
+            self._failure_archive_path = self._FAILURE_ARCHIVE_PATH.expanduser()
         logger.info("GraphSyncService initialized")
 
     # ==================== 核心同步入口 ====================
@@ -538,7 +545,7 @@ class GraphSyncService:
                     for field, details in resolution_details.items()
                     if field in self._CORE_FIELD_LABELS
                 )
-                if retryable and self._has_definitive_missing_core_fields(
+                if self._has_definitive_missing_core_fields(
                     evidence_output,
                     missing_core_fields,
                     overall_conf,
