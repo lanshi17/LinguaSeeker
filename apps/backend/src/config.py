@@ -363,7 +363,7 @@ class AppConfig:
         self.debug: bool = True
 
         # API配置
-        self.api_prefix: str = "/api"
+        self.api_prefix: str = "/api/v1"
         self.api_version: str = "v1"
         self.host: str = "0.0.0.0"
         self.port: int = 8000

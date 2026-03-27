@@ -300,7 +300,7 @@ export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ 
           onChange={(e) => setComposerText(e.target.value)}
           rows={3}
           placeholder={showComposer ? 'Type your answer…' : 'Start clarification to enable answering…'}
-          disabled={busy || !showComposer || transcriptMissing}
+          disabled={busy || !showComposer || transcriptMissing || !canClarify}
           aria-describedby={transcriptMissing ? 'agent-chat-transcript-missing' : undefined}
         />
         <div className="agent-chat__actions">
