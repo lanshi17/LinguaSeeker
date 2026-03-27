@@ -95,17 +95,17 @@ export const TaskNewPage: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="panel">
-        <div className="panel-header">
-          <div>
-            <div style={{ fontWeight: 900 }}>Create Task</div>
+          <div className="panel-header">
+            <div>
+              <h2 style={{ fontWeight: 900, margin: 0, fontSize: 16 }}>Clarification</h2>
+              <div className="muted" style={{ fontSize: 12 }}>
+                Clarification rounds: {interactionRound}/2
+              </div>
+            </div>
             <div className="muted" style={{ fontSize: 12 }}>
-              Clarification rounds: {interactionRound}/2
+              OpenAPI interaction expects a free-text prompt; we format the structured form into a prompt.
             </div>
           </div>
-          <div className="muted" style={{ fontSize: 12 }}>
-            OpenAPI interaction expects a free-text prompt; we format the structured form into a prompt.
-          </div>
-        </div>
         <div className="panel-body">
           <div className="row">
             <label className="col">
@@ -154,10 +154,13 @@ export const TaskNewPage: React.FC = () => {
 
       <div className="panel">
         <div className="panel-header">
-          <div style={{ fontWeight: 900 }}>Next</div>
-          <div className="muted" style={{ fontSize: 12 }}>
-            {ready ? 'Task form ready' : 'Complete clarification to continue'}
+          <div>
+            <h2 style={{ fontWeight: 900, margin: 0, fontSize: 16 }}>Task-sheet confirmation</h2>
+            <div className="muted" style={{ fontSize: 12 }}>
+              {ready ? 'Task form ready' : 'Complete clarification to continue'}
+            </div>
           </div>
+          <div className="muted" style={{ fontSize: 12 }}>Confirm, then choose a branch.</div>
         </div>
         <div className="panel-body">
           {!ready ? (
@@ -190,54 +193,77 @@ export const TaskNewPage: React.FC = () => {
 
               <div className="row">
                 <div className="col" style={{ minWidth: 320 }}>
-                  <div style={{ fontWeight: 800 }}>Upload PDFs/DOCX</div>
+                  <h3 style={{ fontWeight: 800, margin: 0 }}>Branch actions</h3>
                   <div className="muted" style={{ marginTop: 6 }}>
-                    Max 10 files, 10MB each, 50MB total.
+                    Choose whether to upload documents or continue to candidate retrieval.
                   </div>
-                  <div style={{ marginTop: 10 }}>
-                    <input
-                      type="file"
-                      multiple
-                      accept=".pdf,.docx"
-                      onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-                    />
-                  </div>
-                  {files.length > 0 ? (
-                    <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
-                      Selected: {files.map((f) => f.name).join(', ')}
+                  <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                    <div>
+                      <div style={{ fontWeight: 800 }}>Upload PDFs/DOCX</div>
+                      <div className="muted" style={{ marginTop: 6 }}>
+                        Max 10 files, 10MB each, 50MB total.
+                      </div>
+                      <div style={{ marginTop: 10 }}>
+                        <input
+                          type="file"
+                          multiple
+                          accept=".pdf,.docx"
+                          onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+                        />
+                      </div>
+                      {files.length > 0 ? (
+                        <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+                          Selected: {files.map((f) => f.name).join(', ')}
+                        </div>
+                      ) : null}
+                      <div style={{ marginTop: 10 }}>
+                        <button
+                          type="button"
+                          onClick={submitUpload}
+                          disabled={busy || files.length === 0 || !confirmedRequestId}
+                          style={{
+                            padding: '10px 14px',
+                            borderRadius: 12,
+                            border: '1px solid var(--border)',
+                            background: 'rgba(82,196,26,0.16)',
+                            color: 'var(--text)',
+                            cursor: (busy || !confirmedRequestId) ? 'not-allowed' : 'pointer',
+                            opacity: (!confirmedRequestId || files.length === 0) ? 0.5 : 1
+                          }}
+                        >
+                          Submit upload
+                        </button>
+                      </div>
                     </div>
-                  ) : null}
-                  <div style={{ marginTop: 10 }}>
-                    <button
-                      type="button"
-                      onClick={submitUpload}
-                      disabled={busy || files.length === 0 || !confirmedRequestId}
-                      style={{
-                        padding: '10px 14px',
-                        borderRadius: 12,
-                        border: '1px solid var(--border)',
-                        background: 'rgba(82,196,26,0.16)',
-                        color: 'var(--text)',
-                        cursor: (busy || !confirmedRequestId) ? 'not-allowed' : 'pointer',
-                        opacity: (!confirmedRequestId || files.length === 0) ? 0.5 : 1
-                      }}
-                    >
-                      Submit upload
-                    </button>
-                  </div>
-                </div>
 
-                <div className="col" style={{ minWidth: 320 }}>
-                  <div style={{ fontWeight: 800 }}>PubMed candidates</div>
-                  <div className="muted" style={{ marginTop: 6 }}>
-                    Search literature, select 1–10 PMIDs.
-                  </div>
-                  <div style={{ marginTop: 10 }}>
-                    {confirmedRequestId ? (
-                      <Link to="/tasks/pubmed/candidates">Go to candidates</Link>
-                    ) : (
-                      <span className="muted" style={{ fontSize: 12 }}>Confirmation required</span>
-                    )}
+                    <div>
+                      <div style={{ fontWeight: 800 }}>PubMed candidates</div>
+                      <div className="muted" style={{ marginTop: 6 }}>
+                        Search literature, select 1–10 PMIDs.
+                      </div>
+                      <div style={{ marginTop: 10 }}>
+                        {confirmedRequestId ? (
+                          <button
+                            type="button"
+                            onClick={() => navigate('/tasks/pubmed/candidates')}
+                            disabled={busy}
+                            style={{
+                              padding: '10px 14px',
+                              borderRadius: 12,
+                              border: '1px solid var(--border)',
+                              background: 'rgba(24,144,255,0.1)',
+                              color: 'var(--text)',
+                              cursor: busy ? 'not-allowed' : 'pointer',
+                              opacity: busy ? 0.5 : 1
+                            }}
+                          >
+                            Go to candidates
+                          </button>
+                        ) : (
+                          <span className="muted" style={{ fontSize: 12 }}>Confirmation required</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -44,3 +44,12 @@
 - Additional root cause: the merged graph-sync version regressed noisy-HGVS handling, making an explicit-missing-fields case incorrectly `retryable=True`.
 - Fix: restore `DatabaseConfig` compatibility (and point legacy consumers at the existing compatibility wrapper), plus reintroduce the non-retryable missing-core-field logic and safer gene inference for noisy variant text.
 - Prevention: before ending any merge, run targeted tests that cover both compatibility imports and domain skip-path behavior, not just newly added adapter tests.
+
+2026-03-27 - Route prefix mismatch caused contract-test false 404s
+- Symptom: `tests/integration/test_error_contract.py::test_upload_wrong_content_type_returns_contract` expected 415 but got 404 for `POST /api/v1/pdf/upload`.
+- Root cause: backend mounted routes under `AppConfig.api_prefix="/api"` while M2 tests (and API contract) call `/api/v1/...`.
+- Fix: set `AppConfig.api_prefix` to `"/api/v1"` in `src/config.py`.
+- Verification: targeted test passed and M2-focused slice passed:
+  - `uv run pytest -q tests/integration/test_error_contract.py::test_upload_wrong_content_type_returns_contract`
+  - `uv run pytest -q tests/integration/test_m2_interaction_clarification.py tests/integration/test_m2_confirmation_contract.py tests/integration/test_m2_upload_branch_handoff.py tests/integration/test_m2_candidates_handoff.py`
+- Prevention: keep `AppConfig.api_prefix` aligned with `Settings.api_prefix` / frozen tests; treat 404 vs 415 as a routing/prefix signal first, not a validation-path bug.

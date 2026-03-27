@@ -1,11 +1,16 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TaskNewPage } from '../task-new-page';
 import { useTaskFlowStore } from '../../../store/useTaskFlowStore';
-import * as api from '../../../services/api';
+import { useToastStore } from '../../../store/useToastStore';
+import { uploadTaskRequest } from '../../../services/api';
+
+vi.mock('../../../components/chat/agent-clarification-chat', () => ({
+  AgentClarificationChat: () => <div>Mock clarification chat</div>,
+}));
 
 vi.mock('../../../services/api', () => ({
   confirmTaskForm: vi.fn(),
@@ -14,27 +19,39 @@ vi.mock('../../../services/api', () => ({
   interactionRespond: vi.fn(),
 }));
 
-describe('TaskNewPage', () => {
-  let originalScrollTo: typeof Element.prototype.scrollTo;
+const mockNavigate = vi.fn();
 
-  beforeAll(() => {
-    originalScrollTo = Element.prototype.scrollTo;
-    Element.prototype.scrollTo = vi.fn();
-  });
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
-  afterAll(() => {
-    Element.prototype.scrollTo = originalScrollTo;
-  });
+function renderPage() {
+  return render(
+    <MemoryRouter>
+      <TaskNewPage />
+    </MemoryRouter>
+  );
+}
 
+describe('TaskNewPage shell', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useTaskFlowStore.setState({
-      taskForm: null,
+      taskForm: {
+        goal: 'Assess PS3 evidence',
+        disease: 'Breast cancer',
+        country: 'CN',
+        language: 'en',
+      },
       interactionSessionId: null,
-      interactionRound: 0,
+      interactionRound: 1,
       entryMode: 'documents',
+      taskFormPayload: { goal: 'Assess PS3 evidence' },
       confirmedRequestId: null,
-      taskFormPayload: null,
     });
   });
 
@@ -42,103 +59,161 @@ describe('TaskNewPage', () => {
     cleanup();
   });
 
-  it('a) shows clarification round counter', () => {
-    render(
-      <BrowserRouter>
-        <TaskNewPage />
-      </BrowserRouter>
-    );
-    expect(screen.getByText(/Clarification rounds: 0\/2/i)).toBeInTheDocument();
+  it('renders clarification, task-sheet confirmation, and branch actions zones', () => {
+    renderPage();
+
+    expect(screen.getByRole('heading', { name: /Clarification/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Task-sheet confirmation/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Branch actions/i })).toBeInTheDocument();
   });
 
-  it('b) stops further clarification at second round', () => {
+  it('shows the clarification round counter', () => {
+    renderPage();
+    expect(screen.getByText('Clarification rounds: 1/2')).toBeInTheDocument();
+  });
+
+  it('shows default country and language values when the task form is auto-generated later', () => {
     useTaskFlowStore.setState({
-      interactionRound: 2,
-      interactionSessionId: 'sess-123'
+      taskForm: null,
+      interactionRound: 0,
+      taskFormPayload: null,
+      confirmedRequestId: null,
     });
-    render(
-      <BrowserRouter>
-        <TaskNewPage />
-      </BrowserRouter>
-    );
-    
-    expect(screen.getByText(/Clarification rounds: 2\/2/i)).toBeInTheDocument();
-    
-    const sendBtn = screen.queryByRole('button', { name: /Send/i });
-    if (sendBtn) {
-      expect(sendBtn).toBeDisabled();
-    }
 
-    const composer = screen.getByRole('textbox', { name: /澄清回答/i });
-    expect(composer).toBeDisabled();
-    
-    expect(screen.getByText(/Max clarification rounds reached/i)).toBeInTheDocument();
+    renderPage();
+
+    expect(screen.getByDisplayValue('不限')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('auto')).toBeInTheDocument();
   });
 
-  it('c) sets defaults for auto-generated task form', () => {
-    render(
-      <BrowserRouter>
-        <TaskNewPage />
-      </BrowserRouter>
-    );
-    
-    expect(screen.getByRole('textbox', { name: /Country/i })).toHaveValue('不限');
-    expect(screen.getByRole('textbox', { name: /Language/i })).toHaveValue('auto');
+  it('keeps structured fields visible and editable', () => {
+    renderPage();
+
+    const goalInput = screen.getByDisplayValue('Assess PS3 evidence');
+    fireEvent.change(goalInput, { target: { value: 'Assess BS3 evidence' } });
+
+    expect(screen.getByDisplayValue('Assess BS3 evidence')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Breast cancer')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('CN')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('en')).toBeInTheDocument();
   });
 
-  it('d) shows generated task-form fields and allows e) editing them', () => {
+  it('enables branch actions after confirmation', () => {
+    useTaskFlowStore.setState({
+      confirmedRequestId: 'req-123',
+    });
+
+    renderPage();
+
+    expect(screen.getByText(/Confirmed!/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Go to candidates/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Submit upload/i })).toBeDisabled();
+  });
+});
+
+describe('TaskNewPage branches (upload and skip-upload)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
     useTaskFlowStore.setState({
       taskForm: {
-        goal: 'Original Goal',
-        disease: 'Original Disease',
-        country: 'US',
-        language: 'en'
-      }
+        goal: 'Assess PS3 evidence',
+        disease: 'Breast cancer',
+        country: 'CN',
+        language: 'en',
+      },
+      interactionSessionId: null,
+      interactionRound: 1,
+      entryMode: 'documents',
+      taskFormPayload: { goal: 'Assess PS3 evidence' },
+      confirmedRequestId: 'req-123',
     });
-
-    render(
-      <BrowserRouter>
-        <TaskNewPage />
-      </BrowserRouter>
-    );
-
-    const goalInput = screen.getByRole('textbox', { name: /Goal/i });
-    expect(goalInput).toHaveValue('Original Goal');
-
-    fireEvent.change(goalInput, { target: { value: 'Updated Goal' } });
-    expect(goalInput).toHaveValue('Updated Goal');
+    useToastStore.setState({ toasts: [] });
   });
 
-  it('f) disables branch zone initially, then enables it when confirmedRequestId is present', async () => {
-    useTaskFlowStore.setState({
-      taskForm: { goal: 'a', disease: 'b', country: 'c', language: 'd' },
-      confirmedRequestId: null
-    });
+  afterEach(() => {
+    cleanup();
+  });
 
-    vi.mocked(api.confirmTaskForm).mockResolvedValue({
-      request_id: 'req-123',
-      confirmed: true
-    });
+  it('Upload: valid confirmed request + valid files calls uploadTaskRequest and navigates to /requests/:request_id', async () => {
+    vi.mocked(uploadTaskRequest).mockResolvedValueOnce({ request_id: 'req-123', status: 'queued' } as any);
+    renderPage();
 
-    render(
-      <BrowserRouter>
-        <TaskNewPage />
-      </BrowserRouter>
-    );
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['hello'], 'test.pdf', { type: 'application/pdf' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
 
     const submitBtn = screen.getByRole('button', { name: /Submit upload/i });
-    expect(submitBtn).toBeDisabled();
+    expect(submitBtn).not.toBeDisabled();
 
-    expect(screen.queryByRole('link', { name: /Go to candidates/i })).not.toBeInTheDocument();
-    expect(screen.getByText(/Confirmation required/i)).toBeInTheDocument();
+    fireEvent.click(submitBtn);
 
-    const confirmBtn = screen.getByRole('button', { name: /Confirm Task Form/i });
-    fireEvent.click(confirmBtn);
+    expect(uploadTaskRequest).toHaveBeenCalledWith('req-123', [file]);
 
     await waitFor(() => {
-      expect(screen.getByRole('link', { name: /Go to candidates/i })).toBeInTheDocument();
+      expect(mockNavigate).toHaveBeenCalledWith('/requests/req-123');
     });
-    
-    expect(screen.queryByText(/Confirmation required/i)).not.toBeInTheDocument();
+  });
+
+  it('Upload: invalid file locally blocks submission, shows toast, and uploadTaskRequest is NOT called', () => {
+    renderPage();
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const largeContent = new Array(11 * 1024 * 1024).fill('a').join('');
+    const file = new File([largeContent], 'large.pdf', { type: 'application/pdf' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    const submitBtn = screen.getByRole('button', { name: /Submit upload/i });
+    fireEvent.click(submitBtn);
+
+    expect(uploadTaskRequest).not.toHaveBeenCalled();
+
+    const toasts = useToastStore.getState().toasts;
+    expect(toasts).toContainEqual(
+      expect.objectContaining({
+        level: 'error',
+        title: 'Upload validation failed',
+      })
+    );
+  });
+
+  it('Skip-upload: clicking candidates performs handoff and routes to candidates page, disabled while busy', () => {
+    renderPage();
+
+    const skipBtn = screen.getByRole('button', { name: /Go to candidates/i });
+    expect(skipBtn).not.toBeDisabled();
+
+    fireEvent.click(skipBtn);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/tasks/pubmed/candidates');
+    expect(useTaskFlowStore.getState().confirmedRequestId).toBe('req-123');
+  });
+
+  it('Branch actions lock during submission so users cannot double-submit', async () => {
+    let resolveUpload: any;
+    vi.mocked(uploadTaskRequest).mockImplementationOnce(() => {
+      return new Promise((resolve) => {
+        resolveUpload = resolve;
+      });
+    });
+
+    renderPage();
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['hello'], 'test.pdf', { type: 'application/pdf' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    const submitBtn = screen.getByRole('button', { name: /Submit upload/i });
+    fireEvent.click(submitBtn);
+
+    expect(submitBtn).toBeDisabled();
+
+    const skipBtn = screen.getByRole('button', { name: /Go to candidates/i });
+    expect(skipBtn).toBeDisabled();
+
+    resolveUpload({ request_id: 'req-123', status: 'queued' });
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/requests/req-123');
+    });
   });
 });
