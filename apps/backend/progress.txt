@@ -205,6 +205,25 @@ Additional Regression:
 
 Investigation Note: 2026-03-25 (Multi-variant graph sync limitation)
 
+---
+
+Implementation Update: 2026-03-27 (M2 task-creation baseline prefix alignment)
+
+Completed:
+- Aligned backend app router mounting prefix to the M2 contract expected by integration tests.
+  - `src/config.py`: `AppConfig.api_prefix` changed from `"/api"` to `"/api/v1"`
+- This unblocked the frozen error contract test for wrong content type on the upload endpoint:
+  - `tests/integration/test_error_contract.py::test_upload_wrong_content_type_returns_contract`
+
+Validation:
+- `uv run pytest -q tests/integration/test_error_contract.py::test_upload_wrong_content_type_returns_contract` → 1 passed
+- `uv run pytest -q tests/integration/test_m2_interaction_clarification.py tests/integration/test_m2_confirmation_contract.py tests/integration/test_m2_upload_branch_handoff.py tests/integration/test_m2_candidates_handoff.py` → 13 passed, 14 warnings
+
+Notes:
+- `lsp_diagnostics src/config.py` currently reports pre-existing basedpyright errors unrelated to this one-line prefix change; this update intentionally did not expand scope to a config typing cleanup.
+
+Investigation Note: 2026-03-25 (Multi-variant graph sync limitation)
+
 Observed from a ClinVar-sourced PDF E2E run:
 - document_id: `db3b70f2-b6d5-46cb-bfca-af7f63b3dab4`
 - graph sync completed successfully for this paper:

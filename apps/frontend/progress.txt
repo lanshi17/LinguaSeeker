@@ -18,3 +18,26 @@
     - `src/components/chat/agent-clarification-chat.tsx`
     - `src/pages/tasks/pubmed-candidates-page.tsx`
     - `src/pages/tasks/__tests__/pubmed-candidates-page.test.tsx`
+
+2026-03-27 — M2 task-creation page shell, confirmation, and branch behavior verified
+- Extended `/tasks/new` in `src/pages/tasks/task-new-page.tsx` with explicit shell headings, confirmation gating, upload submission, and skip-to-candidates branch handoff.
+- Updated `src/components/chat/agent-clarification-chat.tsx` so the clarification composer is disabled when the interaction is not in an answerable state.
+- Added/expanded `src/pages/tasks/__tests__/task-new-page.test.tsx` to cover:
+  - clarification round counter visibility
+  - default `country=不限` and `language=auto`
+  - editable structured task-form fields
+  - confirmation state enabling branch actions
+  - valid upload branch navigation
+  - invalid local upload validation/toast behavior
+  - candidate handoff routing
+  - branch locking while submission is in-flight
+- Verification evidence:
+  - `npm run test:run -- src/pages/tasks/__tests__/task-new-page.test.tsx` → 9 tests passed
+  - `npm run test:run -- src/pages/tasks/__tests__/task-new-page.test.tsx src/pages/tasks/__tests__/pubmed-candidates-page.test.tsx src/store/__tests__/useTaskFlowStore.test.ts src/services/__tests__/api.test.ts` → 15 tests passed
+  - changed-file diagnostics clean for:
+    - `src/pages/tasks/task-new-page.tsx`
+    - `src/pages/tasks/__tests__/task-new-page.test.tsx`
+    - `src/components/chat/agent-clarification-chat.tsx`
+- Remaining out of scope for this slice:
+  - candidate page detail enhancements beyond handoff
+  - broader visual polish beyond the single-page M2 shell and branch behavior
