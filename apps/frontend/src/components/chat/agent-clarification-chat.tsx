@@ -9,7 +9,7 @@ import { useToastStore } from '../../store/useToastStore';
 
 import type { Dispatch, SetStateAction } from 'react';
 import type { TaskFormStructured } from '../../types/api';
-import type { ChatMessage, ChatRole } from './types';
+import type { ChatMessage, ChatRole } from '../../types/chat';
 
 import './agent-clarification-chat.css';
 
@@ -26,8 +26,54 @@ function createMessage(role: ChatRole, text: string): ChatMessage {
   };
 }
 
+function roleLabel(role: ChatRole) {
+  switch (role) {
+    case 'assistant':
+      return 'ACMG Agent';
+    case 'user':
+      return '您';
+    case 'system':
+      return '系统';
+    case 'error':
+      return '错误';
+  }
+}
+
+function formatMessageTime(createdAtMs: number) {
+  return new Date(createdAtMs).toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function pickQuestion(payload: {
+  question?: string | null;
+  clarification_question?: string | null;
+  needs_clarification?: boolean | null;
+}) {
+  if (payload.question) return payload.question;
+  if (payload.clarification_question) return payload.clarification_question;
+  if (payload.needs_clarification) return '';
+  return null;
+}
+
+function hasReadyTaskForm(payload: {
+  ready?: boolean;
+  task_form_ready?: boolean | null;
+  task_form: TaskFormStructured | null;
+}) {
+  return Boolean(payload.task_form && (payload.ready || payload.task_form_ready));
+}
+
 function isRecordPayload(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isAbortError(err: unknown) {
+  return (
+    (err instanceof DOMException && err.name === 'AbortError') ||
+    (err instanceof Error && err.name === 'AbortError')
+  );
 }
 
 type AgentClarificationChatProps = {
@@ -40,31 +86,50 @@ type AgentClarificationChatProps = {
 export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ draft, userInput, busy, setBusy }) => {
   const navigate = useNavigate();
   const toast = useToastStore();
-  const { taskForm, interactionSessionId, interactionRound, entryMode, setTaskForm, setInteraction, setEntryMode, setTaskFormPayload, setConfirmedRequestId } = useTaskFlowStore();
+  const {
+    taskForm,
+    interactionSessionId,
+    interactionRound,
+    entryMode,
+    interactionMessages,
+    setTaskForm,
+    setInteraction,
+    setEntryMode,
+    setTaskFormPayload,
+    setConfirmedRequestId,
+    appendInteractionMessage,
+    clearInteractionMessages,
+  } = useTaskFlowStore();
 
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
+  const requestControllerRef = useRef<AbortController | null>(null);
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [composerText, setComposerText] = useState('');
 
   const canClarify = interactionRound < 2;
   const requiredOk = Boolean(draft.goal.trim() && draft.disease.trim());
 
   const lastAssistantQuestion = useMemo(() => {
-    for (let i = messages.length - 1; i >= 0; i -= 1) {
-      const m = messages[i];
+    for (let i = interactionMessages.length - 1; i >= 0; i -= 1) {
+      const m = interactionMessages[i];
       if (m.role === 'assistant') return m.text;
     }
     return null;
-  }, [messages]);
+  }, [interactionMessages]);
 
-  const scrollRef = useScrollToBottom(messages.length);
+  const scrollRef = useScrollToBottom(interactionMessages.length);
 
   const append = (role: ChatRole, text: string) => {
-    setMessages((prev) => [...prev, createMessage(role, text)]);
+    appendInteractionMessage(createMessage(role, text));
+  };
+
+  const abortInFlight = () => {
+    requestControllerRef.current?.abort();
+    requestControllerRef.current = null;
   };
 
   const clearInteractionAndForm = () => {
+    abortInFlight();
     setInteraction(null, 0);
     setTaskForm(null);
     setTaskFormPayload(null);
@@ -72,7 +137,7 @@ export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ 
   };
 
   const resetTranscript = () => {
-    setMessages([]);
+    clearInteractionMessages();
     setComposerText('');
   };
 
@@ -117,28 +182,38 @@ export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ 
     }
 
     setBusy(true);
+    abortInFlight();
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
     try {
       append('user', userInput);
-      const res = await interactionStart({ user_input: userInput });
-      setInteraction(res.session_id, res.round);
-      if (res.question) {
-        append('assistant', res.question);
-      }
-      if (res.task_form) {
-        setTaskForm(res.task_form);
-        if ('task_form_payload' in res && isRecordPayload(res.task_form_payload)) {
-          setTaskFormPayload(res.task_form_payload);
-        }
-        append('system', '任务表单已就绪：请审阅确认后进入下一步。');
-      }
-      if (!res.question && !res.task_form) {
-        append('error', '后端未返回问题也未返回任务表单。请点击 Restart 重新开始。');
-      }
+       const res = await interactionStart({ user_input: userInput }, { signal: controller.signal });
+       setInteraction(res.session_id, res.round);
+
+       const question = pickQuestion(res);
+       if (question) {
+         append('assistant', question);
+       }
+       if (hasReadyTaskForm(res)) {
+         setTaskForm(res.task_form);
+         if ('task_form_payload' in res && isRecordPayload(res.task_form_payload)) {
+           setTaskFormPayload(res.task_form_payload);
+         }
+         append('system', '任务表单已就绪：请审阅确认后进入下一步。');
+       }
+       if (!question && !res.task_form) {
+         append('error', '后端未返回问题也未返回任务表单。请点击 Restart 重新开始。');
+       }
+
     } catch (err) {
+      if (isAbortError(err)) return;
       const msg = err instanceof ApiError ? err.detail ?? err.message : 'Failed to start interaction';
       toast.pushToast({ level: 'error', title: 'Interaction failed', message: msg, ttlMs: 8000 });
       append('error', msg);
     } finally {
+      if (requestControllerRef.current === controller) {
+        requestControllerRef.current = null;
+      }
       setBusy(false);
     }
   };
@@ -148,7 +223,7 @@ export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ 
       append('system', '请先点击 Start 开始澄清。');
       return;
     }
-    if (messages.length === 0) {
+    if (interactionMessages.length === 0) {
       append('system', '会话仍在进行，但聊天记录已丢失（可能是你离开了页面）。请点击 Restart 重新开始。');
       return;
     }
@@ -170,37 +245,45 @@ export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ 
     append('user', answer);
 
     setBusy(true);
+    abortInFlight();
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
     try {
-      const res = await interactionRespond({ session_id: interactionSessionId, user_response: answer });
+      const res = await interactionRespond({ session_id: interactionSessionId, user_response: answer }, { signal: controller.signal });
       setInteraction(interactionSessionId, res.round);
 
-      if (res.question) {
-        append('assistant', res.question);
+      const question = pickQuestion(res);
+      if (question) {
+        append('assistant', question);
       }
-      if (res.task_form) {
+      if (hasReadyTaskForm(res)) {
         setTaskForm(res.task_form);
         if ('task_form_payload' in res && isRecordPayload(res.task_form_payload)) {
           setTaskFormPayload(res.task_form_payload);
         }
         append('system', '任务表单已就绪：请审阅确认后进入下一步。');
       }
-      if (!res.question && !res.task_form) {
+      if (!question && !hasReadyTaskForm(res)) {
         append('error', '后端未返回问题也未返回任务表单。请点击 Restart 重新开始。');
       }
     } catch (err) {
+      if (isAbortError(err)) return;
       const msg = err instanceof ApiError ? err.detail ?? err.message : 'Failed to respond';
       toast.pushToast({ level: 'error', title: 'Interaction failed', message: msg, ttlMs: 8000 });
       append('error', msg);
     } finally {
+      if (requestControllerRef.current === controller) {
+        requestControllerRef.current = null;
+      }
       setBusy(false);
     }
   };
 
   const showStart = !interactionSessionId && !taskForm;
   const showComposer = Boolean(interactionSessionId) && !taskForm;
-  const transcriptMissing = showComposer && messages.length === 0;
+  const transcriptMissing = showComposer && interactionMessages.length === 0;
 
-  const lastMessageRole: ChatRole | null = messages.length ? messages[messages.length - 1]!.role : null;
+  const lastMessageRole: ChatRole | null = interactionMessages.length ? interactionMessages[interactionMessages.length - 1]!.role : null;
 
   useEffect(() => {
     if (busy) return;
@@ -209,6 +292,13 @@ export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ 
     if (lastMessageRole !== 'assistant') return;
     composerRef.current?.focus();
   }, [busy, lastMessageRole, showComposer, transcriptMissing]);
+
+  useEffect(
+    () => () => {
+      abortInFlight();
+    },
+    []
+  );
 
   return (
     <div className="agent-chat">
@@ -245,7 +335,7 @@ export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ 
         aria-atomic="false"
         aria-label="Clarification transcript"
       >
-        {showStart && messages.length === 0 ? (
+        {showStart && interactionMessages.length === 0 ? (
           <div className="agent-chat__row" data-role="assistant">
             <div className="agent-chat__bubble" data-role="assistant">
               在开始之前，你想进行哪种工作？
@@ -275,15 +365,19 @@ export const AgentClarificationChat: React.FC<AgentClarificationChatProps> = ({ 
             </div>
           </div>
         ) : null}
-        {messages.length === 0 && entryMode === 'documents' ? (
+        {interactionMessages.length === 0 && entryMode === 'documents' ? (
           <div className="agent-chat__empty">
             请先填写 <b>Goal</b> 和 <b>Disease</b>，然后点击 <b>Start</b> 开始澄清。我们会将结构化表单格式化为首条消息发送给后端。
           </div>
         ) : null}
-        {messages.map((m) => (
+        {interactionMessages.map((m) => (
           <div key={m.id} className="agent-chat__row" data-role={m.role}>
             <div className="agent-chat__bubble" data-role={m.role}>
-              {m.text}
+              <div className="agent-chat__bubble-meta">
+                <span className="agent-chat__bubble-role">{roleLabel(m.role)}</span>
+                <span className="agent-chat__bubble-time">{formatMessageTime(m.createdAtMs)}</span>
+              </div>
+              <div>{m.text}</div>
             </div>
           </div>
         ))}

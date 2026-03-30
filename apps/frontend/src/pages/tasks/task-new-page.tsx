@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { confirmTaskForm, uploadTaskRequest } from '../../services/api';
 import { ApiError } from '../../services/http';
@@ -10,8 +10,63 @@ import { validateUploadFiles } from '../../utils/validation';
 
 import type { TaskFormStructured } from '../../types/api';
 
+type ExpertFeedbackItem = {
+  tone: 'info' | 'warning' | 'success';
+  text: string;
+  action?: 'confirm_now' | 'go_candidates';
+};
+
 function buildUserInput(form: TaskFormStructured) {
   return `Goal: ${form.goal}\nDisease: ${form.disease}\nCountry: ${form.country}\nLanguage: ${form.language}`;
+}
+
+function buildExpertFeedback(params: {
+  taskForm: TaskFormStructured | null;
+  interactionRound: number;
+  confirmedRequestId: string | null;
+  filesCount: number;
+}) {
+  const items: ExpertFeedbackItem[] = [];
+  const { taskForm, interactionRound, confirmedRequestId, filesCount } = params;
+
+  if (!taskForm) {
+    items.push({
+      tone: 'warning',
+      text: 'Continue clarification until a structured task form is returned by backend.',
+    });
+  }
+
+  if (taskForm && !confirmedRequestId) {
+    items.push({
+      tone: 'info',
+      text: 'Confirm the task form to lock the request id before branching.',
+      action: 'confirm_now',
+    });
+  }
+
+  if (confirmedRequestId && filesCount === 0) {
+    items.push({
+      tone: 'info',
+      text: 'Request is confirmed. You can upload files or continue to PubMed candidates.',
+      action: 'go_candidates',
+    });
+  }
+
+  if (confirmedRequestId && filesCount > 0) {
+    items.push({
+      tone: 'success',
+      text: `Files selected (${filesCount}). Submit upload when ready.`,
+    });
+  }
+
+  if (interactionRound >= 2 && !taskForm) {
+    items.push({
+      tone: 'warning',
+      text: 'Clarification rounds reached limit; restart clarification if the task form is still missing.',
+    });
+  }
+
+  return items;
 }
 
 export const TaskNewPage: React.FC = () => {
@@ -38,6 +93,10 @@ export const TaskNewPage: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
 
   const ready = Boolean(taskForm);
+  const expertFeedback = useMemo(
+    () => buildExpertFeedback({ taskForm, interactionRound, confirmedRequestId, filesCount: files.length }),
+    [confirmedRequestId, files.length, interactionRound, taskForm]
+  );
 
   const userInput = useMemo(() => buildUserInput(draft), [draft]);
 
@@ -89,6 +148,19 @@ export const TaskNewPage: React.FC = () => {
       toast.pushToast({ level: 'error', title: 'Confirm failed', message: msg, ttlMs: 8000 });
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleFeedbackAction = (action: ExpertFeedbackItem['action']) => {
+    if (!action) return;
+    if (action === 'confirm_now') {
+      if (!busy) {
+        void handleConfirm();
+      }
+      return;
+    }
+    if (action === 'go_candidates' && confirmedRequestId && !busy) {
+      navigate('/tasks/pubmed/candidates');
     }
   };
 
@@ -190,6 +262,55 @@ export const TaskNewPage: React.FC = () => {
                   </button>
                 </div>
               )}
+
+              <div
+                style={{
+                  padding: 12,
+                  border: '1px solid var(--border)',
+                  borderRadius: 12,
+                  background: 'var(--bg-elevated)',
+                }}
+              >
+                <h3 style={{ fontWeight: 800, margin: 0, fontSize: 14 }}>Expert feedback</h3>
+                <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+                  Plan-aligned review hints before upload/candidate branching.
+                </div>
+                <ul style={{ margin: '10px 0 0', paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {expertFeedback.map((item, index) => (
+                    <li
+                      key={`${item.tone}-${index}`}
+                      style={{
+                        color:
+                          item.tone === 'warning'
+                            ? '#ad6800'
+                            : item.tone === 'success'
+                              ? '#237804'
+                              : 'var(--text-muted)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <span>{item.text}</span>
+                        {item.action ? (
+                          <button
+                            type="button"
+                            onClick={() => handleFeedbackAction(item.action)}
+                            disabled={busy}
+                            style={{
+                              padding: '6px 10px',
+                              borderRadius: 8,
+                              border: '1px solid var(--border)',
+                              background: 'var(--bg-elevated)',
+                              cursor: busy ? 'not-allowed' : 'pointer',
+                            }}
+                          >
+                            {item.action === 'confirm_now' ? 'Confirm now' : 'Open candidates shortcut'}
+                          </button>
+                        ) : null}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
               <div className="row">
                 <div className="col" style={{ minWidth: 320 }}>

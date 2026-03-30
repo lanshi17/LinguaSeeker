@@ -27,5 +27,16 @@ export default [
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }]
     }
+  },
+  {
+    files: ['**/*.{js,cjs,mjs}'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        ...globals.browser,
+        ...globals.node
+      }
+    }
   }
 ];

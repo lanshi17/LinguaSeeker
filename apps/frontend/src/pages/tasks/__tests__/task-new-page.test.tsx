@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TaskNewPage } from '../task-new-page';
 import { useTaskFlowStore } from '../../../store/useTaskFlowStore';
 import { useToastStore } from '../../../store/useToastStore';
-import { uploadTaskRequest } from '../../../services/api';
+import { confirmTaskForm, uploadTaskRequest } from '../../../services/api';
 
 vi.mock('../../../components/chat/agent-clarification-chat', () => ({
   AgentClarificationChat: () => <div>Mock clarification chat</div>,
@@ -72,6 +72,36 @@ describe('TaskNewPage shell', () => {
     expect(screen.getByText('Clarification rounds: 1/2')).toBeInTheDocument();
   });
 
+  it('shows an expert feedback panel with next-step guidance', () => {
+    renderPage();
+
+    expect(screen.getByRole('heading', { name: /Expert feedback/i })).toBeInTheDocument();
+    expect(screen.getByText(/Confirm the task form to lock the request id before branching\./i)).toBeInTheDocument();
+  });
+
+  it('provides a confirm-now action in expert feedback', async () => {
+    vi.mocked(confirmTaskForm).mockResolvedValueOnce({
+      confirmed: true,
+      request_id: 'req-from-feedback',
+      available_branches: [{ source: 'upload' }, { source: 'pubmed' }],
+    });
+
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: /Confirm now/i }));
+
+    await waitFor(() => {
+      expect(confirmTaskForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          task_form_payload: expect.objectContaining({ goal: 'Assess PS3 evidence' }),
+        })
+      );
+    });
+
+    expect(screen.getByText(/Confirmed!/i)).toBeInTheDocument();
+    expect(screen.getByText(/req-from-feedback/i)).toBeInTheDocument();
+  });
+
   it('shows default country and language values when the task form is auto-generated later', () => {
     useTaskFlowStore.setState({
       taskForm: null,
@@ -135,7 +165,10 @@ describe('TaskNewPage branches (upload and skip-upload)', () => {
   });
 
   it('Upload: valid confirmed request + valid files calls uploadTaskRequest and navigates to /requests/:request_id', async () => {
-    vi.mocked(uploadTaskRequest).mockResolvedValueOnce({ request_id: 'req-123', status: 'queued' } as any);
+    vi.mocked(uploadTaskRequest).mockResolvedValueOnce({
+      request_id: 'req-123',
+      status: 'queued',
+    });
     renderPage();
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -189,7 +222,7 @@ describe('TaskNewPage branches (upload and skip-upload)', () => {
   });
 
   it('Branch actions lock during submission so users cannot double-submit', async () => {
-    let resolveUpload: any;
+    let resolveUpload: ((value: { request_id: string; status: string }) => void) | undefined;
     vi.mocked(uploadTaskRequest).mockImplementationOnce(() => {
       return new Promise((resolve) => {
         resolveUpload = resolve;
@@ -210,7 +243,7 @@ describe('TaskNewPage branches (upload and skip-upload)', () => {
     const skipBtn = screen.getByRole('button', { name: /Go to candidates/i });
     expect(skipBtn).toBeDisabled();
 
-    resolveUpload({ request_id: 'req-123', status: 'queued' });
+    resolveUpload?.({ request_id: 'req-123', status: 'queued' });
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/requests/req-123');

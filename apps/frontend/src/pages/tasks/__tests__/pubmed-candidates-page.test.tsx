@@ -5,7 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PubmedCandidatesPage } from '../pubmed-candidates-page';
 import * as api from '../../../services/api';
+import { useAppStore } from '../../../store/appStore';
 import { useTaskFlowStore } from '../../../store/useTaskFlowStore';
+import { useToastStore } from '../../../store/useToastStore';
 
 vi.mock('../../../services/api', () => ({
   pubmedCandidateSearch: vi.fn(),
@@ -16,6 +18,8 @@ vi.mock('../../../services/api', () => ({
 describe('PubmedCandidatesPage M2 Handoff', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useAppStore.getState().reset();
+    useToastStore.getState().clearToasts();
     useTaskFlowStore.setState({
       taskForm: {
         goal: 'test goal',
@@ -29,6 +33,29 @@ describe('PubmedCandidatesPage M2 Handoff', () => {
 
   afterEach(() => {
     cleanup();
+    useAppStore.getState().reset();
+    useToastStore.getState().clearToasts();
+  });
+
+  it('hydrates AppStore candidates from the search response', async () => {
+    vi.mocked(api.pubmedCandidateSearch).mockResolvedValue({
+      task_form: 'test',
+      candidates: [
+        { pmid: '111', title: 'Paper 1', journal: 'J1', pub_date: '2024' }
+      ]
+    });
+
+    render(
+      <BrowserRouter>
+        <PubmedCandidatesPage />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(useAppStore.getState().candidates).toEqual([
+        expect.objectContaining({ pmid: '111', title: 'Paper 1' })
+      ]);
+    });
   });
 
   it('passes request_id to pubmedCandidateSearch when confirmedRequestId is present', async () => {
@@ -54,6 +81,34 @@ describe('PubmedCandidatesPage M2 Handoff', () => {
         })
       );
     });
+  });
+
+  it('uses AppStore selected PMIDs as the shared selection source', async () => {
+    useAppStore.setState((state) => ({
+      ...state,
+      candidates: [
+        { pmid: '111', title: 'Paper 1', journal: 'J1', pub_date: '2024' }
+      ],
+      ui: {
+        ...state.ui,
+        selectedPmids: ['111'],
+      },
+    }));
+    vi.mocked(api.pubmedCandidateSearch).mockResolvedValue({
+      task_form: 'test',
+      candidates: [
+        { pmid: '111', title: 'Paper 1', journal: 'J1', pub_date: '2024' }
+      ]
+    });
+
+    render(
+      <BrowserRouter>
+        <PubmedCandidatesPage />
+      </BrowserRouter>
+    );
+
+    expect(await screen.findByRole('checkbox')).toBeChecked();
+    expect(screen.getByRole('button', { name: /Submit selection \(1\)/i })).not.toBeDisabled();
   });
 
   it('passes request_id to pubmedSelectionSubmit when submitted', async () => {

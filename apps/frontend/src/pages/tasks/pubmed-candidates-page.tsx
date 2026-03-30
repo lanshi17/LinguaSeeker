@@ -1,34 +1,33 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { pubmedCandidateSearch, pubmedSelectionSubmit, stringifyTaskForm } from '../../services/api';
+import { pubmedSelectionSubmit, stringifyTaskForm } from '../../services/api';
 import { ApiError } from '../../services/http';
+import { useAppStore } from '../../store/appStore';
 import { useTaskFlowStore } from '../../store/useTaskFlowStore';
 import { useToastStore } from '../../store/useToastStore';
-
-import type { PubMedCandidateItem } from '../../types/api';
 
 const MAX_SELECT = 10;
 
 export const PubmedCandidatesPage: React.FC = () => {
   const navigate = useNavigate();
-  const toast = useToastStore();
+  const pushToast = useToastStore((s) => s.pushToast);
   const { taskForm, confirmedRequestId } = useTaskFlowStore();
+  const { candidates, ui, fetchCandidates, togglePmidSelection, clearPmidSelection } = useAppStore();
 
-  const [candidates, setCandidates] = useState<PubMedCandidateItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const selectionCount = selected.size;
+  const selectionCount = ui.selectedPmids.length;
   const selectionValid = selectionCount >= 1 && selectionCount <= MAX_SELECT;
 
-  const selectedList = useMemo(() => Array.from(selected), [selected]);
+  const selectedList = useMemo(() => ui.selectedPmids, [ui.selectedPmids]);
 
   useEffect(() => {
     if (!taskForm && !confirmedRequestId) return;
     let cancelled = false;
     setLoading(true);
-    pubmedCandidateSearch({
+
+    const payload = {
       request_id: confirmedRequestId ?? undefined,
       task_form: taskForm ? stringifyTaskForm(taskForm) : undefined,
       target: taskForm?.goal ?? '',
@@ -36,43 +35,41 @@ export const PubmedCandidatesPage: React.FC = () => {
       country: taskForm?.country,
       language: taskForm?.language,
       source: 'pubmed',
-      candidate_limit: 15
-    })
-      .then((res) => {
-        if (!cancelled) setCandidates(res.candidates ?? []);
-      })
+      candidate_limit: 15,
+    };
+
+    fetchCandidates(payload)
       .catch((err) => {
         const msg = err instanceof ApiError ? err.detail ?? err.message : 'Candidate search failed';
-        toast.pushToast({ level: 'error', title: 'Search failed', message: msg, ttlMs: 9000 });
+        pushToast({ level: 'error', title: 'Search failed', message: msg, ttlMs: 9000 });
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
-  }, [taskForm, confirmedRequestId, toast]);
+  }, [taskForm, confirmedRequestId, fetchCandidates, pushToast]);
 
   const toggle = (pmid: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(pmid)) {
-        next.delete(pmid);
-      } else {
-        if (next.size >= MAX_SELECT) {
-          toast.pushToast({ level: 'warning', title: 'Selection limit', message: `Max ${MAX_SELECT} papers`, ttlMs: 5000 });
-          return prev;
-        }
-        next.add(pmid);
-      }
-      return next;
-    });
+    if (ui.selectedPmids.includes(pmid)) {
+      togglePmidSelection(pmid);
+      return;
+    }
+
+    if (ui.selectedPmids.length >= MAX_SELECT) {
+      pushToast({ level: 'warning', title: 'Selection limit', message: `Max ${MAX_SELECT} papers`, ttlMs: 5000 });
+      return;
+    }
+
+    togglePmidSelection(pmid);
   };
 
   const submit = async () => {
     if (!taskForm && !confirmedRequestId) return;
     if (!selectionValid) {
-      toast.pushToast({ level: 'warning', title: 'Invalid selection', message: 'Select 1–10 PMIDs', ttlMs: 6000 });
+      pushToast({ level: 'warning', title: 'Invalid selection', message: 'Select 1–10 PMIDs', ttlMs: 6000 });
       return;
     }
     setLoading(true);
@@ -88,9 +85,10 @@ export const PubmedCandidatesPage: React.FC = () => {
         source: 'pubmed'
       });
       navigate(`/requests/${encodeURIComponent(res.request_id ?? confirmedRequestId ?? 'unknown')}`);
+      clearPmidSelection();
     } catch (err) {
       const msg = err instanceof ApiError ? err.detail ?? err.message : 'Submit failed';
-      toast.pushToast({ level: 'error', title: 'Submit failed', message: msg, ttlMs: 9000 });
+      pushToast({ level: 'error', title: 'Submit failed', message: msg, ttlMs: 9000 });
     } finally {
       setLoading(false);
     }
@@ -143,7 +141,7 @@ export const PubmedCandidatesPage: React.FC = () => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {candidates.map((c) => {
-            const checked = selected.has(c.pmid);
+            const checked = ui.selectedPmids.includes(c.pmid);
             return (
               <label
                 key={c.pmid}
