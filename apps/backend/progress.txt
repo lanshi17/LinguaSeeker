@@ -1,0 +1,1055 @@
+Project: ACMG-Lingua
+Date: 2026-03-03
+Owner: Spec-driven build
+Status: SPEC_FROZEN
+
+Completed:
+- Created and finalized six specification documents:
+  - docs/PRD.md
+  - docs/APP_FLOW.md
+  - docs/TECH_STACK.md
+  - docs/FRONTEND_GUIDELINES.md
+  - docs/BACKEND_STRUCTURE.md
+  - docs/IMPLEMENTATION_PLAN.md
+- Removed quality module direction from MVP scope (Quality API must be 404).
+- Frozen request/paper state model and retry matrix.
+- Frozen dedup policy (global SHA-256, FILE_DUPLICATE as success).
+- Frozen logging contract (failed + error_code + log_link).
+- Frozen retention policy:
+  - task form + structured metadata: permanent
+  - original files: no auto delete
+  - intermediates/logs: 7 days
+- Frozen KG integration direction:
+  - independent KG service
+  - Celery event trigger
+  - PostgreSQL source of truth
+  - full backfill + incremental + retry queue
+
+Key Locked Decisions:
+- MVP source: PubMed only.
+- Candidate list cap: 15 total, page_size default=10, max=15.
+- User selection cap: min=1, max=10.
+- Upload limits: <=10 files, <=10MB per file, <=50MB total.
+- IDs: request_id and paper_task_id are UUIDv4.
+- Success metrics:
+  - fixed 100-paper acceptance set per release
+  - literature-level success >=95%
+  - per-paper E2E <=30 minutes from worker start
+
+Open Items:
+- None at requirement level (core assumptions closed).
+
+Next Execution Steps:
+1) M0: Schema and API contract migration.
+2) M1: Implement 5-node workflow and dedup/log contracts.
+3) M2: Implement interaction flow + frontend pages + PDF merge export.
+4) M3: Standalone KG service + event consumer + backfill script.
+5) M4: Run fixed 100-paper acceptance and publish release report.
+
+---
+
+Implementation Update: 2026-03-03 (Domain MVP stabilization)
+
+Completed:
+- Fixed mixed-indentation blockers that prevented graph/domain modules from loading.
+  - src/database/neo4j_client.py
+  - src/domain/graph/sync.py
+  - tests/unit/test_domain_graph.py
+- Corrected GraphSyncService skip-path behavior for missing core fields:
+  - when required core fields are missing and structural fallback is not applicable,
+    sync now returns skipped/missing_core_fields and does not attempt PostgreSQL insert.
+- Preserved structural-variant manual-review flow and context logging behavior after refactor.
+
+Validation:
+- Targeted graph unit tests: 8 passed.
+- Domain unit suite:
+  - tests/unit/test_domain_agent.py
+  - tests/unit/test_domain_evidence.py
+  - tests/unit/test_domain_graph.py
+  - result: 35 passed.
+
+Notes:
+- No requirement-level changes were introduced.
+- Current update is implementation stabilization aligned with frozen specs.
+
+---
+
+Implementation Update: 2026-03-03 (Failure contract unification - step 1)
+
+Completed:
+- Added global failed-response contract in main exception handlers.
+  - target fields now unified via global handlers: status / error_code / log_link
+  - applied to:
+    - HTTPException
+    - RequestValidationError
+    - ACMGException family
+- Added baseline error-code mapping function and log-link generation entrypoint.
+
+Files:
+- main.py
+
+Completed:
+- Added targeted unit tests for global error mapping and frozen-code normalization behavior.
+
+Validation:
+- tests/unit/test_error_mapping.py
+- tests/integration/test_error_contract.py
+- tests/integration/test_graph_api.py
+- result: 25 passed.
+
+Files:
+- tests/unit/test_error_mapping.py
+
+---
+
+Implementation Update: 2026-03-03 (Failure contract readability refactor)
+
+Completed:
+- Extracted failure-contract mapping table and helpers into dedicated module to reduce main.py complexity.
+- Kept backward-compatible aliases in main.py for existing tests and internal references.
+
+Files:
+- src/presentation/error_contract.py
+- main.py
+
+Validation:
+- Targeted regression tests passed after extraction refactor.
+- Command: .venv/bin/python -m pytest -q tests/unit/test_error_mapping.py tests/integration/test_error_contract.py tests/integration/test_graph_api.py
+- Result: 25 passed, 14 warnings.
+
+---
+
+Implementation Update: 2026-03-03 (Failure contract alias cleanup)
+
+Completed:
+- Removed temporary compatibility aliases from main.py (`_map_error_code`, `_normalize_error_code`, `_failed_payload`).
+- Updated unit mapping tests to import helpers directly from src/presentation/error_contract.py.
+
+Files:
+- main.py
+- tests/unit/test_error_mapping.py
+
+Validation:
+- Targeted regression tests passed after alias removal.
+- Command: .venv/bin/python -m pytest -q tests/unit/test_error_mapping.py tests/integration/test_error_contract.py tests/integration/test_graph_api.py
+- Result: 25 passed, 14 warnings.
+
+---
+
+Implementation Update: 2026-03-03 (Failure contract mapping split)
+
+Completed:
+- Refactored error mapping internals into two layers for readability:
+  - detail keyword mapping (`_map_error_code_by_detail`)
+  - status default mapping (`_map_error_code_by_status`)
+- Kept `map_error_code` external behavior unchanged (including 415 hard mapping).
+- Added focused unit coverage for status-default fallback paths (404/500).
+
+Files:
+- src/presentation/error_contract.py
+- tests/unit/test_error_mapping.py
+
+Validation:
+- Targeted regression tests passed after mapping split.
+- Command: .venv/bin/python -m pytest -q tests/unit/test_error_mapping.py tests/integration/test_error_contract.py tests/integration/test_graph_api.py
+- Result: 27 passed, 14 warnings.
+
+Completed:
+- Added dedicated integration coverage for unified failure contract:
+  - 415 wrong content-type -> FILE_TYPE_UNSUPPORTED
+  - 422 payload validation -> INPUT_INVALID with errors
+
+Validation:
+- tests/integration/test_error_contract.py
+- tests/integration/test_graph_api.py
+- tests/integration/test_task_api.py
+- result: 22 passed.
+
+Files:
+- tests/integration/test_error_contract.py
+
+---
+
+Implementation Update: 2026-03-03 (Failure contract unification - step 3)
+
+Completed:
+- Extended global error-code mapping to cover additional frozen business codes via message patterns:
+  - GRAPH_SYNC_FAILED
+  - PARSE_FAILED
+  - OCR_FAILED / OCR_TIMEOUT
+  - TRANSLATION_FAILED / TRANSLATION_EMPTY
+  - ALIGNMENT_FAILED
+  - ENTITY_EXTRACTION_FAILED / EVIDENCE_EXTRACTION_FAILED
+  - ACMG_RULE_UNSUPPORTED / ACMG_PARSE_FAILED
+  - FETCH_TIMEOUT
+
+Files:
+- main.py
+
+Completed:
+- Updated integration assertions for contract-aligned error payloads on graph API failure paths.
+  - require fields: status / error_code / log_link
+  - covered 400 and 404 paths.
+
+Validation:
+- tests/integration/test_graph_api.py
+- tests/integration/test_task_api.py
+- result: 20 passed.
+
+Additional Regression:
+- tests/unit/test_logging_smoke.py
+- tests/integration/test_graph_api.py
+- result: 25 passed.
+
+---
+
+Investigation Note: 2026-03-25 (Multi-variant graph sync limitation)
+
+---
+
+Implementation Update: 2026-03-27 (M2 task-creation baseline prefix alignment)
+
+Completed:
+- Aligned backend app router mounting prefix to the M2 contract expected by integration tests.
+  - `src/config.py`: `AppConfig.api_prefix` changed from `"/api"` to `"/api/v1"`
+- This unblocked the frozen error contract test for wrong content type on the upload endpoint:
+  - `tests/integration/test_error_contract.py::test_upload_wrong_content_type_returns_contract`
+
+Validation:
+- `uv run pytest -q tests/integration/test_error_contract.py::test_upload_wrong_content_type_returns_contract` → 1 passed
+- `uv run pytest -q tests/integration/test_m2_interaction_clarification.py tests/integration/test_m2_confirmation_contract.py tests/integration/test_m2_upload_branch_handoff.py tests/integration/test_m2_candidates_handoff.py` → 13 passed, 14 warnings
+
+Notes:
+- `lsp_diagnostics src/config.py` currently reports pre-existing basedpyright errors unrelated to this one-line prefix change; this update intentionally did not expand scope to a config typing cleanup.
+
+Investigation Note: 2026-03-25 (Multi-variant graph sync limitation)
+
+Observed from a ClinVar-sourced PDF E2E run:
+- document_id: `db3b70f2-b6d5-46cb-bfca-af7f63b3dab4`
+- graph sync completed successfully for this paper:
+  - PostgreSQL evidence_record created
+  - Neo4j sync returned `neo4j_ok=True`
+- extracted core metadata was usable:
+  - gene_symbol=`BARD1`
+  - transcript_id=`NM_000465.2`
+  - disease_name=`Breast cancer, hereditary`
+
+Observed limitation:
+- multiple variants in one paper were collapsed into a single semicolon-joined string before graph persistence:
+  - `variant_hgvs_c = c.1972C>T; c.1935_1954dup; c.1526T>C`
+  - `variant_hgvs_p = p.Arg658Cys; p.Glu652fs; p.Ile509Thr`
+- ClinVar resolution was executed against the joined cDNA string as if it were one variant and returned "not found".
+- current `GraphSyncService` / `EvidenceRecord` flow writes one evidence record per sync call, so Neo4j also receives one merged variant representation for this paper.
+
+Conclusion:
+- this case is no longer a Neo4j insertion failure.
+- the current issue is multi-variant normalization and persistence granularity.
+- downstream ClinVar linking and graph retrieval can be inaccurate for papers that report multiple variants in one document.
+
+Deferred follow-up direction:
+- preferred future behavior: one paper with multiple extracted variants should fan out into multiple `EvidenceRecord` rows and multiple variant-level graph links, while preserving a backward-compatible top-level sync result for callers.
+- this note records the issue only; no code change was implemented for multi-variant fan-out in this step.
+
+---
+
+Implementation Update: 2026-03-03 (Failure contract unification - step 2)
+
+Completed:
+- Refined global error-code mapping to scenario-aware behavior.
+- Added frozen error-code whitelist normalization to prevent non-spec error codes in responses.
+- Added explicit handling for unsupported content-type / invalid file type pathways.
+
+Files:
+- main.py
+
+Files:
+- tests/integration/test_graph_api.py
+
+---
+
+Implementation Update: 2026-03-03 (Test suite stabilization and full regression recovery)
+
+Completed:
+- Fixed test collection blocker caused by mixed indentation in task unit tests.
+  - tests/unit/test_tasks.py
+- Updated outdated monkeypatch target path in agent integration tests to current module layout.
+  - from `src.component.agents.search_knowledge_base`
+  - to `src.domain.agent.workflow.search_knowledge_base`
+  - file: tests/integration/test_agent.py
+- Corrected test fixture setup in `test_tool` by creating test markdown file before loading.
+  - file: tests/integration/test_agent.py
+- Added explicit guard for live LLM API tests to avoid nondeterministic CI/local failures when external credentials are unavailable.
+  - gated by env var: `RUN_LIVE_LLM_TESTS=1`
+  - file: tests/unit/test_llm.py
+
+Validation:
+- Focused validation after fixes:
+  - .venv/bin/python -m pytest -q tests/unit/test_tasks.py
+  - result: 10 passed.
+- Focused validation for affected modules:
+  - .venv/bin/python -m pytest -q tests/integration/test_agent.py tests/unit/test_llm.py
+  - result: 12 passed, 4 skipped.
+- Full regression:
+  - .venv/bin/python -m pytest -q
+  - result: 164 passed, 6 skipped, 14 warnings.
+
+Notes:
+- No requirement-level changes were introduced.
+- This update restores full test-suite green status under frozen MVP specs.
+
+---
+
+Implementation Update: 2026-03-03 (M0/M1 request orchestration implementation)
+
+Completed (M0 - schema/API baseline):
+- Added ORM models for request-level orchestration and alignment storage:
+  - `task_requests`
+  - `paper_tasks`
+  - `paper_task_logs`
+  - `sentence_alignments`
+  - `task_graph_runs`
+  - `variation_citations`
+- Added PostgreSQL client operations for M0/M1 flow:
+  - task request CRUD / listing / status refresh
+  - paper task CRUD / listing / duplicate lookup
+  - per-paper logs
+  - sentence alignment insert/query
+  - graph run insert/query
+  - variation citation upsert/query
+- Added API routes for request orchestration and M0 contracts:
+  - `POST /api/v1/tasks/requests/upload`
+  - `POST /api/v1/tasks/requests/pubmed/candidates`
+  - `POST /api/v1/tasks/requests/pubmed/submit`
+  - `GET /api/v1/tasks/requests/{request_id}`
+  - `GET /api/v1/tasks/papers/{paper_task_id}`
+  - `GET /api/v1/tasks/{request_id}/log`
+  - `POST /api/v1/tasks/papers/{paper_task_id}/resume`
+  - `GET /api/v1/tasks/check-paper-hash/{file_hash}`
+- Request/paper status model aligned to frozen spec:
+  - request: queued/running/partial_failed/failed/success
+  - paper: queued/running/success/failed
+- Implemented duplicate contract:
+  - global SHA-256 lookup
+  - duplicate creates new `paper_task_id`
+  - duplicate marked success with `FILE_DUPLICATE`
+  - `duplicate_of` preserved
+- Added signed log-link reissue endpoint with rate limit.
+
+Completed (M1 - 5-node chain backend wiring):
+- Refactored `src/service/tasks.py` around explicit 5-node execution:
+  - acquisition
+  - parsing
+  - translation
+  - extraction
+  - acmg
+- Added node utility helpers:
+  - `_make_error_result(...)`
+  - `_result_log_link(...)`
+  - `_task_error_result(...)`
+  - `_task_warning_result(...)`
+  - `_line_spans(...)`
+  - `_build_sentence_alignments(...)`
+  - `_is_english_text(...)`
+  - `_normalize_processing_steps(...)`
+  - `_attempt_hgvs_correction(source, translated)` — prefix-match token restoration with fallback append block
+- Added PaddleOCR pluggable stub in `src/domain/mineru/component.py`:
+  - `paddleocr_available()` — returns False when paddleocr not installed
+  - `run_paddleocr_fallback(file_paths)` — raises `ParsingException("OCR_FAILED")` when not installed
+- Refactored `process_pdf_task` to call 5 node runners sequentially with per-node trace tracking
+- Refactored `process_pubmed_paper_task` to use same 5-node structure
+- Preserved `run_fastapi_pipeline` for non-Celery direct API usage
+
+Files:
+- src/service/tasks.py
+- src/domain/mineru/component.py
+- tests/unit/test_tasks.py
+
+Validation:
+- Added 13 new unit tests covering all M1 utility helpers and node runners
+- Updated `test_process_pdf_task` to mock 5-node runners instead of legacy `run_fastapi_pipeline`
+- Focused:
+  - `DEBUG=false uv run python -m pytest -v tests/unit/test_tasks.py -k "not fetch_timeout"`
+  - result: 28 passed, 1 deselected (fetch_timeout hangs in sandbox due to Celery retry).
+- No new LSP errors introduced; all remaining errors are pre-existing.
+
+M1 Checklist (IMPLEMENTATION_PLAN.md):
+- [x] 5-node chain: acquisition → parsing → translation → extraction → ACMG
+- [x] DOCX failure is terminal
+- [x] MinerU → PaddleOCR fallback (pluggable stub)
+- [x] English skip + HGVS auto-correction
+- [x] SHA-256 dedup + duplicate_of (prior increment)
+- [x] failed + error_code + log_link response spec (prior increment)
+- [x] log_link reissue + rate limit (prior increment)
+
+Notes:
+- M1 milestone is feature-complete for the backend.
+- `run_fastapi_pipeline` is preserved but no longer called from Celery tasks.
+- PaddleOCR stub raises `NotImplementedError` when package is installed but implementation is pending.
+- Implemented unified literature metadata workflow with API-first routing, automated web fallback, and standardized JSON normalization across providers.
+- Fixed API literature module compatibility imports (`.schemas` -> `.models`) for crossref/jstage/pmc/doaj and corrected DOAJ workflow entrypoint.
+- Added unified literature metadata routing stack:
+  - `src/domain/literature/unified/workflow.py` (prefer=auto/api/web routing)
+  - `src/domain/literature/gateway/api_gateway.py` (existing API workflow adapters)
+  - `src/domain/literature/gateway/web_gateway.py` (automated web adapters)
+  - `src/domain/literature/unified/normalizers.py` (standardized metadata JSON)
+- Added smoke-safe package exports for `src.domain` and `src.domain.literature` to prevent unrelated optional dependency failures from blocking literature imports.
+- Added tests: `tests/test_literature_unified_workflow.py` -> 3 passed.
+- Refactored gateway layer to unified dispatchers:
+  - API gateway: `ApiGatewayRequest -> call_api_gateway`
+  - automated_web gateway: `WebGatewayRequest -> call_auto_web_gateway`
+- Updated unified literature workflow to consume only the two unified gateways.
+- Updated workflow tests to patch unified gateway dispatchers (3 passed).
+
+2026-03-21 MVP-Literature hardening
+Completed:
+- Restricted unified literature workflow to MVP-compatible routing (PMC only) and disabled web/non-PMC providers in unified entry.
+- Removed cross-provider fallback behavior (unpaywall/crossref/web fallback) from unified workflow.
+- Unified workflow now returns failure when search/download yields no usable result (`FETCH_NO_RESULT` / `FULLTEXT_UNAVAILABLE` warning markers).
+- Fixed async blocking in `src/domain/literature/api/unpaywall/workflow.py` by offloading sync service calls to `asyncio.to_thread`.
+- Reworked `tests/test_literature_unified_workflow.py` to match MVP constraints and new routing behavior.
+
+Validation:
+- `uv run pytest -q tests/test_literature_unified_workflow.py tests/test_api_gateway_download.py tests/unit/test_literature_acquisition_agent.py`
+- Result: 10 passed.
+- `lsp_diagnostics src/__init__.py` → clean.
+- Code-path search confirmed no remaining `src.service`, `src.database`, `src.presentation`, or `src.configs` imports in `src/`.
+- Code-path search confirmed no remaining legacy architecture wording (`service layer`, `presentation layer`, `database layer`, `表现层`, `服务层`, `数据访问层`) in `src/`.
+- `uv run python -m pytest tests/test_legacy_architecture_cleanup.py -q` → `5 passed`.
+
+Notes:
+- This is a narrow follow-up cleanup after the plan’s recorded completion, not a new refactor wave.
+- Broader runtime/config/task-manager changes in this worktree remain intentionally out of scope for this cleanup slice.
+
+---
+
+Implementation Update: 2026-03-20 (task request API hardening and duplicate-safe postgres updates)
+
+Completed:
+- Hardened task route UUID/status helpers in `src/api/routes/task.py` by replacing unsafe cast-based helpers with explicit boundary normalization:
+  - `_uuid_value` now accepts real UUIDs or UUID strings and raises `TypeError` otherwise
+  - `_uuid_str` now delegates to `_uuid_value`
+  - `_status_str` now only accepts string values and otherwise falls back to the provided default
+- Guarded dynamic postgres update paths in `src/infrastructure/postgres.py` using allowlists so unknown keys are ignored instead of being written to ORM instances:
+  - `update_task_request` now only permits `task_form_text`, `status`, and maps `metadata -> request_metadata`
+  - `update_paper_task` now only permits the defined mutable paper-task fields
+  - `update_evidence_record` now only permits the defined mutable evidence fields
+- Added targeted regression tests for the hardened helpers and guarded update paths:
+  - `tests/test_task_route_helpers.py`
+  - `tests/test_postgres_update_task_request.py`
+  - `tests/test_postgres_update_paper_task.py`
+  - `tests/test_postgres_update_evidence_record.py`
+
+Validation:
+- `uv run python -m py_compile src/infrastructure/postgres.py src/api/routes/task.py tests/test_postgres_update_task_request.py tests/test_postgres_update_paper_task.py tests/test_postgres_update_evidence_record.py tests/test_task_route_helpers.py`
+- `uv run pytest -q tests/test_postgres_update_task_request.py tests/test_postgres_update_paper_task.py tests/test_postgres_update_evidence_record.py tests/test_task_route_helpers.py`
+- result: 6 passed
+- `lsp_diagnostics src/api/routes/task.py`: clean
+- `lsp_diagnostics src/infrastructure/postgres.py`: remaining diagnostics were pre-existing type issues outside this change set
+
+---
+
+Implementation Update: 2026-03-21 (P2 code-quality batch reconciliation and final-wave blockers)
+
+Completed:
+- Reconciled the current repo-local `.sisyphus/plans/p2-code-quality.md` with work already completed in this branch/session.
+- Marked Task 4.1 as completed in the saved plan with concrete verification evidence for the scoped files:
+  - `src/services/task_manager.py`
+  - `src/api/routes/task.py`
+  - `src/infrastructure/postgres.py`
+  - `tests/unit/test_tasks.py`
+  - `tests/test_task_route_helpers.py`
+  - `tests/test_postgres_update_task_request.py`
+  - `tests/test_postgres_update_paper_task.py`
+  - `tests/test_postgres_update_evidence_record.py`
+- Recorded the current Final Wave blocker state directly in the plan so the repo now reflects actual end-state status instead of stale unchecked gates.
+
+Task 4.1 scoped validation already completed:
+- `uv run python -m py_compile src/services/task_manager.py src/api/routes/task.py src/infrastructure/postgres.py tests/unit/test_tasks.py tests/test_task_route_helpers.py tests/test_postgres_update_task_request.py tests/test_postgres_update_paper_task.py tests/testPostgres_update_evidence_record.py`
+- `uv run pytest -q tests/unit/test_tasks.py tests/test_task_route_helpers.py tests/test_postgres_update_task_request.py tests/test_postgres_update_paper_task.py tests/test_postgres_update_evidence_record.py`
+- result: 43 passed
+- `uv run basedpyright src/services/task_manager.py src/api/routes/task.py src/infrastructure/postgres.py`
+- result: 0 errors, 0 warnings, 0 notes
+- `uv run ruff check src/services/task_manager.py src/api/routes/task.py src/infrastructure/postgres.py tests/unit/test_tasks.py tests/test_task_route_helpers.py tests/test_postgres_update_task_request.py tests/test_postgres_update_paper_task.py tests/test_postgres_update_evidence_record.py`
+- result: All checks passed
+
+Final Wave verification executed in current repo environment:
+- F1 `uv run basedpyright src/`
+  - blocker: large existing warning/error set across `src/`
+  - full output saved at `/home/lanshi/.local/share/opencode/tool-output/tool_d0ec2c9be001WGyjqYfzLrdcnJ`
+- F2 `uv run ruff check src/ tests/`
+  - `ruff` is now runnable in the current repo environment
+  - current blocker: full-repo lint still reports many violations across `src/` and `tests/`
+  - full output saved at `/home/lanshi/.local/share/opencode/tool-output/tool_d0fbe3dff0015J6xmoIF4YDrcz`
+- F3 `uv run pytest -q`
+  - import-time settings/bootstrap blocker is resolved
+  - current blocker: collection now stops on 3 remaining import errors:
+    - `tests/integration/test_cyberleninka.py` → `ModuleNotFoundError: cyberleninka`
+    - `tests/integration/test_hans_publishers.py` → `ImportError: cannot import name 'Subject' from 'pubscholar_enums'`
+    - `tests/integration/test_pubscholar_scraper.py` → `ModuleNotFoundError: locators`
+- F4 `uv run python -c "import src.config; import main"`
+  - passes successfully (`smoke-ok`)
+
+Stabilization work completed in this batch:
+1. Added repo-local Ruff dev tooling and synced the environment so `uv run ruff` works in this checkout.
+2. Removed the import-time `Settings()` bootstrap failure by making config and early consumers lazy/runtime-safe:
+   - `src/__init__.py`
+   - `src/config.py`
+   - `src/infrastructure/enum.py`
+   - `src/domain/enums.py`
+   - `src/domain/agent/workflow.py`
+   - `src/domain/graph/sync.py`
+3. Restored `literature_unified_workflow` export in `src/domain/literature/__init__.py`.
+4. Updated `.env.example` with test-safe values for `VLM_ENABLE`, `MINIO_ACCESS_KEY`, and `MINIO_SECRET_KEY` so smoke/test bootstrap no longer fails on placeholder parsing/credential guards.
+
+Next required work before Final Wave can turn fully green:
+1. Triage or isolate the 3 remaining collection/import errors in the literature integration tests.
+2. Decide whether full-repo Ruff cleanup is in scope, since Ruff is now runnable but reports broad existing violations.
+3. Re-run F1–F4 after those blockers are addressed.
+
+---
+
+Implementation Update: 2026-03-21 (single .env for database stack + startup credential recovery)
+
+Completed:
+- Converted `database` stack back to a single env file strategy for Neo4j/Redis/MinIO by using only `database/config/.env` (removed temporary `database/config/.env.neo4j`).
+- Fixed Neo4j healthcheck to parse user/password from `NEO4J_AUTH` (`user/password`) instead of relying on separate `NEO4J_USER/NEO4J_PASSWORD` env keys.
+- Updated `database/scripts/setup/verify_services.sh` to derive Neo4j auth from `NEO4J_AUTH`.
+- Sanitized `database/config/.env` and `database/config/.env.example` to strict `KEY=VALUE` lines (removed inline comments in values that were being injected literally by Podman env-file parsing).
+- Aligned app startup MinIO credentials in `.env.local` (`MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`) with current local MinIO root credentials.
+- Recreated services: `redis`, `minio`, `neo4j`.
+
+Verification:
+- Container env inspection:
+  - `acmg_redis`: `REDIS_PASSWORD=kSZyW5xUr@?YzzRx`
+  - `acmg_minio`: `MINIO_ROOT_USER=yangzs`, `MINIO_ROOT_PASSWORD=***REMOVED***`
+- Health status polling:
+  - `acmg_redis`: healthy
+  - `acmg_minio`: healthy
+  - `acmg_neo4j`: healthy
+- Runtime connectivity check with `.env.local`:
+  - `uv run python -c "... redis ping + minio list buckets ..."`
+  - result: `redis_ping True`, `minio_bucket_count 0`
+- App startup smoke:
+  - `timeout 25s uv run uvicorn main:app --port 8000 --env-file .env.local`
+  - result: startup connectivity passed, MinIO buckets ensured; process exited only because `127.0.0.1:8000` already in use.
+
+Implementation Update: 2026-03-21 (Celery Redis auth recovery)
+
+Completed:
+- Added dotenv fallback loading of `.env.local` in `AppConfig._load_dotenv()` so non-uvicorn entrypoints (like Celery CLI) get local credentials without requiring manual `ENV_FILE` export.
+- Added regression test `tests/unit/test_app_config_env_loading.py` to verify `AppConfig.from_env()` loads `.env.local` by default when present.
+
+Verification:
+- `uv run pytest -q tests/unit/test_app_config_env_loading.py tests/unit/test_celery.py`
+  - result: `2 passed`
+- `timeout 20s uv run celery -A src.celery_app.celery_app worker -l info --concurrency 1`
+  - worker shows `transport: redis://:**@localhost:6379/0`
+  - runtime log confirms `Connected to redis://:**@localhost:6379/0`
+  - no `Authentication required` error observed
+
+
+Implementation Update: 2026-03-21 (PostgreSQL legacy-public-schema conflict fix)
+
+Completed:
+- Reproduced startup failure in `get_postgres_client()` caused by `tasks.document_id -> documents.document_id` FK creation against a legacy `public.documents` table that only had `id`.
+- Added configurable PostgreSQL schema isolation support:
+  - `PostgreSQLConfig.schema` in `src/config.py`
+  - env loading for `POSTGRES_SCHEMA`
+  - `_build_conninfo(..., include_schema=True)` now injects `options='-c search_path=<schema>'` for non-`public` schemas.
+  - `ensure_schema_exists()` in `src/infrastructure/postgres.py`, called by `initialize_schema()` before `Base.metadata.create_all(...)`.
+- Set local runtime to isolated schema via `.env.local`:
+  - `POSTGRES_SCHEMA="acmg_app"`
+- Added regression test:
+  - `tests/unit/test_postgres_schema_search_path.py` ensures conninfo includes `search_path` when schema is configured.
+
+Verification:
+- `uv run pytest -q tests/unit/test_postgres_schema_search_path.py tests/unit/test_app_config_env_loading.py tests/unit/test_celery.py`
+  - result: `3 passed`
+- `uv run python -m py_compile src/config.py src/infrastructure/postgres.py tests/unit/test_postgres_schema_search_path.py tests/unit/test_app_config_env_loading.py`
+  - result: pass
+- `uv run python -c "from src.infrastructure.postgres import get_postgres_client; get_postgres_client(); print('postgres-client-ok')"`
+  - result: pass, schema init successful
+- `psql` validation:
+  - `information_schema.tables` shows app tables created under `acmg_app` schema (including `documents`, `tasks`, `task_requests`, `paper_tasks`, etc.)
+
+
+Implementation Update: 2026-03-21 (database unified initialization and management)
+
+Completed:
+- Added single management entrypoint: `database/scripts/dbctl.sh`.
+- Unified command surface into one CLI:
+  - lifecycle: `up/down/restart/ps/logs`
+  - initialization: `init`
+  - validation: `check`
+  - maintenance: `backup/cleanup`
+  - destructive reset: `reset --yes`
+- Removed legacy fragmented scripts:
+  - deleted `database/scripts/{init_db.sh,backup_db.sh,run_cleanup_sql.sh}`
+  - deleted `database/scripts/setup/` (entire directory)
+  - deleted legacy qdrant helper scripts except runtime init hook
+- Kept runtime dependency:
+  - `database/scripts/qdrant/qdrant_init.sh` (still mounted by compose)
+- Cleaned database directory docs:
+  - rewrote `database/README.md` around `dbctl.sh`
+  - rewrote `database/sql/README.md` around unified CLI
+  - removed stale `database/lesson.md` and `database/leesons.md`
+- Added implementation plan record:
+  - `docs/plans/2026-03-21-database-unified-management.md`
+
+Verification:
+- `bash -n database/scripts/dbctl.sh` -> pass
+- `database/scripts/dbctl.sh ps` -> pass
+- `database/scripts/dbctl.sh check` -> all services `[ok]`
+- `database/scripts/dbctl.sh init` -> `schema-initialized` + `seed-applied`
+
+
+Implementation Update: 2026-03-21 (PostgreSQL schema auto-init robustness fix)
+
+Completed:
+- Fixed env loading path in `src/config.py`:
+  - `.env/.env.<env>/.env.local` are now resolved from project root (based on `src/config.py` location), not current working directory.
+  - `ENV_FILE` keeps highest priority; for relative paths, project-root candidate is preferred with cwd fallback.
+- Hardened PostgreSQL initialization in `src/infrastructure/postgres.py`:
+  - `initialize_schema()` now always resolves effective schema (`schema_name` or configured `POSTGRES_SCHEMA`) and applies `schema_translate_map` for non-public schemas.
+  - `_build_conninfo()` now sets `search_path=<schema>,public` when schema is configured.
+- Added/updated targeted unit tests:
+  - `tests/unit/test_app_config_env_loading.py`
+  - `tests/unit/test_postgres_schema_search_path.py`
+  - `tests/unit/test_postgres_initialize_schema.py`
+
+Verification:
+- `uv run pytest -q tests/unit/test_app_config_env_loading.py tests/unit/test_postgres_schema_search_path.py tests/unit/test_postgres_initialize_schema.py`
+  - result: `3 passed`
+- Reproduced non-project-cwd startup behavior before/after fix using:
+  - `uv run --project ... python -c "from src.infrastructure import postgres; ..."`
+  - result after fix: schema resolves to `acmg_app`, conninfo includes `search_path=acmg_app,public`.
+- Restarted uvicorn on `127.0.0.1:8000` with updated code.
+
+---
+
+Implementation Update: 2026-03-22 (Final Wave literature import blocker recovery)
+
+Completed:
+- Fixed the three remaining literature integration test collection/import blockers identified in the prior Final Wave note:
+  - `tests/integration/test_cyberleninka.py`
+  - `tests/integration/test_hans_publishers.py`
+  - `tests/integration/test_pubscholar_scraper.py`
+- Repointed stale test imports to real package modules under `src.domain.literature.automated_web.*` instead of legacy top-level/script-style imports.
+- Removed Hans `Subject` import collision by importing from the correct Hans package module rather than relying on ambiguous top-level `enums` resolution.
+- Updated stale test expectations and patch targets to current implementation behavior:
+  - payload default `llm_provider` now asserted as `deepseek`
+  - workflow tests patch real package paths
+  - service tests stub the correct pre-crawler paths (`_search_via_public_api` for CyberLeninka, `_search_via_duckduckgo` for PubScholar)
+- Added explicit `llm_api_token="test-token"` in affected service tests to avoid unrelated config fallback bug during mocked crawler-path verification.
+- Cleaned changed-file type issues in the three edited tests so file-local diagnostics are now error-free.
+
+Validation:
+- Changed-file diagnostics:
+  - `lsp_diagnostics tests/integration/test_cyberleninka.py --severity error` -> clean
+  - `lsp_diagnostics tests/integration/test_hans_publishers.py --severity error` -> clean
+  - `lsp_diagnostics tests/integration/test_pubscholar_scraper.py --severity error` -> clean
+- Targeted regression:
+  - `uv run pytest -q tests/integration/test_cyberleninka.py tests/integration/test_hans_publishers.py tests/integration/test_pubscholar_scraper.py`
+  - result: `146 passed`
+- Broader Final Wave slice:
+  - `uv run pytest -q tests/integration`
+  - result: `8 failed, 217 passed, 1 skipped, 18 warnings`
+
+Remaining blockers after this recovery slice:
+- The prior literature collection/import blockers are resolved.
+- Current broader integration failures are now concentrated in `tests/integration/api/test_document_api.py`, including:
+  - `mock_app_config` fixture missing controller-required `api_prefix` / `api_version`
+  - outdated patch target assumptions around `application.services.document_service.MinerUAdapterImpl`
+  - one parser expectation mismatch for returned ZIP URL (`mock-download-url` vs `mock-result-url`)
+- These are separate downstream integration issues, not regressions from the literature import-blocker fix.
+
+---
+
+Implementation Update: 2026-03-22 (Document API integration recovery)
+
+Completed:
+- Fixed the downstream `tests/integration/api/test_document_api.py` failures revealed after the literature Final Wave blockers were cleared.
+- Updated the test module to import current package paths via `src.*` so runtime objects and test assertions reference the same classes/modules.
+- Brought `mock_app_config` in line with current controller requirements by adding:
+  - `api_prefix`
+  - `api_version`
+  - `host`
+  - `port`
+- Updated document-service integration coverage to match the current dependency-injection design:
+  - instantiate `DocumentService()` directly
+  - inject `PDFParser(mineru_adapter=mock_mineru_adapter)`
+  - inject mocked `document_storage`
+- Updated mocked `minio_files` payload shape in the service test to match the current `DocumentProcessResultDTO` contract (`dict`, not `list`).
+- Updated PDF parser assertions to current MinerU adapter behavior:
+  - expect `mineru_parse(...)` call rather than legacy `apply_upload_urls(...)`
+  - align ZIP URL assertion to the mock return value (`mock-result-url`)
+- Tightened a few upload/end-to-end assertions so file-local type diagnostics are clean while preserving behavior checks.
+
+Validation:
+- Changed-file diagnostics:
+  - `lsp_diagnostics tests/integration/api/test_document_api.py --severity error` -> clean
+- Targeted regression:
+  - `uv run pytest -q tests/integration/api/test_document_api.py`
+  - result: `9 passed, 2 warnings`
+- Broader integration slice:
+  - `uv run pytest -q tests/integration`
+  - result: `225 passed, 1 skipped, 16 warnings`
+
+Notes:
+- The previously recorded `tests/integration/api/test_document_api.py` blocker set is now resolved.
+- Remaining warnings in the integration slice are deprecation/warning noise (primarily Pydantic v2 config deprecations and dependency warnings), not failing blockers for this recovery slice.
+
+---
+
+Implementation Update: 2026-03-22 (Final Wave pytest functional blocker reduction)
+
+Completed:
+- Cleared a broad set of repo-wide pytest functional blockers without deleting functional coverage.
+- Added/updated minimal compatibility and utility behavior in production code:
+  - `src/config.py`
+    - added `_LazySettingsProxy.use_agent_workflow()` compatibility method
+    - added `DatabaseConfig` + global `database_config` compatibility export
+  - `src/domain/impl/pdf_parser.py`
+    - added `validate()`
+    - added PDF signature validation before MinerU parse
+  - `src/utils/file_utils.py`
+    - added `cleanup_old_temp_folders()`
+    - added `ensure_directory_exists()`
+  - `app.py`
+    - reduced to compatibility shim re-exporting `main.app`
+  - `src/domain/graph/sync.py`
+    - fixed failure-archive path precedence so class-level monkeypatches work in tests
+- Completed legacy architecture cleanup required by tests:
+  - removed `src/presentation/`
+  - removed `tests/integration/api/test_document_api.py`
+  - rewired residual `src.configs` / `configs` imports in active files to `src.config`
+- Converted live-service tests to explicit integration-style gates instead of letting default unit runs fail on missing services:
+  - `tests/unit/infrastructure/test_mineru_adapter.py`
+  - `tests/unit/infrastructure/test_minio_store.py`
+  - `tests/unit/test_celery.py`
+  - `tests/unit/test_postgre.py`
+  - `tests/unit/test_qdrant.py`
+  - `tests/unit/test_rag.py`
+- Fixed functional unit tests that should remain in the default suite:
+  - `tests/unit/test_interaction.py`
+    - widened Redis patch scope for session rehydration test
+  - `tests/unit/test_tasks.py`
+    - aligned early `process_pdf_task*` tests with the file's existing fake-postgres pattern
+    - restored the success-path temp-dir cleanup test after drift during debugging
+    - repaired `test_process_pdf_task_origin_md_uses_source_text` function header
+- Fixed the real MinerU fallback code gap exercised by tests:
+  - `tests/unit/test_mineru_fallback.py` now passes via `ensure_directory_exists()` implementation.
+
+Validation:
+- Focused regressions now passing/skipping as intended:
+  - `tests/test_supervisor_integration.py` + `tests/unit/domain/test_document_parser.py` + `tests/test_legacy_architecture_cleanup.py::test_legacy_app_module_re_exports_main_app` -> `16 passed`
+  - `tests/test_legacy_architecture_cleanup.py` -> `5 passed`
+  - `tests/unit/infrastructure/test_mineru_adapter.py` -> `1 passed, 1 skipped`
+  - `tests/unit/infrastructure/test_minio_store.py` -> `12 passed, 1 skipped`
+  - `tests/unit/test_celery.py` + `tests/unit/test_domain_graph.py` -> `24 passed, 1 skipped`
+  - `tests/unit/test_interaction.py` -> `10 passed`
+  - `tests/unit/test_postgre.py` -> `4 passed, 11 skipped`
+  - `tests/unit/test_qdrant.py` -> `1 skipped`
+  - `tests/unit/test_mineru_fallback.py` -> `4 passed`
+- Changed-file diagnostics clean on the latest touched test files and utility/parser/app files, except for pre-existing broad type debt in files like `src/config.py` / `src/domain/graph/sync.py`.
+- Full-suite progression evidence:
+  - `uv run pytest --maxfail=20` now advances to 94%+ of the suite with no named failures exposed before timeout.
+  - Latest visible progression reaches through:
+    - all integration suites
+    - legacy cleanup
+    - supervisor/integration/tool/graph/celery/interactions
+    - postgre/qdrant/mineru fallback/task-manager areas
+  - Current blocker is no longer an early functional failure cluster, but total suite runtime / any possible remaining very-late failures beyond the 120s command timeout.
+
+Notes:
+- Following explicit user confirmation, the cleanup policy for this phase is:
+  - keep functional tests
+  - gate or remove only environment-dependent / outdated tests
+  - continue prioritizing project functionality over forcing live external-service tests in the default run
+- Remaining likely work after this milestone:
+  - confirm whether the final 95%-100% slice contains any real failures or only runtime overrun
+  - then address repo-wide non-functional debt (`basedpyright`, `ruff`), especially heavy files like `src/config.py`
+
+---
+
+Implementation Update: 2026-03-22 (Docs cleanup + persistent docs refresh)
+
+Completed:
+- Organized and normalized core docs under `docs/` to align with frozen MVP specs.
+- Fixed cross-document inconsistency on candidate pagination/total limits:
+  - `docs/APP_FLOW.md`: `default=10, max=15`
+  - `docs/BACKEND_STRUCTURE.md`: total candidates `<=15`
+- Updated persistence-facing documentation:
+  - added `docs/README.md` as docs index + long-term maintenance rules + frozen doc set.
+  - refined `docs/EVALUATION_FRAMEWORK.md` evidence-source wording to `PubMed (MVP)`.
+- Removed outdated historical test artifact docs:
+  - deleted `docs/archive/test-artifacts-2026-01/` (all files).
+
+Verification:
+- `grep` check confirms no remaining `max=50` / `总候选 <=50` drift in active docs.
+- `find docs/archive -type f` confirms removed outdated test-artifact files.
+- `git diff -- docs progress.txt` confirms changes are limited to documentation and progress record.
+
+---
+
+Implementation Update: 2026-03-22 (v1.0 workflow re-baseline: multi-source + 6-node pipeline)
+
+Completed:
+- Updated frozen spec docs to align with confirmed v1.0 target workflow:
+  - multi-source literature acquisition (API + crawler adapters)
+  - 6-node pipeline: acquisition -> parsing -> translation -> extraction -> ACMG classification -> expert arbitration
+  - upload scope explicitly retained as PDF/DOCX
+  - parser/translation/extraction defined as independent microservices
+- Reworked core docs:
+  - `docs/PRD.md`
+  - `docs/APP_FLOW.md`
+  - `docs/TECH_STACK.md`
+  - `docs/BACKEND_STRUCTURE.md`
+  - `docs/IMPLEMENTATION_PLAN.md`
+  - `docs/CONSTANTS.md`
+  - `docs/FRONTEND_GUIDELINES.md`
+  - `docs/EVALUATION_FRAMEWORK.md`
+  - `docs/README.md`
+- Added required change-control artifacts:
+  - `docs/RELEASE_NOTES.md`
+  - `docs/BACKWARD_IMPACT.md`
+- Kept prior docs cleanup result: obsolete `docs/archive/test-artifacts-2026-01/` remains removed.
+
+Verification:
+- Cross-doc keyword checks confirm new baseline terms are present (`多源`, `6 节点`, `专家裁决`, `PDF、DOCX`, `BGE-M3`, `scispaCy`, `LlamaIndex`).
+- Legacy baseline checks confirm no active frozen-doc residue for `仅 PubMed`, `主流程 5 节点`, or fixed retry phrasing.
+- `git status --short docs progress.txt` shows only documentation/progress files changed for this milestone.
+
+---
+
+Implementation Update: 2026-03-22 (Plans directory sync to v1.0, conflict-proofing)
+
+Completed:
+- Synchronized `docs/plans/` with the new v1.0 baseline and added explicit plan-state governance.
+- Added status/conflict headers to existing plan files:
+  - `ACTIVE`: acquisition design/implementation, database unified management
+  - `P1_EXT_DRAFT`: multimodal-and-reasoning, streaming-output
+  - `LEGACY/HISTORICAL`: phase-3-document-parsing, langgraph-refactor, cleanup-old-architecture
+- Added plans index and execution guardrail document:
+  - `docs/plans/README.md`
+  - includes precedence rules and current status matrix.
+- Added new active baseline rollout plan:
+  - `docs/plans/2026-03-22-v1.0-multi-source-6node-rollout.md`
+- Updated docs root index to direct plan execution through plans status index:
+  - `docs/README.md` now points to `plans/README.md`.
+
+Verification:
+- Status headers check confirms every plan file has explicit `Plan Status` marker.
+- Keyword scan shows historical conflicting terms (e.g., `quality`) only remain in files now marked `LEGACY`.
+- Plan execution入口 now has single-source guidance via `docs/plans/README.md`.
+
+---
+
+Implementation Update: 2026-03-22 (Docs cleanup: archive + merge + delete for lean docs)
+
+Completed:
+- Archived outdated docs to reduce active-doc noise:
+  - moved legacy plan files to `docs/archive/2026-03-22-legacy-plans/`
+  - moved outdated UML diagrams to `docs/archive/2026-03-22-outdated-diagrams/`
+- Merged overlapping change-control docs:
+  - merged `docs/RELEASE_NOTES.md` + `docs/BACKWARD_IMPACT.md` into `docs/CHANGE_CONTROL.md`
+  - removed original two files after merge
+- Merged and removed redundant quick-reference doc:
+  - moved key PS3/BS3 threshold content into `docs/EVALUATION_FRAMEWORK.md` (Appendix A)
+  - deleted `docs/PS3_BS3_QUICK_REFERENCE.txt`
+- Updated indexes for clean navigation:
+  - `docs/README.md`
+  - `docs/plans/README.md`
+
+Verification:
+- Active `docs/plans/` now contains only active execution plans + index.
+- Reference scan confirms removed files are not used as active links in docs root/indexes.
+- Docs tree now keeps frozen specs + active plans in top-level, historical content in `docs/archive/`.
+
+---
+
+Implementation Update: 2026-03-22 (Candidate selection policy update)
+
+Completed:
+- Updated frozen docs for new candidate selection policy:
+  - candidate pool max: `20`
+  - pagination: `5` items per page
+  - user selection range: `1~5`
+- Updated files:
+  - `docs/PRD.md`
+  - `docs/APP_FLOW.md`
+  - `docs/BACKEND_STRUCTURE.md`
+  - `docs/FRONTEND_GUIDELINES.md`
+  - `docs/IMPLEMENTATION_PLAN.md`
+
+Verification:
+- Search checks in active docs (`docs/`, excluding `archive/`) show no residual old policy strings (`15/10`, `1~10`, `default=10,max=15`, etc.).
+- Updated contract values are now consistent across product, flow, backend API contract, frontend constraints, and implementation plan docs.
+
+---
+
+Implementation Update: 2026-03-22 (Recursive README refresh aligned to actual code)
+
+Completed:
+- Recursively refreshed existing project README files to match current repository implementation.
+- Updated files:
+  - `README.md`
+  - `docs/README.md`
+  - `docs/plans/README.md`
+  - `database/README.md`
+  - `database/sql/README.md`
+  - `src/agents/README.md`
+  - `src/api/README.md`
+  - `src/application/README.md`
+  - `src/configs/README.md`
+  - `src/domain/README.md`
+  - `src/infrastructure/README.md`
+  - `src/knowledge/README.md`
+  - `src/state/README.md`
+  - `src/tools/README.md`
+  - `src/utils/README.md`
+- Replaced stale architecture examples/snippets with code-aligned module maps, route snapshots, and current entrypoints.
+
+Verification:
+- README refresh scope excludes third-party/cached paths (`.venv`, `.pytest_cache`) and only targets repository-owned docs.
+- File lists and endpoint snapshots were generated from current source files before rewriting.
+- `git status --short` shows documentation/progress updates for this milestone.
+
+---
+
+Implementation Update: 2026-03-22 (Config module type/lint cleanup)
+
+Completed:
+- Reduced `src/config.py` from a large basedpyright hotspot to a clean file without changing runtime behavior.
+- Type-safety fixes applied:
+  - `MinerUConfig.extra_formats` now uses `field(default_factory=lambda: ["html"])` instead of a `None` default under a non-optional annotation.
+  - `AppConfig` service config attributes are now typed as non-optional where they are always initialized:
+    - `self.llm: LLMConfig`
+    - `self.embedding: EmbeddingConfig`
+    - `self.rerank: RerankConfig`
+    - `self.mineru: MinerUConfig`
+  - `AppConfig.from_env()` now has explicit return type `-> "AppConfig"`.
+  - `ConfigManager` return types now use concrete generic annotations instead of bare `dict`:
+    - `get_agent_config()`
+    - `get_database_config()`
+    - `get_vector_db_config()`
+  - `get_vector_db_config()` return type was widened to include `None` because `qdrant_api_key` may be absent.
+- Static-analysis compatibility fixes applied:
+  - removed unused `typing.Dict` and later unused `typing.cast` imports.
+  - introduced `_build_settings()` helper so the `Settings()` callsite is isolated with a local pyright ignore instead of contaminating the main accessor.
+  - `get_settings()` now initializes through `_build_settings()`.
+
+Validation:
+- `lsp_diagnostics src/config.py --severity error` -> clean
+- `uv run ruff check src/config.py` -> passed
+
+Notes:
+- This milestone targets non-functional cleanup only; no intended runtime behavior changes beyond preserving the existing config initialization path with stricter static typing.
+- Broader repo-wide basedpyright/ruff debt may still remain in other files, but the `src/config.py` hotspot is now cleared.
+
+---
+
+Implementation Update: 2026-03-22 (Fix MinerU success path incorrectly triggering OCR fallback)
+
+Completed:
+- Fixed a parsing regression in `src/domain/mineru/component.py` where `minerU_pipeline` called `file_utils.download_file(...)` with an unsupported keyword argument (`allow_insecure_fallback`).
+- This bug raised a runtime exception after MinerU reported `done`, which caused upstream logic to incorrectly enter local PaddleOCR fallback.
+- Added unit regression test:
+  - `tests/unit/test_mineru_pipeline_download.py::test_mineru_pipeline_downloads_from_full_zip_url`
+  - Verifies pipeline can download using `extract_result[0].full_zip_url`, unzip, and return `MinerUResponse` without falling into fallback logic.
+
+Verification:
+- `uv run pytest -q tests/unit/test_mineru_pipeline_download.py tests/unit/test_document_parsing_agent.py` -> passed (3 tests)
+- `uv run pytest -q tests/unit/test_tasks.py -k "run_node_parsing"` -> passed (2 tests)
+
+Impact:
+- When MinerU returns `state=done` with `full_zip_url`, parsing now continues on MinerU output as expected and no longer misfires OCR fallback due to this internal exception.
+
+---
+
+Implementation Update: 2026-03-22 (Project naming unified to ACMG-Lingua)
+
+Completed:
+- Standardized project naming to `ACMG-Lingua` in active docs and repository entry docs.
+- Updated key files:
+  - `README.md`
+  - `docs/PRD.md`
+  - `docs/APP_FLOW.md`
+  - `docs/TECH_STACK.md`
+  - `docs/BACKEND_STRUCTURE.md`
+  - `docs/FRONTEND_GUIDELINES.md`
+  - `docs/IMPLEMENTATION_PLAN.md`
+  - `docs/README.md`
+- Also replaced legacy project alias wording in archived refactor plan:
+  - `docs/archive/2026-03-22-legacy-plans/langgraph-refactor-plan.md`
+- Updated progress header project name:
+  - `progress.txt` (`Project: ACMG-Lingua`)
+
+Verification:
+- Repository-wide name scan (excluding dependency/cache dirs) confirms removal of old aliases:
+  - `ACMG-PS3 Intelligence System`
+  - `ACMG PS3 Intelligence System`
+  - `Multi-ACMG Evidence Platform`
+  - `ACMGFlow`
+  - `ACMG Lingua`
+- `ACMG-Lingua` naming is now consistently present in the main documentation headers and project descriptor lines.
+
+---
+
+Implementation Update: 2026-03-23 (Current branch verification after legacy document API trace recovery)
+
+Completed:
+- Re-established the current source of truth after discovering the previously referenced legacy integration target no longer exists.
+- Confirmed `tests/integration/api/test_document_api.py` remains intentionally removed:
+  - enforced by `tests/test_legacy_architecture_cleanup.py`
+- Confirmed no document-API restoration work is required in the current branch state.
+- No source or test code changes were needed in this verification pass.
+
+Verification:
+- `uv run pytest -q tests/integration` -> `216 passed, 1 skipped`
+- Full-suite verification was launched via persistent PTY because synchronous runs timed out before completion.
+- PTY session `pty_d0e0ac2b` (`uv run pytest -q`) exited with code `0`.
+
+Notes:
+- The retained PTY buffer only captured progress output rather than pytest's final textual summary, but the process exit code was successful.
+- Per current instruction, waiting on additional terminal output was skipped once the long-running verification had effectively stalled from an output perspective.
+- This update records the current branch as free of the previously investigated legacy document-API integration blocker.
+
+---
+
+Implementation Update: 2026-03-26 (acquisition adapter merge resolution)
+
+Completed:
+- Finalized the in-progress merge that brought the verified acquisition-adapter rollout into `yangzs-agents`.
+- Kept the provider-adapter gateway structure and adapter test coverage for PMC / Crossref / JStage / DOAJ / Unpaywall.
+- Preserved the stricter graph-sync skip behavior for noisy HGVS evidence so missing core fields remain non-retryable when the payload explicitly indicates fields are absent.
+- Restored legacy `DatabaseConfig` compatibility for MinIO/document storage imports during merge verification.
+
+Verification:
+- `uv run pytest -q tests/unit/test_domain_graph.py` -> `25 passed, 2 warnings`
+- `uv run pytest -q tests/test_api_gateway_download.py tests/domain/literature/gateway tests/test_agents_acquisition.py` -> `26 passed`
+
+Notes:
+- Focused verification for the merged gateway/acquisition/graph-sync paths is green.
+
+---
+
+Implementation Update: 2026-03-30 (Recovered M2 task confirmation flow verification)
+
+Completed:
+- Recovered the unfinished task-creation thread by tracing the saved `update_task_new.patch` artifact and verifying the current frontend already includes the intended confirmation-first branch flow.
+- Removed an obsolete `Link` import from `apps/frontend/src/pages/tasks/task-new-page.tsx` after the page fully switched to button-driven navigation.
+- Replaced two test-only `any` usages in `apps/frontend/src/pages/tasks/__tests__/task-new-page.test.tsx` with concrete `TaskRequestCreateResponse` typing so lint/type safety stays clean.
+
+Verification:
+- `npm run test:run -- src/pages/tasks/__tests__/task-new-page.test.tsx src/pages/tasks/__tests__/pubmed-candidates-page.test.tsx src/store/__tests__/useTaskFlowStore.test.ts` -> `14 passed`
+- `npm run build` -> passed
+- `npm run lint` -> passed
+- `lsp_diagnostics` clean for:
+  - `apps/frontend/src/pages/tasks/task-new-page.tsx`
+  - `apps/frontend/src/pages/tasks/__tests__/task-new-page.test.tsx`
+  - `apps/frontend/src/store/useTaskFlowStore.ts`
+  - `apps/frontend/src/services/api.ts`
+
+Notes:
+- No new feature code was needed beyond cleanup; the recovered confirmation flow from the saved patch was already present in the working tree.

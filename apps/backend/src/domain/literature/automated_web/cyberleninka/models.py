@@ -1,0 +1,123 @@
+# src/domain/literature/cyberleninka/models.py
+"""Pydantic models for CyberLeninka service."""
+
+from typing import Any, Dict, List, Literal, Optional, Union
+
+from pydantic import BaseModel, Field, field_validator
+
+# Constants
+BASE_URL = "https://cyberleninka.ru/"
+
+
+class SearchParams(BaseModel):
+    """Search parameters from external JSON interface."""
+
+    keyword: Union[str, List[str]]  # Can be single keyword or list
+    filters: Dict[str, Any] = Field(
+        default_factory=dict
+    )  # e.g., {"subject": ["Математика"]}
+    limit: int = 20
+
+    @field_validator("limit")
+    @classmethod
+    def limit_range(cls, v: int) -> int:
+        return max(1, min(v, 50))
+
+
+class PaperItem(BaseModel):
+    """Individual paper item."""
+
+    title: str
+    authors: Optional[str] = None
+    year: Optional[str] = None
+    journal: Optional[str] = None
+    subject: Optional[str] = None
+    detail_link: Optional[str] = None
+
+
+class PaperList(BaseModel):
+    """List of papers for LLM extraction."""
+
+    items: List[PaperItem] = Field(default_factory=list)
+
+
+class SearchResponse(BaseModel):
+    """Search response."""
+
+    success: bool
+    items: List[Dict[str, Any]] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+    raw_excerpt: Optional[str] = None
+    total_count: Optional[int] = None
+
+
+class DownloadResponse(BaseModel):
+    """Download response."""
+
+    success: bool
+    pdf_url: Optional[str] = None
+    file_path: Optional[str] = None
+    warnings: List[str] = Field(default_factory=list)
+
+
+class CyberleninkaPayload(BaseModel):
+    """Unified payload model for CyberLeninka workflow."""
+
+    action: Literal["search", "download"] = "search"
+    base_url: str = BASE_URL
+
+    # Search parameters
+    search_params: SearchParams
+
+    # Download selection
+    selected_index: int = 0
+    selected_title: Optional[str] = None
+    detail_link: Optional[str] = None
+
+    # Download configuration
+    download_path: str = "./downloads"
+
+    # LLM configuration
+    llm_provider: str = Field(default_factory=lambda: "deepseek")
+    llm_api_token: Optional[str] = Field(default_factory=lambda: None)
+    llm_extra_headers: Optional[Dict[str, str]] = None
+
+    # Timeout
+    timeout_ms: int = 80000
+
+    # ====== Computed properties ======
+
+    @property
+    def keyword(self) -> List[str]:
+        """Get keyword as list."""
+        if isinstance(self.search_params.keyword, str):
+            return [self.search_params.keyword]
+        return self.search_params.keyword
+
+    @property
+    def subjects(self) -> List[str]:
+        """Get subjects from filters."""
+        return self.search_params.filters.get("subject", [])
+
+    @property
+    def max_results(self) -> int:
+        """Get max results from search_params limit."""
+        return self.search_params.limit
+
+    @property
+    def effective_llm_provider(self) -> str:
+        """Get effective LLM provider (fallback to config)."""
+        if self.llm_provider != "deepseek":
+            return self.llm_provider
+        from ..config import AutomatedWebConfig
+
+        return AutomatedWebConfig.get_default_llm_provider()
+
+    @property
+    def effective_llm_api_token(self) -> Optional[str]:
+        """Get effective LLM API token (fallback to config)."""
+        if self.llm_api_token:
+            return self.llm_api_token
+        from ..config import AutomatedWebConfig
+
+        return AutomatedWebConfig.get_default_llm_api_key()

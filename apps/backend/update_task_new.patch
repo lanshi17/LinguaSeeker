@@ -1,0 +1,200 @@
+--- a/apps/frontend/src/pages/tasks/task-new-page.tsx
++++ b/apps/frontend/src/pages/tasks/task-new-page.tsx
+@@ -1,13 +1,13 @@
+-import { useMemo, useState } from 'react';
++import { useEffect, useMemo, useState } from 'react';
+ import { Link, useNavigate } from 'react-router-dom';
+ 
+-import { uploadTaskRequest } from '../../services/api';
++import { confirmTaskForm, uploadTaskRequest } from '../../services/api';
+ import { ApiError } from '../../services/http';
+ import { AgentClarificationChat } from '../../components/chat/agent-clarification-chat';
+ import { useTaskFlowStore } from '../../store/useTaskFlowStore';
+ import { useToastStore } from '../../store/useToastStore';
+ import { validateUploadFiles } from '../../utils/validation';
+ 
+ import type { TaskFormStructured } from '../../types/api';
+ 
+ function buildUserInput(form: TaskFormStructured) {
+@@ -16,11 +16,11 @@
+ 
+ export const TaskNewPage: React.FC = () => {
+   const navigate = useNavigate();
+   const toast = useToastStore();
+-  const { taskForm, interactionRound } = useTaskFlowStore();
++  const { taskForm, interactionRound, taskFormPayload, confirmedRequestId, setConfirmedRequestId } = useTaskFlowStore();
+ 
+   const [draft, setDraft] = useState<TaskFormStructured>(() =>
+     taskForm ?? {
+       goal: '',
+       disease: '',
+       country: '不限',
+@@ -29,13 +29,27 @@
+   );
+ 
++  useEffect(() => {
++    if (taskForm) {
++      setDraft(taskForm);
++    }
++  }, [taskForm]);
++
+   const [busy, setBusy] = useState(false);
+   const [files, setFiles] = useState<File[]>([]);
+ 
+   const ready = Boolean(taskForm);
+ 
+   const userInput = useMemo(() => buildUserInput(draft), [draft]);
+ 
++  const handleDraftChange = (updates: Partial<TaskFormStructured>) => {
++    setDraft((s) => ({ ...s, ...updates }));
++    if (confirmedRequestId) {
++      setConfirmedRequestId(null);
++    }
++  };
++
+   const submitUpload = async () => {
+-    if (!taskForm) return;
++    if (!confirmedRequestId && !taskForm) return;
+     const validation = validateUploadFiles(files);
+     if (!validation.ok) {
+@@ -52,7 +66,7 @@
+     setBusy(true);
+     try {
+-      const res = await uploadTaskRequest(taskForm, files);
++      const res = await uploadTaskRequest(confirmedRequestId || taskForm, files);
+       navigate(`/requests/${encodeURIComponent(res.request_id)}`);
+     } catch (err) {
+       const msg = err instanceof ApiError ? err.detail ?? err.message : 'Upload failed';
+@@ -62,6 +76,24 @@
+     }
+   };
+ 
++  const handleConfirm = async () => {
++    setBusy(true);
++    try {
++      const payload = { ...(taskFormPayload || {}), ...draft };
++      const res = await confirmTaskForm({ task_form_payload: payload });
++      if (res.confirmed) {
++        setConfirmedRequestId(res.request_id);
++        toast.pushToast({ level: 'success', title: 'Task Confirmed', message: 'Ready for upload or candidates', ttlMs: 3000 });
++      } else {
++        toast.pushToast({ level: 'warning', title: 'Not Confirmed', message: 'Could not confirm task', ttlMs: 5000 });
++      }
++    } catch (err) {
++      const msg = err instanceof ApiError ? err.detail ?? err.message : 'Confirmation failed';
++      toast.pushToast({ level: 'error', title: 'Confirm failed', message: msg, ttlMs: 8000 });
++    } finally {
++      setBusy(false);
++    }
++  };
++
+   return (
+     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+       <div className="panel">
+@@ -79,7 +111,7 @@
+               <div className="muted">Goal</div>
+               <input
+                 value={draft.goal}
+-                onChange={(e) => setDraft((s) => ({ ...s, goal: e.target.value }))}
++                onChange={(e) => handleDraftChange({ goal: e.target.value })}
+                 style={{ width: '100%', padding: 10, borderRadius: 12, border: '1px solid var(--border)' }}
+                 placeholder="e.g., Evaluate PS3 evidence for variant ..."
+               />
+@@ -88,7 +120,7 @@
+               <div className="muted">Disease</div>
+               <input
+                 value={draft.disease}
+-                onChange={(e) => setDraft((s) => ({ ...s, disease: e.target.value }))}
++                onChange={(e) => handleDraftChange({ disease: e.target.value })}
+                 style={{ width: '100%', padding: 10, borderRadius: 12, border: '1px solid var(--border)' }}
+                 placeholder="e.g., cystic fibrosis"
+               />
+@@ -99,7 +131,7 @@
+               <div className="muted">Country</div>
+               <input
+                 value={draft.country}
+-                onChange={(e) => setDraft((s) => ({ ...s, country: e.target.value }))}
++                onChange={(e) => handleDraftChange({ country: e.target.value })}
+                 style={{ width: '100%', padding: 10, borderRadius: 12, border: '1px solid var(--border)' }}
+               />
+             </label>
+@@ -107,7 +139,7 @@
+               <div className="muted">Language</div>
+               <input
+                 value={draft.language}
+-                onChange={(e) => setDraft((s) => ({ ...s, language: e.target.value }))}
++                onChange={(e) => handleDraftChange({ language: e.target.value })}
+                 style={{ width: '100%', padding: 10, borderRadius: 12, border: '1px solid var(--border)' }}
+               />
+             </label>
+@@ -126,10 +158,35 @@
+             {ready ? 'Task form ready' : 'Complete clarification to continue'}
+           </div>
+         </div>
+         <div className="panel-body">
+           {!ready ? (
+             <div className="muted">Waiting for structured task form from backend...</div>
+           ) : (
++            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
++              {confirmedRequestId ? (
++                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(82,196,26,0.1)', color: '#237804' }}>
++                  <span style={{ fontWeight: 'bold' }}>✓ Confirmed!</span> Request ID: {confirmedRequestId}
++                </div>
++              ) : (
++                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(250,173,20,0.1)', color: '#ad6800' }}>
++                  <div style={{ marginBottom: '8px' }}>Please review and confirm the task form before continuing.</div>
++                  <button
++                    type="button"
++                    onClick={handleConfirm}
++                    disabled={busy}
++                    style={{
++                      padding: '8px 16px',
++                      borderRadius: '6px',
++                      border: '1px solid var(--border)',
++                      background: 'var(--bg-elevated)',
++                      cursor: busy ? 'not-allowed' : 'pointer'
++                    }}
++                  >
++                    Confirm Task Form
++                  </button>
++                </div>
++              )}
++
+               <div className="row">
+                 <div className="col" style={{ minWidth: 320 }}>
+                   <div style={{ fontWeight: 800 }}>Upload PDFs/DOCX</div>
+@@ -155,7 +212,7 @@
+                     <button
+                       type="button"
+                       onClick={submitUpload}
+-                      disabled={busy || files.length === 0}
++                      disabled={busy || files.length === 0 || !confirmedRequestId}
+                       style={{
+                         padding: '10px 14px',
+                         borderRadius: 12,
+@@ -163,7 +220,7 @@
+                         background: 'rgba(82,196,26,0.16)',
+                         color: 'var(--text)',
+-                        cursor: busy ? 'not-allowed' : 'pointer'
++                        cursor: (busy || !confirmedRequestId) ? 'not-allowed' : 'pointer',
++                        opacity: (!confirmedRequestId || files.length === 0) ? 0.5 : 1
+                       }}
+                     >
+                       Submit upload
+@@ -176,11 +233,16 @@
+                     Search literature, select 1–10 PMIDs.
+                   </div>
+                   <div style={{ marginTop: 10 }}>
+-                    <Link to="/tasks/pubmed/candidates">Go to candidates</Link>
++                    {confirmedRequestId ? (
++                      <Link to="/tasks/pubmed/candidates">Go to candidates</Link>
++                    ) : (
++                      <span className="muted" style={{ fontSize: 12 }}>Confirmation required</span>
++                    )}
+                   </div>
+                 </div>
+               </div>
++            </div>
+           )}
+         </div>
+       </div>
