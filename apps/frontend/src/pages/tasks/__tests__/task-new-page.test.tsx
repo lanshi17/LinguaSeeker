@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TaskNewPage } from '../task-new-page';
 import { useTaskFlowStore } from '../../../store/useTaskFlowStore';
 import { useToastStore } from '../../../store/useToastStore';
-import { uploadTaskRequest } from '../../../services/api';
+import { confirmTaskForm, uploadTaskRequest } from '../../../services/api';
 
 import type { TaskRequestCreateResponse } from '../../../types/api';
 
@@ -72,6 +72,36 @@ describe('TaskNewPage shell', () => {
   it('shows the clarification round counter', () => {
     renderPage();
     expect(screen.getByText('Clarification rounds: 1/2')).toBeInTheDocument();
+  });
+
+  it('shows an expert feedback panel with next-step guidance', () => {
+    renderPage();
+
+    expect(screen.getByRole('heading', { name: /Expert feedback/i })).toBeInTheDocument();
+    expect(screen.getByText(/Confirm the task form to lock the request id before branching\./i)).toBeInTheDocument();
+  });
+
+  it('provides a confirm-now action in expert feedback', async () => {
+    vi.mocked(confirmTaskForm).mockResolvedValueOnce({
+      confirmed: true,
+      request_id: 'req-from-feedback',
+      available_branches: [{ source: 'upload' }, { source: 'pubmed' }],
+    });
+
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: /Confirm now/i }));
+
+    await waitFor(() => {
+      expect(confirmTaskForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          task_form_payload: expect.objectContaining({ goal: 'Assess PS3 evidence' }),
+        })
+      );
+    });
+
+    expect(screen.getByText(/Confirmed!/i)).toBeInTheDocument();
+    expect(screen.getByText(/req-from-feedback/i)).toBeInTheDocument();
   });
 
   it('shows default country and language values when the task form is auto-generated later', () => {

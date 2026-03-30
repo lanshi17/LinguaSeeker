@@ -105,6 +105,21 @@ export type TaskRequestStatusResponse = {
   papers?: PaperTaskItemResponse[];
 };
 
+export type TaskStatusResponse = {
+  task_id: string;
+  status: string;
+  workflow_status?: string | null;
+  workflow_status_description?: string | null;
+  progress_percentage?: number | null;
+  processing_steps?: Record<string, unknown> | null;
+  paper_task_id?: string | null;
+  document_id?: string | null;
+  error?: string | null;
+  error_details?: Record<string, unknown> | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
 export type LogLinkReissueResponse = {
   request_id: string;
   log_link: string;

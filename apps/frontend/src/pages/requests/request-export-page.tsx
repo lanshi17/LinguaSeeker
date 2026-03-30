@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 
 import { getEvidenceDocument, getTaskRequestStatus } from '../../services/api';
 import { ApiError } from '../../services/http';
+import { useAppStore } from '../../store/appStore';
 import { useToastStore } from '../../store/useToastStore';
 import { normalizeEvidence } from '../../utils/normalizeEvidence';
 
@@ -10,7 +11,8 @@ import type { EvidenceSearchResponse, TaskRequestStatusResponse } from '../../ty
 
 export const RequestExportPage: React.FC = () => {
   const { requestId } = useParams();
-  const toast = useToastStore();
+  const pushToast = useToastStore((s) => s.pushToast);
+  const { currentRequest } = useAppStore();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [requestStatus, setRequestStatus] = useState<TaskRequestStatusResponse | null>(null);
@@ -28,14 +30,17 @@ export const RequestExportPage: React.FC = () => {
       setLoading(true);
       try {
         const res = await getTaskRequestStatus(requestId, { signal: ac.signal });
-        if (!cancelled) setRequestStatus(res);
+        if (!cancelled) {
+          setRequestStatus(res);
+          useAppStore.setState({ currentRequest: res });
+        }
       } catch (err) {
         if (cancelled) return;
         if (err instanceof DOMException && err.name === 'AbortError') {
           return;
         }
         const msg = err instanceof ApiError ? err.detail ?? err.message : 'Failed to load request';
-        toast.pushToast({ level: 'error', title: 'Request load failed', message: msg, ttlMs: 9000 });
+        pushToast({ level: 'error', title: 'Request load failed', message: msg, ttlMs: 9000 });
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -47,14 +52,14 @@ export const RequestExportPage: React.FC = () => {
       cancelled = true;
       ac.abort();
     };
-  }, [requestId, toast]);
+  }, [requestId, pushToast]);
 
   const availableDocs = useMemo(() => {
-    const docs = (requestStatus?.papers ?? [])
+    const docs = (requestStatus?.papers ?? currentRequest?.papers ?? [])
       .map((p) => p.document_id)
       .filter((x): x is string => typeof x === 'string' && x.length > 0);
     return Array.from(new Set(docs));
-  }, [requestStatus]);
+  }, [currentRequest?.papers, requestStatus?.papers]);
 
   const selectedDoc = documentId ?? availableDocs[0] ?? null;
 
@@ -74,7 +79,7 @@ export const RequestExportPage: React.FC = () => {
           return;
         }
         const msg = err instanceof ApiError ? err.detail ?? err.message : 'Failed to load evidence';
-        toast.pushToast({ level: 'error', title: 'Evidence load failed', message: msg, ttlMs: 9000 });
+        pushToast({ level: 'error', title: 'Evidence load failed', message: msg, ttlMs: 9000 });
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -86,7 +91,7 @@ export const RequestExportPage: React.FC = () => {
       cancelled = true;
       ac.abort();
     };
-  }, [selectedDoc, toast]);
+  }, [selectedDoc, pushToast]);
 
   const vm = useMemo(() => normalizeEvidence(evidence?.data ?? null), [evidence]);
 

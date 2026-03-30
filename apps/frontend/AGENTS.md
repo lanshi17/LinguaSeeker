@@ -32,7 +32,12 @@ npm run diagnose         # Print API diagnostics (run in browser console)
 ```
 
 ### 2.1 Test Commands
-**No test runner configured.** The project currently lacks Jest, Vitest, or Playwright. Tests in `tests/` are TypeScript validation files only.
+```bash
+npm run test:run         # Run Vitest once
+npx playwright test -c playwright.task12.config.cjs --reporter=line
+```
+
+Use Vitest for component/store tests and Playwright for the focused Task 12 E2E coverage.
 
 ## 3. Code Style Guidelines
 
@@ -232,3 +237,40 @@ Before completing work:
 - [ ] Follows naming conventions
 - [ ] Proper error handling implemented
 - [ ] Responsive design verified
+
+## 13. State Management
+
+**Library**: Zustand 5.0.10
+
+**Architecture**:
+- `src/store/appStore.ts` defines the unified `useAppStore` store for request polling, PubMed candidate fetching, and shared UI state.
+- `src/store/index.ts` is the public export surface for `useAppStore`, `useTaskFlowStore`, and `useToastStore`.
+- Keep task-creation flow state in `useTaskFlowStore`; use `useAppStore` for cross-page request/candidate state; use `useToastStore` for global notifications rendered by `NotificationToast`.
+
+**Usage**:
+```typescript
+import { useAppStore } from '@/store';
+
+const currentRequest = useAppStore((state) => state.currentRequest);
+const requestFilters = useAppStore((state) => state.ui.requestFilters);
+const fetchRequest = useAppStore((state) => state.fetchRequest);
+```
+
+**Selectors and updates**:
+- Prefer selector-based subscriptions (`useAppStore((state) => state.ui.selectedPmids)`) instead of reading the whole store object.
+- When updating nested UI state, use the existing store actions (`setTaskFilter`, `setRequestFilter`, `togglePmidSelection`, `togglePaperTaskExpand`) rather than mutating `ui` directly.
+- For toast actions, select stable callbacks such as `useToastStore((state) => state.pushToast)` inside effects to avoid rerender loops.
+
+**Current `useAppStore` responsibilities**:
+- Request status fetch + request polling lifecycle
+- PubMed candidate search results
+- Shared UI state for filters, PMID selection, and paper-task expansion
+- Store reset that also clears active polling intervals
+
+**Polling rules**:
+- Start polling through store actions and always stop it on unmount/cleanup.
+- Request polling must stop on terminal statuses: `success`, `failed`, `partial_failed`.
+- Do not add duplicate intervals for the same request key.
+
+**DevTools**:
+- If store inspection is needed during debugging, use the browser React/Zustand tooling available for the running app and verify selected slices rather than relying on whole-store logging.

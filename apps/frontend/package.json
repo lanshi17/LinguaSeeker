@@ -8,9 +8,9 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:run": "vitest run",
+    "test": "vitest --exclude task12.e2e.spec.js",
+    "test:ui": "vitest --ui --exclude task12.e2e.spec.js",
+    "test:run": "vitest run --exclude task12.e2e.spec.js",
     "check-backend": "node scripts/check-backend.cjs",
     "diagnose": "echo '请在浏览器控制台运行: import(\"./src/utils/apiDebug.ts\").then(m => m.printDiagnostics())'"
   },
@@ -41,6 +41,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/d3": "^7.4.3",

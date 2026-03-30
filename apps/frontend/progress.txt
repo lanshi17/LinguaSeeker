@@ -41,3 +41,67 @@
 - Remaining out of scope for this slice:
   - candidate page detail enhancements beyond handoff
   - broader visual polish beyond the single-page M2 shell and branch behavior
+
+2026-03-29 — AgentClarificationChat contract hardening and abort-safe interaction flow verified
+- Hardened clarification contract handling in `src/components/chat/agent-clarification-chat.tsx`:
+  - supports question variants (`question` and `clarification_question`) for start/respond responses
+  - enforces strict ready gating (`ready` or `task_form_ready`) before accepting returned `task_form`
+  - keeps explicit error fallback when neither a question nor a ready task form is available
+- Added component-level abort safety with `AbortController` for `interactionStart` / `interactionRespond`:
+  - forwards `{ signal }` via API call options
+  - aborts in-flight request on restart and on component unmount
+  - suppresses user-facing error toasts for expected abort cancellations
+- Added/updated tests in `src/components/chat/agent-clarification-chat.test.tsx`:
+  - start/respond compatibility variant coverage
+  - strict task-form-ready gating coverage
+  - AbortSignal forwarding assertions for start/respond
+  - restart abort behavior for in-flight start request
+- Ancillary lint-stability fixes completed in this same verification cycle:
+  - `src/services/websocket.ts` no-empty catch removal (now emits `socket_close_failed` event)
+  - `playwright.task12.config.cjs` moved to flat-config-compatible shape
+  - `task12.e2e.spec.js` switched from bare `URL` to `globalThis.URL`
+- Verification evidence:
+  - `npm run test:run -- src/components/chat/agent-clarification-chat.test.tsx` → 7 tests passed
+  - `npm run test:run -- src/components/chat/agent-clarification-chat.test.tsx src/pages/tasks/__tests__/task-new-page.test.tsx` → 16 tests passed
+  - `npx tsc --noEmit -p tsconfig.app.json` → passed
+  - `npm run lint` → passed
+  - `npm run build` → passed
+  - changed-file diagnostics clean for:
+    - `src/components/chat/agent-clarification-chat.tsx`
+    - `src/components/chat/agent-clarification-chat.test.tsx`
+
+2026-03-29 — TaskNewPage expert-feedback panel slice completed (adapted Task 2.3)
+- Added a minimal expert-feedback/review panel in `src/pages/tasks/task-new-page.tsx` to provide plan-aligned next-step guidance before branch actions.
+- Implemented guidance generation with state-aware rules:
+  - task form missing → continue clarification
+  - task form ready but unconfirmed → confirm before branching
+  - confirmed with no files → choose upload or PubMed candidates
+  - confirmed with selected files → ready-to-upload reminder
+  - clarification-round limit with missing task form → restart hint
+- Added RED→GREEN test coverage in `src/pages/tasks/__tests__/task-new-page.test.tsx`:
+  - verifies `Expert feedback` panel renders and shows confirmation-first guidance.
+- Verification evidence:
+  - `npm run test:run -- src/pages/tasks/__tests__/task-new-page.test.tsx` → 10 tests passed
+  - `npm run test:run -- src/pages/tasks/__tests__/task-new-page.test.tsx src/components/chat/agent-clarification-chat.test.tsx` → 17 tests passed
+  - `npx tsc --noEmit -p tsconfig.app.json` → passed
+  - `npm run lint` → passed
+  - `npm run build` → passed
+  - changed-file diagnostics clean for:
+    - `src/pages/tasks/task-new-page.tsx`
+    - `src/pages/tasks/__tests__/task-new-page.test.tsx`
+
+2026-03-29 — TaskNewPage expert-feedback actions wired (adapted Task 2.3 continuation)
+- Upgraded the `Expert feedback` panel from passive hints to actionable shortcuts in `src/pages/tasks/task-new-page.tsx`:
+  - `Confirm now` action runs existing confirmation flow from feedback context.
+  - candidate-navigation shortcut action added for confirmed/no-files state (label disambiguated to avoid selector collisions with existing branch button).
+- Extended panel modeling with per-item action metadata (`confirm_now`, `go_candidates`) while preserving previous state-derived guidance rules.
+- Added RED→GREEN test coverage in `src/pages/tasks/__tests__/task-new-page.test.tsx`:
+  - `provides a confirm-now action in expert feedback` verifies feedback-triggered confirm API call and confirmed-state rendering.
+- Verification evidence:
+  - `npm run test:run -- src/pages/tasks/__tests__/task-new-page.test.tsx src/components/chat/agent-clarification-chat.test.tsx` → 18 tests passed
+  - `npx tsc --noEmit -p tsconfig.app.json` → passed
+  - `npm run lint` → passed
+  - `npm run build` → passed
+  - changed-file diagnostics clean for:
+    - `src/pages/tasks/task-new-page.tsx`
+    - `src/pages/tasks/__tests__/task-new-page.test.tsx`
