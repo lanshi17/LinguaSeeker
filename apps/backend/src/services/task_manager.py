@@ -1893,7 +1893,7 @@ def process_pdf_task(
                 exception=kb_exc,
             )
 
-        if postgres is None:
+        if postgres is None and paper_task_id:
             postgres = get_postgres_client()
 
         if cfg.use_agent_workflow("pdf"):

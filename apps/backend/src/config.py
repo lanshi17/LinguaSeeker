@@ -3,6 +3,7 @@
 import os
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 from typing import Any, Dict, List, Optional, cast
 
 from pydantic import AliasChoices, Field, field_validator
@@ -412,27 +413,41 @@ class AppConfig:
         return str(value).strip().lower() in {"1", "true", "yes", "on"}
 
     @staticmethod
-    def _load_dotenv():
+    def _project_root() -> Path:
+        return Path(__file__).resolve().parent.parent
+
+    @classmethod
+    def _load_dotenv(cls):
         try:
             from dotenv import load_dotenv
         except ImportError:
             # python-dotenv is optional; skip if unavailable
             pass
         else:
+            project_root = cls._project_root()
+
             # 基础.env
-            load_dotenv()
+            env_path = project_root / ".env"
+            if env_path.exists():
+                load_dotenv(dotenv_path=env_path)
 
             # 环境特定配置（如 .env.development）
             env_name = os.getenv("ENVIRONMENT", "development").lower()
-            env_path = os.path.join(os.getcwd(), f".env.{env_name}")
-            if os.path.exists(env_path):
-                load_dotenv(dotenv_path=env_path, override=True)
+            scoped_env_path = project_root / f".env.{env_name}"
+            if scoped_env_path.exists():
+                load_dotenv(dotenv_path=scoped_env_path, override=True)
+
+            env_local_path = project_root / ".env.local"
+            if env_local_path.exists():
+                load_dotenv(dotenv_path=env_local_path, override=True)
 
             # 显式ENV_FILE优先级最高
             env_file = os.getenv("ENV_FILE")
             if env_file:
-                env_file_path = os.path.join(os.getcwd(), env_file)
-                if os.path.exists(env_file_path):
+                env_file_path = Path(env_file)
+                if not env_file_path.is_absolute():
+                    env_file_path = project_root / env_file_path
+                if env_file_path.exists():
                     load_dotenv(dotenv_path=env_file_path, override=True)
 
     @classmethod
@@ -1112,6 +1127,9 @@ _settings: Settings | None = None
 class _LazySettingsProxy:
     def __getattr__(self, name: str) -> Any:
         return getattr(get_settings(), name)
+
+    def use_agent_workflow(self, task_type: str) -> bool:
+        return get_settings().use_agent_workflow(task_type)
 
     def __repr__(self) -> str:
         if _settings is None:

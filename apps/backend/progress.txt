@@ -1053,3 +1053,21 @@ Verification:
 
 Notes:
 - No new feature code was needed beyond cleanup; the recovered confirmation flow from the saved patch was already present in the working tree.
+
+---
+
+Implementation Update: 2026-03-30 (backend test stabilization for `yangzs-agents` merge)
+
+Completed:
+- Restored testability of the lazy settings proxy by forwarding `use_agent_workflow()` through `src/config.py`, so supervisor-path tests can override workflow flags without reaching into concrete settings instances.
+- Made `AppConfig.from_env()` load dotenv files from the backend project root instead of the current working directory, including `.env.local` and `ENV_FILE` overrides.
+- Tightened request validation behavior for PubMed candidate search and upload task-form handling so the existing error-contract tests see the expected `INPUT_INVALID` responses.
+- Removed the last production imports from legacy `src.configs` compatibility wrappers in MinIO/document storage code.
+- Allowed standalone `process_pdf_task()` executions without a `paper_task_id` to avoid forcing a real PostgreSQL connection during isolated unit tests.
+- Aligned the stale arbitration node expectation in `tests/test_node_error_handling.py` with the repository-wide `current_node="arbitration"` convention.
+
+Verification:
+- `uv run pytest tests` -> `739 passed, 23 skipped`
+
+Notes:
+- This milestone unblocks a clean merge of the backend test fixes onto `yangzs-agents`.

@@ -53,3 +53,11 @@
   - `uv run pytest -q tests/integration/test_error_contract.py::test_upload_wrong_content_type_returns_contract`
   - `uv run pytest -q tests/integration/test_m2_interaction_clarification.py tests/integration/test_m2_confirmation_contract.py tests/integration/test_m2_upload_branch_handoff.py tests/integration/test_m2_candidates_handoff.py`
 - Prevention: keep `AppConfig.api_prefix` aligned with `Settings.api_prefix` / frozen tests; treat 404 vs 415 as a routing/prefix signal first, not a validation-path bug.
+
+2026-03-30 - test-only regressions clustered around config indirection and standalone task execution
+- Symptom: backend `pytest` had 13 failures spanning feature-flag monkeypatching, dotenv loading, standalone PDF task tests, and two API error-contract expectations.
+- Root cause: `_LazySettingsProxy` exposed settings attributes via `__getattr__` only, so tests could not patch `use_agent_workflow` on the proxy class; `AppConfig._load_dotenv()` depended on `os.getcwd()` instead of the backend project root; `process_pdf_task()` always opened PostgreSQL even when no `paper_task_id` existed; and one arbitration test kept the obsolete node name `arbitrate`.
+- Additional root cause: `PubMedCandidateSearchRequest.source` was not validated at model level, so invalid-source requests reached route logic; multipart upload handling also needed raw-form inspection because FastAPI normalized blank `task_form` values to `None`.
+- Fix: forward `use_agent_workflow()` on the proxy, load dotenv from project root with `.env.local` and `ENV_FILE` support, skip forced PostgreSQL initialization for standalone PDF tasks without `paper_task_id`, validate PubMed candidate source in the DTO, inspect raw upload form keys to distinguish omitted vs blank `task_form`, remove remaining production imports from `src.configs`, and align the stale arbitration test to `current_node="arbitration"`.
+- Verification: `uv run pytest tests` -> `739 passed, 23 skipped`.
+- Prevention: when config access is abstracted behind a proxy, expose the methods tests and runtime code patch directly; avoid cwd-coupled config loading; and treat blank multipart form fields as distinct from omitted fields when API contracts depend on that difference.

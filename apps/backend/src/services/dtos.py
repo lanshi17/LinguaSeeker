@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from src.services.enum import TaskStatus, WorkflowStatus
 
@@ -224,6 +224,14 @@ class PubMedCandidateSearchRequest(BaseModel):
     language: str = Field("auto", description="Language preference")
     source: str = Field("pubmed", description="Data source, MVP supports pubmed only")
     candidate_limit: int = Field(15, ge=1, le=15, description="Candidate limit, max 15")
+
+    @field_validator("source")
+    @classmethod
+    def validate_source(cls, value: str) -> str:
+        normalized = str(value or "").strip().lower()
+        if normalized != "pubmed":
+            raise ValueError("source must be pubmed in MVP")
+        return normalized
 
 
 class PubMedCandidateSearchResponse(BaseModel):

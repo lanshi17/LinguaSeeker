@@ -12,6 +12,7 @@ from fastapi import (
     HTTPException,
     Path as ApiPath,
     Query,
+    Request,
     UploadFile,
     File,
     Form,
@@ -1007,6 +1008,7 @@ def create_task_request_by_web_crawl(
     },
 )
 async def create_task_request_by_upload(
+    request: Request,
     task_form: Optional[str] = Form(
         None, description="Natural-language task form text (legacy path)."
     ),
@@ -1017,10 +1019,15 @@ async def create_task_request_by_upload(
     files: List[UploadFile] = File(..., description="Uploaded files (PDF/DOCX)."),
 ) -> TaskRequestCreateResponse:
     # M2 Contract: either request_id (reuse path) or task_form (legacy path) required
-    if not request_id and not task_form:
+    raw_form = await request.form()
+    normalized_request_id = str(request_id or "").strip()
+    task_form_supplied = "task_form" in raw_form
+    if not normalized_request_id and task_form is None and not task_form_supplied:
         raise contract_http_exception(
             400, "INPUT_INVALID", "Either request_id or task_form is required"
         )
+    if not normalized_request_id and task_form_supplied and not str(task_form or "").strip():
+        raise contract_http_exception(422, "INPUT_INVALID", "Task form text is required")
 
     if not files:
         raise contract_http_exception(
@@ -1045,12 +1052,12 @@ async def create_task_request_by_upload(
     prepared_uploads = await _prevalidate_upload_files(files)
 
     # M2 Contract: reuse existing request if request_id provided, else create new
-    if request_id:
+    if normalized_request_id:
         # Reuse path: fetch existing confirmed request
-        request_entry = postgres.get_task_request(request_id)
+        request_entry = postgres.get_task_request(normalized_request_id)
         if request_entry is None:
             raise contract_http_exception(
-                400, "INPUT_INVALID", f"Request {request_id} not found"
+                400, "INPUT_INVALID", f"Request {normalized_request_id} not found"
             )
         request_entry_id = _uuid_str(request_entry.request_id)
     else:
@@ -1058,7 +1065,7 @@ async def create_task_request_by_upload(
         normalized_form = (task_form or "").strip()
         if not normalized_form:
             raise contract_http_exception(
-                400, "INPUT_INVALID", "Task form text is required"
+                422, "INPUT_INVALID", "Task form text is required"
             )
         request_entry = postgres.create_task_request(
             task_form_text=normalized_form,

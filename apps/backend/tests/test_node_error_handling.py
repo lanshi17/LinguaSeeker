@@ -253,7 +253,7 @@ class TestArbitrationNode:
         state = _base_state(evidence_output=None)
         result = run_arbitration_node(state)
         assert result["requires_human_review"] is False
-        assert result["current_node"] == "arbitrate"
+        assert result["current_node"] == "arbitration"
 
     def test_decision_needs_review(self, monkeypatch):
         from src.agents.arbitration.node import run_arbitration_node
