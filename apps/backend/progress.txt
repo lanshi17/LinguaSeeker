@@ -1032,3 +1032,24 @@ Verification:
 Notes:
 - Focused verification for the merged gateway/acquisition/graph-sync paths is green.
 
+---
+
+Implementation Update: 2026-03-30 (Recovered M2 task confirmation flow verification)
+
+Completed:
+- Recovered the unfinished task-creation thread by tracing the saved `update_task_new.patch` artifact and verifying the current frontend already includes the intended confirmation-first branch flow.
+- Removed an obsolete `Link` import from `apps/frontend/src/pages/tasks/task-new-page.tsx` after the page fully switched to button-driven navigation.
+- Replaced two test-only `any` usages in `apps/frontend/src/pages/tasks/__tests__/task-new-page.test.tsx` with concrete `TaskRequestCreateResponse` typing so lint/type safety stays clean.
+
+Verification:
+- `npm run test:run -- src/pages/tasks/__tests__/task-new-page.test.tsx src/pages/tasks/__tests__/pubmed-candidates-page.test.tsx src/store/__tests__/useTaskFlowStore.test.ts` -> `14 passed`
+- `npm run build` -> passed
+- `npm run lint` -> passed
+- `lsp_diagnostics` clean for:
+  - `apps/frontend/src/pages/tasks/task-new-page.tsx`
+  - `apps/frontend/src/pages/tasks/__tests__/task-new-page.test.tsx`
+  - `apps/frontend/src/store/useTaskFlowStore.ts`
+  - `apps/frontend/src/services/api.ts`
+
+Notes:
+- No new feature code was needed beyond cleanup; the recovered confirmation flow from the saved patch was already present in the working tree.

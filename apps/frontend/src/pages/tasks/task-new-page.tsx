@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { confirmTaskForm, uploadTaskRequest } from '../../services/api';
 import { ApiError } from '../../services/http';

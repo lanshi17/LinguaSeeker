@@ -8,6 +8,8 @@ import { useTaskFlowStore } from '../../../store/useTaskFlowStore';
 import { useToastStore } from '../../../store/useToastStore';
 import { uploadTaskRequest } from '../../../services/api';
 
+import type { TaskRequestCreateResponse } from '../../../types/api';
+
 vi.mock('../../../components/chat/agent-clarification-chat', () => ({
   AgentClarificationChat: () => <div>Mock clarification chat</div>,
 }));
@@ -135,7 +137,8 @@ describe('TaskNewPage branches (upload and skip-upload)', () => {
   });
 
   it('Upload: valid confirmed request + valid files calls uploadTaskRequest and navigates to /requests/:request_id', async () => {
-    vi.mocked(uploadTaskRequest).mockResolvedValueOnce({ request_id: 'req-123', status: 'queued' } as any);
+    const response: TaskRequestCreateResponse = { request_id: 'req-123', status: 'queued' };
+    vi.mocked(uploadTaskRequest).mockResolvedValueOnce(response);
     renderPage();
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -189,7 +192,7 @@ describe('TaskNewPage branches (upload and skip-upload)', () => {
   });
 
   it('Branch actions lock during submission so users cannot double-submit', async () => {
-    let resolveUpload: any;
+    let resolveUpload: ((value: TaskRequestCreateResponse) => void) | undefined;
     vi.mocked(uploadTaskRequest).mockImplementationOnce(() => {
       return new Promise((resolve) => {
         resolveUpload = resolve;
@@ -210,7 +213,7 @@ describe('TaskNewPage branches (upload and skip-upload)', () => {
     const skipBtn = screen.getByRole('button', { name: /Go to candidates/i });
     expect(skipBtn).toBeDisabled();
 
-    resolveUpload({ request_id: 'req-123', status: 'queued' });
+    resolveUpload?.({ request_id: 'req-123', status: 'queued' });
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/requests/req-123');
