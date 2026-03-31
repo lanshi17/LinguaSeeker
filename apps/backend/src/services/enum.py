@@ -110,7 +110,6 @@ PROCESSING_STEP_ORDER: tuple[str, ...] = (
     "parsing",
     "translation",
     "extraction",
-    "reasoning",
     "classification",
     "adjudication",
 )
@@ -121,7 +120,6 @@ PROCESSING_NODE_TO_STEP: Dict[str, str] = {
     "parsing": "parsing",
     "translation": "translation",
     "extraction": "extraction",
-    "reasoning": "reasoning",
     "acmg": "classification",
     "classification": "classification",
     "adjudication": "adjudication",
@@ -134,7 +132,6 @@ STEP_TO_WORKFLOW_STATUS: Dict[str, WorkflowStatus] = {
     "parsing": WorkflowStatus.processing_pdf,
     "translation": WorkflowStatus.translating,
     "extraction": WorkflowStatus.extracting_evidence,
-    "reasoning": WorkflowStatus.reasoning,
     "classification": WorkflowStatus.classifying,
     "adjudication": WorkflowStatus.adjudicating,
 }

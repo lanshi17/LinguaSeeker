@@ -130,13 +130,6 @@ def finalize(state: SupervisorState) -> SupervisorState:
     updated = dict(state)
     _mark_step(
         updated,
-        step="reasoning",
-        status=ProcessingStepStatus.completed,
-        message="Reasoning completed",
-        node_name="reasoning",
-    )
-    _mark_step(
-        updated,
         step="classification",
         status=ProcessingStepStatus.completed,
         message="Classification completed",
