@@ -106,6 +106,114 @@ async def test_gateway_routes_pmc_download_through_registry_adapter(
 
 
 @pytest.mark.asyncio
+async def test_gateway_routes_crossref_download_through_registry_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class DummyCrossrefAdapter(ProviderAdapter):
+        provider = "crossref"
+
+        async def execute(self, request: ApiGatewayRequest) -> ApiGatewayResult:
+            assert request.provider == "crossref"
+            assert request.action == "download"
+            assert request.query == "ldlr"
+            return ApiGatewayResult(
+                provider="crossref",
+                success=False,
+                items=[],
+                downloads=[],
+                warnings=["crossref_download_unsupported"],
+                meta={"routed": "registry"},
+            )
+
+    registry = ProviderAdapterRegistry([DummyCrossrefAdapter()])
+
+    monkeypatch.setattr(
+        "src.domain.literature.gateway.api_gateway.get_api_provider_registry",
+        lambda: registry,
+    )
+
+    result = await call_api_gateway(
+        ApiGatewayRequest(
+            provider="crossref",
+            action="download",
+            query="ldlr",
+        )
+    )
+
+    assert result.provider == "crossref"
+    assert result.success is False
+    assert result.items == []
+    assert result.downloads == []
+    assert result.warnings == ["crossref_download_unsupported"]
+    assert result.meta == {"routed": "registry"}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("action", "expected_items", "expected_downloads", "download_path"),
+    [
+        ("search", [{"id": "custom-1", "title": "Custom result"}], [], None),
+        (
+            "download",
+            [],
+            [
+                {
+                    "pdf_url": "https://example.org/custom.pdf",
+                    "file_path": "/tmp/custom-downloads/custom.pdf",
+                }
+            ],
+            "/tmp/custom-downloads",
+        ),
+    ],
+)
+async def test_gateway_routes_registered_provider_without_hardcoded_branch(
+    monkeypatch: pytest.MonkeyPatch,
+    action: str,
+    expected_items: list[dict[str, str]],
+    expected_downloads: list[dict[str, str]],
+    download_path: str | None,
+) -> None:
+    class DummyCustomAdapter(ProviderAdapter):
+        provider = "custom"
+
+        async def execute(self, request: ApiGatewayRequest) -> ApiGatewayResult:
+            assert request.provider == "custom"
+            assert request.action == action
+            assert request.download_path == download_path
+            return ApiGatewayResult(
+                provider="custom",
+                success=True,
+                items=expected_items,
+                downloads=expected_downloads,
+                warnings=["adapter-warning"],
+                meta={"routed": "registry"},
+            )
+
+    registry = ProviderAdapterRegistry([DummyCustomAdapter()])
+
+    monkeypatch.setattr(
+        "src.domain.literature.gateway.api_gateway.get_api_provider_registry",
+        lambda: registry,
+    )
+
+    result = await call_api_gateway(
+        ApiGatewayRequest(
+            provider="custom",
+            action=action,
+            query="custom-query",
+            download_path=download_path,
+        )
+    )
+
+    assert result.provider == "custom"
+    assert result.success is True
+    assert result.items == expected_items
+    assert result.downloads == expected_downloads
+    assert result.warnings == ["adapter-warning"]
+    assert result.meta == {"routed": "registry"}
+
+
+@pytest.mark.asyncio
 async def test_gateway_routes_jstage_download_through_registry_adapter(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
