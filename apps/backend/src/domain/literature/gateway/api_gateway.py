@@ -767,6 +767,7 @@ def get_api_provider_registry() -> "ProviderAdapterRegistry":
                 metadata_call=call_pmc_metadata,
                 search_call=call_pmc_search,
                 pmid_call=call_pmc_for_pmid,
+                download_call=call_pmc_download,
             ),
             JStageAdapter(
                 search_call=call_jstage,
@@ -808,6 +809,9 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
             )
 
         if provider == "pmc":
+            registry = get_api_provider_registry()
+            if registry.supports(provider):
+                return await registry.get(provider).execute(request)
             return await call_pmc_download(
                 request.query,
                 identifiers,
