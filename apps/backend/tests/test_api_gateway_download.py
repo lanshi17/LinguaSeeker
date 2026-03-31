@@ -51,6 +51,61 @@ async def test_gateway_routes_pmc_search_through_registry_adapter(
 
 
 @pytest.mark.asyncio
+async def test_gateway_routes_pmc_download_through_registry_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class DummyPMCAdapter(ProviderAdapter):
+        provider = "pmc"
+
+        async def execute(self, request: ApiGatewayRequest) -> ApiGatewayResult:
+            assert request.provider == "pmc"
+            assert request.action == "download"
+            assert request.identifiers == {"pmid": "12345678"}
+            assert request.download_path == "/tmp/pmc-downloads"
+            return ApiGatewayResult(
+                provider="pmc",
+                success=True,
+                items=[],
+                downloads=[
+                    {
+                        "pdf_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7654321/pdf",
+                        "file_path": "/tmp/pmc-downloads/pmc-paper.pdf",
+                    }
+                ],
+                warnings=["adapter-warning"],
+                meta={"routed": "registry"},
+            )
+
+    registry = ProviderAdapterRegistry([DummyPMCAdapter()])
+
+    monkeypatch.setattr(
+        "src.domain.literature.gateway.api_gateway.get_api_provider_registry",
+        lambda: registry,
+    )
+
+    result = await call_api_gateway(
+        ApiGatewayRequest(
+            provider="pmc",
+            action="download",
+            identifiers={"pmid": "12345678"},
+            download_path="/tmp/pmc-downloads",
+        )
+    )
+
+    assert result.provider == "pmc"
+    assert result.success is True
+    assert result.items == []
+    assert result.downloads == [
+        {
+            "pdf_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7654321/pdf",
+            "file_path": "/tmp/pmc-downloads/pmc-paper.pdf",
+        }
+    ]
+    assert result.warnings == ["adapter-warning"]
+    assert result.meta == {"routed": "registry"}
+
+
+@pytest.mark.asyncio
 async def test_gateway_routes_jstage_download_through_registry_adapter(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

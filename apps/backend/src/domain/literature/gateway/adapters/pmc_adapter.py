@@ -14,6 +14,17 @@ PmcSearchCall = Callable[
 PmcForPmidCall = Callable[
     [str, int, bool, Optional[dict[str, Any]]], Awaitable[ApiGatewayResult]
 ]
+PmcDownloadCall = Callable[
+    [
+        str | None,
+        dict[str, str | None],
+        int,
+        bool,
+        str,
+        Optional[dict[str, Any]],
+    ],
+    Awaitable[ApiGatewayResult],
+]
 
 
 async def call_pmc_metadata(
@@ -42,6 +53,17 @@ async def call_pmc_for_pmid(
     raise NotImplementedError("PMC PMID helper is not configured")
 
 
+async def call_pmc_download(
+    query: str | None,
+    identifiers: dict[str, str | None],
+    limit: int,
+    raw: bool,
+    download_path: str,
+    api_params: Optional[dict[str, Any]] = None,
+) -> ApiGatewayResult:
+    raise NotImplementedError("PMC download helper is not configured")
+
+
 class PMCAdapter(ProviderAdapter):
     provider: str = "pmc"
 
@@ -50,10 +72,12 @@ class PMCAdapter(ProviderAdapter):
         metadata_call: PmcMetadataCall | None = None,
         search_call: PmcSearchCall | None = None,
         pmid_call: PmcForPmidCall | None = None,
+        download_call: PmcDownloadCall | None = None,
     ) -> None:
         self._metadata_call = metadata_call or call_pmc_metadata
         self._search_call = search_call or call_pmc_search
         self._pmid_call = pmid_call or call_pmc_for_pmid
+        self._download_call = download_call or call_pmc_download
 
     @override
     async def execute(self, request: ApiGatewayRequest) -> ApiGatewayResult:
@@ -61,6 +85,16 @@ class PMCAdapter(ProviderAdapter):
         api_params = request.params or {}
         pmcid = identifiers.get("pmcid")
         pmid = identifiers.get("pmid")
+
+        if request.action == "download":
+            return await self._download_call(
+                request.query,
+                identifiers,
+                request.limit,
+                request.raw,
+                request.download_path,
+                api_params,
+            )
 
         if pmcid:
             return await self._metadata_call([pmcid], request.raw, api_params)
