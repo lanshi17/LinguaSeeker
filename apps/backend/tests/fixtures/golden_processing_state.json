@@ -248,12 +248,6 @@
       "message": "Evidence extracted",
       "error_code": null
     },
-    "reasoning": {
-      "status": "COMPLETED",
-      "updated_at": "2026-03-07T12:03:30+08:00",
-      "message": "Knowledge graph reasoning completed",
-      "error_code": null
-    },
     "classification": {
       "status": "COMPLETED",
       "updated_at": "2026-03-07T12:04:00+08:00",
