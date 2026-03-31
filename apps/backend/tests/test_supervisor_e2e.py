@@ -96,7 +96,7 @@ class TestHappyPaths:
 
         assert result["workflow_status"] == "completed"
         assert result["current_node"] == "finalize"
-        assert result["processing_steps"]["reasoning"]["status"] == "COMPLETED"
+        assert "reasoning" not in result["processing_steps"]
         assert result["processing_steps"]["classification"]["status"] == "COMPLETED"
         assert result["processing_steps"]["adjudication"]["status"] == "COMPLETED"
 
@@ -120,7 +120,7 @@ class TestHappyPaths:
             result = self._build_and_invoke(state, patches)
 
         assert result["workflow_status"] == "completed"
-        assert result["processing_steps"]["reasoning"]["status"] == "COMPLETED"
+        assert "reasoning" not in result["processing_steps"]
         assert result["processing_steps"]["classification"]["status"] == "COMPLETED"
         assert result["processing_steps"]["adjudication"]["status"] == "COMPLETED"
 

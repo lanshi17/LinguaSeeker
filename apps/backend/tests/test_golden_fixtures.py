@@ -130,6 +130,7 @@ class TestGoldenFixtures:
         assert data["paper_task_id"] == "paper-golden-001"
         assert data["request_id"] == "request-golden-001"
         assert set(data["processing_steps"]) == set(PROCESSING_STEP_ORDER)
+        assert "reasoning" not in data["processing_steps"]
         assert data["processing_steps"]["acquisition"]["status"] == "SKIPPED"
         assert data["processing_steps"]["adjudication"]["status"] == "COMPLETED"
         assert data["node_trace"]["translation"] == "skipped_english"

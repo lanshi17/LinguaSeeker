@@ -59,13 +59,12 @@ class TestWorkflowStatusTransitions:
 
 
 class TestProcessingStepTransitions:
-    def test_processing_step_order_is_locked(self) -> None:
+    def test_processing_step_order_is_locked_to_v1_six_node_contract(self) -> None:
         assert PROCESSING_STEP_ORDER == (
             "acquisition",
             "parsing",
             "translation",
             "extraction",
-            "reasoning",
             "classification",
             "adjudication",
         )
@@ -130,6 +129,23 @@ class TestProcessingStepTransitions:
         assert normalized["acquisition"]["status"] == ProcessingStepStatus.skipped.value
         assert normalized["translation"]["status"] == ProcessingStepStatus.skipped.value
         assert normalized["classification"]["status"] == ProcessingStepStatus.completed.value
+
+    def test_normalize_processing_steps_drops_legacy_reasoning_entry(self) -> None:
+        normalized = normalize_processing_steps(
+            {
+                "reasoning": {
+                    "status": "COMPLETED",
+                    "updated_at": "2026-03-30T00:00:00+00:00",
+                    "message": "Legacy reasoning step",
+                    "error_code": None,
+                },
+                "classification": {"status": "RUNNING"},
+            }
+        )
+
+        assert set(normalized) == set(PROCESSING_STEP_ORDER)
+        assert "reasoning" not in normalized
+        assert normalized["classification"]["status"] == ProcessingStepStatus.running.value
 
 
 class TestCreateEvidenceRecordIdempotency:
