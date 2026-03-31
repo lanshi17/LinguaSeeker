@@ -792,63 +792,12 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
     provider = request.provider
     identifiers = request.identifiers or {}
     api_params = request.params or {}
+    registry = get_api_provider_registry()
+
+    if registry.supports(provider):
+        return await registry.get(provider).execute(request)
 
     if request.action == "download":
-        if provider == "unpaywall":
-            registry = get_api_provider_registry()
-            if registry.supports(provider):
-                return await registry.get(provider).execute(request)
-            return await call_unpaywall_download(
-                request.query,
-                identifiers.get("doi"),
-                request.limit,
-                request.raw,
-                request.download_path,
-                request.selected_index,
-                api_params,
-            )
-
-        if provider == "pmc":
-            registry = get_api_provider_registry()
-            if registry.supports(provider):
-                return await registry.get(provider).execute(request)
-            return await call_pmc_download(
-                request.query,
-                identifiers,
-                request.limit,
-                request.raw,
-                request.download_path,
-                api_params,
-            )
-        if provider == "jstage":
-            registry = get_api_provider_registry()
-            if registry.supports(provider):
-                return await registry.get(provider).execute(request)
-            return await call_jstage_download(
-                request.query,
-                request.limit,
-                request.raw,
-                request.download_path,
-                request.selected_index,
-                request.selected_title,
-                request.detail_link,
-                api_params,
-            )
-
-        if provider == "doaj":
-            registry = get_api_provider_registry()
-            if registry.supports(provider):
-                return await registry.get(provider).execute(request)
-            return await call_doaj_download(
-                request.query,
-                request.limit,
-                request.raw,
-                request.download_path,
-                request.selected_index,
-                request.selected_title,
-                request.detail_link,
-                api_params,
-            )
         return ApiGatewayResult(
             provider=provider,
             success=False,
@@ -857,10 +806,16 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
             warnings=[f"{provider}_download_unsupported"],
         )
 
+    if provider == "crossref":
+        return await call_crossref(
+            request.query,
+            request.limit,
+            request.raw,
+            _crossref_filter_from_identifiers(identifiers),
+            api_params,
+        )
+
     if provider == "unpaywall":
-        registry = get_api_provider_registry()
-        if registry.supports(provider):
-            return await registry.get(provider).execute(request)
         return await call_unpaywall(
             request.query,
             identifiers.get("doi"),
@@ -870,9 +825,6 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
         )
 
     if provider == "pmc":
-        registry = get_api_provider_registry()
-        if registry.supports(provider):
-            return await registry.get(provider).execute(request)
         pmcid = identifiers.get("pmcid")
         pmid = identifiers.get("pmid")
         if pmcid:
@@ -902,9 +854,6 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
         return metadata_result
 
     if provider == "jstage":
-        registry = get_api_provider_registry()
-        if registry.supports(provider):
-            return await registry.get(provider).execute(request)
         return await call_jstage(
             request.query,
             request.limit,
@@ -913,25 +862,10 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
         )
 
     if provider == "doaj":
-        registry = get_api_provider_registry()
-        if registry.supports(provider):
-            return await registry.get(provider).execute(request)
         return await call_doaj(
             request.query,
             request.limit,
             request.raw,
-            api_params,
-        )
-
-    if provider == "crossref":
-        registry = get_api_provider_registry()
-        if registry.supports(provider):
-            return await registry.get(provider).execute(request)
-        return await call_crossref(
-            request.query,
-            request.limit,
-            request.raw,
-            _crossref_filter_from_identifiers(identifiers),
             api_params,
         )
 

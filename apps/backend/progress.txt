@@ -397,6 +397,37 @@ Notes:
 - Refactored gateway layer to unified dispatchers:
   - API gateway: `ApiGatewayRequest -> call_api_gateway`
   - automated_web gateway: `WebGatewayRequest -> call_auto_web_gateway`
+
+Implementation Update: 2026-03-31 (Acquisition adapter facade finalization)
+
+Completed:
+- Finished the remaining 3/21 acquisition strategy + adapter cleanup in the gateway facade.
+- Routed PMC download through the provider adapter registry instead of a dedicated hardcoded branch.
+- Tightened `call_api_gateway(...)` into a registry-first facade:
+  - registered providers now dispatch through `get_api_provider_registry()` before fallback handling
+  - added regression coverage proving a registered provider not named in a hardcoded branch still routes through the registry for both search and download
+- Preserved orchestration boundaries:
+  - `src/agents/acquisition/node.py` remains orchestration-only
+  - `src/domain/literature/acquisition_agent.py` remains the planning layer
+  - provider execution stays in `src/domain/literature/gateway/`
+
+Files:
+- src/domain/literature/gateway/api_gateway.py
+- src/domain/literature/gateway/adapters/pmc_adapter.py
+- tests/test_api_gateway_download.py
+- tests/domain/literature/gateway/test_pmc_adapter.py
+
+Validation:
+- `uv run python -m py_compile src/agents/acquisition/node.py src/agents/acquisition/api_tool.py src/agents/acquisition/crawl_tool.py src/domain/literature/acquisition_agent.py src/domain/literature/gateway/api_gateway.py src/domain/literature/gateway/base.py src/domain/literature/gateway/registry.py src/domain/literature/gateway/adapters/__init__.py src/domain/literature/gateway/adapters/*.py`
+  - result: PASS
+- `uv run pytest -q tests/test_api_gateway_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py tests/domain/literature/gateway/test_registry.py tests/domain/literature/gateway/test_pmc_adapter.py tests/domain/literature/gateway/test_crossref_adapter.py tests/domain/literature/gateway/test_jstage_adapter.py tests/domain/literature/gateway/test_doaj_adapter.py tests/domain/literature/gateway/test_unpaywall_adapter.py`
+  - result: 37 passed
+- `uv run ruff check src/domain/literature/gateway/api_gateway.py src/domain/literature/gateway/adapters src/agents/acquisition src/domain/literature/acquisition_agent.py tests/test_api_gateway_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py tests/domain/literature/gateway`
+  - result: PASS
+
+Notes:
+- `basedpyright` still reports pre-existing warnings in `src/agents/acquisition/node.py` and `src/domain/literature/acquisition_agent.py`; no new gateway-facade-specific Ruff issues were introduced.
+- Environment still emits the existing `RequestsDependencyWarning` during pytest, but the targeted acquisition regression suite passes cleanly.
 - Updated unified literature workflow to consume only the two unified gateways.
 - Updated workflow tests to patch unified gateway dispatchers (3 passed).
 
