@@ -180,9 +180,10 @@ docs/
 - `IMPLEMENTATION_PLAN.md`
 
 **运维人员**:
+- `apps/backend/database/README.md`
 - `deploy/README.md`
 - `TROUBLESHOOTING.md`
-- `docker-compose.yml`
+- `apps/backend/database/scripts/dbctl.sh`
 
 ## 外部资源
 

@@ -191,9 +191,9 @@ npm run test
 
 ### 开发环境
 
-使用 `docker-compose.yml` 启动所有服务：
+使用后端数据库统一入口管理数据库相关服务：
 ```bash
-docker-compose up -d
+./backend/database/scripts/dbctl.sh up
 ```
 
 ### 生产环境

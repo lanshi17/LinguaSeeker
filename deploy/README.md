@@ -410,7 +410,8 @@ tar -czf minio-backup-$(date +%Y%m%d).tar.gz /var/lib/docker/volumes/minio_data
 - [项目根目录 README](../README.md)
 - [后端 README](../apps/backend/README.md)
 - [前端 README](../apps/frontend/README.md)
-- [Docker Compose 配置](../docker-compose.yml)
+- [数据库统一管理](../apps/backend/database/README.md)
+- [数据库 compose 配置](../apps/backend/database/podman-compose.yml)
 
 ---
 
