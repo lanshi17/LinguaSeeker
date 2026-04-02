@@ -11,14 +11,15 @@
 
 ## 当前计划文件
 
-- `2026-03-22-v1.0-multi-source-6node-rollout.md`
-- `2026-03-21-acquisition-strategy-adapter-design.md`
-- `2026-03-21-acquisition-strategy-adapter-implementation.md`
 - `2026-03-21-database-unified-management.md`
+- `2026-03-22-v1.0-multi-source-6node-rollout.md`
+- `2026-03-23-m2-task-creation-flow-design.md`
+- `2026-03-23-m2-task-creation-flow-implementation.md`
 
 ## 归档目录
 
 - `docs/archive/2026-03-22-legacy-plans/`
+- `docs/archive/2026-04-02-completed-plans/`
 
 ## 建议流程
 
