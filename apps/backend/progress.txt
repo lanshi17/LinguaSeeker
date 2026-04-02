@@ -431,6 +431,47 @@ Notes:
 - Updated unified literature workflow to consume only the two unified gateways.
 - Updated workflow tests to patch unified gateway dispatchers (3 passed).
 
+Implementation Update: 2026-04-01 (M2 task-creation slice verification and handoff)
+
+Completed:
+- Verified the M2 task-creation clarification contract, confirmation contract, upload-branch handoff, and PubMed-candidates handoff are present and green on the current branch.
+- Verified the frontend single-page M2 task-creation flow is wired on `/tasks/new` with:
+  - clarification panel
+  - task-sheet confirmation gate
+  - upload branch submission
+  - PubMed candidates branch handoff
+- Verified the PubMed candidates page consumes confirmed `request_id` handoff and submit flow state correctly.
+- Confirmed this M2 slice is substantially implemented already; current work focused on execution audit, verification, and handoff evidence rather than introducing a new backend/frontend behavior delta.
+
+Files verified:
+- src/api/routes/task.py
+- src/services/dtos.py
+- tests/integration/test_m2_interaction_clarification.py
+- tests/integration/test_m2_confirmation_contract.py
+- tests/integration/test_m2_upload_branch_handoff.py
+- tests/integration/test_m2_candidates_handoff.py
+- tests/test_stream_route.py
+- apps/frontend/src/pages/tasks/task-new-page.tsx
+- apps/frontend/src/pages/tasks/pubmed-candidates-page.tsx
+- apps/frontend/src/pages/tasks/__tests__/task-new-page.test.tsx
+- apps/frontend/src/pages/tasks/__tests__/pubmed-candidates-page.test.tsx
+- apps/frontend/src/services/api.ts
+- apps/frontend/src/store/useTaskFlowStore.ts
+- apps/frontend/src/types/api.ts
+
+Validation:
+- `uv run pytest -q tests/integration/test_m2_interaction_clarification.py tests/integration/test_m2_confirmation_contract.py tests/integration/test_m2_upload_branch_handoff.py tests/integration/test_m2_candidates_handoff.py tests/test_stream_route.py`
+  - result: 17 passed
+- `npm run test:run -- src/pages/tasks/__tests__/task-new-page.test.tsx src/pages/tasks/__tests__/pubmed-candidates-page.test.tsx`
+  - result: 16 passed
+- `npm run build`
+  - result: PASS
+
+Notes:
+- Backend pytest still emits existing Pydantic v2 deprecation warnings and the existing `RequestsDependencyWarning`; the targeted M2 slice remains green.
+- Frontend `npm install` reported existing dependency vulnerabilities; no dependency changes were made in this slice.
+- No substantial new M2 implementation gap was identified in the audited clarification/confirmation/upload/candidates slice; the remaining work should be planned from explicit unmet requirements rather than assuming the 2026-03-23 plan is still mostly unimplemented.
+
 2026-03-21 MVP-Literature hardening
 Completed:
 - Restricted unified literature workflow to MVP-compatible routing (PMC only) and disabled web/non-PMC providers in unified entry.
