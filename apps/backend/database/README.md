@@ -68,3 +68,8 @@ database/
 - `init` 会调用 `src.infrastructure.postgres.initialize_schema()` 并执行 `sql/seed_data.sql`。
 - `cleanup` 仅执行 `sql/cleanup_orphan_records.sql`。
 - `reset --yes` 会清理卷并清空 `database/minio/data`。
+
+## 配置契约
+
+- `database/config/.env` 与 `.env.example` 必须使用纯 `KEY=VALUE` 格式，不要在值后追加行内注释。
+- Neo4j 使用单个 `NEO4J_AUTH=user/password` 变量，不能再拆成 `NEO4J_USER` / `NEO4J_PASSWORD`。
