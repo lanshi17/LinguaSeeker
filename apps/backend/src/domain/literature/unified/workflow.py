@@ -8,6 +8,11 @@ from src.domain.literature.gateway.api_gateway import (
     ApiGatewayResult,
     call_api_gateway,
 )
+from src.domain.literature.gateway.web_gateway import (
+    WebGatewayRequest,
+    WebGatewayResult,
+    call_auto_web_gateway,
+)
 from src.domain.literature.unified.models import (
     ApiProvider,
     UnifiedLiteratureItem,
@@ -99,6 +104,19 @@ def _api_response_to_raw(result: ApiGatewayResult) -> Dict[str, Any]:
     }
 
 
+def _web_response_to_raw(result: WebGatewayResult, *, source_trace: List[Dict[str, Any]]) -> Dict[str, Any]:
+    return {
+        "success": result.success,
+        "items": result.items,
+        "downloads": result.downloads,
+        "warnings": result.warnings,
+        "raw": result.raw,
+        "provider": result.provider,
+        "source_trace": source_trace,
+        "attempts": len(source_trace),
+    }
+
+
 async def _execute_api(
     provider: ApiProvider,
     request: UnifiedLiteratureRequest,
@@ -173,6 +191,74 @@ async def _execute_api(
     raise RuntimeError("provider execution failed without result")
 
 
+async def _execute_web(
+    provider: str,
+    request: UnifiedLiteratureRequest,
+    query: str,
+) -> WebGatewayResult:
+    gateway_request = WebGatewayRequest(
+        provider=provider,
+        action=request.action,
+        query=query,
+        limit=request.limit,
+        params=request.web_params,
+        download_path=request.download_path,
+        selected_index=request.selected_index,
+        selected_title=request.selected_title,
+        detail_link=request.detail_link,
+    )
+    attempts = DEFAULT_PROVIDER_RETRIES[request.action]
+    source_trace: List[Dict[str, Any]] = []
+    last_exception: Exception | None = None
+
+    for attempt in range(1, attempts + 1):
+        try:
+            result = await call_auto_web_gateway(gateway_request)
+        except Exception as exc:
+            last_exception = exc
+            source_trace.append(
+                {
+                    "provider": provider,
+                    "attempt": attempt,
+                    "success": False,
+                    "items_count": 0,
+                    "downloads_count": 0,
+                    "warnings": [],
+                    "error": str(exc),
+                }
+            )
+            if attempt == attempts:
+                raise
+            continue
+
+        source_trace.append(
+            {
+                "provider": provider,
+                "attempt": attempt,
+                "success": result.success,
+                "items_count": len(result.items),
+                "downloads_count": len(result.downloads),
+                "warnings": result.warnings,
+                "error": None,
+            }
+        )
+        setattr(result, "source_trace", source_trace)
+
+        has_result = (
+            bool(result.downloads)
+            if request.action == "download"
+            else bool(result.items)
+        )
+        if result.success and has_result:
+            return result
+        if attempt == attempts:
+            return result
+
+    if last_exception is not None:
+        raise last_exception
+    raise RuntimeError("web provider execution failed without result")
+
+
 def _build_api_response(
     *,
     success: bool,
@@ -215,37 +301,59 @@ async def literature_unified_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
         )
         return response.model_dump()
 
-    if request.prefer == "web" or request.web_provider is not None:
+    if request.prefer == "web":
+        web_provider = request.web_provider or "pubscholar"
         route = UnifiedRouteInfo(
             prefer=request.prefer,
-            api_provider="pmc",
-            web_provider=request.web_provider,
+            api_provider=None,
+            web_provider=web_provider,
             used="none",
-            reason="mvp_pubmed_only",
+            reason=None,
+            fallback_used=False,
         )
-        response = UnifiedLiteratureResponse(
-            success=False,
-            items=[],
-            warnings=["INPUT_INVALID: web source is disabled in MVP"],
-            route=route,
-        )
-        return response.model_dump()
+        warnings: List[str] = []
+        raw_payload: Dict[str, Any] = {}
+        query = _build_query(request)
 
-    if request.api_provider and request.api_provider != "pmc":
-        route = UnifiedRouteInfo(
-            prefer=request.prefer,
-            api_provider=request.api_provider,
-            web_provider=None,
-            used="none",
-            reason="mvp_pubmed_only",
+        web_result = await _execute_web(web_provider, request, query)
+        web_items = (
+            normalize_items(web_result.provider, web_result.items)
+            if request.action == "search"
+            else []
         )
+        warnings.extend(web_result.warnings)
+        if request.raw:
+            raw_payload["web"] = _web_response_to_raw(
+                web_result,
+                source_trace=getattr(web_result, "source_trace", []),
+            )
+
+        web_has_result = (
+            bool(web_result.downloads)
+            if request.action == "download"
+            else bool(web_items)
+        )
+
+        route.used = "web"
+        if web_has_result:
+            route.reason = f"web_provider:{route.web_provider}"
+        else:
+            route.reason = (
+                "web_download_failed" if request.action == "download" else "web_no_items"
+            )
+            warnings.append(
+                "FULLTEXT_UNAVAILABLE"
+                if request.action == "download"
+                else "FETCH_NO_RESULT"
+            )
+
         response = UnifiedLiteratureResponse(
-            success=False,
-            items=[],
-            warnings=[
-                f"INPUT_INVALID: api_provider '{request.api_provider}' is disabled in MVP"
-            ],
+            success=bool(web_result.success and web_has_result),
+            items=web_items,
+            downloads=web_result.downloads if request.action == "download" else [],
+            warnings=warnings,
             route=route,
+            raw=raw_payload if raw_payload else None,
         )
         return response.model_dump()
 
@@ -290,6 +398,37 @@ async def literature_unified_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
             if request.action == "download"
             else "FETCH_NO_RESULT"
         )
+
+        should_fallback_to_web = request.prefer == "auto"
+        if should_fallback_to_web:
+            web_provider = request.web_provider or "pubscholar"
+            web_result = await _execute_web(web_provider, request, query)
+            web_items = normalize_items(web_result.provider, web_result.items)
+            if request.raw:
+                raw_payload["web"] = _web_response_to_raw(
+                    web_result,
+                    source_trace=getattr(web_result, "source_trace", []),
+                )
+            web_has_result = (
+                bool(web_result.downloads)
+                if request.action == "download"
+                else bool(web_items)
+            )
+            if web_result.success and web_has_result:
+                route.used = "web"
+                route.web_provider = web_provider
+                route.reason = f"web_provider:{web_provider}"
+                route.fallback_used = True
+                combined_warnings = warnings + web_result.warnings
+                response = UnifiedLiteratureResponse(
+                    success=True,
+                    items=web_items,
+                    downloads=web_result.downloads if request.action == "download" else [],
+                    warnings=combined_warnings,
+                    route=route,
+                    raw=raw_payload if raw_payload else None,
+                )
+                return response.model_dump()
 
     response_success = bool(api_result.success and api_has_result)
     response = _build_api_response(
