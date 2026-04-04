@@ -1053,3 +1053,21 @@ Verification:
 
 Notes:
 - No new feature code was needed beyond cleanup; the recovered confirmation flow from the saved patch was already present in the working tree.
+
+---
+
+Implementation Update: 2026-03-30 (M2 task-creation re-verification)
+
+Completed:
+- Re-ran fresh backend and frontend verification for the M2 task-creation flow after confirming the current branch/worktree context.
+- Confirmed the implemented scope still matches the approved M2 task-creation slice: clarification, task-sheet confirmation, upload handoff, and candidate handoff.
+
+Verification:
+- `uv run pytest -q tests/integration/test_m2_interaction_clarification.py tests/integration/test_m2_confirmation_contract.py tests/integration/test_m2_upload_branch_handoff.py tests/integration/test_m2_candidates_handoff.py` -> `13 passed, 14 warnings`
+- `npm run test:run -- src/pages/tasks/__tests__/task-new-page.test.tsx src/pages/tasks/__tests__/pubmed-candidates-page.test.tsx src/store/__tests__/useTaskFlowStore.test.ts` -> `18 passed`
+- `npm run build` -> passed
+- `npm run lint` -> passed
+
+Notes:
+- Current verification found no new code changes required for the M2 task-creation slice.
+- Remaining out-of-scope items are still later-page/details work outside this task-creation plan slice.

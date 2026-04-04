@@ -1,0 +1,106 @@
+{
+  "project": "ACMG-Lingua Backend",
+  "branchName": "ralph/acquisition-strategy-adapter",
+  "description": "Refactor literature acquisition to use a registry-backed strategy and adapter architecture while preserving the existing gateway API surface and provider behavior.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Freeze current acquisition gateway compatibility with regression tests",
+      "description": "As a maintainer, I want regression tests around the current gateway, unified workflow, and acquisition node behavior so that the adapter refactor preserves the existing external contract.",
+      "acceptanceCriteria": [
+        "tests/test_api_gateway_download.py asserts the current call_api_gateway(...) result contract for at least one existing provider path",
+        "tests/test_literature_unified_workflow.py asserts the unified workflow still receives the same gateway-level output semantics through the existing facade",
+        "tests/test_agents_acquisition.py asserts the acquisition node stays orchestration-only and does not require provider-specific branching knowledge",
+        "uv run pytest -q tests/test_api_gateway_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py passes",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Add provider adapter base contract and registry",
+      "description": "As a maintainer, I want a small adapter interface and registry in the gateway layer so that provider dispatch is centralized without changing higher-level callers.",
+      "acceptanceCriteria": [
+        "Create src/domain/literature/gateway/base.py with a minimal provider adapter contract",
+        "Create src/domain/literature/gateway/registry.py with registration, lookup, unsupported-provider handling, and duplicate-registration behavior",
+        "src/domain/literature/gateway/__init__.py exports the new gateway primitives",
+        "tests/domain/literature/gateway/test_registry.py covers register, lookup, unknown provider, and duplicate registration behavior",
+        "uv run pytest -q tests/domain/literature/gateway/test_registry.py passes",
+        "uv run python -m py_compile src/domain/literature/gateway/base.py src/domain/literature/gateway/registry.py src/domain/literature/gateway/__init__.py passes",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Route the PMC provider path through the adapter registry",
+      "description": "As a maintainer, I want one existing provider path migrated end-to-end through the adapter layer so that the new architecture proves it can preserve current gateway behavior.",
+      "acceptanceCriteria": [
+        "Create src/domain/literature/gateway/adapters/__init__.py and src/domain/literature/gateway/adapters/pmc_adapter.py",
+        "tests/domain/literature/gateway/test_pmc_adapter.py verifies the adapter delegates to the existing PMC implementation and returns the current gateway-compatible output",
+        "src/domain/literature/gateway/api_gateway.py routes the PMC branch through the registry while keeping call_api_gateway(...) externally compatible",
+        "uv run pytest -q tests/domain/literature/gateway/test_pmc_adapter.py tests/test_api_gateway_download.py tests/test_literature_unified_workflow.py passes",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Migrate remaining existing provider branches into adapters",
+      "description": "As a maintainer, I want the remaining supported provider branches moved behind thin adapters one by one so that gateway dispatch becomes registry-driven without rewriting provider logic.",
+      "acceptanceCriteria": [
+        "Create thin adapter files only for already-supported providers such as JStage, Unpaywall, Crossref, and other existing branches that are currently implemented",
+        "Each migrated provider keeps its current public gateway behavior through compatibility assertions in tests/test_api_gateway_download.py or existing provider-specific tests",
+        "src/domain/literature/gateway/api_gateway.py replaces hardcoded provider branching with incremental registry lookup for the migrated providers",
+        "Relevant focused provider regression tests pass after each provider migration",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Keep each story-sized migration thin and delegation-oriented; split further if the provider set proves too large for one Ralph iteration."
+    },
+    {
+      "id": "US-005",
+      "title": "Clean up acquisition orchestration boundaries",
+      "description": "As a maintainer, I want acquisition orchestration to stay in the node and planning layers while provider dispatch lives in the gateway so that responsibilities remain clear after the adapter migration.",
+      "acceptanceCriteria": [
+        "tests/test_agents_acquisition.py asserts the acquisition node orchestrates planning and execution without encoding provider-specific dispatch details",
+        "src/agents/acquisition/node.py and thin wrappers only call the preserved facade or planning layer and do not own provider branching",
+        "src/domain/literature/acquisition_agent.py keeps planning and normalization responsibilities while execution remains in the gateway layer",
+        "uv run pytest -q tests/test_agents_acquisition.py tests/test_literature_unified_workflow.py passes",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Run final verification for the acquisition adapter refactor",
+      "description": "As a maintainer, I want a final verification wave across the touched acquisition and gateway files so that the strategy-plus-adapter refactor is proven against syntax, tests, and static checks.",
+      "acceptanceCriteria": [
+        "uv run python -m py_compile src/agents/acquisition/node.py src/agents/acquisition/api_tool.py src/agents/acquisition/crawl_tool.py src/domain/literature/acquisition_agent.py src/domain/literature/gateway/api_gateway.py src/domain/literature/gateway/base.py src/domain/literature/gateway/registry.py src/domain/literature/gateway/adapters/__init__.py src/domain/literature/gateway/adapters/*.py passes",
+        "uv run pytest -q tests/test_agents_acquisition.py tests/test_literature_unified_workflow.py tests/test_api_gateway_download.py tests/domain/literature/gateway/test_registry.py tests/domain/literature/gateway/test_pmc_adapter.py plus any additional provider-specific tests for migrated adapters passes",
+        "uv run basedpyright src/agents/acquisition src/domain/literature/gateway src/domain/literature/acquisition_agent.py passes with no new errors in the touched scope",
+        "uv run ruff check src/agents/acquisition src/domain/literature/gateway src/domain/literature/acquisition_agent.py tests/test_agents_acquisition.py tests/test_literature_unified_workflow.py tests/test_api_gateway_download.py tests/domain/literature/gateway passes with no new errors in the touched scope",
+        "Implementation still preserves the external gateway API, keeps orchestration in src/agents/acquisition/, keeps planning in acquisition_agent.py, and keeps strategy/adapter logic in the gateway layer",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
