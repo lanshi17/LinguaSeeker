@@ -206,6 +206,25 @@ class TaskRequestStatusResponse(BaseModel):
     )
 
 
+class SourceProviderStatsResponse(BaseModel):
+    attempts: int = Field(0, description="Total provider attempts")
+    hits: int = Field(0, description="Successful provider hits with returned items or downloads")
+    search_hits: int = Field(0, description="Successful search hits")
+    download_hits: int = Field(0, description="Successful download hits")
+    errors: int = Field(0, description="Attempts ending with an error")
+    fallback_hits: int = Field(0, description="Successful hits that occurred after an earlier failed attempt")
+
+
+class TaskRequestSourceStatsResponse(BaseModel):
+    request_id: str = Field(..., description="Request UUIDv4")
+    paper_count: int = Field(..., description="Number of paper tasks considered in the aggregation")
+    fallback_count: int = Field(..., description="Number of paper tasks that used fallback across providers")
+    providers: Dict[str, SourceProviderStatsResponse] = Field(
+        default_factory=dict,
+        description="Aggregated provider hit statistics derived from persisted source_trace",
+    )
+
+
 class PubMedCandidateItem(BaseModel):
     pmid: str = Field(..., description="PubMed id")
     title: str = Field(..., description="Article title")

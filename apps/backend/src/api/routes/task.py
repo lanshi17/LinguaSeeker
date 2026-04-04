@@ -56,6 +56,8 @@ from src.services.dtos import (
     ConfirmationContractRequest,
     ConfirmationContractResponse,
     BranchOption,
+    SourceProviderStatsResponse,
+    TaskRequestSourceStatsResponse,
 )
 from src.services.enum import (
     TaskStatus,
@@ -385,6 +387,75 @@ def _paper_item_model(entry: Any) -> PaperTaskItemResponse:
 
 def _synthetic_hash_from_pmid(pmid: str) -> str:
     return hashlib.sha256(f"pmid:{pmid}".encode("utf-8")).hexdigest()
+
+
+def _aggregate_source_stats(papers: List[Any]) -> Dict[str, Any]:
+    provider_stats: Dict[str, Dict[str, int]] = {}
+    fallback_count = 0
+
+    for paper in papers:
+        node_trace = getattr(paper, "node_trace", None)
+        if not isinstance(node_trace, dict):
+            continue
+        acquisition_detail = node_trace.get("acquisition_detail")
+        if not isinstance(acquisition_detail, dict):
+            continue
+        source_trace = acquisition_detail.get("source_trace")
+        if not isinstance(source_trace, list):
+            continue
+
+        had_previous_failure = False
+        used_fallback = False
+        for attempt in source_trace:
+            if not isinstance(attempt, dict):
+                continue
+            provider = str(attempt.get("provider") or "").strip()
+            if not provider:
+                continue
+            stats = provider_stats.setdefault(
+                provider,
+                {
+                    "attempts": 0,
+                    "hits": 0,
+                    "search_hits": 0,
+                    "download_hits": 0,
+                    "errors": 0,
+                    "fallback_hits": 0,
+                },
+            )
+            stats["attempts"] += 1
+
+            success = bool(attempt.get("success"))
+            items_count = int(attempt.get("items_count") or 0)
+            downloads_count = int(attempt.get("downloads_count") or 0)
+            error = attempt.get("error")
+
+            if error:
+                stats["errors"] += 1
+                had_previous_failure = True
+                continue
+
+            if success and (items_count > 0 or downloads_count > 0):
+                stats["hits"] += 1
+                if items_count > 0:
+                    stats["search_hits"] += 1
+                if downloads_count > 0:
+                    stats["download_hits"] += 1
+                if had_previous_failure:
+                    stats["fallback_hits"] += 1
+                    used_fallback = True
+
+        if used_fallback:
+            fallback_count += 1
+
+    return {
+        "paper_count": len(papers),
+        "fallback_count": fallback_count,
+        "providers": {
+            provider: SourceProviderStatsResponse(**stats)
+            for provider, stats in provider_stats.items()
+        },
+    }
 
 
 @router.post(
@@ -1341,6 +1412,36 @@ def get_task_request_status(
         request_id=str(request_entry.request_id),
         status=_status_str(request_entry.status),
         papers=[_paper_item_model(item) for item in papers],
+    )
+
+
+@router.get(
+    "/requests/{request_id}/source-stats",
+    summary="Get aggregated source hit statistics",
+    description="Aggregate persisted source_trace data for all paper tasks under the request.",
+    response_model=TaskRequestSourceStatsResponse,
+    responses={404: {"model": ErrorResponse, "description": "Request not found."}},
+)
+def get_task_request_source_stats(
+    request_id: str = ApiPath(..., description="Request UUIDv4."),
+) -> TaskRequestSourceStatsResponse:
+    try:
+        request_uuid = UUID(request_id)
+    except ValueError:
+        raise contract_http_exception(400, "INPUT_INVALID", "Invalid request_id")
+
+    postgres = get_postgres_client()
+    request_entry = postgres.get_task_request(request_uuid)
+    if request_entry is None:
+        raise contract_http_exception(404, "RESOURCE_NOT_FOUND", "Request not found")
+
+    papers = postgres.list_paper_tasks_by_request(request_uuid)
+    aggregated = _aggregate_source_stats(papers)
+    return TaskRequestSourceStatsResponse(
+        request_id=str(request_entry.request_id),
+        paper_count=aggregated["paper_count"],
+        fallback_count=aggregated["fallback_count"],
+        providers=aggregated["providers"],
     )
 
 

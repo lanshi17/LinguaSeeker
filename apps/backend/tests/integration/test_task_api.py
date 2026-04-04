@@ -33,6 +33,122 @@ def task_prefix() -> str:
     return f"{cfg.api_prefix}/tasks"
 
 
+def test_get_task_request_status_success(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
+    request_id = uuid4()
+    paper_task_id = uuid4()
+    document_id = uuid4()
+
+    class DummyPostgres:
+        def refresh_task_request_status(self, request_uuid: Any) -> Any:
+            assert request_uuid == request_id
+            return SimpleNamespace(request_id=request_id, status="running")
+
+        def list_paper_tasks_by_request(self, request_uuid: Any) -> List[Any]:
+            assert request_uuid == request_id
+            return [
+                SimpleNamespace(
+                    paper_task_id=paper_task_id,
+                    original_filename="paper.pdf",
+                    status="success",
+                    error_code=None,
+                    duplicate_of=None,
+                    document_id=document_id,
+                    celery_task_id="task-1",
+                )
+            ]
+
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+
+    response = client.get(f"{task_prefix}/requests/{request_id}")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["request_id"] == str(request_id)
+    assert payload["status"] == "running"
+    assert payload["papers"][0]["paper_task_id"] == str(paper_task_id)
+
+
+def test_get_source_stats_aggregates_provider_hits_and_fallbacks(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
+    request_id = uuid4()
+
+    source_trace_primary = [
+        {
+            "provider": "crossref",
+            "attempt": 1,
+            "success": False,
+            "items_count": 0,
+            "downloads_count": 0,
+            "warnings": [],
+            "error": "timeout",
+        },
+        {
+            "provider": "pubscholar",
+            "attempt": 2,
+            "success": True,
+            "items_count": 1,
+            "downloads_count": 0,
+            "warnings": ["web-fallback"],
+            "error": None,
+        },
+    ]
+    source_trace_secondary = [
+        {
+            "provider": "pmc",
+            "attempt": 1,
+            "success": True,
+            "items_count": 0,
+            "downloads_count": 1,
+            "warnings": [],
+            "error": None,
+        }
+    ]
+
+    class DummyPostgres:
+        def get_task_request(self, request_uuid: Any) -> Any:
+            assert request_uuid == request_id
+            return SimpleNamespace(request_id=request_id, status="success")
+
+        def list_paper_tasks_by_request(self, request_uuid: Any) -> List[Any]:
+            assert request_uuid == request_id
+            return [
+                SimpleNamespace(
+                    paper_task_id=uuid4(),
+                    node_trace={
+                        "acquisition_detail": {
+                            "source_trace": source_trace_primary,
+                        }
+                    },
+                    request_metadata=None,
+                ),
+                SimpleNamespace(
+                    paper_task_id=uuid4(),
+                    node_trace={
+                        "acquisition_detail": {
+                            "source_trace": source_trace_secondary,
+                        }
+                    },
+                    request_metadata=None,
+                ),
+            ]
+
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+
+    response = client.get(f"{task_prefix}/requests/{request_id}/source-stats")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["request_id"] == str(request_id)
+    assert payload["paper_count"] == 2
+    assert payload["fallback_count"] == 1
+    assert payload["providers"]["crossref"]["attempts"] == 1
+    assert payload["providers"]["crossref"]["errors"] == 1
+    assert payload["providers"]["pubscholar"]["hits"] == 1
+    assert payload["providers"]["pubscholar"]["fallback_hits"] == 1
+    assert payload["providers"]["pmc"]["download_hits"] == 1
+
+
 def test_create_task_success(
     client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
 ) -> None:
