@@ -1126,8 +1126,6 @@ Verification:
 Notes:
 - No new feature code was needed beyond cleanup; the recovered confirmation flow from the saved patch was already present in the working tree.
 
----
-
 Implementation Update: 2026-03-30 (backend test stabilization for `yangzs-agents` merge)
 
 Completed:
@@ -1162,3 +1160,4 @@ Verification:
 Notes:
 - This closure pass required no business-code edits; the remaining work was Ralph tracking and handoff completion.
 - `lesson.md` was intentionally left unchanged because no new debugging pattern or root cause was discovered during this pass.
+- The pytest slice emitted pre-existing environment/runtime warnings (`RequestsDependencyWarning` and a `PytestUnraisableExceptionWarning` from an event loop shutdown path), but the command exited successfully with all tests passing.
