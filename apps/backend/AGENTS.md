@@ -27,6 +27,7 @@ If any conflict appears, resolve by priority:
 8. Scripts related to initialization and startup must be centralized in **scripts/**.
 9. Database-related files must be centralized in **database/**.
 10. Any ambiguous requirements must be clarified through consultation and confirmation; making assumptions on one’s own is strictly prohibited.
+11. The primary integration branch for this repository is **`yangzs-agents`**.
 
 ## 2. Scope (MVP)
 Implement the main 5-node workflow:
