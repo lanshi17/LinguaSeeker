@@ -129,6 +129,36 @@ def test_run_acquisition_node_pubmed_maps_plan(monkeypatch) -> None:
         "get_literature_acquisition_agent",
         lambda: FakeAcquisitionAgent(),
     )
+    async def fake_workflow(payload: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "success": True,
+            "items": [{"title": "PMC article"}],
+            "downloads": [],
+            "warnings": [],
+            "route": {"used": "api", "api_provider": "pmc"},
+            "raw": {
+                "api": {
+                    "source_trace": [
+                        {
+                            "provider": "pmc",
+                            "attempt": 1,
+                            "success": True,
+                            "items_count": 1,
+                            "downloads_count": 0,
+                            "warnings": [],
+                            "error": None,
+                        }
+                    ]
+                }
+            },
+        }
+
+    monkeypatch.setattr(
+        acquisition_node,
+        "literature_unified_workflow",
+        fake_workflow,
+        raising=False,
+    )
 
     state = cast(
         SupervisorState,
@@ -165,4 +195,141 @@ def test_run_acquisition_node_pubmed_maps_plan(monkeypatch) -> None:
             }
         ],
     }
+    assert result["acquisition_result"]["route"]["used"] == "api"
+    assert result["node_trace"]["acquisition_result"]["route"]["api_provider"] == "pmc"
     assert result["processing_steps"]["acquisition"]["status"] == "COMPLETED"
+
+
+def test_run_acquisition_node_web_invokes_unified_workflow(monkeypatch) -> None:
+    from src.agents.acquisition import node as acquisition_node
+
+    class FakeAcquisitionAgent:
+        def plan_web_request(self, urls: list[str]) -> list[AcquisitionPlanItem]:
+            assert urls == ["https://cyberleninka.ru/article/n/test"]
+            return [
+                AcquisitionPlanItem(
+                    source="web",
+                    raw_value="https://cyberleninka.ru/article/n/test",
+                    normalized_value="https://cyberleninka.ru/article/n/test",
+                    fingerprint="url:fingerprint",
+                    display_name="https://cyberleninka.ru/article/n/test",
+                    metadata={
+                        "source_url": "https://cyberleninka.ru/article/n/test",
+                    },
+                )
+            ]
+
+    async def fake_workflow(payload: dict[str, Any]) -> dict[str, Any]:
+        assert payload["prefer"] == "web"
+        assert payload["query"] == "https://cyberleninka.ru/article/n/test"
+        return {
+            "success": True,
+            "items": [{"title": "Cyberleninka article"}],
+            "downloads": [],
+            "warnings": [],
+            "route": {"used": "web", "web_provider": "cyberleninka"},
+            "raw": {
+                "web": {
+                    "source_trace": [
+                        {
+                            "provider": "cyberleninka",
+                            "attempt": 1,
+                            "success": True,
+                            "items_count": 1,
+                            "downloads_count": 0,
+                            "warnings": [],
+                            "error": None,
+                        }
+                    ]
+                }
+            },
+        }
+
+    monkeypatch.setattr(
+        acquisition_node,
+        "get_literature_acquisition_agent",
+        lambda: FakeAcquisitionAgent(),
+    )
+    monkeypatch.setattr(
+        acquisition_node,
+        "literature_unified_workflow",
+        fake_workflow,
+        raising=False,
+    )
+
+    state = cast(
+        SupervisorState,
+        cast(
+            object,
+            {
+                "source": "web",
+                "urls": ["https://cyberleninka.ru/article/n/test"],
+                "node_trace": {},
+                "processing_steps": default_processing_steps(),
+            },
+        ),
+    )
+
+    result = acquisition_node.run_acquisition_node(state)
+
+    assert result["current_node"] == "acquisition"
+    assert result["node_trace"]["acquisition"] == "success"
+    assert result["node_trace"]["acquisition_result"]["route"]["used"] == "web"
+    assert result["acquisition_result"]["route"]["web_provider"] == "cyberleninka"
+    assert result["processing_steps"]["acquisition"]["status"] == "COMPLETED"
+
+
+def test_run_acquisition_node_raises_when_unified_workflow_returns_no_result(
+    monkeypatch,
+) -> None:
+    from src.agents.acquisition import node as acquisition_node
+
+    class FakeAcquisitionAgent:
+        def plan_web_request(self, urls: list[str]) -> list[AcquisitionPlanItem]:
+            return [
+                AcquisitionPlanItem(
+                    source="web",
+                    raw_value=urls[0],
+                    normalized_value=urls[0],
+                    fingerprint="url:fingerprint",
+                    display_name=urls[0],
+                    metadata={"source_url": urls[0]},
+                )
+            ]
+
+    monkeypatch.setattr(
+        acquisition_node,
+        "get_literature_acquisition_agent",
+        lambda: FakeAcquisitionAgent(),
+    )
+    async def fake_workflow(payload: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "success": False,
+            "items": [],
+            "downloads": [],
+            "warnings": ["FETCH_NO_RESULT"],
+            "route": {"used": "web", "reason": "web_no_items"},
+        }
+
+    monkeypatch.setattr(
+        acquisition_node,
+        "literature_unified_workflow",
+        fake_workflow,
+        raising=False,
+    )
+
+    state = cast(
+        SupervisorState,
+        cast(
+            object,
+            {
+                "source": "web",
+                "urls": ["https://cyberleninka.ru/article/n/test"],
+                "node_trace": {},
+                "processing_steps": default_processing_steps(),
+            },
+        ),
+    )
+
+    with pytest.raises(ValidationException, match="FETCH_NO_RESULT"):
+        acquisition_node.run_acquisition_node(state)

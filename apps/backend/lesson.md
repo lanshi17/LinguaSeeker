@@ -53,3 +53,15 @@
   - `uv run pytest -q tests/integration/test_error_contract.py::test_upload_wrong_content_type_returns_contract`
   - `uv run pytest -q tests/integration/test_m2_interaction_clarification.py tests/integration/test_m2_confirmation_contract.py tests/integration/test_m2_upload_branch_handoff.py tests/integration/test_m2_candidates_handoff.py`
 - Prevention: keep `AppConfig.api_prefix` aligned with `Settings.api_prefix` / frozen tests; treat 404 vs 415 as a routing/prefix signal first, not a validation-path bug.
+
+2026-04-05 - Multi-source rollout can look complete while a hidden unified-workflow gate still forces PubMed-only behavior
+- Symptom: the repository already contained non-PMC API providers, web scrapers, and 6-node workflow code, but explicit `web` routing and non-PMC API overrides were still rejected from `src/domain/literature/unified/workflow.py` with `mvp_pubmed_only`.
+- Root cause: the adapter layer and tests had advanced beyond the effective entrypoint, leaving a stale MVP-only guard in the unified workflow.
+- Fix: remove the `mvp_pubmed_only` rejection branches, add real web execution support, and keep `source_trace` output symmetric across API and web routes.
+- Prevention: when reviving a partially completed rollout, verify the real orchestration entrypoint first; do not assume provider adapters being present means the route is actually reachable.
+
+2026-04-05 - Source-trace persistence breaks silently when download helpers request `raw=False` or only parse API traces
+- Symptom: literature download storage could succeed while dropping `source_trace` for web routes, because `_try_download_and_store_literature_pdf` only read `raw.api.source_trace` and defaulted the unified-workflow request payload to `raw=False`.
+- Root cause: trace persistence logic was written for the API path only and never updated when web routing became part of the same unified contract.
+- Fix: request `raw=True` for literature download flows and read `source_trace` from either `raw.api` or `raw.web`.
+- Prevention: any helper that depends on route metadata or trace output should assert the same contract for both API and web responses in focused tests.

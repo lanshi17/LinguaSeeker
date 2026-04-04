@@ -1,6 +1,7 @@
 import pytest
 
 from src.domain.literature.gateway.api_gateway import ApiGatewayResult
+from src.domain.literature.gateway.web_gateway import WebGatewayResult
 from src.domain.literature.unified.workflow import literature_unified_workflow
 
 
@@ -58,38 +59,112 @@ async def test_unified_workflow_routes_to_crossref_for_doi(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_unified_workflow_rejects_prefer_web_in_mvp():
+async def test_unified_workflow_routes_to_web_provider_when_requested(monkeypatch):
+    async def fake_web_gateway(request):
+        assert request.provider == "cyberleninka"
+        assert request.action == "search"
+        assert request.query == "https://cyberleninka.ru/article/n/test"
+        return WebGatewayResult(
+            provider="cyberleninka",
+            success=True,
+            items=[
+                {
+                    "title": "Cyberleninka result",
+                    "url": "https://cyberleninka.ru/article/n/test",
+                    "authors": ["Alice"],
+                    "journal": "Cyberleninka Journal",
+                    "year": "2024",
+                }
+            ],
+            warnings=[],
+            raw={"provider": "cyberleninka"},
+        )
+
+    monkeypatch.setattr(
+        "src.domain.literature.unified.workflow.call_auto_web_gateway",
+        fake_web_gateway,
+    )
+
     result = await literature_unified_workflow(
         {
             "query": "https://cyberleninka.ru/article/n/test",
             "prefer": "web",
+            "web_provider": "cyberleninka",
             "limit": 2,
+            "raw": True,
         }
     )
 
-    assert result["success"] is False
-    assert result["route"]["used"] == "none"
-    assert result["route"]["reason"] == "mvp_pubmed_only"
-    assert "INPUT_INVALID: web source is disabled in MVP" in result["warnings"]
+    assert result["success"] is True
+    assert result["route"]["used"] == "web"
+    assert result["route"]["web_provider"] == "cyberleninka"
+    assert result["route"]["reason"] == "web_provider:cyberleninka"
+    assert result["items"][0]["title"] == "Cyberleninka result"
+    assert result["raw"]["web"]["source_trace"] == [
+        {
+            "provider": "cyberleninka",
+            "attempt": 1,
+            "success": True,
+            "items_count": 1,
+            "downloads_count": 0,
+            "warnings": [],
+            "error": None,
+        }
+    ]
 
 
 @pytest.mark.asyncio
-async def test_unified_workflow_rejects_non_pmc_api_provider():
+async def test_unified_workflow_allows_explicit_non_pmc_api_provider(monkeypatch):
+    async def fake_api_gateway(request):
+        assert request.provider == "unpaywall"
+        assert request.query == "10.1000/xyz-123"
+        return ApiGatewayResult(
+            provider="unpaywall",
+            success=True,
+            items=[
+                {
+                    "title": "Open result",
+                    "doi": "10.1000/xyz-123",
+                    "journal_title": "Open Journal",
+                    "year": "2024",
+                    "authors": ["Alice"],
+                    "best_oa_location": {"url": "https://example.org/paper"},
+                }
+            ],
+            warnings=[],
+            raw={"provider": "unpaywall"},
+        )
+
+    monkeypatch.setattr(
+        "src.domain.literature.unified.workflow.call_api_gateway",
+        fake_api_gateway,
+    )
+
     result = await literature_unified_workflow(
         {
             "query": "10.1000/xyz-123",
             "prefer": "api",
             "api_provider": "unpaywall",
+            "raw": True,
         }
     )
 
-    assert result["success"] is False
-    assert result["route"]["used"] == "none"
-    assert result["route"]["reason"] == "mvp_pubmed_only"
-    assert (
-        "INPUT_INVALID: api_provider 'unpaywall' is disabled in MVP"
-        in result["warnings"]
-    )
+    assert result["success"] is True
+    assert result["route"]["used"] == "api"
+    assert result["route"]["api_provider"] == "unpaywall"
+    assert result["route"]["reason"] == "api_provider:unpaywall"
+    assert result["items"][0]["doi"] == "10.1000/xyz-123"
+    assert result["raw"]["api"]["source_trace"] == [
+        {
+            "provider": "unpaywall",
+            "attempt": 1,
+            "success": True,
+            "items_count": 1,
+            "downloads_count": 0,
+            "warnings": [],
+            "error": None,
+        }
+    ]
 
 
 @pytest.mark.asyncio

@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, cast
 
-from src.domain.literature.acquisition_agent import get_literature_acquisition_agent
+from src.domain.literature import literature_unified_workflow
+from src.domain.literature.acquisition_agent import (
+    AcquisitionPlanItem,
+    get_literature_acquisition_agent,
+)
 from src.services.enum import (
     ProcessingStepStatus,
     derive_workflow_status,
@@ -59,11 +64,15 @@ def _mark_acquisition_success(
     updated: dict[str, Any],
     message: str,
     acquisition_detail: dict[str, Any] | None = None,
+    acquisition_result: dict[str, Any] | None = None,
 ) -> None:
     node_trace = _node_trace_map(updated.get("node_trace"))
     node_trace["acquisition"] = "success"
     if acquisition_detail is not None:
         node_trace["acquisition_detail"] = acquisition_detail
+    if acquisition_result is not None:
+        updated["acquisition_result"] = acquisition_result
+        node_trace["acquisition_result"] = acquisition_result
     updated["node_trace"] = node_trace
 
     processing_steps = normalize_processing_steps(
@@ -78,6 +87,37 @@ def _mark_acquisition_success(
     )
     updated["processing_steps"] = processing_steps
     updated["workflow_status"] = derive_workflow_status(processing_steps).value
+
+
+def _build_workflow_payload(
+    source: str,
+    plan_items: list[AcquisitionPlanItem],
+) -> dict[str, Any]:
+    normalized_values = [item.normalized_value for item in plan_items if item.normalized_value]
+    query = normalized_values[0] if normalized_values else ""
+    payload: dict[str, Any] = {
+        "action": "search",
+        "query": query,
+        "identifiers": normalized_values,
+        "limit": max(1, len(normalized_values)),
+        "raw": True,
+    }
+    if source == "web":
+        payload["prefer"] = "web"
+    else:
+        payload["prefer"] = "api"
+        payload["api_provider"] = "pmc"
+    return payload
+
+
+def _run_unified_workflow(payload: dict[str, Any]) -> dict[str, Any]:
+    return cast(dict[str, Any], asyncio.run(literature_unified_workflow(payload)))
+
+
+def _has_acquisition_output(result: dict[str, Any]) -> bool:
+    items = result.get("items")
+    downloads = result.get("downloads")
+    return bool(items) or bool(downloads)
 
 
 def run_acquisition_node(state: SupervisorState) -> SupervisorState:
@@ -111,10 +151,20 @@ def run_acquisition_node(state: SupervisorState) -> SupervisorState:
 
     acquisition_plan = [asdict(item) for item in plan_items]
     updated["acquisition_plan"] = acquisition_plan
+    acquisition_result = _run_unified_workflow(
+        _build_workflow_payload(source, plan_items)
+    )
+    if not _has_acquisition_output(acquisition_result):
+        warnings = acquisition_result.get("warnings")
+        warning_text = ", ".join(str(item) for item in warnings or [])
+        if "FETCH_NO_RESULT" in warning_text:
+            raise ValidationException("FETCH_NO_RESULT: acquisition returned no result")
+        raise ValidationException("FETCH_NO_RESULT: acquisition returned no items")
     _mark_acquisition_success(
         updated,
         "Acquisition completed",
         acquisition_detail=_build_planned_acquisition_detail(source, acquisition_plan),
+        acquisition_result=acquisition_result,
     )
     return cast(SupervisorState, cast(object, updated))
 

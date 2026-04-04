@@ -936,7 +936,7 @@ async def _try_download_and_store_literature_pdf(
         "prefer": "auto",
         "download_path": str(download_dir),
         "selected_index": 0,
-        "raw": False,
+        "raw": True,
     }
     if detail_link:
         payload["detail_link"] = str(detail_link)
@@ -962,9 +962,14 @@ async def _try_download_and_store_literature_pdf(
     )
     raw_payload = response.get("raw") if isinstance(response, dict) else None
     api_payload = raw_payload.get("api") if isinstance(raw_payload, dict) else None
+    web_payload = raw_payload.get("web") if isinstance(raw_payload, dict) else None
     source_trace = []
     if isinstance(api_payload, dict):
         trace_value = api_payload.get("source_trace")
+        if isinstance(trace_value, list):
+            source_trace = trace_value
+    elif isinstance(web_payload, dict):
+        trace_value = web_payload.get("source_trace")
         if isinstance(trace_value, list):
             source_trace = trace_value
 

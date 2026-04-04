@@ -1071,3 +1071,25 @@ Verification:
 Notes:
 - Current verification found no new code changes required for the M2 task-creation slice.
 - Remaining out-of-scope items are still later-page/details work outside this task-creation plan slice.
+
+---
+
+Implementation Update: 2026-04-05 (Multi-source + 6-node rollout recovery)
+
+Completed:
+- Added executable rollout documentation for the active multi-source + 6-node backend baseline:
+  - `docs/plans/2026-04-05-multi-source-6node-rollout-design.md`
+  - `docs/plans/2026-04-05-multi-source-6node-rollout-implementation.md`
+- Updated `docs/plans/README.md` and refreshed the older rollout baseline doc to point at the new execution docs.
+- Removed the hidden `mvp_pubmed_only` gate from `src/domain/literature/unified/workflow.py`.
+- Added real web-provider routing and trace output alongside existing API routing and retries.
+- Wired `src/agents/acquisition/node.py` to call the unified workflow for `pubmed` and `web` sources after planning, while keeping the upload fast path unchanged.
+- Preserved acquisition results in state and `node_trace` via `acquisition_result`.
+- Fixed literature PDF download storage to request raw trace data and to persist `source_trace` for both API and web download routes.
+
+Verification:
+- `uv run pytest -q tests/test_literature_unified_workflow.py tests/unit/test_unified_source_selection_and_trace.py tests/test_agents_acquisition.py tests/test_task_manager_pdf_download.py tests/test_supervisor.py tests/test_supervisor_e2e.py` -> `37 passed`
+
+Notes:
+- This step restores alignment between the frozen backend docs and the effective acquisition entrypoint.
+- The focused verification slice is green; no full release-gate or 100-paper acceptance run was attempted in this step.

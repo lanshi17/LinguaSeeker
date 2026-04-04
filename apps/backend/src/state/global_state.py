@@ -51,6 +51,8 @@ class SupervisorState(TypedDict):
     session_id: NotRequired[str]
     question: NotRequired[str | None]
     task_form: NotRequired[dict[str, Any]]
+    acquisition_plan: NotRequired[list[dict[str, Any]]]
+    acquisition_result: NotRequired[dict[str, Any]]
     interaction_ready: NotRequired[bool]
     goal: NotRequired[str]
     disease: NotRequired[str]
