@@ -1126,8 +1126,6 @@ Verification:
 Notes:
 - No new feature code was needed beyond cleanup; the recovered confirmation flow from the saved patch was already present in the working tree.
 
----
-
 Implementation Update: 2026-03-30 (backend test stabilization for `yangzs-agents` merge)
 
 Completed:
@@ -1143,3 +1141,23 @@ Verification:
 
 Notes:
 - This milestone unblocks a clean merge of the backend test fixes onto `yangzs-agents`.
+
+---
+
+Implementation Update: 2026-04-05 (Ralph acquisition gateway facade finalize closure)
+
+Completed:
+- Re-checked the active Ralph task line `ralph/acquisition-gateway-facade-finalize` against the current `v1-rollout-next` implementation.
+- Confirmed `call_api_gateway(...)` is now registry-first: it resolves the provider registry once and dispatches any registered provider through `registry.get(provider).execute(request)` before fallback handling for unsupported providers.
+- Confirmed regression coverage exists for registered providers without hardcoded branches, including both search and download routing.
+- Marked Ralph user stories US-001 through US-003 as passed in `prd.json`.
+
+Verification:
+- `uv run python -m py_compile src/agents/acquisition/node.py src/agents/acquisition/api_tool.py src/agents/acquisition/crawl_tool.py src/domain/literature/acquisition_agent.py src/domain/literature/gateway/api_gateway.py src/domain/literature/gateway/base.py src/domain/literature/gateway/registry.py src/domain/literature/gateway/adapters/__init__.py src/domain/literature/gateway/adapters/*.py` -> passed
+- `uv run pytest -q tests/test_api_gateway_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py tests/domain/literature/gateway/test_registry.py tests/domain/literature/gateway/test_pmc_adapter.py tests/domain/literature/gateway/test_crossref_adapter.py tests/domain/literature/gateway/test_jstage_adapter.py tests/domain/literature/gateway/test_doaj_adapter.py tests/domain/literature/gateway/test_unpaywall_adapter.py` -> `42 passed`
+- `uv run ruff check src/domain/literature/gateway/api_gateway.py src/domain/literature/gateway/adapters src/agents/acquisition src/domain/literature/acquisition_agent.py tests/test_api_gateway_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py tests/domain/literature/gateway` -> passed
+
+Notes:
+- This closure pass required no business-code edits; the remaining work was Ralph tracking and handoff completion.
+- `lesson.md` was intentionally left unchanged because no new debugging pattern or root cause was discovered during this pass.
+- The pytest slice emitted pre-existing environment/runtime warnings (`RequestsDependencyWarning` and a `PytestUnraisableExceptionWarning` from an event loop shutdown path), but the command exited successfully with all tests passing.
