@@ -15,8 +15,8 @@
         "Tests pass"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Validated on 2026-04-05: call_api_gateway is registry-first and tests/test_api_gateway_download.py covers registered-provider routing for both search and download."
     },
     {
       "id": "US-002",
@@ -30,8 +30,8 @@
         "Tests pass"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Validated on 2026-04-05 via py_compile, pytest gateway/acquisition slice, and ruff check in apps/backend."
     },
     {
       "id": "US-003",
@@ -45,8 +45,8 @@
         "Tests pass"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "This Ralph PRD reflects the remaining work after the initial adapter registry and provider migrations already landed in the branch."
+      "passes": true,
+      "notes": "Validated on 2026-04-05 by appending a progress milestone with exact verification commands; no new lesson.md entry was needed because this closure pass found no new debugging root cause."
     }
   ]
 }
