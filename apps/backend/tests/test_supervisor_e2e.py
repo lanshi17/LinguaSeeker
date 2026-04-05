@@ -100,11 +100,84 @@ class TestHappyPaths:
         assert result["processing_steps"]["classification"]["status"] == "COMPLETED"
         assert result["processing_steps"]["adjudication"]["status"] == "COMPLETED"
 
-    def test_web_happy_path(self):
+    def test_upload_happy_path_preserves_acquisition_trace_and_completion(self):
         acmg = MagicMock()
+        acquisition_result = {
+            "success": True,
+            "items": [{"title": "Uploaded paper"}],
+            "downloads": [],
+            "warnings": [],
+            "route": {"used": "upload"},
+        }
+        acquisition_detail = {
+            "source": "upload",
+            "count": 1,
+            "items": [{"file_path": "/tmp/test.pdf"}],
+        }
         patches = {
             "run_interaction_node": _set_fields(interaction_ready=True),
-            "run_acquisition_node": _pass_through,
+            "run_acquisition_node": _set_fields(
+                acquisition_result=acquisition_result,
+                node_trace={
+                    "acquisition": "success",
+                    "acquisition_detail": acquisition_detail,
+                    "acquisition_result": acquisition_result,
+                },
+            ),
+            "run_parsing_node": _set_fields(parsing_result={"ok": True}),
+            "run_extraction_node": _pass_through,
+            "run_reasoning_node": _pass_through,
+            "run_arbitration_node": _set_fields(
+                acmg_result=acmg,
+                arbitration_confidence=0.95,
+                requires_human_review=False,
+            ),
+        }
+        state = _base_state(source="upload")
+
+        with patch(f"{_NODE_PREFIX}.EvidenceAgent"):
+            result = self._build_and_invoke(state, patches)
+
+        assert result["workflow_status"] == "completed"
+        assert result["current_node"] == "finalize"
+        assert result["node_trace"]["acquisition"] == "success"
+        assert result["node_trace"]["acquisition_detail"] == acquisition_detail
+        assert result["node_trace"]["acquisition_result"] == acquisition_result
+        assert result["processing_steps"]["classification"]["status"] == "COMPLETED"
+        assert result["processing_steps"]["adjudication"]["status"] == "COMPLETED"
+
+    def test_web_happy_path(self):
+        acmg = MagicMock()
+        acquisition_result = {
+            "success": True,
+            "items": [{"title": "Web article"}],
+            "downloads": [],
+            "warnings": [],
+            "route": {"used": "web", "web_provider": "cyberleninka"},
+        }
+        patches = {
+            "run_interaction_node": _set_fields(interaction_ready=True),
+            "run_acquisition_node": _set_fields(
+                acquisition_result=acquisition_result,
+                node_trace={
+                    "acquisition": "success",
+                    "acquisition_detail": {
+                        "source": "web",
+                        "count": 1,
+                        "items": [
+                            {
+                                "source": "web",
+                                "normalized_value": "https://example.com",
+                                "fingerprint": "url:fingerprint",
+                                "metadata": {
+                                    "source_url": "https://example.com",
+                                },
+                            }
+                        ],
+                    },
+                    "acquisition_result": acquisition_result,
+                },
+            ),
             "run_parsing_node": _set_fields(parsing_result={"ok": True}),
             "run_extraction_node": _pass_through,
             "run_reasoning_node": _pass_through,
@@ -120,6 +193,11 @@ class TestHappyPaths:
             result = self._build_and_invoke(state, patches)
 
         assert result["workflow_status"] == "completed"
+        assert result["current_node"] == "finalize"
+        assert result["acquisition_result"]["route"]["used"] == "web"
+        assert result["node_trace"]["acquisition_result"]["route"]["web_provider"] == (
+            "cyberleninka"
+        )
         assert "reasoning" not in result["processing_steps"]
         assert result["processing_steps"]["classification"]["status"] == "COMPLETED"
         assert result["processing_steps"]["adjudication"]["status"] == "COMPLETED"

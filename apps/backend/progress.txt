@@ -1190,3 +1190,20 @@ Verification:
 
 Notes:
 - This update is documentation-only; no business code or runtime contract changed.
+
+---
+
+Implementation Update: 2026-04-05 (Multi-source + 6-node rollout final closure)
+
+Completed:
+- Added supervisor regression coverage to pin that acquisition trace data survives the full 6-node graph through `finalize`.
+- Tightened the `web` happy-path supervisor coverage so the routed `acquisition_result` remains visible after the graph completes.
+- Re-ran the focused rollout verification slice for unified workflow, acquisition integration, and supervisor compatibility.
+
+Verification:
+- `uv run pytest -q tests/test_supervisor.py tests/test_supervisor_e2e.py` -> `18 passed`
+- `uv run pytest -q tests/test_literature_unified_workflow.py tests/unit/test_unified_source_selection_and_trace.py tests/test_agents_acquisition.py tests/test_supervisor.py tests/test_supervisor_e2e.py` -> `34 passed`
+
+Notes:
+- The repository snapshot already contained the underlying multi-source + 6-node implementation; this closure step added the missing regression pin rather than changing production behavior.
+- `docs/plans/2026-03-22-v1.0-multi-source-6node-rollout.md` already pointed at the executable 2026-04-05 rollout docs, so no further doc edits were required in this closure batch.

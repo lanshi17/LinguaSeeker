@@ -61,3 +61,8 @@
 - Fix: forward `use_agent_workflow()` on the proxy, load dotenv from project root with `.env.local` and `ENV_FILE` support, skip forced PostgreSQL initialization for standalone PDF tasks without `paper_task_id`, validate PubMed candidate source in the DTO, inspect raw upload form keys to distinguish omitted vs blank `task_form`, remove remaining production imports from `src.configs`, and align the stale arbitration test to `current_node="arbitration"`.
 - Verification: `uv run pytest tests` -> `739 passed, 23 skipped`.
 - Prevention: when config access is abstracted behind a proxy, expose the methods tests and runtime code patch directly; avoid cwd-coupled config loading; and treat blank multipart form fields as distinct from omitted fields when API contracts depend on that difference.
+2026-04-05 - Closeout work should pin final-state trace behavior, not just green-path node completion
+- Symptom: the rollout already had green supervisor happy-path tests, but they did not explicitly prove that richer `acquisition_result` and `node_trace.acquisition_detail` data survive the full graph through `finalize`.
+- Root cause: earlier rollout verification focused on node completion and routing, leaving the final-state trace contract only indirectly covered.
+- Fix: add supervisor E2E regression assertions for upload and web flows that preserve acquisition trace payloads while classification and adjudication still end as `COMPLETED`.
+- Prevention: for workflow closeout, add at least one regression that checks both end-state status and end-state trace payload together; otherwise finalize-step regressions can slip through behind passing happy-path status checks.
