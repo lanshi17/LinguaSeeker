@@ -1,7 +1,7 @@
 # M3 M4 Service Boundary and Contract Verification Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-> **Plan Status:** `ACTIVE (Tasks 4-7 remaining)`
+> **Plan Status:** `ACTIVE (Task 7 remaining; 100-paper acceptance still pending)`
 > **Archived Completed Slice:** `docs/archive/2026-04-05-completed-plans/2026-04-05-m3-service-boundary-hardening-batch-1.md`
 
 **Goal:** Harden the remaining parser/translation/extraction service boundaries and add a concrete M4 release-verification surface so `yangzs-agents` can finish the active `v1.0` rollout backlog.
@@ -16,12 +16,13 @@ Completed and archived:
 1. Task 1: parser compatibility contract
 2. Task 2: translation warning/alignment contract
 3. Task 3: extraction evidence source contract
+4. Task 4: trace-chain contract
+5. Task 5: release-gate calculation
+6. Task 6: CLI/reporting surface
 
 Still active in this plan:
-1. Task 4: trace-chain contract
-2. Task 5: release-gate calculation
-3. Task 6: CLI/reporting surface
-4. Task 7: docs closeout + focused regression
+1. Task 7: docs closeout + focused regression
+2. Real 100-paper acceptance execution remains intentionally separate from the targeted Task 4-6 tooling slice.
 
 ---
 

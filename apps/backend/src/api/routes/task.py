@@ -67,6 +67,7 @@ from src.services.enum import (
     normalize_processing_steps,
     workflow_status_description,
 )
+from src.services.traceability import build_trace_chain, normalize_warning_codes
 from src.domain.agent.interaction import InteractionAgent
 from src.utils.sanitizers import sanitize_filename
 
@@ -1556,6 +1557,8 @@ def get_task_status(
         processing_duration_seconds=metrics.get("processing_duration_seconds"),
         created_at=metrics.get("created_at"),
         updated_at=metrics.get("updated_at"),
+        warning_codes=None,
+        trace_chain=None,
         error=None,
         error_details=None,
     )
@@ -1598,6 +1601,13 @@ def get_task_status(
         )
         response.processing_steps = processing_steps
         response.progress_percentage = calculate_progress_percentage(processing_steps)
+        response.warning_codes = normalize_warning_codes(
+            getattr(paper_entry, "warning_codes", None)
+        )
+        response.trace_chain = build_trace_chain(
+            node_trace=getattr(paper_entry, "node_trace", None),
+            processing_steps=processing_steps,
+        )
 
         workflow_status = coerce_workflow_status(
             getattr(paper_entry, "workflow_status", None),
@@ -1693,6 +1703,14 @@ def get_task_status(
             parsing_metadata = result_payload.get("parsing_metadata")
             if isinstance(parsing_metadata, dict):
                 response.parsing_metadata = parsing_metadata
+            if response.warning_codes is None:
+                response.warning_codes = normalize_warning_codes(
+                    result_payload.get("warning_codes")
+                )
+            if response.trace_chain is None:
+                trace_chain = result_payload.get("trace_chain")
+                if isinstance(trace_chain, dict):
+                    response.trace_chain = trace_chain
         logger.debug("Task succeeded: {}", task_id)
     else:
         logger.debug("Task status: {} status: {}", task_id, async_result.status)

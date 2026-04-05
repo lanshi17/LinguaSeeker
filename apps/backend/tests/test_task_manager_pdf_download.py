@@ -150,3 +150,60 @@ async def test_try_download_and_store_literature_pdf_invalid_signature(
 
     assert result["downloaded"] is False
     assert result["reason"] == "invalid_pdf_signature"
+
+
+@pytest.mark.asyncio
+async def test_try_download_and_store_literature_pdf_persists_web_source_trace(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pdf_path = tmp_path / "web_source_trace.pdf"
+    pdf_path.write_bytes(b"%PDF-1.7\nweb-source-trace")
+
+    source_trace = [
+        {
+            "provider": "cyberleninka",
+            "attempt": 1,
+            "success": True,
+            "items_count": 0,
+            "downloads_count": 1,
+            "warnings": [],
+            "error": None,
+        }
+    ]
+
+    async def fake_unified(payload: Dict[str, Any]) -> Dict[str, Any]:
+        assert payload["raw"] is True
+        return {
+            "success": True,
+            "downloads": [{"file_path": str(pdf_path)}],
+            "warnings": [],
+            "route": {
+                "used": "web",
+                "web_provider": "cyberleninka",
+                "reason": "web_provider:cyberleninka",
+            },
+            "raw": {"web": {"source_trace": source_trace}},
+        }
+
+    metadata_sink: Dict[str, Any] = {}
+    monkeypatch.setattr(tasks_module, "literature_unified_workflow", fake_unified)
+    monkeypatch.setattr(
+        tasks_module,
+        "MinIOClient",
+        _make_fake_minio_client(metadata_sink),
+    )
+
+    result = await tasks_module._try_download_and_store_literature_pdf(
+        document_id="doc-web-trace",
+        source="web",
+        query="https://cyberleninka.ru/article/n/test",
+        identifiers=["https://cyberleninka.ru/article/n/test"],
+        selected_title="paper",
+    )
+
+    assert result["downloaded"] is True
+    assert result["provider"] == "cyberleninka"
+    assert result["source_trace"] == source_trace
+
+    metadata = metadata_sink["metadata"]
+    assert metadata["source_trace"] == json.dumps(source_trace, ensure_ascii=False)

@@ -1280,3 +1280,25 @@ Verification:
 
 Notes:
 - This update only archives completed planning scope and rewrites the active planning surface; it does not change the remaining implementation backlog itself.
+
+---
+
+Implementation Update: 2026-04-06 (`task4-7-release-gate` merge into `yangzs-agents`)
+
+Completed:
+- Merged `task4-7-release-gate` into `yangzs-agents` and resolved the overlapping conflicts in rollout docs, tracking files, and `task_manager.py` without regressing the newer `yangzs-agents` execution behavior.
+- Kept the current branch's rollout/test-stabilization state for:
+  - unified-workflow acquisition integration
+  - supervisor-compatible acquisition state
+  - standalone task execution without forced PostgreSQL initialization
+- Ported the additive release-gate / traceability slice from `task4-7-release-gate`:
+  - `warning_codes` normalization and `trace_chain` propagation in task pipeline outputs
+  - task-status traceability helpers and release-reporting modules / CLI / manifest / template files
+  - raw `source_trace` capture for both API and web literature download paths
+- Reconciled `docs/plans/` with the merged branch state so the remaining active work is now described as `Task 7` closeout plus the real 100-paper acceptance run.
+
+Verification:
+- `uv run pytest -q tests/unit/test_traceability.py tests/unit/test_release_reporting.py tests/unit/test_tasks.py tests/integration/test_task_api.py tests/test_task_manager_pdf_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py tests/test_supervisor.py tests/test_supervisor_e2e.py` -> `111 passed, 14 warnings`
+
+Notes:
+- The warning set in this merge slice remained non-blocking and pre-existing in nature: Pydantic v2 deprecation warnings plus `RequestsDependencyWarning`.

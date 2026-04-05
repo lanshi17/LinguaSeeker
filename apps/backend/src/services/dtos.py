@@ -81,6 +81,12 @@ class TaskStatusResponse(BaseModel):
     updated_at: Optional[str] = Field(
         None, description="Task update timestamp if available"
     )
+    warning_codes: Optional[List[str]] = Field(
+        None, description="Non-fatal warning codes recorded for the paper task"
+    )
+    trace_chain: Optional[Dict[str, Any]] = Field(
+        None, description="Additive node-level provenance summary"
+    )
     error: Optional[str] = Field(None, description="Error message if failed")
     error_details: Optional[Dict[str, Any]] = Field(
         None, description="Structured error details"
@@ -115,6 +121,15 @@ class TaskStatusResponse(BaseModel):
                 "processing_duration_seconds": 12.3,
                 "created_at": "2026-02-10T08:00:00+00:00",
                 "updated_at": "2026-02-10T08:00:12+00:00",
+                "warning_codes": ["FULLTEXT_UNAVAILABLE"],
+                "trace_chain": {
+                    "steps": {
+                        "acquisition": {
+                            "status": "COMPLETED",
+                            "outcome": "success",
+                        }
+                    }
+                },
                 "error": None,
                 "error_details": None,
             }
