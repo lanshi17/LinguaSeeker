@@ -66,3 +66,9 @@
 - Root cause: earlier rollout verification focused on node completion and routing, leaving the final-state trace contract only indirectly covered.
 - Fix: add supervisor E2E regression assertions for upload and web flows that preserve acquisition trace payloads while classification and adjudication still end as `COMPLETED`.
 - Prevention: for workflow closeout, add at least one regression that checks both end-state status and end-state trace payload together; otherwise finalize-step regressions can slip through behind passing happy-path status checks.
+
+2026-04-05 - Branch merges can surface older state-contract gaps even when the source branch verifies green
+- Symptom: after cherry-picking the supervisor closeout regression onto `yangzs-agents`, `tests/test_supervisor_e2e.py::TestHappyPaths::test_web_happy_path` failed with `KeyError: 'acquisition_result'`, and new acquisition-node regression tests showed web requests never called the unified workflow.
+- Root cause: `yangzs-agents` still carried the pre-rollout acquisition node and a `SupervisorState` schema that did not declare `acquisition_result`, so LangGraph dropped the field even when tests injected it.
+- Fix: port the unified-workflow acquisition handoff into `src/agents/acquisition/node.py`, add `acquisition_plan` / `acquisition_result` to `src/state/global_state.py`, and keep the new acquisition integration tests alongside the supervisor regression.
+- Prevention: when merging verification-only commits across long-lived branches, re-run the focused slice on the target branch immediately; a green source branch does not prove the target already has the same state contract.

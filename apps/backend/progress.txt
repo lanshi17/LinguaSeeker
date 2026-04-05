@@ -1207,3 +1207,20 @@ Verification:
 Notes:
 - The repository snapshot already contained the underlying multi-source + 6-node implementation; this closure step added the missing regression pin rather than changing production behavior.
 - `docs/plans/2026-03-22-v1.0-multi-source-6node-rollout.md` already pointed at the executable 2026-04-05 rollout docs, so no further doc edits were required in this closure batch.
+
+---
+
+Implementation Update: 2026-04-05 (`yangzs-agents` rollout merge compatibility)
+
+Completed:
+- Resolved the `yangzs-agents` merge incompatibility exposed by the new supervisor regression: this branch still used the older acquisition node that stopped after planning and never persisted `acquisition_result`.
+- Ported the unified-workflow acquisition handoff into `src/agents/acquisition/node.py` for `pubmed` and `web` sources while preserving the upload fast path.
+- Added `acquisition_plan` and `acquisition_result` to `SupervisorState` so LangGraph preserves the richer acquisition payload through `finalize`.
+- Expanded `tests/test_agents_acquisition.py` with unified-workflow integration coverage for `pubmed`, `web`, and `FETCH_NO_RESULT`.
+
+Verification:
+- `uv run pytest -q tests/test_agents_acquisition.py::test_run_acquisition_node_web_invokes_unified_workflow tests/test_agents_acquisition.py::test_run_acquisition_node_raises_when_unified_workflow_returns_no_result tests/test_supervisor_e2e.py::TestHappyPaths::test_web_happy_path` -> `3 passed`
+- `uv run pytest -q tests/test_literature_unified_workflow.py tests/unit/test_unified_source_selection_and_trace.py tests/test_agents_acquisition.py tests/test_supervisor.py tests/test_supervisor_e2e.py` -> `39 passed`
+
+Notes:
+- The new supervisor closeout regression was valuable because it exposed that `yangzs-agents` had not yet inherited the acquisition-state contract already present on `master`.
