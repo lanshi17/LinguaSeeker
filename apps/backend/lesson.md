@@ -65,3 +65,9 @@
 - Root cause: trace persistence logic was written for the API path only and never updated when web routing became part of the same unified contract.
 - Fix: request `raw=True` for literature download flows and read `source_trace` from either `raw.api` or `raw.web`.
 - Prevention: any helper that depends on route metadata or trace output should assert the same contract for both API and web responses in focused tests.
+
+2026-04-05 - Ralph task trackers can drift behind the real worktree state if closure artifacts are skipped
+- Symptom: `prd.json` still showed US-001 through US-006 as unfinished even though the gateway adapter implementation, focused tests, and verification commands were already green in the worktree.
+- Root cause: previous implementation iterations landed code and tests but did not close the Ralph tracking artifacts (`prd.json` / `progress.txt`) in the same pass.
+- Fix: re-verify the active story slice against code and commands, then update `prd.json` story pass flags and record the milestone in `progress.txt`.
+- Prevention: after each Ralph story or verification wave, close the tracking artifacts in the same session before leaving the worktree.

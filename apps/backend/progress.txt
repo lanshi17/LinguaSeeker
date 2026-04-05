@@ -238,6 +238,7 @@ Observed limitation:
 - multiple variants in one paper were collapsed into a single semicolon-joined string before graph persistence:
   - `variant_hgvs_c = c.1972C>T; c.1935_1954dup; c.1526T>C`
   - `variant_hgvs_p = p.Arg658Cys; p.Glu652fs; p.Ile509Thr`
+
 - ClinVar resolution was executed against the joined cDNA string as if it were one variant and returned "not found".
 - current `GraphSyncService` / `EvidenceRecord` flow writes one evidence record per sync call, so Neo4j also receives one merged variant representation for this paper.
 
@@ -1093,3 +1094,25 @@ Verification:
 Notes:
 - This step restores alignment between the frozen backend docs and the effective acquisition entrypoint.
 - The focused verification slice is green; no full release-gate or 100-paper acceptance run was attempted in this step.
+
+---
+
+Implementation Update: 2026-04-05 (Ralph acquisition adapter worktree closure)
+
+Completed:
+- Reviewed the active Ralph worktree contract in `prd.json` against the current acquisition gateway and orchestration code.
+- Confirmed the adapter-based acquisition refactor is already implemented for:
+  - provider registry + adapter base contract
+  - PMC adapter routing
+  - Crossref / DOAJ / JStage / Unpaywall thin adapters
+  - acquisition-node orchestration boundary preservation
+- Marked Ralph user stories US-001 through US-006 as passed with verification notes in `prd.json`.
+
+Validation:
+- `uv run pytest -q tests/domain/literature/gateway/test_registry.py tests/domain/literature/gateway/test_pmc_adapter.py tests/domain/literature/gateway/test_crossref_adapter.py tests/domain/literature/gateway/test_doaj_adapter.py tests/domain/literature/gateway/test_jstage_adapter.py tests/domain/literature/gateway/test_unpaywall_adapter.py tests/test_api_gateway_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py tests/unit/test_literature_acquisition_agent.py` -> 36 passed
+- `uv run python -m py_compile src/agents/acquisition/node.py src/agents/acquisition/api_tool.py src/agents/acquisition/crawl_tool.py src/domain/literature/acquisition_agent.py src/domain/literature/gateway/api_gateway.py src/domain/literature/gateway/base.py src/domain/literature/gateway/registry.py src/domain/literature/gateway/adapters/__init__.py src/domain/literature/gateway/adapters/*.py` -> passed
+- `uv run basedpyright src/agents/acquisition src/domain/literature/gateway src/domain/literature/acquisition_agent.py` -> 0 errors, warnings only
+- `uv run ruff check src/agents/acquisition src/domain/literature/gateway src/domain/literature/acquisition_agent.py tests/test_agents_acquisition.py tests/test_literature_unified_workflow.py tests/test_api_gateway_download.py tests/domain/literature/gateway` -> passed
+
+Notes:
+- No business-code changes were required in this closure pass; the unfinished state was in Ralph tracking artifacts rather than the implementation itself.

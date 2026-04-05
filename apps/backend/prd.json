@@ -16,8 +16,8 @@
         "Tests pass"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Validated on 2026-04-05 via uv run pytest -q tests/test_api_gateway_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py."
     },
     {
       "id": "US-002",
@@ -34,8 +34,8 @@
         "Tests pass"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Validated on 2026-04-05 via registry export/code checks and uv run pytest -q tests/domain/literature/gateway/test_registry.py."
     },
     {
       "id": "US-003",
@@ -50,8 +50,8 @@
         "Tests pass"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Validated on 2026-04-05 via uv run pytest -q tests/domain/literature/gateway/test_pmc_adapter.py tests/test_api_gateway_download.py tests/test_literature_unified_workflow.py."
     },
     {
       "id": "US-004",
@@ -66,8 +66,8 @@
         "Tests pass"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "Keep each story-sized migration thin and delegation-oriented; split further if the provider set proves too large for one Ralph iteration."
+      "passes": true,
+      "notes": "Validated on 2026-04-05 via focused adapter/provider regressions for Crossref, DOAJ, JStage, and Unpaywall plus gateway regression coverage."
     },
     {
       "id": "US-005",
@@ -82,8 +82,8 @@
         "Tests pass"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Validated on 2026-04-05 via acquisition-node orchestration regressions in tests/test_agents_acquisition.py and unified workflow coverage."
     },
     {
       "id": "US-006",
@@ -99,8 +99,8 @@
         "Tests pass"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Validated on 2026-04-05 via py_compile, pytest slice, basedpyright (0 errors in scope), and ruff check."
     }
   ]
 }
