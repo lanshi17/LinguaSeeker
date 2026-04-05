@@ -1161,3 +1161,32 @@ Notes:
 - This closure pass required no business-code edits; the remaining work was Ralph tracking and handoff completion.
 - `lesson.md` was intentionally left unchanged because no new debugging pattern or root cause was discovered during this pass.
 - The pytest slice emitted pre-existing environment/runtime warnings (`RequestsDependencyWarning` and a `PytestUnraisableExceptionWarning` from an event loop shutdown path), but the command exited successfully with all tests passing.
+
+---
+
+Implementation Update: 2026-04-05 (docs/plans archival refresh)
+
+Completed:
+- Archived completed backend plan documents from `docs/plans/` into `docs/archive/2026-04-05-completed-plans/`.
+- Archived files:
+  - `2026-03-21-acquisition-strategy-adapter-design.md`
+  - `2026-03-21-acquisition-strategy-adapter-implementation.md`
+  - `2026-03-21-database-unified-management.md`
+  - `2026-03-23-m2-task-creation-flow-design.md`
+  - `2026-03-23-m2-task-creation-flow-implementation.md`
+- Rewrote `docs/plans/README.md` so `docs/plans/` now reflects only the active rollout baseline and a recommended execution order.
+
+Recommended next order:
+1. `2026-03-22-v1.0-multi-source-6node-rollout.md` / `M1: Acquisition & Orchestration`
+2. `2026-03-22-v1.0-multi-source-6node-rollout.md` / `M2: 6-Node Execution`
+3. `2026-03-22-v1.0-multi-source-6node-rollout.md` / `M3: Service Boundary Hardening`
+4. `2026-03-22-v1.0-multi-source-6node-rollout.md` / `M4: Contract & Verification`
+
+Verification:
+- `find docs/plans -maxdepth 1 -type f | sort` now leaves only:
+  - `docs/plans/2026-03-22-v1.0-multi-source-6node-rollout.md`
+  - `docs/plans/README.md`
+- `find docs/archive/2026-04-05-completed-plans -maxdepth 1 -type f | sort` confirms the five completed plan files were moved successfully.
+
+Notes:
+- This update is documentation-only; no business code or runtime contract changed.
