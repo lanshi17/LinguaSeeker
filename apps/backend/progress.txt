@@ -1093,3 +1093,27 @@ Verification:
 Notes:
 - This step restores alignment between the frozen backend docs and the effective acquisition entrypoint.
 - The focused verification slice is green; no full release-gate or 100-paper acceptance run was attempted in this step.
+
+---
+
+Implementation Update: 2026-04-05 (Release-gate tooling batch: Tasks 4-6)
+
+Completed:
+- Added additive `warning_codes` and `trace_chain` support for task pipeline payloads and `GET /tasks/{task_id}`.
+- Introduced reusable traceability helpers to normalize warning codes and build node-level trace summaries from `node_trace` + `processing_steps`.
+- Added release-gate calculation for fixed acceptance manifests, including the frozen `FILE_DUPLICATE` success-rate rule and incomplete-run detection.
+- Added release-report tooling:
+  - `scripts/release_report.py`
+  - `src/services/release_report_cli.py`
+  - `src/services/release_reporting.py`
+  - `docs/templates/release_report.md.template`
+  - `docs/acceptance/v1.0-100-paper-manifest.json`
+- Updated the saved rollout implementation plan with the user-authoritative Task 4-7 addendum for this session.
+
+Verification:
+- `uv run pytest -q tests/unit/test_traceability.py tests/unit/test_release_reporting.py tests/unit/test_tasks.py::test_process_pubmed_paper_task_success tests/unit/test_tasks.py::test_process_web_page_task_success tests/integration/test_task_api.py::test_get_task_status_exposes_warning_codes_and_trace_chain` -> `8 passed`
+- `uv run python scripts/release_report.py --manifest docs/acceptance/v1.0-100-paper-manifest.json --output tmp/release-report-v1.0.md` -> rendered markdown report with `Gate status: INCOMPLETE`
+
+Notes:
+- The acceptance manifest/report scaffold is intentionally honest about current state: the real 100-paper acceptance execution is still unfinished.
+- A targeted `ruff check` still reports pre-existing `E402` import-order issues in `src/services/task_manager.py`; this batch did not broaden into repository-wide lint cleanup.

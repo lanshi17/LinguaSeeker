@@ -1,0 +1,25 @@
+# Release Report: {release_no}
+
+Generated at: {generated_at}
+
+## Manifest
+- Locked: {locked}
+- Expected papers: {expected_paper_count}
+- Manifest entries: {manifest_entry_count}
+- Completed papers: {completed_paper_count}
+- Pending papers: {pending_paper_count}
+- Gate status: {gate_status}
+
+## Acceptance Gate
+- Success count: {success_count}
+- Failed count: {failed_count}
+- Duplicate count: {duplicate_count}
+- Success rate: {success_rate_numerator}/{success_rate_denominator} ({success_rate_pct}%)
+- Max duration seconds: {max_duration_seconds}
+- Duration SLA pass: {duration_sla_pass}
+
+## Blocking Reasons
+{blocking_reasons}
+
+## Notes
+{notes}

@@ -70,6 +70,7 @@ from src.services.enum import (
     merge_processing_step_update,
     normalize_processing_steps,
 )
+from src.services.traceability import build_trace_chain, normalize_warning_codes
 from src.tools.db.qdrant_tool import QdrantManager, initialize_knowledge_base
 from src.utils.timer import Timer
 
@@ -2028,13 +2029,18 @@ def process_pdf_task(
                     en_text=en_text,
                     base_warnings=translation_warnings,
                 )
+                normalized_warning_codes = normalize_warning_codes(warning_codes) or []
+                trace_chain = build_trace_chain(
+                    node_trace=node_trace,
+                    processing_steps=processing_steps,
+                )
                 postgres.update_paper_task(
                     paper_task_id,
                     status="success",
                     workflow_status=WorkflowStatus.completed.value,
                     error_code=None,
                     error_details=None,
-                    warning_codes=warning_codes or None,
+                    warning_codes=normalized_warning_codes or None,
                     node_trace=node_trace,
                     processing_steps=processing_steps,
                     file_size_bytes=file_size_bytes,
@@ -2049,6 +2055,9 @@ def process_pdf_task(
                 if isinstance(payload, dict):
                     payload.setdefault("processing_steps", processing_steps)
                     payload.setdefault("progress_percentage", progress_percentage)
+                    payload.setdefault("warning_codes", normalized_warning_codes)
+                    if trace_chain is not None:
+                        payload.setdefault("trace_chain", trace_chain)
                     if request_id:
                         postgres.refresh_task_request_status(request_id)
             except Exception as success_exc:
@@ -2446,6 +2455,26 @@ def process_pubmed_paper_task(
         en_text=en_text,
         base_warnings=base_warnings,
     )
+    normalized_warning_codes = normalize_warning_codes(warning_codes) or []
+    processing_steps = _get_paper_task_processing_steps(
+        postgres,
+        paper_task_id,
+        node_trace=node_trace,
+    )
+    trace_chain = build_trace_chain(
+        node_trace=node_trace,
+        processing_steps=processing_steps,
+    )
+    normalized_warning_codes = normalize_warning_codes(warning_codes) or []
+    processing_steps = _get_paper_task_processing_steps(
+        postgres,
+        paper_task_id,
+        node_trace=node_trace,
+    )
+    trace_chain = build_trace_chain(
+        node_trace=node_trace,
+        processing_steps=processing_steps,
+    )
 
     document_identifier: Any = document_id
     try:
@@ -2472,12 +2501,8 @@ def process_pubmed_paper_task(
         error_details=None,
         fulltext_unavailable=pubmed_fulltext_unavailable,
         node_trace=node_trace,
-        warning_codes=warning_codes,
-        processing_steps=_get_paper_task_processing_steps(
-            postgres,
-            paper_task_id,
-            node_trace=node_trace,
-        ),
+        warning_codes=normalized_warning_codes,
+        processing_steps=processing_steps,
         processing_duration_seconds=(
             datetime.now(timezone.utc) - start_time
         ).total_seconds(),
@@ -2503,6 +2528,8 @@ def process_pubmed_paper_task(
         "status": "success",
         "files": files.model_dump() if hasattr(files, "model_dump") else files,
         "graph_sync_result": graph_sync_result,
+        "warning_codes": normalized_warning_codes,
+        "trace_chain": trace_chain,
     }
 
 
@@ -2812,6 +2839,16 @@ def process_web_page_task(
         en_text=en_text,
         base_warnings=base_warnings,
     )
+    normalized_warning_codes = normalize_warning_codes(warning_codes) or []
+    processing_steps = _get_paper_task_processing_steps(
+        postgres,
+        paper_task_id,
+        node_trace=node_trace,
+    )
+    trace_chain = build_trace_chain(
+        node_trace=node_trace,
+        processing_steps=processing_steps,
+    )
 
     postgres.update_document(
         document_identifier,
@@ -2828,12 +2865,8 @@ def process_web_page_task(
         error_details=None,
         fulltext_unavailable=web_fulltext_unavailable,
         node_trace=node_trace,
-        warning_codes=warning_codes,
-        processing_steps=_get_paper_task_processing_steps(
-            postgres,
-            paper_task_id,
-            node_trace=node_trace,
-        ),
+        warning_codes=normalized_warning_codes,
+        processing_steps=processing_steps,
         processing_duration_seconds=(
             datetime.now(timezone.utc) - start_time
         ).total_seconds(),
@@ -2862,4 +2895,6 @@ def process_web_page_task(
         "status": "success",
         "files": files.model_dump() if hasattr(files, "model_dump") else files,
         "graph_sync_result": graph_sync_result,
+        "warning_codes": normalized_warning_codes,
+        "trace_chain": trace_chain,
     }

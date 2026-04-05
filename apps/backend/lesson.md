@@ -65,3 +65,9 @@
 - Root cause: trace persistence logic was written for the API path only and never updated when web routing became part of the same unified contract.
 - Fix: request `raw=True` for literature download flows and read `source_trace` from either `raw.api` or `raw.web`.
 - Prevention: any helper that depends on route metadata or trace output should assert the same contract for both API and web responses in focused tests.
+
+2026-04-05 - Pipeline contract additions should be built from existing state primitives instead of inventing a second persistence path
+- Symptom: `warning_codes` already existed on `paper_tasks`, but `trace_chain` only existed in docs, which made it tempting to add another storage surface before the task-status API could expose anything useful.
+- Root cause: the repo already had enough runtime primitives (`node_trace`, `processing_steps`, `acquisition_detail`) to construct a stable trace summary, but that implicit contract was not made explicit.
+- Fix: add a small traceability helper that derives `trace_chain` from `node_trace` and normalized step state, and reuse it in both task payload generation and `GET /tasks/{task_id}`.
+- Prevention: when a frozen contract asks for richer output, check whether the data already exists in normalized state before introducing new schema or duplicate persistence.

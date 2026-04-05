@@ -10,6 +10,20 @@
 
 ---
 
+## Session Addendum (2026-04-05)
+
+User-authoritative execution slice for this session:
+1. Task 4: trace `trace_chain` / `warning_codes` through the pipeline and expose them additively in the task-status API contract.
+2. Task 5: implement release-gate calculation for the fixed 100-paper acceptance set, including the frozen `FILE_DUPLICATE` success-rate rule.
+3. Task 6: add a release-report CLI, a reusable report template, and an acceptance manifest scaffold.
+4. Task 7: close out docs and run a focused M3/M4 regression slice.
+
+Execution note:
+1. This session executes Tasks 4-6 as the first batch and reports back for feedback before Task 7.
+2. The real 100-paper acceptance run remains explicitly unfinished in this slice; tooling and docs must reflect that state honestly.
+
+---
+
 ### Task 1: Replace MVP-only unified-workflow assumptions with failing tests
 
 **Files:**

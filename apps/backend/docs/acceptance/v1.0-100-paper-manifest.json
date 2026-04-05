@@ -1,0 +1,11 @@
+{
+  "release_no": "v1.0",
+  "expected_paper_count": 100,
+  "locked": false,
+  "generated_at": "2026-04-05T00:00:00+00:00",
+  "notes": [
+    "Acceptance set scaffold only; actual 100-paper execution remains unfinished in this slice.",
+    "Populate papers with the fixed per-release acceptance set before running the final release gate."
+  ],
+  "papers": []
+}

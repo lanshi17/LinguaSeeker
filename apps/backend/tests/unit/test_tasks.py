@@ -687,6 +687,9 @@ def test_process_pubmed_paper_task_success(monkeypatch: pytest.MonkeyPatch) -> N
     assert result["status"] == "success"
     assert result["fulltext_unavailable"] is False
     assert result["pdf_download"]["source_trace"] == source_trace
+    assert result["warning_codes"] == []
+    assert result["trace_chain"]["steps"]["acquisition"]["detail"]["provider"] == "pmc"
+    assert result["trace_chain"]["steps"]["classification"]["outcome"] == "success"
     assert fake_pg.paper_updates[-1]["fields"]["status"] == "success"
     assert fake_pg.paper_updates[-1]["fields"]["node_trace"]["acquisition_detail"] == {
         "provider": "pmc",
@@ -875,6 +878,12 @@ def test_process_web_page_task_success(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result["status"] == "success"
     assert result["source_url"] == "https://example.org/ldlr-web-study"
     assert result["pdf_download"]["source_trace"] == source_trace
+    assert result["warning_codes"] == []
+    assert (
+        result["trace_chain"]["steps"]["acquisition"]["detail"]["provider"]
+        == "crossref"
+    )
+    assert result["trace_chain"]["steps"]["classification"]["outcome"] == "success"
     assert fake_pg.paper_updates[-1]["fields"]["status"] == "success"
     assert fake_pg.paper_updates[-1]["fields"]["node_trace"]["acquisition_detail"] == {
         "provider": "crossref",
