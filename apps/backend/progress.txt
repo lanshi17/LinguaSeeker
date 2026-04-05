@@ -1224,3 +1224,59 @@ Verification:
 
 Notes:
 - The new supervisor closeout regression was valuable because it exposed that `yangzs-agents` had not yet inherited the acquisition-state contract already present on `master`.
+
+---
+
+Implementation Update: 2026-04-05 (`docs/plans` unfinished-work cleanup)
+
+Completed:
+- Re-audited `docs/plans/` against the current `yangzs-agents` branch state and confirmed no additional completed plan files remain in the active plans directory.
+- Updated `docs/plans/2026-03-22-v1.0-multi-source-6node-rollout.md` to distinguish completed milestones from remaining work:
+  - `M1/M2` marked completed on the current branch
+  - `M3/M4` retained as the only unfinished baseline work
+- Rewrote `docs/plans/README.md` so it now functions as an unfinished-task index instead of a generic file list.
+
+Verification:
+- `find docs/plans -maxdepth 1 -type f | sort` -> `docs/plans/2026-03-22-v1.0-multi-source-6node-rollout.md`, `docs/plans/README.md`
+- Manual review confirms `docs/plans/README.md` and `docs/plans/2026-03-22-v1.0-multi-source-6node-rollout.md` now point only at unfinished work (`M3/M4`) and archived completed plan docs.
+
+Notes:
+- No additional plan-file moves were required in this pass because `docs/plans/` was already reduced to the active baseline plus index.
+
+---
+
+Implementation Update: 2026-04-05 (`M3/M4` executable plan creation)
+
+Completed:
+- Created a dedicated task-by-task implementation plan for the remaining rollout backlog:
+  - `docs/plans/2026-04-05-m3-m4-service-boundary-and-contract-verification-implementation.md`
+- Updated the active rollout baseline and `docs/plans/README.md` to point execution at the new implementation plan for `M3/M4`.
+
+Verification:
+- Manual review confirms the new plan is aligned to the active rollout baseline (`M3: service boundary hardening`, `M4: contract & verification`) rather than the older phase labels still present in `docs/IMPLEMENTATION_PLAN.md`.
+
+Notes:
+- No production code changed in this step; this milestone only creates the executable plan required before running `executing-plans`.
+
+---
+
+Implementation Update: 2026-04-05 (`M3` Batch 1 archive + `docs/plans` remaining-work cleanup)
+
+Completed:
+- Archived the completed M3 service-boundary hardening slice to:
+  - `docs/archive/2026-04-05-completed-plans/2026-04-05-m3-service-boundary-hardening-batch-1.md`
+- Updated `docs/plans/2026-04-05-m3-m4-service-boundary-and-contract-verification-implementation.md` so the active execution surface now starts from `Task 4` and references the archived `Task 1-3` slice.
+- Updated `docs/plans/README.md` and `docs/plans/2026-03-22-v1.0-multi-source-6node-rollout.md` so active planning now shows:
+  - `M1/M2` completed
+  - `M3` contract slice completed and archived
+  - remaining work narrowed to `M4` / `Task 4-7`
+
+Verification:
+- Manual review confirms `docs/plans/README.md`, `docs/plans/2026-03-22-v1.0-multi-source-6node-rollout.md`, and `docs/plans/2026-04-05-m3-m4-service-boundary-and-contract-verification-implementation.md` are now consistent about the remaining active tasks.
+- Completed-slice verification remains:
+  - `uv run pytest -q tests/unit/application/test_document_service.py tests/unit/domain/test_document_parser.py` -> `4 passed`
+  - `uv run pytest -q tests/unit/test_task_manager_alignment.py tests/unit/test_task_manager_minio_outputs.py tests/unit/test_tasks.py tests/test_golden_fixtures.py` -> `50 passed`
+  - `uv run pytest -q tests/test_agents_extraction.py tests/unit/test_tasks.py tests/test_golden_fixtures.py` -> `49 passed`
+
+Notes:
+- This update only archives completed planning scope and rewrites the active planning surface; it does not change the remaining implementation backlog itself.

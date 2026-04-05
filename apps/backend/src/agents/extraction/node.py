@@ -67,6 +67,7 @@ def run_extraction_node(state: SupervisorState) -> SupervisorState:
         ps3_evidence=_dict_value(final_state.get("ps3_evidence")),
         arbitration_confidence=final_state.get("arbitration_confidence"),
         image_descriptions=_string_list(final_state.get("image_descriptions")),
+        evidence_sources=_string_list(final_state.get("evidence_sources")),
         final_evidence_strength=cast(str | None, final_strength),
         status=str(final_state.get("status", "pending")),
         origin_format_md=str(final_state.get("markdown_content", "")),

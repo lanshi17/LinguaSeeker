@@ -1979,6 +1979,7 @@ def process_pdf_task(
 
         end_time = datetime.now(timezone.utc)
         processing_duration_seconds = (end_time - start_time).total_seconds()
+        alignment_count = len(_build_sentence_alignments(source_text, en_text))
 
         payload: Dict[str, Any]
         result = PipelineResult(
@@ -1988,6 +1989,8 @@ def process_pdf_task(
             parsing_metadata=parsing_metadata,
             files=saved_files,
             evidence=agent_response,
+            warning_codes=list(translation_warnings),
+            alignment_count=alignment_count,
         )
         if hasattr(result, "model_dump"):
             payload = result.model_dump()
@@ -2044,6 +2047,8 @@ def process_pdf_task(
                 if isinstance(payload, dict):
                     payload.setdefault("processing_steps", processing_steps)
                     payload.setdefault("progress_percentage", progress_percentage)
+                    payload["warning_codes"] = warning_codes
+                    payload["alignment_count"] = alignment_count
                     if request_id:
                         postgres.refresh_task_request_status(request_id)
             except Exception as success_exc:

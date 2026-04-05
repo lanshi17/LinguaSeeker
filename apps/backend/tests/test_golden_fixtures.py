@@ -117,6 +117,7 @@ class TestGoldenFixtures:
         assert result.overall_confidence == pytest.approx(92.0)
         assert _json_value(result.evidence_classification) == "Pathogenic"
         assert [_json_value(level) for level in (result.acmg_evidence_levels or [])] == ["PS3"]
+        assert result.evidence_sources == ["Figure 1", "Table 2"]
         assert validate_evidence_output_equivalence(result.model_dump(mode="json"), data) == []
 
     def test_processing_state_structure(self) -> None:
@@ -164,6 +165,8 @@ class TestGoldenFixtures:
         assert result.files.image_dir.endswith("/images")
         assert result.evidence is not None
         assert _json_value(result.evidence.final_evidence_strength) == "PS3"
+        assert result.warning_codes == ["HGVS_AUTOCORRECT_FAILED"]
+        assert result.alignment_count == 2
         assert (
             validate_evidence_output_equivalence(
                 result.evidence.model_dump(mode="json"),

@@ -34,7 +34,7 @@ def test_run_extraction_node_maps_processing_state(monkeypatch) -> None:
                 "ps3_step_4": {"final_evidence_strength": "PS3"},
                 "overall_assessment": {"final_recommendation": "PS3"},
             }
-            inner_state["evidence_sources"] = ["Figure 1"]
+            inner_state["evidence_sources"] = ["Figure 1", "Table 2"]
             return inner_state
 
         def _extract_output_contract_fields(
@@ -68,6 +68,7 @@ def test_run_extraction_node_maps_processing_state(monkeypatch) -> None:
 
     assert isinstance(result["evidence_output"], EvidenceOutput)
     assert result["evidence_output"].final_evidence_strength == "PS3"
+    assert result["evidence_output"].evidence_sources == ["Figure 1", "Table 2"]
     assert result_dict["overall_confidence"] == 91.0
     assert result_dict["field_confidence_scores"] == {"gene": 91.0}
     assert isinstance(result["extracted_fields"], ExtractedEvidenceFields)
@@ -79,4 +80,4 @@ def test_run_extraction_node_maps_processing_state(monkeypatch) -> None:
         evidence_quote=None,
         confidence=91.0,
     )
-    assert result["evidence_sources"] == ["Figure 1"]
+    assert result["evidence_sources"] == ["Figure 1", "Table 2"]

@@ -120,6 +120,7 @@ class EvidenceOutput(BaseModel):
     ps3_evidence: Dict[str, Any] = Field(..., description="PS3 证据评估结果")
     arbitration_confidence: Optional[float] = Field(None, description="仲裁置信度 (0-1)")
     image_descriptions: List[str] = Field(default_factory=list, description="图片描述列表")
+    evidence_sources: List[str] = Field(default_factory=list, description="证据来源列表")
     final_evidence_strength: Optional[str] = Field(None, description="最终证据强度等级")
     status: Optional[str] = Field("pending", description="处理状态")
     origin_format_md: Optional[str] = Field(None, description="原始格式的 排版后的Markdown 内容")
@@ -367,6 +368,8 @@ class PipelineResult(BaseModel):
     parsing_metadata: Optional[Dict[str, Any]] = Field(None, description="解析阶段元数据")
     files: PipelineFiles = Field(..., description="输出文件集合")
     evidence: EvidenceOutput = Field(..., description="证据提取结果")
+    warning_codes: List[str] = Field(default_factory=list, description="管道警告码列表")
+    alignment_count: int = Field(0, description="原文-英文句子对齐数量")
 
 
 # ==================== RAG ====================

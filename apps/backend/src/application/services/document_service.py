@@ -37,6 +37,24 @@ class DocumentService:
             # 生成唯一的document ID
             document_id = str(uuid.uuid4())
 
+            parse_documents = getattr(self.pdf_parser, "parse_documents", None)
+            if callable(parse_documents):
+                parse_result = parse_documents([document.temp_file_path])
+                artifacts = parse_result.artifacts
+                return DocumentProcessResultDTO(
+                    document_id=document_id,
+                    file_name=document.filename,
+                    processed_at=datetime.now(timezone.utc),
+                    parser_backend=parse_result.parser_backend,
+                    parser_task_id=parse_result.parser_task_id,
+                    mineru_folder=parse_result.mineru_folder,
+                    markdown_object_key=artifacts.markdown_object_key,
+                    markdown_url=artifacts.markdown_url,
+                    image_object_keys=list(artifacts.image_object_keys),
+                    image_urls=list(artifacts.image_urls),
+                    image_count=parse_result.image_count,
+                )
+
             parse_result = self.pdf_parser.parse(
                 document.temp_file_path,
                 document_id=document_id,
@@ -51,19 +69,17 @@ class DocumentService:
                 f"Stored {storage_result.get('file_count')} files in MinIO under "
                 f"{storage_result.get('minio_prefix')}"
             )
-            # 构建处理结果DTO
-            result_dto = DocumentProcessResultDTO(
+            return DocumentProcessResultDTO(
                 document_id=document_id,
                 file_name=document.filename,
+                processed_at=datetime.now(timezone.utc),
                 minio_prefix=storage_result.get("minio_prefix"),
                 minio_files=storage_result.get("minio_files"),
                 file_count=storage_result.get("file_count"),
-                processed_at=datetime.now(timezone.utc),
                 mineru_file_id=parse_result.get("file_id"),
                 state=parse_result.get("state"),
                 full_zip_url=parse_result.get("full_zip_url"),
             )
-            return result_dto
 
         except Exception as e:
             logger.error(f"Error processing PDF document: {e}")

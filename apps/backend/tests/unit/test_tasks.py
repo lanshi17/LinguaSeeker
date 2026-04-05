@@ -1184,6 +1184,165 @@ def test_process_pdf_task_parsing_artifacts_saved_before_extraction(
     _invoke_bound_task(tasks_module.process_pdf_task, ["file.pdf"])
 
 
+def test_process_pdf_task_exposes_translation_warning_and_alignment_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    evidence = _make_evidence_output(ps3_evidence={"ok": True})
+
+    class FakePostgres:
+        def __init__(self) -> None:
+            self.alignments: List[Dict[str, Any]] = []
+
+        def update_paper_task(self, *_: Any, **__: Any) -> None:
+            return None
+
+        def append_paper_task_log(self, *_: Any, **__: Any) -> None:
+            return None
+
+        def create_sentence_alignment(self, **kwargs: Any) -> None:
+            self.alignments.append(kwargs)
+
+    def fake_acquisition(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+        nt["acquisition"] = "success"
+        return fps, nt
+
+    async def fake_parsing(
+        pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]
+    ) -> Any:
+        nt["parsing"] = "success"
+        return _make_parsing_result("/tmp/mineru-output"), nt
+
+    def fake_translation(pg: Any, ptid: str, md: str, nt: Dict[str, str]) -> Any:
+        nt["translation"] = "success"
+        return "第一句。\n第二句。", "Sentence one.\nSentence two.", nt, [
+            "HGVS_AUTOCORRECT_FAILED"
+        ]
+
+    def fake_extraction(
+        pg: Any, ptid: str, source: str, en: str, imgs: List[str], nt: Dict[str, str]
+    ) -> Any:
+        nt["extraction"] = "success"
+        return evidence, nt
+
+    def fake_acmg(pg: Any, ptid: str, did: str, resp: Any, nt: Dict[str, str]) -> Any:
+        nt["acmg"] = "success"
+        return {"pg_evidence_id": 1, "neo4j_synced": True}, nt
+
+    async def fake_store(*_: Any, **__: Any) -> PipelineFiles:
+        return PipelineFiles(
+            origin_md_path="/tmp/orig.md",
+            en_md_path="/tmp/en.md",
+            image_desc_path="/tmp/image_desc.txt",
+            ps3_evidence_path="/tmp/ps3.json",
+            image_dir="/tmp/images",
+            origin_md_url="",
+            en_md_url="",
+            image_desc_url="",
+            ps3_evidence_url="",
+            image_urls=[],
+        )
+
+    async def fake_store_parsing(*_: Any, **__: Any) -> DocumentParsingArtifact:
+        return DocumentParsingArtifact(
+            markdown_object_key="doc-1/parsing/parsed_markdown.md",
+            markdown_url="/api/v1/results/doc-1/doc-1/parsing/parsed_markdown.md",
+            image_object_keys=[],
+        )
+
+    fake_pg = FakePostgres()
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: fake_pg)
+    monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
+    monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
+    monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
+    monkeypatch.setattr(tasks_module, "run_node_extraction", fake_extraction)
+    monkeypatch.setattr(tasks_module, "run_node_acmg", fake_acmg)
+    monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store)
+    monkeypatch.setattr(
+        tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing
+    )
+    monkeypatch.setattr(
+        tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None
+    )
+
+    result = _invoke_bound_task(
+        tasks_module.process_pdf_task,
+        ["file.pdf"],
+        paper_task_id="paper-1",
+    )
+
+    assert result["warning_codes"] == ["HGVS_AUTOCORRECT_FAILED"]
+    assert result["alignment_count"] == 2
+
+
+def test_process_pdf_task_preserves_evidence_sources(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    evidence = _make_evidence_output(ps3_evidence={"ok": True}).model_dump(mode="json")
+    evidence["evidence_sources"] = ["Figure 1", "Table 2"]
+
+    def fake_acquisition(pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]) -> Any:
+        nt["acquisition"] = "success"
+        return fps, nt
+
+    async def fake_parsing(
+        pg: Any, ptid: str, fps: List[str], nt: Dict[str, str]
+    ) -> Any:
+        nt["parsing"] = "success"
+        return _make_parsing_result("/tmp/mineru-output"), nt
+
+    def fake_translation(pg: Any, ptid: str, md: str, nt: Dict[str, str]) -> Any:
+        nt["translation"] = "success"
+        return md, "en text", nt, []
+
+    def fake_extraction(
+        pg: Any, ptid: str, source: str, en: str, imgs: List[str], nt: Dict[str, str]
+    ) -> Any:
+        nt["extraction"] = "success"
+        return evidence, nt
+
+    def fake_acmg(pg: Any, ptid: str, did: str, resp: Any, nt: Dict[str, str]) -> Any:
+        nt["acmg"] = "success"
+        return {"pg_evidence_id": 1, "neo4j_synced": True}, nt
+
+    async def fake_store(*_: Any, **__: Any) -> PipelineFiles:
+        return PipelineFiles(
+            origin_md_path="/tmp/orig.md",
+            en_md_path="/tmp/en.md",
+            image_desc_path="/tmp/image_desc.txt",
+            ps3_evidence_path="/tmp/ps3.json",
+            image_dir="/tmp/images",
+            origin_md_url="",
+            en_md_url="",
+            image_desc_url="",
+            ps3_evidence_url="",
+            image_urls=[],
+        )
+
+    async def fake_store_parsing(*_: Any, **__: Any) -> DocumentParsingArtifact:
+        return DocumentParsingArtifact(
+            markdown_object_key="doc-1/parsing/parsed_markdown.md",
+            markdown_url="/api/v1/results/doc-1/doc-1/parsing/parsed_markdown.md",
+            image_object_keys=[],
+        )
+
+    monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
+    monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
+    monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
+    monkeypatch.setattr(tasks_module, "run_node_extraction", fake_extraction)
+    monkeypatch.setattr(tasks_module, "run_node_acmg", fake_acmg)
+    monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store)
+    monkeypatch.setattr(
+        tasks_module, "_store_parsing_artifacts_in_minio", fake_store_parsing
+    )
+    monkeypatch.setattr(
+        tasks_module.file_utils, "cleanup_old_temp_folders", lambda *_, **__: None
+    )
+
+    result = _invoke_bound_task(tasks_module.process_pdf_task, ["file.pdf"])
+
+    assert result["evidence"]["evidence_sources"] == ["Figure 1", "Table 2"]
+
+
 def test_run_node_translation_english_skip() -> None:
     fake_pg = _FakePostgresForNodes()
     node_trace: Dict[str, str] = {}
