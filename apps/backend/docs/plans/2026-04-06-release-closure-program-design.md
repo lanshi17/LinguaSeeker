@@ -1,0 +1,250 @@
+# Release Closure Program Design
+
+> **Status:** `APPROVED FOR PLANNING`
+> **Scope:** Complete the remaining release-critical backlog after the `task4-7-release-gate` merge on `yangzs-agents`.
+> **Frozen Contract Sources:** `docs/PRD.md`, `docs/BACKEND_STRUCTURE.md`, `docs/APP_FLOW.md`, `docs/TECH_STACK.md`, `docs/IMPLEMENTATION_PLAN.md`
+
+## Goal
+Close the remaining release backlog in an order that minimizes contract churn:
+1. release closeout and regression evidence
+2. KG independent service
+3. multi-variant graph fan-out
+4. remaining M2 frontend surfaces
+5. repo-wide type/lint debt
+
+## Problem Statement
+The current branch already contains:
+1. the 6-node main workflow
+2. multi-source acquisition routing
+3. M2 task-creation slice
+4. `warning_codes` / `trace_chain` exposure
+5. release-gate calculation and report tooling
+
+But the branch is still not release-complete because:
+1. `Task 7` documentation closeout and merged-branch regression evidence are not finalized
+2. the frozen KG contract still expects an independent service with event consumption and resumable backfill
+3. graph persistence still collapses multi-variant papers into one merged evidence record
+4. the user-visible M2 result/monitor/export surfaces are incomplete relative to frozen docs
+5. repo-wide `basedpyright` / `ruff` debt remains open
+6. the real 100-paper acceptance run has not been executed
+
+## Chosen Approach
+Use a contract-first release-closure program with five ordered phases:
+
+1. **Phase A: Release closeout baseline**
+   Freeze the current merged branch state in docs and focused regression evidence before any new functional work.
+2. **Phase B: KG independent service**
+   Add the missing independent KG execution path using PostgreSQL as the source of truth.
+3. **Phase C: Multi-variant evidence fan-out**
+   Fix persistence granularity in PostgreSQL first, then let KG consume the new normalized rows.
+4. **Phase D: M2 remaining frontend surfaces**
+   Finish request monitoring, results reading, and export UX on top of the stabilized backend contracts.
+5. **Phase E: Repo-wide quality cleanup**
+   Clear release-relevant `basedpyright` / `ruff` debt first, then widen to the full repository.
+
+This order is intentional:
+1. release docs and verification must describe the actual branch state
+2. KG and graph fan-out define the backend data contract that the remaining frontend pages will display
+3. acceptance execution should happen only after the release-relevant behavior is stable
+
+## Non-Goals
+This program does not:
+1. redefine frozen statuses, error codes, retry policies, or retention rules
+2. move KG logic back into the main service runtime path
+3. introduce a new PDF rendering backend during release closeout
+4. change request-level aggregation semantics for multi-variant papers
+5. hide historical lint/type debt with broad ignores
+
+## Architecture
+
+### Phase A: Release Closeout Baseline
+This phase is documentation and verification only.
+
+Allowed work:
+1. `docs/plans/`
+2. `progress.txt`
+3. `lesson.md`
+4. release-facing documentation
+5. focused regression tests that explain the current branch state
+
+Not allowed:
+1. shipping new business behavior
+2. mixing KG or frontend feature work into the closeout pass
+
+Outcome:
+1. one clear description of what is already done on `yangzs-agents`
+2. one clear description of what is still pending
+3. fresh focused regression evidence for the merged branch
+
+### Phase B: KG Independent Service
+Implement the frozen KG boundary from the docs:
+1. main service persists structured evidence in PostgreSQL
+2. main service emits a KG event trigger
+3. KG service reads from PostgreSQL
+4. KG service updates Neo4j
+5. initial full backfill supports resume from checkpoint
+
+#### Event model
+Use a small event payload with stable identifiers only:
+1. `event_id`
+2. idempotency key
+3. `request_id`
+4. `paper_task_id`
+5. `document_id`
+6. `release_no`
+7. event timestamp
+
+Do not transport the full evidence payload through Celery.
+
+#### Recommended execution shape
+1. main service writes an outbox/event row in PostgreSQL
+2. main service enqueues a lightweight Celery trigger carrying the event reference
+3. KG consumer loads the event row and evidence rows from PostgreSQL
+4. KG consumer runs graph sync to Neo4j
+5. retry queue uses the same retry policy as the expert-adjudication contract
+
+#### Why this shape
+1. PostgreSQL stays the only KG source of truth
+2. incremental update and backfill reuse the same executor
+3. broker payload remains small and stable
+4. event delivery failures do not erase the fact that the paper already completed successfully
+
+### Phase C: Multi-Variant Evidence Fan-Out
+Current problem:
+1. a paper with multiple variants is persisted as one merged evidence record
+2. Neo4j receives one merged variant representation
+3. downstream graph retrieval and ClinVar linking become inaccurate
+
+Chosen fix:
+1. keep one top-level `paper_task_id` and one top-level paper success/failure state
+2. split normalized variant-level evidence before writing PostgreSQL evidence rows
+3. persist one `EvidenceRecord`-equivalent row per normalized variant
+4. let KG read those fan-out rows and create Neo4j links per variant
+
+What stays unchanged:
+1. request aggregation still works per paper
+2. paper-task APIs still return one paper-level object
+3. KG still reads from PostgreSQL rather than re-splitting payloads itself
+
+Why PG-first fan-out matters:
+If PostgreSQL keeps merged variants while Neo4j stores split variants, the system ends up with two incompatible truths. Fan-out must happen before KG consumption.
+
+### Phase D: Remaining M2 Frontend Surfaces
+Complete the frozen M2 user-visible loop by extending the current pages instead of inventing a second UI architecture.
+
+#### Request monitoring
+Continue using `RequestMonitorPage` as the request-level status entrypoint.
+Extend it to show:
+1. 6-node progress
+2. `warning_codes`
+3. `trace_chain`
+4. `source_trace`
+5. duplicate/fulltext-unavailable labels
+6. request-level summary metrics
+
+#### Reading/results
+Continue using `DocumentPage` as the single-paper reading surface.
+It should be the place for:
+1. original/source text
+2. English text
+3. evidence anchors
+4. trace-aware reading context
+
+#### Export
+Continue using `RequestExportPage` for export output.
+For release closeout, prefer:
+1. HTML export view
+2. browser print-to-PDF flow
+
+Do not add a new backend PDF rendering stack in this phase unless the current frontend route proves impossible.
+
+### Phase E: Repo-Wide Quality Cleanup
+Use three concentric scopes:
+
+1. **Release-critical scope**
+   Files touched by Phases A-D must be clean for `basedpyright` and `ruff`.
+2. **Hotspot scope**
+   Clean frequently touched backend/frontend entrypoints such as task routes, task manager, config, and request/result pages.
+3. **Repo-wide scope**
+   Run full-repo `basedpyright` and `ruff`, then fix remaining issues without masking new debt.
+
+Principles:
+1. do not change business behavior only to satisfy style rules
+2. no broad suppression that hides new issues in touched files
+3. prioritize zero new debt on modified code before historical full-repo cleanup
+
+## Data Flow
+
+### Main release path after this program
+1. User creates request and selects/uploads papers
+2. 6-node workflow completes per paper
+3. Variant-level evidence is normalized and persisted in PostgreSQL
+4. Main service emits KG event reference
+5. KG consumer reads PostgreSQL rows and syncs Neo4j
+6. Request monitor and document pages read stable task/result contracts
+7. Export page renders a print-ready request report
+8. Acceptance runner computes release gate against the fixed manifest and renders the final release report
+
+## Failure Handling
+
+### KG service
+1. KG enqueue failure must not roll back an already-successful paper task
+2. event rows remain recoverable through retry/backfill
+3. consumer retries follow the expert-adjudication retry template
+4. failed event processing must be traceable via logs and event status
+
+### Fan-out
+1. malformed or unpairable variant fragments must not corrupt other variants from the same paper
+2. paper-level task should fail only if the existing graph/persistence contract would already fail that paper
+3. partial variant parsing should degrade with warnings only when that is contract-safe
+
+### Frontend
+1. `FILE_DUPLICATE` must render as success-path reuse, not failure
+2. `fulltext_unavailable` must remain visible
+3. export should degrade honestly when required fields are missing instead of fabricating content
+
+## Testing Strategy
+
+### Phase A
+1. focused regression suite for merged branch baseline
+2. doc-state consistency checks
+
+### Phase B
+1. unit tests for outbox/event creation, idempotency, retry state, checkpoint resume
+2. integration tests for KG consumer with fake PostgreSQL + fake Neo4j
+3. script-level tests for resumable backfill
+
+### Phase C
+1. unit tests for multi-variant normalization and pairing rules
+2. domain/integration tests proving one paper yields multiple persisted evidence rows
+3. compatibility tests proving paper-level API shape remains stable
+4. KG tests proving fan-out rows become multiple graph writes
+
+### Phase D
+1. route/page tests for monitor, document, and export pages
+2. store/service tests for request status and export payload mapping
+3. build + lint verification for frontend touched scope
+
+### Phase E
+1. targeted `basedpyright` / `ruff` on touched scopes after each phase
+2. final full-repo `basedpyright`
+3. final full-repo `ruff check`
+
+## Risks
+1. KG service and graph fan-out both touch the same data contract; sequencing mistakes can create split truth between PostgreSQL and Neo4j
+2. full acceptance should not be run until Phase A-D are stable, otherwise the report becomes stale immediately
+3. repo-wide lint/type cleanup can easily balloon in scope if not constrained to release-critical and hotspot passes first
+
+## Recommended Execution Order
+1. Phase A: release closeout baseline
+2. Phase B: KG independent service
+3. Phase C: multi-variant fan-out
+4. Phase D: remaining M2 frontend surfaces
+5. Phase E: repo-wide quality cleanup
+6. Real 100-paper acceptance execution and final release report
+
+## Approval Record
+Validated interactively on 2026-04-06:
+1. priority order `1` selected: release closure first, frontend after backend data contract
+2. A-C architecture approved
+3. D-E frontend and quality-cleanup design approved
