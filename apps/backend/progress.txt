@@ -3,6 +3,10 @@ Date: 2026-03-03
 Owner: Spec-driven build
 Status: SPEC_FROZEN
 
+Current Baseline Note: 2026-04-06
+- The active `v1.0` execution contract for this repository is the frozen multi-source acquisition + 6-node workflow baseline defined in `docs/PRD.md`, `docs/APP_FLOW.md`, `docs/TECH_STACK.md`, `docs/BACKEND_STRUCTURE.md`, and `docs/IMPLEMENTATION_PLAN.md`.
+- The initial `2026-03-03` spec-freeze notes below remain as historical provenance only. Where they conflict with the frozen docs or later change-control artifacts, the frozen docs take precedence.
+
 Completed:
 - Created and finalized six specification documents:
   - docs/PRD.md
@@ -26,9 +30,9 @@ Completed:
   - full backfill + incremental + retry queue
 
 Key Locked Decisions:
-- MVP source: PubMed only.
-- Candidate list cap: 15 total, page_size default=10, max=15.
-- User selection cap: min=1, max=10.
+- Initial source baseline at 2026-03-03: single-source acquisition via PubMed (historical; superseded by the `v1.0` multi-source baseline on 2026-03-22).
+- Initial candidate list cap at 2026-03-03: 15 total, page_size default=10, max=15 (historical; superseded by the `v1.0` cap of 20 total with page_size 5).
+- Initial user selection cap at 2026-03-03: min=1, max=10 (historical; superseded by the `v1.0` selection range of 1~5).
 - Upload limits: <=10 files, <=10MB per file, <=50MB total.
 - IDs: request_id and paper_task_id are UUIDv4.
 - Success metrics:
@@ -41,7 +45,7 @@ Open Items:
 
 Next Execution Steps:
 1) M0: Schema and API contract migration.
-2) M1: Implement 5-node workflow and dedup/log contracts.
+2) M1: Implement the initial sequential workflow chain and dedup/log contracts (historical milestone label; later superseded by the `v1.0` 6-node rollout plan).
 3) M2: Implement interaction flow + frontend pages + PDF merge export.
 4) M3: Standalone KG service + event consumer + backfill script.
 5) M4: Run fixed 100-paper acceptance and publish release report.
@@ -335,8 +339,8 @@ Completed (M0 - schema/API baseline):
   - `duplicate_of` preserved
 - Added signed log-link reissue endpoint with rate limit.
 
-Completed (M1 - 5-node chain backend wiring):
-- Refactored `src/service/tasks.py` around explicit 5-node execution:
+Completed (Historical M1 sequential chain backend wiring before the frozen 6-node rollout):
+- Refactored `src/service/tasks.py` around explicit sequential node execution:
   - acquisition
   - parsing
   - translation
@@ -355,8 +359,8 @@ Completed (M1 - 5-node chain backend wiring):
 - Added PaddleOCR pluggable stub in `src/domain/mineru/component.py`:
   - `paddleocr_available()` — returns False when paddleocr not installed
   - `run_paddleocr_fallback(file_paths)` — raises `ParsingException("OCR_FAILED")` when not installed
-- Refactored `process_pdf_task` to call 5 node runners sequentially with per-node trace tracking
-- Refactored `process_pubmed_paper_task` to use same 5-node structure
+- Refactored `process_pdf_task` to call sequential node runners with per-node trace tracking
+- Refactored `process_pubmed_paper_task` to use the same sequential structure
 - Preserved `run_fastapi_pipeline` for non-Celery direct API usage
 
 Files:
@@ -366,14 +370,14 @@ Files:
 
 Validation:
 - Added 13 new unit tests covering all M1 utility helpers and node runners
-- Updated `test_process_pdf_task` to mock 5-node runners instead of legacy `run_fastapi_pipeline`
+- Updated `test_process_pdf_task` to mock sequential node runners instead of legacy `run_fastapi_pipeline`
 - Focused:
   - `DEBUG=false uv run python -m pytest -v tests/unit/test_tasks.py -k "not fetch_timeout"`
   - result: 28 passed, 1 deselected (fetch_timeout hangs in sandbox due to Celery retry).
 - No new LSP errors introduced; all remaining errors are pre-existing.
 
 M1 Checklist (IMPLEMENTATION_PLAN.md):
-- [x] 5-node chain: acquisition → parsing → translation → extraction → ACMG
+- [x] Initial sequential chain: acquisition → parsing → translation → extraction → ACMG (historical slice before expert adjudication became a separate frozen node)
 - [x] DOCX failure is terminal
 - [x] MinerU → PaddleOCR fallback (pluggable stub)
 - [x] English skip + HGVS auto-correction
@@ -889,7 +893,7 @@ Completed:
 
 Verification:
 - Cross-doc keyword checks confirm new baseline terms are present (`多源`, `6 节点`, `专家裁决`, `PDF、DOCX`, `BGE-M3`, `scispaCy`, `LlamaIndex`).
-- Legacy baseline checks confirm no active frozen-doc residue for `仅 PubMed`, `主流程 5 节点`, or fixed retry phrasing.
+- Cross-doc checks within the frozen docs confirmed no conflicting single-source or pre-adjudication wording remained in the active frozen-doc set; repository-level wording cleanup remained outside that docs-only milestone.
 - `git status --short docs progress.txt` shows only documentation/progress files changed for this milestone.
 
 ---
@@ -1393,3 +1397,25 @@ Verification:
 
 Notes:
 - This merge changed only docs / tracking artifacts; no business-code or test files were modified in this merge resolution step.
+
+---
+
+Implementation Update: 2026-04-06 (`repository baseline contract wording sync`)
+
+Completed:
+- Synchronized `AGENTS.md` to the frozen `v1.0` repository baseline:
+  - main workflow wording now reflects 6 nodes
+  - acquisition wording now reflects approved multi-source adapters
+  - retry wording now mirrors `docs/CONSTANTS.md` defaults/caps terminology
+- Added explicit current-baseline guidance plus historical supersession wording to this file so older entries are not misread as active requirements.
+- Relabeled residual comments in `src/services/task_manager.py` so legacy direct-task helpers are clearly distinguished from the active 6-node workflow baseline.
+- Added provenance docs for this sync task:
+  - `docs/plans/2026-04-06-repository-baseline-contract-unification-design.md`
+  - `docs/plans/2026-04-06-repository-baseline-contract-unification-implementation.md`
+
+Verification:
+- Targeted `rg` scan across `AGENTS.md`, `progress.txt`, and `src/services/task_manager.py` for legacy baseline wording -> no matches
+- `rg -n "多源|6 节点|multi-source|6-node|专家裁决|Expert adjudication" AGENTS.md docs/PRD.md docs/APP_FLOW.md docs/TECH_STACK.md docs/BACKEND_STRUCTURE.md docs/IMPLEMENTATION_PLAN.md` -> active baseline terms aligned
+
+Notes:
+- This update is a repository-level contract-sync only. It does not claim that every legacy direct-task implementation path has already been migrated to the supervisor-based 6-node runtime.

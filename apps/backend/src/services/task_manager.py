@@ -1115,7 +1115,9 @@ async def _try_download_and_store_literature_pdf(
 
 
 # ---------------------------------------------------------------------------
-# 5-node pipeline runners  (acquisition → parsing → translation → extraction → acmg)
+# Legacy direct-task pipeline runners
+# (historical sequential path: acquisition → parsing → translation → extraction
+# → acmg; the frozen v1.0 workflow baseline is the 6-node supervisor path)
 # ---------------------------------------------------------------------------
 
 
@@ -2019,7 +2021,7 @@ def process_pdf_task(
             )
         )
 
-        # --- Node 5: ACMG / Graph Sync ---
+        # --- Legacy Node 5: ACMG / Graph Sync (direct path without adjudication) ---
         graph_sync_result, node_trace = run_node_acmg(
             postgres,
             paper_task_id or "",
@@ -2477,7 +2479,7 @@ def process_pubmed_paper_task(
 
     files = asyncio.run(_store_outputs_in_minio(agent_response, [], document_id))
 
-    # --- Node 5: ACMG / Graph Sync ---
+    # --- Legacy Node 5: ACMG / Graph Sync (direct path without adjudication) ---
     try:
         graph_sync_result, node_trace = run_node_acmg(
             postgres,

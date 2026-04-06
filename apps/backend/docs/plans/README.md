@@ -24,6 +24,10 @@
 
 1. `2026-04-05-m3-m4-service-boundary-and-contract-verification-implementation.md`
    `Task 1-6` 已落地后的历史 provenance 文档，保留追溯上下文，但不再代表当前 active backlog。
+2. `2026-04-06-repository-baseline-contract-unification-design.md`
+   一次性仓库口径统一设计文档；用于说明为何需要同步 `AGENTS.md`、`progress.txt` 与残留实现提示。
+3. `2026-04-06-repository-baseline-contract-unification-implementation.md`
+   上述设计的执行计划；该计划用于本次同步任务的 provenance，而非新的 release backlog。
 
 ## 当前未完成任务
 

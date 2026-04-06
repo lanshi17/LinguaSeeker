@@ -30,18 +30,19 @@ If any conflict appears, resolve by priority:
 11. The primary integration branch for this repository is **`yangzs-agents`**.
 
 ## 2. Scope (MVP)
-Implement the main 5-node workflow:
+Implement the main 6-node workflow:
 1. Literature acquisition
 2. Document parsing
 3. Multilingual processing
 4. Evidence extraction
 5. ACMG classification (PS3/BS3 only)
+6. Expert adjudication
 
 Out of scope for MVP:
 1. Quality assessment agent
 2. Quality API (must be removed, legacy calls return 404)
 3. pgvector migration (keep Qdrant)
-4. Non-PubMed production crawler integrations
+4. Illegal or unauthorized data-source integrations, including paywall-bypass strategies
 
 ## 3. Hard Requirements
 1. Primary goal is evidence-source explainability.
@@ -55,7 +56,9 @@ Out of scope for MVP:
 9. If all papers in one request are duplicates, request status must be `success`.
 
 ## 4. Data Source and Compliance
-1. MVP literature source: PubMed only.
+1. MVP literature acquisition uses approved multi-source adapters only:
+   - API: `biopython/pubmed`, `pmc`, `crossref`, `doaj`, `jstage`, `unpaywall`
+   - Crawler: `hans_publishers`, `pubscholar`, `cyberleninka`
 2. Country mapping is ISO-based and must not degrade to language-only approximation.
 3. Unsupported country mapping or empty hit must return `FETCH_NO_RESULT`.
 4. Full text unavailable must fall back to metadata+abstract evidence with `fulltext_unavailable=true`.
@@ -87,12 +90,15 @@ Out of scope for MVP:
 6. Alignment must be stored in PostgreSQL alignment table and keep both English-first and source coordinates.
 
 ## 7. Retry/Failure Policy
-Node retry matrix:
-1. acquisition: `max_retries=2, delay=300s, timeout=900s`
-2. parsing: `max_retries=1, delay=600s, timeout=1800s`
-3. translation: `max_retries=2, delay=120s, timeout=1200s`
-4. extraction: `max_retries=2, delay=300s, timeout=1800s`
-5. acmg: `max_retries=1, delay=180s, timeout=900s`
+Node retry defaults and caps:
+1. acquisition: `default_retries=2, retries_cap=5, delay=300s, timeout=900s`
+2. parsing: `default_retries=1, retries_cap=3, delay=600s, timeout=1800s`
+3. translation: `default_retries=2, retries_cap=4, delay=120s, timeout=1200s`
+4. extraction: `default_retries=2, retries_cap=4, delay=300s, timeout=1800s`
+5. acmg_classification: `default_retries=1, retries_cap=3, delay=180s, timeout=900s`
+6. expert_adjudication: `default_retries=1, retries_cap=3, delay=180s, timeout=900s`
+
+Source ordering and source-level retries remain dynamically decided within these caps.
 
 Failure handling:
 1. No automatic reopen for business users.
