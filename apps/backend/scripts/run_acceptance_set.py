@@ -9,6 +9,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from src.services.acceptance_runner import run_acceptance_set
+from src.services.acceptance_executor import AcceptanceExecutor
 from src.services.release_reporting import load_acceptance_manifest, save_acceptance_manifest
 
 
@@ -22,9 +23,10 @@ def _parse_args() -> argparse.Namespace:
 def main() -> int:
     args = _parse_args()
     manifest = load_acceptance_manifest(args.manifest)
+    executor = AcceptanceExecutor()
     report = run_acceptance_set(
         manifest,
-        enqueue=lambda paper: {'paper_task_id': paper.paper_task_id or f"queued-{paper.paper_id}"},
+        enqueue=executor.enqueue_manifest_paper,
     )
     if args.write:
         save_acceptance_manifest(args.manifest, manifest)

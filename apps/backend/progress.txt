@@ -197,6 +197,29 @@ Validation:
 Notes:
 - No frozen `v1.0` contract fields, statuses, or error codes were changed.
 
+---
+
+Implementation Update: 2026-04-06 (Acceptance closeout Task 2 - internal executor skeleton)
+
+Completed:
+- Added `src/services/acceptance_executor.py` with manifest-row validation, entry-kind dispatch, and normalized `request_id` / `paper_task_id` results.
+- Updated the acceptance runner to write `request_id` back into manifest rows alongside `paper_task_id`.
+- Replaced the placeholder enqueue lambda in `scripts/run_acceptance_set.py` with an `AcceptanceExecutor` instance so the script now uses the internal executor surface.
+
+Files:
+- src/services/acceptance_executor.py
+- src/services/acceptance_runner.py
+- scripts/run_acceptance_set.py
+- tests/unit/test_acceptance_executor.py
+- tests/unit/test_acceptance_runner.py
+
+Validation:
+- `uv run pytest -q tests/unit/test_acceptance_executor.py tests/unit/test_acceptance_runner.py`
+- Result: 4 passed.
+
+Notes:
+- The executor dispatch targets are still skeletal at this milestone; Task 3 and Task 4 wire the real `web` and `api` request creation flows.
+
 Implementation Update: 2026-03-03 (Failure contract unification - step 3)
 
 Completed:
