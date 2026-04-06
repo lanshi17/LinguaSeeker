@@ -31,7 +31,7 @@
 
 ## 当前未完成任务
 
-当前 active backlog 已基本收口到 release final closeout：
+结合 `2026-04-06` 的实际代码审计与 focused verification，`Task 1-13` 对应代码已在当前分支落地；当前 active backlog 已收口到 release final closeout：
 
 1. `Task 14: 100-paper acceptance run`
    - 锁定固定 100 篇 manifest
@@ -41,6 +41,13 @@
 2. `Task 15: final verification sweep`
    - 在真实 acceptance 完成后运行最终后端 release 验证切片
    - 以最终结果更新 `progress.txt` / `lesson.md`
+
+本次代码审计已复核的已落地切片：
+1. KG independent service：PostgreSQL outbox、`kg` queue、consumer、backfill
+2. multi-variant graph fan-out：variant-level evidence rows + document resync path
+3. remaining M2 surfaces：request monitor、document reading、request export
+4. acceptance/report helpers：manifest hydration、enqueue、report rendering
+5. repo-wide quality cleanup：`basedpyright`、`ruff`、frontend build/lint
 
 当前已知阻塞：
 1. `docs/acceptance/v1.0-100-paper-manifest.json` 仍是 scaffold

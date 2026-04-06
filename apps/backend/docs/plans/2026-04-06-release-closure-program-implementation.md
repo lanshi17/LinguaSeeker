@@ -2,13 +2,19 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Finish the remaining release-critical backlog on `yangzs-agents`: release closeout, KG independent service, multi-variant graph fan-out, remaining M2 request/result/export surfaces, repo-wide quality cleanup, and the real 100-paper acceptance run.
+**Goal:** Record the release-closure program accurately and finish the final acceptance/report closeout on `yangzs-agents`.
 
-**Architecture:** First freeze the merged branch state with docs and focused regression evidence. Then add a PostgreSQL-backed KG outbox plus an independent KG consumer/backfill path, fix graph persistence granularity at the PostgreSQL layer, and only then finish the request/result/export frontend on top of the stabilized paper-task read model. End with scoped then repo-wide `basedpyright` / `ruff` cleanup and the final acceptance/report run.
+**Architecture:** Tasks `1-13` are already landed on the current branch: KG outbox/consumer/backfill, multi-variant graph fan-out, remaining M2 result/export surfaces, acceptance helpers, and repo-wide quality cleanup are present in code and re-verified by focused tests and static checks. The active remaining work is to lock the real 100-paper manifest, run the acceptance/report flow, and execute the final verification sweep.
 
 **Tech Stack:** FastAPI, Celery, PostgreSQL, SQLAlchemy, Neo4j, LangGraph, React/Vite, Vitest, pytest, `uv`, `loguru`.
 
 **Git Note:** This repository often runs under “do not commit unless explicitly requested.” Each task includes a suggested commit step, but only run it if the user explicitly asks for commits in the execution session.
+
+**Current Branch Snapshot (verified against actual code on 2026-04-06):**
+1. `Task 1-13` are already landed on `yangzs-agents`.
+2. The only active backlog items are `Task 14` and `Task 15`.
+3. `Task 14` is blocked until `docs/acceptance/v1.0-100-paper-manifest.json` is populated with the real fixed 100-paper set and `locked=true`.
+4. Historical task bodies below are retained as execution provenance for the already-landed slices.
 
 ---
 
@@ -34,7 +40,7 @@ Expected: PASS. If it fails, stop here and fix the branch before any new functio
 
 Required outcomes:
 1. `Task 4-6` are described as already landed.
-2. Remaining work is described as:
+2. The historical checkpoint state at `Task 1` time records remaining work as:
    - KG independent service
    - multi-variant graph fan-out
    - remaining frontend result/export surfaces

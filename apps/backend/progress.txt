@@ -1419,3 +1419,31 @@ Verification:
 
 Notes:
 - This update is a repository-level contract-sync only. It does not claim that every legacy direct-task implementation path has already been migrated to the supervisor-based 6-node runtime.
+
+---
+
+Implementation Update: 2026-04-06 (`active plan docs synced to verified code state`)
+
+Completed:
+- Audited the actual release-closure code paths against the active plan docs instead of relying on historical planning state alone.
+- Re-verified that the following slices are already landed on the current branch:
+  - KG independent service (`kg` outbox / consumer / backfill / dedicated queue)
+  - multi-variant graph fan-out in PostgreSQL + graph resync path
+  - remaining M2 request monitor / document / export frontend surfaces
+  - acceptance manifest hydration / enqueue / release-report helper stack
+  - repo-wide release-critical static/build gates
+- Updated the active plan docs so they now describe the verified branch state honestly:
+  - `Task 1-13` treated as landed provenance
+  - active backlog narrowed to `Task 14` / `Task 15`
+  - real blocker kept explicit as the missing locked 100-paper manifest
+
+Verification:
+- `uv run pytest -q tests/unit/test_kg_events.py tests/unit/test_kg_consumer.py tests/unit/test_kg_backfill.py tests/unit/test_graph_variant_fanout.py tests/unit/test_acceptance_runner.py tests/unit/test_release_reporting.py` -> `16 passed`
+- `npm --prefix ../frontend run test:run -- src/pages/requests/request-monitor-page.test.tsx src/pages/documents/document-page.test.tsx src/pages/requests/request-export-page.test.tsx src/utils/normalizePaperResult.test.ts` -> `12 passed`
+- `uv run basedpyright src/` -> `0 errors, 0 warnings, 0 notes`
+- `uv run ruff check src/ tests/` -> `All checks passed!`
+- `npm --prefix ../frontend run build` -> `PASS`
+- `npm --prefix ../frontend run lint` -> `PASS`
+
+Blocked:
+- `Task 14` still cannot start honestly because `docs/acceptance/v1.0-100-paper-manifest.json` remains a scaffold (`locked=false`, `papers=[]`) and the repository still does not contain the real fixed 100-paper source list.

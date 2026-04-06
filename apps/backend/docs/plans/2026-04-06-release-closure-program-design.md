@@ -1,16 +1,14 @@
 # Release Closure Program Design
 
-> **Status:** `APPROVED FOR PLANNING`
-> **Scope:** Complete the remaining release-critical backlog after the `task4-7-release-gate` merge on `yangzs-agents`.
+> **Status:** `EXECUTED THROUGH TASK 13; FINAL CLOSEOUT PENDING`
+> **Scope:** Complete the final release closeout after Tasks `1-13` landed on `yangzs-agents`.
 > **Frozen Contract Sources:** `docs/PRD.md`, `docs/BACKEND_STRUCTURE.md`, `docs/APP_FLOW.md`, `docs/TECH_STACK.md`, `docs/IMPLEMENTATION_PLAN.md`
 
 ## Goal
-Close the remaining release backlog in an order that minimizes contract churn:
-1. release closeout and regression evidence
-2. KG independent service
-3. multi-variant graph fan-out
-4. remaining M2 frontend surfaces
-5. repo-wide type/lint debt
+Close the remaining release gate in an order that reflects the verified branch state:
+1. lock the fixed 100-paper manifest
+2. execute the acceptance set and publish the final release report
+3. run the final verification sweep and record closeout
 
 ## Problem Statement
 The current branch already contains:
@@ -19,33 +17,27 @@ The current branch already contains:
 3. M2 task-creation slice
 4. `warning_codes` / `trace_chain` exposure
 5. release-gate calculation and report tooling
+6. KG outbox / consumer / backfill code paths
+7. multi-variant graph fan-out persistence
+8. request monitor / document / export frontend surfaces
+9. repo-wide release-critical quality cleanup
 
 But the branch is still not release-complete because:
-1. `Task 7` documentation closeout and merged-branch regression evidence are not finalized
-2. the frozen KG contract still expects an independent service with event consumption and resumable backfill
-3. graph persistence still collapses multi-variant papers into one merged evidence record
-4. the user-visible M2 result/monitor/export surfaces are incomplete relative to frozen docs
-5. repo-wide `basedpyright` / `ruff` debt remains open
-6. the real 100-paper acceptance run has not been executed
+1. `docs/acceptance/v1.0-100-paper-manifest.json` is still a scaffold instead of the locked per-release acceptance set
+2. the real 100-paper acceptance run has not been executed
+3. the final release report has not been published from actual acceptance results
+4. the final verification sweep has not yet been recorded after the real acceptance run
 
 ## Chosen Approach
-Use a contract-first release-closure program with five ordered phases:
+Use a narrow final-closeout sequence:
 
-1. **Phase A: Release closeout baseline**
-   Freeze the current merged branch state in docs and focused regression evidence before any new functional work.
-2. **Phase B: KG independent service**
-   Add the missing independent KG execution path using PostgreSQL as the source of truth.
-3. **Phase C: Multi-variant evidence fan-out**
-   Fix persistence granularity in PostgreSQL first, then let KG consume the new normalized rows.
-4. **Phase D: M2 remaining frontend surfaces**
-   Finish request monitoring, results reading, and export UX on top of the stabilized backend contracts.
-5. **Phase E: Repo-wide quality cleanup**
-   Clear release-relevant `basedpyright` / `ruff` debt first, then widen to the full repository.
+1. lock the real 100-paper manifest and mark it `locked=true`
+2. run the acceptance set and sync actual paper results back into the manifest
+3. render the final release report from the actual manifest state
+4. re-run the final backend/frontend/static verification sweep
+5. update tracking docs with the honest final closeout status
 
-This order is intentional:
-1. release docs and verification must describe the actual branch state
-2. KG and graph fan-out define the backend data contract that the remaining frontend pages will display
-3. acceptance execution should happen only after the release-relevant behavior is stable
+The five-phase closure program below is retained as historical execution provenance for the already-landed Tasks `1-13`.
 
 ## Non-Goals
 This program does not:
@@ -57,7 +49,9 @@ This program does not:
 
 ## Architecture
 
-### Phase A: Release Closeout Baseline
+Historical execution provenance for the already-landed slices:
+
+### Phase A: Release Closeout Baseline `Status: Landed on current branch`
 This phase is documentation and verification only.
 
 Allowed work:
@@ -76,7 +70,7 @@ Outcome:
 2. one clear description of what is still pending
 3. fresh focused regression evidence for the merged branch
 
-### Phase B: KG Independent Service
+### Phase B: KG Independent Service `Status: Landed on current branch`
 Implement the frozen KG boundary from the docs:
 1. main service persists structured evidence in PostgreSQL
 2. main service emits a KG event trigger
@@ -109,7 +103,7 @@ Do not transport the full evidence payload through Celery.
 3. broker payload remains small and stable
 4. event delivery failures do not erase the fact that the paper already completed successfully
 
-### Phase C: Multi-Variant Evidence Fan-Out
+### Phase C: Multi-Variant Evidence Fan-Out `Status: Landed on current branch`
 Current problem:
 1. a paper with multiple variants is persisted as one merged evidence record
 2. Neo4j receives one merged variant representation
@@ -129,7 +123,7 @@ What stays unchanged:
 Why PG-first fan-out matters:
 If PostgreSQL keeps merged variants while Neo4j stores split variants, the system ends up with two incompatible truths. Fan-out must happen before KG consumption.
 
-### Phase D: Remaining M2 Frontend Surfaces
+### Phase D: Remaining M2 Frontend Surfaces `Status: Landed on current branch`
 Complete the frozen M2 user-visible loop by extending the current pages instead of inventing a second UI architecture.
 
 #### Request monitoring
@@ -158,7 +152,7 @@ For release closeout, prefer:
 
 Do not add a new backend PDF rendering stack in this phase unless the current frontend route proves impossible.
 
-### Phase E: Repo-Wide Quality Cleanup
+### Phase E: Repo-Wide Quality Cleanup `Status: Landed on current branch`
 Use three concentric scopes:
 
 1. **Release-critical scope**
