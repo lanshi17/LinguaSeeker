@@ -4,6 +4,7 @@ import json
 from typing import Any, Callable, Iterable, Mapping
 
 from src.api.routes.task import create_task_request_by_web_crawl, submit_pubmed_selection
+from src.services.api_request_submission import submit_api_acceptance_item
 from src.services.dtos import PubMedSelectionSubmitRequest, WebLiteratureCrawlRequest
 from src.services.release_reporting import AcceptancePaperRecord
 
@@ -142,8 +143,9 @@ def enqueue_web_manifest_paper(paper: AcceptancePaperRecord) -> dict[str, str]:
 
 def enqueue_api_manifest_paper(paper: AcceptancePaperRecord) -> dict[str, str]:
     if str(paper.source or "").lower() != "pubmed":
-        raise NotImplementedError(
-            "Task 4 will wire non-pubmed api acceptance flows"
+        return submit_api_acceptance_item(
+            source=str(paper.source or ""),
+            request_payload=_request_payload(paper),
         )
 
     payload = _request_payload(paper)
