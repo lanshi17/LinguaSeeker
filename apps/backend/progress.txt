@@ -1116,3 +1116,22 @@ Validation:
 
 Notes:
 - No business-code changes were required in this closure pass; the unfinished state was in Ralph tracking artifacts rather than the implementation itself.
+
+---
+
+Implementation Update: 2026-04-06 (Plans archive cleanup)
+
+Completed:
+- Archived completed plan slices from `docs/plans/` to `docs/archive/2026-04-06-completed-plans/`:
+  - `2026-03-21-database-unified-management.md`
+  - `2026-03-23-m2-task-creation-flow-design.md`
+  - `2026-03-23-m2-task-creation-flow-implementation.md`
+  - `2026-04-05-multi-source-6node-rollout-design.md`
+  - `2026-04-05-multi-source-6node-rollout-implementation.md`
+- Rewrote `docs/plans/README.md` so the current plans directory only lists active work and explicitly points completed slices to archive locations.
+- Updated `docs/plans/2026-03-22-v1.0-multi-source-6node-rollout.md` to point its execution-detail references at the archived rollout execution docs.
+
+Verification:
+- `find docs/plans -maxdepth 1 -type f | sort` -> only active baseline plan plus `README.md`
+- `find docs/archive/2026-04-06-completed-plans -maxdepth 1 -type f | sort` -> archived completed plan set present
+- `git status --short` -> expected plan/archive/progress updates only
