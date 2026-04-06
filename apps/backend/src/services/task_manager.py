@@ -963,11 +963,15 @@ async def _download_url_to_file(url: str, target: Path) -> Tuple[bool, Optional[
 async def _try_download_and_store_literature_pdf(
     *,
     document_id: str,
-    source: Literal["pubmed", "web"],
+    source: str,
     query: str,
     identifiers: List[str],
     detail_link: Optional[str] = None,
     selected_title: Optional[str] = None,
+    prefer: Literal["auto", "api", "web"] = "auto",
+    api_provider: Optional[str] = None,
+    web_provider: Optional[str] = None,
+    keep_local_file: bool = False,
 ) -> Dict[str, Any]:
     if not document_id:
         return {"downloaded": False, "reason": "document_id_missing"}
@@ -979,11 +983,15 @@ async def _try_download_and_store_literature_pdf(
         "action": "download",
         "query": str(query or ""),
         "identifiers": [str(item).strip() for item in identifiers if str(item).strip()],
-        "prefer": "auto",
+        "prefer": prefer,
         "download_path": str(download_dir),
         "selected_index": 0,
         "raw": True,
     }
+    if api_provider:
+        payload["api_provider"] = str(api_provider)
+    if web_provider:
+        payload["web_provider"] = str(web_provider)
     if detail_link:
         payload["detail_link"] = str(detail_link)
     if selected_title:
@@ -1094,7 +1102,8 @@ async def _try_download_and_store_literature_pdf(
             "warnings": warnings,
             "local_file_path": str(file_path),
         }
-    finally:
+
+    if not keep_local_file:
         shutil.rmtree(download_dir, ignore_errors=True)
 
     return {
@@ -1111,7 +1120,139 @@ async def _try_download_and_store_literature_pdf(
         "bucket": str(getattr(upload_ref.bucket, "value", upload_ref.bucket))
         if upload_ref
         else None,
+        "local_file_path": str(file_path) if keep_local_file else None,
     }
+
+
+def _normalize_api_acceptance_request_payload(
+    request_payload: Dict[str, Any],
+) -> Dict[str, Any]:
+    query = str(request_payload.get("query") or "").strip()
+    identifiers = [
+        str(item).strip()
+        for item in (request_payload.get("identifiers") or [])
+        if str(item).strip()
+    ]
+    selected_title = str(request_payload.get("selected_title") or "").strip()
+    detail_link = str(request_payload.get("detail_link") or "").strip()
+    return {
+        "query": query,
+        "identifiers": identifiers,
+        "selected_title": selected_title,
+        "detail_link": detail_link,
+    }
+
+
+def _extract_api_source_trace(result: Dict[str, Any]) -> List[Dict[str, Any]]:
+    raw_payload = result.get("raw")
+    if not isinstance(raw_payload, dict):
+        return []
+    api_payload = raw_payload.get("api")
+    if not isinstance(api_payload, dict):
+        return []
+    trace_value = api_payload.get("source_trace")
+    return trace_value if isinstance(trace_value, list) else []
+
+
+def _extract_api_fallback_metadata(
+    *,
+    source: str,
+    search_result: Dict[str, Any],
+    request_payload: Dict[str, Any],
+) -> Dict[str, str]:
+    items = search_result.get("items") if isinstance(search_result, dict) else []
+    first_item = items[0] if isinstance(items, list) and items else {}
+    raw_payload = search_result.get("raw") if isinstance(search_result, dict) else {}
+    api_payload = raw_payload.get("api") if isinstance(raw_payload, dict) else {}
+    raw_items = api_payload.get("items") if isinstance(api_payload, dict) else []
+    raw_item = raw_items[0] if isinstance(raw_items, list) and raw_items else {}
+
+    def _pick(*values: Any, default: str = "") -> str:
+        for value in values:
+            text = str(value or "").strip()
+            if text:
+                return text
+        return default
+
+    identifiers = request_payload.get("identifiers") or []
+    if not identifiers and isinstance(first_item, dict):
+        item_identifiers = first_item.get("identifiers")
+        if isinstance(item_identifiers, dict):
+            identifiers = [
+                f"{key}:{value}" for key, value in item_identifiers.items() if value
+            ]
+
+    abstract = _pick(
+        request_payload.get("abstract"),
+        raw_item.get("abstract") if isinstance(raw_item, dict) else None,
+        raw_item.get("summary") if isinstance(raw_item, dict) else None,
+        raw_item.get("excerpt") if isinstance(raw_item, dict) else None,
+        raw_item.get("description") if isinstance(raw_item, dict) else None,
+        raw_item.get("content") if isinstance(raw_item, dict) else None,
+    )
+
+    return {
+        "title": _pick(
+            request_payload.get("selected_title"),
+            first_item.get("title") if isinstance(first_item, dict) else None,
+            raw_item.get("title") if isinstance(raw_item, dict) else None,
+            request_payload.get("query"),
+            default=f"{source} acceptance item",
+        ),
+        "journal": _pick(
+            raw_item.get("journal") if isinstance(raw_item, dict) else None,
+            first_item.get("journal") if isinstance(first_item, dict) else None,
+        ),
+        "year": _pick(
+            raw_item.get("year") if isinstance(raw_item, dict) else None,
+            first_item.get("year") if isinstance(first_item, dict) else None,
+        ),
+        "doi": _pick(
+            raw_item.get("doi") if isinstance(raw_item, dict) else None,
+            first_item.get("doi") if isinstance(first_item, dict) else None,
+        ),
+        "detail_link": _pick(
+            request_payload.get("detail_link"),
+            first_item.get("url") if isinstance(first_item, dict) else None,
+            raw_item.get("url") if isinstance(raw_item, dict) else None,
+        ),
+        "identifiers": ", ".join(
+            [str(item).strip() for item in identifiers if str(item).strip()]
+        ),
+        "abstract": abstract,
+    }
+
+
+def _build_api_fallback_markdown(metadata: Dict[str, str]) -> str:
+    lines = [f"# {metadata.get('title') or 'API acceptance item'}", ""]
+    if metadata.get("journal"):
+        lines.append(f"- Journal: {metadata['journal']}")
+    if metadata.get("year"):
+        lines.append(f"- Published: {metadata['year']}")
+    if metadata.get("doi"):
+        lines.append(f"- DOI: {metadata['doi']}")
+    if metadata.get("detail_link"):
+        lines.append(f"- Source link: {metadata['detail_link']}")
+    if metadata.get("identifiers"):
+        lines.append(f"- Identifiers: {metadata['identifiers']}")
+    lines.append("")
+    lines.append("## Abstract")
+    lines.append("")
+    lines.append(metadata.get("abstract") or "Abstract unavailable.")
+    return "\n".join(lines)
+
+
+def _cleanup_literature_download_file(local_file_path: Optional[str]) -> None:
+    if not local_file_path:
+        return
+    try:
+        shutil.rmtree(Path(local_file_path).parent, ignore_errors=True)
+    except Exception as exc:
+        logger.warning(
+            "Failed to cleanup literature download temp path {}: {}",
+            local_file_path,
+            exc,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -2584,6 +2725,454 @@ def process_pubmed_paper_task(
         "warning_codes": normalized_warning_codes,
         "trace_chain": trace_chain,
     }
+
+
+@celery_app.task(
+    name="tasks.process_api_paper",
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 2, "countdown": 300, "queue": "retry"},
+    retry_jitter=True,
+)
+def process_api_paper_task(
+    self,
+    source: str,
+    request_payload: Dict[str, Any],
+    document_id: str,
+    paper_task_id: str,
+    request_id: str,
+) -> Dict[str, Any]:
+    postgres = get_postgres_client()
+    start_time = datetime.now(timezone.utc)
+    node_trace: Dict[str, Any] = {}
+    normalized_request = _normalize_api_acceptance_request_payload(request_payload)
+    source_name = str(source or "").strip().lower()
+
+    postgres.update_paper_task(
+        paper_task_id,
+        status="running",
+        workflow_status=WorkflowStatus.processing_literature.value,
+        processing_steps=default_processing_steps(),
+        error_details=None,
+    )
+    postgres.update_task_request(request_id, status="running")
+    postgres.append_paper_task_log(
+        paper_task_id,
+        status="running",
+        node="pipeline",
+        message=f"API acceptance pipeline started for source:{source_name}",
+        payload={
+            "node_retry_policy": _build_node_policy_snapshot(),
+            "source": source_name,
+            "request_payload": normalized_request,
+        },
+    )
+
+    _log_node_start(postgres, paper_task_id, "acquisition")
+    acquisition_policy_override: Optional[Dict[str, int]] = None
+    if int(getattr(self, "max_retries", 0)) == 0:
+        acquisition_policy = _get_node_policy("acquisition")
+        acquisition_policy_override = {
+            "max_retries": 0,
+            "delay": 0,
+            "timeout": acquisition_policy["timeout"],
+        }
+
+    search_payload = {
+        "action": "search",
+        "query": normalized_request["query"],
+        "identifiers": normalized_request["identifiers"],
+        "prefer": "api",
+        "api_provider": source_name,
+        "raw": True,
+        "limit": 1,
+    }
+    try:
+        search_result, acquisition_attempt = asyncio.run(
+            _run_async_with_node_policy(
+                "acquisition",
+                "search_api_acceptance_item",
+                lambda: literature_unified_workflow(search_payload),
+                policy_override=acquisition_policy_override,
+            )
+        )
+        _log_node_end(
+            postgres,
+            paper_task_id,
+            "acquisition",
+            success=True,
+            attempt=acquisition_attempt,
+        )
+        node_trace = _update_node_trace(node_trace, "acquisition", "success")
+    except Exception as acq_exc:
+        error_code = map_error_code(
+            500, f"Fetch timeout while querying api source {source_name}: {acq_exc}"
+        )
+        _log_node_end(
+            postgres,
+            paper_task_id,
+            "acquisition",
+            success=False,
+            error_code=error_code,
+            message=f"API acquisition failed: {acq_exc}",
+        )
+        node_trace = _update_node_trace(node_trace, "acquisition", "failed")
+        retry_count = int(getattr(self.request, "retries", 0))
+        max_retries = int(getattr(self, "max_retries", 0))
+        if retry_count >= max_retries:
+            postgres.update_paper_task(
+                paper_task_id,
+                status="failed",
+                workflow_status=WorkflowStatus.failed.value,
+                error_code=error_code,
+                node_trace=node_trace,
+                processing_steps=normalize_processing_steps(
+                    None, node_trace=node_trace
+                ),
+                error_details={"error_code": error_code, "message": str(acq_exc)},
+            )
+            postgres.refresh_task_request_status(request_id)
+        raise
+
+    items = search_result.get("items") if isinstance(search_result, dict) else []
+    if not isinstance(items, list) or not items:
+        error_code = "FETCH_NO_RESULT"
+        node_trace = _update_node_trace(node_trace, "acquisition", "failed")
+        postgres.update_paper_task(
+            paper_task_id,
+            status="failed",
+            workflow_status=WorkflowStatus.failed.value,
+            error_code=error_code,
+            node_trace=node_trace,
+            processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+            error_details={
+                "error_code": error_code,
+                "message": "No usable API acquisition payload",
+            },
+        )
+        postgres.refresh_task_request_status(request_id)
+        return {
+            "source": source_name,
+            "document_id": document_id,
+            "paper_task_id": paper_task_id,
+            "status": "failed",
+            "error_code": error_code,
+        }
+
+    fallback_metadata = _extract_api_fallback_metadata(
+        source=source_name,
+        search_result=search_result,
+        request_payload=normalized_request,
+    )
+    search_source_trace = _extract_api_source_trace(search_result)
+    title = fallback_metadata.get("title") or f"{source_name} acceptance item"
+    query = normalized_request["query"] or title
+    identifiers = list(normalized_request["identifiers"])
+    if not identifiers and fallback_metadata.get("doi"):
+        identifiers = [fallback_metadata["doi"]]
+    detail_link = fallback_metadata.get("detail_link") or None
+
+    api_pdf_result = asyncio.run(
+        _try_download_and_store_literature_pdf(
+            document_id=document_id,
+            source=source_name,
+            query=query,
+            identifiers=identifiers,
+            detail_link=detail_link,
+            selected_title=title,
+            prefer="api",
+            api_provider=source_name,
+            keep_local_file=True,
+        )
+    )
+    has_local_pdf = bool(
+        api_pdf_result.get("downloaded") and api_pdf_result.get("local_file_path")
+    )
+    api_fulltext_unavailable = not has_local_pdf
+    source_trace = api_pdf_result.get("source_trace")
+    if not isinstance(source_trace, list) or not source_trace:
+        source_trace = search_source_trace
+    if source_trace:
+        node_trace["acquisition_detail"] = {
+            "provider": str(api_pdf_result.get("provider") or source_name),
+            "source_trace": source_trace,
+        }
+    postgres.append_paper_task_log(
+        paper_task_id,
+        status="running",
+        node="acquisition",
+        message=(
+            f"API fulltext download {'succeeded' if not api_fulltext_unavailable else 'unavailable'} "
+            f"for source:{source_name}"
+        ),
+        payload={"pdf_download": api_pdf_result, "query": query},
+    )
+
+    document_identifier: Any = document_id
+    try:
+        document_identifier = UUID(str(document_id))
+    except (TypeError, ValueError, AttributeError):
+        document_identifier = document_id
+
+    markdown_content = _build_api_fallback_markdown(fallback_metadata)
+    parsing_image_paths: List[str] = []
+    parsing_metadata: Optional[Dict[str, Any]] = None
+    document_update_fields: Dict[str, Any] = {
+        "title": title,
+        "summary": f"API metadata/abstract fallback used via {source_name}",
+    }
+    if detail_link:
+        document_update_fields["local_path"] = detail_link
+
+    local_file_path = str(api_pdf_result.get("local_file_path") or "").strip()
+    try:
+        if has_local_pdf:
+            parsing_result, parsing_trace = asyncio.run(
+                run_node_parsing(
+                    postgres,
+                    paper_task_id,
+                    [local_file_path],
+                    node_trace,
+                )
+            )
+            if parsing_trace is not node_trace:
+                node_trace.update(parsing_trace)
+            parsing_artifacts = asyncio.run(
+                _store_parsing_artifacts_in_minio(parsing_result, document_id)
+            )
+            parsing_result.artifacts = parsing_artifacts
+            parsing_metadata = {
+                "parser_backend": parsing_result.parser_backend,
+                "parser_task_id": parsing_result.parser_task_id,
+                "mineru_folder": parsing_result.mineru_folder,
+                "image_count": parsing_result.image_count,
+                "markdown_object_key": parsing_artifacts.markdown_object_key,
+                "markdown_url": parsing_artifacts.markdown_url,
+                "image_object_keys": parsing_artifacts.image_object_keys,
+                "image_urls": parsing_artifacts.image_urls,
+            }
+            postgres.append_paper_task_log(
+                paper_task_id,
+                status="success",
+                node="parsing",
+                message="Parsing artifacts stored",
+                payload=parsing_metadata,
+            )
+            markdown_content = parsing_result.markdown_content
+            parsing_image_paths = parsing_result.image_paths
+            document_update_fields["summary"] = (
+                f"API fulltext PDF acquired via {source_name}"
+            )
+            if api_pdf_result.get("object_key"):
+                document_update_fields["local_path"] = api_pdf_result.get("object_key")
+        else:
+            node_trace = _update_node_trace(
+                node_trace, "parsing", "fallback_metadata_abstract"
+            )
+            _update_processing_step_status(
+                postgres,
+                paper_task_id,
+                step="parsing",
+                status=ProcessingStepStatus.skipped,
+                workflow_status=WorkflowStatus.processing_pdf,
+                message="Parsing skipped: using metadata/abstract fallback",
+            )
+    finally:
+        _cleanup_literature_download_file(local_file_path or None)
+
+    try:
+        source_text, en_text, translation_trace, translation_warnings = run_node_translation(
+            postgres,
+            paper_task_id,
+            markdown_content,
+            node_trace,
+        )
+        if translation_trace is not node_trace:
+            node_trace.update(translation_trace)
+    except Exception as trans_exc:
+        node_trace = _update_node_trace(node_trace, "translation", "failed")
+        retry_count = int(getattr(self.request, "retries", 0))
+        max_retries = int(getattr(self, "max_retries", 0))
+        if retry_count >= max_retries:
+            error_code = map_error_code(500, str(trans_exc))
+            postgres.update_paper_task(
+                paper_task_id,
+                status="failed",
+                workflow_status=WorkflowStatus.failed.value,
+                error_code=error_code,
+                node_trace=node_trace,
+                processing_steps=normalize_processing_steps(
+                    None, node_trace=node_trace
+                ),
+                error_details={"error_code": error_code, "message": str(trans_exc)},
+            )
+            postgres.refresh_task_request_status(request_id)
+        raise
+
+    try:
+        agent_response, extraction_trace = run_node_extraction(
+            postgres,
+            paper_task_id,
+            source_text,
+            en_text,
+            parsing_image_paths,
+            node_trace,
+        )
+        if extraction_trace is not node_trace:
+            node_trace.update(extraction_trace)
+    except Exception as ext_exc:
+        retry_count = int(getattr(self.request, "retries", 0))
+        max_retries = int(getattr(self, "max_retries", 0))
+        if retry_count >= max_retries:
+            error_code = map_error_code(500, str(ext_exc))
+            postgres.update_paper_task(
+                paper_task_id,
+                status="failed",
+                workflow_status=WorkflowStatus.failed.value,
+                error_code=error_code,
+                node_trace=node_trace,
+                processing_steps=normalize_processing_steps(
+                    None, node_trace=node_trace
+                ),
+                error_details={"error_code": error_code, "message": str(ext_exc)},
+            )
+            postgres.refresh_task_request_status(request_id)
+        raise
+
+    if not agent_response or getattr(agent_response, "status", None) == "failed":
+        error_code = "EVIDENCE_EXTRACTION_FAILED"
+        postgres.update_paper_task(
+            paper_task_id,
+            status="failed",
+            workflow_status=WorkflowStatus.failed.value,
+            error_code=error_code,
+            node_trace=node_trace,
+            processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+            error_details={
+                "error_code": error_code,
+                "message": "Evidence processing returned failed status",
+            },
+        )
+        postgres.append_paper_task_log(
+            paper_task_id,
+            status="failed",
+            node="extraction",
+            error_code=error_code,
+            message="Evidence processing returned failed status",
+        )
+        postgres.refresh_task_request_status(request_id)
+        return {
+            "source": source_name,
+            "document_id": document_id,
+            "paper_task_id": paper_task_id,
+            "status": "failed",
+            "error_code": error_code,
+        }
+
+    files = asyncio.run(
+        _store_outputs_in_minio(agent_response, parsing_image_paths, document_id)
+    )
+
+    try:
+        graph_sync_result, acmg_trace = run_node_acmg(
+            postgres,
+            paper_task_id,
+            document_id,
+            agent_response,
+            node_trace,
+        )
+        if acmg_trace is not node_trace:
+            node_trace.update(acmg_trace)
+    except Exception as acmg_exc:
+        logger.warning(
+            "Graph sync failed for api source {}: {}", source_name, acmg_exc
+        )
+        graph_sync_result = None
+        node_trace = _update_node_trace(node_trace, "acmg", "failed")
+        _update_processing_step_status(
+            postgres,
+            paper_task_id,
+            step="classification",
+            status=ProcessingStepStatus.skipped,
+            workflow_status=WorkflowStatus.classifying,
+            message="Graph sync failed but pipeline continued",
+            error_code="GRAPH_SYNC_FAILED",
+        )
+
+    base_warnings = list(translation_warnings)
+    if api_fulltext_unavailable:
+        base_warnings.append("FULLTEXT_UNAVAILABLE")
+    warning_codes = _persist_alignments_and_warnings(
+        postgres,
+        paper_task_id,
+        source_text=source_text,
+        en_text=en_text,
+        base_warnings=base_warnings,
+    )
+    normalized_warning_codes = normalize_warning_codes(warning_codes) or []
+    processing_steps = _get_paper_task_processing_steps(
+        postgres,
+        paper_task_id,
+        node_trace=node_trace,
+    )
+    trace_chain = build_trace_chain(
+        node_trace=node_trace,
+        processing_steps=processing_steps,
+    )
+
+    postgres.update_document(
+        document_identifier,
+        status="success",
+        **document_update_fields,
+    )
+    postgres.update_paper_task(
+        paper_task_id,
+        status="success",
+        workflow_status=WorkflowStatus.completed.value,
+        error_code=None,
+        error_details=None,
+        fulltext_unavailable=api_fulltext_unavailable,
+        node_trace=node_trace,
+        warning_codes=normalized_warning_codes,
+        processing_steps=processing_steps,
+        processing_duration_seconds=(
+            datetime.now(timezone.utc) - start_time
+        ).total_seconds(),
+    )
+    postgres.append_paper_task_log(
+        paper_task_id,
+        status="success",
+        node="acmg",
+        message=f"API acceptance pipeline completed for source:{source_name}",
+        payload={
+            "source": source_name,
+            "fulltext_unavailable": api_fulltext_unavailable,
+            "pdf_download": api_pdf_result,
+            "graph_sync_result": graph_sync_result,
+        },
+    )
+    _emit_kg_event_for_success(
+        postgres,
+        request_id=request_id,
+        paper_task_id=paper_task_id,
+        document_id=document_id,
+    )
+    postgres.refresh_task_request_status(request_id)
+    result_payload = {
+        "source": source_name,
+        "document_id": document_id,
+        "paper_task_id": paper_task_id,
+        "fulltext_unavailable": api_fulltext_unavailable,
+        "pdf_download": api_pdf_result,
+        "status": "success",
+        "files": files.model_dump() if hasattr(files, "model_dump") else files,
+        "graph_sync_result": graph_sync_result,
+        "warning_codes": normalized_warning_codes,
+        "trace_chain": trace_chain,
+    }
+    if parsing_metadata is not None:
+        result_payload["parsing_metadata"] = parsing_metadata
+    return result_payload
 
 
 @celery_app.task(
