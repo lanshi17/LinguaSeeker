@@ -4,7 +4,6 @@ import importlib.util
 import sys
 from pathlib import Path
 
-import pytest
 
 # Dynamically load the enums module first
 enums_path = Path("src/domain/literature/automated_web/pubscholar/enums.py")

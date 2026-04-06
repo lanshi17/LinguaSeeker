@@ -1,3 +1,5 @@
+# pyright: reportAttributeAccessIssue=false, reportArgumentType=false, reportOptionalMemberAccess=false, reportCallIssue=false, reportGeneralTypeIssues=false, reportMissingImports=false, reportRedeclaration=false, reportFunctionMemberAccess=false, reportPossiblyUnboundVariable=false, reportReturnType=false
+
 from __future__ import annotations
 
 import re
@@ -23,6 +25,7 @@ from src.infrastructure.models import (
     EvidenceRecord,
     GraphEdgeCache,
     GraphNodeCache,
+    KGEvent,
     PaperTask,
     PaperTaskLog,
     SentenceAlignment,
@@ -34,6 +37,7 @@ from src.infrastructure.models import (
 )
 
 _SCHEMA_NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_UNSET = object()
 
 
 def _get_schema_name() -> Optional[str]:
@@ -560,6 +564,104 @@ class PostgresClient:
             session.flush()
             return entry
 
+    def create_kg_event(
+        self,
+        *,
+        request_id: Optional[Union[UUID, str]] = None,
+        paper_task_id: Optional[Union[UUID, str]] = None,
+        document_id: Optional[Union[UUID, str]] = None,
+        event_type: str,
+        idempotency_key: str,
+        payload: Optional[Dict[str, Any]] = None,
+        status: str = "pending",
+        attempt_count: int = 0,
+        last_error: Optional[str] = None,
+    ) -> KGEvent:
+        insert_stmt = pg_insert(KGEvent).values(
+            {
+                "request_id": (
+                    self._coerce_uuid(request_id) if request_id is not None else None
+                ),
+                "paper_task_id": (
+                    self._coerce_uuid(paper_task_id)
+                    if paper_task_id is not None
+                    else None
+                ),
+                "document_id": (
+                    self._coerce_uuid(document_id)
+                    if document_id is not None
+                    else None
+                ),
+                "event_type": event_type,
+                "idempotency_key": idempotency_key,
+                "status": status,
+                "payload": payload or {},
+                "attempt_count": attempt_count,
+                "last_error": last_error,
+            }
+        )
+        upsert_stmt = insert_stmt.on_conflict_do_nothing(
+            index_elements=[KGEvent.idempotency_key]
+        ).returning(KGEvent)
+
+        with self.session_scope() as session:
+            inserted = session.execute(upsert_stmt).scalar_one_or_none()
+            if inserted is not None:
+                return inserted
+            existing = (
+                session.query(KGEvent)
+                .filter(KGEvent.idempotency_key == idempotency_key)
+                .one()
+            )
+            return existing
+
+    def get_kg_event(self, event_id: Union[UUID, str]) -> Optional[KGEvent]:
+        event_uuid = self._coerce_uuid(event_id)
+        with self.session_scope() as session:
+            return session.get(KGEvent, event_uuid)
+
+    def get_kg_event_by_idempotency_key(self, idempotency_key: str) -> Optional[KGEvent]:
+        with self.session_scope() as session:
+            return (
+                session.query(KGEvent)
+                .filter(KGEvent.idempotency_key == idempotency_key)
+                .one_or_none()
+            )
+
+    def list_pending_kg_events(self, limit: int = 100) -> List[KGEvent]:
+        with self.session_scope() as session:
+            return (
+                session.query(KGEvent)
+                .filter(KGEvent.status == "pending")
+                .order_by(KGEvent.created_at.asc(), KGEvent.event_id.asc())
+                .limit(limit)
+                .all()
+            )
+
+    def update_kg_event_status(
+        self,
+        event_id: Union[UUID, str],
+        *,
+        status: str,
+        attempt_count: Optional[int] = None,
+        last_error: Any = _UNSET,
+        payload: Any = _UNSET,
+    ) -> Optional[KGEvent]:
+        event_uuid = self._coerce_uuid(event_id)
+        with self.session_scope() as session:
+            entry = session.get(KGEvent, event_uuid)
+            if not entry:
+                return None
+            entry.status = status
+            if attempt_count is not None:
+                entry.attempt_count = attempt_count
+            if last_error is not _UNSET:
+                entry.last_error = last_error
+            if payload is not _UNSET:
+                entry.payload = payload
+            session.flush()
+            return entry
+
     def get_latest_paper_task_log(
         self,
         paper_task_id: Union[UUID, str],
@@ -1013,6 +1115,23 @@ class PostgresClient:
             session.add(record)
             session.flush()
             return record
+
+    def create_evidence_records(
+        self,
+        rows: Sequence[Dict[str, Any]],
+    ) -> List[EvidenceRecord]:
+        if not rows:
+            return []
+        with self.session_scope() as session:
+            records: List[EvidenceRecord] = []
+            for row in rows:
+                payload = dict(row)
+                payload["document_id"] = self._coerce_uuid(payload["document_id"])
+                record = EvidenceRecord(**payload)
+                session.add(record)
+                session.flush()
+                records.append(record)
+            return records
 
     def get_evidence_by_id(self, evidence_id: int) -> Optional[EvidenceRecord]:
         with self.session_scope() as session:

@@ -7,7 +7,7 @@
 from typing import List, Dict, Any
 import json
 
-from src.knowledge.prompts.loader import render_prompt_template, load_prompt_bundle
+from src.knowledge.prompts.loader import render_prompt_template
 
 
 # ==================== 标准化证据字段定义 ====================

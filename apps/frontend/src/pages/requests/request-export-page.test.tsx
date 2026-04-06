@@ -6,10 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../../services/api', () => ({
   getTaskRequestStatus: vi.fn(),
   getEvidenceDocument: vi.fn(),
+  getPaperTaskDetail: vi.fn(),
 }));
 
 import { RequestExportPage } from './request-export-page';
-import { getEvidenceDocument, getTaskRequestStatus } from '../../services/api';
+import { getEvidenceDocument, getPaperTaskDetail, getTaskRequestStatus } from '../../services/api';
 import { useAppStore } from '../../store/appStore';
 import { useToastStore } from '../../store/useToastStore';
 
@@ -112,5 +113,56 @@ describe('RequestExportPage', () => {
         expect.objectContaining({ title: 'Evidence load failed' })
       );
     });
+  });
+
+  it('export page renders reading plus judgment sections for print view', async () => {
+    vi.mocked(getTaskRequestStatus).mockResolvedValue({
+      request_id: 'req-123',
+      status: 'success',
+      papers: [
+        {
+          paper_task_id: 'paper-1',
+          status: 'success',
+          document_id: 'doc-1',
+        },
+      ],
+    });
+    vi.mocked(getEvidenceDocument).mockResolvedValue({
+      code: 0,
+      message: 'ok',
+      data: {
+        source_text: 'source text',
+        translated_text: 'translated text',
+      },
+    });
+    vi.mocked(getPaperTaskDetail).mockResolvedValue({
+      paper_task_id: 'paper-1',
+      request_id: 'req-123',
+      document_id: 'doc-1',
+      status: 'success',
+      workflow_status: 'COMPLETED',
+      processing_steps: {
+        classification: { status: 'COMPLETED' },
+        adjudication: { status: 'COMPLETED' },
+      },
+      warning_codes: [],
+      trace_chain: {
+        steps: {
+          classification: { status: 'COMPLETED', outcome: 'success' },
+          adjudication: { status: 'COMPLETED', outcome: 'success' },
+        },
+      },
+      fulltext_unavailable: false,
+      result_payload: {
+        graph_sync_result: { neo4j_ok: true },
+      },
+      parsing_metadata: { parser_backend: 'mineru' },
+      duplicate_of: null,
+    });
+
+    renderPage();
+
+    expect(await screen.findByText(/Evidence judgment/i)).toBeInTheDocument();
+    expect(screen.getByText(/ACMG classification/i)).toBeInTheDocument();
   });
 });

@@ -511,6 +511,104 @@ def test_get_task_status_exposes_warning_codes_and_trace_chain(
     )
 
 
+def test_get_paper_task_detail_returns_trace_chain_warning_codes_and_result(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
+    paper_task_id = uuid4()
+    request_id = uuid4()
+    document_id = uuid4()
+
+    class DummyAsyncResult:
+        def __init__(self, task_id: str, app: Any = None) -> None:
+            self.id = task_id
+            self.status = "SUCCESS"
+            self.result = {
+                "graph_sync_result": {"neo4j_ok": True},
+                "parsing_metadata": {"parser_backend": "mineru"},
+            }
+
+        def failed(self) -> bool:
+            return False
+
+        def successful(self) -> bool:
+            return True
+
+    class DummyPostgres:
+        def get_paper_task(self, paper_task_id_value: Any) -> Any:
+            assert str(paper_task_id_value) == str(paper_task_id)
+            return SimpleNamespace(
+                paper_task_id=paper_task_id,
+                request_id=request_id,
+                document_id=document_id,
+                status="success",
+                workflow_status="COMPLETED",
+                processing_steps={
+                    "acquisition": {"status": "COMPLETED"},
+                    "parsing": {"status": "SKIPPED"},
+                    "translation": {"status": "COMPLETED"},
+                    "extraction": {"status": "COMPLETED"},
+                    "classification": {"status": "COMPLETED"},
+                    "adjudication": {"status": "COMPLETED"},
+                },
+                warning_codes=["FULLTEXT_UNAVAILABLE"],
+                fulltext_unavailable="true",
+                duplicate_of=None,
+                celery_task_id="celery-paper-1",
+                node_trace={
+                    "acquisition": "success",
+                    "acquisition_detail": {
+                        "provider": "pmc",
+                        "source_trace": [
+                            {
+                                "provider": "pmc",
+                                "attempt": 1,
+                                "success": True,
+                                "items_count": 0,
+                                "downloads_count": 1,
+                                "warnings": [],
+                                "error": None,
+                            }
+                        ],
+                    },
+                    "parsing": "fallback_metadata_abstract",
+                    "translation": "success",
+                    "extraction": "success",
+                    "acmg": "success",
+                },
+                error_code=None,
+                error_details=None,
+                created_at=datetime(2026, 3, 1, 8, 0, 0, tzinfo=timezone.utc),
+                updated_at=datetime(2026, 3, 1, 8, 0, 7, tzinfo=timezone.utc),
+            )
+
+        def get_latest_paper_task_log(
+            self, paper_task_id_value: Any, node: str | None = None
+        ) -> Any:
+            assert str(paper_task_id_value) == str(paper_task_id)
+            assert node == "parsing"
+            return SimpleNamespace(
+                payload={
+                    "parsing_metadata": {
+                        "parser_backend": "mineru",
+                        "parser_task_id": "mineru-task-1",
+                    }
+                }
+            )
+
+    monkeypatch.setattr(
+        task_api, "AsyncResult", lambda task_id, app=None: DummyAsyncResult(task_id, app)
+    )
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+
+    response = client.get(f"{task_prefix}/papers/{paper_task_id}")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["paper_task_id"] == str(paper_task_id)
+    assert payload["warning_codes"] == ["FULLTEXT_UNAVAILABLE"]
+    assert payload["trace_chain"]["steps"]["acquisition"]["status"] == "COMPLETED"
+    assert payload["result_payload"]["graph_sync_result"]["neo4j_ok"] is True
+
+
 def test_list_tasks_with_results(
     client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
 ) -> None:

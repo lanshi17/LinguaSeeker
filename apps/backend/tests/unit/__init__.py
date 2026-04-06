@@ -1,2 +1,1 @@
-from .domain import *
-from .application import *
+__all__: list[str] = []

@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from src.state.global_state import SupervisorState
 

@@ -13,13 +13,9 @@ from loguru import logger
 
 from src.infrastructure.postgres import get_postgres_client
 from src.domain.enums import (
-    EVIDENCE_VALIDITY_THRESHOLD,
-    EvidenceClassification,
-    EvidenceStrength,
     SCORE_CLASSIFICATION_MAP,
 )
 from src.domain.evidence.classifier import (
-    EvidenceClassifier,
     _lookup_threshold,
     strength_to_acmg_levels,
 )

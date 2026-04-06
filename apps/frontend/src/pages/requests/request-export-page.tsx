@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 
-import { getEvidenceDocument, getTaskRequestStatus } from '../../services/api';
+import { getEvidenceDocument, getPaperTaskDetail, getTaskRequestStatus } from '../../services/api';
 import { ApiError } from '../../services/http';
 import { useAppStore } from '../../store/appStore';
 import { useToastStore } from '../../store/useToastStore';
 import { normalizeEvidence } from '../../utils/normalizeEvidence';
+import { normalizePaperResult } from '../../utils/normalizePaperResult';
 
-import type { EvidenceSearchResponse, TaskRequestStatusResponse } from '../../types/api';
+import type { EvidenceSearchResponse, PaperTaskDetailResponse, TaskRequestStatusResponse } from '../../types/api';
 
 export const RequestExportPage: React.FC = () => {
   const { requestId } = useParams();
@@ -17,6 +18,7 @@ export const RequestExportPage: React.FC = () => {
 
   const [requestStatus, setRequestStatus] = useState<TaskRequestStatusResponse | null>(null);
   const [evidence, setEvidence] = useState<EvidenceSearchResponse | null>(null);
+  const [paperDetail, setPaperDetail] = useState<PaperTaskDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
 
   const documentId = searchParams.get('documentId');
@@ -54,14 +56,22 @@ export const RequestExportPage: React.FC = () => {
     };
   }, [requestId, pushToast]);
 
+  const papers = useMemo(
+    () => requestStatus?.papers ?? currentRequest?.papers ?? [],
+    [requestStatus?.papers, currentRequest?.papers]
+  );
   const availableDocs = useMemo(() => {
-    const docs = (requestStatus?.papers ?? currentRequest?.papers ?? [])
+    const docs = papers
       .map((p) => p.document_id)
       .filter((x): x is string => typeof x === 'string' && x.length > 0);
     return Array.from(new Set(docs));
-  }, [currentRequest?.papers, requestStatus?.papers]);
+  }, [papers]);
 
   const selectedDoc = documentId ?? availableDocs[0] ?? null;
+  const selectedPaperTaskId = useMemo(() => {
+    const match = papers.find((paper) => paper.document_id === selectedDoc);
+    return match?.paper_task_id ?? null;
+  }, [papers, selectedDoc]);
 
   useEffect(() => {
     if (!selectedDoc) return;
@@ -93,7 +103,36 @@ export const RequestExportPage: React.FC = () => {
     };
   }, [selectedDoc, pushToast]);
 
+  useEffect(() => {
+    if (!selectedPaperTaskId) return;
+    let cancelled = false;
+    const ac = new AbortController();
+
+    const load = async () => {
+      try {
+        const res = await getPaperTaskDetail(selectedPaperTaskId, { signal: ac.signal });
+        if (!cancelled) setPaperDetail(res);
+      } catch (err) {
+        if (cancelled) return;
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          return;
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      cancelled = true;
+      ac.abort();
+    };
+  }, [selectedPaperTaskId]);
+
   const vm = useMemo(() => normalizeEvidence(evidence?.data ?? null), [evidence]);
+  const paperVm = useMemo(
+    () => (paperDetail ? normalizePaperResult(paperDetail) : null),
+    [paperDetail]
+  );
 
   if (!requestId) return <div className="muted">Missing requestId</div>;
 
@@ -188,6 +227,28 @@ export const RequestExportPage: React.FC = () => {
 
         <section>
           <div style={{ fontWeight: 900, marginBottom: 8 }}>Evidence judgment</div>
+          {paperVm ? (
+            <div className="row" style={{ marginBottom: 12 }}>
+              <div className="col">
+                <div style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 10 }}>
+                  <div style={{ fontWeight: 800 }}>{paperVm.classification.title}</div>
+                  <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+                    status: {paperVm.classification.status}
+                    {paperVm.classification.outcome ? ` · outcome: ${paperVm.classification.outcome}` : ''}
+                  </div>
+                </div>
+              </div>
+              <div className="col">
+                <div style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 10 }}>
+                  <div style={{ fontWeight: 800 }}>{paperVm.adjudication.title}</div>
+                  <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+                    status: {paperVm.adjudication.status}
+                    {paperVm.adjudication.outcome ? ` · outcome: ${paperVm.adjudication.outcome}` : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
           <div className="muted" style={{ marginBottom: 8 }}>
             Contract-tolerant MVP: this section renders raw evidence payload until a stable judgment schema is available.
           </div>

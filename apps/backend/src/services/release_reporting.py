@@ -152,6 +152,18 @@ def load_acceptance_manifest(path: str | Path) -> AcceptanceManifest:
     return AcceptanceManifest.model_validate(payload)
 
 
+def save_acceptance_manifest(
+    path: str | Path,
+    manifest: AcceptanceManifest,
+) -> None:
+    manifest_path = Path(path)
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(
+        json.dumps(manifest.model_dump(mode="json"), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
 def _default_template_path() -> Path:
     return (
         Path(__file__).resolve().parents[2]

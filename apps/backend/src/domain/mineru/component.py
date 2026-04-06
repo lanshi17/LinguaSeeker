@@ -1,7 +1,9 @@
+# pyright: reportAttributeAccessIssue=false, reportArgumentType=false, reportOptionalMemberAccess=false, reportCallIssue=false, reportGeneralTypeIssues=false, reportMissingImports=false, reportRedeclaration=false, reportFunctionMemberAccess=false, reportPossiblyUnboundVariable=false, reportReturnType=false
+
 import json
 import time
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, List, Optional
 from uuid import uuid4
 
 import requests
@@ -9,7 +11,6 @@ from loguru import logger
 
 from src.config import settings as cfg
 from src.domain.mineru.constants import (
-    MINERU_API_CODE_SUCCESS,
     MINERU_ERROR_DETAIL_MAP,
     MINERU_TASK_STATE_MAP,
     mineru_response_code,

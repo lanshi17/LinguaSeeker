@@ -1,15 +1,16 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
-import { getTaskRequestStatus, reissueLogLink } from '../../services/api';
+import { getPaperTaskDetail, getTaskRequestStatus, reissueLogLink } from '../../services/api';
 import { ApiError } from '../../services/http';
 import { useRequestPolling } from '../../hooks/useRequestPolling';
 
 import { useAppStore } from '../../store/appStore';
 import { useToastStore } from '../../store/useToastStore';
 import { useWorkflowStore } from '../../store/useWorkflowStore';
+import { normalizePaperResult } from '../../utils/normalizePaperResult';
 
-import type { PaperTaskItemResponse, TaskRequestStatusResponse } from '../../types/api';
+import type { PaperTaskDetailResponse, PaperTaskItemResponse, TaskRequestStatusResponse } from '../../types/api';
 
 function pillColor(status: string) {
   const s = status.toLowerCase();
@@ -19,12 +20,28 @@ function pillColor(status: string) {
   return 'rgba(255,255,255,0.08)';
 }
 
+function formatWarningCode(code: string) {
+  return code.replaceAll('_', ' ').toLowerCase();
+}
+
+function stepLabel(stepKey: string) {
+  if (stepKey === 'classification') return 'ACMG step';
+  if (stepKey === 'adjudication') return 'Expert review';
+  return stepKey;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
+}
+
 function PaperRow({
   paper,
   expanded,
   onToggle,
   taskTimeline,
   taskDescription,
+  detail,
+  detailLoading,
 }: {
   paper: PaperTaskItemResponse;
   expanded: boolean;
@@ -37,8 +54,24 @@ function PaperRow({
     progress?: number;
   }>;
   taskDescription?: string;
+  detail?: PaperTaskDetailResponse | null;
+  detailLoading?: boolean;
 }) {
   const doc = paper.document_id;
+  const resultVm = detail ? normalizePaperResult(detail) : null;
+  const warningCodes = Array.isArray(detail?.warning_codes)
+    ? detail.warning_codes.filter((code) => !(detail?.fulltext_unavailable && code === 'FULLTEXT_UNAVAILABLE'))
+    : [];
+  const processingSteps = detail?.processing_steps && typeof detail.processing_steps === 'object'
+    ? Object.entries(detail.processing_steps as Record<string, unknown>)
+    : [];
+  const traceSteps = detail?.trace_chain && typeof detail.trace_chain === 'object'
+    ? asRecord((detail.trace_chain as Record<string, unknown>).steps)
+    : null;
+  const acquisitionStep = asRecord(traceSteps?.acquisition);
+  const acquisitionDetail = asRecord(acquisitionStep?.detail);
+  const sourceTrace = Array.isArray(acquisitionDetail?.source_trace) ? acquisitionDetail?.source_trace : [];
+
   return (
     <div
       style={{
@@ -90,7 +123,7 @@ function PaperRow({
             {expanded ? 'Hide details' : 'Details'}
           </button>
           {doc ? (
-            <Link to={`/documents/${encodeURIComponent(doc)}`}>Open</Link>
+            <Link to={`/documents/${encodeURIComponent(doc)}?paperTaskId=${encodeURIComponent(paper.paper_task_id)}`}>Open</Link>
           ) : (
             <span className="muted" style={{ fontSize: 12 }}>
               —
@@ -106,6 +139,45 @@ function PaperRow({
             {paper.duplicate_of ? ` · duplicate_of: ${paper.duplicate_of}` : ''}
           </div>
 
+          {detailLoading ? (
+            <div className="muted" style={{ fontSize: 12 }}>
+              Loading paper detail...
+            </div>
+          ) : null}
+
+          {resultVm || warningCodes.length > 0 ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {resultVm?.badges.map((badge) => (
+                <div
+                  key={badge}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: 999,
+                    border: '1px solid var(--border)',
+                    background: 'rgba(255,255,255,0.06)',
+                    fontSize: 12,
+                  }}
+                >
+                  {badge}
+                </div>
+              ))}
+              {warningCodes.map((code) => (
+                <div
+                  key={code}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: 999,
+                    border: '1px solid var(--border)',
+                    background: 'rgba(255,255,255,0.03)',
+                    fontSize: 12,
+                  }}
+                >
+                  {formatWarningCode(code)}
+                </div>
+              ))}
+            </div>
+          ) : null}
+
           <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
             <div style={{ fontWeight: 900 }}>Task workflow</div>
             {taskDescription ? (
@@ -114,7 +186,47 @@ function PaperRow({
               </div>
             ) : null}
             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {taskTimeline.length === 0 ? (
+              {processingSteps.length > 0 ? (
+                processingSteps.map(([stepKey, stepValue]) => {
+                  const step = asRecord(stepValue);
+                  const status = typeof step?.status === 'string' ? step.status : 'PENDING';
+                  const message = typeof step?.message === 'string' ? step.message : undefined;
+                  return (
+                    <div
+                      key={stepKey}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        padding: 10,
+                        borderRadius: 10,
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 800, textTransform: 'capitalize' }}>{stepLabel(stepKey)}</div>
+                        {message ? (
+                          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+                            {message}
+                          </div>
+                        ) : null}
+                      </div>
+                      <div
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: 999,
+                          border: '1px solid var(--border)',
+                          background: pillColor(status),
+                          fontSize: 12,
+                        }}
+                      >
+                        {status}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : taskTimeline.length === 0 ? (
                 <div className="muted" style={{ fontSize: 12 }}>
                   No task data yet
                 </div>
@@ -163,6 +275,43 @@ function PaperRow({
               )}
             </div>
           </div>
+
+          {resultVm ? (
+            <div className="row">
+              <div className="col">
+                <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
+                  <div style={{ fontWeight: 900 }}>{resultVm.classification.title}</div>
+                  <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+                    status: {resultVm.classification.status}
+                    {resultVm.classification.outcome ? ` · outcome: ${resultVm.classification.outcome}` : ''}
+                  </div>
+                </div>
+              </div>
+              <div className="col">
+                <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
+                  <div style={{ fontWeight: 900 }}>{resultVm.adjudication.title}</div>
+                  <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+                    status: {resultVm.adjudication.status}
+                    {resultVm.adjudication.outcome ? ` · outcome: ${resultVm.adjudication.outcome}` : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {acquisitionDetail ? (
+            <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
+              <div style={{ fontWeight: 900 }}>Source trace</div>
+              <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+                provider: {String(acquisitionDetail.provider ?? 'unknown')}
+              </div>
+              {sourceTrace.length > 0 ? (
+                <div className="muted" style={{ marginTop: 4, fontSize: 12 }}>
+                  attempts: {sourceTrace.length}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -181,6 +330,8 @@ export const RequestMonitorPage: React.FC = () => {
   const watchRequest = useWorkflowStore((state) => state.watchRequest);
   const watchTask = useWorkflowStore((state) => state.watchTask);
   const resetWorkflow = useWorkflowStore((state) => state.reset);
+  const [paperDetails, setPaperDetails] = useState<Record<string, PaperTaskDetailResponse | null>>({});
+  const [paperDetailLoading, setPaperDetailLoading] = useState<Record<string, boolean>>({});
 
   const fetcher = useCallback(
     async (signal: AbortSignal) => {
@@ -207,6 +358,30 @@ export const RequestMonitorPage: React.FC = () => {
     };
   }, [requestId, resetWorkflow, watchRequest]);
 
+  const data = workflowRequest ?? poll.data ?? currentRequest;
+  const papers = data?.papers ?? [];
+
+  const loadPaperDetail = useCallback(
+    async (paperTaskId: string) => {
+      if (paperDetails[paperTaskId] || paperDetailLoading[paperTaskId]) {
+        return;
+      }
+      setPaperDetailLoading((state) => ({ ...state, [paperTaskId]: true }));
+      try {
+        const detail = await getPaperTaskDetail(paperTaskId);
+        if (detail) {
+          setPaperDetails((state) => ({ ...state, [paperTaskId]: detail }));
+        }
+      } catch (err) {
+        const apiMsg = err instanceof ApiError ? err.detail ?? err.message : 'Failed to load paper detail';
+        toast.pushToast({ level: 'error', title: 'Paper detail load failed', message: apiMsg, ttlMs: 9000 });
+      } finally {
+        setPaperDetailLoading((state) => ({ ...state, [paperTaskId]: false }));
+      }
+    },
+    [paperDetailLoading, paperDetails, toast]
+  );
+
   const reissue = async () => {
     if (!requestId) return;
     try {
@@ -221,9 +396,6 @@ export const RequestMonitorPage: React.FC = () => {
   if (!requestId) {
     return <div className="muted">Missing requestId</div>;
   }
-
-  const data = workflowRequest ?? poll.data ?? currentRequest;
-  const papers = data?.papers ?? [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -363,10 +535,13 @@ export const RequestMonitorPage: React.FC = () => {
                   togglePaperTaskExpand(p.paper_task_id);
                   if (!isExpanded) {
                     watchTask(p.paper_task_id);
+                    void loadPaperDetail(p.paper_task_id);
                   }
                 }}
                 taskTimeline={currentTask?.paper_task_id === p.paper_task_id ? taskTimeline : []}
                 taskDescription={currentTask?.paper_task_id === p.paper_task_id ? currentTask.workflow_status_description : undefined}
+                detail={paperDetails[p.paper_task_id]}
+                detailLoading={paperDetailLoading[p.paper_task_id]}
               />
             ))}
           </div>

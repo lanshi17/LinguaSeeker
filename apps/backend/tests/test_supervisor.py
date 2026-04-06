@@ -26,7 +26,6 @@ def test_build_supervisor_graph_has_expected_nodes() -> None:
 
 def test_routing_parsing_failed() -> None:
     from src.agents.supervisor import (
-        _route_after_arbitration,
         _route_after_interaction,
         _route_after_parsing,
     )

@@ -1,1 +1,1 @@
-from .test_document_parser import *
+__all__: list[str] = []

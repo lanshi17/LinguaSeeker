@@ -1,7 +1,6 @@
 # test document parser
 import pytest
-from unittest.mock import Mock, patch
-import zipfile
+from unittest.mock import Mock
 from src.domain.impl.pdf_parser import PDFParser
 from src.infrastructure.adapters.mineru import MinerUAdapterImpl
 from src.utils.exceptions import ParseException

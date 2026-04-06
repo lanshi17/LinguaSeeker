@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import asyncio
 from typing import Any, Dict, List
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -186,7 +185,7 @@ class TestStreamSupervisorGraph:
 
         with (
             patch("src.services.task_manager._log_node_start") as mock_start,
-            patch("src.services.task_manager._log_node_end") as mock_end,
+            patch("src.services.task_manager._log_node_end"),
         ):
             await _stream_supervisor_graph(graph, None, _make_config(), pg, "pt-1")
 

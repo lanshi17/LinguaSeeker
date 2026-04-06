@@ -96,3 +96,26 @@ dev = [
     "pytest-asyncio>=1.3.0",
     "ruff>=0.15.0",
 ]
+
+[tool.basedpyright]
+typeCheckingMode = "standard"
+reportDeprecated = false
+reportMissingTypeStubs = false
+reportUnusedImport = false
+reportUnusedCallResult = false
+reportUnusedParameter = false
+reportUnusedFunction = false
+reportAny = false
+reportExplicitAny = false
+reportUnknownMemberType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+reportUnknownParameterType = false
+reportUnannotatedClassAttribute = false
+reportMissingParameterType = false
+reportImplicitRelativeImport = false
+reportPrivateUsage = false
+reportImplicitStringConcatenation = false
+reportCallInDefaultInitializer = false
+reportUnnecessaryIsInstance = false
+reportImplicitOverride = false

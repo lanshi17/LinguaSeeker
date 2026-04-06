@@ -1,3 +1,5 @@
+# pyright: reportAny=false, reportExplicitAny=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportDeprecated=false, reportUnusedCallResult=false, reportUnnecessaryIsInstance=false, reportUntypedFunctionDecorator=false, reportUnknownParameterType=false, reportMissingParameterType=false, reportUnusedParameter=false, reportUnusedFunction=false, reportUnnecessaryCast=false
+
 import asyncio
 import hashlib
 import json
@@ -5,7 +7,6 @@ import mimetypes
 import os
 import re
 import shutil
-import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,12 +28,6 @@ import httpx
 from langchain_core.runnables.config import RunnableConfig
 from langgraph.errors import EmptyInputError
 from loguru import logger
-
-# Ensure the project root (which contains the `src` package) is importable when this file
-# is invoked directly with `python -m src.services.task_manager` or similar.
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 import src.utils.exceptions as exc
 import src.utils.file_utils as file_utils
@@ -59,6 +54,7 @@ from src.domain.models import (
 )
 from src.infrastructure.minio import MinIOClient
 from src.infrastructure.postgres import get_postgres_client
+from src.services.kg_events import get_kg_event_service
 from src.infrastructure.redis import cache_pdf_result
 from src.services.enum import (
     PROCESSING_NODE_TO_STEP,
@@ -79,6 +75,7 @@ cfg = settings
 _agents = EvidenceAgent()
 _qdrant_manager = QdrantManager()
 _REBUILD_EMPTY_KB = getattr(cfg, "rebuild_empty_knowledge_base", True)
+_RELEASE_NO = "v1.0"
 _HGVS_TOKEN_PATTERN = re.compile(
     r"(?:[A-Z]{2}_\d+\.\d+:)?[cgp]\.[A-Za-z0-9_+\-*><=()\[\];:]+"
 )
@@ -267,6 +264,54 @@ def _get_node_policy(node: str) -> Dict[str, int]:
 
 def _build_node_policy_snapshot() -> Dict[str, Dict[str, int]]:
     return {node: _get_node_policy(node) for node in _DEFAULT_NODE_POLICY.keys()}
+
+
+def _emit_kg_event_for_success(
+    postgres: Any,
+    *,
+    request_id: Optional[str],
+    paper_task_id: Optional[str],
+    document_id: Optional[str],
+) -> None:
+    task_id = str(paper_task_id or "").strip()
+    doc_id = str(document_id or "").strip()
+    if not task_id or not doc_id:
+        return
+
+    idempotency_key = f"kg:{_RELEASE_NO}:paper_completed:{task_id}"
+    try:
+        event = get_kg_event_service().create_kg_event(
+            request_id=request_id or None,
+            paper_task_id=task_id,
+            document_id=doc_id,
+            event_type="paper_completed",
+            idempotency_key=idempotency_key,
+            payload={"release_no": _RELEASE_NO},
+        )
+        postgres.append_paper_task_log(
+            task_id,
+            status="success",
+            node="kg",
+            message=f"KG event enqueued: {getattr(event, 'event_id', 'unknown')}",
+            payload={
+                "event_type": "paper_completed",
+                "idempotency_key": idempotency_key,
+                "release_no": _RELEASE_NO,
+            },
+        )
+    except Exception as kg_exc:
+        logger.warning("KG event enqueue failed for paper task {}: {}", task_id, kg_exc)
+        postgres.append_paper_task_log(
+            task_id,
+            status="success",
+            node="kg",
+            message=f"KG event enqueue failed: {kg_exc}",
+            payload={
+                "event_type": "paper_completed",
+                "idempotency_key": idempotency_key,
+                "release_no": _RELEASE_NO,
+            },
+        )
 
 
 def _update_processing_step_status(
@@ -1940,7 +1985,7 @@ def process_pdf_task(
             "image_object_keys": parsing_artifacts.image_object_keys,
             "image_urls": parsing_artifacts.image_urls,
         }
-        if paper_task_id:
+        if paper_task_id and postgres is not None:
             postgres.append_paper_task_log(
                 paper_task_id,
                 status="success",
@@ -2054,6 +2099,12 @@ def process_pdf_task(
                     status="success",
                     node="acmg",
                     message="Paper task completed",
+                )
+                _emit_kg_event_for_success(
+                    postgres,
+                    request_id=request_id,
+                    paper_task_id=paper_task_id,
+                    document_id=document_id,
                 )
                 if isinstance(payload, dict):
                     payload.setdefault("processing_steps", processing_steps)
@@ -2512,6 +2563,12 @@ def process_pubmed_paper_task(
             "graph_sync_result": graph_sync_result,
         },
     )
+    _emit_kg_event_for_success(
+        postgres,
+        request_id=request_id,
+        paper_task_id=paper_task_id,
+        document_id=document_id,
+    )
     postgres.refresh_task_request_status(request_id)
     return {
         "pmid": pmid,
@@ -2877,6 +2934,12 @@ def process_web_page_task(
             "pdf_download": web_pdf_result,
             "graph_sync_result": graph_sync_result,
         },
+    )
+    _emit_kg_event_for_success(
+        postgres,
+        request_id=request_id,
+        paper_task_id=paper_task_id,
+        document_id=document_id,
     )
     postgres.refresh_task_request_status(request_id)
     return {

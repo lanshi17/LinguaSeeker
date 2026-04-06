@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../services/api', () => ({
   getTaskRequestStatus: vi.fn(),
+  getPaperTaskDetail: vi.fn(),
   reissueLogLink: vi.fn(),
 }));
 
@@ -70,7 +71,7 @@ vi.mock('../../store/useWorkflowStore', () => ({
     selector ? selector(workflow.state) : (workflow.state as unknown),
 }));
 
-import { getTaskRequestStatus, reissueLogLink } from '../../services/api';
+import { getPaperTaskDetail, getTaskRequestStatus, reissueLogLink } from '../../services/api';
 import { useAppStore } from '../../store/appStore';
 import { useToastStore } from '../../store/useToastStore';
 
@@ -274,5 +275,65 @@ describe('RequestMonitorPage', () => {
         expect.objectContaining({ title: 'Log link reissue failed' })
       );
     });
+  });
+
+  it('renders duplicate/fulltext labels and 6-node detail from paper task detail API', async () => {
+    setWorkflowState({
+      currentRequest: null,
+      requestTimeline: [],
+      requestConnection: { requestId: null, connected: false },
+    });
+
+    vi.mocked(getTaskRequestStatus).mockResolvedValue({
+      request_id: 'req-123',
+      status: 'success',
+      papers: [
+        {
+          paper_task_id: 'paper-1',
+          status: 'success',
+          filename: 'paper.pdf',
+          error_code: 'FILE_DUPLICATE',
+          duplicate_of: 'paper-0',
+          document_id: 'doc-1',
+        },
+      ],
+    });
+    vi.mocked(getPaperTaskDetail).mockResolvedValue({
+      paper_task_id: 'paper-1',
+      request_id: 'req-123',
+      document_id: 'doc-1',
+      status: 'success',
+      workflow_status: 'COMPLETED',
+      processing_steps: {
+        acquisition: { status: 'COMPLETED' },
+        parsing: { status: 'SKIPPED' },
+        translation: { status: 'COMPLETED' },
+        extraction: { status: 'COMPLETED' },
+        classification: { status: 'COMPLETED' },
+        adjudication: { status: 'COMPLETED' },
+      },
+      warning_codes: ['FULLTEXT_UNAVAILABLE'],
+      trace_chain: {
+        steps: {
+          acquisition: { status: 'COMPLETED', outcome: 'success' },
+          classification: { status: 'COMPLETED', outcome: 'success' },
+          adjudication: { status: 'COMPLETED', outcome: 'success' },
+        },
+      },
+      fulltext_unavailable: true,
+      result_payload: {
+        graph_sync_result: { neo4j_ok: true },
+      },
+      parsing_metadata: { parser_backend: 'mineru' },
+      duplicate_of: 'paper-0',
+    });
+
+    await renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: /Details/i }));
+
+    expect(await screen.findByText(/fulltext unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/classification/i)).toBeInTheDocument();
+    expect(screen.getByText(/adjudication/i)).toBeInTheDocument();
   });
 });

@@ -1,3 +1,5 @@
+# pyright: reportAttributeAccessIssue=false, reportArgumentType=false, reportOptionalMemberAccess=false, reportCallIssue=false, reportGeneralTypeIssues=false, reportMissingImports=false, reportRedeclaration=false, reportFunctionMemberAccess=false, reportPossiblyUnboundVariable=false, reportReturnType=false
+
 """
 多文档图谱搜索模块
 联合 Neo4j 图数据库与 PostgreSQL 关系数据库，

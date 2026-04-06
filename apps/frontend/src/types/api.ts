@@ -105,6 +105,25 @@ export type TaskRequestStatusResponse = {
   papers?: PaperTaskItemResponse[];
 };
 
+export type PaperTaskDetailResponse = {
+  paper_task_id: string;
+  request_id: string;
+  document_id?: string | null;
+  status: string;
+  workflow_status?: string | null;
+  processing_steps?: Record<string, unknown> | null;
+  warning_codes?: string[] | null;
+  trace_chain?: Record<string, unknown> | null;
+  fulltext_unavailable?: boolean | null;
+  result_payload?: Record<string, unknown> | null;
+  parsing_metadata?: Record<string, unknown> | null;
+  duplicate_of?: string | null;
+  error_code?: string | null;
+  error_details?: Record<string, unknown> | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
 export type TaskStatusResponse = {
   task_id: string;
   status: string;

@@ -1,7 +1,9 @@
 # Global fixture configuration (e.g., pytest-asyncio, database sessions)
 import sys
 from pathlib import Path
+
 import dotenv
+import pytest
 
 # Load environment variables from .env.test file
 dotenv.load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env.test")
@@ -10,7 +12,7 @@ dotenv.load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env.test")
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
-import pytest
+
 @pytest.fixture(scope="session")
 def any_global_fixture():
     # Setup code here

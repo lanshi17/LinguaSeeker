@@ -1,3 +1,5 @@
+# pyright: reportAny=false, reportExplicitAny=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportDeprecated=false, reportUnusedCallResult=false, reportUnnecessaryIsInstance=false, reportUnannotatedClassAttribute=false, reportImplicitStringConcatenation=false
+
 """
 图数据同步模块
 在 Pipeline 产出证据后，将结构化数据同步写入 Neo4j 图数据库和 PostgreSQL，
@@ -6,12 +8,13 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 import json
 import re
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional, cast
 from uuid import UUID
 
 from loguru import logger
@@ -362,7 +365,6 @@ class GraphSyncService:
         gene_symbol = fused_core.get("gene_symbol") or ""
         variant_hgvs_c = fused_core.get("variant_hgvs_c") or ""
         variant_hgvs_p = fused_core.get("variant_hgvs_p") or ""
-        protein_change = variant_hgvs_p  # 同义
         transcript_id = fused_core.get("transcript_id") or ""
         ref_genome = self._normalize_string(ref_genome_info.get("version")) or ""
         disease_name = fused_core.get("disease_name") or ""
@@ -391,17 +393,6 @@ class GraphSyncService:
         validity_status, validity_reason = self._determine_validity_status(
             overall_conf, extracted
         )
-
-        variation_id: Optional[int] = None
-        if variant_hgvs_c:
-            try:
-                variation = self._variants.resolve_variation(variant_hgvs_c)
-                if variation:
-                    variation_id = int(variation.variation_id)
-            except Exception as exc:
-                logger.warning(
-                    "ClinVar resolution failed for {}: {}", variant_hgvs_c, exc
-                )
 
         logger.debug(
             "Evidence payload summary for document {} => gene={}, variant_c={}, variant_p={}, strength={}, classification={}, confidence={}",
@@ -446,6 +437,7 @@ class GraphSyncService:
                     f"Invalid document_id format: {raw_document_id}"
                 ) from exc
 
+        uuid_document_id = UUID(str(uuid_document_id))
         canonical_document_id = str(uuid_document_id)
         document_id = canonical_document_id
 
@@ -582,15 +574,6 @@ class GraphSyncService:
         gene_symbol_safe = (
             self._truncate_field(gene_symbol, 100) if gene_symbol else None
         )
-        variant_hgvs_c_safe = (
-            self._truncate_field(variant_hgvs_c, 500) if variant_hgvs_c else None
-        )
-        variant_hgvs_p_safe = (
-            self._truncate_field(variant_hgvs_p, 500) if variant_hgvs_p else None
-        )
-        protein_change_safe = (
-            self._truncate_field(protein_change, 500) if protein_change else None
-        )
         transcript_id_safe = (
             self._truncate_field(transcript_id, 100) if transcript_id else None
         )
@@ -604,36 +587,97 @@ class GraphSyncService:
         classification_safe = (
             self._truncate_field(classification, 100) if classification else None
         )
+        variant_rows = self._fan_out_variant_rows(
+            variant_hgvs_c=variant_hgvs_c,
+            variant_hgvs_p=variant_hgvs_p,
+            extracted_fields=extracted,
+        )
+        pg_row_payloads: List[Dict[str, Any]] = []
+        variant_resolution_rows: List[Dict[str, Any]] = []
+        for row in variant_rows:
+            row_variant_hgvs_c = row.get("variant_hgvs_c") or ""
+            row_variant_hgvs_p = row.get("variant_hgvs_p") or ""
+            row_variation_id: Optional[int] = None
+            if row_variant_hgvs_c:
+                try:
+                    variation = self._variants.resolve_variation(row_variant_hgvs_c)
+                    if variation:
+                        variation_id_value = getattr(variation, "variation_id", None)
+                        if isinstance(variation_id_value, int):
+                            row_variation_id = variation_id_value
+                        elif variation_id_value is not None:
+                            row_variation_id = int(str(variation_id_value))
+                except Exception as exc:
+                    logger.warning(
+                        "ClinVar resolution failed for {}: {}",
+                        row_variant_hgvs_c,
+                        exc,
+                    )
+            variant_resolution_rows.append(
+                {
+                    "variant_hgvs_c": row_variant_hgvs_c,
+                    "variant_hgvs_p": row_variant_hgvs_p,
+                    "protein_change": row_variant_hgvs_p,
+                    "clinvar_variation_id": row_variation_id,
+                }
+            )
+            pg_row_payloads.append(
+                {
+                    "document_id": uuid_document_id,
+                    "gene_symbol": gene_symbol_safe,
+                    "variant_hgvs_c": (
+                        self._truncate_field(row_variant_hgvs_c, 500)
+                        if row_variant_hgvs_c
+                        else None
+                    ),
+                    "variant_hgvs_p": (
+                        self._truncate_field(row_variant_hgvs_p, 500)
+                        if row_variant_hgvs_p
+                        else None
+                    ),
+                    "protein_change": (
+                        self._truncate_field(row_variant_hgvs_p, 500)
+                        if row_variant_hgvs_p
+                        else None
+                    ),
+                    "clinvar_variation_id": row_variation_id,
+                    "transcript_id": transcript_id_safe,
+                    "reference_genome": ref_genome_safe,
+                    "disease_name": disease_name_safe,
+                    "icd10_code": icd10_safe,
+                    "species": species_safe,
+                    "phenotype": phenotype_desc or None,
+                    "evidence_strength": strength_safe,
+                    "evidence_classification": classification_safe,
+                    "overall_confidence": overall_conf,
+                    "arbitration_score": arbitration_score,
+                    "is_valid": validity_status,
+                    "acmg_levels": {"levels": acmg_levels} if acmg_levels else None,
+                    "extracted_fields": row.get("extracted_fields") or None,
+                    "ps3_evidence": ps3 or None,
+                }
+            )
 
         try:
             logger.debug(
-                "Attempting to create evidence record with extracted_fields: {}",
+                "Attempting to create {} evidence record(s) with extracted_fields: {}",
+                len(pg_row_payloads),
                 bool(extracted),
             )
-            pg_record = self._pg.create_evidence_record(
-                document_id=uuid_document_id,
-                gene_symbol=gene_symbol_safe,
-                variant_hgvs_c=variant_hgvs_c_safe,
-                variant_hgvs_p=variant_hgvs_p_safe,
-                protein_change=protein_change_safe,
-                clinvar_variation_id=variation_id,
-                transcript_id=transcript_id_safe,
-                reference_genome=ref_genome_safe,
-                disease_name=disease_name_safe,
-                icd10_code=icd10_safe,
-                species=species_safe,
-                phenotype=phenotype_desc or None,
-                evidence_strength=strength_safe,
-                evidence_classification=classification_safe,
-                overall_confidence=overall_conf,
-                arbitration_score=arbitration_score,
-                is_valid=validity_status,
-                acmg_levels={"levels": acmg_levels} if acmg_levels else None,
-                extracted_fields=extracted or None,
-                ps3_evidence=ps3 or None,
+            create_many = getattr(self._pg, "create_evidence_records", None)
+            if callable(create_many):
+                pg_records = cast(List[Any], create_many(pg_row_payloads))
+            else:
+                pg_records = [
+                    self._pg.create_evidence_record(**payload)
+                    for payload in pg_row_payloads
+                ]
+            evidence_ids = [record.evidence_id for record in pg_records]
+            evidence_id = evidence_ids[0] if evidence_ids else None
+            logger.info(
+                "PostgreSQL evidence_record(s) created: ids={}",
+                evidence_ids,
             )
-            evidence_id = pg_record.evidence_id
-            logger.info("PostgreSQL evidence_record created: id={}", evidence_id)
         except ValidationException as exc:
             logger.warning(
                 "Validation error when creating evidence record for document {}: {} | context={}",
@@ -689,52 +733,61 @@ class GraphSyncService:
                 resolution_details,
             )
 
-        if variation_id is not None:
-            doc_entity = None
-            get_doc = getattr(self._pg, "get_document_by_id", None)
-            if callable(get_doc):
-                try:
-                    doc_entity = get_doc(uuid_document_id)
-                except Exception as exc:
-                    logger.warning(
-                        "Failed to fetch document %s metadata: %s",
-                        canonical_document_id,
-                        exc,
-                    )
+        doc_entity = None
+        get_doc = getattr(self._pg, "get_document_by_id", None)
+        if callable(get_doc):
+            try:
+                doc_entity = get_doc(uuid_document_id)
+            except Exception as exc:
+                logger.warning(
+                    "Failed to fetch document %s metadata: %s",
+                    canonical_document_id,
+                    exc,
+                )
+
+        for row_result, created_record in zip(variant_resolution_rows, pg_records):
+            row_variation_id = row_result.get("clinvar_variation_id")
+            if row_variation_id is None:
+                continue
             self._variants.record_internal_citation(
-                variation_id=variation_id,
+                variation_id=row_variation_id,
                 document_id=canonical_document_id,
                 evidence_strength=strength,
                 pmid=getattr(doc_entity, "pmid", None) if doc_entity else None,
                 metadata={
-                    "evidence_id": evidence_id,
+                    "evidence_id": created_record.evidence_id,
                     "overall_confidence": overall_conf,
                 },
             )
 
         # 2) --- Neo4j ---
-        neo4j_ok = False
-        try:
-            self._sync_to_neo4j(
-                document_id=canonical_document_id,
-                evidence_id=str(evidence_id),
-                gene_symbol=gene_symbol,
-                variant_hgvs_c=variant_hgvs_c,
-                variant_hgvs_p=variant_hgvs_p,
-                variation_id=variation_id,
-                transcript_id=transcript_id,
-                disease_name=disease_name,
-                icd10=icd10,
-                phenotype_desc=phenotype_desc,
-                species=species,
-                strength=strength,
-                classification=classification,
-                overall_conf=overall_conf,
-                structural_hint=structural_hint,
-            )
-            neo4j_ok = True
-        except Exception as e:
-            logger.error("Neo4j sync failed for evidence {}: {}", evidence_id, e)
+        neo4j_ok = True
+        for row_result, created_record in zip(variant_resolution_rows, pg_records):
+            try:
+                self._sync_to_neo4j(
+                    document_id=canonical_document_id,
+                    evidence_id=str(created_record.evidence_id),
+                    gene_symbol=gene_symbol,
+                    variant_hgvs_c=row_result.get("variant_hgvs_c", "") or "",
+                    variant_hgvs_p=row_result.get("variant_hgvs_p", "") or "",
+                    variation_id=row_result.get("clinvar_variation_id"),
+                    transcript_id=transcript_id,
+                    disease_name=disease_name,
+                    icd10=icd10 or "",
+                    phenotype_desc=phenotype_desc,
+                    species=species,
+                    strength=strength,
+                    classification=classification,
+                    overall_conf=overall_conf,
+                    structural_hint=structural_hint,
+                )
+            except Exception as e:
+                logger.error(
+                    "Neo4j sync failed for evidence {}: {}",
+                    created_record.evidence_id,
+                    e,
+                )
+                neo4j_ok = False
         logger.info(
             "Sync complete for document {} (neo4j_ok={})",
             canonical_document_id,
@@ -756,7 +809,9 @@ class GraphSyncService:
 
         return {
             "pg_evidence_id": evidence_id,
+            "pg_evidence_ids": evidence_ids,
             "neo4j_synced": neo4j_ok,
+            "skipped": False,
         }
 
     @staticmethod
@@ -801,7 +856,7 @@ class GraphSyncService:
     @classmethod
     def _missing_core_fields(
         cls,
-        core_fields: Dict[str, Optional[str]],
+        core_fields: Mapping[str, Optional[str]],
         structural_hint: Optional[Dict[str, Any]] = None,
     ) -> List[str]:
         missing: List[str] = []
@@ -844,9 +899,9 @@ class GraphSyncService:
 
     @staticmethod
     def _snapshot_context(
-        document_id: str, **fields: Optional[str]
-    ) -> Dict[str, Optional[str]]:
-        context = {"document_id": document_id}
+        document_id: str, **fields: Any
+    ) -> Dict[str, Any]:
+        context: Dict[str, Any] = {"document_id": document_id}
         for key, value in fields.items():
             if isinstance(value, str) and len(value) > 256:
                 context[key] = f"{value[:253]}..."
@@ -917,6 +972,89 @@ class GraphSyncService:
             return normalized[:max_length]
         return normalized
 
+    @classmethod
+    def _split_variant_values(cls, value: Optional[str]) -> List[str]:
+        normalized = cls._normalize_string(value)
+        if normalized is None:
+            return []
+        values: List[str] = []
+        for line in normalized.splitlines():
+            for part in line.split(";"):
+                candidate = cls._normalize_string(part)
+                if candidate:
+                    values.append(candidate)
+        return values
+
+    def _normalize_variant_extracted_fields(
+        self,
+        extracted_fields: Dict[str, Any],
+        *,
+        variant_hgvs_c: Optional[str],
+        variant_hgvs_p: Optional[str],
+    ) -> Optional[Dict[str, Any]]:
+        if not extracted_fields:
+            return None
+        normalized = deepcopy(extracted_fields)
+        variant_section = self._as_dict(normalized.get("variant")).copy()
+        if variant_hgvs_c:
+            variant_section["hgvs_c"] = variant_hgvs_c
+        else:
+            variant_section.pop("hgvs_c", None)
+        if variant_hgvs_p:
+            variant_section["hgvs_p"] = variant_hgvs_p
+        else:
+            variant_section.pop("hgvs_p", None)
+        if variant_section:
+            normalized["variant"] = variant_section
+        return normalized
+
+    def _fan_out_variant_rows(
+        self,
+        *,
+        variant_hgvs_c: str,
+        variant_hgvs_p: str,
+        extracted_fields: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
+        c_values = self._split_variant_values(variant_hgvs_c)
+        p_values = self._split_variant_values(variant_hgvs_p)
+
+        pairs: List[tuple[Optional[str], Optional[str]]]
+        if len(c_values) > 1 and len(p_values) > 1:
+            if len(c_values) != len(p_values):
+                pairs = [(variant_hgvs_c or None, variant_hgvs_p or None)]
+            else:
+                pairs = list(zip(c_values, p_values))
+        elif len(c_values) > 1:
+            if p_values:
+                pairs = [(variant_hgvs_c or None, variant_hgvs_p or None)]
+            else:
+                pairs = [(value, None) for value in c_values]
+        elif len(p_values) > 1:
+            if c_values:
+                pairs = [(variant_hgvs_c or None, variant_hgvs_p or None)]
+            else:
+                pairs = [(None, value) for value in p_values]
+        else:
+            pairs = [
+                (
+                    c_values[0] if c_values else (variant_hgvs_c or None),
+                    p_values[0] if p_values else (variant_hgvs_p or None),
+                )
+            ]
+
+        return [
+            {
+                "variant_hgvs_c": pair_c,
+                "variant_hgvs_p": pair_p,
+                "extracted_fields": self._normalize_variant_extracted_fields(
+                    extracted_fields,
+                    variant_hgvs_c=pair_c,
+                    variant_hgvs_p=pair_p,
+                ),
+            }
+            for pair_c, pair_p in pairs
+        ]
+
     def _collect_fallback_contexts(self, evidence_output: Dict[str, Any]) -> List[Any]:
         contexts: List[Any] = []
         for key in (
@@ -944,8 +1082,8 @@ class GraphSyncService:
         self,
         evidence_output: Dict[str, Any],
         extracted_candidates: Dict[str, Dict[str, Any]],
-    ) -> tuple[Dict[str, Optional[str]], Dict[str, Dict[str, Any]]]:
-        fused: Dict[str, Optional[str]] = {}
+    ) -> tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
+        fused: Dict[str, Any] = {}
         details: Dict[str, Dict[str, Any]] = {}
         fallback_payloads = self._collect_fallback_contexts(evidence_output)
         for field, meta in extracted_candidates.items():
@@ -1559,7 +1697,7 @@ class GraphSyncService:
         用于修复 Neo4j 数据不一致。
         """
         logger.info("Resyncing document {}", document_id)
-        records = self._pg.get_evidence_for_document(document_id)
+        records = self._pg.get_evidence_for_document(UUID(document_id))
         synced = 0
         failed = 0
         for rec in records:

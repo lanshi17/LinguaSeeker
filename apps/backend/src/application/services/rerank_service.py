@@ -1,4 +1,3 @@
-from logging import Logger
 from .base_service import BaseService
 
 class EmbeddingService(BaseService):

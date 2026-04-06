@@ -5,22 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from src.domain.literature.automated_web.pubscholar.enums import Language, PaperType
-from src.domain.literature.automated_web.pubscholar.locators import (
-    XPATH_FIRST_JOURNAL_LINK,
-    XPATH_FULLTEXT_BTN,
-    XPATH_LANGUAGE_HEADER,
-    XPATH_PAPER_TYPE_HEADER,
-    XPATH_RESULTS_CONTAINER,
-    XPATH_SEARCH_BUTTON,
-    XPATH_SEARCH_INPUT,
-)
 from src.domain.literature.automated_web.pubscholar.models import (
     BASE_URL,
     DownloadResponse,
     PaperItem,
-    PaperList,
     PubScholarPayload,
-    SearchFilters,
     SearchParams,
     SearchResponse,
 )

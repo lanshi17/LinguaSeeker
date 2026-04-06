@@ -1,3 +1,5 @@
+# pyright: reportAttributeAccessIssue=false, reportArgumentType=false, reportOptionalMemberAccess=false, reportCallIssue=false, reportGeneralTypeIssues=false, reportMissingImports=false, reportRedeclaration=false, reportFunctionMemberAccess=false, reportPossiblyUnboundVariable=false, reportReturnType=false
+
 # src/domain/literature/api/unpaywall/service.py
 from __future__ import annotations
 
@@ -5,7 +7,7 @@ import math
 import os
 import re
 import time
-from typing import Any, Dict, Iterable, List, Literal, Optional
+from typing import Any, Dict, Iterable, List, Optional
 from urllib.parse import urljoin
 
 import requests

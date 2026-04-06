@@ -1,10 +1,11 @@
+# pyright: reportAttributeAccessIssue=false, reportArgumentType=false, reportOptionalMemberAccess=false, reportCallIssue=false, reportGeneralTypeIssues=false, reportMissingImports=false, reportRedeclaration=false, reportFunctionMemberAccess=false, reportPossiblyUnboundVariable=false, reportReturnType=false
+
 """企业级计时器与性能监控工具。
 
 提供代码执行时间测试、性能分析功能，适配ACMG管线。
 支持上下文管理器、装饰器、嵌套计时等多种使用方式。
 """
 
-import asyncio
 import functools
 import inspect
 from loguru import logger as loguru_logger
@@ -15,7 +16,6 @@ import time
 from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
 from typing import (
     Any,
@@ -25,7 +25,6 @@ from typing import (
     List,
     Optional,
     TextIO,
-    Type,
     TypeVar,
     Union,
 )

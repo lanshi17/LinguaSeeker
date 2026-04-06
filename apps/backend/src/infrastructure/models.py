@@ -486,6 +486,33 @@ class SentenceAlignment(Base):
     __table_args__ = (Index("ix_sentence_alignments_paper_task_id", "paper_task_id"),)
 
 
+class KGEvent(Base):
+    __tablename__ = "kg_events"
+
+    event_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    request_id = Column(UUID(as_uuid=True), nullable=True)
+    paper_task_id = Column(UUID(as_uuid=True), nullable=True)
+    document_id = Column(UUID(as_uuid=True), nullable=True)
+    event_type = Column(String(100), nullable=False)
+    idempotency_key = Column(String(255), nullable=False)
+    status = Column(String(50), nullable=False, default="pending")
+    payload = Column(JSONB, nullable=False, default=dict)
+    attempt_count = Column(Integer, nullable=False, default=0)
+    last_error = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    __table_args__ = (
+        UniqueConstraint("idempotency_key", name="uq_kg_events_idempotency_key"),
+        Index("ix_kg_events_status", "status"),
+        Index("ix_kg_events_paper_task_id", "paper_task_id"),
+        Index("ix_kg_events_document_id", "document_id"),
+        Index("ix_kg_events_created_at", "created_at"),
+    )
+
+
 @dataclass(frozen=True)
 class MinioObjectRefModel:
     bucket: MinioBucketNameEnum

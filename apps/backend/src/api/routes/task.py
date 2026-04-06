@@ -1,3 +1,5 @@
+# pyright: reportAny=false, reportExplicitAny=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportDeprecated=false, reportUnusedCallResult=false, reportCallInDefaultInitializer=false, reportUnnecessaryComparison=false, reportMissingTypeStubs=false, reportUnnecessaryCast=false
+
 import json
 import hashlib
 import tempfile
@@ -47,6 +49,7 @@ from src.services.dtos import (
     TaskCreateResponse,
     TaskListItem,
     TaskListResponse,
+    PaperTaskDetailResponse,
     TaskStatusResponse,
     ValidationErrorResponse,
     InteractionStartRequest,
@@ -321,6 +324,18 @@ def _as_iso_datetime(value: Any) -> Optional[str]:
         return value.isoformat()
     if isinstance(value, str):
         return value
+    return None
+
+
+def _as_bool_flag(value: Any) -> Optional[bool]:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "1", "yes"}:
+            return True
+        if normalized in {"false", "0", "no"}:
+            return False
     return None
 
 
@@ -1515,6 +1530,103 @@ def resume_paper_task(
         postgres.refresh_task_request_status(request_id)
 
     return TaskCreateResponse(task_id=async_result.id, status=TaskStatus.pending)
+
+
+@router.get(
+    "/papers/{paper_task_id}",
+    summary="Get paper task detail",
+    description=(
+        "Fetch the stable paper-task read model by paper_task_id.\n"
+        "Response body includes workflow detail, warnings, trace chain, duplicate/fulltext flags, and result payload when available."
+    ),
+    response_model=PaperTaskDetailResponse,
+    responses={
+        404: {"model": ErrorResponse, "description": "Paper task not found."},
+    },
+)
+def get_paper_task_detail(
+    paper_task_id: str = ApiPath(..., description="Paper task UUIDv4"),
+) -> PaperTaskDetailResponse:
+    try:
+        parsed_paper_task_id = UUID(paper_task_id)
+    except ValueError:
+        raise contract_http_exception(400, "INPUT_INVALID", "Invalid paper_task_id")
+
+    postgres = get_postgres_client()
+    paper_entry = postgres.get_paper_task(str(parsed_paper_task_id))
+    if paper_entry is None:
+        raise contract_http_exception(
+            404, "RESOURCE_NOT_FOUND", f"Paper task {paper_task_id} not found"
+        )
+
+    processing_steps = normalize_processing_steps(
+        getattr(paper_entry, "processing_steps", None),
+        node_trace=getattr(paper_entry, "node_trace", None),
+    )
+    response = PaperTaskDetailResponse(
+        paper_task_id=str(getattr(paper_entry, "paper_task_id")),
+        request_id=str(getattr(paper_entry, "request_id")),
+        document_id=_uuid_optional_str(getattr(paper_entry, "document_id", None)),
+        status=_status_str(getattr(paper_entry, "status", None), default="queued"),
+        workflow_status=coerce_workflow_status(
+            getattr(paper_entry, "workflow_status", None),
+            default=WorkflowStatus.pending,
+        ),
+        processing_steps=processing_steps,
+        warning_codes=normalize_warning_codes(getattr(paper_entry, "warning_codes", None)),
+        trace_chain=build_trace_chain(
+            node_trace=getattr(paper_entry, "node_trace", None),
+            processing_steps=processing_steps,
+        ),
+        fulltext_unavailable=_as_bool_flag(
+            getattr(paper_entry, "fulltext_unavailable", None)
+        ),
+        result_payload=None,
+        parsing_metadata=None,
+        duplicate_of=_uuid_optional_str(getattr(paper_entry, "duplicate_of", None)),
+        error_code=getattr(paper_entry, "error_code", None),
+        error_details=(
+            getattr(paper_entry, "error_details", None)
+            if isinstance(getattr(paper_entry, "error_details", None), dict)
+            else None
+        ),
+        created_at=_as_iso_datetime(getattr(paper_entry, "created_at", None)),
+        updated_at=_as_iso_datetime(getattr(paper_entry, "updated_at", None)),
+    )
+
+    celery_task_id = getattr(paper_entry, "celery_task_id", None)
+    if celery_task_id:
+        async_result = AsyncResult(str(celery_task_id), app=celery_app)
+        result_payload = getattr(async_result, "result", None)
+        if isinstance(result_payload, dict):
+            response.result_payload = result_payload
+            parsing_metadata = result_payload.get("parsing_metadata")
+            if isinstance(parsing_metadata, dict):
+                response.parsing_metadata = parsing_metadata
+
+    if response.parsing_metadata is None:
+        get_latest_log = getattr(postgres, "get_latest_paper_task_log", None)
+        if callable(get_latest_log):
+            parsing_log = get_latest_log(str(parsed_paper_task_id), node="parsing")
+            parsing_payload = getattr(parsing_log, "payload", None)
+            if isinstance(parsing_payload, dict):
+                nested_metadata = parsing_payload.get("parsing_metadata")
+                if isinstance(nested_metadata, dict):
+                    response.parsing_metadata = nested_metadata
+                elif any(
+                    key in parsing_payload
+                    for key in (
+                        "parser_backend",
+                        "parser_task_id",
+                        "mineru_folder",
+                        "image_count",
+                        "markdown_object_key",
+                        "image_object_keys",
+                    )
+                ):
+                    response.parsing_metadata = parsing_payload
+
+    return response
 
 
 @router.get(

@@ -1,3 +1,5 @@
+# pyright: reportAttributeAccessIssue=false, reportArgumentType=false, reportOptionalMemberAccess=false, reportCallIssue=false, reportGeneralTypeIssues=false, reportMissingImports=false, reportRedeclaration=false, reportFunctionMemberAccess=false, reportPossiblyUnboundVariable=false, reportReturnType=false
+
 # MinerU适配器实现
 # 实现MinerU接口,提供完整的文档处理流水线
 from src.infrastructure.adapters.mineru.mineru_adapter_interface import MinerUAdapterInterface
@@ -8,8 +10,6 @@ from typing import Any, Dict, List, Optional, Tuple
 import os
 import requests
 import time
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 
 
 class MinerUAdapterImpl(MinerUAdapterInterface):

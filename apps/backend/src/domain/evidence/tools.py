@@ -3,7 +3,6 @@ from typing import List, Dict, Any, Optional
 from langchain_core.tools import tool
 from loguru import logger
 
-from src.domain.enums import EvidenceStrength
 from src.domain.evidence.classifier import EvidenceClassifier
 from src.domain.evidence.evaluation_framework import (
     determine_evidence_strength as determine_evidence_strength_framework,

@@ -19,7 +19,6 @@ from neo4j import GraphDatabase
 from neo4j.exceptions import Neo4jError
 
 from src.config import settings as cfg
-from src.utils.timer import Timer
 
 
 # ==================== Schema 初始化 Cypher ====================

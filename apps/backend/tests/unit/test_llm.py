@@ -1,11 +1,8 @@
 from src.config import settings as cfg
 from loguru import logger
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage, ToolMessage
-from typing import Optional
-from datetime import datetime
+from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import SecretStr
-import sys
 import os
 import pytest
 

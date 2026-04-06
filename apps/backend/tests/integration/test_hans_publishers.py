@@ -9,17 +9,13 @@ from src.domain.literature.automated_web.hans_publishers.hans_publishers import 
     hanspub_workflow,
 )
 from src.domain.literature.automated_web.hans_publishers.locators import (
-    XPATH_PDF_LINK,
     XPATH_RESULTS_CONTAINER,
-    XPATH_SEARCH_BUTTON,
-    XPATH_SEARCH_INPUT,
 )
 from src.domain.literature.automated_web.hans_publishers.models import (
     BASE_URL,
     DownloadResponse,
     HansPubPayload,
     PaperItem,
-    PaperList,
     SearchParams,
     SearchResponse,
 )

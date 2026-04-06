@@ -1,22 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
-import { getEvidenceDocument } from '../../services/api';
+import { getEvidenceDocument, getPaperTaskDetail } from '../../services/api';
 import { ApiError } from '../../services/http';
 import { useToastStore } from '../../store/useToastStore';
 import { normalizeEvidence } from '../../utils/normalizeEvidence';
+import { normalizePaperResult } from '../../utils/normalizePaperResult';
 
-import type { EvidenceSearchResponse } from '../../types/api';
+import type { EvidenceSearchResponse, PaperTaskDetailResponse } from '../../types/api';
 
 type TabKey = 'reading' | 'judgment';
 
 export const DocumentPage: React.FC = () => {
   const { documentId } = useParams();
+  const [searchParams] = useSearchParams();
   const toast = useToastStore();
 
   const [active, setActive] = useState<TabKey>('reading');
   const [loading, setLoading] = useState(false);
   const [payload, setPayload] = useState<EvidenceSearchResponse | null>(null);
+  const [paperDetail, setPaperDetail] = useState<PaperTaskDetailResponse | null>(null);
 
   useEffect(() => {
     if (!documentId) return;
@@ -48,7 +51,37 @@ export const DocumentPage: React.FC = () => {
     };
   }, [documentId, toast]);
 
+  useEffect(() => {
+    if (!documentId) return;
+    const ac = new AbortController();
+    let cancelled = false;
+    const paperTaskId = searchParams.get('paperTaskId') ?? documentId;
+
+    const load = async () => {
+      try {
+        const res = await getPaperTaskDetail(paperTaskId, { signal: ac.signal });
+        if (!cancelled) setPaperDetail(res);
+      } catch (err) {
+        if (cancelled) return;
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          return;
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      cancelled = true;
+      ac.abort();
+    };
+  }, [documentId, searchParams]);
+
   const vm = useMemo(() => normalizeEvidence(payload?.data ?? null), [payload]);
+  const paperVm = useMemo(
+    () => (paperDetail ? normalizePaperResult(paperDetail) : null),
+    [paperDetail]
+  );
 
   if (!documentId) return <div className="muted">Missing documentId</div>;
 
@@ -99,6 +132,29 @@ export const DocumentPage: React.FC = () => {
             <div style={{ fontWeight: 800, color: 'var(--warning)' }}>Note</div>
             <div className="muted" style={{ marginTop: 6 }}>
               {vm.warning}
+            </div>
+          </div>
+        ) : null}
+
+        {paperVm ? (
+          <div className="row" style={{ marginBottom: 12 }}>
+            <div className="col">
+              <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
+                <div style={{ fontWeight: 800 }}>{paperVm.classification.title}</div>
+                <div className="muted" style={{ marginTop: 6 }}>
+                  status: {paperVm.classification.status}
+                  {paperVm.classification.outcome ? ` · outcome: ${paperVm.classification.outcome}` : ''}
+                </div>
+              </div>
+            </div>
+            <div className="col">
+              <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
+                <div style={{ fontWeight: 800 }}>{paperVm.adjudication.title}</div>
+                <div className="muted" style={{ marginTop: 6 }}>
+                  status: {paperVm.adjudication.status}
+                  {paperVm.adjudication.outcome ? ` · outcome: ${paperVm.adjudication.outcome}` : ''}
+                </div>
+              </div>
             </div>
           </div>
         ) : null}

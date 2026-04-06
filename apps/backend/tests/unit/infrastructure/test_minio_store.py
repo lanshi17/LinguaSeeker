@@ -8,7 +8,6 @@ from unittest.mock import Mock, patch, MagicMock
 from src.config import DatabaseConfig, MinIOConfig
 from src.infrastructure.store.minio_store import MinIOStore
 from src.utils.exceptions import StoreException
-from io import BytesIO
 
 
 @pytest.fixture
@@ -48,7 +47,7 @@ class TestMinIOStore:
             mock_minio.return_value = mock_client
             mock_client.bucket_exists.return_value = False
 
-            store = MinIOStore(mock_db_config)
+            _store = MinIOStore(mock_db_config)
 
             # 验证Minio客户端被正确初始化
             mock_minio.assert_called_once_with(

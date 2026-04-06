@@ -700,6 +700,248 @@ def test_process_pubmed_paper_task_success(monkeypatch: pytest.MonkeyPatch) -> N
     assert any(log.get("node") == "acmg" for log in fake_pg.logs)
 
 
+def test_process_pubmed_paper_task_emits_kg_event_after_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakePubMedService:
+        async def fetch_article_metadata_abstract(self, pmid: str) -> Any:
+            return SimpleNamespace(
+                pmid=pmid,
+                title="LDLR study",
+                journal="Journal",
+                pub_date="2025",
+                abstract="Functional assay supports pathogenicity",
+            )
+
+    class FakeAgent:
+        def process_medical_evidence(
+            self, markdown_content: str, image_paths: List[str], translated_md: str = ""
+        ) -> EvidenceOutput:
+            output = _make_evidence_output(ps3_evidence={"ok": True})
+            output.en_format_md = translated_md or "LDLR translated abstract"
+            return output
+
+    class FakePostgres:
+        def __init__(self) -> None:
+            self.paper_updates: List[Dict[str, Any]] = []
+            self.logs: List[Dict[str, Any]] = []
+
+        def update_paper_task(self, paper_task_id: str, **fields: Any) -> Any:
+            self.paper_updates.append(
+                {"paper_task_id": paper_task_id, "fields": fields}
+            )
+            return None
+
+        def update_task_request(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def append_paper_task_log(self, paper_task_id: str, **kwargs: Any) -> Any:
+            self.logs.append({"paper_task_id": paper_task_id, **kwargs})
+            return None
+
+        def update_document(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def refresh_task_request_status(self, _: str) -> Any:
+            return None
+
+        def create_sentence_alignment(self, **_: Any) -> Any:
+            return None
+
+    class FakeKGEvents:
+        def __init__(self) -> None:
+            self.created: List[Dict[str, Any]] = []
+
+        def create_kg_event(self, **kwargs: Any) -> Any:
+            self.created.append(kwargs)
+            return SimpleNamespace(event_id="event-1", status="pending")
+
+    async def fake_store_outputs(*_: Any, **__: Any) -> PipelineFiles:
+        return PipelineFiles(
+            origin_md_path="/tmp/orig.md",
+            en_md_path="/tmp/en.md",
+            image_desc_path="/tmp/image_desc.txt",
+            ps3_evidence_path="/tmp/ps3.json",
+            image_dir="/tmp/images",
+            origin_md_url="",
+            en_md_url="",
+            image_desc_url="",
+            ps3_evidence_url="",
+            image_urls=[],
+        )
+
+    async def fake_pdf_download(*_: Any, **__: Any) -> Dict[str, Any]:
+        return {
+            "downloaded": True,
+            "route": {
+                "used": "api",
+                "api_provider": "pmc",
+                "reason": "api_provider:pmc",
+            },
+            "provider": "pmc",
+            "warnings": [],
+            "downloads_count": 1,
+            "source_trace": [],
+            "local_file_name": "paper.pdf",
+            "sha256": "abc",
+            "size_bytes": 128,
+            "object_key": "literature/mock/object.pdf",
+            "bucket": "literature-uploads",
+        }
+
+    fake_pg = FakePostgres()
+    fake_kg_events = FakeKGEvents()
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: fake_pg)
+    monkeypatch.setattr(tasks_module, "get_pubmed_service", lambda: FakePubMedService())
+    monkeypatch.setattr(tasks_module, "_agents", FakeAgent())
+    monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store_outputs)
+    monkeypatch.setattr(
+        tasks_module, "_sync_evidence_to_graph", lambda *_: {"neo4j_synced": True}
+    )
+    monkeypatch.setattr(
+        tasks_module,
+        "_try_download_and_store_literature_pdf",
+        fake_pdf_download,
+    )
+    monkeypatch.setattr(
+        tasks_module,
+        "get_kg_event_service",
+        lambda: fake_kg_events,
+        raising=False,
+    )
+
+    result = _invoke_bound_task(
+        tasks_module.process_pubmed_paper_task,
+        pmid="12345678",
+        document_id="doc-1",
+        paper_task_id="paper-1",
+        request_id="req-1",
+    )
+
+    assert fake_kg_events.created[0]["paper_task_id"] == "paper-1"
+    assert fake_kg_events.created[0]["document_id"] == "doc-1"
+    assert fake_kg_events.created[0]["event_type"] == "paper_completed"
+    assert fake_kg_events.created[0]["payload"]["release_no"] == "v1.0"
+    assert result["status"] == "success"
+
+
+def test_process_pubmed_paper_task_keeps_success_when_kg_emit_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakePubMedService:
+        async def fetch_article_metadata_abstract(self, pmid: str) -> Any:
+            return SimpleNamespace(
+                pmid=pmid,
+                title="LDLR study",
+                journal="Journal",
+                pub_date="2025",
+                abstract="Functional assay supports pathogenicity",
+            )
+
+    class FakeAgent:
+        def process_medical_evidence(
+            self, markdown_content: str, image_paths: List[str], translated_md: str = ""
+        ) -> EvidenceOutput:
+            output = _make_evidence_output(ps3_evidence={"ok": True})
+            output.en_format_md = translated_md or "LDLR translated abstract"
+            return output
+
+    class FakePostgres:
+        def __init__(self) -> None:
+            self.paper_updates: List[Dict[str, Any]] = []
+            self.logs: List[Dict[str, Any]] = []
+
+        def update_paper_task(self, paper_task_id: str, **fields: Any) -> Any:
+            self.paper_updates.append(
+                {"paper_task_id": paper_task_id, "fields": fields}
+            )
+            return None
+
+        def update_task_request(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def append_paper_task_log(self, paper_task_id: str, **kwargs: Any) -> Any:
+            self.logs.append({"paper_task_id": paper_task_id, **kwargs})
+            return None
+
+        def update_document(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def refresh_task_request_status(self, _: str) -> Any:
+            return None
+
+        def create_sentence_alignment(self, **_: Any) -> Any:
+            return None
+
+    class FakeKGEvents:
+        def create_kg_event(self, **_: Any) -> Any:
+            raise RuntimeError("queue unavailable")
+
+    async def fake_store_outputs(*_: Any, **__: Any) -> PipelineFiles:
+        return PipelineFiles(
+            origin_md_path="/tmp/orig.md",
+            en_md_path="/tmp/en.md",
+            image_desc_path="/tmp/image_desc.txt",
+            ps3_evidence_path="/tmp/ps3.json",
+            image_dir="/tmp/images",
+            origin_md_url="",
+            en_md_url="",
+            image_desc_url="",
+            ps3_evidence_url="",
+            image_urls=[],
+        )
+
+    async def fake_pdf_download(*_: Any, **__: Any) -> Dict[str, Any]:
+        return {
+            "downloaded": True,
+            "route": {
+                "used": "api",
+                "api_provider": "pmc",
+                "reason": "api_provider:pmc",
+            },
+            "provider": "pmc",
+            "warnings": [],
+            "downloads_count": 1,
+            "source_trace": [],
+            "local_file_name": "paper.pdf",
+            "sha256": "abc",
+            "size_bytes": 128,
+            "object_key": "literature/mock/object.pdf",
+            "bucket": "literature-uploads",
+        }
+
+    fake_pg = FakePostgres()
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: fake_pg)
+    monkeypatch.setattr(tasks_module, "get_pubmed_service", lambda: FakePubMedService())
+    monkeypatch.setattr(tasks_module, "_agents", FakeAgent())
+    monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store_outputs)
+    monkeypatch.setattr(
+        tasks_module, "_sync_evidence_to_graph", lambda *_: {"neo4j_synced": True}
+    )
+    monkeypatch.setattr(
+        tasks_module,
+        "_try_download_and_store_literature_pdf",
+        fake_pdf_download,
+    )
+    monkeypatch.setattr(
+        tasks_module,
+        "get_kg_event_service",
+        lambda: FakeKGEvents(),
+        raising=False,
+    )
+
+    result = _invoke_bound_task(
+        tasks_module.process_pubmed_paper_task,
+        pmid="12345678",
+        document_id="doc-1",
+        paper_task_id="paper-1",
+        request_id="req-1",
+    )
+
+    assert result["status"] == "success"
+    assert fake_pg.logs[-1]["message"].startswith("KG event enqueue failed")
+
+
 def test_process_pubmed_paper_task_fetch_timeout_marks_failed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

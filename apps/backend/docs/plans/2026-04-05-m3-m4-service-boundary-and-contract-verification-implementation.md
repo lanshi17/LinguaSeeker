@@ -1,7 +1,7 @@
 # M3 M4 Service Boundary and Contract Verification Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-> **Plan Status:** `ACTIVE (Task 7 remaining; 100-paper acceptance still pending)`
+> **Plan Status:** `REFERENCE ONLY (Task 1-6 landed on current branch; remaining release backlog has moved beyond this slice)`
 > **Archived Completed Slice:** `docs/archive/2026-04-05-completed-plans/2026-04-05-m3-service-boundary-hardening-batch-1.md`
 
 **Goal:** Harden the remaining parser/translation/extraction service boundaries and add a concrete M4 release-verification surface so `yangzs-agents` can finish the active `v1.0` rollout backlog.
@@ -20,9 +20,16 @@ Completed and archived:
 5. Task 5: release-gate calculation
 6. Task 6: CLI/reporting surface
 
-Still active in this plan:
-1. Task 7: docs closeout + focused regression
-2. Real 100-paper acceptance execution remains intentionally separate from the targeted Task 4-6 tooling slice.
+Checkpoint-only closeout now verified on the merged branch:
+1. The focused regression suite for the merged `yangzs-agents` state passed on `2026-04-06`.
+2. The tracked rollout docs now describe `Task 4-6` as already landed on the current branch.
+
+This document should now be read as provenance for how the M3/M4 contract slice landed. The remaining release-critical backlog is no longer limited to this document's historical `Task 7`; it now spans:
+1. KG independent service
+2. multi-variant graph fan-out
+3. remaining frontend result / export surfaces
+4. repo-wide quality cleanup
+5. real 100-paper acceptance run
 
 ---
 

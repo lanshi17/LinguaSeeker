@@ -1,10 +1,8 @@
 """Unit tests for Hans Publishers module focusing on models only."""
 
 import importlib.util
-import sys
 from pathlib import Path
 
-import pytest
 
 # Dynamically load the models module to avoid import chain issues
 models_path = Path("src/domain/literature/automated_web/hans_publishers/models.py")

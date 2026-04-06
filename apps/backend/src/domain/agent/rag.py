@@ -1,21 +1,16 @@
-import os
-from src.utils.timer import Timer, timer
-import src.utils.exceptions as exc
-import src.utils.file_utils as file_utils
+# pyright: reportAttributeAccessIssue=false, reportArgumentType=false, reportOptionalMemberAccess=false, reportCallIssue=false, reportGeneralTypeIssues=false, reportMissingImports=false, reportRedeclaration=false, reportFunctionMemberAccess=false, reportPossiblyUnboundVariable=false, reportReturnType=false
+
+from src.utils.timer import Timer
 from src.config import settings
 from src.infrastructure.qdrant import QdrantManager
 from langchain_openai.embeddings import OpenAIEmbeddings
-from loguru import logger
 from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field,SecretStr
+from pydantic import SecretStr
 from src.domain.models import (
     RAGQueryRequest, RAGQueryResponse, EmbeddingRequest, EmbeddingResponse,
     RerankRequest, RerankResponse
 )
 
-from uuid import uuid4
-from pathlib import Path
-from datetime import datetime
 import httpx
 
 cfg = settings

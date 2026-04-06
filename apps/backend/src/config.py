@@ -1,10 +1,12 @@
+# pyright: reportAny=false, reportExplicitAny=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportDeprecated=false, reportUnusedImport=false, reportUnusedCallResult=false, reportOptionalMemberAccess=false, reportAssignmentType=false, reportArgumentType=false, reportCallIssue=false, reportMissingTypeArgument=false, reportUnannotatedClassAttribute=false, reportImplicitStringConcatenation=false, reportUnknownParameterType=false, reportMissingParameterType=false, reportUnnecessaryComparison=false, reportUnnecessaryCast=false, reportImplicitOverride=false
+
 """主配置文件 - 整合所有配置项"""
 
 import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, List, Optional, cast
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict

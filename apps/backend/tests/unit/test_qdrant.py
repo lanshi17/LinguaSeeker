@@ -9,14 +9,9 @@ from pathlib import Path
 import os
 from icecream import ic
 from loguru import logger
-from datetime import datetime
 from src.config import settings as cfg
 from src.utils.timer import Timer
-from typing import Optional
-from pathlib import Path
-from uuid import uuid4
 import asyncio
-from datetime import datetime
 
 # 禁用代理 unset http_proxy https_proxy all_proxy
 os.environ.pop("http_proxy", None)
@@ -100,7 +95,6 @@ def test_delete_collection():
         )
         assert not exists, "Collection should be deleted"
 
-    import asyncio
 
     asyncio.run(delete_and_check())
 
@@ -119,7 +113,6 @@ def test_create_collection_if_not_exists():
         exists = await qdrant_manager.client.collection_exists(test_collection_name)
         assert exists, "Collection should be created"
 
-    import asyncio
 
     asyncio.run(create_and_check())
 
@@ -138,7 +131,6 @@ def test_create_collection_if_already_exists():
         exists = await qdrant_manager.client.collection_exists(test_collection_name)
         assert exists, "Collection should still exist"
 
-    import asyncio
 
     asyncio.run(create_existing_and_check())
 
@@ -157,7 +149,6 @@ def test_reset_collection():
         exists = await qdrant_manager.client.collection_exists(test_collection_name)
         assert exists, "Collection should exist after reset"
 
-    import asyncio
 
     asyncio.run(reset_and_check())
 
@@ -186,7 +177,6 @@ def test_get_list_collections():
         collections = await qdrant_manager.list_collections()
         assert isinstance(collections, list), "Collections should be a list"
 
-    import asyncio
 
     asyncio.run(list_and_check())
 
@@ -203,7 +193,6 @@ def test_get_collection_info():
         info = await qdrant_manager.get_collection_info()
         assert info is not None, "Collection info should not be None"
 
-    import asyncio
 
     asyncio.run(info_and_check())
 

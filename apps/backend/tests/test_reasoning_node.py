@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, Optional, cast
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from src.agents.reasoning.node import (
     _build_reasoning_summary,

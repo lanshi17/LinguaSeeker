@@ -16,7 +16,6 @@ from src.infrastructure.postgres import (
     _derive_request_status,
     _build_database_url,
     _build_conninfo,
-    ensure_database_exists,
     get_engine,
     get_postgres_client,
     initialize_schema,

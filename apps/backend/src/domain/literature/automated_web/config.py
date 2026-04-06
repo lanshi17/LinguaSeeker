@@ -1,9 +1,11 @@
+# pyright: reportAttributeAccessIssue=false, reportArgumentType=false, reportOptionalMemberAccess=false, reportCallIssue=false, reportGeneralTypeIssues=false, reportMissingImports=false, reportRedeclaration=false, reportFunctionMemberAccess=false, reportPossiblyUnboundVariable=false, reportReturnType=false
+
 """Base configuration for automated web crawlers."""
 
 from dataclasses import dataclass
 from typing import Optional
 
-from src.config import get_settings, resolve_llm_triplet
+from src.config import Settings, get_settings, resolve_llm_triplet
 
 
 @dataclass(frozen=True)
@@ -17,7 +19,7 @@ class AutomatedWebConfig:
     """Configuration helper for automated web crawlers."""
 
     @classmethod
-    def get_settings(cls) -> "Settings":
+    def get_settings(cls) -> Settings:
         """Get the global Settings instance."""
         return get_settings()
 

@@ -13,6 +13,7 @@ import type {
   InteractionStartRequest,
   InteractionStartResponse,
   LogLinkReissueResponse,
+  PaperTaskDetailResponse,
   PubMedCandidateSearchRequest,
   PubMedCandidateSearchResponse,
   PubMedSelectionSubmitRequest,
@@ -83,6 +84,12 @@ export async function uploadTaskRequest(taskFormOrRequestId: TaskFormStructured 
 
 export async function getTaskRequestStatus(requestId: string, options: ApiCallOptions = {}) {
   return requestGetJson<TaskRequestStatusResponse>(`/tasks/requests/${encodeURIComponent(requestId)}`, { signal: options.signal });
+}
+
+export async function getPaperTaskDetail(paperTaskId: string, options: ApiCallOptions = {}) {
+  return requestGetJson<PaperTaskDetailResponse>(`/tasks/papers/${encodeURIComponent(paperTaskId)}`, {
+    signal: options.signal
+  });
 }
 
 export async function reissueLogLink(requestId: string, options: ApiCallOptions = {}) {

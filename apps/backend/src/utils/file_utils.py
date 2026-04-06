@@ -5,7 +5,7 @@ import shutil
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Any, Dict
+from typing import Dict
 
 import requests
 from loguru import logger

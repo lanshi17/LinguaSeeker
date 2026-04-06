@@ -9,18 +9,13 @@ from src.domain.literature.automated_web.cyberleninka.cyberleninka import (
 )
 from src.domain.literature.automated_web.cyberleninka.enums import Subject
 from src.domain.literature.automated_web.cyberleninka.locators import (
-    XPATH_DOWNLOAD_BTN,
     XPATH_RESULTS,
-    XPATH_SEARCH_BUTTON,
-    XPATH_SEARCH_INPUT,
-    XPATH_SUBJECT_FILTER,
 )
 from src.domain.literature.automated_web.cyberleninka.models import (
     BASE_URL,
     CyberleninkaPayload,
     DownloadResponse,
     PaperItem,
-    PaperList,
     SearchParams,
     SearchResponse,
 )

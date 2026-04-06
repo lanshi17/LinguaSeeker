@@ -1,3 +1,5 @@
+# pyright: reportDeprecated=false, reportExplicitAny=false, reportAny=false, reportUnannotatedClassAttribute=false
+
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
@@ -132,6 +134,80 @@ class TaskStatusResponse(BaseModel):
                 },
                 "error": None,
                 "error_details": None,
+            }
+        }
+
+
+class PaperTaskDetailResponse(BaseModel):
+    paper_task_id: str = Field(..., description="Paper task UUIDv4")
+    request_id: str = Field(..., description="Parent request UUIDv4")
+    document_id: Optional[str] = Field(None, description="Document UUID when available")
+    status: str = Field(..., description="Paper task status")
+    workflow_status: Optional[WorkflowStatus] = Field(
+        None, description="Detailed workflow stage status"
+    )
+    processing_steps: Optional[Dict[str, Dict[str, Any]]] = Field(
+        None, description="Detailed per-step processing state"
+    )
+    warning_codes: Optional[List[str]] = Field(
+        None, description="Non-fatal warning codes recorded for the paper task"
+    )
+    trace_chain: Optional[Dict[str, Any]] = Field(
+        None, description="Additive node-level provenance summary"
+    )
+    fulltext_unavailable: Optional[bool] = Field(
+        None, description="Whether the paper fell back to metadata/abstract evidence"
+    )
+    result_payload: Optional[Dict[str, Any]] = Field(
+        None, description="Paper-task result payload when available from Celery"
+    )
+    parsing_metadata: Optional[Dict[str, Any]] = Field(
+        None, description="Document parsing metadata when available"
+    )
+    duplicate_of: Optional[str] = Field(
+        None, description="Historical paper_task_id when duplicated"
+    )
+    error_code: Optional[str] = Field(None, description="Error code when applicable")
+    error_details: Optional[Dict[str, Any]] = Field(
+        None, description="Structured error details"
+    )
+    created_at: Optional[str] = Field(
+        None, description="Task creation timestamp if available"
+    )
+    updated_at: Optional[str] = Field(
+        None, description="Task update timestamp if available"
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "paper_task_id": "6f03f2f8-58b0-48e1-9600-a4d1464580bc",
+                "request_id": "e1c7ccf0-222b-4f17-95a2-a3594ef27408",
+                "document_id": "c525fcfa-6dd9-4c9d-8d42-bd7c5a52fa7a",
+                "status": "success",
+                "workflow_status": "COMPLETED",
+                "processing_steps": {
+                    "acquisition": {"status": "COMPLETED"},
+                    "classification": {"status": "COMPLETED"},
+                    "adjudication": {"status": "COMPLETED"},
+                },
+                "warning_codes": ["FULLTEXT_UNAVAILABLE"],
+                "trace_chain": {
+                    "steps": {
+                        "acquisition": {
+                            "status": "COMPLETED",
+                            "outcome": "success",
+                        }
+                    }
+                },
+                "fulltext_unavailable": True,
+                "result_payload": {"graph_sync_result": {"neo4j_ok": True}},
+                "parsing_metadata": {"parser_backend": "mineru"},
+                "duplicate_of": None,
+                "error_code": None,
+                "error_details": None,
+                "created_at": "2026-02-10T08:00:00+00:00",
+                "updated_at": "2026-02-10T08:00:12+00:00",
             }
         }
 

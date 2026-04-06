@@ -116,7 +116,6 @@ def test_certificate_info():
     print("\n📜 测试证书信息...")
     
     import subprocess
-    import json
     
     cert_path = "./qdrant/certs/qdrant.crt"
     if os.path.exists(cert_path):

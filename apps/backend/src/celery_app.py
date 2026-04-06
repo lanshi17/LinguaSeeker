@@ -23,7 +23,7 @@ celery_app = Celery(
     "acmg_tasks",
     broker=redis_url,
     backend=redis_url,
-    include=["src.services.task_manager"],
+    include=["src.services.task_manager", "src.services.kg_tasks"],
 )
 
 # 可选: 配置序列化器等
@@ -38,8 +38,10 @@ celery_app.conf.update(
     task_queues=(
         Queue("default", routing_key="default"),
         Queue("retry", routing_key="retry"),
+        Queue("kg", routing_key="kg"),
     ),
     task_routes={
         "tasks.process_pdf": {"queue": "default", "routing_key": "default"},
+        "tasks.process_kg_event": {"queue": "kg", "routing_key": "kg"},
     },
 )

@@ -38,14 +38,14 @@ class AssociationReport:
             "query_entity": {"type": self.query_entity_type, "id": self.query_entity_id},
             "links": [
                 {
-                    "source": {"type": l.source_type, "id": l.source_id},
-                    "target": {"type": l.target_type, "id": l.target_id},
-                    "relationship": l.relationship,
-                    "co_occurrence_count": l.co_occurrence_count,
-                    "document_ids": l.document_ids,
-                    "confidence": l.confidence,
+                    "source": {"type": link.source_type, "id": link.source_id},
+                    "target": {"type": link.target_type, "id": link.target_id},
+                    "relationship": link.relationship,
+                    "co_occurrence_count": link.co_occurrence_count,
+                    "document_ids": link.document_ids,
+                    "confidence": link.confidence,
                 }
-                for l in self.links
+                for link in self.links
             ],
             "co_occurrence_matrix": self.co_occurrence_matrix,
             "summary": self.summary,

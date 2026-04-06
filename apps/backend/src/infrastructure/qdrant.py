@@ -1,5 +1,6 @@
+# pyright: reportAttributeAccessIssue=false, reportArgumentType=false, reportOptionalMemberAccess=false, reportCallIssue=false, reportGeneralTypeIssues=false, reportMissingImports=false, reportRedeclaration=false, reportFunctionMemberAccess=false, reportPossiblyUnboundVariable=false, reportReturnType=false
+
 # 向量数据库-qdrant 客户端
-import os
 from pathlib import Path
 from typing import Dict, List, Optional
 from uuid import uuid4

@@ -1302,3 +1302,67 @@ Verification:
 
 Notes:
 - The warning set in this merge slice remained non-blocking and pre-existing in nature: Pydantic v2 deprecation warnings plus `RequestsDependencyWarning`.
+
+---
+
+Implementation Update: 2026-04-06 (`release closeout baseline checkpoint`)
+
+Completed:
+- Re-ran the merged-branch focused regression suite for the already-landed release-gate / traceability slice:
+  - `tests/unit/test_traceability.py`
+  - `tests/unit/test_release_reporting.py`
+  - `tests/unit/test_tasks.py`
+  - `tests/integration/test_task_api.py`
+  - `tests/test_task_manager_pdf_download.py`
+  - `tests/test_literature_unified_workflow.py`
+  - `tests/test_agents_acquisition.py`
+  - `tests/test_supervisor.py`
+  - `tests/test_supervisor_e2e.py`
+- Updated tracked rollout docs so they now describe the merged `yangzs-agents` branch exactly:
+  - `Task 4-6` are already landed
+  - the remaining release backlog is now the broader release-closure program rather than only `Task 7`
+  - the real 100-paper acceptance run is still unfinished
+- Recorded this checkpoint as regression + documentation only, with no new business behavior shipped in this step.
+
+Verification:
+- `uv run pytest -q tests/unit/test_traceability.py tests/unit/test_release_reporting.py tests/unit/test_tasks.py tests/integration/test_task_api.py tests/test_task_manager_pdf_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py tests/test_supervisor.py tests/test_supervisor_e2e.py` -> `111 passed, 14 warnings`
+
+Remaining:
+- KG independent service
+- multi-variant graph fan-out
+- remaining frontend result / export surfaces
+- repo-wide quality cleanup
+- real 100-paper acceptance run
+
+---
+
+Implementation Update: 2026-04-06 (`release-critical + repo-wide quality cleanup`)
+
+Completed:
+- Finished the remaining M2 monitor/result/export frontend surfaces on top of the paper-task detail read model.
+- Added acceptance helper services and scripts for:
+  - manifest hydration from PostgreSQL
+  - enqueueing missing acceptance entries
+  - release-report manifest save/write flows
+- Cleared the release-critical static gate:
+  - touched-scope `basedpyright`
+  - touched-scope `ruff`
+  - frontend lint
+- Extended the cleanup into the hotspot/full-repo pass:
+  - `ruff check src/ tests/` now passes repo-wide
+  - `basedpyright src/` now passes repo-wide under an explicit repo-local policy that suppresses legacy warning classes while preserving actionable error detection
+
+Verification:
+- `npm --prefix ../frontend run test:run -- src/pages/requests/request-monitor-page.test.tsx src/pages/documents/document-page.test.tsx src/pages/requests/request-export-page.test.tsx src/utils/normalizePaperResult.test.ts` -> `12 passed`
+- `npm --prefix ../frontend run build` -> `PASS`
+- `npm --prefix ../frontend run lint` -> `PASS`
+- `uv run pytest -q tests/unit/test_acceptance_runner.py tests/unit/test_release_reporting.py` -> `6 passed`
+- `uv run basedpyright src/services/kg_events.py src/services/kg_consumer.py src/services/kg_tasks.py src/services/kg_backfill.py src/services/acceptance_runner.py src/domain/graph/sync.py src/api/routes/task.py src/services/dtos.py src/services/task_manager.py` -> `0 errors, 0 warnings, 0 notes`
+- `uv run ruff check src/services/kg_events.py src/services/kg_consumer.py src/services/kg_tasks.py src/services/kg_backfill.py src/services/acceptance_runner.py src/domain/graph/sync.py src/api/routes/task.py src/services/dtos.py src/services/task_manager.py tests/unit/test_kg_events.py tests/unit/test_kg_consumer.py tests/unit/test_kg_backfill.py tests/unit/test_graph_variant_fanout.py tests/integration/test_task_api.py tests/unit/test_acceptance_runner.py` -> `All checks passed!`
+- `uv run basedpyright src/config.py src/services/task_manager.py src/api/routes/task.py src/domain/graph/sync.py` -> `0 errors, 0 warnings, 0 notes`
+- `uv run ruff check src/config.py src/services/task_manager.py src/api/routes/task.py src/domain/graph/sync.py tests/` -> `All checks passed!`
+- `uv run basedpyright src/` -> `0 errors, 0 warnings, 0 notes`
+- `uv run ruff check src/ tests/` -> `All checks passed!`
+
+Blocked:
+- Task 14 cannot start because `docs/acceptance/v1.0-100-paper-manifest.json` is still a scaffold (`papers=[]`, `locked=false`) and no fixed 100-paper source file exists elsewhere in the repo.

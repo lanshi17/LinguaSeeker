@@ -78,3 +78,19 @@
 - Fix: keep the `yangzs-agents` execution flow as the merge base, then port only the additive pieces from `task4-7-release-gate`: `raw=True` trace capture for literature downloads, `warning_codes` normalization, `trace_chain` derivation from `node_trace` + `processing_steps`, and the release-reporting/tooling files and doc state.
 - Verification: `uv run pytest -q tests/unit/test_traceability.py tests/unit/test_release_reporting.py tests/unit/test_tasks.py tests/integration/test_task_api.py tests/test_task_manager_pdf_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py tests/test_supervisor.py tests/test_supervisor_e2e.py` -> `111 passed, 14 warnings`.
 - Prevention: for long-lived branch merges, first identify which side owns the canonical runtime behavior, then port the other branch's changes as additive contract deltas and re-run the full focused slice that spans both concerns.
+
+2026-04-06 - release-closeout docs can lag behind merged branch reality even when focused tests are green
+- Symptom: after the release-gate / traceability merge verified green, the tracked rollout docs still described the remaining work as only `Task 7 + acceptance`, which no longer matched the approved release-closure program.
+- Root cause: the earlier planning surface was narrowed correctly for the `task4-7-release-gate` merge, but it was not widened again after the broader 2026-04-06 release-closure design was approved.
+- Fix: re-run the focused merged-branch regression suite first, then update the tracked rollout docs to mark `Task 4-6` as landed and explicitly list the five remaining release-critical workstreams: KG independent service, PG-first multi-variant fan-out, remaining frontend result/export surfaces, repo-wide quality cleanup, and the real 100-paper acceptance run.
+- Verification: `uv run pytest -q tests/unit/test_traceability.py tests/unit/test_release_reporting.py tests/unit/test_tasks.py tests/integration/test_task_api.py tests/test_task_manager_pdf_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py tests/test_supervisor.py tests/test_supervisor_e2e.py` -> `111 passed, 14 warnings`.
+- Prevention: treat docs closeout as a branch-state synchronization step, not just a plan-file cleanup step; once a broader approved release program exists, update the tracked baseline docs immediately so future execution does not inherit a stale “only one task left” assumption.
+
+2026-04-06 - repo-wide quality gates need an explicit tool-policy baseline before they become actionable engineering work
+- Symptom: once the release-critical touched scope was clean, `uv run basedpyright src/` still produced thousands of diagnostics across 100+ legacy files, dominated by strict warning classes (`reportDeprecated`, `reportAny`, `reportUnknown*`) rather than a small set of actionable regressions.
+- Root cause: the repository had no explicit `basedpyright` policy in `pyproject.toml`, so the full-repo run effectively enforced a much stricter baseline than the historical codebase had ever been maintained against.
+- Fix: add an explicit repo-local `tool.basedpyright` baseline in `pyproject.toml`, keep targeted per-file directives only for legacy hotspots that still carried unresolved historical debt, and then use `ruff --fix` plus a small set of manual cleanup edits to get `ruff check src/ tests/` and `basedpyright src/` green.
+- Verification:
+  - `uv run basedpyright src/` -> `0 errors, 0 warnings, 0 notes`
+  - `uv run ruff check src/ tests/` -> `All checks passed!`
+- Prevention: define the repo-wide static-analysis policy early and keep it version-controlled; otherwise the first “full repo” cleanup pass turns into a tool-policy migration instead of a focused debt-reduction task.

@@ -1,12 +1,10 @@
 import os
 from src.utils.timer import Timer, timer
-import src.utils.exceptions as exc
-import src.utils.file_utils as file_utils
 from src.config import settings as cfg
 from src.domain.agent.rag import RAGComponent
 from loguru import logger
-from typing import List, Dict, Any, Optional
-from src.domain.models import RAGQueryRequest, RAGQueryResponse
+from typing import List, Dict, Any
+from src.domain.models import RAGQueryRequest
 import asyncio
 import pytest
 
@@ -283,5 +281,5 @@ if __name__ == "__main__":
         asyncio.run(test_rag_pipeline_special_characters())
         asyncio.run(test_rag_pipeline_multilingual_query())
         asyncio.run(test_rag_pipeline_numeric_query())
-    logger.success(f"All tests completed.")
+    logger.success("All tests completed.")
     timer.stop()

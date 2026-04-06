@@ -1,6 +1,5 @@
 # base store -save file 
 from loguru import logger
-from src.utils.exceptions import StoreException
 from typing import Any
 from abc import ABC, abstractmethod
 import os

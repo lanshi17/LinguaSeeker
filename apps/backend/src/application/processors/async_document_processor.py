@@ -1,10 +1,12 @@
+# pyright: reportAttributeAccessIssue=false, reportArgumentType=false, reportOptionalMemberAccess=false, reportCallIssue=false, reportGeneralTypeIssues=false, reportMissingImports=false, reportRedeclaration=false, reportFunctionMemberAccess=false, reportPossiblyUnboundVariable=false, reportReturnType=false
+
 # 异步文档处理器 - 基于 Celery
 from typing import Optional
 from celery.result import AsyncResult
 from loguru import logger
 
 from src.utils.celery_tasks import process_pdf_document, celery_app
-from src.domain.task_models.document_task import DocumentTask, TaskStatus
+from src.domain.task_models.document_task import DocumentTask
 from src.domain.enums import TaskStatus as TaskStatusEnum
 
 

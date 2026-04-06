@@ -16,9 +16,7 @@ from src.domain.evidence.tools import (
     determine_max_evidence_from_controls,
 )
 import os
-from src.utils.timer import Timer, timer
-import src.utils.exceptions as exc
-import src.utils.file_utils as file_utils
+from src.utils.timer import Timer
 from src.config import settings
 from src.domain.agent.rag import RAGComponent
 import pytest
@@ -341,7 +339,7 @@ def test_process_medical_evidence():
     test_image_path = "test_image.jpg"
     with open(test_image_path, "wb") as f:
         f.write(b"test")
-    test_request = AgentRequest(
+    _test_request = AgentRequest(
         question="Analyze the medical evidence",
         context=test_markdown_content,
         max_response_tokens=2000,

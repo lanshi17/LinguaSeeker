@@ -86,7 +86,7 @@ def test_qdrant_connection_detailed():
             try:
                 info = client.info()
                 print(f"📊 Qdrant 信息: {info}")
-            except:
+            except Exception:
                 print("ℹ️  无法获取详细信息，但基本连接成功")
             
             return True
