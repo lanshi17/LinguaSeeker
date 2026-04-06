@@ -1366,3 +1366,30 @@ Verification:
 
 Blocked:
 - Task 14 cannot start because `docs/acceptance/v1.0-100-paper-manifest.json` is still a scaffold (`papers=[]`, `locked=false`) and no fixed 100-paper source file exists elsewhere in the repo.
+
+---
+
+Implementation Update: 2026-04-06 (`master` worktree merge into `yangzs-agents`)
+
+Completed:
+- Merged the remaining unmerged local worktree branch (`master`) into `yangzs-agents`.
+- Kept the newer `yangzs-agents` release-closure program state for:
+  - `docs/plans/README.md`
+  - `docs/plans/2026-03-22-v1.0-multi-source-6node-rollout.md`
+  - `lesson.md`
+  - `prd.json`
+  - `progress.txt`
+- Ported the additive plan-archive cleanup from `master`:
+  - moved `2026-04-05-multi-source-6node-rollout-design.md`
+  - moved `2026-04-05-multi-source-6node-rollout-implementation.md`
+  - archived both under `docs/archive/2026-04-06-completed-plans/`
+- Kept the earlier `docs/archive/2026-04-05-completed-plans/` entries for database/M2 plan slices to avoid duplicate archive copies.
+- Updated the plans index so `docs/plans/` now reflects the actual active release-closure documents on `yangzs-agents`.
+
+Verification:
+- `git merge-base --is-ancestor task4-7-release-gate HEAD` -> success
+- `git merge-base --is-ancestor master HEAD` -> success
+- `git worktree list --porcelain` + merge inspection -> all local worktree branches are now contained in `yangzs-agents`
+
+Notes:
+- This merge changed only docs / tracking artifacts; no business-code or test files were modified in this merge resolution step.

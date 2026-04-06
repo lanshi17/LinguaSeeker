@@ -61,6 +61,21 @@
 - Fix: forward `use_agent_workflow()` on the proxy, load dotenv from project root with `.env.local` and `ENV_FILE` support, skip forced PostgreSQL initialization for standalone PDF tasks without `paper_task_id`, validate PubMed candidate source in the DTO, inspect raw upload form keys to distinguish omitted vs blank `task_form`, remove remaining production imports from `src.configs`, and align the stale arbitration test to `current_node="arbitration"`.
 - Verification: `uv run pytest tests` -> `739 passed, 23 skipped`.
 - Prevention: when config access is abstracted behind a proxy, expose the methods tests and runtime code patch directly; avoid cwd-coupled config loading; and treat blank multipart form fields as distinct from omitted fields when API contracts depend on that difference.
+2026-04-05 - Multi-source rollout can look complete while a hidden unified-workflow gate still forces PubMed-only behavior
+- Symptom: the repository already contained non-PMC API providers, web scrapers, and 6-node workflow code, but explicit `web` routing and non-PMC API overrides were still rejected from `src/domain/literature/unified/workflow.py` with `mvp_pubmed_only`.
+- Root cause: the adapter layer and tests had advanced beyond the effective entrypoint, leaving a stale MVP-only guard in the unified workflow.
+- Fix: remove the `mvp_pubmed_only` rejection branches, add real web execution support, and keep `source_trace` output symmetric across API and web routes.
+- Prevention: when reviving a partially completed rollout, verify the real orchestration entrypoint first; do not assume provider adapters being present means the route is actually reachable.
+2026-04-05 - Source-trace persistence breaks silently when download helpers request `raw=False` or only parse API traces
+- Symptom: literature download storage could succeed while dropping `source_trace` for web routes, because `_try_download_and_store_literature_pdf` only read `raw.api.source_trace` and defaulted the unified-workflow request payload to `raw=False`.
+- Root cause: trace persistence logic was written for the API path only and never updated when web routing became part of the same unified contract.
+- Fix: request `raw=True` for literature download flows and read `source_trace` from either `raw.api` or `raw.web`.
+- Prevention: any helper that depends on route metadata or trace output should assert the same contract for both API and web responses in focused tests.
+2026-04-05 - Ralph task trackers can drift behind the real worktree state if closure artifacts are skipped
+- Symptom: `prd.json` still showed US-001 through US-006 as unfinished even though the gateway adapter implementation, focused tests, and verification commands were already green in the worktree.
+- Root cause: previous implementation iterations landed code and tests but did not close the Ralph tracking artifacts (`prd.json` / `progress.txt`) in the same pass.
+- Fix: re-verify the active story slice against code and commands, then update `prd.json` story pass flags and record the milestone in `progress.txt`.
+- Prevention: after each Ralph story or verification wave, close the tracking artifacts in the same session before leaving the worktree.
 2026-04-05 - Closeout work should pin final-state trace behavior, not just green-path node completion
 - Symptom: the rollout already had green supervisor happy-path tests, but they did not explicitly prove that richer `acquisition_result` and `node_trace.acquisition_detail` data survive the full graph through `finalize`.
 - Root cause: earlier rollout verification focused on node completion and routing, leaving the final-state trace contract only indirectly covered.
