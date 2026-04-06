@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -13,6 +13,16 @@ PAPER_DURATION_SLA_SECONDS = 30 * 60
 
 class AcceptancePaperRecord(BaseModel):
     paper_id: str = Field(..., description="Stable acceptance-set paper identifier")
+    entry_kind: Optional[str] = Field(
+        None, description="Internal acceptance executor entry kind"
+    )
+    source: Optional[str] = Field(
+        None, description="Concrete provider or source bucket"
+    )
+    request_payload: Optional[dict[str, Any]] = Field(
+        None, description="Normalized execution input for the acceptance executor"
+    )
+    request_id: Optional[str] = Field(None, description="request_id when enqueued")
     paper_task_id: Optional[str] = Field(None, description="paper_task_id when executed")
     status: str = Field("queued", description="Paper task status")
     error_code: Optional[str] = Field(None, description="Frozen task error code")

@@ -5,7 +5,32 @@
   "generated_at": "2026-04-05T00:00:00+00:00",
   "notes": [
     "Acceptance set scaffold only; actual 100-paper execution remains unfinished in this slice.",
-    "Populate papers with the fixed per-release acceptance set before running the final release gate."
+    "Populate papers with the fixed per-release acceptance set before running the final release gate.",
+    "Each paper row must carry entry_kind, source, request_payload, and the write-back request_id/paper_task_id fields."
   ],
-  "papers": []
+  "papers": [
+    {
+      "paper_id": "example-api-001",
+      "entry_kind": "api",
+      "source": "pmc",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"example disease\",\"country\":\"US\",\"language\":\"EN\"}",
+        "query": "BARD1 hereditary breast cancer",
+        "identifiers": [
+          "PMCID:PMC1234567"
+        ],
+        "selected_title": "Functional analysis of example variant",
+        "detail_link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1234567/"
+      },
+      "request_id": null,
+      "paper_task_id": null,
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "Functional analysis of example variant",
+      "notes": "Scaffold row only; replace with the locked release acceptance set before execution."
+    }
+  ]
 }
