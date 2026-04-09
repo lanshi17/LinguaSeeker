@@ -1,6 +1,6 @@
 # Acceptance Closeout Design
 
-> **Status:** `APPROVED`
+> **Status:** `EXECUTED`
 > **Scope:** Complete `Task 14` and `Task 15` for the `v1.0` release closeout on `yangzs-agents`.
 > **Frozen Contract Sources:** `docs/PRD.md`, `docs/BACKEND_STRUCTURE.md`, `docs/APP_FLOW.md`, `docs/TECH_STACK.md`, `docs/IMPLEMENTATION_PLAN.md`, `docs/plans/2026-04-06-release-closure-program-design.md`, `docs/plans/2026-04-06-release-closure-program-implementation.md`
 
@@ -20,11 +20,13 @@ The current branch already contains:
 4. acceptance summary and report rendering helpers
 5. passing focused backend/frontend/static verification slices
 
-The branch is still not release-complete because:
-1. `docs/acceptance/v1.0-100-paper-manifest.json` is still a scaffold
-2. `scripts/run_acceptance_set.py` still uses a placeholder enqueue lambda instead of real request creation
-3. the manifest schema only models result tracking, not execution input
-4. there is no internal submit path for non-web `api` acceptance items
+The branch is no longer blocked on acceptance execution. This closeout slice has been executed:
+1. 100-paper manifest is locked and executable
+2. acceptance set has been run and synced
+3. final release report has been published
+4. final verification sweep has been executed
+
+The remaining release concern is gate follow-up (`DURATION_SLA_BREACHED`), not Task 14/15 executability.
 
 ## Constraints
 1. The real HTTP/API product surface for this slice is treated as two entry kinds only:

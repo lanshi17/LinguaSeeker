@@ -1490,6 +1490,36 @@ Notes:
 
 Implementation Update: 2026-04-06 (`release closeout baseline checkpoint`)
 
+Implementation Update: 2026-04-09 (plans closeout sync after real acceptance execution)
+
+Completed:
+- Updated `docs/plans/README.md` to reflect the actual post-closeout branch state:
+  - `Task 14` completed
+  - `Task 15` completed
+  - release report published with current gate result `FAILED` / `DURATION_SLA_BREACHED`
+- Updated the top-level rollout baseline (`docs/plans/2026-03-22-v1.0-multi-source-6node-rollout.md`) so it no longer describes acceptance execution as pending work.
+- Reframed the 2026-04-06 release-closure and acceptance-closeout plan docs from pending execution to historical execution provenance.
+- Archived completed 2026-04-06 derived plan docs into `docs/archive/2026-04-09-completed-plans/`:
+  - `2026-04-06-acceptance-closeout-design.md`
+  - `2026-04-06-acceptance-closeout-implementation.md`
+  - `2026-04-06-repository-baseline-contract-unification-design.md`
+  - `2026-04-06-repository-baseline-contract-unification-implementation.md`
+
+Verification:
+- `docs/plans/` now retains only:
+  - `2026-03-22-v1.0-multi-source-6node-rollout.md`
+  - `2026-04-05-m3-m4-service-boundary-and-contract-verification-implementation.md`
+  - `2026-04-06-release-closure-program-design.md`
+  - `2026-04-06-release-closure-program-implementation.md`
+  - `README.md`
+- `docs/archive/2026-04-09-completed-plans/` now contains the four completed 2026-04-06 derived plan documents.
+- Manual review confirms the active planning surface no longer claims that manifest execution or final verification remain undone.
+
+Notes:
+- This pass is documentation/archive synchronization only; no runtime behavior or acceptance results changed.
+- The active remaining release work is now accurately framed as release-gate follow-up for `DURATION_SLA_BREACHED`.
+
+
 Completed:
 - Re-ran the merged-branch focused regression suite for the already-landed release-gate / traceability slice:
   - `tests/unit/test_traceability.py`

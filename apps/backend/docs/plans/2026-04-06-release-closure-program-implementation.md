@@ -4,17 +4,18 @@
 
 **Goal:** Record the release-closure program accurately and finish the final acceptance/report closeout on `yangzs-agents`.
 
-**Architecture:** Tasks `1-13` are already landed on the current branch: KG outbox/consumer/backfill, multi-variant graph fan-out, remaining M2 result/export surfaces, acceptance helpers, and repo-wide quality cleanup are present in code and re-verified by focused tests and static checks. The active remaining work is to lock the real 100-paper manifest, run the acceptance/report flow, and execute the final verification sweep.
+**Architecture:** Tasks `1-15` are now executed on the current branch: KG outbox/consumer/backfill, multi-variant graph fan-out, remaining M2 result/export surfaces, acceptance helpers, real 100-paper acceptance execution, final verification sweep, and repo-wide quality cleanup are all present and verified. The active remaining work has shifted to release-gate follow-up for `DURATION_SLA_BREACHED`.
 
 **Tech Stack:** FastAPI, Celery, PostgreSQL, SQLAlchemy, Neo4j, LangGraph, React/Vite, Vitest, pytest, `uv`, `loguru`.
 
 **Git Note:** This repository often runs under “do not commit unless explicitly requested.” Each task includes a suggested commit step, but only run it if the user explicitly asks for commits in the execution session.
 
-**Current Branch Snapshot (verified against actual code on 2026-04-06):**
-1. `Task 1-13` are already landed on `yangzs-agents`.
-2. The only active backlog items are `Task 14` and `Task 15`.
-3. `Task 14` is blocked until `docs/acceptance/v1.0-100-paper-manifest.json` is populated with the real fixed 100-paper set and `locked=true`.
-4. Historical task bodies below are retained as execution provenance for the already-landed slices.
+**Current Branch Snapshot (verified against actual code on 2026-04-09):**
+1. `Task 1-15` are executed on `yangzs-agents`.
+2. 100-paper acceptance has reached terminal state and been synced back into the manifest.
+3. the final release report has been published at `docs/release/v1.0-release-report.md`.
+4. the final verification sweep has been executed successfully.
+5. historical task bodies below are retained as execution provenance.
 
 ---
 

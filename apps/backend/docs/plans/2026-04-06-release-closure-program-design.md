@@ -1,6 +1,6 @@
 # Release Closure Program Design
 
-> **Status:** `EXECUTED THROUGH TASK 13; FINAL CLOSEOUT PENDING`
+> **Status:** `EXECUTED; RELEASE GATE FOLLOW-UP PENDING`
 > **Scope:** Complete the final release closeout after Tasks `1-13` landed on `yangzs-agents`.
 > **Frozen Contract Sources:** `docs/PRD.md`, `docs/BACKEND_STRUCTURE.md`, `docs/APP_FLOW.md`, `docs/TECH_STACK.md`, `docs/IMPLEMENTATION_PLAN.md`
 
@@ -23,10 +23,9 @@ The current branch already contains:
 9. repo-wide release-critical quality cleanup
 
 But the branch is still not release-complete because:
-1. `docs/acceptance/v1.0-100-paper-manifest.json` is still a scaffold instead of the locked per-release acceptance set
-2. the real 100-paper acceptance run has not been executed
-3. the final release report has not been published from actual acceptance results
-4. the final verification sweep has not yet been recorded after the real acceptance run
+1. the published release report currently shows `Gate status: FAILED`
+2. the blocking reason is `DURATION_SLA_BREACHED`
+3. the next work is no longer acceptance execution, but post-closeout SLA remediation / rerun planning
 
 ## Chosen Approach
 Use a narrow final-closeout sequence:

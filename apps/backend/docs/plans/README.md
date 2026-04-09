@@ -14,58 +14,37 @@
 ### `ACTIVE`
 
 1. `2026-03-22-v1.0-multi-source-6node-rollout.md`
-   顶层 `v1.0` 基线计划。当前用于约束未完成的 release 收口工作。
+   顶层 `v1.0` 基线计划。当前用于约束 release 后续整改与复盘执行面。
 2. `2026-04-06-release-closure-program-design.md`
-   当前 release closure program 的设计基线。
+   release closure program 的设计基线（已执行完成，保留为 closeout 事实来源与后续整改参考）。
 3. `2026-04-06-release-closure-program-implementation.md`
-   当前 release closure program 的执行计划；实际剩余阻塞以该文件为准。
-4. `2026-04-06-acceptance-closeout-design.md`
-   `Task 14/15` 的派生设计文档，定义 mixed-source acceptance closeout 的最小可行方案。
-5. `2026-04-06-acceptance-closeout-implementation.md`
-   上述设计的执行计划；当前若要真正完成 `Task 14/15`，应按该计划推进。
+   release closure program 执行计划（`Task 14/15` 已完成，保留为执行 provenance）。
 
 ### `REFERENCE ONLY`
 
 1. `2026-04-05-m3-m4-service-boundary-and-contract-verification-implementation.md`
-   `Task 1-6` 已落地后的历史 provenance 文档，保留追溯上下文，但不再代表当前 active backlog。
+   `Task 1-6` 已落地后的历史 provenance 文档。
 2. `2026-04-06-repository-baseline-contract-unification-design.md`
-   一次性仓库口径统一设计文档；用于说明为何需要同步 `AGENTS.md`、`progress.txt` 与残留实现提示。
+   仓库口径统一设计文档，已完成，保留追溯。
 3. `2026-04-06-repository-baseline-contract-unification-implementation.md`
-   上述设计的执行计划；该计划用于本次同步任务的 provenance，而非新的 release backlog。
+   上述设计的执行计划，已完成，保留追溯。
 
-## 当前未完成任务
+## 当前状态（已同步到真实执行结果）
 
-结合 `2026-04-06` 的实际代码审计与 focused verification，`Task 1-13` 对应代码已在当前分支落地；当前 active backlog 已收口到 release final closeout：
+结合 2026-04-09 实际执行结果：
 
-1. `Task 14: 100-paper acceptance run`
-   - 锁定固定 100 篇 manifest
-   - 执行 acceptance set
-   - 回写 manifest 实际结果
-   - 生成最终 release report
-2. `Task 15: final verification sweep`
-   - 在真实 acceptance 完成后运行最终后端 release 验证切片
-   - 以最终结果更新 `progress.txt` / `lesson.md`
+1. `Task 14` 已完成：100 篇 acceptance 已全部进入终态并同步回 manifest。
+2. `Task 15` 已完成：最终 backend/frontend/static 验证切片已执行完成。
+3. `docs/release/v1.0-release-report.md` 已发布，当前 gate 结果为 `FAILED`，阻塞原因是 `DURATION_SLA_BREACHED`（非 run incomplete）。
 
-本次代码审计已复核的已落地切片：
-1. KG independent service：PostgreSQL outbox、`kg` queue、consumer、backfill
-2. multi-variant graph fan-out：variant-level evidence rows + document resync path
-3. remaining M2 surfaces：request monitor、document reading、request export
-4. acceptance/report helpers：manifest hydration、enqueue、report rendering
-5. repo-wide quality cleanup：`basedpyright`、`ruff`、frontend build/lint
+当前分支不再存在“Task 14/15 未执行”的阻塞；后续工作应转入 release gate 失败项整改与复盘。
 
-当前已知阻塞：
-1. `docs/acceptance/v1.0-100-paper-manifest.json` 仍是 scaffold
-2. 仓库内尚无固定 100 篇来源清单，因此 acceptance 无法诚实执行
+## 建议后续顺序
 
-## 建议任务顺序
-
-建议按下面顺序继续执行剩余工作：
-
-1. 先按 `2026-04-06-acceptance-closeout-design.md` / `2026-04-06-acceptance-closeout-implementation.md` 补齐 mixed-source acceptance 执行面
-2. 固定并锁定真实 100 篇 manifest
-3. 运行 acceptance set 并同步实际结果
-4. 生成最终 release report
-5. 执行 Task 15 最终验证并记录 closeout
+1. 基于 `v1.0-release-report.md` 分析 `DURATION_SLA_BREACHED` 的主要来源（按论文/节点拆解）。
+2. 制定并执行时延整改批次（优先 acquisition/translation/extraction 热点）。
+3. 重新运行 acceptance 验证并更新 release report。
+4. 在 `progress.txt` / `lesson.md` 记录整改闭环。
 
 ## 已完成并归档的计划
 
@@ -83,6 +62,13 @@
 - `2026-04-05-multi-source-6node-rollout-design.md`
 - `2026-04-05-multi-source-6node-rollout-implementation.md`
 
+已于 `2026-04-09` 归档到 `docs/archive/2026-04-09-completed-plans/`：
+
+- `2026-04-06-acceptance-closeout-design.md`
+- `2026-04-06-acceptance-closeout-implementation.md`
+- `2026-04-06-repository-baseline-contract-unification-design.md`
+- `2026-04-06-repository-baseline-contract-unification-implementation.md`
+
 另有较早的完成归档保留在 `docs/archive/2026-04-02-completed-plans/`：
 
 - `2026-03-30-backend-6node-contract-cleanup-design.md`
@@ -94,10 +80,11 @@
 - `docs/archive/2026-04-02-completed-plans/`
 - `docs/archive/2026-04-05-completed-plans/`
 - `docs/archive/2026-04-06-completed-plans/`
+- `docs/archive/2026-04-09-completed-plans/`
 
 ## 当前整理结论
 
-1. `master` 的 plans 归档整理已合并到当前 `yangzs-agents` 分支。
-2. `2026-04-05` rollout 设计/实现文档已移出 active plans surface，转入 `docs/archive/2026-04-06-completed-plans/`。
-3. 当前 `docs/plans/` 保留的是顶层基线、当前 release closure program，以及一个 provenance-only 历史实现文档。
-4. 当前分支仍不能视为 release-complete；真实 100-paper acceptance 尚未执行。
+1. `Task 14/15` 已执行完成，相关结果已反映在 manifest/report 与 progress 记录中。
+2. `2026-04-06` 的 acceptance closeout 与 repository baseline unification 派生计划已转入归档。
+3. 当前 `docs/plans/` 仅保留 active baseline 与已执行 closeout program 的事实来源文档。
+4. 后续主线是 release gate 失败项（`DURATION_SLA_BREACHED`）整改，不是 acceptance 执行补齐。

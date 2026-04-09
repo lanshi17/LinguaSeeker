@@ -2,9 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Make `Task 14` and `Task 15` executable for the mixed-source `v1.0` acceptance closeout.
+**Goal:** Record how `Task 14` and `Task 15` were executed for the mixed-source `v1.0` acceptance closeout.
 
-**Architecture:** Extend the acceptance manifest so each paper row contains execution inputs, then replace the placeholder acceptance enqueue path with a real internal executor. Reuse the current `web` and `pubmed` request creation flows where they already exist, and add one minimal internal submit/task path for the remaining `api` providers. Finish by executing the real acceptance manifest and running the final release verification sweep.
+**Architecture:** The acceptance manifest now carries execution inputs per paper row, the placeholder acceptance enqueue path has been replaced by a real internal executor, and the current `web`, `pubmed`, and internal non-`pubmed` `api` paths have been executed to complete the real acceptance manifest. The final release verification sweep has also been run. This document now remains as execution provenance for the completed closeout slice.
 
 **Tech Stack:** FastAPI, Celery, PostgreSQL, SQLAlchemy, LangGraph, pytest, Vitest, `uv`, `loguru`.
 
