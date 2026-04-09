@@ -1142,6 +1142,10 @@ def test_process_web_page_task_success(monkeypatch: pytest.MonkeyPatch) -> None:
     assert any(log.get("node") == "acmg" for log in fake_pg.logs)
 
 
+def test_process_api_paper_task_is_registered() -> None:
+    assert tasks_module.process_api_paper_task.name == "tasks.process_api_paper"
+
+
 # ---------------------------------------------------------------------------
 # M1 utility helpers
 # ---------------------------------------------------------------------------

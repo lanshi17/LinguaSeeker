@@ -1,11 +1,2114 @@
 {
   "release_no": "v1.0",
   "expected_paper_count": 100,
-  "locked": false,
-  "generated_at": "2026-04-05T00:00:00+00:00",
+  "locked": true,
+  "generated_at": "2026-04-07T00:00:00+00:00",
   "notes": [
-    "Acceptance set scaffold only; actual 100-paper execution remains unfinished in this slice.",
-    "Populate papers with the fixed per-release acceptance set before running the final release gate."
+    "Curated on 2026-04-07 via public literature search.",
+    "Language quotas requested by user: zh=30, ja=20, ru=20, de=20, en=10.",
+    "All rows use entry_kind=web and source=web per user instruction to not distinguish api/web.",
+    "Manifest is populated and locked, but the acceptance run has not been executed yet."
   ],
-  "papers": []
+  "papers": [
+    {
+      "paper_id": "v1.0-zh-001",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN511374202308/1468118.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "d10aaed9-1c1d-4039-a64d-d4f3ef501653",
+      "paper_task_id": "2ebeae4d-1590-48eb-99b9-ec5f0af5fe20",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 97.947112,
+      "worker_started_at": "2026-04-07T09:21:14.608651+00:00",
+      "completed_at": "2026-04-07T14:24:50.017242+00:00",
+      "title": "https://rs.yiigle.com/CN511374202308/1468118.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-002",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN115989202309/1473578.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "ebb3eeda-0399-49aa-8e43-75aa6adb68da",
+      "paper_task_id": "b8a4d4b0-5f40-4f4c-8009-83a341219c51",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 168.855328,
+      "worker_started_at": "2026-04-07T09:21:14.741424+00:00",
+      "completed_at": "2026-04-07T14:26:00.981436+00:00",
+      "title": "https://rs.yiigle.com/CN115989202309/1473578.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-003",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://www.junogenomics.com/document_sharing/34.html"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "73734b82-72cc-4e40-a5d6-108cbf10698b",
+      "paper_task_id": "42177ff7-81a5-4da7-899f-cae96c2ded6b",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 147.902699,
+      "worker_started_at": "2026-04-07T09:21:14.748551+00:00",
+      "completed_at": "2026-04-07T14:25:40.008893+00:00",
+      "title": "https://www.junogenomics.com/document_sharing/34.html",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-004",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://www.junogenomics.com/document_sharing/49.html"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "6d4c06b4-58a9-4d1a-a40b-cd0c5d38216d",
+      "paper_task_id": "b920ee8b-7281-48ef-b681-daf10520ccc1",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 151.401158,
+      "worker_started_at": "2026-04-07T09:21:14.755534+00:00",
+      "completed_at": "2026-04-07T14:25:43.535762+00:00",
+      "title": "https://www.junogenomics.com/document_sharing/49.html",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-005",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://www.junogenomics.com/document_sharing/47.html"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "a75b4a40-9495-4bc7-bf3c-a3f97d2fe963",
+      "paper_task_id": "eaf2fb13-d87c-4823-8f14-1ef7d23d565a",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 155.657249,
+      "worker_started_at": "2026-04-07T09:21:14.762454+00:00",
+      "completed_at": "2026-04-07T14:25:47.773447+00:00",
+      "title": "https://www.junogenomics.com/document_sharing/47.html",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-006",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://www.junogenomics.com/document_sharing/53.html"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "5ee02d43-2901-4ffd-8ded-9d34fce60b5c",
+      "paper_task_id": "54dd5e7f-3323-463c-877e-a2f82f05f1e3",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 132.026274,
+      "worker_started_at": "2026-04-07T09:21:14.769417+00:00",
+      "completed_at": "2026-04-07T14:25:24.163536+00:00",
+      "title": "https://www.junogenomics.com/document_sharing/53.html",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-007",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN112137202320/1460453.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "a64e124f-218a-440c-8cea-2753fd54e8ac",
+      "paper_task_id": "6fac9ff3-0271-419e-a487-c2678cca4c6f",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 155.291607,
+      "worker_started_at": "2026-04-07T09:21:14.779226+00:00",
+      "completed_at": "2026-04-07T14:25:47.417453+00:00",
+      "title": "https://rs.yiigle.com/CN112137202320/1460453.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-008",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN511374202307/1464803.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "e6170190-b516-49c6-a14d-7fb9b28f4893",
+      "paper_task_id": "541105fc-2369-43f7-bd15-94bf42e60075",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 172.002765,
+      "worker_started_at": "2026-04-07T09:21:14.788242+00:00",
+      "completed_at": "2026-04-07T14:26:04.139719+00:00",
+      "title": "https://rs.yiigle.com/CN511374202307/1464803.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-009",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN511374202304/1452678.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "3e098fec-bb49-4367-84b9-3e3724bc8653",
+      "paper_task_id": "8bae3ae7-d765-4128-8496-8f37ae3724c6",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 191.397854,
+      "worker_started_at": "2026-04-07T09:21:14.797299+00:00",
+      "completed_at": "2026-04-07T14:26:23.533615+00:00",
+      "title": "https://rs.yiigle.com/CN511374202304/1452678.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-010",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN511374202002/1190170.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "7319445e-7ec3-45ba-89f6-b4db468c80e4",
+      "paper_task_id": "78d5cd94-1938-4f68-ba18-eed2d191ee51",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 147.729896,
+      "worker_started_at": "2026-04-07T09:21:14.806447+00:00",
+      "completed_at": "2026-04-07T14:25:39.866183+00:00",
+      "title": "https://rs.yiigle.com/CN511374202002/1190170.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-011",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN511374202009/1246200.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "d937d98d-2846-4146-aa2e-aaf103281761",
+      "paper_task_id": "03957f53-dc09-4f5e-95de-d9a22731684e",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 164.355847,
+      "worker_started_at": "2026-04-07T09:21:14.816622+00:00",
+      "completed_at": "2026-04-07T14:25:56.497912+00:00",
+      "title": "https://rs.yiigle.com/CN511374202009/1246200.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-012",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN511374202212/1435535.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "524892d8-bbad-4c96-a779-c695070bb553",
+      "paper_task_id": "059b4153-34a0-4947-89a7-dca1d5adbe1e",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 159.9482,
+      "worker_started_at": "2026-04-07T09:21:14.824175+00:00",
+      "completed_at": "2026-04-07T14:25:52.092976+00:00",
+      "title": "https://rs.yiigle.com/CN511374202212/1435535.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-013",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN115399202004/1445145.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "3f368e3b-31d6-4ad7-beb0-3afb4d310c6a",
+      "paper_task_id": "14780c4b-8d6a-4622-a516-d7a72968b578",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 177.598032,
+      "worker_started_at": "2026-04-07T09:21:14.831829+00:00",
+      "completed_at": "2026-04-07T14:26:09.751232+00:00",
+      "title": "https://rs.yiigle.com/CN115399202004/1445145.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-014",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN2021/1491650.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "81e2533f-dc55-4e54-8155-ed8c8740551b",
+      "paper_task_id": "8d817381-1569-4300-9780-f1e3715699d9",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 314.281701,
+      "worker_started_at": "2026-04-07T09:21:14.839948+00:00",
+      "completed_at": "2026-04-07T14:28:26.441463+00:00",
+      "title": "https://rs.yiigle.com/CN2021/1491650.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-015",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN511374202208/1413924.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "aeb2b3b1-a12d-439c-a6a5-b06fb0533d3e",
+      "paper_task_id": "50cd6a3e-4e48-4904-9696-6da375b388cc",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 168.26418,
+      "worker_started_at": "2026-04-07T09:21:14.846294+00:00",
+      "completed_at": "2026-04-07T14:26:00.428457+00:00",
+      "title": "https://rs.yiigle.com/CN511374202208/1413924.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-016",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN112137202317/1458116.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "c50eba27-f620-4fa3-9aa0-7d863b0359b5",
+      "paper_task_id": "ebaa9b68-239a-404e-856f-5b40d41e6f99",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 240.27641,
+      "worker_started_at": "2026-04-07T09:21:14.852602+00:00",
+      "completed_at": "2026-04-07T14:27:12.449892+00:00",
+      "title": "https://rs.yiigle.com/CN112137202317/1458116.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-017",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN511374202012/1303097.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "ac2a8f4a-d763-4b03-b4f0-41683beaec8f",
+      "paper_task_id": "a3ba45dd-f605-402a-b90c-3a5120f62ff8",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 215.189457,
+      "worker_started_at": "2026-04-07T09:21:14.858713+00:00",
+      "completed_at": "2026-04-07T14:26:47.370558+00:00",
+      "title": "https://rs.yiigle.com/CN511374202012/1303097.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-018",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN113903202203/1355279.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "9a4c7e67-d10d-448a-93bb-482ad46c9ff6",
+      "paper_task_id": "f03f6ec4-5007-4a8b-96ed-0c8c0480c9b3",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 250.100976,
+      "worker_started_at": "2026-04-07T09:21:14.864616+00:00",
+      "completed_at": "2026-04-07T14:27:22.293048+00:00",
+      "title": "https://rs.yiigle.com/CN113903202203/1355279.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-019",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN115399202004/1197188.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "7301087a-4e18-43df-a8e3-2fbb5d948a4e",
+      "paper_task_id": "8be2d7f0-1259-40f6-bcd8-950c26600680",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 173.461106,
+      "worker_started_at": "2026-04-07T09:21:14.870560+00:00",
+      "completed_at": "2026-04-07T14:26:05.661996+00:00",
+      "title": "https://rs.yiigle.com/CN115399202004/1197188.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-020",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN112137202231/1420792.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "5d62cc51-a748-46ff-bb6a-50d1582d5a2a",
+      "paper_task_id": "08d7d158-86be-4ba0-a9e4-e428d38edc93",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 328.159158,
+      "worker_started_at": "2026-04-07T09:21:14.876360+00:00",
+      "completed_at": "2026-04-07T14:28:40.368622+00:00",
+      "title": "https://rs.yiigle.com/CN112137202231/1420792.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-021",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN2021/1326310.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "11435457-8235-4a8f-868b-407e46b642fd",
+      "paper_task_id": "4e162dfc-b674-4cc4-ad7f-3c7065137640",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 179.410436,
+      "worker_started_at": "2026-04-07T09:21:14.882243+00:00",
+      "completed_at": "2026-04-08T08:16:53.403135+00:00",
+      "title": "https://rs.yiigle.com/CN2021/1326310.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-022",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN112140202206/1380662.htm"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "e311b5b5-5bd4-4a2a-8474-83b2a3f2e58e",
+      "paper_task_id": "fbd1c0ee-1d36-47f9-a7fb-b226de77587a",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 149.626255,
+      "worker_started_at": "2026-04-07T09:21:14.888099+00:00",
+      "completed_at": "2026-04-08T08:16:23.811085+00:00",
+      "title": "https://rs.yiigle.com/CN112140202206/1380662.htm",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-023",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_zhyxycx202403003"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "58d0a3c7-6fe2-4c56-8627-8a2165c68249",
+      "paper_task_id": "93f52523-57f0-43db-9989-091c74fff073",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 195.343375,
+      "worker_started_at": "2026-04-07T09:21:14.894003+00:00",
+      "completed_at": "2026-04-08T08:17:09.533320+00:00",
+      "title": "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_zhyxycx202403003",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-024",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_ykyj202210006"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "e1cb0232-548b-4201-863a-9c82c9157c3a",
+      "paper_task_id": "c8d066b0-a5da-46db-a185-a21c801fefaf",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 120.236781,
+      "worker_started_at": "2026-04-07T09:21:14.900138+00:00",
+      "completed_at": "2026-04-08T08:15:54.426225+00:00",
+      "title": "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_ykyj202210006",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-025",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_zhsjk202307008"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "7f3ec4b4-61f5-4adb-926d-098b7204e75d",
+      "paper_task_id": "800a323c-8982-415b-98ac-5c9a535579e7",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 127.561826,
+      "worker_started_at": "2026-04-07T09:21:14.906328+00:00",
+      "completed_at": "2026-04-08T08:16:01.797835+00:00",
+      "title": "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_zhsjk202307008",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-026",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_zhebyhk202212007"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "42166eb3-2912-4f9b-b08c-5191a5f5be07",
+      "paper_task_id": "7b91fc4f-8680-4fef-9048-cdabd618f86b",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 120.077993,
+      "worker_started_at": "2026-04-07T09:21:14.912873+00:00",
+      "completed_at": "2026-04-08T08:15:54.308950+00:00",
+      "title": "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_zhebyhk202212007",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-027",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://med.wanfangdata.com.cn/Paper/Detail?dbid=WF_QK&id=PeriodicalPaper_zhyxycx202305012"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "607d3eed-7ba3-4c5b-bf60-8f4c75ccaea7",
+      "paper_task_id": "4159d553-3e7b-4166-9dd5-d8efeaff9f7d",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 123.511775,
+      "worker_started_at": "2026-04-07T09:21:14.918894+00:00",
+      "completed_at": "2026-04-08T08:15:57.814049+00:00",
+      "title": "https://med.wanfangdata.com.cn/Paper/Detail?dbid=WF_QK&id=PeriodicalPaper_zhyxycx202305012",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-028",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_xejjyx202309013"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "2e8462d7-e618-423a-ac21-922b4d41661d",
+      "paper_task_id": "e1afba77-9271-4515-a090-4b5f0d334ac9",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 122.42124,
+      "worker_started_at": "2026-04-07T09:21:14.925143+00:00",
+      "completed_at": "2026-04-08T08:15:56.724880+00:00",
+      "title": "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_xejjyx202309013",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-029",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_zhyxycx202402004"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "8f07297f-ca3a-4bae-a187-690cbc1cb9ef",
+      "paper_task_id": "a5f31eed-4f14-405f-9801-117d1ee95f14",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 117.913839,
+      "worker_started_at": "2026-04-07T09:21:14.931092+00:00",
+      "completed_at": "2026-04-08T08:15:52.299703+00:00",
+      "title": "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_zhyxycx202402004",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-zh-030",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_zhek202205012"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "2ec0c8a1-edee-4aae-9292-783df6f66db8",
+      "paper_task_id": "9a799156-b3da-454c-aabc-177f2cbd097f",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 122.121306,
+      "worker_started_at": "2026-04-07T09:21:14.937832+00:00",
+      "completed_at": "2026-04-08T08:15:56.482890+00:00",
+      "title": "https://med.wanfangdata.com.cn/Paper/Detail/PeriodicalPaper_zhek202205012",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-001",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/jjsth/34/4/34_2023_JJTH_34_4_468-479/_html/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "35972ade-aaf6-4ae7-8133-6ce2196fef20",
+      "paper_task_id": "ce7b5d64-4694-4185-bed5-bd1a48eee75e",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 507.087397,
+      "worker_started_at": "2026-04-07T09:21:14.944781+00:00",
+      "completed_at": "2026-04-08T08:22:21.510494+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/jjsth/34/4/34_2023_JJTH_34_4_468-479/_html/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-002",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/jjsth/26/5/26_518/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "e34682bc-64c3-4379-8254-9aff38e419c4",
+      "paper_task_id": "b9edabe9-5505-43a4-89f5-343c029db1f3",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 223.813152,
+      "worker_started_at": "2026-04-07T09:21:14.951726+00:00",
+      "completed_at": "2026-04-08T08:17:38.269000+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/jjsth/26/5/26_518/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-003",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/jjsth/35/5/35_2024_JJTH_35_5_597-603/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "c61ab143-817c-49bf-836e-cbd94f2ec6fe",
+      "paper_task_id": "e13b43b7-98b9-4e83-9eaa-31a489dee161",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 181.841088,
+      "worker_started_at": "2026-04-07T09:21:14.958475+00:00",
+      "completed_at": "2026-04-08T08:16:56.307901+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/jjsth/35/5/35_2024_JJTH_35_5_597-603/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-004",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/jse/41/3/41_124/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "8055c143-be10-41e5-9d7c-ef6be7d66963",
+      "paper_task_id": "35222cfc-3b5b-4b5d-a5c2-063e481296f6",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 166.675646,
+      "worker_started_at": "2026-04-07T09:21:14.965452+00:00",
+      "completed_at": "2026-04-08T08:16:41.187814+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/jse/41/3/41_124/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-005",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/jspho/55/5/55_387/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "0e220185-e6ca-4144-9822-d458c9ff1c58",
+      "paper_task_id": "fc9acbb9-16dd-48d9-af9f-e5be9ff4520e",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 198.181941,
+      "worker_started_at": "2026-04-07T09:21:14.972217+00:00",
+      "completed_at": "2026-04-08T08:17:12.704362+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/jspho/55/5/55_387/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-006",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/fpj/160/4/160_25008/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "eb780999-8820-4f43-a335-334698925e90",
+      "paper_task_id": "84c26a58-b879-4bbe-944a-215c2cfbf3e2",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 294.904734,
+      "worker_started_at": "2026-04-07T09:21:14.978550+00:00",
+      "completed_at": "2026-04-08T08:18:49.467707+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/fpj/160/4/160_25008/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-007",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/mhc/31/1/31_20/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "d9427470-0b7e-4a14-ac9a-caae9c4d0cc9",
+      "paper_task_id": "e3f8306d-eb10-4717-9219-7fbd6fdb050a",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 222.569699,
+      "worker_started_at": "2026-04-07T09:21:14.985487+00:00",
+      "completed_at": "2026-04-08T08:17:37.179224+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/mhc/31/1/31_20/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-008",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/jcbd/16/1/16_26/_article/-char/ja"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "34057863-8422-47dc-a8d7-81c16743b5fc",
+      "paper_task_id": "fba90d93-34e7-45b0-a51f-b01117f74761",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 194.772731,
+      "worker_started_at": "2026-04-07T09:21:14.992221+00:00",
+      "completed_at": "2026-04-08T08:17:09.407171+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/jcbd/16/1/16_26/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-009",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/ojjscn/51/6/51_386/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "f20242de-d04a-4a57-9bdb-f373b056c70a",
+      "paper_task_id": "8ce0b7db-48ab-443f-a420-9794ad745134",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 173.941393,
+      "worker_started_at": "2026-04-07T09:21:14.999069+00:00",
+      "completed_at": "2026-04-08T08:16:48.609907+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/ojjscn/51/6/51_386/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-010",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/clinicalneurol/64/4/64_cn-001938/_html/-char/ja"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "be8f52c8-619a-4c44-95f0-db4423a6c6da",
+      "paper_task_id": "ec0c2e95-114c-46e4-82af-1ee2ffe7f14b",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 321.462046,
+      "worker_started_at": "2026-04-07T09:21:15.005938+00:00",
+      "completed_at": "2026-04-08T08:19:16.150474+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/clinicalneurol/64/4/64_cn-001938/_html/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-011",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/jspr/38/2/38_103/_html/-char/ja"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "26c61192-bd8f-424d-894a-78f999d8f282",
+      "paper_task_id": "52dd6db8-dfc5-45e1-aba7-be8f45609c8a",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 140.924493,
+      "worker_started_at": "2026-04-07T09:21:15.011882+00:00",
+      "completed_at": "2026-04-07T14:27:10.957885+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/jspr/38/2/38_103/_html/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-012",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/otoljpn/31/2/31_148/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "962b5d58-d134-4b1d-a50c-b3c4ea5ad75a",
+      "paper_task_id": "7edb98c1-654e-4ad7-9ffd-f5577859662d",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 140.880419,
+      "worker_started_at": "2026-04-07T09:21:15.017905+00:00",
+      "completed_at": "2026-04-07T14:27:45.054678+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/otoljpn/31/2/31_148/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-013",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/jser/83/3/83_181/_html/-char/ja"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "e43db538-eb99-4851-a221-a28f2a3334cf",
+      "paper_task_id": "e8f9cafd-03ec-45dc-9055-46218d81c394",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 161.205789,
+      "worker_started_at": "2026-04-07T09:21:15.025642+00:00",
+      "completed_at": "2026-04-07T14:28:21.080230+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/jser/83/3/83_181/_html/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-014",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/otoljpn/22/1/22_47/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "b12c0785-3024-454b-be9b-c7f21f1d143b",
+      "paper_task_id": "48ac1a42-499b-496e-8831-fda5f449bf8e",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 156.63153,
+      "worker_started_at": "2026-04-07T09:21:15.034387+00:00",
+      "completed_at": "2026-04-07T14:28:16.652146+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/otoljpn/22/1/22_47/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-015",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/audiology/66/5/66_378/_article/-char/ja"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "f481f99d-2e4c-42d6-b086-0dec9829090d",
+      "paper_task_id": "69e8b59d-e021-4326-bac7-47f0d9c21068",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 126.849358,
+      "worker_started_at": "2026-04-07T09:21:15.040956+00:00",
+      "completed_at": "2026-04-07T14:27:50.395474+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/audiology/66/5/66_378/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-016",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/orltokyo/65/3/65_117/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "887af561-ed15-434f-b025-c010eaa61b11",
+      "paper_task_id": "705519fa-6bcd-47ca-b11f-db459ccbf539",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 138.623944,
+      "worker_started_at": "2026-04-07T09:21:15.047643+00:00",
+      "completed_at": "2026-04-07T14:28:06.049943+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/orltokyo/65/3/65_117/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-017",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/rinketsu/60/6/60_691/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "2ba131bd-57f1-4206-8303-4482b71f79fc",
+      "paper_task_id": "608d2263-c8ac-4197-b36a-09f99fe95295",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 159.208458,
+      "worker_started_at": "2026-04-07T09:21:15.055657+00:00",
+      "completed_at": "2026-04-07T14:28:26.992866+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/rinketsu/60/6/60_691/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-018",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/jsci/29/3/29_3_136/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "05e214c3-a2dc-4951-bf97-f07c529a2cdb",
+      "paper_task_id": "a0caea76-f7e1-4540-ba2b-00ae8502b064",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 149.976551,
+      "worker_started_at": "2026-04-07T09:21:15.064420+00:00",
+      "completed_at": "2026-04-07T14:28:22.077843+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/jsci/29/3/29_3_136/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-019",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/naika/108/5/108_1015/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "29e7a903-fa6f-448c-86df-a298221e4b63",
+      "paper_task_id": "1cdcdb06-de3e-4ab8-9366-fbe76d438283",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 143.822985,
+      "worker_started_at": "2026-04-07T09:21:15.072998+00:00",
+      "completed_at": "2026-04-07T14:28:20.332842+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/naika/108/5/108_1015/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ja-020",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "urls": [
+          "https://www.jstage.jst.go.jp/article/nishinihonhifu/85/6/85_466/_article/-char/ja/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "dd213d01-49f6-4a25-8ebb-4403f73bbdc1",
+      "paper_task_id": "628de94f-a738-47e1-af05-e6e0c5d5368a",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 165.169171,
+      "worker_started_at": "2026-04-07T09:21:15.079284+00:00",
+      "completed_at": "2026-04-07T14:28:45.607663+00:00",
+      "title": "https://www.jstage.jst.go.jp/article/nishinihonhifu/85/6/85_466/_article/-char/ja",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-001",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/mutatsionnyy-skrining-bolnyh-s-narusheniyami-funktsii-fibrinogena"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "495c06d6-b893-490e-af55-2eda748cdbc3",
+      "paper_task_id": "eb9ba630-7a2d-49c6-be1c-a6709ec42313",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 186.631617,
+      "worker_started_at": "2026-04-07T09:21:15.086063+00:00",
+      "completed_at": "2026-04-07T14:29:07.622708+00:00",
+      "title": "https://cyberleninka.ru/article/n/mutatsionnyy-skrining-bolnyh-s-narusheniyami-funktsii-fibrinogena",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-002",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/analiz-allelnoy-chastoty-mutatsiy-gena-cftr-s-pomoschyu-dnk-diagnostiki-v-sankt-peterburge"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "3bffbfd4-dc07-4aa2-8418-b298414252b1",
+      "paper_task_id": "e07d3168-ee4b-4b05-97a7-cef8c3ba5707",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 173.198487,
+      "worker_started_at": "2026-04-07T09:21:15.093384+00:00",
+      "completed_at": "2026-04-07T14:28:57.348899+00:00",
+      "title": "https://cyberleninka.ru/article/n/analiz-allelnoy-chastoty-mutatsiy-gena-cftr-s-pomoschyu-dnk-diagnostiki-v-sankt-peterburge",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-003",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/rezultaty-molekulyarno-geneticheskih-issledovaniy-patsientov-s-retinoblastomoy"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "94d8c477-a1fc-43bb-aed1-04091473c060",
+      "paper_task_id": "bc96a6b5-6001-468d-9d1a-58580907cb99",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 175.096569,
+      "worker_started_at": "2026-04-07T09:21:15.101873+00:00",
+      "completed_at": "2026-04-07T14:29:00.769160+00:00",
+      "title": "https://cyberleninka.ru/article/n/rezultaty-molekulyarno-geneticheskih-issledovaniy-patsientov-s-retinoblastomoy",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-004",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/mutatsionnyy-analiz-smn-genau-patsientov-so-spinalnoy-myshechnoy-atrofiey-i-svyaz-mezhdu-mutatsiey-i-tyazhestyu-klinicheskih-proyavleniy"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "4f7e8a4e-3a99-4dfe-9da2-2b53b3516e00",
+      "paper_task_id": "44ccc6b6-0669-4426-aca6-62d3ac3e4d56",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 514.541298,
+      "worker_started_at": "2026-04-07T09:21:15.108658+00:00",
+      "completed_at": "2026-04-07T14:34:44.303479+00:00",
+      "title": "https://cyberleninka.ru/article/n/mutatsionnyy-analiz-smn-genau-patsientov-so-spinalnoy-myshechnoy-atrofiey-i-svyaz-mezhdu-mutatsiey-i-tyazhestyu-klinicheskih-proyavleniy",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-005",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/rasprostranennost-vulgarnogo-ihtioza-i-chastota-mutatsiy-r501x-i-2282del4-v-gene-flg-v-rostovskoy-oblasti"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "761c7bd3-f9f1-4149-8d49-f3ab5e803c43",
+      "paper_task_id": "7aca174d-e7f8-4522-9690-5702fd8b17dd",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 193.448319,
+      "worker_started_at": "2026-04-07T09:21:15.115028+00:00",
+      "completed_at": "2026-04-07T14:29:36.991178+00:00",
+      "title": "https://cyberleninka.ru/article/n/rasprostranennost-vulgarnogo-ihtioza-i-chastota-mutatsiy-r501x-i-2282del4-v-gene-flg-v-rostovskoy-oblasti",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-006",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/cluchay-nasledstvennogo-zabolevaniya-obmena-veschestv-defitsit-atsil-koa-degidrogenazy-zhirnyh-kislot-s-ochen-dlinnoy-tsepyu-vlcad"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "75a88ac7-f2ad-4d9c-b844-4533d84f4584",
+      "paper_task_id": "2a916bc2-7bf5-4e43-a0ff-95cf26b9929f",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 341.852591,
+      "worker_started_at": "2026-04-07T09:21:15.121407+00:00",
+      "completed_at": "2026-04-07T14:32:29.231775+00:00",
+      "title": "https://cyberleninka.ru/article/n/cluchay-nasledstvennogo-zabolevaniya-obmena-veschestv-defitsit-atsil-koa-degidrogenazy-zhirnyh-kislot-s-ochen-dlinnoy-tsepyu-vlcad",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-007",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/propionovaya-atsiduriya-u-rebenka-v-vozraste-5-mesyatsev"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "556149fc-6d77-472d-9c0b-94dfc30c5345",
+      "paper_task_id": "1cd5d105-cecc-4c6b-9a79-a48f33cece16",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 308.272009,
+      "worker_started_at": "2026-04-07T09:21:15.129406+00:00",
+      "completed_at": "2026-04-07T14:32:19.236373+00:00",
+      "title": "https://cyberleninka.ru/article/n/propionovaya-atsiduriya-u-rebenka-v-vozraste-5-mesyatsev",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-008",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/mutatsiya-v-gene-crebbp-u-devochki-s-sindromom-hodby-na-noskah-klinicheskiy-sluchay"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "e1593cbd-9832-470d-9980-b2b651f9ac6c",
+      "paper_task_id": "6107871c-602b-4c47-8046-94da8a6ccece",
+      "status": "failed",
+      "error_code": "TRANSLATION_FAILED",
+      "duration_seconds": null,
+      "worker_started_at": "2026-04-07T09:21:15.135580+00:00",
+      "completed_at": "2026-04-09T03:20:20.464200+00:00",
+      "title": "https://cyberleninka.ru/article/n/mutatsiya-v-gene-crebbp-u-devochki-s-sindromom-hodby-na-noskah-klinicheskiy-sluchay",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-009",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/epilepsiya-pri-sindrome-de-vivo-literaturnyy-obzor-i-opisanie-klinicheskogo-sluchaya"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "7bb3a4c1-9fdd-4431-b9d4-fbefb0393cb7",
+      "paper_task_id": "336b71f9-deb6-452b-a853-38cd3a7f0d67",
+      "status": "failed",
+      "error_code": "TRANSLATION_FAILED",
+      "duration_seconds": null,
+      "worker_started_at": "2026-04-07T09:21:15.142490+00:00",
+      "completed_at": "2026-04-09T03:20:20.470730+00:00",
+      "title": "https://cyberleninka.ru/article/n/epilepsiya-pri-sindrome-de-vivo-literaturnyy-obzor-i-opisanie-klinicheskogo-sluchaya",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-010",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/semeynyy-adenomatoznyy-polipoz-tolstoy-kishki-oslozhnennyy-obturatsionnoy-tolstokishechnoy-neprohodimostyu-klinicheskiy-sluchay"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "901029b3-f211-476d-a943-e17b33d22bdb",
+      "paper_task_id": "906cf4eb-e742-4f75-8f89-d4a2d16a7d10",
+      "status": "failed",
+      "error_code": "TRANSLATION_FAILED",
+      "duration_seconds": null,
+      "worker_started_at": "2026-04-07T09:21:15.148810+00:00",
+      "completed_at": "2026-04-09T03:20:20.473836+00:00",
+      "title": "https://cyberleninka.ru/article/n/semeynyy-adenomatoznyy-polipoz-tolstoy-kishki-oslozhnennyy-obturatsionnoy-tolstokishechnoy-neprohodimostyu-klinicheskiy-sluchay",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-011",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/semeynaya-sredizemnomorskaya-lihoradka-obzor-literatury-i-sluchay-iz-praktiki-1"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "e65424ed-411e-47b1-8fd7-27c8a227ebf9",
+      "paper_task_id": "37c60ae4-3ff2-4168-a200-4dadc3f93e90",
+      "status": "failed",
+      "error_code": "TRANSLATION_FAILED",
+      "duration_seconds": null,
+      "worker_started_at": "2026-04-07T09:21:15.155417+00:00",
+      "completed_at": "2026-04-09T03:20:20.476822+00:00",
+      "title": "https://cyberleninka.ru/article/n/semeynaya-sredizemnomorskaya-lihoradka-obzor-literatury-i-sluchay-iz-praktiki-1",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-012",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/leptomeningealnyy-amiloidoz-osobennosti-klinicheskoy-kartiny-klinicheskoe-nablyudenie"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "cdb40bda-b978-4547-8617-c2ee3552c0af",
+      "paper_task_id": "38ad4efd-13a3-4d52-ab25-55829c5072ac",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 465.374653,
+      "worker_started_at": "2026-04-07T09:21:15.162323+00:00",
+      "completed_at": "2026-04-09T03:18:29.420879+00:00",
+      "title": "https://cyberleninka.ru/article/n/leptomeningealnyy-amiloidoz-osobennosti-klinicheskoy-kartiny-klinicheskoe-nablyudenie",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-013",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/nasledstvennye-harakteristiki-brca1-5382insc-shek2-blm-assotsiirovannogo-raka-molochnoy-zhelezy"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "9bf5fc69-79ff-4d0b-a502-96f1e8e64649",
+      "paper_task_id": "086c78cc-fad1-4f0f-add7-048870cb29e6",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 316.193717,
+      "worker_started_at": "2026-04-07T09:21:15.168680+00:00",
+      "completed_at": "2026-04-08T12:42:20.430875+00:00",
+      "title": "https://cyberleninka.ru/article/n/nasledstvennye-harakteristiki-brca1-5382insc-shek2-blm-assotsiirovannogo-raka-molochnoy-zhelezy",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-014",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/organizatsiya-pervichnoy-profilaktiki-raka-putem-opredeleniya-germinalnyh-mutatsiy-v-genah-brca1-2"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "89a46cdd-6b22-432c-a273-2d64d56dac31",
+      "paper_task_id": "cc09a6d0-6540-47b8-9207-099450dd8c57",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 414.672546,
+      "worker_started_at": "2026-04-07T09:21:15.174651+00:00",
+      "completed_at": "2026-04-07T14:35:15.011815+00:00",
+      "title": "https://cyberleninka.ru/article/n/organizatsiya-pervichnoy-profilaktiki-raka-putem-opredeleniya-germinalnyh-mutatsiy-v-genah-brca1-2",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-015",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://umedp.ru/articles/klinicheskoe_nablyudenie_nasledstvennogo_pankreatita_u_rebenka_v_rezultate_mutatsii_v_gene_prss1.html"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "05bd349f-3c0e-44f8-b750-6051b00ef169",
+      "paper_task_id": "c80ee280-17db-44ad-b03d-1cd53a3ea1d2",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 312.600173,
+      "worker_started_at": "2026-04-07T09:21:15.180649+00:00",
+      "completed_at": "2026-04-09T02:52:20.536904+00:00",
+      "title": "https://umedp.ru/articles/klinicheskoe_nablyudenie_nasledstvennogo_pankreatita_u_rebenka_v_rezultate_mutatsii_v_gene_prss1.html",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-016",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://umedp.ru/articles/print/2170/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "b4cebad8-bc1d-4e57-96a8-16c0e6e2efd4",
+      "paper_task_id": "8d773897-2e71-44f4-aef5-f1cd418916fe",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 806.427013,
+      "worker_started_at": "2026-04-07T09:21:15.186554+00:00",
+      "completed_at": "2026-04-09T03:11:03.011816+00:00",
+      "title": "https://umedp.ru/articles/print/2170",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-017",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://consilium.orscience.ru/2075-1753/article/view/93032"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "be9afb7f-0976-4ea3-af00-9bd4cf87ca17",
+      "paper_task_id": "c3da8f08-a15f-46de-a6c3-4408f70a2123",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 155.07698,
+      "worker_started_at": "2026-04-07T09:21:15.192657+00:00",
+      "completed_at": "2026-04-07T14:31:01.526767+00:00",
+      "title": "https://consilium.orscience.ru/2075-1753/article/view/93032",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-018",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://consilium.orscience.ru/2075-1753/article/view/643258/ru_RU"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "6beb0abc-75b1-4fb5-82ee-56101c3b3842",
+      "paper_task_id": "4fda0bf8-0ddb-4117-847b-1439ff2263ef",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 154.456896,
+      "worker_started_at": "2026-04-07T09:21:15.198635+00:00",
+      "completed_at": "2026-04-07T14:31:01.456728+00:00",
+      "title": "https://consilium.orscience.ru/2075-1753/article/view/643258/ru_RU",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-019",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://consilium.orscience.ru/2075-1753/article/view/93307"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "e1f034c9-3a23-4823-a504-429b9538420a",
+      "paper_task_id": "5b74b936-16d0-4ee8-a103-ac1b2d0f6342",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 148.627645,
+      "worker_started_at": "2026-04-07T09:21:15.204785+00:00",
+      "completed_at": "2026-04-07T14:31:09.005098+00:00",
+      "title": "https://consilium.orscience.ru/2075-1753/article/view/93307",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-ru-020",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://consilium.orscience.ru/2075-1753/article/view/94728"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "e1881b34-cdff-4406-a0ed-5b484bde53e0",
+      "paper_task_id": "56c0883c-5498-44cf-aaff-8bd8412aba8c",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 210.609112,
+      "worker_started_at": "2026-04-07T09:21:15.210756+00:00",
+      "completed_at": "2026-04-07T14:32:16.223338+00:00",
+      "title": "https://consilium.orscience.ru/2075-1753/article/view/94728",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-001",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://link.springer.com/article/10.1007/s11825-019-0243-5"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "a501c307-88c4-454f-9308-320579d23cef",
+      "paper_task_id": "96e64a78-e0c8-4dbf-ad1e-bdaa796a57fe",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 252.727681,
+      "worker_started_at": "2026-04-07T09:21:15.216677+00:00",
+      "completed_at": "2026-04-07T14:33:10.083748+00:00",
+      "title": "https://link.springer.com/article/10.1007/s11825-019-0243-5",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-002",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://link.springer.com/article/10.1007/s00112-023-01747-1"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "80154e47-9b20-48bf-8587-a1e5f8966501",
+      "paper_task_id": "2710b3fe-3b9c-4e87-b763-63d9fb2d4368",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 127.286323,
+      "worker_started_at": "2026-04-07T09:21:15.222805+00:00",
+      "completed_at": "2026-04-07T14:31:08.062829+00:00",
+      "title": "https://link.springer.com/article/10.1007/s00112-023-01747-1",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-003",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://link.springer.com/article/10.1007/s11560-023-00646-6"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "2c1fac77-69b4-4c30-a61a-d6baa250e4ec",
+      "paper_task_id": "43af4721-edb4-48a5-b2ca-a6c17b69455b",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 297.946417,
+      "worker_started_at": "2026-04-07T09:21:15.229096+00:00",
+      "completed_at": "2026-04-07T14:34:05.575898+00:00",
+      "title": "https://link.springer.com/article/10.1007/s11560-023-00646-6",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-004",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://link.springer.com/article/10.1007/s00108-024-01718-y"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "6d0fc610-1b00-41f6-9245-41090616571b",
+      "paper_task_id": "c788d88b-b015-484e-90a1-340ca363da77",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 187.149352,
+      "worker_started_at": "2026-04-07T09:21:15.237345+00:00",
+      "completed_at": "2026-04-07T14:32:44.147188+00:00",
+      "title": "https://link.springer.com/article/10.1007/s00108-024-01718-y",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-005",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://link.springer.com/article/10.1007/s00347-023-01903-8"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "1ffa7615-0f61-4413-813e-6d705c3f15d2",
+      "paper_task_id": "3afc0c15-c1ea-43ff-a015-f6de35b22e29",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 297.122154,
+      "worker_started_at": "2026-04-07T09:21:15.243370+00:00",
+      "completed_at": "2026-04-07T14:35:58.585297+00:00",
+      "title": "https://link.springer.com/article/10.1007/s00347-023-01903-8",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-006",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://link.springer.com/article/10.1007/s11812-019-00094-0"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "97416aee-3b63-4d99-bc32-fec46d7eb533",
+      "paper_task_id": "caf1b1e1-d25b-4976-8c16-c3b6b0e6f4e4",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 225.036213,
+      "worker_started_at": "2026-04-07T09:21:15.250810+00:00",
+      "completed_at": "2026-04-07T14:34:46.569233+00:00",
+      "title": "https://link.springer.com/article/10.1007/s11812-019-00094-0",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-007",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://link.springer.com/article/10.1007/s10304-022-00494-y"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "ed8799c4-05e8-4654-80ff-667166d3b420",
+      "paper_task_id": "abeb8b9f-028b-4368-9cb6-e4ba1d364847",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 252.423831,
+      "worker_started_at": "2026-04-07T09:21:15.256887+00:00",
+      "completed_at": "2026-04-07T14:35:20.493289+00:00",
+      "title": "https://link.springer.com/article/10.1007/s10304-022-00494-y",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-008",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://www.springermedizin.de/paediatrie/stoerungen-der-intelligenzentwicklung/angewandte-genetik-in-der-paediatrie/15848342"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "41bb7efc-47f9-4f1b-b32d-02fd0de1bfe7",
+      "paper_task_id": "2c0374f1-e67f-4626-bbec-e0ef93ff5493",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 103.820067,
+      "worker_started_at": "2026-04-07T09:21:15.263323+00:00",
+      "completed_at": "2026-04-07T14:32:52.833440+00:00",
+      "title": "https://www.springermedizin.de/paediatrie/stoerungen-der-intelligenzentwicklung/angewandte-genetik-in-der-paediatrie/15848342",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-009",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://www.thieme-connect.com/products/ejournals/html/10.1055/a-0759-2094"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "441b48ed-a979-4ab9-9425-de566a0c60c1",
+      "paper_task_id": "19de6437-6a2f-4e09-96d1-cbb99156000b",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 469.316271,
+      "worker_started_at": "2026-04-07T09:21:15.269286+00:00",
+      "completed_at": "2026-04-07T14:40:05.546203+00:00",
+      "title": "https://www.thieme-connect.com/products/ejournals/html/10.1055/a-0759-2094",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-010",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://www.thieme-connect.com/products/ejournals/html/10.1055/a-0803-6149"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "205a443b-0f0d-4d85-a5f8-7d8dd3195e97",
+      "paper_task_id": "c68685da-8bbc-4cca-ab32-4f1692791e97",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 263.194335,
+      "worker_started_at": "2026-04-07T09:21:15.276550+00:00",
+      "completed_at": "2026-04-07T14:36:42.437500+00:00",
+      "title": "https://www.thieme-connect.com/products/ejournals/html/10.1055/a-0803-6149",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-011",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://www.thieme-connect.com/products/ejournals/abstract/10.1055/s-0034-1383330"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "29b71811-5184-4254-a675-2b91d580e9a0",
+      "paper_task_id": "b407ffd1-b9c5-4bc0-8d60-ed470ce4555c",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 220.154344,
+      "worker_started_at": "2026-04-07T09:21:15.284455+00:00",
+      "completed_at": "2026-04-07T14:36:09.392633+00:00",
+      "title": "https://www.thieme-connect.com/products/ejournals/abstract/10.1055/s-0034-1383330",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-012",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://www.thieme-connect.com/products/ejournals/abstract/10.1055/a-1927-0580"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "c586e7b9-ba11-44d5-949f-84ef6065c416",
+      "paper_task_id": "d60a65e9-a9ec-4df1-bb4f-8424e323f89c",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 189.863048,
+      "worker_started_at": "2026-04-07T09:21:15.290747+00:00",
+      "completed_at": "2026-04-07T14:35:42.304145+00:00",
+      "title": "https://www.thieme-connect.com/products/ejournals/abstract/10.1055/a-1927-0580",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-013",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://www.thieme-connect.com/products/ejournals/abstract/10.1055/a-2328-9534"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "3fb41e14-2d8f-4e6a-a707-1910c897ee45",
+      "paper_task_id": "691aee0e-9bb7-4cfd-8a7d-b31684fd89aa",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 471.214944,
+      "worker_started_at": "2026-04-07T09:21:15.296946+00:00",
+      "completed_at": "2026-04-07T14:40:23.867760+00:00",
+      "title": "https://www.thieme-connect.com/products/ejournals/abstract/10.1055/a-2328-9534",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-014",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://www.thieme-connect.com/products/ejournals/abstract/10.5482/HAMO-17-01-0008"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "2c8cd0b5-14ca-4f26-b067-8861929dabc9",
+      "paper_task_id": "5a92a607-7492-4dba-950b-3edb08fd6da7",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 242.226305,
+      "worker_started_at": "2026-04-07T09:21:15.302951+00:00",
+      "completed_at": "2026-04-07T14:36:35.899256+00:00",
+      "title": "https://www.thieme-connect.com/products/ejournals/abstract/10.5482/HAMO-17-01-0008",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-015",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://www.thieme-connect.com/products/ejournals/html/10.1055/s-0044-102033"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "0d8adb9d-e655-4c45-be31-2a29909d9fd3",
+      "paper_task_id": "499b431d-a69c-4aa8-a7c1-63302969462f",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 453.127175,
+      "worker_started_at": "2026-04-07T09:21:15.309008+00:00",
+      "completed_at": "2026-04-07T14:40:17.281308+00:00",
+      "title": "https://www.thieme-connect.com/products/ejournals/html/10.1055/s-0044-102033",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-016",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://www.thieme-connect.com/products/ejournals/html/10.1055/a-2145-4663"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "4657e66f-8c9b-456b-aa94-5d67d58c3efc",
+      "paper_task_id": "da4027bd-a95b-4aa7-903d-1a2db462d3ec",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 259.675816,
+      "worker_started_at": "2026-04-07T09:21:15.315437+00:00",
+      "completed_at": "2026-04-07T14:37:12.517314+00:00",
+      "title": "https://www.thieme-connect.com/products/ejournals/html/10.1055/a-2145-4663",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-017",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/38713210/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "e3ea3bab-d962-4388-b132-ac8af7d9bcad",
+      "paper_task_id": "1387074d-9a32-4c11-85b2-7eab4e0afeac",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 99.089155,
+      "worker_started_at": "2026-04-07T09:21:15.321409+00:00",
+      "completed_at": "2026-04-07T14:34:33.401380+00:00",
+      "title": "https://pubmed.ncbi.nlm.nih.gov/38713210",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-018",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/41563457/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "ee1b29d9-db69-43fd-8e83-08b602171c06",
+      "paper_task_id": "06d6b77b-7d1a-4e4f-bbcb-629f57ee8b9b",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 95.900199,
+      "worker_started_at": "2026-04-07T09:21:15.327558+00:00",
+      "completed_at": "2026-04-07T14:34:32.921197+00:00",
+      "title": "https://pubmed.ncbi.nlm.nih.gov/41563457",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-019",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/37932605/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "f3855df4-582b-47b3-aa69-c0f6da4dcd42",
+      "paper_task_id": "e2120b86-347c-4bb9-b9db-0819085e9fce",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 98.235189,
+      "worker_started_at": "2026-04-07T09:21:15.334983+00:00",
+      "completed_at": "2026-04-07T14:34:35.397961+00:00",
+      "title": "https://pubmed.ncbi.nlm.nih.gov/37932605",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-de-020",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "urls": [
+          "https://pubmed.ncbi.nlm.nih.gov/33491886/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "6d6eea0e-223e-448b-baaa-934f5bd3c840",
+      "paper_task_id": "30d30d87-44d1-48d4-acab-a0ab25ad81a2",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 96.870257,
+      "worker_started_at": "2026-04-07T09:21:15.341824+00:00",
+      "completed_at": "2026-04-07T14:34:46.960570+00:00",
+      "title": "https://pubmed.ncbi.nlm.nih.gov/33491886",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-en-001",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"US\",\"language\":\"EN\"}",
+        "urls": [
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC6938631/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "e563f714-12f7-4ef7-a6ea-f5e40a4092ec",
+      "paper_task_id": "3e705740-cf26-4fab-947f-2e3fb6a0385a",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 207.110952,
+      "worker_started_at": "2026-04-07T09:21:15.348092+00:00",
+      "completed_at": "2026-04-07T14:37:32.693496+00:00",
+      "title": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6938631",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-en-002",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"US\",\"language\":\"EN\"}",
+        "urls": [
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC6884856/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "e1d9420d-758e-44f4-80c0-31ef08ea8d71",
+      "paper_task_id": "e69aa141-bdb0-43d4-afa6-dec50bef94aa",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 119.634964,
+      "worker_started_at": "2026-04-07T09:21:15.354945+00:00",
+      "completed_at": "2026-04-07T14:36:32.562872+00:00",
+      "title": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6884856",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-en-003",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"US\",\"language\":\"EN\"}",
+        "urls": [
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC6548460/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "2ec6d95f-b159-40ab-8e50-b329046787e5",
+      "paper_task_id": "daa77ec1-51a1-41d0-9d88-366acb392204",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 288.865272,
+      "worker_started_at": "2026-04-07T09:21:15.360993+00:00",
+      "completed_at": "2026-04-07T14:39:22.273524+00:00",
+      "title": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6548460",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-en-004",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"US\",\"language\":\"EN\"}",
+        "urls": [
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC10840334/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "bba38e33-81e5-4d86-82ae-7bb1df5a555f",
+      "paper_task_id": "7cdf44a8-5eb7-4d8b-a853-cf1ae5f2de62",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 266.048159,
+      "worker_started_at": "2026-04-07T09:21:15.367043+00:00",
+      "completed_at": "2026-04-07T14:39:01.455576+00:00",
+      "title": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10840334",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-en-005",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"US\",\"language\":\"EN\"}",
+        "urls": [
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC8008494/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "743ef35c-25f9-4889-b1e0-01c1ab568f28",
+      "paper_task_id": "ba3146e4-a055-40ea-88a3-6cfac7ff1eb5",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 256.929713,
+      "worker_started_at": "2026-04-07T09:21:15.372936+00:00",
+      "completed_at": "2026-04-07T14:39:01.240173+00:00",
+      "title": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8008494",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-en-006",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"US\",\"language\":\"EN\"}",
+        "urls": [
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC11821525/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "006f51f5-ef71-4fa4-bfdf-8cdfa9d65c8f",
+      "paper_task_id": "1861bf4e-83aa-41f3-aae3-c1ab205d47d4",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 292.70865,
+      "worker_started_at": "2026-04-07T09:21:15.379153+00:00",
+      "completed_at": "2026-04-07T14:39:39.284688+00:00",
+      "title": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11821525",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-en-007",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"US\",\"language\":\"EN\"}",
+        "urls": [
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC10940015/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "e7336475-34ae-4ad8-a3d1-cd37c45d478b",
+      "paper_task_id": "4821f439-351a-4b8d-8246-3940d5e5875d",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 251.726969,
+      "worker_started_at": "2026-04-07T09:21:15.385096+00:00",
+      "completed_at": "2026-04-07T14:38:58.695250+00:00",
+      "title": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10940015",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-en-008",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"US\",\"language\":\"EN\"}",
+        "urls": [
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC10946542/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "a3d853cd-8fb4-4540-8562-d3933a22d2ad",
+      "paper_task_id": "6a4dbfd6-14c9-494d-8b1c-d5b24320c5d3",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 158.351126,
+      "worker_started_at": "2026-04-07T09:21:15.390970+00:00",
+      "completed_at": "2026-04-07T14:37:53.370103+00:00",
+      "title": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10946542",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-en-009",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"US\",\"language\":\"EN\"}",
+        "urls": [
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC8490018/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "b45fac73-5c32-4a02-9d52-d45014f6118c",
+      "paper_task_id": "1ad83f7d-6f53-4c7e-a569-fa44f4b29d23",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 208.494656,
+      "worker_started_at": "2026-04-07T09:21:15.397014+00:00",
+      "completed_at": "2026-04-07T14:38:48.994236+00:00",
+      "title": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8490018",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.0-en-010",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"US\",\"language\":\"EN\"}",
+        "urls": [
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC5959958/"
+        ],
+        "force_refresh": false
+      },
+      "request_id": "7818b2e3-f088-40eb-82d1-68af62595828",
+      "paper_task_id": "4dea937e-a759-458a-b3a5-c98ed15297d7",
+      "status": "success",
+      "error_code": null,
+      "duration_seconds": 198.936032,
+      "worker_started_at": "2026-04-07T09:21:15.402970+00:00",
+      "completed_at": "2026-04-07T14:39:01.246608+00:00",
+      "title": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5959958",
+      "notes": null
+    }
+  ]
 }

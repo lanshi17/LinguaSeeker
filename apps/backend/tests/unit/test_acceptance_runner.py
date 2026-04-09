@@ -49,7 +49,7 @@ def test_sync_manifest_rows_from_postgres_updates_paper_statuses(
     assert manifest.papers[0].duration_seconds == 123.0
 
 
-def test_run_acceptance_set_enqueues_missing_manifest_entries() -> None:
+def test_run_acceptance_set_uses_real_executor_and_writes_ids() -> None:
     manifest = AcceptanceManifest.model_validate(
         {
             'release_no': 'v1.0',
@@ -66,10 +66,14 @@ def test_run_acceptance_set_enqueues_missing_manifest_entries() -> None:
 
     def enqueuer(paper: Any) -> Dict[str, Any]:
         queued.append(paper.paper_id)
-        return {'paper_task_id': f"task-{paper.paper_id}"}
+        return {
+            'request_id': f"req-{paper.paper_id}",
+            'paper_task_id': f"task-{paper.paper_id}",
+        }
 
     report = run_acceptance_set(manifest, enqueue=enqueuer)
 
     assert report['queued_count'] == 2
     assert queued == ['paper-a', 'paper-b']
+    assert manifest.papers[0].request_id == 'req-paper-a'
     assert manifest.papers[0].paper_task_id == 'task-paper-a'

@@ -278,6 +278,7 @@ class PostgreSQLConfig:
     host: str = "localhost"
     port: int = 5432
     database: str = "acmg_ps3"
+    schema: str = "public"
     user: str = "postgres"
     password: str = ""
     pool_size: int = 10
@@ -532,6 +533,7 @@ class AppConfig:
         cfg.postgresql.host = os.getenv("POSTGRES_HOST", cfg.postgresql.host)
         cfg.postgresql.port = int(os.getenv("POSTGRES_PORT", cfg.postgresql.port))
         cfg.postgresql.database = os.getenv("POSTGRES_DB", cfg.postgresql.database)
+        cfg.postgresql.schema = os.getenv("POSTGRES_SCHEMA", cfg.postgresql.schema)
         cfg.postgresql.user = os.getenv("POSTGRES_USER", cfg.postgresql.user)
         cfg.postgresql.password = os.getenv(
             "POSTGRES_PASSWORD", cfg.postgresql.password
@@ -979,6 +981,14 @@ class Settings(BaseSettings):
     # ==================== 文献获取配置 ====================
     pubmed_api_key: Optional[str] = None
     pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
+    firecrawl_base_url: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("FIRECRAWL_BASE_URL", "RETRIEVAL_BASE_URL"),
+    )
+    firecrawl_api_key: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("FIRECRAWL_API_KEY", "RETRIEVAL_API_KEY"),
+    )
 
     # ==================== 邮箱配置 ====================
     smtp_host: str = "smtp.exmail.qq.com"

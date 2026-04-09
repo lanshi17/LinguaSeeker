@@ -11,6 +11,57 @@ from src.services.release_reporting import (
 )
 
 
+def test_acceptance_manifest_accepts_entry_kind_source_and_request_payload() -> None:
+    manifest = AcceptanceManifest.model_validate(
+        {
+            "release_no": "v1.0",
+            "locked": True,
+            "expected_paper_count": 1,
+            "papers": [
+                {
+                    "paper_id": "api-001",
+                    "entry_kind": "api",
+                    "source": "pmc",
+                    "request_payload": {"query": "BARD1"},
+                    "request_id": "req-1",
+                    "status": "queued",
+                }
+            ],
+        }
+    )
+
+    assert manifest.papers[0].entry_kind == "api"
+    assert manifest.papers[0].source == "pmc"
+    assert manifest.papers[0].request_payload == {"query": "BARD1"}
+    assert manifest.papers[0].request_id == "req-1"
+
+
+def test_release_gate_summary_ignores_execution_metadata_for_counts() -> None:
+    manifest = AcceptanceManifest.model_validate(
+        {
+            "release_no": "v1.0",
+            "locked": True,
+            "expected_paper_count": 1,
+            "papers": [
+                {
+                    "paper_id": "api-001",
+                    "entry_kind": "api",
+                    "source": "pmc",
+                    "request_payload": {"query": "BARD1"},
+                    "request_id": "req-1",
+                    "status": "queued",
+                }
+            ],
+        }
+    )
+
+    summary = calculate_release_gate_summary(manifest)
+
+    assert summary.manifest_entry_count == 1
+    assert summary.completed_paper_count == 0
+    assert summary.pending_paper_count == 1
+
+
 def test_calculate_release_gate_counts_file_duplicate_as_success() -> None:
     manifest = AcceptanceManifest.model_validate(
         {

@@ -42,6 +42,7 @@ celery_app.conf.update(
     ),
     task_routes={
         "tasks.process_pdf": {"queue": "default", "routing_key": "default"},
+        "tasks.process_api_paper": {"queue": "default", "routing_key": "default"},
         "tasks.process_kg_event": {"queue": "kg", "routing_key": "kg"},
     },
 )

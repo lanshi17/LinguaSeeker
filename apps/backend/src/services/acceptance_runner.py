@@ -90,9 +90,13 @@ def run_acceptance_set(
             continue
         enqueue_result = enqueue(paper)
         if isinstance(enqueue_result, dict):
+            request_id = enqueue_result.get('request_id')
             paper_task_id = enqueue_result.get('paper_task_id')
         else:
+            request_id = getattr(enqueue_result, 'request_id', None)
             paper_task_id = getattr(enqueue_result, 'paper_task_id', enqueue_result)
+        if request_id:
+            paper.request_id = str(request_id)
         if paper_task_id:
             paper.paper_task_id = str(paper_task_id)
         paper.status = 'queued'

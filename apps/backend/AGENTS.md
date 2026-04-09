@@ -59,6 +59,8 @@ Out of scope for MVP:
 1. MVP literature acquisition uses approved multi-source adapters only:
    - API: `biopython/pubmed`, `pmc`, `crossref`, `doaj`, `jstage`, `unpaywall`
    - Crawler: `hans_publishers`, `pubscholar`, `cyberleninka`
+2. The legacy Firecrawl naming in helper modules is compatibility-only. Current web crawling must use the crawl4ai-backed path and current retrieval configuration, not old Firecrawl-specific config keys.
+3. Do not introduce or rely on `FIRECRAWL_*` environment variables for active flows. Use the repository's current retrieval/web acquisition configuration surface instead.
 2. Country mapping is ISO-based and must not degrade to language-only approximation.
 3. Unsupported country mapping or empty hit must return `FETCH_NO_RESULT`.
 4. Full text unavailable must fall back to metadata+abstract evidence with `fulltext_unavailable=true`.

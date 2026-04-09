@@ -174,6 +174,152 @@ Files:
 
 ---
 
+Implementation Update: 2026-04-06 (Acceptance closeout Task 1 - executable manifest schema)
+
+Completed:
+- Extended the acceptance manifest paper schema with execution metadata fields required by the closeout design:
+  - `entry_kind`
+  - `source`
+  - `request_payload`
+  - `request_id`
+- Kept release gate summary calculations backward-compatible so execution metadata does not affect acceptance counts.
+- Updated the scaffold acceptance manifest to show the executable row shape expected for the real mixed-source run.
+
+Files:
+- src/services/release_reporting.py
+- tests/unit/test_release_reporting.py
+- docs/acceptance/v1.0-100-paper-manifest.json
+
+Validation:
+- `uv run pytest -q tests/unit/test_release_reporting.py`
+- Result: 6 passed.
+
+Notes:
+- No frozen `v1.0` contract fields, statuses, or error codes were changed.
+
+---
+
+Implementation Update: 2026-04-06 (Acceptance closeout Task 2 - internal executor skeleton)
+
+Completed:
+- Added `src/services/acceptance_executor.py` with manifest-row validation, entry-kind dispatch, and normalized `request_id` / `paper_task_id` results.
+- Updated the acceptance runner to write `request_id` back into manifest rows alongside `paper_task_id`.
+- Replaced the placeholder enqueue lambda in `scripts/run_acceptance_set.py` with an `AcceptanceExecutor` instance so the script now uses the internal executor surface.
+
+Files:
+- src/services/acceptance_executor.py
+- src/services/acceptance_runner.py
+- scripts/run_acceptance_set.py
+- tests/unit/test_acceptance_executor.py
+- tests/unit/test_acceptance_runner.py
+
+Validation:
+- `uv run pytest -q tests/unit/test_acceptance_executor.py tests/unit/test_acceptance_runner.py`
+- Result: 4 passed.
+
+Notes:
+- The executor dispatch targets are still skeletal at this milestone; Task 3 and Task 4 wire the real `web` and `api` request creation flows.
+
+---
+
+Implementation Update: 2026-04-06 (Acceptance closeout Task 3 - reuse web and PubMed flows)
+
+Completed:
+- Replaced the Task 2 executor stubs for `entry_kind="web"` with direct reuse of `create_task_request_by_web_crawl(...)`.
+- Replaced the `entry_kind="api" + source="pubmed"` path with direct reuse of `submit_pubmed_selection(...)`.
+- Added manifest-payload normalization helpers so the executor converts one executable manifest row into the current request DTOs and extracts the returned single `paper_task_id`.
+
+Files:
+- src/services/acceptance_executor.py
+- tests/unit/test_acceptance_executor.py
+
+Validation:
+- `uv run pytest -q tests/unit/test_acceptance_executor.py`
+- Result: 4 passed.
+
+Notes:
+- The executor still rejects non-`pubmed` `api` rows at this point. Task 4 adds the internal submit path for the remaining approved API providers.
+
+---
+
+Implementation Update: 2026-04-06 (Acceptance closeout Task 4 - internal non-PubMed API submit path)
+
+Completed:
+- Added `src/services/api_request_submission.py` for internal mixed-source acceptance submission of approved non-`pubmed` API providers.
+- The helper now:
+  - creates the request entry
+  - creates the document entry
+  - creates the paper task entry
+  - persists normalized provider/request metadata on the request
+  - enqueues the future `process_api_paper_task` surface
+  - returns normalized `request_id` / `paper_task_id`
+- Routed the acceptance executor’s non-`pubmed` `api` branch into the new helper.
+
+Files:
+- src/services/api_request_submission.py
+- src/services/acceptance_executor.py
+- tests/unit/test_api_request_submission.py
+- tests/unit/test_acceptance_executor.py
+
+Validation:
+- `uv run pytest -q tests/unit/test_api_request_submission.py tests/unit/test_acceptance_executor.py`
+- Result: 7 passed.
+
+Notes:
+- Existing Postgres request/document/paper-task methods were sufficient for this milestone, so no schema or repository interface expansion was required here.
+
+---
+
+Implementation Update: 2026-04-06 (Acceptance closeout Task 5 - api acceptance paper task)
+
+Completed:
+- Added `process_api_paper_task` to the task manager and registered it on the Celery app as `tasks.process_api_paper`.
+- Extended the shared literature-PDF download helper so the API task can force `prefer="api"` / `api_provider=<source>` and keep the local PDF long enough to parse it.
+- Implemented both API-task branches required by the accepted design:
+  - fulltext PDF available -> parse -> translate -> extract -> ACMG
+  - fulltext unavailable -> metadata/abstract fallback with `FULLTEXT_UNAVAILABLE`
+- Kept KG event emission and trace-chain persistence aligned with the existing direct-task paths.
+
+Files:
+- src/services/task_manager.py
+- src/celery_app.py
+- src/services/__init__.py
+- tests/unit/test_process_api_paper_task.py
+- tests/unit/test_tasks.py
+
+Validation:
+- `uv run pytest -q tests/unit/test_process_api_paper_task.py tests/unit/test_tasks.py`
+- Result: 45 passed.
+
+Notes:
+- This milestone completes the code path needed for non-`pubmed` API acceptance rows to enqueue and execute through the current backend pipeline.
+
+---
+
+Implementation Update: 2026-04-07 (Acceptance closeout hotfix - legacy Firecrawl naming retired from active web path)
+
+Completed:
+- Identified that the acceptance web-execution path was still calling `get_firecrawl_service().scrape_markdown(...)` from `src/services/task_manager.py`, even though the repository had already moved web crawling work to crawl4ai-backed implementations.
+- Replaced the legacy HTTP Firecrawl client in `src/domain/literature/firecrawl_service.py` with a crawl4ai-backed compatibility wrapper so the existing call sites keep working without requiring old `FIRECRAWL_*` settings.
+- Added config regression tests to prevent two recurring issues:
+  - `POSTGRES_SCHEMA` must load into runtime config.
+  - legacy `settings.firecrawl_*` access no longer blocks active flows because the compatibility surface is explicitly covered.
+- Updated `AGENTS.md` to document that Firecrawl naming is compatibility-only and active flows must use the crawl4ai/current retrieval configuration surface.
+
+Files:
+- src/domain/literature/firecrawl_service.py
+- src/config.py
+- tests/unit/test_firecrawl_service.py
+- tests/unit/test_config.py
+- AGENTS.md
+
+Validation:
+- `uv run pytest -q tests/unit/test_firecrawl_service.py tests/unit/test_config.py`
+- Result: 3 passed.
+
+Notes:
+- This change is intentionally a compatibility hotfix for the active acceptance run. A later cleanup can rename the helper/module surface itself, but active execution should no longer depend on old Firecrawl config keys.
+
 Implementation Update: 2026-03-03 (Failure contract unification - step 3)
 
 Completed:
@@ -1265,6 +1411,39 @@ Notes:
 ---
 
 Implementation Update: 2026-04-05 (`M3` Batch 1 archive + `docs/plans` remaining-work cleanup)
+
+Implementation Update: 2026-04-09 (acceptance closeout RU tail zombie recovery and terminalization)
+
+Completed:
+- Diagnosed and recovered the 7 remaining RU acceptance items that were stuck as `paper_tasks.status=running` while Celery/queue no longer progressed.
+- Reopened all 7 by ops script using the manifest source URL (`request_payload.urls[0]`) and logged `reopened_by_ops_script` semantics under `ops_reopen` logs.
+- Confirmed active execution and retried rounds from worker telemetry; identified translation-node quota failures (`429 insufficient_quota`) as the recurring blocker for part of the RU tail.
+- Reconciled terminal states for tasks whose Celery state was already `FAILURE` and latest node log was `translation failed / TRANSLATION_FAILED`, updating DB status to `failed` and refreshing request aggregation.
+- Synced acceptance manifest from PostgreSQL and regenerated release report.
+
+Files / runtime surfaces:
+- `docs/acceptance/v1.0-100-paper-manifest.json`
+- `docs/release/v1.0-release-report.md`
+- PostgreSQL tables: `paper_tasks`, `paper_task_logs`
+- Celery worker runtime (`tasks.process_web_page`)
+
+Verification:
+- Full acceptance terminal-state snapshot from DB:
+  - `counts= {'success': 96, 'failed': 4}`
+  - `non_terminal_count= 0`
+- Celery runtime check after reconciliation:
+  - `celery inspect active` -> empty
+- Manifest sync verification:
+  - `manifest_counts= {'success': 96, 'failed': 4}`
+  - `non_terminal_count= 0`
+- Release report regenerated:
+  - Gate status `FAILED`
+  - Blocking reason `DURATION_SLA_BREACHED`
+
+Notes:
+- This closeout resolves the RU-tail zombie/running mismatch and completes Task 14 (100-paper run reaches terminal states).
+- Release gate remains failed due to SLA metric breach, not run incompleteness.
+
 
 Completed:
 - Archived the completed M3 service-boundary hardening slice to:
