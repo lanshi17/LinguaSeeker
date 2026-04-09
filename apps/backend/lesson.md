@@ -61,7 +61,14 @@
 - Fix: forward `use_agent_workflow()` on the proxy, load dotenv from project root with `.env.local` and `ENV_FILE` support, skip forced PostgreSQL initialization for standalone PDF tasks without `paper_task_id`, validate PubMed candidate source in the DTO, inspect raw upload form keys to distinguish omitted vs blank `task_form`, remove remaining production imports from `src.configs`, and align the stale arbitration test to `current_node="arbitration"`.
 - Verification: `uv run pytest tests` -> `739 passed, 23 skipped`.
 - Prevention: when config access is abstracted behind a proxy, expose the methods tests and runtime code patch directly; avoid cwd-coupled config loading; and treat blank multipart form fields as distinct from omitted fields when API contracts depend on that difference.
-2026-04-05 - Multi-source rollout can look complete while a hidden unified-workflow gate still forces PubMed-only behavior
+2026-04-09 - Acceptance closeout can stall in pseudo-running state when Celery result and DB task status diverge
+- Symptom: RU-tail items remained `paper_tasks.status=running` for a long time while request gate stayed incomplete; worker/queue snapshots alternated between idle and retry bursts.
+- Root cause: mixed runtime outcomes were not normalized into terminal DB states for several items. Some tasks had already reached Celery `FAILURE` with latest node log `translation failed / TRANSLATION_FAILED` (quota-related 429), but DB rows still showed `running`.
+- Fix: perform ops reconciliation in two phases:
+  1) reopen true zombie items using manifest URL source (`request_payload.urls[0]`) and record `ops_reopen` (`reopened_by_ops_script` semantics);
+  2) for rows with confirmed Celery `FAILURE` + latest translation-failed log, finalize DB rows to `failed` with `TRANSLATION_FAILED`, append reconciliation log, refresh request status.
+- Prevention: for acceptance closeout, always cross-check three planes together before deciding to requeue again: (a) Celery state, (b) latest paper_task_log node/status/error_code, (c) paper_tasks terminal status. If (a) and (b) already indicate terminal failure, reconcile DB status instead of endless requeue loops.
+
 - Symptom: the repository already contained non-PMC API providers, web scrapers, and 6-node workflow code, but explicit `web` routing and non-PMC API overrides were still rejected from `src/domain/literature/unified/workflow.py` with `mvp_pubmed_only`.
 - Root cause: the adapter layer and tests had advanced beyond the effective entrypoint, leaving a stale MVP-only guard in the unified workflow.
 - Fix: remove the `mvp_pubmed_only` rejection branches, add real web execution support, and keep `source_trace` output symmetric across API and web routes.

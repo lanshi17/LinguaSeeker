@@ -207,7 +207,8 @@ class AcceptanceExecutor:
                 + ", ".join(missing_fields)
             )
 
-        dispatcher = self._dispatchers.get(paper.entry_kind)
+        entry_kind = str(paper.entry_kind)
+        dispatcher = self._dispatchers.get(entry_kind)
         if dispatcher is None:
             raise ValueError(
                 f"Unsupported acceptance entry_kind: {paper.entry_kind}"

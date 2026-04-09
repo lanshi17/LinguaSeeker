@@ -210,7 +210,7 @@ def submit_api_acceptance_item(
                 error_code="INTERNAL_ERROR",
             )
             pg.append_paper_task_log(
-                paper_entry.paper_task_id,
+                str(paper_entry.paper_task_id),
                 status="failed",
                 node="document",
                 error_code="INTERNAL_ERROR",

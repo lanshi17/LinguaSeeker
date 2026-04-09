@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
-import httpx
-
-from src.config import settings
+from bs4 import BeautifulSoup
+from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig
 
 
 @dataclass(frozen=True)
@@ -25,62 +24,48 @@ class FirecrawlService:
         api_key: Optional[str] = None,
         timeout_seconds: int = 60,
     ) -> None:
-        self._base_url = (
-            base_url or settings.firecrawl_base_url or "https://api.firecrawl.dev"
-        ).rstrip("/")
-        self._api_key = (api_key or settings.firecrawl_api_key or "").strip()
+        self._browser_config = BrowserConfig(headless=True, java_script_enabled=True)
         self._timeout_seconds = timeout_seconds
 
     async def scrape_markdown(self, url: str) -> FirecrawlMarkdownResult:
         normalized_url = str(url or "").strip()
         if not normalized_url:
             raise ValueError("INPUT_INVALID: url is required")
-        if not self._api_key:
-            raise RuntimeError("INPUT_INVALID: firecrawl_api_key is not configured")
 
-        headers = {
-            "Authorization": f"Bearer {self._api_key}",
-            "Content-Type": "application/json",
-        }
-        payload = {
-            "url": normalized_url,
-            "formats": ["markdown"],
-            "onlyMainContent": True,
-        }
-
-        async with httpx.AsyncClient(timeout=self._timeout_seconds) as client:
-            response = await client.post(
-                f"{self._base_url}/v1/scrape",
-                headers=headers,
-                json=payload,
+        async with AsyncWebCrawler(config=self._browser_config) as crawler:
+            result = cast(
+                Any,
+                await crawler.arun(
+                    url=normalized_url,
+                    config=CrawlerRunConfig(cache_mode=CacheMode.BYPASS),
+                ),
             )
-            response.raise_for_status()
-            body = response.json()
 
-        if isinstance(body, dict) and body.get("success") is False:
-            raise RuntimeError(str(body.get("error") or "Fetch no result from Firecrawl"))
+        if not result.success:
+            raise RuntimeError(result.error_message or "Fetch no result from crawl4ai")
 
-        data = body.get("data", body) if isinstance(body, dict) else {}
-        if not isinstance(data, dict):
-            raise RuntimeError("Fetch no result from Firecrawl")
+        markdown_obj = getattr(result, "markdown", None)
+        markdown = str(getattr(markdown_obj, "fit_markdown", "") or "").strip()
+        if not markdown:
+            markdown = str(getattr(result, "cleaned_html", "") or "").strip()
+        if not markdown:
+            raise RuntimeError("Fetch no result from crawl4ai")
 
-        metadata = data.get("metadata")
+        metadata = getattr(result, "metadata", None)
         if not isinstance(metadata, dict):
             metadata = {}
 
-        markdown = str(data.get("markdown") or data.get("content") or "").strip()
-        if not markdown:
-            raise RuntimeError("Fetch no result from Firecrawl")
+        final_url = str(metadata.get("url") or normalized_url)
+        title = str(metadata.get("title") or "").strip()
+        if not title:
+            cleaned_html = str(getattr(result, "cleaned_html", "") or "")
+            if cleaned_html:
+                soup = BeautifulSoup(cleaned_html, "html.parser")
+                title = (soup.title.string or "").strip() if soup.title else ""
+        if not title:
+            title = final_url
 
-        title = str(data.get("title") or metadata.get("title") or normalized_url)
-        final_url = str(
-            data.get("finalUrl")
-            or data.get("final_url")
-            or metadata.get("finalUrl")
-            or metadata.get("url")
-            or normalized_url
-        )
-        merged_metadata = {**metadata, "provider": "firecrawl", "source_url": normalized_url}
+        merged_metadata = {**metadata, "provider": "crawl4ai", "source_url": normalized_url}
         return FirecrawlMarkdownResult(
             source_url=normalized_url,
             final_url=final_url,
