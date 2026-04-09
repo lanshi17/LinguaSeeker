@@ -19,6 +19,10 @@
    当前 release closure program 的设计基线。
 3. `2026-04-06-release-closure-program-implementation.md`
    当前 release closure program 的执行计划；实际剩余阻塞以该文件为准。
+4. `2026-04-06-acceptance-closeout-design.md`
+   `Task 14/15` 的派生设计文档，定义 mixed-source acceptance closeout 的最小可行方案。
+5. `2026-04-06-acceptance-closeout-implementation.md`
+   上述设计的执行计划；当前若要真正完成 `Task 14/15`，应按该计划推进。
 
 ### `REFERENCE ONLY`
 
@@ -57,10 +61,11 @@
 
 建议按下面顺序继续执行剩余工作：
 
-1. 固定并锁定真实 100 篇 manifest
-2. 运行 acceptance set 并同步实际结果
-3. 生成最终 release report
-4. 执行 Task 15 最终验证并记录 closeout
+1. 先按 `2026-04-06-acceptance-closeout-design.md` / `2026-04-06-acceptance-closeout-implementation.md` 补齐 mixed-source acceptance 执行面
+2. 固定并锁定真实 100 篇 manifest
+3. 运行 acceptance set 并同步实际结果
+4. 生成最终 release report
+5. 执行 Task 15 最终验证并记录 closeout
 
 ## 已完成并归档的计划
 
