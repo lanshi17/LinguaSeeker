@@ -15,14 +15,54 @@ from src.services.release_reporting import (
 )
 
 
-def _as_iso_datetime(value: Any) -> Optional[str]:
+def _as_datetime(value: Any) -> Optional[datetime]:
     if isinstance(value, datetime):
         if value.tzinfo is None:
-            value = value.replace(tzinfo=timezone.utc)
-        return value.isoformat()
+            return value.replace(tzinfo=timezone.utc)
+        return value
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value.replace('Z', '+00:00'))
+        except ValueError:
+            return None
+    return None
+
+
+def _as_iso_datetime(value: Any) -> Optional[str]:
+    parsed = _as_datetime(value)
+    if parsed is not None:
+        return parsed.isoformat()
     if isinstance(value, str):
         return value
     return None
+
+
+def _derive_latest_attempt_window(
+    postgres: Any,
+    paper_task_id: Any,
+    *,
+    fallback_completed_at: Any,
+) -> tuple[Optional[datetime], Optional[datetime]]:
+    if paper_task_id is None:
+        return (None, None)
+
+    get_latest_log = getattr(postgres, 'get_latest_paper_task_log', None)
+    if not callable(get_latest_log):
+        return (None, None)
+
+    latest_pipeline_log = get_latest_log(str(paper_task_id), node='pipeline')
+    started_at = _as_datetime(getattr(latest_pipeline_log, 'created_at', None))
+
+    completed_at = _as_datetime(fallback_completed_at)
+    if completed_at is None:
+        latest_log = get_latest_log(str(paper_task_id))
+        completed_at = _as_datetime(getattr(latest_log, 'created_at', None))
+
+    if started_at is None or completed_at is None:
+        return (None, None)
+    if completed_at < started_at:
+        return (None, None)
+    return (started_at, completed_at)
 
 
 def _lookup_acceptance_row(postgres: Any, paper: AcceptancePaperRecord) -> Any:
@@ -62,13 +102,26 @@ def sync_manifest_from_postgres(
         error_code = getattr(row, 'error_code', None)
         paper.error_code = str(error_code) if error_code is not None else None
         duration_seconds = getattr(row, 'processing_duration_seconds', None)
+        worker_started_at = getattr(row, 'worker_started_at', None) or getattr(row, 'created_at', None)
+        completed_at = getattr(row, 'completed_at', None) or getattr(row, 'updated_at', None)
         if duration_seconds is not None:
             paper.duration_seconds = float(duration_seconds)
+        else:
+            latest_started_at, latest_completed_at = _derive_latest_attempt_window(
+                pg,
+                paper_task_id or paper.paper_task_id,
+                fallback_completed_at=completed_at,
+            )
+            if latest_started_at is not None and latest_completed_at is not None:
+                worker_started_at = latest_started_at
+                completed_at = latest_completed_at
+                paper.duration_seconds = max(
+                    (latest_completed_at - latest_started_at).total_seconds(),
+                    0.0,
+                )
         title = getattr(row, 'title', None) or getattr(row, 'original_filename', None)
         if title is not None:
             paper.title = str(title)
-        worker_started_at = getattr(row, 'worker_started_at', None) or getattr(row, 'created_at', None)
-        completed_at = getattr(row, 'completed_at', None) or getattr(row, 'updated_at', None)
         paper.worker_started_at = _as_iso_datetime(worker_started_at)
         paper.completed_at = _as_iso_datetime(completed_at)
 

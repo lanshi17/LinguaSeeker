@@ -1222,8 +1222,8 @@
       "paper_task_id": "6107871c-602b-4c47-8046-94da8a6ccece",
       "status": "failed",
       "error_code": "TRANSLATION_FAILED",
-      "duration_seconds": null,
-      "worker_started_at": "2026-04-07T09:21:15.135580+00:00",
+      "duration_seconds": 723.094497,
+      "worker_started_at": "2026-04-09T03:08:17.369703+00:00",
       "completed_at": "2026-04-09T03:20:20.464200+00:00",
       "title": "https://cyberleninka.ru/article/n/mutatsiya-v-gene-crebbp-u-devochki-s-sindromom-hodby-na-noskah-klinicheskiy-sluchay",
       "notes": null
@@ -1243,8 +1243,8 @@
       "paper_task_id": "336b71f9-deb6-452b-a853-38cd3a7f0d67",
       "status": "failed",
       "error_code": "TRANSLATION_FAILED",
-      "duration_seconds": null,
-      "worker_started_at": "2026-04-07T09:21:15.142490+00:00",
+      "duration_seconds": 572.256587,
+      "worker_started_at": "2026-04-09T03:10:48.214143+00:00",
       "completed_at": "2026-04-09T03:20:20.470730+00:00",
       "title": "https://cyberleninka.ru/article/n/epilepsiya-pri-sindrome-de-vivo-literaturnyy-obzor-i-opisanie-klinicheskogo-sluchaya",
       "notes": null
@@ -1264,8 +1264,8 @@
       "paper_task_id": "906cf4eb-e742-4f75-8f89-d4a2d16a7d10",
       "status": "failed",
       "error_code": "TRANSLATION_FAILED",
-      "duration_seconds": null,
-      "worker_started_at": "2026-04-07T09:21:15.148810+00:00",
+      "duration_seconds": 728.23561,
+      "worker_started_at": "2026-04-09T03:08:12.238226+00:00",
       "completed_at": "2026-04-09T03:20:20.473836+00:00",
       "title": "https://cyberleninka.ru/article/n/semeynyy-adenomatoznyy-polipoz-tolstoy-kishki-oslozhnennyy-obturatsionnoy-tolstokishechnoy-neprohodimostyu-klinicheskiy-sluchay",
       "notes": null
@@ -1285,8 +1285,8 @@
       "paper_task_id": "37c60ae4-3ff2-4168-a200-4dadc3f93e90",
       "status": "failed",
       "error_code": "TRANSLATION_FAILED",
-      "duration_seconds": null,
-      "worker_started_at": "2026-04-07T09:21:15.155417+00:00",
+      "duration_seconds": 729.448196,
+      "worker_started_at": "2026-04-09T03:08:11.028626+00:00",
       "completed_at": "2026-04-09T03:20:20.476822+00:00",
       "title": "https://cyberleninka.ru/article/n/semeynaya-sredizemnomorskaya-lihoradka-obzor-literatury-i-sluchay-iz-praktiki-1",
       "notes": null

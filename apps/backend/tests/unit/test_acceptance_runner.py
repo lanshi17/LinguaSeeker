@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Dict, List
@@ -47,6 +48,66 @@ def test_sync_manifest_rows_from_postgres_updates_paper_statuses(
     assert manifest.papers[0].status == 'success'
     assert manifest.papers[0].paper_task_id == 'paper-1'
     assert manifest.papers[0].duration_seconds == 123.0
+
+
+def test_sync_manifest_rows_from_postgres_uses_latest_attempt_window_when_duration_missing(
+    tmp_path: Path,
+) -> None:
+    manifest_path = tmp_path / 'manifest.json'
+    manifest_path.write_text(
+        json.dumps(
+            {
+                'release_no': 'v1.0',
+                'locked': True,
+                'expected_paper_count': 1,
+                'papers': [
+                    {'paper_id': 'paper-a', 'paper_task_id': 'task-1', 'status': 'queued'},
+                ],
+            }
+        ),
+        encoding='utf-8',
+    )
+
+    class FakePostgres:
+        def get_acceptance_result_by_paper_id(self, paper_id: str) -> Any:
+            return None
+
+        def get_paper_task(self, paper_task_id: str) -> Any:
+            assert paper_task_id == 'task-1'
+            return SimpleNamespace(
+                paper_task_id='task-1',
+                status='failed',
+                error_code='TRANSLATION_FAILED',
+                processing_duration_seconds=None,
+                created_at=datetime(2026, 4, 7, 9, 21, 15, tzinfo=timezone.utc),
+                updated_at=datetime(2026, 4, 9, 3, 20, 20, tzinfo=timezone.utc),
+            )
+
+        def get_latest_paper_task_log(self, paper_task_id: str, *, node: str | None = None) -> Any:
+            assert paper_task_id == 'task-1'
+            if node == 'pipeline':
+                return SimpleNamespace(
+                    created_at=datetime(2026, 4, 9, 3, 13, 37, tzinfo=timezone.utc),
+                    node='pipeline',
+                )
+            if node is None:
+                return SimpleNamespace(
+                    created_at=datetime(2026, 4, 9, 3, 20, 20, tzinfo=timezone.utc),
+                    node='ops_reconcile',
+                )
+            if node == 'translation':
+                return SimpleNamespace(
+                    created_at=datetime(2026, 4, 9, 3, 20, 20, tzinfo=timezone.utc),
+                    node='translation',
+                )
+            return None
+
+    manifest = sync_manifest_from_postgres(manifest_path, postgres=FakePostgres())
+
+    assert manifest.papers[0].status == 'failed'
+    assert manifest.papers[0].duration_seconds == 403.0
+    assert manifest.papers[0].worker_started_at == '2026-04-09T03:13:37+00:00'
+    assert manifest.papers[0].completed_at == '2026-04-09T03:20:20+00:00'
 
 
 def test_run_acceptance_set_uses_real_executor_and_writes_ids() -> None:
