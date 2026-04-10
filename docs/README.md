@@ -8,7 +8,9 @@
 docs/
 ├── README.md                     # 本文件
 ├── plans/                        # 实施计划和设计文档
-│   ├── 2026-03-17-ignore-minio-data-design.md
+│   ├── archive/                  # 已完成/已归档计划
+│   │   ├── 2026-03-17-ignore-minio-data-design.md
+│   │   └── ...
 │   └── ...
 └── ...                           # 其他文档
 ```
@@ -43,9 +45,12 @@ docs/
 
 位于 `plans/` 子目录：
 
+- `plans/`：仍在使用、待执行或待跟踪的计划/设计文档
+- `plans/archive/`：已完成、已落地或仅保留记录用途的计划/设计文档
+
 | 文档 | 日期 | 说明 |
 |------|------|------|
-| `2026-03-17-ignore-minio-data-design.md` | 2026-03-17 | MinIO 数据忽略设计 |
+| `archive/2026-03-17-ignore-minio-data-design.md` | 2026-03-17 | MinIO 数据忽略设计 |
 
 ## 核心文档说明
 
@@ -119,6 +124,13 @@ docs/
 - 使用大写字母和下划线：`FEATURE_NAME.md`
 - 计划文档添加日期前缀：`YYYY-MM-DD-description.md`
 - 使用英文文件名（便于版本控制）
+
+### plans/ 归档规则
+
+- 新建中的方案、待执行任务、仍需持续更新的设计，保留在 `docs/plans/`
+- 当方案对应代码已落地，或文档仅作为历史决策记录保留时，移动到 `docs/plans/archive/`
+- 归档后，`docs/README.md` 中的计划文档索引必须同步更新为归档路径
+- 归档仅调整文档位置，不改动文档日期前缀和主题命名
 
 ### 文档模板
 
