@@ -1682,3 +1682,20 @@ Verification:
 
 Notes:
 - This planning milestone does not claim that `Task 14` is now executable. It records the approved minimal-change design and execution sequence needed to make it executable.
+
+---
+
+Implementation Update: 2026-04-10 (`release artifact consistency remediation`)
+
+Completed:
+- Normalized terminal-state manifest notes during artifact sync/render so stale pre-execution wording is removed once the 100-paper run has already reached terminal state.
+- Rendered the release report with a fresh publication timestamp instead of reusing manifest curation time.
+- Added a checked-in artifact regression that validates the manifest/report pair from disk and republished both canonical files from the current manifest state.
+- Recorded this pass as artifact finalization only: no acceptance execution rows were rerun or reopened.
+
+Verification:
+- `uv run pytest -q tests/unit/test_release_artifacts.py tests/unit/test_acceptance_runner.py tests/unit/test_release_reporting.py` -> `14 passed`
+- Republished artifacts now agree on gate result `PASSED` with `Duration SLA pass: yes` and `Blocking Reasons: NONE`.
+
+Notes:
+- This remediation pass changed release artifacts and provenance docs only; it did not rerun the 100-paper workflow.

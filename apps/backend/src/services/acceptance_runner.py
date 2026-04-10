@@ -10,7 +10,9 @@ from src.infrastructure.postgres import get_postgres_client
 from src.services.release_reporting import (
     AcceptanceManifest,
     AcceptancePaperRecord,
+    calculate_release_gate_summary,
     load_acceptance_manifest,
+    normalize_manifest_notes,
     save_acceptance_manifest,
 )
 
@@ -80,6 +82,16 @@ def _lookup_acceptance_row(postgres: Any, paper: AcceptancePaperRecord) -> Any:
     return None
 
 
+def _paper_needs_postgres_refresh(paper: AcceptancePaperRecord) -> bool:
+    if paper.status not in {'success', 'failed'}:
+        return True
+    if not paper.paper_task_id:
+        return True
+    if paper.duration_seconds is not None:
+        return False
+    return not (paper.worker_started_at and paper.completed_at)
+
+
 def sync_manifest_from_postgres(
     manifest_path: str | Path,
     *,
@@ -87,9 +99,13 @@ def sync_manifest_from_postgres(
     write: bool = False,
 ) -> AcceptanceManifest:
     manifest = load_acceptance_manifest(manifest_path)
-    pg = postgres or get_postgres_client()
+    pg = postgres
 
     for paper in manifest.papers:
+        if not _paper_needs_postgres_refresh(paper):
+            continue
+        if pg is None:
+            pg = get_postgres_client()
         row = _lookup_acceptance_row(pg, paper)
         if row is None:
             continue
@@ -124,6 +140,9 @@ def sync_manifest_from_postgres(
             paper.title = str(title)
         paper.worker_started_at = _as_iso_datetime(worker_started_at)
         paper.completed_at = _as_iso_datetime(completed_at)
+
+    summary = calculate_release_gate_summary(manifest)
+    manifest.notes = normalize_manifest_notes(manifest, summary)
 
     if write:
         save_acceptance_manifest(manifest_path, manifest)

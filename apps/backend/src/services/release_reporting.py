@@ -9,6 +9,12 @@ from pydantic import BaseModel, Field
 
 SUCCESS_RATE_THRESHOLD = 95.0
 PAPER_DURATION_SLA_SECONDS = 30 * 60
+PRE_EXECUTION_NOTES = {
+    "Manifest is populated and locked, but the acceptance run has not been executed yet.",
+    "Actual 100-paper acceptance run remains unfinished.",
+}
+TERMINAL_STATE_NOTE_PREFIX = "Acceptance run reached terminal state:"
+DURATION_FOLLOW_UP_NOTE = "Release gate follow-up remains open for DURATION_SLA_BREACHED."
 
 
 class AcceptancePaperRecord(BaseModel):
@@ -63,6 +69,30 @@ class ReleaseGateSummary(BaseModel):
     success_rate_pct: Optional[float]
     max_duration_seconds: Optional[float]
     duration_sla_pass: bool
+
+
+def _dedupe_preserve_order(notes: List[str]) -> List[str]:
+    deduped: List[str] = []
+    for note in notes:
+        if note not in deduped:
+            deduped.append(note)
+    return deduped
+
+
+def normalize_manifest_notes(
+    manifest: AcceptanceManifest,
+    summary: ReleaseGateSummary,
+) -> List[str]:
+    notes = list(manifest.notes)
+    is_terminal = summary.completed_paper_count >= manifest.expected_paper_count
+    if is_terminal:
+        notes = [note for note in notes if note not in PRE_EXECUTION_NOTES]
+        notes.append(
+            f"{TERMINAL_STATE_NOTE_PREFIX} success={summary.success_count}, failed={summary.failed_count}."
+        )
+        if "DURATION_SLA_BREACHED" in summary.blocking_reasons:
+            notes.append(DURATION_FOLLOW_UP_NOTE)
+    return _dedupe_preserve_order(notes)
 
 
 def _parse_iso_datetime(value: Optional[str]) -> Optional[datetime]:
@@ -188,6 +218,7 @@ def render_release_report(
     summary: ReleaseGateSummary,
     *,
     template_text: Optional[str] = None,
+    rendered_at: Optional[datetime] = None,
 ) -> str:
     if template_text is None:
         template_text = _default_template_path().read_text(encoding="utf-8")
@@ -202,13 +233,13 @@ def render_release_report(
         if summary.max_duration_seconds is not None
         else "n/a"
     )
-    generated_at = manifest.generated_at or datetime.now(timezone.utc).isoformat()
+    report_generated_at = (rendered_at or datetime.now(timezone.utc)).isoformat()
     reasons = summary.blocking_reasons or ["NONE"]
-    notes = manifest.notes or ["None."]
+    notes = normalize_manifest_notes(manifest, summary) or ["None."]
 
     return template_text.format(
         release_no=manifest.release_no,
-        generated_at=generated_at,
+        generated_at=report_generated_at,
         locked="yes" if manifest.locked else "no",
         expected_paper_count=manifest.expected_paper_count,
         manifest_entry_count=summary.manifest_entry_count,

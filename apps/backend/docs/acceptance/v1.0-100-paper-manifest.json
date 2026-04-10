@@ -7,7 +7,7 @@
     "Curated on 2026-04-07 via public literature search.",
     "Language quotas requested by user: zh=30, ja=20, ru=20, de=20, en=10.",
     "All rows use entry_kind=web and source=web per user instruction to not distinguish api/web.",
-    "Manifest is populated and locked, but the acceptance run has not been executed yet."
+    "Acceptance run reached terminal state: success=96, failed=4."
   ],
   "papers": [
     {

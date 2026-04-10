@@ -110,6 +110,99 @@ def test_sync_manifest_rows_from_postgres_uses_latest_attempt_window_when_durati
     assert manifest.papers[0].completed_at == '2026-04-09T03:20:20+00:00'
 
 
+def test_sync_manifest_from_postgres_removes_pre_execution_note_after_terminal_run(
+    tmp_path: Path,
+) -> None:
+    manifest_path = tmp_path / 'manifest.json'
+    manifest_path.write_text(
+        json.dumps(
+            {
+                'release_no': 'v1.0',
+                'locked': True,
+                'expected_paper_count': 1,
+                'notes': [
+                    'Manifest is populated and locked, but the acceptance run has not been executed yet.'
+                ],
+                'papers': [
+                    {'paper_id': 'paper-a', 'paper_task_id': 'task-1', 'status': 'queued'}
+                ],
+            }
+        ),
+        encoding='utf-8',
+    )
+
+    class FakePostgres:
+        def get_acceptance_result_by_paper_id(self, paper_id: str) -> Any:
+            return SimpleNamespace(
+                paper_task_id='task-1',
+                status='success',
+                error_code=None,
+                processing_duration_seconds=123.0,
+            )
+
+    manifest = sync_manifest_from_postgres(manifest_path, postgres=FakePostgres(), write=True)
+
+    assert (
+        'Manifest is populated and locked, but the acceptance run has not been executed yet.'
+        not in manifest.notes
+    )
+    assert any(
+        note.startswith('Acceptance run reached terminal state:')
+        for note in manifest.notes
+    )
+
+
+
+def test_sync_manifest_from_postgres_normalizes_terminal_notes_without_db_lookup(
+    tmp_path: Path,
+) -> None:
+    manifest_path = tmp_path / 'manifest.json'
+    manifest_path.write_text(
+        json.dumps(
+            {
+                'release_no': 'v1.0',
+                'locked': True,
+                'expected_paper_count': 1,
+                'notes': [
+                    'Manifest is populated and locked, but the acceptance run has not been executed yet.'
+                ],
+                'papers': [
+                    {
+                        'paper_id': 'paper-a',
+                        'paper_task_id': 'task-1',
+                        'status': 'success',
+                        'duration_seconds': 123.0,
+                    }
+                ],
+            }
+        ),
+        encoding='utf-8',
+    )
+
+    class ExplodingPostgres:
+        def get_acceptance_result_by_paper_id(self, paper_id: str) -> Any:
+            raise AssertionError('db lookup should not happen for terminal manifest rows')
+
+        def get_paper_task(self, paper_task_id: str) -> Any:
+            raise AssertionError('db lookup should not happen for terminal manifest rows')
+
+    manifest = sync_manifest_from_postgres(
+        manifest_path,
+        postgres=ExplodingPostgres(),
+        write=True,
+    )
+
+    assert (
+        'Manifest is populated and locked, but the acceptance run has not been executed yet.'
+        not in manifest.notes
+    )
+    assert any(
+        note.startswith('Acceptance run reached terminal state:')
+        for note in manifest.notes
+    )
+
+
+
 def test_run_acceptance_set_uses_real_executor_and_writes_ids() -> None:
     manifest = AcceptanceManifest.model_validate(
         {

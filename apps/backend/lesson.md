@@ -116,3 +116,9 @@
   - `uv run basedpyright src/` -> `0 errors, 0 warnings, 0 notes`
   - `uv run ruff check src/ tests/` -> `All checks passed!`
 - Prevention: define the repo-wide static-analysis policy early and keep it version-controlled; otherwise the first “full repo” cleanup pass turns into a tool-policy migration instead of a focused debt-reduction task.
+
+2026-04-10 - release artifacts drift when report rendering trusts stale manifest notes and curation timestamps
+- Symptom: published report gate/status text and notes contradicted the executed manifest state.
+- Root cause: manifest notes were preserved verbatim after execution, and report generation reused manifest curation time as publication time.
+- Fix: normalize terminal-manifest notes during sync/render, render reports with explicit publish timestamps, and pin checked-in artifact consistency with a regression test.
+- Prevention: whenever acceptance artifacts are republished, validate the checked-in manifest/report pair from disk rather than assuming the latest runtime summary matches the last committed markdown.

@@ -31,7 +31,7 @@
 
 1. `Task 14` 已完成：100 篇 acceptance 已全部进入终态并同步回 manifest。
 2. `Task 15` 已完成：最终 backend/frontend/static 验证切片已执行完成。
-3. `docs/release/v1.0-release-report.md` 已发布，当前 gate 结果为 `PASSED`，此前的 `DURATION_SLA_BREACHED` 已完成纠偏并重新生成报告。
+3. `docs/release/v1.0-release-report.md` 已发布，当前 gate 结果为 `PASSED`；2026-04-10 已完成 artifact consistency remediation，manifest/report 已重新发布并保持一致。
 
 当前分支不再存在“Task 14/15 未执行”的阻塞；release closeout program 已完成并归档，后续工作回到基线 rollout 的后续整改/复盘管理。
 

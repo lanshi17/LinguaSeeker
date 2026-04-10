@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 from src.services.release_report_cli import main as release_report_main
@@ -131,6 +132,52 @@ def test_render_release_report_mentions_gate_status_and_notes() -> None:
     assert "# Release Report: v1.0" in rendered
     assert "Gate status: INCOMPLETE" in rendered
     assert "Actual 100-paper acceptance run remains unfinished." in rendered
+
+
+def test_render_release_report_drops_unfinished_note_for_terminal_manifest() -> None:
+    manifest = AcceptanceManifest.model_validate(
+        {
+            "release_no": "v1.0",
+            "locked": True,
+            "expected_paper_count": 1,
+            "notes": ["Actual 100-paper acceptance run remains unfinished."],
+            "papers": [
+                {"paper_id": "paper-a", "status": "success", "duration_seconds": 120.0}
+            ],
+        }
+    )
+
+    summary = calculate_release_gate_summary(manifest)
+    rendered = render_release_report(manifest, summary)
+
+    assert "Actual 100-paper acceptance run remains unfinished." not in rendered
+    assert "Acceptance run reached terminal state:" in rendered
+
+
+
+def test_render_release_report_uses_render_timestamp_not_manifest_generated_at() -> None:
+    manifest = AcceptanceManifest.model_validate(
+        {
+            "release_no": "v1.0",
+            "locked": True,
+            "generated_at": "2026-04-07T00:00:00+00:00",
+            "expected_paper_count": 1,
+            "papers": [
+                {"paper_id": "paper-a", "status": "success", "duration_seconds": 120.0}
+            ],
+        }
+    )
+
+    summary = calculate_release_gate_summary(manifest)
+    rendered = render_release_report(
+        manifest,
+        summary,
+        rendered_at=datetime(2026, 4, 10, 8, 0, tzinfo=timezone.utc),
+    )
+
+    assert "Generated at: 2026-04-10T08:00:00+00:00" in rendered
+    assert "Generated at: 2026-04-07T00:00:00+00:00" not in rendered
+
 
 
 def test_release_report_cli_writes_markdown_report(tmp_path: Path) -> None:
