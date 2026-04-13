@@ -111,6 +111,8 @@ def test_supervisor_state_is_valid_typed_dict() -> None:
         "session_id",
         "question",
         "task_form",
+        "acquisition_plan",
+        "acquisition_result",
         "interaction_ready",
         "goal",
         "disease",

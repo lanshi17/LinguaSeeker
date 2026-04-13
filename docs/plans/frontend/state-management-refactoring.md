@@ -506,5 +506,5 @@ See `src/services/api.ts` for existing functions:
 ### 10.3 Related Documentation
 
 - [AGENTS.md](../AGENTS.md) - Project coding guidelines
-- [PRD.md](../docs/PRD.md) - Product requirements
-- [IMPLEMENTATION_PLAN.md](../docs/IMPLEMENTATION_PLAN.md) - Overall implementation plan
+- [PRD.md](../../PRD.md) - Product requirements
+- [IMPLEMENTATION_PLAN.md](../../IMPLEMENTATION_PLAN.md) - Overall implementation plan

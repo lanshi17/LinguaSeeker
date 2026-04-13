@@ -1,257 +1,117 @@
-# ACMG-Lingua 多语种文献证据提取平台 - 文档中心
+# docs/ 目录导航
 
-本目录包含 ACMG-Lingua 多语种文献证据提取平台的所有技术文档、设计文档和使用指南。
+本目录是仓库级文档入口。根目录只保留 `README.md`、六个冻结规范文档，以及按用途划分的子目录；其余说明、计划、指南、历史输出和支持文件都应进入对应子目录。
+
+## 根目录冻结规范
+
+以下六个文档是仓库级权威入口，默认按此顺序阅读：
+
+1. [PRD.md](./PRD.md)
+2. [APP_FLOW.md](./APP_FLOW.md)
+3. [TECH_STACK.md](./TECH_STACK.md)
+4. [FRONTEND_GUIDELINES.md](./FRONTEND_GUIDELINES.md)
+5. [BACKEND_STRUCTURE.md](./BACKEND_STRUCTURE.md)
+6. [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)
 
 ## 目录结构
 
-```
+```text
 docs/
-├── README.md                     # 本文件
-├── plans/                        # 实施计划和设计文档
-│   ├── archive/                  # 已完成/已归档计划
-│   │   ├── 2026-03-17-ignore-minio-data-design.md
-│   │   └── ...
-│   └── ...
-└── ...                           # 其他文档
+├── README.md
+├── PRD.md
+├── APP_FLOW.md
+├── TECH_STACK.md
+├── FRONTEND_GUIDELINES.md
+├── BACKEND_STRUCTURE.md
+├── IMPLEMENTATION_PLAN.md
+├── plans/
+├── guides/
+├── reference/
+├── archive/
+├── data/
+└── templates/
 ```
 
-## 文档分类
+## 子目录用途
 
-### 1. 产品文档
+### `plans/`
 
-- **PRD.md** - 产品需求文档
-- **APP_FLOW.md** - 应用流程图和说明
-- **IMPLEMENTATION_PLAN.md** - 实施计划
+放仍在执行、待跟踪、待复盘或仍会直接引用的计划与设计文档。
 
-### 2. 技术文档
+- `docs/plans/README.md`：当前活跃计划索引
+- `docs/plans/archive/`：已完成但仍需按计划语义归档保留的历史计划
+- `docs/plans/frontend/`：前端相关计划与实施方案
 
-- **TECH_STACK.md** - 技术栈说明
-- **BACKEND_STRUCTURE.md** - 后端架构说明
-- **FRONTEND_GUIDELINES.md** - 前端开发指南
-- **EVALUATION_FRAMEWORK.md** - 评估框架文档
+### `guides/`
 
-### 3. 开发指南
+放面向开发/使用/排障的操作型文档。
 
-- **DEVELOPMENT_GUIDELINES.md** - 开发指南
-- **TROUBLESHOOTING.md** - 故障排查指南
-- **QUICKSTART.md** - 快速入门指南
+- `docs/guides/frontend/`：前端 quickstart、troubleshooting、开发指南、WebSocket 指南等
 
-### 4. API 文档
+### `reference/`
 
-- **API 文档**: http://localhost:8000/docs (Swagger/OpenAPI)
-- **OpenAPI Spec**: `/api_docs/openapi.json`
+放长期参考资料、冻结规范补充、报告与稳定说明。
 
-### 5. 实施计划
+- `docs/reference/CHANGE_CONTROL.md`
+- `docs/reference/CONSTANTS.md`
+- `docs/reference/EVALUATION_FRAMEWORK.md`
+- `docs/reference/PS3_BS3_VALIDATION_REPORT.md`
+- `docs/reference/v1.0-release-report.md`
+- `docs/reference/backend/README.md`
+- `docs/reference/frontend/`：前端长期参考资料
 
-位于 `plans/` 子目录：
+### `archive/`
 
-- `plans/`：仍在使用、待执行或待跟踪的计划/设计文档
-- `plans/archive/`：已完成、已落地或仅保留记录用途的计划/设计文档
+放历史性、阶段性、一次性输出，不作为当前默认实现依据。
 
-| 文档 | 日期 | 说明 |
-|------|------|------|
-| `archive/2026-03-17-ignore-minio-data-design.md` | 2026-03-17 | MinIO 数据忽略设计 |
+- `docs/archive/backend/`：后端历史产物
+- `docs/archive/frontend/`：前端总结、修复记录、阶段性报告
 
-## 核心文档说明
+### `data/`
 
-### PRD.md - 产品需求文档
+放清单、样例、结构化数据文件。
 
-包含：
-- 产品定位和目标
-- 用户故事和使用场景
-- 功能需求和非功能需求
-- 验收标准
+- `docs/data/v1.0-100-paper-manifest.json`
 
-### TECH_STACK.md - 技术栈说明
+### `templates/`
 
-包含：
-- 前端技术栈 (React, TypeScript, Ant Design)
-- 后端技术栈 (FastAPI, LangGraph, Python, uv)
-- 数据库技术栈 (PostgreSQL, Neo4j, Qdrant, Redis, MinIO)
-- LLM 架构 (8 个专用 Agent + 主力/仲裁双 LLM)
-  - 8 个 Agent：retrieval, parsing, mt, format, vlm, evidence, classification, arbitration
-  - 默认模型：Qwen 系列（qwen3.5-flash/plus/max, qwen-mt, qwen-vl）
-  - 主力 LLM（可选）：DeepSeek
-  - 仲裁 LLM（可选）：Claude
-- 基础设施 (Docker, Kubernetes, MinIO)
-- 语言检测：lingua-language-detector
+放模板文件。
 
-### BACKEND_STRUCTURE.md - 后端架构说明
+- `docs/templates/release_report.md.template`
 
-包含：
-- 六边形架构说明
-- 目录结构和模块划分
-- 数据流和调用链
-- 设计模式和最佳实践
+## 使用约定
 
-### FRONTEND_GUIDELINES.md - 前端开发指南
+1. 新需求先对齐冻结规范，再编写或更新执行计划。
+2. 涉及状态、错误码、重试、保留策略、验收口径变更时，必须同时更新冻结文档与相关参考文档。
+3. `docs/archive/` 与 `docs/plans/archive/` 中的文档仅用于追溯，不直接驱动当前实现。
+4. 不要再把新文档直接堆在 `docs/` 根目录；除六个冻结规范外，其余文档必须进入对应子目录。
 
-包含：
-- 组件开发规范
-- 状态管理指南
-- API 集成规范
-- 样式和主题规范
+## 快速查找
 
-### EVALUATION_FRAMEWORK.md - 评估框架文档
+### 按角色
 
-包含：
-- ACMG-PS3 证据标准说明
-- 评估流程和算法
-- 质量控制指标
-- 测试数据集
+**工程实现**
+- [BACKEND_STRUCTURE.md](./BACKEND_STRUCTURE.md)
+- [FRONTEND_GUIDELINES.md](./FRONTEND_GUIDELINES.md)
+- [TECH_STACK.md](./TECH_STACK.md)
+- [plans/README.md](./plans/README.md)
 
-## 文档维护
+**产品/流程**
+- [PRD.md](./PRD.md)
+- [APP_FLOW.md](./APP_FLOW.md)
+- [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)
 
-### 文档更新流程
+**参考与发布**
+- [reference/CONSTANTS.md](./reference/CONSTANTS.md)
+- [reference/CHANGE_CONTROL.md](./reference/CHANGE_CONTROL.md)
+- [reference/v1.0-release-report.md](./reference/v1.0-release-report.md)
 
-1. **创建/更新文档**
-   - 使用 Markdown 格式
-   - 遵循文档模板
-   - 添加更新日期
+## 维护规则
 
-2. **代码审查**
-   - 文档变更需要代码审查
-   - 确保信息准确
-   - 检查链接有效性
-
-3. **版本管理**
-   - 文档与代码版本同步
-   - 重大变更添加版本说明
-   - 保留历史版本记录
-
-### 文档命名规范
-
-- 使用大写字母和下划线：`FEATURE_NAME.md`
-- 计划文档添加日期前缀：`YYYY-MM-DD-description.md`
-- 使用英文文件名（便于版本控制）
-
-### plans/ 归档规则
-
-- 新建中的方案、待执行任务、仍需持续更新的设计，保留在 `docs/plans/`
-- 当方案对应代码已落地，或文档仅作为历史决策记录保留时，移动到 `docs/plans/archive/`
-- 归档后，`docs/README.md` 中的计划文档索引必须同步更新为归档路径
-- 归档仅调整文档位置，不改动文档日期前缀和主题命名
-
-### 文档模板
-
-```markdown
-# 文档标题
-
-## 概述
-
-简要说明文档目的和范围。
-
-## 背景
-
-相关背景和上下文信息。
-
-## 详细说明
-
-详细内容，可包含：
-- 架构图
-- 流程图
-- 代码示例
-- 配置示例
-
-## 使用指南
-
-如何使用或实施。
-
-## 相关文档
-
-链接到相关文档。
+- 计划完成后，优先移动到 `docs/plans/archive/`，而不是继续留在活跃索引中。
+- 历史总结、修复记录、lesson 类文档优先进入 `docs/archive/`。
+- Frontend/backend 专属导航文档应放在 `docs/reference/<domain>/`，不要重新在根目录复制入口。
 
 ---
 
-**最后更新**: YYYY-MM-DD
-```
-
-## 文档检索
-
-### 按主题查找
-
-| 主题 | 文档 |
-|------|------|
-| 快速入门 | `QUICKSTART.md` |
-| 开发环境搭建 | `README.md` (根目录) |
-| API 使用 | http://localhost:8000/docs |
-| 故障排查 | `TROUBLESHOOTING.md` |
-| 架构说明 | `BACKEND_STRUCTURE.md` |
-
-### 按角色查找
-
-**开发者**:
-- `DEVELOPMENT_GUIDELINES.md`
-- `TECH_STACK.md`
-- `BACKEND_STRUCTURE.md`
-- `FRONTEND_GUIDELINES.md`
-
-**产品经理**:
-- `PRD.md`
-- `APP_FLOW.md`
-- `IMPLEMENTATION_PLAN.md`
-
-**运维人员**:
-- `apps/backend/database/README.md`
-- `deploy/README.md`
-- `TROUBLESHOOTING.md`
-- `apps/backend/database/scripts/dbctl.sh`
-
-## 外部资源
-
-### 技术文档
-
-- [FastAPI 文档](https://fastapi.tiangolo.com/)
-- [LangGraph 文档](https://langchain-ai.github.io/langgraph/)
-- [React 文档](https://react.dev/)
-- [TypeScript 文档](https://www.typescriptlang.org/)
-- [Ant Design 文档](https://ant.design/)
-
-### 数据库文档
-
-- [PostgreSQL 文档](https://www.postgresql.org/docs/)
-- [Neo4j 文档](https://neo4j.com/docs/)
-- [Qdrant 文档](https://qdrant.tech/documentation/)
-- [Redis 文档](https://redis.io/docs/)
-
-### LLM API 文档
-
-- [Qwen API 文档](https://help.aliyun.com/zh/dashscope/)
-- [DeepSeek API](https://platform.deepseek.com/docs)
-- [Anthropic API](https://docs.anthropic.com/)
-
-### 其他工具
-
-- [MinerU 文档](https://github.com/opendatalab/MinerU)
-- [Firecrawl 文档](https://docs.firecrawl.dev/)
-- [lingua-language-detector](https://github.com/pemistahl/lingua-py)
-
-## 贡献指南
-
-欢迎贡献文档！请遵循以下步骤：
-
-1. **Fork 项目**
-2. **创建分支**: `git checkout -b feature/doc-update`
-3. **提交变更**: `git commit -m 'docs: update XXX documentation'`
-4. **推送分支**: `git push origin feature/doc-update`
-5. **创建 Pull Request**
-
-### 文档质量标准
-
-- **准确性**: 信息准确无误
-- **完整性**: 覆盖所有必要内容
-- **清晰性**: 表达清晰易懂
-- **一致性**: 格式和风格统一
-- **时效性**: 及时更新过时内容
-
-## 反馈与支持
-
-如有文档相关问题，请：
-
-1. 查看现有文档是否已有答案
-2. 提交 Issue 描述问题
-3. 提交 PR 修复文档
-
----
-
-**最后更新**: 2026-03-22 (v3.0)
+**最后更新**: 2026-04-13

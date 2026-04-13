@@ -205,12 +205,7 @@ def save_acceptance_manifest(
 
 
 def _default_template_path() -> Path:
-    return (
-        Path(__file__).resolve().parents[2]
-        / "docs"
-        / "templates"
-        / "release_report.md.template"
-    )
+    return Path(__file__).resolve().parents[4] / "docs" / "templates" / "release_report.md.template"
 
 
 def render_release_report(

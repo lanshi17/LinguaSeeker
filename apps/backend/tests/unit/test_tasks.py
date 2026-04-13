@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 from types import SimpleNamespace
 
 import pytest
+from qdrant_client import AsyncQdrantClient
 
 from src.domain.graph.sync import SchemaSyncError
 from src.services import task_manager as tasks_module
@@ -83,6 +84,26 @@ def test_disable_proxies() -> None:
     assert "http_proxy" not in os.environ
     assert "https_proxy" not in os.environ
     assert "all_proxy" not in os.environ
+
+
+def test_qdrant_manager_disables_env_proxies(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict[str, Any] = {}
+
+    def fake_client(*args: Any, **kwargs: Any) -> AsyncQdrantClient:
+        captured["kwargs"] = kwargs
+        return SimpleNamespace()  # type: ignore[return-value]
+
+    monkeypatch.setattr("src.infrastructure.qdrant.AsyncQdrantClient", fake_client)
+    monkeypatch.setenv("http_proxy", "http://127.0.0.1:7890")
+    monkeypatch.setenv("https_proxy", "http://127.0.0.1:7890")
+    monkeypatch.setenv("all_proxy", "socks5h://127.0.0.1:7890")
+
+    from src.infrastructure.qdrant import QdrantManager
+
+    manager = QdrantManager()
+
+    assert manager.client is not None
+    assert captured["kwargs"]["trust_env"] is False
 
 
 def test_collect_mineru_assets(mineru_folder: Path) -> None:
