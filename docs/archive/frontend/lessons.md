@@ -234,9 +234,9 @@ uploadPdf(file: File, options?: { force_reprocess?: boolean })
 ## 9. References
 
 - [AGENTS.md](./AGENTS.md) - Frontend Development Guide
-- [FRONTEND_GUIDELINES.md](./docs/FRONTEND_GUIDELINES.md) - Implementation Guidelines
-- [PRD.md](./docs/PRD.md) - Product Requirements
-- [APP_FLOW.md](./docs/APP_FLOW.md) - Application Flow
+- [FRONTEND_GUIDELINES.md](../../FRONTEND_GUIDELINES.md) - Implementation Guidelines
+- [PRD.md](../../PRD.md) - Product Requirements
+- [APP_FLOW.md](../../APP_FLOW.md) - Application Flow
 
 ## 10. Conclusion
 
