@@ -97,11 +97,17 @@ class TestAcquisitionNode:
         agent.plan_pubmed_request.return_value = [FakePlanItem("PM123")]
         factory = MagicMock(return_value=agent)
         monkeypatch.setattr(acq_mod, "get_literature_acquisition_agent", factory)
+        monkeypatch.setattr(
+            acq_mod,
+            "_run_unified_workflow",
+            lambda payload: {"items": [{"pmid": "PM123"}], "warnings": [], "payload": payload},
+        )
 
         state = _base_state(source="pubmed", pmids=["PM123"])
         result = run_acquisition_node(state)
         agent.plan_pubmed_request.assert_called_once()
         assert result["current_node"] == "acquisition"
+        assert result["acquisition_result"]["items"] == [{"pmid": "PM123"}]
 
     def test_web_source_calls_agent(self, monkeypatch):
         from dataclasses import dataclass
@@ -117,11 +123,21 @@ class TestAcquisitionNode:
         agent.plan_web_request.return_value = [FakePlanItem("https://example.com")]
         factory = MagicMock(return_value=agent)
         monkeypatch.setattr(acq_mod, "get_literature_acquisition_agent", factory)
+        monkeypatch.setattr(
+            acq_mod,
+            "_run_unified_workflow",
+            lambda payload: {
+                "items": [{"url": "https://example.com"}],
+                "warnings": [],
+                "payload": payload,
+            },
+        )
 
         state = _base_state(source="web", urls=["https://example.com"])
         result = run_acquisition_node(state)
         agent.plan_web_request.assert_called_once()
         assert result["current_node"] == "acquisition"
+        assert result["acquisition_result"]["items"] == [{"url": "https://example.com"}]
 
 
 class TestParsingNode:

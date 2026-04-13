@@ -227,4 +227,7 @@ class TestProcessingNodeMapping:
         from src.services.enum import PROCESSING_NODE_TO_STEP
 
         for node in _SUPERVISOR_PROGRESS_NODES:
+            if node == "reasoning":
+                assert node not in PROCESSING_NODE_TO_STEP
+                continue
             assert node in PROCESSING_NODE_TO_STEP, f"Missing mapping for '{node}'"

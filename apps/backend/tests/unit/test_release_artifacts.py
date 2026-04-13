@@ -9,9 +9,9 @@ from src.services.release_reporting import (
 
 
 def test_checked_in_release_artifacts_are_self_consistent() -> None:
-    manifest = load_acceptance_manifest("docs/acceptance/v1.0-100-paper-manifest.json")
+    manifest = load_acceptance_manifest("../../docs/data/v1.0-100-paper-manifest.json")
     summary = calculate_release_gate_summary(manifest)
-    report = Path("docs/release/v1.0-release-report.md").read_text(encoding="utf-8")
+    report = Path("../../docs/reference/v1.0-release-report.md").read_text(encoding="utf-8")
 
     assert f"Gate status: {summary.gate_status}" in report
     if summary.completed_paper_count >= manifest.expected_paper_count:

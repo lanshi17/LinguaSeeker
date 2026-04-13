@@ -91,6 +91,7 @@ class QdrantManager:
             https=cfg.qdrant.https,
             verify=cfg.qdrant.verify_ssl,
             check_compatibility=False,
+            trust_env=False,
         )
 
     @property
