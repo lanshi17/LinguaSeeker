@@ -122,3 +122,13 @@
 - Root cause: manifest notes were preserved verbatim after execution, and report generation reused manifest curation time as publication time.
 - Fix: normalize terminal-manifest notes during sync/render, render reports with explicit publish timestamps, and pin checked-in artifact consistency with a regression test.
 - Prevention: whenever acceptance artifacts are republished, validate the checked-in manifest/report pair from disk rather than assuming the latest runtime summary matches the last committed markdown.
+
+2026-04-13 - Neo4j Docker image mutates config at startup, so host-mounted config files break Podman runs and dirty the repo
+- Symptom: `acmg_neo4j` repeatedly failed to start under Podman with `sed: cannot rename /var/lib/neo4j/conf/...: Device or resource busy`, and the checked-in `database/neo4j/conf/neo4j.conf` became owned by a container UID and unreadable from the repo.
+- Root cause: the compose file bind-mounted a host `neo4j.conf` into the exact container config path, but the Neo4j image rewrites config during startup. Single-file bind mounts caused rename failures, and broader host config mounts allowed the container to rewrite repo files with container ownership.
+- Fix: stop mounting host Neo4j config into the container, express the required Bolt/listen/pagecache settings via `NEO4J_*` environment variables in `database/podman-compose.yml`, keep `database/neo4j/conf/neo4j.conf` as reference-only, and add a regression test that forbids host config mounts for the Neo4j service.
+- Verification:
+  - `uv run pytest tests/unit/test_database_podman_compose.py -q` -> `1 passed`
+  - `./scripts/dbctl.sh check` -> `[ok] neo4j`
+  - `podman inspect acmg_neo4j --format '{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}} {{.State.ExitCode}}'` -> `running healthy 0`
+- Prevention: for container images that self-mutate config at boot, prefer environment-variable or image-native config injection over bind-mounting repo-managed config files into live runtime paths.

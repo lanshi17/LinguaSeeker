@@ -73,3 +73,5 @@ database/
 
 - `database/config/.env` 与 `.env.example` 必须使用纯 `KEY=VALUE` 格式，不要在值后追加行内注释。
 - Neo4j 使用单个 `NEO4J_AUTH=user/password` 变量，不能再拆成 `NEO4J_USER` / `NEO4J_PASSWORD`。
+- Neo4j 运行时配置通过 `podman-compose.yml` 里的 `NEO4J_*` 环境变量注入，不挂载宿主机 `neo4j/conf`；官方镜像启动时会改写容器内配置，bind mount 宿主机配置会触发 `Device or resource busy` 或把仓库文件属主改成容器 UID。
+- `neo4j/conf/neo4j.conf` 只作为仓库内参考配置保留，不参与容器运行时挂载。

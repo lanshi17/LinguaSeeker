@@ -1699,3 +1699,22 @@ Verification:
 
 Notes:
 - This remediation pass changed release artifacts and provenance docs only; it did not rerun the 100-paper workflow.
+
+---
+
+Implementation Update: 2026-04-13 (`neo4j podman startup fix`)
+
+Completed:
+- Reproduced the `acmg_neo4j` startup failure and traced it to the Neo4j image rewriting its config at boot while `podman-compose.yml` bind-mounted a host `neo4j.conf` file into `/var/lib/neo4j/conf/neo4j.conf`.
+- Reworked the Neo4j service runtime configuration to use `NEO4J_*` environment variables instead of any host `neo4j/conf` bind mount.
+- Updated `database/README.md` and the reference `database/neo4j/conf/neo4j.conf` comments so the repo now documents that the checked-in config file is reference-only and not mounted into the container.
+- Added a regression test `tests/unit/test_database_podman_compose.py` that asserts the Neo4j service uses environment-based runtime configuration and does not mount host config files.
+- Recreated `acmg_neo4j` from the updated compose definition and restored the repo-owned `database/neo4j/conf/neo4j.conf` file permissions after the previous container-owned copy was no longer in use.
+
+Verification:
+- `uv run pytest tests/unit/test_database_podman_compose.py -q` -> `1 passed`
+- `./scripts/dbctl.sh check` -> all services healthy, including `[ok] neo4j`
+- `podman inspect acmg_neo4j --format '{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}} {{.State.ExitCode}}'` -> `running healthy 0`
+
+Notes:
+- The root failure signature was `sed: cannot rename /var/lib/neo4j/conf/...: Device or resource busy`, which disappeared after removing the host config bind mount.
