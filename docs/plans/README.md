@@ -62,6 +62,8 @@
 - `2026-04-10-release-artifact-consistency-remediation.md`
 - `2026-04-11-docs-root-reorganization-design.md`
 - `2026-04-11-docs-root-reorganization-implementation.md`
+- `2026-04-13-docs-subdirectory-centralization-design.md`
+- `2026-04-13-docs-subdirectory-centralization-implementation.md`
 
 另有较早的完成归档保留在 `docs/plans/archive/2026-04-02-completed-plans/`：
 
