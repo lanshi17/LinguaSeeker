@@ -13,8 +13,7 @@
 
 ### `ACTIVE`
 
-1. `2026-03-22-v1.0-multi-source-6node-rollout.md`
-   顶层 `v1.0` 基线计划。当前用于约束 release 后续整改与复盘执行面。
+当前顶层 `docs/plans/` 暂无 backend/root active baseline。若后续出现新的 release 风险、补充验证或复盘任务，请基于已归档的 `v1.0` rollout baseline 重新派生新计划；前端计划继续保留在 `docs/plans/frontend/`。
 
 ## 当前状态（已同步到真实执行结果）
 
@@ -23,15 +22,19 @@
 1. release artifact consistency remediation 已完成，manifest / release report / backend tests 已重新对齐。
 2. docs root reorganization 已完成，仓库级文档已统一到根 `docs/` 体系，并完成 backend/frontend 文档迁移。
 3. repository baseline contract unification 与 m3/m4 service-boundary provenance 文档已完成，仅保留追溯价值。
-4. 当前 `docs/plans/` 活跃面已收敛回 `v1.0` 基线计划与仍需持续推进的前端计划目录。
+4. 当前根 `docs/plans/` 已不再保留 rollout active baseline；后续如需继续 release 风险整改，应从归档基线重新派生增量计划。
 
 ## 建议后续顺序
 
-1. 如需继续 release 风险整改或复盘，基于 `2026-03-22-v1.0-multi-source-6node-rollout.md` 派生新的执行批次。
+1. 如需继续 release 风险整改或复盘，基于归档的 `v1.0` rollout baseline 派生新的执行批次，不再恢复该基线到 active 目录。
 2. 新的 frontend 规划继续放在 `docs/plans/frontend/`，避免重新把一次性总结放回活跃目录。
 3. 完成后的计划统一迁移到 `docs/plans/archive/<date>-completed-plans/`，并同步更新本索引。
 
 ## 已完成并归档的计划
+
+已于 `2026-04-15` 归档到 `docs/plans/archive/2026-04-15-completed-plans/`：
+
+- `2026-03-22-v1.0-multi-source-6node-rollout.md`
 
 已于 `2026-04-05` 归档到 `docs/plans/archive/2026-04-05-completed-plans/`：
 
@@ -77,11 +80,12 @@
 - `docs/plans/archive/2026-04-05-completed-plans/`
 - `docs/plans/archive/2026-04-06-completed-plans/`
 - `docs/plans/archive/2026-04-09-completed-plans/`
+- `docs/plans/archive/2026-04-15-completed-plans/`
 - `docs/plans/archive/2026-04-13-completed-plans/`
 
 ## 当前整理结论
 
-1. 当前根 `docs/plans/` 已只保留 active baseline 计划入口。
+1. 当前根 `docs/plans/` 已移除已完成的 rollout baseline active 入口，仅保留仍需继续推进的计划入口与前端计划目录。
 2. `REFERENCE ONLY` 计划已迁入归档切片，不再占用活跃目录。
 3. 刚完成的 docs root reorganization 与 release artifact consistency remediation 已归档保留追溯。
-4. 后续主线仍是基于 `v1.0` 基线计划继续推进增量整改与复盘。
+4. 后续主线如需恢复 release 风险整改，应从已归档的 `v1.0` 基线计划重新派生新的增量计划。
