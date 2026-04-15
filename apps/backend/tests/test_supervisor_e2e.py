@@ -353,6 +353,21 @@ class TestUnknownSourceFallback:
 
 
 class TestTranslationNode:
+    def test_translation_retranslates_invalid_existing_translation(self):
+        from src.agents.supervisor import translation
+
+        mock_agent = MagicMock()
+        mock_agent.translate_markdown.return_value = {
+            "translated_md": "Translated English text."
+        }
+
+        state = _base_state(markdown_content="中文原文", translated_markdown="中文原文")
+        with patch(f"{_NODE_PREFIX}.EvidenceAgent", return_value=mock_agent):
+            result = translation(state)
+
+        mock_agent.translate_markdown.assert_called_once()
+        assert result.get("translated_markdown") == "Translated English text."
+
     def test_translation_skips_when_already_translated(self):
         from src.agents.supervisor import translation
 

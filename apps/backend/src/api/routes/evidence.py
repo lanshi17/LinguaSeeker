@@ -6,12 +6,14 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Path, Query
 from loguru import logger
 from pydantic import BaseModel, Field
 
+from src.infrastructure.minio import MinIOClient
 from src.infrastructure.neo4j import get_neo4j_client
 from src.domain.graph.association_service import get_entity_association_analyzer
 from src.domain.evidence.aggregator import get_evidence_aggregation_engine
@@ -54,6 +56,14 @@ class EvidenceSearchResponse(BaseModel):
 
     class Config:
         json_schema_extra = {"example": {"code": 0, "message": "ok", "data": {"total": 12}}}
+
+
+class DocumentEvidencePayload(BaseModel):
+    document_id: int | str
+    source_text: str = ""
+    translated_text: str = ""
+    ps3_evidence: Dict[str, Any] = Field(default_factory=dict)
+    graph: Dict[str, Any] = Field(default_factory=dict)
 
 
 class AggregationResponse(BaseModel):
@@ -108,6 +118,27 @@ def _inject_document_identifier(
             if record.get("document_id") == normalized:
                 record["document_id"] = numeric
     return payload
+
+
+async def _load_document_artifacts(document_id: str) -> tuple[str, str, Dict[str, Any]]:
+    minio = MinIOClient()
+
+    async def _read_text(object_path: str) -> str:
+        try:
+            payload = await minio.download_processed_result(f"{document_id}/{object_path}")
+            return payload.decode("utf-8")
+        except FileNotFoundError:
+            return ""
+
+    source_text = await _read_text("original_format.md")
+    translated_text = await _read_text("en_format.md")
+    try:
+        ps3_evidence = json.loads(
+            (await minio.download_processed_result_json(document_id)).decode("utf-8")
+        )
+    except FileNotFoundError:
+        ps3_evidence = {}
+    return source_text, translated_text, ps3_evidence
 
 
 # ==================== 图谱检索 ====================
@@ -220,8 +251,18 @@ async def get_document_evidence(
         engine = get_graph_search_engine()
         result = engine.get_document_evidence(normalized_id)
         logger.debug("Document evidence result: {} evidence", result.total_evidence)
-        payload = _inject_document_identifier(result.to_dict(), normalized_id, numeric_id)
-        return EvidenceSearchResponse(data=payload)
+        graph_payload = _inject_document_identifier(result.to_dict(), normalized_id, numeric_id)
+        source_text, translated_text, ps3_evidence = await _load_document_artifacts(
+            normalized_id
+        )
+        payload = DocumentEvidencePayload(
+            document_id=numeric_id if numeric_id is not None else normalized_id,
+            source_text=source_text,
+            translated_text=translated_text,
+            ps3_evidence=ps3_evidence,
+            graph=graph_payload,
+        )
+        return EvidenceSearchResponse(data=payload.model_dump())
     except Exception as e:
         logger.exception("Document evidence retrieval failed: {}", e)
         raise contract_http_exception(500, "INTERNAL_ERROR", "Document evidence retrieval failed")

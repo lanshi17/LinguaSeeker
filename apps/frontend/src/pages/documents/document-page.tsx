@@ -7,7 +7,7 @@ import { useToastStore } from '../../store/useToastStore';
 import { normalizeEvidence } from '../../utils/normalizeEvidence';
 import { normalizePaperResult } from '../../utils/normalizePaperResult';
 
-import type { EvidenceSearchResponse, PaperTaskDetailResponse } from '../../types/api';
+import type { DocumentEvidenceResponse, PaperTaskDetailResponse } from '../../types/api';
 
 type TabKey = 'reading' | 'judgment';
 
@@ -18,7 +18,7 @@ export const DocumentPage: React.FC = () => {
 
   const [active, setActive] = useState<TabKey>('reading');
   const [loading, setLoading] = useState(false);
-  const [payload, setPayload] = useState<EvidenceSearchResponse | null>(null);
+  const [payload, setPayload] = useState<DocumentEvidenceResponse | null>(null);
   const [paperDetail, setPaperDetail] = useState<PaperTaskDetailResponse | null>(null);
 
   useEffect(() => {
@@ -188,9 +188,9 @@ export const DocumentPage: React.FC = () => {
           </div>
         ) : (
           <div>
-            <div style={{ fontWeight: 800 }}>Raw payload</div>
+            <div style={{ fontWeight: 800 }}>Structured evidence</div>
             <div className="muted" style={{ marginTop: 6 }}>
-              The OpenAPI contract returns `data: object` without a stable evidence schema; this view renders the raw payload.
+              Stable document evidence payload from the backend.
             </div>
             <div style={{ marginTop: 10 }}>
               <pre
@@ -202,7 +202,7 @@ export const DocumentPage: React.FC = () => {
                   background: 'rgba(255,255,255,0.03)'
                 }}
               >
-                {payload ? JSON.stringify(payload.data, null, 2) : JSON.stringify(null, null, 2)}
+                {JSON.stringify(payload?.data?.ps3_evidence ?? payload?.data?.graph ?? {}, null, 2)}
               </pre>
             </div>
           </div>

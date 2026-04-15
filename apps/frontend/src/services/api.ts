@@ -7,6 +7,7 @@ import {
 import type {
   ConfirmationContractRequest,
   ConfirmationContractResponse,
+  DocumentEvidenceResponse,
   EvidenceSearchResponse,
   InteractionRespondRequest,
   InteractionRespondResponse,
@@ -98,7 +99,7 @@ export async function reissueLogLink(requestId: string, options: ApiCallOptions 
 }
 
 export async function getEvidenceDocument(documentId: string, options: ApiCallOptions = {}) {
-  return requestGetJson<EvidenceSearchResponse>(`/evidence/document/${encodeURIComponent(documentId)}`, {
+  return requestGetJson<DocumentEvidenceResponse>(`/evidence/document/${encodeURIComponent(documentId)}`, {
     signal: options.signal
   });
 }

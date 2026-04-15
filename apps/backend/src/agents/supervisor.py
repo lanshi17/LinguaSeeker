@@ -12,6 +12,7 @@ from src.agents.interaction import run_interaction_node
 from src.agents.parsing import run_parsing_node
 from src.agents.reasoning.node import run_reasoning_node
 from src.domain.agent.workflow import EvidenceAgent
+from src.services.translation_validation import validate_translation_output
 from src.domain.enums import ProcessingState
 from src.services.enum import (
     ProcessingStepStatus,
@@ -102,8 +103,13 @@ def _route_by_source(state: SupervisorState) -> str:
 def translation(state: SupervisorState) -> SupervisorState:
     updated: dict[str, Any] = dict(state)
     updated["current_node"] = "translation"
-    if updated.get("translated_markdown"):
-        return cast(SupervisorState, cast(object, updated))
+    existing = str(updated.get("translated_markdown", "") or "")
+    if existing:
+        try:
+            validate_translation_output(str(updated.get("markdown_content", "") or ""), existing)
+            return cast(SupervisorState, cast(object, updated))
+        except ValueError:
+            updated["translated_markdown"] = ""
 
     agent = EvidenceAgent()
     inner_state = _dict_value(updated.get("_inner_processing_state"))

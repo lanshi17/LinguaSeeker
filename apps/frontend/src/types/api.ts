@@ -133,6 +133,11 @@ export type TaskStatusResponse = {
   processing_steps?: Record<string, unknown> | null;
   paper_task_id?: string | null;
   document_id?: string | null;
+  file_size_bytes?: number | null;
+  processing_duration_seconds?: number | null;
+  warning_codes?: string[] | null;
+  trace_chain?: Record<string, unknown> | null;
+  parsing_metadata?: Record<string, unknown> | null;
   error?: string | null;
   error_details?: Record<string, unknown> | null;
   created_at?: string | null;
@@ -143,6 +148,20 @@ export type LogLinkReissueResponse = {
   request_id: string;
   log_link: string;
   expires_in_seconds?: number;
+};
+
+export type DocumentEvidencePayload = {
+  document_id?: string | number;
+  source_text: string;
+  translated_text: string;
+  ps3_evidence?: Record<string, unknown>;
+  graph?: Record<string, unknown>;
+};
+
+export type DocumentEvidenceResponse = {
+  code: number;
+  message: string;
+  data: DocumentEvidencePayload;
 };
 
 export type EvidenceSearchResponse = {
