@@ -55,6 +55,10 @@ from src.domain.models import (
 from src.infrastructure.minio import MinIOClient
 from src.infrastructure.postgres import get_postgres_client
 from src.services.kg_events import get_kg_event_service
+from src.services.translation_validation import (
+    should_skip_translation,
+    validate_translation_output,
+)
 from src.infrastructure.redis import cache_pdf_result
 from src.services.enum import (
     PROCESSING_NODE_TO_STEP,
@@ -1442,8 +1446,7 @@ def run_node_translation(
     """Returns (source_text, en_text, node_trace, warning_codes)."""
     _log_node_start(postgres, paper_task_id, "translation")
 
-    lang = _detect_language(md_content)
-    if lang == "en":
+    if should_skip_translation(md_content):
         logger.info("Source text detected as English — skipping translation")
         _log_node_end(
             postgres,
@@ -1521,6 +1524,18 @@ def run_node_translation(
     if not all_restored:
         warning_codes.append("HGVS_AUTOCORRECT_FAILED")
     en_text = corrected_text
+    try:
+        validate_translation_output(md_content, en_text)
+    except ValueError as exc_info:
+        _log_node_end(
+            postgres,
+            paper_task_id,
+            "translation",
+            success=False,
+            error_code="TRANSLATION_VALIDATION_FAILED",
+            message=str(exc_info),
+        )
+        raise exc.TranslationError(str(exc_info)) from exc_info
 
     _log_node_end(postgres, paper_task_id, "translation", success=True, attempt=attempt)
     return (
@@ -3305,7 +3320,10 @@ def process_web_page_task(
             document_id=document_id,
             url=str(getattr(crawl_result, "final_url", None) or url),
             markdown_content=markdown_content,
-            metadata=getattr(crawl_result, "metadata", None),
+            metadata={
+                **(getattr(crawl_result, "metadata", None) or {}),
+                "normalized_body": True,
+            },
         )
     )
     final_url = str(getattr(crawl_result, "final_url", None) or url)

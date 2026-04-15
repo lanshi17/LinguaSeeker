@@ -8,7 +8,7 @@ import { useToastStore } from '../../store/useToastStore';
 import { normalizeEvidence } from '../../utils/normalizeEvidence';
 import { normalizePaperResult } from '../../utils/normalizePaperResult';
 
-import type { EvidenceSearchResponse, PaperTaskDetailResponse, TaskRequestStatusResponse } from '../../types/api';
+import type { DocumentEvidenceResponse, PaperTaskDetailResponse, TaskRequestStatusResponse } from '../../types/api';
 
 export const RequestExportPage: React.FC = () => {
   const { requestId } = useParams();
@@ -17,7 +17,7 @@ export const RequestExportPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [requestStatus, setRequestStatus] = useState<TaskRequestStatusResponse | null>(null);
-  const [evidence, setEvidence] = useState<EvidenceSearchResponse | null>(null);
+  const [evidence, setEvidence] = useState<DocumentEvidenceResponse | null>(null);
   const [paperDetail, setPaperDetail] = useState<PaperTaskDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -250,7 +250,7 @@ export const RequestExportPage: React.FC = () => {
             </div>
           ) : null}
           <div className="muted" style={{ marginBottom: 8 }}>
-            Contract-tolerant MVP: this section renders raw evidence payload until a stable judgment schema is available.
+            Stable document evidence payload from the backend.
           </div>
           <pre
             style={{
@@ -261,7 +261,7 @@ export const RequestExportPage: React.FC = () => {
               background: 'rgba(255,255,255,0.03)'
             }}
           >
-            {JSON.stringify(evidence?.data ?? null, null, 2)}
+            {JSON.stringify(evidence?.data?.ps3_evidence ?? evidence?.data?.graph ?? {}, null, 2)}
           </pre>
         </section>
       </div>

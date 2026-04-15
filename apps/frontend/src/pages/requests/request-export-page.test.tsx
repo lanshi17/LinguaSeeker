@@ -115,6 +115,58 @@ describe('RequestExportPage', () => {
     });
   });
 
+  it('request export page renders reading columns from the stable document evidence payload', async () => {
+    vi.mocked(getTaskRequestStatus).mockResolvedValue({
+      request_id: 'req-123',
+      status: 'success',
+      papers: [
+        {
+          paper_task_id: 'paper-1',
+          status: 'success',
+          document_id: 'doc-1',
+        },
+      ],
+    });
+    vi.mocked(getEvidenceDocument).mockResolvedValue({
+      code: 0,
+      message: 'ok',
+      data: {
+        source_text: '段落一\n\n段落二',
+        translated_text: 'Paragraph one\n\nParagraph two',
+        ps3_evidence: {},
+        graph: { total_evidence: 1 },
+      },
+    });
+    vi.mocked(getPaperTaskDetail).mockResolvedValue({
+      paper_task_id: 'paper-1',
+      request_id: 'req-123',
+      document_id: 'doc-1',
+      status: 'success',
+      workflow_status: 'COMPLETED',
+      processing_steps: {
+        classification: { status: 'COMPLETED' },
+        adjudication: { status: 'COMPLETED' },
+      },
+      warning_codes: [],
+      trace_chain: {
+        steps: {
+          classification: { status: 'COMPLETED', outcome: 'success' },
+          adjudication: { status: 'COMPLETED', outcome: 'success' },
+        },
+      },
+      fulltext_unavailable: false,
+      result_payload: {
+        graph_sync_result: { neo4j_ok: true },
+      },
+      parsing_metadata: { parser_backend: 'mineru' },
+      duplicate_of: null,
+    });
+
+    renderPage();
+
+    expect(await screen.findByText(/Paragraph one/i)).toBeInTheDocument();
+  });
+
   it('export page renders reading plus judgment sections for print view', async () => {
     vi.mocked(getTaskRequestStatus).mockResolvedValue({
       request_id: 'req-123',

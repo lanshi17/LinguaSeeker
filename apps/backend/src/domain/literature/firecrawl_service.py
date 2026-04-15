@@ -6,6 +6,8 @@ from typing import Any, Dict, Optional, cast
 from bs4 import BeautifulSoup
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig
 
+from src.domain.document_normalization import normalize_document_body
+
 
 @dataclass(frozen=True)
 class FirecrawlMarkdownResult:
@@ -45,10 +47,10 @@ class FirecrawlService:
             raise RuntimeError(result.error_message or "Fetch no result from crawl4ai")
 
         markdown_obj = getattr(result, "markdown", None)
-        markdown = str(getattr(markdown_obj, "fit_markdown", "") or "").strip()
-        if not markdown:
-            markdown = str(getattr(result, "cleaned_html", "") or "").strip()
-        if not markdown:
+        raw_markdown = str(getattr(markdown_obj, "fit_markdown", "") or "").strip()
+        fallback_html = str(getattr(result, "cleaned_html", "") or "").strip()
+        normalized = normalize_document_body(raw_markdown or fallback_html)
+        if not normalized.text:
             raise RuntimeError("Fetch no result from crawl4ai")
 
         metadata = getattr(result, "metadata", None)
@@ -65,12 +67,18 @@ class FirecrawlService:
         if not title:
             title = final_url
 
-        merged_metadata = {**metadata, "provider": "crawl4ai", "source_url": normalized_url}
+        merged_metadata = {
+            **metadata,
+            "provider": "crawl4ai",
+            "source_url": normalized_url,
+            "normalized_body": True,
+            "body_selector": normalized.body_selector,
+        }
         return FirecrawlMarkdownResult(
             source_url=normalized_url,
             final_url=final_url,
             title=title,
-            markdown=markdown,
+            markdown=normalized.text,
             metadata=merged_metadata,
         )
 

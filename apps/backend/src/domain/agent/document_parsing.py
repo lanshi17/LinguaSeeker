@@ -5,6 +5,7 @@ from typing import Any, List, Optional, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
+from src.domain.document_normalization import normalize_document_body
 from src.domain.mineru.component import MinerUComponent, run_paddleocr_fallback
 from src.domain.models import (
     DocumentParsingArtifact,
@@ -32,8 +33,9 @@ def collect_parsing_assets(folder_path: str) -> tuple[str, List[str]]:
         markdown_path = markdown_candidates[0]
 
     markdown_content = markdown_path.read_text(encoding="utf-8")
+    normalized = normalize_document_body(markdown_content)
     image_paths = [str(path) for path in sorted(root.rglob("*.jpg"))]
-    return markdown_content, image_paths
+    return normalized.text, image_paths
 
 
 class DocumentParsingAgent:

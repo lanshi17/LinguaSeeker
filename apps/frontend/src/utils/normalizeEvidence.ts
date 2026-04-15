@@ -61,18 +61,40 @@ export function normalizeEvidence(data: unknown): EvidenceViewModel {
     }
   }
 
-  const sourceText =
-    asString(data.source_text) ?? asString(data.sourceText) ?? asString(data.source) ?? asString(data.text_source);
-  const targetText =
-    asString(data.translated_text) ??
+  const sourceText = asString(data.source_text) ?? '';
+  const targetText = asString(data.translated_text) ?? '';
+
+  if (sourceText || targetText) {
+    const sourceParts = sourceText ? splitParagraphs(sourceText) : [];
+    const targetParts = targetText ? splitParagraphs(targetText) : [];
+    const maxLen = Math.max(sourceParts.length, targetParts.length);
+    const segments: EvidenceSegment[] = [];
+    for (let i = 0; i < maxLen; i += 1) {
+      segments.push({
+        id: `p_${i}`,
+        sourceText: sourceParts[i] ?? '',
+        targetText: targetParts[i] ?? ''
+      });
+    }
+    return {
+      sourceLang: 'source',
+      targetLang: 'en',
+      segments,
+      raw: data,
+    };
+  }
+
+  const fallbackSourceText =
+    asString(data.sourceText) ?? asString(data.source) ?? asString(data.text_source);
+  const fallbackTargetText =
     asString(data.translatedText) ??
     asString(data.target_text) ??
     asString(data.targetText) ??
     asString(data.translation);
 
-  if (sourceText || targetText) {
-    const sourceParts = sourceText ? splitParagraphs(sourceText) : [];
-    const targetParts = targetText ? splitParagraphs(targetText) : [];
+  if (fallbackSourceText || fallbackTargetText) {
+    const sourceParts = fallbackSourceText ? splitParagraphs(fallbackSourceText) : [];
+    const targetParts = fallbackTargetText ? splitParagraphs(fallbackTargetText) : [];
     const maxLen = Math.max(sourceParts.length, targetParts.length);
     const segments: EvidenceSegment[] = [];
     for (let i = 0; i < maxLen; i += 1) {

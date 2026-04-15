@@ -1010,6 +1010,109 @@ def test_process_pubmed_paper_task_fetch_timeout_marks_failed(
     assert fake_pg.paper_updates[-1]["fields"]["error_code"] == "FETCH_TIMEOUT"
 
 
+def test_process_web_page_task_stores_normalized_markdown(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict[str, Any] = {}
+
+    class FakeFirecrawlService:
+        async def scrape_markdown(self, url: str) -> Any:
+            return SimpleNamespace(
+                source_url=url,
+                final_url=url,
+                title="Example",
+                markdown="# Example\n\n正文",
+                metadata={"content_type": "text/html", "provider": "crawl4ai"},
+            )
+
+    class FakeAgent:
+        def translate_markdown(self, state: Dict[str, Any]) -> Dict[str, Any]:
+            state["translated_md"] = "Translated Example"
+            return state
+
+        def process_medical_evidence(
+            self, markdown_content: str, image_paths: List[str], translated_md: str = ""
+        ) -> EvidenceOutput:
+            output = _make_evidence_output(ps3_evidence={"ok": True})
+            output.en_format_md = translated_md or "Translated Example"
+            return output
+
+    class FakePostgres:
+        def update_paper_task(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def update_task_request(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def append_paper_task_log(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def update_document(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def refresh_task_request_status(self, _: str) -> Any:
+            return None
+
+        def create_sentence_alignment(self, **kwargs: Any) -> Any:
+            return None
+
+    async def fake_store_acquired_web_content(*, markdown_content: str, **kwargs: Any) -> str:
+        captured["markdown_content"] = markdown_content
+        captured["metadata"] = kwargs.get("metadata")
+        return "literature/doc-1/source.md"
+
+    async def fake_store_outputs(*_: Any, **__: Any) -> PipelineFiles:
+        return PipelineFiles(
+            origin_md_path="/tmp/orig.md",
+            en_md_path="/tmp/en.md",
+            image_desc_path="/tmp/image_desc.txt",
+            ps3_evidence_path="/tmp/ps3.json",
+            image_dir="/tmp/images",
+            origin_md_url="",
+            en_md_url="",
+            image_desc_url="",
+            ps3_evidence_url="",
+            image_urls=[],
+        )
+
+    async def fake_pdf_download(*_: Any, **__: Any) -> Dict[str, Any]:
+        return {
+            "downloaded": False,
+            "provider": "",
+            "warnings": [],
+            "downloads_count": 0,
+            "source_trace": [],
+        }
+
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
+    monkeypatch.setattr(
+        tasks_module, "get_firecrawl_service", lambda: FakeFirecrawlService()
+    )
+    monkeypatch.setattr(tasks_module, "_agents", FakeAgent())
+    monkeypatch.setattr(
+        tasks_module, "_store_acquired_web_content", fake_store_acquired_web_content
+    )
+    monkeypatch.setattr(tasks_module, "_store_outputs_in_minio", fake_store_outputs)
+    monkeypatch.setattr(
+        tasks_module,
+        "_try_download_and_store_literature_pdf",
+        fake_pdf_download,
+    )
+    monkeypatch.setattr(
+        tasks_module, "_sync_evidence_to_graph", lambda *_: {"neo4j_synced": True}
+    )
+
+    _invoke_bound_task(
+        tasks_module.process_web_page_task,
+        "https://example.org",
+        "doc-1",
+        "paper-1",
+        "req-1",
+    )
+
+    assert captured["markdown_content"] == "# Example\n\n正文"
+    assert "<div>" not in captured["markdown_content"]
+    assert captured["metadata"]["normalized_body"] is True
+
+
 def test_process_web_page_task_success(monkeypatch: pytest.MonkeyPatch) -> None:
     class FakeFirecrawlService:
         async def scrape_markdown(self, url: str) -> Any:
@@ -1617,6 +1720,25 @@ def test_process_pdf_task_preserves_evidence_sources(
     result = _invoke_bound_task(tasks_module.process_pdf_task, ["file.pdf"])
 
     assert result["evidence"]["evidence_sources"] == ["Figure 1", "Table 2"]
+
+
+def test_run_node_translation_fails_when_output_is_still_non_english(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_pg = _FakePostgresForNodes()
+    node_trace: Dict[str, str] = {}
+
+    def fake_translate_markdown(state: Any) -> Any:
+        state["translated_md"] = "这是一段需要翻译的中文医学内容。"
+        return state
+
+    monkeypatch.setattr(tasks_module._agents, "translate_markdown", fake_translate_markdown)
+
+    with pytest.raises(exc.TranslationError, match="translation_validation_failed"):
+        tasks_module.run_node_translation(
+            fake_pg,
+            "paper-1",
+            "这是一段需要翻译的中文医学内容。",
+            node_trace,
+        )
 
 
 def test_run_node_translation_english_skip() -> None:

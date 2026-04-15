@@ -138,13 +138,60 @@ def test_search_by_variant(
     assert response.json()["data"]["variant"] == "BRCA1:c.68_69del"
 
 
-def test_get_document_evidence(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch, evidence_prefix: str
+def test_get_document_evidence_returns_processed_text_and_graph(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    evidence_prefix: str,
 ) -> None:
     _patch_dependencies(monkeypatch)
+
+    class DummyMinio:
+        async def download_processed_result(self, object_key: str) -> bytes:
+            if object_key == "12/original_format.md":
+                return b"# Source\n\n\xe6\xad\xa3\xe6\x96\x87"
+            if object_key == "12/en_format.md":
+                return b"# Source\n\nEnglish body"
+            raise FileNotFoundError(object_key)
+
+        async def download_processed_result_json(self, document_id: str) -> bytes:
+            assert document_id == "12"
+            return b'{"strength": "PS3"}'
+
+    monkeypatch.setattr(graph_api, "MinIOClient", DummyMinio)
+
     response = client.get(f"{evidence_prefix}/document/12")
-    assert response.status_code == 200
-    assert response.json()["data"]["document_id"] == 12
+    payload = response.json()["data"]
+
+    assert payload["document_id"] == 12
+    assert payload["source_text"].startswith("# Source")
+    assert payload["translated_text"].endswith("English body")
+    assert payload["ps3_evidence"]["strength"] == "PS3"
+    assert payload["graph"]["total_evidence"] == 1
+
+
+def test_get_document_evidence_gracefully_handles_missing_artifacts(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    evidence_prefix: str,
+) -> None:
+    _patch_dependencies(monkeypatch)
+
+    class DummyMinio:
+        async def download_processed_result(self, object_key: str) -> bytes:
+            raise FileNotFoundError(object_key)
+
+        async def download_processed_result_json(self, document_id: str) -> bytes:
+            raise FileNotFoundError(document_id)
+
+    monkeypatch.setattr(graph_api, "MinIOClient", DummyMinio)
+
+    response = client.get(f"{evidence_prefix}/document/12")
+    payload = response.json()["data"]
+
+    assert payload["source_text"] == ""
+    assert payload["translated_text"] == ""
+    assert payload["ps3_evidence"] == {}
+    assert payload["graph"]["document_id"] == 12
 
 
 def test_association_gene(

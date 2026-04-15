@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 from loguru import logger
 from src.domain.enums import ProcessingState
+from src.services.translation_validation import validate_translation_output
 from src.domain.models import (
     EvidenceOutput,
     EvidenceStrengthClassification,
@@ -681,13 +682,17 @@ class EvidenceAgent:
         """翻译 Markdown 为英文"""
         logger.info("开始翻译 Markdown 为英文...")
 
+        markdown_content = state.get("markdown_content", "")
         existing_translation = state.get("translated_md", "")
         if isinstance(existing_translation, str) and existing_translation.strip():
-            logger.info("检测到已有英文翻译，跳过翻译步骤")
-            return state
+            try:
+                validate_translation_output(markdown_content, existing_translation)
+                logger.info("检测到已有有效英文翻译，跳过翻译步骤")
+                return state
+            except ValueError:
+                state["translated_md"] = ""
 
         llm = self.get_translation_llm()
-        markdown_content = state.get("markdown_content", "")
         if not markdown_content.strip():
             logger.warning("Markdown 内容为空，跳过翻译")
             state["translated_md"] = ""
