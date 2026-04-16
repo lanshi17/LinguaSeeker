@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TaskNewPage } from '../task-new-page';
 import { useTaskFlowStore } from '../../../store/useTaskFlowStore';
 import { useToastStore } from '../../../store/useToastStore';
-import { confirmTaskForm, uploadTaskRequest } from '../../../services/api';
+import { confirmTaskForm, uploadTaskRequest, webCrawlSubmit } from '../../../services/api';
 
 import type { TaskRequestCreateResponse } from '../../../types/api';
 
@@ -16,7 +16,9 @@ vi.mock('../../../components/chat/agent-clarification-chat', () => ({
 
 vi.mock('../../../services/api', () => ({
   confirmTaskForm: vi.fn(),
+  stringifyTaskForm: vi.fn((taskForm) => JSON.stringify(taskForm)),
   uploadTaskRequest: vi.fn(),
+  webCrawlSubmit: vi.fn(),
   interactionStart: vi.fn(),
   interactionRespond: vi.fn(),
 }));
@@ -219,6 +221,28 @@ describe('TaskNewPage branches (upload and skip-upload)', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith('/tasks/pubmed/candidates');
     expect(useTaskFlowStore.getState().confirmedRequestId).toBe('req-123');
+  });
+
+  it('Web crawl: confirmed request + URLs submits web branch and navigates to /requests/:requestId', async () => {
+    vi.mocked(webCrawlSubmit).mockResolvedValueOnce({ request_id: 'req-web', status: 'queued' });
+
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText(/Web URLs/i), {
+      target: { value: 'https://example.com/a\nhttps://example.com/b' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Submit web crawl/i }));
+
+    await waitFor(() => {
+      expect(webCrawlSubmit).toHaveBeenCalledWith({
+        task_form: expect.any(String),
+        urls: ['https://example.com/a', 'https://example.com/b'],
+        source: 'web',
+        force_refresh: false,
+      });
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/requests/req-web');
   });
 
   it('Branch actions lock during submission so users cannot double-submit', async () => {

@@ -1,80 +1,51 @@
-# API 连接状态总结
+# 前端 API 状态总结
 
 ## 当前状态
 
-### ✅ 代理配置正常
-- 前端代理已正确配置
-- `/api/v1/health` 返回 200
-- 后端服务可正常访问
+### ✅ 当前前端路由与后端挂载面一致
 
-### ⚠️ 已知问题
+前端当前围绕以下稳定入口工作：
 
-#### 1. /api 和 /api/v1 返回 404
-**状态**: ✅ 预期行为
-**说明**: 后端没有为这些路径定义根路由，这是正常的。所有业务端点都在 `/api/v1/*` 下。
+- `/tasks/new`：任务澄清、确认、分支选择
+- `/tasks/pubmed/candidates`：PubMed 候选检索与选择
+- `/requests/:requestId`：请求级监控
+- `/documents/:documentId`：文档证据查看
+- `/graph`：图谱检索、统计与文档重同步
 
-#### 2. PDF 上传返回 500
-**状态**: 🔧 后端问题
-**说明**: 这是后端业务逻辑错误，需要后端修复。前端调用路径是正确的。
-
-### ✅ 前端 API 路径验证
-
-所有前端 API 调用路径都是正确的：
+### ✅ 当前前端依赖的 API 路径
 
 | 功能 | 前端调用路径 | 状态 |
-|------|-------------|------|
-| PDF 上传 (Base64) | `/api/v1/pdf/upload` | ✅ 路径正确 |
-| PDF 上传 (表单) | `/api/v1/pdf/upload` | ✅ 路径正确 |
-| PMID 获取 | `/api/v1/pdf/fetch-by-pmid` | ✅ 路径正确 |
-| DOI 获取 | `/api/v1/pdf/fetch-by-doi` | ✅ 路径正确 |
-| 任务状态 | `/api/v1/tasks/{id}` | ✅ 路径正确 |
-| 任务进度 | `/api/v1/tasks/{id}/progress` | ✅ 路径正确 |
+|---|---|---|
+| 任务澄清开始 | `/api/v1/tasks/interaction/start` | ✅ 已对齐 |
+| 任务澄清续问 | `/api/v1/tasks/interaction/respond` | ✅ 已对齐 |
+| 任务单确认 | `/api/v1/tasks/interaction/confirm` | ✅ 已对齐 |
+| 上传分支提交 | `/api/v1/tasks/requests/upload` | ✅ 已对齐 |
+| PubMed 候选检索 | `/api/v1/tasks/requests/pubmed/candidates` | ✅ 已对齐 |
+| PubMed 候选提交 | `/api/v1/tasks/requests/pubmed/submit` | ✅ 已对齐 |
+| Web crawl 分支提交 | `/api/v1/tasks/requests/web/crawl` | ✅ 已对齐 |
+| 请求状态 | `/api/v1/tasks/requests/{request_id}` | ✅ 已对齐 |
+| 请求来源统计 | `/api/v1/tasks/requests/{request_id}/source-stats` | ✅ 已对齐 |
+| Paper task 详情 | `/api/v1/tasks/papers/{paper_task_id}` | ✅ 已对齐 |
+| 请求流式状态 | `/api/v1/stream/requests/{request_id}` | ✅ 已对齐 |
+| 文档证据 | `/api/v1/evidence/document/{document_id}` | ✅ 已对齐 |
+| 图谱搜索 | `/api/v1/evidence/search` | ✅ 已对齐 |
+| 图谱统计 | `/api/v1/evidence/graph/stats` | ✅ 已对齐 |
+| 文档图谱重同步 | `/api/v1/evidence/sync/document/{document_id}` | ✅ 已对齐 |
 
-## 健康检查工具
+## 已移除的旧路径说明
 
-### 浏览器控制台命令
+以下历史描述不再应被当作当前前端主路径：
 
-```javascript
-// 运行完整健康检查
-healthCheck.runHealthCheck()
+- 旧分析页路由
+- 旧任务状态页路由
+- 旧文档页重定向说明
+- 旧 PDF PMID/DOI 获取接口说明
 
-// 快速检查
-healthCheck.quickHealthCheck()
+这些历史描述如果继续保留，会与当前 request-centric 流程冲突。
 
-// 诊断 PDF 上传
-healthCheck.diagnosePDFUpload()
-```
+## 当前判断
 
-### 预期结果
-
-健康检查应该显示：
-- ✅ 健康检查 (200)
-- ✅ PDF 上传 (200/405) - 端点存在
-- ✅ PMID/DOI 获取 (200/405) - 端点存在
-- ✅ 任务状态 (200/404) - 404 表示端点存在但任务不存在
-
-## 故障排查
-
-### 如果健康检查显示 ❌
-
-1. 检查后端是否启动
-   ```bash
-   curl http://localhost:8000/api/v1/health
-   ```
-
-2. 检查代理配置
-   - 确认 `vite.config.ts` 中的代理配置
-   - 重启前端服务
-
-### 如果 PDF 上传显示 500
-
-这是后端问题，前端无法修复。需要后端开发者检查：
-- 数据库连接
-- 文件处理逻辑
-- 服务器日志
-
-## 建议
-
-1. **保持当前代理配置** - 已验证正常工作
-2. **等待后端修复 500 错误** - 前端路径正确
-3. **使用健康检查工具监控** - 快速发现问题
+1. 前端主流程已经以 `request_id` 为中心，而不是 `task_id` 或旧分析页。
+2. `/tasks/new` 是统一入口，并承担 upload / PubMed / web crawl 三路分支。
+3. `/graph` 对应的是 evidence API，而不是仅用于只读统计控制台。
+4. 文档应统一描述 `/api/v1` 前缀下的当前挂载接口。

@@ -99,6 +99,22 @@ export type TaskRequestCreateResponse = {
   papers?: PaperTaskItemResponse[];
 };
 
+export type WebLiteratureCrawlRequest = {
+  task_form: string;
+  urls: string[];
+  source?: string;
+  force_refresh?: boolean;
+};
+
+export type GraphSearchRequest = {
+  gene_symbol?: string;
+  variant?: string;
+  protein_change?: string;
+  disease_name?: string;
+  min_confidence?: number;
+  only_valid?: boolean;
+};
+
 export type TaskRequestStatusResponse = {
   request_id: string;
   status: string;

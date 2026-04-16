@@ -33,8 +33,9 @@ import("./src/utils/apiDebug.ts").then(m => m.quickCheck().then(console.log))
 ### ❌ 问题 1: 后端服务未启动（500 错误）
 
 **症状**：
-- POST /api/v1/pdf/upload → 500
-- POST /api/v1/pdf/fetch-by-pmid → 500
+- POST /api/v1/tasks/requests/upload → 500
+- POST /api/v1/tasks/requests/web/crawl → 500
+- POST /api/v1/evidence/search → 500
 - GET /api → 404
 
 **原因**：后端服务没有运行在 8000 端口
@@ -101,21 +102,24 @@ npm run dev
    后端控制台会显示详细的错误堆栈
 
 2. **检查后端路由配置**
-   确认后端有定义这些路由：
+   确认后端有定义这些当前接口：
    ```python
    # FastAPI 示例
-   @app.post("/api/v1/pdf/upload")
-   async def upload_pdf(...)
-   
-   @app.post("/api/v1/pdf/fetch-by-pmid")
-   async def fetch_by_pmid(...)
+   @app.post("/api/v1/tasks/requests/upload")
+   async def create_task_request_by_upload(...)
+
+   @app.post("/api/v1/tasks/requests/web/crawl")
+   async def create_task_request_by_web_crawl(...)
+
+   @app.post("/api/v1/evidence/search")
+   async def search_evidence(...)
    ```
 
 3. **测试后端直接访问**
    ```bash
-   curl -X POST http://localhost:8000/api/v1/pdf/upload \
-     -H "Content-Type: multipart/form-data" \
-     -F "file=@test.pdf"
+   curl -X POST http://localhost:8000/api/v1/tasks/requests/web/crawl \
+     -H "Content-Type: application/json" \
+     -d '{"task_form":"Find PS3 evidence","urls":["https://example.org"],"source":"web"}'
    ```
 
 ---

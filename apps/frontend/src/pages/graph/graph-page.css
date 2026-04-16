@@ -8,6 +8,28 @@
   gap: 14px;
 }
 
+.graph-console__search-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.graph-console__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.graph-console__summary-card {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(124, 92, 255, 0.08);
+  font-weight: 700;
+}
+
 .graph-console__actions {
   display: flex;
   gap: 10px;
@@ -26,6 +48,11 @@
 
 .graph-console__field {
   display: block;
+}
+
+.graph-console__label {
+  font-size: 12px;
+  margin-bottom: 6px;
 }
 
 .graph-console__input:focus-visible {

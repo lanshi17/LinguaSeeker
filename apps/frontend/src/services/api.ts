@@ -9,6 +9,7 @@ import type {
   ConfirmationContractResponse,
   DocumentEvidenceResponse,
   EvidenceSearchResponse,
+  GraphSearchRequest,
   InteractionRespondRequest,
   InteractionRespondResponse,
   InteractionStartRequest,
@@ -20,7 +21,8 @@ import type {
   PubMedSelectionSubmitRequest,
   TaskRequestCreateResponse,
   TaskRequestStatusResponse,
-  TaskFormStructured
+  TaskFormStructured,
+  WebLiteratureCrawlRequest
 } from '../types/api';
 
 export function stringifyTaskForm(taskForm: TaskFormStructured) {
@@ -80,6 +82,20 @@ export async function uploadTaskRequest(taskFormOrRequestId: TaskFormStructured 
   return requestFormData<TaskRequestCreateResponse>('/tasks/requests/upload', {
     method: 'POST',
     body: formData
+  }, { signal: options.signal });
+}
+
+export async function webCrawlSubmit(payload: WebLiteratureCrawlRequest, options: ApiCallOptions = {}) {
+  return requestJson<TaskRequestCreateResponse>('/tasks/requests/web/crawl', {
+    method: 'POST',
+    body: payload,
+  }, { signal: options.signal });
+}
+
+export async function searchEvidence(payload: GraphSearchRequest, options: ApiCallOptions = {}) {
+  return requestJson<EvidenceSearchResponse>('/evidence/search', {
+    method: 'POST',
+    body: payload,
   }, { signal: options.signal });
 }
 

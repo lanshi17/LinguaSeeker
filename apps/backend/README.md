@@ -14,7 +14,7 @@ uv sync
 uv run python main.py
 ```
 
-默认 API 前缀由 `src/config.py` 配置（当前默认 `/api`）。
+默认 API 前缀由 `src/config.py` 配置（当前默认 `/api/v1`）。
 
 ## 当前主流程（代码）
 

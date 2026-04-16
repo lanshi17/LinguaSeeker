@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { confirmTaskForm, uploadTaskRequest } from '../../services/api';
+import { confirmTaskForm, stringifyTaskForm, uploadTaskRequest, webCrawlSubmit } from '../../services/api';
 import { ApiError } from '../../services/http';
 import { AgentClarificationChat } from '../../components/chat/agent-clarification-chat';
 import { useTaskFlowStore } from '../../store/useTaskFlowStore';
@@ -69,6 +69,13 @@ function buildExpertFeedback(params: {
   return items;
 }
 
+function parseWebUrls(value: string) {
+  return value
+    .split(/\r?\n/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 export const TaskNewPage: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToastStore();
@@ -91,6 +98,8 @@ export const TaskNewPage: React.FC = () => {
 
   const [busy, setBusy] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [webUrlsText, setWebUrlsText] = useState('');
+  const [forceRefresh, setForceRefresh] = useState(false);
 
   const ready = Boolean(taskForm);
   const expertFeedback = useMemo(
@@ -127,6 +136,51 @@ export const TaskNewPage: React.FC = () => {
     } catch (err) {
       const msg = err instanceof ApiError ? err.detail ?? err.message : 'Upload failed';
       toast.pushToast({ level: 'error', title: 'Upload failed', message: msg, ttlMs: 9000 });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitWebCrawl = async () => {
+    if (!confirmedRequestId) return;
+
+    const urls = parseWebUrls(webUrlsText);
+    if (urls.length === 0) {
+      toast.pushToast({
+        level: 'error',
+        title: 'Web crawl validation failed',
+        message: 'Please enter at least one URL.',
+        ttlMs: 8000,
+      });
+      return;
+    }
+
+    try {
+      urls.forEach((value) => {
+        new URL(value);
+      });
+    } catch {
+      toast.pushToast({
+        level: 'error',
+        title: 'Web crawl validation failed',
+        message: 'Please enter valid absolute URLs, one per line.',
+        ttlMs: 8000,
+      });
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const res = await webCrawlSubmit({
+        task_form: stringifyTaskForm(draft),
+        urls,
+        source: 'web',
+        force_refresh: forceRefresh,
+      });
+      navigate(`/requests/${encodeURIComponent(res.request_id)}`);
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.detail ?? err.message : 'Web crawl request failed';
+      toast.pushToast({ level: 'error', title: 'Web crawl failed', message: msg, ttlMs: 9000 });
     } finally {
       setBusy(false);
     }
@@ -383,6 +437,60 @@ export const TaskNewPage: React.FC = () => {
                         ) : (
                           <span className="muted" style={{ fontSize: 12 }}>Confirmation required</span>
                         )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ fontWeight: 800 }}>Web crawl</div>
+                      <div className="muted" style={{ marginTop: 6 }}>
+                        Submit one or more URLs for crawl-based intake.
+                      </div>
+                      <div style={{ marginTop: 10 }}>
+                        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <span className="muted" style={{ fontSize: 12 }}>Web URLs</span>
+                          <textarea
+                            value={webUrlsText}
+                            onChange={(e) => setWebUrlsText(e.target.value)}
+                            placeholder="https://example.com/a&#10;https://example.com/b"
+                            rows={4}
+                            style={{
+                              width: '100%',
+                              padding: 10,
+                              borderRadius: 12,
+                              border: '1px solid var(--border)',
+                              background: 'var(--bg-elevated)',
+                              color: 'var(--text)',
+                              resize: 'vertical',
+                            }}
+                          />
+                        </label>
+                      </div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 12 }}>
+                        <input
+                          type="checkbox"
+                          checked={forceRefresh}
+                          onChange={(e) => setForceRefresh(e.target.checked)}
+                          disabled={busy || !confirmedRequestId}
+                        />
+                        Force refresh existing crawl targets
+                      </label>
+                      <div style={{ marginTop: 10 }}>
+                        <button
+                          type="button"
+                          onClick={submitWebCrawl}
+                          disabled={busy || !confirmedRequestId}
+                          style={{
+                            padding: '10px 14px',
+                            borderRadius: 12,
+                            border: '1px solid var(--border)',
+                            background: 'rgba(250,173,20,0.12)',
+                            color: 'var(--text)',
+                            cursor: (busy || !confirmedRequestId) ? 'not-allowed' : 'pointer',
+                            opacity: confirmedRequestId ? (busy ? 0.5 : 1) : 0.5,
+                          }}
+                        >
+                          Submit web crawl
+                        </button>
                       </div>
                     </div>
                   </div>
