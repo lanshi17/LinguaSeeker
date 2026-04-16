@@ -1,0 +1,87 @@
+{
+  "project": "ACMG-Lingua Frontend",
+  "branchName": "ralph/frontend-agent-workspace-completion",
+  "description": "Finish the remaining frontend agent-workspace work by unifying request monitor stream state, adding reusable workflow UI, exposing the agent workspace route, and refreshing stale WebSocket documentation.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Unify request monitor stream and polling state",
+      "description": "As a frontend maintainer, I want RequestMonitorPage to use one clear request-state flow with stream-aware fallback so that the page stays correct without duplicated updates.",
+      "acceptanceCriteria": [
+        "In `src/pages/requests/request-monitor-page.tsx`, streamed request data from `useWorkflowStore` is preferred when connected, and polling remains only as an explicit fallback when no stream data is available",
+        "`RequestMonitorPage` no longer writes the same request lifecycle through multiple direct paths (`fetchRequest`, `useRequestPolling`, and manual `useAppStore.setState`) without clear gating",
+        "Update request monitor tests to cover stream-connected and fallback polling behavior",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Create shared workflow timeline component",
+      "description": "As a user, I want a consistent progress timeline so that request and task execution look the same wherever workflow state is shown.",
+      "acceptanceCriteria": [
+        "Add a reusable component under `src/components/workflow/` that renders step label, status, description, and optional progress",
+        "`src/pages/requests/request-monitor-page.tsx` uses the shared timeline component for workflow sections instead of inline step markup",
+        "Add tests covering running, completed, and error timeline states",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Expose and flesh out agent workspace page",
+      "description": "As a user, I want `/tasks/agent-create` to be a real agent-first workspace so that I can stay in one page for clarification and live workflow context.",
+      "acceptanceCriteria": [
+        "Add a router entry for `/tasks/agent-create` and expose a navigation path from existing UI",
+        "`src/pages/tasks/agent-task-create-page.tsx` embeds clarification/task-flow state instead of only linking to `/tasks/new`",
+        "The page shows current `entryMode`, request/task connection status, and shared workflow timeline output",
+        "Add or update tests for routing and in-page workspace rendering",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Extract reusable expert feedback panel",
+      "description": "As a user, I want the task confirmation guidance to come from a reusable feedback panel so that confirm-now and branch actions are clearer and easier to maintain.",
+      "acceptanceCriteria": [
+        "Add a component under `src/components/feedback/` for expert feedback items and optional action buttons",
+        "`src/pages/tasks/task-new-page.tsx` uses the component for confirm-now and open-candidates guidance instead of inline list/button markup",
+        "Existing tests still cover confirmation and candidates shortcut behavior after the extraction",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Refresh WebSocket guide for current frontend implementation",
+      "description": "As a maintainer, I want the frontend WebSocket guide to match the current stream architecture so that future work follows the real request/task stream contract.",
+      "acceptanceCriteria": [
+        "`docs/guides/frontend/WEBSOCKET_GUIDE.md` documents the current files: `src/services/websocket.ts`, `src/store/workflowStore.ts`, and `src/store/useWorkflowStore.ts`",
+        "The guide's request/task stream URL examples match `src/services/websocket.ts` and remove obsolete references such as `TaskStatusPage`, `useWebSocket.ts`, and `/ws/task/{task_id}/progress`",
+        "Document current fallback behavior between stream connections and request polling",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
