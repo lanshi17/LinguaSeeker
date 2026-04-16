@@ -32,6 +32,12 @@
 
 ## 已完成并归档的计划
 
+已于 `2026-04-16` 归档到 `docs/plans/archive/2026-04-16-completed-plans/`：
+
+- `2026-04-15-rollout-plan-archive-implementation.md`
+- `2026-04-16-completed-plan-batch-archive-design.md`
+- `2026-04-16-completed-plan-batch-archive-implementation.md`
+
 已于 `2026-04-15` 归档到 `docs/plans/archive/2026-04-15-completed-plans/`：
 
 - `2026-03-22-v1.0-multi-source-6node-rollout.md`
@@ -80,8 +86,9 @@
 - `docs/plans/archive/2026-04-05-completed-plans/`
 - `docs/plans/archive/2026-04-06-completed-plans/`
 - `docs/plans/archive/2026-04-09-completed-plans/`
-- `docs/plans/archive/2026-04-15-completed-plans/`
 - `docs/plans/archive/2026-04-13-completed-plans/`
+- `docs/plans/archive/2026-04-15-completed-plans/`
+- `docs/plans/archive/2026-04-16-completed-plans/`
 
 ## 当前整理结论
 
