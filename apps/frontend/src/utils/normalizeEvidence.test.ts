@@ -15,13 +15,13 @@ describe('normalizeEvidence', () => {
     expect(vm.warning).toBeUndefined();
   });
 
-  it('decodes bilingual raw text payload', () => {
+  it('decodes bilingual raw text payload without fallback warning', () => {
     const vm = normalizeEvidence({
       source_text: 'p1\n\n p2',
       translated_text: 't1\n\n t2'
     });
     expect(vm.segments.length).toBe(2);
-    expect(vm.warning).toBeTruthy();
+    expect(vm.warning).toBeUndefined();
   });
 
   it('falls back for unknown object', () => {

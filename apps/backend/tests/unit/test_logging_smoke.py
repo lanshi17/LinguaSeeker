@@ -372,6 +372,13 @@ async def test_graph_api_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
         def get_graph_statistics(self) -> Dict[str, Any]:
             return {}
 
+    class DummyMinio:
+        async def download_processed_result(self, object_key: str) -> bytes:
+            raise FileNotFoundError(object_key)
+
+        async def download_processed_result_json(self, document_id: str) -> bytes:
+            raise FileNotFoundError(document_id)
+
     monkeypatch.setattr(graph_api_module, "get_graph_search_engine", lambda: FakeEngine())
     monkeypatch.setattr(graph_api_module, "get_entity_association_analyzer", lambda: FakeAnalyzer())
     monkeypatch.setattr(
@@ -379,6 +386,7 @@ async def test_graph_api_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     monkeypatch.setattr(graph_api_module, "get_graph_sync_service", lambda: FakeSync())
     monkeypatch.setattr(graph_api_module, "get_neo4j_client", lambda: FakeNeo4j())
+    monkeypatch.setattr(graph_api_module, "MinIOClient", DummyMinio)
 
     req = graph_api_module.EvidenceSearchRequest(
         gene_symbol="GENE",
