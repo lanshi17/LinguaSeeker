@@ -1,0 +1,52 @@
+{
+  "project": "ACMG-Lingua Backend",
+  "branchName": "ralph/acquisition-gateway-facade-finalize",
+  "description": "Finish the remaining acquisition strategy and adapter refactor by consolidating API gateway dispatch behind the provider registry, running final verification, and updating handoff notes.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Make API gateway dispatch registry-first",
+      "description": "As a maintainer, I want call_api_gateway to route any registered provider through the adapter registry before fallback handling so that provider dispatch is centralized in the gateway layer.",
+      "acceptanceCriteria": [
+        "call_api_gateway(...) checks get_api_provider_registry() once and routes any supported provider through registry.get(provider).execute(request)",
+        "Add regression coverage proving a registered provider that is not named in a hardcoded branch still routes through the registry for both search and download",
+        "Gateway compatibility tests for PMC, Crossref, JStage, DOAJ, and Unpaywall still pass after the facade refactor",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Validated on 2026-04-05: call_api_gateway is registry-first and tests/test_api_gateway_download.py covers registered-provider routing for both search and download."
+    },
+    {
+      "id": "US-002",
+      "title": "Run final acquisition adapter verification wave",
+      "description": "As a maintainer, I want final syntax, regression, and lint verification for the acquisition adapter scope so that the refactor is proven before handoff.",
+      "acceptanceCriteria": [
+        "uv run python -m py_compile src/agents/acquisition/node.py src/agents/acquisition/api_tool.py src/agents/acquisition/crawl_tool.py src/domain/literature/acquisition_agent.py src/domain/literature/gateway/api_gateway.py src/domain/literature/gateway/base.py src/domain/literature/gateway/registry.py src/domain/literature/gateway/adapters/__init__.py src/domain/literature/gateway/adapters/*.py passes",
+        "uv run pytest -q tests/test_api_gateway_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py tests/domain/literature/gateway/test_registry.py tests/domain/literature/gateway/test_pmc_adapter.py tests/domain/literature/gateway/test_crossref_adapter.py tests/domain/literature/gateway/test_jstage_adapter.py tests/domain/literature/gateway/test_doaj_adapter.py tests/domain/literature/gateway/test_unpaywall_adapter.py passes",
+        "uv run ruff check src/domain/literature/gateway/api_gateway.py src/domain/literature/gateway/adapters src/agents/acquisition src/domain/literature/acquisition_agent.py tests/test_api_gateway_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py tests/domain/literature/gateway passes",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Validated on 2026-04-05 via py_compile, pytest gateway/acquisition slice, and ruff check in apps/backend."
+    },
+    {
+      "id": "US-003",
+      "title": "Record acquisition adapter milestone in handoff notes",
+      "description": "As a maintainer, I want progress and handoff notes updated with the acquisition adapter milestone so that the remaining context and verification evidence are preserved for later work.",
+      "acceptanceCriteria": [
+        "Append a progress.txt milestone entry summarizing the acquisition adapter and gateway facade work that was completed",
+        "List the exact verification commands and passing results cited in the progress update",
+        "Update lesson.md only if a debugging pattern or root cause was discovered during the refactor",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Validated on 2026-04-05 by appending a progress milestone with exact verification commands; no new lesson.md entry was needed because this closure pass found no new debugging root cause."
+    }
+  ]
+}

@@ -1,52 +1,103 @@
 {
   "project": "ACMG-Lingua Backend",
-  "branchName": "ralph/acquisition-gateway-facade-finalize",
-  "description": "Finish the remaining acquisition strategy and adapter refactor by consolidating API gateway dispatch behind the provider registry, running final verification, and updating handoff notes.",
+  "branchName": "ralph/document-normalization-translation-api-alignment",
+  "description": "Normalize document body inputs, enforce translation validity, and align the document-evidence API contract across backend and frontend.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Make API gateway dispatch registry-first",
-      "description": "As a maintainer, I want call_api_gateway to route any registered provider through the adapter registry before fallback handling so that provider dispatch is centralized in the gateway layer.",
+      "title": "Add shared document body normalizer",
+      "description": "As a backend maintainer, I want one shared normalizer for HTML and markdown document bodies so that downstream pipeline stages always receive body-only markdown.",
       "acceptanceCriteria": [
-        "call_api_gateway(...) checks get_api_provider_registry() once and routes any supported provider through registry.get(provider).execute(request)",
-        "Add regression coverage proving a registered provider that is not named in a hardcoded branch still routes through the registry for both search and download",
-        "Gateway compatibility tests for PMC, Crossref, JStage, DOAJ, and Unpaywall still pass after the facade refactor",
-        "Typecheck passes",
-        "Tests pass"
+        "Create `apps/backend/src/domain/document_normalization.py` with `NormalizedDocument` and `normalize_document_body(content)`",
+        "HTML normalization strips scaffold tags and extracts article/main/body content into markdown-style text",
+        "Markdown normalization removes embedded HTML blocks while preserving headings and body text",
+        "`uv run --directory apps/backend pytest -q tests/unit/test_document_normalization.py` passes",
+        "Tests pass",
+        "Typecheck passes"
       ],
       "priority": 1,
       "passes": true,
-      "notes": "Validated on 2026-04-05: call_api_gateway is registry-first and tests/test_api_gateway_download.py covers registered-provider routing for both search and download."
+      "notes": "Validated on 2026-04-16: shared document normalization module and unit tests were already present on the current branch; targeted acceptance tests passed in the Ralph worktree."
     },
     {
       "id": "US-002",
-      "title": "Run final acquisition adapter verification wave",
-      "description": "As a maintainer, I want final syntax, regression, and lint verification for the acquisition adapter scope so that the refactor is proven before handoff.",
+      "title": "Normalize acquired and parsed document bodies before storage",
+      "description": "As a backend maintainer, I want web-acquired and parser-produced markdown normalized before storage so that downstream translation and extraction see one canonical document body format.",
       "acceptanceCriteria": [
-        "uv run python -m py_compile src/agents/acquisition/node.py src/agents/acquisition/api_tool.py src/agents/acquisition/crawl_tool.py src/domain/literature/acquisition_agent.py src/domain/literature/gateway/api_gateway.py src/domain/literature/gateway/base.py src/domain/literature/gateway/registry.py src/domain/literature/gateway/adapters/__init__.py src/domain/literature/gateway/adapters/*.py passes",
-        "uv run pytest -q tests/test_api_gateway_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py tests/domain/literature/gateway/test_registry.py tests/domain/literature/gateway/test_pmc_adapter.py tests/domain/literature/gateway/test_crossref_adapter.py tests/domain/literature/gateway/test_jstage_adapter.py tests/domain/literature/gateway/test_doaj_adapter.py tests/domain/literature/gateway/test_unpaywall_adapter.py passes",
-        "uv run ruff check src/domain/literature/gateway/api_gateway.py src/domain/literature/gateway/adapters src/agents/acquisition src/domain/literature/acquisition_agent.py tests/test_api_gateway_download.py tests/test_literature_unified_workflow.py tests/test_agents_acquisition.py tests/domain/literature/gateway passes",
-        "Typecheck passes",
-        "Tests pass"
+        "`FirecrawlService` normalizes fit_markdown or cleaned_html fallback content and marks metadata with `normalized_body` and `body_selector`",
+        "`DocumentParsingAgent` normalizes collected parser markdown before returning `markdown_content`",
+        "`process_web_page_task` stores normalized markdown and tags stored acquisition metadata with `normalized_body=true`",
+        "`uv run --directory apps/backend pytest -q tests/unit/test_firecrawl_service.py tests/unit/test_document_parsing_agent.py tests/unit/test_tasks.py::test_process_web_page_task_stores_normalized_markdown` passes",
+        "Tests pass",
+        "Typecheck passes"
       ],
       "priority": 2,
       "passes": true,
-      "notes": "Validated on 2026-04-05 via py_compile, pytest gateway/acquisition slice, and ruff check in apps/backend."
+      "notes": "Validated on 2026-04-16: normalization wiring in firecrawl, parser collection, and web-content storage was already landed on the current branch; targeted acceptance tests passed in the Ralph worktree."
     },
     {
       "id": "US-003",
-      "title": "Record acquisition adapter milestone in handoff notes",
-      "description": "As a maintainer, I want progress and handoff notes updated with the acquisition adapter milestone so that the remaining context and verification evidence are preserved for later work.",
+      "title": "Reject untranslated or non-English translation output",
+      "description": "As a backend maintainer, I want translation skip and validation rules enforced so that untranslated or non-English outputs cannot silently pass into downstream extraction.",
       "acceptanceCriteria": [
-        "Append a progress.txt milestone entry summarizing the acquisition adapter and gateway facade work that was completed",
-        "List the exact verification commands and passing results cited in the progress update",
-        "Update lesson.md only if a debugging pattern or root cause was discovered during the refactor",
-        "Typecheck passes",
-        "Tests pass"
+        "Create `apps/backend/src/services/translation_validation.py` with `should_skip_translation` and `validate_translation_output` using `lingua-language-detector`",
+        "`task_manager` uses `should_skip_translation` for skip gating and raises `translation_validation_failed` when corrected output is empty, unchanged, or still non-English",
+        "Workflow and supervisor nodes only reuse an existing translation if it passes validation; invalid existing translations are cleared and retranslated",
+        "`uv run --directory apps/backend pytest -q tests/unit/test_translation_validation.py tests/unit/test_tasks.py::test_run_node_translation_fails_when_output_is_still_non_english tests/test_supervisor_e2e.py::TestTranslationNode::test_translation_retranslates_invalid_existing_translation` passes",
+        "Tests pass",
+        "Typecheck passes"
       ],
       "priority": 3,
       "passes": true,
-      "notes": "Validated on 2026-04-05 by appending a progress milestone with exact verification commands; no new lesson.md entry was needed because this closure pass found no new debugging root cause."
+      "notes": "Validated on 2026-04-16: translation validation module and the task_manager/workflow/supervisor enforcement hooks were already present on the current branch; targeted acceptance tests passed in the Ralph worktree."
+    },
+    {
+      "id": "US-004",
+      "title": "Return a stable document evidence API contract",
+      "description": "As a frontend and backend maintainer, I want `/evidence/document/{document_id}` to return a stable document-evidence payload so that consumers can rely on processed text and graph data without parsing generic blobs.",
+      "acceptanceCriteria": [
+        "`GET /evidence/document/{document_id}` returns `document_id`, `source_text`, `translated_text`, `ps3_evidence`, and `graph` in a document-specific payload",
+        "The route loads `original_format.md`, `en_format.md`, and processed JSON from MinIO with empty-string or empty-object fallbacks when artifacts are missing",
+        "Existing graph search data remains available under the nested `graph` field",
+        "`uv run --directory apps/backend pytest -q tests/integration/test_graph_api.py::test_get_document_evidence_returns_processed_text_and_graph tests/integration/test_graph_api.py::test_get_document_evidence_gracefully_handles_missing_artifacts` passes",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Validated on 2026-04-16: the stable document-evidence payload and MinIO artifact loading were already present in `src/api/routes/evidence.py`; targeted integration tests passed in the Ralph worktree."
+    },
+    {
+      "id": "US-005",
+      "title": "Align frontend document and export pages with the stable evidence payload",
+      "description": "As a frontend maintainer, I want the document page and request export page to consume the stable document-evidence contract so that structured evidence and reading columns render without contract-warning fallbacks.",
+      "acceptanceCriteria": [
+        "Add `DocumentEvidencePayload` and `DocumentEvidenceResponse` types and make `getEvidenceDocument` return the typed response",
+        "`normalizeEvidence` prefers `source_text` and `translated_text` from the stable payload before fallback parsing",
+        "`document-page.tsx` renders the structured evidence panel without the unstable-contract warning, and `request-export-page.tsx` renders reading columns from the same payload",
+        "`npm --prefix apps/frontend run test:run -- src/pages/documents/document-page.test.tsx src/pages/requests/request-export-page.test.tsx` passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Validated on 2026-04-16: typed document-evidence API usage, stable payload normalization, focused Vitest coverage, and Playwright browser verification all passed in the Ralph worktree."
+    },
+    {
+      "id": "US-006",
+      "title": "Run the final cross-stack verification slice",
+      "description": "As a maintainer, I want one final backend and frontend verification wave so that the document normalization, translation validation, and contract-alignment slice is proven before handoff.",
+      "acceptanceCriteria": [
+        "`uv run --directory apps/backend pytest -q tests/unit/test_document_normalization.py tests/unit/test_firecrawl_service.py tests/unit/test_document_parsing_agent.py tests/unit/test_translation_validation.py tests/unit/test_tasks.py::test_process_web_page_task_stores_normalized_markdown tests/unit/test_tasks.py::test_run_node_translation_fails_when_output_is_still_non_english tests/test_supervisor_e2e.py::TestTranslationNode::test_translation_retranslates_invalid_existing_translation tests/integration/test_graph_api.py::test_get_document_evidence_returns_processed_text_and_graph tests/integration/test_graph_api.py::test_get_document_evidence_gracefully_handles_missing_artifacts` passes",
+        "`npm --prefix apps/frontend run test:run -- src/pages/documents/document-page.test.tsx src/pages/requests/request-export-page.test.tsx` passes",
+        "`npm --prefix apps/frontend run build` passes",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "Validated on 2026-04-16: final backend slice passed (14 tests), frontend slice passed (7 tests), and frontend production build succeeded in the Ralph worktree."
     }
   ]
 }
