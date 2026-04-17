@@ -14,8 +14,8 @@ import { normalizePaperResult } from '../../utils/normalizePaperResult';
 import type { PaperTaskDetailResponse, PaperTaskItemResponse, TaskRequestStatusResponse } from '../../types/api';
 import type { WorkflowTimelineStep } from '../../types/stream';
 
-function pillColor(status: string) {
-  const s = status.toLowerCase();
+function pillColor(status: string | null | undefined) {
+  const s = String(status ?? '').toLowerCase();
   if (s.includes('success')) return 'rgba(82,196,26,0.22)';
   if (s.includes('fail')) return 'rgba(255,77,79,0.22)';
   if (s.includes('run') || s.includes('process') || s.includes('start')) return 'rgba(124,92,255,0.22)';
@@ -309,10 +309,13 @@ export const RequestMonitorPage: React.FC = () => {
   }, [requestId, resetWorkflow, watchRequest]);
 
   const streamedSnapshot = requestId && matchesRequestId(requestId, streamedRequest) ? streamedRequest : null;
+  const workflowData = streamedSnapshot && Array.isArray(streamedSnapshot.papers) && streamedSnapshot.papers.length > 0
+    ? streamedSnapshot
+    : null;
   const pollingSnapshot = requestId && matchesRequestId(requestId, poll.data) ? poll.data : null;
   const appStoreSnapshot = requestId && matchesRequestId(requestId, currentRequest) ? currentRequest : null;
-  const data = streamedSnapshot ?? pollingSnapshot ?? appStoreSnapshot;
-  const shouldShowPollError = Boolean(poll.error && !streamedSnapshot && !appStoreSnapshot);
+  const data = workflowData ?? pollingSnapshot ?? appStoreSnapshot;
+  const shouldShowPollError = Boolean(poll.error && !workflowData && !appStoreSnapshot);
   const papers = data?.papers ?? [];
 
   const loadPaperDetail = useCallback(

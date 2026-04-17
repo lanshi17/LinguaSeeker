@@ -1,0 +1,62 @@
+[
+  {
+    "sample_id": "zh-001",
+    "country": "CN",
+    "language": "ZH",
+    "url": "https://rs.yiigle.com/CN511374202308/1468118.htm"
+  },
+  {
+    "sample_id": "zh-002",
+    "country": "CN",
+    "language": "ZH",
+    "url": "https://rs.yiigle.com/CN115989202309/1473578.htm"
+  },
+  {
+    "sample_id": "zh-003",
+    "country": "CN",
+    "language": "ZH",
+    "url": "https://www.junogenomics.com/document_sharing/34.html"
+  },
+  {
+    "sample_id": "ja-001",
+    "country": "JP",
+    "language": "JA",
+    "url": "https://www.jstage.jst.go.jp/article/jjsth/34/4/34_2023_JJTH_34_4_468-479/_html/-char/ja/"
+  },
+  {
+    "sample_id": "ja-002",
+    "country": "JP",
+    "language": "JA",
+    "url": "https://www.jstage.jst.go.jp/article/jjsth/26/5/26_518/_article/-char/ja/"
+  },
+  {
+    "sample_id": "ja-003",
+    "country": "JP",
+    "language": "JA",
+    "url": "https://www.jstage.jst.go.jp/article/jjsth/35/5/35_2024_JJTH_35_5_597-603/_article/-char/ja/"
+  },
+  {
+    "sample_id": "ru-001",
+    "country": "RU",
+    "language": "RU",
+    "url": "https://cyberleninka.ru/article/n/mutatsionnyy-skrining-bolnyh-s-narusheniyami-funktsii-fibrinogena"
+  },
+  {
+    "sample_id": "ru-002",
+    "country": "RU",
+    "language": "RU",
+    "url": "https://cyberleninka.ru/article/n/analiz-allelnoy-chastoty-mutatsiy-gena-cftr-s-pomoschyu-dnk-diagnostiki-v-sankt-peterburge"
+  },
+  {
+    "sample_id": "de-001",
+    "country": "DE",
+    "language": "DE",
+    "url": "https://link.springer.com/article/10.1007/s11825-019-0243-5"
+  },
+  {
+    "sample_id": "de-002",
+    "country": "DE",
+    "language": "DE",
+    "url": "https://link.springer.com/article/10.1007/s00112-023-01747-1"
+  }
+]

@@ -70,9 +70,13 @@ describe('DocumentPage', () => {
     });
 
     renderPage();
-    fireEvent.click(await screen.findByRole('button', { name: /Evidence judgment/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Reading/i }));
 
-    expect(await screen.findByText(/Structured evidence/i)).toBeInTheDocument();
+    expect(await screen.findByTestId('document-source-panel')).toHaveTextContent('source text');
+    expect(screen.getByTestId('document-target-panel')).toHaveTextContent('translated text');
+
+    fireEvent.click(screen.getByRole('button', { name: /Evidence judgment/i }));
+    expect(await screen.findByTestId('document-evidence-json')).toHaveTextContent('PS3');
     expect(screen.queryByText(/without a stable evidence schema/i)).not.toBeInTheDocument();
   });
 

@@ -172,6 +172,200 @@ def test_create_task_success(
     assert payload["status"] == "PENDING"
 
 
+def test_create_web_crawl_with_force_refresh_ignores_existing_document_dedup(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
+    request_id = uuid4()
+    document_id = uuid4()
+    paper_task_id = uuid4()
+
+    class DummyPlanItem:
+        normalized_value = "https://example.com/paper"
+        display_name = "https://example.com/paper"
+        fingerprint = "fp-1"
+
+    class DummyAgent:
+        def plan_web_request(self, urls: List[str]) -> List[Any]:
+            assert urls == ["https://example.com/paper"]
+            return [DummyPlanItem()]
+
+    class DummyAsyncResult:
+        id = "celery-web-1"
+
+    class DummyCeleryTask:
+        def apply_async(self, args: List[str]) -> DummyAsyncResult:
+            assert args == [
+                "https://example.com/paper",
+                str(document_id),
+                str(paper_task_id),
+                str(request_id),
+            ]
+            return DummyAsyncResult()
+
+    class DummyPostgres:
+        def __init__(self) -> None:
+            self.find_document_by_hash_calls = 0
+            self.find_latest_paper_task_by_hash_calls = 0
+            self.created_document = None
+            self.created_paper_task = None
+
+        def create_task_request(self, task_form_text: str, status: str, metadata: Dict[str, Any]) -> Any:
+            assert status == "queued"
+            assert metadata["force_refresh"] is True
+            return SimpleNamespace(request_id=request_id, status="queued")
+
+        def find_document_by_hash(self, fingerprint: str) -> Any:
+            self.find_document_by_hash_calls += 1
+            return SimpleNamespace(document_id=document_id)
+
+        def find_latest_paper_task_by_hash(self, fingerprint: str) -> Any:
+            self.find_latest_paper_task_by_hash_calls += 1
+            return SimpleNamespace(paper_task_id=uuid4(), status="success")
+
+        def create_document(self, **kwargs: Any) -> Any:
+            self.created_document = kwargs
+            return SimpleNamespace(document_id=document_id)
+
+        def create_paper_task(self, **kwargs: Any) -> Any:
+            self.created_paper_task = kwargs
+            return SimpleNamespace(paper_task_id=paper_task_id, **kwargs)
+
+        def append_paper_task_log(self, *args: Any, **kwargs: Any) -> Any:
+            return None
+
+        def update_paper_task(self, paper_task_id_value: str, celery_task_id: str) -> Any:
+            assert paper_task_id_value == str(paper_task_id)
+            assert celery_task_id == "celery-web-1"
+            return SimpleNamespace(paper_task_id=paper_task_id, celery_task_id=celery_task_id)
+
+        def refresh_task_request_status(self, request_id_value: str) -> Any:
+            assert str(request_id_value) == str(request_id)
+            return SimpleNamespace(request_id=request_id, status="queued")
+
+    postgres = DummyPostgres()
+    monkeypatch.setattr(task_api, "get_literature_acquisition_agent", lambda: DummyAgent())
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: postgres)
+    monkeypatch.setattr(task_api, "process_web_page_task", DummyCeleryTask())
+
+    response = client.post(
+        f"{task_prefix}/requests/web/crawl",
+        json={
+            "task_form": '{"goal":"PS3/BS3 evidence","disease":"x","country":"MULTI","language":"MULTI"}',
+            "urls": ["https://example.com/paper"],
+            "source": "web",
+            "force_refresh": True,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["papers"][0]["status"] == "queued"
+    assert payload["papers"][0]["error_code"] is None
+    assert payload["papers"][0]["duplicate_of"] is None
+    assert postgres.find_document_by_hash_calls == 0
+    assert postgres.find_latest_paper_task_by_hash_calls == 0
+    assert postgres.created_document is not None
+    assert postgres.created_paper_task["status"] == "queued"
+    assert postgres.created_paper_task["document_id"] == str(document_id)
+
+
+
+def test_create_web_crawl_with_force_refresh_requeues_existing_document_after_create_conflict(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
+) -> None:
+    request_id = uuid4()
+    document_id = uuid4()
+    paper_task_id = uuid4()
+    historical_paper_task_id = uuid4()
+
+    class DummyPlanItem:
+        normalized_value = "https://example.com/paper"
+        display_name = "https://example.com/paper"
+        fingerprint = "fp-1"
+
+    class DummyAgent:
+        def plan_web_request(self, urls: List[str]) -> List[Any]:
+            assert urls == ["https://example.com/paper"]
+            return [DummyPlanItem()]
+
+    class DummyAsyncResult:
+        id = "celery-web-2"
+
+    class DummyCeleryTask:
+        def apply_async(self, args: List[str]) -> DummyAsyncResult:
+            assert args == [
+                "https://example.com/paper",
+                str(document_id),
+                str(paper_task_id),
+                str(request_id),
+            ]
+            return DummyAsyncResult()
+
+    class DummyPostgres:
+        def __init__(self) -> None:
+            self.find_document_by_hash_calls = 0
+            self.find_latest_paper_task_by_hash_calls = 0
+            self.created_paper_task = None
+            self.log_entries: List[Tuple[Tuple[Any, ...], Dict[str, Any]]] = []
+
+        def create_task_request(self, task_form_text: str, status: str, metadata: Dict[str, Any]) -> Any:
+            assert metadata["force_refresh"] is True
+            return SimpleNamespace(request_id=request_id, status="queued")
+
+        def find_document_by_hash(self, fingerprint: str) -> Any:
+            self.find_document_by_hash_calls += 1
+            return SimpleNamespace(document_id=document_id)
+
+        def find_latest_paper_task_by_hash(self, fingerprint: str) -> Any:
+            self.find_latest_paper_task_by_hash_calls += 1
+            return SimpleNamespace(paper_task_id=historical_paper_task_id, status="success")
+
+        def create_document(self, **kwargs: Any) -> Any:
+            raise IntegrityError("insert into documents", {}, Exception("duplicate key"))
+
+        def create_paper_task(self, **kwargs: Any) -> Any:
+            self.created_paper_task = kwargs
+            return SimpleNamespace(paper_task_id=paper_task_id, **kwargs)
+
+        def append_paper_task_log(self, *args: Any, **kwargs: Any) -> Any:
+            self.log_entries.append((args, kwargs))
+            return None
+
+        def update_paper_task(self, paper_task_id_value: str, celery_task_id: str) -> Any:
+            assert paper_task_id_value == str(paper_task_id)
+            assert celery_task_id == "celery-web-2"
+            return SimpleNamespace(paper_task_id=paper_task_id, celery_task_id=celery_task_id)
+
+        def refresh_task_request_status(self, request_id_value: str) -> Any:
+            return SimpleNamespace(request_id=request_id, status="queued")
+
+    postgres = DummyPostgres()
+    monkeypatch.setattr(task_api, "get_literature_acquisition_agent", lambda: DummyAgent())
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: postgres)
+    monkeypatch.setattr(task_api, "process_web_page_task", DummyCeleryTask())
+
+    response = client.post(
+        f"{task_prefix}/requests/web/crawl",
+        json={
+            "task_form": '{"goal":"PS3/BS3 evidence","disease":"x","country":"MULTI","language":"MULTI"}',
+            "urls": ["https://example.com/paper"],
+            "source": "web",
+            "force_refresh": True,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["papers"][0]["status"] == "queued"
+    assert payload["papers"][0]["error_code"] is None
+    assert payload["papers"][0]["duplicate_of"] is None
+    assert postgres.find_document_by_hash_calls == 1
+    assert postgres.find_latest_paper_task_by_hash_calls == 0
+    assert postgres.created_paper_task["status"] == "queued"
+    assert postgres.created_paper_task["document_id"] == str(document_id)
+    assert all(entry[1].get("node") != "dedup" for entry in postgres.log_entries)
+
+
 def test_get_task_status_success(
     client: TestClient, monkeypatch: pytest.MonkeyPatch, task_prefix: str
 ) -> None:

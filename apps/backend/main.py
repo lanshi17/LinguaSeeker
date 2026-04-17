@@ -23,6 +23,7 @@ from src.api.routes.evidence import router as evidence_api_routers
 from src.api.routes.stream import router as stream_api_routers
 from src.api.routes.task import router as task_api_routers
 from src.config import app_config as cfg  # 导入配置实例
+from src.config import settings
 from src.health import check_all_connections
 from src.infrastructure.minio import MinIOClient
 from src.utils.exceptions import (
@@ -110,9 +111,7 @@ def _parse_cors_origins(origins: str) -> list[str]:
     return [origin.strip() for origin in origins.split(",") if origin.strip()]
 
 
-_cors_options = _build_cors_options(
-    _parse_cors_origins('["http://localhost:3000", "http://localhost:8080"]')
-)
+_cors_options = _build_cors_options(_parse_cors_origins(settings.cors_origins))
 
 
 @asynccontextmanager

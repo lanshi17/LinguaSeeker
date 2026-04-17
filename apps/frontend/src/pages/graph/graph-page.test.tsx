@@ -14,7 +14,7 @@ import { searchEvidence } from '../../services/api';
 beforeEach(() => vi.clearAllMocks());
 
 describe('GraphPage', () => {
-  it('submits graph search filters and renders node/edge counts', async () => {
+  it('renders returned node labels and relationships in dedicated graph lists', async () => {
     vi.mocked(searchEvidence).mockResolvedValue({
       code: 0,
       message: 'ok',
@@ -23,17 +23,16 @@ describe('GraphPage', () => {
         edges: [{ source: 'g1', target: 'd1', relationship: 'RELATED_TO' }],
         total_evidence: 2,
         document_count: 1,
+        evidence_records: [{ document_id: 'doc-1' }],
       },
     });
 
     render(<GraphPage />);
-
     fireEvent.change(screen.getByLabelText(/Gene symbol/i), { target: { value: 'BRCA1' } });
     fireEvent.click(screen.getByRole('button', { name: /Search graph/i }));
 
     await waitFor(() => expect(searchEvidence).toHaveBeenCalledWith({ gene_symbol: 'BRCA1' }));
-    expect(await screen.findByText(/Nodes: 1/i)).toBeInTheDocument();
-    expect(screen.getByText(/Edges: 1/i)).toBeInTheDocument();
-    expect(screen.getByText(/Evidence: 2/i)).toBeInTheDocument();
+    expect(await screen.findByTestId('graph-node-list')).toHaveTextContent('BRCA1');
+    expect(screen.getByTestId('graph-edge-list')).toHaveTextContent('RELATED_TO');
   });
 });

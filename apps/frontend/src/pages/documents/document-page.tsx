@@ -161,7 +161,7 @@ export const DocumentPage: React.FC = () => {
 
         {active === 'reading' ? (
           <div className="row">
-            <div className="col">
+            <div className="col" data-testid="document-source-panel">
               <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>
                 Source ({vm.sourceLang})
               </div>
@@ -173,7 +173,7 @@ export const DocumentPage: React.FC = () => {
                 ))}
               </div>
             </div>
-            <div className="col">
+            <div className="col" data-testid="document-target-panel">
               <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>
                 Target ({vm.targetLang})
               </div>
@@ -194,6 +194,7 @@ export const DocumentPage: React.FC = () => {
             </div>
             <div style={{ marginTop: 10 }}>
               <pre
+                data-testid="document-evidence-json"
                 style={{
                   overflow: 'auto',
                   padding: 12,
