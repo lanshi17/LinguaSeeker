@@ -4,17 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { confirmTaskForm, stringifyTaskForm, uploadTaskRequest, webCrawlSubmit } from '../../services/api';
 import { ApiError } from '../../services/http';
 import { AgentClarificationChat } from '../../components/chat/agent-clarification-chat';
+import { ExpertFeedbackPanel } from '../../components/feedback/expert-feedback-panel';
 import { useTaskFlowStore } from '../../store/useTaskFlowStore';
 import { useToastStore } from '../../store/useToastStore';
 import { validateUploadFiles } from '../../utils/validation';
 
+import type { ExpertFeedbackAction, ExpertFeedbackItem } from '../../components/feedback/expert-feedback-panel';
 import type { TaskFormStructured } from '../../types/api';
-
-type ExpertFeedbackItem = {
-  tone: 'info' | 'warning' | 'success';
-  text: string;
-  action?: 'confirm_now' | 'go_candidates';
-};
 
 function buildUserInput(form: TaskFormStructured) {
   return `Goal: ${form.goal}\nDisease: ${form.disease}\nCountry: ${form.country}\nLanguage: ${form.language}`;
@@ -205,7 +201,7 @@ export const TaskNewPage: React.FC = () => {
     }
   };
 
-  const handleFeedbackAction = (action: ExpertFeedbackItem['action']) => {
+  const handleFeedbackAction = (action: ExpertFeedbackAction | undefined) => {
     if (!action) return;
     if (action === 'confirm_now') {
       if (!busy) {
@@ -317,54 +313,7 @@ export const TaskNewPage: React.FC = () => {
                 </div>
               )}
 
-              <div
-                style={{
-                  padding: 12,
-                  border: '1px solid var(--border)',
-                  borderRadius: 12,
-                  background: 'var(--bg-elevated)',
-                }}
-              >
-                <h3 style={{ fontWeight: 800, margin: 0, fontSize: 14 }}>Expert feedback</h3>
-                <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
-                  Plan-aligned review hints before upload/candidate branching.
-                </div>
-                <ul style={{ margin: '10px 0 0', paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {expertFeedback.map((item, index) => (
-                    <li
-                      key={`${item.tone}-${index}`}
-                      style={{
-                        color:
-                          item.tone === 'warning'
-                            ? '#ad6800'
-                            : item.tone === 'success'
-                              ? '#237804'
-                              : 'var(--text-muted)',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                        <span>{item.text}</span>
-                        {item.action ? (
-                          <button
-                            type="button"
-                            onClick={() => handleFeedbackAction(item.action)}
-                            disabled={busy}
-                            style={{
-                              padding: '6px 10px',
-                              borderRadius: 8,
-                              border: '1px solid var(--border)',
-                              background: 'var(--bg-elevated)',
-                              cursor: busy ? 'not-allowed' : 'pointer',
-                            }}
-                          >
-                            {item.action === 'confirm_now' ? 'Confirm now' : 'Open candidates shortcut'}
-                          </button>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <ExpertFeedbackPanel items={expertFeedback} busy={busy} onAction={handleFeedbackAction} />
 
               <div className="row">
                 <div className="col" style={{ minWidth: 320 }}>

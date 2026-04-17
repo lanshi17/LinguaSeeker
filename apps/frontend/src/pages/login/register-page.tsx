@@ -11,7 +11,7 @@ export const RegisterPage: React.FC = () => {
           Registration/email verification is blocked until backend auth endpoints are added.
         </div>
         <div style={{ marginTop: 12 }}>
-          <Link to="/tasks/new">Continue to MVP flow</Link>
+          <Link to="/tasks/agent-create">Continue to MVP flow</Link>
         </div>
         <div style={{ marginTop: 8 }} className="muted">
           Already have an account? <Link to="/login">Login</Link>

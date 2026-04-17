@@ -11,7 +11,7 @@ export const LoginPage: React.FC = () => {
           Backend authentication endpoints are not available in the current OpenAPI contract.
         </div>
         <div style={{ marginTop: 12 }}>
-          <Link to="/tasks/new">Continue to MVP flow</Link>
+          <Link to="/tasks/agent-create">Continue to MVP flow</Link>
         </div>
         <div style={{ marginTop: 8 }} className="muted">
           Need an account? <Link to="/register">Register</Link>

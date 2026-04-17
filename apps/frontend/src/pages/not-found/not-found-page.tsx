@@ -17,7 +17,7 @@ export const NotFoundPage: React.FC = () => {
       </div>
       <div className="panel-body">
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <Link to="/tasks/new">Go to Task</Link>
+          <Link to="/tasks/agent-create">Go to Task</Link>
           <Link to="/graph">Go to Graph</Link>
           <Link to="/login">Go to Login</Link>
         </div>

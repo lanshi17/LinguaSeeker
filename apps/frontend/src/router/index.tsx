@@ -9,6 +9,7 @@ import { NotFoundPage } from '../pages/not-found/not-found-page';
 import { RequestExportPage } from '../pages/requests/request-export-page';
 import { RequestMonitorPage } from '../pages/requests/request-monitor-page';
 import { PubmedCandidatesPage } from '../pages/tasks/pubmed-candidates-page';
+import { AgentTaskCreatePage } from '../pages/tasks/agent-task-create-page';
 import { TaskNewPage } from '../pages/tasks/task-new-page';
 
 export const router = createBrowserRouter([
@@ -16,9 +17,10 @@ export const router = createBrowserRouter([
     path: '/',
     element: <AppShell />,
     children: [
-      { index: true, element: <Navigate to="/tasks/new" replace /> },
+      { index: true, element: <Navigate to="/tasks/agent-create" replace /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
+      { path: 'tasks/agent-create', element: <AgentTaskCreatePage /> },
       { path: 'tasks/new', element: <TaskNewPage /> },
       { path: 'graph', element: <GraphPage /> },
       { path: 'tasks/pubmed/candidates', element: <PubmedCandidatesPage /> },

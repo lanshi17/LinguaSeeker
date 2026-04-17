@@ -5,12 +5,14 @@ import { getPaperTaskDetail, getTaskRequestStatus, reissueLogLink } from '../../
 import { ApiError } from '../../services/http';
 import { useRequestPolling } from '../../hooks/useRequestPolling';
 
+import { WorkflowTimeline } from '../../components/workflow/workflow-timeline';
 import { useAppStore } from '../../store/appStore';
 import { useToastStore } from '../../store/useToastStore';
 import { useWorkflowStore } from '../../store/useWorkflowStore';
 import { normalizePaperResult } from '../../utils/normalizePaperResult';
 
 import type { PaperTaskDetailResponse, PaperTaskItemResponse, TaskRequestStatusResponse } from '../../types/api';
+import type { WorkflowTimelineStep } from '../../types/stream';
 
 function pillColor(status: string) {
   const s = status.toLowerCase();
@@ -30,6 +32,18 @@ function stepLabel(stepKey: string) {
   return stepKey;
 }
 
+function isActiveStreamRequest(requestId: string, streamRequestId: string | null, request?: TaskRequestStatusResponse | null) {
+  return Boolean(request && streamRequestId === requestId && request.request_id === requestId);
+}
+
+function matchesRequestId(requestId: string, request?: TaskRequestStatusResponse | null) {
+  return Boolean(request && request.request_id === requestId);
+}
+
+function prefersPollingFallback(streamedRequest: TaskRequestStatusResponse | null, requestId?: string) {
+  return Boolean(requestId && !streamedRequest);
+}
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
 }
@@ -46,13 +60,7 @@ function PaperRow({
   paper: PaperTaskItemResponse;
   expanded: boolean;
   onToggle: () => void;
-  taskTimeline: Array<{
-    id: 'queued' | 'running' | 'success';
-    label: string;
-    status: 'pending' | 'running' | 'completed' | 'error';
-    description?: string;
-    progress?: number;
-  }>;
+  taskTimeline: WorkflowTimelineStep[];
   taskDescription?: string;
   detail?: PaperTaskDetailResponse | null;
   detailLoading?: boolean;
@@ -179,101 +187,38 @@ function PaperRow({
           ) : null}
 
           <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
-            <div style={{ fontWeight: 900 }}>Task workflow</div>
+            <WorkflowTimeline
+              title="Task workflow"
+              steps={
+                processingSteps.length > 0
+                  ? processingSteps.map(([stepKey, stepValue]) => {
+                      const step = asRecord(stepValue);
+                      const status = typeof step?.status === 'string' ? step.status : 'PENDING';
+                      const message = typeof step?.message === 'string' ? step.message : undefined;
+                      const normalizedStatus = status.toLowerCase();
+
+                      return {
+                        id: stepKey,
+                        label: stepLabel(stepKey),
+                        status: normalizedStatus.includes('fail') || normalizedStatus.includes('error')
+                          ? 'error'
+                          : normalizedStatus.includes('complete') || normalizedStatus.includes('success') || normalizedStatus.includes('skip')
+                            ? 'completed'
+                            : normalizedStatus.includes('run') || normalizedStatus.includes('process') || normalizedStatus.includes('start')
+                              ? 'running'
+                              : 'pending',
+                        description: message,
+                      };
+                    })
+                  : taskTimeline
+              }
+              emptyMessage="No task data yet"
+            />
             {taskDescription ? (
               <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
                 {taskDescription}
               </div>
             ) : null}
-            <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {processingSteps.length > 0 ? (
-                processingSteps.map(([stepKey, stepValue]) => {
-                  const step = asRecord(stepValue);
-                  const status = typeof step?.status === 'string' ? step.status : 'PENDING';
-                  const message = typeof step?.message === 'string' ? step.message : undefined;
-                  return (
-                    <div
-                      key={stepKey}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 12,
-                        padding: 10,
-                        borderRadius: 10,
-                        border: '1px solid var(--border)',
-                      }}
-                    >
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 800, textTransform: 'capitalize' }}>{stepLabel(stepKey)}</div>
-                        {message ? (
-                          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-                            {message}
-                          </div>
-                        ) : null}
-                      </div>
-                      <div
-                        style={{
-                          padding: '6px 10px',
-                          borderRadius: 999,
-                          border: '1px solid var(--border)',
-                          background: pillColor(status),
-                          fontSize: 12,
-                        }}
-                      >
-                        {status}
-                      </div>
-                    </div>
-                  );
-                })
-              ) : taskTimeline.length === 0 ? (
-                <div className="muted" style={{ fontSize: 12 }}>
-                  No task data yet
-                </div>
-              ) : (
-                taskTimeline.map((step) => (
-                  <div
-                    key={step.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                      padding: 10,
-                      borderRadius: 10,
-                      border: '1px solid var(--border)',
-                    }}
-                  >
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 800 }}>{step.label}</div>
-                      {step.description ? (
-                        <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-                          {step.description}
-                        </div>
-                      ) : null}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      {typeof step.progress === 'number' ? (
-                        <div className="muted" style={{ fontSize: 12 }}>
-                          {step.progress}%
-                        </div>
-                      ) : null}
-                      <div
-                        style={{
-                          padding: '6px 10px',
-                          borderRadius: 999,
-                          border: '1px solid var(--border)',
-                          background: pillColor(step.status),
-                          fontSize: 12,
-                        }}
-                      >
-                        {step.status}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
           </div>
 
           {resultVm ? (
@@ -327,6 +272,7 @@ export const RequestMonitorPage: React.FC = () => {
   const currentTask = useWorkflowStore((state) => state.currentTask);
   const requestTimeline = useWorkflowStore((state) => state.requestTimeline);
   const taskTimeline = useWorkflowStore((state) => state.taskTimeline);
+  const requestConnection = useWorkflowStore((state) => state.requestConnection);
   const watchRequest = useWorkflowStore((state) => state.watchRequest);
   const watchTask = useWorkflowStore((state) => state.watchTask);
   const resetWorkflow = useWorkflowStore((state) => state.reset);
@@ -336,14 +282,18 @@ export const RequestMonitorPage: React.FC = () => {
   const fetcher = useCallback(
     async (signal: AbortSignal) => {
       if (!requestId) throw new ApiError({ status: 0, message: 'Missing requestId' });
-      const data = await getTaskRequestStatus(requestId, { signal });
-      useAppStore.setState({ currentRequest: data });
-      return data;
+      return getTaskRequestStatus(requestId, { signal });
     },
     [requestId]
   );
 
-  const poll = useRequestPolling<TaskRequestStatusResponse>(fetcher, { enabled: Boolean(requestId), intervalMs: 2000 });
+  const streamedRequest = requestId && isActiveStreamRequest(requestId, requestConnection.requestId, workflowRequest)
+    ? workflowRequest
+    : null;
+  const poll = useRequestPolling<TaskRequestStatusResponse>(fetcher, {
+    enabled: prefersPollingFallback(streamedRequest, requestId),
+    intervalMs: 2000,
+  });
 
   useEffect(() => {
     if (!requestId) return;
@@ -358,7 +308,11 @@ export const RequestMonitorPage: React.FC = () => {
     };
   }, [requestId, resetWorkflow, watchRequest]);
 
-  const data = workflowRequest ?? poll.data ?? currentRequest;
+  const streamedSnapshot = requestId && matchesRequestId(requestId, streamedRequest) ? streamedRequest : null;
+  const pollingSnapshot = requestId && matchesRequestId(requestId, poll.data) ? poll.data : null;
+  const appStoreSnapshot = requestId && matchesRequestId(requestId, currentRequest) ? currentRequest : null;
+  const data = streamedSnapshot ?? pollingSnapshot ?? appStoreSnapshot;
+  const shouldShowPollError = Boolean(poll.error && !streamedSnapshot && !appStoreSnapshot);
   const papers = data?.papers ?? [];
 
   const loadPaperDetail = useCallback(
@@ -427,7 +381,7 @@ export const RequestMonitorPage: React.FC = () => {
         </div>
         <div className="panel-body">
           {poll.loading && !data ? <div className="muted">Loading...</div> : null}
-          {poll.error ? (
+          {shouldShowPollError ? (
             <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
               <div style={{ fontWeight: 800, color: 'var(--danger)' }}>Error</div>
               <div className="muted" style={{ marginTop: 6 }}>
@@ -465,53 +419,7 @@ export const RequestMonitorPage: React.FC = () => {
           </div>
         </div>
         <div className="panel-body">
-          {requestTimeline.length === 0 ? (
-            <div className="muted">No workflow data yet</div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {requestTimeline.map((step) => (
-                <div
-                  key={step.id}
-                  style={{
-                    border: '1px solid var(--border)',
-                    borderRadius: 12,
-                    padding: 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                  }}
-                >
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 800 }}>{step.label}</div>
-                    {step.description ? (
-                      <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-                        {step.description}
-                      </div>
-                    ) : null}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {typeof step.progress === 'number' ? (
-                      <div className="muted" style={{ fontSize: 12 }}>
-                        {step.progress}%
-                      </div>
-                    ) : null}
-                    <div
-                      style={{
-                        padding: '6px 10px',
-                        borderRadius: 999,
-                        border: '1px solid var(--border)',
-                        background: pillColor(step.status),
-                        fontSize: 12,
-                      }}
-                    >
-                      {step.status}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <WorkflowTimeline steps={requestTimeline} emptyMessage="No workflow data yet" />
         </div>
       </div>
 

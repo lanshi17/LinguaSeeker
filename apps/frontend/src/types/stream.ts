@@ -3,7 +3,7 @@ import type { TaskRequestStatusResponse, TaskStatusResponse } from './api';
 export type WorkflowTimelineStatus = 'pending' | 'running' | 'completed' | 'error';
 
 export type WorkflowTimelineStep = {
-  id: 'queued' | 'running' | 'success';
+  id: string;
   label: string;
   status: WorkflowTimelineStatus;
   description?: string;
