@@ -39,7 +39,7 @@ async function pollTerminal(request, requestId) {
     const response = await request.get(`${apiBase}/tasks/requests/${requestId}`);
     expect(response.ok()).toBeTruthy();
     const payload = await response.json();
-    if (payload.papers?.length === 10 && payload.papers.every((paper) => ['success', 'failed', 'partial_failed'].includes(String(paper.status)))) {
+    if (payload.papers?.length === samples.length && payload.papers.every((paper) => ['success', 'failed', 'partial_failed'].includes(String(paper.status)))) {
       return payload;
     }
     await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -53,7 +53,7 @@ test('request page, document page, and graph page render real backend data for 1
 
   await page.goto(`/requests/${requestId}`);
   await expect(page.getByText(requestId)).toBeVisible();
-  await expect(page.getByText(/Papers:\s*10/i)).toBeVisible({ timeout: 30000 });
+  await expect(page.getByText(new RegExp(`Papers:\\s*${samples.length}`, 'i'))).toBeVisible({ timeout: 30000 });
   await expect(page.getByText(/paper_task_id:/i)).not.toBeVisible();
   await page.getByRole('button', { name: 'Details' }).first().click();
   await expect(page.getByText(/paper_task_id:/i)).toBeVisible();

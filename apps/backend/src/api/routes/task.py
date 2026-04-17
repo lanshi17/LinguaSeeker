@@ -983,32 +983,14 @@ def create_task_request_by_web_crawl(
             existing_document = postgres.find_document_by_hash(plan_item.fingerprint)
             if payload.force_refresh and existing_document is not None:
                 document_id = str(existing_document.document_id)
-                paper_entry = postgres.create_paper_task(
+                paper_entry = _enqueue_web_paper_task(
+                    postgres,
                     request_id=request_id,
                     document_id=document_id,
-                    original_filename=plan_item.display_name,
-                    file_hash=plan_item.fingerprint,
-                    status="queued",
-                )
-                paper_task_id = str(paper_entry.paper_task_id)
-                postgres.append_paper_task_log(
-                    paper_task_id,
-                    status="queued",
-                    node="acquisition",
-                    message=f"Web page re-queued after document conflict: {plan_item.normalized_value}",
-                    payload={"url": plan_item.normalized_value, "source": "web", "force_refresh": True},
-                )
-                async_result = _celery_task(process_web_page_task).apply_async(
-                    args=[
-                        plan_item.normalized_value,
-                        document_id,
-                        paper_task_id,
-                        request_id,
-                    ]
-                )
-                paper_entry = postgres.update_paper_task(
-                    paper_task_id,
-                    celery_task_id=async_result.id,
+                    display_name=plan_item.display_name,
+                    fingerprint=plan_item.fingerprint,
+                    url=plan_item.normalized_value,
+                    force_refresh=True,
                 )
                 paper_entries.append(paper_entry)
                 continue
@@ -1061,33 +1043,13 @@ def create_task_request_by_web_crawl(
             paper_entries.append(paper_entry)
             continue
         document_id = str(document.document_id)
-        paper_entry = postgres.create_paper_task(
+        paper_entry = _enqueue_web_paper_task(
+            postgres,
             request_id=request_id,
             document_id=document_id,
-            original_filename=plan_item.display_name,
-            file_hash=plan_item.fingerprint,
-            status="queued",
-        )
-        paper_task_id = str(paper_entry.paper_task_id)
-        postgres.append_paper_task_log(
-            paper_task_id,
-            status="queued",
-            node="acquisition",
-            message=f"Web page queued: {plan_item.normalized_value}",
-            payload={"url": plan_item.normalized_value, "source": "web"},
-        )
-
-        async_result = _celery_task(process_web_page_task).apply_async(
-            args=[
-                plan_item.normalized_value,
-                document_id,
-                paper_task_id,
-                request_id,
-            ]
-        )
-        paper_entry = postgres.update_paper_task(
-            paper_task_id,
-            celery_task_id=async_result.id,
+            display_name=plan_item.display_name,
+            fingerprint=plan_item.fingerprint,
+            url=plan_item.normalized_value,
         )
         paper_entries.append(paper_entry)
 
@@ -1103,6 +1065,47 @@ def create_task_request_by_web_crawl(
 #   This blocks the event loop during postgres operations under concurrent load.
 #   Fix: Either wrap postgres calls with `await anyio.to_thread.run_sync()`
 #   or migrate PostgresClient to AsyncSession. See architecture refactor plan.
+
+
+def _enqueue_web_paper_task(
+    postgres: Any,
+    *,
+    request_id: str,
+    document_id: str,
+    display_name: str,
+    fingerprint: str,
+    url: str,
+    force_refresh: bool = False,
+) -> Any:
+    paper_entry = postgres.create_paper_task(
+        request_id=request_id,
+        document_id=document_id,
+        original_filename=display_name,
+        file_hash=fingerprint,
+        status="queued",
+    )
+    paper_task_id = str(paper_entry.paper_task_id)
+    log_payload: dict[str, Any] = {"url": url, "source": "web"}
+    if force_refresh:
+        log_payload["force_refresh"] = True
+    postgres.append_paper_task_log(
+        paper_task_id,
+        status="queued",
+        node="acquisition",
+        message=(
+            f"Web page re-queued after document conflict: {url}"
+            if force_refresh
+            else f"Web page queued: {url}"
+        ),
+        payload=log_payload,
+    )
+    async_result = _celery_task(process_web_page_task).apply_async(
+        args=[url, document_id, paper_task_id, request_id]
+    )
+    return postgres.update_paper_task(
+        paper_task_id,
+        celery_task_id=async_result.id,
+    )
 
 
 @router.post(

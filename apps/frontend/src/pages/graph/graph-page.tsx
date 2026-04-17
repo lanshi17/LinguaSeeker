@@ -4,7 +4,13 @@ import { getEvidenceGraphStats, resyncEvidenceDocument, searchEvidence } from '.
 import { ApiError } from '../../services/http';
 import { useToastStore } from '../../store/useToastStore';
 
-import type { EvidenceSearchResponse, GraphSearchRequest } from '../../types/api';
+import type {
+  EvidenceGraphEdge,
+  EvidenceGraphNode,
+  EvidenceSearchPayload,
+  EvidenceSearchResponse,
+  GraphSearchRequest,
+} from '../../types/api';
 
 import './graph-page.css';
 
@@ -47,11 +53,11 @@ export const GraphPage: React.FC = () => {
   const resyncText = useMemo(() => (resyncResult ? prettyJson(resyncResult) : 'No data yet.'), [resyncResult]);
   const searchText = useMemo(() => (searchResult ? prettyJson(searchResult.data) : 'No graph search results yet.'), [searchResult]);
 
-  const graphData = (searchResult?.data ?? {}) as Record<string, unknown>;
-  const nodes = Array.isArray(graphData.nodes) ? graphData.nodes : [];
-  const edges = Array.isArray(graphData.edges) ? graphData.edges : [];
-  const totalEvidence = typeof graphData.total_evidence === 'number' ? graphData.total_evidence : 0;
-  const documentCount = typeof graphData.document_count === 'number' ? graphData.document_count : 0;
+  const graphData: EvidenceSearchPayload = searchResult?.data ?? {};
+  const nodes: EvidenceGraphNode[] = graphData.nodes ?? [];
+  const edges: EvidenceGraphEdge[] = graphData.edges ?? [];
+  const totalEvidence = graphData.total_evidence ?? 0;
+  const documentCount = graphData.document_count ?? 0;
 
   const refreshStats = async () => {
     setStatsLoading(true);
@@ -196,32 +202,26 @@ export const GraphPage: React.FC = () => {
                 <section>
                   <h4 style={{ margin: 0 }}>Nodes</h4>
                   <ul data-testid="graph-node-list" className="graph-console__list">
-                    {nodes.map((node) => {
-                      const item = node as Record<string, unknown>;
-                      return (
-                        <li key={String(item.id)} className="graph-console__list-item">
-                          <strong>{String(item.label ?? item.id)}</strong>
-                          <span className="muted">{String(item.type ?? 'unknown')}</span>
-                        </li>
-                      );
-                    })}
+                    {nodes.map((node) => (
+                      <li key={node.id} className="graph-console__list-item">
+                        <strong>{node.label ?? node.id}</strong>
+                        <span className="muted">{node.type ?? 'unknown'}</span>
+                      </li>
+                    ))}
                   </ul>
                 </section>
                 <section>
                   <h4 style={{ margin: 0 }}>Edges</h4>
                   <ul data-testid="graph-edge-list" className="graph-console__list">
-                    {edges.map((edge, index) => {
-                      const item = edge as Record<string, unknown>;
-                      return (
-                        <li
-                          key={`${String(item.source)}-${String(item.target)}-${index}`}
-                          className="graph-console__list-item"
-                        >
-                          <strong>{String(item.relationship)}</strong>
-                          <span className="muted">{String(item.source)} → {String(item.target)}</span>
-                        </li>
-                      );
-                    })}
+                    {edges.map((edge, index) => (
+                      <li
+                        key={`${edge.source}-${edge.target}-${index}`}
+                        className="graph-console__list-item"
+                      >
+                        <strong>{edge.relationship}</strong>
+                        <span className="muted">{edge.source} → {edge.target}</span>
+                      </li>
+                    ))}
                   </ul>
                 </section>
               </div>
