@@ -192,6 +192,39 @@ export const GraphPage: React.FC = () => {
                 <div className="graph-console__summary-card">Evidence: {totalEvidence}</div>
                 <div className="graph-console__summary-card">Documents: {documentCount}</div>
               </div>
+              <div className="graph-console__results-grid">
+                <section>
+                  <h4 style={{ margin: 0 }}>Nodes</h4>
+                  <ul data-testid="graph-node-list" className="graph-console__list">
+                    {nodes.map((node) => {
+                      const item = node as Record<string, unknown>;
+                      return (
+                        <li key={String(item.id)} className="graph-console__list-item">
+                          <strong>{String(item.label ?? item.id)}</strong>
+                          <span className="muted">{String(item.type ?? 'unknown')}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+                <section>
+                  <h4 style={{ margin: 0 }}>Edges</h4>
+                  <ul data-testid="graph-edge-list" className="graph-console__list">
+                    {edges.map((edge, index) => {
+                      const item = edge as Record<string, unknown>;
+                      return (
+                        <li
+                          key={`${String(item.source)}-${String(item.target)}-${index}`}
+                          className="graph-console__list-item"
+                        >
+                          <strong>{String(item.relationship)}</strong>
+                          <span className="muted">{String(item.source)} → {String(item.target)}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              </div>
               <div style={{ marginTop: 10 }}>
                 <pre className="graph-console__pre" role="region" aria-label="Graph search JSON" aria-live="polite">
                   {searchText}

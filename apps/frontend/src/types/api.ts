@@ -180,10 +180,32 @@ export type DocumentEvidenceResponse = {
   data: DocumentEvidencePayload;
 };
 
+export type EvidenceGraphNode = {
+  id: string;
+  type: string;
+  label: string;
+  [key: string]: unknown;
+};
+
+export type EvidenceGraphEdge = {
+  source: string;
+  target: string;
+  relationship: string;
+  [key: string]: unknown;
+};
+
+export type EvidenceSearchPayload = {
+  nodes?: EvidenceGraphNode[];
+  edges?: EvidenceGraphEdge[];
+  evidence_records?: Array<Record<string, unknown>>;
+  document_count?: number;
+  total_evidence?: number;
+};
+
 export type EvidenceSearchResponse = {
   code: number;
   message: string;
-  data: unknown;
+  data: EvidenceSearchPayload;
 };
 
 export type ErrorResponse = {

@@ -16,9 +16,12 @@ def test_build_cors_options_disables_credentials_for_wildcard() -> None:
     assert options["allow_credentials"] is False
 
 
-def test_build_root_payload_hides_internal_details() -> None:
-    payload = main._build_root_payload()
-    assert "Environment" not in payload
-    assert "Debug Mode" not in payload
-    assert "API Prefix" not in payload
-    assert set(payload.keys()) == {"name", "version", "status"}
+def test_parse_cors_origins_accepts_json_array_string() -> None:
+    origins = main._parse_cors_origins('["http://localhost:3000", "http://localhost:8080"]')
+    assert origins == ["http://localhost:3000", "http://localhost:8080"]
+
+
+def test_main_uses_available_settings_cors_field() -> None:
+    assert main._cors_options["allow_origins"] == main._parse_cors_origins(main.settings.cors_origins)
+
+

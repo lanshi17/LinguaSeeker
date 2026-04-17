@@ -11,6 +11,7 @@
     "test": "vitest --exclude task12.e2e.spec.js",
     "test:ui": "vitest --ui --exclude task12.e2e.spec.js",
     "test:run": "vitest run --exclude task12.e2e.spec.js",
+    "test:e2e:real": "playwright test -c ./playwright.real-pipeline.config.cjs --reporter=line",
     "check-backend": "node scripts/check-backend.cjs",
     "diagnose": "echo '请在浏览器控制台运行: import(\"./src/utils/apiDebug.ts\").then(m => m.printDiagnostics())'"
   },

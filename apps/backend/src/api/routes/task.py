@@ -981,6 +981,37 @@ def create_task_request_by_web_crawl(
                 exc,
             )
             existing_document = postgres.find_document_by_hash(plan_item.fingerprint)
+            if payload.force_refresh and existing_document is not None:
+                document_id = str(existing_document.document_id)
+                paper_entry = postgres.create_paper_task(
+                    request_id=request_id,
+                    document_id=document_id,
+                    original_filename=plan_item.display_name,
+                    file_hash=plan_item.fingerprint,
+                    status="queued",
+                )
+                paper_task_id = str(paper_entry.paper_task_id)
+                postgres.append_paper_task_log(
+                    paper_task_id,
+                    status="queued",
+                    node="acquisition",
+                    message=f"Web page re-queued after document conflict: {plan_item.normalized_value}",
+                    payload={"url": plan_item.normalized_value, "source": "web", "force_refresh": True},
+                )
+                async_result = _celery_task(process_web_page_task).apply_async(
+                    args=[
+                        plan_item.normalized_value,
+                        document_id,
+                        paper_task_id,
+                        request_id,
+                    ]
+                )
+                paper_entry = postgres.update_paper_task(
+                    paper_task_id,
+                    celery_task_id=async_result.id,
+                )
+                paper_entries.append(paper_entry)
+                continue
             historical_paper = postgres.find_latest_paper_task_by_hash(
                 plan_item.fingerprint
             )

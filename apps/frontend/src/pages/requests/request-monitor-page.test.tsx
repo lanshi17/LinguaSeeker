@@ -119,7 +119,14 @@ describe('RequestMonitorPage', () => {
       currentRequest: {
         request_id: 'req-123',
         status: 'success',
-        papers: [],
+        papers: [
+          {
+            paper_task_id: 'paper-1',
+            status: 'success',
+            filename: 'workflow-paper.pdf',
+            document_id: 'doc-1',
+          },
+        ],
       },
       requestTimeline: [
         { id: 'queued', label: 'Queued', status: 'completed' },
@@ -139,7 +146,8 @@ describe('RequestMonitorPage', () => {
 
     await renderPage();
 
-    expect(await screen.findByText('success')).toBeInTheDocument();
+    expect(await screen.findByText(/Papers: 1/i)).toBeInTheDocument();
+    expect(screen.getByText('workflow-paper.pdf')).toBeInTheDocument();
     expect(watchRequest).toHaveBeenCalledWith('req-123');
   });
 
@@ -256,6 +264,38 @@ describe('RequestMonitorPage', () => {
 
     expect(useAppStore.getState().ui.expandedPaperTasks).toEqual([]);
     expect(screen.queryByText(/paper_task_id: paper-1/i)).not.toBeInTheDocument();
+  });
+
+  it('prefers polled papers when workflow request payload lacks papers', async () => {
+    setWorkflowState({
+      currentRequest: { request_id: 'req-123', status: 'running', papers: [] } as any,
+      requestTimeline: [
+        { id: 'queued', label: 'Queued', status: 'completed' },
+        { id: 'running', label: 'Running', status: 'running' },
+        { id: 'success', label: 'Completed', status: 'pending' },
+      ],
+      requestConnection: { requestId: 'req-123', connected: true },
+    });
+
+    vi.mocked(getTaskRequestStatus).mockResolvedValue({
+      request_id: 'req-123',
+      status: 'failed',
+      papers: [
+        {
+          paper_task_id: 'paper-1',
+          status: 'failed',
+          filename: 'paper.pdf',
+          error_code: 'INTERNAL_ERROR',
+          duplicate_of: null,
+          document_id: 'doc-1',
+        },
+      ],
+    });
+
+    await renderPage();
+
+    expect(await screen.findByText(/Papers: 1/i)).toBeInTheDocument();
+    expect(screen.getByText('paper.pdf')).toBeInTheDocument();
   });
 
   it('pushes a toast when reissuing the log link fails', async () => {

@@ -12,8 +12,8 @@ import { normalizePaperResult } from '../../utils/normalizePaperResult';
 
 import type { PaperTaskDetailResponse, PaperTaskItemResponse, TaskRequestStatusResponse } from '../../types/api';
 
-function pillColor(status: string) {
-  const s = status.toLowerCase();
+function pillColor(status: string | null | undefined) {
+  const s = String(status ?? '').toLowerCase();
   if (s.includes('success')) return 'rgba(82,196,26,0.22)';
   if (s.includes('fail')) return 'rgba(255,77,79,0.22)';
   if (s.includes('run') || s.includes('process') || s.includes('start')) return 'rgba(124,92,255,0.22)';
@@ -358,7 +358,10 @@ export const RequestMonitorPage: React.FC = () => {
     };
   }, [requestId, resetWorkflow, watchRequest]);
 
-  const data = workflowRequest ?? poll.data ?? currentRequest;
+  const workflowData = workflowRequest && Array.isArray(workflowRequest.papers) && workflowRequest.papers.length > 0
+    ? workflowRequest
+    : null;
+  const data = workflowData ?? poll.data ?? currentRequest;
   const papers = data?.papers ?? [];
 
   const loadPaperDetail = useCallback(
