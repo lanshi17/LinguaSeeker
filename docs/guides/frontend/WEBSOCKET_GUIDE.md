@@ -1,174 +1,229 @@
-# WebSocket 功能使用指南
+# Frontend WebSocket Guide
 
-## 概述
+## Scope
 
-已添加 WebSocket 支持用于实时获取任务进度更新。
+This guide describes the current frontend WebSocket implementation used by the ACMG-Lingua request monitor flow. The source of truth is:
 
-**WebSocket 端点**: `ws://localhost:8000/ws/task/{task_id}/progress`
+- `apps/frontend/src/services/websocket.ts`
+- `apps/frontend/src/store/workflowStore.ts`
+- `apps/frontend/src/store/useWorkflowStore.ts`
+- `apps/frontend/src/pages/requests/request-monitor-page.tsx`
 
-## 新增文件
+This document intentionally replaces older guidance that no longer matches the current implementation.
 
-### 服务层
-- `src/services/websocket.ts` - WebSocket 客户端类
+## Current architecture
 
-### Hooks
-- `src/hooks/useWebSocket.ts` - WebSocket React Hooks
+The frontend uses a small shared WebSocket service plus a Zustand workflow store:
 
-### 类型定义
-WebSocket 相关类型已添加到 `src/services/websocket.ts`:
-- `WebSocketMessage` - WebSocket 消息格式
-- `WebSocketStatus` - 连接状态
-- `WebSocketOptions` - 配置选项
+1. `createWebSocketService(...)` creates a service that can open request and task streams, parse JSON payloads, and fan out messages to subscribers.
+2. `workflowStore.ts` subscribes to those channels and stores the latest request/task snapshots, derived workflow timelines, and connection metadata.
+3. `useWorkflowStore.ts` exports the single app-facing store instance created with `wsService`.
+4. `RequestMonitorPage` combines stream data with HTTP hydration and request polling so the UI can stay live without depending on polling alone.
 
-## 使用方法
+## WebSocket service
 
-### 1. 在组件中使用 Hook
+`apps/frontend/src/services/websocket.ts` exports:
 
-```tsx
-import { useTaskWebSocket } from './hooks/useWebSocket';
+- `createWebSocketService(options?)`
+- `wsService`
 
-function MyComponent() {
-  const { 
-    isConnected, 
-    progress, 
-    currentStage,
-    lastMessage 
-  } = useTaskWebSocket('task-123', {
-    enabled: true,
-    onProgress: (progress, stage) => {
-      console.log(`进度: ${progress}%, 阶段: ${stage}`);
-    },
-    onComplete: (data) => {
-      console.log('任务完成:', data);
-    },
-    onError: (error) => {
-      console.error('WebSocket 错误:', error);
-    }
-  });
+### Practical API
 
-  return (
-    <div>
-      {isConnected ? '已连接' : '未连接'}
-      进度: {progress}%
-    </div>
-  );
-}
+The returned service exposes four methods:
+
+- `subscribe(channel, listener)`
+- `connectToRequest(requestId)`
+- `connectToTask(taskId)`
+- `disconnectAll()`
+
+### URL construction
+
+The service derives its base WebSocket URL from the frontend API base URL:
+
+- If the configured API base is HTTP/HTTPS, it is converted to `ws://` or `wss://`
+- If running in the browser without an explicit absolute API base, it falls back to the current browser host
+- If running outside the browser, it falls back to `ws://localhost:8000`
+
+### Current stream endpoints
+
+The current implementation connects to these endpoints:
+
+- Request stream: `WS /api/v1/stream/requests/{request_id}`
+- Task stream: `WS /api/v1/stream/{task_id}`
+
+Examples:
+
+```text
+ws://localhost:8000/api/v1/stream/requests/req-123
+ws://localhost:8000/api/v1/stream/task-456
 ```
 
-### 2. 使用 WebSocket 监控任务（替代轮询）
+### Message handling behavior
 
-```tsx
-import { useWebSocketTaskPolling } from './hooks/useWebSocket';
+The service expects each WebSocket message to be JSON. On message receipt it:
 
-function TaskMonitor() {
-  const {
-    isWatching,
-    progress,
-    currentStage,
-    status,
-    startWatching,
-    stopWatching
-  } = useWebSocketTaskPolling('task-123', 
-    (data) => console.log('完成:', data),
-    (error) => console.error('错误:', error)
-  );
+1. Parses `event.data` as JSON
+2. Notifies listeners on the matching channel
+3. Emits a synthetic error payload when parsing fails
 
-  return (
-    <div>
-      <button onClick={startWatching}>开始监控</button>
-      <div>进度: {progress}%</div>
-      <div>阶段: {currentStage}</div>
-    </div>
-  );
-}
+Current error payloads produced by the service are:
+
+- `{ error: 'invalid_json', raw: ev.data }` when the message is not valid JSON
+- `{ error: 'socket_error' }` from `socket.onerror`
+- `{ error: 'socket_close_failed' }` on the `system` channel if `disconnectAll()` throws while closing a socket
+
+Caveat: the service is intentionally minimal. It does not currently implement reconnect logic, heartbeat handling, or channel-specific validation beyond JSON parsing.
+
+## Workflow store
+
+`apps/frontend/src/store/workflowStore.ts` is the main state layer for stream-driven request/task monitoring.
+
+### Stored state
+
+The store keeps:
+
+- `currentRequest: TaskRequestStatusResponse | null`
+- `currentTask: TaskStatusResponse | null`
+- `requestTimeline: WorkflowTimelineStep[]`
+- `taskTimeline: WorkflowTimelineStep[]`
+- `requestConnection: { requestId: string | null; connected: boolean }`
+- `taskConnection: { taskId: string | null; connected: boolean }`
+
+### Watching a request
+
+`watchRequest(requestId)` does two things:
+
+1. Subscribes to channel `request:${requestId}`
+2. Calls `service.connectToRequest(requestId)`
+
+When payloads arrive, the store treats them as `TaskRequestStatusResponse` and updates:
+
+- `currentRequest`
+- `requestTimeline`
+- `requestConnection`
+
+### Watching a task
+
+`watchTask(taskId)` similarly:
+
+1. Subscribes to channel `task:${taskId}`
+2. Calls `service.connectToTask(taskId)`
+
+When payloads arrive, the store treats them as `TaskStatusResponse` and updates:
+
+- `currentTask`
+- `taskTimeline`
+- `taskConnection`
+
+If the task payload contains `error`, or `status === 'failure'`, the store also pushes a toast with title `Task stream error`.
+
+### Timeline projection
+
+The store derives simple three-step timelines for both requests and tasks:
+
+- `Queued`
+- `Running`
+- `Completed`
+
+For request snapshots:
+
+- `queued` is always marked completed once a request payload has arrived
+- `success` marks all steps completed
+- non-success request payloads leave the request in a running state
+
+For task snapshots:
+
+- `workflow_status_description` is copied into the running/completed step description when present
+- `progress_percentage` is copied into the step progress when present
+- `failure` marks the running step as `error`
+- `success` marks all steps completed
+
+### Reset behavior
+
+`reset()` unsubscribes request/task listeners, calls `service.disconnectAll()`, and resets all request/task data, timelines, and connection state back to their initial values.
+
+## useWorkflowStore
+
+`apps/frontend/src/store/useWorkflowStore.ts` is intentionally thin:
+
+```ts
+export const useWorkflowStore = createWorkflowStore(wsService);
 ```
 
-### 3. 直接使用 WebSocket 客户端
+This file does not add extra behavior. It simply exports the app store instance built from the shared `wsService` singleton.
 
-```tsx
-import { TaskWebSocketClient } from './services/websocket';
+## RequestMonitorPage data flow
 
-const client = new TaskWebSocketClient('task-123', {
-  onProgress: (progress, stage) => {
-    console.log(`进度: ${progress}%`);
-  },
-  onComplete: (data) => {
-    console.log('任务完成');
-  },
-  onError: (error) => {
-    console.error('错误:', error);
-  }
-});
+`apps/frontend/src/pages/requests/request-monitor-page.tsx` is the clearest example of how stream data, polling, and app-store hydration work together.
 
-client.connect();
+### What happens on page load
 
-// 稍后断开
-client.disconnect();
+When `RequestMonitorPage` mounts for a `requestId`, it starts two independent flows:
+
+1. `fetchRequest(requestId)` hydrates request data into the app store through `useAppStore`
+2. `watchRequest(requestId)` starts the request WebSocket watch through `useWorkflowStore`
+
+On unmount, the page calls `resetWorkflow()`.
+
+### Stream-first request selection
+
+The page only trusts stream data when the active stream connection and payload both match the current route `requestId`.
+
+In practice, it builds:
+
+- `streamedSnapshot` from `workflowStore.currentRequest` when the streamed request matches the active request id
+- `pollingSnapshot` from `useRequestPolling(...)` when polling has fetched the active request id
+- `appStoreSnapshot` from `useAppStore().currentRequest` when the hydration fetch matches the active request id
+
+The chosen request data is:
+
+```ts
+data = streamedSnapshot ?? pollingSnapshot ?? appStoreSnapshot;
 ```
 
-## TaskStatusPage 更新
+So the precedence is:
 
-任务状态页面现在支持 WebSocket 实时更新：
+1. Matching active stream snapshot
+2. Polling snapshot
+3. App-store hydration snapshot
 
-1. **自动连接**: 页面加载时自动尝试 WebSocket 连接
-2. **实时进度**: 通过 WebSocket 接收实时进度更新
-3. **降级机制**: WebSocket 失败时自动切换到轮询
-4. **连接状态显示**: 显示当前连接状态（实时推送/轮询）
+### Polling fallback relationship
 
-## 功能特性
+Polling is not the primary source of truth. It is enabled only when the page does not currently have a matching streamed request snapshot:
 
-### 自动重连
-WebSocket 连接断开会自动重连（最多 5 次，间隔 2 秒）。
-
-### 降级机制
-如果 WebSocket 连接失败，自动切换到 HTTP 轮询。
-
-### 消息类型
-WebSocket 支持的消息类型：
-- `progress` - 进度更新
-- `status` - 状态变更
-- `completed` - 任务完成
-- `error` - 错误信息
-- `connected` - 连接成功
-- `disconnected` - 连接断开
-
-## 后端要求
-
-后端需要实现 WebSocket 端点：
-```
-WS /ws/task/{task_id}/progress
+```ts
+enabled: Boolean(requestId && !streamedRequest)
 ```
 
-预期消息格式：
-```json
-{
-  "type": "progress",
-  "task_id": "task-123",
-  "progress": 50,
-  "stage": "PDF解析",
-  "timestamp": "2024-01-01T00:00:00Z"
-}
-```
+That means the page behavior is:
 
-## 浏览器控制台调试
+- Prefer the request stream when a matching stream snapshot exists
+- Fall back to HTTP polling every 2 seconds when stream request data is absent
+- Fall back again to the app-store hydration snapshot if polling has not yet produced data
 
-```javascript
-// 查看 WebSocket 状态
-proxyTest.runProxyTest()
+`useRequestPolling` also skips work while the browser tab is hidden, because it defers each polling tick when `document.visibilityState === 'hidden'`.
 
-// 检查连接
-networkTest.fullNetworkDiagnostic()
-```
+### Task stream usage on the page
 
-## 故障排查
+Task streams are not opened for every paper immediately. Instead, when a paper row is expanded the page:
 
-### WebSocket 连接失败
-1. 检查后端是否支持 WebSocket
-2. 检查防火墙设置
-3. 查看浏览器控制台错误信息
-4. 系统会自动降级到轮询模式
+1. Calls `watchTask(p.paper_task_id)`
+2. Loads paper detail via HTTP
 
-### 连接状态说明
-- **● 实时推送已连接** - WebSocket 连接成功
-- **○ 正在连接实时推送...** - 正在连接 WebSocket
-- **○ 使用轮询模式** - WebSocket 失败，使用 HTTP 轮询
+The expanded paper then renders workflow information from the current task stream when `currentTask.paper_task_id` matches that paper.
+
+## Recommended usage pattern
+
+If you need live request/task status elsewhere in the frontend, follow the current pattern:
+
+1. Use `useWorkflowStore` rather than creating ad hoc WebSocket code in components
+2. Call `watchRequest(requestId)` for request-level monitoring
+3. Call `watchTask(taskId)` only when task-level detail is actually needed
+4. Keep a non-stream fallback path for initial hydration or cases where no matching stream snapshot exists
+5. Call `reset()` when leaving the monitored screen so sockets and listeners are cleaned up
+
+## Implementation notes
+
+- The WebSocket service is intentionally minimal: there is no reconnect or heartbeat logic in the current frontend code.
+- `workflowStore.ts` treats parsed payloads as request/task response shapes, but it does not perform runtime schema validation beyond JSON parsing.
+- `requestConnection.connected` and `taskConnection.connected` become `true` after matching payloads are received, so they are better read as "stream has produced data for this id" than as a low-level socket-open flag.

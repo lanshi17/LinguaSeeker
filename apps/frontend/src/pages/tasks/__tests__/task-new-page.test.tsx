@@ -106,6 +106,18 @@ describe('TaskNewPage shell', () => {
     expect(screen.getByText(/req-from-feedback/i)).toBeInTheDocument();
   });
 
+  it('provides an expert feedback shortcut to candidates after confirmation', () => {
+    useTaskFlowStore.setState({
+      confirmedRequestId: 'req-123',
+    });
+
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: /Open candidates shortcut/i }));
+
+    expect(mockNavigate).toHaveBeenCalledWith('/tasks/pubmed/candidates');
+  });
+
   it('shows default country and language values when the task form is auto-generated later', () => {
     useTaskFlowStore.setState({
       taskForm: null,

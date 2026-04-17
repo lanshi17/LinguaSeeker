@@ -16,7 +16,7 @@ type WorkflowRequest = {
 };
 
 type WorkflowTimelineStep = {
-  id: 'queued' | 'running' | 'success';
+  id: string;
   label: string;
   status: 'pending' | 'running' | 'completed' | 'error';
   description?: string;
@@ -112,7 +112,7 @@ describe('RequestMonitorPage', () => {
     useToastStore.getState().clearToasts();
   });
 
-  it('prefers workflow streamed request status when available', async () => {
+  it('prefers matching active workflow stream over polling snapshot', async () => {
     const watchRequest = vi.fn();
 
     setWorkflowState({
@@ -140,14 +140,22 @@ describe('RequestMonitorPage', () => {
     await renderPage();
 
     expect(await screen.findByText('success')).toBeInTheDocument();
+    expect(screen.queryByText('running')).not.toBeInTheDocument();
     expect(watchRequest).toHaveBeenCalledWith('req-123');
+    await waitFor(() => {
+      expect(getTaskRequestStatus).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('hydrates request status into AppStore and renders the current request', async () => {
+  it('falls back to polling snapshot when no matching stream data is active', async () => {
     setWorkflowState({
-      currentRequest: null,
+      currentRequest: {
+        request_id: 'req-other',
+        status: 'success',
+        papers: [],
+      },
+      requestConnection: { requestId: 'req-other', connected: true },
       requestTimeline: [],
-      requestConnection: { requestId: null, connected: false },
     });
 
     vi.mocked(getTaskRequestStatus).mockResolvedValue({
@@ -167,38 +175,90 @@ describe('RequestMonitorPage', () => {
 
     expect(await screen.findByText('running')).toBeInTheDocument();
     expect(screen.getByText('paper.pdf')).toBeInTheDocument();
+  });
+
+  it('falls back to app-store request when stream and poll data are absent', async () => {
+    useAppStore.setState({
+      currentRequest: {
+        request_id: 'req-123',
+        status: 'queued',
+        papers: [],
+      },
+    });
+
+    vi.mocked(getTaskRequestStatus).mockRejectedValue(new Error('network down'));
+
+    await renderPage();
+
+    expect(await screen.findByText('queued')).toBeInTheDocument();
+    expect(screen.queryByText('Error')).not.toBeInTheDocument();
+    expect(screen.queryByText('network down')).not.toBeInTheDocument();
     expect(useAppStore.getState().currentRequest?.request_id).toBe('req-123');
   });
 
-  it('renders a workflow timeline when available', async () => {
+  it('renders shared timeline states for request and paper-task workflows', async () => {
+    const watchTask = vi.fn();
+
     setWorkflowState({
       currentRequest: {
         request_id: 'req-123',
         status: 'running',
-        papers: [],
+        papers: [
+          {
+            paper_task_id: 'paper-1',
+            status: 'failure',
+            filename: 'paper.pdf',
+          },
+        ],
       },
       requestConnection: { requestId: 'req-123', connected: true },
       requestTimeline: [
         { id: 'queued', label: 'Queued', status: 'completed' },
         { id: 'running', label: 'Running', status: 'running', description: 'Parsing PDF', progress: 40 },
-        { id: 'success', label: 'Completed', status: 'pending' },
+        { id: 'success', label: 'Completed', status: 'error', description: 'Workflow failed' },
       ],
+      currentTask: {
+        task_id: 'task-1',
+        status: 'failure',
+        workflow_status: 'classification',
+        workflow_status_description: 'Classifier crashed',
+        progress_percentage: 60,
+        paper_task_id: 'paper-1',
+        error: 'Classifier crashed',
+      },
+      taskConnection: { taskId: 'task-1', connected: true },
+      taskTimeline: [
+        { id: 'queued', label: 'Queued', status: 'completed' },
+        { id: 'running', label: 'Running', status: 'completed', description: 'Parsed PDF', progress: 60 },
+        { id: 'failed', label: 'Failed', status: 'error', description: 'Classifier crashed' },
+      ],
+      watchTask,
     });
 
     vi.mocked(getTaskRequestStatus).mockResolvedValue({
       request_id: 'req-123',
       status: 'queued',
-      papers: [],
+      papers: [
+        {
+          paper_task_id: 'paper-1',
+          status: 'failure',
+          filename: 'paper.pdf',
+        },
+      ],
     });
 
     await renderPage();
 
     expect(await screen.findByText('Workflow')).toBeInTheDocument();
-    expect(screen.getByText('Queued')).toBeInTheDocument();
-    expect(screen.getByText('Running')).toBeInTheDocument();
-    expect(screen.getByText('Completed')).toBeInTheDocument();
     expect(screen.getByText(/Parsing PDF/i)).toBeInTheDocument();
-    expect(screen.getByText(/40%/i)).toBeInTheDocument();
+    expect(screen.getByText(/Workflow failed/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Details/i }));
+
+    expect(screen.getByText(/Task workflow/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Failed$/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Classifier crashed/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/error/i).length).toBeGreaterThan(0);
   });
 
   it('toggles paper details expansion through AppStore state', async () => {

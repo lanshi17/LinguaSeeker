@@ -103,7 +103,7 @@ export const PubmedCandidatesPage: React.FC = () => {
         <div className="panel-body">
           <div className="muted">Confirmation state or task form not found. Please create a task first.</div>
           <div style={{ marginTop: 10 }}>
-            <Link to="/tasks/new">Go to task creation</Link>
+            <Link to="/tasks/agent-create">Go to task creation</Link>
           </div>
         </div>
       </div>

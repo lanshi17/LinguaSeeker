@@ -15,7 +15,7 @@ export const AppShell: React.FC = () => {
           </div>
           <nav aria-label="Primary" style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
             <Link
-              to="/tasks/new"
+              to="/tasks/agent-create"
               aria-current={location.pathname.startsWith('/tasks') ? 'page' : undefined}
               style={{ opacity: location.pathname.startsWith('/tasks') ? 1 : 0.8 }}
             >
