@@ -7,7 +7,6 @@
 ```
 deploy/
 ├── dev_start.sh          # 本地开发环境启动脚本
-├── .work_logs.sh         # 工作日志脚本
 ├── docker/               # Docker 配置文件
 └── README.md             # 本文件
 ```

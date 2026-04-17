@@ -1500,6 +1500,31 @@ class GraphSyncService:
         )
         logger.debug("Ensuring document node {} exists", document_id)
         neo = self._neo4j
+        doc_entity = None
+        get_doc = getattr(self._pg, "get_document_by_id", None)
+        if callable(get_doc):
+            try:
+                doc_entity = get_doc(UUID(str(document_id)))
+            except Exception as exc:
+                logger.warning(
+                    "Failed to fetch document %s metadata for Neo4j sync: %s",
+                    document_id,
+                    exc,
+                )
+        document_props: Dict[str, Any] = {}
+        if doc_entity is not None:
+            title = getattr(doc_entity, "title", None)
+            file_hash = getattr(doc_entity, "file_hash", None)
+            status = getattr(doc_entity, "status", None)
+            pmid = getattr(doc_entity, "pmid", None)
+            if title:
+                document_props["title"] = title
+            if file_hash:
+                document_props["file_hash"] = file_hash
+            if status:
+                document_props["status"] = status
+            if pmid:
+                document_props["pmid"] = pmid
         variant_structural_key = None
         variant_exon_range = None
         variant_structural_type = None
@@ -1512,7 +1537,7 @@ class GraphSyncService:
                 structural_hint.get("transcript_id") or variant_transcript
             )
 
-        neo.upsert_document(str(document_id))
+        neo.upsert_document(str(document_id), **document_props)
 
         if gene_symbol:
             logger.debug("Upserting gene node {}", gene_symbol)

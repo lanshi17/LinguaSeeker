@@ -275,10 +275,75 @@ def test_graph_sync_evidence(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
     assert "evidence" in calls
 
 
-def test_graph_sync_backfills_nested_ps3_payload_fields(
+def test_graph_sync_evidence_upserts_document_metadata(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
+    document_calls: list[dict[str, Any]] = []
+
+    class FakeNeo4j:
+        def upsert_document(self, document_id: str, **props: Any) -> None:
+            document_calls.append({"document_id": document_id, **props})
+
+        def __getattr__(self, _: str) -> Any:
+            return lambda *args, **kwargs: None
+
+    class FakePostgres:
+        def create_evidence_record(self, **kwargs: Any) -> Any:
+            return SimpleNamespace(evidence_id=321)
+
+        def get_document_by_id(self, document_id: Any) -> Any:
+            return SimpleNamespace(
+                document_id=document_id,
+                title='Example document title',
+                file_hash='hash-123',
+                status='success',
+                pmid='12345678',
+            )
+
+        def get_evidence_for_document(self, *_: Any, **__: Any) -> List[Any]:
+            return []
+
+    monkeypatch.setattr(sync_module, 'get_neo4j_client', lambda: FakeNeo4j())
+    monkeypatch.setattr(sync_module, 'get_postgres_client', lambda: FakePostgres())
+    monkeypatch.setattr(
+        sync_module,
+        'get_variation_data_service',
+        lambda: DummyVariationService(),
+    )
+    monkeypatch.setattr(
+        sync_module.GraphSyncService,
+        '_FAILURE_ARCHIVE_PATH',
+        tmp_path / 'failures.jsonl',
+    )
+
+    service = sync_module.GraphSyncService()
+    evidence_output = {
+        'extracted_fields': {
+            'gene': {'symbol': 'GENE'},
+            'variant': {'hgvs_c': 'c.1A>T', 'hgvs_p': 'p.K1N'},
+            'transcript_id': {'transcript_id': 'NM_1'},
+            'disease_chpo': {'disease_name': 'D1'},
+        },
+        'ps3_evidence': {},
+        'evidence_classification': 'Pathogenic',
+        'overall_confidence': 90.0,
+        'final_evidence_strength': 'PS3',
+    }
+
+    service.sync_evidence('00000000-0000-0000-0000-000000000001', evidence_output)
+
+    assert document_calls == [
+        {
+            'document_id': '00000000-0000-0000-0000-000000000001',
+            'title': 'Example document title',
+            'file_hash': 'hash-123',
+            'status': 'success',
+            'pmid': '12345678',
+        }
+    ]
+
+
     class NoopNeo4j:
         def __getattr__(self, _: str) -> Any:
             return lambda *args, **kwargs: None
