@@ -575,7 +575,9 @@ class GraphSyncService:
             self._truncate_field(gene_symbol, 100) if gene_symbol else None
         )
         transcript_id_safe = (
-            self._truncate_field(transcript_id, 100) if transcript_id else None
+            self._truncate_field(self._normalize_transcript_id(transcript_id), 100)
+            if transcript_id is not None
+            else None
         )
         ref_genome_safe = self._truncate_field(ref_genome, 50) if ref_genome else None
         disease_name_safe = (
@@ -944,6 +946,15 @@ class GraphSyncService:
             return cleaned or None
         except Exception:
             return None
+
+    @classmethod
+    def _normalize_transcript_id(cls, value: Any) -> Optional[str]:
+        normalized = cls._normalize_string(value)
+        if normalized is None:
+            return None
+        if normalized.lower() in {'0.0', 'null', 'none', 'nan', 'n/a'}:
+            return None
+        return normalized
 
     @staticmethod
     def _truncate_field(value: Any, max_length: int) -> Optional[str]:
@@ -1528,7 +1539,7 @@ class GraphSyncService:
         variant_structural_key = None
         variant_exon_range = None
         variant_structural_type = None
-        variant_transcript = transcript_id
+        variant_transcript = self._normalize_transcript_id(transcript_id)
         if isinstance(structural_hint, dict):
             variant_structural_key = structural_hint.get("structural_key")
             variant_exon_range = structural_hint.get("exon_range")
@@ -1600,14 +1611,14 @@ class GraphSyncService:
                     str(document_id), "Variant", entity_key, entity_value
                 )
 
-        if transcript_id and gene_symbol:
+        if variant_transcript and gene_symbol:
             logger.debug(
                 "Upserting transcript {} and linking to gene {}",
-                transcript_id,
+                variant_transcript,
                 gene_symbol,
             )
-            neo.upsert_transcript(transcript_id)
-            neo.link_gene_transcript(gene_symbol, transcript_id)
+            neo.upsert_transcript(variant_transcript)
+            neo.link_gene_transcript(gene_symbol, variant_transcript)
 
         if disease_name:
             logger.debug("Upserting disease {} (icd10={})", disease_name, icd10 or "-")

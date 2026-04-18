@@ -332,6 +332,150 @@ def test_graph_sync_evidence_upserts_disease_icd10(
     ]
 
 
+def test_graph_sync_drops_placeholder_transcript_id_from_variant_and_transcript_nodes(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    variant_calls: list[dict[str, Any]] = []
+    transcript_calls: list[str] = []
+    gene_transcript_calls: list[tuple[str, str]] = []
+
+    class FakeNeo4j:
+        def upsert_variant(self, hgvs_c: Optional[str], **props: Any) -> None:
+            variant_calls.append({'hgvs_c': hgvs_c, **props})
+
+        def upsert_transcript(self, transcript_id: str, **props: Any) -> None:
+            transcript_calls.append(transcript_id)
+
+        def link_gene_transcript(self, gene_symbol: str, transcript_id: str) -> None:
+            gene_transcript_calls.append((gene_symbol, transcript_id))
+
+        def __getattr__(self, _: str) -> Any:
+            return lambda *args, **kwargs: None
+
+    class FakePostgres:
+        def __init__(self) -> None:
+            self.kwargs: Dict[str, Any] = {}
+
+        def create_evidence_record(self, **kwargs: Any) -> Any:
+            self.kwargs = kwargs
+            return SimpleNamespace(evidence_id=501)
+
+        def get_evidence_for_document(self, *_: Any, **__: Any) -> List[Any]:
+            return []
+
+    fake_pg = FakePostgres()
+    monkeypatch.setattr(sync_module, 'get_neo4j_client', lambda: FakeNeo4j())
+    monkeypatch.setattr(sync_module, 'get_postgres_client', lambda: fake_pg)
+    monkeypatch.setattr(
+        sync_module,
+        'get_variation_data_service',
+        lambda: DummyVariationService(),
+    )
+    monkeypatch.setattr(
+        sync_module.GraphSyncService,
+        '_FAILURE_ARCHIVE_PATH',
+        tmp_path / 'failures.jsonl',
+    )
+
+    service = sync_module.GraphSyncService()
+    evidence_output = {
+        'extracted_fields': {
+            'gene': {'symbol': 'GENE'},
+            'variant': {'hgvs_c': 'c.1A>T', 'hgvs_p': 'p.K1N'},
+            'transcript_id': {'transcript_id': '0.0'},
+            'disease_chpo': {'disease_name': 'D1'},
+        },
+        'ps3_evidence': {},
+        'evidence_classification': 'Pathogenic',
+        'overall_confidence': 90.0,
+        'final_evidence_strength': 'PS3',
+    }
+
+    service.sync_evidence('00000000-0000-0000-0000-000000000001', evidence_output)
+
+    assert fake_pg.kwargs['transcript_id'] is None
+    assert len(variant_calls) == 1
+    assert variant_calls[0]['hgvs_c'] == 'c.1A>T'
+    assert variant_calls[0]['variation_id'] == 101
+    assert variant_calls[0]['hgvs_p'] == 'p.K1N'
+    assert variant_calls[0]['transcript_id'] is None
+    assert transcript_calls == []
+    assert gene_transcript_calls == []
+
+
+def test_graph_sync_keeps_valid_transcript_id(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    variant_calls: list[dict[str, Any]] = []
+    transcript_calls: list[str] = []
+    gene_transcript_calls: list[tuple[str, str]] = []
+
+    class FakeNeo4j:
+        def upsert_variant(self, hgvs_c: Optional[str], **props: Any) -> None:
+            variant_calls.append({'hgvs_c': hgvs_c, **props})
+
+        def upsert_transcript(self, transcript_id: str, **props: Any) -> None:
+            transcript_calls.append(transcript_id)
+
+        def link_gene_transcript(self, gene_symbol: str, transcript_id: str) -> None:
+            gene_transcript_calls.append((gene_symbol, transcript_id))
+
+        def __getattr__(self, _: str) -> Any:
+            return lambda *args, **kwargs: None
+
+    class FakePostgres:
+        def __init__(self) -> None:
+            self.kwargs: Dict[str, Any] = {}
+
+        def create_evidence_record(self, **kwargs: Any) -> Any:
+            self.kwargs = kwargs
+            return SimpleNamespace(evidence_id=502)
+
+        def get_evidence_for_document(self, *_: Any, **__: Any) -> List[Any]:
+            return []
+
+    fake_pg = FakePostgres()
+    monkeypatch.setattr(sync_module, 'get_neo4j_client', lambda: FakeNeo4j())
+    monkeypatch.setattr(sync_module, 'get_postgres_client', lambda: fake_pg)
+    monkeypatch.setattr(
+        sync_module,
+        'get_variation_data_service',
+        lambda: DummyVariationService(),
+    )
+    monkeypatch.setattr(
+        sync_module.GraphSyncService,
+        '_FAILURE_ARCHIVE_PATH',
+        tmp_path / 'failures.jsonl',
+    )
+
+    service = sync_module.GraphSyncService()
+    evidence_output = {
+        'extracted_fields': {
+            'gene': {'symbol': 'GENE'},
+            'variant': {'hgvs_c': 'c.1A>T', 'hgvs_p': 'p.K1N'},
+            'transcript_id': {'transcript_id': 'NM_006017.3'},
+            'disease_chpo': {'disease_name': 'D1'},
+        },
+        'ps3_evidence': {},
+        'evidence_classification': 'Pathogenic',
+        'overall_confidence': 90.0,
+        'final_evidence_strength': 'PS3',
+    }
+
+    service.sync_evidence('00000000-0000-0000-0000-000000000001', evidence_output)
+
+    assert fake_pg.kwargs['transcript_id'] == 'NM_006017.3'
+    assert len(variant_calls) == 1
+    assert variant_calls[0]['hgvs_c'] == 'c.1A>T'
+    assert variant_calls[0]['variation_id'] == 101
+    assert variant_calls[0]['hgvs_p'] == 'p.K1N'
+    assert variant_calls[0]['transcript_id'] == 'NM_006017.3'
+    assert transcript_calls == ['NM_006017.3']
+    assert gene_transcript_calls == [('GENE', 'NM_006017.3')]
+
+
 def test_graph_sync_evidence_upserts_document_metadata(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
