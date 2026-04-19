@@ -976,6 +976,7 @@ async def _try_download_and_store_literature_pdf(
     api_provider: Optional[str] = None,
     web_provider: Optional[str] = None,
     keep_local_file: bool = False,
+    preserve_local_file: bool = False,
 ) -> Dict[str, Any]:
     if not document_id:
         return {"downloaded": False, "reason": "document_id_missing"}
@@ -1077,6 +1078,7 @@ async def _try_download_and_store_literature_pdf(
             provider = route.get("web_provider")
 
     upload_ref = None
+    preserved_file_path: Optional[str] = None
     try:
         minio_client = MinIOClient()
         await minio_client.ensure_buckets()
@@ -1096,6 +1098,15 @@ async def _try_download_and_store_literature_pdf(
                 "uploaded_at": datetime.now(timezone.utc).isoformat(),
             },
         )
+        if preserve_local_file or keep_local_file:
+            preserved_dir = Path(os.environ.get("PWD", str(Path.cwd()))) / "tmp"
+            preserved_dir.mkdir(parents=True, exist_ok=True)
+            preserved_name = f"run_upload_{document_id}"
+            target_dir = preserved_dir / preserved_name
+            target_dir.mkdir(parents=True, exist_ok=True)
+            preserved_path = target_dir / filename
+            shutil.copy2(file_path, preserved_path)
+            preserved_file_path = str(preserved_path)
     except Exception as exc:
         shutil.rmtree(download_dir, ignore_errors=True)
         return {
@@ -1118,13 +1129,13 @@ async def _try_download_and_store_literature_pdf(
         "downloads_count": len(downloads),
         "source_trace": source_trace,
         "local_file_name": filename,
+        "local_file_path": preserved_file_path or (str(file_path) if keep_local_file else None),
         "sha256": file_hash,
         "size_bytes": len(payload_bytes),
         "object_key": upload_ref.object_key if upload_ref else None,
         "bucket": str(getattr(upload_ref.bucket, "value", upload_ref.bucket))
         if upload_ref
         else None,
-        "local_file_path": str(file_path) if keep_local_file else None,
     }
 
 
@@ -3229,6 +3240,68 @@ def process_literature_identifier_task(
         "status": "queued",
         "worker": "literature_identifier_placeholder",
     }
+
+
+@celery_app.task(
+    name="tasks.process_literature_identifier",
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 2, "countdown": 300, "queue": "retry"},
+    retry_jitter=True,
+)
+def process_literature_identifier_task(
+    self,
+    candidate: Dict[str, Any],
+    document_id: str,
+    paper_task_id: str,
+    request_id: str,
+) -> Dict[str, Any]:
+    identifiers = dict(candidate.get("identifiers") or {})
+    detail_link = str(candidate.get("detail_link") or identifiers.get("url") or candidate.get("url") or "").strip() or None
+    selected_title = str(candidate.get("title") or "").strip() or None
+    query = (
+        selected_title
+        or str(identifiers.get("doi") or "").strip()
+        or str(identifiers.get("pmid") or "").strip()
+        or str(document_id or "").strip()
+    )
+    identifier_values = [
+        str(value).strip()
+        for value in identifiers.values()
+        if str(value).strip()
+    ]
+    source: Literal["pubmed", "web"] = "pubmed" if identifiers.get("pmid") else "web"
+
+    download = asyncio.run(
+        _try_download_and_store_literature_pdf(
+            document_id=document_id,
+            source=source,
+            query=query,
+            identifiers=identifier_values,
+            detail_link=detail_link,
+            selected_title=selected_title,
+            preserve_local_file=True,
+        )
+    )
+    local_file_path = str(download.get("local_file_path") or "").strip()
+    if not download.get("downloaded") or not local_file_path:
+        return {
+            "candidate": candidate,
+            "document_id": document_id,
+            "paper_task_id": paper_task_id,
+            "request_id": request_id,
+            "status": "failed",
+            "error_code": "FULLTEXT_UNAVAILABLE",
+            "download": download,
+        }
+
+    return process_pdf_task.run(
+        file_paths=[local_file_path],
+        file_hash=download.get("sha256"),
+        document_id=document_id,
+        paper_task_id=paper_task_id,
+        request_id=request_id,
+    )
 
 
 @celery_app.task(

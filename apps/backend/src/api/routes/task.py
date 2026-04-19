@@ -35,6 +35,7 @@ from src.services.task_manager import (
     process_literature_identifier_task,
     process_pdf_task,
     process_pubmed_paper_task,
+    process_literature_identifier_task,
     resume_supervisor_task,
     process_web_page_task,
 )
@@ -478,6 +479,109 @@ def _aggregate_source_stats(papers: List[Any]) -> Dict[str, Any]:
             for provider, stats in provider_stats.items()
         },
     }
+
+
+def _synthetic_hash_from_literature_candidate(candidate: Dict[str, Any]) -> str:
+    identifiers = dict(candidate.get("identifiers") or {})
+    identity = {
+        "candidate_id": candidate.get("candidate_id"),
+        "provider": candidate.get("provider"),
+        "route": candidate.get("route"),
+        "title": candidate.get("title"),
+        "doi": candidate.get("doi") or identifiers.get("doi"),
+        "url": candidate.get("url") or identifiers.get("url"),
+        "pmid": identifiers.get("pmid"),
+    }
+    return hashlib.sha256(
+        json.dumps(identity, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    ).hexdigest()
+
+
+def _enqueue_literature_candidate_task(
+    postgres: Any,
+    *,
+    request_id: str,
+    candidate: Dict[str, Any],
+) -> Any:
+    candidate_item = LiteratureCandidateItem.model_validate(candidate)
+    candidate_payload = candidate_item.model_dump()
+    identifiers = dict(candidate_payload.get("identifiers") or {})
+    route = str(candidate_payload.get("route") or "").strip().lower()
+    url = str(candidate_payload.get("url") or identifiers.get("url") or "").strip()
+    pmid = str(candidate_payload.get("doi") or "")
+    pmid = str(identifiers.get("pmid") or pmid).strip()
+    title = str(candidate_payload.get("title") or "Literature candidate").strip() or "Literature candidate"
+    provider = str(candidate_payload.get("provider") or "literature").strip() or "literature"
+    detail_link = str(candidate_payload.get("detail_link") or "").strip() or None
+
+    lane = "identifier"
+    file_hash_seed = json.dumps(candidate_payload, sort_keys=True, ensure_ascii=False)
+    original_filename = title
+    document_kwargs: Dict[str, Any] = {
+        "title": title,
+        "original_filename": title,
+        "local_path": url or detail_link,
+        "file_hash": hashlib.sha256(file_hash_seed.encode("utf-8")).hexdigest(),
+        "status": "queued",
+        "summary": f"Queued literature candidate from {provider}",
+    }
+
+    if route == "web" and url:
+        lane = "web"
+        document_kwargs["local_path"] = url
+    elif pmid:
+        lane = "pubmed"
+        document_kwargs.update(
+            {
+                "title": f"PMID:{pmid}",
+                "original_filename": f"PMID:{pmid}",
+                "pmid": pmid,
+                "local_path": None,
+                "file_hash": _synthetic_hash_from_pmid(pmid),
+                "summary": f"Queued literature PMID candidate from {provider}",
+            }
+        )
+        original_filename = f"PMID:{pmid}"
+
+    document = postgres.create_document(**document_kwargs)
+    document_id = _uuid_str(document.document_id)
+    paper_entry = postgres.create_paper_task(
+        request_id=request_id,
+        document_id=document_id,
+        original_filename=original_filename,
+        file_hash=document_kwargs["file_hash"],
+        status="queued",
+    )
+    paper_task_id = _uuid_str(paper_entry.paper_task_id)
+    postgres.append_paper_task_log(
+        paper_task_id,
+        status="queued",
+        node="acquisition",
+        message=f"Literature {lane} candidate queued: {title}",
+        payload={
+            "lane": lane,
+            "provider": provider,
+            "candidate": candidate_payload,
+        },
+    )
+
+    if lane == "web":
+        async_result = _celery_task(process_web_page_task).apply_async(
+            args=[url, document_id, paper_task_id, request_id]
+        )
+    elif lane == "pubmed":
+        async_result = _celery_task(process_pubmed_paper_task).apply_async(
+            args=[pmid, document_id, paper_task_id, request_id]
+        )
+    else:
+        async_result = _celery_task(process_literature_identifier_task).apply_async(
+            args=[candidate_payload, document_id, paper_task_id, request_id]
+        )
+
+    return postgres.update_paper_task(
+        paper_task_id,
+        celery_task_id=async_result.id,
+    )
 
 
 @router.post(

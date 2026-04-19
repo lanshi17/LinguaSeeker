@@ -2,14 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../services/api', () => ({
   getTaskRequestStatus: vi.fn(),
-  pubmedCandidateSearch: vi.fn(),
+  literatureCandidateSearch: vi.fn(),
 }));
 
 import { useAppStore } from '../appStore';
 import { useToastStore } from '../useToastStore';
-import { getTaskRequestStatus, pubmedCandidateSearch } from '../../services/api';
+import { getTaskRequestStatus, literatureCandidateSearch } from '../../services/api';
 
-import type { PubMedCandidateItem, TaskRequestStatusResponse } from '../../types/api';
+import type { LiteratureCandidateItem, TaskRequestStatusResponse } from '../../types/api';
 
 describe('useAppStore', () => {
   beforeEach(() => {
@@ -41,10 +41,10 @@ describe('useAppStore', () => {
   });
 
   it('fetchCandidates stores candidate results for the current task form payload', async () => {
-    const candidates: PubMedCandidateItem[] = [
-      { pmid: '1', title: 'A paper', journal: 'Nature', pub_date: '2026-03-01' },
+    const candidates: LiteratureCandidateItem[] = [
+      { candidate_id: 'cand-1', provider: 'jstage', route: 'api', title: 'A paper', journal: 'Nature', year: '2026', language: 'ja' },
     ];
-    vi.mocked(pubmedCandidateSearch).mockResolvedValueOnce({
+    vi.mocked(literatureCandidateSearch).mockResolvedValueOnce({
       request_id: 'req-123',
       task_form: '{"goal":"Assess evidence"}',
       candidates,
@@ -54,11 +54,11 @@ describe('useAppStore', () => {
       request_id: 'req-123',
       target: 'Assess evidence',
       disease: 'Breast cancer',
-      source: 'pubmed',
+      source: 'literature',
       candidate_limit: 15,
     });
 
-    expect(pubmedCandidateSearch).toHaveBeenCalledWith(
+    expect(literatureCandidateSearch).toHaveBeenCalledWith(
       expect.objectContaining({ request_id: 'req-123', target: 'Assess evidence' })
     );
     expect(useAppStore.getState().candidates).toEqual(candidates);
@@ -90,19 +90,19 @@ describe('useAppStore', () => {
     expect(useAppStore.getState().ui.requestFilters.status).toBe('all');
   });
 
-  it('toggles PMIDs and expanded paper tasks and clears selected PMIDs', () => {
-    useAppStore.getState().togglePmidSelection('pmid-1');
-    useAppStore.getState().togglePmidSelection('pmid-2');
+  it('toggles candidate ids and expanded paper tasks and clears selected candidate ids', () => {
+    useAppStore.getState().toggleCandidateSelection('cand-1');
+    useAppStore.getState().toggleCandidateSelection('cand-2');
     useAppStore.getState().togglePaperTaskExpand('paper-1');
 
-    expect(useAppStore.getState().ui.selectedPmids).toEqual(['pmid-1', 'pmid-2']);
+    expect(useAppStore.getState().ui.selectedCandidateIds).toEqual(['cand-1', 'cand-2']);
     expect(useAppStore.getState().ui.expandedPaperTasks).toEqual(['paper-1']);
 
-    useAppStore.getState().togglePmidSelection('pmid-1');
-    useAppStore.getState().clearPmidSelection();
+    useAppStore.getState().toggleCandidateSelection('cand-1');
+    useAppStore.getState().clearCandidateSelection();
     useAppStore.getState().togglePaperTaskExpand('paper-1');
 
-    expect(useAppStore.getState().ui.selectedPmids).toEqual([]);
+    expect(useAppStore.getState().ui.selectedCandidateIds).toEqual([]);
     expect(useAppStore.getState().ui.expandedPaperTasks).toEqual([]);
   });
 

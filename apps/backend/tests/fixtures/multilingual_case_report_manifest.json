@@ -1,0 +1,228 @@
+[
+  {
+    "language": "zh",
+    "country": "CN",
+    "provider": "pubscholar",
+    "route": "web",
+    "query": "DNAJB2复合杂合突变相关腓骨肌萎缩症2型家系病例1例",
+    "title": "DNAJB2复合杂合突变相关腓骨肌萎缩症2型家系病例1例",
+    "identifiers": {
+      "doi": "10.3760/cma.j.cmcr.2022.e01497",
+      "url": "https://rs.yiigle.com/CN119999202201/1360483.htm"
+    },
+    "expected_gene": "DNAJB2",
+    "expected_variant": null,
+    "expected_disease": "腓骨肌萎缩症2型"
+  },
+  {
+    "language": "zh",
+    "country": "CN",
+    "provider": "hans_publishers",
+    "route": "web",
+    "query": "一例ANK1基因突变型遗传性球形红细胞增多症病例报告并文献复习",
+    "title": "一例ANK1基因突变型遗传性球形红细胞增多症病例报告并文献复习",
+    "identifiers": {
+      "doi": "10.12677/ACM.2023.13112451",
+      "url": "https://image.hanspub.org/Html/77-1577845_75032.htm"
+    },
+    "expected_gene": "ANK1",
+    "expected_variant": null,
+    "expected_disease": "遗传性球形红细胞增多症"
+  },
+  {
+    "language": "ja",
+    "country": "JP",
+    "provider": "jstage",
+    "route": "api",
+    "query": "A family case with a COL4A2 gene variant who was identified based upon brain imaging findings in a sibling",
+    "title": "A family case with a COL4A2 gene variant who was identified based upon brain imaging findings in a sibling",
+    "identifiers": {
+      "doi": "10.11251/ojjscn.58.41",
+      "url": "https://www.jstage.jst.go.jp/article/ojjscn/58/1/58_41/_article/-char/en"
+    },
+    "expected_gene": "COL4A2",
+    "expected_variant": "c.1811G>T (p.Gly604Val)",
+    "expected_disease": "COL4A2-related hereditary cerebrovascular disease"
+  },
+  {
+    "language": "ja",
+    "country": "JP",
+    "provider": "jstage",
+    "route": "api",
+    "query": "An ATP2A2 Missense Mutation in a Japanese Family with Darier Disease",
+    "title": "An ATP2A2 Missense Mutation in a Japanese Family with Darier Disease: A Case Report and Review of the Japanese Darier Disease Patients with ATP2A2 Mutations",
+    "identifiers": {
+      "doi": "10.1272/jnms.84.246",
+      "url": "https://www.jstage.jst.go.jp/article/jnms/84/5/84_246/_article"
+    },
+    "expected_gene": "ATP2A2",
+    "expected_variant": "p.C560R",
+    "expected_disease": "Darier disease"
+  },
+  {
+    "language": "ko",
+    "country": "KR",
+    "provider": "crossref",
+    "route": "api",
+    "query": "A Novel Germline Mutation in BRCA1 Causes Exon 20 Skipping in a Korean Family with a History of Breast Cancer",
+    "title": "A Novel Germline Mutation in BRCA1 Causes Exon 20 Skipping in a Korean Family with a History of Breast Cancer",
+    "identifiers": {
+      "doi": "10.4048/jbc.2017.20.3.310",
+      "url": "https://doi.org/10.4048/jbc.2017.20.3.310"
+    },
+    "expected_gene": "BRCA1",
+    "expected_variant": "exon 20 skipping germline mutation",
+    "expected_disease": "breast cancer"
+  },
+  {
+    "language": "ko",
+    "country": "KR",
+    "provider": "crossref",
+    "route": "api",
+    "query": "A novel germline mutation in hMLH1 in three Korean women with endometrial cancer in a family of Lynch syndrome",
+    "title": "A novel germline mutation in hMLH1 in three Korean women with endometrial cancer in a family of Lynch syndrome: case report and literature review",
+    "identifiers": {
+      "doi": "10.1186/s13053-021-00185-y",
+      "url": "https://doi.org/10.1186/s13053-021-00185-y"
+    },
+    "expected_gene": "MLH1",
+    "expected_variant": "c.1367delC",
+    "expected_disease": "Lynch syndrome"
+  },
+  {
+    "language": "ru",
+    "country": "RU",
+    "provider": "cyberleninka",
+    "route": "web",
+    "query": "ОФТАЛЬМОЛОГИЧЕСКИЙ СТАТУС ПРИ МУТАЦИИ ГЕНА TCOF1 (КЛИНИЧЕСКИЙ СЛУЧАЙ)",
+    "title": "ОФТАЛЬМОЛОГИЧЕСКИЙ СТАТУС ПРИ МУТАЦИИ ГЕНА TCOF1 (КЛИНИЧЕСКИЙ СЛУЧАЙ)",
+    "identifiers": {
+      "url": "https://cyberleninka.ru/article/n/oftalmologicheskiy-status-pri-mutatsii-gena-tcof1-klinicheskiy-sluchay"
+    },
+    "expected_gene": "TCOF1",
+    "expected_variant": null,
+    "expected_disease": "Treacher Collins syndrome"
+  },
+  {
+    "language": "ru",
+    "country": "RU",
+    "provider": "cyberleninka",
+    "route": "web",
+    "query": "КЛИНИЧЕСКИЙ СЛУЧАЙ ЮНОШЕСКОЙ ФОРМЫ БОЛЕЗНИ АЛЕКСАНДЕРА, ВЫЗВАННОЙ РАНЕЕ НЕ ОПИСАННОЙ МУТАЦИЕЙ В ГЕНЕ GFAP",
+    "title": "КЛИНИЧЕСКИЙ СЛУЧАЙ ЮНОШЕСКОЙ ФОРМЫ БОЛЕЗНИ АЛЕКСАНДЕРА, ВЫЗВАННОЙ РАНЕЕ НЕ ОПИСАННОЙ МУТАЦИЕЙ В ГЕНЕ GFAP",
+    "identifiers": {
+      "doi": "10.17650/2073-8803-2021-16-1-2-58-62",
+      "url": "https://cyberleninka.ru/article/n/klinicheskiy-sluchay-yunosheskoy-formy-bolezni-aleksandera-vyzvannoy-ranee-ne-opisannoy-mutatsiey-v-gene-gfap"
+    },
+    "expected_gene": "GFAP",
+    "expected_variant": "c.758C>A (p.Ala253Asp)",
+    "expected_disease": "juvenile Alexander disease"
+  },
+  {
+    "language": "de",
+    "country": "DE",
+    "provider": "pmc",
+    "route": "api",
+    "query": "Identification of a novel mutation in the cornea specific keratin 12 gene causing Meesmann’s corneal dystrophy in a German family",
+    "title": "Identification of a novel mutation in the cornea specific keratin 12 gene causing Meesmann’s corneal dystrophy in a German family",
+    "identifiers": {
+      "pmcid": "PMC2890559",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2890559/"
+    },
+    "expected_gene": "KRT12",
+    "expected_variant": "c.409A>G (p.Met129Val)",
+    "expected_disease": "Meesmann’s corneal dystrophy"
+  },
+  {
+    "language": "de",
+    "country": "DE",
+    "provider": "pmc",
+    "route": "api",
+    "query": "Distinct clinical phenotypes in a family with a novel truncating MEN1 frameshift mutation",
+    "title": "Distinct clinical phenotypes in a family with a novel truncating MEN1 frameshift mutation",
+    "identifiers": {
+      "doi": "10.1186/s12902-022-00978-9",
+      "pmcid": "PMC8919629",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8919629/"
+    },
+    "expected_gene": "MEN1",
+    "expected_variant": "c.674delG (p.Gly225Aspfs*56)",
+    "expected_disease": "Multiple endocrine neoplasia type 1"
+  },
+  {
+    "language": "en",
+    "country": "IR",
+    "provider": "crossref",
+    "route": "api",
+    "query": "The first report of c.4408T>C mutation on FBN1 gene in a case with Marfan Syndrome in Iran",
+    "title": "The first report of c.4408T>C mutation on FBN1 gene in a case with Marfan Syndrome in Iran",
+    "identifiers": {
+      "doi": "10.12996/gmj.2019.56",
+      "url": "https://doi.org/10.12996/gmj.2019.56"
+    },
+    "expected_gene": "FBN1",
+    "expected_variant": "c.4408T>C",
+    "expected_disease": "Marfan syndrome"
+  },
+  {
+    "language": "en",
+    "country": "CN",
+    "provider": "crossref",
+    "route": "api",
+    "query": "A novel mutation in the ABCD1 gene of a Chinese patient with X-linked adrenoleukodystrophy",
+    "title": "A novel mutation in the ABCD1 gene of a Chinese patient with X-linked adrenoleukodystrophy",
+    "identifiers": {
+      "doi": "10.1097/MD.0000000000010837",
+      "url": "https://doi.org/10.1097/MD.0000000000010837"
+    },
+    "expected_gene": "ABCD1",
+    "expected_variant": null,
+    "expected_disease": "X-linked adrenoleukodystrophy"
+  },
+  {
+    "language": "en",
+    "country": "PR",
+    "provider": "pmc",
+    "route": "api",
+    "query": "A Novel Variant in the FBN1 Gene Causing Marfan Syndrome: A Case Report",
+    "title": "A Novel Variant in the FBN1 Gene Causing Marfan Syndrome: A Case Report",
+    "identifiers": {
+      "doi": "10.7759/cureus.56948",
+      "pmcid": "PMC11044074",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11044074/"
+    },
+    "expected_gene": "FBN1",
+    "expected_variant": null,
+    "expected_disease": "Marfan syndrome"
+  },
+  {
+    "language": "en",
+    "country": "BE",
+    "provider": "unpaywall",
+    "route": "api",
+    "query": "Peripheral precocious puberty in Li–Fraumeni syndrome: a case report and literature review of pure androgen-secreting adrenocortical tumors",
+    "title": "Peripheral precocious puberty in Li–Fraumeni syndrome: a case report and literature review of pure androgen-secreting adrenocortical tumors",
+    "identifiers": {
+      "doi": "10.1186/s13256-023-03889-y",
+      "url": "https://doi.org/10.1186/s13256-023-03889-y"
+    },
+    "expected_gene": "TP53",
+    "expected_variant": null,
+    "expected_disease": "Li-Fraumeni syndrome"
+  },
+  {
+    "language": "en",
+    "country": "MA",
+    "provider": "doaj",
+    "route": "api",
+    "query": "X-Linked Adrenoleukodystrophy in a Moroccan Patient: Genetic Diagnosis Leads to Presymptomatic Testing and Family Counseling",
+    "title": "X-Linked Adrenoleukodystrophy in a Moroccan Patient: Genetic Diagnosis Leads to Presymptomatic Testing and Family Counseling",
+    "identifiers": {
+      "doi": "10.2478/bjmg-2025-0002",
+      "url": "https://doi.org/10.2478/bjmg-2025-0002"
+    },
+    "expected_gene": "ABCD1",
+    "expected_variant": null,
+    "expected_disease": "X-linked adrenoleukodystrophy"
+  }
+]

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { pubmedSelectionSubmit, stringifyTaskForm } from '../../services/api';
+import { literatureSelectionSubmit, stringifyTaskForm } from '../../services/api';
 import { ApiError } from '../../services/http';
 import { useAppStore } from '../../store/appStore';
 import { useTaskFlowStore } from '../../store/useTaskFlowStore';
@@ -9,18 +9,21 @@ import { useToastStore } from '../../store/useToastStore';
 
 const MAX_SELECT = 10;
 
-export const PubmedCandidatesPage: React.FC = () => {
+export const LiteratureCandidatesPage: React.FC = () => {
   const navigate = useNavigate();
   const pushToast = useToastStore((s) => s.pushToast);
   const { taskForm, confirmedRequestId } = useTaskFlowStore();
-  const { candidates, ui, fetchCandidates, togglePmidSelection, clearPmidSelection } = useAppStore();
+  const { candidates, ui, fetchCandidates, toggleCandidateSelection, clearCandidateSelection } = useAppStore();
 
   const [loading, setLoading] = useState(false);
 
-  const selectionCount = ui.selectedPmids.length;
+  const selectionCount = ui.selectedCandidateIds.length;
   const selectionValid = selectionCount >= 1 && selectionCount <= MAX_SELECT;
 
-  const selectedList = useMemo(() => ui.selectedPmids, [ui.selectedPmids]);
+  const selectedCandidates = useMemo(
+    () => candidates.filter((candidate) => ui.selectedCandidateIds.includes(candidate.candidate_id)),
+    [candidates, ui.selectedCandidateIds]
+  );
 
   useEffect(() => {
     if (!taskForm && !confirmedRequestId) return;
@@ -34,7 +37,7 @@ export const PubmedCandidatesPage: React.FC = () => {
       disease: taskForm?.disease ?? '',
       country: taskForm?.country,
       language: taskForm?.language,
-      source: 'pubmed',
+      source: 'literature',
       candidate_limit: 15,
     };
 
@@ -52,40 +55,36 @@ export const PubmedCandidatesPage: React.FC = () => {
     };
   }, [taskForm, confirmedRequestId, fetchCandidates, pushToast]);
 
-  const toggle = (pmid: string) => {
-    if (ui.selectedPmids.includes(pmid)) {
-      togglePmidSelection(pmid);
+  const toggle = (candidateId: string) => {
+    if (ui.selectedCandidateIds.includes(candidateId)) {
+      toggleCandidateSelection(candidateId);
       return;
     }
 
-    if (ui.selectedPmids.length >= MAX_SELECT) {
+    if (ui.selectedCandidateIds.length >= MAX_SELECT) {
       pushToast({ level: 'warning', title: 'Selection limit', message: `Max ${MAX_SELECT} papers`, ttlMs: 5000 });
       return;
     }
 
-    togglePmidSelection(pmid);
+    toggleCandidateSelection(candidateId);
   };
 
   const submit = async () => {
     if (!taskForm && !confirmedRequestId) return;
     if (!selectionValid) {
-      pushToast({ level: 'warning', title: 'Invalid selection', message: 'Select 1–10 PMIDs', ttlMs: 6000 });
+      pushToast({ level: 'warning', title: 'Invalid selection', message: 'Select 1–10 papers', ttlMs: 6000 });
       return;
     }
     setLoading(true);
     try {
-      const res = await pubmedSelectionSubmit({
+      const res = await literatureSelectionSubmit({
         request_id: confirmedRequestId ?? undefined,
         task_form: taskForm ? stringifyTaskForm(taskForm) : undefined,
-        selected_pmids: selectedList,
-        target: taskForm?.goal ?? '',
-        disease: taskForm?.disease ?? '',
-        country: taskForm?.country,
-        language: taskForm?.language,
-        source: 'pubmed'
+        selected_candidates: selectedCandidates,
+        source: 'literature'
       });
       navigate(`/requests/${encodeURIComponent(res.request_id ?? confirmedRequestId ?? 'unknown')}`);
-      clearPmidSelection();
+      clearCandidateSelection();
     } catch (err) {
       const msg = err instanceof ApiError ? err.detail ?? err.message : 'Submit failed';
       pushToast({ level: 'error', title: 'Submit failed', message: msg, ttlMs: 9000 });
@@ -98,7 +97,7 @@ export const PubmedCandidatesPage: React.FC = () => {
     return (
       <div className="panel">
         <div className="panel-header">
-          <div style={{ fontWeight: 900 }}>PubMed candidates</div>
+          <div style={{ fontWeight: 900 }}>Online literature candidates</div>
         </div>
         <div className="panel-body">
           <div className="muted">Confirmation state or task form not found. Please create a task first.</div>
@@ -114,7 +113,7 @@ export const PubmedCandidatesPage: React.FC = () => {
     <div className="panel">
       <div className="panel-header">
         <div>
-          <div style={{ fontWeight: 900 }}>PubMed candidates</div>
+          <div style={{ fontWeight: 900 }}>Online literature candidates</div>
           <div className="muted" style={{ fontSize: 12 }}>
             Select 1–10 papers. Returned: {candidates.length}.
           </div>
@@ -140,11 +139,12 @@ export const PubmedCandidatesPage: React.FC = () => {
         {candidates.length === 0 && !loading ? <div className="muted">No candidates</div> : null}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {candidates.map((c) => {
-            const checked = ui.selectedPmids.includes(c.pmid);
+          {candidates.map((candidate) => {
+            const checked = ui.selectedCandidateIds.includes(candidate.candidate_id);
+            const meta = [candidate.provider, candidate.route, candidate.language].filter(Boolean).join(' · ');
             return (
               <label
-                key={c.pmid}
+                key={candidate.candidate_id}
                 style={{
                   border: '1px solid var(--border)',
                   borderRadius: 12,
@@ -155,11 +155,11 @@ export const PubmedCandidatesPage: React.FC = () => {
                   background: checked ? 'rgba(124,92,255,0.10)' : 'rgba(255,255,255,0.03)'
                 }}
               >
-                <input type="checkbox" checked={checked} onChange={() => toggle(c.pmid)} />
+                <input type="checkbox" checked={checked} onChange={() => toggle(candidate.candidate_id)} />
                 <div>
-                  <div style={{ fontWeight: 800 }}>{c.title}</div>
+                  <div style={{ fontWeight: 800 }}>{candidate.title}</div>
                   <div className="muted" style={{ marginTop: 4, fontSize: 12 }}>
-                    PMID: {c.pmid} · {c.journal} · {c.pub_date}
+                    {meta || 'Unknown source'}
                   </div>
                 </div>
               </label>

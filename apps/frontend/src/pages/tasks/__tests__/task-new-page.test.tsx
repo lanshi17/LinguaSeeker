@@ -87,7 +87,7 @@ describe('TaskNewPage shell', () => {
     vi.mocked(confirmTaskForm).mockResolvedValueOnce({
       confirmed: true,
       request_id: 'req-from-feedback',
-      available_branches: [{ source: 'upload' }, { source: 'pubmed' }],
+      available_branches: [{ source: 'upload' }, { source: 'literature' }],
     });
 
     renderPage();
@@ -231,7 +231,7 @@ describe('TaskNewPage branches (upload and skip-upload)', () => {
 
     fireEvent.click(skipBtn);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/tasks/pubmed/candidates');
+    expect(mockNavigate).toHaveBeenCalledWith('/tasks/literature/candidates');
     expect(useTaskFlowStore.getState().confirmedRequestId).toBe('req-123');
   });
 

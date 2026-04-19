@@ -48,14 +48,21 @@ export type ConfirmationContractResponse = {
   available_branches: BranchOption[];
 };
 
-export type PubMedCandidateItem = {
-  pmid: string;
+export type LiteratureCandidateItem = {
+  candidate_id: string;
+  provider: string;
+  route: 'api' | 'web';
   title: string;
-  journal: string;
-  pub_date: string;
+  journal?: string | null;
+  year?: string | null;
+  language?: string | null;
+  doi?: string | null;
+  url?: string | null;
+  identifiers?: Record<string, unknown>;
+  detail_link?: string | null;
 };
 
-export type PubMedCandidateSearchRequest = {
+export type LiteratureCandidateSearchRequest = {
   request_id?: string;
   task_form?: string;
   target: string;
@@ -64,22 +71,19 @@ export type PubMedCandidateSearchRequest = {
   language?: string;
   source?: string;
   candidate_limit?: number;
+  provider_hints?: string[];
 };
 
-export type PubMedCandidateSearchResponse = {
+export type LiteratureCandidateSearchResponse = {
   request_id?: string;
   task_form: string;
-  candidates: PubMedCandidateItem[];
+  candidates: LiteratureCandidateItem[];
 };
 
-export type PubMedSelectionSubmitRequest = {
+export type LiteratureSelectionSubmitRequest = {
   request_id?: string;
   task_form?: string;
-  selected_pmids: string[];
-  target: string;
-  disease: string;
-  country?: string;
-  language?: string;
+  selected_candidates: LiteratureCandidateItem[];
   source?: string;
 };
 
@@ -200,6 +204,15 @@ export type EvidenceSearchPayload = {
   evidence_records?: Array<Record<string, unknown>>;
   document_count?: number;
   total_evidence?: number;
+};
+
+export type EvidenceSearchRequest = {
+  gene_symbol?: string;
+  variant?: string;
+  protein_change?: string;
+  disease_name?: string;
+  min_confidence?: number;
+  only_valid?: boolean;
 };
 
 export type EvidenceSearchResponse = {

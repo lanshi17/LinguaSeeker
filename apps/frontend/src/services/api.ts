@@ -8,17 +8,18 @@ import type {
   ConfirmationContractRequest,
   ConfirmationContractResponse,
   DocumentEvidenceResponse,
+  EvidenceSearchRequest,
   EvidenceSearchResponse,
   GraphSearchRequest,
   InteractionRespondRequest,
   InteractionRespondResponse,
   InteractionStartRequest,
   InteractionStartResponse,
+  LiteratureCandidateSearchRequest,
+  LiteratureCandidateSearchResponse,
+  LiteratureSelectionSubmitRequest,
   LogLinkReissueResponse,
   PaperTaskDetailResponse,
-  PubMedCandidateSearchRequest,
-  PubMedCandidateSearchResponse,
-  PubMedSelectionSubmitRequest,
   TaskRequestCreateResponse,
   TaskRequestStatusResponse,
   TaskFormStructured,
@@ -54,15 +55,15 @@ export async function confirmTaskForm(payload: ConfirmationContractRequest, opti
   }, { signal: options.signal });
 }
 
-export async function pubmedCandidateSearch(payload: PubMedCandidateSearchRequest, options: ApiCallOptions = {}) {
-  return requestJson<PubMedCandidateSearchResponse>('/tasks/requests/pubmed/candidates', {
+export async function literatureCandidateSearch(payload: LiteratureCandidateSearchRequest, options: ApiCallOptions = {}) {
+  return requestJson<LiteratureCandidateSearchResponse>('/tasks/requests/literature/candidates', {
     method: 'POST',
     body: payload
   }, { signal: options.signal });
 }
 
-export async function pubmedSelectionSubmit(payload: PubMedSelectionSubmitRequest, options: ApiCallOptions = {}) {
-  return requestJson<TaskRequestCreateResponse>('/tasks/requests/pubmed/submit', {
+export async function literatureSelectionSubmit(payload: LiteratureSelectionSubmitRequest, options: ApiCallOptions = {}) {
+  return requestJson<TaskRequestCreateResponse>('/tasks/requests/literature/submit', {
     method: 'POST',
     body: payload
   }, { signal: options.signal });
@@ -118,6 +119,13 @@ export async function getEvidenceDocument(documentId: string, options: ApiCallOp
   return requestGetJson<DocumentEvidenceResponse>(`/evidence/document/${encodeURIComponent(documentId)}`, {
     signal: options.signal
   });
+}
+
+export async function searchEvidenceGraph(payload: EvidenceSearchRequest, options: ApiCallOptions = {}) {
+  return requestJson<EvidenceSearchResponse>('/evidence/search', {
+    method: 'POST',
+    body: payload
+  }, { signal: options.signal });
 }
 
 export async function getEvidenceGraphStats(options: ApiCallOptions = {}) {

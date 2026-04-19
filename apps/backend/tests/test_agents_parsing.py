@@ -57,5 +57,34 @@ def test_run_parsing_node_maps_document_parsing_result(monkeypatch) -> None:
     assert result["markdown_content"] == "# Parsed content"
     assert result["image_paths"] == ["/tmp/page-1.png"]
     assert parsing_result["mineru_folder"] == "mineru-output"
+def test_run_parsing_node_accepts_markdown_fallback_without_file_paths() -> None:
+    from src.agents.parsing import node as parsing_node
+
+    state = cast(
+        SupervisorState,
+        cast(
+            object,
+            {
+                "file_paths": [],
+                "markdown_content": "# Downloaded content",
+                "node_trace": {},
+                "processing_steps": default_processing_steps(),
+            },
+        ),
+    )
+
+    result = parsing_node.run_parsing_node(state)
+    result_dict = cast(dict[str, Any], cast(object, result))
+    parsing_result = result_dict["parsing_result"]
+
+    assert result["current_node"] == "parsing"
+    assert result["parser_backend"] == "acquisition_fallback"
+    assert result["markdown_content"] == "# Downloaded content"
+    assert result["image_paths"] == []
+    assert parsing_result == {
+        "parser_backend": "acquisition_fallback",
+        "markdown_content": "# Downloaded content",
+        "image_paths": [],
+    }
     assert result["node_trace"]["parsing"] == "success"
     assert result["processing_steps"]["parsing"]["status"] == "COMPLETED"
