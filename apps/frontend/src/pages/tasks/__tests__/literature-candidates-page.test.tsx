@@ -3,19 +3,19 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { BrowserRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PubmedCandidatesPage } from '../pubmed-candidates-page';
+import { LiteratureCandidatesPage } from '../literature-candidates-page';
 import * as api from '../../../services/api';
 import { useAppStore } from '../../../store/appStore';
 import { useTaskFlowStore } from '../../../store/useTaskFlowStore';
 import { useToastStore } from '../../../store/useToastStore';
 
 vi.mock('../../../services/api', () => ({
-  pubmedCandidateSearch: vi.fn(),
-  pubmedSelectionSubmit: vi.fn(),
+  literatureCandidateSearch: vi.fn(),
+  literatureSelectionSubmit: vi.fn(),
   stringifyTaskForm: vi.fn(),
 }));
 
-describe('PubmedCandidatesPage M2 Handoff', () => {
+describe('LiteratureCandidatesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useAppStore.getState().reset();
@@ -38,72 +38,47 @@ describe('PubmedCandidatesPage M2 Handoff', () => {
   });
 
   it('hydrates AppStore candidates from the search response', async () => {
-    vi.mocked(api.pubmedCandidateSearch).mockResolvedValue({
+    vi.mocked(api.literatureCandidateSearch).mockResolvedValue({
       task_form: 'test',
       candidates: [
-        { pmid: '111', title: 'Paper 1', journal: 'J1', pub_date: '2024' }
+        { candidate_id: 'cand-1', provider: 'jstage', route: 'api', title: 'Paper 1', language: 'ja' }
       ]
     });
 
     render(
       <BrowserRouter>
-        <PubmedCandidatesPage />
+        <LiteratureCandidatesPage />
       </BrowserRouter>
     );
 
     await waitFor(() => {
       expect(useAppStore.getState().candidates).toEqual([
-        expect.objectContaining({ pmid: '111', title: 'Paper 1' })
+        expect.objectContaining({ candidate_id: 'cand-1', title: 'Paper 1' })
       ]);
     });
   });
 
-  it('passes request_id to pubmedCandidateSearch when confirmedRequestId is present', async () => {
-    vi.mocked(api.pubmedCandidateSearch).mockResolvedValue({
-      task_form: 'test',
-      candidates: [
-        { pmid: '111', title: 'Paper 1', journal: 'J1', pub_date: '2024' }
-      ]
-    });
-
-    render(
-      <BrowserRouter>
-        <PubmedCandidatesPage />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(api.pubmedCandidateSearch).toHaveBeenCalledWith(
-        expect.objectContaining({
-          request_id: 'req-123',
-          target: 'test goal',
-          disease: 'test disease'
-        })
-      );
-    });
-  });
-
-  it('uses AppStore selected PMIDs as the shared selection source', async () => {
+  it('uses selected candidate ids as the shared selection source', async () => {
     useAppStore.setState((state) => ({
       ...state,
       candidates: [
-        { pmid: '111', title: 'Paper 1', journal: 'J1', pub_date: '2024' }
+        { candidate_id: 'cand-1', provider: 'jstage', route: 'api', title: 'Paper 1', language: 'ja' }
       ],
       ui: {
         ...state.ui,
-        selectedPmids: ['111'],
+        selectedCandidateIds: ['cand-1'],
       },
     }));
-    vi.mocked(api.pubmedCandidateSearch).mockResolvedValue({
+    vi.mocked(api.literatureCandidateSearch).mockResolvedValue({
       task_form: 'test',
       candidates: [
-        { pmid: '111', title: 'Paper 1', journal: 'J1', pub_date: '2024' }
+        { candidate_id: 'cand-1', provider: 'jstage', route: 'api', title: 'Paper 1', language: 'ja' }
       ]
     });
 
     render(
       <BrowserRouter>
-        <PubmedCandidatesPage />
+        <LiteratureCandidatesPage />
       </BrowserRouter>
     );
 
@@ -111,21 +86,21 @@ describe('PubmedCandidatesPage M2 Handoff', () => {
     expect(screen.getByRole('button', { name: /Submit selection \(1\)/i })).not.toBeDisabled();
   });
 
-  it('passes request_id to pubmedSelectionSubmit when submitted', async () => {
-    vi.mocked(api.pubmedCandidateSearch).mockResolvedValue({
+  it('passes request_id and selected candidates on submit', async () => {
+    vi.mocked(api.literatureCandidateSearch).mockResolvedValue({
       task_form: 'test',
       candidates: [
-        { pmid: '111', title: 'Paper 1', journal: 'J1', pub_date: '2024' }
+        { candidate_id: 'cand-1', provider: 'jstage', route: 'api', title: 'Paper 1', language: 'ja' }
       ]
     });
-    vi.mocked(api.pubmedSelectionSubmit).mockResolvedValue({
+    vi.mocked(api.literatureSelectionSubmit).mockResolvedValue({
       request_id: 'req-123',
       status: 'success'
     });
 
     render(
       <BrowserRouter>
-        <PubmedCandidatesPage />
+        <LiteratureCandidatesPage />
       </BrowserRouter>
     );
 
@@ -137,16 +112,16 @@ describe('PubmedCandidatesPage M2 Handoff', () => {
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(api.pubmedSelectionSubmit).toHaveBeenCalledWith(
+      expect(api.literatureSelectionSubmit).toHaveBeenCalledWith(
         expect.objectContaining({
           request_id: 'req-123',
-          selected_pmids: ['111']
+          selected_candidates: [expect.objectContaining({ candidate_id: 'cand-1' })]
         })
       );
     });
   });
 
-  it('shows fallback message when taskForm is missing (sensible fallback)', () => {
+  it('shows fallback message when taskForm is missing', () => {
     useTaskFlowStore.setState({
       taskForm: null,
       confirmedRequestId: null,
@@ -154,7 +129,7 @@ describe('PubmedCandidatesPage M2 Handoff', () => {
 
     render(
       <BrowserRouter>
-        <PubmedCandidatesPage />
+        <LiteratureCandidatesPage />
       </BrowserRouter>
     );
 

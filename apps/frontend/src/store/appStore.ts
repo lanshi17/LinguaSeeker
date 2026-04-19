@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 
-import { pubmedCandidateSearch, getTaskRequestStatus } from '../services/api';
+import { literatureCandidateSearch, getTaskRequestStatus } from '../services/api';
 
 import type {
-  PubMedCandidateItem,
-  PubMedCandidateSearchRequest,
+  LiteratureCandidateItem,
+  LiteratureCandidateSearchRequest,
   TaskRequestStatusResponse,
 } from '../types/api';
 
@@ -21,7 +21,7 @@ type PollingConfig = {
 type UIState = {
   taskFilters: TaskFilters;
   requestFilters: TaskFilters;
-  selectedPmids: string[];
+  selectedCandidateIds: string[];
   expandedPaperTasks: string[];
 };
 
@@ -29,7 +29,7 @@ type AppStoreState = {
   currentRequest: TaskRequestStatusResponse | null;
   requestLoading: boolean;
   requestError: string | null;
-  candidates: PubMedCandidateItem[];
+  candidates: LiteratureCandidateItem[];
   candidatesLoading: boolean;
   candidatesError: string | null;
   pollingIntervals: Map<string, ReturnType<typeof setInterval>>;
@@ -39,13 +39,13 @@ type AppStoreState = {
 
 type AppStoreActions = {
   fetchRequest: (requestId: string) => Promise<void>;
-  fetchCandidates: (payload: PubMedCandidateSearchRequest) => Promise<void>;
+  fetchCandidates: (payload: LiteratureCandidateSearchRequest) => Promise<void>;
   startRequestPolling: (requestId: string) => void;
   stopRequestPolling: (requestId: string) => void;
   setTaskFilter: (key: keyof TaskFilters, value: string) => void;
   setRequestFilter: (key: keyof TaskFilters, value: string) => void;
-  togglePmidSelection: (pmid: string) => void;
-  clearPmidSelection: () => void;
+  toggleCandidateSelection: (candidateId: string) => void;
+  clearCandidateSelection: () => void;
   togglePaperTaskExpand: (paperTaskId: string) => void;
   reset: () => void;
 };
@@ -65,7 +65,7 @@ const DEFAULT_POLLING_CONFIG: PollingConfig = {
 const initialUiState = (): UIState => ({
   taskFilters: { ...DEFAULT_FILTERS },
   requestFilters: { ...DEFAULT_FILTERS },
-  selectedPmids: [],
+  selectedCandidateIds: [],
   expandedPaperTasks: [],
 });
 
@@ -91,10 +91,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
-  fetchCandidates: async (payload: PubMedCandidateSearchRequest) => {
+  fetchCandidates: async (payload: LiteratureCandidateSearchRequest) => {
     set({ candidatesLoading: true, candidatesError: null });
     try {
-      const response = await pubmedCandidateSearch(payload);
+      const response = await literatureCandidateSearch(payload);
       set({ candidates: response.candidates ?? [], candidatesLoading: false, candidatesError: null });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch candidates';
@@ -159,25 +159,25 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }));
   },
 
-  togglePmidSelection: (pmid) => {
+  toggleCandidateSelection: (candidateId) => {
     set((state) => {
-      const exists = state.ui.selectedPmids.includes(pmid);
+      const exists = state.ui.selectedCandidateIds.includes(candidateId);
       return {
         ui: {
           ...state.ui,
-          selectedPmids: exists
-            ? state.ui.selectedPmids.filter((item) => item !== pmid)
-            : [...state.ui.selectedPmids, pmid],
+          selectedCandidateIds: exists
+            ? state.ui.selectedCandidateIds.filter((item) => item !== candidateId)
+            : [...state.ui.selectedCandidateIds, candidateId],
         },
       };
     });
   },
 
-  clearPmidSelection: () => {
+  clearCandidateSelection: () => {
     set((state) => ({
       ui: {
         ...state.ui,
-        selectedPmids: [],
+        selectedCandidateIds: [],
       },
     }));
   },

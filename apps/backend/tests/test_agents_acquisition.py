@@ -279,6 +279,65 @@ def test_run_acquisition_node_web_invokes_unified_workflow(monkeypatch) -> None:
     assert result["processing_steps"]["acquisition"]["status"] == "COMPLETED"
 
 
+def test_run_acquisition_node_pubmed_download_sets_file_paths(monkeypatch) -> None:
+    from src.agents.acquisition import node as acquisition_node
+
+    class FakeAcquisitionAgent:
+        def plan_pubmed_request(self, pmids: list[str]) -> list[AcquisitionPlanItem]:
+            assert pmids == ["12345"]
+            return [
+                AcquisitionPlanItem(
+                    source="pubmed",
+                    raw_value="12345",
+                    normalized_value="12345",
+                    fingerprint="pmid:12345",
+                    display_name="PMID:12345",
+                    metadata={"pmid": "12345"},
+                )
+            ]
+
+    async def fake_workflow(payload: dict[str, Any]) -> dict[str, Any]:
+        assert payload["action"] == "download"
+        return {
+            "success": True,
+            "items": [],
+            "downloads": [{"file_path": "/tmp/paper.pdf"}],
+            "warnings": [],
+            "route": {"used": "api", "api_provider": "pmc"},
+            "raw": {"api": {"source_trace": []}},
+        }
+
+    monkeypatch.setattr(
+        acquisition_node,
+        "get_literature_acquisition_agent",
+        lambda: FakeAcquisitionAgent(),
+    )
+    monkeypatch.setattr(
+        acquisition_node,
+        "literature_unified_workflow",
+        fake_workflow,
+        raising=False,
+    )
+
+    state = cast(
+        SupervisorState,
+        cast(
+            object,
+            {
+                "source": "pubmed",
+                "pmids": ["12345"],
+                "node_trace": {},
+                "processing_steps": default_processing_steps(),
+            },
+        ),
+    )
+
+    result = acquisition_node.run_acquisition_node(state)
+
+    assert result["file_paths"] == ["/tmp/paper.pdf"]
+    assert result["acquisition_result"]["downloads"][0]["file_path"] == "/tmp/paper.pdf"
+
+
 def test_run_acquisition_node_raises_when_unified_workflow_returns_no_result(
     monkeypatch,
 ) -> None:

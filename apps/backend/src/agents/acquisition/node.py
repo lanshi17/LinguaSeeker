@@ -94,20 +94,25 @@ def _build_workflow_payload(
     plan_items: list[AcquisitionPlanItem],
 ) -> dict[str, Any]:
     normalized_values = [item.normalized_value for item in plan_items if item.normalized_value]
-    query = normalized_values[0] if normalized_values else ""
-    payload: dict[str, Any] = {
-        "action": "search",
-        "query": query,
-        "identifiers": normalized_values,
-        "limit": max(1, len(normalized_values)),
+    primary = normalized_values[0] if normalized_values else ""
+    if source == "web":
+        return {
+            "action": "download",
+            "query": primary,
+            "identifiers": [primary],
+            "prefer": "web",
+            "detail_link": primary,
+            "selected_title": primary,
+            "raw": True,
+        }
+    return {
+        "action": "download",
+        "query": f"PMID:{primary}" if primary else "",
+        "identifiers": [primary] if primary else [],
+        "prefer": "api",
+        "api_provider": "pmc",
         "raw": True,
     }
-    if source == "web":
-        payload["prefer"] = "web"
-    else:
-        payload["prefer"] = "api"
-        payload["api_provider"] = "pmc"
-    return payload
 
 
 def _run_unified_workflow(payload: dict[str, Any]) -> dict[str, Any]:
@@ -154,6 +159,13 @@ def run_acquisition_node(state: SupervisorState) -> SupervisorState:
     acquisition_result = _run_unified_workflow(
         _build_workflow_payload(source, plan_items)
     )
+    download_paths = [
+        str(item.get("file_path"))
+        for item in acquisition_result.get("downloads", [])
+        if str(item.get("file_path") or "").strip()
+    ]
+    if download_paths:
+        updated["file_paths"] = download_paths
     if not _has_acquisition_output(acquisition_result):
         warnings = acquisition_result.get("warnings")
         warning_text = ", ".join(str(item) for item in warnings or [])

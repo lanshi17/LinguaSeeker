@@ -47,7 +47,7 @@ function buildExpertFeedback(params: {
   if (confirmedRequestId && filesCount === 0) {
     items.push({
       tone: 'info',
-      text: 'Request is confirmed. You can upload files or continue to PubMed candidates.',
+      text: 'Request is confirmed. You can upload files or continue to online literature candidates.',
       action: 'go_candidates',
     });
   }
@@ -160,7 +160,7 @@ export const TaskNewPage: React.FC = () => {
       return;
     }
     if (action === 'go_candidates' && confirmedRequestId && !busy) {
-      navigate('/tasks/pubmed/candidates');
+      navigate('/tasks/literature/candidates');
     }
   };
 
@@ -358,15 +358,15 @@ export const TaskNewPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <div style={{ fontWeight: 800 }}>PubMed candidates</div>
+                      <div style={{ fontWeight: 800 }}>Online literature candidates</div>
                       <div className="muted" style={{ marginTop: 6 }}>
-                        Search literature, select 1–10 PMIDs.
+                        Search literature across supported providers and select 1–10 papers.
                       </div>
                       <div style={{ marginTop: 10 }}>
                         {confirmedRequestId ? (
                           <button
                             type="button"
-                            onClick={() => navigate('/tasks/pubmed/candidates')}
+                            onClick={() => navigate('/tasks/literature/candidates')}
                             disabled={busy}
                             style={{
                               padding: '10px 14px',

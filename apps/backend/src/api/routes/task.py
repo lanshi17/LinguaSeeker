@@ -26,10 +26,12 @@ from src.infrastructure.minio import MinIOClient
 from src.infrastructure.postgres import get_postgres_client
 from src.infrastructure.redis import list_celery_task_meta
 from src.domain.literature import get_literature_acquisition_agent, get_pubmed_service
+from src.domain.literature.unified.search_service import search_multilingual_candidates
 from src.api.dependencies import contract_http_exception
 from src.services.task_manager import (
     process_pdf_task,
     process_pubmed_paper_task,
+    process_literature_identifier_task,
     resume_supervisor_task,
     process_web_page_task,
 )
@@ -38,6 +40,10 @@ from src.services.dtos import (
     PubMedCandidateSearchRequest,
     PubMedCandidateSearchResponse,
     PubMedSelectionSubmitRequest,
+    LiteratureCandidateItem,
+    LiteratureCandidateSearchRequest,
+    LiteratureCandidateSearchResponse,
+    LiteratureSelectionSubmitRequest,
     WebLiteratureCrawlRequest,
     PaperTaskItemResponse,
     TaskRequestCreateResponse,
@@ -386,6 +392,81 @@ def _synthetic_hash_from_pmid(pmid: str) -> str:
     return hashlib.sha256(f"pmid:{pmid}".encode("utf-8")).hexdigest()
 
 
+def _synthetic_hash_from_literature_candidate(candidate: Dict[str, Any]) -> str:
+    identifiers = dict(candidate.get("identifiers") or {})
+    identity = {
+        "candidate_id": candidate.get("candidate_id"),
+        "provider": candidate.get("provider"),
+        "route": candidate.get("route"),
+        "title": candidate.get("title"),
+        "doi": candidate.get("doi") or identifiers.get("doi"),
+        "url": candidate.get("url") or identifiers.get("url"),
+        "pmid": identifiers.get("pmid"),
+    }
+    return hashlib.sha256(
+        json.dumps(identity, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    ).hexdigest()
+
+
+def _enqueue_literature_candidate_task(
+    postgres: Any,
+    *,
+    request_id: str,
+    candidate: Dict[str, Any],
+) -> Any:
+    identifiers = dict(candidate.get("identifiers") or {})
+    candidate_title = str(
+        candidate.get("title") or "Untitled literature candidate"
+    ).strip()
+    route = str(candidate.get("route") or "").strip().lower()
+    url = str(candidate.get("url") or identifiers.get("url") or "").strip()
+    pmid = str(identifiers.get("pmid") or "").strip()
+    synthetic_hash = _synthetic_hash_from_literature_candidate(candidate)
+
+    document = postgres.create_document(
+        title=candidate_title,
+        original_filename=candidate_title,
+        pmid=pmid or None,
+        local_path=url or None,
+        file_hash=synthetic_hash,
+        status="queued",
+    )
+    document_id = _uuid_str(document.document_id)
+    paper_entry = postgres.create_paper_task(
+        request_id=request_id,
+        document_id=document_id,
+        original_filename=candidate_title,
+        file_hash=synthetic_hash,
+        status="queued",
+    )
+    paper_task_id = _uuid_str(paper_entry.paper_task_id)
+    postgres.append_paper_task_log(
+        paper_task_id,
+        status="queued",
+        node="acquisition",
+        message=f"Literature candidate queued: {candidate_title}",
+        payload={"candidate": candidate},
+    )
+
+    if route == "web" and url:
+        async_result = _celery_task(process_web_page_task).apply_async(
+            args=[url, document_id, paper_task_id, request_id]
+        )
+    elif pmid:
+        async_result = _celery_task(process_pubmed_paper_task).apply_async(
+            args=[pmid, document_id, paper_task_id, request_id]
+        )
+    else:
+        async_result = _celery_task(process_literature_identifier_task).apply_async(
+            args=[candidate, document_id, paper_task_id, request_id]
+        )
+
+    return postgres.update_paper_task(
+        paper_task_id,
+        celery_task_id=async_result.id,
+    )
+
+
 @router.post(
     "/interaction/start",
     summary="Start interaction for task clarification",
@@ -642,6 +723,181 @@ async def search_pubmed_candidates(
             )
             for item in rows
         ],
+    )
+
+
+@router.post(
+    "/requests/literature/candidates",
+    summary="Search multilingual literature candidates",
+    description=(
+        "Search normalized literature candidates across language-specific providers "
+        "using the unified workflow one provider at a time."
+    ),
+    response_model=LiteratureCandidateSearchResponse,
+    responses={
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid query or unsupported source.",
+        },
+        504: {"model": ErrorResponse, "description": "Literature fetch timeout."},
+    },
+)
+async def search_literature_candidates(
+    payload: LiteratureCandidateSearchRequest,
+) -> LiteratureCandidateSearchResponse:
+    if not payload.request_id and not payload.task_form:
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "Either request_id or task_form is required"
+        )
+
+    response_request_id = None
+    response_task_form = ""
+
+    if payload.request_id:
+        postgres = get_postgres_client()
+        request_entry = postgres.get_task_request(payload.request_id)
+        if request_entry is None:
+            raise contract_http_exception(
+                400, "INPUT_INVALID", f"Request {payload.request_id} not found"
+            )
+        response_request_id = payload.request_id
+        task_form_text = request_entry.task_form_text
+        response_task_form = str(task_form_text) if task_form_text is not None else ""
+    else:
+        response_task_form = (payload.task_form or "").strip()
+
+    if payload.source.lower() != "literature":
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "source must be literature"
+        )
+
+    query = f"{payload.target} {payload.disease} case report".strip()
+    if not query:
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "target and disease are required"
+        )
+
+    try:
+        candidates = await search_multilingual_candidates(
+            target=payload.target,
+            disease=payload.disease,
+            language=payload.language,
+            candidate_limit=payload.candidate_limit,
+            country=payload.country,
+            provider_hints=payload.provider_hints,
+        )
+    except ValueError as exc:
+        raise contract_http_exception(400, "INPUT_INVALID", str(exc))
+    except Exception as exc:
+        logger.exception("Literature candidate fetch failed: {}", exc)
+        raise contract_http_exception(
+            504, "FETCH_TIMEOUT", "Fetch timeout while querying literature providers"
+        )
+
+    if not candidates:
+        raise contract_http_exception(
+            400, "FETCH_NO_RESULT", "Fetch no result from literature providers"
+        )
+
+    return LiteratureCandidateSearchResponse(
+        request_id=response_request_id,
+        task_form=response_task_form,
+        candidates=[LiteratureCandidateItem.model_validate(item) for item in candidates],
+    )
+
+
+@router.post(
+    "/requests/literature/submit",
+    summary="Submit selected literature candidates",
+    description="Create request metadata from selected normalized literature candidates.",
+    response_model=TaskRequestCreateResponse,
+    responses={
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid candidate selection or source.",
+        },
+        503: {"model": ErrorResponse, "description": "Dependency unavailable."},
+    },
+)
+def submit_literature_selection(
+    payload: LiteratureSelectionSubmitRequest,
+) -> TaskRequestCreateResponse:
+    if payload.source.lower() != "literature":
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "source must be literature"
+        )
+
+    selected_candidates = payload.selected_candidates
+    if not selected_candidates:
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "selected_candidates is required"
+        )
+    if len(selected_candidates) > 10:
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "selected_candidates max is 10"
+        )
+
+    task_form = (payload.task_form or "").strip()
+    if not task_form and not payload.request_id:
+        raise contract_http_exception(
+            400, "INPUT_INVALID", "Either request_id or task_form is required"
+        )
+
+    postgres = get_postgres_client()
+    if payload.request_id:
+        request_entry = postgres.get_task_request(payload.request_id)
+        if request_entry is None:
+            raise contract_http_exception(
+                400, "INPUT_INVALID", f"Request {payload.request_id} not found"
+            )
+        request_entry_id = _uuid_str(request_entry.request_id)
+        if not task_form:
+            task_form_text = getattr(request_entry, "task_form_text", None)
+            task_form = str(task_form_text).strip() if task_form_text is not None else ""
+        request_entry = postgres.update_task_request(
+            request_entry_id,
+            metadata={
+                "entry": "literature",
+                "source": payload.source,
+                "selected_count": len(selected_candidates),
+                "selected_candidates": [item.model_dump() for item in selected_candidates],
+            },
+        )
+    else:
+        request_entry = postgres.create_task_request(
+            task_form_text=task_form,
+            status="queued",
+            metadata={
+                "entry": "literature",
+                "source": payload.source,
+                "selected_count": len(selected_candidates),
+                "selected_candidates": [item.model_dump() for item in selected_candidates],
+            },
+        )
+        request_entry_id = _uuid_str(request_entry.request_id)
+
+    paper_entries: List[Any] = []
+    for selected_candidate in selected_candidates:
+        raw_candidate = (
+            selected_candidate.model_dump()
+            if isinstance(selected_candidate, LiteratureCandidateItem)
+            else dict(cast(Dict[str, Any], selected_candidate))
+        )
+        paper_entry = _enqueue_literature_candidate_task(
+            postgres,
+            request_id=request_entry_id,
+            candidate=raw_candidate,
+        )
+        paper_entries.append(paper_entry)
+
+    refresh_request = getattr(postgres, "refresh_task_request_status", None)
+    if callable(refresh_request):
+        request_entry = refresh_request(request_entry_id) or request_entry
+
+    return TaskRequestCreateResponse(
+        request_id=str(getattr(request_entry, "request_id", request_entry_id)),
+        status=_status_str(getattr(request_entry, "status", None)),
+        papers=[_paper_item_model(item) for item in paper_entries],
     )
 
 

@@ -8,7 +8,7 @@ import { GraphPage } from '../pages/graph/graph-page';
 import { NotFoundPage } from '../pages/not-found/not-found-page';
 import { RequestExportPage } from '../pages/requests/request-export-page';
 import { RequestMonitorPage } from '../pages/requests/request-monitor-page';
-import { PubmedCandidatesPage } from '../pages/tasks/pubmed-candidates-page';
+import { LiteratureCandidatesPage } from '../pages/tasks/literature-candidates-page';
 import { TaskNewPage } from '../pages/tasks/task-new-page';
 
 export const router = createBrowserRouter([
@@ -21,7 +21,7 @@ export const router = createBrowserRouter([
       { path: 'register', element: <RegisterPage /> },
       { path: 'tasks/new', element: <TaskNewPage /> },
       { path: 'graph', element: <GraphPage /> },
-      { path: 'tasks/pubmed/candidates', element: <PubmedCandidatesPage /> },
+      { path: 'tasks/literature/candidates', element: <LiteratureCandidatesPage /> },
       { path: 'requests/:requestId', element: <RequestMonitorPage /> },
       { path: 'requests/:requestId/export', element: <RequestExportPage /> },
       { path: 'documents/:documentId', element: <DocumentPage /> },

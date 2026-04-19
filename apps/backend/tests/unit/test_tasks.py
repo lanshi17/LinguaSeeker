@@ -1,3 +1,4 @@
+import asyncio
 import os
 from pathlib import Path
 from typing import Any, Dict, List
@@ -197,6 +198,7 @@ def test_process_pdf_task(monkeypatch: pytest.MonkeyPatch) -> None:
         )
 
     monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: SimpleNamespace())
     monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
     monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
     monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
@@ -273,6 +275,7 @@ def test_process_pdf_task_cleans_managed_temp_dir_on_success(
         )
 
     monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: SimpleNamespace())
     monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
     monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
     monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
@@ -312,6 +315,7 @@ def test_process_pdf_task_cleans_managed_temp_dir_on_final_failure(
         raise exc.ParsingException("parse failed")
 
     monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: SimpleNamespace())
     monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
     monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
     monkeypatch.setattr(
@@ -411,6 +415,7 @@ def test_process_pdf_task_origin_md_uses_source_text(
 
     monkeypatch.setattr(tasks_module, "_agents", FakeAgent())
     monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: SimpleNamespace())
     monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
     monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
     monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
@@ -1092,6 +1097,7 @@ def test_process_pdf_task_persists_parsing_metadata(
     async def fake_store_parsing(*_: Any, **__: Any) -> DocumentParsingArtifact:
         return parsing_result.artifacts
 
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: SimpleNamespace())
     monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
     monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
     monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
@@ -1165,6 +1171,7 @@ def test_process_pdf_task_parsing_artifacts_saved_before_extraction(
             image_urls=[],
         )
 
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: SimpleNamespace())
     monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
     monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
     monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
@@ -1261,6 +1268,7 @@ def test_process_pdf_task_accumulates_non_fatal_kb_init_warning(
     async def fake_init_kb_fails() -> bool:
         raise RuntimeError("Qdrant connection refused")
 
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: SimpleNamespace())
     monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
     monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
     monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
@@ -1343,6 +1351,7 @@ def test_process_pdf_task_accumulates_non_fatal_cache_failure(
     def fake_cache_fails(*_: Any, **__: Any) -> None:
         raise ConnectionError("Redis unavailable")
 
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: SimpleNamespace())
     monkeypatch.setattr(tasks_module, "run_node_acquisition", fake_acquisition)
     monkeypatch.setattr(tasks_module, "run_node_parsing", fake_parsing)
     monkeypatch.setattr(tasks_module, "run_node_translation", fake_translation)
@@ -1370,3 +1379,107 @@ def test_process_pdf_task_accumulates_non_fatal_cache_failure(
     assert warning["step"] == "cache_result"
     assert "Failed to cache result in Redis" in warning["message"]
     assert warning["exception_type"] == "ConnectionError"
+
+
+
+def test_process_literature_identifier_task_downloads_pdf_and_reuses_pdf_pipeline(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    candidate = {
+        "provider": "jstage",
+        "route": "api",
+        "title": "Fabry case report",
+        "identifiers": {"doi": "10.1234/example"},
+        "detail_link": "https://www.jstage.jst.go.jp/article/example",
+    }
+
+    async def fake_download(**kwargs: Any) -> Dict[str, Any]:
+        assert kwargs["preserve_local_file"] is True
+        return {
+            "downloaded": True,
+            "local_file_path": "/tmp/run_upload_doc-1/paper.pdf",
+            "sha256": "abc",
+        }
+
+    called: Dict[str, Any] = {}
+
+    def fake_process_pdf_run(**kwargs: Any) -> Dict[str, Any]:
+        called.update(kwargs)
+        return {"status": "success", "document_id": "doc-1"}
+
+    monkeypatch.setattr(
+        tasks_module,
+        "_try_download_and_store_literature_pdf",
+        fake_download,
+    )
+    monkeypatch.setattr(tasks_module.process_pdf_task, "run", fake_process_pdf_run)
+
+    result = _invoke_bound_task(
+        tasks_module.process_literature_identifier_task,
+        candidate=candidate,
+        document_id="doc-1",
+        paper_task_id="paper-1",
+        request_id="req-1",
+    )
+
+    assert result == {"status": "success", "document_id": "doc-1"}
+    assert called == {
+        "file_paths": ["/tmp/run_upload_doc-1/paper.pdf"],
+        "file_hash": "abc",
+        "document_id": "doc-1",
+        "paper_task_id": "paper-1",
+        "request_id": "req-1",
+    }
+
+
+def test_try_download_and_store_literature_pdf_preserves_local_file(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    source_pdf = tmp_path / "paper.pdf"
+    source_pdf.write_bytes(b"%PDF-1.7 test")
+
+    async def fake_workflow(_: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "success": True,
+            "downloads": [{"file_path": str(source_pdf)}],
+            "warnings": [],
+            "route": {"used": "api", "api_provider": "crossref"},
+            "raw": {"api": {"source_trace": []}},
+        }
+
+    class FakeUploadRef:
+        object_key = "literature/mock/object.pdf"
+        bucket = "literature-uploads"
+
+    class FakeMinioClient:
+        @staticmethod
+        def build_literature_object_key(file_hash: str, filename: str) -> str:
+            return f"literature/{file_hash}/{filename}"
+
+        async def ensure_buckets(self) -> None:
+            return None
+
+        async def upload_literature_upload(self, **_: Any) -> Any:
+            return FakeUploadRef()
+
+    monkeypatch.setattr(tasks_module, "literature_unified_workflow", fake_workflow)
+    monkeypatch.setattr(tasks_module, "MinIOClient", FakeMinioClient)
+    monkeypatch.setenv("PWD", str(tmp_path))
+
+    result = asyncio.run(
+        tasks_module._try_download_and_store_literature_pdf(
+            document_id="doc-1",
+            source="web",
+            query="Fabry case report",
+            identifiers=["10.1234/example"],
+            selected_title="paper",
+            preserve_local_file=True,
+        )
+    )
+
+    assert result["downloaded"] is True
+    local_file_path = result["local_file_path"]
+    assert local_file_path is not None
+    assert Path(local_file_path).is_file()
+    assert Path(local_file_path).read_bytes().startswith(b"%PDF-")

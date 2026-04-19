@@ -28,6 +28,33 @@ def _node_trace_map(value: object) -> dict[str, Any]:
 def run_parsing_node(state: SupervisorState) -> SupervisorState:
     updated: dict[str, Any] = dict(state)
     file_paths = _string_list(updated.get("file_paths"))
+    if not file_paths and updated.get("markdown_content"):
+        updated["current_node"] = "parsing"
+        updated["parsing_result"] = {
+            "parser_backend": "acquisition_fallback",
+            "markdown_content": updated["markdown_content"],
+            "image_paths": [],
+        }
+        updated["parser_backend"] = "acquisition_fallback"
+        updated["image_paths"] = []
+
+        node_trace = _node_trace_map(updated.get("node_trace"))
+        node_trace["parsing"] = "success"
+        updated["node_trace"] = node_trace
+
+        processing_steps = normalize_processing_steps(
+            updated.get("processing_steps"),
+            node_trace=node_trace,
+        )
+        processing_steps = merge_processing_step_update(
+            processing_steps,
+            step="parsing",
+            status=ProcessingStepStatus.completed,
+            message="Parsing completed",
+        )
+        updated["processing_steps"] = processing_steps
+        updated["workflow_status"] = derive_workflow_status(processing_steps).value
+        return cast(SupervisorState, cast(object, updated))
     if not file_paths:
         return cast(SupervisorState, cast(object, updated))
 

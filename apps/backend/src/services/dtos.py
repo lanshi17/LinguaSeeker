@@ -248,6 +248,58 @@ class PubMedSelectionSubmitRequest(BaseModel):
     source: str = Field("pubmed", description="Data source")
 
 
+class LiteratureCandidateItem(BaseModel):
+    candidate_id: str
+    provider: str
+    route: str
+    title: str
+    journal: Optional[str] = None
+    year: Optional[str] = None
+    language: Optional[str] = None
+    doi: Optional[str] = None
+    url: Optional[str] = None
+    identifiers: Dict[str, Any] = Field(default_factory=dict)
+    detail_link: Optional[str] = None
+
+
+class LiteratureCandidateSearchRequest(BaseModel):
+    request_id: Optional[str] = Field(
+        None, description="Confirmed request ID for M2 handoff"
+    )
+    task_form: Optional[str] = Field(None, description="Natural-language task form")
+    target: str = Field(..., description="Target gene/variant or objective")
+    disease: str = Field(..., description="Disease name")
+    country: str = Field("不限", description="Country filter (ISO/alias)")
+    language: str = Field("auto", description="Language preference")
+    source: str = Field("literature", description="Data source")
+    candidate_limit: int = Field(15, ge=1, le=20, description="Candidate limit, max 20")
+    provider_hints: List[str] = Field(
+        default_factory=list,
+        description="Optional provider order hints",
+    )
+
+
+class LiteratureCandidateSearchResponse(BaseModel):
+    request_id: Optional[str] = Field(
+        None, description="Request ID for M2 handoff continuity"
+    )
+    task_form: str = Field(..., description="Echoed task form")
+    candidates: List[LiteratureCandidateItem] = Field(
+        default_factory=list, description="Normalized literature candidates"
+    )
+
+
+class LiteratureSelectionSubmitRequest(BaseModel):
+    request_id: Optional[str] = Field(
+        None, description="Existing request ID when continuing a confirmed flow"
+    )
+    task_form: Optional[str] = Field(None, description="Natural-language task form")
+    selected_candidates: List[LiteratureCandidateItem] = Field(
+        default_factory=list, description="Selected literature candidates, 1~10"
+    )
+    source: str = Field("literature", description="Data source")
+
+
 class WebLiteratureCrawlRequest(BaseModel):
     task_form: str = Field(..., description="Natural-language task form")
     urls: List[str] = Field(..., min_length=1, description="Selected web URLs, 1~10")
