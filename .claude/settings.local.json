@@ -4,7 +4,8 @@
       "Bash(git push)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Read(//dev/**)"
     ]
   }
 }

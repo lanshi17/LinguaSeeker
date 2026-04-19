@@ -117,3 +117,4 @@ worktrees/
 .aider*
 **/.claude/settings.local*.json
 apps/backend/.claude/settings.json
+**/.claude/*.json
