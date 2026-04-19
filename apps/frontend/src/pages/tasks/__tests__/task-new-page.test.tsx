@@ -115,7 +115,7 @@ describe('TaskNewPage shell', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Open candidates shortcut/i }));
 
-    expect(mockNavigate).toHaveBeenCalledWith('/tasks/pubmed/candidates');
+    expect(mockNavigate).toHaveBeenCalledWith('/tasks/literature/candidates');
   });
 
   it('shows default country and language values when the task form is auto-generated later', () => {
