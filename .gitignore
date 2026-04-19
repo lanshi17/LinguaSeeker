@@ -115,4 +115,5 @@ worktrees/
 # Local MinIO data (runtime artifacts)
 /apps/backend/database/minio/data/
 .aider*
+**/.claude/settings.local*.json
 apps/backend/.claude/settings.json

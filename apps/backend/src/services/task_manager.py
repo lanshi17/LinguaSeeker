@@ -3191,6 +3191,47 @@ def process_api_paper_task(
 
 
 @celery_app.task(
+    name="tasks.process_literature_identifier",
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 2, "countdown": 300, "queue": "retry"},
+    retry_jitter=True,
+)
+def process_literature_identifier_task(
+    self,
+    candidate: Dict[str, Any],
+    document_id: str,
+    paper_task_id: str,
+    request_id: str,
+) -> Dict[str, Any]:
+    del self
+    postgres = get_postgres_client()
+    postgres.update_paper_task(
+        paper_task_id,
+        status="queued",
+        workflow_status=WorkflowStatus.processing_literature.value,
+        error_code=None,
+        error_details=None,
+    )
+    postgres.append_paper_task_log(
+        paper_task_id,
+        status="queued",
+        node="acquisition",
+        message="Identifier literature candidate queued for placeholder worker",
+        payload={"candidate": candidate, "lane": "identifier"},
+    )
+    postgres.refresh_task_request_status(request_id)
+    return {
+        "candidate": candidate,
+        "document_id": document_id,
+        "paper_task_id": paper_task_id,
+        "request_id": request_id,
+        "status": "queued",
+        "worker": "literature_identifier_placeholder",
+    }
+
+
+@celery_app.task(
     name="tasks.process_web_page",
     bind=True,
     autoretry_for=(Exception,),

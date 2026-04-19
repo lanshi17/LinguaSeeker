@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from src.services.task_manager import (
         init_knowledge_base_if_needed,
-        process_api_paper_task,
+        process_literature_identifier_task,
         process_pdf_task,
         process_pubmed_paper_task,
         process_web_page_task,
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "init_knowledge_base_if_needed",
-    "process_api_paper_task",
+    "process_literature_identifier_task",
     "process_pdf_task",
     "process_pubmed_paper_task",
     "process_web_page_task",
