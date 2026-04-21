@@ -3,6 +3,8 @@ import pytest
 from src.domain.literature.unified.search_service import (
     build_provider_plan,
     dedupe_candidates,
+    rank_candidates,
+    _normalize_candidate,
 )
 
 
@@ -62,3 +64,41 @@ def test_dedupe_candidates_by_doi_url_and_normalized_title() -> None:
     deduped = dedupe_candidates(candidates)
 
     assert [item["candidate_id"] for item in deduped] == ["cand-1", "cand-3", "cand-5"]
+
+
+def test_normalize_candidate_handles_empty_links_list() -> None:
+    item = {
+        "title": "Example paper",
+        "links": [],
+        "identifiers": {"doi": "10.1000/example"},
+    }
+
+    candidate = _normalize_candidate(item, {"provider": "unpaywall", "route": "api"})
+
+    assert candidate["detail_link"] is None
+    assert candidate["doi"] == "10.1000/example"
+
+
+def test_rank_candidates_prefers_exact_normalized_title_match() -> None:
+    candidates = [
+        {
+            "candidate_id": "cand-1",
+            "provider": "crossref",
+            "route": "api",
+            "title": "Different title",
+        },
+        {
+            "candidate_id": "cand-2",
+            "provider": "jstage",
+            "route": "api",
+            "title": "An <i>ATP2A2</i> Missense Mutation in a Japanese Family with Darier Disease: A Case Report and Review of the Japanese Darier Disease Patients with <i>ATP2A2</i> Mutations",
+        },
+    ]
+
+    ranked = rank_candidates(
+        candidates,
+        expected_title="An ATP2A2 Missense Mutation in a Japanese Family with Darier Disease: A Case Report and Review of the Japanese Darier Disease Patients with ATP2A2 Mutations",
+        preferred_provider="jstage",
+    )
+
+    assert ranked[0]["candidate_id"] == "cand-2"

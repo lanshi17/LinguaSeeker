@@ -288,11 +288,87 @@ def test_literature_submit_dispatches_pmid_candidates_to_pubmed_worker(
     assert response.json()["papers"][0]["celery_task_id"] == "celery-pmid-123"
 
 
-def test_literature_submit_dispatches_identifier_candidates_to_identifier_worker(
+def test_literature_submit_doi_only_candidate_stays_on_identifier_lane(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
     task_prefix: str,
 ) -> None:
+    queued: dict[str, Any] = {}
+
+    class DummyAsyncResult:
+        id = "celery-identifier-doi-only"
+
+    class DummyIdentifierTask:
+        def apply_async(self, args: list[Any]) -> DummyAsyncResult:
+            queued["identifier_args"] = args
+            return DummyAsyncResult()
+
+    class DummyPubMedTask:
+        def apply_async(self, args: list[Any]) -> DummyAsyncResult:
+            queued["pubmed_args"] = args
+            return DummyAsyncResult()
+
+    class DummyPostgres:
+        def create_task_request(self, *, task_form_text: str, status: str, metadata: dict[str, Any]) -> Any:
+            return SimpleNamespace(request_id="req-doi", status=status)
+
+        def create_document(self, **kwargs: Any) -> Any:
+            return SimpleNamespace(document_id="doc-doi")
+
+        def create_paper_task(self, **kwargs: Any) -> Any:
+            return SimpleNamespace(
+                paper_task_id="paper-doi",
+                document_id=kwargs["document_id"],
+                original_filename=kwargs["original_filename"],
+                status=kwargs["status"],
+                error_code=None,
+                duplicate_of=None,
+                celery_task_id=None,
+            )
+
+        def append_paper_task_log(self, *args: Any, **kwargs: Any) -> None:
+            return None
+
+        def update_paper_task(self, paper_task_id: str, **kwargs: Any) -> Any:
+            return SimpleNamespace(
+                paper_task_id=paper_task_id,
+                document_id="doc-doi",
+                original_filename="DOI candidate",
+                status="queued",
+                error_code=None,
+                duplicate_of=None,
+                celery_task_id=kwargs.get("celery_task_id"),
+            )
+
+        def refresh_task_request_status(self, request_id: str) -> Any:
+            return SimpleNamespace(request_id=request_id, status="queued")
+
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+    monkeypatch.setattr(task_api, "process_literature_identifier_task", DummyIdentifierTask())
+    monkeypatch.setattr(task_api, "process_pubmed_paper_task", DummyPubMedTask())
+    monkeypatch.setattr(task_api, "_celery_task", lambda task: task)
+
+    response = client.post(
+        f"{task_prefix}/requests/literature/submit",
+        json={
+            "task_form": "Find DOI-backed case reports",
+            "selected_candidates": [
+                {
+                    "candidate_id": "cand-doi-only",
+                    "provider": "crossref",
+                    "route": "api",
+                    "title": "DOI candidate",
+                    "doi": "10.1186/s13053-021-00185-y",
+                    "identifiers": {"doi": "10.1186/s13053-021-00185-y"},
+                }
+            ],
+            "source": "literature",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "identifier_args" in queued
+    assert "pubmed_args" not in queued
     queued: dict[str, Any] = {}
 
     class DummyAsyncResult:
@@ -378,4 +454,148 @@ def test_literature_submit_dispatches_identifier_candidates_to_identifier_worker
         "paper-3",
         "req-3",
     ]
-    assert response.json()["papers"][0]["celery_task_id"] == "celery-identifier-123"
+
+
+def test_literature_submit_reuses_existing_document_instead_of_500_on_duplicate(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    task_prefix: str,
+) -> None:
+    class DummyPostgres:
+        def create_task_request(self, *, task_form_text: str, status: str, metadata: dict[str, Any]) -> Any:
+            return SimpleNamespace(request_id="req-dup", status=status)
+
+        def find_document_by_hash(self, file_hash: str) -> Any:
+            assert file_hash
+            return SimpleNamespace(document_id="doc-existing")
+
+        def find_latest_paper_task_by_hash(self, file_hash: str) -> Any:
+            assert file_hash
+            return SimpleNamespace(paper_task_id="paper-existing", status="success")
+
+        def create_paper_task(self, **kwargs: Any) -> Any:
+            return SimpleNamespace(
+                paper_task_id="paper-dup",
+                document_id=kwargs.get("document_id"),
+                original_filename=kwargs.get("original_filename"),
+                status=kwargs["status"],
+                error_code=kwargs.get("error_code"),
+                duplicate_of=kwargs.get("duplicate_of"),
+                celery_task_id=None,
+            )
+
+        def append_paper_task_log(self, *args: Any, **kwargs: Any) -> None:
+            return None
+
+        def refresh_task_request_status(self, request_id: str) -> Any:
+            return SimpleNamespace(request_id=request_id, status="queued")
+
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+
+    response = client.post(
+        f"{task_prefix}/requests/literature/submit",
+        json={
+            "task_form": "Retry duplicate literature candidate",
+            "selected_candidates": [
+                {
+                    "candidate_id": "cand-dup",
+                    "provider": "crossref",
+                    "route": "api",
+                    "title": "Duplicate DOI candidate",
+                    "doi": "10.1186/s13053-021-00185-y",
+                    "url": "https://doi.org/10.1186/s13053-021-00185-y",
+                    "identifiers": {"doi": "10.1186/s13053-021-00185-y"},
+                }
+            ],
+            "source": "literature",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+
+
+def test_literature_submit_reuses_existing_queued_document_and_enqueues_worker(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    task_prefix: str,
+) -> None:
+    queued: dict[str, Any] = {}
+
+    class DummyAsyncResult:
+        id = "celery-reused-doc"
+
+    class DummyTask:
+        def apply_async(self, args: list[Any]) -> DummyAsyncResult:
+            queued["args"] = args
+            return DummyAsyncResult()
+
+    class DummyPostgres:
+        def create_task_request(self, *, task_form_text: str, status: str, metadata: dict[str, Any]) -> Any:
+            return SimpleNamespace(request_id="req-reuse", status=status)
+
+        def find_document_by_hash(self, file_hash: str) -> Any:
+            assert file_hash
+            return SimpleNamespace(document_id="doc-existing")
+
+        def find_latest_paper_task_by_hash(self, file_hash: str) -> Any:
+            assert file_hash
+            return SimpleNamespace(paper_task_id="paper-existing", status="queued")
+
+        def create_document(self, **kwargs: Any) -> Any:
+            raise AssertionError("should reuse existing document instead of creating a new one")
+
+        def create_paper_task(self, **kwargs: Any) -> Any:
+            return SimpleNamespace(
+                paper_task_id="paper-reuse",
+                document_id=kwargs.get("document_id"),
+                original_filename=kwargs.get("original_filename"),
+                status=kwargs["status"],
+                error_code=kwargs.get("error_code"),
+                duplicate_of=kwargs.get("duplicate_of"),
+                celery_task_id=None,
+            )
+
+        def append_paper_task_log(self, *args: Any, **kwargs: Any) -> None:
+            return None
+
+        def update_paper_task(self, paper_task_id: str, **kwargs: Any) -> Any:
+            return SimpleNamespace(
+                paper_task_id=paper_task_id,
+                document_id="doc-existing",
+                original_filename="Queued duplicate candidate",
+                status="queued",
+                error_code=None,
+                duplicate_of=None,
+                celery_task_id=kwargs.get("celery_task_id"),
+            )
+
+        def refresh_task_request_status(self, request_id: str) -> Any:
+            return SimpleNamespace(request_id=request_id, status="queued")
+
+    monkeypatch.setattr(task_api, "get_postgres_client", lambda: DummyPostgres())
+    monkeypatch.setattr(task_api, "process_literature_identifier_task", DummyTask())
+    monkeypatch.setattr(task_api, "_celery_task", lambda task: task)
+
+    response = client.post(
+        f"{task_prefix}/requests/literature/submit",
+        json={
+            "task_form": "Reuse queued duplicate literature candidate",
+            "selected_candidates": [
+                {
+                    "candidate_id": "cand-reuse",
+                    "provider": "crossref",
+                    "route": "api",
+                    "title": "Queued duplicate candidate",
+                    "doi": "10.1097/MD.0000000000010837",
+                    "url": "https://doi.org/10.1097/MD.0000000000010837",
+                    "identifiers": {"doi": "10.1097/MD.0000000000010837"},
+                }
+            ],
+            "source": "literature",
+        },
+    )
+
+    assert response.status_code == 200
+    assert queued["args"][1:] == ["doc-existing", "paper-reuse", "req-reuse"]
+    assert response.json()["papers"][0]["document_id"] == "doc-existing"

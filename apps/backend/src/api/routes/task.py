@@ -1361,20 +1361,20 @@ def _enqueue_literature_candidate_task(
     identifiers = dict(candidate_payload.get("identifiers") or {})
     route = str(candidate_payload.get("route") or "").strip().lower()
     url = str(candidate_payload.get("url") or identifiers.get("url") or "").strip()
-    pmid = str(candidate_payload.get("doi") or "")
-    pmid = str(identifiers.get("pmid") or pmid).strip()
+    pmid = str(identifiers.get("pmid") or "").strip()
     title = str(candidate_payload.get("title") or "Literature candidate").strip() or "Literature candidate"
     provider = str(candidate_payload.get("provider") or "literature").strip() or "literature"
     detail_link = str(candidate_payload.get("detail_link") or "").strip() or None
 
     lane = "identifier"
     file_hash_seed = json.dumps(candidate_payload, sort_keys=True, ensure_ascii=False)
+    file_hash = hashlib.sha256(file_hash_seed.encode("utf-8")).hexdigest()
     original_filename = title
     document_kwargs: Dict[str, Any] = {
         "title": title,
         "original_filename": title,
         "local_path": url or detail_link,
-        "file_hash": hashlib.sha256(file_hash_seed.encode("utf-8")).hexdigest(),
+        "file_hash": file_hash,
         "status": "queued",
         "summary": f"Queued literature candidate from {provider}",
     }
@@ -1384,25 +1384,47 @@ def _enqueue_literature_candidate_task(
         document_kwargs["local_path"] = url
     elif pmid:
         lane = "pubmed"
+        file_hash = _synthetic_hash_from_pmid(pmid)
         document_kwargs.update(
             {
                 "title": f"PMID:{pmid}",
                 "original_filename": f"PMID:{pmid}",
                 "pmid": pmid,
                 "local_path": None,
-                "file_hash": _synthetic_hash_from_pmid(pmid),
+                "file_hash": file_hash,
                 "summary": f"Queued literature PMID candidate from {provider}",
             }
         )
         original_filename = f"PMID:{pmid}"
 
-    document = postgres.create_document(**document_kwargs)
-    document_id = _uuid_str(document.document_id)
+    existing_document = getattr(postgres, "find_document_by_hash", lambda *_: None)(file_hash)
+    historical_paper = getattr(postgres, "find_latest_paper_task_by_hash", lambda *_: None)(file_hash)
+    existing_document_id = (
+        _uuid_optional_str(existing_document.document_id)
+        if existing_document is not None
+        else None
+    )
+    if existing_document is not None and _has_successful_historical_paper(historical_paper):
+        return _create_duplicate_paper_entry(
+            postgres,
+            request_id=request_id,
+            document_id=existing_document_id,
+            original_filename=original_filename,
+            file_hash=file_hash,
+            historical_paper=historical_paper,
+            message=f"Duplicate literature candidate detected: {title}",
+        )
+
+    document_id = existing_document_id
+    if document_id is None:
+        document = postgres.create_document(**document_kwargs)
+        document_id = _uuid_str(document.document_id)
+
     paper_entry = postgres.create_paper_task(
         request_id=request_id,
         document_id=document_id,
         original_filename=original_filename,
-        file_hash=document_kwargs["file_hash"],
+        file_hash=file_hash,
         status="queued",
     )
     paper_task_id = _uuid_str(paper_entry.paper_task_id)

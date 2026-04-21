@@ -149,7 +149,8 @@ def _normalize_candidate(item: Dict[str, Any], plan_item: ProviderPlanItem) -> D
     identifiers = dict(item.get("identifiers") or {})
     doi = item.get("doi") or identifiers.get("doi")
     url = item.get("url") or identifiers.get("url")
-    detail_link = item.get("url") or item.get("links", [None])[0]
+    links = item.get("links") if isinstance(item.get("links"), list) else []
+    detail_link = item.get("url") or (links[0] if links else None)
 
     normalized = {
         "candidate_id": "",
@@ -172,6 +173,25 @@ def _normalize_candidate(item: Dict[str, Any], plan_item: ProviderPlanItem) -> D
     return normalized
 
 
+def rank_candidates(
+    candidates: Sequence[Dict[str, Any]],
+    *,
+    expected_title: Optional[str] = None,
+    preferred_provider: Optional[str] = None,
+) -> list[Dict[str, Any]]:
+    normalized_expected_title = _normalize_title(expected_title)
+    normalized_provider = str(preferred_provider or "").strip().lower() or None
+
+    def _score(candidate: Dict[str, Any]) -> tuple[int, int, int]:
+        normalized_title = _normalize_title(candidate.get("title"))
+        exact_title = int(bool(normalized_expected_title and normalized_title == normalized_expected_title))
+        provider_match = int(bool(normalized_provider and str(candidate.get("provider") or "").strip().lower() == normalized_provider))
+        has_doi = int(bool(_clean_identifier(candidate.get("doi") or (candidate.get("identifiers") or {}).get("doi"))))
+        return (exact_title, provider_match, has_doi)
+
+    return sorted(candidates, key=_score, reverse=True)
+
+
 async def search_multilingual_candidates(
     *,
     target: str,
@@ -187,6 +207,7 @@ async def search_multilingual_candidates(
 
     plan = build_provider_plan(language=language, provider_hints=provider_hints)
     collected: list[Dict[str, Any]] = []
+    preferred_provider = plan[0]["provider"] if plan else None
 
     for plan_item in plan:
         payload: Dict[str, Any] = {
@@ -213,7 +234,16 @@ async def search_multilingual_candidates(
             collected.append(_normalize_candidate(item, plan_item))
 
         collected = dedupe_candidates(collected)
+        collected = rank_candidates(
+            collected,
+            expected_title=target,
+            preferred_provider=preferred_provider,
+        )
         if len(collected) >= candidate_limit:
             return collected[:candidate_limit]
 
-    return collected[:candidate_limit]
+    return rank_candidates(
+        collected,
+        expected_title=target,
+        preferred_provider=preferred_provider,
+    )[:candidate_limit]
