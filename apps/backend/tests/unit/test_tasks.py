@@ -1015,6 +1015,352 @@ def test_process_pubmed_paper_task_fetch_timeout_marks_failed(
     assert fake_pg.paper_updates[-1]["fields"]["error_code"] == "FETCH_TIMEOUT"
 
 
+def test_process_web_page_task_prefers_direct_chinese_recovery_before_generic_download_when_crawl_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakePostgres:
+        def update_paper_task(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def update_task_request(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def append_paper_task_log(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def update_document(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def refresh_task_request_status(self, _: str) -> Any:
+            return None
+
+        def create_sentence_alignment(self, **kwargs: Any) -> Any:
+            return None
+
+    async def fake_run_async_with_node_policy(
+        node: str,
+        operation: str,
+        runner,
+        policy_override: Dict[str, Any] | None = None,
+    ) -> tuple[Any, int]:
+        del node, operation, runner, policy_override
+        raise RuntimeError("Fetch no result from crawl4ai")
+
+    called: Dict[str, Any] = {}
+
+    def fake_run_recovery(url: str) -> Dict[str, Any]:
+        called["recovery_url"] = url
+        return {
+            "success": True,
+            "normalized_markdown": "# 标题\n\nANK1 中文正文",
+            "provider": "chinese_fulltext_recovery",
+            "warnings": ["fallback:html_body"],
+        }
+
+    async def fake_pdf_download(*_: Any, **__: Any) -> Dict[str, Any]:
+        return {
+            "downloaded": True,
+            "local_file_path": "/tmp/run_upload_doc-1/unrelated.pdf",
+            "sha256": "abc",
+            "provider": "pubscholar",
+            "warnings": [],
+            "source_trace": [],
+        }
+
+    def fail_process_pdf_run(**kwargs: Any) -> Dict[str, Any]:
+        raise AssertionError(kwargs)
+
+    def fake_process_markdown_direct(**kwargs: Any) -> Dict[str, Any]:
+        called["markdown_kwargs"] = kwargs
+        return {"status": "success", "document_id": kwargs["document_id"]}
+
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
+    monkeypatch.setattr(
+        tasks_module,
+        "_run_async_with_node_policy",
+        fake_run_async_with_node_policy,
+    )
+    monkeypatch.setattr(
+        tasks_module,
+        "run_chinese_fulltext_recovery",
+        fake_run_recovery,
+    )
+    monkeypatch.setattr(
+        tasks_module,
+        "_try_download_and_store_literature_pdf",
+        fake_pdf_download,
+    )
+    monkeypatch.setattr(tasks_module.process_pdf_task, "run", fail_process_pdf_run)
+    monkeypatch.setattr(
+        tasks_module,
+        "_process_markdown_direct",
+        fake_process_markdown_direct,
+    )
+
+    result = _invoke_bound_task(
+        tasks_module.process_web_page_task,
+        "https://image.hanspub.org/Html/77-1577845_75032.htm",
+        "doc-1",
+        "paper-1",
+        "req-1",
+    )
+
+    assert result == {"status": "success", "document_id": "doc-1"}
+    assert called["recovery_url"] == "https://image.hanspub.org/Html/77-1577845_75032.htm"
+    assert called["markdown_kwargs"]["markdown_content"] == "# 标题\n\nANK1 中文正文"
+
+
+
+def test_process_web_page_task_uses_pdf_pipeline_when_crawl_fails_but_download_finds_pdf(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakePostgres:
+        def update_paper_task(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def update_task_request(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def append_paper_task_log(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def update_document(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def refresh_task_request_status(self, _: str) -> Any:
+            return None
+
+        def create_sentence_alignment(self, **kwargs: Any) -> Any:
+            return None
+
+    async def fake_run_async_with_node_policy(
+        node: str,
+        operation: str,
+        runner,
+        policy_override: Dict[str, Any] | None = None,
+    ) -> tuple[Any, int]:
+        del node, operation, runner, policy_override
+        raise RuntimeError("Fetch no result from crawl4ai")
+
+    async def fake_pdf_download(*_: Any, **__: Any) -> Dict[str, Any]:
+        return {
+            "downloaded": True,
+            "local_file_path": "/tmp/run_upload_doc-1/paper.pdf",
+            "sha256": "abc",
+            "provider": "pubscholar",
+            "warnings": [],
+            "source_trace": [],
+        }
+
+    called: Dict[str, Any] = {}
+
+    def fake_process_pdf_run(**kwargs: Any) -> Dict[str, Any]:
+        called.update(kwargs)
+        return {"status": "success", "document_id": kwargs["document_id"]}
+
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
+    monkeypatch.setattr(
+        tasks_module,
+        "_run_async_with_node_policy",
+        fake_run_async_with_node_policy,
+    )
+    monkeypatch.setattr(
+        tasks_module,
+        "run_chinese_fulltext_recovery",
+        lambda url: {"success": False, "normalized_markdown": "", "warnings": []},
+    )
+    monkeypatch.setattr(
+        tasks_module,
+        "_try_download_and_store_literature_pdf",
+        fake_pdf_download,
+    )
+    monkeypatch.setattr(tasks_module.process_pdf_task, "run", fake_process_pdf_run)
+
+    result = _invoke_bound_task(
+        tasks_module.process_web_page_task,
+        "https://example.org/paper",
+        "doc-1",
+        "paper-1",
+        "req-1",
+    )
+
+    assert result == {"status": "success", "document_id": "doc-1"}
+    assert called == {
+        "file_paths": ["/tmp/run_upload_doc-1/paper.pdf"],
+        "file_hash": "abc",
+        "document_id": "doc-1",
+        "paper_task_id": "paper-1",
+        "request_id": "req-1",
+    }
+
+
+
+def test_process_web_page_task_disables_acquisition_retries_for_hans_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakePostgres:
+        def update_paper_task(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def update_task_request(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def append_paper_task_log(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def update_document(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def refresh_task_request_status(self, _: str) -> Any:
+            return None
+
+        def create_sentence_alignment(self, **kwargs: Any) -> Any:
+            return None
+
+    observed: Dict[str, Any] = {}
+
+    async def fake_run_async_with_node_policy(
+        node: str,
+        operation: str,
+        runner,
+        policy_override: Dict[str, Any] | None = None,
+    ) -> tuple[Any, int]:
+        observed["node"] = node
+        observed["operation"] = operation
+        observed["policy_override"] = policy_override
+        raise RuntimeError("Fetch no result from crawl4ai")
+
+    async def fake_pdf_download(*_: Any, **__: Any) -> Dict[str, Any]:
+        return {
+            "downloaded": False,
+            "normalized_markdown": "# 标题\n\n中文正文",
+            "provider": "chinese_fulltext_recovery",
+            "warnings": ["fallback:html_body"],
+            "downloads_count": 0,
+            "source_trace": [],
+        }
+
+    def fake_process_markdown_direct(**kwargs: Any) -> Dict[str, Any]:
+        return {"status": "success", "document_id": kwargs["document_id"]}
+
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
+    monkeypatch.setattr(
+        tasks_module,
+        "_run_async_with_node_policy",
+        fake_run_async_with_node_policy,
+    )
+    monkeypatch.setattr(
+        tasks_module,
+        "_try_download_and_store_literature_pdf",
+        fake_pdf_download,
+    )
+    monkeypatch.setattr(
+        tasks_module,
+        "_process_markdown_direct",
+        fake_process_markdown_direct,
+    )
+
+    result = _invoke_bound_task(
+        tasks_module.process_web_page_task,
+        "https://image.hanspub.org/Html/77-1577845_75032.htm",
+        "doc-1",
+        "paper-1",
+        "req-1",
+    )
+
+    assert result == {"status": "success", "document_id": "doc-1"}
+    assert observed["node"] == "acquisition"
+    assert observed["operation"] == "fetch_web_markdown"
+    assert observed["policy_override"]["max_retries"] == 0
+    assert observed["policy_override"]["delay"] == 0
+
+
+
+def test_process_web_page_task_continues_with_recovered_markdown_when_crawl_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeFirecrawlService:
+        async def scrape_markdown(self, url: str) -> Any:
+            raise RuntimeError("Fetch no result from crawl4ai")
+
+    class FakePostgres:
+        def update_paper_task(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def update_task_request(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def append_paper_task_log(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def update_document(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def refresh_task_request_status(self, _: str) -> Any:
+            return None
+
+        def create_sentence_alignment(self, **kwargs: Any) -> Any:
+            return None
+
+    called: Dict[str, Any] = {}
+
+    def fake_run_recovery(url: str) -> Dict[str, Any]:
+        called["recovery_url"] = url
+        return {
+            "success": True,
+            "normalized_markdown": "# 标题\n\n中文正文",
+            "provider": "chinese_fulltext_recovery",
+            "warnings": ["fallback:html_body"],
+        }
+
+    def fail_pdf_download(*_: Any, **__: Any) -> Dict[str, Any]:
+        raise AssertionError("generic download helper should not run for direct Hans recovery")
+
+    def fake_process_markdown_direct(**kwargs: Any) -> Dict[str, Any]:
+        called["markdown_kwargs"] = kwargs
+        return {"status": "success", "document_id": kwargs["document_id"]}
+
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
+    monkeypatch.setattr(
+        tasks_module, "get_firecrawl_service", lambda: FakeFirecrawlService()
+    )
+    monkeypatch.setattr(
+        tasks_module,
+        "run_chinese_fulltext_recovery",
+        fake_run_recovery,
+    )
+    monkeypatch.setattr(
+        tasks_module,
+        "_try_download_and_store_literature_pdf",
+        fail_pdf_download,
+    )
+    monkeypatch.setattr(
+        tasks_module,
+        "_process_markdown_direct",
+        fake_process_markdown_direct,
+    )
+    setattr(tasks_module.process_web_page_task, "max_retries", 0)
+
+    result = _invoke_bound_task(
+        tasks_module.process_web_page_task,
+        "https://image.hanspub.org/Html/77-1577845_75032.htm",
+        "doc-1",
+        "paper-1",
+        "req-1",
+    )
+
+    assert result == {"status": "success", "document_id": "doc-1"}
+    assert called["recovery_url"] == "https://image.hanspub.org/Html/77-1577845_75032.htm"
+    assert called["markdown_kwargs"]["markdown_content"] == "# 标题\n\n中文正文"
+    assert called["markdown_kwargs"]["document_id"] == "doc-1"
+    assert called["markdown_kwargs"]["paper_task_id"] == "paper-1"
+    assert called["markdown_kwargs"]["request_id"] == "req-1"
+    assert called["markdown_kwargs"]["source"] == "web"
+    assert called["markdown_kwargs"]["source_url"] == "https://image.hanspub.org/Html/77-1577845_75032.htm"
+    assert called["markdown_kwargs"]["fulltext_unavailable"] is False
+
+
+
 def test_process_web_page_task_stores_normalized_markdown(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: dict[str, Any] = {}
 
@@ -1987,6 +2333,79 @@ def test_process_literature_identifier_task_downloads_pdf_and_reuses_pdf_pipelin
         "paper_task_id": "paper-1",
         "request_id": "req-1",
     }
+
+
+
+def test_process_literature_identifier_task_continues_when_recovery_returns_markdown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    candidate = {
+        "provider": "pubscholar",
+        "route": "web",
+        "title": "DNAJB2复合杂合突变相关腓骨肌萎缩症2型家系病例1例",
+        "identifiers": {"url": "https://example.cn/paper"},
+        "detail_link": "https://example.cn/paper",
+    }
+
+    async def fake_download(**kwargs: Any) -> Dict[str, Any]:
+        return {
+            "downloaded": False,
+            "normalized_markdown": "# 标题\n\n中文正文",
+            "provider": "chinese_fulltext_recovery",
+            "reason": "html_fallback",
+        }
+
+    called: Dict[str, Any] = {}
+
+    class FakePostgres:
+        def update_document(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def update_paper_task(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def append_paper_task_log(self, *_: Any, **__: Any) -> Any:
+            return None
+
+        def refresh_task_request_status(self, _: str) -> Any:
+            return None
+
+        def create_sentence_alignment(self, **kwargs: Any) -> Any:
+            return None
+
+    def fake_process_markdown_direct(**kwargs: Any) -> Dict[str, Any]:
+        called.update(kwargs)
+        return {"status": "success", "document_id": kwargs["document_id"]}
+
+    monkeypatch.setattr(
+        tasks_module,
+        "_try_download_and_store_literature_pdf",
+        fake_download,
+    )
+    monkeypatch.setattr(tasks_module, "get_postgres_client", lambda: FakePostgres())
+    monkeypatch.setattr(
+        tasks_module,
+        "_process_markdown_direct",
+        fake_process_markdown_direct,
+        raising=False,
+    )
+
+    result = _invoke_bound_task(
+        tasks_module.process_literature_identifier_task,
+        candidate=candidate,
+        document_id="doc-1",
+        paper_task_id="paper-1",
+        request_id="req-1",
+    )
+
+    assert result == {"status": "success", "document_id": "doc-1"}
+    assert called["markdown_content"] == "# 标题\n\n中文正文"
+    assert called["document_id"] == "doc-1"
+    assert called["paper_task_id"] == "paper-1"
+    assert called["request_id"] == "req-1"
+    assert called["source"] == "web"
+    assert called["title"] == "DNAJB2复合杂合突变相关腓骨肌萎缩症2型家系病例1例"
+    assert called["source_url"] == "https://example.cn/paper"
 
 
 def test_try_download_and_store_literature_pdf_preserves_local_file(

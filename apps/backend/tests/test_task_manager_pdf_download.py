@@ -8,6 +8,13 @@ import pytest
 from src.services import task_manager as tasks_module
 
 
+def _make_fake_recovery(result: Dict[str, Any]):
+    def _fake_recovery(url: str) -> Dict[str, Any]:
+        return result
+
+    return _fake_recovery
+
+
 def _make_fake_minio_client(metadata_sink: Dict[str, Any] | None = None) -> type:
     class _FakeMinioClient:
         @staticmethod
@@ -207,3 +214,130 @@ async def test_try_download_and_store_literature_pdf_persists_web_source_trace(
 
     metadata = metadata_sink["metadata"]
     assert metadata["source_trace"] == json.dumps(source_trace, ensure_ascii=False)
+
+
+@pytest.mark.asyncio
+async def test_try_download_invalid_pdf_signature_uses_html_fallback_for_known_chinese_provider_url(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    txt_path = tmp_path / "ANK1.pdf"
+    txt_path.write_text("not-a-pdf", encoding="utf-8")
+
+    async def fake_unified(_: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "success": True,
+            "downloads": [{"file_path": str(txt_path)}],
+            "warnings": [],
+            "route": {"used": "web", "web_provider": "hans_publishers"},
+            "raw": {"web": {"source_trace": []}},
+        }
+
+    recovery_called: list[str] = []
+
+    def fake_recovery(url: str) -> Dict[str, Any]:
+        recovery_called.append(url)
+        return {
+            "success": True,
+            "normalized_markdown": "# 标题\n\n正文",
+            "provider": "chinese_fulltext_recovery",
+            "warnings": ["fallback:html_body"],
+        }
+
+    monkeypatch.setattr(tasks_module, "literature_unified_workflow", fake_unified)
+    monkeypatch.setattr(tasks_module, "run_chinese_fulltext_recovery", fake_recovery)
+
+    result = await tasks_module._try_download_and_store_literature_pdf(
+        document_id="doc-hans",
+        source="web",
+        query="https://image.hanspub.org/Html/77-1577845_75032.htm",
+        identifiers=["https://image.hanspub.org/Html/77-1577845_75032.htm"],
+        detail_link="https://image.hanspub.org/Html/77-1577845_75032.htm",
+    )
+
+    assert result["downloaded"] is False
+    assert result["normalized_markdown"] == "# 标题\n\n正文"
+    assert result["provider"] == "chinese_fulltext_recovery"
+    assert recovery_called == ["https://image.hanspub.org/Html/77-1577845_75032.htm"]
+
+
+@pytest.mark.asyncio
+async def test_try_download_returns_normalized_markdown_when_chinese_pdf_fallbacks_fail(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_unified(_: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "success": False,
+            "downloads": [],
+            "warnings": [],
+            "route": {"used": "web", "web_provider": "pubscholar"},
+            "raw": {"web": {"source_trace": []}},
+        }
+
+    recovery_called: list[str] = []
+
+    def fake_recovery(url: str) -> Dict[str, Any]:
+        recovery_called.append(url)
+        return {
+            "success": True,
+            "normalized_markdown": "# 标题\n\n正文",
+            "provider": "chinese_fulltext_recovery",
+            "warnings": ["fallback:html_body"],
+        }
+
+    monkeypatch.setattr(tasks_module, "literature_unified_workflow", fake_unified)
+    monkeypatch.setattr(tasks_module, "run_chinese_fulltext_recovery", fake_recovery)
+
+    result = await tasks_module._try_download_and_store_literature_pdf(
+        document_id="doc-zh",
+        source="web",
+        query="DNAJB2复合杂合突变相关腓骨肌萎缩症2型家系病例1例",
+        identifiers=["https://example.cn/paper"],
+        detail_link="https://example.cn/paper",
+        selected_title="DNAJB2复合杂合突变相关腓骨肌萎缩症2型家系病例1例",
+    )
+
+    assert result["downloaded"] is False
+    assert result["normalized_markdown"] == "# 标题\n\n正文"
+    assert result["provider"] == "chinese_fulltext_recovery"
+    assert recovery_called == ["https://example.cn/paper"]
+
+
+@pytest.mark.asyncio
+async def test_try_download_does_not_trigger_recovery_for_non_chinese_input(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_unified(_: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "success": False,
+            "downloads": [],
+            "warnings": [],
+            "route": {"used": "web", "web_provider": "pubscholar"},
+            "raw": {"web": {"source_trace": []}},
+        }
+
+    recovery_called: list[str] = []
+
+    def fake_recovery(url: str) -> Dict[str, Any]:
+        recovery_called.append(url)
+        return {
+            "success": True,
+            "normalized_markdown": "# Title\n\nBody",
+            "provider": "chinese_fulltext_recovery",
+            "warnings": ["fallback:html_body"],
+        }
+
+    monkeypatch.setattr(tasks_module, "literature_unified_workflow", fake_unified)
+    monkeypatch.setattr(tasks_module, "run_chinese_fulltext_recovery", fake_recovery)
+
+    result = await tasks_module._try_download_and_store_literature_pdf(
+        document_id="doc-en",
+        source="web",
+        query="Fabry case report",
+        identifiers=["https://example.org/paper"],
+        detail_link="https://example.org/paper",
+        selected_title="Fabry case report",
+    )
+
+    assert result["downloaded"] is False
+    assert result["reason"] == "pdf_not_found"
+    assert recovery_called == []

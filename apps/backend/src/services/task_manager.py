@@ -38,6 +38,7 @@ from src.domain.agent.document_parsing import (
     collect_parsing_assets,
     get_document_parsing_agent,
 )
+from src.agents.chinese_fulltext_recovery.agent import run_chinese_fulltext_recovery
 from src.domain.agent.workflow import EvidenceAgent
 from src.domain.graph.sync import SchemaSyncError, get_graph_sync_service
 from src.domain.literature import (
@@ -1044,6 +1045,30 @@ async def _try_download_and_store_literature_pdf(
             elif candidate.is_file():
                 file_path = candidate
 
+    normalized_markdown = ""
+    is_chinese_candidate = _is_chinese_candidate_for_html_recovery(
+        title=selected_title,
+        query=query,
+        detail_link=detail_link,
+        route=route if isinstance(route, dict) else None,
+    )
+    if file_path is None and is_chinese_candidate and detail_link:
+        recovery = run_chinese_fulltext_recovery(detail_link)
+        warnings.extend(recovery.get("warnings") or [])
+        normalized_markdown = str(recovery.get("normalized_markdown") or "").strip()
+        if recovery.get("success") and normalized_markdown:
+            shutil.rmtree(download_dir, ignore_errors=True)
+            return {
+                "downloaded": False,
+                "provider": recovery.get("provider"),
+                "normalized_markdown": normalized_markdown,
+                "warnings": warnings,
+                "reason": "html_fallback",
+                "route": route,
+                "downloads_count": len(downloads),
+                "source_trace": source_trace,
+            }
+
     if file_path is None or not file_path.is_file():
         shutil.rmtree(download_dir, ignore_errors=True)
         return {
@@ -1055,6 +1080,22 @@ async def _try_download_and_store_literature_pdf(
         }
 
     if not _is_pdf_file(file_path):
+        if is_chinese_candidate and detail_link:
+            recovery = run_chinese_fulltext_recovery(detail_link)
+            warnings.extend(recovery.get("warnings") or [])
+            normalized_markdown = str(recovery.get("normalized_markdown") or "").strip()
+            if recovery.get("success") and normalized_markdown:
+                shutil.rmtree(download_dir, ignore_errors=True)
+                return {
+                    "downloaded": False,
+                    "provider": recovery.get("provider"),
+                    "normalized_markdown": normalized_markdown,
+                    "warnings": warnings,
+                    "reason": "html_fallback",
+                    "route": route,
+                    "downloads_count": len(downloads),
+                    "source_trace": source_trace,
+                }
         shutil.rmtree(download_dir, ignore_errors=True)
         return {
             "downloaded": False,
@@ -1268,6 +1309,202 @@ def _cleanup_literature_download_file(local_file_path: Optional[str]) -> None:
             local_file_path,
             exc,
         )
+
+
+
+def _is_chinese_candidate_for_html_recovery(
+    *,
+    title: Optional[str],
+    query: Optional[str],
+    detail_link: Optional[str],
+    route: Optional[Dict[str, Any]] = None,
+) -> bool:
+    title_text = str(title or query or "").strip()
+    if re.search(r"[\u4e00-\u9fff]", title_text):
+        return True
+    link = str(detail_link or "").strip().lower()
+    if "yiigle.com" in link or "hanspub.org" in link:
+        return True
+    provider = str((route or {}).get("web_provider") or "").strip().lower()
+    return provider == "hans_publishers"
+
+
+
+def _process_markdown_direct(
+    *,
+    postgres: Any,
+    markdown_content: str,
+    document_id: str,
+    paper_task_id: str,
+    request_id: str,
+    source: str,
+    title: str,
+    source_url: Optional[str],
+    node_trace: Optional[Dict[str, Any]] = None,
+    fulltext_unavailable: bool = False,
+    pdf_download: Optional[Dict[str, Any]] = None,
+    acquisition_object_key: Optional[str] = None,
+    acquisition_summary: Optional[str] = None,
+) -> Dict[str, Any]:
+    node_trace = dict(node_trace or {})
+    document_identifier: Any = document_id
+    try:
+        document_identifier = UUID(str(document_id))
+    except (TypeError, ValueError, AttributeError):
+        document_identifier = document_id
+
+    node_trace = _update_node_trace(node_trace, "parsing", "markdown_direct")
+    _update_processing_step_status(
+        postgres,
+        paper_task_id,
+        step="parsing",
+        status=ProcessingStepStatus.skipped,
+        workflow_status=WorkflowStatus.processing_pdf,
+        message="Parsing skipped: markdown acquired directly",
+    )
+
+    source_text, en_text, node_trace, translation_warnings = run_node_translation(
+        postgres,
+        paper_task_id,
+        markdown_content,
+        node_trace,
+    )
+    agent_response, node_trace = run_node_extraction(
+        postgres,
+        paper_task_id,
+        source_text,
+        en_text,
+        [],
+        node_trace,
+    )
+
+    if not agent_response or getattr(agent_response, "status", None) == "failed":
+        error_code = "EVIDENCE_EXTRACTION_FAILED"
+        postgres.update_paper_task(
+            paper_task_id,
+            status="failed",
+            workflow_status=WorkflowStatus.failed.value,
+            error_code=error_code,
+            node_trace=node_trace,
+            processing_steps=normalize_processing_steps(None, node_trace=node_trace),
+            error_details={
+                "error_code": error_code,
+                "message": "Evidence processing returned failed status",
+            },
+        )
+        postgres.append_paper_task_log(
+            paper_task_id,
+            status="failed",
+            node="extraction",
+            error_code=error_code,
+            message="Evidence processing returned failed status",
+        )
+        postgres.refresh_task_request_status(request_id)
+        return {
+            "source_url": source_url,
+            "document_id": document_id,
+            "paper_task_id": paper_task_id,
+            "status": "failed",
+            "error_code": error_code,
+        }
+
+    files = asyncio.run(_store_outputs_in_minio(agent_response, [], document_id))
+
+    try:
+        graph_sync_result, node_trace = run_node_acmg(
+            postgres,
+            paper_task_id,
+            document_id,
+            agent_response,
+            node_trace,
+        )
+    except Exception as acmg_exc:
+        logger.warning("Graph sync failed for {} {}: {}", source, source_url or title, acmg_exc)
+        graph_sync_result = None
+        node_trace = _update_node_trace(node_trace, "acmg", "failed")
+        _update_processing_step_status(
+            postgres,
+            paper_task_id,
+            step="classification",
+            status=ProcessingStepStatus.skipped,
+            workflow_status=WorkflowStatus.classifying,
+            message="Graph sync failed but pipeline continued",
+            error_code="GRAPH_SYNC_FAILED",
+        )
+
+    base_warnings = list(translation_warnings)
+    if fulltext_unavailable:
+        base_warnings.append("FULLTEXT_UNAVAILABLE")
+    warning_codes = _persist_alignments_and_warnings(
+        postgres,
+        paper_task_id,
+        source_text=source_text,
+        en_text=en_text,
+        base_warnings=base_warnings,
+    )
+    normalized_warning_codes = normalize_warning_codes(warning_codes) or []
+    processing_steps = _get_paper_task_processing_steps(
+        postgres,
+        paper_task_id,
+        node_trace=node_trace,
+    )
+    trace_chain = build_trace_chain(
+        node_trace=node_trace,
+        processing_steps=processing_steps,
+    )
+
+    document_fields: Dict[str, Any] = {"status": "success", "title": title}
+    if acquisition_summary is not None:
+        document_fields["summary"] = acquisition_summary
+    if acquisition_object_key is not None:
+        document_fields["local_path"] = acquisition_object_key
+    elif source_url:
+        document_fields["local_path"] = source_url
+    postgres.update_document(document_identifier, **document_fields)
+    postgres.update_paper_task(
+        paper_task_id,
+        status="success",
+        workflow_status=WorkflowStatus.completed.value,
+        error_code=None,
+        error_details=None,
+        fulltext_unavailable=fulltext_unavailable,
+        node_trace=node_trace,
+        warning_codes=normalized_warning_codes,
+        processing_steps=processing_steps,
+    )
+    postgres.append_paper_task_log(
+        paper_task_id,
+        status="success",
+        node="acmg",
+        message=f"{source} markdown pipeline completed for source:{source_url or title}",
+        payload={
+            "source": source,
+            "source_url": source_url,
+            "fulltext_unavailable": fulltext_unavailable,
+            "pdf_download": pdf_download,
+            "graph_sync_result": graph_sync_result,
+        },
+    )
+    _emit_kg_event_for_success(
+        postgres,
+        request_id=request_id,
+        paper_task_id=paper_task_id,
+        document_id=document_id,
+    )
+    postgres.refresh_task_request_status(request_id)
+    return {
+        "source": source,
+        "source_url": source_url,
+        "document_id": document_id,
+        "paper_task_id": paper_task_id,
+        "fulltext_unavailable": fulltext_unavailable,
+        "pdf_download": pdf_download,
+        "status": "success",
+        "files": files.model_dump() if hasattr(files, "model_dump") else files,
+        "graph_sync_result": graph_sync_result,
+        "warning_codes": normalized_warning_codes,
+        "trace_chain": trace_chain,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -3283,6 +3520,20 @@ def process_literature_identifier_task(
             preserve_local_file=True,
         )
     )
+    markdown = str(download.get("normalized_markdown") or "").strip()
+    if markdown:
+        return _process_markdown_direct(
+            postgres=get_postgres_client(),
+            markdown_content=markdown,
+            document_id=document_id,
+            paper_task_id=paper_task_id,
+            request_id=request_id,
+            source="web",
+            title=selected_title or query,
+            source_url=detail_link,
+            fulltext_unavailable=True,
+            pdf_download=download,
+        )
     local_file_path = str(download.get("local_file_path") or "").strip()
     if not download.get("downloaded") or not local_file_path:
         return {
@@ -3350,7 +3601,7 @@ def process_web_page_task(
 
     _log_node_start(postgres, paper_task_id, "acquisition")
     acquisition_policy_override: Optional[Dict[str, int]] = None
-    if int(getattr(self, "max_retries", 0)) == 0:
+    if int(getattr(self, "max_retries", 0)) == 0 or "hanspub.org" in str(url or "").lower():
         acquisition_policy = _get_node_policy("acquisition")
         acquisition_policy_override = {
             "max_retries": 0,
@@ -3376,6 +3627,67 @@ def process_web_page_task(
         )
         node_trace = _update_node_trace(node_trace, "acquisition", "success")
     except Exception as acq_exc:
+        direct_chinese_recovery = None
+        if _is_chinese_candidate_for_html_recovery(
+            title=url,
+            query=url,
+            detail_link=url,
+            route={"web_provider": "hans_publishers" if "hanspub.org" in str(url or "").lower() else None},
+        ):
+            direct_chinese_recovery = run_chinese_fulltext_recovery(url)
+            direct_markdown = str(
+                (direct_chinese_recovery or {}).get("normalized_markdown") or ""
+            ).strip()
+            if direct_markdown:
+                return _process_markdown_direct(
+                    postgres=postgres,
+                    markdown_content=direct_markdown,
+                    document_id=document_id,
+                    paper_task_id=paper_task_id,
+                    request_id=request_id,
+                    source="web",
+                    title=url,
+                    source_url=url,
+                    node_trace=_update_node_trace(node_trace, "acquisition", "failed"),
+                    fulltext_unavailable=False,
+                    pdf_download=direct_chinese_recovery,
+                )
+
+        fallback_download = asyncio.run(
+            _try_download_and_store_literature_pdf(
+                document_id=document_id,
+                source="web",
+                query=url,
+                identifiers=[url],
+                detail_link=url,
+                selected_title=url,
+                keep_local_file=True,
+            )
+        )
+        fallback_markdown = str(fallback_download.get("normalized_markdown") or "").strip()
+        if fallback_markdown:
+            return _process_markdown_direct(
+                postgres=postgres,
+                markdown_content=fallback_markdown,
+                document_id=document_id,
+                paper_task_id=paper_task_id,
+                request_id=request_id,
+                source="web",
+                title=url,
+                source_url=url,
+                node_trace=_update_node_trace(node_trace, "acquisition", "failed"),
+                fulltext_unavailable=False,
+                pdf_download=fallback_download,
+            )
+        fallback_file_path = str(fallback_download.get("local_file_path") or "").strip()
+        if fallback_download.get("downloaded") and fallback_file_path:
+            return process_pdf_task.run(
+                file_paths=[fallback_file_path],
+                file_hash=fallback_download.get("sha256"),
+                document_id=document_id,
+                paper_task_id=paper_task_id,
+                request_id=request_id,
+            )
         error_code = map_error_code(
             500, f"Fetch timeout while crawling web page: {acq_exc}"
         )
@@ -3484,197 +3796,18 @@ def process_web_page_task(
         summary=acquisition_summary,
     )
 
-    node_trace = _update_node_trace(node_trace, "parsing", "markdown_direct")
-    _update_processing_step_status(
-        postgres,
-        paper_task_id,
-        step="parsing",
-        status=ProcessingStepStatus.skipped,
-        workflow_status=WorkflowStatus.processing_pdf,
-        message="Parsing skipped: markdown acquired directly from web crawl",
-    )
-
-    try:
-        source_text, en_text, node_trace, translation_warnings = run_node_translation(
-            postgres,
-            paper_task_id,
-            markdown_content,
-            node_trace,
-        )
-    except Exception as trans_exc:
-        node_trace = _update_node_trace(node_trace, "translation", "failed")
-        retry_count = int(getattr(self.request, "retries", 0))
-        max_retries = int(getattr(self, "max_retries", 0))
-        if retry_count >= max_retries:
-            error_code = map_error_code(500, str(trans_exc))
-            postgres.update_paper_task(
-                paper_task_id,
-                status="failed",
-                workflow_status=WorkflowStatus.failed.value,
-                error_code=error_code,
-                node_trace=node_trace,
-                processing_steps=normalize_processing_steps(
-                    None, node_trace=node_trace
-                ),
-                error_details={"error_code": error_code, "message": str(trans_exc)},
-            )
-            postgres.refresh_task_request_status(request_id)
-        raise
-
-    try:
-        agent_response, node_trace = run_node_extraction(
-            postgres,
-            paper_task_id,
-            source_text,
-            en_text,
-            [],
-            node_trace,
-        )
-    except Exception as ext_exc:
-        retry_count = int(getattr(self.request, "retries", 0))
-        max_retries = int(getattr(self, "max_retries", 0))
-        if retry_count >= max_retries:
-            error_code = map_error_code(500, str(ext_exc))
-            postgres.update_paper_task(
-                paper_task_id,
-                status="failed",
-                workflow_status=WorkflowStatus.failed.value,
-                error_code=error_code,
-                node_trace=node_trace,
-                processing_steps=normalize_processing_steps(
-                    None, node_trace=node_trace
-                ),
-                error_details={"error_code": error_code, "message": str(ext_exc)},
-            )
-            postgres.refresh_task_request_status(request_id)
-        raise
-
-    if not agent_response or getattr(agent_response, "status", None) == "failed":
-        error_code = "EVIDENCE_EXTRACTION_FAILED"
-        postgres.update_paper_task(
-            paper_task_id,
-            status="failed",
-            workflow_status=WorkflowStatus.failed.value,
-            error_code=error_code,
-            node_trace=node_trace,
-            processing_steps=normalize_processing_steps(None, node_trace=node_trace),
-            error_details={
-                "error_code": error_code,
-                "message": "Evidence processing returned failed status",
-            },
-        )
-        postgres.append_paper_task_log(
-            paper_task_id,
-            status="failed",
-            node="extraction",
-            error_code=error_code,
-            message="Evidence processing returned failed status",
-        )
-        postgres.refresh_task_request_status(request_id)
-        return {
-            "source_url": url,
-            "document_id": document_id,
-            "paper_task_id": paper_task_id,
-            "status": "failed",
-            "error_code": error_code,
-        }
-
-    files = asyncio.run(_store_outputs_in_minio(agent_response, [], document_id))
-
-    try:
-        graph_sync_result, node_trace = run_node_acmg(
-            postgres,
-            paper_task_id,
-            document_id,
-            agent_response,
-            node_trace,
-        )
-    except Exception as acmg_exc:
-        logger.warning("Graph sync failed for web URL {}: {}", url, acmg_exc)
-        graph_sync_result = None
-        node_trace = _update_node_trace(node_trace, "acmg", "failed")
-        _update_processing_step_status(
-            postgres,
-            paper_task_id,
-            step="classification",
-            status=ProcessingStepStatus.skipped,
-            workflow_status=WorkflowStatus.classifying,
-            message="Graph sync failed but pipeline continued",
-            error_code="GRAPH_SYNC_FAILED",
-        )
-
-    base_warnings = list(translation_warnings)
-    if web_fulltext_unavailable:
-        base_warnings.append("FULLTEXT_UNAVAILABLE")
-    warning_codes = _persist_alignments_and_warnings(
-        postgres,
-        paper_task_id,
-        source_text=source_text,
-        en_text=en_text,
-        base_warnings=base_warnings,
-    )
-    normalized_warning_codes = normalize_warning_codes(warning_codes) or []
-    processing_steps = _get_paper_task_processing_steps(
-        postgres,
-        paper_task_id,
-        node_trace=node_trace,
-    )
-    trace_chain = build_trace_chain(
-        node_trace=node_trace,
-        processing_steps=processing_steps,
-    )
-
-    postgres.update_document(
-        document_identifier,
-        status="success",
-        title=crawl_title,
-        local_path=acquisition_object_key,
-        summary=acquisition_summary,
-    )
-    postgres.update_paper_task(
-        paper_task_id,
-        status="success",
-        workflow_status=WorkflowStatus.completed.value,
-        error_code=None,
-        error_details=None,
-        fulltext_unavailable=web_fulltext_unavailable,
-        node_trace=node_trace,
-        warning_codes=normalized_warning_codes,
-        processing_steps=processing_steps,
-        processing_duration_seconds=(
-            datetime.now(timezone.utc) - start_time
-        ).total_seconds(),
-    )
-    postgres.append_paper_task_log(
-        paper_task_id,
-        status="success",
-        node="acmg",
-        message=f"Web crawl pipeline completed for URL:{url}",
-        payload={
-            "source_url": url,
-            "final_url": final_url,
-            "fulltext_unavailable": web_fulltext_unavailable,
-            "pdf_download": web_pdf_result,
-            "graph_sync_result": graph_sync_result,
-        },
-    )
-    _emit_kg_event_for_success(
-        postgres,
-        request_id=request_id,
-        paper_task_id=paper_task_id,
+    return _process_markdown_direct(
+        postgres=postgres,
+        markdown_content=markdown_content,
         document_id=document_id,
+        paper_task_id=paper_task_id,
+        request_id=request_id,
+        source="web",
+        title=crawl_title,
+        source_url=final_url,
+        node_trace=node_trace,
+        fulltext_unavailable=web_fulltext_unavailable,
+        pdf_download=web_pdf_result,
+        acquisition_object_key=acquisition_object_key,
+        acquisition_summary=acquisition_summary,
     )
-    postgres.refresh_task_request_status(request_id)
-    return {
-        "source_url": url,
-        "final_url": final_url,
-        "document_id": document_id,
-        "paper_task_id": paper_task_id,
-        "fulltext_unavailable": web_fulltext_unavailable,
-        "pdf_download": web_pdf_result,
-        "status": "success",
-        "files": files.model_dump() if hasattr(files, "model_dump") else files,
-        "graph_sync_result": graph_sync_result,
-        "warning_codes": normalized_warning_codes,
-        "trace_chain": trace_chain,
-    }
