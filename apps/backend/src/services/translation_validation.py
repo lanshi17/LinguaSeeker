@@ -32,7 +32,8 @@ def validate_translation_output(source_text: str, translated_text: str) -> None:
     translated = str(translated_text or "").strip()
     if not translated:
         raise ValueError("translation_validation_failed: empty")
-    if _CJK_RE.search(translated):
+    cjk_count = len(_CJK_RE.findall(translated))
+    if cjk_count and len(translated) > 0 and cjk_count / len(translated) > 0.10:
         raise ValueError("translation_validation_failed: non_english_output")
     ratio = SequenceMatcher(None, source.lower(), translated.lower()).ratio()
     if source and ratio >= 0.85:

@@ -166,3 +166,47 @@ async def test_download_prefers_unpaywall_for_doi_download_and_trace_recorded(
             "error": None,
         }
     ]
+
+
+@pytest.mark.asyncio
+async def test_crossref_download_overrides_to_unpaywall_when_doi_present(
+    monkeypatch,
+):
+    calls = []
+
+    async def fake_api_gateway(request):
+        calls.append(request)
+        return ApiGatewayResult(
+            provider="unpaywall",
+            success=True,
+            items=[],
+            downloads=[
+                {
+                    "pdf_url": "https://example.org/paper.pdf",
+                    "file_path": "/tmp/lit-downloads/paper.pdf",
+                }
+            ],
+            warnings=[],
+            raw={"provider": "unpaywall"},
+        )
+
+    monkeypatch.setattr(
+        "src.domain.literature.unified.workflow.call_api_gateway", fake_api_gateway
+    )
+
+    result = await literature_unified_workflow(
+        {
+            "action": "download",
+            "query": "10.4048/jbc.2017.20.3.310",
+            "identifiers": ["10.4048/jbc.2017.20.3.310"],
+            "api_provider": "crossref",
+            "prefer": "api",
+            "download_path": "/tmp/lit-downloads",
+            "raw": True,
+        }
+    )
+
+    assert len(calls) == 1
+    assert calls[0].provider == "unpaywall"
+    assert result["success"] is True
+    assert result["route"]["api_provider"] == "unpaywall"

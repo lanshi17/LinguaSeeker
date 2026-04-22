@@ -70,6 +70,8 @@ def _select_api_provider(
     request: UnifiedLiteratureRequest, identifiers: IdentifierInfo
 ) -> ApiProvider:
     if request.api_provider:
+        if request.api_provider == "crossref" and request.action == "download" and identifiers.get("doi"):
+            return "unpaywall"
         return request.api_provider
 
     if identifiers.get("pmcid") or identifiers.get("pmid"):

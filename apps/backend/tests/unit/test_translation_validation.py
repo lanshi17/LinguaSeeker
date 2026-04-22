@@ -17,3 +17,19 @@ def test_validate_translation_output_rejects_untranslated_copy() -> None:
     source = "这是一段需要翻译的中文医学内容。"
     with pytest.raises(ValueError, match="translation_validation_failed"):
         validate_translation_output(source, source)
+
+
+def test_validate_translation_output_allows_small_cjk_ratio() -> None:
+    source = "DNAJB2复合杂合突变相关腓骨肌萎缩症2型家系病例1例"
+    translated = (
+        "A case of Charcot-Marie-Tooth disease type 2 associated with compound "
+        "heterozygous mutations in DNAJB2 (张三 et al., 中华医学杂志)"
+    )
+    validate_translation_output(source, translated)
+
+
+def test_validate_translation_output_rejects_high_cjk_ratio() -> None:
+    source = "DNAJB2复合杂合突变相关腓骨肌萎缩症2型家系病例1例"
+    translated = "DNAJB2复合杂合突变相关腓骨肌萎缩症2型家系病例1例的翻译结果仍然是中文"
+    with pytest.raises(ValueError, match="translation_validation_failed"):
+        validate_translation_output(source, translated)
