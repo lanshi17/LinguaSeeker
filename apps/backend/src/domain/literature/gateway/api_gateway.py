@@ -452,6 +452,68 @@ async def call_pmc_download(
         return _failure_result("pmc", exc)
 
 
+async def _jstage_unpaywall_fallback(
+    doi: Optional[str],
+    query: Optional[str],
+    limit: int,
+    raw: bool,
+    download_path: str,
+    selected_index: int,
+    jstage_warnings: List[str],
+    api_params: Optional[Dict[str, Any]] = None,
+) -> ApiGatewayResult:
+    """Fallback to Unpaywall when J-STAGE direct download fails (e.g. RESTRICTED ACCESS)."""
+    if not doi:
+        return ApiGatewayResult(
+            provider="jstage",
+            success=False,
+            items=[],
+            downloads=[],
+            warnings=jstage_warnings + ["unpaywall_fallback_skipped:no_doi"],
+        )
+
+    try:
+        unpaywall_result = await call_unpaywall_download(
+            query=query,
+            doi=doi,
+            limit=limit,
+            raw=raw,
+            download_path=download_path,
+            selected_index=selected_index,
+            api_params=api_params,
+        )
+    except Exception as exc:
+        return ApiGatewayResult(
+            provider="jstage",
+            success=False,
+            items=[],
+            downloads=[],
+            warnings=jstage_warnings + [f"unpaywall_fallback_failed:{exc}"],
+        )
+
+    if unpaywall_result.success and unpaywall_result.downloads:
+        unpaywall_result.provider = "jstage"
+        unpaywall_result.warnings = jstage_warnings + [
+            "unpaywall_fallback_used"
+        ] + unpaywall_result.warnings
+        if unpaywall_result.meta is None:
+            unpaywall_result.meta = {}
+        unpaywall_result.meta["fallback_from"] = "jstage"
+        unpaywall_result.meta["fallback_to"] = "unpaywall"
+        unpaywall_result.meta["doi_used"] = doi
+        return unpaywall_result
+
+    return ApiGatewayResult(
+        provider="jstage",
+        success=False,
+        items=[],
+        downloads=[],
+        warnings=jstage_warnings
+        + ["unpaywall_fallback_failed:pdf_not_found"]
+        + unpaywall_result.warnings,
+    )
+
+
 async def call_jstage(
     query: Optional[str],
     limit: int,
@@ -488,9 +550,14 @@ async def call_jstage_download(
     warnings: List[str] = []
     item_title = selected_title or "jstage-paper"
     candidates: List[str] = []
+    doi: Optional[str] = None
 
     if detail_link:
         candidates.extend(_jstage_pdf_candidates(detail_link))
+
+    # Extract DOI from api_params identifiers (passed by the unified workflow)
+    if api_params and isinstance(api_params.get("identifiers"), dict):
+        doi = (api_params["identifiers"].get("doi") or "").strip() or None
 
     if not candidates:
         search_payload = {
@@ -515,14 +582,15 @@ async def call_jstage_download(
             if isinstance(item, dict)
         ]
         if not items:
-            return ApiGatewayResult(
-                provider="jstage",
-                success=False,
-                items=[],
-                downloads=[],
-                warnings=warnings or ["no_search_results"],
-                raw=search_response.get("raw") if raw else None,
-                meta=search_response.get("meta"),
+            return await _jstage_unpaywall_fallback(
+                doi=doi,
+                query=query,
+                limit=limit,
+                raw=raw,
+                download_path=download_path,
+                selected_index=selected_index,
+                jstage_warnings=warnings or ["no_search_results"],
+                api_params=api_params,
             )
 
         chosen = _choose_item(
@@ -532,14 +600,15 @@ async def call_jstage_download(
             title_keys=["article_title_ja", "article_title_en"],
         )
         if not chosen:
-            return ApiGatewayResult(
-                provider="jstage",
-                success=False,
-                items=[],
-                downloads=[],
-                warnings=warnings + ["invalid_selected_index"],
-                raw=search_response.get("raw") if raw else None,
-                meta=search_response.get("meta"),
+            return await _jstage_unpaywall_fallback(
+                doi=doi,
+                query=query,
+                limit=limit,
+                raw=raw,
+                download_path=download_path,
+                selected_index=selected_index,
+                jstage_warnings=warnings + ["invalid_selected_index"],
+                api_params=api_params,
             )
 
         item_title = (
@@ -547,6 +616,9 @@ async def call_jstage_download(
             or str(chosen.get("article_title_en") or "").strip()
             or item_title
         )
+        # Capture DOI from search result for fallback
+        if not doi:
+            doi = str(chosen.get("doi") or "").strip() or None
         link = str(chosen.get("link") or "").strip()
         if link:
             candidates.extend(_jstage_pdf_candidates(link))
@@ -557,26 +629,30 @@ async def call_jstage_download(
         filename_stem=item_title,
     )
     warnings.extend(extra_warnings)
-    if not file_path:
+    if file_path:
         return ApiGatewayResult(
             provider="jstage",
-            success=False,
+            success=True,
             items=[],
-            downloads=[],
-            warnings=warnings or ["pdf_not_found"],
+            downloads=[
+                {
+                    "pdf_url": pdf_url,
+                    "file_path": file_path,
+                }
+            ],
+            warnings=warnings,
         )
 
-    return ApiGatewayResult(
-        provider="jstage",
-        success=True,
-        items=[],
-        downloads=[
-            {
-                "pdf_url": pdf_url,
-                "file_path": file_path,
-            }
-        ],
-        warnings=warnings,
+    # J-STAGE direct download failed — try Unpaywall as fallback
+    return await _jstage_unpaywall_fallback(
+        doi=doi,
+        query=query or item_title,
+        limit=limit,
+        raw=raw,
+        download_path=download_path,
+        selected_index=selected_index,
+        jstage_warnings=warnings or ["pdf_not_found"],
+        api_params=api_params,
     )
 
 

@@ -60,6 +60,14 @@ class JStageAdapter(ProviderAdapter):
     async def execute(self, request: ApiGatewayRequest) -> ApiGatewayResult:
         api_params = request.params or {}
         if request.action == "download":
+            # Inject identifiers (DOI) into api_params so the J-STAGE download
+            # function can use them for Unpaywall fallback when J-STAGE PDF
+            # is RESTRICTED ACCESS.
+            merged_identifiers = dict(api_params.get("identifiers") or {})
+            if request.identifiers:
+                merged_identifiers.update(request.identifiers)
+            if merged_identifiers:
+                api_params = {**api_params, "identifiers": merged_identifiers}
             return await self._download_call(
                 request.query,
                 request.limit,

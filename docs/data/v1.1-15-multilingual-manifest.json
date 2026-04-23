@@ -1,0 +1,351 @@
+{
+  "release_no": "v1.1-multilingual",
+  "expected_paper_count": 15,
+  "locked": true,
+  "generated_at": "2026-04-22T00:00:00+00:00",
+  "notes": [
+    "15-paper multilingual case report acceptance set.",
+    "Languages: zh=2, ja=2, ko=2, ru=2, de=2, en=5."
+  ],
+  "papers": [
+    {
+      "paper_id": "v1.1-zh-DNAJB2",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://rs.yiigle.com/CN119999202201/1360483.htm"
+        ],
+        "force_refresh": true
+      },
+      "request_id": "cab4b925-3805-403f-b87d-45118fc58e2e",
+      "paper_task_id": "8b2936af-d289-4f72-9c42-38381da3b57e",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "DNAJB2复合杂合突变相关腓骨肌萎缩症2型家系病例1例",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-zh-ANK1",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"ZH\"}",
+        "urls": [
+          "https://image.hanspub.org/Html/77-1577845_75032.htm"
+        ],
+        "force_refresh": true
+      },
+      "request_id": "a3a48489-52de-4a4e-94bc-f9b941177311",
+      "paper_task_id": "738d690f-2dfb-400e-a8e3-0003f575cfe1",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "一例ANK1基因突变型遗传性球形红细胞增多症病例报告并文献复习",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-ja-COL4A2",
+      "entry_kind": "api",
+      "source": "jstage",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "query": "A family case with a COL4A2 gene variant who was identified based upon brain imaging findings in a sibling",
+        "identifiers": {
+          "doi": "10.11251/ojjscn.58.41"
+        },
+        "selected_title": "A family case with a COL4A2 gene variant who was identified based upon brain imaging findings in a sibling",
+        "detail_link": "https://www.jstage.jst.go.jp/article/ojjscn/58/1/58_41/_article/-char/en"
+      },
+      "request_id": "d08e0c86-faed-4413-92b4-29e4e541b91d",
+      "paper_task_id": "a01a189c-3a18-4f1f-943f-67ed17d17ffd",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "COL4A2 gene variant family case",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-ja-ATP2A2",
+      "entry_kind": "api",
+      "source": "jstage",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"JP\",\"language\":\"JA\"}",
+        "query": "An ATP2A2 Missense Mutation in a Japanese Family with Darier Disease",
+        "identifiers": {
+          "doi": "10.1272/jnms.84.246"
+        },
+        "selected_title": "An ATP2A2 Missense Mutation in a Japanese Family with Darier Disease: A Case Report and Review of the Japanese Darier Disease Patients with ATP2A2 Mutations",
+        "detail_link": "https://www.jstage.jst.go.jp/article/jnms/84/5/84_246/_article"
+      },
+      "request_id": "ec0ded7c-fed0-419f-be9a-7b1ceeb753c7",
+      "paper_task_id": "df55248c-390d-4f90-bdab-d9aed2d6d7bf",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "ATP2A2 Missense Mutation Darier Disease",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-ko-BRCA1",
+      "entry_kind": "api",
+      "source": "crossref",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"KR\",\"language\":\"KO\"}",
+        "query": "A Novel Germline Mutation in BRCA1 Causes Exon 20 Skipping in a Korean Family with a History of Breast Cancer",
+        "identifiers": {
+          "doi": "10.4048/jbc.2017.20.3.310"
+        },
+        "selected_title": "A Novel Germline Mutation in BRCA1 Causes Exon 20 Skipping in a Korean Family with a History of Breast Cancer",
+        "detail_link": "https://doi.org/10.4048/jbc.2017.20.3.310"
+      },
+      "request_id": "51ce3a36-dfb4-466a-b2d3-a3b4a7aa254b",
+      "paper_task_id": "7368c3fb-6544-49fe-9668-aa19271cb23d",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "BRCA1 Exon 20 Skipping Korean",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-ko-MLH1",
+      "entry_kind": "api",
+      "source": "crossref",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"KR\",\"language\":\"KO\"}",
+        "query": "A novel germline mutation in hMLH1 in three Korean women with endometrial cancer in a family of Lynch syndrome",
+        "identifiers": {
+          "doi": "10.1186/s13053-021-00185-y"
+        },
+        "selected_title": "A novel germline mutation in hMLH1 in three Korean women with endometrial cancer in a family of Lynch syndrome: case report and literature review",
+        "detail_link": "https://doi.org/10.1186/s13053-021-00185-y"
+      },
+      "request_id": "e13f2d21-a3ce-4b12-8097-3cbd81d89497",
+      "paper_task_id": "5375babb-98ee-485d-8750-3eab2f3614ad",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "MLH1 Lynch syndrome Korean",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-ru-TCOF1",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/oftalmologicheskiy-status-pri-mutatsii-gena-tcof1-klinicheskiy-sluchay"
+        ],
+        "force_refresh": true
+      },
+      "request_id": "63ce3aa0-49fd-4379-b148-410224c206c5",
+      "paper_task_id": "43e4664f-d7fc-4f88-a4c4-7a610cc7e8fb",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "TCOF1 Treacher Collins syndrome",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-ru-GFAP",
+      "entry_kind": "web",
+      "source": "web",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"RU\",\"language\":\"RU\"}",
+        "urls": [
+          "https://cyberleninka.ru/article/n/klinicheskiy-sluchay-yunosheskoy-formy-bolezni-aleksandera-vyzvannoy-ranee-ne-opisannoy-mutatsiey-v-gene-gfap"
+        ],
+        "force_refresh": true
+      },
+      "request_id": "eed3a3e7-2ab0-40e2-a16d-93d384ee2c5b",
+      "paper_task_id": "1b8f4be0-f093-4ccc-91b9-91c3c9cf2933",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "GFAP juvenile Alexander disease",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-de-KRT12",
+      "entry_kind": "api",
+      "source": "pmc",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "query": "Identification of a novel mutation in the cornea specific keratin 12 gene causing Meesmann's corneal dystrophy in a German family",
+        "identifiers": {
+          "pmcid": "PMC2890559"
+        },
+        "selected_title": "Identification of a novel mutation in the cornea specific keratin 12 gene causing Meesmann's corneal dystrophy in a German family",
+        "detail_link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2890559/"
+      },
+      "request_id": "f8ad3a28-232b-49e9-b447-36d2d37e8965",
+      "paper_task_id": "43b3bbbc-4846-4e86-ba16-2ab48fd8dcbd",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "KRT12 Meesmann corneal dystrophy",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-de-MEN1",
+      "entry_kind": "api",
+      "source": "pmc",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"DE\",\"language\":\"DE\"}",
+        "query": "Distinct clinical phenotypes in a family with a novel truncating MEN1 frameshift mutation",
+        "identifiers": {
+          "doi": "10.1186/s12902-022-00978-9",
+          "pmcid": "PMC8919629"
+        },
+        "selected_title": "Distinct clinical phenotypes in a family with a novel truncating MEN1 frameshift mutation",
+        "detail_link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8919629/"
+      },
+      "request_id": "207a9b11-8985-4527-9701-39495d038935",
+      "paper_task_id": "4c9d76cc-df99-45c8-b2de-eb15c4d68bea",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "MEN1 frameshift mutation",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-en-FBN1-IR",
+      "entry_kind": "api",
+      "source": "crossref",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"IR\",\"language\":\"EN\"}",
+        "query": "The first report of c.4408T>C mutation on FBN1 gene in a case with Marfan Syndrome in Iran",
+        "identifiers": {
+          "doi": "10.12996/gmj.2019.56"
+        },
+        "selected_title": "The first report of c.4408T>C mutation on FBN1 gene in a case with Marfan Syndrome in Iran",
+        "detail_link": "https://doi.org/10.12996/gmj.2019.56"
+      },
+      "request_id": "8422ea69-b049-4ec5-a612-0ca707697d03",
+      "paper_task_id": "339f4d4c-cff6-43b9-9730-c5d175b30ef8",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "FBN1 Marfan syndrome Iran",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-en-ABCD1-CN",
+      "entry_kind": "api",
+      "source": "crossref",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"CN\",\"language\":\"EN\"}",
+        "query": "A novel mutation in the ABCD1 gene of a Chinese patient with X-linked adrenoleukodystrophy",
+        "identifiers": {
+          "doi": "10.1097/MD.0000000000010837"
+        },
+        "selected_title": "A novel mutation in the ABCD1 gene of a Chinese patient with X-linked adrenoleukodystrophy",
+        "detail_link": "https://doi.org/10.1097/MD.0000000000010837"
+      },
+      "request_id": "01655935-e2cf-4d36-8205-8c18b5e97537",
+      "paper_task_id": "cfc54586-1989-4246-899f-594e74dbeea0",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "ABCD1 X-linked adrenoleukodystrophy",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-en-FBN1-PR",
+      "entry_kind": "api",
+      "source": "pmc",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"PR\",\"language\":\"EN\"}",
+        "query": "A Novel Variant in the FBN1 Gene Causing Marfan Syndrome: A Case Report",
+        "identifiers": {
+          "doi": "10.7759/cureus.56948",
+          "pmcid": "PMC11044074"
+        },
+        "selected_title": "A Novel Variant in the FBN1 Gene Causing Marfan Syndrome: A Case Report",
+        "detail_link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11044074/"
+      },
+      "request_id": "dd4db823-3c46-4f0c-8aa0-77e71a6239a3",
+      "paper_task_id": "ce11cd44-aa40-4cf0-9f14-f4c012e3c229",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "FBN1 Marfan syndrome case report",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-en-TP53-BE",
+      "entry_kind": "api",
+      "source": "unpaywall",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"BE\",\"language\":\"EN\"}",
+        "query": "Peripheral precocious puberty in Li-Fraumeni syndrome",
+        "identifiers": {
+          "doi": "10.1186/s13256-023-03889-y"
+        },
+        "selected_title": "Peripheral precocious puberty in Li–Fraumeni syndrome: a case report and literature review of pure androgen-secreting adrenocortical tumors",
+        "detail_link": "https://doi.org/10.1186/s13256-023-03889-y"
+      },
+      "request_id": "3f72aa87-8782-4137-b269-c7f203b4a528",
+      "paper_task_id": "0d6ab7b4-c80b-4447-a6f9-46814c69581f",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "TP53 Li-Fraumeni syndrome",
+      "notes": null
+    },
+    {
+      "paper_id": "v1.1-en-ABCD1-MA",
+      "entry_kind": "api",
+      "source": "doaj",
+      "request_payload": {
+        "task_form": "{\"goal\":\"PS3/BS3 evidence\",\"disease\":\"hereditary disease variant interpretation\",\"country\":\"MA\",\"language\":\"EN\"}",
+        "query": "X-Linked Adrenoleukodystrophy in a Moroccan Patient",
+        "identifiers": {
+          "doi": "10.2478/bjmg-2025-0002"
+        },
+        "selected_title": "X-Linked Adrenoleukodystrophy in a Moroccan Patient: Genetic Diagnosis Leads to Presymptomatic Testing and Family Counseling",
+        "detail_link": "https://doi.org/10.2478/bjmg-2025-0002"
+      },
+      "request_id": "65eff1aa-ce6c-433c-a11d-b26d79c2c1b8",
+      "paper_task_id": "d69e5783-d691-489d-a99f-0b411235e2b4",
+      "status": "queued",
+      "error_code": null,
+      "duration_seconds": null,
+      "worker_started_at": null,
+      "completed_at": null,
+      "title": "ABCD1 adrenoleukodystrophy Morocco",
+      "notes": null
+    }
+  ]
+}
