@@ -1,0 +1,85 @@
+{
+  "Variants Include": [
+    {
+      "Gene": "PRKN",
+      "variants": [
+        {
+          "HGVS": "NM_004562.3:c.1252T>C",
+          "cDNA Change": {
+            "transcript": "NM_004562.3",
+            "ref": "T",
+            "alt": "C",
+            "position": "1252"
+          },
+          "Protein Change": {
+            "ref": "C",
+            "alt": "R",
+            "position": "418"
+          },
+          "Description in input context": "C418R"
+        }
+      ]
+    }
+  ],
+  "Described Disease": {
+    "Described Disease": "Autosomal recessive juvenile Parkinson’s disease (AR-JP)",
+    "MONDO": "MONDO:0010820"
+  },
+  "Experiment Method": [
+    {
+      "Assay Method": "Caspase-3 activity measurements",
+      "Material used": {
+        "Material Source": "Cell line",
+        "Material Name": "TSM1 neurons, SH-SY5Y cells",
+        "Description": "Cells were incubated with staurosporine."
+      },
+      "Readout type": "Quantitative",
+      "Readout description": [
+        {
+          "Variant": "NM_004562.3:c.1252T>C",
+          "Conclusion": "Abnormal",
+          "Molecular Effect": "complete loss-of function",
+          "Result Description": "Caspase-3 activity was measured in cells overexpressing parkin mutant C418R."
+        }
+      ],
+      "Biological replicates": {
+        "Biological replicates": "Yes",
+        "Description": "3 independent experiments"
+      },
+      "Technical replicates": {
+        "Technical replicates": "Yes",
+        "Description": "triplicate"
+      },
+      "Basic positive control": {
+        "Basic positive control": "Yes",
+        "Description": "WT should be used as a basic positive control."
+      },
+      "Basic negative control": {
+        "Basic negative control": "N.D.",
+        "Description": "N.D."
+      },
+      "Validation controls P/LP": {
+        "Validation controls P/LP": "N.D.",
+        "Counts": "N.D."
+      },
+      "Validation controls B/LB": {
+        "Validation controls B/LB": "N.D.",
+        "Counts": "N.D."
+      },
+      "Statistical analysis method": {
+        "Statistical analysis method": "Student t-test"
+      },
+      "Threshold for normal readout": {
+        "Threshold for normal readout": "N.D.",
+        "Source": "N.D."
+      },
+      "Threshold for abnormal readout": {
+        "Threshold for abnormal readout": "N.D.",
+        "Source": "N.D."
+      },
+      "Approved assay": {
+        "Approved assay": "Yes"
+      }
+    }
+  ]
+}
