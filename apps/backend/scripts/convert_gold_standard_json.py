@@ -12,8 +12,10 @@ INVOCATION_DIR = Path(os.environ.get("PWD", Path.cwd())).resolve()
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-from src.domain.evidence.gold_standard_converter import convert_gold_standard_payload
-from src.domain.models import EvidenceOutput
+from src.domain.evidence.gold_standard_converter import (  # noqa: E402
+    convert_gold_standard_payload,
+)
+from src.domain.models import EvidenceOutput  # noqa: E402
 
 
 def convert_file(source_path: Path, target_path: Path, source_id: str | None = None) -> int:
