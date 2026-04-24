@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from src.services.translation_validation import (
+    reset_translation_artifacts,
     should_skip_translation,
     validate_translation_output,
 )
@@ -11,6 +12,32 @@ from src.services.translation_validation import (
 def test_should_skip_translation_rejects_ascii_heavy_cjk_text() -> None:
     text = "NM_000059.4:c.7790G>A 研究显示该变异影响功能。Table 1 shows the assay result."
     assert should_skip_translation(text) is False
+
+
+def test_should_skip_translation_returns_false_for_non_english_markdown() -> None:
+    assert should_skip_translation("## 病例摘要\n\n患者表现为肌无力") is False
+
+
+def test_reset_translation_artifacts_clears_stage_outputs() -> None:
+    state = {
+        "translation_required": True,
+        "translation_terminology": "term map",
+        "translation_structure": "plan",
+        "translation_draft": "draft",
+        "translation_polished": "polished",
+        "translation_review": "review",
+        "translation_warnings": ["warning"],
+    }
+
+    reset_translation_artifacts(state)
+
+    assert state["translation_required"] is False
+    assert state["translation_terminology"] == ""
+    assert state["translation_structure"] == ""
+    assert state["translation_draft"] == ""
+    assert state["translation_polished"] == ""
+    assert state["translation_review"] == ""
+    assert state["translation_warnings"] == []
 
 
 def test_validate_translation_output_rejects_untranslated_copy() -> None:

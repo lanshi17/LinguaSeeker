@@ -70,15 +70,15 @@ def _select_api_provider(
     request: UnifiedLiteratureRequest, identifiers: IdentifierInfo
 ) -> ApiProvider:
     if request.api_provider:
-        if request.api_provider == "crossref" and request.action == "download" and identifiers.get("doi"):
-            return "unpaywall"
         return request.api_provider
 
     if identifiers.get("pmcid") or identifiers.get("pmid"):
         return "pmc"
 
     if identifiers.get("doi"):
+        # Priority: Crossref -> Unpaywall -> OpenAlex -> Europe PMC
         if request.action == "download":
+            # Will go through fallback chain if needed
             return "unpaywall"
         return "crossref"
 
@@ -361,87 +361,131 @@ async def literature_unified_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
         )
         return response.model_dump()
 
-    query = _build_query(request)
-    identifiers = _extract_identifiers([request.query or ""] + request.identifiers)
-    api_provider = _select_api_provider(request, identifiers)
+     query = _build_query(request)
+     identifiers = _extract_identifiers([request.query or ""] + request.identifiers)
+     initial_api_provider = _select_api_provider(request, identifiers)
 
-    route = UnifiedRouteInfo(
-        prefer=request.prefer,
-        api_provider=api_provider,
-        web_provider=None,
-        used="none",
-        reason=None,
-        fallback_used=False,
-    )
-    warnings: List[str] = []
-    raw_payload: Dict[str, Any] = {}
+     route = UnifiedRouteInfo(
+         prefer=request.prefer,
+         api_provider=initial_api_provider,
+         web_provider=None,
+         used="none",
+         reason=None,
+         fallback_used=False,
+     )
+     warnings: List[str] = []
+     raw_payload: Dict[str, Any] = {}
 
-    api_result = await _execute_api(api_provider, request, identifiers, query)
-    api_items = (
-        normalize_items(api_result.provider, api_result.items)
-        if request.action == "search"
-        else []
-    )
-    warnings.extend(api_result.warnings)
-    if request.raw:
-        raw_payload["api"] = _api_response_to_raw(api_result)
+     # Try providers in priority order: Crossref -> Unpaywall -> OpenAlex -> Europe PMC
+     api_provider_chain: list[ApiProvider] = []
+     if identifiers.get("doi"):
+         # For DOIs, try all four providers in order
+         api_provider_chain = ["crossref", "unpaywall", "openalex", "europepmc"]
+     elif identifiers.get("pmcid") or identifiers.get("pmid"):
+         # PMC already handles this
+         api_provider_chain = ["pmc"]
+     else:
+         # For keyword search, start with crossref then others
+         api_provider_chain = ["crossref", "unpaywall", "openalex", "europepmc"]
 
-    api_has_result = (
-        bool(api_result.downloads) if request.action == "download" else bool(api_items)
-    )
+     # If a specific provider was requested, only try that
+     if initial_api_provider not in api_provider_chain:
+         api_provider_chain = [initial_api_provider]
 
-    route.used = "api"
-    if api_has_result:
-        route.reason = f"api_provider:{route.api_provider}"
-    else:
-        route.reason = (
-            "api_download_failed" if request.action == "download" else "api_no_items"
-        )
-        warnings.append(
-            "FULLTEXT_UNAVAILABLE"
-            if request.action == "download"
-            else "FETCH_NO_RESULT"
-        )
+     last_api_result: ApiGatewayResult | None = None
+     last_api_items: list[UnifiedLiteratureItem] | None = None
+     successful_provider: ApiProvider | None = None
 
-        should_fallback_to_web = request.prefer == "auto"
-        if should_fallback_to_web:
-            web_provider = request.web_provider or "pubscholar"
-            web_result = await _execute_web(web_provider, request, query)
-            web_items = normalize_items(web_result.provider, web_result.items)
-            if request.raw:
-                raw_payload["web"] = _web_response_to_raw(
-                    web_result,
-                    source_trace=getattr(web_result, "source_trace", []),
-                )
-            web_has_result = (
-                bool(web_result.downloads)
-                if request.action == "download"
-                else bool(web_items)
-            )
-            if web_result.success and web_has_result:
-                route.used = "web"
-                route.web_provider = web_provider
-                route.reason = f"web_provider:{web_provider}"
-                route.fallback_used = True
-                combined_warnings = warnings + web_result.warnings
-                response = UnifiedLiteratureResponse(
-                    success=True,
-                    items=web_items,
-                    downloads=web_result.downloads if request.action == "download" else [],
-                    warnings=combined_warnings,
-                    route=route,
-                    raw=raw_payload if raw_payload else None,
-                )
-                return response.model_dump()
+     for current_provider in api_provider_chain:
+         try:
+             current_result = await _execute_api(current_provider, request, identifiers, query)
+             current_items = (
+                 normalize_items(current_result.provider, current_result.items)
+                 if request.action == "search"
+                 else []
+             )
+             warnings.extend(current_result.warnings)
+             current_has_result = (
+                 bool(current_result.downloads) if request.action == "download" else bool(current_items)
+             )
 
-    response_success = bool(api_result.success and api_has_result)
-    response = _build_api_response(
-        success=response_success,
-        request=request,
-        route=route,
-        warnings=warnings,
-        raw_payload=raw_payload,
-        api_result=api_result,
-        api_items=api_items,
-    )
-    return response.model_dump()
+             if current_result.success and current_has_result:
+                 successful_provider = current_provider
+                 last_api_result = current_result
+                 last_api_items = current_items
+                 break
+             else:
+                 # Provider didn't work, continue to next
+                 if current_result.warnings:
+                     warnings.extend(current_result.warnings)
+                 warnings.append(f"{current_provider}_failed")
+                 continue
+
+         except Exception as exc:
+             warnings.append(f"{current_provider}_exception: {exc}")
+             continue
+
+     route.used = "api"
+     if successful_provider and last_api_result:
+         route.reason = f"api_provider:{successful_provider}"
+         api_result = last_api_result
+         api_items = last_api_items or []
+     else:
+         route.reason = (
+             "api_download_failed" if request.action == "download" else "api_no_items"
+         )
+         warnings.append(
+             "FULLTEXT_UNAVAILABLE"
+             if request.action == "download"
+             else "FETCH_NO_RESULT"
+         )
+         # Set defaults for final response
+         api_result = await _execute_api(initial_api_provider, request, identifiers, query)
+         api_items = (
+             normalize_items(api_result.provider, api_result.items)
+             if request.action == "search"
+             else []
+         )
+
+         should_fallback_to_web = request.prefer == "auto"
+         if should_fallback_to_web:
+             web_provider = request.web_provider or "pubscholar"
+             web_result = await _execute_web(web_provider, request, query)
+             web_items = normalize_items(web_result.provider, web_result.items)
+             if request.raw:
+                 raw_payload["web"] = _web_response_to_raw(
+                     web_result,
+                     source_trace=getattr(web_result, "source_trace", []),
+                 )
+             web_has_result = (
+                 bool(web_result.downloads)
+                 if request.action == "download"
+                 else bool(web_items)
+             )
+             if web_result.success and web_has_result:
+                 route.used = "web"
+                 route.web_provider = web_provider
+                 route.reason = f"web_provider:{web_provider}"
+                 route.fallback_used = True
+                 combined_warnings = warnings + web_result.warnings
+                 response = UnifiedLiteratureResponse(
+                     success=True,
+                     items=web_items,
+                     downloads=web_result.downloads if request.action == "download" else [],
+                     warnings=combined_warnings,
+                     route=route,
+                     raw=raw_payload if raw_payload else None,
+                 )
+                 return response.model_dump()
+
+     response_success = bool(api_result.success and (last_api_items if last_api_items is not None else api_items))
+     response = _build_api_response(
+         success=response_success,
+         request=request,
+         route=route,
+         warnings=warnings,
+         raw_payload=raw_payload,
+         api_result=api_result,
+         api_items=last_api_items if last_api_items is not None else api_items,
+     )
+     return response.model_dump()

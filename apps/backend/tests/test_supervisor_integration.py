@@ -493,6 +493,90 @@ def test_run_supervisor_pipeline_reuses_checkpointer_when_interrupt_enabled(
     assert captured["checkpointers"][0] is captured["checkpointers"][1]
 
 
+def test_run_supervisor_pipeline_returns_non_english_translation_artifacts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeGraph(_FakeGraphBase):
+        async def ainvoke(
+            self, _state: Any, config: Dict[str, Any] | None = None
+        ) -> Dict[str, Any]:
+            return {
+                "workflow_status": "completed",
+                "translated_markdown": "GLA c.92C>A variant was identified in the patient.",
+                "translation_review": "No unresolved ambiguity",
+                "translation_required": True,
+                "node_trace": {},
+                "evidence_output": None,
+            }
+
+    def fake_compile_supervisor(
+        *,
+        interrupt_before_human_review: bool = False,
+        checkpointer: Any | None = None,
+    ) -> FakeGraph:
+        return FakeGraph()
+
+    import src.agents.supervisor as supervisor_module
+
+    monkeypatch.setattr(supervisor_module, "compile_supervisor", fake_compile_supervisor)
+
+    result = tasks_module._run_supervisor_pipeline(
+        source="upload",
+        document_id="doc-1",
+        paper_task_id="paper-1",
+        request_id="req-translation",
+        postgres=SimpleNamespace(),
+        file_paths=["/tmp/paper.pdf"],
+    )
+
+    assert result["translated_markdown"] == "GLA c.92C>A variant was identified in the patient."
+    assert result["translation_review"] == "No unresolved ambiguity"
+    assert result["translation_required"] is True
+    assert result["status"] == "success"
+
+
+def test_run_supervisor_pipeline_keeps_english_skip_output(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeGraph(_FakeGraphBase):
+        async def ainvoke(
+            self, _state: Any, config: Dict[str, Any] | None = None
+        ) -> Dict[str, Any]:
+            return {
+                "workflow_status": "completed",
+                "translated_markdown": "English source text already valid.",
+                "translation_required": False,
+                "translation_review": "",
+                "node_trace": {},
+                "evidence_output": None,
+            }
+
+    def fake_compile_supervisor(
+        *,
+        interrupt_before_human_review: bool = False,
+        checkpointer: Any | None = None,
+    ) -> FakeGraph:
+        return FakeGraph()
+
+    import src.agents.supervisor as supervisor_module
+
+    monkeypatch.setattr(supervisor_module, "compile_supervisor", fake_compile_supervisor)
+
+    result = tasks_module._run_supervisor_pipeline(
+        source="upload",
+        document_id="doc-1",
+        paper_task_id="paper-1",
+        request_id="req-english",
+        postgres=SimpleNamespace(),
+        file_paths=["/tmp/paper.pdf"],
+    )
+
+    assert result["translated_markdown"] == "English source text already valid."
+    assert result["translation_required"] is False
+    assert result["translation_review"] == ""
+    assert result["status"] == "success"
+
+
 def test_run_supervisor_pipeline_marks_pending_review_status(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -13,7 +13,9 @@ import httpx
 
 from src.domain.literature.api.crossref.workflow import crossref_http_workflow
 from src.domain.literature.api.doaj.workflow import doaj_http_workflow
+from src.domain.literature.api.europepmc.workflow import run_europepmc_workflow
 from src.domain.literature.api.jstage.workflow import jstage_http_workflow
+from src.domain.literature.api.openalex.workflow import run_openalex_workflow
 from src.domain.literature.api.pmc.workflow import pmc_http_workflow
 from src.domain.literature.api.unpaywall.workflow import unpaywall_workflow
 from src.domain.literature.gateway.contracts import ApiGatewayRequest, ApiGatewayResult
@@ -816,21 +818,143 @@ async def call_doaj_download(
             meta=response.get("meta"),
         )
 
-    return ApiGatewayResult(
-        provider="doaj",
-        success=True,
-        items=[],
-        downloads=[{"pdf_url": pdf_url, "file_path": file_path}],
-        warnings=warnings,
-        raw=response if raw else None,
-        meta=response.get("meta"),
-    )
+     return ApiGatewayResult(
+         provider="doaj",
+         success=True,
+         items=[],
+         downloads=[{"pdf_url": pdf_url, "file_path": file_path}],
+         warnings=warnings,
+         raw=response if raw else None,
+         meta=response.get("meta"),
+     )
 
 
-def get_api_provider_registry() -> "ProviderAdapterRegistry":
+async def call_openalex(
+    query: Optional[str],
+    doi: Optional[str],
+    limit: int,
+    raw: bool,
+    api_params: Optional[Dict[str, Any]] = None,
+) -> ApiGatewayResult:
+    if doi:
+        payload = {"action": "doi", "doi": doi, "raw": raw}
+    else:
+        payload = {
+            "action": "query",
+            "search_params": {"keyword": [query] if query else [], "limit": limit},
+            "raw": raw,
+        }
+    payload = _merge_payload(payload, api_params)
+    try:
+        response = await run_openalex_workflow(payload)
+        return _result_from_response("openalex", response)
+    except Exception as exc:
+        return _failure_result("openalex", exc)
+
+
+async def call_openalex_download(
+    query: Optional[str],
+    doi: Optional[str],
+    limit: int,
+    raw: bool,
+    download_path: str,
+    selected_index: int,
+    api_params: Optional[Dict[str, Any]] = None,
+) -> ApiGatewayResult:
+    if doi:
+        payload: Dict[str, Any] = {
+            "action": "download",
+            "doi": doi,
+            "download_path": download_path,
+            "selected_index": selected_index,
+            "raw": raw,
+        }
+    else:
+        payload = {
+            "action": "download",
+            "search_params": {
+                "keyword": [query] if query else [],
+                "limit": limit,
+            },
+            "download_path": download_path,
+            "selected_index": selected_index,
+            "raw": raw,
+        }
+
+    payload = _merge_payload(payload, api_params)
+    try:
+        response = await run_openalex_workflow(payload)
+        return _download_result_from_response("openalex", response)
+    except Exception as exc:
+        return _failure_result("openalex", exc)
+
+
+async def call_europepmc(
+    query: Optional[str],
+    doi: Optional[str],
+    limit: int,
+    raw: bool,
+    api_params: Optional[Dict[str, Any]] = None,
+) -> ApiGatewayResult:
+    if doi:
+        payload = {"action": "doi", "doi": doi, "raw": raw}
+    else:
+        payload = {
+            "action": "query",
+            "search_params": {"keyword": [query] if query else [], "limit": limit},
+            "raw": raw,
+        }
+    payload = _merge_payload(payload, api_params)
+    try:
+        response = await run_europepmc_workflow(payload)
+        return _result_from_response("europepmc", response)
+    except Exception as exc:
+        return _failure_result("europepmc", exc)
+
+
+async def call_europepmc_download(
+    query: Optional[str],
+    doi: Optional[str],
+    limit: int,
+    raw: bool,
+    download_path: str,
+    selected_index: int,
+    api_params: Optional[Dict[str, Any]] = None,
+) -> ApiGatewayResult:
+    if doi:
+        payload: Dict[str, Any] = {
+            "action": "download",
+            "doi": doi,
+            "download_path": download_path,
+            "selected_index": selected_index,
+            "raw": raw,
+        }
+    else:
+        payload = {
+            "action": "download",
+            "search_params": {
+                "keyword": [query] if query else [],
+                "limit": limit,
+            },
+            "download_path": download_path,
+            "selected_index": selected_index,
+            "raw": raw,
+        }
+
+    payload = _merge_payload(payload, api_params)
+    try:
+        response = await run_europepmc_workflow(payload)
+        return _download_result_from_response("europepmc", response)
+    except Exception as exc:
+        return _failure_result("europepmc", exc)
+
+
+ def get_api_provider_registry() -> "ProviderAdapterRegistry":
     from src.domain.literature.gateway.adapters.crossref_adapter import CrossrefAdapter
     from src.domain.literature.gateway.adapters.doaj_adapter import DoajAdapter
+    from src.domain.literature.gateway.adapters.europepmc_adapter import EuropePmcAdapter
     from src.domain.literature.gateway.adapters.jstage_adapter import JStageAdapter
+    from src.domain.literature.gateway.adapters.openalex_adapter import OpenAlexAdapter
     from src.domain.literature.gateway.adapters.pmc_adapter import PMCAdapter
     from src.domain.literature.gateway.adapters.unpaywall_adapter import (
         UnpaywallAdapter,
@@ -859,6 +983,14 @@ def get_api_provider_registry() -> "ProviderAdapterRegistry":
             ),
             CrossrefAdapter(
                 search_call=call_crossref,
+            ),
+            OpenAlexAdapter(
+                search_call=call_openalex,
+                download_call=call_openalex_download,
+            ),
+            EuropePmcAdapter(
+                search_call=call_europepmc,
+                download_call=call_europepmc_download,
             ),
         ]
     )
@@ -937,18 +1069,36 @@ async def call_api_gateway(request: ApiGatewayRequest) -> ApiGatewayResult:
             api_params,
         )
 
-    if provider == "doaj":
-        return await call_doaj(
+     if provider == "doaj":
+         return await call_doaj(
+             request.query,
+             request.limit,
+             request.raw,
+             api_params,
+         )
+
+    if provider == "openalex":
+        return await call_openalex(
             request.query,
+            identifiers.get("doi"),
             request.limit,
             request.raw,
             api_params,
         )
 
-    return ApiGatewayResult(
-        provider=provider,
-        success=False,
-        items=[],
-        downloads=[],
-        warnings=[f"{provider}_unsupported"],
-    )
+    if provider == "europepmc":
+        return await call_europepmc(
+            request.query,
+            identifiers.get("doi"),
+            request.limit,
+            request.raw,
+            api_params,
+        )
+
+     return ApiGatewayResult(
+         provider=provider,
+         success=False,
+         items=[],
+         downloads=[],
+         warnings=[f"{provider}_unsupported"],
+     )

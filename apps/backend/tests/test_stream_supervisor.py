@@ -9,6 +9,7 @@ from src.services.task_manager import (
     _SUPERVISOR_PROGRESS_NODES,
     _stream_supervisor_graph,
 )
+from src.agents.supervisor import translation
 
 
 class _FakeGraph:
@@ -195,6 +196,19 @@ class TestStreamSupervisorGraph:
 
 
 class TestSupervisorProgressNodes:
+    def test_supervisor_translation_still_skips_when_existing_translation_is_valid(self):
+        state = {
+            "markdown_content": "English source text",
+            "translated_markdown": "Valid English translation",
+            "image_paths": [],
+            "image_descriptions": [],
+        }
+
+        updated = translation(state)
+
+        assert updated["translated_markdown"] == "Valid English translation"
+        assert updated.get("translation_review", "") == ""
+
     def test_progress_nodes_set_contains_expected_nodes(self):
         expected = {
             "acquisition",

@@ -1933,6 +1933,19 @@ def _build_supervisor_payload(
     elif isinstance(evidence_output, dict):
         payload["evidence"] = evidence_output
 
+    for key in (
+        "translated_markdown",
+        "translation_required",
+        "translation_terminology",
+        "translation_structure",
+        "translation_draft",
+        "translation_polished",
+        "translation_review",
+        "translation_warnings",
+    ):
+        if key in final_state:
+            payload[key] = final_state.get(key)
+
     if status == "failed":
         payload["error_code"] = str(final_state.get("error_code") or "INTERNAL_ERROR")
         payload["error_message"] = str(final_state.get("error_message") or "")

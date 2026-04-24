@@ -353,6 +353,32 @@ class TestUnknownSourceFallback:
 
 
 class TestTranslationNode:
+    def test_non_english_markdown_reaches_translation_with_valid_english_output(self):
+        from src.agents.supervisor import translation
+
+        mock_agent = MagicMock()
+        mock_agent.translate_markdown.return_value = {
+            "translated_md": "GLA c.92C>A variant was identified in the patient.",
+            "translation_review": "No unresolved ambiguity",
+            "translation_draft": "GLA c.92C>A variant was identified in the patient.",
+            "translation_polished": "GLA c.92C>A variant was identified in the patient.",
+        }
+
+        state = _base_state(
+            markdown_content="# 病例摘要\n\n患者携带 GLA c.92C>A 变异",
+            translated_markdown=None,
+            image_paths=[],
+            image_descriptions=[],
+            _inner_processing_state={},
+        )
+        with patch(f"{_NODE_PREFIX}.EvidenceAgent", return_value=mock_agent):
+            result = translation(state)
+
+        mock_agent.translate_markdown.assert_called_once()
+        assert result["translated_markdown"]
+        assert "GLA c.92C>A" in result["translated_markdown"]
+        assert result["translation_review"] == "No unresolved ambiguity"
+
     def test_translation_retranslates_invalid_existing_translation(self):
         from src.agents.supervisor import translation
 

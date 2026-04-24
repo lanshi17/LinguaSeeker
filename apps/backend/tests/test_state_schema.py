@@ -68,6 +68,43 @@ def test_state_package_exports_key_symbols() -> None:
     assert state_pkg.PipelineResult is domain_models.PipelineResult
 
 
+def test_processing_state_supports_staged_translation_artifacts() -> None:
+    state = domain_enums.ProcessingState(
+        markdown_content="原文",
+        image_paths=[],
+        translated_md="",
+        translation_required=True,
+        translation_terminology="gene -> gene",
+        translation_structure="Subject -> Verb -> Object",
+        translation_draft="draft",
+        translation_polished="polished",
+        translation_review="ok",
+        translation_warnings=["needs_review"],
+        image_descriptions=[],
+        ps3_evidence={},
+        extracted_fields={},
+        evidence_sources=[],
+        knowledge_context="",
+        field_confidence_scores={},
+        overall_confidence=0.0,
+        evidence_classification="",
+        acmg_evidence_levels=[],
+        arbitration_confidence=0.0,
+        arbitration_score=0.0,
+        arbitration_feedback="",
+        iteration_count=0,
+        max_iterations=2,
+        needs_manual_review=False,
+        enable_vlm=False,
+        vlm_results=[],
+        status="pending",
+        output=None,
+    )
+
+    assert state["translation_draft"] == "draft"
+    assert state["translation_warnings"] == ["needs_review"]
+
+
 def test_supervisor_state_is_valid_typed_dict() -> None:
     from src.state.global_state import SupervisorState
 

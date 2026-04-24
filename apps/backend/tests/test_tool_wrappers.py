@@ -73,6 +73,7 @@ def test_translation_tool_delegates_to_evidence_agent(monkeypatch) -> None:
     class FakeEvidenceAgent:
         def translate_markdown(self, state: dict[str, Any]) -> dict[str, Any]:
             state["translated_md"] = "translated body"
+            state["translation_review"] = "review ok"
             return state
 
     monkeypatch.setattr(translation_tool, "EvidenceAgent", FakeEvidenceAgent)
@@ -84,6 +85,7 @@ def test_translation_tool_delegates_to_evidence_agent(monkeypatch) -> None:
     result = translation_tool.translate_markdown(state)
 
     assert result["translated_md"] == "translated body"
+    assert result["translation_review"] == "review ok"
     assert "医学 Markdown 内容翻译为英文" in translation_tool.get_translation_prompt("示例")
 
 

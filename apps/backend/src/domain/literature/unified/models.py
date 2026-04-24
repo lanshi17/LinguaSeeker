@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-ApiProvider = Literal["crossref", "unpaywall", "pmc", "jstage", "doaj"]
+ApiProvider = Literal["crossref", "unpaywall", "openalex", "europepmc", "pmc", "jstage", "doaj"]
 WebProvider = Literal["pubscholar", "cyberleninka", "hans_publishers"]
 PreferStrategy = Literal["auto", "api", "web"]
 ActionStrategy = Literal["search", "download"]

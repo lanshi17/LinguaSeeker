@@ -153,6 +153,13 @@ class ProcessingState(TypedDict):
 
     # 中间处理结果
     translated_md: str  # 翻译后的 Markdown (英文)
+    translation_required: bool
+    translation_terminology: str
+    translation_structure: str
+    translation_draft: str
+    translation_polished: str
+    translation_review: str
+    translation_warnings: List[str]
     image_descriptions: List[str]  # 图片描述列表
 
     # 证据提取结果

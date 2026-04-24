@@ -129,6 +129,17 @@ def translation(state: SupervisorState) -> SupervisorState:
     updated["translated_markdown"] = final_state.get("translated_md") or updated.get(
         "markdown_content", ""
     )
+    for key in (
+        "translation_required",
+        "translation_terminology",
+        "translation_structure",
+        "translation_draft",
+        "translation_polished",
+        "translation_review",
+        "translation_warnings",
+    ):
+        if key in final_state:
+            updated[key] = final_state.get(key)
     return cast(SupervisorState, cast(object, updated))
 
 

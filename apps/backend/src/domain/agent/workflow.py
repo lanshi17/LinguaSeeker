@@ -6,7 +6,12 @@ import re
 from pathlib import Path
 from loguru import logger
 from src.domain.enums import ProcessingState
-from src.services.translation_validation import validate_translation_output
+from src.services.translation_validation import (
+    reset_translation_artifacts,
+    should_skip_translation,
+    summarize_translation_validation_error,
+    validate_translation_output,
+)
 from src.domain.models import (
     EvidenceOutput,
     EvidenceStrengthClassification,
@@ -692,11 +697,42 @@ class EvidenceAgent:
             except ValueError:
                 state["translated_md"] = ""
 
-        llm = self.get_translation_llm()
+        reset_translation_artifacts(state)
+
         if not markdown_content.strip():
             logger.warning("Markdown 内容为空，跳过翻译")
             state["translated_md"] = ""
             return state
+
+        if should_skip_translation(markdown_content):
+            logger.info("检测到英文 Markdown，跳过翻译")
+            state["translated_md"] = markdown_content
+            return state
+
+        state["translation_required"] = True
+        llm = self.get_translation_llm()
+        state["translation_terminology"] = self._message_content_to_text(
+            llm.invoke(
+                [
+                    HumanMessage(
+                        content=prompts.get_translation_terminology_prompt(
+                            markdown_content
+                        )
+                    )
+                ]
+            ).content
+        )
+        state["translation_structure"] = self._message_content_to_text(
+            llm.invoke(
+                [
+                    HumanMessage(
+                        content=prompts.get_translation_structure_prompt(
+                            markdown_content
+                        )
+                    )
+                ]
+            ).content
+        )
         max_tokens = 8192
         prompt_overhead = len(prompts.get_translation_prompt(""))
         max_chars = max(1, max_tokens - prompt_overhead - 20)
@@ -708,7 +744,11 @@ class EvidenceAgent:
 
         translated_segments: List[str] = []
         for idx, segment in enumerate(segments, start=1):
-            prompt = prompts.get_translation_prompt(segment)
+            prompt = prompts.get_translation_draft_prompt(
+                segment,
+                state["translation_terminology"],
+                state["translation_structure"],
+            )
             try:
                 response = llm.invoke([HumanMessage(content=prompt)])
                 content = self._message_content_to_text(response.content)
@@ -720,9 +760,75 @@ class EvidenceAgent:
                 logger.error(f"翻译分段 {idx}/{len(segments)} 失败: {e}")
                 raise RuntimeError(f"翻译分段 {idx} 失败") from e
 
-        state["translated_md"] = "\n\n".join(translated_segments)
+        state["translation_draft"] = "\n\n".join(translated_segments)
+        state = self._apply_translation_polish(state)
+        final_candidate = str(
+            state.get("translation_polished") or state["translation_draft"]
+        )
+        state["translation_review"] = self._run_translation_review(
+            markdown_content,
+            final_candidate,
+        )
+        try:
+            validate_translation_output(markdown_content, final_candidate)
+        except Exception as exc:
+            state["translation_warnings"] = list(state.get("translation_warnings") or []) + [
+                summarize_translation_validation_error(exc)
+            ]
+            fallback_candidate = str(state["translation_draft"] or "")
+            validate_translation_output(markdown_content, fallback_candidate)
+            state["translated_md"] = fallback_candidate
+        else:
+            state["translated_md"] = final_candidate
         logger.info(f"翻译完成，字数: {len(state['translated_md'])}")
 
+        return state
+
+    def _run_translation_polish(self, draft: str, terminology: str) -> str:
+        llm = self.get_translation_llm()
+        response = llm.invoke(
+            [
+                HumanMessage(
+                    content=prompts.get_translation_polish_prompt(draft, terminology)
+                )
+            ]
+        )
+        return self._message_content_to_text(response.content)
+
+    def _run_translation_review(
+        self,
+        source_markdown: str,
+        translated_markdown: str,
+    ) -> str:
+        llm = self.get_translation_llm()
+        response = llm.invoke(
+            [
+                HumanMessage(
+                    content=prompts.get_translation_review_prompt(
+                        source_markdown,
+                        translated_markdown,
+                    )
+                )
+            ]
+        )
+        return self._message_content_to_text(response.content)
+
+    def _apply_translation_polish(self, state: ProcessingState) -> ProcessingState:
+        draft = str(state.get("translation_draft") or "")
+        terminology = str(state.get("translation_terminology") or "")
+        warnings = list(state.get("translation_warnings") or [])
+        if not draft:
+            state["translation_polished"] = ""
+            state["translation_warnings"] = warnings
+            return state
+        try:
+            polished = str(self._run_translation_polish(draft, terminology) or "").strip()
+            state["translation_polished"] = polished or draft
+        except Exception:
+            state["translation_polished"] = draft
+            if "translation_polish_failed" not in warnings:
+                warnings.append("translation_polish_failed")
+        state["translation_warnings"] = warnings
         return state
 
     @staticmethod
