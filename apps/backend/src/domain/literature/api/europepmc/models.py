@@ -1,5 +1,5 @@
 # src/domain/literature/api/europepmc/models.py
-# Europe PMC API Pydantic models
+"""Pydantic models for Europe PMC API."""
 
 from __future__ import annotations
 
@@ -8,15 +8,20 @@ from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field, field_validator
 
 
-class EuropePmcParams(BaseModel):
-    """Europe PMC search parameters."""
+class SearchParams(BaseModel):
+    """Search parameters for Europe PMC query."""
 
+    keyword: List[str] = Field(default_factory=list)
     query: Optional[str] = None
-    id: Optional[str] = None
-    id_type: Literal["doi", "pmid", "pmcid"] = "doi"
+    filters: Dict[str, Any] = Field(default_factory=dict)
+    limit: int = 50
     page: int = 1
-    page_size: int = 25
-    sort: str = "relevance"
+
+    @field_validator("limit")
+    @classmethod
+    def limit_range(cls, v: int) -> int:
+        """Validate limit is between 1 and 500."""
+        return max(1, min(v, 500))
 
     @field_validator("page")
     @classmethod
@@ -24,35 +29,29 @@ class EuropePmcParams(BaseModel):
         """Validate page is at least 1."""
         return max(1, v)
 
-    @field_validator("page_size")
-    @classmethod
-    def page_size_range(cls, v: int) -> int:
-        """Validate page size is between 1 and 100."""
-        return max(1, min(v, 100))
-
 
 class EuropePmcPayload(BaseModel):
     """Payload for Europe PMC operations."""
 
-    action: Literal["search", "id", "download"] = "search"
+    action: Literal["query", "doi", "download"] = "query"
 
-    # Search parameters
-    search_params: Optional[EuropePmcParams] = None
+    # query
+    search_params: Optional[SearchParams] = None
 
-    # ID lookup
-    id: Optional[str] = None
-    id_type: Literal["doi", "pmid", "pmcid"] = "doi"
+    # doi query
+    doi_list: List[str] = Field(default_factory=list)
+    doi: Optional[str] = None
 
-    # Download
+    # download
     selected_index: int = 0
     download_path: str = "./downloads"
 
-    # Runtime
-    timeout: float = 30.0
-    max_retries: int = 2
+    # runtime
+    batch_size: int = 200
     sleep_seconds: float = 1.0
+    progress: bool = False
+    errors: Literal["raise", "ignore"] = "ignore"
     raw: bool = False
-    user_agent: Optional[str] = None
 
 
 class ApiResponse(BaseModel):
@@ -60,7 +59,6 @@ class ApiResponse(BaseModel):
 
     success: bool
     items: List[Dict[str, Any]] = Field(default_factory=list)
-    meta: Optional[Any] = None
     warnings: List[str] = Field(default_factory=list)
     raw: Optional[Any] = None
 
