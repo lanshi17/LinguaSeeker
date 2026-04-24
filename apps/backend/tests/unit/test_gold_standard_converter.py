@@ -1,5 +1,8 @@
 import importlib.util
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 from typing import Callable
 
@@ -42,6 +45,61 @@ def test_convert_gold_standard_file_writes_evidence_json(tmp_path: Path) -> None
     data = json.loads(target.read_text(encoding="utf-8"))
     assert isinstance(data, list)
     assert len(data) == 1
+    EvidenceOutput.model_validate(data[0])
+
+
+def test_convert_gold_standard_script_runs_from_backend_directory(tmp_path: Path) -> None:
+    source = FIXTURES_DIR / "gold_standard_source_minimal.json"
+    target = tmp_path / "14749723.evidence.json"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/convert_gold_standard_json.py",
+            str(source),
+            str(target),
+        ],
+        cwd=BACKEND_DIR,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert "gold_standard_source_minimal.json: 1" in result.stdout
+    data = json.loads(target.read_text(encoding="utf-8"))
+    EvidenceOutput.model_validate(data[0])
+
+
+def test_convert_gold_standard_script_resolves_source_from_invocation_directory(
+    tmp_path: Path,
+) -> None:
+    source_dir = tmp_path / "source"
+    output_root = tmp_path / "outputs"
+    target_dir = output_root / "target"
+    source_dir.mkdir()
+    output_root.mkdir()
+    source = source_dir / "14749723.json"
+    source.write_text(
+        (FIXTURES_DIR / "gold_standard_source_minimal.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/convert_gold_standard_json.py",
+            str(source_dir.relative_to(tmp_path)),
+            str(target_dir),
+        ],
+        cwd=BACKEND_DIR,
+        env={**os.environ, "PWD": str(tmp_path)},
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert "14749723.json: 1" in result.stdout
+    data = json.loads((target_dir / "14749723.evidence.json").read_text(encoding="utf-8"))
     EvidenceOutput.model_validate(data[0])
 
 

@@ -2,8 +2,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import sys
 from pathlib import Path
 from typing import Sequence
+
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+INVOCATION_DIR = Path(os.environ.get("PWD", Path.cwd())).resolve()
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 
 from src.domain.evidence.gold_standard_converter import convert_gold_standard_payload
 from src.domain.models import EvidenceOutput
@@ -32,6 +39,19 @@ def convert_directory(source_dir: Path, target_dir: Path) -> dict[str, int]:
     return counts
 
 
+def resolve_source_path(path: Path) -> Path:
+    if path.is_absolute() or path.exists():
+        return path
+    invocation_path = INVOCATION_DIR / path
+    if invocation_path.exists():
+        return invocation_path
+    return path
+
+
+def resolve_target_path(path: Path) -> Path:
+    return path
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Convert gold standard annotation JSON to EvidenceOutput JSON."
@@ -40,13 +60,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("target", type=Path)
     args = parser.parse_args(argv)
 
-    if args.source.is_dir():
-        counts = convert_directory(args.source, args.target)
+    source = resolve_source_path(args.source)
+    target = resolve_target_path(args.target)
+
+    if source.is_dir():
+        counts = convert_directory(source, target)
         for name, count in counts.items():
             print(f"{name}: {count}")
     else:
-        count = convert_file(args.source, args.target)
-        print(f"{args.source.name}: {count}")
+        count = convert_file(source, target)
+        print(f"{source.name}: {count}")
 
     return 0
 
