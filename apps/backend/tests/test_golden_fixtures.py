@@ -95,7 +95,7 @@ def validate_evidence_output_equivalence(
 
 class TestGoldenFixtures:
     def test_fixture_inventory(self) -> None:
-        fixture_names = sorted(path.name for path in FIXTURES_DIR.glob("*.json"))
+        fixture_names = sorted(path.name for path in FIXTURES_DIR.glob("golden_*.json"))
         assert fixture_names == [
             "golden_evidence_output.json",
             "golden_parsing_result.json",

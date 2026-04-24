@@ -5,6 +5,13 @@
     "/tmp/doc-golden-001/page_2.png"
   ],
   "translated_md": "# Synthetic translated source\n\n- Functional assay summary",
+  "translation_required": false,
+  "translation_terminology": "",
+  "translation_structure": "",
+  "translation_draft": "",
+  "translation_polished": "# Synthetic translated source\n\n- Functional assay summary",
+  "translation_review": "English source detected; translation skipped.",
+  "translation_warnings": [],
   "image_descriptions": [
     "Figure 1 shows strong reduction in activity.",
     "Table 2 summarizes pathogenic control outcomes."
