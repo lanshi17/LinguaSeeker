@@ -65,3 +65,88 @@ def test_convert_gold_standard_payload_populates_ps3_scoring() -> None:
 
     assert ps3_evidence["ps3_step_4"]["oddspath_data"]["computable"] is False
     assert ps3_evidence["functional_evidence_aim"] == "pathogenic"
+
+
+def test_convert_gold_standard_payload_matches_parenthetical_variant_suffix() -> None:
+    payload = {
+        "Variants Include": [
+            {
+                "Gene": "DJ-1",
+                "variants": [
+                    {
+                        "HGVS": "NM_007262.5:c.497T>C",
+                        "cDNA Change": {
+                            "transcript": "NM_007262.5",
+                            "ref": "T",
+                            "alt": "C",
+                            "position": "497",
+                        },
+                        "Protein Change": {"ref": "L", "alt": "P", "position": "166"},
+                        "Description in input context": "L166P",
+                    }
+                ],
+            }
+        ],
+        "Described Disease": {"Described Disease": "Parkinson's disease"},
+        "Experiment Method": [
+            {
+                "Assay Method": "Flow Cytometry",
+                "Material used": {
+                    "Material Source": "Cell line",
+                    "Material Name": "DJ-1 expressing cells",
+                    "Description": "Cells were measured by flow cytometry.",
+                },
+                "Readout type": "Quantitative",
+                "Readout description": [
+                    {
+                        "Variant": "NM_007262.5:c.497T>C (L166P)",
+                        "Conclusion": "Abnormal",
+                        "Molecular Effect": "loss of function",
+                        "Result Description": "Reduced DJ-1 expression was observed.",
+                    }
+                ],
+                "Biological replicates": {"Biological replicates": "Yes"},
+                "Technical replicates": {"Technical replicates": "N.D."},
+                "Basic positive control": {
+                    "Basic positive control": "Yes",
+                    "Description": "Wild-type DJ-1 expressing cells.",
+                },
+                "Basic negative control": {
+                    "Basic negative control": "Yes",
+                    "Description": {
+                        "Control vector-transfected cells": "Negative control for DJ-1 expression."
+                    },
+                },
+                "Approved assay": {"Approved assay": "Yes"},
+            }
+        ],
+    }
+
+    records = convert_gold_standard_payload(payload, source_id="19801972")
+    output = EvidenceOutput.model_validate(records[0])
+    fields = ExtractedEvidenceFields.model_validate(output.extracted_fields)
+
+    assert fields.variant is not None
+    assert fields.variant.hgvs_c == "NM_007262.5:c.497T>C"
+    assert fields.variant.hgvs_p == "p.Leu166Pro"
+    assert fields.negative_positive_control is not None
+    assert fields.negative_positive_control.has_negative_control is True
+    assert (
+        fields.negative_positive_control.negative_control_description
+        == "Control vector-transfected cells: Negative control for DJ-1 expression."
+    )
+
+
+def test_convert_gold_standard_payload_emits_partial_variant_when_missing_from_variant_list() -> None:
+    payload = _load_gold_standard_payload()
+    payload["Experiment Method"][0]["Readout description"][0]["Variant"] = "NM_007262.5:c.155G>C (C53A)"
+
+    records = convert_gold_standard_payload(payload, source_id="19801972")
+    output = EvidenceOutput.model_validate(records[0])
+    fields = ExtractedEvidenceFields.model_validate(output.extracted_fields)
+
+    assert fields.variant is not None
+    assert fields.variant.hgvs_c == "NM_007262.5:c.155G>C"
+    assert fields.transcript_id is not None
+    assert fields.transcript_id.transcript_id == "NM_007262.5"
+    assert fields.variant.hgvs_p is None

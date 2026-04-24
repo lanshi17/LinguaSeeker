@@ -56,7 +56,9 @@ def _convert_readout(
     variants: dict[str, dict[str, Any]],
     source_id: str | None,
 ) -> dict[str, Any]:
-    variant = variants.get(_variant_key(readout.get("Variant")), {})
+    readout_variant_key = _variant_key(readout.get("Variant"))
+    variant = variants.get(readout_variant_key, {})
+    transcript = (variant.get("cDNA Change") or {}).get("transcript") or _transcript_from_hgvs(readout_variant_key)
     ps3_evidence = _build_ps3_evidence(payload, method, readout)
     strength = _strength_from_score(ps3_evidence["overall_assessment"]["total_score"])
 
@@ -66,10 +68,10 @@ def _convert_readout(
             if not _is_missing(variant.get("Gene"))
             else None,
             "transcript_id": {
-                "transcript_id": (variant.get("cDNA Change") or {}).get("transcript"),
+                "transcript_id": transcript,
                 "confidence": 100.0,
             }
-            if not _is_missing((variant.get("cDNA Change") or {}).get("transcript"))
+            if not _is_missing(transcript)
             else None,
             "experiment_data": {
                 "assay_type": method.get("Assay Method"),
@@ -91,7 +93,7 @@ def _convert_readout(
             if not _is_missing(readout.get("Conclusion"))
             else None,
             "variant": {
-                "hgvs_c": variant.get("HGVS") or _variant_key(readout.get("Variant")),
+                "hgvs_c": variant.get("HGVS") or readout_variant_key,
                 "hgvs_p": _hgvs_p(variant),
                 "ref_allele": (variant.get("cDNA Change") or {}).get("ref"),
                 "alt_allele": (variant.get("cDNA Change") or {}).get("alt"),
@@ -104,10 +106,10 @@ def _convert_readout(
                 "has_negative_control": _is_yes(
                     (method.get("Basic negative control") or {}).get("Basic negative control")
                 ),
-                "positive_control_description": _none_if_missing(
+                "positive_control_description": _control_description(
                     (method.get("Basic positive control") or {}).get("Description")
                 ),
-                "negative_control_description": _none_if_missing(
+                "negative_control_description": _control_description(
                     (method.get("Basic negative control") or {}).get("Description")
                 ),
                 "confidence": 100.0,
@@ -206,6 +208,11 @@ def _variant_key(value: Any) -> str:
     return re.sub(r"\s+\([^)]*\)\s*$", "", str(value).strip())
 
 
+def _transcript_from_hgvs(value: str) -> str | None:
+    match = re.match(r"^([^:]+):", value)
+    return match[1] if match else None
+
+
 def _hgvs_p(variant: dict[str, Any]) -> str | None:
     protein = variant.get("Protein Change") or {}
     ref = protein.get("ref")
@@ -227,6 +234,14 @@ def _is_missing(value: Any) -> bool:
 
 def _none_if_missing(value: Any) -> Any:
     return None if _is_missing(value) else value
+
+
+def _control_description(value: Any) -> str | None:
+    if _is_missing(value):
+        return None
+    if isinstance(value, dict):
+        return "; ".join(f"{key}: {description}" for key, description in value.items())
+    return str(value)
 
 
 def _is_yes(value: Any) -> bool:
