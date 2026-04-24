@@ -70,14 +70,14 @@ def test_convert_gold_standard_script_runs_from_backend_directory(tmp_path: Path
     EvidenceOutput.model_validate(data[0])
 
 
-def test_convert_gold_standard_script_resolves_source_from_invocation_directory(
+def test_convert_gold_standard_script_resolves_paths_from_invocation_directory(
     tmp_path: Path,
 ) -> None:
     source_dir = tmp_path / "source"
-    output_root = tmp_path / "outputs"
-    target_dir = output_root / "target"
+    target_rel = Path("outputs") / f"target-{tmp_path.name}"
+    target_dir = tmp_path / target_rel
+    backend_target_dir = BACKEND_DIR / target_rel
     source_dir.mkdir()
-    output_root.mkdir()
     source = source_dir / "14749723.json"
     source.write_text(
         (FIXTURES_DIR / "gold_standard_source_minimal.json").read_text(encoding="utf-8"),
@@ -89,7 +89,7 @@ def test_convert_gold_standard_script_resolves_source_from_invocation_directory(
             sys.executable,
             "scripts/convert_gold_standard_json.py",
             str(source_dir.relative_to(tmp_path)),
-            str(target_dir),
+            str(target_rel),
         ],
         cwd=BACKEND_DIR,
         env={**os.environ, "PWD": str(tmp_path)},
@@ -99,6 +99,7 @@ def test_convert_gold_standard_script_resolves_source_from_invocation_directory(
     )
 
     assert "14749723.json: 1" in result.stdout
+    assert not backend_target_dir.exists()
     data = json.loads((target_dir / "14749723.evidence.json").read_text(encoding="utf-8"))
     EvidenceOutput.model_validate(data[0])
 

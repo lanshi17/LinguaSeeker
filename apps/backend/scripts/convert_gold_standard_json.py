@@ -49,7 +49,9 @@ def resolve_source_path(path: Path) -> Path:
 
 
 def resolve_target_path(path: Path) -> Path:
-    return path
+    if path.is_absolute():
+        return path
+    return INVOCATION_DIR / path
 
 
 def main(argv: Sequence[str] | None = None) -> int:
