@@ -1,0 +1,401 @@
+[
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 15,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": false
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 75
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:17019612"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "LRRK2",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_198578.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Cell culture and transfection",
+        "method_description": "Human embryonic kidney cells (HEK-293T) were maintained at 37°C in a 95% air/5% CO2 humidified atmosphere incubator and grown on polyornithine-precoated 6 well plate in Dulbecco’s modified Eagle’s medium (DMEM, GIBCO) containing 10% heat inactivated fetal bovine serum (GIBCO). Cells were transfected overnight with 3.0 µg of each plasmid DNA using LipofectamineTM 2000 reagent (Invitrogen) and OptiMEM culture medium. Cells were further incubated overnight in fresh medium containing oxygen stress reagent H2O2 (0.4 and 0.8 mM). The cultured cells were harvested by trypsin digestion for apoptosis analysis.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HEK-293T",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson’s disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_198578.4:c.7153G>A",
+        "hgvs_p": "p.Gly2385Arg",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": false,
+        "has_positive_control": true,
+        "negative_control_description": null,
+        "positive_control_description": "Wild type LRRK2 protein was used as a control in transfection studies.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 15,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": false
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 75
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:17019612"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "LRRK2",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_198578.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Apoptosis detection",
+        "method_description": "For quantitation of apoptosis on H2O2 treated wild type and variant LRRK2 gene transfected cell population, Annexin V-PE apoptosis Kit I (BD Biosciences) was used according to manufacturer's instruction. The cells were washed in cold PBS buffer twice. After the cells were resuspended in binding buffer, 100 µl of cells were transferred to a 5 ml tube and 5 µl of Annexin V-PE and 5 µl of 7-AAD were added. After incubating the reaction for 15 min in the dark, 400 µl of binding buffer were added for flow cytometry analysis (FACSCalibur, Becton Dickinson).",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HEK-293T",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson’s disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_198578.4:c.7153G>A",
+        "hgvs_p": "p.Gly2385Arg",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": false,
+        "has_positive_control": true,
+        "negative_control_description": null,
+        "positive_control_description": "Wild type LRRK2 protein transfected cells treated with H2O2.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 15,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": false
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 75
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:17019612"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "LRRK2",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_198578.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Determination of localization for LRRK2 variant",
+        "method_description": "After overnight transfection, cells on coverslips were further incubated in fresh DMEM culture medium for 6h and then rinsed with PBS and fixed with 3.7% formaldehyde for 10 min at RT. After washing in PBS, coverslips were mounted onto glass slides with DAPI containing Vectormount (Vector Laboratories) and examined with an LSM-510 laser-scanning confocal microscope (Carl Zeiss).",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HEK-293T",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson’s disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Normal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_198578.4:c.7153G>A",
+        "hgvs_p": "p.Gly2385Arg",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": false,
+        "has_positive_control": true,
+        "negative_control_description": null,
+        "positive_control_description": "Wild type LRRK2 protein localization.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  }
+]

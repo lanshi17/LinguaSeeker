@@ -1,0 +1,786 @@
+[
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 10,
+        "checkpoint_3a": {
+          "replicates_used": false,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 0,
+        "final_evidence_strength": "PS3_supporting",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 50
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:18307263"
+    ],
+    "final_evidence_strength": "PS3_supporting",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "In Vitro Mutagenesis and Cell Transfections",
+        "method_description": "Human SH-SY5Y neuroblastoma cells were grown in 5% CO2 in Dulbecco’s modified Eagle’s medium (Invitrogen, Carlsbad, CA) supplemented with 10% fetal calf serum containing penicillin (100 U/mL) and streptomycin (50 lg/mL). The QuickChange site-directed mutagenesis kit (Stratagene, La Jolla, CA) was used to insert each of the two mutations (p.A244G and p.V317I) in the PINK1 cDNA with a 3' HA-tag, and the entire coding region was sequenced to confirm the presence of each mutation. Cells were transiently transfected with pcDNA3 expression vectors encoding the wild-type or mutant proteins, or with the empty vector (control), using Lipofectamine 2000 (Invitrogen).",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Late Onset Sporadic Parkinson’s Disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": null,
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.731C>G",
+        "hgvs_p": "p.Ala244Gly",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "C",
+        "alt_allele": "G",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "cells with the empty vector",
+        "positive_control_description": "cells with wild-type proteins",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 0.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_supporting"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 10,
+        "checkpoint_3a": {
+          "replicates_used": false,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 0,
+        "final_evidence_strength": "PS3_supporting",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 50
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:18307263"
+    ],
+    "final_evidence_strength": "PS3_supporting",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "In Vitro Mutagenesis and Cell Transfections",
+        "method_description": "Human SH-SY5Y neuroblastoma cells were grown in 5% CO2 in Dulbecco’s modified Eagle’s medium (Invitrogen, Carlsbad, CA) supplemented with 10% fetal calf serum containing penicillin (100 U/mL) and streptomycin (50 lg/mL). The QuickChange site-directed mutagenesis kit (Stratagene, La Jolla, CA) was used to insert each of the two mutations (p.A244G and p.V317I) in the PINK1 cDNA with a 3' HA-tag, and the entire coding region was sequenced to confirm the presence of each mutation. Cells were transiently transfected with pcDNA3 expression vectors encoding the wild-type or mutant proteins, or with the empty vector (control), using Lipofectamine 2000 (Invitrogen).",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Late Onset Sporadic Parkinson’s Disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": null,
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.949G>A",
+        "hgvs_p": "p.Val317Ile",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "cells with the empty vector",
+        "positive_control_description": "cells with wild-type proteins",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 0.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_supporting"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:18307263"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Fluorometric TUNEL assay",
+        "method_description": "Human SH-SY5Y neuroblastoma cells were grown in 5% CO2 in Dulbecco’s modified Eagle’s medium (Invitrogen, Carlsbad, CA) supplemented with 10% fetal calf serum containing penicillin (100 U/mL) and streptomycin (50 lg/mL).",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Late Onset Sporadic Parkinson’s Disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.731C>G",
+        "hgvs_p": "p.Ala244Gly",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "C",
+        "alt_allele": "G",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "cells with the empty vector",
+        "positive_control_description": "cells with wild-type proteins",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:18307263"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Fluorometric TUNEL assay",
+        "method_description": "Human SH-SY5Y neuroblastoma cells were grown in 5% CO2 in Dulbecco’s modified Eagle’s medium (Invitrogen, Carlsbad, CA) supplemented with 10% fetal calf serum containing penicillin (100 U/mL) and streptomycin (50 lg/mL).",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Late Onset Sporadic Parkinson’s Disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.949G>A",
+        "hgvs_p": "p.Val317Ile",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "cells with the empty vector",
+        "positive_control_description": "cells with wild-type proteins",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 10,
+        "checkpoint_3a": {
+          "replicates_used": false,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3_moderate",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 70
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:18307263"
+    ],
+    "final_evidence_strength": "PS3_moderate",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Western Blotting Analysis",
+        "method_description": "Human SH-SY5Y neuroblastoma cells were grown in 5% CO2 in Dulbecco’s modified Eagle’s medium (Invitrogen, Carlsbad, CA) supplemented with 10% fetal calf serum containing penicillin (100 U/mL) and streptomycin (50 lg/mL).",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Late Onset Sporadic Parkinson’s Disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.731C>G",
+        "hgvs_p": "p.Ala244Gly",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "C",
+        "alt_allele": "G",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "cells with the empty vector",
+        "positive_control_description": "cells with wild-type proteins",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_moderate"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 10,
+        "checkpoint_3a": {
+          "replicates_used": false,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3_moderate",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 70
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:18307263"
+    ],
+    "final_evidence_strength": "PS3_moderate",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Western Blotting Analysis",
+        "method_description": "Human SH-SY5Y neuroblastoma cells were grown in 5% CO2 in Dulbecco’s modified Eagle’s medium (Invitrogen, Carlsbad, CA) supplemented with 10% fetal calf serum containing penicillin (100 U/mL) and streptomycin (50 lg/mL).",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Late Onset Sporadic Parkinson’s Disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.949G>A",
+        "hgvs_p": "p.Val317Ile",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "cells with the empty vector",
+        "positive_control_description": "cells with wild-type proteins",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_moderate"
+    ]
+  }
+]

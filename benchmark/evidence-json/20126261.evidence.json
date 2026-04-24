@@ -1,0 +1,1997 @@
+[
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.1040T>C",
+        "hgvs_p": "p.Leu347Pro",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "T",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.502G>C",
+        "hgvs_p": "p.Ala168Pro",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.813C>A",
+        "hgvs_p": "p.His217Gln",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "C",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.926G>A",
+        "hgvs_p": "p.Gly309Asp",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Normal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.1231G>A",
+        "hgvs_p": "p.Gly411Ser",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PRKN",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_004562.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_004562.3:c.125G>C",
+        "hgvs_p": "p.Arg42Pro",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PRKN",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_004562.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_004562.3:c.136G>C",
+        "hgvs_p": "p.Ala46Pro",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "C",
+        "alt_allele": "T",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PRKN",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_004562.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_004562.3:c.758G>A",
+        "hgvs_p": "p.Cys253Tyr",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PRKN",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_004562.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_004562.3:c.865T>G",
+        "hgvs_p": "p.Cys289Gly",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "T",
+        "alt_allele": "G",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PRKN",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_004562.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_004562.3:c.995G>C",
+        "hgvs_p": "p.Cys332Ser",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PRKN",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_004562.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_004562.3:c.1321T>C",
+        "hgvs_p": "p.Cys441Arg",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "T",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PRKN",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_004562.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_004562.3:c.931C>T",
+        "hgvs_p": "p.Gln311X",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "C",
+        "alt_allele": "T",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PRKN",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_004562.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_004562.3:c.633A>T",
+        "hgvs_p": "p.Lys211Asn",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "A",
+        "alt_allele": "T",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PRKN",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_004562.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_004562.3:c.635G>A",
+        "hgvs_p": "p.Cys212Tyr",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:20126261"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PRKN",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_004562.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting and Immunocytochemistry",
+        "method_description": "For PINK1 experiments, cells were fractionated using the Mitochondria Isolation Kit, according to manufacturer’s specifications.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "HeLa cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Parkinson's disease",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_004562.3:c.823C>T",
+        "hgvs_p": "p.Arg275Trp",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "C",
+        "alt_allele": "T",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "DMSO treatment was used as a negative control.",
+        "positive_control_description": "Wild-type PINK1 and Parkin were used as positive controls.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  }
+]

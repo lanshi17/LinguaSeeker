@@ -1,0 +1,1325 @@
+[
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:15824318"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "In Vitro Kinase Assays",
+        "method_description": "PINK1 fusion proteins were expressed in Escherichia coli BL21 (DE3)[cite: 54]. Cells were grown at 37°C until the OD600 reached 0.7–0.8 and then were induced with isopropyl β-D-thiogalactopyranoside to a final concentration of 0.2 mM at 37°C for 3 h[cite: 55]. Cells were harvested and lysed by sonication on ice in lysis buffer containing 50 mM Tris-HCl (pH 7.4), 200 mM NaCl, 1 mM EDTA, 1 mM DTT, 0.1%, Triton X-100, and protease inhibitors[cite: 56]. After centrifugation for 20 min at 12,000 g, the supernatant was incubated with Glutathione Sepharose 4B beads (Amersham Pharmacia Biosciences) overnight at 4°C[cite: 57]. The beads were washed extensively with lysis buffer and prepared for SDS/PAGE by addition of 2× SDS sample buffer and then heating at 95°C for 5 min[cite: 58].",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "Escherichia coli BL21 (DE3)",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Recessive Parkinsonism",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.926G>A",
+        "hgvs_p": "p.Gly309Asp",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Artificial kinase-dead mutant (K219A, D362A, D384A, triple kinase-dead mutant)[cite: 111].",
+        "positive_control_description": "Wild-type PINK1 (lane 1) is shown for comparison with artificial kinase mutants[cite: 111]. Autophosphorylation activity of wild-type PINK1 GST-fusion proteins[cite: 107].",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:15824318"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "In Vitro Kinase Assays",
+        "method_description": "PINK1 fusion proteins were expressed in Escherichia coli BL21 (DE3)[cite: 54]. Cells were grown at 37°C until the OD600 reached 0.7–0.8 and then were induced with isopropyl β-D-thiogalactopyranoside to a final concentration of 0.2 mM at 37°C for 3 h[cite: 55]. Cells were harvested and lysed by sonication on ice in lysis buffer containing 50 mM Tris-HCl (pH 7.4), 200 mM NaCl, 1 mM EDTA, 1 mM DTT, 0.1%, Triton X-100, and protease inhibitors[cite: 56]. After centrifugation for 20 min at 12,000 g, the supernatant was incubated with Glutathione Sepharose 4B beads (Amersham Pharmacia Biosciences) overnight at 4°C[cite: 57]. The beads were washed extensively with lysis buffer and prepared for SDS/PAGE by addition of 2× SDS sample buffer and then heating at 95°C for 5 min[cite: 58].",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "Escherichia coli BL21 (DE3)",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Recessive Parkinsonism",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.1040T>C",
+        "hgvs_p": "p.Leu347Pro",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "T",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Artificial kinase-dead mutant (K219A, D362A, D384A, triple kinase-dead mutant)[cite: 111].",
+        "positive_control_description": "Wild-type PINK1 (lane 1) is shown for comparison with artificial kinase mutants[cite: 111]. Autophosphorylation activity of wild-type PINK1 GST-fusion proteins[cite: 107].",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:15824318"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting",
+        "method_description": "COS7 or M17 (human neuroblastoma) cells were grown in Opti-MEM supplemented with 10% (vol/vol) FBS (Invitrogen) and were transiently transfected by using FuGENE (Roche Applied Science, Indianapolis)[cite: 51, 52]. Proteins resolved on SDS/PAGE were blotted as described in refs. 11 and 23[cite: 65]. Antibodies used were monoclonal anti-GFP (clones 7.1 and 13.1, Roche Applied Science), anti-myc (clone 9E10, Roche Applied Science), and anti-β-actin (clone AC15, Sigma)[cite: 66]. Blots were imaged by using a Storm phosphorimager, and the relative intensity of immunoreactive bands was measured by using IMAGEQUANT 5.2 and normalized to β-actin[cite: 67].",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "COS7 or M17 (human neuroblastoma) cells [cite: 51]",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Recessive Parkinsonism",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Normal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.926G>A",
+        "hgvs_p": "p.Gly309Asp",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells[cite: 90, 179]. Kinase-dead construct (lanes 4 and 5)[cite: 180].",
+        "positive_control_description": "Wild type (lanes 2 and 3) control[cite: 180].",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:15824318"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunoblotting",
+        "method_description": "COS7 or M17 (human neuroblastoma) cells were grown in Opti-MEM supplemented with 10% (vol/vol) FBS (Invitrogen) and were transiently transfected by using FuGENE (Roche Applied Science, Indianapolis)[cite: 51, 52]. Proteins resolved on SDS/PAGE were blotted as described in refs. 11 and 23[cite: 65]. Antibodies used were monoclonal anti-GFP (clones 7.1 and 13.1, Roche Applied Science), anti-myc (clone 9E10, Roche Applied Science), and anti-β-actin (clone AC15, Sigma)[cite: 66]. Blots were imaged by using a Storm phosphorimager, and the relative intensity of immunoreactive bands was measured by using IMAGEQUANT 5.2 and normalized to β-actin[cite: 67].",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "COS7 or M17 (human neuroblastoma) cells [cite: 51]",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Recessive Parkinsonism",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.1040T>C",
+        "hgvs_p": "p.Leu347Pro",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "T",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells[cite: 90, 179]. Kinase-dead construct (lanes 4 and 5)[cite: 180].",
+        "positive_control_description": "Wild type (lanes 2 and 3) control[cite: 180].",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:15824318"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Quantitative RT-PCR",
+        "method_description": "Total RNA was isolated from cells 48 h after transfection by using TRIzol (Invitrogen)[cite: 74]. The isolated RNA was treated with a DNase I (Invitrogen), and 1-µg quantities of total RNA were reverse transcribed separately with SuperScript III reverse transcriptase (Invitrogen) by using oligo(dT) primers[cite: 75]. cDNA templates were diluted 10-fold before use in RT-PCR[cite: 76]. Primers for PINK1 were 5'-AGACGCTTGCAGGGCTTTC-3' (forward) and 5'-GGCAATGTAGGCATGGTGG-3' (reverse)[cite: 76]. Primers for β-actin were 5'-AGAAGGATTCCTATGTGGGCG-3' (forward) and 5'-CATGTCGTCCCAGTTGGT-GAC-3' (reverse)[cite: 77]. Real-time quantitative PCR was performed and analyzed by using the Applied Biosystems 7900 system as described in ref. 25[cite: 78].",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "COS-7 cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Recessive Parkinsonism",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Normal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.926G>A",
+        "hgvs_p": "p.Gly309Asp",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells[cite: 179].",
+        "positive_control_description": "Wild type control[cite: 180].",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:15824318"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Quantitative RT-PCR",
+        "method_description": "Total RNA was isolated from cells 48 h after transfection by using TRIzol (Invitrogen)[cite: 74]. The isolated RNA was treated with a DNase I (Invitrogen), and 1-µg quantities of total RNA were reverse transcribed separately with SuperScript III reverse transcriptase (Invitrogen) by using oligo(dT) primers[cite: 75]. cDNA templates were diluted 10-fold before use in RT-PCR[cite: 76]. Primers for PINK1 were 5'-AGACGCTTGCAGGGCTTTC-3' (forward) and 5'-GGCAATGTAGGCATGGTGG-3' (reverse)[cite: 76]. Primers for β-actin were 5'-AGAAGGATTCCTATGTGGGCG-3' (forward) and 5'-CATGTCGTCCCAGTTGGT-GAC-3' (reverse)[cite: 77]. Real-time quantitative PCR was performed and analyzed by using the Applied Biosystems 7900 system as described in ref. 25[cite: 78].",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "COS-7 cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Recessive Parkinsonism",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Normal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.1040T>C",
+        "hgvs_p": "p.Leu347Pro",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "T",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells[cite: 179].",
+        "positive_control_description": "Wild type control[cite: 180].",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 15,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": false
+        }
+      },
+      "ps3_step_4": {
+        "score": 0,
+        "final_evidence_strength": "PS3_supporting",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 55
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:15824318"
+    ],
+    "final_evidence_strength": "PS3_supporting",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Pulse–Chase Labeling",
+        "method_description": "Cos-7 cells were transiently transfected with GFP-tagged PINK1[cite: 69]. Forty-eight hours after transfection, cells were starved in methionine/cysteine-free DMEM (Gibco-BRL) plus 1% L-glutamine for 1 h[cite: 69]. Cells were then exposed to 500 µCi (1 Ci = 37 GBq) of [35S]Met/[35S]Cys (Amersham Pharmacia Biosciences) per well for 3 h, rinsed three times with warm PBS, and chased in complete medium containing 1% L-glutamine, 2 mM L-methionine, 2 mM L-cysteine, and 10% FCS for various times up to 8 h[cite: 70]. Cells were lysed in buffer containing 150 mM NaCl, 5 mM EDTA, 50 mM Tris (pH 7.6), 0.25% Nonidet P-40, 1 mM PMSF, and protease inhibitors[cite: 71]. Transfected proteins were immunoprecipitated by using anti-GFP conjugated to agarose (Vector Laboratories), and products were eluted with sample buffer and separated by SDS/PAGE[cite: 72]. After electrophoresis, the gel was fixed (isopropyl alcohol/water/acetic acid, 25:65:10), enhanced with Amplify (Amersham Pharmacia Biosciences) for 30 min, and dried for autoradiography on a Storm PhosphorImager[cite: 73].",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "COS-7 cells [cite: 69]",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Recessive Parkinsonism",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": null,
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.926G>A",
+        "hgvs_p": "p.Gly309Asp",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": false,
+        "has_positive_control": true,
+        "negative_control_description": null,
+        "positive_control_description": "Wild-type N-terminal GFP-tagged PINK1[cite: 184].",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 0.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_supporting"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 15,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": false
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 75
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:15824318"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Pulse–Chase Labeling",
+        "method_description": "Cos-7 cells were transiently transfected with GFP-tagged PINK1[cite: 69]. Forty-eight hours after transfection, cells were starved in methionine/cysteine-free DMEM (Gibco-BRL) plus 1% L-glutamine for 1 h[cite: 69]. Cells were then exposed to 500 µCi (1 Ci = 37 GBq) of [35S]Met/[35S]Cys (Amersham Pharmacia Biosciences) per well for 3 h, rinsed three times with warm PBS, and chased in complete medium containing 1% L-glutamine, 2 mM L-methionine, 2 mM L-cysteine, and 10% FCS for various times up to 8 h[cite: 70]. Cells were lysed in buffer containing 150 mM NaCl, 5 mM EDTA, 50 mM Tris (pH 7.6), 0.25% Nonidet P-40, 1 mM PMSF, and protease inhibitors[cite: 71]. Transfected proteins were immunoprecipitated by using anti-GFP conjugated to agarose (Vector Laboratories), and products were eluted with sample buffer and separated by SDS/PAGE[cite: 72]. After electrophoresis, the gel was fixed (isopropyl alcohol/water/acetic acid, 25:65:10), enhanced with Amplify (Amersham Pharmacia Biosciences) for 30 min, and dried for autoradiography on a Storm PhosphorImager[cite: 73].",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "COS-7 cells [cite: 69]",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Recessive Parkinsonism",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.1040T>C",
+        "hgvs_p": "p.Leu347Pro",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "T",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": false,
+        "has_positive_control": true,
+        "negative_control_description": null,
+        "positive_control_description": "Wild-type N-terminal GFP-tagged PINK1[cite: 184].",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:15824318"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunofluorescence Staining",
+        "method_description": "Cells were stained with MitoTracker (Molecular Probes) and transfected PINK1 as described in refs. 11 and 23 for DJ-1, except that primary antibodies were either anti-GFP or anti-myc (both at 1:200 dilution)[cite: 81, 82]. GFP-tagged PINK1 was observed directly in transfected cells without fixation[cite: 157]. For myc-tagged PINK1, after fixation, myc staining was revealed by using anti-myc monoclonal antibody (green in f and i) and compared with MitoTracker (red in g and h)[cite: 124].",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "COS-7 cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Recessive Parkinsonism",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Normal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.926G>A",
+        "hgvs_p": "p.Gly309Asp",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were shown as a control[cite: 122]. Kinase-dead PINK1 was used as a control[cite: 172].",
+        "positive_control_description": "Wild-type PINK1 was used for localization studies[cite: 176].",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 20
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 80
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:15824318"
+    ],
+    "final_evidence_strength": "PS3",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "PINK1",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_032409.3",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunofluorescence Staining",
+        "method_description": "Cells were stained with MitoTracker (Molecular Probes) and transfected PINK1 as described in refs. 11 and 23 for DJ-1, except that primary antibodies were either anti-GFP or anti-myc (both at 1:200 dilution)[cite: 81, 82]. GFP-tagged PINK1 was observed directly in transfected cells without fixation[cite: 157]. For myc-tagged PINK1, after fixation, myc staining was revealed by using anti-myc monoclonal antibody (green in f and i) and compared with MitoTracker (red in g and h)[cite: 124].",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "COS-7 cells",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": {
+        "disease_name": "Recessive Parkinsonism",
+        "chpo_id": null,
+        "icd10_code": null,
+        "omim_id": null,
+        "inheritance_pattern": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_032409.3:c.1040T>C",
+        "hgvs_p": "p.Leu347Pro",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "T",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were shown as a control[cite: 122]. Kinase-dead PINK1 was used as a control[cite: 172].",
+        "positive_control_description": "Wild-type PINK1 was used for localization studies[cite: 176].",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 100.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3"
+    ]
+  }
+]

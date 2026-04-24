@@ -1,0 +1,1460 @@
+[
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 0
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3_moderate",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 60
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:21658409"
+    ],
+    "final_evidence_strength": "PS3_moderate",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "SNCA",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_000345.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "MTT assay",
+        "method_description": "Human neuroblastoma, SH-SY5Y cells purchased from ATCC were cultured in Minimum Essential Medium.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": null,
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_000345.4:c.88G>C",
+        "hgvs_p": "p.Ala30Pro",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were used as a basic negative control.",
+        "positive_control_description": "Wild-type (WT) a-Syn was used as a basic positive control.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 0.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_moderate"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 0
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3_moderate",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 60
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:21658409"
+    ],
+    "final_evidence_strength": "PS3_moderate",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "SNCA",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_000345.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "MTT assay",
+        "method_description": "Human neuroblastoma, SH-SY5Y cells purchased from ATCC were cultured in Minimum Essential Medium.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": null,
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_000345.4:c.157G>A",
+        "hgvs_p": "p.Ala53Thr",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were used as a basic negative control.",
+        "positive_control_description": "Wild-type (WT) a-Syn was used as a basic positive control.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 0.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_moderate"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 0
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3_moderate",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 60
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:21658409"
+    ],
+    "final_evidence_strength": "PS3_moderate",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "SNCA",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_000345.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "MTT assay",
+        "method_description": "Human neuroblastoma, SH-SY5Y cells purchased from ATCC were cultured in Minimum Essential Medium.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": null,
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_000345.4:c.136G>A",
+        "hgvs_p": "p.Glu46Lys",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were used as a basic negative control.",
+        "positive_control_description": "Wild-type (WT) a-Syn was used as a basic positive control.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 0.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_moderate"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 0
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 0,
+        "final_evidence_strength": "PS3_supporting",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 40
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:21658409"
+    ],
+    "final_evidence_strength": "PS3_supporting",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "SNCA",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_000345.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Western blot analysis",
+        "method_description": "Stable SH-SY5Y cells overexpressing wild type or familial a-Syn mutants (A30P, E46K and A53T) were subjected to treatments.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": null,
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": null,
+      "variant": {
+        "hgvs_c": "NM_000345.4:c.88G>C",
+        "hgvs_p": "p.Ala30Pro",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were used as a basic negative control.",
+        "positive_control_description": "Wild-type (WT) a-Syn was used as a basic positive control.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 0.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 0.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_supporting"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 0
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 0,
+        "final_evidence_strength": "PS3_supporting",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 40
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:21658409"
+    ],
+    "final_evidence_strength": "PS3_supporting",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "SNCA",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_000345.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Western blot analysis",
+        "method_description": "Stable SH-SY5Y cells overexpressing wild type or familial a-Syn mutants (A30P, E46K and A53T) were subjected to treatments.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": null,
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": null,
+      "variant": {
+        "hgvs_c": "NM_000345.4:c.157G>A",
+        "hgvs_p": "p.Ala53Thr",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were used as a basic negative control.",
+        "positive_control_description": "Wild-type (WT) a-Syn was used as a basic positive control.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 0.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 0.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_supporting"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 0
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 0,
+        "final_evidence_strength": "PS3_supporting",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 40
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:21658409"
+    ],
+    "final_evidence_strength": "PS3_supporting",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "SNCA",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_000345.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Western blot analysis",
+        "method_description": "Stable SH-SY5Y cells overexpressing wild type or familial a-Syn mutants (A30P, E46K and A53T) were subjected to treatments.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": null,
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": null,
+      "variant": {
+        "hgvs_c": "NM_000345.4:c.136G>A",
+        "hgvs_p": "p.Glu46Lys",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were used as a basic negative control.",
+        "positive_control_description": "Wild-type (WT) a-Syn was used as a basic positive control.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 0.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 0.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_supporting"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 0
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 0,
+        "final_evidence_strength": "PS3_supporting",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 40
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:21658409"
+    ],
+    "final_evidence_strength": "PS3_supporting",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "SNCA",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_000345.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunofluorescence microscopy",
+        "method_description": "Cells were seeded onto coverslips and grown to 50%, fixed with 4% (w/v) paraformaldehyde and permeabilized with 0.5% Triton X-100.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": null,
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": null,
+      "variant": {
+        "hgvs_c": "NM_000345.4:c.88G>C",
+        "hgvs_p": "p.Ala30Pro",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were used as a basic negative control.",
+        "positive_control_description": "Wild-type (WT) a-Syn was used as a basic positive control.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 0.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 0.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_supporting"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 0
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 0,
+        "final_evidence_strength": "PS3_supporting",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 40
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:21658409"
+    ],
+    "final_evidence_strength": "PS3_supporting",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "SNCA",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_000345.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunofluorescence microscopy",
+        "method_description": "Cells were seeded onto coverslips and grown to 50%, fixed with 4% (w/v) paraformaldehyde and permeabilized with 0.5% Triton X-100.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": null,
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": null,
+      "variant": {
+        "hgvs_c": "NM_000345.4:c.157G>A",
+        "hgvs_p": "p.Ala53Thr",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were used as a basic negative control.",
+        "positive_control_description": "Wild-type (WT) a-Syn was used as a basic positive control.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 0.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 0.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_supporting"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": null,
+      "ps3_step_1": {
+        "score": 0
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 0,
+        "final_evidence_strength": "PS3_supporting",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 40
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:21658409"
+    ],
+    "final_evidence_strength": "PS3_supporting",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "SNCA",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_000345.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Immunofluorescence microscopy",
+        "method_description": "Cells were seeded onto coverslips and grown to 50%, fixed with 4% (w/v) paraformaldehyde and permeabilized with 0.5% Triton X-100.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": null,
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": null,
+      "variant": {
+        "hgvs_c": "NM_000345.4:c.136G>A",
+        "hgvs_p": "p.Glu46Lys",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were used as a basic negative control.",
+        "positive_control_description": "Wild-type (WT) a-Syn was used as a basic positive control.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 0.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 0.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_supporting"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 0
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3_moderate",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 60
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:21658409"
+    ],
+    "final_evidence_strength": "PS3_moderate",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "SNCA",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_000345.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Flow cytometry",
+        "method_description": "Cells were subjected to acute rotenone or maneb treatments at LC50 concentrations for 48h, or treated with 15mM H2O2, 6h after 2 weeks chronic 5nM rotenone or 150nM maneb treatment.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": null,
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_000345.4:c.88G>C",
+        "hgvs_p": "p.Ala30Pro",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "C",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were used as a basic negative control.",
+        "positive_control_description": "Wild-type (WT) a-Syn was used as a basic positive control.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 0.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_moderate"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 0
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3_moderate",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 60
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:21658409"
+    ],
+    "final_evidence_strength": "PS3_moderate",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "SNCA",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_000345.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Flow cytometry",
+        "method_description": "Cells were subjected to acute rotenone or maneb treatments at LC50 concentrations for 48h, or treated with 15mM H2O2, 6h after 2 weeks chronic 5nM rotenone or 150nM maneb treatment.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": null,
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_000345.4:c.157G>A",
+        "hgvs_p": "p.Ala53Thr",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were used as a basic negative control.",
+        "positive_control_description": "Wild-type (WT) a-Syn was used as a basic positive control.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 0.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_moderate"
+    ]
+  },
+  {
+    "ps3_evidence": {
+      "functional_evidence_aim": "pathogenic",
+      "ps3_step_1": {
+        "score": 0
+      },
+      "ps3_step_2": {
+        "score": 20
+      },
+      "ps3_step_3": {
+        "score": 20,
+        "checkpoint_3a": {
+          "replicates_used": true,
+          "positive_control_present": true,
+          "negative_control_present": true
+        }
+      },
+      "ps3_step_4": {
+        "score": 20,
+        "final_evidence_strength": "PS3_moderate",
+        "oddspath_data": {
+          "computable": false
+        }
+      },
+      "overall_assessment": {
+        "total_score": 60
+      }
+    },
+    "arbitration_confidence": null,
+    "image_descriptions": [],
+    "evidence_sources": [
+      "PMID:21658409"
+    ],
+    "final_evidence_strength": "PS3_moderate",
+    "status": "success",
+    "origin_format_md": null,
+    "en_format_md": null,
+    "extracted_fields": {
+      "gene": {
+        "symbol": "SNCA",
+        "full_name": null,
+        "ncbi_gene_id": null,
+        "ensembl_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "transcript_id": {
+        "transcript_id": "NM_000345.4",
+        "source": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "reference_genome_version": null,
+      "experiment_data": {
+        "assay_type": "Flow cytometry",
+        "method_description": "Cells were subjected to acute rotenone or maneb treatments at LC50 concentrations for 48h, or treated with 15mM H2O2, 6h after 2 weeks chronic 5nM rotenone or 150nM maneb treatment.",
+        "key_findings": null,
+        "statistical_data": null,
+        "sample_size": null,
+        "cell_line": "SH-SY5Y",
+        "model_organism": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "disease_chpo": null,
+      "disease_icd10": null,
+      "species": {
+        "species_name": "Homo sapiens",
+        "is_human": true,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "phenotype": {
+        "phenotype_description": "Abnormal",
+        "hpo_ids": null,
+        "severity": null,
+        "onset_age": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "variant": {
+        "hgvs_c": "NM_000345.4:c.136G>A",
+        "hgvs_p": "p.Glu46Lys",
+        "hgvs_g": null,
+        "chromosome": null,
+        "position": null,
+        "ref_allele": "G",
+        "alt_allele": "A",
+        "variant_type": null,
+        "rs_id": null,
+        "clinvar_id": null,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "negative_positive_control": {
+        "has_negative_control": true,
+        "has_positive_control": true,
+        "negative_control_description": "Untransfected cells were used as a basic negative control.",
+        "positive_control_description": "Wild-type (WT) a-Syn was used as a basic positive control.",
+        "control_variants": null,
+        "total_control_count": 0,
+        "confidence": 100.0,
+        "evidence_quote": null
+      },
+      "pedigree_information": null
+    },
+    "field_confidence_scores": {
+      "gene": 100.0,
+      "transcript_id": 100.0,
+      "reference_genome_version": 0.0,
+      "experiment_data": 100.0,
+      "disease_chpo": 0.0,
+      "disease_icd10": 0.0,
+      "species": 100.0,
+      "phenotype": 100.0,
+      "variant": 100.0,
+      "negative_positive_control": 100.0,
+      "pedigree_information": 0.0
+    },
+    "overall_confidence": 100.0,
+    "evidence_classification": "Pathogenic",
+    "acmg_evidence_levels": [
+      "PS3_moderate"
+    ]
+  }
+]

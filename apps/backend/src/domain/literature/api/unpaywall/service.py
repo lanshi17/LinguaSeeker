@@ -127,13 +127,13 @@ class _UnpaywallHttpClient:
     def __init__(self, email: Optional[str]):
         self.email = email
         self.session = requests.Session()
+        if email:
+            ua = f"ACMG-Lingua/0.1.0 (+mailto:{email}; +https://github.com/yangzhaonan/ACMG-Lingua)"
+        else:
+            ua = "ACMG-Lingua/0.1.0 (+https://github.com/yangzhaonan/ACMG-Lingua)"
         self.session.headers.update(
             {
-                "User-Agent": (
-                    f"literature-backend/1.0 (mailto:{email})"
-                    if email
-                    else "literature-backend/1.0"
-                ),
+                "User-Agent": ua,
                 "Accept": "application/json",
             }
         )
@@ -457,13 +457,17 @@ class UnpaywallService:
         if not pdf_url:
             if not self._email:
                 try:
+                    if self._email:
+                        ua = f"ACMG-Lingua/0.1.0 (+mailto:{self._email}; +https://github.com/yangzhaonan/ACMG-Lingua)"
+                    else:
+                        ua = "ACMG-Lingua/0.1.0 (+https://github.com/yangzhaonan/ACMG-Lingua)"
                     landing = requests.get(
                         f"https://doi.org/{doi}",
                         timeout=60,
                         allow_redirects=True,
                         headers={
                             "Accept": "text/html,application/xhtml+xml",
-                            "User-Agent": "literature-backend/1.0",
+                            "User-Agent": ua,
                         },
                     )
                     if landing.ok:
