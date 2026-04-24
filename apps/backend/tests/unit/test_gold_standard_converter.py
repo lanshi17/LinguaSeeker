@@ -1,16 +1,48 @@
+import importlib.util
 import json
 from pathlib import Path
+from typing import Callable
 
 from src.domain.evidence.gold_standard_converter import convert_gold_standard_payload
 from src.domain.models import EvidenceOutput, ExtractedEvidenceFields
 
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+
+
+def _load_convert_file() -> Callable[[Path, Path, str | None], int]:
+    try:
+        from apps.backend.scripts.convert_gold_standard_json import convert_file
+    except ModuleNotFoundError:
+        script_path = BACKEND_DIR / "scripts" / "convert_gold_standard_json.py"
+        spec = importlib.util.spec_from_file_location("convert_gold_standard_json", script_path)
+        assert spec is not None
+        assert spec.loader is not None
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module.convert_file
+    else:
+        return convert_file
 
 
 def _load_gold_standard_payload() -> dict:
     fixture_path = FIXTURES_DIR / "gold_standard_source_minimal.json"
     return json.loads(fixture_path.read_text(encoding="utf-8"))
+
+
+def test_convert_gold_standard_file_writes_evidence_json(tmp_path: Path) -> None:
+    source = FIXTURES_DIR / "gold_standard_source_minimal.json"
+    target = tmp_path / "14749723.evidence.json"
+    convert_file = _load_convert_file()
+
+    count = convert_file(source, target, source_id="14749723")
+
+    assert count == 1
+    data = json.loads(target.read_text(encoding="utf-8"))
+    assert isinstance(data, list)
+    assert len(data) == 1
+    EvidenceOutput.model_validate(data[0])
 
 
 def test_convert_gold_standard_payload_emits_valid_evidence_output() -> None:
