@@ -65,7 +65,7 @@ describe('EvidenceFieldsPanel', () => {
     expect(screen.getByText('BRCA1')).toBeInTheDocument();
     expect(screen.getByText('Pathogenic')).toBeInTheDocument();
     expect(screen.getByText('strong')).toBeInTheDocument();
-    expect(screen.getByText(/92\.5%/)).toBeInTheDocument();
+    expect(screen.getByText(/92\.5/)).toBeInTheDocument();
     expect(screen.getByText(/✓ Valid/)).toBeInTheDocument();
   });
 

@@ -27,23 +27,31 @@ function asEvidenceSearchData(data: unknown): EvidenceSearchData | null {
   return data as EvidenceSearchData;
 }
 
-function confidenceBadgeStyle(confidence: number): React.CSSProperties {
+// ==================== Shared sub-components ====================
+
+function ConfidenceBadge({ confidence }: { confidence: number }) {
   const color =
     confidence >= 85
       ? 'var(--success)'
       : confidence >= 60
         ? 'var(--warning)'
         : 'var(--muted)';
-  return {
-    display: 'inline-block',
-    padding: '1px 8px',
-    borderRadius: 999,
-    fontSize: 11,
-    fontWeight: 700,
-    border: `1px solid ${color}`,
-    color,
-    marginLeft: 6,
-  };
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        padding: '1px 8px',
+        borderRadius: 999,
+        fontSize: 11,
+        fontWeight: 700,
+        border: `1px solid ${color}`,
+        color,
+        marginLeft: 6,
+      }}
+    >
+      {confidence.toFixed(1)}
+    </span>
+  );
 }
 
 function validBadge(isValid: string | null | undefined) {
@@ -60,8 +68,6 @@ function validBadge(isValid: string | null | undefined) {
     </span>
   );
 }
-
-// ==================== Field sub-renderers ====================
 
 function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
   if (value == null || value === '') return null;
@@ -93,6 +99,8 @@ function QuoteRow({ quote }: { quote: string | null | undefined }) {
   );
 }
 
+// ==================== Field sub-renderers ====================
+
 function renderGene(gene: GeneInfo) {
   return (
     <div>
@@ -100,10 +108,7 @@ function renderGene(gene: GeneInfo) {
       <FieldRow label="Full name" value={gene.full_name} />
       <FieldRow label="NCBI Gene ID" value={gene.ncbi_gene_id} />
       <FieldRow label="Ensembl ID" value={gene.ensembl_id} />
-      <FieldRow
-        label="Confidence"
-        value={<span style={confidenceBadgeStyle(gene.confidence)}>{gene.confidence.toFixed(1)}</span>}
-      />
+      <FieldRow label="Confidence" value={<ConfidenceBadge confidence={gene.confidence} />} />
       <QuoteRow quote={gene.evidence_quote} />
     </div>
   );
@@ -114,10 +119,7 @@ function renderTranscript(t: TranscriptInfo) {
     <div>
       <FieldRow label="Transcript ID" value={t.transcript_id} />
       <FieldRow label="Source" value={t.source} />
-      <FieldRow
-        label="Confidence"
-        value={<span style={confidenceBadgeStyle(t.confidence)}>{t.confidence.toFixed(1)}</span>}
-      />
+      <FieldRow label="Confidence" value={<ConfidenceBadge confidence={t.confidence} />} />
       <QuoteRow quote={t.evidence_quote} />
     </div>
   );
@@ -127,10 +129,7 @@ function renderRefGenome(r: ReferenceGenomeInfo) {
   return (
     <div>
       <FieldRow label="Version" value={r.version} />
-      <FieldRow
-        label="Confidence"
-        value={<span style={confidenceBadgeStyle(r.confidence)}>{r.confidence.toFixed(1)}</span>}
-      />
+      <FieldRow label="Confidence" value={<ConfidenceBadge confidence={r.confidence} />} />
       <QuoteRow quote={r.evidence_quote} />
     </div>
   );
@@ -154,10 +153,7 @@ function renderExperiment(e: ExperimentData) {
           </ul>
         </div>
       )}
-      <FieldRow
-        label="Confidence"
-        value={<span style={confidenceBadgeStyle(e.confidence)}>{e.confidence.toFixed(1)}</span>}
-      />
+      <FieldRow label="Confidence" value={<ConfidenceBadge confidence={e.confidence} />} />
       <QuoteRow quote={e.evidence_quote} />
     </div>
   );
@@ -174,10 +170,7 @@ function renderDisease(d: DiseaseInfo, label: string) {
       <FieldRow label="ICD-10" value={d.icd10_code} />
       <FieldRow label="OMIM ID" value={d.omim_id} />
       <FieldRow label="Inheritance" value={d.inheritance_pattern} />
-      <FieldRow
-        label="Confidence"
-        value={<span style={confidenceBadgeStyle(d.confidence)}>{d.confidence.toFixed(1)}</span>}
-      />
+      <FieldRow label="Confidence" value={<ConfidenceBadge confidence={d.confidence} />} />
       <QuoteRow quote={d.evidence_quote} />
     </div>
   );
@@ -188,10 +181,7 @@ function renderSpecies(s: SpeciesInfo) {
     <div>
       <FieldRow label="Species" value={s.species_name} />
       <FieldRow label="Is human" value={s.is_human ? 'Yes' : 'No'} />
-      <FieldRow
-        label="Confidence"
-        value={<span style={confidenceBadgeStyle(s.confidence)}>{s.confidence.toFixed(1)}</span>}
-      />
+      <FieldRow label="Confidence" value={<ConfidenceBadge confidence={s.confidence} />} />
       <QuoteRow quote={s.evidence_quote} />
     </div>
   );
@@ -204,10 +194,7 @@ function renderPhenotype(p: PhenotypeInfo) {
       <FieldRow label="HPO IDs" value={p.hpo_ids?.join(', ')} />
       <FieldRow label="Severity" value={p.severity} />
       <FieldRow label="Onset age" value={p.onset_age} />
-      <FieldRow
-        label="Confidence"
-        value={<span style={confidenceBadgeStyle(p.confidence)}>{p.confidence.toFixed(1)}</span>}
-      />
+      <FieldRow label="Confidence" value={<ConfidenceBadge confidence={p.confidence} />} />
       <QuoteRow quote={p.evidence_quote} />
     </div>
   );
@@ -226,10 +213,7 @@ function renderVariant(v: VariantInfo) {
       <FieldRow label="Variant type" value={v.variant_type} />
       <FieldRow label="dbSNP rs ID" value={v.rs_id} />
       <FieldRow label="ClinVar ID" value={v.clinvar_id} />
-      <FieldRow
-        label="Confidence"
-        value={<span style={confidenceBadgeStyle(v.confidence)}>{v.confidence.toFixed(1)}</span>}
-      />
+      <FieldRow label="Confidence" value={<ConfidenceBadge confidence={v.confidence} />} />
       <QuoteRow quote={v.evidence_quote} />
     </div>
   );
@@ -239,20 +223,11 @@ function renderControl(c: ControlInfo) {
   return (
     <div>
       <FieldRow label="Negative control" value={c.has_negative_control ? 'Yes' : 'No'} />
-      <FieldRow
-        label="Negative control desc."
-        value={c.negative_control_description}
-      />
+      <FieldRow label="Negative control desc." value={c.negative_control_description} />
       <FieldRow label="Positive control" value={c.has_positive_control ? 'Yes' : 'No'} />
-      <FieldRow
-        label="Positive control desc."
-        value={c.positive_control_description}
-      />
+      <FieldRow label="Positive control desc." value={c.positive_control_description} />
       <FieldRow label="Total control count" value={String(c.total_control_count)} />
-      <FieldRow
-        label="Confidence"
-        value={<span style={confidenceBadgeStyle(c.confidence)}>{c.confidence.toFixed(1)}</span>}
-      />
+      <FieldRow label="Confidence" value={<ConfidenceBadge confidence={c.confidence} />} />
       <QuoteRow quote={c.evidence_quote} />
     </div>
   );
@@ -269,10 +244,7 @@ function renderPedigree(p: PedigreeInfo) {
       />
       <FieldRow label="Segregation data" value={p.segregation_data} />
       <FieldRow label="Inheritance pattern" value={p.inheritance_pattern} />
-      <FieldRow
-        label="Confidence"
-        value={<span style={confidenceBadgeStyle(p.confidence)}>{p.confidence.toFixed(1)}</span>}
-      />
+      <FieldRow label="Confidence" value={<ConfidenceBadge confidence={p.confidence} />} />
       <QuoteRow quote={p.evidence_quote} />
     </div>
   );
@@ -439,9 +411,7 @@ function EvidenceRecordCard({ record, index }: { record: EvidenceRecord; index: 
             </span>
           )}
           {record.overall_confidence != null && (
-            <span style={confidenceBadgeStyle(record.overall_confidence)}>
-              {record.overall_confidence.toFixed(1)}%
-            </span>
+            <ConfidenceBadge confidence={record.overall_confidence} />
           )}
           {validBadge(record.is_valid)}
         </div>
