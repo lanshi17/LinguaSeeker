@@ -23,7 +23,7 @@
 | `extracted_fields` | Object \| null | — | 11 个标准化结构化证据字段（见下节） |
 | `field_confidence_scores` | Object \| null | — | 各字段置信度评分（0–100） |
 | `overall_confidence` | float \| null | — | 总体置信度（0–100） |
-| `evidence_classification` | string \| null | — | 证据分类：`Pathogenic` / `Benign` / `Uncertain` |
+| `evidence_classification` | string \| null | — | 证据分类，当前取值：`Pathogenic`；模型定义允许扩展 |
 | `acmg_evidence_levels` | string[] \| null | — | ACMG 证据等级标签列表（见下方枚举值） |
 
 #### `final_evidence_strength` / `acmg_evidence_levels` 枚举值
@@ -49,10 +49,10 @@
 | `functional_evidence_aim` | string \| null | 功能证据方向：`pathogenic`（致病）或 `benign`（良性） |
 | `ps3_step_1` | Object | 步骤1：定义疾病机制 |
 | `ps3_step_1.score` | number | 步骤1得分 |
-| `ps3_step_1.summary` | string \| null | 步骤1说明 |
+| `ps3_step_1.summary` | string \| null | 步骤1说明（可选，实际数据中常缺省） |
 | `ps3_step_2` | Object | 步骤2：实验方法适用性 |
 | `ps3_step_2.score` | number | 步骤2得分 |
-| `ps3_step_2.summary` | string \| null | 步骤2说明 |
+| `ps3_step_2.summary` | string \| null | 步骤2说明（可选，实际数据中常缺省） |
 | `ps3_step_3` | Object | 步骤3：实验有效性 |
 | `ps3_step_3.score` | number | 步骤3得分 |
 | `ps3_step_3.checkpoint_3a` | Object \| null | 检查点3a：基本对照与重复 |
@@ -68,7 +68,7 @@
 | `ps3_step_4.oddspath_data.functional_evidence_aim` | string \| null | 方向性标注 |
 | `overall_assessment` | Object | 综合评估 |
 | `overall_assessment.total_score` | number | 综合总分 |
-| `overall_assessment.reasoning` | string \| null | 综合推理说明 |
+| `overall_assessment.reasoning` | string \| null | 综合推理说明（可选，实际数据中常缺省） |
 
 ---
 
@@ -387,7 +387,7 @@
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
-| `Disease` | string | 疾病名称，如 `Parkinson disease` |
+| `Described Disease` | string | 疾病名称，如 `Autosomal recessive juvenile parkinsonism` |
 | `MONDO` | string | MONDO 本体 ID，如 `MONDO:0005180` |
 
 ---
@@ -429,8 +429,8 @@
 | 字段名 | 类型 | 说明 |
 |---|---|---|
 | `Variant` | string | 变异 HGVS 字符串 |
-| `Conclusion` | string | 结论：`Abnormal`（异常）/ `Normal`（正常）/ `N.D.`（未判定） |
-| `Molecular Effect` | string | 分子效应：`gain-of-function`（功能获得）/ `loss-of-function`（功能丧失）/ `intermediate effect`（中间效应）/ `N.D.` |
+| `Conclusion` | string | 结论：`Abnormal`（异常）/ `Normal`（正常）/ `N.D.`（未判定）。个别标注存在非标准值（如 `Monoallelic expression`） |
+| `Molecular Effect` | string | 分子效应。常见取值：`gain-of-function`（功能获得）/ `loss-of-function`（功能丧失）/ `partial loss-of-function`（部分功能丧失）/ `complete loss-of-function`（完全功能丧失）/ `dominant-negative`（显性负效应）/ `intermediate effect`（中间效应）/ `No Effect`（无效应）/ `N.D.`（未报告）。注意：大小写和连字符在标注中不完全统一 |
 | `Result Description` | string | 实验结果详细描述 |
 
 ---
