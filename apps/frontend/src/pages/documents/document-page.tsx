@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { EvidenceFieldsPanel } from '../../components/evidence/EvidenceFieldsPanel';
 import { getEvidenceDocument } from '../../services/api';
 import { ApiError } from '../../services/http';
 import { useToastStore } from '../../store/useToastStore';
@@ -132,23 +133,7 @@ export const DocumentPage: React.FC = () => {
           </div>
         ) : (
           <div>
-            <div style={{ fontWeight: 800 }}>Raw payload</div>
-            <div className="muted" style={{ marginTop: 6 }}>
-              The OpenAPI contract returns `data: object` without a stable evidence schema; this view renders the raw payload.
-            </div>
-            <div style={{ marginTop: 10 }}>
-              <pre
-                style={{
-                  overflow: 'auto',
-                  padding: 12,
-                  borderRadius: 12,
-                  border: '1px solid var(--border)',
-                  background: 'rgba(255,255,255,0.03)'
-                }}
-              >
-                {payload ? JSON.stringify(payload.data, null, 2) : JSON.stringify(null, null, 2)}
-              </pre>
-            </div>
+            <EvidenceFieldsPanel data={payload?.data ?? null} />
           </div>
         )}
       </div>
