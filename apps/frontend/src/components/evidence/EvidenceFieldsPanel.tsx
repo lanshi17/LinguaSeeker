@@ -148,7 +148,7 @@ function renderExperiment(e: ExperimentData) {
           <span style={{ color: 'var(--muted)', fontSize: 12, display: 'block' }}>Key findings</span>
           <ul style={{ margin: '2px 0 2px 16px', padding: 0, fontSize: 12 }}>
             {e.key_findings.map((f, i) => (
-              <li key={i}>{f}</li>
+              <li key={`finding-${i}`}>{f}</li>
             ))}
           </ul>
         </div>
@@ -535,7 +535,11 @@ export function EvidenceFieldsPanel({ data }: Props) {
       </div>
 
       {records.map((record, i) => (
-        <EvidenceRecordCard key={record.evidence_id ?? i} record={record} index={i} />
+        <EvidenceRecordCard
+          key={record.evidence_id != null ? `ev-${record.evidence_id}` : `rec-${i}`}
+          record={record}
+          index={i}
+        />
       ))}
     </div>
   );
