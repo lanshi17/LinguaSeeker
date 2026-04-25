@@ -55,6 +55,7 @@ docs/
 - `docs/reference/CHANGE_CONTROL.md`
 - `docs/reference/CONSTANTS.md`
 - `docs/reference/EVALUATION_FRAMEWORK.md`
+- `docs/reference/EVIDENCE_JSON_SCHEMA.md`：证据 JSON 字段完整说明
 - `docs/reference/PS3_BS3_VALIDATION_REPORT.md`
 - `docs/reference/v1.0-release-report.md`
 - `docs/reference/backend/README.md`
@@ -105,6 +106,7 @@ docs/
 **参考与发布**
 - [reference/CONSTANTS.md](./reference/CONSTANTS.md)
 - [reference/CHANGE_CONTROL.md](./reference/CHANGE_CONTROL.md)
+- [reference/EVIDENCE_JSON_SCHEMA.md](./reference/EVIDENCE_JSON_SCHEMA.md)
 - [reference/v1.0-release-report.md](./reference/v1.0-release-report.md)
 
 ## 维护规则
@@ -115,4 +117,4 @@ docs/
 
 ---
 
-**最后更新**: 2026-04-13
+**最后更新**: 2026-04-25
