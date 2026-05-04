@@ -68,7 +68,7 @@ Services: frontend at `:3000`, backend at `:8000`, PostgreSQL at `:5432`, Redis 
 
 - **Package managers**: Python uses `uv`; Node.js uses `nvm` + `npm`; Rust uses `cargo`. Never use system-level pip or global installs.
 - **Branch strategy**: `dev` is the primary branch. `master` is merged manually only.
-- **Linting**: Backend enforces Ruff (line-length 120, Python 3.11 target). Frontend uses ESLint with `eslint-config-next`.
+- **Linting**: Backend enforces Ruff (line-length 120, Python 3.12 target). Frontend uses ESLint with `eslint-config-next`.
 - **Logging**: Use `loguru` (Python). Log files go to `logs/` with timestamp naming.
 - **Testing**: `pytest` for backend, located in `backend/tests/`.
 - **Progress tracking**: Update `progress.txt` at root after each task milestone.

@@ -7,7 +7,7 @@ ACMG variant classification and interpretation platform.
 | Layer | Technology |
 |-------|-----------|
 | Frontend | Next.js 15, React 18, TypeScript, Tailwind CSS, Zustand, React Query |
-| Backend | Python 3.11+, FastAPI, SQLAlchemy, Alembic, Celery |
+| Backend | Python 3.12+, FastAPI, SQLAlchemy, Alembic, Celery |
 | Native I/O | Rust (PyO3 extension via `backend/libs/rust-io/`) |
 | Database | PostgreSQL 16, Redis 8.0 |
 | Infra | Docker Compose |
@@ -45,7 +45,7 @@ ACMG variant classification and interpretation platform.
 
 - Docker & Docker Compose
 - Node.js 18+ (managed via `nvm`)
-- Python 3.11+ (managed via `uv`)
+- Python 3.12+ (managed via `uv`)
 - Rust toolchain (for native I/O library)
 
 ### Run with Docker
