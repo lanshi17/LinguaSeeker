@@ -50,6 +50,9 @@ htmlcov/
 .pytest_cache/
 .coverage
 
+# Old version reference symlinks
+.old_version
+
 # Misc
 *.bak
 *.tmp
