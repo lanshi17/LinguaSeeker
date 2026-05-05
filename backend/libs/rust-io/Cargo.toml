@@ -2,11 +2,20 @@
 name = "rust-io"
 version = "0.1.0"
 edition = "2024"
+description = "High-performance I/O module for ACMG Lingua"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 name = "rust_io"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-pyo3 = "0.28.2"
+pyo3 = { version = "0.28.2", features = ["extension-module"] }
+pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
+reqwest = { version = "0.13", features = ["json", "rustls", "gzip", "socks"], default-features = false }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+scraper = "0.26"
+thiserror = "2"
+url = "2"
+pythonize = "0.28"
