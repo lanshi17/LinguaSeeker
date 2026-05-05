@@ -64,46 +64,4 @@ docker compose up
 
 Services: frontend at `:3000`, backend at `:8000`, PostgreSQL at `:5432`, Redis at `:6379`.
 
-## Key Conventions
-
-- **Package managers**: Python uses `uv`; Node.js uses `nvm` + `npm`; Rust uses `cargo`. Never use system-level pip or global installs.
-- **Branch strategy**: `dev` is the primary branch. `master` is merged manually only.
-- **Linting**: Backend enforces Ruff (line-length 120, Python 3.12 target). Frontend uses ESLint with `eslint-config-next`.
-- **Logging**: Use `loguru` (Python). Log files go to `logs/` with timestamp naming.
-- **Testing**: `pytest` for backend, located in `backend/tests/`.
-- **Progress tracking**: Update `progress.txt` at root after each task milestone.
-- **Lessons learned**: Document debugging/iteration retrospectives in `lesson.md`.
-- **Documentation**: All docs in `docs/`. Archive completed/outdated docs to `docs/archive/`.
-- **Scripts**: Initialization and startup scripts go in `scripts/`.
-- **Deploy configs**: Container and orchestration files go in `deploy/`.
-
-## Directory Layout
-
-```
-.
-├── backend/
-│   ├── app/
-│   │   ├── api/        # FastAPI route handlers
-│   │   ├── core/       # Config, security, dependencies
-│   │   ├── models/     # SQLAlchemy ORM models
-│   │   ├── schemas/    # Pydantic request/response schemas
-│   │   ├── services/   # Business logic layer
-│   │   ├── tasks/      # Celery task definitions
-│   │   └── utils/      # Shared utilities
-│   ├── alembic/        # DB migration scripts
-│   ├── libs/rust-io/   # PyO3 native extension
-│   ├── tests/          # pytest test suite
-│   └── pyproject.toml
-├── frontend/
-│   ├── app/            # Next.js App Router pages
-│   ├── components/     # React components (ui/, charts/, forms/, layout/)
-│   ├── lib/            # Utilities, hooks, types, API clients
-│   ├── styles/         # Global styles
-│   └── tests/          # Frontend tests
-├── database/
-│   ├── migrations/     # Raw SQL migration scripts
-│   └── seeds/          # Seed data
-├── services/           # External service configurations
-├── docs/               # Project documentation
-└── docker-compose.yml
-```
+For project rules and agent behaviors, please refer to AGENTS.md.
