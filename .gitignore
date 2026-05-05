@@ -56,3 +56,4 @@ htmlcov/
 # Misc
 *.bak
 *.tmp
+backend/.cache_ggshield
