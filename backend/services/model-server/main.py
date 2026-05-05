@@ -1,0 +1,74 @@
+"""Model server entry point.
+
+Usage:
+    uv run python main.py                 # default port 8001
+    uv run python main.py --port 8002     # custom port
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+# ── Ensure app is importable ─────────────────────────────────────────────
+sys.path.insert(0, str(Path(__file__).parent))
+
+from fastapi import FastAPI
+
+from app.api import chat, embedding, health, rerank
+from app.config import get_config
+from app.domain.embedding import EmbeddingService
+from app.domain.llm import LLMService
+from app.domain.rerank import RerankService
+from app.utils.logger import get_logger, request_monitor_middleware_factory, setup_logging
+
+setup_logging()
+logger = get_logger()
+
+# ── Build services ───────────────────────────────────────────────────────
+
+cfg = get_config()
+
+_embedding_svc = EmbeddingService(model_id=cfg.embedding_model_id)
+_rerank_svc = RerankService(model_id=cfg.rerank_model_id)
+_llm_svc = LLMService(model_id=cfg.llm_model_id) if cfg.llm_model_id else None
+
+# Wire services into API routes
+embedding.bind(_embedding_svc)
+rerank.bind(_rerank_svc)
+if _llm_svc:
+    chat.bind(_llm_svc)
+
+# Register services for health checks
+health.register_services({
+    "embedding": _embedding_svc,
+    "rerank": _rerank_svc,
+    **({"llm": _llm_svc} if _llm_svc else {}),
+})
+
+# ── Assemble FastAPI app ─────────────────────────────────────────────────
+
+app = FastAPI(title="ACMG-Lingua Model Server", version="1.0.0")
+app.add_middleware(request_monitor_middleware_factory())
+
+app.include_router(embedding.router)
+app.include_router(rerank.router)
+app.include_router(chat.router)
+app.include_router(health.router)
+
+# ── Run ──────────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    import uvicorn
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", default=cfg.host)
+    parser.add_argument("--port", type=int, default=cfg.port)
+    args = parser.parse_args()
+
+    logger.info("Starting model server on {host}:{port}", host=args.host, port=args.port)
+    logger.info("  Embedding : {id}", id=cfg.embedding_model_id)
+    logger.info("  Rerank    : {id}", id=cfg.rerank_model_id)
+    logger.info("  LLM       : {id}", id=cfg.llm_model_id or "(not configured)")
+    uvicorn.run(app, host=args.host, port=args.port, log_level=cfg.log_level)
