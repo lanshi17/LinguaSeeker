@@ -1,13 +1,20 @@
+mod error;
+mod types;
+mod client;
+mod providers;
+mod scraper;
+mod py;
+
 use pyo3::prelude::*;
 
-/// A Python module implemented in Rust.
 #[pymodule]
-mod rust_io {
-    use pyo3::prelude::*;
-
-    /// Formats the sum of two numbers as string.
-    #[pyfunction]
-    fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
-        Ok((a + b).to_string())
-    }
+fn rust_io(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    let literature = PyModule::new(m.py(), "literature")?;
+    
+    literature.add_function(wrap_pyfunction!(py::fetch_one, &literature)?)?;
+    literature.add_function(wrap_pyfunction!(py::fetch_multi, &literature)?)?;
+    literature.add_function(wrap_pyfunction!(py::scrape_web, &literature)?)?;
+    
+    m.add_submodule(&literature)?;
+    Ok(())
 }
