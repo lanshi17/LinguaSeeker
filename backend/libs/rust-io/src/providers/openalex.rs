@@ -1,6 +1,6 @@
 use crate::client::HttpClient;
 use crate::error::GatewayError;
-use crate::types::{Action, FetchParams, FetchResult};
+use crate::types::FetchResult;
 
 pub struct OpenAlexProvider;
 
