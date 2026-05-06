@@ -1446,22 +1446,53 @@ git commit -m "test(rust-io): add Python integration tests"
 
 ## Summary
 
-| Task | Description | Dependencies |
-|------|-------------|--------------|
-| 1 | Add Cargo dependencies | — |
-| 2 | Shared types (error, result) | 1 |
-| 3 | HTTP client (retry, proxy) | 2 |
-| 4 | Crossref provider | 3 |
-| 5 | Unpaywall provider | 3 |
-| 6 | PMC provider | 3 |
-| 7 | DOAJ provider | 3 |
-| 8 | OpenAlex provider | 3 |
-| 9 | EuropePMC provider | 3 |
-| 10 | JStage provider | 3 |
-| 11 | HTML web scraper | 3 |
-| 12 | PyO3-async bindings | 4-11 |
-| 13 | Rust tests | 12 |
-| 14 | Build + smoke test | 12 |
-| 15 | Python integration tests | 14 |
+| Task | Description | Dependencies | Status |
+|------|-------------|--------------|--------|
+| 1 | Add Cargo dependencies | — | ✅ COMPLETED |
+| 2 | Shared types (error, result) | 1 | ✅ COMPLETED |
+| 3 | HTTP client (retry, proxy) | 2 | ✅ COMPLETED |
+| 4 | Crossref provider | 3 | ✅ COMPLETED |
+| 5 | Unpaywall provider | 3 | ❌ NOT IMPLEMENTED |
+| 6 | PMC provider | 3 | ✅ COMPLETED |
+| 7 | DOAJ provider | 3 | ❌ NOT IMPLEMENTED |
+| 8 | OpenAlex provider | 3 | ✅ COMPLETED |
+| 9 | EuropePMC provider | 3 | ✅ COMPLETED |
+| 10 | JStage provider | 3 | ❌ NOT IMPLEMENTED |
+| 11 | HTML web scraper | 3 | ✅ COMPLETED |
+| 12 | PyO3-async bindings | 4-11 | ✅ COMPLETED |
+| 13 | Rust tests | 12 | ❌ NOT IMPLEMENTED |
+| 14 | Build + smoke test | 12 | ⚠️ PARTIAL (build artifacts exist) |
+| 15 | Python integration tests | 14 | ❌ NOT IMPLEMENTED |
 
-Tasks 4-10 are independent and can be parallelized. Total: ~15 tasks, ~16 commits.
+### Implementation Status: 9/15 tasks complete (60%)
+
+**Source files implemented:**
+- `src/lib.rs` — PyO3 module with `rust_io.literature` submodule
+- `src/error.rs` — `GatewayError` enum with thiserror + PyErr conversion
+- `src/types.rs` — `Action`, `Identifiers`, `FetchParams`, `FetchResult`
+- `src/client.rs` — `HttpClient` with retry, timeout, gzip, SOCKS proxy
+- `src/providers/mod.rs` — Provider module (4 providers: crossref, openalex, europepmc, pmc)
+- `src/providers/crossref.rs` — Crossref search via `/works` API
+- `src/providers/pmc.rs` — PMC search + PDF URL resolution
+- `src/providers/openalex.rs` — OpenAlex search + download URLs
+- `src/providers/europepmc.rs` — EuropePMC search + fulltext XML URLs
+- `src/scraper.rs` — Static HTML scraper for pubscholar, cyberleninka, hans_publishers
+- `src/py.rs` — PyO3 bindings for `fetch_one`, `fetch_multi`, `scrape_web`
+- `Cargo.toml` — Dependencies (pyo3 0.28, pyo3-async-runtimes 0.28, reqwest 0.13, tokio, serde, scraper 0.26, thiserror 2, url, pythonize)
+- `pyproject.toml` — Maturin build system config
+
+**Missing provider implementations:**
+- `src/providers/unpaywall.rs` — Unpaywall DOI lookup (Task 5)
+- `src/providers/doaj.rs` — DOAJ article search (Task 7)
+- `src/providers/jstage.rs` — JStage search + PDF candidates (Task 10)
+
+**Missing test coverage:**
+- `tests/test_types.rs` — Rust unit tests (Task 13)
+- `tests/test_integration.py` — Python integration tests (Task 15)
+
+**Notable deviations from plan:**
+- Uses `pyo3-async-runtimes` 0.28 instead of `pyo3-async` 0.22
+- Uses `reqwest` 0.13 instead of 0.12
+- Uses `scraper` 0.26 instead of 0.22
+- Scraper is `src/scraper.rs` (single file) instead of `src/scraper/mod.rs`
+- No `async-trait` crate — providers use direct trait impls without `#[async_trait]`

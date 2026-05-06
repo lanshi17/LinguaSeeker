@@ -14,7 +14,7 @@ pub enum GatewayError {
     #[error("Provider '{provider}' error: {message}")]
     Provider { provider: String, message: String },
 
-    #[error("{0}")] 
+    #[error("{0}")]
     Other(String),
 }
 
