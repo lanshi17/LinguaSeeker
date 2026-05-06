@@ -15,7 +15,7 @@ class EmbeddingService(BaseModelService):
         super().__init__(model_id)
 
     def _load(self) -> None:
-        self._model = SentenceTransformer(self._model_id, local_files_only=True)
+        self._model = SentenceTransformer(self._model_id, device=self._device, local_files_only=True)
 
     def infer(self, texts: list[str], normalize: bool = True) -> np.ndarray:
         self.ensure_loaded()

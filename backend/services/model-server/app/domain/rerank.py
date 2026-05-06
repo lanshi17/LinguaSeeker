@@ -15,7 +15,7 @@ class RerankService(BaseModelService):
         super().__init__(model_id)
 
     def _load(self) -> None:
-        self._model = CrossEncoder(self._model_id, local_files_only=True)
+        self._model = CrossEncoder(self._model_id, device=self._device, local_files_only=True)
 
     def infer(self, query: str, documents: list[str]) -> np.ndarray:
         self.ensure_loaded()
