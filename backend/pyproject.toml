@@ -19,6 +19,7 @@ dependencies = [
     "requests[socks]>=2.33.1",
     "pysocks>=1.7.1",
     "torch>=2.11.0",
+    "crawl4ai>=0.8.6",
 ]
 
 [project.optional-dependencies]
