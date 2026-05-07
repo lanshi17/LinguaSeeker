@@ -147,4 +147,78 @@ impl File {
             }
         }
     }
+
+    fn compress(&self, output_path: &str, format: &str) -> PyResult<u64> {
+        let count = match format {
+            "zip" => crate::archive::zip::compress_dir(&self.path, output_path)?,
+            "tar" => crate::archive::tar_gz::compress_tar(&self.path, output_path)?,
+            "tar.gz" | "tgz" => crate::archive::tar_gz::compress_tar_gz(&self.path, output_path)?,
+            _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                format!("unsupported format: {format}. Use zip, tar, or tar.gz")
+            )),
+        };
+        Ok(count)
+    }
+
+    fn extract(&self, output_dir: &str) -> PyResult<u64> {
+        let path_lower = self.path.to_lowercase();
+        let count = if path_lower.ends_with(".zip") {
+            crate::archive::zip::extract(&self.path, output_dir)?
+        } else if path_lower.ends_with(".tar.gz") || path_lower.ends_with(".tgz") {
+            crate::archive::tar_gz::extract_tar_gz(&self.path, output_dir)?
+        } else if path_lower.ends_with(".tar") {
+            crate::archive::tar_gz::extract_tar(&self.path, output_dir)?
+        } else {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                format!("cannot detect archive format from path: {}", self.path)
+            ));
+        };
+        Ok(count)
+    }
+
+    fn copy_async<'py>(&self, py: Python<'py>, dst: String) -> PyResult<Bound<'py, PyAny>> {
+        let path = self.path.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            tokio::task::spawn_blocking(move || {
+                let local = LocalBackend::new();
+                local.copy(&path, &dst).map_err(FileError::from)
+            }).await.map_err(|e| FileError::Other(e.to_string()))?
+            .map_err(FileError::from)?;
+            Ok(())
+        })
+    }
+
+    fn compress_async<'py>(&self, py: Python<'py>, output_path: String, format: String) -> PyResult<Bound<'py, PyAny>> {
+        let dir = self.path.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let count = tokio::task::spawn_blocking(move || {
+                match format.as_str() {
+                    "zip" => crate::archive::zip::compress_dir(&dir, &output_path),
+                    "tar" => crate::archive::tar_gz::compress_tar(&dir, &output_path),
+                    "tar.gz" | "tgz" => crate::archive::tar_gz::compress_tar_gz(&dir, &output_path),
+                    _ => Err(FileError::Archive(format!("unsupported format: {format}"))),
+                }
+            }).await.map_err(|e| FileError::Other(e.to_string()))??;
+            Ok(count)
+        })
+    }
+
+    fn extract_async<'py>(&self, py: Python<'py>, output_dir: String) -> PyResult<Bound<'py, PyAny>> {
+        let path = self.path.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let count = tokio::task::spawn_blocking(move || {
+                let path_lower = path.to_lowercase();
+                if path_lower.ends_with(".zip") {
+                    crate::archive::zip::extract(&path, &output_dir)
+                } else if path_lower.ends_with(".tar.gz") || path_lower.ends_with(".tgz") {
+                    crate::archive::tar_gz::extract_tar_gz(&path, &output_dir)
+                } else if path_lower.ends_with(".tar") {
+                    crate::archive::tar_gz::extract_tar(&path, &output_dir)
+                } else {
+                    Err(FileError::Archive(format!("cannot detect format: {path}")))
+                }
+            }).await.map_err(|e| FileError::Other(e.to_string()))??;
+            Ok(count)
+        })
+    }
 }
