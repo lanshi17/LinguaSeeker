@@ -1,4 +1,4 @@
-use crate::backends::{local::LocalBackend, s3::S3Backend, FileMetadata, FileOps};
+use crate::backends::{local::LocalBackend, s3::S3Backend, FileOps};
 use crate::error::FileError;
 use crate::hash;
 use pyo3::prelude::*;
@@ -181,9 +181,8 @@ impl File {
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             tokio::task::spawn_blocking(move || {
                 let local = LocalBackend::new();
-                local.copy(&path, &dst).map_err(FileError::from)
-            }).await.map_err(|e| FileError::Other(e.to_string()))?
-            .map_err(FileError::from)?;
+                local.copy(&path, &dst)
+            }).await.map_err(|e| FileError::Other(e.to_string()))??;
             Ok(())
         })
     }

@@ -17,6 +17,7 @@ pub struct FileMetadata {
 }
 
 /// Trait for local and S3 backends.
+#[allow(dead_code)]
 pub trait FileOps: Send + Sync {
     fn read_all(&self, path: &str) -> Result<Vec<u8>, FileError>;
     fn read_chunk(&self, path: &str, offset: u64, size: u64) -> Result<Vec<u8>, FileError>;

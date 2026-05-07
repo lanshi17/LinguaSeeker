@@ -32,20 +32,16 @@ impl FileOps for LocalBackend {
     }
 
     fn write(&self, path: &str, data: &[u8], create_parents: bool) -> Result<(), FileError> {
-        if create_parents {
-            if let Some(parent) = Path::new(path).parent() {
-                fs::create_dir_all(parent)?;
-            }
+        if create_parents && let Some(parent) = Path::new(path).parent() {
+            fs::create_dir_all(parent)?;
         }
         fs::write(path, data)?;
         Ok(())
     }
 
     fn write_stream(&self, path: &str, reader: &mut dyn Read, create_parents: bool) -> Result<(), FileError> {
-        if create_parents {
-            if let Some(parent) = Path::new(path).parent() {
-                fs::create_dir_all(parent)?;
-            }
+        if create_parents && let Some(parent) = Path::new(path).parent() {
+            fs::create_dir_all(parent)?;
         }
         let mut file = fs::File::create(path)?;
         let mut buf = [0u8; 1024 * 1024];
