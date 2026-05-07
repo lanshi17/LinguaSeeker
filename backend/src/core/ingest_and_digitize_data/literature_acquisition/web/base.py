@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urljoin, urlparse
 
 import httpx
-from bs4 import BeautifulSoup
+from selectolax.parser import HTMLParser
 
 
 def safe_json_loads(text: str) -> Any:
@@ -33,7 +33,7 @@ def sanitize_filename(name: str) -> str:
 
 
 def extract_pdf_links_from_html(html: str, base_url: str) -> List[str]:
-    """Extract PDF links from HTML. Uses Rust parser when available, falls back to BeautifulSoup."""
+    """Extract PDF links from HTML. Uses Rust parser when available, falls back to selectolax."""
     if not html:
         return []
     try:
@@ -41,24 +41,22 @@ def extract_pdf_links_from_html(html: str, base_url: str) -> List[str]:
         return rust_io.literature.extract_pdf_links(html, base_url)
     except (ImportError, Exception):
         pass
-    # Fallback: BeautifulSoup
-    soup = BeautifulSoup(html, "html.parser")
+    # Fallback: selectolax
+    tree = HTMLParser(html)
     links = []
-    for a in soup.find_all("a", href=True):
-        href = a["href"].strip()
+    for node in tree.css("a[href]"):
+        href = (node.attributes.get("href") or "").strip()
         if ".pdf" in href.lower():
             links.append(urljoin(base_url, href))
-    for meta in soup.find_all("meta"):
-        name = (meta.get("name") or "").lower()
-        if name == "citation_pdf_url":
-            content = (meta.get("content") or "").strip()
-            if content:
-                links.append(urljoin(base_url, content))
+    for node in tree.css("meta[name='citation_pdf_url']"):
+        content = (node.attributes.get("content") or "").strip()
+        if content:
+            links.append(urljoin(base_url, content))
     return list(dict.fromkeys(links))
 
 
 def scrape_html_elements(html: str, css_selector: str) -> List[Dict[str, Any]]:
-    """Parse HTML with CSS selector. Uses Rust when available."""
+    """Parse HTML with CSS selector. Uses Rust when available, falls back to selectolax."""
     if not html:
         return []
     try:
@@ -66,16 +64,16 @@ def scrape_html_elements(html: str, css_selector: str) -> List[Dict[str, Any]]:
         return rust_io.literature.scrape_html(html, css_selector)
     except (ImportError, Exception):
         pass
-    # Fallback: BeautifulSoup
-    soup = BeautifulSoup(html, "html.parser")
+    # Fallback: selectolax
+    tree = HTMLParser(html)
     return [
         {
-            "text": el.get_text(" ", strip=True),
-            "html": str(el),
-            "tag_name": el.name,
-            "attrs": dict(el.attrs),
+            "text": node.text(deep=True, separator=" ").strip(),
+            "html": node.html,
+            "tag_name": node.tag,
+            "attrs": dict(node.attributes) if node.attributes else {},
         }
-        for el in soup.select(css_selector)
+        for node in tree.css(css_selector)
     ]
 
 
