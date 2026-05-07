@@ -15,7 +15,7 @@ from src.core.ingest_and_digitize_data.literature_acquisition.normalizers import
 
 class TestNormalizerRegistry:
     def test_all_providers_registered(self):
-        expected = {"crossref", "unpaywall", "pmc", "jstage", "doaj", "openalex", "europepmc"}
+        expected = {"crossref", "unpaywall", "pmc", "jstage", "doaj", "openalex", "europepmc", "pubscholar", "cyberleninka", "hans_publishers"}
         assert set(NORMALIZER_MAP.keys()) == expected
 
     def test_normalize_items_unknown_provider(self):

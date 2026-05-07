@@ -4,3 +4,4 @@
 [2026-05-07] PDF download: wired _download_pdf_from_candidates into download_from_provider. Frontiers OA paper (10.3389/fimmu.2025.1655475) downloads successfully (2.1MB). Chinese paywall papers return resolved_url only. [completed]
 [2026-05-07] PMC provider: added esummary metadata fetch after esearch. PMC normalizer handles esummary format. Full test suite: 11/11 API papers pass, 3 PDFs downloaded (jstage/unpaywall). Web papers (4) need crawl4ai integration. [completed]
 [2026-05-07] Language-organized downloads: workflow resolves language from request or DOI domain, appends lang code to download_path (e.g. downloads/v1.1/en/, downloads/v1.1/ja/). 11/11 API tests pass. [completed]
+[2026-05-07] Web crawling: implemented pubscholar/cyberleninka/hans_publishers providers with crawl4ai integration, rust-io scraper extended with CSS selector + PDF link extraction, unit tests added. [completed]
