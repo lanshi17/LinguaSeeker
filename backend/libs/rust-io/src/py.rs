@@ -104,6 +104,29 @@ fn parse_action(action: &str) -> Result<Action, GatewayError> {
     }
 }
 
+#[pyfunction]
+#[pyo3(signature = (html, css_selector))]
+pub fn scrape_html<'py>(
+    py: Python<'py>,
+    html: &str,
+    css_selector: &str,
+) -> PyResult<Bound<'py, PyAny>> {
+    let result = crate::scraper::scrape_html(html, css_selector)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+    pythonize::pythonize(py, &result).map_err(PyErr::from)
+}
+
+#[pyfunction]
+#[pyo3(signature = (html, base_url))]
+pub fn extract_pdf_links<'py>(
+    py: Python<'py>,
+    html: &str,
+    base_url: &str,
+) -> PyResult<Bound<'py, PyAny>> {
+    let links = crate::scraper::extract_pdf_links(html, base_url);
+    pythonize::pythonize(py, &links).map_err(PyErr::from)
+}
+
 fn py_err(e: PyErr) -> GatewayError {
     GatewayError::Other(e.to_string())
 }
