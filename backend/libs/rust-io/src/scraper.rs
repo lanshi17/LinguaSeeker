@@ -110,6 +110,89 @@ pub async fn scrape_provider(
     })
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_scrape_html_finds_elements() {
+        let html = r#"<html><body><div class="item">Hello</div><div class="item">World</div></body></html>"#;
+        let result = scrape_html(html, "div.item").unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0]["text"], "Hello");
+        assert_eq!(result[1]["text"], "World");
+    }
+
+    #[test]
+    fn test_scrape_html_empty_selector() {
+        let html = "<html><body><p>Test</p></body></html>";
+        let result = scrape_html(html, "div.missing").unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_scrape_html_invalid_selector() {
+        let html = "<html><body></body></html>";
+        let result = scrape_html(html, ">>invalid");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_scrape_html_preserves_attrs() {
+        let html = r#"<a href="https://example.com" class="link">Click</a>"#;
+        let result = scrape_html(html, "a").unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0]["attrs"]["href"], "https://example.com");
+        assert_eq!(result[0]["attrs"]["class"], "link");
+    }
+
+    #[test]
+    fn test_extract_pdf_links_from_anchor() {
+        let html = r#"<html><body><a href="paper.pdf">Download</a><a href="other.html">Link</a></body></html>"#;
+        let links = extract_pdf_links(html, "https://example.com");
+        assert_eq!(links.len(), 1);
+        assert!(links[0].contains("paper.pdf"));
+    }
+
+    #[test]
+    fn test_extract_pdf_links_from_meta() {
+        let html = r#"<html><head><meta name="citation_pdf_url" content="https://example.com/paper.pdf"></head></html>"#;
+        let links = extract_pdf_links(html, "https://example.com");
+        assert_eq!(links.len(), 1);
+        assert_eq!(links[0], "https://example.com/paper.pdf");
+    }
+
+    #[test]
+    fn test_extract_pdf_links_resolves_relative() {
+        let html = r#"<a href="/files/paper.pdf">PDF</a>"#;
+        let links = extract_pdf_links(html, "https://example.com/page");
+        assert_eq!(links.len(), 1);
+        assert_eq!(links[0], "https://example.com/files/paper.pdf");
+    }
+
+    #[test]
+    fn test_extract_pdf_links_dedupes() {
+        let html = r#"<a href="paper.pdf">A</a><a href="paper.pdf">B</a>"#;
+        let links = extract_pdf_links(html, "https://example.com");
+        assert_eq!(links.len(), 1);
+    }
+
+    #[test]
+    fn test_extract_pdf_links_empty() {
+        let html = "<html><body><a href=\"page.html\">Link</a></body></html>";
+        let links = extract_pdf_links(html, "https://example.com");
+        assert!(links.is_empty());
+    }
+
+    #[test]
+    fn test_extract_pdf_links_download_pdf_pattern() {
+        let html = r#"<a href="/download/pdf/12345">Download PDF</a>"#;
+        let links = extract_pdf_links(html, "https://example.com");
+        assert_eq!(links.len(), 1);
+        assert!(links[0].contains("download/pdf/12345"));
+    }
+}
+
 pub struct WebScraper;
 
 impl WebScraper {
