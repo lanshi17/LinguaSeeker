@@ -17,7 +17,7 @@ from .contracts import (
 from .doi_fallback import doi_fallback_download, probe_doi_landing_page
 from .gateway import _normalize_doi, download_from_provider, search_provider
 from .normalizers import normalize_items
-from .web_providers import WebGatewayRequest, call_web_provider
+from .web_providers import call_web_provider
 
 DOI_PATTERN = re.compile(r"\b10\.\d{4,9}/[^\s\"<>]+", re.IGNORECASE)
 PMCID_PATTERN = re.compile(r"\bPMC\d+\b", re.IGNORECASE)
@@ -316,7 +316,7 @@ async def _handle_download(
     # Web fallback
     if request.prefer in ("auto", "web"):
         web_provider = request.web_provider or "pubscholar"
-        web_request = WebGatewayRequest(
+        web_result = await call_web_provider(
             provider=web_provider,
             action="download",
             query=query,
@@ -327,7 +327,6 @@ async def _handle_download(
             detail_link=request.detail_link,
             params=request.web_params,
         )
-        web_result = await call_web_provider(web_request)
         all_results.append(web_result)
         warnings.extend(web_result.warnings)
         if web_result.success and web_result.downloads:
