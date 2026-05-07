@@ -12,6 +12,7 @@ from src.core.ingest_and_digitize_data.literature_acquisition.web.base import (
     safe_json_loads,
     sanitize_filename,
     extract_pdf_links_from_html,
+    scrape_html_elements,
     choose_item,
     build_js_helpers,
     resolve_llm_config,
@@ -157,3 +158,24 @@ class TestResolveLlmConfig:
         provider, key = resolve_llm_config()
         assert provider == "openai"
         assert key == "test-key"
+
+
+class TestRustIntegration:
+    def test_extract_pdf_links_rust_or_fallback(self):
+        """Verify extract_pdf_links_from_html works (Rust or BS4 fallback)."""
+        html = '<a href="paper.pdf">Download</a><a href="other.html">Link</a>'
+        links = extract_pdf_links_from_html(html, "https://example.com")
+        assert len(links) == 1
+        assert "paper.pdf" in links[0]
+
+    def test_extract_pdf_links_meta_rust_or_fallback(self):
+        html = '<meta name="citation_pdf_url" content="https://example.com/paper.pdf">'
+        links = extract_pdf_links_from_html(html, "https://example.com")
+        assert len(links) == 1
+        assert links[0] == "https://example.com/paper.pdf"
+
+    def test_scrape_html_elements(self):
+        html = '<html><body><div class="item">Hello</div><div class="item">World</div></body></html>'
+        result = scrape_html_elements(html, "div.item")
+        assert len(result) == 2
+        assert result[0]["text"] == "Hello"
