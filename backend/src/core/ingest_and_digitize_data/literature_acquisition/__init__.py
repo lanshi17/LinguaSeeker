@@ -21,7 +21,7 @@ from .gateway import (
 from .normalizers import normalize_items
 from .pubmed_service import PubMedArticle, PubMedCandidate, PubMedService, get_pubmed_service
 from .search_service import build_provider_plan, search_multilingual
-from .web_providers import WebGatewayRequest, call_web_provider
+from .web_providers import call_web_provider
 from .workflow import literature_workflow
 
 __all__ = [
@@ -46,7 +46,6 @@ __all__ = [
     "PubMedArticle",
     "get_pubmed_service",
     # Web providers
-    "WebGatewayRequest",
     "call_web_provider",
     # Search
     "build_provider_plan",

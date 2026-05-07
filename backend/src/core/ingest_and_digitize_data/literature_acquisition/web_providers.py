@@ -1,33 +1,13 @@
-"""Web provider (pubscholar/cyberleninka/hans_publishers) via crawl4ai.
-
-These providers use JavaScript-rendered web scraping. They depend on crawl4ai
-(Playwright-based) for full browser automation.
-"""
+"""Web provider dispatcher — routes to pubscholar/cyberleninka/hans_publishers."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal
 
 from .contracts import GatewayResult, SourceTraceEntry
 
 WebProvider = Literal["pubscholar", "cyberleninka", "hans_publishers"]
 ActionStrategy = Literal["search", "download"]
-
-
-@dataclass
-class WebGatewayRequest:
-    """Request for web provider call."""
-
-    provider: WebProvider
-    action: ActionStrategy = "search"
-    query: Optional[str] = None
-    limit: int = 20
-    params: Dict[str, Any] = field(default_factory=dict)
-    download_path: str = "./downloads"
-    selected_index: int = 0
-    selected_title: Optional[str] = None
-    detail_link: Optional[str] = None
 
 
 def _failure_result(provider: str, error: Exception) -> GatewayResult:
@@ -53,179 +33,225 @@ def _failure_result(provider: str, error: Exception) -> GatewayResult:
     )
 
 
-async def call_pubscholar(request: WebGatewayRequest) -> GatewayResult:
+async def call_pubscholar(
+    action: str,
+    query: str,
+    limit: int = 20,
+    download_path: str = "./downloads",
+    selected_index: int = 0,
+    selected_title: str | None = None,
+    detail_link: str | None = None,
+    params: Dict[str, Any] | None = None,
+) -> GatewayResult:
     """Call PubScholar web provider."""
     try:
-        from src.domain.literature.automated_web.pubscholar.pubscholar import (
-            pubscholar_workflow,
-        )
+        from .web.pubscholar import pubscholar_download, pubscholar_search
     except ImportError:
-        return _failure_result(
-            "pubscholar",
-            RuntimeError("pubscholar module not available"),
-        )
-
-    payload: Dict[str, Any] = {
-        "action": request.action,
-        "search_params": {
-            "keyword": request.query or "",
-            "filters": {},
-            "limit": request.limit,
-        },
-    }
-    if request.action == "download":
-        payload["selected_index"] = request.selected_index
-        payload["download_path"] = request.download_path
-        if request.selected_title:
-            payload["selected_title"] = request.selected_title
-        if request.detail_link:
-            payload["detail_link"] = request.detail_link
-    if request.params:
-        payload.update(request.params)
+        return _failure_result("pubscholar", RuntimeError("pubscholar module not available"))
 
     try:
-        response = await pubscholar_workflow(payload)
+        if action == "search":
+            result = await pubscholar_search(
+                query=query,
+                limit=limit,
+                **(params or {}),
+            )
+        else:
+            result = await pubscholar_download(
+                query=query,
+                detail_link=detail_link,
+                selected_index=selected_index,
+                selected_title=selected_title,
+                download_path=download_path,
+                **(params or {}),
+            )
+
         trace = SourceTraceEntry(
             provider="pubscholar",
             attempt=1,
-            action=request.action,
-            success=bool(response.get("success")),
-            items_count=len(response.get("items") or []),
-            downloads_count=len(response.get("downloads") or []),
-            warnings=list(response.get("warnings") or []),
+            action=action,
+            success=bool(result.get("success")),
+            items_count=len(result.get("items") or []),
+            downloads_count=1 if result.get("file_path") else 0,
+            warnings=list(result.get("warnings") or []),
         )
+
+        downloads = []
+        if result.get("file_path"):
+            downloads.append({
+                "file_path": result["file_path"],
+                "pdf_url": result.get("pdf_url"),
+            })
+
         return GatewayResult(
             provider="pubscholar",
-            success=bool(response.get("success")),
-            items=list(response.get("items") or []),
-            downloads=list(response.get("downloads") or []),
-            warnings=list(response.get("warnings") or []),
-            raw=response,
+            success=bool(result.get("success")),
+            items=list(result.get("items") or []),
+            downloads=downloads,
+            warnings=list(result.get("warnings") or []),
+            raw=result,
             source_trace=[trace],
         )
     except Exception as exc:
         return _failure_result("pubscholar", exc)
 
 
-async def call_cyberleninka(request: WebGatewayRequest) -> GatewayResult:
+async def call_cyberleninka(
+    action: str,
+    query: str,
+    limit: int = 20,
+    download_path: str = "./downloads",
+    selected_index: int = 0,
+    selected_title: str | None = None,
+    detail_link: str | None = None,
+    params: Dict[str, Any] | None = None,
+) -> GatewayResult:
     """Call CyberLeninka web provider."""
     try:
-        from src.domain.literature.automated_web.cyberleninka.cyberleninka import (
-            cyberleninka_workflow,
-        )
+        from .web.cyberleninka import cyberleninka_download, cyberleninka_search
     except ImportError:
-        return _failure_result(
-            "cyberleninka",
-            RuntimeError("cyberleninka module not available"),
-        )
-
-    payload: Dict[str, Any] = {
-        "action": request.action,
-        "search_params": {
-            "keyword": request.query or "",
-            "filters": {},
-            "limit": request.limit,
-        },
-    }
-    if request.action == "download":
-        payload["selected_index"] = request.selected_index
-        payload["download_path"] = request.download_path
-        if request.selected_title:
-            payload["selected_title"] = request.selected_title
-        if request.detail_link:
-            payload["detail_link"] = request.detail_link
-    if request.params:
-        payload.update(request.params)
+        return _failure_result("cyberleninka", RuntimeError("cyberleninka module not available"))
 
     try:
-        response = await cyberleninka_workflow(payload)
+        if action == "search":
+            result = await cyberleninka_search(
+                query=query,
+                limit=limit,
+                **(params or {}),
+            )
+        else:
+            result = await cyberleninka_download(
+                query=query,
+                detail_link=detail_link,
+                selected_index=selected_index,
+                selected_title=selected_title,
+                download_path=download_path,
+                **(params or {}),
+            )
+
         trace = SourceTraceEntry(
             provider="cyberleninka",
             attempt=1,
-            action=request.action,
-            success=bool(response.get("success")),
-            items_count=len(response.get("items") or []),
-            downloads_count=len(response.get("downloads") or []),
-            warnings=list(response.get("warnings") or []),
+            action=action,
+            success=bool(result.get("success")),
+            items_count=len(result.get("items") or []),
+            downloads_count=1 if result.get("file_path") else 0,
+            warnings=list(result.get("warnings") or []),
         )
+
+        downloads = []
+        if result.get("file_path"):
+            downloads.append({
+                "file_path": result["file_path"],
+                "pdf_url": result.get("pdf_url"),
+            })
+
         return GatewayResult(
             provider="cyberleninka",
-            success=bool(response.get("success")),
-            items=list(response.get("items") or []),
-            downloads=list(response.get("downloads") or []),
-            warnings=list(response.get("warnings") or []),
-            raw=response,
+            success=bool(result.get("success")),
+            items=list(result.get("items") or []),
+            downloads=downloads,
+            warnings=list(result.get("warnings") or []),
+            raw=result,
             source_trace=[trace],
         )
     except Exception as exc:
         return _failure_result("cyberleninka", exc)
 
 
-async def call_hans_publishers(request: WebGatewayRequest) -> GatewayResult:
+async def call_hans_publishers(
+    action: str,
+    query: str,
+    limit: int = 20,
+    download_path: str = "./downloads",
+    selected_index: int = 0,
+    selected_title: str | None = None,
+    detail_link: str | None = None,
+    params: Dict[str, Any] | None = None,
+) -> GatewayResult:
     """Call Hans Publishers web provider."""
     try:
-        from src.domain.literature.automated_web.hans_publishers.hans_publishers import (
-            hanspub_workflow,
-        )
+        from .web.hans_publishers import hanspub_download, hanspub_search
     except ImportError:
-        return _failure_result(
-            "hans_publishers",
-            RuntimeError("hans_publishers module not available"),
-        )
-
-    payload: Dict[str, Any] = {
-        "action": request.action,
-        "search_params": {
-            "keyword": request.query or "",
-            "filters": {},
-            "limit": request.limit,
-        },
-    }
-    if request.action == "download":
-        payload["selected_index"] = request.selected_index
-        payload["download_path"] = request.download_path
-        if request.selected_title:
-            payload["selected_title"] = request.selected_title
-        if request.detail_link:
-            payload["detail_link"] = request.detail_link
-    if request.params:
-        payload.update(request.params)
+        return _failure_result("hans_publishers", RuntimeError("hans_publishers module not available"))
 
     try:
-        response = await hanspub_workflow(payload)
+        if action == "search":
+            result = await hanspub_search(
+                query=query,
+                limit=limit,
+                **(params or {}),
+            )
+        else:
+            result = await hanspub_download(
+                query=query,
+                detail_link=detail_link,
+                selected_index=selected_index,
+                selected_title=selected_title,
+                download_path=download_path,
+                **(params or {}),
+            )
+
         trace = SourceTraceEntry(
             provider="hans_publishers",
             attempt=1,
-            action=request.action,
-            success=bool(response.get("success")),
-            items_count=len(response.get("items") or []),
-            downloads_count=len(response.get("downloads") or []),
-            warnings=list(response.get("warnings") or []),
+            action=action,
+            success=bool(result.get("success")),
+            items_count=len(result.get("items") or []),
+            downloads_count=1 if result.get("file_path") else 0,
+            warnings=list(result.get("warnings") or []),
         )
+
+        downloads = []
+        if result.get("file_path"):
+            downloads.append({
+                "file_path": result["file_path"],
+                "pdf_url": result.get("pdf_url"),
+            })
+
         return GatewayResult(
             provider="hans_publishers",
-            success=bool(response.get("success")),
-            items=list(response.get("items") or []),
-            downloads=list(response.get("downloads") or []),
-            warnings=list(response.get("warnings") or []),
-            raw=response,
+            success=bool(result.get("success")),
+            items=list(result.get("items") or []),
+            downloads=downloads,
+            warnings=list(result.get("warnings") or []),
+            raw=result,
             source_trace=[trace],
         )
     except Exception as exc:
         return _failure_result("hans_publishers", exc)
 
 
-async def call_web_provider(request: WebGatewayRequest) -> GatewayResult:
+async def call_web_provider(
+    provider: str,
+    action: str = "search",
+    query: str = "",
+    limit: int = 20,
+    download_path: str = "./downloads",
+    selected_index: int = 0,
+    selected_title: str | None = None,
+    detail_link: str | None = None,
+    params: Dict[str, Any] | None = None,
+) -> GatewayResult:
     """Unified entry point for web providers."""
     dispatch = {
         "pubscholar": call_pubscholar,
         "cyberleninka": call_cyberleninka,
         "hans_publishers": call_hans_publishers,
     }
-    handler = dispatch.get(request.provider)
+    handler = dispatch.get(provider)
     if not handler:
         return _failure_result(
-            request.provider,
-            ValueError(f"unknown web provider: {request.provider}"),
+            provider,
+            ValueError(f"unknown web provider: {provider}"),
         )
-    return await handler(request)
+    return await handler(
+        action=action,
+        query=query,
+        limit=limit,
+        download_path=download_path,
+        selected_index=selected_index,
+        selected_title=selected_title,
+        detail_link=detail_link,
+        params=params,
+    )
