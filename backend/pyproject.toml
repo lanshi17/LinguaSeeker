@@ -21,6 +21,7 @@ dependencies = [
     "torch>=2.11.0",
     "crawl4ai>=0.8.6",
     "selectolax>=0.4.8",
+    "loguru>=0.7.0",
 ]
 
 [project.optional-dependencies]
