@@ -7,15 +7,14 @@ from unittest.mock import AsyncMock, patch, MagicMock
 
 from src.core.ingest_and_digitize_data.literature_acquisition.web_providers import (
     call_web_provider,
-    call_pubscholar,
-    call_cyberleninka,
-    call_hans_publishers,
 )
 from src.core.ingest_and_digitize_data.literature_acquisition.web.base import (
     safe_json_loads,
     sanitize_filename,
     extract_pdf_links_from_html,
     choose_item,
+    build_js_helpers,
+    resolve_llm_config,
 )
 
 
@@ -60,6 +59,13 @@ class TestBaseUtilities:
         items = [{"title": "A"}]
         assert choose_item(items, 5, None) is None
 
+    def test_build_js_helpers_contains_functions(self):
+        js = build_js_helpers()
+        assert "const sleep" in js
+        assert "const click" in js
+        assert "const input" in js
+        assert "const clickByText" in js
+
 
 class TestWebProviderDispatch:
     @pytest.mark.asyncio
@@ -71,21 +77,21 @@ class TestWebProviderDispatch:
     @pytest.mark.asyncio
     async def test_pubscholar_import_error(self):
         with patch.dict("sys.modules", {"src.core.ingest_and_digitize_data.literature_acquisition.web.pubscholar": None}):
-            result = await call_pubscholar(action="search", query="test")
+            result = await call_web_provider("pubscholar", action="search", query="test")
             assert not result.success
             assert "not available" in result.warnings[0]
 
     @pytest.mark.asyncio
     async def test_cyberleninka_import_error(self):
         with patch.dict("sys.modules", {"src.core.ingest_and_digitize_data.literature_acquisition.web.cyberleninka": None}):
-            result = await call_cyberleninka(action="search", query="test")
+            result = await call_web_provider("cyberleninka", action="search", query="test")
             assert not result.success
             assert "not available" in result.warnings[0]
 
     @pytest.mark.asyncio
     async def test_hans_import_error(self):
         with patch.dict("sys.modules", {"src.core.ingest_and_digitize_data.literature_acquisition.web.hans_publishers": None}):
-            result = await call_hans_publishers(action="search", query="test")
+            result = await call_web_provider("hans_publishers", action="search", query="test")
             assert not result.success
             assert "not available" in result.warnings[0]
 
@@ -107,14 +113,47 @@ class TestCyberleninkaSearch:
         }
         mock_response.raise_for_status = MagicMock()
 
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_client.return_value)
-            mock_client.return_value.__aexit__ = AsyncMock(return_value=False)
-            mock_client.return_value.post = AsyncMock(return_value=mock_response)
+        mock_async_client = AsyncMock()
+        mock_async_client.post = AsyncMock(return_value=mock_response)
+        mock_async_client.__aenter__ = AsyncMock(return_value=mock_async_client)
+        mock_async_client.__aexit__ = AsyncMock(return_value=False)
 
+        with patch("src.core.ingest_and_digitize_data.literature_acquisition.web.cyberleninka.httpx.AsyncClient", return_value=mock_async_client):
             from src.core.ingest_and_digitize_data.literature_acquisition.web.cyberleninka import cyberleninka_search
             result = await cyberleninka_search("test query", limit=10)
 
             assert result["success"]
             assert len(result["items"]) == 1
             assert result["items"][0]["title"] == "Test Paper"
+
+    @pytest.mark.asyncio
+    async def test_api_search_empty_query(self):
+        from src.core.ingest_and_digitize_data.literature_acquisition.web.cyberleninka import cyberleninka_search
+        result = await cyberleninka_search("", limit=10)
+        assert not result["success"]
+
+
+class TestCyberleninkaDownload:
+    @pytest.mark.asyncio
+    async def test_download_no_search_results(self):
+        from src.core.ingest_and_digitize_data.literature_acquisition.web.cyberleninka import cyberleninka_download
+        with patch(
+            "src.core.ingest_and_digitize_data.literature_acquisition.web.cyberleninka.cyberleninka_search",
+            new_callable=AsyncMock,
+            return_value={"success": False, "items": [], "warnings": []},
+        ):
+            result = await cyberleninka_download("nonexistent paper")
+            assert not result["success"]
+            assert "no_search_results" in result["warnings"]
+
+
+class TestResolveLlmConfig:
+    def test_env_fallback(self, monkeypatch):
+        monkeypatch.delenv("CRAWL4AI_LLM_PROVIDER", raising=False)
+        monkeypatch.delenv("CRAWL4AI_LLM_API_KEY", raising=False)
+        monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+        monkeypatch.setenv("CRAWL4AI_LLM_PROVIDER", "openai")
+        monkeypatch.setenv("CRAWL4AI_LLM_API_KEY", "test-key")
+        provider, key = resolve_llm_config()
+        assert provider == "openai"
+        assert key == "test-key"
