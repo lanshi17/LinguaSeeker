@@ -33,7 +33,15 @@ def sanitize_filename(name: str) -> str:
 
 
 def extract_pdf_links_from_html(html: str, base_url: str) -> List[str]:
-    """Extract PDF links from HTML using BeautifulSoup."""
+    """Extract PDF links from HTML. Uses Rust parser when available, falls back to BeautifulSoup."""
+    if not html:
+        return []
+    try:
+        import rust_io
+        return rust_io.literature.extract_pdf_links(html, base_url)
+    except (ImportError, Exception):
+        pass
+    # Fallback: BeautifulSoup
     soup = BeautifulSoup(html, "html.parser")
     links = []
     for a in soup.find_all("a", href=True):
@@ -47,6 +55,28 @@ def extract_pdf_links_from_html(html: str, base_url: str) -> List[str]:
             if content:
                 links.append(urljoin(base_url, content))
     return list(dict.fromkeys(links))
+
+
+def scrape_html_elements(html: str, css_selector: str) -> List[Dict[str, Any]]:
+    """Parse HTML with CSS selector. Uses Rust when available."""
+    if not html:
+        return []
+    try:
+        import rust_io
+        return rust_io.literature.scrape_html(html, css_selector)
+    except (ImportError, Exception):
+        pass
+    # Fallback: BeautifulSoup
+    soup = BeautifulSoup(html, "html.parser")
+    return [
+        {
+            "text": el.get_text(" ", strip=True),
+            "html": str(el),
+            "tag_name": el.name,
+            "attrs": dict(el.attrs),
+        }
+        for el in soup.select(css_selector)
+    ]
 
 
 def choose_item(
