@@ -20,6 +20,7 @@ dependencies = [
     "pysocks>=1.7.1",
     "torch>=2.11.0",
     "crawl4ai>=0.8.6",
+    "selectolax>=0.4.8",
 ]
 
 [project.optional-dependencies]
