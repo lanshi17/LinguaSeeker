@@ -21,6 +21,7 @@ dependencies = [
     "torch>=2.11.0",
     "crawl4ai>=0.8.6",
     "selectolax>=0.4.8",
+    "files-io",
 ]
 
 [project.optional-dependencies]
@@ -48,6 +49,9 @@ url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
 [[tool.uv.index]]
 name = "aliyun"
 url = "https://mirrors.aliyun.com/pypi/simple/"
+
+[tool.uv.sources]
+files-io = { path = "libs/files-io", editable = true }
 
 [tool.ruff]
 line-length = 120
