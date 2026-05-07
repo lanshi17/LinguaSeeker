@@ -471,6 +471,40 @@ def normalize_europepmc(item: Dict[str, Any]) -> LiteratureItem:
     )
 
 
+def normalize_web_generic(item: Dict[str, Any]) -> LiteratureItem:
+    """Normalize generic web provider result (pubscholar/cyberleninka/hans)."""
+    title = _clean_text(item.get("title"))
+    authors_raw = item.get("authors")
+    if isinstance(authors_raw, str):
+        if "," in authors_raw:
+            authors = [a.strip() for a in authors_raw.split(",") if a.strip()]
+        elif ";" in authors_raw:
+            authors = [a.strip() for a in authors_raw.split(";") if a.strip()]
+        else:
+            authors = [authors_raw.strip()] if authors_raw.strip() else []
+    elif isinstance(authors_raw, list):
+        authors = [_clean_text(a) or "" for a in authors_raw]
+        authors = [a for a in authors if a]
+    else:
+        authors = []
+
+    url = _clean_text(item.get("detail_link") or item.get("source_link"))
+    return LiteratureItem(
+        source=_clean_text(item.get("source")) or "web",
+        title=title,
+        authors=authors,
+        journal=_clean_text(item.get("journal")),
+        year=_extract_year(item.get("year")),
+        doi=_clean_text(item.get("doi")),
+        url=url,
+        links=_extract_links([url]) if url else [],
+        language=_clean_text(item.get("language")),
+        publisher=_clean_text(item.get("publisher")),
+        identifiers={},
+        keywords=_dedupe([_clean_text(v) for v in _as_list(item.get("subjects") or item.get("keywords")) if _clean_text(v)]),
+    )
+
+
 # --- Normalizer registry ---
 
 NORMALIZER_MAP: Dict[str, Callable[[Dict[str, Any]], LiteratureItem]] = {
@@ -481,6 +515,9 @@ NORMALIZER_MAP: Dict[str, Callable[[Dict[str, Any]], LiteratureItem]] = {
     "doaj": normalize_doaj,
     "openalex": normalize_openalex,
     "europepmc": normalize_europepmc,
+    "pubscholar": normalize_web_generic,
+    "cyberleninka": normalize_web_generic,
+    "hans_publishers": normalize_web_generic,
 }
 
 
