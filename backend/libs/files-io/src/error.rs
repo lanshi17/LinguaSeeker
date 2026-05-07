@@ -14,6 +14,9 @@ pub enum FileError {
     #[error("Archive error: {0}")]
     Archive(String),
 
+    #[error("Zip error: {0}")]
+    Zip(#[from] zip::result::ZipError),
+
     #[error("Hash error: {0}")]
     Hash(String),
 
