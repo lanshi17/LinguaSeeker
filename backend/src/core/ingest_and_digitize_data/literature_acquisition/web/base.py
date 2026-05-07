@@ -111,3 +111,130 @@ async def download_pdf_from_candidates(
 def wait_for_xpath_js(xpath: str) -> str:
     """Build JavaScript wait condition for XPath."""
     return f"""() => !!document.evaluate({json.dumps(xpath)}, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue"""
+
+
+def build_js_helpers() -> str:
+    """Return JavaScript helper functions for UI interaction."""
+    return """
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  const $x = (xpath) => document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  const click = (xpath) => { const el = $x(xpath); if (el) el.click(); return !!el; };
+  const input = (xpath, value) => {
+      const el = $x(xpath);
+      if (!el) return false;
+      el.focus(); el.value = '';
+      el.dispatchEvent(new Event('input', {bubbles:true}));
+      el.value = value;
+      el.dispatchEvent(new Event('input', {bubbles:true}));
+      return true;
+  };
+  const clickByText = (text) => {
+      const candidates = Array.from(document.querySelectorAll('button,span,li,div,a,label'))
+        .filter(el => el.textContent && el.textContent.trim() === text);
+      if (candidates.length) { candidates[0].click(); return true; }
+      const fuzzy = Array.from(document.querySelectorAll('button,span,li,div,a,label'))
+        .filter(el => el.textContent && el.textContent.includes(text));
+      if (fuzzy.length) { fuzzy[0].click(); return true; }
+      return false;
+  };
+"""
+
+
+def resolve_llm_config() -> Tuple[str, Optional[str]]:
+    """Resolve LLM provider and API key with hierarchical fallback.
+
+    Checks project config first, then env vars.
+    Returns (provider, api_key).
+    """
+    # Try project config first
+    try:
+        from src.config import get_settings, resolve_llm_triplet
+        settings = get_settings()
+        triplet = resolve_llm_triplet(settings, "retrieval")
+        if triplet.api_key:
+            provider = "deepseek"
+            if "openai" in triplet.base_url.lower():
+                provider = "openai"
+            elif "anthropic" in triplet.base_url.lower():
+                provider = "anthropic"
+            elif "dashscope" in triplet.base_url.lower():
+                provider = "dashscope"
+            return provider, triplet.api_key
+    except (ImportError, Exception):
+        pass
+
+    # Fallback to env vars
+    provider = os.getenv("CRAWL4AI_LLM_PROVIDER", "deepseek")
+    api_key = os.getenv("CRAWL4AI_LLM_API_KEY") or os.getenv("DEEPSEEK_API_KEY")
+    return provider, api_key
+
+
+async def crawl4ai_search(
+    url: str,
+    js_code: str,
+    wait_xpath: str,
+    schema: Dict[str, Any],
+    instruction: str,
+    limit: int,
+    timeout_ms: int = 80000,
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    """Shared crawl4ai search flow. Returns (items, warnings)."""
+    warnings: List[str] = []
+
+    try:
+        from crawl4ai import (
+            AsyncWebCrawler,
+            BrowserConfig,
+            CacheMode,
+            CrawlerRunConfig,
+            LLMConfig,
+            LLMExtractionStrategy,
+        )
+    except ImportError:
+        warnings.append("crawl4ai_not_available")
+        return [], warnings
+
+    provider, api_key = resolve_llm_config()
+    if not api_key:
+        warnings.append("no_llm_api_key")
+        return [], warnings
+
+    llm_strategy = LLMExtractionStrategy(
+        llm_config=LLMConfig(provider=provider, api_token=api_key),
+        schema=schema,
+        extraction_type="schema",
+        instruction=instruction,
+        extra_args={"temperature": 0, "top_p": 0.9, "max_tokens": 2000},
+    )
+
+    browser_config = BrowserConfig(headless=True, java_script_enabled=True)
+    crawler_config = CrawlerRunConfig(
+        cache_mode=CacheMode.BYPASS,
+        js_code=[js_code],
+        wait_for=wait_for_xpath_js(wait_xpath),
+        page_timeout=timeout_ms,
+        word_count_threshold=1,
+        extraction_strategy=llm_strategy,
+    )
+
+    try:
+        async with AsyncWebCrawler(config=browser_config) as crawler:
+            result = await crawler.arun(url=url, config=crawler_config)
+    except Exception as exc:
+        warnings.append(f"crawl_failed:{exc}")
+        return [], warnings
+
+    if not result.success:
+        warnings.append(result.error_message or "crawl_failed")
+        return [], warnings
+
+    data = safe_json_loads(result.extracted_content)
+    raw_items: List[Dict[str, Any]] = []
+    if isinstance(data, list):
+        raw_items = [i for i in data if isinstance(i, dict)]
+    elif isinstance(data, dict):
+        items_val = data.get("items", [])
+        if isinstance(items_val, list):
+            raw_items = [i for i in items_val if isinstance(i, dict)]
+
+    return raw_items[:limit], warnings
