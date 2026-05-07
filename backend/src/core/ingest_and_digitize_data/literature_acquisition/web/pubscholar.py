@@ -9,7 +9,7 @@ from urllib.parse import parse_qs, quote_plus, urljoin, urlparse
 from html import unescape
 
 import httpx
-from bs4 import BeautifulSoup
+from selectolax.parser import HTMLParser
 
 from .base import (
     build_js_helpers,
@@ -62,15 +62,15 @@ async def _duckduckgo_search(query: str, limit: int = 10) -> List[Dict[str, str]
         resp = await client.get(url, params={"q": query}, headers=headers)
         resp.raise_for_status()
 
-    soup = BeautifulSoup(resp.text, "html.parser")
+    tree = HTMLParser(resp.text)
     results: List[Dict[str, str]] = []
     seen: set[str] = set()
-    for anchor in soup.select("a.result__a"):
-        href = _decode_duckduckgo_link(anchor.get("href") or "")
+    for node in tree.css("a.result__a"):
+        href = _decode_duckduckgo_link(node.attributes.get("href") or "")
         if not href or href in seen:
             continue
         seen.add(href)
-        title = anchor.get_text(" ", strip=True) or href
+        title = node.text(deep=True, separator=" ").strip() or href
         results.append({"title": title, "url": href})
         if len(results) >= limit:
             break
