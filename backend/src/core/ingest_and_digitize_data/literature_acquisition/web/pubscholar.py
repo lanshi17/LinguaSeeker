@@ -12,12 +12,11 @@ import httpx
 from bs4 import BeautifulSoup
 
 from .base import (
+    build_js_helpers,
     choose_item,
+    crawl4ai_search,
     download_pdf_from_candidates,
     extract_pdf_links_from_html,
-    safe_json_loads,
-    sanitize_filename,
-    wait_for_xpath_js,
 )
 from .locators import (
     PUBSCHOLAR_FULLTEXT_BTN,
@@ -129,49 +128,10 @@ async def pubscholar_search(
         warnings.append("fallback_search:duckduckgo")
         return {"success": True, "items": items[:limit], "warnings": warnings}
 
-    # Fallback to crawl4ai + LLM extraction
-    try:
-        from crawl4ai import (
-            AsyncWebCrawler,
-            BrowserConfig,
-            CacheMode,
-            CrawlerRunConfig,
-            LLMConfig,
-            LLMExtractionStrategy,
-        )
-    except ImportError:
-        warnings.append("crawl4ai_not_available")
-        return {"success": False, "items": [], "warnings": warnings}
-
-    import os
-    llm_provider = os.getenv("CRAWL4AI_LLM_PROVIDER", "deepseek")
-    llm_api_key = os.getenv("CRAWL4AI_LLM_API_KEY") or os.getenv("DEEPSEEK_API_KEY")
-
-    if not llm_api_key:
-        warnings.append("no_llm_api_key")
-        return {"success": False, "items": [], "warnings": warnings}
-
-    # Build JS for search interaction
+    # Fallback to crawl4ai + LLM extraction using shared helper
     js_parts = [
         "(async () => {",
-        "  const sleep = (ms) => new Promise(r => setTimeout(r, ms));",
-        "  const $x = (xpath) => document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;",
-        "  const click = (xpath) => { const el = $x(xpath); if (el) el.click(); return !!el; };",
-        "  const input = (xpath, value) => {",
-        "      const el = $x(xpath);",
-        "      if (!el) return false;",
-        "      el.focus(); el.value = '';",
-        "      el.dispatchEvent(new Event('input', {bubbles:true}));",
-        "      el.value = value;",
-        "      el.dispatchEvent(new Event('input', {bubbles:true}));",
-        "      return true;",
-        "  };",
-        "  const clickByText = (text) => {",
-        "      const candidates = Array.from(document.querySelectorAll('button,span,li,div,a'))",
-        "        .filter(el => el.textContent && el.textContent.trim() === text);",
-        "      if (candidates.length) { candidates[0].click(); return true; }",
-        "      return false;",
-        "  };",
+        build_js_helpers(),
         f"  input({PUBSCHOLAR_SEARCH_INPUT!r}, {query!r});",
         f"  click({PUBSCHOLAR_SEARCH_BUTTON!r});",
         "  await sleep(1200);",
@@ -232,63 +192,33 @@ async def pubscholar_search(
 
     instruction = f"Extract at most {limit} items. Fields: title, authors, year, journal, paper_type, language, has_full_text, source_link, subjects."
 
-    llm_strategy = LLMExtractionStrategy(
-        llm_config=LLMConfig(provider=llm_provider, api_token=llm_api_key),
+    raw_items, crawl_warnings = await crawl4ai_search(
+        url=BASE_URL,
+        js_code=js_code,
+        wait_xpath=PUBSCHOLAR_RESULTS_CONTAINER,
         schema=schema,
-        extraction_type="schema",
         instruction=instruction,
-        extra_args={"temperature": 0, "top_p": 0.9, "max_tokens": 2000},
+        limit=limit,
+        timeout_ms=timeout_ms,
     )
+    warnings.extend(crawl_warnings)
 
-    browser_config = BrowserConfig(headless=True, java_script_enabled=True)
-    crawler_config = CrawlerRunConfig(
-        cache_mode=CacheMode.BYPASS,
-        js_code=[js_code],
-        wait_for=wait_for_xpath_js(PUBSCHOLAR_RESULTS_CONTAINER),
-        page_timeout=timeout_ms,
-        word_count_threshold=1,
-        extraction_strategy=llm_strategy,
-    )
+    items: List[Dict[str, Any]] = []
+    for idx, raw in enumerate(raw_items):
+        items.append({
+            "title": raw.get("title", ""),
+            "authors": raw.get("authors"),
+            "year": raw.get("year"),
+            "journal": raw.get("journal"),
+            "paper_type": raw.get("paper_type"),
+            "language": raw.get("language"),
+            "has_full_text": raw.get("has_full_text"),
+            "source_link": raw.get("source_link"),
+            "subjects": raw.get("subjects"),
+            "index": idx,
+        })
 
-    items = []
-    raw_excerpt = None
-
-    try:
-        async with AsyncWebCrawler(config=browser_config) as crawler:
-            result = await crawler.arun(url=BASE_URL, config=crawler_config)
-
-        if result.success:
-            data = safe_json_loads(result.extracted_content)
-            raw_items = []
-            if isinstance(data, list):
-                raw_items = [i for i in data if isinstance(i, dict)]
-            elif isinstance(data, dict):
-                items_val = data.get("items", [])
-                if isinstance(items_val, list):
-                    raw_items = [i for i in items_val if isinstance(i, dict)]
-
-            for idx, raw in enumerate(raw_items[:limit]):
-                items.append({
-                    "title": raw.get("title", ""),
-                    "authors": raw.get("authors"),
-                    "year": raw.get("year"),
-                    "journal": raw.get("journal"),
-                    "paper_type": raw.get("paper_type"),
-                    "language": raw.get("language"),
-                    "has_full_text": raw.get("has_full_text"),
-                    "source_link": raw.get("source_link"),
-                    "subjects": raw.get("subjects"),
-                    "index": idx,
-                })
-
-            if result.markdown:
-                raw_excerpt = result.markdown[:1000]
-        else:
-            warnings.append(result.error_message or "crawl_failed")
-    except Exception as exc:
-        warnings.append(f"crawl_failed:{exc}")
-
-    return {"success": bool(items), "items": items, "warnings": warnings, "raw_excerpt": raw_excerpt}
+    return {"success": bool(items), "items": items, "warnings": warnings}
 
 
 async def pubscholar_download(

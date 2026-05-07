@@ -4,16 +4,17 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import quote_plus, urljoin
 
 import httpx
 
 from .base import (
+    build_js_helpers,
     choose_item,
+    crawl4ai_search,
     download_pdf_from_candidates,
     extract_pdf_links_from_html,
-    sanitize_filename,
 )
 from .locators import (
     CYBERLENINKA_RESULTS,
@@ -108,39 +109,14 @@ async def _search_via_api(
 
 async def _search_via_crawl4ai(
     query: str, subjects: List[str], limit: int, timeout_ms: int
-) -> List[Dict[str, Any]]:
-    """Search via crawl4ai browser automation (fallback)."""
-    try:
-        from crawl4ai import (
-            AsyncWebCrawler,
-            BrowserConfig,
-            CacheMode,
-            CrawlerRunConfig,
-            LLMConfig,
-            LLMExtractionStrategy,
-        )
-    except ImportError:
-        return []
-
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    """Search via crawl4ai browser automation (fallback). Uses shared helper."""
     js_code = f"""
     (async () => {{
-      const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-      const $x = (xpath) => document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-      const click = (xpath) => {{ const el = $x(xpath); if (el) el.click(); return !!el; }};
-      const input = (xpath, value) => {{
-          const el = $x(xpath);
-          if (!el) return false;
-          el.focus(); el.value = '';
-          el.dispatchEvent(new Event('input', {{bubbles:true}}));
-          el.value = value;
-          el.dispatchEvent(new Event('input', {{bubbles:true}}));
-          return true;
-      }};
-
+      {build_js_helpers()}
       input({CYBERLENINKA_SEARCH_INPUT!r}, {query!r});
       click({CYBERLENINKA_SEARCH_BUTTON!r});
       await sleep(1200);
-
       const container = $x({CYBERLENINKA_RESULTS!r});
       if (container) {{ document.body.innerHTML = container.outerHTML; }}
     }})();
@@ -167,48 +143,16 @@ async def _search_via_crawl4ai(
 
     instruction = f"Extract up to {limit} papers. Return JSON with key 'items'. Fields: title, authors, year, journal, detail_link."
 
-    import os
-    llm_provider = os.getenv("CRAWL4AI_LLM_PROVIDER", "deepseek")
-    llm_api_key = os.getenv("CRAWL4AI_LLM_API_KEY") or os.getenv("DEEPSEEK_API_KEY")
-
-    if not llm_api_key:
-        return []
-
-    llm_strategy = LLMExtractionStrategy(
-        llm_config=LLMConfig(provider=llm_provider, api_token=llm_api_key),
+    items, warnings = await crawl4ai_search(
+        url=BASE_URL,
+        js_code=js_code,
+        wait_xpath=CYBERLENINKA_RESULTS,
         schema=schema,
-        extraction_type="schema",
         instruction=instruction,
-        extra_args={"temperature": 0, "max_tokens": 2000},
+        limit=limit,
+        timeout_ms=timeout_ms,
     )
-
-    browser_config = BrowserConfig(headless=True, java_script_enabled=True)
-    crawler_config = CrawlerRunConfig(
-        cache_mode=CacheMode.BYPASS,
-        js_code=[js_code],
-        wait_for=f"""() => !!document.evaluate({CYBERLENINKA_RESULTS!r}, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue""",
-        page_timeout=timeout_ms,
-        word_count_threshold=1,
-        extraction_strategy=llm_strategy,
-    )
-
-    async with AsyncWebCrawler(config=browser_config) as crawler:
-        result = await crawler.arun(url=BASE_URL, config=crawler_config)
-
-    if not result.success:
-        return []
-
-    from .base import safe_json_loads
-    data = safe_json_loads(result.extracted_content)
-    raw_items = []
-    if isinstance(data, list):
-        raw_items = [i for i in data if isinstance(i, dict)]
-    elif isinstance(data, dict):
-        items_val = data.get("items", [])
-        if isinstance(items_val, list):
-            raw_items = [i for i in items_val if isinstance(i, dict)]
-
-    return raw_items[:limit]
+    return items, warnings
 
 
 async def cyberleninka_search(
@@ -228,7 +172,8 @@ async def cyberleninka_search(
 
     # Fallback to crawl4ai
     warnings.append("api_search_failed:falling_back_to_crawl4ai")
-    items = await _search_via_crawl4ai(query, subjects, limit, timeout_ms)
+    items, crawl_warnings = await _search_via_crawl4ai(query, subjects, limit, timeout_ms)
+    warnings.extend(crawl_warnings)
     if items:
         return {"success": True, "items": items, "warnings": warnings}
 

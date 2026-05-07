@@ -7,14 +7,16 @@ import re
 from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 
+import httpx
 from bs4 import BeautifulSoup
 
 from .base import (
+    build_js_helpers,
     choose_item,
+    crawl4ai_search,
     download_pdf_from_candidates,
     extract_pdf_links_from_html,
-    sanitize_filename,
-    safe_json_loads,
+    wait_for_xpath_js,
 )
 from .locators import (
     HANS_PDF_LINK,
@@ -67,56 +69,14 @@ async def hanspub_search(
 ) -> Dict[str, Any]:
     """Search Hans Publishers for papers."""
     warnings: List[str] = []
-    subjects = subjects or []
-
-    try:
-        from crawl4ai import (
-            AsyncWebCrawler,
-            BrowserConfig,
-            CacheMode,
-            CrawlerRunConfig,
-            LLMConfig,
-            LLMExtractionStrategy,
-        )
-    except ImportError:
-        warnings.append("crawl4ai_not_available")
-        return {"success": False, "items": [], "warnings": warnings}
-
-    import os
-    llm_provider = os.getenv("CRAWL4AI_LLM_PROVIDER", "deepseek")
-    llm_api_key = os.getenv("CRAWL4AI_LLM_API_KEY") or os.getenv("DEEPSEEK_API_KEY")
-
-    if not llm_api_key:
-        warnings.append("no_llm_api_key")
-        return {"success": False, "items": [], "warnings": warnings}
-
     query_str = " ".join(query) if isinstance(query, list) else query
 
     js_code = f"""
     (async () => {{
-      const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-      const $x = (xpath) => document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-      const click = (xpath) => {{ const el = $x(xpath); if (el) el.click(); return !!el; }};
-      const input = (xpath, value) => {{
-          const el = $x(xpath);
-          if (!el) return false;
-          el.focus(); el.value = '';
-          el.dispatchEvent(new Event('input', {{bubbles:true}}));
-          el.value = value;
-          el.dispatchEvent(new Event('input', {{bubbles:true}}));
-          return true;
-      }};
-      const clickByText = (text) => {{
-          const nodes = Array.from(document.querySelectorAll('a,button,li,span,label,div'))
-            .filter(el => el.textContent && el.textContent.trim() === text);
-          if (nodes.length) {{ nodes[0].click(); return true; }}
-          return false;
-      }};
-
+      {build_js_helpers()}
       input({HANS_SEARCH_INPUT!r}, {query_str!r});
       click({HANS_SEARCH_BUTTON!r});
       await sleep(1200);
-
       const container = $x({HANS_RESULTS_CONTAINER!r});
       if (container) {{ document.body.innerHTML = container.outerHTML; }}
     }})();
@@ -144,58 +104,40 @@ async def hanspub_search(
 
     instruction = f"Extract up to {limit} papers. Return JSON with key 'items'. Fields: title, authors, year, journal, subject, detail_link."
 
-    llm_strategy = LLMExtractionStrategy(
-        llm_config=LLMConfig(provider=llm_provider, api_token=llm_api_key),
+    raw_items, crawl_warnings = await crawl4ai_search(
+        url=BASE_URL,
+        js_code=js_code,
+        wait_xpath=HANS_RESULTS_CONTAINER,
         schema=schema,
-        extraction_type="schema",
         instruction=instruction,
-        extra_args={"temperature": 0, "max_tokens": 2000},
+        limit=limit,
+        timeout_ms=timeout_ms,
     )
-
-    browser_config = BrowserConfig(headless=True, java_script_enabled=True)
-    crawler_config = CrawlerRunConfig(
-        cache_mode=CacheMode.BYPASS,
-        js_code=[js_code],
-        wait_for=f"""() => !!document.evaluate({HANS_RESULTS_CONTAINER!r}, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue""",
-        page_timeout=timeout_ms,
-        word_count_threshold=1,
-        extraction_strategy=llm_strategy,
-    )
+    warnings.extend(crawl_warnings)
 
     items: List[Dict[str, Any]] = []
+    for idx, raw in enumerate(raw_items):
+        items.append({
+            "title": raw.get("title", ""),
+            "authors": raw.get("authors"),
+            "year": raw.get("year"),
+            "journal": raw.get("journal"),
+            "subject": raw.get("subject"),
+            "detail_link": raw.get("detail_link"),
+            "index": idx,
+        })
 
-    async with AsyncWebCrawler(config=browser_config) as crawler:
-        result = await crawler.arun(url=BASE_URL, config=crawler_config)
-
-    if result.success:
-        data = safe_json_loads(result.extracted_content)
-        raw_items: List[Dict[str, Any]] = []
-        if isinstance(data, list):
-            raw_items = [i for i in data if isinstance(i, dict)]
-        elif isinstance(data, dict):
-            items_val = data.get("items", [])
-            if isinstance(items_val, list):
-                raw_items = [i for i in items_val if isinstance(i, dict)]
-
-        for idx, raw in enumerate(raw_items[:limit]):
-            items.append({
-                "title": raw.get("title", ""),
-                "authors": raw.get("authors"),
-                "year": raw.get("year"),
-                "journal": raw.get("journal"),
-                "subject": raw.get("subject"),
-                "detail_link": raw.get("detail_link"),
-                "index": idx,
-            })
-
-        if not items:
-            # Fallback: extract from HTML
-            cleaned_html = getattr(result, "cleaned_html", None) or ""
-            items = _fallback_extract_items_from_html(cleaned_html, limit)
-            if items:
-                warnings.append("fallback_html_items_used")
-    else:
-        warnings.append(result.error_message or "crawl_failed")
+    if not items and not crawl_warnings:
+        # Fallback: try static HTML extraction
+        try:
+            async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
+                resp = await client.get(BASE_URL, headers={"user-agent": USER_AGENT})
+                resp.raise_for_status()
+                items = _fallback_extract_items_from_html(resp.text, limit)
+                if items:
+                    warnings.append("fallback_html_items_used")
+        except Exception as exc:
+            warnings.append(f"html_fallback_failed:{exc}")
 
     return {"success": bool(items), "items": items, "warnings": warnings}
 
@@ -229,12 +171,10 @@ async def hanspub_download(
     try:
         from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig
 
-        wait_js = f"""() => !!document.evaluate({HANS_PDF_LINK!r}, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue"""
-
         browser_config = BrowserConfig(headless=True, java_script_enabled=True)
         crawler_config = CrawlerRunConfig(
             cache_mode=CacheMode.BYPASS,
-            wait_for=wait_js,
+            wait_for=wait_for_xpath_js(HANS_PDF_LINK),
             page_timeout=timeout_ms,
         )
 
@@ -246,8 +186,12 @@ async def hanspub_download(
             if pdf_links:
                 pdf_url = pdf_links[0]
     except ImportError:
-        # crawl4ai not available, try httpx
-        import httpx
+        pass  # crawl4ai not available, fall through to httpx
+    except Exception as exc:
+        warnings.append(f"crawl_failed:{exc}")
+
+    # Fallback: httpx static parse
+    if not pdf_url:
         try:
             async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
                 page = await client.get(detail_link, headers={"user-agent": USER_AGENT})
@@ -257,8 +201,6 @@ async def hanspub_download(
                     pdf_url = pdf_links[0]
         except Exception as exc:
             warnings.append(f"http_parse_failed:{exc}")
-    except Exception as exc:
-        warnings.append(f"crawl_failed:{exc}")
 
     if not pdf_url:
         return {"success": False, "warnings": warnings + ["pdf_not_found"]}
