@@ -209,15 +209,20 @@ async fn execute_provider(
     action: &Action,
     params: &FetchParams,
 ) -> Result<FetchResult, GatewayError> {
-    let query = params.query.as_deref().unwrap_or_default();
     match (provider, action) {
-        ("crossref", Action::Search) => CrossrefProvider::search(client, query, params.limit).await,
-        ("openalex", Action::Search) => OpenAlexProvider::search(client, query, params.limit).await,
-        ("europepmc", Action::Search) => EuropePmcProvider::search(client, query, params.limit).await,
-        ("pmc", Action::Search) => PmcProvider::search(client, query, params.limit).await,
-        ("doaj", Action::Search) => DoajProvider::search(client, query, params.limit).await,
+        ("crossref", Action::Search) => CrossrefProvider::search(client, params).await,
+        ("openalex", Action::Search) => OpenAlexProvider::search(client, params).await,
+        ("europepmc", Action::Search) => EuropePmcProvider::search(client, params).await,
+        ("pmc", Action::Search) => PmcProvider::search(client, params).await,
+        ("doaj", Action::Search) => {
+            let query = params.query.as_deref().unwrap_or_default();
+            DoajProvider::search(client, query, params.limit).await
+        }
         ("doaj", Action::Download) => DoajProvider::download_urls(client, params).await,
-        ("jstage", Action::Search) => JstageProvider::search(client, query, params.limit).await,
+        ("jstage", Action::Search) => {
+            let query = params.query.as_deref().unwrap_or_default();
+            JstageProvider::search(client, query, params.limit).await
+        }
         ("jstage", Action::Download) => JstageProvider::download_urls(client, params).await,
         ("unpaywall", Action::Search | Action::Download) => {
             UnpaywallProvider::search(client, params).await
