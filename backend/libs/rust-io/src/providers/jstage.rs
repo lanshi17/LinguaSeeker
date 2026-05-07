@@ -86,12 +86,28 @@ fn pdf_candidates(detail_link: &str) -> Vec<String> {
         return vec![];
     }
 
-    let mut candidates = vec![detail_link.to_string()];
+    let mut candidates = Vec::new();
+
+    // Strip -char/lang suffix to get base URL
+    let base = if let Some(idx) = detail_link.find("/-char/") {
+        &detail_link[..idx]
+    } else {
+        detail_link
+    };
+
+    // Try _pdf from base (most likely to return direct PDF)
+    if base.contains("/_article") {
+        candidates.push(base.replace("/_article", "/_pdf"));
+    }
+
+    // Try original URL
+    candidates.push(detail_link.to_string());
+
+    // Try _pdf with -char suffix
     if detail_link.contains("/_article") {
         candidates.push(detail_link.replace("/_article", "/_pdf"));
     }
-    if detail_link.contains("/_article/") {
-        candidates.push(detail_link.replace("/_article/", "/_pdf/"));
-    }
+
+    candidates.dedup();
     candidates
 }

@@ -1,0 +1,6 @@
+[2026-05-06] literature_acquisition module: contracts, normalizers, gateway, doi_fallback, pubmed_service, web_providers, search_service, workflow, unit tests (49 passed) [completed]
+[2026-05-06] rust-io DOI-specific lookup: crossref/openalex/europepmc/pmc providers now use identifiers for DOI/PMID lookup instead of text search. Added DOI unicode normalization (U+2043 etc). Integration tested with 3 Chinese literature references. [completed]
+[2026-05-07] DOI fallback for Chinese domains: doi_fallback now returns resolved URL for Wanfang/CNKI instead of failing. Workflow adds doi_fallback to search flow (not just download). All 3 Chinese references pass. [completed]
+[2026-05-07] PDF download: wired _download_pdf_from_candidates into download_from_provider. Frontiers OA paper (10.3389/fimmu.2025.1655475) downloads successfully (2.1MB). Chinese paywall papers return resolved_url only. [completed]
+[2026-05-07] PMC provider: added esummary metadata fetch after esearch. PMC normalizer handles esummary format. Full test suite: 11/11 API papers pass, 3 PDFs downloaded (jstage/unpaywall). Web papers (4) need crawl4ai integration. [completed]
+[2026-05-07] Language-organized downloads: workflow resolves language from request or DOI domain, appends lang code to download_path (e.g. downloads/v1.1/en/, downloads/v1.1/ja/). 11/11 API tests pass. [completed]
