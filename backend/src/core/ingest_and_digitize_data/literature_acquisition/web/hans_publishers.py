@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 
 import httpx
-from bs4 import BeautifulSoup
+from selectolax.parser import HTMLParser
 
 from .base import (
     build_js_helpers,
@@ -33,18 +33,18 @@ USER_AGENT = "Mozilla/5.0"
 
 def _fallback_extract_items_from_html(html_text: str, limit: int) -> List[Dict[str, Any]]:
     """Extract items from HTML by parsing paperinformation links."""
-    soup = BeautifulSoup(html_text or "", "html.parser")
+    tree = HTMLParser(html_text or "")
     seen_links: set[str] = set()
     items: List[Dict[str, Any]] = []
-    for a in soup.find_all("a", href=True):
-        href = str(a.get("href") or "").strip()
+    for node in tree.css("a[href]"):
+        href = str(node.attributes.get("href") or "").strip()
         if "paperinformation?paperid=" not in href:
             continue
         detail_link = urljoin(BASE_URL, href)
         if detail_link in seen_links:
             continue
         seen_links.add(detail_link)
-        title = re.sub(r"\s+", " ", a.get_text(" ", strip=True)).strip()
+        title = re.sub(r"\s+", " ", node.text(deep=True, separator=" ")).strip()
         if not title:
             title = f"Hans Paper {len(items) + 1}"
         items.append({
