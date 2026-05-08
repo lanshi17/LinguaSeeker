@@ -22,8 +22,12 @@ pub fn batch_hash(file_paths: Vec<String>) -> PyResult<Py<PyAny>> {
     let mut errors = HashMap::new();
     for path in &file_paths {
         match hash::hash_file(Path::new(path)) {
-            Ok(h) => { hashes.insert(path.clone(), h); }
-            Err(e) => { errors.insert(path.clone(), e.to_string()); }
+            Ok(h) => {
+                hashes.insert(path.clone(), h);
+            }
+            Err(e) => {
+                errors.insert(path.clone(), e.to_string());
+            }
         }
     }
     Python::attach(|py| {

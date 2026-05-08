@@ -22,7 +22,12 @@ pub trait FileOps: Send + Sync {
     fn read_chunk(&self, path: &str, offset: u64, size: u64) -> Result<Vec<u8>, FileError>;
     fn write(&self, path: &str, data: &[u8], create_parents: bool) -> Result<(), FileError>;
     #[allow(dead_code)]
-    fn write_stream(&self, path: &str, reader: &mut dyn std::io::Read, create_parents: bool) -> Result<(), FileError>;
+    fn write_stream(
+        &self,
+        path: &str,
+        reader: &mut dyn std::io::Read,
+        create_parents: bool,
+    ) -> Result<(), FileError>;
     fn exists(&self, path: &str) -> Result<bool, FileError>;
     fn metadata(&self, path: &str) -> Result<FileMetadata, FileError>;
     fn rename(&self, src: &str, dst: &str) -> Result<(), FileError>;

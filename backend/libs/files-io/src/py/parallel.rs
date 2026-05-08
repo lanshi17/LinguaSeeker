@@ -1,4 +1,4 @@
-use crate::backends::{local::LocalBackend, s3::S3Backend, FileOps};
+use crate::backends::{FileOps, local::LocalBackend, s3::S3Backend};
 use crate::error::FileError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
@@ -43,30 +43,53 @@ pub fn batch_copy(
 ) -> PyResult<Py<PyAny>> {
     if sources.len() != destinations.len() {
         return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-            "sources and destinations must have same length"
+            "sources and destinations must have same length",
         ));
     }
     let local = Arc::new(LocalBackend::new());
     let s3: Option<Arc<S3Backend>> = if let (Some(ak), Some(sk)) = (&access_key, &secret_key) {
-        Some(Arc::new(S3Backend::new(ak, sk, endpoint.as_deref(), region.as_deref())?))
+        Some(Arc::new(S3Backend::new(
+            ak,
+            sk,
+            endpoint.as_deref(),
+            region.as_deref(),
+        )?))
     } else {
         None
     };
 
-    let results: Vec<OpResult> = sources.into_iter().zip(destinations).map(|(src, dst)| {
-        let ops: &dyn FileOps = if src.starts_with("s3://") || dst.starts_with("s3://") {
-            match &s3 {
-                Some(b) => b.as_ref(),
-                None => return OpResult { path: src, success: false, message: "S3 credentials required".into() },
+    let results: Vec<OpResult> = sources
+        .into_iter()
+        .zip(destinations)
+        .map(|(src, dst)| {
+            let ops: &dyn FileOps = if src.starts_with("s3://") || dst.starts_with("s3://") {
+                match &s3 {
+                    Some(b) => b.as_ref(),
+                    None => {
+                        return OpResult {
+                            path: src,
+                            success: false,
+                            message: "S3 credentials required".into(),
+                        };
+                    }
+                }
+            } else {
+                local.as_ref()
+            };
+            match ops.copy(&src, &dst) {
+                Ok(()) => OpResult {
+                    path: src,
+                    success: true,
+                    message: String::new(),
+                },
+                Err(e) => OpResult {
+                    path: src,
+                    success: false,
+                    message: e.to_string(),
+                },
             }
-        } else {
-            local.as_ref()
-        };
-        match ops.copy(&src, &dst) {
-            Ok(()) => OpResult { path: src, success: true, message: String::new() },
-            Err(e) => OpResult { path: src, success: false, message: e.to_string() },
-        }
-    }).collect();
+        })
+        .collect();
 
     make_result_dict(py, &results)
 }
@@ -82,26 +105,44 @@ pub fn batch_compress(
 ) -> PyResult<Py<PyAny>> {
     if dir_paths.len() != output_paths.len() {
         return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-            "dir_paths and output_paths must have same length"
+            "dir_paths and output_paths must have same length",
         ));
     }
-    let results: Vec<OpResult> = dir_paths.into_iter().zip(output_paths).map(|(dir, out)| {
-        let r = match format {
-            "zip" => crate::archive::zip::compress_dir(&dir, &out),
-            "tar" => crate::archive::tar_gz::compress_tar(&dir, &out),
-            "tar.gz" | "tgz" => crate::archive::tar_gz::compress_tar_gz(&dir, &out),
-            _ => Err(FileError::Archive(format!("unsupported format: {format}"))),
-        };
-        match r {
-            Ok(_) => OpResult { path: dir, success: true, message: String::new() },
-            Err(e) => OpResult { path: dir, success: false, message: e.to_string() },
-        }
-    }).collect();
+    let results: Vec<OpResult> = dir_paths
+        .into_iter()
+        .zip(output_paths)
+        .map(|(dir, out)| {
+            let r = match format {
+                "zip" => crate::archive::zip::compress_dir(&dir, &out),
+                "tar" => crate::archive::tar_gz::compress_tar(&dir, &out),
+                "tar.gz" | "tgz" => crate::archive::tar_gz::compress_tar_gz(&dir, &out),
+                _ => Err(FileError::Archive(format!("unsupported format: {format}"))),
+            };
+            match r {
+                Ok(_) => OpResult {
+                    path: dir,
+                    success: true,
+                    message: String::new(),
+                },
+                Err(e) => OpResult {
+                    path: dir,
+                    success: false,
+                    message: e.to_string(),
+                },
+            }
+        })
+        .collect();
 
     make_result_dict(py, &results)
 }
 
-/// Async batch copy using spawn_blocking.
+/// Async batch copy — runs the sequential copy loop on a blocking thread.
+///
+/// Despite the name, copies execute **sequentially** inside a single
+/// `spawn_blocking` task. The async wrapper only prevents blocking the
+/// Tokio event loop. For true parallelism, callers should split the
+/// batch and invoke this function multiple times, or use a higher-level
+/// orchestrator.
 #[pyfunction]
 #[pyo3(name = "batch_copy_async", signature = (sources, destinations, access_key=None, secret_key=None, endpoint=None, region=None))]
 pub fn batch_copy_async<'py>(
@@ -116,9 +157,19 @@ pub fn batch_copy_async<'py>(
     pyo3_async_runtimes::tokio::future_into_py(py, async move {
         let result = tokio::task::spawn_blocking(move || {
             Python::attach(|py| {
-                batch_copy(py, sources, destinations, access_key, secret_key, endpoint, region)
+                batch_copy(
+                    py,
+                    sources,
+                    destinations,
+                    access_key,
+                    secret_key,
+                    endpoint,
+                    region,
+                )
             })
-        }).await.map_err(FileError::TaskJoin)??;
+        })
+        .await
+        .map_err(FileError::TaskJoin)??;
         Ok(result)
     })
 }

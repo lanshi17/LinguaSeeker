@@ -7,6 +7,11 @@ const DEFAULT_TIMEOUT_MS: u64 = 30_000;
 const DEFAULT_MAX_RETRIES: u32 = 2;
 const BACKOFF_BASE_MS: u64 = 1000;
 
+fn retry_backoff(attempt: u32) -> Duration {
+    let shift = attempt.saturating_sub(1).min(20);
+    Duration::from_millis(BACKOFF_BASE_MS * (1u64 << shift))
+}
+
 #[derive(Clone)]
 pub struct HttpClient {
     inner: Client,
@@ -55,8 +60,7 @@ impl HttpClient {
                 break;
             }
 
-            let backoff = Duration::from_millis(BACKOFF_BASE_MS * (1 << (attempt - 1)));
-            tokio::time::sleep(backoff).await;
+            tokio::time::sleep(retry_backoff(attempt)).await;
             response = self.inner.get(url.clone()).send().await?;
         }
 
@@ -93,8 +97,37 @@ impl HttpClient {
     }
 }
 
-impl Default for HttpClient {
-    fn default() -> Self {
-        Self::new(None, None, None).unwrap()
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn retry_backoff_caps_large_attempt_numbers() {
+        assert_eq!(retry_backoff(1), Duration::from_millis(BACKOFF_BASE_MS));
+        assert_eq!(
+            retry_backoff(21),
+            Duration::from_millis(BACKOFF_BASE_MS * (1u64 << 20))
+        );
+        assert_eq!(
+            retry_backoff(32),
+            Duration::from_millis(BACKOFF_BASE_MS * (1u64 << 20))
+        );
+    }
+
+    #[test]
+    fn build_url_percent_encodes_query_values_once() {
+        let client = HttpClient::new(None, None, None).unwrap();
+        let doi = "10.1002/(SICI)1097-0258(19980815)17:15<1661::AID-SIM889>3.0.CO;2-2";
+        let url = client
+            .build_url(
+                "https://api.openalex.org/works",
+                &serde_json::json!({ "filter": format!("doi:{doi}") }),
+            )
+            .unwrap();
+        let query = url.query().unwrap();
+
+        assert!(query.contains("filter=doi%3A10.1002%2F%28SICI%29"));
+        assert!(query.contains("%3C1661%3A%3AAID-SIM889%3E"));
+        assert!(!query.contains("%25"));
     }
 }

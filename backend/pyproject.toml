@@ -22,7 +22,7 @@ dependencies = [
     "crawl4ai>=0.8.6",
     "selectolax>=0.4.8",
     "loguru>=0.7.0",
-    "files-io",
+    "rust-io",
 ]
 
 [project.optional-dependencies]
@@ -52,7 +52,7 @@ name = "aliyun"
 url = "https://mirrors.aliyun.com/pypi/simple/"
 
 [tool.uv.sources]
-files-io = { path = "libs/files-io", editable = true }
+rust-io = { path = "libs/rust-io", editable = true }
 
 [tool.ruff]
 line-length = 120

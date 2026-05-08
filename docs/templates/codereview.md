@@ -1,39 +1,28 @@
-# Code Review: [Module Name]
-> Review date: YYYY-MM-DD
-> Reviewer: [name/AI]
-> Status: pending | in-progress | approved | changes-requested
+# Code Review: <title>
 
----
+- **Branch**: `<branch>`
+- **Date**: YYYY-MM-DD
+- **Reviewer**: <name>
+- **Scope**: <files/modules reviewed>
 
-## Summary
+## Summary Decision
 
-Brief description of what was reviewed.
-
----
+✅ Approve / 💬 Comment / 🔄 Request changes
 
 ## Findings
 
-| # | Severity | Issue | Status |
-|---|---|---|---|
-| 1 | critical/high/medium/low | Description | open/fixed/wontfix |
+### 🔴 [blocking] <finding>
 
----
+**File**: `<path>`
 
-## Detailed Review
+Describe the issue, impact, and recommended fix.
 
-### [Area 1]
+### 🟡 [important] <finding>
 
-...
+**File**: `<path>`
 
-### [Area 2]
+Describe the issue, impact, and recommended fix.
 
-...
+## Verification
 
----
-
-## Verdict
-
-- [ ] All critical issues resolved
-- [ ] All high issues resolved
-- [ ] Tests passing
-- [ ] Ready to merge
+- Command/result:

@@ -37,7 +37,7 @@ def extract_pdf_links_from_html(html: str, base_url: str) -> List[str]:
     if not html:
         return []
     try:
-        import literature_io
+        import rust_io.literature as literature_io
         return literature_io.extract_pdf_links(html, base_url)
     except (ImportError, Exception):
         pass
@@ -60,7 +60,7 @@ def scrape_html_elements(html: str, css_selector: str) -> List[Dict[str, Any]]:
     if not html:
         return []
     try:
-        import literature_io
+        import rust_io.literature as literature_io
         return literature_io.scrape_html(html, css_selector)
     except (ImportError, Exception):
         pass

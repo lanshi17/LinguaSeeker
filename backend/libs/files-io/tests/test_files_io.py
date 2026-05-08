@@ -3,7 +3,7 @@ import os
 import tempfile
 import pytest
 
-import files_io
+import rust_io.files as files_io
 
 
 @pytest.fixture

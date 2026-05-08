@@ -1,41 +1,24 @@
-# [Feature Name] Implementation Plan
+# Plan: <title>
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
-**Status:** planned | in-progress | completed
+**Status:** planned
 **Created:** YYYY-MM-DD
-**Completed:** YYYY-MM-DD (fill when done)
-**PR:** #xxx (fill when merged)
+**Completed:** —
+**PR:** —
 
-**Goal:** One-sentence description of what this plan achieves.
+## Goal
 
-**Architecture:** Brief description of the technical approach.
+Describe the intended outcome.
 
-**Tech Stack:** Key technologies and libraries.
+## Scope
 
----
+- In scope:
+- Out of scope:
 
-## Confirmed Requirements
+## Steps
 
-| Requirement | Decision |
-|---|---|
-| ... | ... |
+1. Step one → Verification: expected check.
+2. Step two → Verification: expected check.
 
----
+## Risks
 
-## Task 1: [Task Name]
-
-**Files:**
-- Modify: `path/to/file`
-
-**Step 1: [Step description]**
-
-...
-
----
-
-## Verification
-
-- [ ] All tests pass
-- [ ] Code review completed
-- [ ] Merged to dev branch
+- Risk and mitigation.
