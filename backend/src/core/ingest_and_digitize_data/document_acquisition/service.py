@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import time
-from typing import Optional
 
 from loguru import logger
 
@@ -12,13 +12,9 @@ from .contracts import (
     AcquisitionSource,
     DocumentAcquisitionRequest,
     DocumentAcquisitionResult,
+    DocumentDownloadEntry,
 )
-
-try:
-    import files_io
-except ImportError:
-    files_io = None  # type: ignore[assignment]
-    logger.warning("files_io not available, file deduplication disabled")
+from .local_upload.contracts import LocalStoredFile
 
 
 class DocumentAcquisitionService:
@@ -32,7 +28,7 @@ class DocumentAcquisitionService:
     def __init__(self) -> None:
         self.logger = logger.bind(component="DocumentAcquisitionService")
 
-    def acquire(self, request: DocumentAcquisitionRequest) -> DocumentAcquisitionResult:
+    async def acquire(self, request: DocumentAcquisitionRequest) -> DocumentAcquisitionResult:
         """Acquire a document from the specified source.
 
         Args:
@@ -50,7 +46,7 @@ class DocumentAcquisitionService:
             if request.source == AcquisitionSource.LOCAL:
                 result = self._handle_upload(request)
             elif request.source == AcquisitionSource.ONLINE:
-                result = self._handle_literature(request)
+                result = await self._handle_literature(request)
             else:
                 raise ValueError(f"Invalid source: {request.source}")
 
@@ -85,16 +81,25 @@ class DocumentAcquisitionService:
 
         self.logger.debug(f"Uploading file: {request.filename}")
 
-        # File deduplication logic
-        if request.deduplicate and files_io is not None:
+        # File deduplication: check if a file with the same SHA256 already exists
+        # in the target upload_dir (same content → same filename from store_local_file).
+        if request.deduplicate and request.upload_dir:
             content_hash = hashlib.sha256(request.content).hexdigest()
-            existing = self._find_by_hash(content_hash)
-            if existing:
-                self.logger.debug(f"File already exists: {existing.file_path}")
+            ext = os.path.splitext(request.filename)[1].lower()
+            expected_path = os.path.join(request.upload_dir, f"{content_hash}{ext}")
+            if os.path.exists(expected_path):
+                size = os.path.getsize(expected_path)
+                self.logger.debug(f"File already exists: {expected_path}")
                 return DocumentAcquisitionResult(
                     success=True,
                     source=AcquisitionSource.LOCAL,
-                    stored_file=existing,
+                    stored_file=LocalStoredFile(
+                        file_path=expected_path,
+                        sha256=content_hash,
+                        original_filename=request.filename,
+                        size=size,
+                        content_type=request.content_type,
+                    ),
                     deduplicated=True,
                     warnings=["File already exists"],
                 )
@@ -117,7 +122,7 @@ class DocumentAcquisitionService:
             stored_file=result.stored_file,
         )
 
-    def _handle_literature(self, request: DocumentAcquisitionRequest) -> DocumentAcquisitionResult:
+    async def _handle_literature(self, request: DocumentAcquisitionRequest) -> DocumentAcquisitionResult:
         """Handle online literature acquisition."""
         if not request.action:
             raise ValueError("action is required for online acquisition")
@@ -141,7 +146,17 @@ class DocumentAcquisitionService:
             "api_provider": request.api_provider,
         }
 
-        result = online_acquisition_workflow(payload)
+        result = await online_acquisition_workflow(payload)
+
+        # Convert raw download dicts to typed entries
+        downloads = [
+            DocumentDownloadEntry(
+                file_path=d.get("file_path"),
+                pdf_url=d.get("pdf_url"),
+                resolved_url=d.get("resolved_url"),
+            )
+            for d in result.get("downloads", [])
+        ]
 
         return DocumentAcquisitionResult(
             success=result.get("success", False),
@@ -149,25 +164,6 @@ class DocumentAcquisitionService:
             warnings=result.get("warnings", []),
             error=result.get("error"),
             items=result.get("items", []),
-            downloads=result.get("downloads", []),
+            downloads=downloads,
             route=result.get("route"),
         )
-
-    def _find_by_hash(self, content_hash: str) -> Optional[object]:
-        """Find file by hash with file lock for thread safety."""
-        if files_io is None:
-            return None
-
-        import fcntl
-
-        lock_path = f"/tmp/files_io_{content_hash}.lock"
-        try:
-            with open(lock_path, "w") as lock_file:
-                fcntl.flock(lock_file, fcntl.LOCK_EX)
-                try:
-                    return files_io.find_by_hash(content_hash)
-                finally:
-                    fcntl.flock(lock_file, fcntl.LOCK_UN)
-        except Exception as e:
-            self.logger.warning(f"File lock failed: {e}")
-            return None
