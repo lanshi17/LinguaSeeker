@@ -56,4 +56,8 @@ htmlcov/
 # Misc
 *.bak
 *.tmp
-backend/.cache_ggshield
+**/.cache_ggshield
+**/*.pdf
+
+# Worktrees
+.worktrees/
