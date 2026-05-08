@@ -6,10 +6,10 @@ description = "Unified local + S3 file I/O for ACMG Lingua"
 
 [lib]
 name = "files_io"
-crate-type = ["cdylib", "rlib"]
+crate-type = ["rlib"]
 
 [dependencies]
-pyo3 = { version = "0.28.2", features = ["extension-module"] }
+pyo3 = { version = "0.28.2" }
 pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs"] }
 aws-sdk-s3 = "1"
