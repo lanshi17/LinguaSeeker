@@ -20,6 +20,9 @@ pub enum FileError {
     #[error("Hash error: {0}")]
     Hash(String),
 
+    #[error("Task join error: {0}")]
+    TaskJoin(#[from] tokio::task::JoinError),
+
     #[error("{0}")]
     Other(String),
 }

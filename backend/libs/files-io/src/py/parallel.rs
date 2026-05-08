@@ -118,7 +118,7 @@ pub fn batch_copy_async<'py>(
             Python::attach(|py| {
                 batch_copy(py, sources, destinations, access_key, secret_key, endpoint, region)
             })
-        }).await.map_err(|e| FileError::Other(e.to_string()))??;
+        }).await.map_err(FileError::TaskJoin)??;
         Ok(result)
     })
 }

@@ -187,7 +187,7 @@ impl File {
                     Backend::S3(b) => b,
                 };
                 ops.copy(&path, &dst)
-            }).await.map_err(|e| FileError::Other(e.to_string()))??;
+            }).await.map_err(FileError::TaskJoin)??;
             Ok(())
         })
     }
@@ -202,7 +202,7 @@ impl File {
                     "tar.gz" | "tgz" => crate::archive::tar_gz::compress_tar_gz(&dir, &output_path),
                     _ => Err(FileError::Archive(format!("unsupported format: {format}"))),
                 }
-            }).await.map_err(|e| FileError::Other(e.to_string()))??;
+            }).await.map_err(FileError::TaskJoin)??;
             Ok(count)
         })
     }
@@ -221,7 +221,7 @@ impl File {
                 } else {
                     Err(FileError::Archive(format!("cannot detect format: {path}")))
                 }
-            }).await.map_err(|e| FileError::Other(e.to_string()))??;
+            }).await.map_err(FileError::TaskJoin)??;
             Ok(count)
         })
     }
