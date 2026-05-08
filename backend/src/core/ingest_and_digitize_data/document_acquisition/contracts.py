@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
+
+from .local_upload.contracts import LocalStoredFile
+from .online_acquisition.contracts import OnlineAcquisitionItem, OnlineAcquisitionRouteInfo
 
 
 class AcquisitionSource(str, Enum):
@@ -12,6 +15,15 @@ class AcquisitionSource(str, Enum):
 
     LOCAL = "local"
     ONLINE = "online"
+
+
+@dataclass(frozen=True)
+class DocumentDownloadEntry:
+    """A single download result from online acquisition."""
+
+    file_path: Optional[str] = None
+    pdf_url: Optional[str] = None
+    resolved_url: Optional[str] = None
 
 
 @dataclass
@@ -51,12 +63,12 @@ class DocumentAcquisitionResult:
     warnings: List[str] = field(default_factory=list)
     error: Optional[str] = None
     # local upload result fields
-    stored_file: Optional[Any] = None  # LocalStoredFile
+    stored_file: Optional[LocalStoredFile] = None
     deduplicated: bool = False
     # online acquisition result fields
-    items: List[Any] = field(default_factory=list)  # List[OnlineAcquisitionItem]
-    downloads: List[Dict[str, Any]] = field(default_factory=list)
-    route: Optional[Any] = None  # RouteInfo
+    items: List[OnlineAcquisitionItem] = field(default_factory=list)
+    downloads: List[DocumentDownloadEntry] = field(default_factory=list)
+    route: Optional[OnlineAcquisitionRouteInfo] = None
     cached: bool = False
     # common fields
     elapsed_time: float = 0.0

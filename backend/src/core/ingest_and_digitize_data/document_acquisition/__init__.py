@@ -5,6 +5,7 @@ from .contracts import (
     AcquisitionSource,
     DocumentAcquisitionRequest,
     DocumentAcquisitionResult,
+    DocumentDownloadEntry,
 )
 
 __all__ = [
