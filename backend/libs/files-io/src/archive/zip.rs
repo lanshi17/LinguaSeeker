@@ -11,8 +11,7 @@ pub fn compress_dir(dir_path: &str, output_path: &str) -> Result<u64, FileError>
     }
     let file = fs::File::create(output_path)?;
     let mut zip = zip::ZipWriter::new(file);
-    let options = SimpleFileOptions::default()
-        .compression_method(zip::CompressionMethod::Deflated);
+    let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
     let mut file_count: u64 = 0;
     add_dir_to_zip(&mut zip, dir, dir, &options, &mut file_count)?;
     zip.finish()?;
@@ -43,6 +42,41 @@ fn add_dir_to_zip(
     Ok(())
 }
 
+fn is_zip_symlink(mode: Option<u32>) -> bool {
+    mode.is_some_and(|mode| mode & 0o170000 == 0o120000)
+}
+
+fn validate_entry_path(entry_name: &Path, out_root: &Path) -> Result<(), FileError> {
+    if entry_name.components().any(|component| {
+        matches!(
+            component,
+            std::path::Component::ParentDir
+                | std::path::Component::RootDir
+                | std::path::Component::Prefix(_)
+        )
+    }) {
+        return Err(FileError::Archive(format!(
+            "path traversal attempt: entry '{}' contains unsafe components",
+            entry_name.display()
+        )));
+    }
+
+    let mut current = out_root.to_path_buf();
+    for component in entry_name.components() {
+        current.push(component.as_os_str());
+        if current.exists() {
+            let canonical = fs::canonicalize(&current)?;
+            if !canonical.starts_with(out_root) {
+                return Err(FileError::Archive(format!(
+                    "path traversal attempt: entry '{}' resolves outside output directory",
+                    entry_name.display()
+                )));
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Extract a .zip archive to a directory.
 ///
 /// Validates that all extracted paths remain within `output_dir` to prevent
@@ -54,16 +88,18 @@ pub fn extract(archive_path: &str, output_dir: &str) -> Result<u64, FileError> {
     let out_root = fs::canonicalize(output_dir)?;
     let mut count: u64 = 0;
     for i in 0..archive.len() {
-        let mut file = archive.by_index(i).map_err(|e| FileError::Archive(e.to_string()))?;
+        let mut file = archive
+            .by_index(i)
+            .map_err(|e| FileError::Archive(e.to_string()))?;
         let entry_name = file.mangled_name();
-        let outpath = out_root.join(&entry_name);
-        // Path traversal guard: entry components must not escape output_dir
-        if entry_name.components().any(|c| matches!(c, std::path::Component::ParentDir | std::path::Component::RootDir)) {
+        if is_zip_symlink(file.unix_mode()) {
             return Err(FileError::Archive(format!(
-                "path traversal attempt: entry '{}' contains unsafe components",
+                "symlink entries are not supported: '{}'",
                 entry_name.display()
             )));
         }
+        validate_entry_path(&entry_name, &out_root)?;
+        let outpath = out_root.join(&entry_name);
         if file.name().ends_with('/') {
             fs::create_dir_all(&outpath)?;
         } else {

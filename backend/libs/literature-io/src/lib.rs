@@ -1,6 +1,6 @@
-pub mod error;
-pub mod types;
 pub mod client;
+pub mod error;
 pub mod providers;
-pub mod scraper;
 pub mod py;
+pub mod scraper;
+pub mod types;

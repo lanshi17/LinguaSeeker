@@ -20,7 +20,12 @@ impl UnpaywallProvider {
             ));
         };
 
-        let email = std::env::var("UNPAYWALL_EMAIL").unwrap_or_else(|_| "[redacted-email]".into());
+        let Ok(email) = std::env::var("UNPAYWALL_EMAIL") else {
+            return Ok(FetchResult::failure(
+                "unpaywall",
+                vec!["unpaywall_requires_email".into()],
+            ));
+        };
         let url = format!("https://api.unpaywall.org/v2/{}", urlencoding::encode(doi));
         let params = serde_json::json!({ "email": email });
         let json = client.get_json(&url, &params).await?;

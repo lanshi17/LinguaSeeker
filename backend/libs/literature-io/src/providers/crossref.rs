@@ -13,25 +13,28 @@ impl CrossrefProvider {
         let limit = params.limit.unwrap_or(10);
 
         // If DOI is provided, use the DOI-specific endpoint
-        if let Some(doi) = params.identifiers.as_ref().and_then(|ids| ids.doi.as_deref()) {
-            if !doi.is_empty() {
-                let url = format!("https://api.crossref.org/works/{}", doi);
-                let json = client.get_json(&url, &serde_json::json!({})).await?;
-                // DOI endpoint returns a single item in "message"
-                let items = json
-                    .get("message")
-                    .map(|msg| vec![msg.clone()])
-                    .unwrap_or_default();
-                return Ok(FetchResult {
-                    provider: "crossref".into(),
-                    success: !items.is_empty(),
-                    items,
-                    downloads: vec![],
-                    warnings: vec![],
-                    raw: Some(json),
-                    meta: None,
-                });
-            }
+        if let Some(doi) = params
+            .identifiers
+            .as_ref()
+            .and_then(|ids| ids.doi.as_deref())
+            && !doi.is_empty()
+        {
+            let url = work_url_for_doi(doi);
+            let json = client.get_json(&url, &serde_json::json!({})).await?;
+            // DOI endpoint returns a single item in "message"
+            let items = json
+                .get("message")
+                .map(|msg| vec![msg.clone()])
+                .unwrap_or_default();
+            return Ok(FetchResult {
+                provider: "crossref".into(),
+                success: !items.is_empty(),
+                items,
+                downloads: vec![],
+                warnings: vec![],
+                raw: Some(json),
+                meta: None,
+            });
         }
 
         // Fallback: text search
@@ -56,7 +59,16 @@ impl CrossrefProvider {
     }
 }
 
-fn parse_crossref_response(json: &serde_json::Value) -> Result<Vec<serde_json::Value>, GatewayError> {
+fn work_url_for_doi(doi: &str) -> String {
+    format!(
+        "https://api.crossref.org/works/{}",
+        urlencoding::encode(doi)
+    )
+}
+
+fn parse_crossref_response(
+    json: &serde_json::Value,
+) -> Result<Vec<serde_json::Value>, GatewayError> {
     let items = json
         .get("message")
         .and_then(|m| m.get("items"))
@@ -64,4 +76,21 @@ fn parse_crossref_response(json: &serde_json::Value) -> Result<Vec<serde_json::V
         .map(|arr| arr.to_vec())
         .unwrap_or_default();
     Ok(items)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn work_url_for_doi_percent_encodes_path_segment() {
+        let doi = "10.1002/(SICI)1097-0258(19980815)17:15<1661::AID-SIM889>3.0.CO;2-2";
+        let encoded = urlencoding::encode(doi);
+
+        let url = work_url_for_doi(doi);
+
+        assert_eq!(url, format!("https://api.crossref.org/works/{encoded}"));
+        assert!(!url.contains("(SICI)"));
+        assert!(!url.contains("<1661"));
+    }
 }

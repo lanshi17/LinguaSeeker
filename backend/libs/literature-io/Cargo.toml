@@ -11,6 +11,7 @@ crate-type = ["rlib"]
 [dependencies]
 pyo3 = { version = "0.28.2" }
 pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
+futures = "0.3"
 reqwest = { version = "0.13", features = ["json", "rustls", "gzip", "socks"], default-features = false }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
 serde = { version = "1", features = ["derive"] }
