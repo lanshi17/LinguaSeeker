@@ -18,10 +18,10 @@ from .contracts import (
 )
 
 try:
-    from rust_io import files as rust_files
+    import files_io
 except ImportError:
-    rust_files = None  # type: ignore[assignment]
-    logger.warning("rust_io.files not available, falling back to Python I/O")
+    files_io = None  # type: ignore[assignment]
+    logger.warning("files_io not available, falling back to Python I/O")
 
 
 def validate_upload(file: UploadedFile) -> List[str]:
@@ -40,12 +40,8 @@ def validate_upload(file: UploadedFile) -> List[str]:
         errors.append(f"Unsupported file extension: {ext}. Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}")
 
     # Validate PDF magic bytes
-    if ext == ".pdf":
-        if rust_files is not None:
-            if not rust_files.validate_pdf_magic(file.content):
-                errors.append("Invalid PDF: missing %PDF magic bytes")
-        elif not file.content[:4] == b"%PDF":
-            errors.append("Invalid PDF: missing %PDF magic bytes")
+    if ext == ".pdf" and not file.content[:4] == b"%PDF":
+        errors.append("Invalid PDF: missing %PDF magic bytes")
 
     return errors
 
@@ -95,15 +91,15 @@ def store_file(
 
     # Write file (skip for temp path — already written by _write_to_temp)
     if upload_dir:
-        if rust_files is not None:
-            rust_files.write_file(file_path, file.content)
+        if files_io is not None:
+            files_io.File(file_path).write(file.content)
         else:
             with open(file_path, "wb") as f:
                 f.write(file.content)
 
     # Hash: verify from disk when Rust is available, else from memory
-    if rust_files is not None:
-        verified_hash = rust_files.compute_sha256(file_path)
+    if files_io is not None:
+        verified_hash = files_io.File(file_path).content_hash()
     else:
         verified_hash = _compute_sha256(file.content)
 
