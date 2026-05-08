@@ -193,7 +193,7 @@ def _failure_result(provider: str, error: Exception, action: str = "search") -> 
 async def call_provider(request: OnlineAcquisitionGatewayRequest) -> OnlineAcquisitionGatewayResult:
     """Call a single provider via literature_io.fetch_one."""
     try:
-        import literature_io
+        import rust_io.literature as literature_io
     except ImportError:
         return _failure_result(
             request.provider,

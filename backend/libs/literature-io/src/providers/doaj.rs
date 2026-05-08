@@ -26,7 +26,10 @@ impl DoajProvider {
             .and_then(|results| results.as_array())
             .map(|items| items.to_vec())
             .unwrap_or_default();
-        let total = json.get("total").and_then(|value| value.as_u64()).unwrap_or(0);
+        let total = json
+            .get("total")
+            .and_then(|value| value.as_u64())
+            .unwrap_or(0);
 
         Ok(FetchResult {
             provider: "doaj".into(),
@@ -46,10 +49,7 @@ impl DoajProvider {
         let query = params.query.as_deref().unwrap_or_default();
         let search_result = Self::search(client, query, params.limit).await?;
         if search_result.items.is_empty() {
-            return Ok(FetchResult::failure(
-                "doaj",
-                vec!["doaj_no_results".into()],
-            ));
+            return Ok(FetchResult::failure("doaj", vec!["doaj_no_results".into()]));
         }
 
         let selected_index = params.selected_index.unwrap_or(0) as usize;
@@ -101,10 +101,10 @@ fn extract_doaj_links(item: &serde_json::Value) -> Vec<String> {
 
     if let Some(identifiers) = bibjson.get("identifier").and_then(|value| value.as_array()) {
         for identifier in identifiers {
-            if identifier.get("type").and_then(|value| value.as_str()) == Some("doi") {
-                if let Some(doi) = identifier.get("id").and_then(|value| value.as_str()) {
-                    links.push(format!("https://doi.org/{doi}"));
-                }
+            if identifier.get("type").and_then(|value| value.as_str()) == Some("doi")
+                && let Some(doi) = identifier.get("id").and_then(|value| value.as_str())
+            {
+                links.push(format!("https://doi.org/{doi}"));
             }
         }
     }

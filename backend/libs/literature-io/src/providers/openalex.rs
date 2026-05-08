@@ -14,25 +14,28 @@ impl OpenAlexProvider {
         let base_url = "https://api.openalex.org/works";
 
         // If DOI is provided, use DOI filter for exact lookup
-        if let Some(doi) = params.identifiers.as_ref().and_then(|ids| ids.doi.as_deref()) {
-            if !doi.is_empty() {
-                let filter = format!("doi:{}", doi);
-                let search_params = serde_json::json!({
-                    "filter": filter,
-                    "per-page": 1,
-                });
-                let json = client.get_json(base_url, &search_params).await?;
-                let items = parse_openalex_response(&json)?;
-                return Ok(FetchResult {
-                    provider: "openalex".into(),
-                    success: !items.is_empty(),
-                    items,
-                    downloads: vec![],
-                    warnings: vec![],
-                    raw: Some(json),
-                    meta: None,
-                });
-            }
+        if let Some(doi) = params
+            .identifiers
+            .as_ref()
+            .and_then(|ids| ids.doi.as_deref())
+            && !doi.is_empty()
+        {
+            let filter = format!("doi:{}", doi);
+            let search_params = serde_json::json!({
+                "filter": filter,
+                "per-page": 1,
+            });
+            let json = client.get_json(base_url, &search_params).await?;
+            let items = parse_openalex_response(&json)?;
+            return Ok(FetchResult {
+                provider: "openalex".into(),
+                success: !items.is_empty(),
+                items,
+                downloads: vec![],
+                warnings: vec![],
+                raw: Some(json),
+                meta: None,
+            });
         }
 
         // Fallback: text search
@@ -56,7 +59,9 @@ impl OpenAlexProvider {
     }
 }
 
-fn parse_openalex_response(json: &serde_json::Value) -> Result<Vec<serde_json::Value>, GatewayError> {
+fn parse_openalex_response(
+    json: &serde_json::Value,
+) -> Result<Vec<serde_json::Value>, GatewayError> {
     let items = json
         .get("results")
         .and_then(|r| r.as_array())

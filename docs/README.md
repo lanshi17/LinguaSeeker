@@ -1,98 +1,63 @@
 # Documentation Index
 
-## Directory Structure
+Project documentation is organized by lifecycle status.
 
-```
+```text
 docs/
-├── README.md          # This file — index & classification rules
-├── archive/           # Completed work (plans + code reviews)
+├── README.md
+├── active/
+├── planned/
+├── codereview/
+├── archive/
 │   ├── plans/
 │   └── codereview/
-├── active/            # Currently in progress
-├── planned/           # Not started yet
-├── codereview/        # Active code reviews (in progress)
-└── templates/         # Document templates
-    ├── plan.md
-    └── codereview.md
+└── templates/
 ```
 
 ## Classification Rules
 
-### Status Lifecycle
+- `planned/`: planned work that has not started.
+- `active/`: in-progress implementation plans and working notes.
+- `codereview/`: active code review reports and review follow-ups.
+- `archive/plans/`: completed or superseded plans.
+- `archive/codereview/`: completed code reviews whose findings are resolved or no longer active.
+- `templates/`: reusable documentation templates.
 
-Every document goes through these stages:
+## Naming Convention
 
-```
-planned/ → active/ → archive/
-```
-
-### When to Move Documents
-
-| From | To | Trigger |
-|---|---|---|
-| `planned/` | `active/` | Implementation started (first commit) |
-| `active/` | `archive/` | PR merged to `dev` branch |
-| `codereview/` | `archive/codereview/` | Review approved + PR merged |
-
-### Naming Convention
-
-```
-YYYY-MM-DD-<kebab-case-description>.md
-```
-
-Examples:
-- `2026-05-07-files-io-module.md`
-- `2026-05-08-selectolax-migration.md`
-
-### Document Headers
-
-Every plan must include in its header:
-- **Status:** planned | in-progress | completed
-- **Created:** date
-- **Completed:** date (when done)
-- **PR:** link/number (when merged)
-
-### Code Review Documents
-
-- Active reviews go in `codereview/`
-- Completed reviews go in `archive/codereview/`
-- Naming: `<module>-YYYY-MM-DD.md` (add `-second`, `-final` for multiple rounds)
-
-### Orphan Cleanup
-
-- Documents older than 30 days with status "planned" should be reviewed — either start or close them
-- Code reviews with "changes-requested" older than 14 days should be pinged
-
----
+Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Active Plans
 
-| Date | Plan | Status |
+| date | title | status/PR |
 |---|---|---|
-| — | (none) | — |
+| — | — | — |
 
-## Planned (Not Started)
+## Planned Work
 
-| Date | Plan | Location |
+| date | title | status/PR |
 |---|---|---|
-| 2026-05-08 | [Rust I/O Facade Refactor](../backend/docs/planned/2026-05-08-rust-io-facade-refactor.md) | backend/docs/planned/ |
+| — | — | — |
 
----
+## Active Code Reviews
+
+| date | title | status/PR |
+|---|---|---|
+| 2026-05-08 | [rust-io facade pass 7](codereview/rust-io-facade-2026-05-08-pass7.md) | approved |
+| 2026-05-08 | [rust-io facade pass 6](codereview/rust-io-facade-2026-05-08-pass6.md) | approved with docs follow-up |
+| 2026-05-08 | [rust-io facade pass 5](codereview/rust-io-facade-2026-05-08-pass5.md) | comment / nearly ready |
+| 2026-05-08 | [rust-io facade pass 4](codereview/rust-io-facade-2026-05-08-pass4.md) | changes requested |
+| 2026-05-08 | [rust-io facade pass 3](codereview/rust-io-facade-2026-05-08-pass3.md) | active review history |
+| 2026-05-08 | [rust-io facade](codereview/rust-io-facade-2026-05-08.md) | active review history |
+| 2026-05-08 | [files-io final](codereview/files-io-2026-05-08-final.md) | active review history |
+| 2026-05-08 | [files-io second](codereview/files-io-2026-05-08-second.md) | active review history |
+| 2026-05-08 | [files-io](codereview/files-io-2026-05-08.md) | active review history |
 
 ## Archive Index
 
-### Completed Plans
-
-| Date | Plan | PR |
+| date | title | status/PR |
 |---|---|---|
-| 2026-05-05 | [Rust I/O Literature Gateway](archive/plans/2026-05-05-rust-io-literature-gateway.md) | merged |
-| 2026-05-06 | [Literature Acquisition Module](archive/plans/2026-05-06-literature-acquisition.md) | merged |
-| 2026-05-07 | [Files I/O Module](archive/plans/2026-05-07-files-io-module.md) | merged |
-| 2026-05-07 | [Selectolax Migration](archive/plans/2026-05-07-selectolax-migration.md) | merged |
-| 2026-05-07 | [User Upload](archive/plans/2026-05-07-user-upload.md) | merged |
-
-### Completed Code Reviews
-
-| Date | Module | Rounds |
-|---|---|---|
-| 2026-05-08 | files-io | 3 (initial, second, final) |
+| 2026-05-08 | [rust-io facade review v2](archive/codereview/code_review_rust_io_facade_v2.md) | archived |
+| 2026-05-08 | [rust-io facade review](archive/codereview/code_review_rust_io_facade.md) | archived |
+| 2026-05-06 | [literature acquisition plan](archive/plans/2026-05-06-literature-acquisition.md) | completed |
+| 2026-05-05 | [rust-io literature gateway](archive/plans/2026-05-05-rust-io-literature-gateway.md) | completed |

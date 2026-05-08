@@ -5,6 +5,7 @@ use crate::providers::{
     PmcProvider, UnpaywallProvider,
 };
 use crate::types::{Action, FetchParams, FetchResult};
+use futures::future::join_all;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
@@ -35,6 +36,16 @@ pub fn fetch_one<'py>(
     })
 }
 
+/// Fan out a literature action to multiple providers concurrently.
+///
+/// All provider requests are launched in parallel via `join_all`.
+/// Per-provider runtime failures (HTTP errors, timeouts) are captured
+/// as `FetchResult::failure` objects rather than propagating exceptions,
+/// so a single provider failure does not abort the entire batch.
+///
+/// **Note**: Unknown provider names also produce a `FetchResult::failure`
+/// object. Callers should inspect `success` / `warnings` on each result
+/// to distinguish "no results" from "provider not recognized".
 #[pyfunction]
 #[pyo3(signature = (providers, action, params, timeout_ms=None, max_retries=None, proxy=None))]
 pub fn fetch_multi<'py>(
@@ -51,14 +62,18 @@ pub fn fetch_multi<'py>(
     let client = HttpClient::new(timeout_ms, max_retries, proxy.as_deref())?;
 
     pyo3_async_runtimes::tokio::future_into_py(py, async move {
-        let mut results = Vec::with_capacity(providers.len());
-        for provider in providers {
-            results.push(
-                execute_provider(&client, &provider, &action, &params)
-                    .await
-                    .map_err(PyErr::from)?,
-            );
-        }
+        let tasks = providers.into_iter().map(|provider| {
+            let client = client.clone();
+            let action = action.clone();
+            let params = params.clone();
+            async move {
+                match execute_provider(&client, &provider, &action, &params).await {
+                    Ok(result) => result,
+                    Err(err) => FetchResult::failure(&provider, vec![err.to_string()]),
+                }
+            }
+        });
+        let results = join_all(tasks).await;
         Python::attach(|py| {
             pythonize::pythonize(py, &results)
                 .map(|obj| obj.unbind())

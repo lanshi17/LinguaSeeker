@@ -15,7 +15,10 @@ impl JstageProvider {
             "count": limit.unwrap_or(20).min(100),
         });
         let json = client
-            .get_json("https://www.jstage.jst.go.jp/search/global/_search", &params)
+            .get_json(
+                "https://www.jstage.jst.go.jp/search/global/_search",
+                &params,
+            )
             .await?;
         let items = json
             .get("articles")
@@ -53,7 +56,10 @@ impl JstageProvider {
 
         let selected_index = params.selected_index.unwrap_or(0) as usize;
         let item = &search_result.items[selected_index.min(search_result.items.len() - 1)];
-        let detail_link = item.get("link").and_then(|value| value.as_str()).unwrap_or_default();
+        let detail_link = item
+            .get("link")
+            .and_then(|value| value.as_str())
+            .unwrap_or_default();
         Ok(Self::downloads_from_link(detail_link, search_result.raw))
     }
 

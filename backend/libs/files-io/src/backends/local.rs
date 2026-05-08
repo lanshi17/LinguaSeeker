@@ -8,8 +8,16 @@ use std::path::Path;
 #[derive(Clone)]
 pub struct LocalBackend;
 
+impl Default for LocalBackend {
+    fn default() -> Self {
+        Self
+    }
+}
+
 impl LocalBackend {
-    pub fn new() -> Self { Self }
+    pub fn new() -> Self {
+        Self
+    }
 }
 
 impl FileOps for LocalBackend {
@@ -34,7 +42,12 @@ impl FileOps for LocalBackend {
         Ok(())
     }
 
-    fn write_stream(&self, path: &str, reader: &mut dyn Read, create_parents: bool) -> Result<(), FileError> {
+    fn write_stream(
+        &self,
+        path: &str,
+        reader: &mut dyn Read,
+        create_parents: bool,
+    ) -> Result<(), FileError> {
         if create_parents && let Some(parent) = Path::new(path).parent() {
             fs::create_dir_all(parent)?;
         }
@@ -42,7 +55,9 @@ impl FileOps for LocalBackend {
         let mut buf = [0u8; 1024 * 1024];
         loop {
             let n = reader.read(&mut buf)?;
-            if n == 0 { break; }
+            if n == 0 {
+                break;
+            }
             file.write_all(&buf[..n])?;
         }
         Ok(())
@@ -54,8 +69,13 @@ impl FileOps for LocalBackend {
 
     fn metadata(&self, path: &str) -> Result<FileMetadata, FileError> {
         let meta = fs::metadata(path)?;
-        let mtime = meta.modified()
-            .map(|t| t.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs_f64())
+        let mtime = meta
+            .modified()
+            .map(|t| {
+                t.duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs_f64()
+            })
             .unwrap_or(0.0);
         let mut extra = HashMap::new();
         let perms;
