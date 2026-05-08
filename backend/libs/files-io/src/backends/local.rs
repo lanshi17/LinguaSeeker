@@ -5,6 +5,7 @@ use std::fs;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 
+#[derive(Clone)]
 pub struct LocalBackend;
 
 impl LocalBackend {

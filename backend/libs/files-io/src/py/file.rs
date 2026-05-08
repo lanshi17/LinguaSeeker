@@ -4,6 +4,7 @@ use crate::hash;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict};
 
+#[derive(Clone)]
 enum Backend {
     Local(LocalBackend),
     S3(S3Backend),
@@ -178,10 +179,14 @@ impl File {
 
     fn copy_async<'py>(&self, py: Python<'py>, dst: String) -> PyResult<Bound<'py, PyAny>> {
         let path = self.path.clone();
+        let backend = self.backend.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             tokio::task::spawn_blocking(move || {
-                let local = LocalBackend::new();
-                local.copy(&path, &dst)
+                let ops: &dyn FileOps = match &backend {
+                    Backend::Local(b) => b,
+                    Backend::S3(b) => b,
+                };
+                ops.copy(&path, &dst)
             }).await.map_err(|e| FileError::Other(e.to_string()))??;
             Ok(())
         })

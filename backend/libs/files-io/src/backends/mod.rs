@@ -17,11 +17,11 @@ pub struct FileMetadata {
 }
 
 /// Trait for local and S3 backends.
-#[allow(dead_code)]
 pub trait FileOps: Send + Sync {
     fn read_all(&self, path: &str) -> Result<Vec<u8>, FileError>;
     fn read_chunk(&self, path: &str, offset: u64, size: u64) -> Result<Vec<u8>, FileError>;
     fn write(&self, path: &str, data: &[u8], create_parents: bool) -> Result<(), FileError>;
+    #[allow(dead_code)]
     fn write_stream(&self, path: &str, reader: &mut dyn std::io::Read, create_parents: bool) -> Result<(), FileError>;
     fn exists(&self, path: &str) -> Result<bool, FileError>;
     fn metadata(&self, path: &str) -> Result<FileMetadata, FileError>;
@@ -30,5 +30,6 @@ pub trait FileOps: Send + Sync {
     fn remove(&self, path: &str) -> Result<(), FileError>;
     fn remove_dir_all(&self, path: &str) -> Result<(), FileError>;
     fn list_dir(&self, path: &str) -> Result<Vec<String>, FileError>;
+    #[allow(dead_code)]
     fn ensure_dir(&self, path: &str) -> Result<(), FileError>;
 }
