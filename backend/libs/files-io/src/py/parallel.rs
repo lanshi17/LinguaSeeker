@@ -29,9 +29,10 @@ fn make_result_dict(py: Python<'_>, results: &[OpResult]) -> PyResult<Py<PyAny>>
     Ok(result.into_any().unbind())
 }
 
+/// Copy multiple files sequentially. Returns {success: [...], failed: [{path, error}]}.
 #[pyfunction]
-#[pyo3(signature = (sources, destinations, access_key=None, secret_key=None, endpoint=None, region=None))]
-pub fn parallel_copy(
+#[pyo3(name = "batch_copy", signature = (sources, destinations, access_key=None, secret_key=None, endpoint=None, region=None))]
+pub fn batch_copy(
     py: Python<'_>,
     sources: Vec<String>,
     destinations: Vec<String>,
@@ -70,9 +71,10 @@ pub fn parallel_copy(
     make_result_dict(py, &results)
 }
 
+/// Compress multiple directories sequentially. Returns {success: [...], failed: [{path, error}]}.
 #[pyfunction]
-#[pyo3(signature = (dir_paths, output_paths, format="zip"))]
-pub fn parallel_compress(
+#[pyo3(name = "batch_compress", signature = (dir_paths, output_paths, format="zip"))]
+pub fn batch_compress(
     py: Python<'_>,
     dir_paths: Vec<String>,
     output_paths: Vec<String>,
@@ -99,9 +101,10 @@ pub fn parallel_compress(
     make_result_dict(py, &results)
 }
 
+/// Async batch copy using spawn_blocking.
 #[pyfunction]
-#[pyo3(signature = (sources, destinations, access_key=None, secret_key=None, endpoint=None, region=None))]
-pub fn parallel_copy_async<'py>(
+#[pyo3(name = "batch_copy_async", signature = (sources, destinations, access_key=None, secret_key=None, endpoint=None, region=None))]
+pub fn batch_copy_async<'py>(
     py: Python<'py>,
     sources: Vec<String>,
     destinations: Vec<String>,
@@ -113,7 +116,7 @@ pub fn parallel_copy_async<'py>(
     pyo3_async_runtimes::tokio::future_into_py(py, async move {
         let result = tokio::task::spawn_blocking(move || {
             Python::attach(|py| {
-                parallel_copy(py, sources, destinations, access_key, secret_key, endpoint, region)
+                batch_copy(py, sources, destinations, access_key, secret_key, endpoint, region)
             })
         }).await.map_err(|e| FileError::Other(e.to_string()))??;
         Ok(result)

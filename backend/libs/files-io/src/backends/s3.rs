@@ -16,6 +16,7 @@ fn get_runtime() -> &'static Runtime {
     S3_RT.get_or_init(|| Runtime::new().expect("failed to create tokio runtime for S3"))
 }
 
+#[derive(Clone)]
 pub struct S3Backend {
     client: Client,
 }
@@ -212,22 +213,36 @@ impl FileOps for S3Backend {
     fn list_dir(&self, path: &str) -> Result<Vec<String>, FileError> {
         let (bucket, key) = parse_s3_path(path)?;
         let prefix = if key.ends_with('/') { key.to_string() } else { format!("{key}/") };
-        let resp = self.rt().block_on(
-            self.client.list_objects_v2().bucket(bucket).prefix(&prefix).delimiter("/").send()
-        ).map_err(|e| FileError::S3(e.to_string()))?;
         let mut entries = Vec::new();
-        for cp in resp.common_prefixes() {
-            if let Some(p) = cp.prefix() {
-                let name = p.strip_prefix(&prefix).unwrap_or(p);
-                entries.push(name.to_string());
+        let mut continuation_token: Option<String> = None;
+
+        loop {
+            let mut req = self.client.list_objects_v2().bucket(bucket).prefix(&prefix).delimiter("/");
+            if let Some(token) = &continuation_token {
+                req = req.continuation_token(token);
             }
-        }
-        for obj in resp.contents() {
-            if let Some(k) = obj.key() {
-                let name = k.strip_prefix(&prefix).unwrap_or(k);
-                if !name.is_empty() {
+            let resp = self.rt().block_on(req.send())
+                .map_err(|e| FileError::S3(e.to_string()))?;
+
+            for cp in resp.common_prefixes() {
+                if let Some(p) = cp.prefix() {
+                    let name = p.strip_prefix(&prefix).unwrap_or(p);
                     entries.push(name.to_string());
                 }
+            }
+            for obj in resp.contents() {
+                if let Some(k) = obj.key() {
+                    let name = k.strip_prefix(&prefix).unwrap_or(k);
+                    if !name.is_empty() {
+                        entries.push(name.to_string());
+                    }
+                }
+            }
+
+            if resp.is_truncated.unwrap_or(false) {
+                continuation_token = resp.next_continuation_token().map(|s| s.to_string());
+            } else {
+                break;
             }
         }
         Ok(entries)
