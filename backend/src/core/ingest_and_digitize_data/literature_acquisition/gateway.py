@@ -194,9 +194,8 @@ def _failure_result(provider: str, error: Exception, action: str = "search") -> 
 async def call_provider(request: GatewayRequest) -> GatewayResult:
     """Call a single provider via rust_io.literature.fetch_one."""
     try:
-        import rust_io
-        rust_lit = rust_io.literature
-    except (ImportError, AttributeError):
+        import rust_io.literature as literature_io
+    except ImportError:
         return _failure_result(
             request.provider,
             RuntimeError("rust_io.literature not available"),
@@ -205,7 +204,7 @@ async def call_provider(request: GatewayRequest) -> GatewayResult:
 
     params = _build_fetch_params(request)
     try:
-        raw_result = await rust_lit.fetch_one(
+        raw_result = await literature_io.fetch_one(
             provider=request.provider,
             action=request.action,
             params=params,
