@@ -1,6 +1,5 @@
 use crate::error::FileError;
 use std::fs;
-use std::io::{Read, Write};
 use std::path::Path;
 use zip::write::SimpleFileOptions;
 
@@ -37,9 +36,7 @@ fn add_dir_to_zip(
         } else {
             zip.start_file(name.to_string_lossy(), *options)?;
             let mut f = fs::File::open(&path)?;
-            let mut buf = Vec::new();
-            f.read_to_end(&mut buf)?;
-            zip.write_all(&buf)?;
+            std::io::copy(&mut f, zip)?;
             *count += 1;
         }
     }
