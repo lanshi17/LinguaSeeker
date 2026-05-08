@@ -20,7 +20,6 @@ from .locators import (
     CYBERLENINKA_RESULTS,
     CYBERLENINKA_SEARCH_BUTTON,
     CYBERLENINKA_SEARCH_INPUT,
-    CYBERLENINKA_SUBJECT_FILTER,
 )
 
 log = logging.getLogger(__name__)
