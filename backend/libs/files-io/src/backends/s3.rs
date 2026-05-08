@@ -2,14 +2,22 @@ use super::{FileMetadata, FileOps};
 use crate::error::FileError;
 use aws_sdk_s3::Client;
 use aws_sdk_s3::config::{Credentials, Region};
+use aws_sdk_s3::error::SdkError;
 use aws_credential_types::provider::SharedCredentialsProvider;
 use std::collections::HashMap;
 use std::io::Read;
+use std::sync::OnceLock;
 use tokio::runtime::Runtime;
+
+/// Shared tokio runtime for all S3Backend instances.
+static S3_RT: OnceLock<Runtime> = OnceLock::new();
+
+fn get_runtime() -> &'static Runtime {
+    S3_RT.get_or_init(|| Runtime::new().expect("failed to create tokio runtime for S3"))
+}
 
 pub struct S3Backend {
     client: Client,
-    rt: Runtime,
 }
 
 fn parse_s3_path(path: &str) -> Result<(&str, &str), FileError> {
@@ -24,7 +32,6 @@ fn parse_s3_path(path: &str) -> Result<(&str, &str), FileError> {
 
 impl S3Backend {
     pub fn new(access_key: &str, secret_key: &str, endpoint: Option<&str>, region: Option<&str>) -> Result<Self, FileError> {
-        let rt = Runtime::new().map_err(|e| FileError::Other(e.to_string()))?;
         let credentials = Credentials::new(
             access_key, secret_key, None, None, "files-io",
         );
@@ -36,17 +43,34 @@ impl S3Backend {
         }
         let config = config_builder.build();
         let client = Client::new(&config);
-        Ok(Self { client, rt })
+        Ok(Self { client })
+    }
+
+    fn rt(&self) -> &'static Runtime {
+        get_runtime()
+    }
+}
+
+/// Check if an S3 error is a 404 (not found).
+fn is_not_found(err: &SdkError<aws_sdk_s3::operation::head_object::HeadObjectError>) -> bool {
+    match err {
+        SdkError::ServiceError(e) => {
+            matches!(
+                e.err(),
+                aws_sdk_s3::operation::head_object::HeadObjectError::NotFound(_)
+            )
+        }
+        _ => false,
     }
 }
 
 impl FileOps for S3Backend {
     fn read_all(&self, path: &str) -> Result<Vec<u8>, FileError> {
         let (bucket, key) = parse_s3_path(path)?;
-        let resp = self.rt.block_on(
+        let resp = self.rt().block_on(
             self.client.get_object().bucket(bucket).key(key).send()
         ).map_err(|e| FileError::S3(e.to_string()))?;
-        let bytes = self.rt.block_on(resp.body.collect())
+        let bytes = self.rt().block_on(resp.body.collect())
             .map_err(|e| FileError::S3(e.to_string()))?;
         Ok(bytes.to_vec())
     }
@@ -54,10 +78,10 @@ impl FileOps for S3Backend {
     fn read_chunk(&self, path: &str, offset: u64, size: u64) -> Result<Vec<u8>, FileError> {
         let (bucket, key) = parse_s3_path(path)?;
         let range = format!("bytes={}-{}", offset, offset + size - 1);
-        let resp = self.rt.block_on(
+        let resp = self.rt().block_on(
             self.client.get_object().bucket(bucket).key(key).range(range).send()
         ).map_err(|e| FileError::S3(e.to_string()))?;
-        let bytes = self.rt.block_on(resp.body.collect())
+        let bytes = self.rt().block_on(resp.body.collect())
             .map_err(|e| FileError::S3(e.to_string()))?;
         Ok(bytes.to_vec())
     }
@@ -65,7 +89,7 @@ impl FileOps for S3Backend {
     fn write(&self, path: &str, data: &[u8], _create_parents: bool) -> Result<(), FileError> {
         let (bucket, key) = parse_s3_path(path)?;
         let body = aws_sdk_s3::primitives::ByteStream::from(data.to_vec());
-        self.rt.block_on(
+        self.rt().block_on(
             self.client.put_object().bucket(bucket).key(key).body(body).send()
         ).map_err(|e| FileError::S3(e.to_string()))?;
         Ok(())
@@ -79,18 +103,23 @@ impl FileOps for S3Backend {
 
     fn exists(&self, path: &str) -> Result<bool, FileError> {
         let (bucket, key) = parse_s3_path(path)?;
-        let result = self.rt.block_on(
+        let result = self.rt().block_on(
             self.client.head_object().bucket(bucket).key(key).send()
         );
         match result {
             Ok(_) => Ok(true),
-            Err(_) => Ok(false),
+            Err(e) => {
+                if is_not_found(&e) {
+                    return Ok(false);
+                }
+                Err(FileError::S3(e.to_string()))
+            }
         }
     }
 
     fn metadata(&self, path: &str) -> Result<FileMetadata, FileError> {
         let (bucket, key) = parse_s3_path(path)?;
-        let resp = self.rt.block_on(
+        let resp = self.rt().block_on(
             self.client.head_object().bucket(bucket).key(key).send()
         ).map_err(|e| FileError::S3(e.to_string()))?;
         let size = resp.content_length().unwrap_or(0) as u64;
@@ -120,7 +149,11 @@ impl FileOps for S3Backend {
 
     fn rename(&self, src: &str, dst: &str) -> Result<(), FileError> {
         self.copy(src, dst)?;
-        self.remove(src)?;
+        if let Err(e) = self.remove(src) {
+            // Attempt to clean up the copied destination on failure.
+            let _ = self.remove(dst);
+            return Err(e);
+        }
         Ok(())
     }
 
@@ -128,7 +161,7 @@ impl FileOps for S3Backend {
         let (src_bucket, src_key) = parse_s3_path(src)?;
         let (dst_bucket, dst_key) = parse_s3_path(dst)?;
         let copy_source = format!("{src_bucket}/{src_key}");
-        self.rt.block_on(
+        self.rt().block_on(
             self.client.copy_object()
                 .bucket(dst_bucket)
                 .key(dst_key)
@@ -140,7 +173,7 @@ impl FileOps for S3Backend {
 
     fn remove(&self, path: &str) -> Result<(), FileError> {
         let (bucket, key) = parse_s3_path(path)?;
-        self.rt.block_on(
+        self.rt().block_on(
             self.client.delete_object().bucket(bucket).key(key).send()
         ).map_err(|e| FileError::S3(e.to_string()))?;
         Ok(())
@@ -149,14 +182,28 @@ impl FileOps for S3Backend {
     fn remove_dir_all(&self, path: &str) -> Result<(), FileError> {
         let (bucket, key) = parse_s3_path(path)?;
         let prefix = if key.ends_with('/') { key.to_string() } else { format!("{key}/") };
-        let resp = self.rt.block_on(
-            self.client.list_objects_v2().bucket(bucket).prefix(&prefix).send()
-        ).map_err(|e| FileError::S3(e.to_string()))?;
-        for obj in resp.contents() {
-            if let Some(k) = obj.key() {
-                self.rt.block_on(
-                    self.client.delete_object().bucket(bucket).key(k).send()
-                ).map_err(|e| FileError::S3(e.to_string()))?;
+        let mut continuation_token: Option<String> = None;
+
+        loop {
+            let mut req = self.client.list_objects_v2().bucket(bucket).prefix(&prefix);
+            if let Some(token) = &continuation_token {
+                req = req.continuation_token(token);
+            }
+            let resp = self.rt().block_on(req.send())
+                .map_err(|e| FileError::S3(e.to_string()))?;
+
+            for obj in resp.contents() {
+                if let Some(k) = obj.key() {
+                    self.rt().block_on(
+                        self.client.delete_object().bucket(bucket).key(k).send()
+                    ).map_err(|e| FileError::S3(e.to_string()))?;
+                }
+            }
+
+            if resp.is_truncated.unwrap_or(false) {
+                continuation_token = resp.next_continuation_token().map(|s| s.to_string());
+            } else {
+                break;
             }
         }
         Ok(())
@@ -165,7 +212,7 @@ impl FileOps for S3Backend {
     fn list_dir(&self, path: &str) -> Result<Vec<String>, FileError> {
         let (bucket, key) = parse_s3_path(path)?;
         let prefix = if key.ends_with('/') { key.to_string() } else { format!("{key}/") };
-        let resp = self.rt.block_on(
+        let resp = self.rt().block_on(
             self.client.list_objects_v2().bucket(bucket).prefix(&prefix).delimiter("/").send()
         ).map_err(|e| FileError::S3(e.to_string()))?;
         let mut entries = Vec::new();
@@ -187,7 +234,6 @@ impl FileOps for S3Backend {
     }
 
     fn ensure_dir(&self, _path: &str) -> Result<(), FileError> {
-        // S3 has no real directories; no-op
         Ok(())
     }
 }
