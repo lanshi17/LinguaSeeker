@@ -39,6 +39,14 @@ def validate_upload(file: UploadedFile) -> List[str]:
     if ext not in ALLOWED_EXTENSIONS:
         errors.append(f"Unsupported file extension: {ext}. Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}")
 
+    # Validate PDF magic bytes
+    if ext == ".pdf":
+        if rust_files is not None:
+            if not rust_files.validate_pdf_magic(file.content):
+                errors.append("Invalid PDF: missing %PDF magic bytes")
+        elif not file.content[:4] == b"%PDF":
+            errors.append("Invalid PDF: missing %PDF magic bytes")
+
     return errors
 
 
