@@ -43,3 +43,12 @@ class TestValidateUpload:
         uf = UploadedFile(filename="test.docx", content=content)
         errors = validate_upload(uf)
         assert errors == []
+
+    def test_pdf_without_magic_bytes_rejected(self):
+        uf = UploadedFile(
+            filename="fake.pdf",
+            content=b"not a real pdf file",
+            content_type="application/pdf",
+        )
+        errors = validate_upload(uf)
+        assert any("pdf" in e.lower() or "invalid" in e.lower() for e in errors)
