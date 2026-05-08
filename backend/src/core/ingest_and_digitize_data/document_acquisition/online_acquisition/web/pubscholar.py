@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import re
 from typing import Any, Dict, List, Optional
-from urllib.parse import parse_qs, quote_plus, urljoin, urlparse
+from urllib.parse import parse_qs, quote_plus, urlparse
 from html import unescape
 
 import httpx

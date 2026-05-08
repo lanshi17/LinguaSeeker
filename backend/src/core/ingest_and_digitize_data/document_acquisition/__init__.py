@@ -12,5 +12,6 @@ __all__ = [
     "DocumentAcquisitionService",
     "DocumentAcquisitionRequest",
     "DocumentAcquisitionResult",
+    "DocumentDownloadEntry",
     "AcquisitionSource",
 ]

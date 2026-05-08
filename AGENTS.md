@@ -187,7 +187,222 @@
 
 这些准则有效的标志：diff 中不必要的变更更少、因过度复杂导致的重写更少、澄清问题出现在实现之前而非犯错之后。
 
+### 21. 自动化 Skill 触发
+
+- **文档整理**：每当计划文档完成或 `docs/` 目录发生变更（新建、修改、归档），必须自动使用 `skill:doc-organize` 整理文档结构。
+- **模块指南**：每当一个模块被实现（功能代码完成且测试通过），必须自动使用 `skill:module-guide` 生成开发者指南文档。
+
+### 22. 后端 Python 类型安全 — 禁止裸 dict 返回值
+
+- **禁止**使用 `-> dict`、`-> Dict[str, Any]` 等裸字典类型作为函数返回类型标注。
+- 必须使用具名类型体代替，按场景选择：
+
+| 场景 | 使用类型 | 示例 |
+|---|---|---|
+| **API 请求/响应** | `pydantic.BaseModel` | `class LiteratureResponse(BaseModel): ...` |
+| **内部数据契约**（模块间传递、不可变数据） | `dataclasses.dataclass` | `@dataclass class GatewayResult: ...` |
+| **轻量键值映射**（仅限配置、元数据等简单键值） | `TypedDict` | `class ProviderPlanItem(TypedDict): ...` |
+
+- 所有 API 路由函数的返回值必须声明 `response_model`，使用 `BaseModel` 子类。
+- 类型定义统一放在模块的 `contracts.py` 或 `schemas.py` 中，遵循现有命名约定：
+  - `*Request` / `*Response` — Pydantic BaseModel（API 边界）
+  - `*Result` / `*Entry` — dataclass（内部契约）
+  - `*Item` / `*Params` — TypedDict（轻量映射）
+- **例外**：解析外部第三方 API 的原始 JSON、配置文件字典等确实无固定结构的数据，可使用 `dict`，但必须添加 `# noqa: dict-return` 注释并说明理由。
+
+---
+
 ## 三、违反处理
 
 - 违反以上规则的代码不得合并到主分支。
 - AI Agent 违反规则时，必须在 `lesson.md` 中记录并修正。
+
+---
+
+## 附录：Claude Code 项目上下文
+
+> 以下内容供 Claude Code 在本仓库工作时参考。
+
+### Project Overview
+
+ACMG Lingua is an ACMG variant classification and interpretation platform. It automates literature acquisition, cross-lingual translation, evidence extraction, entity standardization, and dual-track (ACMG/AMP + GDV) reasoning with expert arbitration. Monorepo with a Next.js frontend, FastAPI backend, and three Rust native extensions via PyO3.
+
+### Architecture
+
+#### Backend (`backend/`)
+
+FastAPI async application. Business logic lives in `backend/src/` (not `app/`), organized by pipeline phase:
+
+```
+src/
+├── core/
+│   ├── config.py                          # pydantic-settings singleton, all env vars
+│   ├── ingest_and_digitize_data/          # Phase 1: literature acquisition + user upload
+│   │   ├── literature_acquisition/        #   gateway, providers, PubMed, web scrapers
+│   │   └── user_upload/                   #   PDF/DOCX upload handling
+│   ├── cross_lingual_process_and_extract_evidence/  # Phase 2: translation + extraction
+│   ├── standardize_entities_and_align_knowledge/    # Phase 3: entity normalization
+│   ├── execute_dual_track_intelligent_reasoning_and_arbitration/  # Phase 4: ACMG + GDV
+│   └── visualize_evidence_with_expert_in_loop/      # Phase 5: display + feedback
+├── api/           # FastAPI routes (currently empty, being built)
+├── agents/        # Agent orchestration (currently empty)
+├── dao/           # Data access layer (currently empty)
+└── utils/         # Shared utilities
+```
+
+Configuration: `src/core/config.py` loads from `.env.local` / `.env` via pydantic-settings. Nested domain models (`cfg.llm`, `cfg.postgresql`, etc.) are built from flat env vars by a `model_validator`. Access via `from src.core.config import get_config`.
+
+#### Rust Native Extensions (`backend/libs/`)
+
+Three PyO3 crates, all using `cdylib` + `rlib` crate types, async via `pyo3-async-runtimes` + tokio:
+
+| Crate | Python module | Purpose |
+|-------|--------------|---------|
+| `rust-io` | `rust_io` | Literature search/download via providers (Crossref, OpenAlex, EuropePMC, PMC, DOAJ, JStage, Unpaywall). Also has `files` submodule for SHA256, file write, PDF validation. |
+| `files-io` | `files_io` | Unified local + S3 file I/O. Dedup, parallel ops, archive (zip/tar/gzip). |
+| `literature-io` | `literature_io` | Dedicated literature acquisition I/O (same provider set as rust-io, newer architecture). |
+
+All three expose async Python functions via `pyo3_async_runtimes::tokio::future_into_py`. The Python gateway (`src/core/ingest_and_digitize_data/literature_acquisition/gateway.py`) calls `literature_io.fetch_one()` for HTTP I/O and handles PDF downloads in Python.
+
+#### Model Server (`backend/services/model-server/`)
+
+Standalone FastAPI microservice (port 8001) for local model inference: Embedding, Rerank, LLM chat. OpenAI-compatible API. Models lazy-loaded on first request. Shares `.env.local` with backend.
+
+#### Frontend (`frontend/`)
+
+Next.js 15 App Router, React 18, TypeScript, Tailwind CSS. State: Zustand. Data fetching: React Query + Axios. API proxy: `next.config.ts` rewrites `/api/v1/*` to `localhost:8000`.
+
+```
+app/
+├── api/              # Next.js API routes (auth, proxy)
+├── (dashboard)/      # Dashboard layout group
+│   ├── analysis/     # Variant analysis page
+│   ├── results/      # Results review page
+│   └── settings/     # User settings
+components/
+├── ui/               # Base UI components
+├── charts/           # Data visualizations
+├── forms/            # Input forms
+└── layout/           # Page layouts
+lib/
+├── api/              # API client functions
+├── hooks/            # React hooks
+├── types/            # TypeScript types
+└── utils/            # Utility functions
+```
+
+#### Infrastructure
+
+Docker Compose: frontend (`:3000`), backend (`:8000`), PostgreSQL 16 (`:5432`), Redis 8.0 (`:6379`).
+
+### Development Commands
+
+#### Backend (Python)
+
+All Python operations must go through `uv`. Never use system `pip`.
+
+```bash
+cd backend
+
+# Install dependencies
+uv pip install -e ".[dev]"
+
+# Add dependencies
+uv add <package>              # production
+uv add --dev <package>        # dev
+
+# Run dev server
+uv run uvicorn app.main:app --reload
+
+# Lint (Google Python Style, line-length 120)
+uv run ruff check
+
+# Run all tests
+uv run pytest
+
+# Run a single test
+uv run pytest tests/path/to/test_file.py::test_function_name
+
+# Update lock file
+uv lock
+```
+
+#### Frontend (Node.js)
+
+Use `nvm` to select Node 18+. Never use system global Node.
+
+```bash
+cd frontend
+nvm use
+npm install
+npm run dev          # Dev server
+npm run lint         # ESLint
+npm run type-check   # TypeScript check
+npm run build        # Production build
+```
+
+#### Rust Libraries
+
+```bash
+cd backend/libs/rust-io     # or files-io, literature-io
+cargo test
+cargo bench                 # rust-io only
+```
+
+To rebuild the PyO3 extension after Rust changes: `maturin develop --release` (from the crate directory).
+
+#### Model Server
+
+```bash
+cd backend/services/model-server
+uv run python main.py       # Starts on :8001
+uv run python main.py --port 8002
+```
+
+#### Full Stack
+
+```bash
+docker compose up
+```
+
+### Key Patterns
+
+#### Old Version Code Reuse
+
+The previous codebase is preserved in `backend/.old_version/`. **Always check it before writing new code.** Search first, reuse preferentially, adapt to new architecture.
+
+```bash
+grep -r "keyword" backend/.old_version/src/
+find backend/.old_version/ -name "*.py" | xargs grep "ClassNameOrFunction"
+tree backend/.old_version/src/ -L 2
+```
+
+| Directory | Contents |
+|---|---|
+| `.old_version/src/` | Core business logic (agents, api, domain, infrastructure, services, tools, utils) |
+| `.old_version/utils/` | Shared utility modules |
+| `.old_version/configs/` | App and database configuration |
+| `.old_version/scripts/` | Ops scripts (log cleanup, cache purge, data sync, etc.) |
+| `.old_version/database/` | Alembic migrations, Neo4j, Qdrant, MinIO configs |
+| `.old_version/tests/` | Existing test cases |
+| `.old_version/knowledge_docs/` | Knowledge base documents |
+| `.old_version/lesson.md` | Past retrospective notes |
+| `.old_version/prd.json` | Product requirements |
+
+**Workflow**: Search first → reuse preferentially → adapt to new architecture → annotate source for complex migrations.
+
+**Prohibited**: Writing new features without checking `.old_version/`, copying without adaptation, deleting `.old_version/`.
+
+#### Literature Provider System
+
+The literature acquisition gateway supports multiple providers (Crossref, OpenAlex, EuropePMC, PMC, DOAJ, JStage, Unpaywall, plus web scrapers for CyberLeninka, Hans Publishers, PubScholar). Rust handles HTTP I/O; Python handles business logic, retry, and PDF download orchestration.
+
+#### Configuration
+
+All config via environment variables or `.env` / `.env.local` files. Key config domains: `LLM_*`, `MT_*` (translation), `VLM_*` (vision), `ARBITRATION_*`, `EMBEDDING_*`, `RERANK_*`, `MINERU_*`, `POSTGRES_*`, `REDIS_*`, `NEO4J_*`, `MINIO_*`, `SMTP_*`.
+
+#### Testing
+
+- Backend: `pytest` with `pytest-asyncio` for async tests. Tests mirror source structure under `backend/tests/`.
+- Frontend: tests under `frontend/tests/`.
+- Rust: `cargo test` per crate.

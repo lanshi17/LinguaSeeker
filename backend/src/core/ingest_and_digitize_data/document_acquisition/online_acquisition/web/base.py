@@ -6,7 +6,7 @@ import json
 import os
 import re
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
 import httpx
 from selectolax.parser import HTMLParser
@@ -37,8 +37,8 @@ def extract_pdf_links_from_html(html: str, base_url: str) -> List[str]:
     if not html:
         return []
     try:
-        import rust_io
-        return rust_io.literature.extract_pdf_links(html, base_url)
+        import literature_io
+        return literature_io.extract_pdf_links(html, base_url)
     except (ImportError, Exception):
         pass
     # Fallback: selectolax
@@ -60,8 +60,8 @@ def scrape_html_elements(html: str, css_selector: str) -> List[Dict[str, Any]]:
     if not html:
         return []
     try:
-        import rust_io
-        return rust_io.literature.scrape_html(html, css_selector)
+        import literature_io
+        return literature_io.scrape_html(html, css_selector)
     except (ImportError, Exception):
         pass
     # Fallback: selectolax
