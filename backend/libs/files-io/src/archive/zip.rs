@@ -44,14 +44,26 @@ fn add_dir_to_zip(
 }
 
 /// Extract a .zip archive to a directory.
+///
+/// Validates that all extracted paths remain within `output_dir` to prevent
+/// path traversal attacks (e.g. entries containing `..`).
 pub fn extract(archive_path: &str, output_dir: &str) -> Result<u64, FileError> {
     let file = fs::File::open(archive_path)?;
     let mut archive = zip::ZipArchive::new(file).map_err(|e| FileError::Archive(e.to_string()))?;
     fs::create_dir_all(output_dir)?;
+    let out_root = fs::canonicalize(output_dir)?;
     let mut count: u64 = 0;
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).map_err(|e| FileError::Archive(e.to_string()))?;
-        let outpath = Path::new(output_dir).join(file.mangled_name());
+        let entry_name = file.mangled_name();
+        let outpath = out_root.join(&entry_name);
+        // Path traversal guard: entry components must not escape output_dir
+        if entry_name.components().any(|c| matches!(c, std::path::Component::ParentDir | std::path::Component::RootDir)) {
+            return Err(FileError::Archive(format!(
+                "path traversal attempt: entry '{}' contains unsafe components",
+                entry_name.display()
+            )));
+        }
         if file.name().ends_with('/') {
             fs::create_dir_all(&outpath)?;
         } else {

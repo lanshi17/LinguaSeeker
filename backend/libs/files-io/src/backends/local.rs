@@ -12,12 +12,6 @@ impl LocalBackend {
     pub fn new() -> Self { Self }
 }
 
-fn auto_chunk_size(file_size: u64) -> u64 {
-    if file_size < 64 * 1024 { file_size }
-    else if file_size < 10 * 1024 * 1024 { 64 * 1024 }
-    else { 1024 * 1024 }
-}
-
 impl FileOps for LocalBackend {
     fn read_all(&self, path: &str) -> Result<Vec<u8>, FileError> {
         Ok(fs::read(path)?)
@@ -97,19 +91,10 @@ impl FileOps for LocalBackend {
     }
 
     fn copy(&self, src: &str, dst: &str) -> Result<(), FileError> {
-        let src_meta = fs::metadata(src)?;
-        let chunk = auto_chunk_size(src_meta.len());
         if let Some(parent) = Path::new(dst).parent() {
             fs::create_dir_all(parent)?;
         }
-        let mut reader = fs::File::open(src)?;
-        let mut writer = fs::File::create(dst)?;
-        let mut buf = vec![0u8; chunk as usize];
-        loop {
-            let n = reader.read(&mut buf)?;
-            if n == 0 { break; }
-            writer.write_all(&buf[..n])?;
-        }
+        fs::copy(src, dst)?;
         Ok(())
     }
 
