@@ -11,13 +11,8 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 pyo3 = { version = "0.28.2", features = ["extension-module"] }
 pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
-reqwest = { version = "0.13", features = ["json", "rustls", "gzip", "socks"], default-features = false }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
-serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-scraper = "0.26"
-thiserror = "2"
-url = "2"
 pythonize = "0.28"
-urlencoding = "2"
-sha2 = "0.10"
+files-io = { path = "../files-io" }
+literature-io = { path = "../literature-io" }
