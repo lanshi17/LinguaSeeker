@@ -1,4 +1,4 @@
-use crate::backends::{local::LocalBackend, s3::S3Backend, FileOps};
+use crate::backends::{FileOps, local::LocalBackend, s3::S3Backend};
 use crate::error::FileError;
 use crate::hash;
 use pyo3::prelude::*;
@@ -44,13 +44,21 @@ impl File {
                 PyErr::new::<pyo3::exceptions::PyValueError, _>("secret_key required for S3 paths")
             })?;
             let backend = S3Backend::new(ak, sk, endpoint, region)?;
-            Ok(Self { path: path.to_string(), backend: Backend::S3(backend) })
+            Ok(Self {
+                path: path.to_string(),
+                backend: Backend::S3(backend),
+            })
         } else {
-            Ok(Self { path: path.to_string(), backend: Backend::Local(LocalBackend::new()) })
+            Ok(Self {
+                path: path.to_string(),
+                backend: Backend::Local(LocalBackend::new()),
+            })
         }
     }
 
-    fn __enter__(slf: Py<Self>) -> Py<Self> { slf }
+    fn __enter__(slf: Py<Self>) -> Py<Self> {
+        slf
+    }
 
     fn __exit__(
         &mut self,
@@ -139,9 +147,7 @@ impl File {
 
     fn content_hash(&self) -> PyResult<String> {
         match &self.backend {
-            Backend::Local(_) => {
-                Ok(hash::hash_file(std::path::Path::new(&self.path))?)
-            }
+            Backend::Local(_) => Ok(hash::hash_file(std::path::Path::new(&self.path))?),
             Backend::S3(_) => {
                 let data = self.ops().read_all(&self.path)?;
                 Ok(hash::hash_bytes(&data))
@@ -154,9 +160,11 @@ impl File {
             "zip" => crate::archive::zip::compress_dir(&self.path, output_path)?,
             "tar" => crate::archive::tar_gz::compress_tar(&self.path, output_path)?,
             "tar.gz" | "tgz" => crate::archive::tar_gz::compress_tar_gz(&self.path, output_path)?,
-            _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                format!("unsupported format: {format}. Use zip, tar, or tar.gz")
-            )),
+            _ => {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "unsupported format: {format}. Use zip, tar, or tar.gz"
+                )));
+            }
         };
         Ok(count)
     }
@@ -170,9 +178,10 @@ impl File {
         } else if path_lower.ends_with(".tar") {
             crate::archive::tar_gz::extract_tar(&self.path, output_dir)?
         } else {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                format!("cannot detect archive format from path: {}", self.path)
-            ));
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "cannot detect archive format from path: {}",
+                self.path
+            )));
         };
         Ok(count)
     }
@@ -187,27 +196,38 @@ impl File {
                     Backend::S3(b) => b,
                 };
                 ops.copy(&path, &dst)
-            }).await.map_err(FileError::TaskJoin)??;
+            })
+            .await
+            .map_err(FileError::TaskJoin)??;
             Ok(())
         })
     }
 
-    fn compress_async<'py>(&self, py: Python<'py>, output_path: String, format: String) -> PyResult<Bound<'py, PyAny>> {
+    fn compress_async<'py>(
+        &self,
+        py: Python<'py>,
+        output_path: String,
+        format: String,
+    ) -> PyResult<Bound<'py, PyAny>> {
         let dir = self.path.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            let count = tokio::task::spawn_blocking(move || {
-                match format.as_str() {
-                    "zip" => crate::archive::zip::compress_dir(&dir, &output_path),
-                    "tar" => crate::archive::tar_gz::compress_tar(&dir, &output_path),
-                    "tar.gz" | "tgz" => crate::archive::tar_gz::compress_tar_gz(&dir, &output_path),
-                    _ => Err(FileError::Archive(format!("unsupported format: {format}"))),
-                }
-            }).await.map_err(FileError::TaskJoin)??;
+            let count = tokio::task::spawn_blocking(move || match format.as_str() {
+                "zip" => crate::archive::zip::compress_dir(&dir, &output_path),
+                "tar" => crate::archive::tar_gz::compress_tar(&dir, &output_path),
+                "tar.gz" | "tgz" => crate::archive::tar_gz::compress_tar_gz(&dir, &output_path),
+                _ => Err(FileError::Archive(format!("unsupported format: {format}"))),
+            })
+            .await
+            .map_err(FileError::TaskJoin)??;
             Ok(count)
         })
     }
 
-    fn extract_async<'py>(&self, py: Python<'py>, output_dir: String) -> PyResult<Bound<'py, PyAny>> {
+    fn extract_async<'py>(
+        &self,
+        py: Python<'py>,
+        output_dir: String,
+    ) -> PyResult<Bound<'py, PyAny>> {
         let path = self.path.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let count = tokio::task::spawn_blocking(move || {
@@ -221,7 +241,9 @@ impl File {
                 } else {
                     Err(FileError::Archive(format!("cannot detect format: {path}")))
                 }
-            }).await.map_err(FileError::TaskJoin)??;
+            })
+            .await
+            .map_err(FileError::TaskJoin)??;
             Ok(count)
         })
     }

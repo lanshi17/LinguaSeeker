@@ -1,7 +1,7 @@
+use crate::error::FileError;
 use sha2::{Digest, Sha256};
 use std::io::Read;
 use std::path::Path;
-use crate::error::FileError;
 
 /// Compute SHA-256 hash of a file, reading in chunks.
 pub fn hash_file(path: &Path) -> Result<String, FileError> {
@@ -10,7 +10,9 @@ pub fn hash_file(path: &Path) -> Result<String, FileError> {
     let mut buf = [0u8; 1024 * 1024]; // 1MB chunks for hashing
     loop {
         let n = file.read(&mut buf)?;
-        if n == 0 { break; }
+        if n == 0 {
+            break;
+        }
         hasher.update(&buf[..n]);
     }
     Ok(hex::encode(hasher.finalize()))
