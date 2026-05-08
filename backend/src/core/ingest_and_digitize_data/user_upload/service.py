@@ -18,10 +18,10 @@ from .contracts import (
 )
 
 try:
-    import files_io
+    import rust_io.files as files_io
 except ImportError:
     files_io = None  # type: ignore[assignment]
-    logger.warning("files_io not available, falling back to Python I/O")
+    logger.warning("rust_io.files not available, falling back to Python I/O")
 
 
 def validate_upload(file: UploadedFile) -> List[str]:
