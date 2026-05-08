@@ -79,30 +79,25 @@ def store_file(
 
     ext = Path(file.filename).suffix.lower()
 
-    # Determine storage directory
     if upload_dir:
         os.makedirs(upload_dir, exist_ok=True)
-        sha256 = _compute_sha256(file.content)
-        file_path = os.path.join(upload_dir, f"{sha256}{ext}")
+        file_path = os.path.join(upload_dir, f"{_compute_sha256(file.content)}{ext}")
     else:
         file_path = _write_to_temp(file.content, suffix=ext)
-        sha256 = _compute_sha256(file.content)
 
-    # Write file using Rust I/O if available
-    if rust_files is not None and upload_dir:
-        rust_files.write_file(file_path, file.content)
-    elif not upload_dir:
-        # Already written by _write_to_temp
-        pass
-    else:
-        with open(file_path, "wb") as f:
-            f.write(file.content)
+    # Write file (skip for temp path — already written by _write_to_temp)
+    if upload_dir:
+        if rust_files is not None:
+            rust_files.write_file(file_path, file.content)
+        else:
+            with open(file_path, "wb") as f:
+                f.write(file.content)
 
-    # Compute hash via Rust if available
-    if rust_files is not None and upload_dir:
+    # Hash: verify from disk when Rust is available, else from memory
+    if rust_files is not None:
         verified_hash = rust_files.compute_sha256(file_path)
     else:
-        verified_hash = sha256
+        verified_hash = _compute_sha256(file.content)
 
     logger.info(
         "Stored file: {} -> {} (sha256={}, size={})",

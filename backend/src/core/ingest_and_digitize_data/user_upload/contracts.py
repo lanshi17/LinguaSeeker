@@ -6,13 +6,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional
 
-# Allowed MIME types
-ALLOWED_CONTENT_TYPES = frozenset({
-    "application/pdf",
-    "application/msword",  # .doc
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # .docx
-})
-
 # Allowed file extensions
 ALLOWED_EXTENSIONS = frozenset({".pdf", ".doc", ".docx"})
 

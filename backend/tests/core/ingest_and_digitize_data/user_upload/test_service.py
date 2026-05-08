@@ -1,8 +1,5 @@
 """Tests for user upload service."""
 
-import pytest
-from pathlib import Path
-
 from src.core.ingest_and_digitize_data.user_upload.contracts import (
     MAX_FILE_SIZE_BYTES,
     UploadedFile,
