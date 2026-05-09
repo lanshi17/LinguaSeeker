@@ -1,7 +1,11 @@
 """Data contracts for document parsing results."""
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field, model_validator
+
+ParserName = Literal["mineru", "paddleocr", "unknown"]
 
 
 class DocumentMetadata(BaseModel):
@@ -22,7 +26,12 @@ class FigurePosition(BaseModel):
 
 
 class TableStructure(BaseModel):
-    """Structured table data extracted from PDF."""
+    """Structured table data extracted from PDF.
+
+    All cell values are stored as strings. Numeric data from scientific
+    tables is coerced to strings at extraction time — this prioritizes
+    consistent markdown rendering over semantic type fidelity.
+    """
 
     page: int = Field(ge=1)
     index: int = Field(ge=1, description="Table index on this page")
@@ -48,7 +57,7 @@ class ParseResult(BaseModel):
     metadata: DocumentMetadata
     pages: list[PageContent]
     full_markdown: str = ""
-    parser_used: str = "unknown"
+    parser_used: ParserName = "unknown"
 
     @model_validator(mode="after")
     def _derive_full_markdown(self) -> ParseResult:

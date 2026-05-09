@@ -5,12 +5,23 @@ Mark with @pytest.mark.integration to skip in CI.
 """
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from src.core.ingest_and_digitize_data.parse_document import (
     ParseDocumentService,
     ParseResult,
 )
+
+
+@pytest.fixture
+def sample_pdf_url():
+    """PDF URL from environment variable, skip if not set."""
+    url = os.environ.get("TEST_PDF_URL", "")
+    if not url:
+        pytest.skip("TEST_PDF_URL not set")
+    return url
 
 
 @pytest.mark.integration

@@ -44,8 +44,14 @@ class TestPaddleOCRError:
 class TestParserExhaustedError:
     def test_both_failed(self):
         err = ParserExhaustedError(
-            mineru_error=MinerUAPIError("500"),
-            paddle_error=PaddleOCRError("crash"),
+            errors={
+                "mineru": MinerUAPIError("500"),
+                "paddleocr": PaddleOCRError("crash"),
+            },
         )
-        assert "mineru" in str(err).lower() or "MinerU" in str(err)
-        assert "paddle" in str(err).lower() or "Paddle" in str(err)
+        assert "mineru" in str(err)
+        assert "paddleocr" in str(err)
+
+    def test_repr(self):
+        err = ParserExhaustedError(errors={"mineru": MinerUAPIError("500")})
+        assert "ParserExhaustedError" in repr(err)

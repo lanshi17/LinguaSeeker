@@ -27,8 +27,7 @@ class TestParserFactory:
         )
 
     def test_factory_creates_parsers(self, factory):
-        assert factory._mineru_parser is not None
-        assert factory._paddle_parser is not None
+        assert len(factory.parsers) == 2
 
     @pytest.mark.asyncio
     async def test_mineru_success(self, factory):
@@ -38,7 +37,7 @@ class TestParserFactory:
             parser_used="mineru",
         )
 
-        with patch.object(factory._mineru_parser, "parse", new_callable=AsyncMock, return_value=mock_result):
+        with patch.object(factory.parsers[0], "parse", new_callable=AsyncMock, return_value=mock_result):
             result = await factory.parse("/tmp/test.pdf")
 
         assert result.parser_used == "mineru"
@@ -51,15 +50,15 @@ class TestParserFactory:
             parser_used="paddleocr",
         )
 
-        with patch.object(factory._mineru_parser, "parse", new_callable=AsyncMock, side_effect=MinerUAPIError("500")), \
-             patch.object(factory._paddle_parser, "parse", new_callable=AsyncMock, return_value=mock_result):
+        with patch.object(factory.parsers[0], "parse", new_callable=AsyncMock, side_effect=MinerUAPIError("500")), \
+             patch.object(factory.parsers[1], "parse", new_callable=AsyncMock, return_value=mock_result):
             result = await factory.parse("/tmp/test.pdf")
 
         assert result.parser_used == "paddleocr"
 
     @pytest.mark.asyncio
     async def test_both_fail_raises(self, factory):
-        with patch.object(factory._mineru_parser, "parse", new_callable=AsyncMock, side_effect=MinerUAPIError("500")), \
-             patch.object(factory._paddle_parser, "parse", new_callable=AsyncMock, side_effect=PaddleOCRError("crash")):
+        with patch.object(factory.parsers[0], "parse", new_callable=AsyncMock, side_effect=MinerUAPIError("500")), \
+             patch.object(factory.parsers[1], "parse", new_callable=AsyncMock, side_effect=PaddleOCRError("crash")):
             with pytest.raises(ParserExhaustedError):
                 await factory.parse("/tmp/test.pdf")

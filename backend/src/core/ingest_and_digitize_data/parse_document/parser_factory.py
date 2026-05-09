@@ -18,19 +18,21 @@ class ParserFactory:
         mineru_api_token: str,
         paddle_model_path: str = "",
     ):
-        self._mineru_parser = MinerUParser(api_token=mineru_api_token)
-        self._paddle_parser = PaddleOCRParser(model_path=paddle_model_path)
+        self._parsers: list[ParserStrategy] = [
+            MinerUParser(api_token=mineru_api_token),
+            PaddleOCRParser(model_path=paddle_model_path),
+        ]
 
     @property
     def parsers(self) -> list[ParserStrategy]:
         """Available parsers in priority order."""
-        return [self._mineru_parser, self._paddle_parser]
+        return self._parsers
 
     async def parse(self, pdf_path: str) -> ParseResult:
         """Parse PDF with automatic fallback.
 
-        Tries MinerU first, falls back to PaddleOCR on failure.
-        Raises ParserExhaustedError if all parsers fail.
+        Tries parsers in priority order.  Raises ParserExhaustedError
+        if all parsers fail.
         """
         errors: dict[str, Exception] = {}
 
@@ -45,7 +47,4 @@ class ParserFactory:
                 errors[parser.name] = e
                 continue
 
-        raise ParserExhaustedError(
-            mineru_error=errors.get("mineru"),
-            paddle_error=errors.get("paddleocr"),
-        )
+        raise ParserExhaustedError(errors=errors)

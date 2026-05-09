@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import TypedDict
 
 from loguru import logger
 
@@ -14,6 +15,19 @@ from .contracts import (
     TableStructure,
 )
 from .exceptions import PaddleOCRError
+
+
+class _PaddleOCRPageData(TypedDict):
+    page_number: int
+    markdown: str
+    figures: list[dict]
+    tables: list[dict]
+
+
+class _PaddleOCRRawResult(TypedDict):
+    total_pages: int
+    pages: list[_PaddleOCRPageData]
+    full_markdown: str
 
 
 class PaddleOCRParser(ParserStrategy):
@@ -37,7 +51,7 @@ class PaddleOCRParser(ParserStrategy):
 
         return self._build_result(result)
 
-    def _run_paddle_ocr(self, pdf_path: str) -> dict:
+    def _run_paddle_ocr(self, pdf_path: str) -> _PaddleOCRRawResult:
         """Run PaddleOCR in a thread (CPU-bound)."""
         from paddleocr import PaddleOCR
 
@@ -75,7 +89,7 @@ class PaddleOCRParser(ParserStrategy):
             "full_markdown": "\n\n".join(full_markdown_parts),
         }
 
-    def _build_result(self, data: dict) -> ParseResult:
+    def _build_result(self, data: _PaddleOCRRawResult) -> ParseResult:
         """Convert PaddleOCR output to ParseResult."""
         metadata = DocumentMetadata(total_pages=data.get("total_pages", 1))
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import TypedDict
 
 from loguru import logger
 
@@ -16,6 +17,23 @@ from .contracts import (
     TableStructure,
 )
 from .exceptions import MinerUAPIError, MinerUTimeoutError
+
+
+class _MinerUPageData(TypedDict):
+    page_number: int
+    markdown: str
+    figures: list[dict]
+    tables: list[dict]
+
+
+class _MinerURawResult(TypedDict):
+    state: str
+    total_pages: int
+    title: str | None
+    authors: list[str]
+    abstract: str | None
+    pages: list[_MinerUPageData]
+    full_markdown: str
 
 
 class MinerUParser(ParserStrategy):
@@ -71,6 +89,8 @@ class MinerUParser(ParserStrategy):
                 enable_formula=True,
                 enable_table=True,
             )
+        except (ConnectionError, TimeoutError, OSError) as e:
+            raise MinerUAPIError(f"Failed to create task: {e}") from e
         except Exception as e:
             raise MinerUAPIError(f"Failed to create task: {e}") from e
 
@@ -80,7 +100,7 @@ class MinerUParser(ParserStrategy):
 
         return task_id
 
-    async def _poll_result(self, task_id: str) -> dict:
+    async def _poll_result(self, task_id: str) -> _MinerURawResult:
         """Poll for task result until completion or timeout."""
         for attempt in range(self._max_poll_attempts):
             try:
@@ -88,12 +108,15 @@ class MinerUParser(ParserStrategy):
                     task_id=task_id,
                     token=self._api_token,
                 )
+            except (ConnectionError, TimeoutError, OSError) as e:
+                raise MinerUAPIError(f"Failed to get result: {e}") from e
             except Exception as e:
                 raise MinerUAPIError(f"Failed to get result: {e}") from e
 
             state = response.get("state", "")
 
             if state == "done":
+                self._validate_response(response)
                 return response
             elif state == "failed":
                 error_msg = response.get("error", "Unknown error")
@@ -106,10 +129,21 @@ class MinerUParser(ParserStrategy):
 
         raise MinerUTimeoutError(timeout=self._poll_interval * self._max_poll_attempts)
 
-    def _build_result(self, data: dict) -> ParseResult:
+    @staticmethod
+    def _validate_response(data: dict) -> None:
+        """Validate critical fields in MinerU response.
+
+        Raises MinerUAPIError if the response is malformed.
+        """
+        if "total_pages" not in data:
+            raise MinerUAPIError("Malformed response: missing 'total_pages'")
+        if not data.get("pages"):
+            raise MinerUAPIError("Malformed response: empty 'pages'")
+
+    def _build_result(self, data: _MinerURawResult) -> ParseResult:
         """Convert MinerU response to ParseResult."""
         metadata = DocumentMetadata(
-            total_pages=data.get("total_pages", 1),
+            total_pages=data["total_pages"],
             title=data.get("title"),
             authors=data.get("authors", []),
             abstract_text=data.get("abstract"),
