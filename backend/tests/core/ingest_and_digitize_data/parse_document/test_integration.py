@@ -41,7 +41,7 @@ class TestParseDocumentIntegration:
     @pytest.mark.asyncio
     async def test_parse_and_save_output(self, service, sample_pdf_url, tmp_path):
         """Test parsing and saving output files."""
-        result = await service.parse_and_save(sample_pdf_url, str(tmp_path))
+        await service.parse_and_save(sample_pdf_url, str(tmp_path))
 
         assert (tmp_path / "output.md").exists()
         assert (tmp_path / "metadata.json").exists()
