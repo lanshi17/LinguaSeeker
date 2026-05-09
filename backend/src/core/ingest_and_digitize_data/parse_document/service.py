@@ -24,32 +24,32 @@ class ParseDocumentService:
             paddle_model_path=paddle_model_path,
         )
 
-    async def parse(self, pdf_url: str) -> ParseResult:
+    async def parse(self, pdf_path: str) -> ParseResult:
         """Parse a PDF file and return structured results.
 
         Args:
-            pdf_url: URL to the PDF file (S3/MinIO or public URL).
+            pdf_path: URL to the PDF file (S3/MinIO or public URL).
 
         Returns:
             ParseResult with metadata, pages, and full markdown.
         """
-        return await self._factory.parse(pdf_url)
+        return await self._factory.parse(pdf_path)
 
     async def parse_and_save(
         self,
-        pdf_url: str,
+        pdf_path: str,
         output_dir: str,
     ) -> ParseResult:
         """Parse PDF and save markdown output to files.
 
         Args:
-            pdf_url: URL to the PDF file.
+            pdf_path: URL to the PDF file.
             output_dir: Directory to save output files.
 
         Returns:
             ParseResult from the parser.
         """
-        result = await self._factory.parse(pdf_url)
+        result = await self._factory.parse(pdf_path)
 
         md_path = str(Path(output_dir) / "output.md")
         files_io.File(md_path).write(result.full_markdown)
@@ -65,7 +65,7 @@ class ParseDocumentService:
         self,
         file_path: str,
         known_hashes: list[str],
-    ) -> dict:  # noqa: dict-return
+    ) -> dict:  # noqa — Rust PyO3 function returns untyped dict
         """Check if a file is a duplicate based on content hash.
 
         Args:

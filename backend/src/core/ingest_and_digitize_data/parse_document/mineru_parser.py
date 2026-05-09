@@ -11,10 +11,8 @@ import rust_io.net as net_io
 from .base import ParserStrategy
 from .contracts import (
     DocumentMetadata,
-    FigurePosition,
-    PageContent,
     ParseResult,
-    TableStructure,
+    pages_from_raw,
 )
 from .exceptions import MinerUAPIError, MinerUTimeoutError
 
@@ -58,11 +56,11 @@ class MinerUParser(ParserStrategy):
     def name(self) -> str:
         return "mineru"
 
-    async def parse(self, pdf_url: str) -> ParseResult:
+    async def parse(self, pdf_path: str) -> ParseResult:
         """Parse PDF via MinerU API.
 
         Args:
-            pdf_url: URL to the PDF file (S3/MinIO or public URL).
+            pdf_path: URL to the PDF file (S3/MinIO or public URL).
 
         Returns:
             ParseResult with metadata, pages, and full markdown.
@@ -71,26 +69,24 @@ class MinerUParser(ParserStrategy):
             MinerUAPIError: On API errors or task failure.
             MinerUTimeoutError: On polling timeout.
         """
-        logger.info(f"MinerU parsing: {pdf_url}")
+        logger.info(f"MinerU parsing: {pdf_path}")
 
-        task_id = await self._create_task(pdf_url)
+        task_id = await self._create_task(pdf_path)
         logger.info(f"MinerU task created: {task_id}")
 
         result_data = await self._poll_result(task_id)
 
         return self._build_result(result_data)
 
-    async def _create_task(self, pdf_url: str) -> str:
+    async def _create_task(self, pdf_path: str) -> str:
         """Create MinerU parsing task and return task_id."""
         try:
             response = await net_io.mineru_create_task(
-                url=pdf_url,
+                url=pdf_path,
                 token=self._api_token,
                 enable_formula=True,
                 enable_table=True,
             )
-        except (ConnectionError, TimeoutError, OSError) as e:
-            raise MinerUAPIError(f"Failed to create task: {e}") from e
         except Exception as e:
             raise MinerUAPIError(f"Failed to create task: {e}") from e
 
@@ -108,8 +104,6 @@ class MinerUParser(ParserStrategy):
                     task_id=task_id,
                     token=self._api_token,
                 )
-            except (ConnectionError, TimeoutError, OSError) as e:
-                raise MinerUAPIError(f"Failed to get result: {e}") from e
             except Exception as e:
                 raise MinerUAPIError(f"Failed to get result: {e}") from e
 
@@ -149,37 +143,9 @@ class MinerUParser(ParserStrategy):
             abstract_text=data.get("abstract"),
         )
 
-        pages = []
-        for page_data in data.get("pages", []):
-            figures = [
-                FigurePosition(
-                    page=page_data["page_number"],
-                    index=f.get("index", 1),
-                    caption=f.get("caption"),
-                )
-                for f in page_data.get("figures", [])
-            ]
-            tables = [
-                TableStructure(
-                    page=page_data["page_number"],
-                    index=t.get("index", 1),
-                    headers=t.get("headers", []),
-                    rows=t.get("rows", []),
-                )
-                for t in page_data.get("tables", [])
-            ]
-            pages.append(
-                PageContent(
-                    page_number=page_data["page_number"],
-                    markdown=page_data.get("markdown", ""),
-                    figures=figures,
-                    tables=tables,
-                )
-            )
-
         return ParseResult(
             metadata=metadata,
-            pages=pages,
+            pages=pages_from_raw(data.get("pages", [])),
             full_markdown=data.get("full_markdown", ""),
             parser_used=self.name,
         )

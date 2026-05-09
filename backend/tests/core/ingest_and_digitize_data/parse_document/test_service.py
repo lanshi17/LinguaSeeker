@@ -10,6 +10,7 @@ from src.core.ingest_and_digitize_data.parse_document.contracts import (
     PageContent,
     ParseResult,
 )
+from src.core.ingest_and_digitize_data.parse_document.parser_factory import ParserFactory
 from src.core.ingest_and_digitize_data.parse_document.service import ParseDocumentService
 
 
@@ -29,7 +30,7 @@ class TestParseDocumentService:
             parser_used="mineru",
         )
 
-        with patch.object(service._factory, "parse", new_callable=AsyncMock, return_value=mock_result):
+        with patch.object(ParserFactory, "parse", new_callable=AsyncMock, return_value=mock_result):
             result = await service.parse("https://example.com/test.pdf")
 
         assert result.parser_used == "mineru"
@@ -44,7 +45,7 @@ class TestParseDocumentService:
             parser_used="mineru",
         )
 
-        with patch.object(service._factory, "parse", new_callable=AsyncMock, return_value=mock_result), \
+        with patch.object(ParserFactory, "parse", new_callable=AsyncMock, return_value=mock_result), \
              patch("rust_io.files.File") as mock_file_cls:
             mock_file_instance = MagicMock()
             mock_file_cls.return_value = mock_file_instance
