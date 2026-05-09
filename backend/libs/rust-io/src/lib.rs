@@ -18,25 +18,13 @@ fn register_submodule(
 
 #[pymodule]
 fn rust_io(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    let literature = PyModule::new(m.py(), "literature")?;
-    literature.add_function(wrap_pyfunction!(literature_io::py::fetch_one, &literature)?)?;
-    literature.add_function(wrap_pyfunction!(
-        literature_io::py::fetch_multi,
-        &literature
-    )?)?;
-    literature.add_function(wrap_pyfunction!(
-        literature_io::py::scrape_web,
-        &literature
-    )?)?;
-    literature.add_function(wrap_pyfunction!(
-        literature_io::py::scrape_html,
-        &literature
-    )?)?;
-    literature.add_function(wrap_pyfunction!(
-        literature_io::py::extract_pdf_links,
-        &literature
-    )?)?;
-    register_submodule(m, "rust_io.literature", &literature)?;
+    let http = PyModule::new(m.py(), "http")?;
+    http.add_function(wrap_pyfunction!(http_io::py::fetch_one, &http)?)?;
+    http.add_function(wrap_pyfunction!(http_io::py::fetch_multi, &http)?)?;
+    http.add_function(wrap_pyfunction!(http_io::py::scrape_web, &http)?)?;
+    http.add_function(wrap_pyfunction!(http_io::py::scrape_html, &http)?)?;
+    http.add_function(wrap_pyfunction!(http_io::py::extract_pdf_links, &http)?)?;
+    register_submodule(m, "rust_io.http", &http)?;
 
     let files = PyModule::new(m.py(), "files")?;
     files.add_class::<files_io::py::file::File>()?;
