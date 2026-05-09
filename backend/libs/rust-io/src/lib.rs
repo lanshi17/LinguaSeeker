@@ -24,6 +24,10 @@ fn rust_io(m: &Bound<'_, PyModule>) -> PyResult<()> {
     http.add_function(wrap_pyfunction!(http_io::py::scrape_web, &http)?)?;
     http.add_function(wrap_pyfunction!(http_io::py::scrape_html, &http)?)?;
     http.add_function(wrap_pyfunction!(http_io::py::extract_pdf_links, &http)?)?;
+    http.add_function(wrap_pyfunction!(http_io::py::mineru_create_task, &http)?)?;
+    http.add_function(wrap_pyfunction!(http_io::py::mineru_get_result, &http)?)?;
+    http.add_function(wrap_pyfunction!(http_io::py::mineru_batch_submit, &http)?)?;
+    http.add_function(wrap_pyfunction!(http_io::py::mineru_batch_result, &http)?)?;
     register_submodule(m, "rust_io.http", &http)?;
 
     let files = PyModule::new(m.py(), "files")?;
