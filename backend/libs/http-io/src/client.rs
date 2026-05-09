@@ -80,6 +80,45 @@ impl HttpClient {
         Ok(text)
     }
 
+    /// POST JSON with optional Authorization header.
+    pub async fn post_json(
+        &self,
+        url: &str,
+        body: &serde_json::Value,
+        auth_header: Option<&str>,
+    ) -> Result<serde_json::Value, GatewayError> {
+        let mut request = self
+            .inner
+            .post(url)
+            .header("Content-Type", "application/json")
+            .header("Accept", "*/*");
+
+        if let Some(auth) = auth_header {
+            request = request.header("Authorization", auth);
+        }
+
+        let response = request.json(body).send().await?;
+        let json = response.error_for_status()?.json().await?;
+        Ok(json)
+    }
+
+    /// GET with optional Authorization header, returning JSON.
+    pub async fn get_json_with_auth(
+        &self,
+        url: &str,
+        auth_header: Option<&str>,
+    ) -> Result<serde_json::Value, GatewayError> {
+        let mut request = self.inner.get(url);
+
+        if let Some(auth) = auth_header {
+            request = request.header("Authorization", auth);
+        }
+
+        let response = request.send().await?;
+        let json = response.error_for_status()?.json().await?;
+        Ok(json)
+    }
+
     fn build_url(&self, base: &str, query: &serde_json::Value) -> Result<url::Url, GatewayError> {
         let mut url = url::Url::parse(base)?;
         if let Some(obj) = query.as_object() {
