@@ -1,11 +1,11 @@
 [package]
-name = "http-io"
+name = "net-io"
 version = "0.1.0"
 edition = "2024"
 description = "High-performance HTTP/web I/O for ACMG Lingua"
 
 [lib]
-name = "http_io"
+name = "net_io"
 crate-type = ["rlib"]
 
 [dependencies]

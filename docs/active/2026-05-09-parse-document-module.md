@@ -4,9 +4,9 @@
 
 **Goal:** 实现 PDF 文档解析模块，将 PDF 转换为结构化数据 + Markdown 格式，支持 MinerU (主) 和 PaddleOCR (备) 双引擎自动降级。
 
-**Architecture:** 采用策略模式实现双引擎解析器，分层架构分离 I/O 操作和业务逻辑。`files-io` 负责所有文件 I/O（读取 PDF、写入 MD、去重、临时文件管理），`http-io` (via `rust_io.http`) 负责所有 HTTP 请求（MinerU API 调用），Python 层负责解析逻辑和结果标准化。
+**Architecture:** 采用策略模式实现双引擎解析器，分层架构分离 I/O 操作和业务逻辑。`files-io` 负责所有文件 I/O（读取 PDF、写入 MD、去重、临时文件管理），`net-io` (via `rust_io.net`) 负责所有 HTTP 请求（MinerU API 调用），Python 层负责解析逻辑和结果标准化。
 
-**Tech Stack:** Python 3.12, Pydantic (数据契约), rust_io.http (MinerU API via Rust http-io), PaddleOCR-VL-1.5 (本地部署), files-io (Rust PyO3 扩展)
+**Tech Stack:** Python 3.12, Pydantic (数据契约), rust_io.net (MinerU API via Rust net-io), PaddleOCR-VL-1.5 (本地部署), files-io (Rust PyO3 扩展)
 
 ---
 
@@ -28,7 +28,7 @@ parse_document/
 ```
 调用方 -> service.py -> parser_factory.py -> [mineru_parser | paddle_parser]
                 ↓                           ↓
-            contracts.py (ParseResult)   rust_io.http (MinerU API via http-io)
+            contracts.py (ParseResult)   rust_io.net (MinerU API via net-io)
                 ↓
             files-io (写 MD / 去重)
 ```
@@ -36,7 +36,7 @@ parse_document/
 **MinerU 调用链:**
 ```
 mineru_parser.py
-  → rust_io.http.mineru_create_task(url, token, ...)  # Rust HTTP POST
+  → rust_io.net.mineru_create_task(url, token, ...)   # Rust HTTP POST
   → rust_io.http.mineru_get_result(task_id, token, ...)  # Rust HTTP GET (轮询)
   → 解析 JSON → ParseResult
 ```
@@ -451,13 +451,13 @@ git commit -m "feat(parse-document): add abstract base class for parser strategy
 
 ## Task 4: 实现 MinerU Parser (mineru_parser.py)
 
-**前置依赖:** `http-io` feat 分支已实现 `rust_io.http.mineru_create_task` 和 `rust_io.http.mineru_get_result`。
+**前置依赖:** `net-io` feat 分支已实现 `rust_io.net.mineru_create_task` 和 `rust_io.net.mineru_get_result`。
 
 **MinerU API 调用链:**
 ```
 Python (mineru_parser.py)
-  → rust_io.http.mineru_create_task(url, token, ...)  # 创建解析任务
-  → rust_io.http.mineru_get_result(task_id, token, ...)  # 轮询结果
+  → rust_io.net.mineru_create_task(url, token, ...)   # 创建解析任务
+  → rust_io.net.mineru_get_result(task_id, token, ...)  # 轮询结果
   → 解析返回的 JSON → ParseResult
 ```
 
@@ -562,14 +562,14 @@ Expected: FAIL with "ModuleNotFoundError"
 **Step 3: Write minimal implementation**
 
 ```python
-"""MinerU API parser implementation via rust_io.http."""
+"""MinerU API parser implementation via rust_io.net."""
 from __future__ import annotations
 
 import asyncio
 
 from loguru import logger
 
-import rust_io.http as http_io
+import rust_io.net as net_io
 
 from .base import ParserStrategy
 from .contracts import (
@@ -583,7 +583,7 @@ from .exceptions import MinerUAPIError, MinerUTimeoutError
 
 
 class MinerUParser(ParserStrategy):
-    """PDF parser using MinerU API via Rust http-io layer.
+    """PDF parser using MinerU API via Rust net-io layer.
 
     MinerU uses an async task-based API:
     1. Create task with PDF URL → get task_id
@@ -632,7 +632,7 @@ class MinerUParser(ParserStrategy):
     async def _create_task(self, pdf_url: str) -> str:
         """Create MinerU parsing task and return task_id."""
         try:
-            response = await http_io.mineru_create_task(
+            response = await net_io.mineru_create_task(
                 url=pdf_url,
                 token=self._api_token,
                 enable_formula=True,
@@ -651,7 +651,7 @@ class MinerUParser(ParserStrategy):
         """Poll for task result until completion or timeout."""
         for attempt in range(self._max_poll_attempts):
             try:
-                response = await http_io.mineru_get_result(
+                response = await net_io.mineru_get_result(
                     task_id=task_id,
                     token=self._api_token,
                 )

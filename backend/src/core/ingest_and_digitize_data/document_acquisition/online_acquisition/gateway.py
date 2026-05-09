@@ -1,4 +1,4 @@
-"""Unified gateway — delegates HTTP I/O to http_io, Python handles downloads."""
+"""Unified gateway — delegates HTTP I/O to net_io, Python handles downloads."""
 
 from __future__ import annotations
 
@@ -125,7 +125,7 @@ async def _download_pdf_from_candidates(
 
 
 def _build_fetch_params(request: OnlineAcquisitionGatewayRequest) -> Dict[str, Any]:
-    """Convert OnlineAcquisitionGatewayRequest to http_io.fetch_one params dict."""
+    """Convert OnlineAcquisitionGatewayRequest to net_io.fetch_one params dict."""
     params: Dict[str, Any] = {
         "query": request.query or "",
         "limit": request.limit,
@@ -153,7 +153,7 @@ def _rust_result_to_gateway(
     result: Dict[str, Any],
     trace: Optional[OnlineAcquisitionSourceTraceEntry] = None,
 ) -> OnlineAcquisitionGatewayResult:
-    """Convert http_io FetchResult dict to OnlineAcquisitionGatewayResult."""
+    """Convert net_io FetchResult dict to OnlineAcquisitionGatewayResult."""
     gateway_result = OnlineAcquisitionGatewayResult(
         provider=provider,
         success=bool(result.get("success")),
@@ -191,19 +191,19 @@ def _failure_result(provider: str, error: Exception, action: str = "search") -> 
 
 
 async def call_provider(request: OnlineAcquisitionGatewayRequest) -> OnlineAcquisitionGatewayResult:
-    """Call a single provider via http_io.fetch_one."""
+    """Call a single provider via net_io.fetch_one."""
     try:
-        import rust_io.http as http_io
+        import rust_io.net as net_io
     except ImportError:
         return _failure_result(
             request.provider,
-            RuntimeError("http_io not available"),
+            RuntimeError("net_io not available"),
             request.action,
         )
 
     params = _build_fetch_params(request)
     try:
-        raw_result = await http_io.fetch_one(
+        raw_result = await net_io.fetch_one(
             provider=request.provider,
             action=request.action,
             params=params,
@@ -299,7 +299,7 @@ async def download_from_provider(
     )
     result = await call_provider_with_retry(request)
 
-    # If http-io returned PDF candidate URLs, try to actually download them
+    # If net-io returned PDF candidate URLs, try to actually download them
     if result.success and result.downloads:
         pdf_candidates = [
             d.get("pdf_url") for d in result.downloads if d.get("pdf_url")
