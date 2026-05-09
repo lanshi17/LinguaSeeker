@@ -260,9 +260,9 @@ Three PyO3 crates, all using `cdylib` + `rlib` crate types, async via `pyo3-asyn
 |-------|--------------|---------|
 | `rust-io` | `rust_io` | Literature search/download via providers (Crossref, OpenAlex, EuropePMC, PMC, DOAJ, JStage, Unpaywall). Also has `files` submodule for SHA256, file write, PDF validation. |
 | `files-io` | `files_io` | Unified local + S3 file I/O. Dedup, parallel ops, archive (zip/tar/gzip). |
-| `literature-io` | `literature_io` | Dedicated literature acquisition I/O (same provider set as rust-io, newer architecture). |
+| `http-io` | `rust_io.http` | Literature search/download via providers + MinerU document parsing API. Same provider set as rust-io, newer architecture. |
 
-All three expose async Python functions via `pyo3_async_runtimes::tokio::future_into_py`. The Python gateway (`src/core/ingest_and_digitize_data/literature_acquisition/gateway.py`) calls `literature_io.fetch_one()` for HTTP I/O and handles PDF downloads in Python.
+All three expose async Python functions via `pyo3_async_runtimes::tokio::future_into_py`. The Python gateway (`src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/gateway.py`) calls `http_io.fetch_one()` for HTTP I/O and handles PDF downloads in Python.
 
 #### Model Server (`backend/services/model-server/`)
 
@@ -344,7 +344,7 @@ npm run build        # Production build
 #### Rust Libraries
 
 ```bash
-cd backend/libs/rust-io     # or files-io, literature-io
+cd backend/libs/rust-io     # or files-io, http-io
 cargo test
 cargo bench                 # rust-io only
 ```
