@@ -12,7 +12,6 @@ dependencies = [
     { name = "celery" },
     { name = "crawl4ai" },
     { name = "fastapi" },
-    { name = "files-io" },
     { name = "httpx", extra = ["socks"] },
     { name = "loguru" },
     { name = "maturin" },
@@ -50,7 +49,6 @@ requires-dist = [
     { name = "celery", specifier = ">=5.4.0" },
     { name = "crawl4ai", specifier = ">=0.8.6" },
     { name = "fastapi", specifier = ">=0.111.0" },
-    { name = "files-io", editable = "libs/files-io" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.27.0" },
     { name = "httpx", extras = ["socks"], specifier = ">=0.27.0" },
     { name = "loguru", specifier = ">=0.7.0" },
@@ -906,10 +904,6 @@ sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/b5/fe/997687a931ab51
 wheels = [
     { url = "https://pypi.tuna.tsinghua.edu.cn/packages/81/47/dd9a212ef6e343a6857485ffe25bba537304f1913bdbed446a23f7f592e1/filelock-3.29.0-py3-none-any.whl", hash = "sha256:96f5f6344709aa1572bbf631c640e4ebeeb519e08da902c39a001882f30ac258", size = 39812, upload-time = "2026-04-19T15:39:08.752Z" },
 ]
-
-[[package]]
-name = "files-io"
-source = { editable = "libs/files-io" }
 
 [[package]]
 name = "frozenlist"
