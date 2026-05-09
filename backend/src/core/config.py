@@ -93,6 +93,14 @@ class MinerUConfig(BaseModel):
     max_file_size_mb: int = 100
 
 
+class PaddleOCRConfig(BaseModel):
+    """PaddleOCR local model configuration."""
+
+    model_path: str = ""
+    use_gpu: bool = False
+    lang: str = "en"
+
+
 class RedisConfig(BaseModel):
     """Redis connection."""
 
@@ -251,6 +259,12 @@ class Settings(BaseSettings):
     mineru_timeout: int = 300
     mineru_max_file_size_mb: int = 100
 
+    # ── PaddleOCR flat fields (PADDLE_*) ───────────────────────────────
+
+    paddle_model_path: str = ""
+    paddle_use_gpu: bool = False
+    paddle_lang: str = "en"
+
     # ── Redis flat fields (REDIS_*) ──────────────────────────────────────
 
     redis_host: str = "localhost"
@@ -321,6 +335,7 @@ class Settings(BaseSettings):
     embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig, exclude=True)
     rerank: RerankConfig = Field(default_factory=RerankConfig, exclude=True)
     mineru: MinerUConfig = Field(default_factory=MinerUConfig, exclude=True)
+    paddle: PaddleOCRConfig = Field(default_factory=PaddleOCRConfig, exclude=True)
     redis: RedisConfig = Field(default_factory=RedisConfig, exclude=True)
     postgresql: PostgreSQLConfig = Field(default_factory=PostgreSQLConfig, exclude=True)
     neo4j: Neo4jConfig = Field(default_factory=Neo4jConfig, exclude=True)
@@ -380,6 +395,11 @@ class Settings(BaseSettings):
             download_dir=self.mineru_download_dir,
             timeout=self.mineru_timeout,
             max_file_size_mb=self.mineru_max_file_size_mb,
+        )
+        self.paddle = PaddleOCRConfig(
+            model_path=self.paddle_model_path,
+            use_gpu=self.paddle_use_gpu,
+            lang=self.paddle_lang,
         )
         self.redis = RedisConfig(
             host=self.redis_host,
