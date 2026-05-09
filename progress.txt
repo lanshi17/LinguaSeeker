@@ -1,1 +1,2 @@
 [2026-05-09] Rename http-io crate to net-io and update all external dependencies [done]
+[2026-05-09] Update six core docs to evidence extraction scope [done]

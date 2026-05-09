@@ -1,144 +1,165 @@
 # PRD — ACMG Lingua
 
-## 1. Product Overview
+## 1. Product Positioning
 
-ACMG Lingua is a web-based platform that automates ACMG variant classification and ClinGen Gene-Disease Validity (GDV) assessment. It ingests scientific literature (via PDF upload, PMID/DOI, or keyword search), translates non-English documents, extracts structured evidence items, standardizes entities against public databases, and produces classification drafts through multi-agent reasoning with expert arbitration.
+ACMG Lingua is a Multi-Agent infrastructure platform for medical genetics literature automation and structured evidence extraction. The product focuses on the upstream bottlenecks before medical rating: literature acquisition, multimodal document parsing, multilingual-native evidence extraction, entity standardization, evidence matrix construction, source-linked review, and expert feedback capture.
 
-## 2. Target Users
+The system provides a high-quality data foundation for downstream clinical interpretation and research computation. It does not perform final autonomous ACMG/GDV medical classification in the current scope.
 
-The roles below are user personas, not authorization roles. Current-stage access control treats users as a single logged-in user class.
+## 2. Core Problems
+
+| Problem | Product Response |
+|---|---|
+| Literature collection and reading consume expert time | Cross-database search, batch download, PMID/DOI/keyword workflows, and local PDF/DOCX upload shorten single-gene or variant literature gathering from hours to minutes. |
+| Cross-language and multimodal evidence is missed | Use multilingual-native extraction before structured translation, combined with layout analysis, table parsing, and VLM figure descriptions. |
+| Evidence collection is fragmented and hard to standardize | Convert unstructured papers into a standardized evidence matrix with normalized genes, variants, diseases, phenotypes, methods, results, and source links. |
+| Entity aliases and cross-database lookups are error-prone | Align extracted entities with HGNC, ClinVar, dbSNP, OMIM, HPO, ClinGen, and related public databases through exact, synonym, vector, and Agent-assisted conflict resolution. |
+| Expert extraction experience is hard to reuse | Preserve absolute source positions, structured feedback, and corrected source-evidence pairs for institutional extraction knowledge bases and future model/prompt improvement. |
+
+## 3. Target Users
+
+The personas below are product users, not authorization roles. Current-stage authorization treats authenticated users as one user class.
 
 | User Persona | Technical Level | Primary Use Case |
-|--------------|----------------|-----------------|
-| Clinical Geneticist | No coding | Upload functional assay papers, get PS3/BS3 evidence strength drafts |
-| Researcher | No coding | Batch-process literature for variant-disease evidence drafts |
-| Genetic Counselor | No coding | Query existing evidence chains for review support |
-| Lab Technician | No coding | Upload PDFs and review extracted evidence drafts |
+|---|---|---|
+| Clinical Geneticist | No coding | Quickly review source-linked structured evidence extracted from papers. |
+| Bioinformatics Analyst | Low/no coding | Batch collect and normalize variant/gene literature evidence. |
+| Researcher | No coding | Mine multilingual literature for phenotypes, experiments, population data, and relationships. |
+| Genetic Counselor | No coding | Review evidence chains and export evidence summary reports. |
+| Lab Technician | No coding | Upload local PDF/DOCX documents and verify extracted data. |
 
-## 3. Core User Stories
+## 4. Core User Stories
 
-### US-1: Literature Upload & Processing
-As a clinical geneticist, I upload a PDF paper describing a functional assay for BRCA1 c.5266dup. The system automatically:
-1. Parses the PDF (OCR if scanned)
-2. Translates to English (if non-English)
-3. Extracts structured evidence items (variant, disease, experiment details, controls, thresholds)
-4. Standardizes gene/disease/variant names against HGNC, ClinVar, OMIM
-5. Shows me a draft classification with full evidence chain
+### US-1: Literature Upload and Processing
 
-### US-2: Multi-Variant Analysis
-As a researcher, I upload a paper containing 5 variants. The system processes all variants and produces separate evidence chains and classifications for each.
+As a clinical geneticist, I upload a PDF or DOCX paper describing a functional assay. The system:
 
-### US-3: Evidence Review & Feedback
-As a genetic counselor, I review the system's draft classification. I can:
-- See the MinerU-rendered MD/HTML document with evidence source anchors
-- Add review comments and rationale without changing structured classification results
-- Export a draft report as PDF
+1. Extracts metadata before full parsing when possible: DOI, PMID, authors, year, journal.
+2. Parses the document with MinerU/PaddleOCR or DOCX parsing into Markdown/HTML plus source anchors and bounding boxes.
+3. Separates text, tables, figures, pedigrees, and medically relevant image regions.
+4. Extracts target evidence in the source language first.
+5. Translates and denoises only structured evidence fields and relevant snippets.
+6. Produces a standardized evidence matrix with source-linked evidence items.
 
-### US-4: Database Query
-As a lab technician, I input "BRCA1 c.5266dup" or a gene-disease pair. The system returns existing evidence chains and current classification from the database.
+### US-2: Multilingual Evidence Extraction
 
-### US-5: GDV Assessment
-As a researcher, I input a gene-disease pair. The system uses the provided literature plus supplemental retrieval across configured literature providers, extracts genetic evidence (case-level, segregation, case-control) and experimental evidence (function, alteration, models/rescue), and produces a ClinGen GDV draft classification.
+As a researcher, I process a non-English paper. The system extracts entities and evidence in the original language first, then translates structured JSON fields to standard English or Chinese without corrupting HGVS strings, gene symbols, phenotypes, or assay measurements.
 
-## 4. Functional Requirements
+### US-3: Evidence Matrix Construction
 
-### Phase 1: Literature Acquisition & Digitization
+As a bioinformatics analyst, I need a machine-readable evidence matrix containing variants, genes, diseases, phenotypes, experimental methods, experimental results, population frequencies, table values, figure-derived evidence, confidence scores, and original source anchors.
 
-| ID | Requirement | Priority |
-|----|-------------|----------|
-| F1.1 | Accept PDF upload (max 50MB, including scanned PDFs) | P0 |
-| F1.2 | Accept PMID/DOI input for literature retrieval | P0 |
-| F1.3 | Accept keyword search across multiple providers | P1 |
-| F1.4 | OCR via MinerU API (primary) with PaddleOCR VLM fallback | P0 |
-| F1.5 | Extract metadata (DOI, PMID, authors, year, journal) before full OCR | P1 |
-| F1.6 | Parse tables to JSON/CSV format | P2 |
-| F1.7 | Generate image descriptions via VLM | P2 |
-| F1.8 | Chunk text by paragraph with max_tokens limit | P0 |
-| F1.9 | Return MinerU source anchors / Bounding Box coordinates; no-bbox OCR output fails the task | P0 |
-| F1.10 | Support multi-language sources: CN, JP, DE, RU, KR, EN | P0 |
+### US-4: Source-Linked Evidence Review
 
-### Phase 2: Translation & Evidence Extraction
+As a reviewer, I click an extracted data point such as a population frequency, HPO phenotype, or biochemical assay result and the document panel highlights the exact source paragraph, table row/cell, or figure region.
 
-| ID | Requirement | Priority |
-|----|-------------|----------|
-| F2.1 | Translate non-English documents to English before extraction | P0 |
-| F2.2 | 5-stage translation pipeline: terminology → structure → draft → polish → review | P0 |
-| F2.3 | Preserve medical terminology accuracy (HGVS, gene symbols, protein names) | P0 |
-| F2.4 | Extract all evidence fields per GDV v12 + ACMG 2019 schema | P0 |
-| F2.5 | Structured JSON output with confidence scores per field | P0 |
-| F2.6 | Traceability: link each evidence item to MinerU source anchor / bbox-backed document span | P1 |
+### US-5: Structured Expert Feedback
 
-### Phase 3: Entity Standardization
+As an expert reviewer, I can record structured feedback at the correct failure point:
+
+- Translation error.
+- Entity standardization error.
+- Evidence extraction error.
+- Missed target phenotype, method, or result.
+- Report wording issue.
+
+Feedback is persisted for audit, report export, and future dataset/prompt/model improvement. Current-stage feedback does not mutate extracted evidence automatically unless a reviewed correction workflow is implemented.
+
+### US-6: Evidence Summary Export
+
+As a reviewer, I export a PDF/DOCX evidence summary report containing document metadata, standardized evidence matrix, source snippets, confidence scores, and review feedback.
+
+## 5. Functional Requirements
+
+### Phase 1: Literature Acquisition and Digitization
 
 | ID | Requirement | Priority |
-|----|-------------|----------|
-| F3.1 | Match gene symbols against HGNC | P0 |
-| F3.2 | Match disease names against OMIM, MONDO, HPO | P0 |
-| F3.3 | Match variants against ClinVar, dbSNP | P0 |
-| F3.4 | Query population frequency from gnomAD | P0 |
-| F3.5 | Query computational predictions from CADD, REVEL, SpliceAI | P1 |
-| F3.6 | Preserve original values alongside standardized values | P0 |
-| F3.7 | Vector-based fuzzy matching using pgvector (Qwen3-Embedding) | P1 |
-| F3.8 | Conflict resolution via heuristic + agent for ambiguous matches | P1 |
+|---|---|---|
+| F1.1 | Accept local PDF upload, including scanned PDFs. | P0 |
+| F1.2 | Accept local DOCX upload. | P0 |
+| F1.3 | Accept PMID/DOI input for literature retrieval. | P0 |
+| F1.4 | Accept keyword search across configured providers. | P1 |
+| F1.5 | Extract metadata before full OCR/parsing when possible: DOI, PMID, authors, year, journal, source quality signals. | P1 |
+| F1.6 | Parse PDF through MinerU primary path and PaddleOCR fallback. | P0 |
+| F1.7 | Convert documents to Markdown/HTML with source anchors and bounding boxes. | P0 |
+| F1.8 | Reject parse output that cannot provide source anchors or bbox-backed spans for evidence review. | P0 |
+| F1.9 | Parse tables into structured JSON/CSV where available. | P1 |
+| F1.10 | Generate VLM image descriptions for figures, pedigrees, plots, and functional assay diagrams. | P1 |
+| F1.11 | Chunk long documents by logical section and paragraph while preserving source span mapping. | P0 |
+| F1.12 | Support multilingual sources including Chinese, Japanese, German, Russian, Korean, and English. | P0 |
 
-### Phase 4: Dual-Track Reasoning & Arbitration
-
-| ID | Requirement | Priority |
-|----|-------------|----------|
-| F4.1 | ACMG/AMP classification (Pathogenic → Benign, 5-tier) | P0 |
-| F4.2 | ClinGen GDV draft classification (Definitive → No Known Disease Validity) | P0 |
-| F4.3 | Multi-agent architecture: separate agents per evidence category | P0 |
-| F4.4 | Arbitration via stronger reasoning model (ArbitrationConfig); rule matrices remain authoritative when LLM output conflicts | P0 |
-| F4.5 | Retry mechanism: re-evaluate disputed parts only | P0 |
-| F4.6 | Confidence scoring per evidence item | P0 |
-| F4.7 | GDV gating: No Known / Disputed / Refuted blocks ACMG tier display; Limited is shown as a warning | P0 |
-| F4.8 | Query Neo4j gene-disease graph for background knowledge | P1 |
-| F4.9 | ACMG rules: 2015 guidelines + 2019 updates + latest refinements | P0 |
-| F4.10 | GDV rules: ClinGen Gene-Disease Validity framework v12 | P0 |
-
-### Phase 5: Visualization & Human-in-the-Loop
+### Phase 2: Cross-Lingual Processing and Evidence Extraction
 
 | ID | Requirement | Priority |
-|----|-------------|----------|
-| F5.1 | Display translated MinerU MD/HTML document alongside evidence chain | P0 |
-| F5.2 | Highlight source text linked to evidence items through source anchors / bbox-backed spans | P1 |
-| F5.3 | Allow user to add review comments and rationale without changing structured classification output | P0 |
-| F5.4 | Export draft report as PDF | P0 |
-| F5.5 | Real-time processing status via WebSocket | P0 |
-| F5.6 | Multi-variant view within single session | P0 |
+|---|---|---|
+| F2.1 | Perform multilingual-native entity/relation/evidence extraction before translating evidence fields. | P0 |
+| F2.2 | Preserve biomedical literals: HGVS, gene symbols, transcript IDs, protein names, rsIDs, accession IDs, measurements. | P0 |
+| F2.3 | Use coarse-grained filtering to identify paragraphs/regions likely containing target evidence. | P1 |
+| F2.4 | Use fine-grained extraction Agents for phenotypes, experimental methods, experimental results, population frequency, segregation, and other target evidence. | P0 |
+| F2.5 | Translate only structured extracted evidence and relevant snippets after extraction. | P0 |
+| F2.6 | Output structured JSON with confidence scores per field and evidence item. | P0 |
+| F2.7 | Link each evidence item to absolute traceability anchors: page, line/section, source anchor, and bbox where available. | P0 |
+| F2.8 | Support table-derived, figure-derived, and text-derived evidence items. | P1 |
 
-### Cross-Cutting
+### Phase 3: Entity Standardization and Knowledge Alignment
 
 | ID | Requirement | Priority |
-|----|-------------|----------|
-| F6.1 | JWT authentication via `/api/v1/auth/*`; FastAPI signs/verifies tokens and Next.js proxies | P0 |
-| F6.2 | Public email/password registration, required email verification, login, 24h JWT TTL; password reset deferred | P0 |
-| F6.3 | Async task creation/status/result flow via `/api/v1/tasks`; running tasks are in-memory, completed metadata, document/OCR output, results, and comments persist | P0 |
-| F6.4 | Evidence graph query and statistics | P1 |
-| F6.5 | Health check endpoint | P0 |
-| F6.6 | File hash / PMID / DOI cache reuse with version invalidation | P1 |
+|---|---|---|
+| F3.1 | Match gene symbols and aliases against HGNC. | P0 |
+| F3.2 | Match diseases against OMIM, MONDO, and HPO. | P0 |
+| F3.3 | Match variants against ClinVar and dbSNP. | P0 |
+| F3.4 | Align gene-disease context against ClinGen and OMIM where available. | P1 |
+| F3.5 | Query population frequency from gnomAD where available. | P1 |
+| F3.6 | Preserve original extracted values alongside standardized values. | P0 |
+| F3.7 | Use exact matching first, then synonym matching, then pgvector/embedding semantic matching. | P1 |
+| F3.8 | Invoke heuristic + Agent conflict resolution for ambiguous aliases or multiple candidate entities. | P1 |
+| F3.9 | Store standardized evidence matrix and match rationale. | P0 |
 
-## 5. Non-Functional Requirements
+### Phase 4: Evidence Visualization and Expert Human-in-the-Loop
+
+| ID | Requirement | Priority |
+|---|---|---|
+| F4.1 | Display parsed document and standardized evidence matrix in a split-panel UI. | P0 |
+| F4.2 | Synchronize evidence clicks with source highlights in text/table/figure spans. | P0 |
+| F4.3 | Show confidence scores and extraction uncertainty flags. | P0 |
+| F4.4 | Accept structured expert feedback by target type: translation, entity, evidence item, missed evidence, report. | P1 |
+| F4.5 | Store corrected source-evidence pairs for future dataset/fine-tuning workflows. | P1 |
+| F4.6 | Export evidence summary report as PDF. | P0 |
+| F4.7 | Export evidence summary report as DOCX. | P1 |
+| F4.8 | Stream real-time processing status through WebSocket. | P0 |
+
+### Cross-Cutting Requirements
+
+| ID | Requirement | Priority |
+|---|---|---|
+| F5.1 | FastAPI owns `/api/v1/*` API behavior and JWT signing/verification. | P0 |
+| F5.2 | Next.js proxies API calls and renders UI; it does not sign or verify JWTs. | P0 |
+| F5.3 | Registration, email verification, login, and 24h JWT TTL. | P0 |
+| F5.4 | Async task creation/status/result flow; running task state may be in-memory for MVP. | P0 |
+| F5.5 | Persist completed metadata, document outputs, evidence matrix, reports, and feedback. | P0 |
+| F5.6 | Cache by PDF/DOCX hash, PMID, DOI, prompt version, parser version, and model config. | P1 |
+| F5.7 | Use loguru logs under `logs/`. | P0 |
+
+## 6. Non-Functional Requirements
 
 | Category | Requirement |
-|----------|-------------|
-| Scale | Future production target: 10,000 registered users, 100 concurrent |
-| Performance | Future production target: single document processing < 5 minutes (PDF → classification draft) |
-| Availability | Future production target: 99.5% uptime for cloud deployment |
-| Security | JWT auth, required email verification, no hardcoded secrets, .env-based config; PHI/privacy handling is user responsibility with upload warnings |
-| Storage | Local file system (MinIO deferred) |
-| LLM | Custom OpenAI-compatible API format |
-| Database | PostgreSQL 16 + pgvector for current MVP; Neo4j and Redis are P1/future |
+|---|---|
+| Scope Safety | Current scope is evidence extraction and evidence summarization, not final autonomous medical rating. |
+| Traceability | Every displayed evidence item must link to source anchors/bbox-backed spans. |
+| Reliability | Failed extraction, missing traceability, or low confidence must surface as explicit task errors/warnings, not silent success. |
+| Security | No hardcoded secrets; environment-variable configuration; upload warning for sensitive clinical data. |
+| Performance | Future production target: single-document processing under 5 minutes where model/provider latency allows. |
+| Scale | Future production target: 10,000 registered users, 100 concurrent analyses. |
+| Storage | Current MVP can use PostgreSQL + local filesystem; object storage is deferred unless re-scoped. |
+| LLM | OpenAI-compatible API format for LLM, VLM, translation, embedding, and rerank roles. |
 
-## 6. Out of Scope (Current Phase)
+## 7. Out of Scope for Current MVP Unless Re-Scoped
 
-- Celery task queue (deferred; running tasks are in-memory and may disappear on restart)
-- MinIO object storage (deferred, using local filesystem)
-- Redis and Neo4j production integrations (P1/future)
-- Password reset and refresh-token flows
-- Chat Assistant beyond status-oriented UX (P1/future)
-- DOCX export (PDF only)
-- Model fine-tuning / active learning flywheel
-- Advanced table/chart structured extraction (basic only)
-- Automated PHI de-identification or privacy enforcement
-- LIMS or external clinical system integration
+- Autonomous ACMG/AMP classification or final clinical diagnosis.
+- Full ClinGen GDV scoring workflow as a product output.
+- External LIMS/EHR integration.
+- Automated PHI de-identification or privacy enforcement beyond warnings.
+- Production-grade distributed task queue.
+- Production Redis/Neo4j/MinIO dependency.
+- Full active-learning fine-tuning automation, although dataset capture hooks should be designed.
+- Human edits that directly mutate extracted evidence without a reviewed correction workflow.
