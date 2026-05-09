@@ -65,7 +65,7 @@ class ParseDocumentService:
         self,
         file_path: str,
         known_hashes: list[str],
-    ) -> dict:  # noqa: dict-return — wraps files_io C extension return
+    ) -> dict:  # noqa: dict-return
         """Check if a file is a duplicate based on content hash.
 
         Args:
