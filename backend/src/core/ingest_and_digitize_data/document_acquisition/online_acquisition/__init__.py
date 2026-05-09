@@ -1,6 +1,6 @@
 """Online acquisition module — layered architecture.
 
-literature-io handles HTTP I/O, Python handles business logic.
+http-io handles HTTP I/O, Python handles business logic.
 """
 
 from .contracts import (

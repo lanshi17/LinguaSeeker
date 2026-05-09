@@ -1,4 +1,4 @@
-"""Tests for gateway module — with mocked literature_io."""
+"""Tests for gateway module — with mocked http_io."""
 
 from unittest.mock import AsyncMock, patch
 
