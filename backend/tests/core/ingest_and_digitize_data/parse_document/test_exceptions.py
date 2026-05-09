@@ -1,8 +1,6 @@
 """Tests for parse_document exceptions."""
 from __future__ import annotations
 
-import pytest
-
 from src.core.ingest_and_digitize_data.parse_document.exceptions import (
     MinerUAPIError,
     MinerUTimeoutError,

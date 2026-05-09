@@ -19,7 +19,7 @@ class TestDocumentMetadata:
             total_pages=10,
             title="Test Paper",
             authors=["Author A", "Author B"],
-            abstract="This is a test abstract.",
+            abstract_text="This is a test abstract.",
         )
         assert meta.total_pages == 10
         assert meta.title == "Test Paper"
@@ -29,7 +29,7 @@ class TestDocumentMetadata:
         meta = DocumentMetadata(total_pages=5)
         assert meta.title is None
         assert meta.authors == []
-        assert meta.abstract is None
+        assert meta.abstract_text is None
 
     def test_invalid_pages(self):
         with pytest.raises(ValidationError):
@@ -93,3 +93,21 @@ class TestParseResult:
             full_markdown="Content",
         )
         assert result.parser_used == "unknown"
+
+    def test_full_markdown_auto_derived(self):
+        result = ParseResult(
+            metadata=DocumentMetadata(total_pages=2),
+            pages=[
+                PageContent(page_number=1, markdown="Page 1"),
+                PageContent(page_number=2, markdown="Page 2"),
+            ],
+        )
+        assert result.full_markdown == "Page 1\n\nPage 2"
+
+    def test_explicit_full_markdown_preserved(self):
+        result = ParseResult(
+            metadata=DocumentMetadata(total_pages=1),
+            pages=[PageContent(page_number=1, markdown="Content")],
+            full_markdown="Custom markdown",
+        )
+        assert result.full_markdown == "Custom markdown"

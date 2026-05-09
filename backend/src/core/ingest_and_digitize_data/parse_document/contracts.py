@@ -1,7 +1,7 @@
 """Data contracts for document parsing results."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class DocumentMetadata(BaseModel):
@@ -10,7 +10,7 @@ class DocumentMetadata(BaseModel):
     total_pages: int = Field(ge=1, description="Total number of pages")
     title: str | None = None
     authors: list[str] = Field(default_factory=list)
-    abstract: str | None = None
+    abstract_text: str | None = None
 
 
 class FigurePosition(BaseModel):
@@ -40,9 +40,18 @@ class PageContent(BaseModel):
 
 
 class ParseResult(BaseModel):
-    """Complete result of PDF parsing."""
+    """Complete result of PDF parsing.
+
+    ``full_markdown`` is automatically derived from ``pages`` if not provided.
+    """
 
     metadata: DocumentMetadata
     pages: list[PageContent]
-    full_markdown: str
+    full_markdown: str = ""
     parser_used: str = "unknown"
+
+    @model_validator(mode="after")
+    def _derive_full_markdown(self) -> ParseResult:
+        if not self.full_markdown and self.pages:
+            self.full_markdown = "\n\n".join(p.markdown for p in self.pages)
+        return self

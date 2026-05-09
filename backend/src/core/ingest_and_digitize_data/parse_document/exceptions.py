@@ -17,7 +17,7 @@ class MinerUAPIError(ParseDocumentError):
 class MinerUTimeoutError(ParseDocumentError):
     """MinerU API request timed out."""
 
-    def __init__(self, timeout: int):
+    def __init__(self, timeout: float):
         self.timeout = timeout
         super().__init__(f"MinerU API timed out after {timeout}s")
 
