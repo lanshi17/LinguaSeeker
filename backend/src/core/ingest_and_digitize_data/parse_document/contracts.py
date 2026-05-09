@@ -48,6 +48,45 @@ class PageContent(BaseModel):
     tables: list[TableStructure] = Field(default_factory=list)
 
 
+def _figures_from_page(page_number: int, figures: list[dict]) -> list[FigurePosition]:
+    """Extract figure positions from raw page data."""
+    return [
+        FigurePosition(page=page_number, index=f.get("index", 1), caption=f.get("caption"))
+        for f in figures
+    ]
+
+
+def _tables_from_page(page_number: int, tables: list[dict]) -> list[TableStructure]:
+    """Extract table structures from raw page data."""
+    return [
+        TableStructure(
+            page=page_number,
+            index=t.get("index", 1),
+            headers=t.get("headers", []),
+            rows=t.get("rows", []),
+        )
+        for t in tables
+    ]
+
+
+def pages_from_raw(pages_data: list[dict]) -> list[PageContent]:
+    """Convert raw page dicts to PageContent list.
+
+    Shared by MinerU and PaddleOCR parsers to avoid duplication.
+    """
+    pages: list[PageContent] = []
+    for page_data in pages_data:
+        pages.append(
+            PageContent(
+                page_number=page_data["page_number"],
+                markdown=page_data.get("markdown", ""),
+                figures=_figures_from_page(page_data["page_number"], page_data.get("figures", [])),
+                tables=_tables_from_page(page_data["page_number"], page_data.get("tables", [])),
+            )
+        )
+    return pages
+
+
 class ParseResult(BaseModel):
     """Complete result of PDF parsing.
 

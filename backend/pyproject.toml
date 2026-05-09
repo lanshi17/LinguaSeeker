@@ -54,6 +54,11 @@ url = "https://mirrors.aliyun.com/pypi/simple/"
 [tool.uv.sources]
 rust-io = { path = "libs/rust-io", editable = true }
 
+[tool.pytest.ini_options]
+markers = [
+    "integration: tests that require external services (MinerU API, PaddleOCR model)",
+]
+
 [tool.ruff]
 line-length = 120
 target-version = "py312"

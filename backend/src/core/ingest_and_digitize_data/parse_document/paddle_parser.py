@@ -9,10 +9,8 @@ from loguru import logger
 from .base import ParserStrategy
 from .contracts import (
     DocumentMetadata,
-    FigurePosition,
-    PageContent,
     ParseResult,
-    TableStructure,
+    pages_from_raw,
 )
 from .exceptions import PaddleOCRError
 
@@ -53,7 +51,10 @@ class PaddleOCRParser(ParserStrategy):
 
     def _run_paddle_ocr(self, pdf_path: str) -> _PaddleOCRRawResult:
         """Run PaddleOCR in a thread (CPU-bound)."""
-        from paddleocr import PaddleOCR
+        try:
+            from paddleocr import PaddleOCR
+        except ImportError:
+            raise PaddleOCRError("PaddleOCR is not installed. Install with: uv add paddleocr")
 
         ocr = PaddleOCR(use_angle_cls=True, lang="en", show_log=False)
 
@@ -61,6 +62,8 @@ class PaddleOCRParser(ParserStrategy):
         full_markdown_parts = []
 
         result = ocr.ocr(pdf_path, cls=True)
+        if not result:
+            raise PaddleOCRError("PaddleOCR returned empty result for the PDF")
         page_number = 1
 
         for page_result in result:
@@ -93,33 +96,9 @@ class PaddleOCRParser(ParserStrategy):
         """Convert PaddleOCR output to ParseResult."""
         metadata = DocumentMetadata(total_pages=data.get("total_pages", 1))
 
-        pages = []
-        for page_data in data.get("pages", []):
-            figures = [
-                FigurePosition(page=page_data["page_number"], index=f["index"], caption=f.get("caption"))
-                for f in page_data.get("figures", [])
-            ]
-            tables = [
-                TableStructure(
-                    page=page_data["page_number"],
-                    index=t["index"],
-                    headers=t.get("headers", []),
-                    rows=t.get("rows", []),
-                )
-                for t in page_data.get("tables", [])
-            ]
-            pages.append(
-                PageContent(
-                    page_number=page_data["page_number"],
-                    markdown=page_data.get("markdown", ""),
-                    figures=figures,
-                    tables=tables,
-                )
-            )
-
         return ParseResult(
             metadata=metadata,
-            pages=pages,
+            pages=pages_from_raw(data.get("pages", [])),
             full_markdown=data.get("full_markdown", ""),
             parser_used=self.name,
         )

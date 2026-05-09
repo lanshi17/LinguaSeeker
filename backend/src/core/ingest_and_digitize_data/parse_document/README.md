@@ -85,7 +85,7 @@ Data flow:
 | `MinerUAPIError` | `ParseDocumentError` | `status_code: int \| None` |
 | `MinerUTimeoutError` | `ParseDocumentError` | `timeout: float` |
 | `PaddleOCRError` | `ParseDocumentError` | — |
-| `ParserExhaustedError` | `ParseDocumentError` | `mineru_error`, `paddle_error` |
+| `ParserExhaustedError` | `ParseDocumentError` | `errors: dict[str, Exception]` |
 
 ## Internal Design
 
@@ -153,7 +153,7 @@ except MinerUAPIError as e:
     print(f"MinerU failed (status={e.status_code}), will retry with PaddleOCR")
     # Factory already tried PaddleOCR; this means both failed
 except ParserExhaustedError as e:
-    print(f"All parsers failed: MinerU={e.mineru_error}, PaddleOCR={e.paddle_error}")
+    print(f"All parsers failed: {e.errors}")
 ```
 
 ### Dedup check before parsing
