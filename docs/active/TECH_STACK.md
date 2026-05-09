@@ -64,7 +64,7 @@ backend/
 ├── libs/
 │   ├── rust-io/           # Canonical Python-facing Rust I/O middle layer
 │   ├── files-io/          # Unified local + S3 file I/O (PyO3)
-│   └── http-io/           # HTTP/web I/O: literature providers + MinerU API (PyO3)
+│   └── net-io/            # HTTP/web I/O: literature providers + MinerU API (PyO3)
 ├── services/
 │   └── model-server/      # Embedding + Rerank + LLM inference (port 8001)
 ├── alembic/               # Database migrations
@@ -78,7 +78,7 @@ backend/
 |-------|--------------|-------|------|
 | rust-io | `rust_io` | tokio + pyo3-async | Canonical Rust middle layer called by Python; wraps low-level literature/file I/O submodules |
 | files-io | `files_io` | tokio + pyo3-async | Unified local + S3 file I/O primitives |
-| http-io | `rust_io.http` | tokio + pyo3-async | HTTP/web I/O: literature providers + MinerU document parsing API |
+| net-io | `rust_io.net` | tokio + pyo3-async | HTTP/web I/O: literature providers + MinerU document parsing API |
 
 All crates expose async Python functions via `pyo3_async_runtimes::tokio::future_into_py`.
 

@@ -1,6 +1,6 @@
 """Online acquisition module — layered architecture.
 
-http-io handles HTTP I/O, Python handles business logic.
+net-io handles HTTP I/O, Python handles business logic.
 """
 
 from .contracts import (

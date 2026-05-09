@@ -1,4 +1,4 @@
-"""Tests for gateway module — with mocked http_io."""
+"""Tests for gateway module — with mocked net_io."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -87,8 +87,8 @@ class TestRustResultToGateway:
 
 class TestCallProvider:
     @pytest.mark.asyncio
-    async def test_http_io_not_available(self):
-        with patch("builtins.__import__", side_effect=ImportError("no http_io")):
+    async def test_net_io_not_available(self):
+        with patch("builtins.__import__", side_effect=ImportError("no net_io")):
             result = await call_provider(OnlineAcquisitionGatewayRequest(provider="crossref"))
             assert result.success is False
             assert "not available" in result.warnings[0]

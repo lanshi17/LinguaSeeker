@@ -18,17 +18,17 @@ fn register_submodule(
 
 #[pymodule]
 fn rust_io(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    let http = PyModule::new(m.py(), "http")?;
-    http.add_function(wrap_pyfunction!(http_io::py::fetch_one, &http)?)?;
-    http.add_function(wrap_pyfunction!(http_io::py::fetch_multi, &http)?)?;
-    http.add_function(wrap_pyfunction!(http_io::py::scrape_web, &http)?)?;
-    http.add_function(wrap_pyfunction!(http_io::py::scrape_html, &http)?)?;
-    http.add_function(wrap_pyfunction!(http_io::py::extract_pdf_links, &http)?)?;
-    http.add_function(wrap_pyfunction!(http_io::py::mineru_create_task, &http)?)?;
-    http.add_function(wrap_pyfunction!(http_io::py::mineru_get_result, &http)?)?;
-    http.add_function(wrap_pyfunction!(http_io::py::mineru_batch_submit, &http)?)?;
-    http.add_function(wrap_pyfunction!(http_io::py::mineru_batch_result, &http)?)?;
-    register_submodule(m, "rust_io.http", &http)?;
+    let net = PyModule::new(m.py(), "net")?;
+    net.add_function(wrap_pyfunction!(net_io::py::fetch_one, &net)?)?;
+    net.add_function(wrap_pyfunction!(net_io::py::fetch_multi, &net)?)?;
+    net.add_function(wrap_pyfunction!(net_io::py::scrape_web, &net)?)?;
+    net.add_function(wrap_pyfunction!(net_io::py::scrape_html, &net)?)?;
+    net.add_function(wrap_pyfunction!(net_io::py::extract_pdf_links, &net)?)?;
+    net.add_function(wrap_pyfunction!(net_io::py::mineru_create_task, &net)?)?;
+    net.add_function(wrap_pyfunction!(net_io::py::mineru_get_result, &net)?)?;
+    net.add_function(wrap_pyfunction!(net_io::py::mineru_batch_submit, &net)?)?;
+    net.add_function(wrap_pyfunction!(net_io::py::mineru_batch_result, &net)?)?;
+    register_submodule(m, "rust_io.net", &net)?;
 
     let files = PyModule::new(m.py(), "files")?;
     files.add_class::<files_io::py::file::File>()?;

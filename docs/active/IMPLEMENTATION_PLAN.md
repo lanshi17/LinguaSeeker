@@ -51,7 +51,7 @@ Most literature acquisition work is partially present. Remaining work:
 
 | # | Task | Description | Verify |
 |---|------|-------------|--------|
-| 1.1 | Rust I/O boundary alignment | Python calls `rust_io` as canonical middle layer; `rust_io` integrates `http_io`/`files_io`; business logic stays in Python | Gateway tests confirm Python-owned fallback/ranking/retry |
+| 1.1 | Rust I/O boundary alignment | Python calls `rust_io` as canonical middle layer; `rust_io` integrates `net_io`/`files_io`; business logic stays in Python | Gateway tests confirm Python-owned fallback/ranking/retry |
 | 1.2 | Keyword search API | `/api/v1/literature/search` returns selectable candidates with provider/title/canonical ID/PDF URL when available | Search returns candidates; candidates without PDF are not analyzable |
 | 1.3 | Selected candidate task flow | Keyword task creation accepts `selected_candidate` with `selected_download_url` | Selected candidate creates a task and fetches chosen PDF |
 | 1.4 | MinerU OCR integration | `src/core/.../ocr/mineru_client.py` calls MinerU API and parses bbox/source anchors + Markdown/HTML | PDF → rendered document + source anchor/bbox map |
