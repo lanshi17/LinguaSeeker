@@ -13,6 +13,9 @@ class MinerUAPIError(ParseDocumentError):
         self.status_code = status_code
         super().__init__(f"MinerU API error (status={status_code}): {message}" if status_code else message)
 
+    def __repr__(self) -> str:
+        return f"MinerUAPIError(message={self.args[0]!r}, status_code={self.status_code!r})"
+
 
 class MinerUTimeoutError(ParseDocumentError):
     """MinerU API request timed out."""
@@ -20,6 +23,9 @@ class MinerUTimeoutError(ParseDocumentError):
     def __init__(self, timeout: float):
         self.timeout = timeout
         super().__init__(f"MinerU API timed out after {timeout}s")
+
+    def __repr__(self) -> str:
+        return f"MinerUTimeoutError(timeout={self.timeout!r})"
 
 
 class PaddleOCRError(ParseDocumentError):
@@ -29,12 +35,10 @@ class PaddleOCRError(ParseDocumentError):
 class ParserExhaustedError(ParseDocumentError):
     """All parsers failed."""
 
-    def __init__(self, mineru_error: Exception | None, paddle_error: Exception | None):
-        self.mineru_error = mineru_error
-        self.paddle_error = paddle_error
-        parts = []
-        if mineru_error:
-            parts.append(f"MinerU: {mineru_error}")
-        if paddle_error:
-            parts.append(f"PaddleOCR: {paddle_error}")
+    def __init__(self, errors: dict[str, Exception]):
+        self.errors = errors
+        parts = [f"{name}: {err}" for name, err in errors.items()]
         super().__init__(f"All parsers exhausted. {'; '.join(parts)}")
+
+    def __repr__(self) -> str:
+        return f"ParserExhaustedError(errors={self.errors!r})"
