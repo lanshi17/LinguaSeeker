@@ -1,15 +1,18 @@
 # rust-io
 
-Thin PyO3 facade for ACMG Lingua's Rust native extensions. Registers `rust_io.files` and `rust_io.literature` submodules backed by `files-io` and `literature-io` crates.
+Thin PyO3 facade for ACMG Lingua's Rust native extensions. Registers `rust_io.files` and `rust_io.http` submodules backed by `files-io` and `http-io` crates.
 
 ## Python Usage
 
 ```python
 import rust_io.files as files
-import rust_io.literature as literature
+import rust_io.http as http_io
 
 # Literature acquisition
-result = await literature.fetch_one("crossref", "search", {"query": "CRISPR"})
+result = await http_io.fetch_one("crossref", "search", {"query": "CRISPR"})
+
+# MinerU document parsing
+task = await http_io.mineru_create_task("https://example.com/paper.pdf", token="...")
 
 # File I/O
 files.write_file("/tmp/test.bin", b"hello")
@@ -30,18 +33,20 @@ rust-io (cdylib + rlib)
 ├── src/lib.rs              # Facade: registers submodules
 ├── files-io (rlib)         # File I/O, S3, archives, dedup
 │   └── src/py/             # #[pyfunction]s re-exported by facade
-└── literature-io (rlib)    # Literature acquisition (7 providers, HTTP client, scraper)
+└── http-io (rlib)          # HTTP/web I/O (7 providers, scraper, MinerU API)
     └── src/py/             # #[pyfunction]s re-exported by facade
 ```
 
 The facade delegates all functionality to sub-crates. `src/lib.rs` only:
-1. Creates `PyModule` for each submodule (`"files"`, `"literature"`)
+1. Creates `PyModule` for each submodule (`"files"`, `"http"`)
 2. Adds `#[pyfunction]` / `#[pyclass]` from sub-crates via `wrap_pyfunction!` / `add_class`
 3. Registers each submodule in `sys.modules` so `import rust_io.files` works
 
 ## Exports
 
-### `rust_io.literature`
+### `rust_io.http`
+
+#### Literature Providers
 
 | Function | Description |
 |----------|-------------|
@@ -50,6 +55,15 @@ The facade delegates all functionality to sub-crates. `src/lib.rs` only:
 | `scrape_web(provider, action, params, ...)` | Generic web scraping |
 | `scrape_html(html, css_selector)` | CSS selector extraction |
 | `extract_pdf_links(html, base_url)` | PDF link extraction |
+
+#### MinerU Document Parsing
+
+| Function | Description |
+|----------|-------------|
+| `mineru_create_task(url, token, ...)` | Create a single document parsing task |
+| `mineru_get_result(task_id, token, ...)` | Get single task result |
+| `mineru_batch_submit(files, token, ...)` | Submit batch parsing tasks |
+| `mineru_batch_result(batch_id, token, ...)` | Get batch results |
 
 ### `rust_io.files`
 
@@ -68,4 +82,4 @@ The facade delegates all functionality to sub-crates. `src/lib.rs` only:
 ## Sub-crate Docs
 
 - [files-io](../files-io/) — File I/O, S3, archives
-- [literature-io](../literature-io/) — Literature acquisition providers
+- [http-io](../http-io/) — HTTP/web I/O providers + MinerU document parsing

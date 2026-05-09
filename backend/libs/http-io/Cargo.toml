@@ -1,11 +1,11 @@
 [package]
-name = "literature-io"
+name = "http-io"
 version = "0.1.0"
 edition = "2024"
-description = "High-performance literature acquisition I/O for ACMG Lingua"
+description = "High-performance HTTP/web I/O for ACMG Lingua"
 
 [lib]
-name = "literature_io"
+name = "http_io"
 crate-type = ["rlib"]
 
 [dependencies]

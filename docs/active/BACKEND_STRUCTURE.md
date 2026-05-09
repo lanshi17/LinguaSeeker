@@ -133,7 +133,7 @@ backend/
 ├── libs/
 │   ├── rust-io/                                              # Canonical low-level Rust I/O wrapper
 │   ├── files-io/                                             # Unified file I/O primitives
-│   └── literature-io/                                        # Literature acquisition I/O primitives
+│   └── http-io/                                              # HTTP/web I/O: literature providers + MinerU API
 ├── services/
 │   └── model-server/                                         # Embedding + Rerank + LLM-compatible API
 ├── alembic/
@@ -165,7 +165,7 @@ Environment variables are flat, for example `LLM_API_KEY`, and are mapped to nes
 
 ### 3.2 Literature Gateway (`src/core/.../literature_acquisition/gateway.py`)
 
-Python calls `rust_io` as the canonical Rust middle layer. `rust_io` integrates `literature_io`, `files_io`, and future Rust I/O submodules.
+Python calls `rust_io` as the canonical Rust middle layer. `rust_io` integrates `http_io`, `files_io`, and future Rust I/O submodules.
 
 Rust handles only low-level I/O:
 

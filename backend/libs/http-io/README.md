@@ -1,13 +1,18 @@
-# literature-io
+# http-io
 
-Rust library for literature acquisition in ACMG Lingua. **Not a standalone Python module** — accessed via the `rust_io.literature` facade.
+Rust library for HTTP/web I/O operations in ACMG Lingua. **Not a standalone Python module** — accessed via the `rust_io.http` facade.
 
 ## From Python
 
 ```python
-import rust_io.literature as literature_io
+import rust_io.http as http_io
 
-result = await literature_io.fetch_one("crossref", "search", {"query": "CRISPR", "limit": 10})
+# Literature search
+result = await http_io.fetch_one("crossref", "search", {"query": "CRISPR", "limit": 10})
+
+# MinerU document parsing
+task = await http_io.mineru_create_task("https://example.com/paper.pdf", token="...")
+result = await http_io.mineru_get_result(task["task_id"], token="...")
 ```
 
 ## Build & Test
@@ -32,8 +37,9 @@ src/
 ├── py.rs               # Python binding layer: param parsing + provider dispatch
 ├── client.rs           # HTTP client (reqwest + retry + proxy)
 ├── error.rs            # GatewayError with Python exception mapping
-├── types.rs            # Shared types: Action, FetchParams, FetchResult
+├── types.rs            # Shared types: Action, FetchParams, FetchResult, MinerU*
 ├── scraper.rs          # Generic web scraping
+├── mineru.rs           # MinerU document parsing API client
 └── providers/          # Data source implementations
     ├── mod.rs
     ├── crossref.rs
@@ -49,14 +55,22 @@ src/
 
 ```
 Python call
-  → rust_io.literature.fetch_one  (facade, in rust-io/src/lib.rs)
-    → literature_io::py::fetch_one  (py.rs: param parsing, type conversion)
-      → execute_provider()  (provider dispatch)
-        → providers/xxx.rs  (API call via client.rs)
+  → rust_io.http.fetch_one        (facade, in rust-io/src/lib.rs)
+    → http_io::py::fetch_one      (py.rs: param parsing, type conversion)
+      → execute_provider()        (provider dispatch)
+        → providers/xxx.rs        (API call via client.rs)
+    → pythonize → Python dict
+
+Python call
+  → rust_io.http.mineru_create_task  (facade)
+    → http_io::py::mineru_create_task (py.rs)
+      → http_io::mineru::create_task  (mineru.rs: HTTP POST to MinerU API)
     → pythonize → Python dict
 ```
 
 ## Python API
+
+### Literature Providers
 
 ```python
 async def fetch_one(provider, action, params, timeout_ms=None, max_retries=None, proxy=None) -> dict
@@ -66,7 +80,16 @@ def scrape_html(html, css_selector) -> list[dict]
 def extract_pdf_links(html, base_url) -> list[str]
 ```
 
-### params dict
+### MinerU Document Parsing
+
+```python
+async def mineru_create_task(url, token, model_version="vlm", is_ocr=False, enable_formula=True, enable_table=True, language="ch", data_id=None, page_ranges=None, no_cache=False, cache_tolerance=900, timeout_ms=None, proxy=None) -> dict
+async def mineru_get_result(task_id, token, timeout_ms=None, proxy=None) -> dict
+async def mineru_batch_submit(files, token, model_version="vlm", enable_formula=True, enable_table=True, language="ch", no_cache=False, cache_tolerance=900, timeout_ms=None, proxy=None) -> dict
+async def mineru_batch_result(batch_id, token, timeout_ms=None, proxy=None) -> dict
+```
+
+### params dict (literature providers)
 
 ```python
 {
@@ -85,7 +108,7 @@ def extract_pdf_links(html, base_url) -> list[str]
 }
 ```
 
-### FetchResult
+### FetchResult (literature providers)
 
 ```python
 {
@@ -99,7 +122,7 @@ def extract_pdf_links(html, base_url) -> list[str]
 }
 ```
 
-## Adding a New Provider
+## Adding a New Literature Provider
 
 1. Create `src/providers/myprovider.rs`:
 
