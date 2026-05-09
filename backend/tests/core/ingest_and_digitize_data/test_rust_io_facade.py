@@ -5,18 +5,22 @@ import hashlib
 import pytest
 
 import rust_io.files as files
-import rust_io.literature as literature
+import rust_io.http as http_io
 
 
-def test_literature_facade_exports_provider_functions():
+def test_http_io_facade_exports_provider_functions():
     for name in (
         "fetch_one",
         "fetch_multi",
         "scrape_web",
         "scrape_html",
         "extract_pdf_links",
+        "mineru_create_task",
+        "mineru_get_result",
+        "mineru_batch_submit",
+        "mineru_batch_result",
     ):
-        assert hasattr(literature, name)
+        assert hasattr(http_io, name)
 
 
 def test_files_facade_preserves_legacy_helpers(tmp_path):
@@ -43,8 +47,8 @@ def test_files_facade_exports_files_io_functions():
 
 
 @pytest.mark.asyncio
-async def test_literature_fetch_multi_returns_failure_per_unknown_provider():
-    results = await literature.fetch_multi(["missing_a", "missing_b"], "search", {})
+async def test_http_io_fetch_multi_returns_failure_per_unknown_provider():
+    results = await http_io.fetch_multi(["missing_a", "missing_b"], "search", {})
 
     assert [result["provider"] for result in results] == ["missing_a", "missing_b"]
     assert [result["success"] for result in results] == [False, False]
@@ -55,7 +59,7 @@ async def test_literature_fetch_multi_returns_failure_per_unknown_provider():
 async def test_unpaywall_requires_configured_email(monkeypatch):
     monkeypatch.delenv("UNPAYWALL_EMAIL", raising=False)
 
-    result = await literature.fetch_one(
+    result = await http_io.fetch_one(
         "unpaywall",
         "search",
         {"identifiers": {"doi": "10.1234/example"}},
