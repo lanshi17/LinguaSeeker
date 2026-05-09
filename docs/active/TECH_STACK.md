@@ -3,351 +3,287 @@
 ## 1. Overview
 
 | Layer | Technology | Version | Current Role |
-|-------|-----------|---------|--------------|
+|---|---|---|---|
 | Frontend | Next.js | 15 | App Router, SSR, API proxy |
-| UI | React | 18 | Component library |
-| Language | TypeScript | 5.5+ | Type safety |
-| Styling | Tailwind CSS | 3.4 | Utility-first CSS |
-| State | Zustand | 4.5 | Client state management |
+| UI | React | 18 | Component model |
+| Language | TypeScript | 5.5+ | Strict frontend type safety |
+| Styling | Tailwind CSS | 3.4 | Utility-first UI styling |
+| State | Zustand | 4.5 | Client runtime state |
 | Data Fetching | React Query + Axios | 5.50 / 1.7 | Server state + HTTP |
-| Backend | FastAPI | 0.111+ | Async Python API, JWT signing/verification, task orchestration |
-| Python | CPython | 3.12+ | Runtime |
-| ORM | SQLAlchemy | 2.0+ | Async PostgreSQL |
+| Backend | FastAPI | 0.111+ | Async API, auth, tasks, orchestration |
+| Python | CPython | 3.12+ | Backend runtime |
+| ORM | SQLAlchemy | 2.0+ | Async PostgreSQL access |
 | Migrations | Alembic | 1.13+ | Schema versioning |
-| Validation | Pydantic | 2.7+ | Data contracts |
-| Config | pydantic-settings | 2.3+ | Env-based config |
-| Native I/O | Rust (PyO3) | 0.28 | Low-level HTTP/file I/O only |
-| Async Runtime | tokio | 1.x | Rust async |
-| HTTP Client | reqwest | 0.13 | Rust HTTP (rustls + SOCKS support) |
-| Vector DB | pgvector | — | Embedding storage via PostgreSQL |
+| Validation | Pydantic | 2.7+ | API and evidence contracts |
+| Config | pydantic-settings | 2.3+ | Environment-based config |
+| Native I/O | Rust + PyO3 | 0.28 | Low-level HTTP/file/document I/O |
+| Async Runtime | tokio | 1.x | Rust async runtime |
+| HTTP Client | reqwest | 0.13 | Rust HTTP with rustls/SOCKS support |
+| Vector Search | pgvector | — | Entity fuzzy matching |
 | Database | PostgreSQL | 16 | Current MVP primary store |
-| Task Runtime State | In-memory | — | Pending/running task status; may disappear on restart |
-| Graph DB | Neo4j | 5.x | P1/future gene-disease graph, not current MVP dependency |
-| Cache | Redis | 8.0 | P1/future cache/queue support, not current MVP dependency |
-| Storage | Local filesystem | — | Current document/result storage; MinIO deferred |
-| OCR (primary) | MinerU API | v4 | PDF → Markdown/HTML + bbox JSON |
-| OCR (fallback) | PaddleOCR VLM | — | Allowed only if source anchors/bbox-backed spans are produced |
-| LLM | Custom OpenAI-compatible | — | Extraction, translation, reasoning |
-| Embedding | Qwen3-Embedding-0.6B | — | Entity fuzzy matching |
-| Rerank | bge-reranker-v2-m3 | — | Search result reranking |
-| Logging | loguru | 0.7+ | Structured logging |
-| Testing (BE) | pytest + pytest-asyncio | 9.0+ / 1.3+ | Unit + async tests |
-| Testing (FE) | ESLint + TypeScript check | — | Current-stage frontend verification |
-| Linting (BE) | Ruff | 0.5+ | Google Python Style |
-| Linting (FE) | ESLint | 8.57+ | Google TypeScript Style |
-| Container | Docker Compose | — | Local dev orchestration |
-| Package (PY) | uv | — | Python dependency management |
-| Package (JS) | nvm + npm | — | Node.js dependency management |
-| Package (RS) | cargo | — | Rust dependency management |
-| Build (RS) | maturin | 1.13+ | PyO3 wheel building |
+| Task Runtime State | In-memory | — | Pending/running task status in MVP |
+| Graph DB | Neo4j | 5.x | P1/future knowledge graph exploration, not current MVP dependency |
+| Cache/Queue | Redis | 8.0 | P1/future distributed cache/runtime |
+| Storage | Local filesystem | — | Current document/result storage |
+| Object Storage | MinIO | — | Deferred production storage option |
+| PDF Parsing | MinerU API | v4 | PDF → Markdown/HTML + layout/bbox JSON |
+| OCR Fallback | PaddleOCR VLM | — | Fallback only with source anchors/bbox-backed spans |
+| DOCX Parsing | Python DOCX tooling + files-io boundary | — | DOCX text/table/image extraction |
+| LLM | OpenAI-compatible custom API | — | Evidence extraction |
+| Translation LLM | OpenAI-compatible MT model | — | Structured evidence translation/denoising |
+| VLM | OpenAI-compatible vision model | — | Figure, table, and pedigree description |
+| Embedding | Qwen3-Embedding-0.6B | — | Entity embeddings |
+| Rerank | bge-reranker-v2-m3 | — | Literature/search reranking |
+| Logging | loguru | 0.7+ | Structured logs under `logs/` |
+| Backend Tests | pytest + pytest-asyncio | 9.0+ / 1.3+ | Unit and async tests |
+| Frontend Verification | ESLint + TypeScript check | — | Current frontend verification |
+| Backend Linting | Ruff | 0.5+ | Google Python Style |
+| Frontend Linting | ESLint | 8.57+ | Google TypeScript Style |
+| Container | Docker Compose | — | Local development orchestration |
+| Python Package Tool | uv | — | Python dependency management |
+| JS Package Tool | nvm + npm | — | Node dependency management |
+| Rust Package Tool | cargo | — | Rust dependency management |
+| PyO3 Build | maturin | 1.13+ | Native extension build |
 
-## 2. Backend Architecture
+## 2. Architectural Principles
 
-### 2.1 Source Layout
+1. **Evidence extraction is the product boundary.** Current MVP builds the evidence data foundation for downstream medical rating; it does not produce final autonomous ACMG/GDV classifications.
+2. **Python owns business strategy.** Provider fallback, extraction policy, standardization decisions, workflow orchestration, and API contracts stay in Python.
+3. **Rust owns low-level I/O.** Rust crates perform HTTP fetches, file hashing/writing, archive handling, PDF validation, and bounded I/O primitives.
+4. **Extraction before translation.** Non-English documents are parsed and evidence-extracted in the original language before structured evidence translation.
+5. **Traceability is mandatory.** Evidence without source anchors/bbox-backed spans cannot support displayed evidence rows.
+6. **Standardization is layered.** Exact match → synonym match → vector match → conflict resolver Agent.
 
-```
-backend/
-├── src/
-│   ├── core/
-│   │   ├── config.py                              # Settings singleton
-│   │   ├── ingest_and_digitize_data/              # Phase 1
-│   │   │   ├── literature_acquisition/            # Providers, gateway, PubMed
-│   │   │   └── user_upload/                       # PDF upload
-│   │   ├── cross_lingual_process_and_extract_evidence/  # Phase 2
-│   │   ├── standardize_entities_and_align_knowledge/    # Phase 3
-│   │   ├── execute_dual_track_intelligent_reasoning_and_arbitration/  # Phase 4
-│   │   └── visualize_evidence_with_expert_in_loop/      # Phase 5
-│   ├── api/               # FastAPI routes under /api/v1/*
-│   ├── agents/            # Agent orchestration
-│   ├── dao/               # Data access layer
-│   └── utils/             # Shared utilities
-├── libs/
-│   ├── rust-io/           # Canonical Python-facing Rust I/O middle layer
-│   ├── files-io/          # Unified local + S3 file I/O (PyO3)
-│   └── net-io/            # HTTP/web I/O: literature providers + MinerU API (PyO3)
-├── services/
-│   └── model-server/      # Embedding + Rerank + LLM inference (port 8001)
-├── alembic/               # Database migrations
-├── tests/                 # pytest test suite
-└── .old_version/          # Previous codebase reference for reuse
-```
-
-### 2.2 Rust Crates and Boundary
-
-| Crate | Python Module | Async | Role |
-|-------|--------------|-------|------|
-| rust-io | `rust_io` | tokio + pyo3-async | Canonical Rust middle layer called by Python; wraps low-level literature/file I/O submodules |
-| files-io | `files_io` | tokio + pyo3-async | Unified local + S3 file I/O primitives |
-| net-io | `rust_io.net` | tokio + pyo3-async | HTTP/web I/O: literature providers + MinerU document parsing API |
-
-All crates expose async Python functions via `pyo3_async_runtimes::tokio::future_into_py`.
-
-Rust is restricted to low-level I/O concerns:
-
-- HTTP fetching
-- JSON parsing
-- HTML scraping without JS rendering
-- File hashing/writing/validation primitives
-- Archive/file transfer primitives
-
-Python owns business strategy:
-
-- Provider fallback order
-- Ranking and deduplication policy
-- Retry policy
-- Rate limiting policy
-- PDF download orchestration
-- Storage-path policy
-- Task orchestration
-
-### 2.3 Literature Providers (Rust I/O)
-
-| Provider | Search | Download Links | Language Focus |
-|----------|--------|----------------|----------------|
-| Crossref | Yes | Metadata/link discovery | International |
-| OpenAlex | Yes | Metadata/link discovery | International |
-| EuropePMC | Yes | Metadata/link discovery | European |
-| PMC | Yes | Metadata/link discovery | US/international |
-| DOAJ | Yes | Yes | Open access |
-| JStage | Yes | Yes | Japanese |
-| Unpaywall | Yes | Yes | Open access links |
-| CyberLeninka | Yes (web) | Yes | Russian |
-| Hans Publishers | Yes (web) | Yes | Chinese |
-| PubScholar | Yes (web) | Yes | Chinese |
-
-JS-rendered scraping remains in Python, for example through `crawl4ai`.
-
-### 2.4 Model Server
-
-Standalone FastAPI service (port 8001):
-
-- `POST /v1/embeddings` — Qwen3-Embedding-0.6B
-- `POST /v1/rerank` — bge-reranker-v2-m3
-- `POST /v1/chat/completions` — LLM when configured
-- `GET /health` — model readiness check
-
-Models are lazy-loaded on first request. The service shares `.env.local` with the backend.
-
-### 2.5 Configuration System
-
-All config uses `src/core/config.py` with pydantic-settings:
-
-- Loads from `.env.local` → `.env` → environment variables
-- Flat fields such as `LLM_API_KEY` map to nested models such as `cfg.llm.api_key`
-- Singleton via `get_config()`, FastAPI dependency via `get_settings()`
-
-Key config domains:
-
-```
-LLM_*           # General LLM (extraction, reasoning)
-MT_*            # Translation LLM
-VLM_*           # Vision LLM (image description)
-ARBITRATION_*   # Arbitration agent (strongest reasoning)
-EMBEDDING_*     # Embedding model
-RERANK_*        # Rerank model
-MINERU_*        # MinerU OCR API
-POSTGRES_*      # PostgreSQL connection
-SMTP_*          # Email verification
-PUBMED_*        # PubMed API
-REDIS_*         # P1/future Redis integration
-NEO4J_*         # P1/future Neo4j integration
-MINIO_*         # Deferred object storage
-```
-
-## 3. Frontend Architecture
+## 3. Backend Architecture
 
 ### 3.1 Source Layout
 
+```text
+backend/
+├── src/
+│   ├── core/
+│   │   ├── config.py
+│   │   ├── ingest_and_digitize_data/                       # Phase 1
+│   │   │   ├── literature_acquisition/                     # Providers, gateway, PubMed/web
+│   │   │   ├── user_upload/                                # PDF/DOCX upload workflow
+│   │   │   └── ocr/                                        # MinerU/PaddleOCR/DOCX/layout anchors
+│   │   ├── cross_lingual_process_and_extract_evidence/     # Phase 2
+│   │   ├── standardize_entities_and_align_knowledge/       # Phase 3
+│   │   └── visualize_evidence_with_expert_in_loop/         # Phase 4
+│   ├── api/                                                # FastAPI routes under /api/v1
+│   ├── agents/                                             # Agent orchestration
+│   ├── dao/                                                # Data access layer
+│   └── utils/                                              # Shared utilities
+├── libs/
+│   ├── rust-io/                                            # Canonical Python-facing Rust I/O facade
+│   ├── files-io/                                           # Unified local + S3 file I/O primitives
+│   └── net-io/                                             # HTTP/web I/O + MinerU API primitives
+├── services/model-server/                                  # Embedding/rerank/LLM API
+├── alembic/
+├── tests/
+└── .old_version/                                           # Previous implementation reference
 ```
+
+### 3.2 Rust Crates and Boundary
+
+| Crate | Python Module | Async | Role |
+|---|---|---|---|
+| `rust-io` | `rust_io` | tokio + pyo3-async | Canonical facade called by Python; wraps low-level file/network submodules. |
+| `files-io` | `files_io` | tokio + pyo3-async | Unified local/S3 file primitives: write, read, hash, archive, transfer. |
+| `net-io` | `rust_io.net` | tokio + pyo3-async | HTTP/web I/O for literature providers and MinerU API. |
+
+Rust may handle:
+
+- HTTP requests and provider payload parsing.
+- Static HTML scraping without JS rendering.
+- File hashing, file validation, writes, archive operations.
+- MinerU API transport when exposed as low-level I/O.
+
+Python must handle:
+
+- Provider fallback strategy.
+- Ranking, deduplication, retry, and rate-limit policy.
+- Document source selection.
+- Evidence extraction and standardization policy.
+- Source traceability policy.
+- API response contracts.
+
+### 3.3 Literature Providers
+
+| Provider | Search | Download Links | Language/Scope |
+|---|---|---|---|
+| Crossref | Yes | Metadata/link discovery | International |
+| OpenAlex | Yes | Metadata/link discovery | International |
+| EuropePMC | Yes | Metadata/link discovery | European/international |
+| PMC | Yes | Yes | Open access biomedical |
+| DOAJ | Yes | Yes | Open access journals |
+| JStage | Yes | Yes | Japanese |
+| Unpaywall | Yes | Yes | Open access resolution |
+| CyberLeninka | Yes | Yes | Russian |
+| Hans Publishers | Yes | Yes | Chinese |
+| PubScholar | Yes | Yes | Chinese |
+
+JS-rendered scraping remains a Python concern when needed.
+
+### 3.4 Model Server and Model Roles
+
+Standalone FastAPI model service exposes OpenAI-compatible endpoints:
+
+- `POST /v1/embeddings`
+- `POST /v1/rerank`
+- `POST /v1/chat/completions`
+- `GET /health`
+
+| Role | Config Prefix | Example | Use Case |
+|---|---|---|---|
+| General LLM | `LLM_*` | deepseek-v4-flash | Source-language evidence extraction |
+| Translation | `MT_*` | qwen-mt-flash | Structured evidence translation/denoising |
+| Vision | `VLM_*` | qwen3-vl-flash | Figure, table, pedigree description |
+| Embedding | `EMBEDDING_*` | Qwen3-Embedding-0.6B | Entity matching |
+| Rerank | `RERANK_*` | bge-reranker-v2-m3 | Search reranking |
+
+## 4. Frontend Architecture
+
+### 4.1 Source Layout
+
+```text
 frontend/
 ├── app/
-│   ├── api/               # Next.js proxy routes when needed; FastAPI remains authoritative
-│   ├── (dashboard)/       # Dashboard layout group
-│   │   ├── analysis/      # New task page
-│   │   ├── results/       # Results review page
-│   │   └── settings/      # User settings
+│   ├── api/                    # Proxy routes only when needed
+│   ├── auth/                   # login/register/verify-email
+│   └── (dashboard)/
+│       ├── analysis/           # Upload/search/new task
+│       ├── results/            # Evidence matrix review
+│       └── settings/
 ├── components/
-│   ├── ui/                # Base UI components
-│   ├── charts/            # Data visualizations
-│   ├── forms/             # Input forms
-│   └── layout/            # Page layouts
+│   ├── ui/
+│   ├── forms/
+│   ├── charts/
+│   ├── document-panel.tsx
+│   ├── evidence-panel.tsx
+│   └── processing-status.tsx
 ├── lib/
-│   ├── api/               # API client functions
-│   ├── hooks/             # React hooks
-│   ├── types/             # TypeScript types
-│   └── utils/             # Utility functions
-├── styles/                # Global styles
-├── public/                # Static assets
-└── tests/                 # Future frontend tests
+│   ├── api/
+│   ├── hooks/
+│   ├── types/
+│   └── utils/
+├── stores/
+├── styles/
+└── tests/
 ```
 
-### 3.2 Key Frontend Technologies
+### 4.2 Frontend Responsibilities
 
-| Concern | Technology | Notes |
-|---------|-----------|-------|
-| Routing | Next.js App Router | File-based, layouts |
-| State (client) | Zustand | Lightweight, no boilerplate |
-| State (server) | React Query | Caching, invalidation |
-| HTTP | Axios | Via Next.js proxy to FastAPI |
-| WebSocket | Native WebSocket API | Per-task processing status |
-| Styling | Tailwind CSS | Utility-first |
-| Auth | JWT | FastAPI signs/verifies; frontend stores and attaches token |
-| Document Rendering | MD/HTML, not embedded PDF | MinerU-rendered document + source anchors/bbox map |
+- Render task creation forms for PDF, DOCX, PMID, DOI, and keyword search.
+- Stream status via WebSocket.
+- Render parsed documents, tables, figures, and evidence source highlights.
+- Present standardized evidence matrices with confidence and match rationale.
+- Capture structured review comments and extraction corrections.
+- Request PDF/DOCX evidence summary export.
 
-### 3.3 API Proxy
+FastAPI remains authoritative for API behavior and JWT verification. Next.js does not sign or verify JWTs.
 
-`next.config.ts` rewrites `/api/v1/*` to `http://localhost:8000/api/v1/*` in local development.
+## 5. Database and State Architecture
 
-FastAPI is authoritative for:
-
-- `/api/v1/auth/*`
-- `/api/v1/tasks/*`
-- `/api/v1/literature/search`
-- `/api/v1/health`
-- Future `/api/v1/evidence/*` and `/api/v1/graph/*`
-
-Next.js does not sign or verify JWTs. It only proxies requests and provides frontend routing/UI.
-
-## 4. Database and State Architecture
-
-### 4.1 PostgreSQL (Current MVP Primary Store)
+### 5.1 PostgreSQL Current MVP Store
 
 Core tables to design:
 
-- `users` — user accounts, email verification state, password hash
-- `tasks` — completed task metadata and persisted completed task records
-- `documents` — uploaded/fetched documents, hashes, metadata, OCR output pointers
-- `variants` — variant records (HGVS, gene, coordinates)
-- `diseases` — disease records (name, MONDO, OMIM)
-- `evidence_items` — extracted evidence with JSON fields and source anchors
-- `classifications` — ACMG/GDV draft classification results
-- `evidence_chains` — evidence chain entries with rule references
-- `review_comments` — human review comments/rationale
-- `processing_logs` — persisted trace for completed tasks where available
-- `cache_entries` — cache keys, version metadata, and reusable output pointers
+- `users` — user accounts, password hash, email verification state.
+- `tasks` — task metadata and persisted completed task records.
+- `documents` — uploaded/fetched files, hashes, metadata, rendered output pointers.
+- `document_spans` — source anchors, bbox, page, section, table/figure references.
+- `evidence_items` — extracted original/translated evidence and confidence.
+- `standardized_entities` — original value, standardized value, source DB, match rationale.
+- `evidence_matrices` — normalized per-document/per-task evidence matrix snapshots.
+- `review_comments` — expert feedback by target type.
+- `processing_logs` — persisted trace for completed tasks.
+- `cache_entries` — cache keys and reusable output pointers.
+- `feedback_dataset_items` — curated expert corrections for future active-learning workflows.
 
-Extensions:
+`pgvector` supports fuzzy entity matching.
 
-- `pgvector` — embedding storage for fuzzy entity matching
+### 5.2 Runtime State
 
-### 4.2 In-Memory Task State
-
-Pending/running task status is stored in memory for the current MVP.
+Current MVP may keep pending/running task state in memory:
 
 - Running tasks may disappear on backend restart.
-- Completed task metadata, document/OCR output, final results, and review comments persist.
+- Completed task metadata, document output, evidence matrices, reports, and comments persist.
 - WebSocket status streams from in-memory runtime state.
-- Redis is not required for current task execution.
+- Redis is deferred unless task runtime is re-scoped.
 
-### 4.3 Neo4j (P1/Future Knowledge Graph)
+### 5.3 Public Database Sources
 
-Neo4j is deferred from the current MVP. When enabled, expected node types include:
+| Source | Data | Use |
+|---|---|---|
+| HGNC | Gene symbols and aliases | Gene normalization |
+| ClinVar | Variant annotations | Variant context |
+| dbSNP | rsID mappings | Variant alias normalization |
+| OMIM | Gene-disease pairs | Disease and gene-disease context |
+| HPO | Phenotype terms | Phenotype normalization |
+| ClinGen | Gene-disease validity references/context | Context alignment only in current scope |
+| gnomAD | Population frequencies | Evidence enrichment when available |
+| CADD/REVEL/SpliceAI | Computational predictions | Evidence enrichment when reported/available |
 
-- `Gene` — symbol, HGNC ID, full name
-- `Disease` — name, MONDO ID, OMIM ID
-- `Variant` — HGVS, coordinates, type
-- `Classification` — ACMG/GDV class, date
+## 6. Infrastructure
 
-Expected edge types include:
+### 6.1 Docker Compose
 
-- `Gene → CAUSES → Disease`
-- `Variant → FOUND_IN → Gene`
-- `Variant → ASSOCIATED_WITH → Disease`
-- `Variant → HAS_CLASSIFICATION → Classification`
-- `Document → EVIDENCE_FOR → Variant`
-
-### 4.4 Redis (P1/Future)
-
-Redis is deferred from the current MVP. Future uses may include:
-
-- Distributed task runtime state
-- High-frequency entity lookup cache
-- Search result cache
-- WebSocket fanout support
-
-## 5. Infrastructure
-
-### 5.1 Docker Compose Services
-
-Current local development requires:
+Current local services:
 
 ```yaml
 services:
   frontend:    # Next.js, port 3000
   backend:     # FastAPI, port 8000
   postgres:    # PostgreSQL 16, port 5432
+  redis:       # Placeholder/future runtime/cache
 ```
 
-Redis may exist as a local placeholder service, but current MVP behavior must not depend on Redis. Neo4j and model-server are separate/future integrations unless explicitly enabled.
+Neo4j, MinIO, and model-server are optional/future integrations unless explicitly enabled.
 
-### 5.2 Development Workflow
+### 6.2 Configuration Domains
 
-```
-uv add <package>              # Add Python dependency
-uv run uvicorn app.main:app   # Run backend
-uv run pytest                 # Run tests
-uv run ruff check             # Lint backend
-npm run dev                   # Run frontend
-npm run lint                  # Lint frontend
-npm run type-check            # Type-check frontend
-cargo test                    # Run Rust tests
-maturin develop --release     # Rebuild PyO3 extension
-```
-
-## 6. LLM Integration
-
-### 6.1 LLM Roles
-
-| Role | Config Prefix | Model Example | Use Case |
-|------|--------------|---------------|----------|
-| General | LLM_* | deepseek-v4-flash | Extraction, reasoning |
-| Translation | MT_* | qwen-mt-flash | Document translation |
-| Vision | VLM_* | qwen3-vl-flash | Image description |
-| Arbitration | ARBITRATION_* | deepseek-v4-pro | Arbitration and consistency review |
-| Embedding | EMBEDDING_* | Qwen3-Embedding-0.6B | Entity matching |
-| Rerank | RERANK_* | bge-reranker-v2-m3 | Search reranking |
-
-### 6.2 API Format
-
-All LLM calls use OpenAI-compatible format:
-
-```
-POST {base_url}/chat/completions
-Authorization: Bearer {api_key}
-{
-    "model": "{model}",
-    "messages": [...],
-    "temperature": 0,
-    "max_tokens": 2000
-}
+```text
+LLM_*           # General extraction model
+MT_*            # Translation model
+VLM_*           # Vision model
+EMBEDDING_*     # Embedding model
+RERANK_*        # Rerank model
+MINERU_*        # MinerU OCR/parsing API
+POSTGRES_*      # PostgreSQL
+SMTP_*          # Email verification
+PUBMED_*        # PubMed API
+REDIS_*         # Future Redis
+NEO4J_*         # Future Neo4j
+MINIO_*         # Future object storage
 ```
 
-LLM output is allowed to draft evidence strength and classification, but rule matrices remain authoritative when conflicts occur.
+## 7. Development and Verification Commands
 
-### 6.3 Old Version Code Reuse
+Python operations must use `uv`; Node operations must use `nvm` + `npm`; Rust operations use `cargo`.
 
-Key modules from `.old_version/` to adapt:
+```bash
+cd backend
+uv run pytest
+uv run ruff check
 
-| Module | Reuse Target |
-|--------|-------------|
-| `agents/supervisor.py` | LangGraph workflow orchestration |
-| `agents/extraction/node.py` | Evidence extraction node |
-| `agents/arbitration/node.py` | Arbitration node |
-| `agents/reasoning/node.py` | Reasoning context; Neo4j portions are P1/future |
-| `agents/parsing/translation_tool.py` | Translation pipeline |
-| `domain/agent/prompts.py` | Prompt templates |
-| `domain/agent/workflow.py` | EvidenceAgent patterns |
-| `domain/evidence/` | Evidence tools, classifier |
-| `domain/variant/` | ClinVar/ClinGen clients |
-| `infrastructure/` | PostgreSQL patterns; Redis/Neo4j portions are P1/future |
-| `tools/external/` | External DB tools |
+cd frontend
+nvm use
+npm run lint
+npm run type-check
 
-## 7. Frontend Verification Scope
+cd backend/libs/rust-io
+cargo test
+```
 
-Current-stage frontend verification is:
+## 8. Old Version Reuse Map
 
-- `npm run lint`
-- `npm run type-check`
-- Manual golden-path UI check when frontend behavior is implemented
-
-React Testing Library, mocked WebSocket tests, and E2E tests are future hardening work unless explicitly pulled into scope.
+| Old Version Source | New Target | Reuse |
+|---|---|---|
+| `src/agents/supervisor.py` | `src/agents/supervisor.py` | LangGraph workflow orchestration |
+| `src/agents/extraction/node.py` | Phase 2 extraction | Evidence extraction node patterns |
+| `src/agents/parsing/translation_tool.py` | Phase 2 structured translation | Terminology/structure/draft/review pipeline adapted after native extraction |
+| `src/domain/agent/prompts.py` | Phase 2 prompts | Prompt templates |
+| `src/domain/variant/` | Phase 3 standardization | ClinVar/ClinGen clients and normalizers |
+| `src/infrastructure/` | DAO layer | PostgreSQL patterns; Redis/Neo4j deferred |
+| `src/tools/external/` | Public DB integrations | External database tooling |
