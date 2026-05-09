@@ -32,7 +32,7 @@ class ParserFactory:
         Tries MinerU first, falls back to PaddleOCR on failure.
         Raises ParserExhaustedError if all parsers fail.
         """
-        last_error: Exception | None = None
+        errors: dict[str, Exception] = {}
 
         for parser in self.parsers:
             try:
@@ -42,10 +42,10 @@ class ParserFactory:
                 return result
             except Exception as e:
                 logger.warning(f"Parser {parser.name} failed: {e}")
-                last_error = e
+                errors[parser.name] = e
                 continue
 
         raise ParserExhaustedError(
-            mineru_error=last_error if len(self.parsers) == 1 else None,
-            paddle_error=last_error,
+            mineru_error=errors.get("mineru"),
+            paddle_error=errors.get("paddleocr"),
         )
