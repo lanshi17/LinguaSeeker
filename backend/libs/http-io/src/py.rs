@@ -276,3 +276,167 @@ async fn execute_provider(
         }),
     }
 }
+
+// ── MinerU API functions ──────────────────────────────────────────────
+
+#[pyfunction]
+#[pyo3(signature = (url, token, model_version=None, is_ocr=None, enable_formula=None, enable_table=None, language=None, data_id=None, page_ranges=None, no_cache=None, cache_tolerance=None, timeout_ms=None, proxy=None))]
+pub fn mineru_create_task<'py>(
+    py: Python<'py>,
+    url: String,
+    token: String,
+    model_version: Option<String>,
+    is_ocr: Option<bool>,
+    enable_formula: Option<bool>,
+    enable_table: Option<bool>,
+    language: Option<String>,
+    data_id: Option<String>,
+    page_ranges: Option<String>,
+    no_cache: Option<bool>,
+    cache_tolerance: Option<u32>,
+    timeout_ms: Option<u64>,
+    proxy: Option<String>,
+) -> PyResult<Bound<'py, PyAny>> {
+    let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
+    let request = crate::types::MinerUCreateTaskRequest {
+        url,
+        model_version,
+        is_ocr,
+        enable_formula,
+        enable_table,
+        language,
+        data_id,
+        page_ranges,
+        no_cache,
+        cache_tolerance,
+    };
+
+    pyo3_async_runtimes::tokio::future_into_py(py, async move {
+        let result = crate::mineru::create_task(&client, &token, &request)
+            .await
+            .map_err(PyErr::from)?;
+        Python::attach(|py| {
+            pythonize::pythonize(py, &result)
+                .map(|obj| obj.unbind())
+                .map_err(PyErr::from)
+        })
+    })
+}
+
+#[pyfunction]
+#[pyo3(signature = (task_id, token, timeout_ms=None, proxy=None))]
+pub fn mineru_get_result<'py>(
+    py: Python<'py>,
+    task_id: String,
+    token: String,
+    timeout_ms: Option<u64>,
+    proxy: Option<String>,
+) -> PyResult<Bound<'py, PyAny>> {
+    let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
+
+    pyo3_async_runtimes::tokio::future_into_py(py, async move {
+        let result = crate::mineru::get_result(&client, &token, &task_id)
+            .await
+            .map_err(PyErr::from)?;
+        Python::attach(|py| {
+            pythonize::pythonize(py, &result)
+                .map(|obj| obj.unbind())
+                .map_err(PyErr::from)
+        })
+    })
+}
+
+#[pyfunction]
+#[pyo3(signature = (files, token, model_version=None, enable_formula=None, enable_table=None, language=None, no_cache=None, cache_tolerance=None, timeout_ms=None, proxy=None))]
+pub fn mineru_batch_submit<'py>(
+    py: Python<'py>,
+    files: Vec<Bound<'py, PyDict>>,
+    token: String,
+    model_version: Option<String>,
+    enable_formula: Option<bool>,
+    enable_table: Option<bool>,
+    language: Option<String>,
+    no_cache: Option<bool>,
+    cache_tolerance: Option<u32>,
+    timeout_ms: Option<u64>,
+    proxy: Option<String>,
+) -> PyResult<Bound<'py, PyAny>> {
+    let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
+
+    let mut entries = Vec::with_capacity(files.len());
+    for file_dict in &files {
+        let url = file_dict
+            .get_item("url")
+            .map_err(py_err)?
+            .ok_or_else(|| GatewayError::Other("file entry missing 'url'".into()))
+            .and_then(|v| v.extract::<String>().map_err(|e| GatewayError::Other(e.to_string())))?;
+        let data_id = file_dict
+            .get_item("data_id")
+            .map_err(py_err)?
+            .map(|v| v.extract::<String>())
+            .transpose()
+            .map_err(py_err)?;
+        let is_ocr = file_dict
+            .get_item("is_ocr")
+            .map_err(py_err)?
+            .map(|v| v.extract::<bool>())
+            .transpose()
+            .map_err(py_err)?;
+        let page_ranges = file_dict
+            .get_item("page_ranges")
+            .map_err(py_err)?
+            .map(|v| v.extract::<String>())
+            .transpose()
+            .map_err(py_err)?;
+        entries.push(crate::types::MinerUBatchFileEntry {
+            url,
+            data_id,
+            is_ocr,
+            page_ranges,
+        });
+    }
+
+    let request = crate::types::MinerUBatchSubmitRequest {
+        files: entries,
+        model_version,
+        enable_formula,
+        enable_table,
+        language,
+        no_cache,
+        cache_tolerance,
+    };
+
+    pyo3_async_runtimes::tokio::future_into_py(py, async move {
+        let result = crate::mineru::batch_submit(&client, &token, &request)
+            .await
+            .map_err(PyErr::from)?;
+        Python::attach(|py| {
+            pythonize::pythonize(py, &result)
+                .map(|obj| obj.unbind())
+                .map_err(PyErr::from)
+        })
+    })
+}
+
+#[pyfunction]
+#[pyo3(signature = (batch_id, token, timeout_ms=None, proxy=None))]
+pub fn mineru_batch_result<'py>(
+    py: Python<'py>,
+    batch_id: String,
+    token: String,
+    timeout_ms: Option<u64>,
+    proxy: Option<String>,
+) -> PyResult<Bound<'py, PyAny>> {
+    let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
+
+    pyo3_async_runtimes::tokio::future_into_py(py, async move {
+        let result = crate::mineru::batch_result(&client, &token, &batch_id)
+            .await
+            .map_err(PyErr::from)?;
+        Python::attach(|py| {
+            pythonize::pythonize(py, &result)
+                .map(|obj| obj.unbind())
+                .map_err(PyErr::from)
+        })
+    })
+}

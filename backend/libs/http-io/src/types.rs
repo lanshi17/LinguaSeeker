@@ -51,3 +51,38 @@ impl FetchResult {
         }
     }
 }
+
+// ── MinerU API types ─────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MinerUCreateTaskRequest {
+    pub url: String,
+    pub model_version: Option<String>,
+    pub is_ocr: Option<bool>,
+    pub enable_formula: Option<bool>,
+    pub enable_table: Option<bool>,
+    pub language: Option<String>,
+    pub data_id: Option<String>,
+    pub page_ranges: Option<String>,
+    pub no_cache: Option<bool>,
+    pub cache_tolerance: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MinerUBatchFileEntry {
+    pub url: String,
+    pub data_id: Option<String>,
+    pub is_ocr: Option<bool>,
+    pub page_ranges: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MinerUBatchSubmitRequest {
+    pub files: Vec<MinerUBatchFileEntry>,
+    pub model_version: Option<String>,
+    pub enable_formula: Option<bool>,
+    pub enable_table: Option<bool>,
+    pub language: Option<String>,
+    pub no_cache: Option<bool>,
+    pub cache_tolerance: Option<u32>,
+}
