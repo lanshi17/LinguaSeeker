@@ -75,13 +75,14 @@ def pages_from_raw(pages_data: list[dict]) -> list[PageContent]:
     Shared by MinerU and PaddleOCR parsers to avoid duplication.
     """
     pages: list[PageContent] = []
-    for page_data in pages_data:
+    for i, page_data in enumerate(pages_data, start=1):
+        page_number = page_data.get("page_number", i)
         pages.append(
             PageContent(
-                page_number=page_data["page_number"],
+                page_number=page_number,
                 markdown=page_data.get("markdown", ""),
-                figures=_figures_from_page(page_data["page_number"], page_data.get("figures", [])),
-                tables=_tables_from_page(page_data["page_number"], page_data.get("tables", [])),
+                figures=_figures_from_page(page_number, page_data.get("figures", [])),
+                tables=_tables_from_page(page_number, page_data.get("tables", [])),
             )
         )
     return pages

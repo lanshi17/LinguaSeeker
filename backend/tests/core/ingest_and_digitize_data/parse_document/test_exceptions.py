@@ -30,8 +30,8 @@ class TestMinerUAPIError:
 
 class TestMinerUTimeoutError:
     def test_timeout(self):
-        err = MinerUTimeoutError(timeout=300)
-        assert err.timeout == 300
+        err = MinerUTimeoutError(total_timeout=300)
+        assert err.total_timeout == 300
         assert "300" in str(err)
 
 

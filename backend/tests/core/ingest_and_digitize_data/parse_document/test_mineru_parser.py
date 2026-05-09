@@ -13,6 +13,20 @@ from src.core.ingest_and_digitize_data.parse_document.exceptions import (
 from src.core.ingest_and_digitize_data.parse_document.mineru_parser import MinerUParser
 
 
+class TestMinerUValidateResponse:
+    def test_valid_response(self):
+        data = {"total_pages": 1, "pages": [{"page_number": 1}]}
+        MinerUParser._validate_response(data)  # should not raise
+
+    def test_missing_total_pages(self):
+        with pytest.raises(MinerUAPIError, match="missing 'total_pages'"):
+            MinerUParser._validate_response({"pages": []})
+
+    def test_empty_pages(self):
+        with pytest.raises(MinerUAPIError, match="empty 'pages'"):
+            MinerUParser._validate_response({"total_pages": 1, "pages": []})
+
+
 class TestMinerUParser:
     @pytest.fixture
     def parser(self):

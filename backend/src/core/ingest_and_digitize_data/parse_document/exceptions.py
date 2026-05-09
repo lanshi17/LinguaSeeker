@@ -18,14 +18,14 @@ class MinerUAPIError(ParseDocumentError):
 
 
 class MinerUTimeoutError(ParseDocumentError):
-    """MinerU API request timed out."""
+    """MinerU API polling timed out (total allowed time, not per-request)."""
 
-    def __init__(self, timeout: float):
-        self.timeout = timeout
-        super().__init__(f"MinerU API timed out after {timeout}s")
+    def __init__(self, total_timeout: float):
+        self.total_timeout = total_timeout
+        super().__init__(f"MinerU API timed out after {total_timeout}s")
 
     def __repr__(self) -> str:
-        return f"MinerUTimeoutError(timeout={self.timeout!r})"
+        return f"MinerUTimeoutError(total_timeout={self.total_timeout!r})"
 
 
 class PaddleOCRError(ParseDocumentError):

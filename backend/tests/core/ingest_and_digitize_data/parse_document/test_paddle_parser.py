@@ -1,7 +1,7 @@
 """Tests for PaddleOCR parser."""
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -44,3 +44,18 @@ class TestPaddleOCRParser:
         with patch.object(parser, "_run_paddle_ocr", side_effect=RuntimeError("Model crash")):
             with pytest.raises(PaddleOCRError):
                 await parser.parse("/tmp/test.pdf")
+
+    def test_import_error_raises_clear_message(self, parser):
+        with patch.dict("sys.modules", {"paddleocr": None}):
+            with pytest.raises(PaddleOCRError, match="not installed"):
+                parser._run_paddle_ocr("/tmp/test.pdf")
+
+    def test_none_result_raises(self, parser):
+        mock_paddleocr = MagicMock()
+        mock_instance = MagicMock()
+        mock_instance.ocr.return_value = None
+        mock_paddleocr.PaddleOCR.return_value = mock_instance
+
+        with patch.dict("sys.modules", {"paddleocr": mock_paddleocr}):
+            with pytest.raises(PaddleOCRError, match="empty result"):
+                parser._run_paddle_ocr("/tmp/test.pdf")

@@ -121,7 +121,7 @@ class MinerUParser(ParserStrategy):
             else:
                 raise MinerUAPIError(f"Unknown task state: {state}")
 
-        raise MinerUTimeoutError(timeout=self._poll_interval * self._max_poll_attempts)
+        raise MinerUTimeoutError(total_timeout=self._poll_interval * self._max_poll_attempts)
 
     @staticmethod
     def _validate_response(data: dict) -> None:
