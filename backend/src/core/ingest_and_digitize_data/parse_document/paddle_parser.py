@@ -61,24 +61,17 @@ class PaddleOCRParser(ParserStrategy):
         pages = []
         full_markdown_parts = []
 
-        result = list(ocr.predict(pdf_path))
+        result = ocr.ocr(pdf_path, cls=True)
         if not result:
             raise PaddleOCRError("PaddleOCR returned empty result for the PDF")
         page_number = 1
 
         for page_result in result:
             lines = []
-            if hasattr(page_result, "rec_texts"):
-                # New PaddleOCR v3+ API
-                lines = list(page_result.rec_texts)
-            elif isinstance(page_result, dict) and "rec_texts" in page_result:
-                lines = page_result["rec_texts"]
-            elif isinstance(page_result, list):
-                # Legacy API fallback
+            if page_result:
                 for line in page_result:
-                    if isinstance(line, (list, tuple)) and len(line) >= 2:
-                        text = line[1][0] if isinstance(line[1], (list, tuple)) else str(line[1])
-                        lines.append(text)
+                    text = line[1][0]
+                    lines.append(text)
 
             markdown = "\n".join(lines)
             full_markdown_parts.append(markdown)
