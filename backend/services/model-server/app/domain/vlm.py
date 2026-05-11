@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any
+from dataclasses import dataclass, field
 
 import vllm
 from mineru_vl_utils import MinerUClient, MinerULogitsProcessor
@@ -15,7 +15,21 @@ from app.utils.logger import get_logger
 logger = get_logger()
 
 
-class LLMService(BaseModelService):
+@dataclass
+class VLMInferResult:
+    """Structured result from VLM inference (I1: replaces bare dict)."""
+
+    id: str
+    full_markdown: str
+    pages: list[dict] = field(default_factory=list)
+    metadata: dict = field(default_factory=lambda: {"total_pages": 1})
+
+
+class VLMInferenceError(Exception):
+    """Raised when VLM inference fails."""
+
+
+class VLMService(BaseModelService):
     """MinerU2.5-Pro VLM via vllm engine + MinerUClient.
 
     Provides document extraction from images using MinerU's two-step process:
@@ -38,6 +52,7 @@ class LLMService(BaseModelService):
         self._model = vllm.LLM(
             model=self._model_id,
             gpu_memory_utilization=self._gpu_memory_utilization,
+            # vllm accepts logits processor classes — MinerU provides a class
             logits_processors=[MinerULogitsProcessor],
             trust_remote_code=True,
         )
@@ -48,13 +63,21 @@ class LLMService(BaseModelService):
         )
         logger.info("MinerUClient initialized (image_analysis={flag})", flag=self._image_analysis)
 
-    def infer(self, image: Image.Image, **kwargs: Any) -> dict[str, Any]:
-        """Extract structured content from an image."""
+    def infer(self, image: Image.Image) -> VLMInferResult:
+        """Extract structured content from an image.
+
+        Raises:
+            VLMInferenceError: If MinerU extraction fails.
+        """
         self.ensure_loaded()
         assert self._client is not None
 
         logger.info("Running MinerU two_step_extract")
-        result = self._client.two_step_extract(image)
+        try:
+            result = self._client.two_step_extract(image)
+        except Exception as exc:
+            logger.error("MinerU two_step_extract failed: {exc}", exc=exc)
+            raise VLMInferenceError(f"VLM extraction failed: {exc}") from exc
 
         if isinstance(result, tuple) and len(result) == 2:
             full_markdown, pages_data = result
@@ -62,9 +85,9 @@ class LLMService(BaseModelService):
             full_markdown = str(result)
             pages_data = []
 
-        return {
-            "id": f"vlm-{uuid.uuid4().hex[:12]}",
-            "full_markdown": full_markdown,
-            "pages": pages_data,
-            "metadata": {"total_pages": len(pages_data) if pages_data else 1},
-        }
+        return VLMInferResult(
+            id=f"vlm-{uuid.uuid4().hex[:12]}",
+            full_markdown=full_markdown,
+            pages=pages_data,
+            metadata={"total_pages": len(pages_data) if pages_data else 1},
+        )

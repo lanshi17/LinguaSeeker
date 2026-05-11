@@ -16,34 +16,40 @@ from app.models import (
     VLMPageContent,
     VLMDocumentMetadata,
     VLMUsage,
+    VLMFigurePosition,
+    VLMTableStructure,
 )
 from app.utils.logger import get_logger
 
 if TYPE_CHECKING:
-    from app.domain.llm import LLMService
+    from app.domain.vlm import VLMService
 
 logger = get_logger()
 router = APIRouter(tags=["vlm"])
 
-_service: LLMService | None = None
+_service: VLMService | None = None
 
 
-def bind(service: LLMService) -> None:
+def bind(service: VLMService) -> None:
     global _service
     _service = service
 
 
-def _extract_images_from_messages(messages: list[dict]) -> list[Image.Image]:
+def _extract_images_from_messages(messages: list) -> list[Image.Image]:
     """Extract PIL Images from OpenAI multimodal message format."""
     images = []
     for msg in messages:
-        content = msg.get("content", "")
+        content = msg.content if hasattr(msg, "content") else msg.get("content", "")
         if not isinstance(content, list):
             continue
         for part in content:
-            if part.get("type") != "image_url":
+            part_type = part.type if hasattr(part, "type") else part.get("type")
+            if part_type != "image_url":
                 continue
-            url = part["image_url"]["url"]
+            image_url = part.image_url if hasattr(part, "image_url") else part.get("image_url")
+            if image_url is None:
+                continue
+            url = image_url.url if hasattr(image_url, "url") else image_url.get("url", "")
             if url.startswith("data:"):
                 match = re.match(r"data:image/\w+;base64,(.+)", url)
                 if match:
@@ -54,16 +60,36 @@ def _extract_images_from_messages(messages: list[dict]) -> list[Image.Image]:
     return images
 
 
+def _parse_figure(raw: dict) -> VLMFigurePosition:
+    """Parse a raw dict into VLMFigurePosition with validation."""
+    try:
+        return VLMFigurePosition.model_validate(raw)
+    except Exception as exc:
+        logger.warning("Malformed figure data: {raw} — {exc}", raw=raw, exc=exc)
+        raise HTTPException(status_code=502, detail=f"Upstream returned malformed figure data: {exc}") from exc
+
+
+def _parse_table(raw: dict) -> VLMTableStructure:
+    """Parse a raw dict into VLMTableStructure with validation."""
+    try:
+        return VLMTableStructure.model_validate(raw)
+    except Exception as exc:
+        logger.warning("Malformed table data: {raw} — {exc}", raw=raw, exc=exc)
+        raise HTTPException(status_code=502, detail=f"Upstream returned malformed table data: {exc}") from exc
+
+
 def _build_pages(pages_data: list[dict]) -> list[VLMPageContent]:
-    """Convert raw page dicts to VLMPageContent list."""
+    """Convert raw page dicts to VLMPageContent list with explicit validation."""
     pages = []
     for i, page in enumerate(pages_data, start=1):
         page_number = page.get("page_number", i)
+        figures = [_parse_figure(f) for f in page.get("figures", [])]
+        tables = [_parse_table(t) for t in page.get("tables", [])]
         pages.append(VLMPageContent(
             page_number=page_number,
             markdown=page.get("markdown", ""),
-            figures=page.get("figures", []),
-            tables=page.get("tables", []),
+            figures=figures,
+            tables=tables,
         ))
     return pages
 
@@ -77,22 +103,25 @@ def chat_completions(req: VLMExtractRequest):
     images = _extract_images_from_messages(req.messages)
     if not images:
         raise HTTPException(status_code=400, detail="No image found in messages. Provide an image via image_url content part.")
+    if len(images) > 1:
+        raise HTTPException(status_code=400, detail="Multiple images not supported. Provide exactly one image.")
 
-    result = _service.infer(image=images[0])
-
-    metadata = result.get("metadata", {})
-    pages_data = result.get("pages", [])
+    try:
+        result = _service.infer(image=images[0])
+    except Exception as exc:
+        logger.error("VLM inference failed: {exc}", exc=exc)
+        raise HTTPException(status_code=500, detail=f"VLM inference failed: {exc}") from exc
 
     return VLMExtractResponse(
-        id=result.get("id", ""),
+        id=result.id,
         model=req.model or _service.model_id,
         metadata=VLMDocumentMetadata(
-            total_pages=metadata.get("total_pages", len(pages_data)),
-            title=metadata.get("title"),
-            authors=metadata.get("authors", []),
-            abstract_text=metadata.get("abstract_text"),
+            total_pages=result.metadata.get("total_pages", len(result.pages)),
+            title=result.metadata.get("title"),
+            authors=result.metadata.get("authors", []),
+            abstract_text=result.metadata.get("abstract_text"),
         ),
-        pages=_build_pages(pages_data),
-        full_markdown=result.get("full_markdown", ""),
+        pages=_build_pages(result.pages),
+        full_markdown=result.full_markdown,
         usage=VLMUsage(),
     )

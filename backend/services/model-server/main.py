@@ -16,11 +16,11 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from fastapi import FastAPI
 
-from app.api import chat, embedding, health, rerank, vlm
+from app.api import embedding, health, rerank, vlm
 from app.config import get_config
 from app.domain.embedding import EmbeddingService
-from app.domain.llm import LLMService
 from app.domain.rerank import RerankService
+from app.domain.vlm import VLMService
 from app.utils.logger import get_logger, request_monitor_middleware_factory, setup_logging
 
 setup_logging()
@@ -38,7 +38,7 @@ _rerank_svc = RerankService(
     model_id=cfg.rerank_model_id,
     gpu_memory_utilization=cfg.vllm_gpu_memory_utilization,
 )
-_llm_svc = LLMService(
+_vlm_svc = VLMService(
     model_id=cfg.vlm_model_id,
     gpu_memory_utilization=cfg.vllm_gpu_memory_utilization,
     image_analysis=cfg.vlm_image_analysis,
@@ -47,15 +47,14 @@ _llm_svc = LLMService(
 # Wire services into API routes
 embedding.bind(_embedding_svc)
 rerank.bind(_rerank_svc)
-if _llm_svc:
-    chat.bind(_llm_svc)
-    vlm.bind(_llm_svc)
+if _vlm_svc:
+    vlm.bind(_vlm_svc)
 
 # Register services for health checks
 health.register_services({
     "embedding": _embedding_svc,
     "rerank": _rerank_svc,
-    **({"vlm": _llm_svc} if _llm_svc else {}),
+    **({"vlm": _vlm_svc} if _vlm_svc else {}),
 })
 
 # ── Assemble FastAPI app ─────────────────────────────────────────────────
@@ -65,8 +64,8 @@ app.add_middleware(request_monitor_middleware_factory())
 
 app.include_router(embedding.router)
 app.include_router(rerank.router)
-app.include_router(chat.router)
-app.include_router(vlm.router)
+if _vlm_svc:
+    app.include_router(vlm.router)
 app.include_router(health.router)
 
 # ── Run ──────────────────────────────────────────────────────────────────

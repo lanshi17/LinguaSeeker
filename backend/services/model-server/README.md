@@ -99,12 +99,11 @@ app/
 │   ├── base.py            # BaseModelService 抽象基类
 │   ├── embedding.py       # EmbeddingService (vllm task="embed")
 │   ├── rerank.py          # RerankService (vllm task="score")
-│   └── llm.py             # LLMService / VLM (vllm + MinerUClient)
+│   └── vlm.py             # VLMService (vllm + MinerUClient)
 └── api/                   # 路由层
     ├── health.py
     ├── embedding.py
     ├── rerank.py
-    ├── chat.py
     └── vlm.py             # /v1/chat/completions 多模态端点
 ```
 
