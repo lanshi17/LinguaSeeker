@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     # LLM model (placeholder — for future local LLM)
     llm_model_id: str = ""
 
+    # VLM model (MinerU)
+    vlm_model_id: str = ""
+    vlm_image_analysis: bool = False
+
+    # vllm shared settings
+    vllm_gpu_memory_utilization: float = 0.9
+
 
 @lru_cache(maxsize=1)
 def get_config() -> Settings:

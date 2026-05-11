@@ -5,23 +5,9 @@ from __future__ import annotations
 import time
 from abc import ABC, abstractmethod
 
-import torch
-
 from app.utils.logger import get_logger
 
 logger = get_logger()
-
-
-def _require_cuda() -> str:
-    """Return the CUDA device string, or raise if CUDA is unavailable."""
-    if not torch.cuda.is_available():
-        raise RuntimeError(
-            "CUDA is not available. Local model inference requires a CUDA-capable GPU. "
-            "Install the correct PyTorch build and ensure NVIDIA drivers are loaded."
-        )
-    device_name = torch.cuda.get_device_name(0)
-    logger.info("CUDA available — using GPU: {name}", name=device_name)
-    return "cuda"
 
 
 class BaseModelService(ABC):
@@ -31,11 +17,11 @@ class BaseModelService(ABC):
     ``_load()`` is called once on first request.
     """
 
-    def __init__(self, model_id: str) -> None:
+    def __init__(self, model_id: str, gpu_memory_utilization: float = 0.9) -> None:
         self._model_id = model_id
         self._model = None
         self._ready = False
-        self._device = _require_cuda()
+        self._gpu_memory_utilization = gpu_memory_utilization
 
     @property
     def model_id(self) -> str:

@@ -101,3 +101,71 @@ class ChatResponse(BaseModel):
     model: str
     choices: list[ChatChoice]
     usage: ChatUsage = Field(default_factory=ChatUsage)
+
+
+# ── VLM / MinerU Extraction ─────────────────────────────────────────────
+
+
+class VLMDocumentMetadata(BaseModel):
+    """Document-level metadata from VLM extraction."""
+
+    total_pages: int = 1
+    title: str | None = None
+    authors: list[str] = Field(default_factory=list)
+    abstract_text: str | None = None
+
+
+class VLMFigurePosition(BaseModel):
+    """Position of a figure within the document."""
+
+    page: int = Field(ge=1)
+    index: int = Field(ge=1)
+    caption: str | None = None
+
+
+class VLMTableStructure(BaseModel):
+    """Structured table data extracted by VLM."""
+
+    page: int = Field(ge=1)
+    index: int = Field(ge=1)
+    headers: list[str] = Field(default_factory=list)
+    rows: list[list[str]] = Field(default_factory=list)
+
+
+class VLMPageContent(BaseModel):
+    """Content of a single page extracted by VLM."""
+
+    page_number: int = Field(ge=1)
+    markdown: str
+    figures: list[VLMFigurePosition] = Field(default_factory=list)
+    tables: list[VLMTableStructure] = Field(default_factory=list)
+
+
+class VLMExtractRequest(BaseModel):
+    """OpenAI-compatible multimodal chat request for VLM extraction."""
+
+    model: str = ""
+    messages: list[dict]  # OpenAI multimodal message format
+    max_tokens: int = 4096
+    temperature: float = 0.0
+
+
+class VLMUsage(BaseModel):
+    """Token usage for VLM extraction."""
+
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+
+
+class VLMExtractResponse(BaseModel):
+    """Structured extraction response from VLM."""
+
+    id: str = ""
+    object: str = "vlm.extraction"
+    model: str
+    metadata: VLMDocumentMetadata = Field(default_factory=VLMDocumentMetadata)
+    pages: list[VLMPageContent] = Field(default_factory=list)
+    full_markdown: str = ""
+    choices: list[dict] = Field(default_factory=list)
+    usage: VLMUsage = Field(default_factory=VLMUsage)
