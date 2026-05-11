@@ -6,3 +6,4 @@
 [2026-05-11] MinerU VLM + vllm migration — unified inference backend with VLM document extraction endpoint [DONE]
 [2026-05-11] Generated/updated developer READMEs for all three libs crates (rust-io, net-io, files-io) — added missing MinerU pyfunction docs, concurrency model, env var reference, error→exception mapping tables, development workflow, extension guides, security notes, performance notes, and Rust internal API sections [done]
 [2026-05-11] [Wrote net-io MinerU local file upload implementation plan] [completed]
+[2026-05-11] Implemented MinerU local file upload in net-io — added put_bytes client, upload URL creation (single/batch), local file upload via pre-signed URLs, 4 new PyO3 pyfunctions, registered in rust-io, with unit tests and updated READMEs [completed]

@@ -1,6 +1,11 @@
 # MinerU VLM + vllm 全量迁移 Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+**Status:** completed
+**Created:** 2026-05-11
+**Completed:** 2026-05-11
+**PR:** ~
+
 
 **Goal:** 将 model-server 的所有推理后端（Embedding / Rerank / LLM）统一迁移到 vllm，并新增 MinerU2.5-Pro-2604-1.2B VLM 服务，提供 OpenAI 兼容的多模态 `/v1/chat/completions` 端点。
 

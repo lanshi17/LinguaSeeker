@@ -42,9 +42,8 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status/PR |
 |---|---|---|
-| 2026-05-11 | [MinerU VLM + vllm migration](planned/2026-05-11-mineru-vlm-vllm-migration.md) | planned |
-| 2026-05-11 | [parse-document integration test](planned/2026-05-11-parse-document-integration-test.md) | planned |
-| 2026-05-11 | [net-io MinerU local upload](plans/2026-05-11-net-io-mineru-local-upload.md) | planned |
+| 2026-05-11 | [parse-document local VLM integration test](planned/2026-05-11-parse-document-integration-test.md) | planned |
+| 2026-05-11 | [translation & formatting module](planned/2026-05-11-translation-formatting-module.md) | planned |
 
 ## Active Code Reviews
 
@@ -66,6 +65,9 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-05-06 | [literature acquisition](archive/plans/2026-05-06-literature-acquisition.md) | completed |
 | 2026-05-05 | [rust-io literature gateway](archive/plans/2026-05-05-rust-io-literature-gateway.md) | completed |
 | 2026-05-09 | [parse-document module](archive/plans/2026-05-09-parse-document-module.md) | completed |
+| 2026-05-11 | [MinerU VLM + vllm migration](archive/plans/2026-05-11-mineru-vlm-vllm-migration.md) | completed |
+| 2026-05-11 | [parse-document integration test (MinerU + PaddleOCR)](archive/plans/2026-05-11-parse-document-integration-test.md) | completed |
+| 2026-05-11 | [net-io MinerU local upload](archive/plans/2026-05-11-net-io-mineru-local-upload.md) | completed |
 
 ### Completed Code Reviews
 
@@ -83,3 +85,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-05-08 | [files-io](archive/codereview/files-io-2026-05-08.md) | approved |
 | 2026-05-08 | [rust-io facade review v2](archive/codereview/code_review_rust_io_facade_v2.md) | archived |
 | 2026-05-08 | [rust-io facade review](archive/codereview/code_review_rust_io_facade.md) | archived |
+| 2026-05-11 | [mineru-vlm-vllm review pass 4 — approved](archive/codereview/2026-05-11-mineru-vlm-vllm-migration-review-4.md) | approved |
+| 2026-05-11 | [mineru-vlm-vllm review pass 3](archive/codereview/2026-05-11-mineru-vlm-vllm-migration-review-3.md) | resolved |
+| 2026-05-11 | [mineru-vlm-vllm review pass 2](archive/codereview/2026-05-11-mineru-vlm-vllm-migration-review-2.md) | resolved |

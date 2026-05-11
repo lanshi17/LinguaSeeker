@@ -2,6 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
+**Status:** planned
+**Created:** 2026-05-11
+
 **Goal:** Implement a modular, layered translation and formatting pipeline that normalizes upstream `ParseResult` documents (any language) into authoritative formatted-original + English-translation outputs with sentence-level bbox tracking.
 
 **Architecture:** Six-module pipeline orchestrated by LangGraph. Format-first approach: normalize source markdown → detect language → multi-stage translation (terminology → structure → draft → polish → review) → validate. All LLM calls use the existing `TranslationConfig` (MT_*). File I/O delegated to `rust_io.files`. Token-budgeted segmentation (8192) applied to both formatting and translation stages.

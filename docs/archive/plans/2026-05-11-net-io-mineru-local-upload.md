@@ -2,9 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-05-11
-
+**Completed:** 2026-05-11
 **Goal:** Add a MinerU local-file upload interface to `net-io` so Python callers can request MinerU upload URLs, upload local files, and receive the resulting batch task metadata.
 
 **Architecture:** Keep `net-io` as the low-level HTTP client and expose new async PyO3 functions through the existing `rust_io.net` facade. Use MinerU API v4 `/file-urls/batch` for local files, then upload bytes to each returned pre-signed URL with `PUT`; MinerU auto-submits parsing after upload, so no extra task-submit API is called. Preserve existing URL-based single and batch parsing APIs.
