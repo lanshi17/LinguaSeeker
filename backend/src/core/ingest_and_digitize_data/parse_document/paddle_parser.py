@@ -56,7 +56,7 @@ class PaddleOCRParser(ParserStrategy):
         except ImportError:
             raise PaddleOCRError("PaddleOCR is not installed. Install with: uv add paddleocr")
 
-        ocr = PaddleOCR(use_angle_cls=True, lang="en", show_log=False)
+        ocr = PaddleOCR(use_angle_cls=True, show_log=False)
 
         pages = []
         full_markdown_parts = []

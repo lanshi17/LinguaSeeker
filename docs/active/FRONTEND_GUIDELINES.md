@@ -24,20 +24,21 @@ FastAPI is authoritative for authentication and API behavior. Next.js proxies re
 
 - **Evidence-first framing**: current UI presents extracted and standardized evidence, not final autonomous medical classification.
 - **Non-diagnostic language**: reports and result pages must describe outputs as evidence summaries and extraction results.
-- **No silent uncertainty**: low confidence, missing traceability, and ambiguous standardization must be visible.
-- **Correction capture**: expert corrections should be structured so they can improve future extraction and standardization.
+- **No silent uncertainty**: low confidence, missing traceability, ambiguous standardization, and native/translated extraction disagreement must be visible.
+- **Correction capture**: expert corrections should be structured so they can improve native extraction, translation, translated extraction, fusion, and standardization.
 
-### 2.2 Traceability First
+### 2.2 Bi-Directional Traceability First
 
-- Every evidence item shown in the UI must link to a source span.
-- Clicking an evidence item must highlight the original text/table/figure region.
-- If a result lacks source anchors/bbox-backed spans, the UI should display it as invalid/incomplete rather than plausible.
+- Every evidence item shown in the UI must link to an original source span.
+- For translated content, every evidence item should also link to a translated-text span.
+- Clicking an evidence item must highlight the original text/table/figure region and the translated text/table/figure region side by side.
+- If a result lacks required anchors/bbox-backed spans, the UI should display it as invalid/incomplete rather than plausible.
 
 ### 2.3 Low-Friction Medical Professional UX
 
 - Users are not expected to code or understand pipeline internals.
 - Long-running tasks must show concrete stages and current progress.
-- Confidence scores should be displayed near the evidence they describe.
+- Confidence scores and fusion status should be displayed near the evidence they describe.
 - Biomedical strings such as HGVS, rsIDs, transcript IDs, and gene symbols should use monospace formatting.
 
 ## 3. Directory Structure
@@ -53,7 +54,7 @@ frontend/
 │   ├── (dashboard)/
 │   │   ├── layout.tsx                 # Sidebar + topbar layout
 │   │   ├── analysis/page.tsx          # Upload/input/search + status UX
-│   │   ├── results/[taskId]/page.tsx  # Source/evidence review
+│   │   ├── results/[taskId]/page.tsx  # Bilingual source/evidence review
 │   │   └── settings/page.tsx
 │   ├── layout.tsx                     # Root layout and providers
 │   ├── page.tsx                       # Landing or redirect
@@ -74,8 +75,9 @@ frontend/
 │   ├── charts/
 │   │   ├── evidence-timeline.tsx
 │   │   └── confidence-gauge.tsx
-│   ├── document-panel.tsx             # Parsed document and highlights
-│   ├── evidence-panel.tsx             # Evidence matrix review
+│   ├── document-panel.tsx             # Original parsed document and highlights
+│   ├── translated-document-panel.tsx  # Translated document and highlights
+│   ├── evidence-panel.tsx             # Evidence matrix and fusion review
 │   ├── processing-status.tsx          # WebSocket progress
 │   └── layout/
 │       ├── sidebar.tsx
@@ -122,7 +124,7 @@ The MVP analysis page is structured-form first. Chat assistant behavior is P1/fu
 
 ```text
 ┌────────────────────────────────────────────────────────────┐
-│ New Evidence Extraction Task                                │
+│ New Dual Evidence Extraction Task                           │
 ├──────────────────────────────┬─────────────────────────────┤
 │ Input                         │ Processing Status           │
 │                              │                             │
@@ -131,8 +133,10 @@ The MVP analysis page is structured-form first. Chat assistant behavior is P1/fu
 │ [PMID input]                 │ acquisition                 │
 │ [DOI input]                  │ parsing                     │
 │ [Keyword search]             │ native_extraction           │
-│                              │ structured_translation      │
-│ [Start Extraction]           │ standardization             │
+│                              │ translation                 │
+│ [Start Extraction]           │ translated_extraction       │
+│                              │ fusion                      │
+│                              │ standardization             │
 │                              │ report_preparation          │
 └──────────────────────────────┴─────────────────────────────┘
 ```
@@ -140,17 +144,16 @@ The MVP analysis page is structured-form first. Chat assistant behavior is P1/fu
 ### 4.2 Result Review Page
 
 ```text
-┌────────────────────────────────────────────────────────────────────┐
-│ Topbar: Task #123 | Evidence Matrix Ready | Export                 │
-├──────────────────────────────┬─────────────────────────────────────┤
-│ Document Panel               │ Evidence Panel                      │
-│                              │                                     │
-│ Parsed Markdown/HTML         │ Standardized evidence matrix        │
-│ Table JSON rendered as table │ Evidence items by category          │
-│ Figure + VLM description     │ Original + translated snippets      │
-│ Highlighted source span      │ Confidence and match status         │
-│                              │ Structured feedback form            │
-└──────────────────────────────┴─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Topbar: Task #123 | Evidence Matrix Ready | Fusion Warnings | Export       │
+├─────────────────────────┬─────────────────────────┬─────────────────────────┤
+│ Original Document       │ Translated Document     │ Evidence Panel          │
+│                         │                         │                         │
+│ Original Markdown/HTML  │ English/Chinese HTML    │ Standardized matrix     │
+│ Table/figure regions    │ Translated snippets     │ Evidence by category    │
+│ Highlighted source span │ Highlighted translation │ Fusion status/conflicts │
+│                         │                         │ Structured feedback     │
+└─────────────────────────┴─────────────────────────┴─────────────────────────┘
 ```
 
 ## 5. Key Components
@@ -188,8 +191,10 @@ Connect to `WS /api/v1/tasks/{task_id}/ws` and render concrete stages:
 ```text
 [✓] Acquisition Complete
 [✓] Parsing Complete
-[✓] Multilingual Native Extraction Complete
-[⟳] Structured Translation — 45%
+[✓] Native Extraction Complete
+[✓] Translation Complete
+[⟳] Translated Extraction — 45%
+[ ] Fusion and Cross-Validation
 [ ] Entity Standardization
 [ ] Report Preparation
 ```
@@ -198,7 +203,7 @@ When WebSocket emits `complete`, fetch `GET /api/v1/tasks/{task_id}/result`.
 
 If backend restart loses an in-memory running task, show a clear interrupted-task message and offer recreation when possible.
 
-### 5.4 Document Panel (`document-panel.tsx`)
+### 5.4 Original Document Panel (`document-panel.tsx`)
 
 Responsibilities:
 
@@ -206,33 +211,47 @@ Responsibilities:
 - Render DOCX-derived text and tables in the same source-span model.
 - Render extracted tables as table views when structured JSON/CSV is available.
 - Show figure/pedigree/plot regions with VLM-generated descriptions.
-- Highlight source spans by `source_anchor`, bbox, table cell, or figure region.
+- Highlight original source spans by `source_anchor`, bbox, table cell, or figure region.
 - Clicking highlighted source text scrolls to the linked evidence item.
 
-Current stage does not require an embedded native PDF viewer; rendered MD/HTML is the primary document surface.
+Current stage does not require an embedded native PDF viewer; rendered MD/HTML is the primary original document surface.
 
-### 5.5 Evidence Panel (`evidence-panel.tsx`)
+### 5.5 Translated Document Panel (`translated-document-panel.tsx`)
+
+Responsibilities:
+
+- Render English/Chinese translated Markdown/HTML.
+- Preserve translated anchors mapped back to original anchors.
+- Highlight translated spans corresponding to selected evidence items.
+- Show translation warnings when biomedical literals changed or content was dropped.
+- Provide side-by-side review with the original document panel.
+
+### 5.6 Evidence Panel (`evidence-panel.tsx`)
 
 Sections:
 
 1. **Document Metadata**: DOI, PMID, authors, year, journal, language.
-2. **Evidence Matrix Summary**: total evidence items, categories, low-confidence count.
-3. **Variant/Gene Mentions**: original values and standardized IDs.
-4. **Disease/Phenotype Mentions**: original terms, HPO/OMIM/MONDO matches.
+2. **Evidence Matrix Summary**: total evidence items, categories, low-confidence count, fusion-conflict count.
+3. **Variant/Gene Mentions**: original values, translated values, standardized IDs.
+4. **Disease/Phenotype Mentions**: original terms, translated terms, HPO/OMIM/MONDO matches.
 5. **Functional/Experimental Data**: assays, controls, thresholds, quantitative/qualitative results.
 6. **Genetic Data**: segregation, de novo, case-control evidence when present.
 7. **Population and Computational Data**: reported frequencies and prediction data.
 8. **Entity Standardization**: match method, source DB, match score/rationale.
-9. **Source Links**: source snippets, page/line/bbox/table/figure references.
-10. **Conflicts and Confidence**: low-confidence fields and ambiguous matches.
-11. **Structured Feedback**: targeted expert feedback.
-12. **Actions**: Add feedback/comment, export PDF/DOCX evidence summary.
+9. **Bilingual Source Links**: original snippets, translated snippets, page/line/bbox/table/figure references.
+10. **Fusion Status**: agreed, native-only, translated-only, conflict, manually corrected.
+11. **Conflicts and Confidence**: low-confidence fields, disagreements, ambiguous matches.
+12. **Structured Feedback**: targeted expert feedback.
+13. **Actions**: Add feedback/comment, export PDF/DOCX evidence summary.
 
-### 5.6 Structured Feedback Form (`forms/review-feedback-form.tsx`)
+### 5.7 Structured Feedback Form (`forms/review-feedback-form.tsx`)
 
 Feedback target types:
 
+- `native_extraction`
+- `translated_extraction`
 - `translation`
+- `fusion`
 - `entity`
 - `evidence_item`
 - `missed_evidence`
@@ -246,11 +265,12 @@ Fields:
 - Problem category.
 - Reviewer rationale.
 - Suggested correction text.
-- Optional source anchor.
+- Optional original source anchor.
+- Optional translated source anchor.
 
 Submitting feedback requires login. In the current stage, feedback persists for audit/export/dataset preparation and does not directly mutate evidence rows.
 
-### 5.7 WebSocket Hook (`lib/hooks/use-websocket.ts`)
+### 5.8 WebSocket Hook (`lib/hooks/use-websocket.ts`)
 
 Required behavior:
 
@@ -319,11 +339,11 @@ GET  /api/v1/auth/me             → Current user, if authenticated
 
 ```text
 GET      /api/v1/literature/search          → Keyword/provider search
-POST     /api/v1/tasks                      → Create extraction task
+POST     /api/v1/tasks                      → Create dual extraction task
 GET      /api/v1/tasks                      → List active/recent and completed tasks
 GET      /api/v1/tasks/{task_id}            → Get task metadata/status
 WS       /api/v1/tasks/{task_id}/ws         → Real-time processing status
-GET      /api/v1/tasks/{task_id}/result     → Get evidence matrix result
+GET      /api/v1/tasks/{task_id}/result     → Get bilingual evidence matrix result
 POST     /api/v1/tasks/{task_id}/comments   → Add review comment/feedback, login required
 POST     /api/v1/tasks/{task_id}/export     → Generate PDF/DOCX evidence report
 GET      /api/v1/health                     → Health check
@@ -343,8 +363,8 @@ GET /api/v1/graph/stats         → Graph statistics if enabled
 
 - Use a medical/scientific palette: calm neutrals, clear warning states, accessible contrast.
 - Reserve red for blocking parse/extraction errors.
-- Reserve amber for low confidence or ambiguous standardization.
-- Reserve green for completed processing and valid source linkage.
+- Reserve amber for low confidence, ambiguous standardization, or fusion conflicts.
+- Reserve green for completed processing and valid bilingual source linkage.
 
 ### 8.2 Component Patterns
 
@@ -352,7 +372,7 @@ GET /api/v1/graph/stats         → Graph statistics if enabled
 - Avoid inline styles.
 - Extract repeated patterns into component variants or Tailwind utilities.
 - Use accessible primitives for dialogs, dropdowns, and tooltips.
-- Keep evidence cards dense but scannable; avoid hiding traceability or uncertainty behind hover-only UI.
+- Keep evidence cards dense but scannable; avoid hiding traceability, fusion status, or uncertainty behind hover-only UI.
 
 ### 8.3 Typography
 
@@ -371,6 +391,6 @@ Current-stage frontend verification:
 Future hardening:
 
 - Component tests with React Testing Library.
-- E2E tests for upload → review → export.
-- Mock WebSocket tests for processing status.
+- E2E tests for upload → bilingual review → export.
+- Mock WebSocket tests for dual extraction status.
 - MSW for API mocking.

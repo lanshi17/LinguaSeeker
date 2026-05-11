@@ -14,12 +14,12 @@
 | Python | CPython | 3.12+ | Backend runtime |
 | ORM | SQLAlchemy | 2.0+ | Async PostgreSQL access |
 | Migrations | Alembic | 1.13+ | Schema versioning |
-| Validation | Pydantic | 2.7+ | API and evidence contracts |
+| Validation | Pydantic | 2.7+ | API, extraction, fusion, and evidence contracts |
 | Config | pydantic-settings | 2.3+ | Environment-based config |
 | Native I/O | Rust + PyO3 | 0.28 | Low-level HTTP/file/document I/O |
 | Async Runtime | tokio | 1.x | Rust async runtime |
 | HTTP Client | reqwest | 0.13 | Rust HTTP with rustls/SOCKS support |
-| Vector Search | pgvector | — | Entity fuzzy matching |
+| Vector Search | pgvector | — | Entity fuzzy matching and feedback dataset retrieval |
 | Database | PostgreSQL | 16 | Current MVP primary store |
 | Task Runtime State | In-memory | — | Pending/running task status in MVP |
 | Graph DB | Neo4j | 5.x | P1/future knowledge graph exploration, not current MVP dependency |
@@ -29,10 +29,12 @@
 | PDF Parsing | MinerU API | v4 | PDF → Markdown/HTML + layout/bbox JSON |
 | OCR Fallback | PaddleOCR VLM | — | Fallback only with source anchors/bbox-backed spans |
 | DOCX Parsing | Python DOCX tooling + files-io boundary | — | DOCX text/table/image extraction |
-| LLM | OpenAI-compatible custom API | — | Evidence extraction |
-| Translation LLM | OpenAI-compatible MT model | — | Structured evidence translation/denoising |
+| Native Extraction LLM | OpenAI-compatible custom API | — | Original-language evidence extraction |
+| Translation LLM | OpenAI-compatible MT model | — | English/Chinese translation for review and secondary extraction |
+| Secondary Extraction LLM | OpenAI-compatible custom API | — | Translated-text evidence extraction |
+| Fusion LLM/Agent | OpenAI-compatible custom API | — | Native/translated JSON comparison, deduplication, conflict flagging |
 | VLM | OpenAI-compatible vision model | — | Figure, table, and pedigree description |
-| Embedding | Qwen3-Embedding-0.6B | — | Entity embeddings |
+| Embedding | Qwen3-Embedding-0.6B | — | Entity matching and feedback retrieval |
 | Rerank | bge-reranker-v2-m3 | — | Literature/search reranking |
 | Logging | loguru | 0.7+ | Structured logs under `logs/` |
 | Backend Tests | pytest + pytest-asyncio | 9.0+ / 1.3+ | Unit and async tests |
@@ -48,10 +50,10 @@
 ## 2. Architectural Principles
 
 1. **Evidence extraction is the product boundary.** Current MVP builds the evidence data foundation for downstream medical rating; it does not produce final autonomous ACMG/GDV classifications.
-2. **Python owns business strategy.** Provider fallback, extraction policy, standardization decisions, workflow orchestration, and API contracts stay in Python.
-3. **Rust owns low-level I/O.** Rust crates perform HTTP fetches, file hashing/writing, archive handling, PDF validation, and bounded I/O primitives.
-4. **Extraction before translation.** Non-English documents are parsed and evidence-extracted in the original language before structured evidence translation.
-5. **Traceability is mandatory.** Evidence without source anchors/bbox-backed spans cannot support displayed evidence rows.
+2. **Dual extraction beats single-pass translation.** For non-English documents, extract from the original text, translate to English/Chinese, extract again from translated text, then fuse and cross-validate both JSON outputs.
+3. **Python owns business strategy.** Provider fallback, extraction policy, fusion policy, standardization decisions, workflow orchestration, and API contracts stay in Python.
+4. **Rust owns low-level I/O.** Rust crates perform HTTP fetches, file hashing/writing, archive handling, PDF validation, and bounded I/O primitives.
+5. **Bi-directional traceability is mandatory.** Evidence without original anchors, and translated anchors when translated text exists, cannot support displayed evidence rows.
 6. **Standardization is layered.** Exact match → synonym match → vector match → conflict resolver Agent.
 
 ## 3. Backend Architecture
@@ -68,6 +70,9 @@ backend/
 │   │   │   ├── user_upload/                                # PDF/DOCX upload workflow
 │   │   │   └── ocr/                                        # MinerU/PaddleOCR/DOCX/layout anchors
 │   │   ├── cross_lingual_process_and_extract_evidence/     # Phase 2
+│   │   │   ├── extraction/                                 # Native + translated extraction
+│   │   │   ├── translation/                                # English/Chinese translation
+│   │   │   └── fusion/                                     # Cross-validation and bilingual anchor fusion
 │   │   ├── standardize_entities_and_align_knowledge/       # Phase 3
 │   │   └── visualize_evidence_with_expert_in_loop/         # Phase 4
 │   ├── api/                                                # FastAPI routes under /api/v1
@@ -104,8 +109,8 @@ Python must handle:
 - Provider fallback strategy.
 - Ranking, deduplication, retry, and rate-limit policy.
 - Document source selection.
-- Evidence extraction and standardization policy.
-- Source traceability policy.
+- Native extraction, translated extraction, fusion, and standardization policy.
+- Bi-directional source traceability policy.
 - API response contracts.
 
 ### 3.3 Literature Providers
@@ -136,10 +141,12 @@ Standalone FastAPI model service exposes OpenAI-compatible endpoints:
 
 | Role | Config Prefix | Example | Use Case |
 |---|---|---|---|
-| General LLM | `LLM_*` | deepseek-v4-flash | Source-language evidence extraction |
-| Translation | `MT_*` | qwen-mt-flash | Structured evidence translation/denoising |
+| Native Extraction | `LLM_*` | deepseek-v4-flash | Source-language evidence extraction |
+| Translation | `MT_*` | qwen-mt-flash | English/Chinese translation for review and secondary extraction |
+| Secondary Extraction | `LLM_*` or `SECONDARY_EXTRACTION_*` | deepseek-v4-flash | Evidence extraction from translated text |
+| Fusion | `LLM_*` or `FUSION_*` | deepseek-v4-flash | Cross-validation, deduplication, conflict flagging |
 | Vision | `VLM_*` | qwen3-vl-flash | Figure, table, pedigree description |
-| Embedding | `EMBEDDING_*` | Qwen3-Embedding-0.6B | Entity matching |
+| Embedding | `EMBEDDING_*` | Qwen3-Embedding-0.6B | Entity matching and feedback retrieval |
 | Rerank | `RERANK_*` | bge-reranker-v2-m3 | Search reranking |
 
 ## 4. Frontend Architecture
@@ -153,13 +160,14 @@ frontend/
 │   ├── auth/                   # login/register/verify-email
 │   └── (dashboard)/
 │       ├── analysis/           # Upload/search/new task
-│       ├── results/            # Evidence matrix review
+│       ├── results/            # Bilingual evidence matrix review
 │       └── settings/
 ├── components/
 │   ├── ui/
 │   ├── forms/
 │   ├── charts/
 │   ├── document-panel.tsx
+│   ├── translated-document-panel.tsx
 │   ├── evidence-panel.tsx
 │   └── processing-status.tsx
 ├── lib/
@@ -175,9 +183,9 @@ frontend/
 ### 4.2 Frontend Responsibilities
 
 - Render task creation forms for PDF, DOCX, PMID, DOI, and keyword search.
-- Stream status via WebSocket.
-- Render parsed documents, tables, figures, and evidence source highlights.
-- Present standardized evidence matrices with confidence and match rationale.
+- Stream status via WebSocket across parsing, native extraction, translation, translated extraction, fusion, standardization, and report preparation.
+- Render original parsed documents, translated documents, tables, figures, and synchronized bilingual highlights.
+- Present standardized evidence matrices with confidence, fusion status, and match rationale.
 - Capture structured review comments and extraction corrections.
 - Request PDF/DOCX evidence summary export.
 
@@ -191,24 +199,28 @@ Core tables to design:
 
 - `users` — user accounts, password hash, email verification state.
 - `tasks` — task metadata and persisted completed task records.
-- `documents` — uploaded/fetched files, hashes, metadata, rendered output pointers.
-- `document_spans` — source anchors, bbox, page, section, table/figure references.
-- `evidence_items` — extracted original/translated evidence and confidence.
-- `standardized_entities` — original value, standardized value, source DB, match rationale.
+- `documents` — uploaded/fetched files, hashes, metadata, rendered original output pointers.
+- `translated_documents` — translated Markdown/HTML output pointers and translation metadata.
+- `document_spans` — original anchors, bbox, page, section, table/figure references.
+- `translated_document_spans` — translated anchors mapped back to original anchors.
+- `native_evidence_items` — original-language extracted evidence and confidence.
+- `translated_evidence_items` — translated-text extracted evidence and confidence.
+- `fused_evidence_items` — deduplicated evidence with agreement/conflict status and bilingual spans.
+- `standardized_entities` — original value, translated value, standardized value, source DB, match rationale.
 - `evidence_matrices` — normalized per-document/per-task evidence matrix snapshots.
 - `review_comments` — expert feedback by target type.
 - `processing_logs` — persisted trace for completed tasks.
 - `cache_entries` — cache keys and reusable output pointers.
-- `feedback_dataset_items` — curated expert corrections for future active-learning workflows.
+- `feedback_dataset_items` — curated original-translation-evidence corrections for future active-learning workflows.
 
-`pgvector` supports fuzzy entity matching.
+`pgvector` supports fuzzy entity matching and retrieval of prior feedback examples.
 
 ### 5.2 Runtime State
 
 Current MVP may keep pending/running task state in memory:
 
 - Running tasks may disappear on backend restart.
-- Completed task metadata, document output, evidence matrices, reports, and comments persist.
+- Completed task metadata, original/translated document outputs, evidence matrices, reports, and comments persist.
 - WebSocket status streams from in-memory runtime state.
 - Redis is deferred unless task runtime is re-scoped.
 
@@ -244,18 +256,20 @@ Neo4j, MinIO, and model-server are optional/future integrations unless explicitl
 ### 6.2 Configuration Domains
 
 ```text
-LLM_*           # General extraction model
-MT_*            # Translation model
-VLM_*           # Vision model
-EMBEDDING_*     # Embedding model
-RERANK_*        # Rerank model
-MINERU_*        # MinerU OCR/parsing API
-POSTGRES_*      # PostgreSQL
-SMTP_*          # Email verification
-PUBMED_*        # PubMed API
-REDIS_*         # Future Redis
-NEO4J_*         # Future Neo4j
-MINIO_*         # Future object storage
+LLM_*                  # Native extraction and default extraction/fusion model
+SECONDARY_EXTRACTION_* # Optional translated-text extraction override
+FUSION_*               # Optional fusion/cross-validation override
+MT_*                   # Translation model
+VLM_*                  # Vision model
+EMBEDDING_*            # Embedding model
+RERANK_*               # Rerank model
+MINERU_*               # MinerU OCR/parsing API
+POSTGRES_*             # PostgreSQL
+SMTP_*                 # Email verification
+PUBMED_*               # PubMed API
+REDIS_*                # Future Redis
+NEO4J_*                # Future Neo4j
+MINIO_*                # Future object storage
 ```
 
 ## 7. Development and Verification Commands
@@ -281,9 +295,9 @@ cargo test
 | Old Version Source | New Target | Reuse |
 |---|---|---|
 | `src/agents/supervisor.py` | `src/agents/supervisor.py` | LangGraph workflow orchestration |
-| `src/agents/extraction/node.py` | Phase 2 extraction | Evidence extraction node patterns |
-| `src/agents/parsing/translation_tool.py` | Phase 2 structured translation | Terminology/structure/draft/review pipeline adapted after native extraction |
-| `src/domain/agent/prompts.py` | Phase 2 prompts | Prompt templates |
+| `src/agents/extraction/node.py` | Phase 2 native and translated extraction | Evidence extraction node patterns |
+| `src/agents/parsing/translation_tool.py` | Phase 2 translation | Terminology/structure/draft/review pipeline between extraction passes |
+| `src/domain/agent/prompts.py` | Phase 2 prompts | Native extraction, translated extraction, and fusion prompts |
 | `src/domain/variant/` | Phase 3 standardization | ClinVar/ClinGen clients and normalizers |
 | `src/infrastructure/` | DAO layer | PostgreSQL patterns; Redis/Neo4j deferred |
 | `src/tools/external/` | Public DB integrations | External database tooling |

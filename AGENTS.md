@@ -225,7 +225,7 @@
 
 ### Project Overview
 
-ACMG Lingua is an ACMG variant classification and interpretation platform. It automates literature acquisition, cross-lingual translation, evidence extraction, entity standardization, and dual-track (ACMG/AMP + GDV) reasoning with expert arbitration. Monorepo with a Next.js frontend, FastAPI backend, and three Rust native extensions via PyO3.
+ACMG Lingua is a Multi-Agent infrastructure platform for medical genetics literature automation and structured evidence extraction. It provides a four-phase evidence pipeline: literature acquisition and digitization, cross-lingual dual evidence extraction and fusion, entity standardization and knowledge alignment, and bilingual visualization with expert-in-the-loop feedback. Monorepo with a Next.js frontend, FastAPI backend, and three Rust native extensions via PyO3.
 
 ### Architecture
 
@@ -240,10 +240,9 @@ src/
 │   ├── ingest_and_digitize_data/          # Phase 1: literature acquisition + user upload
 │   │   ├── literature_acquisition/        #   gateway, providers, PubMed, web scrapers
 │   │   └── user_upload/                   #   PDF/DOCX upload handling
-│   ├── cross_lingual_process_and_extract_evidence/  # Phase 2: translation + extraction
-│   ├── standardize_entities_and_align_knowledge/    # Phase 3: entity normalization
-│   ├── execute_dual_track_intelligent_reasoning_and_arbitration/  # Phase 4: ACMG + GDV
-│   └── visualize_evidence_with_expert_in_loop/      # Phase 5: display + feedback
+│   ├── cross_lingual_process_and_extract_evidence/  # Phase 2: dual extraction, translation, fusion
+│   ├── standardize_entities_and_align_knowledge/    # Phase 3: entity standardization
+│   └── visualize_evidence_with_expert_in_loop/      # Phase 4: visualization, feedback, export
 ├── api/           # FastAPI routes (currently empty, being built)
 ├── agents/        # Agent orchestration (currently empty)
 ├── dao/           # Data access layer (currently empty)

@@ -32,12 +32,12 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | date | title | status/PR |
 |---|---|---|
 | 2026-05-09 | [parse-document module](active/2026-05-09-parse-document-module.md) | in-progress |
-| 2026-05-09 | [PRD](active/PRD.md) | active |
-| 2026-05-09 | [Application Flow](active/APP_FLOW.md) | active |
-| 2026-05-09 | [Technology Stack](active/TECH_STACK.md) | active |
-| 2026-05-09 | [Frontend Guidelines](active/FRONTEND_GUIDELINES.md) | active |
-| 2026-05-09 | [Backend Structure](active/BACKEND_STRUCTURE.md) | active |
-| 2026-05-09 | [Implementation Plan](active/IMPLEMENTATION_PLAN.md) | active |
+| 2026-05-09 | [PRD](active/PRD.md) | active — dual extraction scope |
+| 2026-05-09 | [Application Flow](active/APP_FLOW.md) | active — dual extraction scope |
+| 2026-05-09 | [Technology Stack](active/TECH_STACK.md) | active — dual extraction scope |
+| 2026-05-09 | [Frontend Guidelines](active/FRONTEND_GUIDELINES.md) | active — dual extraction scope |
+| 2026-05-09 | [Backend Structure](active/BACKEND_STRUCTURE.md) | active — dual extraction scope |
+| 2026-05-09 | [Implementation Plan](active/IMPLEMENTATION_PLAN.md) | active — dual extraction scope |
 
 ## Planned Work
 

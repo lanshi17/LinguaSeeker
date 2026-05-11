@@ -2,20 +2,20 @@
 
 ## 1. Overview
 
-ACMG Lingua backend is a FastAPI async application organized around a four-phase evidence infrastructure pipeline. It ingests literature or user-uploaded PDF/DOCX documents, parses them into traceable structured documents, extracts multilingual evidence, standardizes biomedical entities, builds evidence matrices, and persists source-linked review feedback.
+ACMG Lingua backend is a FastAPI async application organized around a four-phase evidence infrastructure pipeline. It ingests literature or user-uploaded PDF/DOCX documents, parses them into traceable structured documents, performs original-language extraction and translated-text secondary extraction, fuses bilingual evidence, standardizes biomedical entities, builds evidence matrices, and persists source-linked review feedback.
 
 Backend responsibilities:
 
 - Own `/api/v1/*` API contracts, JWT signing/verification, task lifecycle, persistence, and evidence report generation.
-- Orchestrate Multi-Agent workflows for acquisition, parsing, native extraction, structured translation, standardization, and feedback capture.
-- Reject or flag outputs that cannot be traced back to source anchors/bbox-backed spans.
-- Persist standardized evidence matrices and corrected source-evidence pairs for future model/prompt improvement.
+- Orchestrate Multi-Agent workflows for acquisition, parsing, native extraction, translation, translated extraction, fusion, standardization, and feedback capture.
+- Reject or flag outputs that cannot be traced back to original anchors and translated anchors when translated text exists.
+- Persist standardized evidence matrices and corrected original-translation-evidence triples for future model/prompt improvement.
 - Keep Rust PyO3 crates constrained to low-level I/O.
 
 Current MVP state model:
 
 - Pending/running task state may be in memory and can disappear on backend restart.
-- Completed task metadata, document outputs, evidence matrices, reports, cache metadata, and feedback persist.
+- Completed task metadata, original/translated document outputs, evidence matrices, reports, cache metadata, and feedback persist.
 - Task and result reads are public.
 - Review comments/feedback require login.
 - Deployed task creation should require login; local development may allow unrestricted task creation.
@@ -62,18 +62,22 @@ backend/
 │   │   │       └── source_anchor_parser.py                   # Source anchor and bbox parsing
 │   │   ├── cross_lingual_process_and_extract_evidence/       # Phase 2
 │   │   │   ├── __init__.py
-│   │   │   ├── contracts.py                                  # Evidence item contracts
+│   │   │   ├── contracts.py                                  # Dual extraction contracts
 │   │   │   ├── filtering/
 │   │   │   │   └── coarse_filter.py                          # Evidence-bearing chunk filter
 │   │   │   ├── extraction/
-│   │   │   │   ├── native_extractor.py                       # Source-language extraction
-│   │   │   │   ├── evidence_extractor.py                     # Fine-grained Agent extraction
+│   │   │   │   ├── native_extractor.py                       # Original-language extraction
+│   │   │   │   ├── translated_extractor.py                   # Translated-text extraction
 │   │   │   │   ├── prompt_templates.py
 │   │   │   │   └── schemas.py
-│   │   │   └── translation/
-│   │   │       ├── structured_translation.py                 # Translate extracted JSON/snippets
-│   │   │       ├── terminology.py
-│   │   │       └── validation.py
+│   │   │   ├── translation/
+│   │   │   │   ├── document_translation.py                   # English/Chinese rendered translation
+│   │   │   │   ├── terminology.py
+│   │   │   │   └── validation.py
+│   │   │   └── fusion/
+│   │   │       ├── evidence_fuser.py                         # Compare/dedupe/fuse JSON outputs
+│   │   │       ├── anchor_mapper.py                          # original ↔ translated anchors
+│   │   │       └── conflict_detector.py                      # Fusion disagreement flags
 │   │   ├── standardize_entities_and_align_knowledge/         # Phase 3
 │   │   │   ├── __init__.py
 │   │   │   ├── matchers/
@@ -97,7 +101,7 @@ backend/
 │   │       ├── report_generator.py                           # PDF/DOCX evidence report generation
 │   │       ├── feedback_service.py                           # Structured expert feedback
 │   │       ├── comment_service.py                            # Review comments
-│   │       ├── source_linker.py                              # Source anchor/bbox ↔ evidence linking
+│   │       ├── source_linker.py                              # original/translated anchor ↔ evidence linking
 │   │       └── dataset_builder.py                            # Future active-learning dataset capture
 │   ├── api/
 │   │   ├── __init__.py
@@ -165,7 +169,7 @@ Environment variables are flat, for example `LLM_API_KEY`, and are mapped to nes
 
 ### 3.2 Task Runtime and Lifecycle
 
-`POST /api/v1/tasks` creates an async evidence extraction task and returns `task_id` immediately.
+`POST /api/v1/tasks` creates an async dual evidence extraction task and returns `task_id` immediately.
 
 Supported task inputs:
 
@@ -178,7 +182,7 @@ Runtime behavior:
 - Pending/running state may be in memory for MVP.
 - WebSocket status is served from runtime state at `/api/v1/tasks/{task_id}/ws`.
 - Completed metadata/results persist.
-- `GET /api/v1/tasks/{task_id}/result` returns the evidence matrix result.
+- `GET /api/v1/tasks/{task_id}/result` returns the bilingual evidence matrix result.
 - If the backend restarts, running tasks may be lost and must be recreated.
 
 ### 3.3 Phase 1: Acquisition, Upload, and Parsing
@@ -194,23 +198,27 @@ Parsing requirements:
 - Layout analysis must preserve table rows/cells and figure regions for later evidence highlighting.
 - Long text chunking must preserve source span mapping.
 
-### 3.4 Phase 2: Cross-Lingual Evidence Extraction
+### 3.4 Phase 2: Cross-Lingual Dual Evidence Extraction
 
-Non-English evidence extraction follows the source-language-first rule:
+Non-English evidence extraction follows the dual-pass rule:
 
 ```text
-Source chunk → coarse filter → multilingual-native extraction → structured translation/denoising → standard evidence item
+Source chunk → coarse filter → native extraction → translation → translated extraction → fusion/cross-validation → standard evidence item
 ```
 
-The extractor must output:
+The extractor/fusion pipeline must output:
 
 - Original source-language value.
-- Translated/normalized value.
+- Translated value.
+- Native extraction record and translated extraction record.
 - Evidence category: phenotype, method, result, frequency, genetic observation, computational observation, or metadata.
-- Source span: page, section/line, source anchor, bbox, table/figure ID.
+- Original source span: page, section/line, source anchor, bbox, table/figure ID.
+- Translated source span: page/section/line, translated anchor, mapped original anchor, bbox/table/figure ID when available.
 - Confidence score.
+- Fusion status: `agreed`, `native_only`, `translated_only`, `conflict`, or `manually_corrected`.
+- Fusion rationale.
 
-Full document translation may be generated for reviewer convenience, but extraction-critical data is anchored to source-language evidence.
+Full document or evidence-bearing-section translation is generated for reviewer convenience and for translated-text secondary extraction.
 
 ### 3.5 Phase 3: Entity Standardization
 
@@ -222,17 +230,17 @@ Matching order:
 4. Conflict resolver Agent for ambiguous candidates.
 5. Preserve original and flag unstandardized if no reliable match.
 
-Supported sources include HGNC, ClinVar, dbSNP, OMIM, HPO, ClinGen, and gnomAD where available.
+Supported sources include HGNC, ClinVar, dbSNP, OMIM, HPO, ClinGen, and gnomAD where available. Standardization must preserve original extracted value, translated extracted value, standardized value, source database, match status, and match rationale.
 
-### 3.6 Phase 4: Review, Feedback, and Reports
+### 3.6 Phase 4: Bilingual Review, Feedback, and Reports
 
 Review services support:
 
-- Source-linked evidence matrix display.
+- Source-linked bilingual evidence matrix display.
 - Review comments.
-- Structured feedback by target type: translation, entity, evidence item, missed evidence, report.
+- Structured feedback by target type: native extraction, translated extraction, translation, fusion, entity, evidence item, missed evidence, report.
 - PDF/DOCX evidence summary report generation.
-- Future dataset capture of corrected source-evidence pairs.
+- Future dataset capture of corrected original-translation-evidence triples.
 
 Current-stage feedback does not directly mutate evidence rows unless a reviewed correction workflow is implemented.
 
@@ -270,6 +278,18 @@ class SourceSpan(BaseModel):
     figure_id: str | None
     snippet: str
 
+class TranslatedSourceSpan(BaseModel):
+    translated_anchor: str
+    mapped_source_anchor: str
+    page: int | None
+    section: str | None
+    line_start: int | None
+    line_end: int | None
+    bbox: list[float] | None
+    table_id: str | None
+    figure_id: str | None
+    translated_snippet: str
+
 class EvidenceItem(BaseModel):
     evidence_id: str
     category: Literal[
@@ -286,11 +306,17 @@ class EvidenceItem(BaseModel):
     ]
     original_value: str
     translated_value: str | None
+    native_extraction_value: str | None
+    translated_extraction_value: str | None
     confidence: float
+    fusion_status: Literal["agreed", "native_only", "translated_only", "conflict", "manually_corrected"]
+    fusion_rationale: str | None
     source_span: SourceSpan
+    translated_source_span: TranslatedSourceSpan | None
 
 class StandardizedEntity(BaseModel):
     original_value: str
+    translated_value: str | None
     standardized_value: str | None
     entity_type: Literal["gene", "disease", "phenotype", "variant", "frequency"]
     source_db: str | None
@@ -307,7 +333,9 @@ class DocumentResult(BaseModel):
     year: int | None
     journal: str | None
     rendered_document_uri: str
+    translated_document_uri: str | None
     source_map_uri: str
+    translated_source_map_uri: str | None
 ```
 
 ### 4.3 Task and Result Contracts
@@ -335,6 +363,9 @@ class EvidenceMatrix(BaseModel):
     standardized_entities: list[StandardizedEntity]
     low_confidence_count: int
     unstandardized_count: int
+    fusion_conflict_count: int
+    native_only_count: int
+    translated_only_count: int
 
 class TaskResultResponse(BaseModel):
     task_id: str
@@ -348,10 +379,22 @@ class TaskResultResponse(BaseModel):
 
 ```python
 class ReviewCommentRequest(BaseModel):
-    target_type: Literal["task", "evidence_item", "translation", "entity", "missed_evidence", "report"]
+    target_type: Literal[
+        "task",
+        "native_extraction",
+        "translated_extraction",
+        "translation",
+        "fusion",
+        "entity",
+        "evidence_item",
+        "missed_evidence",
+        "report",
+    ]
     target_id: str | None
     rationale: str
     suggested_correction: str | None = None
+    source_anchor: str | None = None
+    translated_anchor: str | None = None
 
 class ReviewComment(BaseModel):
     comment_id: str
@@ -361,6 +404,8 @@ class ReviewComment(BaseModel):
     target_id: str | None
     rationale: str
     suggested_correction: str | None
+    source_anchor: str | None
+    translated_anchor: str | None
     created_at: datetime
 ```
 
@@ -450,7 +495,10 @@ Phase-specific tests should cover:
 
 - PDF/DOCX upload validation and storage.
 - Traceability gate failures.
-- Multilingual-native extraction contract validation.
+- Native extraction contract validation.
+- Translation anchor mapping validation.
+- Translated extraction contract validation.
+- Fusion conflict detection and deduplication.
 - Entity matching exact/synonym/vector/ambiguous flows.
 - Evidence matrix construction.
 - Structured feedback persistence.
@@ -460,9 +508,9 @@ Phase-specific tests should cover:
 | Old Path | New Target | Reuse |
 |---|---|---|
 | `src/agents/supervisor.py` | `src/agents/supervisor.py` | LangGraph workflow |
-| `src/agents/extraction/node.py` | Phase 2 extraction | Evidence extraction logic |
-| `src/agents/parsing/translation_tool.py` | Phase 2 structured translation | Adapt to extraction-before-translation flow |
-| `src/domain/agent/prompts.py` | Phase 2 prompts | Prompt templates |
+| `src/agents/extraction/node.py` | Phase 2 native/translated extraction | Evidence extraction logic |
+| `src/agents/parsing/translation_tool.py` | Phase 2 translation | Adapt between native and translated extraction passes |
+| `src/domain/agent/prompts.py` | Phase 2 prompts | Native extraction, translated extraction, and fusion prompts |
 | `src/domain/agent/workflow.py` | Phase 2 agents | EvidenceAgent patterns |
 | `src/domain/variant/` | Phase 3 | ClinVar/ClinGen clients |
 | `src/infrastructure/` | DAO layer | PostgreSQL patterns; Redis/Neo4j deferred |
