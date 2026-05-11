@@ -265,6 +265,10 @@ class Settings(BaseSettings):
     paddle_use_gpu: bool = False
     paddle_lang: str = "en"
 
+    # ── Model Server flat fields (MODEL_SERVER_*) ─────────────────────
+
+    model_server_url: str = "http://localhost:8001"
+
     # ── Redis flat fields (REDIS_*) ──────────────────────────────────────
 
     redis_host: str = "localhost"
