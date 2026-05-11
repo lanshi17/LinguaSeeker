@@ -5,7 +5,7 @@
 ## Quick Start
 
 ```python
-import files_io
+import rust_io.files as files_io
 
 # Local file — write and read
 f = files_io.File("/tmp/data/report.txt")
@@ -165,7 +165,18 @@ pub enum FileError {
 }
 ```
 
-All variants convert to `pyo3::exceptions::PyRuntimeError` automatically via the `From<FileError> for PyErr` impl.
+All variants convert to Python exceptions automatically via the `From<FileError> for PyErr` impl:
+
+| Rust variant | Python exception |
+|-------------|-----------------|
+| `Io(std::io::Error)` | `IOError` |
+| `S3(String)` | `ConnectionError` |
+| `Path(String)` | `ValueError` |
+| `Archive(String)` | `ValueError` |
+| `Zip(zip::result::ZipError)` | `ValueError` |
+| `Hash(String)` | `RuntimeError` |
+| `TaskJoin(tokio::task::JoinError)` | `RuntimeError` |
+| `Other(String)` | `RuntimeError` |
 
 ## Internal Design
 
@@ -193,7 +204,7 @@ SHA-256 is used for content hashing because it provides collision resistance nee
 
 ### Error handling
 
-All Rust errors are collected into `FileError`, which implements `From` for `PyErr`. This means any `?` in Rust code automatically converts to a Python `RuntimeError` with the error message. No manual error mapping is needed at the PyO3 boundary.
+All Rust errors are collected into `FileError`, which implements `From` for `PyErr`. Each variant maps to the semantically appropriate Python exception (see `FileError` table above) — `?` propagation automatically produces the correct exception type at the PyO3 boundary.
 
 ## Usage Patterns
 
@@ -352,41 +363,41 @@ else:
 | `pythonize` | 0.28 | Convert Rust types to Python objects |
 | `thiserror` | 2 | Derive `Error` trait for `FileError` |
 
-iw|Build system: [maturin](https://www.maturin.rs/) (>= 1.13). Requires Python >= 3.10, declared in `pyproject.toml`.
+Build system: [maturin](https://www.maturin.rs/) (>= 1.13). Requires Python >= 3.10, declared in `pyproject.toml`.
 
-ie|## Testing
+## Testing
 
-ni|Run the 14 Python integration tests with:
+Run the 14 Python integration tests with:
 
-pc|```bash
-ng|cd backend/libs/files-io
-fa|uv run pytest tests/test_files_io.py -v
-al|```
+```bash
+cd backend/libs/files-io
+uv run pytest tests/test_files_io.py -v
+```
 
-hf|Test coverage (Python, 14 tests):
-ji|- **Read/write:** bytes, text, context manager usage
-pa|- **Metadata:** dict structure, size, type flags
-nx|- **File operations:** exists, rename, copy, remove, remove_dir_all, list_dir
-mv|- **Content hashing:** same-content equality, different-content inequality
-yz|- **Archives:** zip compress/extract, tar.gz compress/extract
-ni|- **Deduplication:** check_duplicate, batch_hash
+Test coverage (Python, 14 tests):
+- **Read/write:** bytes, text, context manager usage
+- **Metadata:** dict structure, size, type flags
+- **File operations:** exists, rename, copy, remove, remove_dir_all, list_dir
+- **Content hashing:** same-content equality, different-content inequality
+- **Archives:** zip compress/extract, tar.gz compress/extract
+- **Deduplication:** check_duplicate, batch_hash
 
-qc|Run the 10 Rust tests with:
+Run the 10 Rust tests with:
 
-pc|```bash
-ng|cd backend/libs/files-io
-fa|cargo test
-al|```
+```bash
+cd backend/libs/files-io
+cargo test
+```
 
-hf|Rust test coverage (10 tests):
-ji|- **Error mapping:** 5 tests verifying FileError → PyErr conversion (IO→IOError, Path→ValueError, Archive→ValueError, S3→ConnectionError, Other→RuntimeError)
-pa|- **Archive security:** 4 tests — zip symlink rejection, tar symlink rejection, tar.gz symlink rejection, zip path traversal through existing symlink parent (Unix-only)
-nx|- **Compatibility:** 1 test — legacy utility functions match expected behavior
+Rust test coverage (10 tests):
+- **Error mapping:** 5 tests verifying FileError → PyErr conversion (IO→IOError, Path→ValueError, Archive→ValueError, S3→ConnectionError, Other→RuntimeError)
+- **Archive security:** 4 tests — zip symlink rejection, tar symlink rejection, tar.gz symlink rejection, zip path traversal through existing symlink parent (Unix-only)
+- **Compatibility:** 1 test — legacy utility functions match expected behavior
 
-rd|
-rw|Not covered by the current test suite:
-il|- S3 backend (requires a running S3-compatible service)
-ls|- Async variants (copy_async, compress_async, extract_async, batch_copy_async)
-kd|- Error paths (invalid paths, permission denied, corrupt archives)
-bm|- read_chunk
-uf|- write_stream and ensure_dir (internal-only, marked #[allow(dead_code)])
+
+Not covered by the current test suite:
+- S3 backend (requires a running S3-compatible service)
+- Async variants (copy_async, compress_async, extract_async, batch_copy_async)
+- Error paths (invalid paths, permission denied, corrupt archives)
+- read_chunk
+- write_stream and ensure_dir (internal-only, marked #[allow(dead_code)])

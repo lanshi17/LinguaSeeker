@@ -28,6 +28,22 @@ fn rust_io(m: &Bound<'_, PyModule>) -> PyResult<()> {
     net.add_function(wrap_pyfunction!(net_io::py::mineru_get_result, &net)?)?;
     net.add_function(wrap_pyfunction!(net_io::py::mineru_batch_submit, &net)?)?;
     net.add_function(wrap_pyfunction!(net_io::py::mineru_batch_result, &net)?)?;
+    net.add_function(wrap_pyfunction!(
+        net_io::py::mineru_create_upload_url,
+        &net
+    )?)?;
+    net.add_function(wrap_pyfunction!(
+        net_io::py::mineru_create_batch_upload_urls,
+        &net
+    )?)?;
+    net.add_function(wrap_pyfunction!(
+        net_io::py::mineru_upload_local_file,
+        &net
+    )?)?;
+    net.add_function(wrap_pyfunction!(
+        net_io::py::mineru_upload_local_files,
+        &net
+    )?)?;
     register_submodule(m, "rust_io.net", &net)?;
 
     let files = PyModule::new(m.py(), "files")?;

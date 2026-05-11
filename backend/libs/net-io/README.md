@@ -216,12 +216,68 @@ async def mineru_batch_submit(
     proxy: str | None = None,
 ) -> dict
 
+
+async def mineru_create_upload_url(
+    filename: str,
+    token: str,
+    content_type: str | None = None,
+    model_version: str | None = None,
+    is_ocr: bool | None = None,
+    enable_formula: bool | None = None,
+    enable_table: bool | None = None,
+    language: str | None = None,
+    data_id: str | None = None,
+    page_ranges: str | None = None,
+    no_cache: bool | None = None,
+    cache_tolerance: int | None = None,
+    timeout_ms: int | None = None,
+    proxy: str | None = None,
+) -> dict                                  # returns code/msg/data with pre-signed upload URL
+async def mineru_create_batch_upload_urls(
+    files: list[dict],                     # each: {"name": str, "data_id"?, "is_ocr"?, "page_ranges"?}
+    token: str,
+    model_version: str | None = None,
+    enable_formula: bool | None = None,
+    enable_table: bool | None = None,
+    language: str | None = None,
+    callback: str | None = None,
+    seed: str | None = None,               # required by MinerU when callback is set
+    extra_formats: list[str] | None = None, # supported by MinerU: "docx", "html", "latex"
+    timeout_ms: int | None = None,
+    proxy: str | None = None,
+) -> dict                                  # returns code/msg/data.batch_id/data.file_urls
+
 async def mineru_batch_result(
     batch_id: str,
     token: str,
     timeout_ms: int | None = None,
     proxy: str | None = None,
 ) -> dict
+
+async def mineru_upload_local_file(
+    upload_url: str,
+    file_path: str,
+    content_type: str | None = None,       # MinerU docs recommend omitting Content-Type
+    timeout_ms: int | None = None,
+    proxy: str | None = None,
+) -> dict
+
+async def mineru_upload_local_files(
+    file_paths: list[str],
+    token: str,
+    model_version: str | None = None,
+    enable_formula: bool | None = None,
+    enable_table: bool | None = None,
+    language: str | None = None,
+    data_ids: list[str] | None = None,     # must match file_paths length when provided
+    is_ocr: bool | None = None,
+    page_ranges: str | None = None,
+    callback: str | None = None,
+    seed: str | None = None,
+    extra_formats: list[str] | None = None,
+    timeout_ms: int | None = None,
+    proxy: str | None = None,
+) -> dict                                  # creates upload URLs, PUTs files, then returns batch response
 ```
 
 All MinerU functions target the MinerU API v4 (`https://mineru.net/api/v4`). Authentication is via `Authorization: Bearer <token>` header.
@@ -253,6 +309,7 @@ Backoff formula: `delay_ms = 1000 * 2^(attempt - 1)`, capped at `2^20 * 1000 ≈
 |-------------|-----------------|
 | `Http(reqwest::Error)` | `ConnectionError` |
 | `Json(serde_json::Error)` | `ValueError` |
+| `Io(std::io::Error)` | `OSError` |
 | `Url(url::ParseError)` | `ValueError` |
 | `Provider { provider, message }` | `RuntimeError` |
 | `Other(String)` | `RuntimeError` |
@@ -449,3 +506,64 @@ Not covered:
 - `fetch_one` / `fetch_multi` / `scrape_web` end-to-end (require live provider APIs)
 - MinerU API functions (require valid MinerU token)
 - `fetch_multi` parallel execution behavior
+
+## Security Notes
+
+- **MinerU tokens**: Passed per-call via the `token` kwarg. Never hardcoded in source or committed to version control. The crate does not read tokens from the environment — callers are responsible for secure token management.
+- **Unpaywall email**: Retrieved from the `UNPAYWALL_EMAIL` environment variable at runtime in `unpaywall.rs`. Set this in `.env.local` or your deployment environment.
+- **S3 credentials** (via `files-io`): Can be passed explicitly as kwargs or resolved from the AWS credential chain. Never log or serialize credentials in `FetchResult` or error messages.
+- **Archive extraction**: Both tar/tar.gz and ZIP extraction validate all entry paths to prevent zip-slip / path traversal attacks. Symlink entries in archives are rejected. See `files-io` crate for details.
+- **Proxy URLs**: May contain credentials if using authenticated proxies. These are not logged, but callers should avoid passing proxy URLs with embedded credentials in clear text over untrusted channels.
+
+## Performance Notes
+
+- **Provider parallelism**: `fetch_multi` uses `futures::join_all` to run all provider requests concurrently on the tokio runtime. There is no global rate limiter or connection pool — all providers share the same `reqwest::Client` (created per `HttpClient` instance). For large provider sets, consider external throttling.
+- **Retry strategy**: Only `get_json` (provider search) has retry with exponential backoff (1s base, capped at ~17.5 min). `get_text`, `post_json`, `put_bytes`, and `get_json_with_auth` are single-attempt. This means MinerU API calls do not retry on transient failures — wrap them in retry logic at the Python level if needed.
+- **HTML scraping**: `scrape_html` and `extract_pdf_links` parse the full HTML document in memory. For very large HTML pages (>10MB), consider streaming or chunking at the Python level before calling these functions.
+- **Provider response parsing**: All provider `search` functions parse the full JSON response into `Vec<Value>`. No streaming or pagination is implemented — the `limit` parameter controls how many results the provider returns, not how many are parsed.
+- **Memory**: Each `HttpClient` carries a `reqwest::Client` (connection pool, TLS session cache). Creating a new client per call (`fetch_one`, `fetch_multi`, each MinerU call) is intentional for isolation but means connection reuse is limited to the duration of a single Python coroutine.
+
+## Internal Rust API
+
+For developers modifying or extending the crate:
+
+### `HttpClient` (client.rs)
+
+```rust
+impl HttpClient {
+    pub fn new(timeout_ms: Option<u64>, max_retries: Option<u32>, proxy: Option<&str>) -> Result<Self, GatewayError>;
+    pub async fn get_json(&self, url: &str, query: &Value) -> Result<Value, GatewayError>;       // with retry
+    pub async fn get_text(&self, url: &str) -> Result<String, GatewayError>;                      // no retry
+    pub async fn post_json(&self, url: &str, body: &Value, auth_header: Option<&str>) -> Result<Value, GatewayError>;
+    pub async fn put_bytes(&self, url: &str, bytes: Vec<u8>, content_type: Option<&str>) -> Result<Value, GatewayError>;
+    pub async fn get_json_with_auth(&self, url: &str, auth_header: Option<&str>) -> Result<Value, GatewayError>;
+}
+```
+
+Defaults: `DEFAULT_TIMEOUT_MS = 30_000`, `DEFAULT_MAX_RETRIES = 2`, `BACKOFF_BASE_MS = 1000`.
+
+### Provider pattern
+
+Each provider is a unit struct with one or more async associated functions:
+
+```rust
+pub struct CrossrefProvider;
+impl CrossrefProvider {
+    pub async fn search(client: &HttpClient, params: &FetchParams) -> Result<FetchResult, GatewayError>;
+}
+```
+
+All providers return `FetchResult`. The `execute_provider` function in `py.rs` dispatches by matching on `(provider_name, action)` tuples.
+
+### `WebScraper` (scraper.rs)
+
+```rust
+pub fn scrape_html(html: &str, css_selector: &str) -> Result<Vec<ScrapedElement>, GatewayError>;
+pub fn extract_pdf_links(html: &str, base_url: &str) -> Vec<String>;
+```
+
+`scrape_provider` is the async entry point for the `scrape_web` pyfunction. It fetches HTML via `HttpClient::get_text` and extracts elements using `WebScraper`.
+
+### `GatewayError` (error.rs)
+
+Six variants: `Http`, `Json`, `Io`, `Url`, `Provider { provider, message }`, `Other(String)`. All implement `From<...> for GatewayError` so `?` propagation works. The `From<GatewayError> for PyErr` impl maps each variant to the semantically correct Python exception type automatically — no manual error conversion needed at the PyO3 boundary.

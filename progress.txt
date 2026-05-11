@@ -1,3 +1,8 @@
 [2026-05-09] Rename http-io crate to net-io and update all external dependencies [done]
 [2026-05-09] Update six core docs to evidence extraction scope [done]
 [2026-05-09] Refine six core docs for bilingual dual extraction workflow [done]
+[2026-05-11] Created git-auto-commit skill — automates commit/push with Conventional Commits, conflict resolution, ggshield scanning, worktree cleanup [completed]
+[2026-05-11] Cleaned up unnecessary skills: removed docx, internal-comms, ralph (both copies), slack-gif-creator, duplicate code-review-skill (claude copy) [done]
+[2026-05-11] MinerU VLM + vllm migration — unified inference backend with VLM document extraction endpoint [DONE]
+[2026-05-11] Generated/updated developer READMEs for all three libs crates (rust-io, net-io, files-io) — added missing MinerU pyfunction docs, concurrency model, env var reference, error→exception mapping tables, development workflow, extension guides, security notes, performance notes, and Rust internal API sections [done]
+[2026-05-11] [Wrote net-io MinerU local file upload implementation plan] [completed]
