@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from fastapi import FastAPI
 
-from app.api import chat, embedding, health, rerank
+from app.api import chat, embedding, health, rerank, vlm
 from app.config import get_config
 from app.domain.embedding import EmbeddingService
 from app.domain.llm import LLMService
@@ -30,21 +30,32 @@ logger = get_logger()
 
 cfg = get_config()
 
-_embedding_svc = EmbeddingService(model_id=cfg.embedding_model_id)
-_rerank_svc = RerankService(model_id=cfg.rerank_model_id)
-_llm_svc = LLMService(model_id=cfg.llm_model_id) if cfg.llm_model_id else None
+_embedding_svc = EmbeddingService(
+    model_id=cfg.embedding_model_id,
+    gpu_memory_utilization=cfg.vllm_gpu_memory_utilization,
+)
+_rerank_svc = RerankService(
+    model_id=cfg.rerank_model_id,
+    gpu_memory_utilization=cfg.vllm_gpu_memory_utilization,
+)
+_llm_svc = LLMService(
+    model_id=cfg.vlm_model_id,
+    gpu_memory_utilization=cfg.vllm_gpu_memory_utilization,
+    image_analysis=cfg.vlm_image_analysis,
+) if cfg.vlm_model_id else None
 
 # Wire services into API routes
 embedding.bind(_embedding_svc)
 rerank.bind(_rerank_svc)
 if _llm_svc:
     chat.bind(_llm_svc)
+    vlm.bind(_llm_svc)
 
 # Register services for health checks
 health.register_services({
     "embedding": _embedding_svc,
     "rerank": _rerank_svc,
-    **({"llm": _llm_svc} if _llm_svc else {}),
+    **({"vlm": _llm_svc} if _llm_svc else {}),
 })
 
 # ── Assemble FastAPI app ─────────────────────────────────────────────────
@@ -55,6 +66,7 @@ app.add_middleware(request_monitor_middleware_factory())
 app.include_router(embedding.router)
 app.include_router(rerank.router)
 app.include_router(chat.router)
+app.include_router(vlm.router)
 app.include_router(health.router)
 
 # ── Run ──────────────────────────────────────────────────────────────────
@@ -70,5 +82,5 @@ if __name__ == "__main__":
     logger.info("Starting model server on {host}:{port}", host=args.host, port=args.port)
     logger.info("  Embedding : {id}", id=cfg.embedding_model_id)
     logger.info("  Rerank    : {id}", id=cfg.rerank_model_id)
-    logger.info("  LLM       : {id}", id=cfg.llm_model_id or "(not configured)")
+    logger.info("  VLM       : {id}", id=cfg.vlm_model_id or "(not configured)")
     uvicorn.run(app, host=args.host, port=args.port, log_level=cfg.log_level)
