@@ -102,6 +102,23 @@ impl HttpClient {
         Ok(json)
     }
 
+    /// PUT bytes with an optional Content-Type header, returning an empty JSON object.
+    pub async fn put_bytes(
+        &self,
+        url: &str,
+        bytes: Vec<u8>,
+        content_type: Option<&str>,
+    ) -> Result<serde_json::Value, GatewayError> {
+        let mut request = self.inner.put(url).body(bytes);
+
+        if let Some(value) = content_type {
+            request = request.header("Content-Type", value);
+        }
+
+        request.send().await?.error_for_status()?;
+        Ok(serde_json::json!({}))
+    }
+
     /// GET with optional Authorization header, returning JSON.
     pub async fn get_json_with_auth(
         &self,

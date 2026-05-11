@@ -48,7 +48,7 @@ rust-io (cdylib + rlib)
  │
  └── net-io (rlib dep)       # HTTP/web I/O (7 providers, scraper, MinerU API)
      └── src/py.rs           #   fetch_one, fetch_multi, scrape_web, scrape_html,
-                             #   extract_pdf_links, mineru_* (4 functions)
+                             #   extract_pdf_links, mineru_* (8 functions)
 ```
 
 This crate contains no business logic. `src/lib.rs` only:
@@ -80,7 +80,10 @@ The `register_submodule` helper calls `parent.add_submodule(submodule)` and then
 | `mineru_get_result` | `(task_id, token, timeout_ms=None, proxy=None) -> dict` | Get single task result by ID. |
 | `mineru_batch_submit` | `(files, token, model_version=None, enable_formula=None, enable_table=None, language=None, no_cache=None, cache_tolerance=None, timeout_ms=None, proxy=None) -> dict` | Submit batch parsing tasks. `files` is `list[dict]` with `url`, optional `data_id`, `is_ocr`, `page_ranges`. |
 | `mineru_batch_result` | `(batch_id, token, timeout_ms=None, proxy=None) -> dict` | Get batch results by batch ID. |
-
+| `mineru_create_upload_url` | `(filename, token, content_type=None, model_version=None, is_ocr=None, enable_formula=None, enable_table=None, language=None, data_id=None, page_ranges=None, no_cache=None, cache_tolerance=None, timeout_ms=None, proxy=None) -> dict` | Get a pre-signed upload URL for a local file (single). POST to MinerU API v4 `/file-urls/batch`. |
+| `mineru_create_batch_upload_urls` | `(files, token, model_version=None, enable_formula=None, enable_table=None, language=None, callback=None, seed=None, extra_formats=None, timeout_ms=None, proxy=None) -> dict` | Get pre-signed upload URLs for multiple local files. Uploaded files are auto-submitted by MinerU. |
+| `mineru_upload_local_files` | `(file_paths, token, model_version=None, enable_formula=None, enable_table=None, language=None, data_ids=None, is_ocr=None, page_ranges=None, callback=None, seed=None, extra_formats=None, timeout_ms=None, proxy=None) -> dict` | Create upload URLs and upload local files. MinerU auto-submits after upload. |
+| `mineru_upload_local_file` | `(upload_url, file_path, content_type=None, timeout_ms=None, proxy=None) -> dict` | Upload a single local file to a pre-signed URL. |
 ### `rust_io.files`
 
 | Item | Type | Description |
@@ -100,6 +103,99 @@ The `register_submodule` helper calls `parent.add_submodule(submodule)` and then
 - [net-io](../net-io/) — HTTP/web I/O providers + MinerU document parsing
 - [files-io](../files-io/) — File I/O, S3, archives, SHA-256 dedup
 
+
+## Concurrency Model
+
+All async Python functions (`fetch_one`, `fetch_multi`, `scrape_web`, `mineru_*`, `batch_copy_async`, etc.) use `pyo3-async-runtimes` to bridge Rust `async fn` → Python coroutine. The underlying tokio runtime is managed automatically:
+
+- **Provider I/O** (`net-io`): Each `HttpClient` is created per-call. `fetch_multi` launches all provider requests concurrently via `futures::join_all` — all providers execute in parallel on the same tokio runtime.
+- **File I/O** (`files-io`): Synchronous `File` methods execute directly. Async variants (`*_async`) use `tokio::task::spawn_blocking` to offload blocking I/O without stalling the Python event loop. The S3 backend uses a shared `OnceLock<Runtime>` singleton for sync→async bridging.
+- **GIL behavior**: Rust code inside `#[pyfunction]` runs with the GIL held during argument parsing, then releases it during async I/O. The GIL is re-acquired only to construct the return value via `pythonize`.
+
+## Environment Variables
+
+| Variable | Used by | Description |
+|----------|---------|-------------|
+| `UNPAYWALL_EMAIL` | `net-io` (Unpaywall provider) | Required for Unpaywall API authentication |
+| `AWS_ACCESS_KEY_ID` | `files-io` (S3 backend) | AWS credential chain (optional if passed explicitly) |
+| `AWS_SECRET_ACCESS_KEY` | `files-io` (S3 backend) | AWS credential chain (optional if passed explicitly) |
+| `AWS_REGION` | `files-io` (S3 backend) | AWS region, default `us-east-1` |
+
+S3 credential resolution uses the `aws-sdk-s3` default credential chain (env vars, `~/.aws/credentials`, IMDS). Explicit `access_key`/`secret_key`/`region` kwargs override the chain. MinerU tokens are passed per-call — they are never read from the environment.
+
+## Error Reference
+
+Both sub-crates map Rust error types to Python exceptions automatically via `From<Error> for PyErr`:
+
+### `rust_io.net` (GatewayError)
+
+| Rust variant | Python exception | Typical cause |
+|-------------|-----------------|---------------|
+| `Http(reqwest::Error)` | `ConnectionError` | Timeout, DNS failure, non-2xx response |
+| `Json(serde_json::Error)` | `ValueError` | Malformed provider response |
+| `Io(std::io::Error)` | `OSError` | File read failure (MinerU upload) |
+| `Url(url::ParseError)` | `ValueError` | Malformed provider URL |
+| `Provider { provider, message }` | `RuntimeError` | Unknown provider or unsupported action |
+| `Other(String)` | `RuntimeError` | Catch-all for business logic errors |
+
+### `rust_io.files` (FileError)
+
+| Rust variant | Python exception | Typical cause |
+|-------------|-----------------|---------------|
+| `Io(std::io::Error)` | `IOError` | Permission denied, file not found |
+| `S3(String)` | `ConnectionError` | S3 service unavailable, auth failure |
+| `Path(String)` | `ValueError` | Path traversal attempt, invalid path |
+| `Archive(String)` | `ValueError` | Malformed archive, extraction path error |
+| `Zip(ZipError)` | `ValueError` | Corrupt ZIP file |
+| `Hash(String)` | `RuntimeError` | SHA-256 computation failure |
+| `TaskJoin(JoinError)` | `RuntimeError` | spawn_blocking task panic or cancel |
+| `Other(String)` | `RuntimeError` | Catch-all for business logic errors |
+
+## Development Workflow
+
+```bash
+# Build the Python extension (from backend/)
+cd backend
+uv run maturin develop --release -m libs/rust-io/Cargo.toml
+
+# Run Rust unit tests per sub-crate
+cargo test -p net-io
+cargo test -p files-io
+
+# Run Python integration tests
+uv run pytest backend/tests/ -v
+
+# Lint Rust code
+cargo clippy --all-targets -- -D warnings
+
+# Type-check Python
+uv run ruff check
+```
+
+The `Cargo.lock` files are committed for reproducibility. After adding or updating dependencies, run `cargo check` from the crate directory (not a workspace root) to update individual lock files.
+
+## Extension Guide
+
+### Adding a new `rust_io.net` pyfunction
+
+1. Implement the Rust function in `net-io/src/` (e.g. a new provider, new scraper utility)
+2. Expose it as a `#[pyfunction]` in `net-io/src/py.rs`
+3. Register it in `rust-io/src/lib.rs`:
+   ```rust
+   net.add_function(wrap_pyfunction!(net_io::py::your_new_function, &net)?)?;
+   ```
+4. Rebuild and test
+
+### Adding a new `rust_io.files` pyfunction
+
+Same pattern — implement in `files-io/src/py/`, then register in `rust-io/src/lib.rs`:
+```rust
+files.add_function(wrap_pyfunction!(files_io::py::new_module::your_function, &files)?)?;
+```
+
+### Submodule registration internals
+
+The `register_submodule` helper is required because PyO3 nests submodules by default. Without explicitly setting `sys.modules["rust_io.net"]`, Python's `import rust_io.net` would fail even though the module is attached to the parent. The helper calls both `parent.add_submodule()` and `sys.modules[full_name] = submodule`.
 ## Dependencies
 
 | Crate | Version | Purpose |

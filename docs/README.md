@@ -31,7 +31,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status/PR |
 |---|---|---|
-| 2026-05-09 | [parse-document module](active/2026-05-09-parse-document-module.md) | in-progress |
 | 2026-05-09 | [PRD](active/PRD.md) | active — dual extraction scope |
 | 2026-05-09 | [Application Flow](active/APP_FLOW.md) | active — dual extraction scope |
 | 2026-05-09 | [Technology Stack](active/TECH_STACK.md) | active — dual extraction scope |
@@ -43,7 +42,9 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status/PR |
 |---|---|---|
-| — | — | — |
+| 2026-05-11 | [MinerU VLM + vllm migration](planned/2026-05-11-mineru-vlm-vllm-migration.md) | planned |
+| 2026-05-11 | [parse-document integration test](planned/2026-05-11-parse-document-integration-test.md) | planned |
+| 2026-05-11 | [net-io MinerU local upload](plans/2026-05-11-net-io-mineru-local-upload.md) | planned |
 
 ## Active Code Reviews
 
@@ -64,6 +65,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-05-07 | [user upload](archive/plans/2026-05-07-user-upload.md) | completed |
 | 2026-05-06 | [literature acquisition](archive/plans/2026-05-06-literature-acquisition.md) | completed |
 | 2026-05-05 | [rust-io literature gateway](archive/plans/2026-05-05-rust-io-literature-gateway.md) | completed |
+| 2026-05-09 | [parse-document module](archive/plans/2026-05-09-parse-document-module.md) | completed |
 
 ### Completed Code Reviews
 

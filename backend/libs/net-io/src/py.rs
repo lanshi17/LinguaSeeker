@@ -369,7 +369,10 @@ pub fn mineru_batch_submit<'py>(
             .get_item("url")
             .map_err(py_err)?
             .ok_or_else(|| GatewayError::Other("file entry missing 'url'".into()))
-            .and_then(|v| v.extract::<String>().map_err(|e| GatewayError::Other(e.to_string())))?;
+            .and_then(|v| {
+                v.extract::<String>()
+                    .map_err(|e| GatewayError::Other(e.to_string()))
+            })?;
         let data_id = file_dict
             .get_item("data_id")
             .map_err(py_err)?
@@ -433,6 +436,232 @@ pub fn mineru_batch_result<'py>(
         let result = crate::mineru::batch_result(&client, &token, &batch_id)
             .await
             .map_err(PyErr::from)?;
+        Python::attach(|py| {
+            pythonize::pythonize(py, &result)
+                .map(|obj| obj.unbind())
+                .map_err(PyErr::from)
+        })
+    })
+}
+
+#[pyfunction]
+#[pyo3(signature = (filename, token, content_type=None, model_version=None, is_ocr=None, enable_formula=None, enable_table=None, language=None, data_id=None, page_ranges=None, no_cache=None, cache_tolerance=None, timeout_ms=None, proxy=None))]
+pub fn mineru_create_upload_url<'py>(
+    py: Python<'py>,
+    filename: String,
+    token: String,
+    content_type: Option<String>,
+    model_version: Option<String>,
+    is_ocr: Option<bool>,
+    enable_formula: Option<bool>,
+    enable_table: Option<bool>,
+    language: Option<String>,
+    data_id: Option<String>,
+    page_ranges: Option<String>,
+    no_cache: Option<bool>,
+    cache_tolerance: Option<u32>,
+    timeout_ms: Option<u64>,
+    proxy: Option<String>,
+) -> PyResult<Bound<'py, PyAny>> {
+    let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
+    let request = crate::types::MinerUUploadUrlRequest {
+        filename,
+        content_type,
+        model_version,
+        is_ocr,
+        enable_formula,
+        enable_table,
+        language,
+        data_id,
+        page_ranges,
+        no_cache,
+        cache_tolerance,
+    };
+
+    pyo3_async_runtimes::tokio::future_into_py(py, async move {
+        let result = crate::mineru::create_upload_url(&client, &token, &request)
+            .await
+            .map_err(PyErr::from)?;
+        Python::attach(|py| {
+            pythonize::pythonize(py, &result)
+                .map(|obj| obj.unbind())
+                .map_err(PyErr::from)
+        })
+    })
+}
+
+#[pyfunction]
+#[pyo3(signature = (files, token, model_version=None, enable_formula=None, enable_table=None, language=None, callback=None, seed=None, extra_formats=None, timeout_ms=None, proxy=None))]
+pub fn mineru_create_batch_upload_urls<'py>(
+    py: Python<'py>,
+    files: Vec<Bound<'py, PyDict>>,
+    token: String,
+    model_version: Option<String>,
+    enable_formula: Option<bool>,
+    enable_table: Option<bool>,
+    language: Option<String>,
+    callback: Option<String>,
+    seed: Option<String>,
+    extra_formats: Option<Vec<String>>,
+    timeout_ms: Option<u64>,
+    proxy: Option<String>,
+) -> PyResult<Bound<'py, PyAny>> {
+    let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
+
+    let mut entries = Vec::with_capacity(files.len());
+    for file_dict in &files {
+        let name = file_dict
+            .get_item("name")
+            .map_err(py_err)?
+            .ok_or_else(|| GatewayError::Other("file entry missing 'name'".into()))
+            .and_then(|v| {
+                v.extract::<String>()
+                    .map_err(|e| GatewayError::Other(e.to_string()))
+            })?;
+        let data_id = file_dict
+            .get_item("data_id")
+            .map_err(py_err)?
+            .map(|v| v.extract::<String>())
+            .transpose()
+            .map_err(py_err)?;
+        let is_ocr = file_dict
+            .get_item("is_ocr")
+            .map_err(py_err)?
+            .map(|v| v.extract::<bool>())
+            .transpose()
+            .map_err(py_err)?;
+        let page_ranges = file_dict
+            .get_item("page_ranges")
+            .map_err(py_err)?
+            .map(|v| v.extract::<String>())
+            .transpose()
+            .map_err(py_err)?;
+        entries.push(crate::types::MinerULocalFileEntry {
+            name,
+            data_id,
+            is_ocr,
+            page_ranges,
+        });
+    }
+
+    let request = crate::types::MinerUBatchUploadUrlRequest {
+        files: entries,
+        model_version,
+        enable_formula,
+        enable_table,
+        language,
+        callback,
+        seed,
+        extra_formats,
+    };
+
+    pyo3_async_runtimes::tokio::future_into_py(py, async move {
+        let result = crate::mineru::create_batch_upload_urls(&client, &token, &request)
+            .await
+            .map_err(PyErr::from)?;
+        Python::attach(|py| {
+            pythonize::pythonize(py, &result)
+                .map(|obj| obj.unbind())
+                .map_err(PyErr::from)
+        })
+    })
+}
+
+#[pyfunction]
+#[pyo3(signature = (file_paths, token, model_version=None, enable_formula=None, enable_table=None, language=None, data_ids=None, is_ocr=None, page_ranges=None, callback=None, seed=None, extra_formats=None, timeout_ms=None, proxy=None))]
+pub fn mineru_upload_local_files<'py>(
+    py: Python<'py>,
+    file_paths: Vec<String>,
+    token: String,
+    model_version: Option<String>,
+    enable_formula: Option<bool>,
+    enable_table: Option<bool>,
+    language: Option<String>,
+    data_ids: Option<Vec<String>>,
+    is_ocr: Option<bool>,
+    page_ranges: Option<String>,
+    callback: Option<String>,
+    seed: Option<String>,
+    extra_formats: Option<Vec<String>>,
+    timeout_ms: Option<u64>,
+    proxy: Option<String>,
+) -> PyResult<Bound<'py, PyAny>> {
+    let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
+    if let Some(ref ids) = data_ids {
+        if ids.len() != file_paths.len() {
+            return Err(PyErr::from(GatewayError::Other(format!(
+                "data_ids length {} does not match file_paths length {}",
+                ids.len(),
+                file_paths.len()
+            ))));
+        }
+    }
+
+    let entries = file_paths
+        .iter()
+        .enumerate()
+        .map(|(idx, path)| {
+            let name = std::path::Path::new(path)
+                .file_name()
+                .and_then(|value| value.to_str())
+                .ok_or_else(|| {
+                    GatewayError::Other(format!("local file path has no valid filename: {path}"))
+                })?
+                .to_owned();
+            let data_id = data_ids.as_ref().map(|ids| ids[idx].clone());
+            Ok(crate::types::MinerULocalFileEntry {
+                name,
+                data_id,
+                is_ocr,
+                page_ranges: page_ranges.clone(),
+            })
+        })
+        .collect::<Result<Vec<_>, GatewayError>>()?;
+
+    let request = crate::types::MinerUBatchUploadUrlRequest {
+        files: entries,
+        model_version,
+        enable_formula,
+        enable_table,
+        language,
+        callback,
+        seed,
+        extra_formats,
+    };
+
+    pyo3_async_runtimes::tokio::future_into_py(py, async move {
+        let result = crate::mineru::upload_local_files(&client, &token, &request, &file_paths)
+            .await
+            .map_err(PyErr::from)?;
+        Python::attach(|py| {
+            pythonize::pythonize(py, &result)
+                .map(|obj| obj.unbind())
+                .map_err(PyErr::from)
+        })
+    })
+}
+
+#[pyfunction]
+#[pyo3(signature = (upload_url, file_path, content_type=None, timeout_ms=None, proxy=None))]
+pub fn mineru_upload_local_file<'py>(
+    py: Python<'py>,
+    upload_url: String,
+    file_path: String,
+    content_type: Option<String>,
+    timeout_ms: Option<u64>,
+    proxy: Option<String>,
+) -> PyResult<Bound<'py, PyAny>> {
+    let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
+
+    pyo3_async_runtimes::tokio::future_into_py(py, async move {
+        let result = crate::mineru::upload_local_file(
+            &client,
+            &upload_url,
+            &file_path,
+            content_type.as_deref(),
+        )
+        .await
+        .map_err(PyErr::from)?;
         Python::attach(|py| {
             pythonize::pythonize(py, &result)
                 .map(|obj| obj.unbind())

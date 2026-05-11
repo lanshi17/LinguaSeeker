@@ -19,6 +19,10 @@ def test_net_io_facade_exports_provider_functions():
         "mineru_get_result",
         "mineru_batch_submit",
         "mineru_batch_result",
+        "mineru_create_upload_url",
+        "mineru_create_batch_upload_urls",
+        "mineru_upload_local_file",
+        "mineru_upload_local_files",
     ):
         assert hasattr(net_io, name)
 

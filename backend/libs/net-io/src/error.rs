@@ -8,6 +8,9 @@ pub enum GatewayError {
     #[error("JSON parse error: {0}")]
     Json(#[from] serde_json::Error),
 
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
+
     #[error("URL parse error: {0}")]
     Url(#[from] url::ParseError),
 
@@ -25,6 +28,7 @@ impl From<GatewayError> for pyo3::PyErr {
                 pyo3::exceptions::PyConnectionError::new_err(err.to_string())
             }
             GatewayError::Json(err) => pyo3::exceptions::PyValueError::new_err(err.to_string()),
+            GatewayError::Io(err) => pyo3::exceptions::PyOSError::new_err(err.to_string()),
             GatewayError::Url(err) => pyo3::exceptions::PyValueError::new_err(err.to_string()),
             GatewayError::Provider { provider, message } => {
                 pyo3::exceptions::PyRuntimeError::new_err(format!(
