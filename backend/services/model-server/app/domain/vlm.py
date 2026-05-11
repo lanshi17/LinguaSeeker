@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
+from typing import TypedDict
 
 import vllm
 from mineru_vl_utils import MinerUClient, MinerULogitsProcessor
@@ -15,13 +16,23 @@ from app.utils.logger import get_logger
 logger = get_logger()
 
 
+class MinerUPageDict(TypedDict, total=False):
+    """Shape of a page dict returned by MinerUClient.two_step_extract()."""
+
+    page_number: int
+    markdown: str
+    figures: list[dict]
+    tables: list[dict]
+
+
 @dataclass
 class VLMInferResult:
-    """Structured result from VLM inference (I1: replaces bare dict)."""
+    """Structured result from VLM inference."""
 
     id: str
     full_markdown: str
-    pages: list[dict] = field(default_factory=list)
+    pages: list[MinerUPageDict] = field(default_factory=list)
+    # Opaque upstream data from MinerUClient — no fixed schema
     metadata: dict = field(default_factory=lambda: {"total_pages": 1})
 
 

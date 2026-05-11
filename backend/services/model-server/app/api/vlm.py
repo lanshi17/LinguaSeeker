@@ -9,10 +9,12 @@ from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, HTTPException
 from PIL import Image
+from pydantic import ValidationError
 
 from app.models import (
     VLMExtractRequest,
     VLMExtractResponse,
+    VLMMessage,
     VLMPageContent,
     VLMDocumentMetadata,
     VLMUsage,
@@ -20,6 +22,8 @@ from app.models import (
     VLMTableStructure,
 )
 from app.utils.logger import get_logger
+
+from app.domain.vlm import VLMInferenceError
 
 if TYPE_CHECKING:
     from app.domain.vlm import VLMService
@@ -35,21 +39,16 @@ def bind(service: VLMService) -> None:
     _service = service
 
 
-def _extract_images_from_messages(messages: list) -> list[Image.Image]:
+def _extract_images_from_messages(messages: list[VLMMessage]) -> list[Image.Image]:
     """Extract PIL Images from OpenAI multimodal message format."""
     images = []
     for msg in messages:
-        content = msg.content if hasattr(msg, "content") else msg.get("content", "")
-        if not isinstance(content, list):
+        if not isinstance(msg.content, list):
             continue
-        for part in content:
-            part_type = part.type if hasattr(part, "type") else part.get("type")
-            if part_type != "image_url":
+        for part in msg.content:
+            if part.type != "image_url" or part.image_url is None:
                 continue
-            image_url = part.image_url if hasattr(part, "image_url") else part.get("image_url")
-            if image_url is None:
-                continue
-            url = image_url.url if hasattr(image_url, "url") else image_url.get("url", "")
+            url = part.image_url.url
             if url.startswith("data:"):
                 match = re.match(r"data:image/\w+;base64,(.+)", url)
                 if match:
@@ -64,7 +63,7 @@ def _parse_figure(raw: dict) -> VLMFigurePosition:
     """Parse a raw dict into VLMFigurePosition with validation."""
     try:
         return VLMFigurePosition.model_validate(raw)
-    except Exception as exc:
+    except ValidationError as exc:
         logger.warning("Malformed figure data: {raw} — {exc}", raw=raw, exc=exc)
         raise HTTPException(status_code=502, detail=f"Upstream returned malformed figure data: {exc}") from exc
 
@@ -73,7 +72,7 @@ def _parse_table(raw: dict) -> VLMTableStructure:
     """Parse a raw dict into VLMTableStructure with validation."""
     try:
         return VLMTableStructure.model_validate(raw)
-    except Exception as exc:
+    except ValidationError as exc:
         logger.warning("Malformed table data: {raw} — {exc}", raw=raw, exc=exc)
         raise HTTPException(status_code=502, detail=f"Upstream returned malformed table data: {exc}") from exc
 
@@ -108,6 +107,9 @@ def chat_completions(req: VLMExtractRequest):
 
     try:
         result = _service.infer(image=images[0])
+    except VLMInferenceError as exc:
+        logger.error("VLM inference failed (upstream): {exc}", exc=exc)
+        raise HTTPException(status_code=502, detail=f"VLM upstream failure: {exc}") from exc
     except Exception as exc:
         logger.error("VLM inference failed: {exc}", exc=exc)
         raise HTTPException(status_code=500, detail=f"VLM inference failed: {exc}") from exc

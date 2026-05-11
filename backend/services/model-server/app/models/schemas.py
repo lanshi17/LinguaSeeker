@@ -67,7 +67,9 @@ class RerankResponse(BaseModel):
     usage: RerankUsage = Field(default_factory=RerankUsage)
 
 
-# ── Chat / LLM (placeholder for future local LLM) ──────────────────────
+# ── Chat / LLM (placeholder for future local LLM — Task 10) ─────────────
+# These schemas are reserved for a future text-based LLM chat endpoint.
+# Currently unused — VLM extraction uses VLMExtractRequest/Response below.
 
 
 class ChatMessage(BaseModel):
@@ -188,5 +190,6 @@ class VLMExtractResponse(BaseModel):
     metadata: VLMDocumentMetadata = Field(default_factory=VLMDocumentMetadata)
     pages: list[VLMPageContent] = Field(default_factory=list)
     full_markdown: str = ""
+    # OpenAI-compatible passthrough — choice object shape not yet finalized
     choices: list[dict] = Field(default_factory=list)
     usage: VLMUsage = Field(default_factory=VLMUsage)
