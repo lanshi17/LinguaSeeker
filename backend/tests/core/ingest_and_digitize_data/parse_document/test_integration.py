@@ -67,7 +67,14 @@ class TestParseDocumentReal:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("pdf_path,lang", PDF_INVENTORY, ids=[Path(p).name for p, _ in PDF_INVENTORY])
     async def test_mineru(self, service, pdf_path, lang):
-        """Parse each PDF with MinerU and save output."""
+        """Parse each PDF with MinerU and save output.
+
+        Note: MinerU API requires a URL, not a local file path.
+        Skip if the pdf_path is a local file.
+        """
+        if not pdf_path.startswith(("http://", "https://")):
+            pytest.skip("MinerU requires a URL, not a local file path")
+
         result = await service.parse(pdf_path)
 
         assert isinstance(result, ParseResult)
