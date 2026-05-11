@@ -6,6 +6,10 @@ Mark with @pytest.mark.integration to skip in CI.
 from __future__ import annotations
 
 import json
+import socket
+import threading
+from functools import partial
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
 import pytest
@@ -32,6 +36,25 @@ def _collect_pdfs() -> list[tuple[str, str]]:
 
 
 PDF_INVENTORY = _collect_pdfs()
+
+
+def _find_free_port() -> int:
+    """Find a free port on localhost."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("", 0))
+        return s.getsockname()[1]
+
+
+@pytest.fixture(scope="session")
+def file_server():
+    """Start a local HTTP server to serve PDF files for MinerU tests."""
+    port = _find_free_port()
+    handler = partial(SimpleHTTPRequestHandler, directory=str(DOWNLOADS_DIR.parent))
+    server = HTTPServer(("127.0.0.1", port), handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    yield f"http://127.0.0.1:{port}/downloads"
+    server.shutdown()
 
 
 @pytest.fixture
@@ -66,16 +89,21 @@ class TestParseDocumentReal:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("pdf_path,lang", PDF_INVENTORY, ids=[Path(p).name for p, _ in PDF_INVENTORY])
-    async def test_mineru(self, service, pdf_path, lang):
+    async def test_mineru(self, service, pdf_path, lang, file_server):
         """Parse each PDF with MinerU and save output.
 
-        Note: MinerU API requires a URL, not a local file path.
-        Skip if the pdf_path is a local file.
+        Note: MinerU API blocks localhost URLs (regional restriction).
+        Use a public URL for testing.
         """
-        if not pdf_path.startswith(("http://", "https://")):
-            pytest.skip("MinerU requires a URL, not a local file path")
+        # MinerU requires a public URL, not localhost
+        pdf_name = Path(pdf_path).name
+        url = f"{file_server}/{lang}/{pdf_name}"
 
-        result = await service.parse(pdf_path)
+        # Skip if using localhost (MinerU blocks it)
+        if "127.0.0.1" in url or "localhost" in url:
+            pytest.skip("MinerU blocks localhost URLs (regional restriction)")
+
+        result = await service.parse(url)
 
         assert isinstance(result, ParseResult)
         assert result.metadata.total_pages >= 1
@@ -90,11 +118,7 @@ class TestParseDocumentReal:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("pdf_path,lang", PDF_INVENTORY, ids=[Path(p).name for p, _ in PDF_INVENTORY])
     async def test_paddleocr(self, service, pdf_path, lang):
-        """Parse each PDF with PaddleOCR and save output.
-
-        Note: This calls service.parse() which tries MinerU first.
-        To test PaddleOCR directly, we need to call the parser directly.
-        """
+        """Parse each PDF with PaddleOCR and save output."""
         from src.core.ingest_and_digitize_data.parse_document.paddle_parser import PaddleOCRParser
         from src.core.config import get_config
 
