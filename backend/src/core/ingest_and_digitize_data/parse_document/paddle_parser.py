@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from typing import TypedDict
 
 from loguru import logger
@@ -26,6 +27,49 @@ class _PaddleOCRRawResult(TypedDict):
     total_pages: int
     pages: list[_PaddleOCRPageData]
     full_markdown: str
+
+
+def _patch_paddle_inference():
+    """Monkey-patch PaddleStaticRunner to work around PaddlePaddle 3.x OneDNN/PIR crash on newer Intel CPUs.
+
+    The PaddlePaddle 3.x inference engine has a bug where the OneDNN instruction executor
+    crashes with 'ConvertPirAttribute2RuntimeAttribute not support' on certain Intel CPUs.
+    This patch disables the new IR and executor to use the legacy inference path.
+    """
+    os.environ["FLAGS_enable_new_ir"] = "0"
+    os.environ["FLAGS_enable_new_executor"] = "0"
+
+    try:
+        import paddlex.inference.models.runners.paddle_static.runner as runner_mod
+
+        _original_create = runner_mod.PaddleStaticRunner._create
+
+        def _patched_create(self):
+            import paddle
+            paddle_inference = paddle.inference
+
+            model_paths = runner_mod.get_model_paths(self.model_dir, self.model_file_prefix)
+            if "paddle" not in model_paths:
+                raise RuntimeError("No valid PaddlePaddle model found")
+
+            model_file, params_file = model_paths["paddle"]
+            config = paddle_inference.Config(str(model_file), str(params_file))
+            config.disable_gpu()
+            if hasattr(config, "disable_mkldnn"):
+                config.disable_mkldnn()
+            config.set_cpu_math_library_num_threads(4)
+            config.set_optimization_level(0)
+            if hasattr(config, "enable_new_ir"):
+                config.enable_new_ir(False)
+
+            return paddle_inference.create_predictor(config)
+
+        runner_mod.PaddleStaticRunner._create = _patched_create
+    except ImportError:
+        pass
+
+
+_patch_paddle_inference()
 
 
 class PaddleOCRParser(ParserStrategy):
@@ -56,22 +100,27 @@ class PaddleOCRParser(ParserStrategy):
         except ImportError:
             raise PaddleOCRError("PaddleOCR is not installed. Install with: uv add paddleocr")
 
-        ocr = PaddleOCR(use_angle_cls=True, show_log=False)
+        ocr = PaddleOCR(use_textline_orientation=True)
 
         pages = []
         full_markdown_parts = []
 
-        result = ocr.ocr(pdf_path, cls=True)
+        result = list(ocr.predict(pdf_path))
         if not result:
             raise PaddleOCRError("PaddleOCR returned empty result for the PDF")
         page_number = 1
 
         for page_result in result:
             lines = []
-            if page_result:
+            if hasattr(page_result, "rec_texts"):
+                lines = list(page_result.rec_texts)
+            elif isinstance(page_result, dict) and "rec_texts" in page_result:
+                lines = page_result["rec_texts"]
+            elif isinstance(page_result, list):
                 for line in page_result:
-                    text = line[1][0]
-                    lines.append(text)
+                    if isinstance(line, (list, tuple)) and len(line) >= 2:
+                        text = line[1][0] if isinstance(line[1], (list, tuple)) else str(line[1])
+                        lines.append(text)
 
             markdown = "\n".join(lines)
             full_markdown_parts.append(markdown)
