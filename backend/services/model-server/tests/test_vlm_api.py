@@ -9,12 +9,12 @@ from PIL import Image
 
 def _make_test_client():
     """Create a test client with VLM route wired up."""
-    with patch("app.domain.llm.vllm.LLM"), \
-         patch("app.domain.llm.MinerUClient"):
-        from app.domain.llm import LLMService
+    with patch("app.domain.vlm.vllm.LLM"), \
+         patch("app.domain.vlm.MinerUClient"):
+        from app.domain.vlm import VLMService
         from app.api import vlm
 
-        svc = LLMService(model_id="test-model")
+        svc = VLMService(model_id="test-model")
         svc._ready = True  # Skip actual loading
         svc._client = MagicMock()
         svc._client.two_step_extract.return_value = (
@@ -57,6 +57,21 @@ def test_vlm_extract_with_image():
     })
     assert resp.status_code == 200
     svc._client.two_step_extract.assert_called_once()
+
+
+def test_vlm_multi_image_returns_400():
+    """Multiple images should be rejected (I4)."""
+    client, _ = _make_test_client()
+    img_b64 = _make_test_image_b64()
+    resp = client.post("/v1/chat/completions", json={
+        "model": "test",
+        "messages": [{"role": "user", "content": [
+            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_b64}"}},
+            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_b64}"}},
+        ]}],
+    })
+    assert resp.status_code == 400
+    assert "Multiple images" in resp.json()["detail"]
 
 
 def test_vlm_not_available():

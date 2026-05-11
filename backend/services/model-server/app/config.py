@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -21,7 +22,7 @@ class Settings(BaseSettings):
     log_level: str = "info"
 
     # HuggingFace cache
-    hf_home: str = "/home/yangzs/.cache/huggingface/hub"
+    hf_home: str = os.path.expanduser("~/.cache/huggingface/hub")
 
     # Embedding model
     embedding_model_id: str = "Qwen/Qwen3-Embedding-0.6B"

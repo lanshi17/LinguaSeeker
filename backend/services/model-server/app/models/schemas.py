@@ -141,11 +141,32 @@ class VLMPageContent(BaseModel):
     tables: list[VLMTableStructure] = Field(default_factory=list)
 
 
+class VLMImageUrl(BaseModel):
+    """Image URL in OpenAI multimodal content part."""
+
+    url: str
+
+
+class VLMContentPart(BaseModel):
+    """A single content part in an OpenAI multimodal message."""
+
+    type: str  # "text" | "image_url"
+    text: str | None = None
+    image_url: VLMImageUrl | None = None
+
+
+class VLMMessage(BaseModel):
+    """OpenAI multimodal chat message."""
+
+    role: str
+    content: str | list[VLMContentPart]
+
+
 class VLMExtractRequest(BaseModel):
     """OpenAI-compatible multimodal chat request for VLM extraction."""
 
     model: str = ""
-    messages: list[dict]  # OpenAI multimodal message format
+    messages: list[VLMMessage]
     max_tokens: int = 4096
     temperature: float = 0.0
 
