@@ -256,23 +256,113 @@ def _parse_zip_content(extract_dir: Path) -> ParseResult:
     raise MinerUAPIError(f"No parseable content in zip. Files: {list(extract_dir.rglob('*'))}")
 
 
+def _html_table_to_markdown(html: str) -> str:
+    """Convert HTML <table> to markdown table format."""
+    from html.parser import HTMLParser
+
+    class _TableParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.rows: list[list[str]] = []
+            self._current_row: list[str] = []
+            self._current_cell = ""
+            self._in_cell = False
+
+        def handle_starttag(self, tag, attrs):
+            if tag in ("td", "th"):
+                self._in_cell = True
+                self._current_cell = ""
+            elif tag == "tr":
+                self._current_row = []
+
+        def handle_endtag(self, tag):
+            if tag in ("td", "th"):
+                self._in_cell = False
+                self._current_row.append(self._current_cell.strip())
+            elif tag == "tr" and self._current_row:
+                self.rows.append(self._current_row)
+
+        def handle_data(self, data):
+            if self._in_cell:
+                self._current_cell += data
+
+    parser = _TableParser()
+    parser.feed(html)
+
+    if not parser.rows:
+        return ""
+
+    col_count = max(len(row) for row in parser.rows)
+    for row in parser.rows:
+        while len(row) < col_count:
+            row.append("")
+
+    lines = []
+    lines.append("| " + " | ".join(parser.rows[0]) + " |")
+    lines.append("| " + " | ".join(["---"] * col_count) + " |")
+    for row in parser.rows[1:]:
+        lines.append("| " + " | ".join(row) + " |")
+
+    return "\n".join(lines)
+
+
+def _block_to_markdown(block: dict) -> str:
+    """Convert a single content_list block to markdown."""
+    block_type = block.get("type", "text")
+
+    if block_type == "text":
+        text = block.get("text", "")
+        level = block.get("text_level")
+        if level and isinstance(level, int) and 1 <= level <= 6:
+            return f"{'#' * level} {text}"
+        return text
+
+    if block_type == "image":
+        caption = block.get("image_caption", [])
+        img_path = block.get("img_path", "")
+        caption_text = caption[0] if caption else ""
+        if img_path:
+            return f"![{caption_text}]({img_path})"
+        return caption_text
+
+    if block_type == "table":
+        parts = []
+        caption = block.get("table_caption", [])
+        if caption:
+            parts.append(f"**{caption[0]}**")
+
+        table_body = block.get("table_body", "")
+        if table_body:
+            md_table = _html_table_to_markdown(table_body)
+            if md_table:
+                parts.append(md_table)
+
+        footnote = block.get("table_footnote", [])
+        if footnote:
+            parts.append(f"*{footnote[0]}*")
+
+        return "\n\n".join(parts)
+
+    return ""
+
+
 def _parse_content_list(content_list: list[dict], full_markdown: str) -> ParseResult:
     """Parse MinerU *_content_list.json format.
 
-    Each item has: type, text, text_level, bbox, page_idx, etc.
-    Groups items by page_idx to build per-page markdown.
+    Handles text, image, and table block types.
+    Groups by page_idx, preserves block order within each page.
     """
     from collections import defaultdict
 
-    pages_map: dict[int, list[str]] = defaultdict(list)
+    pages_map: dict[int, list[dict]] = defaultdict(list)
     for item in content_list:
+        block_type = item.get("type", "text")
+        if block_type == "discarded":
+            continue
         page_idx = item.get("page_idx", 0)
-        text = item.get("text", "")
-        if text:
-            pages_map[page_idx].append(text)
+        pages_map[page_idx].append(item)
 
     if not pages_map:
-        # Fallback to full markdown
         return ParseResult(
             metadata=DocumentMetadata(total_pages=1),
             pages=[PageContent(page_number=1, markdown=full_markdown)],
@@ -281,8 +371,13 @@ def _parse_content_list(content_list: list[dict], full_markdown: str) -> ParseRe
 
     pages = []
     for page_idx in sorted(pages_map.keys()):
-        page_number = page_idx + 1  # page_idx is 0-based
-        markdown = "\n\n".join(pages_map[page_idx])
+        page_number = page_idx + 1
+        parts = []
+        for block in pages_map[page_idx]:
+            md = _block_to_markdown(block)
+            if md:
+                parts.append(md)
+        markdown = "\n\n".join(parts)
         pages.append(PageContent(page_number=page_number, markdown=markdown))
 
     return ParseResult(
