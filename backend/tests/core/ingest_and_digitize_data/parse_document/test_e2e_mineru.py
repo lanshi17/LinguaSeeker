@@ -33,6 +33,9 @@ from src.core.ingest_and_digitize_data.parse_document.exceptions import MinerUAP
 from src.core.ingest_and_digitize_data.parse_document.mineru_local_parser import (
     MinerULocalParser,
 )
+from src.core.ingest_and_digitize_data.parse_document.mineru_parser import (
+    MinerUParser,
+)
 
 DOWNLOADS_DIR = Path(__file__).resolve().parents[4] / "downloads"
 OUTPUT_DIR = Path("/tmp/e2e_output")
@@ -257,39 +260,15 @@ def _parse_zip_content(extract_dir: Path) -> ParseResult:
 
 
 def _parse_content_list(content_list: list[dict], full_markdown: str) -> ParseResult:
-    """Parse MinerU *_content_list.json format.
+    """Parse MinerU *_content_list.json using production code path.
 
-    Each item has: type, text, text_level, bbox, page_idx, etc.
-    Groups items by page_idx to build per-page markdown.
+    Routes through MinerUParser._parse_content_list_json + _build_result
+    to exercise the full production pipeline (including pages_from_raw,
+    _figures_from_page, _tables_from_page).
     """
-    from collections import defaultdict
-
-    pages_map: dict[int, list[str]] = defaultdict(list)
-    for item in content_list:
-        page_idx = item.get("page_idx", 0)
-        text = item.get("text", "")
-        if text:
-            pages_map[page_idx].append(text)
-
-    if not pages_map:
-        # Fallback to full markdown
-        return ParseResult(
-            metadata=DocumentMetadata(total_pages=1),
-            pages=[PageContent(page_number=1, markdown=full_markdown)],
-            parser_used="mineru",
-        )
-
-    pages = []
-    for page_idx in sorted(pages_map.keys()):
-        page_number = page_idx + 1  # page_idx is 0-based
-        markdown = "\n\n".join(pages_map[page_idx])
-        pages.append(PageContent(page_number=page_number, markdown=markdown))
-
-    return ParseResult(
-        metadata=DocumentMetadata(total_pages=len(pages)),
-        pages=pages,
-        parser_used="mineru",
-    )
+    parser = MinerUParser(api_token="dummy", poll_interval=0.1, max_poll_attempts=1)
+    raw = parser._parse_content_list_json(content_list, full_markdown)
+    return parser._build_result(raw)
 
 
 def _parse_pdf_info_json(data: dict, full_markdown: str) -> ParseResult:
