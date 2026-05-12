@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import MagicMock
 
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     FormattedDocument,
