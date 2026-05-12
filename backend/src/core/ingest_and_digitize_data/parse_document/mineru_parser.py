@@ -5,6 +5,8 @@ import asyncio
 import json
 import tempfile
 import zipfile
+from collections import defaultdict
+from html.parser import HTMLParser
 from io import BytesIO
 from pathlib import Path
 from typing import TypedDict
@@ -23,36 +25,40 @@ from .contracts import (
 from .exceptions import MinerUAPIError, MinerUTimeoutError
 
 
+class _TableParser(HTMLParser):
+    """HTML table parser that extracts rows and detects <th> header rows."""
+
+    def __init__(self):
+        super().__init__()
+        self.rows: list[list[str]] = []
+        self.has_th: bool = False
+        self._current_row: list[str] = []
+        self._current_cell = ""
+        self._in_cell = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ("td", "th"):
+            self._in_cell = True
+            self._current_cell = ""
+            if tag == "th":
+                self.has_th = True
+        elif tag == "tr":
+            self._current_row = []
+
+    def handle_endtag(self, tag):
+        if tag in ("td", "th"):
+            self._in_cell = False
+            self._current_row.append(self._current_cell.strip())
+        elif tag == "tr" and self._current_row:
+            self.rows.append(self._current_row)
+
+    def handle_data(self, data):
+        if self._in_cell:
+            self._current_cell += data
+
+
 def _html_table_to_markdown(html: str) -> str:
     """Convert HTML <table> to markdown table format."""
-    from html.parser import HTMLParser
-
-    class _TableParser(HTMLParser):
-        def __init__(self):
-            super().__init__()
-            self.rows: list[list[str]] = []
-            self._current_row: list[str] = []
-            self._current_cell = ""
-            self._in_cell = False
-
-        def handle_starttag(self, tag, attrs):
-            if tag in ("td", "th"):
-                self._in_cell = True
-                self._current_cell = ""
-            elif tag == "tr":
-                self._current_row = []
-
-        def handle_endtag(self, tag):
-            if tag in ("td", "th"):
-                self._in_cell = False
-                self._current_row.append(self._current_cell.strip())
-            elif tag == "tr" and self._current_row:
-                self.rows.append(self._current_row)
-
-        def handle_data(self, data):
-            if self._in_cell:
-                self._current_cell += data
-
     parser = _TableParser()
     parser.feed(html)
 
@@ -71,6 +77,68 @@ def _html_table_to_markdown(html: str) -> str:
         lines.append("| " + " | ".join(row) + " |")
 
     return "\n".join(lines)
+
+
+def _html_table_to_structured(html: str) -> tuple[list[str], list[list[str]]]:
+    """Extract headers and data rows from HTML <table>.
+
+    Returns (headers, rows) where headers is the first row and rows is the rest.
+    """
+    parser = _TableParser()
+    parser.feed(html)
+
+    if not parser.rows:
+        return [], []
+
+    headers = parser.rows[0]
+    rows = parser.rows[1:]
+    return headers, rows
+
+
+def _block_to_markdown(block: dict) -> str:
+    """Convert a single content_list block to markdown."""
+    block_type = block.get("type", "text")
+
+    if block_type == "text":
+        text = block.get("text", "")
+        level = block.get("text_level")
+        if level and isinstance(level, int) and 1 <= level <= 6:
+            return f"{'#' * level} {text}"
+        return text
+
+    if block_type == "image":
+        caption = block.get("image_caption", [])
+        img_path = block.get("img_path", "")
+        caption_text = caption[0] if caption else ""
+        footnote = block.get("image_footnote", [])
+        parts = []
+        if img_path:
+            parts.append(f"![{caption_text}]({img_path})")
+        elif caption_text:
+            parts.append(caption_text)
+        if footnote:
+            parts.append(f"*{footnote[0]}*")
+        return "\n\n".join(parts)
+
+    if block_type == "table":
+        parts = []
+        caption = block.get("table_caption", [])
+        if caption:
+            parts.append(f"**{caption[0]}**")
+
+        table_body = block.get("table_body", "")
+        if table_body:
+            md_table = _html_table_to_markdown(table_body)
+            if md_table:
+                parts.append(md_table)
+
+        footnote = block.get("table_footnote", [])
+        if footnote:
+            parts.append(f"*{footnote[0]}*")
+
+        return "\n\n".join(parts)
+
+    return ""
 
 
 class _MinerUPageData(TypedDict):
@@ -329,8 +397,6 @@ class MinerUParser(ParserStrategy):
 
     def _parse_content_list_json(self, content_list: list[dict], full_markdown: str) -> _MinerURawResult:
         """Parse MinerU *_content_list.json with text, image, table blocks."""
-        from collections import defaultdict
-
         pages_map: dict[int, list[dict]] = defaultdict(list)
         for item in content_list:
             if item.get("type") == "discarded":
@@ -358,38 +424,16 @@ class MinerUParser(ParserStrategy):
             tables: list[dict] = []
             for block in pages_map[page_idx]:
                 block_type = block.get("type", "text")
-                if block_type == "text":
-                    text = block.get("text", "")
-                    level = block.get("text_level")
-                    if level and isinstance(level, int) and 1 <= level <= 6:
-                        parts.append(f"{'#' * level} {text}")
-                    else:
-                        parts.append(text)
-                elif block_type == "image":
+                md = _block_to_markdown(block)
+                if md:
+                    parts.append(md)
+                if block_type == "image":
                     caption = block.get("image_caption", [])
-                    img_path = block.get("img_path", "")
-                    caption_text = caption[0] if caption else ""
-                    if img_path:
-                        parts.append(f"![{caption_text}]({img_path})")
-                    else:
-                        parts.append(caption_text)
-                    figures.append({"index": len(figures) + 1, "caption": caption_text})
+                    figures.append({"index": len(figures) + 1, "caption": caption[0] if caption else ""})
                 elif block_type == "table":
-                    caption = block.get("table_caption", [])
                     table_body = block.get("table_body", "")
-                    footnote = block.get("table_footnote", [])
-                    table_parts: list[str] = []
-                    if caption:
-                        table_parts.append(f"**{caption[0]}**")
-                    if table_body:
-                        md_table = _html_table_to_markdown(table_body)
-                        if md_table:
-                            table_parts.append(md_table)
-                    if footnote:
-                        table_parts.append(f"*{footnote[0]}*")
-                    if table_parts:
-                        parts.append("\n\n".join(table_parts))
-                    tables.append({"index": len(tables) + 1, "headers": [], "rows": []})
+                    headers, rows = _html_table_to_structured(table_body) if table_body else ([], [])
+                    tables.append({"index": len(tables) + 1, "headers": headers, "rows": rows})
 
             page_md = "\n\n".join(parts)
             full_parts.append(page_md)

@@ -1,8 +1,12 @@
 """Unit tests for MinerU content_list.json parsing logic."""
 from __future__ import annotations
 
-from tests.core.ingest_and_digitize_data.parse_document.test_e2e_mineru import (
+from src.core.ingest_and_digitize_data.parse_document.mineru_parser import (
+    _block_to_markdown,
     _html_table_to_markdown,
+    _html_table_to_structured,
+)
+from tests.core.ingest_and_digitize_data.parse_document.test_e2e_mineru import (
     _parse_content_list,
 )
 
@@ -32,6 +36,51 @@ class TestHtmlTableToMarkdown:
         result = _html_table_to_markdown(html)
         # Second row should be padded
         assert "| 1 | 2 |  |" in result
+
+
+class TestHtmlTableToStructured:
+    """Tests for _html_table_to_structured helper."""
+
+    def test_extracts_headers_and_rows(self):
+        html = "<table><tr><td>A</td><td>B</td></tr><tr><td>1</td><td>2</td></tr></table>"
+        headers, rows = _html_table_to_structured(html)
+        assert headers == ["A", "B"]
+        assert rows == [["1", "2"]]
+
+    def test_empty_table(self):
+        headers, rows = _html_table_to_structured("")
+        assert headers == []
+        assert rows == []
+
+    def test_single_row_table(self):
+        html = "<table><tr><td>Only</td></tr></table>"
+        headers, rows = _html_table_to_structured(html)
+        assert headers == ["Only"]
+        assert rows == []
+
+
+class TestBlockToMarkdown:
+    """Tests for _block_to_markdown helper."""
+
+    def test_text_block(self):
+        assert _block_to_markdown({"type": "text", "text": "Hello"}) == "Hello"
+
+    def test_text_block_with_heading(self):
+        assert _block_to_markdown({"type": "text", "text": "Title", "text_level": 2}) == "## Title"
+
+    def test_image_block_with_footnote(self):
+        block = {
+            "type": "image",
+            "img_path": "images/fig.jpg",
+            "image_caption": ["Fig 1"],
+            "image_footnote": ["Source: data"],
+        }
+        result = _block_to_markdown(block)
+        assert "![Fig 1](images/fig.jpg)" in result
+        assert "*Source: data*" in result
+
+    def test_discarded_block_returns_empty(self):
+        assert _block_to_markdown({"type": "discarded", "text": "noise"}) == ""
 
 
 class TestContentListParsing:
@@ -77,6 +126,22 @@ class TestContentListParsing:
         result = _parse_content_list(content_list, "")
         assert "![](images/fig.jpg)" in result.pages[0].markdown
 
+    def test_image_block_with_footnote(self):
+        content_list = [
+            {
+                "type": "image",
+                "img_path": "images/fig.jpg",
+                "image_caption": ["Figure 1"],
+                "image_footnote": ["Source: lab data"],
+                "bbox": [0, 0, 0, 0],
+                "page_idx": 0,
+            }
+        ]
+        result = _parse_content_list(content_list, "")
+        md = result.pages[0].markdown
+        assert "![Figure 1](images/fig.jpg)" in md
+        assert "*Source: lab data*" in md
+
     def test_table_block_produces_markdown_table(self):
         content_list = [
             {
@@ -95,6 +160,25 @@ class TestContentListParsing:
         assert "| A | B |" in page_md
         assert "| 1 | 2 |" in page_md
         assert "*Note: values in mg/dl*" in page_md
+
+    def test_table_block_populates_structured_data(self):
+        """Verify TableStructure has real headers/rows, not empty lists."""
+        content_list = [
+            {
+                "type": "table",
+                "img_path": "images/table.jpg",
+                "table_caption": ["Table 1"],
+                "table_footnote": [],
+                "table_body": "<table><tr><td>A</td><td>B</td></tr><tr><td>1</td><td>2</td></tr></table>",
+                "bbox": [0, 0, 0, 0],
+                "page_idx": 0,
+            }
+        ]
+        result = _parse_content_list(content_list, "")
+        assert len(result.pages[0].tables) == 1
+        table = result.pages[0].tables[0]
+        assert table.headers == ["A", "B"]
+        assert table.rows == [["1", "2"]]
 
     def test_discarded_blocks_skipped(self):
         content_list = [
