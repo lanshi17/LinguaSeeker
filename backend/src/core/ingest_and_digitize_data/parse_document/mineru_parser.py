@@ -23,6 +23,56 @@ from .contracts import (
 from .exceptions import MinerUAPIError, MinerUTimeoutError
 
 
+def _html_table_to_markdown(html: str) -> str:
+    """Convert HTML <table> to markdown table format."""
+    from html.parser import HTMLParser
+
+    class _TableParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.rows: list[list[str]] = []
+            self._current_row: list[str] = []
+            self._current_cell = ""
+            self._in_cell = False
+
+        def handle_starttag(self, tag, attrs):
+            if tag in ("td", "th"):
+                self._in_cell = True
+                self._current_cell = ""
+            elif tag == "tr":
+                self._current_row = []
+
+        def handle_endtag(self, tag):
+            if tag in ("td", "th"):
+                self._in_cell = False
+                self._current_row.append(self._current_cell.strip())
+            elif tag == "tr" and self._current_row:
+                self.rows.append(self._current_row)
+
+        def handle_data(self, data):
+            if self._in_cell:
+                self._current_cell += data
+
+    parser = _TableParser()
+    parser.feed(html)
+
+    if not parser.rows:
+        return ""
+
+    col_count = max(len(row) for row in parser.rows)
+    for row in parser.rows:
+        while len(row) < col_count:
+            row.append("")
+
+    lines = []
+    lines.append("| " + " | ".join(parser.rows[0]) + " |")
+    lines.append("| " + " | ".join(["---"] * col_count) + " |")
+    for row in parser.rows[1:]:
+        lines.append("| " + " | ".join(row) + " |")
+
+    return "\n".join(lines)
+
+
 class _MinerUPageData(TypedDict):
     page_number: int
     markdown: str
@@ -163,32 +213,51 @@ class MinerUParser(ParserStrategy):
 
     def _parse_extracted_content(self, extract_dir: Path) -> _MinerURawResult:
         """Parse extracted zip content into structured result."""
-        # Look for content_list.json or similar
         json_files = list(extract_dir.rglob("*.json"))
         md_files = list(extract_dir.rglob("*.md"))
 
-        # Try to find structured content
-        content_data = None
+        # Priority 1: *_content_list.json (new MinerU format with structured blocks)
+        content_list_files = [f for f in extract_dir.rglob("*_content_list.json")]
+        full_md_path = extract_dir / "full.md"
+        full_markdown = full_md_path.read_text(encoding="utf-8") if full_md_path.exists() else ""
+
+        if content_list_files:
+            try:
+                data = json.loads(content_list_files[0].read_text(encoding="utf-8"))
+                if isinstance(data, list) and data:
+                    return self._parse_content_list_json(data, full_markdown)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                pass
+
+        # Priority 2: layout.json with pdf_info
         for jf in json_files:
             try:
                 data = json.loads(jf.read_text(encoding="utf-8"))
                 if isinstance(data, dict) and "pdf_info" in data:
-                    content_data = data
-                    break
+                    return self._parse_content_json(data, md_files)
                 elif isinstance(data, list) and len(data) > 0:
-                    # Might be content list
                     content_data = {"pages": data}
-                    break
+                    return self._parse_content_json(content_data, md_files)
             except (json.JSONDecodeError, UnicodeDecodeError):
                 continue
 
-        if content_data:
-            return self._parse_content_json(content_data, md_files)
-        elif md_files:
-            # Fallback: use markdown files directly
+        # Priority 3: markdown files
+        if md_files:
             return self._parse_markdown_files(md_files)
-        else:
-            raise MinerUAPIError(f"No parseable content found in zip. Files: {list(extract_dir.rglob('*'))}")
+
+        # Priority 4: full.md only
+        if full_markdown:
+            return _MinerURawResult(
+                state="done",
+                total_pages=1,
+                title=None,
+                authors=[],
+                abstract=None,
+                pages=[_MinerUPageData(page_number=1, markdown=full_markdown, figures=[], tables=[])],
+                full_markdown=full_markdown,
+            )
+
+        raise MinerUAPIError(f"No parseable content found in zip. Files: {list(extract_dir.rglob('*'))}")
 
     def _parse_content_json(self, data: dict, md_files: list[Path]) -> _MinerURawResult:
         """Parse MinerU content_list.json format."""
@@ -256,6 +325,89 @@ class MinerUParser(ParserStrategy):
             abstract=None,
             pages=pages,
             full_markdown="\n\n".join(full_markdown_parts),
+        )
+
+    def _parse_content_list_json(self, content_list: list[dict], full_markdown: str) -> _MinerURawResult:
+        """Parse MinerU *_content_list.json with text, image, table blocks."""
+        from collections import defaultdict
+
+        pages_map: dict[int, list[dict]] = defaultdict(list)
+        for item in content_list:
+            if item.get("type") == "discarded":
+                continue
+            page_idx = item.get("page_idx", 0)
+            pages_map[page_idx].append(item)
+
+        if not pages_map:
+            return _MinerURawResult(
+                state="done",
+                total_pages=1,
+                title=None,
+                authors=[],
+                abstract=None,
+                pages=[_MinerUPageData(page_number=1, markdown=full_markdown, figures=[], tables=[])],
+                full_markdown=full_markdown,
+            )
+
+        pages: list[_MinerUPageData] = []
+        full_parts: list[str] = []
+        for page_idx in sorted(pages_map.keys()):
+            page_number = page_idx + 1
+            parts: list[str] = []
+            figures: list[dict] = []
+            tables: list[dict] = []
+            for block in pages_map[page_idx]:
+                block_type = block.get("type", "text")
+                if block_type == "text":
+                    text = block.get("text", "")
+                    level = block.get("text_level")
+                    if level and isinstance(level, int) and 1 <= level <= 6:
+                        parts.append(f"{'#' * level} {text}")
+                    else:
+                        parts.append(text)
+                elif block_type == "image":
+                    caption = block.get("image_caption", [])
+                    img_path = block.get("img_path", "")
+                    caption_text = caption[0] if caption else ""
+                    if img_path:
+                        parts.append(f"![{caption_text}]({img_path})")
+                    else:
+                        parts.append(caption_text)
+                    figures.append({"index": len(figures) + 1, "caption": caption_text})
+                elif block_type == "table":
+                    caption = block.get("table_caption", [])
+                    table_body = block.get("table_body", "")
+                    footnote = block.get("table_footnote", [])
+                    table_parts: list[str] = []
+                    if caption:
+                        table_parts.append(f"**{caption[0]}**")
+                    if table_body:
+                        md_table = _html_table_to_markdown(table_body)
+                        if md_table:
+                            table_parts.append(md_table)
+                    if footnote:
+                        table_parts.append(f"*{footnote[0]}*")
+                    if table_parts:
+                        parts.append("\n\n".join(table_parts))
+                    tables.append({"index": len(tables) + 1, "headers": [], "rows": []})
+
+            page_md = "\n\n".join(parts)
+            full_parts.append(page_md)
+            pages.append(_MinerUPageData(
+                page_number=page_number,
+                markdown=page_md,
+                figures=figures,
+                tables=tables,
+            ))
+
+        return _MinerURawResult(
+            state="done",
+            total_pages=len(pages),
+            title=None,
+            authors=[],
+            abstract=None,
+            pages=pages,
+            full_markdown="\n\n".join(full_parts),
         )
 
     def _build_result(self, data: _MinerURawResult) -> ParseResult:
