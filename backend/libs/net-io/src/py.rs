@@ -279,6 +279,7 @@ async fn execute_provider(
 
 // ── MinerU API functions ──────────────────────────────────────────────
 
+#[allow(clippy::too_many_arguments)]
 #[pyfunction]
 #[pyo3(signature = (url, token, model_version=None, is_ocr=None, enable_formula=None, enable_table=None, language=None, data_id=None, page_ranges=None, no_cache=None, cache_tolerance=None, timeout_ms=None, proxy=None))]
 pub fn mineru_create_task<'py>(
@@ -346,6 +347,7 @@ pub fn mineru_get_result<'py>(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 #[pyfunction]
 #[pyo3(signature = (files, token, model_version=None, enable_formula=None, enable_table=None, language=None, no_cache=None, cache_tolerance=None, timeout_ms=None, proxy=None))]
 pub fn mineru_batch_submit<'py>(
@@ -444,6 +446,7 @@ pub fn mineru_batch_result<'py>(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 #[pyfunction]
 #[pyo3(signature = (filename, token, content_type=None, model_version=None, is_ocr=None, enable_formula=None, enable_table=None, language=None, data_id=None, page_ranges=None, no_cache=None, cache_tolerance=None, timeout_ms=None, proxy=None))]
 pub fn mineru_create_upload_url<'py>(
@@ -490,6 +493,7 @@ pub fn mineru_create_upload_url<'py>(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 #[pyfunction]
 #[pyo3(signature = (files, token, model_version=None, enable_formula=None, enable_table=None, language=None, callback=None, seed=None, extra_formats=None, timeout_ms=None, proxy=None))]
 pub fn mineru_create_batch_upload_urls<'py>(
@@ -567,6 +571,7 @@ pub fn mineru_create_batch_upload_urls<'py>(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 #[pyfunction]
 #[pyo3(signature = (file_paths, token, model_version=None, enable_formula=None, enable_table=None, language=None, data_ids=None, is_ocr=None, page_ranges=None, callback=None, seed=None, extra_formats=None, timeout_ms=None, proxy=None))]
 pub fn mineru_upload_local_files<'py>(
@@ -587,14 +592,14 @@ pub fn mineru_upload_local_files<'py>(
     proxy: Option<String>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
-    if let Some(ref ids) = data_ids {
-        if ids.len() != file_paths.len() {
-            return Err(PyErr::from(GatewayError::Other(format!(
-                "data_ids length {} does not match file_paths length {}",
-                ids.len(),
-                file_paths.len()
-            ))));
-        }
+    if let Some(ref ids) = data_ids
+        && ids.len() != file_paths.len()
+    {
+        return Err(PyErr::from(GatewayError::Other(format!(
+            "data_ids length {} does not match file_paths length {}",
+            ids.len(),
+            file_paths.len()
+        ))));
     }
 
     let entries = file_paths
@@ -654,16 +659,11 @@ pub fn mineru_upload_local_file<'py>(
     let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
 
     pyo3_async_runtimes::tokio::future_into_py(py, async move {
-        let result = crate::mineru::upload_local_file(
-            &client,
-            &upload_url,
-            &file_path,
-            content_type.as_deref(),
-        )
-        .await
-        .map_err(PyErr::from)?;
+        crate::mineru::upload_local_file(&client, &upload_url, &file_path, content_type.as_deref())
+            .await
+            .map_err(PyErr::from)?;
         Python::attach(|py| {
-            pythonize::pythonize(py, &result)
+            pythonize::pythonize(py, &serde_json::json!({"ok": true}))
                 .map(|obj| obj.unbind())
                 .map_err(PyErr::from)
         })
