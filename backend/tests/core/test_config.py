@@ -1,10 +1,7 @@
-"""Tests for PaddleOCR config in Settings."""
+"""Tests for model server config in Settings."""
 from src.core.config import Settings
 
 
-def test_paddle_config_defaults():
+def test_model_server_url_default():
     settings = Settings()
-    assert hasattr(settings, "paddle")
-    assert settings.paddle.model_path == ""
-    assert settings.paddle.use_gpu is False
-    assert settings.paddle.lang == "en"
+    assert settings.model_server_url == "http://localhost:8001"

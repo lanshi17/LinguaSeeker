@@ -1,6 +1,6 @@
 # parse_document
 
-> PDF to structured Markdown conversion with dual-engine parsing (MinerU primary, PaddleOCR fallback).
+> PDF to structured Markdown conversion using MinerU VLM via model-server.
 
 ## Quick Start
 
@@ -9,15 +9,12 @@ from src.core.ingest_and_digitize_data.parse_document import ParseDocumentServic
 from src.core.config import get_config
 
 cfg = get_config()
-service = ParseDocumentService(
-    mineru_api_token=cfg.mineru.api_token,
-    paddle_model_path=cfg.paddle.model_path,
-)
+service = ParseDocumentService(model_server_url=cfg.model_server_url)
 
 result = await service.parse("https://example.com/paper.pdf")
 print(result.full_markdown)        # Full document as Markdown
 print(result.metadata.total_pages) # Page count
-print(result.parser_used)          # "mineru" or "paddleocr"
+print(result.parser_used)          # "mineru"
 ```
 
 ## Architecture
@@ -25,18 +22,13 @@ print(result.parser_used)          # "mineru" or "paddleocr"
 ```
 caller
   -> ParseDocumentService          # public entry point
-       -> ParserFactory            # strategy selection + fallback
-            -> MinerUParser        # primary: HTTP API via rust_io.net
-            -> PaddleOCRParser     # fallback: local model via asyncio.to_thread
+       -> ParserFactory            # delegates to MinerULocalParser
+            -> MinerULocalParser   # PDF -> images -> model-server VLM
        -> rust_io.files            # file I/O (write MD, dedup)
 
 Data flow:
-  PDF URL -> [MinerU API | PaddleOCR] -> ParseResult
-                                            |
-                                     +------+------+
-                                     |             |
-                               .metadata      .pages[]
-                               .full_markdown  .pages[].markdown
+  PDF -> PyMuPDF (pages as PIL Images) -> model-server /v1/chat/completions
+      -> VLMExtractResponse -> ParseResult
 ```
 
 ## Public API
@@ -45,9 +37,9 @@ Data flow:
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `__init__` | `(mineru_api_token: str, paddle_model_path: str = "")` | Create service with parser credentials |
-| `parse` | `async (pdf_url: str) -> ParseResult` | Parse PDF, return structured result |
-| `parse_and_save` | `async (pdf_url: str, output_dir: str) -> ParseResult` | Parse + write `output.md` and `metadata.json` |
+| `__init__` | `(model_server_url: str = "http://localhost:8001")` | Create service |
+| `parse` | `async (pdf_path: str) -> ParseResult` | Parse PDF, return structured result |
+| `parse_and_save` | `async (pdf_path: str, output_dir: str) -> ParseResult` | Parse + write `output.md` and `metadata.json` |
 | `check_duplicate` | `async (file_path: str, known_hashes: list[str]) -> dict` | SHA-256 dedup check via files_io |
 
 ### ParseResult
@@ -57,7 +49,7 @@ Data flow:
 | `metadata` | `DocumentMetadata` | Page count, title, authors, abstract |
 | `pages` | `list[PageContent]` | Per-page markdown, figures, tables |
 | `full_markdown` | `str` | Auto-derived from `pages` if not provided |
-| `parser_used` | `str` | `"mineru"`, `"paddleocr"`, or `"unknown"` |
+| `parser_used` | `str` | `"mineru"` or `"unknown"` |
 
 ### DocumentMetadata
 
@@ -84,30 +76,19 @@ Data flow:
 | `ParseDocumentError` | `Exception` | — |
 | `MinerUAPIError` | `ParseDocumentError` | `status_code: int \| None` |
 | `MinerUTimeoutError` | `ParseDocumentError` | `timeout: float` |
-| `PaddleOCRError` | `ParseDocumentError` | — |
 | `ParserExhaustedError` | `ParseDocumentError` | `errors: dict[str, Exception]` |
 
 ## Internal Design
 
-### Strategy Pattern
+### MinerULocalParser
 
-`ParserStrategy` (ABC) defines the interface. Concrete implementations:
-- `MinerUParser` — calls `rust_io.net.mineru_create_task` + `rust_io.net.mineru_get_result` (async task-based API with polling)
-- `PaddleOCRParser` — runs `paddleocr.ocr()` in a thread via `asyncio.to_thread` (CPU-bound)
+Converts each PDF page to a PIL Image via PyMuPDF (`fitz`), then sends it as a base64-encoded multimodal message to the model-server's `/v1/chat/completions` endpoint. The model-server runs `opendatalab/MinerU2.5-Pro-2604-1.2B` via vllm + MinerUClient (two-step extraction: structure detection then content extraction).
 
-### Fallback Logic
-
-`ParserFactory.parse()` tries parsers in priority order (MinerU first). On failure, logs warning and tries next. If all fail, raises `ParserExhaustedError` with both errors attached.
-
-### MinerU Polling
-
-MinerU is an async task API. `MinerUParser`:
-1. Creates task via `mineru_create_task(url, token)` -> gets `task_id`
-2. Polls `mineru_get_result(task_id, token)` every `poll_interval` seconds
-3. Handles states: `pending`, `running`, `converting` -> continue; `done` -> return; `failed` -> raise
-4. Times out after `max_poll_attempts * poll_interval` seconds (default: 300s)
-
-All HTTP I/O goes through the Rust `net-io` crate via `rust_io.net`.
+Page-by-page extraction:
+1. `_pdf_to_images(pdf_path, dpi)` — PyMuPDF PDF-to-PIL conversion
+2. `_image_to_base64(image)` — PIL Image to base64 PNG
+3. `_extract_page(client, page_number, image)` — POST to model-server, parse response
+4. Results aggregated into single `ParseResult`
 
 ### Full Markdown Auto-Derivation
 
@@ -132,28 +113,24 @@ for page in result.pages:
 
 ```python
 result = await service.parse_and_save(
-    pdf_url="https://example.com/paper.pdf",
+    pdf_path="https://example.com/paper.pdf",
     output_dir="/tmp/output",
 )
 # Creates: /tmp/output/output.md, /tmp/output/metadata.json
 ```
 
-### Handle errors with fallback awareness
+### Handle errors
 
 ```python
 from src.core.ingest_and_digitize_data.parse_document import (
     ParseDocumentService,
-    ParserExhaustedError,
     MinerUAPIError,
 )
 
 try:
-    result = await service.parse(pdf_url)
+    result = await service.parse(pdf_path)
 except MinerUAPIError as e:
-    print(f"MinerU failed (status={e.status_code}), will retry with PaddleOCR")
-    # Factory already tried PaddleOCR; this means both failed
-except ParserExhaustedError as e:
-    print(f"All parsers failed: {e.errors}")
+    print(f"MinerU failed (status={e.status_code})")
 ```
 
 ### Dedup check before parsing
@@ -164,50 +141,24 @@ if dup["is_duplicate"]:
     print("Already processed, skipping")
 ```
 
-## Extension Guide
-
-### Adding a new parser
-
-1. Create `new_parser.py` implementing `ParserStrategy`:
-   ```python
-   from .base import ParserStrategy
-   from .contracts import ParseResult
-
-   class NewParser(ParserStrategy):
-       @property
-       def name(self) -> str:
-           return "newparser"
-
-       async def parse(self, pdf_path: str) -> ParseResult:
-           # implementation
-           ...
-   ```
-
-2. Register in `ParserFactory.__init__` and `parsers` property.
-3. Add error class to `exceptions.py` if needed.
-4. Update `ParserExhaustedError` to track the new parser's errors.
-
-### Configuration
+## Configuration
 
 Environment variables (loaded via `src.core.config`):
 
 | Variable | Config field | Default |
 |----------|-------------|---------|
-| `MINERU_API_TOKEN` | `cfg.mineru.api_token` | `""` |
-| `MINERU_TIMEOUT` | `cfg.mineru.timeout` | `300` |
-| `PADDLE_MODEL_PATH` | `cfg.paddle.model_path` | `""` |
-| `PADDLE_USE_GPU` | `cfg.paddle.use_gpu` | `False` |
-| `PADDLE_LANG` | `cfg.paddle.lang` | `"en"` |
+| `MODEL_SERVER_URL` | `cfg.model_server_url` | `"http://localhost:8001"` |
 
 ## Dependencies
 
 | Dependency | Purpose |
 |------------|---------|
-| `rust_io.net` | MinerU HTTP API calls (Rust PyO3 extension) |
-| `rust_io.files` | File I/O, SHA-256 dedup (Rust PyO3 extension) |
-| `paddleocr` | Local OCR model (lazy import in PaddleOCRParser) |
+| `httpx` | HTTP client for model-server requests |
+| `pymupdf` | PDF-to-image conversion (PyMuPDF) |
+| `Pillow` | PIL Image handling |
 | `pydantic` | Data contracts with validation |
 | `loguru` | Structured logging |
+| `rust_io.files` | File I/O, SHA-256 dedup (Rust PyO3 extension) |
 
 ## Testing
 
@@ -217,7 +168,7 @@ cd backend
 # Unit tests (mocked, no external services)
 uv run pytest tests/core/ingest_and_digitize_data/parse_document/ -v
 
-# Integration tests (requires MinerU API key or PaddleOCR model)
+# Integration tests (requires model-server on port 8001)
 uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_integration.py -v -m integration
 
 # Lint

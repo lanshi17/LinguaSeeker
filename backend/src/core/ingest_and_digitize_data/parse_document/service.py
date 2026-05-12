@@ -14,15 +14,8 @@ from .parser_factory import ParserFactory
 class ParseDocumentService:
     """High-level service for PDF parsing with file I/O delegation."""
 
-    def __init__(
-        self,
-        model_server_url: str = "http://localhost:8001",
-        paddle_model_path: str = "",
-    ):
-        self._factory = ParserFactory(
-            model_server_url=model_server_url,
-            paddle_model_path=paddle_model_path,
-        )
+    def __init__(self, model_server_url: str = "http://localhost:8001"):
+        self._factory = ParserFactory(model_server_url=model_server_url)
 
     async def parse(self, pdf_path: str) -> ParseResult:
         """Parse a PDF file and return structured results.
