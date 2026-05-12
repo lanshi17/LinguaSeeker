@@ -9,3 +9,4 @@
 [2026-05-11] Implemented MinerU local file upload in net-io — added put_bytes client, upload URL creation (single/batch), local file upload via pre-signed URLs, 4 new PyO3 pyfunctions, registered in rust-io, with unit tests and updated READMEs [completed]
 [2026-05-11] parse_document integration test with real PDFs by language [done]
 [2026-05-12] Upgraded PaddleOCR to 3.5.0 + PaddlePaddle 3.3.1 with OneDNN workaround for Intel 14th gen CPUs — 9/9 PaddleOCR integration tests passing [done]
+[2026-05-12] MinerU E2E tests — API mode (upload+batch poll) + Local mode (model-server VLM) with 9 real PDFs across 4 languages, output to /tmp/e2e_output/ [done]
