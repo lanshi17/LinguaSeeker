@@ -28,17 +28,22 @@ Format-first flow: normalize source markdown → detect language → route → m
 ```
 backend/src/core/cross_lingual_process_and_extract_evidence/
 ├── __init__.py
-├── contracts.py               # All data types (Pydantic models, dataclasses)
-├── workflow.py                # LangGraph pipeline orchestration + public service (no translation logic)
+├── contracts.py               # Pydantic PipelineState + all data types
+├── config_context.py          # Typed TranslationConfigContext — single injection point
+├── router.py                  # Independent LanguageRouter — decoupled from orchestrator
+├── middleware.py              # LangSmith @traceable + loguru structured logging
+├── workflow.py                # Pure orchestrator — graph wiring + public API (zero business logic)
 │
 ├── format/                    # Formatting sub-package
 │   ├── __init__.py
-│   ├── formatter.py           # Source markdown normalization + bbox tracking
+│   ├── base.py                # ABC: BaseFormatter interface
+│   ├── formatter.py           # MarkdownFormatter implementation
 │   └── segmenter.py           # Token-budgeted text segmentation (shared by format + translate)
 │
 └── translate/                 # Translation sub-package
     ├── __init__.py
-    ├── translator.py          # Multi-stage translation engine (terminology → structure → draft → polish → review)
+    ├── base.py                # ABC: BaseTranslator interface
+    ├── translator.py          # MultiStageTranslator implementation
     ├── prompts.py             # LLM prompt templates (inline)
     ├── language_detector.py   # Language detection + skip logic
     └── validator.py           # Translation quality validation + assessment
@@ -846,6 +851,25 @@ Expected: FAIL with ModuleNotFoundError
 **Step 3: Write minimal implementation**
 
 ```python
+# backend/src/core/cross_lingual_process_and_extract_evidence/format/base.py
+"""Interface for document formatters — Clean Architecture boundary."""
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List
+
+from ..contracts import FormattedDocument
+
+
+class BaseFormatter(ABC):
+    """Abstract formatter interface. Swappable for testing or alternative strategies."""
+
+    @abstractmethod
+    def format(self, pages: List[Dict[str, Any]]) -> FormattedDocument:
+        ...
+```
+
+```python
 # backend/src/core/cross_lingual_process_and_extract_evidence/format/formatter.py
 """Source document formatting and normalization with bbox tracking."""
 from __future__ import annotations
@@ -856,6 +880,7 @@ from typing import Any, Dict, List, Optional
 from loguru import logger
 
 from ..contracts import FormattedDocument, SentenceRegion
+from .base import BaseFormatter
 from .segmenter import estimate_tokens, segment_text
 
 
@@ -978,6 +1003,13 @@ def format_markdown(
         sentences=sentences,
         metadata={"page_count": len(pages)},
     )
+
+
+class MarkdownFormatter(BaseFormatter):
+    """Concrete formatter implementing the BaseFormatter interface."""
+
+    def format(self, pages: List[Dict[str, Any]]) -> FormattedDocument:
+        return format_markdown(pages)
 ```
 
 **Step 4: Run test to verify it passes**
@@ -1120,13 +1152,14 @@ git commit -m "feat(cross-lingual): add translation quality validator"
 
 ---
 
-### Task 7: Multi-Stage Translation Engine
+### Task 7: Multi-Stage Translation Engine (with BaseTranslator ABC)
 
 **Files:**
+- Create: `backend/src/core/cross_lingual_process_and_extract_evidence/translate/base.py`
 - Create: `backend/src/core/cross_lingual_process_and_extract_evidence/translate/translator.py`
 - Test: `backend/tests/core/cross_lingual_process_and_extract_evidence/test_translator.py`
 
-This is the translation engine — all LLM-driven translation stages extracted into an independent module. The `Translator` class owns terminology extraction, structure planning, segmented draft translation, polishing, and review.
+Translation engine with interface/implementation split. `MultiStageTranslator` implements `BaseTranslator` ABC. All LLM settings injected via `TranslationConfigContext`.
 
 **Step 1: Write the failing test**
 
@@ -1139,16 +1172,17 @@ from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     FormattedDocument,
     TranslationSegment,
 )
-from src.core.cross_lingual_process_and_extract_evidence.translate.translator import Translator
+from src.core.cross_lingual_process_and_extract_evidence.config_context import TranslationConfigContext
+from src.core.cross_lingual_process_and_extract_evidence.translate.translator import MultiStageTranslator
 
 
 @pytest.fixture
-def mock_cfg():
-    cfg = MagicMock()
-    cfg.translation.api_key = "test-key"
-    cfg.translation.base_url = "http://localhost:8001/v1"
-    cfg.translation.model = "test-model"
-    return cfg
+def mock_ctx():
+    return TranslationConfigContext(
+        model="test-model",
+        api_key="test-key",
+        base_url="http://localhost:8001/v1",
+    )
 
 
 @pytest.fixture
@@ -1159,28 +1193,28 @@ def formatted_doc():
     )
 
 
-def test_translator_init(mock_cfg):
-    t = Translator(cfg=mock_cfg)
-    assert t._cfg == mock_cfg
+def test_translator_init(mock_ctx):
+    t = MultiStageTranslator(ctx=mock_ctx)
+    assert t._ctx == mock_ctx
 
 
-def test_translator_build_llm(mock_cfg):
-    t = Translator(cfg=mock_cfg)
+def test_translator_build_llm(mock_ctx):
+    t = MultiStageTranslator(ctx=mock_ctx)
     llm = t._build_llm()
     assert llm is not None
 
 
 def test_to_text_none():
-    assert Translator._to_text(None) == ""
+    assert MultiStageTranslator._to_text(None) == ""
 
 
 def test_to_text_string():
-    assert Translator._to_text(" hello ") == "hello"
+    assert MultiStageTranslator._to_text(" hello ") == "hello"
 
 
 def test_to_text_list():
     content = [{"type": "text", "text": "hello"}, {"type": "text", "text": "world"}]
-    assert "hello" in Translator._to_text(content)
+    assert "hello" in MultiStageTranslator._to_text(content)
 ```
 
 **Step 2: Run test to verify it fails**
@@ -1191,19 +1225,53 @@ Expected: FAIL with ModuleNotFoundError
 **Step 3: Write minimal implementation**
 
 ```python
+# backend/src/core/cross_lingual_process_and_extract_evidence/translate/base.py
+"""Interface for translators — Clean Architecture boundary."""
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from typing import List, Tuple
+
+from ..contracts import FormattedDocument, TranslationResult
+
+
+class BaseTranslator(ABC):
+    """Abstract translator interface.
+
+    Implementations translate a ``FormattedDocument`` into a ``TranslationResult``.
+    Swappable for testing or alternative translation strategies (e.g. NMT vs LLM).
+    """
+
+    @abstractmethod
+    def translate(self, formatted: FormattedDocument) -> Tuple[str, str, str, str, List[str], List[str]]:
+        """Run the full translation pipeline.
+
+        Returns (terminology, structure_plan, draft, translated, source_segments, warnings).
+        """
+        ...
+
+    @abstractmethod
+    def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
+        """Run the full pipeline and return a ``TranslationResult``."""
+        ...
+```
+
+```python
 # backend/src/core/cross_lingual_process_and_extract_evidence/translate/translator.py
 """Multi-stage translation engine for biomedical documents."""
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, List, Tuple
 
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from loguru import logger
 from pydantic import SecretStr
 
-from ..contracts import FormattedDocument, TranslationSegment, TranslationResult, SentenceRegion
+from ..config_context import TranslationConfigContext
+from ..contracts import FormattedDocument, TranslationResult, TranslationSegment
 from ..format.segmenter import estimate_tokens, segment_text
+from .base import BaseTranslator
 from .prompts import (
     get_draft_prompt,
     get_polish_prompt,
@@ -1214,34 +1282,26 @@ from .prompts import (
 from .validator import summarize_validation_error, validate_translation_output
 
 
-class Translator:
-    """Encapsulates all LLM-driven translation stages.
+class MultiStageTranslator(BaseTranslator):
+    """Concrete translator implementing the BaseTranslator interface.
 
-    Usage::
-
-        from src.core.config import get_config
-        from src.core.cross_lingual_process_and_extract_evidence.translate.translator import Translator
-
-        cfg = get_config()
-        translator = Translator(cfg=cfg)
-        result = await translator.translate(formatted_doc)
+    Runs: terminology → structure → draft → polish → review → validate.
+    All LLM settings come from ``TranslationConfigContext`` (injected, not raw config).
     """
 
-    def __init__(self, cfg: Any):
-        self._cfg = cfg
+    def __init__(self, ctx: TranslationConfigContext):
+        self._ctx = ctx
 
     def _build_llm(self) -> ChatOpenAI:
-        """Build a ChatOpenAI client from TranslationConfig (MT_*)."""
         return ChatOpenAI(
-            model=self._cfg.translation.model,
-            api_key=SecretStr(self._cfg.translation.api_key),
-            base_url=self._cfg.translation.base_url,
-            temperature=0.0,
+            model=self._ctx.model,
+            api_key=SecretStr(self._ctx.api_key),
+            base_url=self._ctx.base_url,
+            temperature=self._ctx.temperature,
         )
 
     @staticmethod
     def _to_text(content: Any) -> str:
-        """Normalize LangChain message content to plain text."""
         if content is None:
             return ""
         if isinstance(content, str):
@@ -1263,7 +1323,6 @@ class Translator:
     # ── Individual stages ────────────────────────────────────────────────
 
     def extract_terminology(self, formatted: FormattedDocument) -> str:
-        """Stage 1: Extract bilingual terminology map from source."""
         logger.info("Stage: terminology")
         llm = self._build_llm()
         response = llm.invoke(
@@ -1272,7 +1331,6 @@ class Translator:
         return self._to_text(response.content)
 
     def plan_structure(self, formatted: FormattedDocument) -> str:
-        """Stage 2: Plan document structure for English rendering."""
         logger.info("Stage: structure")
         llm = self._build_llm()
         response = llm.invoke(
@@ -1281,19 +1339,11 @@ class Translator:
         return self._to_text(response.content)
 
     def translate_segments(
-        self,
-        formatted: FormattedDocument,
-        terminology: str,
-        structure_plan: str,
-    ) -> tuple[str, list[str]]:
-        """Stage 3: Translate document in token-budgeted segments.
-
-        Returns (joined_translated_text, source_segments).
-        """
+        self, formatted: FormattedDocument, terminology: str, structure_plan: str,
+    ) -> Tuple[str, List[str]]:
         logger.info("Stage: draft")
         llm = self._build_llm()
         text = formatted.formatted_markdown
-
         overhead = estimate_tokens(get_draft_prompt("", terminology, structure_plan))
         segments = segment_text(text, max_tokens=8192, prompt_overhead_tokens=overhead)
 
@@ -1311,44 +1361,32 @@ class Translator:
         return "\n\n".join(translated_parts), segments
 
     def polish(self, draft: str, terminology: str) -> str:
-        """Stage 4: Polish the draft for academic English fluency."""
         logger.info("Stage: polish")
         if not draft:
             return ""
         llm = self._build_llm()
-        response = llm.invoke(
-            [HumanMessage(content=get_polish_prompt(draft, terminology))]
-        )
+        response = llm.invoke([HumanMessage(content=get_polish_prompt(draft, terminology))])
         return self._to_text(response.content) or draft
 
     def review(self, source: str, translated: str) -> str:
-        """Stage 5: Review translation against source for gaps."""
         logger.info("Stage: review")
         if not translated:
             return ""
         llm = self._build_llm()
-        response = llm.invoke(
-            [HumanMessage(content=get_review_prompt(source, translated))]
-        )
+        response = llm.invoke([HumanMessage(content=get_review_prompt(source, translated))])
         return self._to_text(response.content)
 
     # ── Full pipeline ────────────────────────────────────────────────────
 
-    def translate(self, formatted: FormattedDocument) -> tuple[str, str, str, str, list[str], list[str]]:
-        """Run the full terminology → structure → draft → polish → review pipeline.
-
-        Returns (terminology, structure_plan, draft, polished, source_segments, warnings).
-        """
+    def translate(self, formatted: FormattedDocument) -> Tuple[str, str, str, str, List[str], List[str]]:
         terminology = self.extract_terminology(formatted)
         structure_plan = self.plan_structure(formatted)
         draft, source_segments = self.translate_segments(formatted, terminology, structure_plan)
         polished = self.polish(draft, terminology)
-        review_notes = self.review(formatted.formatted_markdown, polished)
+        self.review(formatted.formatted_markdown, polished)
 
         warnings: list[str] = []
         translated = polished
-
-        # Validate — fall back to draft if polish fails
         try:
             validate_translation_output(formatted.formatted_markdown, translated)
         except Exception as exc:
@@ -1364,14 +1402,10 @@ class Translator:
 
         return terminology, structure_plan, draft, translated, source_segments, warnings
 
-
     def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
-        """Run the full pipeline and return a ``TranslationResult``."""
         terminology, structure_plan, draft, translated, source_segments, warnings = (
             self.translate(formatted)
         )
-
-        # Build translation segments with bbox mapping
         translated_sentences = translated.split("\n\n") if translated else []
         tr_segments: list[TranslationSegment] = []
         for idx, src_seg in enumerate(source_segments):
@@ -1380,23 +1414,17 @@ class Translator:
                 if sent.text.strip() in src_seg.strip() or src_seg.strip() in sent.text:
                     src_bbox = sent
                     break
-            tr_segments.append(
-                TranslationSegment(
-                    index=idx,
-                    source_text=src_seg,
-                    translated_text=translated_sentences[idx] if idx < len(translated_sentences) else "",
-                    source_bbox=src_bbox,
-                )
-            )
-
+            tr_segments.append(TranslationSegment(
+                index=idx, source_text=src_seg,
+                translated_text=translated_sentences[idx] if idx < len(translated_sentences) else "",
+                source_bbox=src_bbox,
+            ))
         return TranslationResult(
             formatted_original=formatted.formatted_markdown,
             translated_english=translated,
             source_language=formatted.source_language or "unknown",
-            terminology_map={},
-            translation_warnings=warnings,
-            sentences=formatted.sentences,
-            segments=tr_segments,
+            terminology_map={}, translation_warnings=warnings,
+            sentences=formatted.sentences, segments=tr_segments,
         )
 ```
 
@@ -1408,30 +1436,106 @@ Expected: PASS
 **Step 5: Commit**
 
 ```bash
-git add backend/src/core/cross_lingual_process_and_extract_evidence/translate/translator.py \
+git add backend/src/core/cross_lingual_process_and_extract_evidence/translate/base.py \
+       backend/src/core/cross_lingual_process_and_extract_evidence/translate/translator.py \
        backend/tests/core/cross_lingual_process_and_extract_evidence/test_translator.py
-git commit -m "feat(cross-lingual): add independent multi-stage translation engine"
+git commit -m "feat(cross-lingual): add BaseTranslator ABC + MultiStageTranslator implementation"
 ```
 
 ---
 
-### Task 8: LangGraph Workflow & Public Service
+### Task 8: Router + Middleware (Observability & Decision Logic)
+
+**Files:**
+- Create: `backend/src/core/cross_lingual_process_and_extract_evidence/router.py`
+- Create: `backend/src/core/cross_lingual_process_and_extract_evidence/middleware.py`
+
+**Step 1: Write the implementation**
+
+```python
+# backend/src/core/cross_lingual_process_and_extract_evidence/router.py
+"""Independent routing logic — decoupled from orchestrator."""
+from __future__ import annotations
+
+from typing import Literal
+
+from .contracts import PipelineState
+from .translate.language_detector import should_skip_translation
+
+
+class LanguageRouter:
+    """Decides whether a document needs translation.
+
+    Single-responsibility: routing logic lives here, not in workflow.py.
+    """
+
+    @staticmethod
+    def route(state: PipelineState) -> Literal["translate", "skip_translate"]:
+        if state.needs_translation and not should_skip_translation(
+            state.formatted.formatted_markdown if state.formatted else ""
+        ):
+            return "translate"
+        return "skip_translate"
+```
+
+```python
+# backend/src/core/cross_lingual_process_and_extract_evidence/middleware.py
+"""Observability interceptors — LangSmith tracing + structured logging."""
+from __future__ import annotations
+
+import functools
+from typing import Any, Callable
+
+from langsmith import traceable
+from loguru import logger
+
+
+def traced_node(name: str) -> Callable:
+    """Decorator that adds LangSmith tracing + loguru logging to a pipeline node."""
+    def decorator(fn: Callable) -> Callable:
+        @traceable(name=name, run_type="chain")
+        @functools.wraps(fn)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            logger.info("Node [{}] start", name)
+            try:
+                result = fn(*args, **kwargs)
+                logger.info("Node [{}] done", name)
+                return result
+            except Exception as e:
+                logger.error("Node [{}] failed: {}", name, e)
+                raise
+        return wrapper
+    return decorator
+```
+
+**Step 2: Commit**
+
+```bash
+git add backend/src/core/cross_lingual_process_and_extract_evidence/router.py \
+       backend/src/core/cross_lingual_process_and_extract_evidence/middleware.py
+git commit -m "feat(cross-lingual): add LanguageRouter and traced_node middleware"
+```
+
+---
+
+### Task 9: LangGraph Workflow & Public Service (Pure Orchestrator)
 
 **Files:**
 - Create: `backend/src/core/cross_lingual_process_and_extract_evidence/workflow.py`
 - Test: `backend/tests/core/cross_lingual_process_and_extract_evidence/test_workflow.py`
 
-This is the orchestration layer — the LangGraph pipeline and the public `TranslationService` API. All translation logic lives in `translator.py`; workflow only owns graph wiring, routing, and format/detect nodes.
+Pure orchestrator — zero business logic. Delegates formatting to `MarkdownFormatter`, translation to `MultiStageTranslator`, routing to `LanguageRouter`, observability to `traced_node`. Uses typed `PipelineState` and `TranslationConfigContext`.
 
 **Step 1: Write the failing test**
 
 ```python
 # backend/tests/core/cross_lingual_process_and_extract_evidence/test_workflow.py
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     FormattedDocument,
+    PipelineState,
     TranslationResult,
 )
 from src.core.cross_lingual_process_and_extract_evidence.workflow import TranslationService
@@ -1439,11 +1543,11 @@ from src.core.cross_lingual_process_and_extract_evidence.workflow import Transla
 
 @pytest.fixture
 def mock_config():
-    """Minimal mock config for TranslationService."""
     cfg = MagicMock()
     cfg.translation.api_key = "test-key"
     cfg.translation.base_url = "http://localhost:8001/v1"
     cfg.translation.model = "test-model"
+    cfg.translation.temperature = 0.0
     return cfg
 
 
@@ -1456,12 +1560,22 @@ def sample_pages():
 
 def test_service_init(mock_config):
     service = TranslationService(cfg=mock_config)
-    assert service._cfg == mock_config
+    assert service._ctx.model == "test-model"
+
+
+def test_service_has_formatter(mock_config):
+    service = TranslationService(cfg=mock_config)
+    assert service._formatter is not None
 
 
 def test_service_has_translator(mock_config):
     service = TranslationService(cfg=mock_config)
     assert service._translator is not None
+
+
+def test_service_has_router(mock_config):
+    service = TranslationService(cfg=mock_config)
+    assert service._router is not None
 ```
 
 **Step 2: Run test to verify it fails**
@@ -1473,7 +1587,7 @@ Expected: FAIL with ModuleNotFoundError
 
 ```python
 # backend/src/core/cross_lingual_process_and_extract_evidence/workflow.py
-"""LangGraph pipeline orchestration and public translation service."""
+"""Pure orchestrator — graph wiring + public service API. Zero business logic."""
 from __future__ import annotations
 
 import asyncio
@@ -1482,18 +1596,13 @@ from typing import Any, Dict, List
 from langgraph.graph import END, StateGraph
 from loguru import logger
 
-from .contracts import FormattedDocument, TranslationResult
-from .format.formatter import format_markdown
-from .translate.language_detector import detect_language, should_skip_translation
-from .translate.translator import Translator
-
-
-# ── Type aliases ─────────────────────────────────────────────────────────
-
-PipelineState = Dict[str, Any]
-
-
-# ── Service ──────────────────────────────────────────────────────────────
+from .config_context import TranslationConfigContext
+from .contracts import FormattedDocument, PipelineState, TranslationResult
+from .format.formatter import MarkdownFormatter
+from .language_detector import detect_language
+from .middleware import traced_node
+from .router import LanguageRouter
+from .translate.translator import MultiStageTranslator
 
 
 class TranslationService:
@@ -1502,9 +1611,7 @@ class TranslationService:
     Usage::
 
         from src.core.config import get_config
-        from src.core.cross_lingual_process_and_extract_evidence.workflow import (
-            TranslationService,
-        )
+        from src.core.cross_lingual_process_and_extract_evidence.workflow import TranslationService
 
         cfg = get_config()
         service = TranslationService(cfg=cfg)
@@ -1512,68 +1619,56 @@ class TranslationService:
     """
 
     def __init__(self, cfg: Any):
-        self._cfg = cfg
-        self._translator = Translator(cfg=cfg)
+        self._ctx = TranslationConfigContext.from_config(cfg)
+        self._formatter = MarkdownFormatter()
+        self._translator = MultiStageTranslator(ctx=self._ctx)
+        self._router = LanguageRouter()
 
-    # ── Pipeline nodes ───────────────────────────────────────────────────
+    # ── Pipeline nodes (thin delegates) ─────────────────────────────────
 
+    @traced_node("format")
     def _node_format(self, state: PipelineState) -> PipelineState:
-        """Normalize and format the source document."""
-        logger.info("Stage: format")
-        pages = state["pages"]
-        formatted = format_markdown(pages)
-        state["formatted"] = formatted
-        state["source_language"] = formatted.source_language or detect_language(
+        formatted = self._formatter.format(state.pages)
+        state.formatted = formatted
+        state.source_language = formatted.source_language or detect_language(
             formatted.formatted_markdown
         )
         return state
 
+    @traced_node("detect_language")
     def _node_detect_language(self, state: PipelineState) -> PipelineState:
-        """Detect language and decide if translation is needed."""
-        logger.info("Stage: detect_language")
-        text = state["formatted"].formatted_markdown
-        lang = state.get("source_language") or detect_language(text)
-        state["source_language"] = lang
-        state["needs_translation"] = not should_skip_translation(text)
-        logger.info("Detected language: {}, needs_translation: {}", lang, state["needs_translation"])
+        text = state.formatted.formatted_markdown if state.formatted else ""
+        lang = state.source_language or detect_language(text)
+        state.source_language = lang
+        state.needs_translation = self._router.route(state) == "translate"
+        logger.info("lang={}, needs_translation={}", lang, state.needs_translation)
         return state
 
+    @traced_node("translate")
     def _node_translate(self, state: PipelineState) -> PipelineState:
-        """Delegate all translation stages to Translator."""
-        formatted: FormattedDocument = state["formatted"]
-        result = self._translator.translate_to_result(formatted)
-        state["translation_result"] = result
+        result = self._translator.translate_to_result(state.formatted)
+        state.translation_result = result
         return state
 
+    @traced_node("skip_translate")
     def _node_skip_translate(self, state: PipelineState) -> PipelineState:
-        """No-op for English documents — no translation needed."""
         logger.info("Document is already English, skipping translation")
-        formatted: FormattedDocument = state["formatted"]
-        text = formatted.formatted_markdown
-        state["translation_result"] = TranslationResult(
+        text = state.formatted.formatted_markdown if state.formatted else ""
+        state.translation_result = TranslationResult(
             formatted_original=text,
             translated_english=text,
             source_language="en",
             terminology_map={},
             translation_warnings=[],
-            sentences=formatted.sentences,
+            sentences=state.formatted.sentences if state.formatted else [],
             segments=[],
         )
         return state
 
-    # ── Routing ──────────────────────────────────────────────────────────
-
-    @staticmethod
-    def _route_after_detect(state: PipelineState) -> str:
-        if state.get("needs_translation", True):
-            return "translate"
-        return "skip_translate"
-
     # ── Build graph ──────────────────────────────────────────────────────
 
     def _build_graph(self) -> Any:
-        """Construct the LangGraph pipeline."""
-        graph = StateGraph(dict)
+        graph = StateGraph(PipelineState)
 
         graph.add_node("format", self._node_format)
         graph.add_node("detect_language", self._node_detect_language)
@@ -1584,11 +1679,8 @@ class TranslationService:
         graph.add_edge("format", "detect_language")
         graph.add_conditional_edges(
             "detect_language",
-            self._route_after_detect,
-            {
-                "translate": "translate",
-                "skip_translate": "skip_translate",
-            },
+            lambda s: "translate" if s.needs_translation else "skip_translate",
+            {"translate": "translate", "skip_translate": "skip_translate"},
         )
         graph.add_edge("translate", END)
         graph.add_edge("skip_translate", END)
@@ -1597,33 +1689,12 @@ class TranslationService:
 
     # ── Public API ───────────────────────────────────────────────────────
 
-    async def run(
-        self,
-        pages: List[Dict[str, Any]],
-    ) -> TranslationResult:
-        """Run the full format → translate pipeline.
-
-        Args:
-            pages: List of page dicts from ``ParseResult.pages``.
-                   Each must have ``page_number`` and ``markdown`` keys.
-
-        Returns:
-            ``TranslationResult`` with formatted original, English translation,
-            terminology map, bbox mappings, and metadata.
-        """
+    async def run(self, pages: List[Dict[str, Any]]) -> TranslationResult:
         logger.info("Starting translation pipeline for {} pages", len(pages))
 
-        initial_state: PipelineState = {
-            "pages": pages,
-            "formatted": None,
-            "source_language": "",
-            "needs_translation": True,
-            "translation_result": None,
-        }
-
+        initial_state = PipelineState(pages=pages)
         graph = self._build_graph()
 
-        # LangGraph invoke (sync) — wrap in executor for async context
         try:
             loop = asyncio.get_running_loop()
             final_state = await loop.run_in_executor(
@@ -1632,27 +1703,20 @@ class TranslationService:
         except RuntimeError:
             final_state = graph.invoke(initial_state)
 
-        if not isinstance(final_state, dict):
-            raise RuntimeError("Pipeline returned non-dict state")
+        if not isinstance(final_state, PipelineState):
+            raise RuntimeError("Pipeline returned unexpected state type")
 
-        result: TranslationResult = final_state["translation_result"]
+        result = final_state.translation_result
         if result is None:
             raise RuntimeError("Pipeline produced no translation result")
 
         logger.info(
-            "Translation pipeline complete: {} sentences, {} segments, lang={}",
-            len(result.sentences),
-            len(result.segments),
-            result.source_language,
+            "Pipeline complete: {} sentences, {} segments, lang={}",
+            len(result.sentences), len(result.segments), result.source_language,
         )
-
         return result
 
-    def run_sync(
-        self,
-        pages: List[Dict[str, Any]],
-    ) -> TranslationResult:
-        """Synchronous wrapper for ``run()``."""
+    def run_sync(self, pages: List[Dict[str, Any]]) -> TranslationResult:
         try:
             asyncio.get_running_loop()
         except RuntimeError:
@@ -1673,11 +1737,11 @@ Expected: PASS
 ```bash
 git add backend/src/core/cross_lingual_process_and_extract_evidence/workflow.py \
        backend/tests/core/cross_lingual_process_and_extract_evidence/test_workflow.py
-git commit -m "feat(cross-lingual): slim workflow — delegate translation to Translator"
+git commit -m "feat(cross-lingual): add pure orchestrator with PipelineState, Router, Middleware"
 
 ---
 
-### Task 9: Integration Test with Mocked LLM
+### Task 10: Integration Test with Mocked LLM
 
 **Files:**
 - Create: `backend/tests/core/cross_lingual_process_and_extract_evidence/test_integration.py`
@@ -1787,7 +1851,7 @@ git commit -m "test(cross-lingual): add integration test with mocked LLM"
 
 ---
 
-### Task 10: Ruff Lint Pass
+### Task 11: Ruff Lint Pass
 
 **Step 1: Run Ruff**
 
@@ -1806,7 +1870,7 @@ git commit -m "style(cross-lingual): fix ruff lint issues"
 
 ---
 
-### Task 11: Progress & Doc Update
+### Task 12: Progress & Doc Update
 
 **Step 1: Update progress.txt**
 
@@ -1829,7 +1893,7 @@ After all tasks are complete, verify:
 
 - [ ] All tests pass: `cd backend && uv run pytest tests/core/cross_lingual_process_and_extract_evidence/ -v`
 - [ ] Ruff clean: `cd backend && uv run ruff check src/core/cross_lingual_process_and_extract_evidence/`
-- [ ] Module importable: `cd backend && uv run python -c "from src.core.cross_lingual_process_and_extract_evidence.workflow import TranslationService; from src.core.cross_lingual_process_and_extract_evidence.translate.translator import Translator; print('OK')"`
+- [ ] Module importable: `cd backend && uv run python -c "from src.core.cross_lingual_process_and_extract_evidence.workflow import TranslationService; from src.core.cross_lingual_process_and_extract_evidence.translate.translator import MultiStageTranslator; print('OK')"`
 - [ ] No dict returns: all return types are named dataclasses/pydantic models
 - [ ] Bbox tracking: `SentenceRegion` populated for formatted sentences
 - [ ] Language skip: English documents bypass translation entirely
