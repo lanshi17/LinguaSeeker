@@ -23,6 +23,7 @@ dependencies = [
     "selectolax>=0.4.8",
     "loguru>=0.7.0",
     "mineru_vl_utils",
+    "tokenizers>=0.22.0,<=0.23.0",
     "rust-io",
     "pymupdf>=1.27.2.3",
 ]
