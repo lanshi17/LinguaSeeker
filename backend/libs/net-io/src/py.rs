@@ -297,7 +297,11 @@ pub fn mineru_create_task<'py>(
     timeout_ms: Option<u64>,
     proxy: Option<String>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
+    // MinerU API: use no-proxy client unless explicitly provided
+    let client = match proxy {
+        Some(ref p) => HttpClient::new(timeout_ms, None, Some(p))?,
+        None => HttpClient::new_no_proxy(timeout_ms, None)?,
+    };
     let request = crate::types::MinerUCreateTaskRequest {
         url,
         model_version,
@@ -332,7 +336,11 @@ pub fn mineru_get_result<'py>(
     timeout_ms: Option<u64>,
     proxy: Option<String>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
+    // MinerU API: use no-proxy client unless explicitly provided
+    let client = match proxy {
+        Some(ref p) => HttpClient::new(timeout_ms, None, Some(p))?,
+        None => HttpClient::new_no_proxy(timeout_ms, None)?,
+    };
 
     pyo3_async_runtimes::tokio::future_into_py(py, async move {
         let result = crate::mineru::get_result(&client, &token, &task_id)
@@ -361,7 +369,11 @@ pub fn mineru_batch_submit<'py>(
     timeout_ms: Option<u64>,
     proxy: Option<String>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
+    // MinerU API: use no-proxy client unless explicitly provided
+    let client = match proxy {
+        Some(ref p) => HttpClient::new(timeout_ms, None, Some(p))?,
+        None => HttpClient::new_no_proxy(timeout_ms, None)?,
+    };
 
     let mut entries = Vec::with_capacity(files.len());
     for file_dict in &files {
@@ -430,7 +442,11 @@ pub fn mineru_batch_result<'py>(
     timeout_ms: Option<u64>,
     proxy: Option<String>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    let client = HttpClient::new(timeout_ms, None, proxy.as_deref())?;
+    // MinerU API: use no-proxy client unless explicitly provided
+    let client = match proxy {
+        Some(ref p) => HttpClient::new(timeout_ms, None, Some(p))?,
+        None => HttpClient::new_no_proxy(timeout_ms, None)?,
+    };
 
     pyo3_async_runtimes::tokio::future_into_py(py, async move {
         let result = crate::mineru::batch_result(&client, &token, &batch_id)
