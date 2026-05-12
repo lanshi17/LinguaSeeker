@@ -17,10 +17,7 @@ from src.core.ingest_and_digitize_data.parse_document.service import ParseDocume
 class TestParseDocumentService:
     @pytest.fixture
     def service(self):
-        return ParseDocumentService(
-            model_server_url="http://localhost:8001",
-            paddle_model_path="/models/paddleocr",
-        )
+        return ParseDocumentService(model_server_url="http://localhost:8001")
 
     @pytest.mark.asyncio
     async def test_parse(self, service):

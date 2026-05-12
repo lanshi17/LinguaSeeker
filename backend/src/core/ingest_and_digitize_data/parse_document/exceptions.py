@@ -28,10 +28,6 @@ class MinerUTimeoutError(ParseDocumentError):
         return f"MinerUTimeoutError(total_timeout={self.total_timeout!r})"
 
 
-class PaddleOCRError(ParseDocumentError):
-    """PaddleOCR processing failed."""
-
-
 class ParserExhaustedError(ParseDocumentError):
     """All parsers failed."""
 

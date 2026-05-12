@@ -5,7 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-ParserName = Literal["mineru", "paddleocr", "unknown"]
+ParserName = Literal["mineru", "unknown"]
 
 
 class DocumentMetadata(BaseModel):
@@ -70,10 +70,7 @@ def _tables_from_page(page_number: int, tables: list[dict]) -> list[TableStructu
 
 
 def pages_from_raw(pages_data: list[dict]) -> list[PageContent]:
-    """Convert raw page dicts to PageContent list.
-
-    Shared by MinerU and PaddleOCR parsers to avoid duplication.
-    """
+    """Convert raw page dicts to PageContent list."""
     pages: list[PageContent] = []
     for i, page_data in enumerate(pages_data, start=1):
         page_number = page_data.get("page_number", i)
