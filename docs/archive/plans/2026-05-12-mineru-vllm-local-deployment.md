@@ -2,6 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
+**Status:** completed
+**Created:** 2026-05-12
+
 **Goal:** Replace PaddleOCR with MinerU2.5-Pro-2604-1.2B as the sole document parsing engine, using vllm for local GPU inference via the model-server. Remove all PaddleOCR dependencies and code.
 
 **Architecture:** The model-server runs MinerU2.5-Pro-2604-1.2B via `vllm.LLM` + `MinerUClient` (two-step extraction: structure detection then content extraction). The `MinerULocalParser` converts PDF pages to PIL Images via PyMuPDF, sends each page as a base64-encoded multimodal message to the model-server's `/v1/chat/completions` endpoint, and aggregates results into `ParseResult`. PaddleOCR is completely removed — no fallback parser needed since MinerU VLM handles all document types.
