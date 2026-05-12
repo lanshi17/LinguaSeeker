@@ -7,7 +7,6 @@ import tempfile
 import zipfile
 from collections import defaultdict
 from html.parser import HTMLParser
-from io import BytesIO
 from pathlib import Path
 from typing import TypedDict
 
