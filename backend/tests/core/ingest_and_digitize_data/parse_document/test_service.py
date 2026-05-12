@@ -18,7 +18,7 @@ class TestParseDocumentService:
     @pytest.fixture
     def service(self):
         return ParseDocumentService(
-            mineru_api_token="test-token",
+            model_server_url="http://localhost:8001",
             paddle_model_path="/models/paddleocr",
         )
 

@@ -32,7 +32,14 @@ def _collect_pdfs() -> list[tuple[str, str]]:
     return pdfs
 
 
-PDF_INVENTORY = _collect_pdfs()
+@pytest.fixture(scope="session")
+def pdf_inventory():
+    if not DOWNLOADS_DIR.exists():
+        pytest.skip(f"PDF directory not found: {DOWNLOADS_DIR}")
+    pdfs = _collect_pdfs()
+    if not pdfs:
+        pytest.skip("No PDFs found in downloads/")
+    return pdfs
 
 
 @pytest.fixture
@@ -77,46 +84,39 @@ class TestParseDocumentReal:
     """Real integration tests — parses actual PDFs and saves output."""
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "pdf_path,lang",
-        PDF_INVENTORY,
-        ids=[Path(p).name for p, _ in PDF_INVENTORY],
-    )
-    async def test_mineru_local(self, mineru_parser, pdf_path, lang):
+    async def test_mineru_local(self, pdf_inventory, mineru_parser):
         """Parse each PDF with local MinerU VLM and save output."""
-        result = await mineru_parser.parse(pdf_path)
+        for pdf_path, lang in pdf_inventory:
+            result = await mineru_parser.parse(pdf_path)
 
-        assert isinstance(result, ParseResult)
-        assert result.metadata.total_pages >= 1
-        assert len(result.pages) >= 1
-        assert result.full_markdown
-        assert result.parser_used == "mineru"
+            assert isinstance(result, ParseResult)
+            assert result.metadata.total_pages >= 1
+            assert len(result.pages) >= 1
+            assert result.full_markdown
+            assert result.parser_used == "mineru"
 
-        out_dir = _save_output(lang, pdf_path, "mineru", result)
-        assert (out_dir / "output.md").exists()
-        assert (out_dir / "metadata.json").exists()
+            out_dir = _save_output(lang, pdf_path, "mineru", result)
+            assert (out_dir / "output.md").exists()
+            assert (out_dir / "metadata.json").exists()
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "pdf_path,lang",
-        PDF_INVENTORY,
-        ids=[Path(p).name for p, _ in PDF_INVENTORY],
-    )
-    async def test_paddleocr(self, service, pdf_path, lang):
+    async def test_paddleocr(self, pdf_inventory):
         """Parse each PDF with PaddleOCR and save output."""
         from src.core.ingest_and_digitize_data.parse_document.paddle_parser import PaddleOCRParser
         from src.core.config import get_config
 
         cfg = get_config()
         parser = PaddleOCRParser(model_path=cfg.paddle.model_path)
-        result = await parser.parse(pdf_path)
 
-        assert isinstance(result, ParseResult)
-        assert result.metadata.total_pages >= 1
-        assert len(result.pages) >= 1
-        assert result.full_markdown
-        assert result.parser_used == "paddleocr"
+        for pdf_path, lang in pdf_inventory:
+            result = await parser.parse(pdf_path)
 
-        out_dir = _save_output(lang, pdf_path, "paddleocr", result)
-        assert (out_dir / "output.md").exists()
-        assert (out_dir / "metadata.json").exists()
+            assert isinstance(result, ParseResult)
+            assert result.metadata.total_pages >= 1
+            assert len(result.pages) >= 1
+            assert result.full_markdown
+            assert result.parser_used == "paddleocr"
+
+            out_dir = _save_output(lang, pdf_path, "paddleocr", result)
+            assert (out_dir / "output.md").exists()
+            assert (out_dir / "metadata.json").exists()
