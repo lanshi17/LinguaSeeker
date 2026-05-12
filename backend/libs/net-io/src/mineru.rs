@@ -90,13 +90,7 @@ pub async fn upload_local_files(
     file_paths: &[String],
 ) -> Result<Value, GatewayError> {
     let response = create_batch_upload_urls(client, token, request).await?;
-    let urls = response
-        .get("data")
-        .and_then(|data| data.get("file_urls"))
-        .and_then(|value| value.as_array())
-        .ok_or_else(|| {
-            GatewayError::Other("MinerU upload URL response missing data.file_urls".into())
-        })?;
+    let urls = extract_upload_urls(&response)?;
 
     if urls.len() != file_paths.len() {
         return Err(GatewayError::Other(format!(
@@ -106,10 +100,7 @@ pub async fn upload_local_files(
         )));
     }
 
-    for (url, file_path) in urls.iter().zip(file_paths) {
-        let upload_url = url
-            .as_str()
-            .ok_or_else(|| GatewayError::Other("MinerU upload URL is not a string".into()))?;
+    for (upload_url, file_path) in urls.iter().zip(file_paths) {
         upload_local_file(client, upload_url, file_path, None).await?;
     }
 
@@ -122,9 +113,28 @@ pub async fn upload_local_file(
     upload_url: &str,
     file_path: &str,
     content_type: Option<&str>,
-) -> Result<Value, GatewayError> {
+) -> Result<(), GatewayError> {
     let bytes = std::fs::read(file_path)?;
     client.put_bytes(upload_url, bytes, content_type).await
+}
+
+/// Extract upload URLs from a MinerU /file-urls/batch response.
+fn extract_upload_urls(response: &Value) -> Result<Vec<String>, GatewayError> {
+    response
+        .get("data")
+        .and_then(|data| data.get("file_urls"))
+        .and_then(|value| value.as_array())
+        .ok_or_else(|| {
+            GatewayError::Other("MinerU upload URL response missing data.file_urls".into())
+        })?
+        .iter()
+        .map(|value| {
+            value
+                .as_str()
+                .map(str::to_owned)
+                .ok_or_else(|| GatewayError::Other("MinerU upload URL is not a string".into()))
+        })
+        .collect()
 }
 
 fn build_create_task_body(request: &MinerUCreateTaskRequest) -> Value {
@@ -209,9 +219,6 @@ fn build_local_file_entry(file: &MinerULocalFileEntry) -> Value {
 
 fn build_upload_file_entry(request: &MinerUUploadUrlRequest) -> Value {
     let mut file = serde_json::json!({ "name": request.filename });
-    if let Some(ref v) = request.content_type {
-        file["content_type"] = Value::String(v.clone());
-    }
     if let Some(ref v) = request.data_id {
         file["data_id"] = Value::String(v.clone());
     }
@@ -405,7 +412,7 @@ mod tests {
         let files = body["files"].as_array().unwrap();
         assert_eq!(files.len(), 1);
         assert_eq!(files[0]["name"], "paper.pdf");
-        assert_eq!(files[0]["content_type"], "application/pdf");
+        assert!(files[0].get("content_type").is_none());
         assert_eq!(files[0]["data_id"], "paper-1");
         assert_eq!(files[0]["is_ocr"], true);
         assert_eq!(files[0]["page_ranges"], "1-3");
@@ -501,5 +508,38 @@ mod tests {
         };
         let body = build_create_task_body(&req);
         assert_eq!(body["model_version"], "MinerU-HTML");
+    }
+
+    #[test]
+    fn test_extract_upload_urls_rejects_missing_file_urls() {
+        let response = serde_json::json!({"code": 0, "data": {"batch_id": "batch-1"}});
+        let err = extract_upload_urls(&response).unwrap_err();
+        assert!(err.to_string().contains("missing data.file_urls"));
+    }
+
+    #[test]
+    fn test_extract_upload_urls_returns_urls() {
+        let response = serde_json::json!({
+            "code": 0,
+            "data": {"file_urls": ["https://upload-1", "https://upload-2"]}
+        });
+        let urls = extract_upload_urls(&response).unwrap();
+        assert_eq!(
+            urls,
+            vec![
+                "https://upload-1".to_string(),
+                "https://upload-2".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn test_extract_upload_urls_rejects_non_string_entry() {
+        let response = serde_json::json!({
+            "code": 0,
+            "data": {"file_urls": ["https://ok", 42]}
+        });
+        let err = extract_upload_urls(&response).unwrap_err();
+        assert!(err.to_string().contains("not a string"));
     }
 }
