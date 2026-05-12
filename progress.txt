@@ -11,3 +11,4 @@
 [2026-05-12] Upgraded PaddleOCR to 3.5.0 + PaddlePaddle 3.3.1 with OneDNN workaround for Intel 14th gen CPUs — 9/9 PaddleOCR integration tests passing [done]
 [2026-05-12] MinerU E2E tests — API mode (upload+batch poll) + Local mode (model-server VLM) with 9 real PDFs across 4 languages, output to /tmp/e2e_output/ [done]
 [2026-05-12] Fix E2E MinerU: image captions + table data preserved from content_list.json, tokenizers pinned for local mode, 28 unit tests passing [done]
+[2026-05-12] [cross-lingual translation+formatting module v2] [implemented]
