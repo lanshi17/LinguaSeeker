@@ -115,7 +115,8 @@ pub async fn upload_local_file(
     content_type: Option<&str>,
 ) -> Result<(), GatewayError> {
     let bytes = std::fs::read(file_path)?;
-    client.put_bytes(upload_url, bytes, content_type).await
+    client.put_bytes(upload_url, bytes, content_type).await?;
+    Ok(())
 }
 
 /// Extract upload URLs from a MinerU /file-urls/batch response.
