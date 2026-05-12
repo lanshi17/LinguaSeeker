@@ -50,6 +50,7 @@ backend/src/core/cross_lingual_process_and_extract_evidence/
 
 **Files:**
 - Create: `backend/src/core/cross_lingual_process_and_extract_evidence/contracts.py`
+- Create: `backend/src/core/cross_lingual_process_and_extract_evidence/config_context.py`
 - Test: `backend/tests/core/cross_lingual_process_and_extract_evidence/test_contracts.py`
 
 **Step 1: Write the failing test**
@@ -63,6 +64,7 @@ backend/src/core/cross_lingual_process_and_extract_evidence/
 # backend/tests/core/cross_lingual_process_and_extract_evidence/test_contracts.py
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     BboxPoint,
+    PipelineState,
     SentenceRegion,
     FormattedDocument,
     TranslationSegment,
@@ -120,7 +122,20 @@ def test_translation_result_fields():
     assert result.formatted_original == "原文"
     assert result.translated_english == "English"
     assert result.source_language == "zh"
-```
+
+
+def test_pipeline_state_defaults():
+    state = PipelineState(pages=[{"page_number": 1, "markdown": "test"}])
+    assert state.source_language == ""
+    assert state.needs_translation is True
+    assert state.formatted is None
+    assert state.translation_result is None
+
+
+def test_pipeline_state_rejects_missing_pages():
+    import pytest
+    with pytest.raises(Exception):
+        PipelineState()  # pages is required
 
 **Step 2: Run test to verify it fails**
 
@@ -229,6 +244,58 @@ class TranslationResult:
     translation_warnings: List[str]
     sentences: List[SentenceRegion]
     segments: List[TranslationSegment]
+
+
+# ── Pipeline state (LangGraph) ─────────────────────────────────────────
+
+
+class PipelineState(BaseModel):
+    """Typed state for the LangGraph pipeline — replaces free-form dict.
+
+    Each field is a discrete pipeline artifact. Nodes declare what they
+    read/write via their function signatures.
+    """
+
+    model_config = {"arbitrary_types_allowed": True}
+
+    pages: List[Dict[str, Any]]
+    formatted: Optional[FormattedDocument] = None
+    source_language: str = ""
+    needs_translation: bool = True
+    translation_result: Optional[TranslationResult] = None
+```
+
+```python
+# backend/src/core/cross_lingual_process_and_extract_evidence/config_context.py
+"""Typed configuration context — single injection point for all LLM settings."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any
+
+
+@dataclass(frozen=True)
+class TranslationConfigContext:
+    """Subset of app config needed by translation/formatting modules.
+
+    Built once from ``cfg.translation`` at service init, then injected
+    into sub-modules. Prevents raw config leakage into deep code.
+    """
+
+    model: str
+    api_key: str
+    base_url: str
+    temperature: float = 0.0
+
+    @classmethod
+    def from_config(cls, cfg: Any) -> TranslationConfigContext:
+        """Build from the global config object (``cfg.translation``)."""
+        return cls(
+            model=cfg.translation.model,
+            api_key=cfg.translation.api_key,
+            base_url=cfg.translation.base_url,
+            temperature=getattr(cfg.translation, "temperature", 0.0),
+        )
 ```
 
 **Step 4: Run test to verify it passes**
@@ -241,9 +308,10 @@ Expected: PASS
 ```bash
 git add backend/src/core/cross_lingual_process_and_extract_evidence/__init__.py \
        backend/src/core/cross_lingual_process_and_extract_evidence/contracts.py \
+       backend/src/core/cross_lingual_process_and_extract_evidence/config_context.py \
        backend/tests/core/cross_lingual_process_and_extract_evidence/__init__.py \
        backend/tests/core/cross_lingual_process_and_extract_evidence/test_contracts.py
-git commit -m "feat(cross-lingual): add data contracts for translation pipeline"
+git commit -m "feat(cross-lingual): add data contracts, PipelineState, and config context"
 ```
 
 ---
