@@ -1,6 +1,9 @@
 """Tests for MinerU parser."""
 from __future__ import annotations
 
+import json
+import tempfile
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -115,3 +118,46 @@ class TestMinerUParser:
              patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_failed_response):
             with pytest.raises(MinerUAPIError, match="Task failed"):
                 await parser.parse("https://example.com/test.pdf")
+
+    def test_parse_extracted_content_with_content_list(self, parser):
+        """Verify parser handles MinerU zip format with content_list.json."""
+        with tempfile.TemporaryDirectory() as tmp:
+            content_dir = Path(tmp) / "extract"
+            content_dir.mkdir()
+
+            # full.md
+            (content_dir / "full.md").write_text("# Title\n\nBody text", encoding="utf-8")
+
+            # content_list.json
+            content_list = [
+                {"type": "text", "text": "Title", "text_level": 1, "page_idx": 0},
+                {"type": "text", "text": "Body text", "page_idx": 0},
+                {
+                    "type": "image",
+                    "img_path": "images/fig.jpg",
+                    "image_caption": ["Figure 1"],
+                    "image_footnote": [],
+                    "bbox": [0, 0, 0, 0],
+                    "page_idx": 0,
+                },
+                {
+                    "type": "table",
+                    "img_path": "images/table.jpg",
+                    "table_caption": ["Table 1"],
+                    "table_footnote": [],
+                    "table_body": "<table><tr><td>A</td></tr><tr><td>1</td></tr></table>",
+                    "bbox": [0, 0, 0, 0],
+                    "page_idx": 0,
+                },
+            ]
+            (content_dir / "test-uuid_content_list.json").write_text(
+                json.dumps(content_list, ensure_ascii=False), encoding="utf-8"
+            )
+
+            result = parser._parse_extracted_content(content_dir)
+
+        assert result["state"] == "done"
+        assert result["total_pages"] == 1
+        assert "Title" in result["full_markdown"]
+        assert "![Figure 1]" in result["full_markdown"]
+        assert "| A |" in result["full_markdown"]  # markdown table
