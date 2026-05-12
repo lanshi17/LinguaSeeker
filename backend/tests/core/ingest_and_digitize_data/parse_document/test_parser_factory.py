@@ -10,10 +10,7 @@ from src.core.ingest_and_digitize_data.parse_document.contracts import (
     PageContent,
     ParseResult,
 )
-from src.core.ingest_and_digitize_data.parse_document.exceptions import (
-    MinerUAPIError,
-    ParserExhaustedError,
-)
+from src.core.ingest_and_digitize_data.parse_document.exceptions import MinerUAPIError
 from src.core.ingest_and_digitize_data.parse_document.parser_factory import ParserFactory
 
 
