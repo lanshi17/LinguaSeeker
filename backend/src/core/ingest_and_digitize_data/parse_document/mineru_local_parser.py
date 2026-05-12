@@ -12,10 +12,9 @@ from PIL import Image
 from .base import ParserStrategy
 from .contracts import (
     DocumentMetadata,
-    FigurePosition,
     PageContent,
     ParseResult,
-    TableStructure,
+    pages_from_raw,
 )
 from .exceptions import MinerUAPIError
 
@@ -142,8 +141,13 @@ class MinerULocalParser(ParserStrategy):
 
     @staticmethod
     def _parse_page_response(page_number: int, data: dict) -> PageContent:
-        """Convert model-server VLM response to PageContent."""
-        # VLMExtractResponse structure
+        """Convert model-server VLM response to PageContent.
+
+        Supports two response formats:
+        - VLMExtractResponse: {"full_markdown": "...", "pages": [...]}
+        - OpenAI chat completions: {"choices": [{"message": {"content": "..."}}]}
+        """
+        # Try VLMExtractResponse format first
         full_markdown = data.get("full_markdown", "")
         pages_data = data.get("pages", [])
 
@@ -152,32 +156,31 @@ class MinerULocalParser(ParserStrategy):
             markdown = page.get("markdown", full_markdown)
             figures_raw = page.get("figures", [])
             tables_raw = page.get("tables", [])
-        else:
+        elif full_markdown:
             markdown = full_markdown
             figures_raw = []
             tables_raw = []
+        else:
+            # Fallback: try OpenAI chat completions format
+            choices = data.get("choices", [])
+            if choices and isinstance(choices, list):
+                message = choices[0].get("message", {})
+                markdown = message.get("content", "")
+            else:
+                markdown = ""
+            figures_raw = []
+            tables_raw = []
 
-        figures = [
-            FigurePosition(
-                page=page_number,
-                index=f.get("index", 1),
-                caption=f.get("caption"),
+        if not markdown:
+            logger.warning(
+                f"Model-server returned empty markdown for page {page_number}. "
+                f"Response keys: {list(data.keys())}"
             )
-            for f in figures_raw
-        ]
-        tables = [
-            TableStructure(
-                page=page_number,
-                index=t.get("index", 1),
-                headers=t.get("headers", []),
-                rows=t.get("rows", []),
-            )
-            for t in tables_raw
-        ]
 
-        return PageContent(
-            page_number=page_number,
-            markdown=markdown,
-            figures=figures,
-            tables=tables,
-        )
+        raw_page = {
+            "page_number": page_number,
+            "markdown": markdown,
+            "figures": figures_raw,
+            "tables": tables_raw,
+        }
+        return pages_from_raw([raw_page])[0]

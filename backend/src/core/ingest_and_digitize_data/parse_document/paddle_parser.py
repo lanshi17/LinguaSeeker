@@ -29,20 +29,27 @@ class _PaddleOCRRawResult(TypedDict):
     full_markdown: str
 
 
-def _patch_paddle_inference():
+_paddle_patch_applied = False
+
+
+def _ensure_paddle_patch():
     """Monkey-patch PaddleStaticRunner to work around PaddlePaddle 3.x OneDNN/PIR crash on newer Intel CPUs.
 
     The PaddlePaddle 3.x inference engine has a bug where the OneDNN instruction executor
     crashes with 'ConvertPirAttribute2RuntimeAttribute not support' on certain Intel CPUs.
     This patch disables the new IR and executor to use the legacy inference path.
+
+    Called lazily on first PaddleOCR use, not at module import time.
     """
+    global _paddle_patch_applied
+    if _paddle_patch_applied:
+        return
+
     os.environ["FLAGS_enable_new_ir"] = "0"
     os.environ["FLAGS_enable_new_executor"] = "0"
 
     try:
         import paddlex.inference.models.runners.paddle_static.runner as runner_mod
-
-        _original_create = runner_mod.PaddleStaticRunner._create
 
         def _patched_create(self):
             import paddle
@@ -68,8 +75,7 @@ def _patch_paddle_inference():
     except ImportError:
         pass
 
-
-_patch_paddle_inference()
+    _paddle_patch_applied = True
 
 
 class PaddleOCRParser(ParserStrategy):
@@ -95,6 +101,8 @@ class PaddleOCRParser(ParserStrategy):
 
     def _run_paddle_ocr(self, pdf_path: str) -> _PaddleOCRRawResult:
         """Run PaddleOCR in a thread (CPU-bound)."""
+        _ensure_paddle_patch()
+
         try:
             from paddleocr import PaddleOCR
         except ImportError:
