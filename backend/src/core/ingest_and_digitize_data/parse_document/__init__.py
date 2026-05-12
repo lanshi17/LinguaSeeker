@@ -1,9 +1,4 @@
-"""Document parsing module for PDF to Markdown conversion.
-
-Supports dual-engine parsing with automatic fallback:
-- MinerU Local (primary): model-server VLM endpoint
-- PaddleOCR (fallback): Locally deployed model
-"""
+"""Document parsing module — MinerU VLM engine."""
 
 from .contracts import (
     DocumentMetadata,
@@ -15,7 +10,6 @@ from .contracts import (
 from .exceptions import (
     MinerUAPIError,
     MinerUTimeoutError,
-    PaddleOCRError,
     ParseDocumentError,
     ParserExhaustedError,
 )
@@ -28,7 +22,6 @@ __all__ = [
     "MinerUAPIError",
     "MinerULocalParser",
     "MinerUTimeoutError",
-    "PaddleOCRError",
     "PageContent",
     "ParseDocumentError",
     "ParseDocumentService",
