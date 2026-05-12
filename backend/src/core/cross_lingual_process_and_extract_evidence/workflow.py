@@ -34,6 +34,7 @@ class TranslationService:
         self._formatter = MarkdownFormatter()
         self._translator = MultiStageTranslator(ctx=self._ctx)
         self._router = LanguageRouter()
+        self._graph = self._build_graph()
 
     # ── Pipeline nodes (thin delegates) ─────────────────────────────────
 
@@ -104,7 +105,7 @@ class TranslationService:
         logger.info("Starting translation pipeline for {} pages", len(pages))
 
         initial_state = PipelineState(pages=pages)
-        graph = self._build_graph()
+        graph = self._graph
 
         try:
             loop = asyncio.get_running_loop()

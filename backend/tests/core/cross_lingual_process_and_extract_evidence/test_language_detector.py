@@ -28,5 +28,5 @@ def test_no_skip_for_chinese():
 
 
 def test_skip_translation_for_empty():
-    assert should_skip_translation("") is False
-    assert should_skip_translation("   ") is False
+    assert should_skip_translation("") is True
+    assert should_skip_translation("   ") is True

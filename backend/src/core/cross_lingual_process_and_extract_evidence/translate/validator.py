@@ -1,13 +1,11 @@
 """Translation quality validation and assessment."""
 from __future__ import annotations
 
-import re
 from difflib import SequenceMatcher
 
-from lingua import Language, LanguageDetectorBuilder
+from lingua import Language
 
-_DETECTOR = LanguageDetectorBuilder.from_all_languages().build()
-_CJK_RE = re.compile(r"[㐀-鿿぀-ヿ가-힯]")
+from .language_detector import _CJK_RE, _DETECTOR
 
 
 def validate_translation_output(source_text: str, translated_text: str) -> None:
