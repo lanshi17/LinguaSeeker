@@ -22,9 +22,11 @@ dependencies = [
     "crawl4ai>=0.8.6",
     "selectolax>=0.4.8",
     "loguru>=0.7.0",
-    "vllm>=0.10.1",
     "mineru_vl_utils",
     "rust-io",
+    "paddleocr>=3.5.0",
+    "paddlepaddle>=3.0.0",
+    "pymupdf>=1.27.2.3",
 ]
 
 [project.optional-dependencies]

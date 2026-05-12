@@ -6,7 +6,7 @@ from loguru import logger
 from .base import ParserStrategy
 from .contracts import ParseResult
 from .exceptions import ParserExhaustedError
-from .mineru_parser import MinerUParser
+from .mineru_local_parser import MinerULocalParser
 from .paddle_parser import PaddleOCRParser
 
 
@@ -15,11 +15,11 @@ class ParserFactory:
 
     def __init__(
         self,
-        mineru_api_token: str,
+        model_server_url: str = "http://localhost:8001",
         paddle_model_path: str = "",
     ):
         self._parsers: list[ParserStrategy] = [
-            MinerUParser(api_token=mineru_api_token),
+            MinerULocalParser(model_server_url=model_server_url),
             PaddleOCRParser(model_path=paddle_model_path),
         ]
 

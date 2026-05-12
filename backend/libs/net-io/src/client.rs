@@ -43,6 +43,25 @@ impl HttpClient {
         })
     }
 
+    /// Create a client that explicitly ignores system proxy settings.
+    pub fn new_no_proxy(
+        timeout_ms: Option<u64>,
+        max_retries: Option<u32>,
+    ) -> Result<Self, GatewayError> {
+        let timeout = Duration::from_millis(timeout_ms.unwrap_or(DEFAULT_TIMEOUT_MS));
+        let builder = Client::builder()
+            .timeout(timeout)
+            .user_agent("acmg-lingua-io/0.1.0")
+            .gzip(true)
+            .redirect(reqwest::redirect::Policy::limited(10))
+            .no_proxy();
+
+        Ok(Self {
+            inner: builder.build()?,
+            max_retries: max_retries.unwrap_or(DEFAULT_MAX_RETRIES),
+        })
+    }
+
     pub async fn get_json(
         &self,
         url: &str,

@@ -16,11 +16,11 @@ class ParseDocumentService:
 
     def __init__(
         self,
-        mineru_api_token: str,
+        model_server_url: str = "http://localhost:8001",
         paddle_model_path: str = "",
     ):
         self._factory = ParserFactory(
-            mineru_api_token=mineru_api_token,
+            model_server_url=model_server_url,
             paddle_model_path=paddle_model_path,
         )
 
