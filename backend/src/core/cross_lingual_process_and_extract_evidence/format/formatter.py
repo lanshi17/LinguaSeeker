@@ -55,29 +55,35 @@ def extract_sentences(
     sentences: List[SentenceRegion] = []
     # Split on sentence boundaries (CJK + Western punctuation)
     pattern = re.compile(r"(?<=[。！？.!?])\s*")
-    current_offset = 0
 
-    for part in pattern.split(text):
-        part = part.strip()
-        if not part:
-            current_offset += len(part) + 1
-            continue
+    # Track split positions directly to avoid ambiguous text.find()
+    last_end = 0
+    for match in pattern.finditer(text):
+        segment = text[last_end:match.start()].strip()
+        if segment:
+            page = _resolve_page(last_end, page_offset_map) if page_offset_map else 0
+            sentences.append(
+                SentenceRegion(
+                    page=page,
+                    start_offset=last_end,
+                    end_offset=match.start(),
+                    text=segment,
+                )
+            )
+        last_end = match.end()
 
-        # Find the actual offset of this part in the original text
-        idx = text.find(part, current_offset)
-        if idx == -1:
-            idx = current_offset
-
-        page = _resolve_page(idx, page_offset_map) if page_offset_map else 0
+    # Capture the final segment after the last delimiter
+    trailing = text[last_end:].strip()
+    if trailing:
+        page = _resolve_page(last_end, page_offset_map) if page_offset_map else 0
         sentences.append(
             SentenceRegion(
                 page=page,
-                start_offset=idx,
-                end_offset=idx + len(part),
-                text=part,
+                start_offset=last_end,
+                end_offset=len(text),
+                text=trailing,
             )
         )
-        current_offset = idx + len(part)
 
     return sentences
 

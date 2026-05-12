@@ -11,14 +11,6 @@ from pydantic import BaseModel
 
 
 @dataclass(frozen=True)
-class BboxPoint:
-    """Position reference: page number + character offset within page."""
-
-    page: int
-    offset: int
-
-
-@dataclass(frozen=True)
 class SentenceRegion:
     """Sentence-level position tracking within a document."""
 
@@ -74,7 +66,6 @@ class TranslationSegment:
     source_text: str
     translated_text: str
     source_bbox: Optional[SentenceRegion] = None
-    translated_bbox: Optional[SentenceRegion] = None
 
 
 @dataclass

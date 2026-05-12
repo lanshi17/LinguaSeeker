@@ -42,7 +42,7 @@ def should_skip_translation(text: str) -> bool:
     """Return ``True`` if the text is already English or empty."""
     sample = str(text or "").strip()
     if not sample:
-        return False
+        return True
     if _CJK_RE.search(sample):
         return False
     lang = detect_language(sample)

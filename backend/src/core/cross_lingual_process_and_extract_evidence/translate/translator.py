@@ -31,9 +31,7 @@ class MultiStageTranslator(BaseTranslator):
 
     def __init__(self, ctx: TranslationConfigContext):
         self._ctx = ctx
-
-    def _build_llm(self) -> ChatOpenAI:
-        return ChatOpenAI(
+        self._llm = ChatOpenAI(
             model=self._ctx.model,
             api_key=SecretStr(self._ctx.api_key),
             base_url=self._ctx.base_url,
@@ -64,7 +62,7 @@ class MultiStageTranslator(BaseTranslator):
 
     def extract_terminology(self, formatted: FormattedDocument) -> str:
         logger.info("Stage: terminology")
-        llm = self._build_llm()
+        llm = self._llm
         response = llm.invoke(
             [HumanMessage(content=get_terminology_prompt(formatted.formatted_markdown))]
         )
@@ -72,7 +70,7 @@ class MultiStageTranslator(BaseTranslator):
 
     def plan_structure(self, formatted: FormattedDocument) -> str:
         logger.info("Stage: structure")
-        llm = self._build_llm()
+        llm = self._llm
         response = llm.invoke(
             [HumanMessage(content=get_structure_prompt(formatted.formatted_markdown))]
         )
@@ -82,7 +80,7 @@ class MultiStageTranslator(BaseTranslator):
         self, formatted: FormattedDocument, terminology: str, structure_plan: str,
     ) -> Tuple[str, List[str]]:
         logger.info("Stage: draft")
-        llm = self._build_llm()
+        llm = self._llm
         text = formatted.formatted_markdown
         overhead = estimate_tokens(get_draft_prompt("", terminology, structure_plan))
         segments = segment_text(text, max_tokens=8192, prompt_overhead_tokens=overhead)
@@ -104,7 +102,7 @@ class MultiStageTranslator(BaseTranslator):
         logger.info("Stage: polish")
         if not draft:
             return ""
-        llm = self._build_llm()
+        llm = self._llm
         response = llm.invoke([HumanMessage(content=get_polish_prompt(draft, terminology))])
         return self._to_text(response.content) or draft
 
@@ -112,18 +110,19 @@ class MultiStageTranslator(BaseTranslator):
         logger.info("Stage: review")
         if not translated:
             return ""
-        llm = self._build_llm()
+        llm = self._llm
         response = llm.invoke([HumanMessage(content=get_review_prompt(source, translated))])
         return self._to_text(response.content)
 
     # ── Full pipeline ────────────────────────────────────────────────────
 
-    def translate(self, formatted: FormattedDocument) -> Tuple[str, str, str, str, List[str], List[str]]:
+    def _translate(self, formatted: FormattedDocument) -> Tuple[str, str, str, str, List[str], List[str]]:
         terminology = self.extract_terminology(formatted)
         structure_plan = self.plan_structure(formatted)
         draft, source_segments = self.translate_segments(formatted, terminology, structure_plan)
         polished = self.polish(draft, terminology)
-        self.review(formatted.formatted_markdown, polished)
+        review_notes = self.review(formatted.formatted_markdown, polished)
+        logger.info("Review notes: {}", review_notes)
 
         warnings: list[str] = []
         translated = polished
@@ -144,7 +143,7 @@ class MultiStageTranslator(BaseTranslator):
 
     def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
         terminology, structure_plan, draft, translated, source_segments, warnings = (
-            self.translate(formatted)
+            self._translate(formatted)
         )
         translated_sentences = translated.split("\n\n") if translated else []
         tr_segments: list[TranslationSegment] = []

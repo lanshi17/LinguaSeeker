@@ -29,10 +29,9 @@ def test_translator_init(mock_ctx):
     assert t._ctx == mock_ctx
 
 
-def test_translator_build_llm(mock_ctx):
+def test_translator_llm(mock_ctx):
     t = MultiStageTranslator(ctx=mock_ctx)
-    llm = t._build_llm()
-    assert llm is not None
+    assert t._llm is not None
 
 
 def test_to_text_none():

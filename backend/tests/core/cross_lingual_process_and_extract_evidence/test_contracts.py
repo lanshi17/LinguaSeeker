@@ -1,17 +1,10 @@
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
-    BboxPoint,
     PipelineState,
     SentenceRegion,
     FormattedDocument,
     TranslationSegment,
     TranslationResult,
 )
-
-
-def test_bbox_point_creation():
-    pt = BboxPoint(page=1, offset=100)
-    assert pt.page == 1
-    assert pt.offset == 100
 
 
 def test_sentence_region_span():
@@ -42,7 +35,6 @@ def test_translation_segment_defaults():
         translated_text="Translated text.",
     )
     assert seg.source_bbox is None
-    assert seg.translated_bbox is None
 
 
 def test_translation_result_fields():
