@@ -6,3 +6,4 @@
 [2026-05-07] Language-organized downloads: workflow resolves language from request or DOI domain, appends lang code to download_path (e.g. downloads/v1.1/en/, downloads/v1.1/ja/). 11/11 API tests pass. [completed]
 [2026-05-07] Web crawling: implemented pubscholar/cyberleninka/hans_publishers providers with crawl4ai integration, rust-io scraper extended with CSS selector + PDF link extraction, unit tests added. [completed]
 [2026-05-07] Web crawling refactor: extracted shared helpers (build_js_helpers, resolve_llm_config, crawl4ai_search), simplified providers and web_providers.py dispatch, added download flow and LLM config tests. [completed]
+[2026-05-12] Code review fixes for parse-document-integration-test: added 12 MinerULocalParser unit tests, fixed test constructors, lazy PaddleOCR patch, pages_from_raw reuse, OpenAI response fallback. 50/50 unit tests pass. [done]
