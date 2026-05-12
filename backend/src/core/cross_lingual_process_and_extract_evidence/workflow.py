@@ -114,8 +114,8 @@ class TranslationService:
         except RuntimeError:
             final_state = graph.invoke(initial_state)
 
-        if not isinstance(final_state, PipelineState):
-            raise RuntimeError("Pipeline returned unexpected state type")
+        if isinstance(final_state, dict):
+            final_state = PipelineState(**final_state)
 
         result = final_state.translation_result
         if result is None:
