@@ -47,10 +47,7 @@ def service():
     from src.core.config import get_config
 
     cfg = get_config()
-    return ParseDocumentService(
-        model_server_url=cfg.model_server_url,
-        paddle_model_path=cfg.paddle.model_path,
-    )
+    return ParseDocumentService(model_server_url=cfg.model_server_url)
 
 
 @pytest.fixture
@@ -96,27 +93,5 @@ class TestParseDocumentReal:
             assert result.parser_used == "mineru"
 
             out_dir = _save_output(lang, pdf_path, "mineru", result)
-            assert (out_dir / "output.md").exists()
-            assert (out_dir / "metadata.json").exists()
-
-    @pytest.mark.asyncio
-    async def test_paddleocr(self, pdf_inventory):
-        """Parse each PDF with PaddleOCR and save output."""
-        from src.core.ingest_and_digitize_data.parse_document.paddle_parser import PaddleOCRParser
-        from src.core.config import get_config
-
-        cfg = get_config()
-        parser = PaddleOCRParser(model_path=cfg.paddle.model_path)
-
-        for pdf_path, lang in pdf_inventory:
-            result = await parser.parse(pdf_path)
-
-            assert isinstance(result, ParseResult)
-            assert result.metadata.total_pages >= 1
-            assert len(result.pages) >= 1
-            assert result.full_markdown
-            assert result.parser_used == "paddleocr"
-
-            out_dir = _save_output(lang, pdf_path, "paddleocr", result)
             assert (out_dir / "output.md").exists()
             assert (out_dir / "metadata.json").exists()
