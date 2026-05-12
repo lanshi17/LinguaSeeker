@@ -42,14 +42,15 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status/PR |
 |---|---|---|
-| 2026-05-11 | [parse-document local VLM integration test](planned/2026-05-11-parse-document-integration-test.md) | planned |
+| 2026-05-12 | [MinerU2.5-Pro vllm local deployment](planned/2026-05-12-mineru-vllm-local-deployment.md) | planned |
 | 2026-05-11 | [translation & formatting module](planned/2026-05-11-translation-formatting-module.md) | planned |
 
 ## Active Code Reviews
 
 | date | title | status/PR |
 |---|---|---|
-| — | — | — |
+| 2026-05-12 | [net-io MinerU local upload review 1](codereview/2026-05-11-net-io-mineru-local-upload-review-1.md) | active |
+| 2026-05-12 | [net-io MinerU local upload review 2](codereview/2026-05-11-net-io-mineru-local-upload-review-2.md) | active |
 
 ## Archive Index
 
