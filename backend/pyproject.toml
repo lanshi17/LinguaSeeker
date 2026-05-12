@@ -24,8 +24,6 @@ dependencies = [
     "loguru>=0.7.0",
     "mineru_vl_utils",
     "rust-io",
-    "paddleocr>=3.5.0",
-    "paddlepaddle>=3.0.0",
     "pymupdf>=1.27.2.3",
 ]
 
@@ -60,7 +58,7 @@ rust-io = { path = "libs/rust-io", editable = true }
 
 [tool.pytest.ini_options]
 markers = [
-    "integration: tests that require external services (MinerU API, PaddleOCR model)",
+    "integration: tests that require external services (model-server VLM)",
 ]
 
 [tool.ruff]

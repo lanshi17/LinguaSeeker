@@ -4,7 +4,6 @@ from __future__ import annotations
 from src.core.ingest_and_digitize_data.parse_document.exceptions import (
     MinerUAPIError,
     MinerUTimeoutError,
-    PaddleOCRError,
     ParseDocumentError,
     ParserExhaustedError,
 )
@@ -35,22 +34,16 @@ class TestMinerUTimeoutError:
         assert "300" in str(err)
 
 
-class TestPaddleOCRError:
-    def test_paddle_error(self):
-        err = PaddleOCRError("Model not found")
-        assert "Model not found" in str(err)
-
-
 class TestParserExhaustedError:
     def test_both_failed(self):
         err = ParserExhaustedError(
             errors={
                 "mineru": MinerUAPIError("500"),
-                "paddleocr": PaddleOCRError("crash"),
+                "mineru_retry": MinerUTimeoutError(total_timeout=300),
             },
         )
         assert "mineru" in str(err)
-        assert "paddleocr" in str(err)
+        assert "mineru_retry" in str(err)
 
     def test_repr(self):
         err = ParserExhaustedError(errors={"mineru": MinerUAPIError("500")})
