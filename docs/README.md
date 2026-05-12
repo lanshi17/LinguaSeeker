@@ -40,9 +40,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Planned Work
 
-| date | title | status/PR |
-|---|---|---|
-| 2026-05-11 | [translation & formatting module](planned/2026-05-11-translation-formatting-module.md) | planned — branch `feat/cross-lingual-module` |
+No planned work at this time.
 
 ## Active Code Reviews
 
@@ -54,6 +52,7 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-05-11 | [translation & formatting module](archive/plans/2026-05-11-translation-formatting-module.md) | implemented — branch `feat/cross-lingual-module-v2` |
 | 2026-05-12 | [MinerU2.5-Pro vllm local deployment](archive/plans/2026-05-12-mineru-vllm-local-deployment.md) | completed |
 | 2026-05-11 | [net-io MinerU local upload](archive/plans/2026-05-11-net-io-mineru-local-upload.md) | completed |
 | 2026-05-11 | [parse-document integration test (MinerU + PaddleOCR)](archive/plans/2026-05-11-parse-document-integration-test.md) | completed |
@@ -71,6 +70,7 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-05-12 | [cross-lingual module v2 — fixes applied](archive/codereview/2026-05-12-feat-cross-lingual-module.md) | resolved |
 | 2026-05-11 | [mineru-vlm-vllm review pass 4 — approved](archive/codereview/2026-05-11-mineru-vlm-vllm-migration-review-4.md) | approved |
 | 2026-05-11 | [mineru-vlm-vllm review pass 3](archive/codereview/2026-05-11-mineru-vlm-vllm-migration-review-3.md) | resolved |
 | 2026-05-11 | [mineru-vlm-vllm review pass 2](archive/codereview/2026-05-11-mineru-vlm-vllm-migration-review-2.md) | resolved |
