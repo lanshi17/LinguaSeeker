@@ -1,7 +1,8 @@
 """Multi-stage translation engine for biomedical documents."""
 from __future__ import annotations
 
-from typing import Any, List, Tuple
+import re
+from typing import Any, Dict, List, Tuple
 
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
@@ -58,29 +59,55 @@ class MultiStageTranslator(BaseTranslator):
             return str(content.get("text", content.get("content", ""))).strip()
         return str(content).strip()
 
+    # ── Helpers ─────────────────────────────────────────────────────────
+
+    _MAX_RETRIES: int = 2
+
+    def _invoke_with_retry(self, prompt: str, stage: str) -> str:
+        """Call LLM with retry on transient failures."""
+        last_exc: Exception | None = None
+        for attempt in range(1, self._MAX_RETRIES + 1):
+            try:
+                response = self._llm.invoke([HumanMessage(content=prompt)])
+                return self._to_text(response.content)
+            except Exception as exc:
+                last_exc = exc
+                logger.warning(
+                    "Stage {} attempt {}/{} failed: {}", stage, attempt, self._MAX_RETRIES, exc,
+                )
+        raise RuntimeError(f"Stage {stage} failed after {self._MAX_RETRIES} attempts") from last_exc
+
+    @staticmethod
+    def _parse_terminology(raw: str) -> Dict[str, str]:
+        """Parse 'source:target' lines into a dict."""
+        result: Dict[str, str] = {}
+        for line in raw.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            match = re.match(r"^(.+?):\s*(.+)$", line)
+            if match:
+                result[match.group(1).strip()] = match.group(2).strip()
+        return result
+
     # ── Individual stages ────────────────────────────────────────────────
 
     def extract_terminology(self, formatted: FormattedDocument) -> str:
         logger.info("Stage: terminology")
-        llm = self._llm
-        response = llm.invoke(
-            [HumanMessage(content=get_terminology_prompt(formatted.formatted_markdown))]
+        return self._invoke_with_retry(
+            get_terminology_prompt(formatted.formatted_markdown), "terminology",
         )
-        return self._to_text(response.content)
 
     def plan_structure(self, formatted: FormattedDocument) -> str:
         logger.info("Stage: structure")
-        llm = self._llm
-        response = llm.invoke(
-            [HumanMessage(content=get_structure_prompt(formatted.formatted_markdown))]
+        return self._invoke_with_retry(
+            get_structure_prompt(formatted.formatted_markdown), "structure",
         )
-        return self._to_text(response.content)
 
     def translate_segments(
         self, formatted: FormattedDocument, terminology: str, structure_plan: str,
     ) -> Tuple[str, List[str]]:
         logger.info("Stage: draft")
-        llm = self._llm
         text = formatted.formatted_markdown
         overhead = estimate_tokens(get_draft_prompt("", terminology, structure_plan))
         segments = segment_text(text, max_tokens=8192, prompt_overhead_tokens=overhead)
@@ -88,13 +115,8 @@ class MultiStageTranslator(BaseTranslator):
         translated_parts: list[str] = []
         for idx, segment in enumerate(segments, start=1):
             prompt = get_draft_prompt(segment, terminology, structure_plan)
-            try:
-                response = llm.invoke([HumanMessage(content=prompt)])
-                translated_parts.append(self._to_text(response.content))
-                logger.info("Draft segment {}/{} done", idx, len(segments))
-            except Exception as e:
-                logger.error("Draft segment {}/{} failed: {}", idx, len(segments), e)
-                raise RuntimeError(f"Translation segment {idx} failed") from e
+            translated_parts.append(self._invoke_with_retry(prompt, f"draft/{idx}"))
+            logger.info("Draft segment {}/{} done", idx, len(segments))
 
         return "\n\n".join(translated_parts), segments
 
@@ -102,21 +124,17 @@ class MultiStageTranslator(BaseTranslator):
         logger.info("Stage: polish")
         if not draft:
             return ""
-        llm = self._llm
-        response = llm.invoke([HumanMessage(content=get_polish_prompt(draft, terminology))])
-        return self._to_text(response.content) or draft
+        return self._invoke_with_retry(get_polish_prompt(draft, terminology), "polish") or draft
 
     def review(self, source: str, translated: str) -> str:
         logger.info("Stage: review")
         if not translated:
             return ""
-        llm = self._llm
-        response = llm.invoke([HumanMessage(content=get_review_prompt(source, translated))])
-        return self._to_text(response.content)
+        return self._invoke_with_retry(get_review_prompt(source, translated), "review")
 
     # ── Full pipeline ────────────────────────────────────────────────────
 
-    def _translate(self, formatted: FormattedDocument) -> Tuple[str, str, str, str, List[str], List[str]]:
+    def _translate(self, formatted: FormattedDocument) -> Tuple[str, Dict[str, str], str, str, List[str], List[str]]:
         terminology = self.extract_terminology(formatted)
         structure_plan = self.plan_structure(formatted)
         draft, source_segments = self.translate_segments(formatted, terminology, structure_plan)
@@ -139,10 +157,11 @@ class MultiStageTranslator(BaseTranslator):
                 except Exception:
                     pass
 
-        return terminology, structure_plan, draft, translated, source_segments, warnings
+        terminology_map = self._parse_terminology(terminology)
+        return terminology_map, structure_plan, draft, translated, source_segments, warnings
 
     def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
-        terminology, structure_plan, draft, translated, source_segments, warnings = (
+        terminology_map, structure_plan, draft, translated, source_segments, warnings = (
             self._translate(formatted)
         )
         translated_sentences = translated.split("\n\n") if translated else []
@@ -162,6 +181,6 @@ class MultiStageTranslator(BaseTranslator):
             formatted_original=formatted.formatted_markdown,
             translated_english=translated,
             source_language=formatted.source_language or "unknown",
-            terminology_map={}, translation_warnings=warnings,
+            terminology_map=terminology_map, translation_warnings=warnings,
             sentences=formatted.sentences, segments=tr_segments,
         )

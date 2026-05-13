@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from ..contracts import FormattedDocument, TranslationResult
 
@@ -15,10 +15,10 @@ class BaseTranslator(ABC):
     """
 
     @abstractmethod
-    def _translate(self, formatted: FormattedDocument) -> Tuple[str, str, str, str, List[str], List[str]]:
+    def _translate(self, formatted: FormattedDocument) -> Tuple[Dict[str, str], str, str, str, List[str], List[str]]:
         """Run the full translation pipeline.
 
-        Returns (terminology, structure_plan, draft, translated, source_segments, warnings).
+        Returns (terminology_map, structure_plan, draft, translated, source_segments, warnings).
         """
         ...
 
