@@ -24,13 +24,13 @@ class TestParseDocumentService:
         mock_result = ParseResult(
             metadata=DocumentMetadata(total_pages=1, title="Test"),
             pages=[PageContent(page_number=1, markdown="# Test")],
-            parser_used="mineru",
+            parser_used="mineru-remote",
         )
 
         with patch.object(ParserFactory, "parse", new_callable=AsyncMock, return_value=mock_result):
             result = await service.parse("https://example.com/test.pdf")
 
-        assert result.parser_used == "mineru"
+        assert result.parser_used == "mineru-remote"
 
     @pytest.mark.asyncio
     async def test_parse_and_save(self, service, tmp_path):
@@ -39,7 +39,7 @@ class TestParseDocumentService:
         mock_result = ParseResult(
             metadata=DocumentMetadata(total_pages=1, title="Test"),
             pages=[PageContent(page_number=1, markdown="# Test")],
-            parser_used="mineru",
+            parser_used="mineru-remote",
         )
 
         with patch.object(ParserFactory, "parse", new_callable=AsyncMock, return_value=mock_result), \
@@ -49,7 +49,7 @@ class TestParseDocumentService:
 
             result = await service.parse_and_save("https://example.com/test.pdf", output_dir)
 
-        assert result.parser_used == "mineru"
+        assert result.parser_used == "mineru-remote"
         assert mock_file_instance.write.call_count == 2  # markdown + metadata JSON
 
     @pytest.mark.asyncio

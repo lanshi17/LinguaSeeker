@@ -178,7 +178,7 @@ class MinerUParser(ParserStrategy):
 
     @property
     def name(self) -> str:
-        return "mineru"
+        return "mineru-remote"
 
     async def parse(self, pdf_path: str) -> ParseResult:
         """Parse PDF via MinerU API.
