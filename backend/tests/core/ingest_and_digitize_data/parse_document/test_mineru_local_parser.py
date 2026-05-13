@@ -11,7 +11,7 @@ from src.core.ingest_and_digitize_data.parse_document.contracts import (
     ParseResult,
 )
 from src.core.ingest_and_digitize_data.parse_document.exceptions import MinerUAPIError
-from src.core.ingest_and_digitize_data.parse_document.mineru_local_parser import (
+from src.core.ingest_and_digitize_data.parse_document.local.parser import (
     MinerULocalParser,
 )
 
@@ -127,10 +127,10 @@ class TestMinerULocalParserParse:
         }
 
         with patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._pdf_to_images",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.pdf_to_images",
             return_value=[mock_image],
         ), patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._image_to_base64",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.image_to_base64",
             return_value="base64data",
         ):
             mock_resp = MagicMock()
@@ -149,7 +149,7 @@ class TestMinerULocalParserParse:
         assert result.metadata.total_pages == 1
         assert len(result.pages) == 1
         assert result.full_markdown == "# Hello World"
-        assert result.parser_used == "mineru"
+        assert result.parser_used == "mineru-local"
 
     @pytest.mark.asyncio
     async def test_parse_multi_page_aggregation(self, parser):
@@ -164,10 +164,10 @@ class TestMinerULocalParserParse:
         }
 
         with patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._pdf_to_images",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.pdf_to_images",
             return_value=[mock_image, mock_image],
         ), patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._image_to_base64",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.image_to_base64",
             return_value="base64data",
         ):
             mock_resp1 = MagicMock()
@@ -196,10 +196,10 @@ class TestMinerULocalParserParse:
         mock_image = MagicMock()
 
         with patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._pdf_to_images",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.pdf_to_images",
             return_value=[mock_image],
         ), patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._image_to_base64",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.image_to_base64",
             return_value="base64data",
         ):
             mock_request = MagicMock()
@@ -222,10 +222,10 @@ class TestMinerULocalParserParse:
         mock_image = MagicMock()
 
         with patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._pdf_to_images",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.pdf_to_images",
             return_value=[mock_image],
         ), patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._image_to_base64",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.image_to_base64",
             return_value="base64data",
         ):
             req_error = httpx.ConnectError("Connection refused")
@@ -240,4 +240,4 @@ class TestMinerULocalParserParse:
                     await parser.parse("/tmp/test.pdf")
 
     def test_name_property(self, parser):
-        assert parser.name == "mineru"
+        assert parser.name == "mineru-local"
