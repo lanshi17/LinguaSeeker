@@ -93,6 +93,18 @@ class MinerUConfig(BaseModel):
     max_file_size_mb: int = 100
 
 
+class ParseDocumentConfig(BaseModel):
+    """Parse document module configuration."""
+
+    mineru_remote_api_token: str = ""
+    mineru_remote_poll_interval: float = 2.0
+    mineru_remote_max_poll_attempts: int = 150
+    mineru_local_model_server_url: str = "http://localhost:8001"
+    mineru_local_model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B"
+    mineru_local_timeout: float = 120.0
+    mineru_local_dpi: int = 200
+
+
 class RedisConfig(BaseModel):
     """Redis connection."""
 
@@ -251,6 +263,16 @@ class Settings(BaseSettings):
     mineru_timeout: int = 300
     mineru_max_file_size_mb: int = 100
 
+    # ── Parse Document flat fields (MINERU_REMOTE_* / MINERU_LOCAL_*) ───
+
+    mineru_remote_api_token: str = ""
+    mineru_remote_poll_interval: float = 2.0
+    mineru_remote_max_poll_attempts: int = 150
+    mineru_local_model_server_url: str = "http://localhost:8001"
+    mineru_local_model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B"
+    mineru_local_timeout: float = 120.0
+    mineru_local_dpi: int = 200
+
     # ── Model Server flat fields (MODEL_SERVER_*) ─────────────────────
 
     model_server_url: str = "http://localhost:8001"
@@ -325,6 +347,7 @@ class Settings(BaseSettings):
     embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig, exclude=True)
     rerank: RerankConfig = Field(default_factory=RerankConfig, exclude=True)
     mineru: MinerUConfig = Field(default_factory=MinerUConfig, exclude=True)
+    parse_document: ParseDocumentConfig = Field(default_factory=ParseDocumentConfig, exclude=True)
     redis: RedisConfig = Field(default_factory=RedisConfig, exclude=True)
     postgresql: PostgreSQLConfig = Field(default_factory=PostgreSQLConfig, exclude=True)
     neo4j: Neo4jConfig = Field(default_factory=Neo4jConfig, exclude=True)
@@ -384,6 +407,15 @@ class Settings(BaseSettings):
             download_dir=self.mineru_download_dir,
             timeout=self.mineru_timeout,
             max_file_size_mb=self.mineru_max_file_size_mb,
+        )
+        self.parse_document = ParseDocumentConfig(
+            mineru_remote_api_token=self.mineru_remote_api_token,
+            mineru_remote_poll_interval=self.mineru_remote_poll_interval,
+            mineru_remote_max_poll_attempts=self.mineru_remote_max_poll_attempts,
+            mineru_local_model_server_url=self.mineru_local_model_server_url,
+            mineru_local_model_id=self.mineru_local_model_id,
+            mineru_local_timeout=self.mineru_local_timeout,
+            mineru_local_dpi=self.mineru_local_dpi,
         )
         self.redis = RedisConfig(
             host=self.redis_host,
