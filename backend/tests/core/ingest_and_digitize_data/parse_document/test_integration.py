@@ -90,8 +90,8 @@ class TestParseDocumentReal:
             assert result.metadata.total_pages >= 1
             assert len(result.pages) >= 1
             assert result.full_markdown
-            assert result.parser_used == "mineru"
+            assert result.parser_used == "mineru-local"
 
-            out_dir = _save_output(lang, pdf_path, "mineru", result)
+            out_dir = _save_output(lang, pdf_path, "mineru-local", result)
             assert (out_dir / "output.md").exists()
             assert (out_dir / "metadata.json").exists()

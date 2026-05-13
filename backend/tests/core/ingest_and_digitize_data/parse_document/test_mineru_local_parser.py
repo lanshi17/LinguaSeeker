@@ -149,7 +149,7 @@ class TestMinerULocalParserParse:
         assert result.metadata.total_pages == 1
         assert len(result.pages) == 1
         assert result.full_markdown == "# Hello World"
-        assert result.parser_used == "mineru"
+        assert result.parser_used == "mineru-local"
 
     @pytest.mark.asyncio
     async def test_parse_multi_page_aggregation(self, parser):
@@ -240,4 +240,4 @@ class TestMinerULocalParserParse:
                     await parser.parse("/tmp/test.pdf")
 
     def test_name_property(self, parser):
-        assert parser.name == "mineru"
+        assert parser.name == "mineru-local"

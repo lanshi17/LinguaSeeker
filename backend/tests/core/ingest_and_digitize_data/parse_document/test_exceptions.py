@@ -38,13 +38,13 @@ class TestParserExhaustedError:
     def test_both_failed(self):
         err = ParserExhaustedError(
             errors={
-                "mineru": MinerUAPIError("500"),
+                "mineru-remote": MinerUAPIError("500"),
                 "mineru_retry": MinerUTimeoutError(total_timeout=300),
             },
         )
-        assert "mineru" in str(err)
+        assert "mineru-remote" in str(err)
         assert "mineru_retry" in str(err)
 
     def test_repr(self):
-        err = ParserExhaustedError(errors={"mineru": MinerUAPIError("500")})
+        err = ParserExhaustedError(errors={"mineru-remote": MinerUAPIError("500")})
         assert "ParserExhaustedError" in repr(err)

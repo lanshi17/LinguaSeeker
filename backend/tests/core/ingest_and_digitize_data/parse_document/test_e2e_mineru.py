@@ -87,7 +87,7 @@ def _assert_parse_result(result: ParseResult, pdf_path: str) -> None:
     assert result.metadata.total_pages >= 1
     assert len(result.pages) >= 1
     assert result.full_markdown, f"Empty markdown for {pdf_path}"
-    assert result.parser_used == "mineru"
+    assert result.parser_used in ("mineru-remote", "mineru-local")
 
     for page in result.pages:
         assert page.page_number >= 1
@@ -253,7 +253,7 @@ def _parse_zip_content(extract_dir: Path) -> ParseResult:
         return ParseResult(
             metadata=DocumentMetadata(total_pages=1),
             pages=[PageContent(page_number=1, markdown=full_markdown)],
-            parser_used="mineru",
+            parser_used="mineru-remote",
         )
 
     raise MinerUAPIError(f"No parseable content in zip. Files: {list(extract_dir.rglob('*'))}")
@@ -282,7 +282,7 @@ def _parse_pdf_info_json(data: dict, full_markdown: str) -> ParseResult:
         return ParseResult(
             metadata=DocumentMetadata(total_pages=1),
             pages=[PageContent(page_number=1, markdown=full_markdown)],
-            parser_used="mineru",
+            parser_used="mineru-remote",
         )
 
     pages = []
@@ -306,7 +306,7 @@ def _parse_pdf_info_json(data: dict, full_markdown: str) -> ParseResult:
     return ParseResult(
         metadata=DocumentMetadata(total_pages=len(pages)),
         pages=pages,
-        parser_used="mineru",
+        parser_used="mineru-remote",
     )
 
 

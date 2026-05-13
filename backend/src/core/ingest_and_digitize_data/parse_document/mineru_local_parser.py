@@ -65,7 +65,7 @@ class MinerULocalParser(ParserStrategy):
 
     @property
     def name(self) -> str:
-        return "mineru"
+        return "mineru-local"
 
     async def parse(self, pdf_path: str) -> ParseResult:
         """Parse PDF by converting pages to images and calling model-server."""
