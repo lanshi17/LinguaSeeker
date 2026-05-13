@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
-from ..contracts import FormattedDocument, SentenceRegion
+from ...contracts import FormattedDocument, SentenceRegion
 from .base import BaseFormatter
 
 

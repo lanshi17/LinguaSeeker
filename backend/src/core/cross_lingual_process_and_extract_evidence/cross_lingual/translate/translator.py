@@ -11,8 +11,8 @@ from langchain_openai import ChatOpenAI
 from loguru import logger
 from pydantic import SecretStr
 
-from ..config_context import TranslationConfigContext
-from ..contracts import FormattedDocument, TranslationResult, TranslationSegment
+from ...config_context import TranslationConfigContext
+from ...contracts import FormattedDocument, TranslationResult, TranslationSegment
 from ..format.segmenter import estimate_tokens, segment_text
 from .base import BaseTranslator
 from .prompts import (

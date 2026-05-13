@@ -6,7 +6,7 @@ from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     FormattedDocument,
 )
 from src.core.cross_lingual_process_and_extract_evidence.config_context import TranslationConfigContext
-from src.core.cross_lingual_process_and_extract_evidence.translate.translator import MultiStageTranslator
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import MultiStageTranslator
 
 
 @pytest.fixture

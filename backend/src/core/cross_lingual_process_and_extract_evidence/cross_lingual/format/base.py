@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
-from ..contracts import FormattedDocument
+from ...contracts import FormattedDocument
 
 
 class BaseFormatter(ABC):

@@ -1,4 +1,4 @@
-from src.core.cross_lingual_process_and_extract_evidence.format.formatter import (
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.format.formatter import (
     extract_sentences,
     build_page_offset_map,
     _format_markdown,

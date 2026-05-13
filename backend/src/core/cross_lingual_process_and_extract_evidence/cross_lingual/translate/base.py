@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple
 
-from ..contracts import FormattedDocument, TranslationResult
+from ...contracts import FormattedDocument, TranslationResult
 
 
 class BaseTranslator(ABC):

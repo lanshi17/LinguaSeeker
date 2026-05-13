@@ -9,11 +9,11 @@ from loguru import logger
 
 from .config_context import TranslationConfigContext
 from .contracts import PipelineState, TranslationResult
-from .format.formatter import MarkdownFormatter
-from .translate.language_detector import detect_language
+from .cross_lingual.format.formatter import MarkdownFormatter
+from .cross_lingual.translate.language_detector import detect_language
 from .middleware import traced_node
 from .router import LanguageRouter
-from .translate.translator import MultiStageTranslator
+from .cross_lingual.translate.translator import MultiStageTranslator
 
 
 class TranslationService:

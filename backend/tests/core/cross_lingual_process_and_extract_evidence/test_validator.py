@@ -1,5 +1,5 @@
 import pytest
-from src.core.cross_lingual_process_and_extract_evidence.translate.validator import (
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.validator import (
     validate_translation_output,
     summarize_validation_error,
 )
