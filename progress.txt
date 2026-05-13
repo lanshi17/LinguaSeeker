@@ -12,3 +12,4 @@
 [2026-05-12] MinerU E2E tests — API mode (upload+batch poll) + Local mode (model-server VLM) with 9 real PDFs across 4 languages, output to /tmp/e2e_output/ [done]
 [2026-05-12] Fix E2E MinerU: image captions + table data preserved from content_list.json, tokenizers pinned for local mode, 28 unit tests passing [done]
 [2026-05-12] Updated six core docs and AGENTS architecture guidance for Orchestrated Vertical Slice Architecture [done]
+[2026-05-12] [cross-lingual translation+formatting module v2] [implemented]

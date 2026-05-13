@@ -72,7 +72,8 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
-| 2026-05-12 | [cross-lingual module v2](archive/codereview/2026-05-12-feat-cross-lingual-module-v2.md) | resolved — 58/58 tests |
+| 2026-05-12 | [cross-lingual module v2 round 3 — approved](archive/codereview/2026-05-12-feat-cross-lingual-module-v2-r3.md) | approved — 58/58 tests |
+| 2026-05-12 | [cross-lingual module v2](archive/codereview/2026-05-12-feat-cross-lingual-module-v2.md) | resolved |
 | 2026-05-12 | [cross-lingual module v1](archive/codereview/2026-05-12-feat-cross-lingual-module-v1.md) | resolved |
 | 2026-05-11 | [mineru-vlm-vllm review pass 4 — approved](archive/codereview/2026-05-11-mineru-vlm-vllm-migration-review-4.md) | approved |
 | 2026-05-11 | [mineru-vlm-vllm review pass 3](archive/codereview/2026-05-11-mineru-vlm-vllm-migration-review-3.md) | resolved |
