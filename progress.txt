@@ -11,3 +11,6 @@
 [2026-05-12] Upgraded PaddleOCR to 3.5.0 + PaddlePaddle 3.3.1 with OneDNN workaround for Intel 14th gen CPUs — 9/9 PaddleOCR integration tests passing [done]
 [2026-05-12] MinerU E2E tests — API mode (upload+batch poll) + Local mode (model-server VLM) with 9 real PDFs across 4 languages, output to /tmp/e2e_output/ [done]
 [2026-05-12] Fix E2E MinerU: image captions + table data preserved from content_list.json, tokenizers pinned for local mode, 28 unit tests passing [done]
+[2026-05-13] parse_document refactor: Batch 1 — ParseDocumentConfig, extended contracts (SavedFiles, DedupResult, ParseAndSaveResult), common module with parsers and converters [done]
+[2026-05-13] parse_document refactor: Batch 2 — remote/ module (MinerURemoteParser), local/ module (MinerULocalParser + helpers), DocumentParseOrchestrator with remote-first fallback [done]
+[2026-05-13] parse_document refactor: cutover — deleted stale mineru_local_parser.py, updated all imports to new module structure, 86 tests passing [done]
