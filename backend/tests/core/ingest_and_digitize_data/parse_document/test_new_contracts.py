@@ -59,17 +59,21 @@ def test_parse_and_save_result_creation():
     )
 
     now = datetime.now()
-    result = ParseAndSaveResult(
-        metadata=DocumentMetadata(total_pages=1),
-        pages=[PageContent(page_number=1, markdown="test")],
-        parser_used="mineru-remote",
+    saved = SavedFiles(
         md_path=Path("/tmp/output.md"),
         metadata_path=Path("/tmp/metadata.json"),
         output_dir=Path("/tmp"),
         created_at=now,
     )
+    result = ParseAndSaveResult(
+        metadata=DocumentMetadata(total_pages=1),
+        pages=[PageContent(page_number=1, markdown="test")],
+        parser_used="mineru-remote",
+        saved_files=saved,
+    )
     assert result.parser_used == "mineru-remote"
-    assert result.md_path == Path("/tmp/output.md")
-    assert result.metadata_path == Path("/tmp/metadata.json")
-    assert result.output_dir == Path("/tmp")
-    assert result.created_at == now
+    assert result.saved_files is not None
+    assert result.saved_files.md_path == Path("/tmp/output.md")
+    assert result.saved_files.metadata_path == Path("/tmp/metadata.json")
+    assert result.saved_files.output_dir == Path("/tmp")
+    assert result.saved_files.created_at == now

@@ -1,10 +1,10 @@
 """Unit tests for MinerU content_list.json parsing logic."""
 from __future__ import annotations
 
-from src.core.ingest_and_digitize_data.parse_document.mineru_parser import (
-    _block_to_markdown,
-    _html_table_to_markdown,
-    _html_table_to_structured,
+from src.core.ingest_and_digitize_data.parse_document.common.converters import (
+    block_to_markdown,
+    html_table_to_markdown,
+    html_table_to_structured,
 )
 from tests.core.ingest_and_digitize_data.parse_document.test_e2e_mineru import (
     _parse_content_list,
@@ -12,61 +12,61 @@ from tests.core.ingest_and_digitize_data.parse_document.test_e2e_mineru import (
 
 
 class TestHtmlTableToMarkdown:
-    """Tests for _html_table_to_markdown helper."""
+    """Tests for html_table_to_markdown helper."""
 
     def test_simple_table(self):
         html = "<table><tr><td>A</td><td>B</td></tr><tr><td>1</td><td>2</td></tr></table>"
-        result = _html_table_to_markdown(html)
+        result = html_table_to_markdown(html)
         assert "| A | B |" in result
         assert "| --- | --- |" in result
         assert "| 1 | 2 |" in result
 
     def test_empty_table(self):
-        assert _html_table_to_markdown("") == ""
-        assert _html_table_to_markdown("<table></table>") == ""
+        assert html_table_to_markdown("") == ""
+        assert html_table_to_markdown("<table></table>") == ""
 
     def test_table_with_th_headers(self):
         html = "<table><tr><th>Name</th><th>Value</th></tr><tr><td>X</td><td>42</td></tr></table>"
-        result = _html_table_to_markdown(html)
+        result = html_table_to_markdown(html)
         assert "| Name | Value |" in result
         assert "| X | 42 |" in result
 
     def test_uneven_rows_padded(self):
         html = "<table><tr><td>A</td><td>B</td><td>C</td></tr><tr><td>1</td><td>2</td></tr></table>"
-        result = _html_table_to_markdown(html)
+        result = html_table_to_markdown(html)
         # Second row should be padded
         assert "| 1 | 2 |  |" in result
 
 
 class TestHtmlTableToStructured:
-    """Tests for _html_table_to_structured helper."""
+    """Tests for html_table_to_structured helper."""
 
     def test_extracts_headers_and_rows(self):
         html = "<table><tr><td>A</td><td>B</td></tr><tr><td>1</td><td>2</td></tr></table>"
-        headers, rows = _html_table_to_structured(html)
+        headers, rows = html_table_to_structured(html)
         assert headers == ["A", "B"]
         assert rows == [["1", "2"]]
 
     def test_empty_table(self):
-        headers, rows = _html_table_to_structured("")
+        headers, rows = html_table_to_structured("")
         assert headers == []
         assert rows == []
 
     def test_single_row_table(self):
         html = "<table><tr><td>Only</td></tr></table>"
-        headers, rows = _html_table_to_structured(html)
+        headers, rows = html_table_to_structured(html)
         assert headers == ["Only"]
         assert rows == []
 
 
 class TestBlockToMarkdown:
-    """Tests for _block_to_markdown helper."""
+    """Tests for block_to_markdown helper."""
 
     def test_text_block(self):
-        assert _block_to_markdown({"type": "text", "text": "Hello"}) == "Hello"
+        assert block_to_markdown({"type": "text", "text": "Hello"}) == "Hello"
 
     def test_text_block_with_heading(self):
-        assert _block_to_markdown({"type": "text", "text": "Title", "text_level": 2}) == "## Title"
+        assert block_to_markdown({"type": "text", "text": "Title", "text_level": 2}) == "## Title"
 
     def test_image_block_with_footnote(self):
         block = {
@@ -75,12 +75,12 @@ class TestBlockToMarkdown:
             "image_caption": ["Fig 1"],
             "image_footnote": ["Source: data"],
         }
-        result = _block_to_markdown(block)
+        result = block_to_markdown(block)
         assert "![Fig 1](images/fig.jpg)" in result
         assert "*Source: data*" in result
 
     def test_discarded_block_returns_empty(self):
-        assert _block_to_markdown({"type": "discarded", "text": "noise"}) == ""
+        assert block_to_markdown({"type": "discarded", "text": "noise"}) == ""
 
 
 class TestContentListParsing:

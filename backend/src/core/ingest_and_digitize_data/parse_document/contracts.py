@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
@@ -129,7 +129,4 @@ class DedupResult:
 class ParseAndSaveResult(ParseResult):
     """ParseResult extended with saved file information."""
 
-    md_path: Path = Field(default=Path("/dev/null"))
-    metadata_path: Path = Field(default=Path("/dev/null"))
-    output_dir: Path = Field(default=Path("/tmp"))
-    created_at: datetime = Field(default_factory=datetime.now)
+    saved_files: SavedFiles | None = None
