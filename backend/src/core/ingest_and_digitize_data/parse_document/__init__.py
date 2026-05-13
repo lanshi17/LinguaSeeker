@@ -30,7 +30,7 @@ def create_parse_service(config=None) -> ParseDocumentService:
     Returns:
         Configured ParseDocumentService instance.
     """
-    from src.core.config import ParseDocumentConfig, get_config
+    from src.core.config import get_config
 
     from .local.parser import MinerULocalParser
     from .orchestrator import DocumentParseOrchestrator
