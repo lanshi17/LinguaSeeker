@@ -18,3 +18,4 @@
 [2026-05-13] parse_document refactor: cutover — deleted stale mineru_local_parser.py, updated all imports to new module structure, 86 tests passing [done]
 [2026-05-13] parse_document refactor: Batch 3 — refactored ParseDocumentService with orchestrator, added create_parse_service() factory, removed old parser_factory.py [done]
 [2026-05-13] parse_document refactor: Batch 4 — updated README.md for new architecture, resolved lint issues, 193 tests passing, lint clean [done]
+[2026-05-13] Moved format/translate into cross_lingual/ subdirectory — consolidated submodules under single parent [done]
