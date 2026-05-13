@@ -30,7 +30,7 @@ from src.core.ingest_and_digitize_data.parse_document.contracts import (
     ParseResult,
 )
 from src.core.ingest_and_digitize_data.parse_document.exceptions import MinerUAPIError
-from src.core.ingest_and_digitize_data.parse_document.mineru_local_parser import (
+from src.core.ingest_and_digitize_data.parse_document.local.parser import (
     MinerULocalParser,
 )
 from src.core.ingest_and_digitize_data.parse_document.mineru_parser import (

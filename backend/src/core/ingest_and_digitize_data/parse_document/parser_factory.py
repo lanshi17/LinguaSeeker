@@ -5,7 +5,7 @@ from loguru import logger
 
 from .base import ParserStrategy
 from .contracts import ParseResult
-from .mineru_local_parser import MinerULocalParser
+from .local.parser import MinerULocalParser
 
 
 class ParserFactory:
