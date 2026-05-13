@@ -80,11 +80,11 @@ class TestParseResult:
                 PageContent(page_number=2, markdown="Page 2"),
             ],
             full_markdown="# Test\n\nPage 1\n\nPage 2",
-            parser_used="mineru",
+            parser_used="mineru-remote",
         )
         assert result.metadata.total_pages == 2
         assert len(result.pages) == 2
-        assert result.parser_used == "mineru"
+        assert result.parser_used == "mineru-remote"
 
     def test_result_defaults(self):
         result = ParseResult(

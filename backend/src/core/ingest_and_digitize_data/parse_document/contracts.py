@@ -1,11 +1,14 @@
 """Data contracts for document parsing results."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-ParserName = Literal["mineru", "unknown"]
+ParserName = Literal["mineru-remote", "mineru-local", "unknown"]
 
 
 class DocumentMetadata(BaseModel):
@@ -101,3 +104,28 @@ class ParseResult(BaseModel):
         if not self.full_markdown and self.pages:
             self.full_markdown = "\n\n".join(p.markdown for p in self.pages)
         return self
+
+
+@dataclass
+class SavedFiles:
+    """Result of saving parsed document to files."""
+
+    md_path: Path
+    metadata_path: Path
+    output_dir: Path
+    created_at: datetime
+
+
+@dataclass
+class DedupResult:
+    """Result of duplicate check for a file."""
+
+    file_path: str
+    hash: str
+    is_duplicate: bool
+
+
+class ParseAndSaveResult(ParseResult):
+    """ParseResult extended with saved file information."""
+
+    saved_files: SavedFiles | None = None

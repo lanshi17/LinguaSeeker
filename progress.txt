@@ -13,3 +13,8 @@
 [2026-05-12] Fix E2E MinerU: image captions + table data preserved from content_list.json, tokenizers pinned for local mode, 28 unit tests passing [done]
 [2026-05-12] Updated six core docs and AGENTS architecture guidance for Orchestrated Vertical Slice Architecture [done]
 [2026-05-12] [cross-lingual translation+formatting module v2] [implemented]
+[2026-05-13] parse_document refactor: Batch 1 — ParseDocumentConfig, extended contracts (SavedFiles, DedupResult, ParseAndSaveResult), common module with parsers and converters [done]
+[2026-05-13] parse_document refactor: Batch 2 — remote/ module (MinerURemoteParser), local/ module (MinerULocalParser + helpers), DocumentParseOrchestrator with remote-first fallback [done]
+[2026-05-13] parse_document refactor: cutover — deleted stale mineru_local_parser.py, updated all imports to new module structure, 86 tests passing [done]
+[2026-05-13] parse_document refactor: Batch 3 — refactored ParseDocumentService with orchestrator, added create_parse_service() factory, removed old parser_factory.py [done]
+[2026-05-13] parse_document refactor: Batch 4 — updated README.md for new architecture, resolved lint issues, 193 tests passing, lint clean [done]

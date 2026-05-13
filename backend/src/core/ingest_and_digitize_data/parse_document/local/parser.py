@@ -1,47 +1,21 @@
-"""MinerU local parser — calls model-server VLM endpoint."""
+"""Local MinerU parser via model-server VLM endpoint."""
 from __future__ import annotations
 
 import asyncio
-import base64
-from io import BytesIO
 
 import httpx
 from loguru import logger
 from PIL import Image
 
-from .base import ParserStrategy
-from .contracts import (
+from ..base import ParserStrategy
+from ..contracts import (
     DocumentMetadata,
     PageContent,
     ParseResult,
     pages_from_raw,
 )
-from .exceptions import MinerUAPIError
-
-
-def _pdf_to_images(pdf_path: str, dpi: int = 200) -> list[Image.Image]:
-    """Convert PDF pages to PIL Images using PyMuPDF."""
-    import fitz
-
-    doc = fitz.open(pdf_path)
-    images = []
-    zoom = dpi / 72.0
-    matrix = fitz.Matrix(zoom, zoom)
-
-    for page in doc:
-        pix = page.get_pixmap(matrix=matrix)
-        img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
-        images.append(img)
-
-    doc.close()
-    return images
-
-
-def _image_to_base64(image: Image.Image) -> str:
-    """Convert PIL Image to base64-encoded PNG string."""
-    buf = BytesIO()
-    image.save(buf, format="PNG")
-    return base64.b64encode(buf.getvalue()).decode("utf-8")
+from ..exceptions import MinerUAPIError
+from .helpers import image_to_base64, pdf_to_images
 
 
 class MinerULocalParser(ParserStrategy):
@@ -65,13 +39,13 @@ class MinerULocalParser(ParserStrategy):
 
     @property
     def name(self) -> str:
-        return "mineru"
+        return "mineru-local"
 
     async def parse(self, pdf_path: str) -> ParseResult:
         """Parse PDF by converting pages to images and calling model-server."""
         logger.info(f"MinerU local parsing: {pdf_path}")
 
-        images = await asyncio.to_thread(_pdf_to_images, pdf_path, self._dpi)
+        images = await asyncio.to_thread(pdf_to_images, pdf_path, self._dpi)
         logger.info(f"Converted {len(images)} pages to images")
 
         pages: list[PageContent] = []
@@ -105,7 +79,7 @@ class MinerULocalParser(ParserStrategy):
         image: Image.Image,
     ) -> PageContent:
         """Extract content from a single page image via model-server."""
-        b64 = _image_to_base64(image)
+        b64 = image_to_base64(image)
 
         payload = {
             "model": self._model_id,

@@ -26,7 +26,7 @@ class TestMinerUParser:
         )
 
     def test_name(self, parser):
-        assert parser.name == "mineru"
+        assert parser.name == "mineru-remote"
 
     @pytest.mark.asyncio
     async def test_parse_success(self, parser):
@@ -63,7 +63,7 @@ class TestMinerUParser:
 
         assert isinstance(result, ParseResult)
         assert result.metadata.total_pages == 2
-        assert result.parser_used == "mineru"
+        assert result.parser_used == "mineru-remote"
 
     @pytest.mark.asyncio
     async def test_parse_create_task_fails(self, parser):
