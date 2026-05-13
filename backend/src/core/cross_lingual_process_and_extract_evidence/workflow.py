@@ -42,9 +42,6 @@ class TranslationService:
     def _node_format(self, state: PipelineState) -> PipelineState:
         formatted = self._formatter.format(state.pages)
         state.formatted = formatted
-        state.source_language = formatted.source_language or detect_language(
-            formatted.formatted_markdown
-        )
         return state
 
     @traced_node("detect_language")

@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List, Tuple
 
+import httpx
+import openai
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from loguru import logger
@@ -62,15 +64,23 @@ class MultiStageTranslator(BaseTranslator):
     # ── Helpers ─────────────────────────────────────────────────────────
 
     _MAX_RETRIES: int = 2
+    _TRANSIENT_EXCEPTIONS = (
+        openai.APITimeoutError,
+        openai.APIConnectionError,
+        openai.RateLimitError,
+        openai.InternalServerError,
+        httpx.TimeoutException,
+        httpx.ConnectError,
+    )
 
     def _invoke_with_retry(self, prompt: str, stage: str) -> str:
-        """Call LLM with retry on transient failures."""
+        """Call LLM with retry on transient failures only."""
         last_exc: Exception | None = None
         for attempt in range(1, self._MAX_RETRIES + 1):
             try:
                 response = self._llm.invoke([HumanMessage(content=prompt)])
                 return self._to_text(response.content)
-            except Exception as exc:
+            except self._TRANSIENT_EXCEPTIONS as exc:
                 last_exc = exc
                 logger.warning(
                     "Stage {} attempt {}/{} failed: {}", stage, attempt, self._MAX_RETRIES, exc,
@@ -79,15 +89,28 @@ class MultiStageTranslator(BaseTranslator):
 
     @staticmethod
     def _parse_terminology(raw: str) -> Dict[str, str]:
-        """Parse 'source:target' lines into a dict."""
+        """Parse 'source: target' lines into a dict.
+
+        Validates: both sides ≤10 words, source side contains non-ASCII
+        (since source language is non-English for translation).
+        """
         result: Dict[str, str] = {}
         for line in raw.splitlines():
             line = line.strip()
             if not line:
                 continue
             match = re.match(r"^(.+?):\s*(.+)$", line)
-            if match:
-                result[match.group(1).strip()] = match.group(2).strip()
+            if not match:
+                continue
+            source = match.group(1).strip()
+            target = match.group(2).strip()
+            # Skip lines that look like English notes/comments
+            if len(source.split()) > 10 or len(target.split()) > 10:
+                continue
+            # Source side should contain non-ASCII (CJK/non-English term)
+            if source.isascii():
+                continue
+            result[source] = target
         return result
 
     # ── Individual stages ────────────────────────────────────────────────
@@ -134,7 +157,7 @@ class MultiStageTranslator(BaseTranslator):
 
     # ── Full pipeline ────────────────────────────────────────────────────
 
-    def _translate(self, formatted: FormattedDocument) -> Tuple[str, Dict[str, str], str, str, List[str], List[str]]:
+    def run_pipeline(self, formatted: FormattedDocument) -> Tuple[str, Dict[str, str], str, str, List[str], List[str]]:
         terminology = self.extract_terminology(formatted)
         structure_plan = self.plan_structure(formatted)
         draft, source_segments = self.translate_segments(formatted, terminology, structure_plan)
@@ -162,7 +185,7 @@ class MultiStageTranslator(BaseTranslator):
 
     def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
         terminology_map, structure_plan, draft, translated, source_segments, warnings = (
-            self._translate(formatted)
+            self.run_pipeline(formatted)
         )
         translated_sentences = translated.split("\n\n") if translated else []
         tr_segments: list[TranslationSegment] = []

@@ -1,7 +1,7 @@
 from src.core.cross_lingual_process_and_extract_evidence.format.formatter import (
     extract_sentences,
     build_page_offset_map,
-    format_markdown,
+    _format_markdown,
 )
 from src.core.cross_lingual_process_and_extract_evidence.contracts import FormattedDocument
 
@@ -35,7 +35,7 @@ def test_format_markdown_returns_formatted_document():
     pages = [
         {"page_number": 1, "markdown": "Some content about genes."},
     ]
-    result = format_markdown(pages)
+    result = _format_markdown(pages)
     assert isinstance(result, FormattedDocument)
     assert result.formatted_markdown != ""
     assert result.metadata["page_count"] == 1

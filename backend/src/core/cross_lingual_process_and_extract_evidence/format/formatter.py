@@ -101,7 +101,7 @@ def _fix_markdown_headings(text: str) -> str:
     return text
 
 
-def format_markdown(
+def _format_markdown(
     pages: List[Dict[str, Any]],
     raw_markdown: str = "",
 ) -> FormattedDocument:
@@ -141,4 +141,4 @@ class MarkdownFormatter(BaseFormatter):
     """Concrete formatter implementing the BaseFormatter interface."""
 
     def format(self, pages: List[Dict[str, Any]]) -> FormattedDocument:
-        return format_markdown(pages)
+        return _format_markdown(pages)

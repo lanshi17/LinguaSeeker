@@ -15,7 +15,7 @@ class BaseTranslator(ABC):
     """
 
     @abstractmethod
-    def _translate(self, formatted: FormattedDocument) -> Tuple[Dict[str, str], str, str, str, List[str], List[str]]:
+    def run_pipeline(self, formatted: FormattedDocument) -> Tuple[Dict[str, str], str, str, str, List[str], List[str]]:
         """Run the full translation pipeline.
 
         Returns (terminology_map, structure_plan, draft, translated, source_segments, warnings).

@@ -15,8 +15,7 @@ class LanguageRouter:
 
     @staticmethod
     def route(state: PipelineState) -> Literal["translate", "skip_translate"]:
-        if state.needs_translation and not should_skip_translation(
-            state.formatted.formatted_markdown if state.formatted else ""
-        ):
-            return "translate"
-        return "skip_translate"
+        text = state.formatted.formatted_markdown if state.formatted else ""
+        if should_skip_translation(text):
+            return "skip_translate"
+        return "translate"
