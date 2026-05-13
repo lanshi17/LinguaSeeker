@@ -70,7 +70,14 @@ def segment_text(
     ``prompt_overhead_tokens`` reduces the effective budget per segment.
     """
     effective_max = max(1, max_tokens - prompt_overhead_tokens - 20)
-    max_chars = effective_max * 4
+    # CJK chars are ~1 token each (not 4 like ASCII), so adjust char budget
+    # based on actual content composition
+    cjk_count = sum(1 for ch in text if not ch.isascii())
+    total = len(text) or 1
+    cjk_ratio = cjk_count / total
+    # Blend: ASCII-heavy → 4 chars/token, CJK-heavy → 1.2 chars/token
+    chars_per_token = 4.0 - cjk_ratio * 2.8
+    max_chars = int(effective_max * chars_per_token)
 
     paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
     paragraph_units: List[str] = []
