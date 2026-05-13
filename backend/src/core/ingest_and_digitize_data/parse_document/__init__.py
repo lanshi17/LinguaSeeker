@@ -32,9 +32,7 @@ def create_parse_service(config=None) -> ParseDocumentService:
     """
     from src.core.config import get_config
 
-    from .local.parser import MinerULocalParser
     from .orchestrator import DocumentParseOrchestrator
-    from .remote.parser import MinerURemoteParser
 
     if config is None:
         cfg = get_config()

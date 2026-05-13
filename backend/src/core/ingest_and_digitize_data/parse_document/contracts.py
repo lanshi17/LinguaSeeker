@@ -123,7 +123,6 @@ class DedupResult:
     file_path: str
     hash: str
     is_duplicate: bool
-    existing_path: Path | None
 
 
 class ParseAndSaveResult(ParseResult):

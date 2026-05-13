@@ -56,7 +56,7 @@ class TestParseDocumentService:
         assert result.saved_files.md_path.name == "output.md"
 
     @pytest.mark.asyncio
-    async def test_check_duplicate(self, service):
+    async def test_dedup(self, service):
         with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io") as mock_files:
             mock_files.check_duplicate.return_value = {"hash": "abc123", "is_duplicate": True}
 

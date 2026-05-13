@@ -79,12 +79,10 @@ class ParseDocumentService:
         results = []
         for file_path in file_paths:
             raw = files_io.check_duplicate(file_path, known_hashes)
-            existing = raw.get("existing_path")
             results.append(DedupResult(
                 file_path=file_path,
                 hash=raw.get("hash", ""),
                 is_duplicate=raw.get("is_duplicate", False),
-                existing_path=Path(existing) if existing else None,
             ))
         return results
 

@@ -87,7 +87,6 @@ ParserName = Literal["mineru-remote", "mineru-local", "unknown"]
 | `file_path` | `str` | Checked file path |
 | `hash` | `str` | SHA-256 content hash |
 | `is_duplicate` | `bool` | Whether hash matches known_hashes |
-| `existing_path` | `Path \| None` | Path to existing duplicate (if found) |
 
 ### ParseAndSaveResult
 
