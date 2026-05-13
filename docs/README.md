@@ -40,11 +40,15 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Planned Work
 
-No planned work at this time.
+| date | title | status/PR |
+|---|---|---|
+| 2026-05-12 | [parse document module refactor](planned/2026-05-12-parse-document-refactor.md) | planned |
 
 ## Active Code Reviews
 
-No active code reviews.
+| date | title | status/PR |
+|---|---|---|
+| 2026-05-12 | [cross-lingual module](codereview/2026-05-12-feat-cross-lingual-module.md) | changes requested |
 
 ## Archive Index
 

@@ -19,8 +19,17 @@
 ### 2. 业务代码目录
 
 - 除主入口文件外，所有业务代码必须放入 **`src/`** 目录。
-- Backend 入口：`backend/app/main.py`；业务逻辑放 `backend/app/` 及其子目录。
+- Backend 入口：`backend/app/main.py`；业务逻辑放 `backend/src/` 及其子目录。
 - Frontend 入口：Next.js App Router 页面放 `frontend/app/`；组件放 `frontend/components/`。
+
+### 2.1 架构偏好 — 编排式垂直切片架构
+
+- 设计新模块/组件时，优先采用 **编排式垂直切片架构（Orchestrated Vertical Slice Architecture）**。
+- 编排层只负责流程拓扑、全局状态、路由决策与节点可观测性；不得包含具体业务规则。
+- 垂直特性包负责完整业务闭环：对编排器暴露 `api.py`/Node 接口，内部使用 `core.py` 放纯业务逻辑，`providers.py` 封装 LLM/DB/Rust I/O/外部服务，`contracts.py` 或 `schema.py` 放强类型契约。
+- 全局状态使用 Pydantic 模型作为单一真相源；节点之间通过类型化状态增量通信，禁止裸 `dict` 作为稳定跨模块契约。
+- 本仓库 Backend 映射：`backend/src/agents/` 是 Orchestrator，`backend/src/core/<feature>/` 是 Features，`backend/src/utils/`、`backend/src/dao/`、Rust crates 是 Shared infrastructure，`backend/src/core/config.py` 是 Config。
+- Frontend 映射：`frontend/app/**/page.tsx` 负责页面级编排，`frontend/components/<feature>/` 与 `frontend/lib/hooks/` 承载垂直 UI 特性，`frontend/components/ui/`、`frontend/lib/api/`、`frontend/lib/types/`、`frontend/stores/` 为共享基础设施。
 
 ### 3. 文档管理
 
@@ -231,23 +240,25 @@ ACMG Lingua is a Multi-Agent infrastructure platform for medical genetics litera
 
 #### Backend (`backend/`)
 
-FastAPI async application. Business logic lives in `backend/src/` (not `app/`), organized by pipeline phase:
+FastAPI async application. Business logic lives in `backend/src/` (not `app/`) and should prefer **Orchestrated Vertical Slice Architecture** for new modules: `src/agents/` owns workflow topology, global Pydantic state, routing decisions, and node telemetry; `src/core/<feature>/` owns vertical feature slices; `src/dao/`, `src/utils/`, Rust crates, and shared clients provide infrastructure.
 
 ```
 src/
+├── agents/        # Orchestrator: LangGraph topology, GraphState, router decisions
 ├── core/
 │   ├── config.py                          # pydantic-settings singleton, all env vars
-│   ├── ingest_and_digitize_data/          # Phase 1: literature acquisition + user upload
+│   ├── ingest_and_digitize_data/          # Phase 1 feature slices: acquisition + upload + parsing
 │   │   ├── literature_acquisition/        #   gateway, providers, PubMed, web scrapers
 │   │   └── user_upload/                   #   PDF/DOCX upload handling
-│   ├── cross_lingual_process_and_extract_evidence/  # Phase 2: dual extraction, translation, fusion
-│   ├── standardize_entities_and_align_knowledge/    # Phase 3: entity standardization
-│   └── visualize_evidence_with_expert_in_loop/      # Phase 4: visualization, feedback, export
-├── api/           # FastAPI routes (currently empty, being built)
-├── agents/        # Agent orchestration (currently empty)
-├── dao/           # Data access layer (currently empty)
-└── utils/         # Shared utilities
+│   ├── cross_lingual_process_and_extract_evidence/  # Phase 2 features: extraction, translation, fusion
+│   ├── standardize_entities_and_align_knowledge/    # Phase 3 features: standardization, alignment
+│   └── visualize_evidence_with_expert_in_loop/      # Phase 4 features: review, feedback, export
+├── api/           # FastAPI routes
+├── dao/           # Shared persistence boundary
+└── utils/         # Shared telemetry/logging/hash utilities
 ```
+
+Feature slices should expose orchestrator-facing node adapters (`api.py` when useful), keep pure business behavior in `core.py`, wrap LLM/DB/Rust/external-service calls in `providers.py`, and define typed contracts in `contracts.py` or `schema.py`. Workflow code wires nodes and edges only; it must not embed extraction, translation, standardization, feedback, or report-generation business rules.
 
 Configuration: `src/core/config.py` loads from `.env.local` / `.env` via pydantic-settings. Nested domain models (`cfg.llm`, `cfg.postgresql`, etc.) are built from flat env vars by a `model_validator`. Access via `from src.core.config import get_config`.
 

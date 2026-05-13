@@ -12,6 +12,34 @@ Current MVP behavior remains async task-based: `POST /api/v1/tasks` creates a ta
 
 Autonomous ACMG/AMP classification and full ClinGen GDV scoring are out of current MVP scope unless explicitly re-scoped. The evidence matrix is designed to become the data foundation for downstream medical rating.
 
+## 1.1 Architecture Cutover Rule
+
+Implementation should bias toward **Orchestrated Vertical Slice Architecture** for every new backend module and non-trivial frontend component group.
+
+Backend mapping:
+
+```text
+src/agents/                 # Orchestrator: workflow graph, GraphState, router
+src/core/<feature>/         # Vertical feature slice
+  api.py                    # Node adapter called by orchestrator
+  core.py                   # Pure business/domain logic
+  providers.py              # LLM, DB, Rust I/O, external-service adapters
+  contracts.py              # Feature-local typed contracts
+src/utils/, src/dao/         # Shared infrastructure
+src/core/config.py           # Settings
+```
+
+Frontend mapping:
+
+```text
+app/**/page.tsx             # Route-level orchestration/composition
+components/<feature>/       # Vertical UI slices
+lib/api/, lib/hooks/        # Providers and integration hooks
+lib/types/, stores/         # Shared contracts and runtime UI state
+```
+
+Acceptance criteria for each module task should verify that orchestration contains topology/routing only, feature slices own their business behavior, all cross-slice data uses typed contracts, and node/component boundaries are observable and testable.
+
 ## 2. Phase Overview
 
 ```text
