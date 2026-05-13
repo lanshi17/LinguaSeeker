@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Literal
 
 from .contracts import PipelineState
-from .translate.language_detector import should_skip_translation
+from .cross_lingual.translate.language_detector import should_skip_translation
 
 
 class LanguageRouter:

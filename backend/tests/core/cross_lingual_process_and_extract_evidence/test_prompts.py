@@ -1,4 +1,4 @@
-from src.core.cross_lingual_process_and_extract_evidence.translate.prompts import (
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.prompts import (
     get_terminology_prompt,
     get_structure_prompt,
     get_draft_prompt,

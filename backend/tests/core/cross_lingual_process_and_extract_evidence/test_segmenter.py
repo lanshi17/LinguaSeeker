@@ -1,4 +1,4 @@
-from src.core.cross_lingual_process_and_extract_evidence.format.segmenter import (
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.format.segmenter import (
     estimate_tokens,
     segment_text,
 )
