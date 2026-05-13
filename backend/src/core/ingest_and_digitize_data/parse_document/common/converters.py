@@ -42,7 +42,7 @@ def html_table_to_structured(html: str) -> tuple[list[str], list[list[str]]]:
     return headers, rows
 
 
-def block_to_markdown(block: dict) -> str:  # noqa: dict-return — parsing raw MinerU content_list blocks
+def block_to_markdown(block: dict) -> str:
     """Convert a single content_list block to markdown."""
     block_type = block.get("type", "text")
 
