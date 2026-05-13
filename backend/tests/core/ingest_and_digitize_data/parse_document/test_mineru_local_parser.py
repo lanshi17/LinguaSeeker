@@ -11,7 +11,7 @@ from src.core.ingest_and_digitize_data.parse_document.contracts import (
     ParseResult,
 )
 from src.core.ingest_and_digitize_data.parse_document.exceptions import MinerUAPIError
-from src.core.ingest_and_digitize_data.parse_document.mineru_local_parser import (
+from src.core.ingest_and_digitize_data.parse_document.local.parser import (
     MinerULocalParser,
 )
 
@@ -127,10 +127,10 @@ class TestMinerULocalParserParse:
         }
 
         with patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._pdf_to_images",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.pdf_to_images",
             return_value=[mock_image],
         ), patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._image_to_base64",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.image_to_base64",
             return_value="base64data",
         ):
             mock_resp = MagicMock()
@@ -164,10 +164,10 @@ class TestMinerULocalParserParse:
         }
 
         with patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._pdf_to_images",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.pdf_to_images",
             return_value=[mock_image, mock_image],
         ), patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._image_to_base64",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.image_to_base64",
             return_value="base64data",
         ):
             mock_resp1 = MagicMock()
@@ -196,10 +196,10 @@ class TestMinerULocalParserParse:
         mock_image = MagicMock()
 
         with patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._pdf_to_images",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.pdf_to_images",
             return_value=[mock_image],
         ), patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._image_to_base64",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.image_to_base64",
             return_value="base64data",
         ):
             mock_request = MagicMock()
@@ -222,10 +222,10 @@ class TestMinerULocalParserParse:
         mock_image = MagicMock()
 
         with patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._pdf_to_images",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.pdf_to_images",
             return_value=[mock_image],
         ), patch(
-            "src.core.ingest_and_digitize_data.parse_document.mineru_local_parser._image_to_base64",
+            "src.core.ingest_and_digitize_data.parse_document.local.parser.image_to_base64",
             return_value="base64data",
         ):
             req_error = httpx.ConnectError("Connection refused")

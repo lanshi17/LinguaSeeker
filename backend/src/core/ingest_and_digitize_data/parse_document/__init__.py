@@ -13,7 +13,8 @@ from .exceptions import (
     ParseDocumentError,
     ParserExhaustedError,
 )
-from .mineru_local_parser import MinerULocalParser
+from .local.parser import MinerULocalParser
+from .remote.parser import MinerURemoteParser
 from .service import ParseDocumentService
 
 __all__ = [
@@ -21,6 +22,7 @@ __all__ = [
     "FigurePosition",
     "MinerUAPIError",
     "MinerULocalParser",
+    "MinerURemoteParser",
     "MinerUTimeoutError",
     "PageContent",
     "ParseDocumentError",
