@@ -41,12 +41,10 @@ def test_dedup_result_creation():
         file_path="/tmp/test.pdf",
         hash="abc123",
         is_duplicate=False,
-        existing_path=None,
     )
     assert result.file_path == "/tmp/test.pdf"
     assert result.hash == "abc123"
     assert result.is_duplicate is False
-    assert result.existing_path is None
 
 
 def test_parse_and_save_result_creation():
