@@ -7,7 +7,7 @@
 
 ## Summary Decision
 
-🔄 Request changes — 2 blocking issues, 5 important items
+✅ All blocking and important issues resolved — 2 blocking, 3 important fixed; 2 important deferred
 
 ## Strengths
 
@@ -20,77 +20,44 @@
 
 ## Findings
 
-### 🔴 [blocking] `should_skip_translation("")` returns `False` — empty docs go through 5 LLM calls
+### ~~🔴 [blocking] `should_skip_translation("")` returns `False`~~ ✅ Fixed
 
 **File**: `translate/language_detector.py:42-45`
 
 ```python
-def should_skip_translation(text: str) -> bool:
-    sample = str(text or "").strip()
-    if not sample:
-        return False  # ❌ empty text → full LLM pipeline (5 calls on nothing)
-```
-
-Empty or whitespace-only text falls through to `terminology → structure → draft → polish → review`. For batch processing where some pages have no extractable text, this wastes significant API cost.
-
-**Fix**: Return `True` (skip) for empty text:
-
-```python
 if not sample:
-    return True
+    return True  # ✅ fixed
 ```
 
-### 🔴 [blocking] Lingua `LanguageDetector` initialized twice — doubles memory (~80MB ×2)
+### ~~🔴 [blocking] Lingua `LanguageDetector` initialized twice~~ ✅ Fixed
 
 **Files**: `translate/language_detector.py:8` + `translate/validator.py:9`
 
-```python
-# language_detector.py
-_DETECTOR = LanguageDetectorBuilder.from_all_languages().build()
+Validator now imports `_DETECTOR` and `_CJK_RE` from `language_detector`. ~80MB saved.
 
-# validator.py (duplicate!)
-_DETECTOR = LanguageDetectorBuilder.from_all_languages().build()
-```
-
-The all-languages model is non-trivial. `_CJK_RE` is also duplicated.
-
-**Fix**: Import the module-level `_DETECTOR` and `_CJK_RE` from `language_detector` into `validator`, or extract both into a shared `translate/_detector.py`.
-
-### 🟡 [important] `Translator.translate()` returns opaque 6-tuple
+### ~~🟡 [important] `Translator.translate()` returns opaque 6-tuple~~ ✅ Fixed
 
 **File**: `translate/translator.py:145`
 
-```python
-def translate(self, formatted: FormattedDocument) -> tuple[str, str, str, str, list[str], list[str]]:
-```
+Renamed to `_translate()` (private). ABC updated. First element now `Dict[str, str]` (terminology_map).
 
-Violates project rule #22 (no bare dict/tuple return types). A 6-element tuple requires callers to remember positional order. Since this is only called by `translate_to_result()`, make it private (`_translate`) or use a lightweight dataclass.
-
-### 🟡 [important] No retry/error handling for individual LLM stages
+### ~~🟡 [important] No retry/error handling for individual LLM stages~~ ✅ Fixed
 
 **File**: `translate/translator.py:108-115`
 
-`translate_segments()` raises `RuntimeError` on any segment failure, losing all prior work. The old version had `node_translation_max_retries: int = 2`. Individual segment failures should be caught and reflected in warnings.
+Added `_invoke_with_retry(max_retries=2)` used by all LLM stages. Per-segment failures retry before raising.
 
-### 🟡 [important] CJK-unaware `max_chars` penalizes CJK documents
+### ~~🟡 [important] CJK-unaware `max_chars` penalizes CJK documents~~ ✅ Fixed
 
 **File**: `format/segmenter.py:74`
 
-```python
-max_chars = effective_max * 4  # assumes 4 ASCII chars/token
-```
+Now uses blended `chars_per_token` (4.0 for ASCII → 1.2 for CJK-heavy) based on actual content composition.
 
-CJK characters count as ~1 token each, so the char budget is 4× too small for CJK-heavy documents, causing over-segmentation. Since CJK documents are the primary translation target, this matters.
-
-### 🟡 [important] `TerminologyMap` always empty in result
+### ~~🟡 [important] `TerminologyMap` always empty in result~~ ✅ Fixed
 
 **File**: `translate/translator.py:193`
 
-```python
-terminology_map={},  # always empty — never parsed from LLM response
-```
-
-The terminology extraction LLM stage runs and feeds into draft/polish prompts, but the structured map is never parsed back. Either parse it or remove the field from `TranslationResult`.
+Added `_parse_terminology()` to parse `source:target` lines into `Dict[str, str]`. Map now populated in result.
 
 ### 🟡 [important] Test coverage gaps
 
@@ -121,6 +88,11 @@ Fine in practice (~microseconds); `bisect` would be O(log N).
 ## Verification
 
 ```
-uv run ruff check                              → 4 errors (all pre-existing, none in this module)
-uv run pytest tests/core/cross_lingual.../ -q  → 41 passed in 12.31s
+uv run ruff check                              → All checks passed
+uv run pytest tests/core/cross_lingual.../ -v  → 44 passed in 0.64s
 ```
+
+### Remaining (deferred)
+
+- **I5**: Test coverage gaps — edge cases for helpers and empty-doc workflow
+- **Nits**: sentence boundary regex, dead `from_pages()`, empty `__init__.py`, `_resolve_page` O(n)
