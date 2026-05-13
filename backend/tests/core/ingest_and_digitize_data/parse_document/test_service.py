@@ -10,30 +10,35 @@ from src.core.ingest_and_digitize_data.parse_document.contracts import (
     PageContent,
     ParseResult,
 )
-from src.core.ingest_and_digitize_data.parse_document.parser_factory import ParserFactory
 from src.core.ingest_and_digitize_data.parse_document.service import ParseDocumentService
 
 
 class TestParseDocumentService:
     @pytest.fixture
-    def service(self):
-        return ParseDocumentService(model_server_url="http://localhost:8001")
+    def mock_orchestrator(self):
+        orchestrator = AsyncMock()
+        orchestrator.name = "orchestrator"
+        return orchestrator
+
+    @pytest.fixture
+    def service(self, mock_orchestrator):
+        return ParseDocumentService(orchestrator=mock_orchestrator)
 
     @pytest.mark.asyncio
-    async def test_parse(self, service):
+    async def test_parse(self, service, mock_orchestrator):
         mock_result = ParseResult(
             metadata=DocumentMetadata(total_pages=1, title="Test"),
             pages=[PageContent(page_number=1, markdown="# Test")],
             parser_used="mineru-remote",
         )
+        mock_orchestrator.parse.return_value = mock_result
 
-        with patch.object(ParserFactory, "parse", new_callable=AsyncMock, return_value=mock_result):
-            result = await service.parse("https://example.com/test.pdf")
+        result = await service.parse("https://example.com/test.pdf")
 
         assert result.parser_used == "mineru-remote"
 
     @pytest.mark.asyncio
-    async def test_parse_and_save(self, service, tmp_path):
+    async def test_parse_and_save(self, service, mock_orchestrator, tmp_path):
         output_dir = str(tmp_path / "output")
 
         mock_result = ParseResult(
@@ -41,20 +46,21 @@ class TestParseDocumentService:
             pages=[PageContent(page_number=1, markdown="# Test")],
             parser_used="mineru-remote",
         )
+        mock_orchestrator.parse.return_value = mock_result
 
-        with patch.object(ParserFactory, "parse", new_callable=AsyncMock, return_value=mock_result), \
-             patch("rust_io.files.File") as mock_file_cls:
-            mock_file_instance = MagicMock()
-            mock_file_cls.return_value = mock_file_instance
-
+        with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io") as mock_files:
             result = await service.parse_and_save("https://example.com/test.pdf", output_dir)
 
         assert result.parser_used == "mineru-remote"
-        assert mock_file_instance.write.call_count == 2  # markdown + metadata JSON
+        assert result.saved_files is not None
+        assert result.saved_files.md_path.name == "output.md"
 
     @pytest.mark.asyncio
     async def test_check_duplicate(self, service):
-        with patch("rust_io.files.check_duplicate", return_value={"hash": "abc123", "is_duplicate": True}):
-            result = await service.check_duplicate("/tmp/test.pdf", ["abc123"])
+        with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io") as mock_files:
+            mock_files.check_duplicate.return_value = {"hash": "abc123", "is_duplicate": True}
 
-        assert result["is_duplicate"] is True
+            results = await service.dedup(["/tmp/test.pdf"], ["abc123"])
+
+            assert len(results) == 1
+            assert results[0].is_duplicate is True
