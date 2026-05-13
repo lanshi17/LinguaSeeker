@@ -46,9 +46,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Active Code Reviews
 
-| date | title | status/PR |
-|---|---|---|
-| 2026-05-12 | [cross-lingual module](codereview/2026-05-12-feat-cross-lingual-module.md) | changes requested |
+No active code reviews.
 
 ## Archive Index
 
@@ -74,7 +72,8 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status/PR |
 |---|---|---|
-| 2026-05-12 | [cross-lingual module v2 — fixes applied](archive/codereview/2026-05-12-feat-cross-lingual-module.md) | resolved |
+| 2026-05-12 | [cross-lingual module v2](archive/codereview/2026-05-12-feat-cross-lingual-module-v2.md) | resolved — 58/58 tests |
+| 2026-05-12 | [cross-lingual module v1](archive/codereview/2026-05-12-feat-cross-lingual-module-v1.md) | resolved |
 | 2026-05-11 | [mineru-vlm-vllm review pass 4 — approved](archive/codereview/2026-05-11-mineru-vlm-vllm-migration-review-4.md) | approved |
 | 2026-05-11 | [mineru-vlm-vllm review pass 3](archive/codereview/2026-05-11-mineru-vlm-vllm-migration-review-3.md) | resolved |
 | 2026-05-11 | [mineru-vlm-vllm review pass 2](archive/codereview/2026-05-11-mineru-vlm-vllm-migration-review-2.md) | resolved |
