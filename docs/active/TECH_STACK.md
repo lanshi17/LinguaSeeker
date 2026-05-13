@@ -56,6 +56,29 @@
 5. **Bi-directional traceability is mandatory.** Evidence without original anchors, and translated anchors when translated text exists, cannot support displayed evidence rows.
 6. **Standardization is layered.** Exact match → synonym match → vector match → conflict resolver Agent.
 
+
+## 2.1 Orchestrated Vertical Slice Architecture
+
+The preferred design style for new modules is **Orchestrated Vertical Slice Architecture**:
+
+```text
+orchestrator/      workflow topology, global state, router decisions
+features/          vertical business slices with api/core/providers/schema
+shared/            reusable clients, telemetry, persistence, low-level utilities
+config/            environment-backed settings
+```
+
+In this repository the backend mapping is `src/agents/` for orchestration, `src/core/<phase-or-feature>/` for feature slices, `src/utils/` + `src/dao/` + Rust crates for shared infrastructure, and `src/core/config.py` for configuration. The frontend mapping is route pages as composition/orchestration, feature-oriented components/hooks as vertical slices, and `lib/api`, `lib/types`, `stores`, and UI primitives as shared infrastructure.
+
+Implementation rules:
+
+- Use Pydantic models for global graph/task state and API boundaries.
+- Use feature-local contracts for internal slice data; avoid passing untyped dictionaries across nodes.
+- Keep orchestration declarative: node registration, edges, and routing only.
+- Keep business behavior inside the feature slice that owns the domain step.
+- Wrap external dependencies through providers or shared clients so core logic remains testable.
+- Capture per-node telemetry centrally for linear observability.
+
 ## 3. Backend Architecture
 
 ### 3.1 Source Layout

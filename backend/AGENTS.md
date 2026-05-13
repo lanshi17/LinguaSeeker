@@ -24,7 +24,7 @@ Modern tools only. System-level installs are prohibited.
 
 | Purpose | Path |
 |---|---|
-| Backend entry | `app/main.py`, business logic in `app/` and subdirectories |
+| Backend entry | `app/main.py`, business logic in `src/` and subdirectories |
 | Frontend entry | Next.js App Router in `frontend/app/`, components in `frontend/components/` |
 | Documentation | `docs/` (archive: `docs/archive/`) |
 | Tests | `tests/` (Rust: `libs/rust-io/tests/`) |
@@ -32,6 +32,17 @@ Modern tools only. System-level installs are prohibited.
 | Database | `database/` (migrations: `migrations/`, seeds: `seeds/`) |
 | Deployment | `deploy/` |
 | Logs | `logs/` (timestamped, e.g. `2026-05-04_143000.log`) |
+
+
+### 1.2.1 Architecture Preference: Orchestrated Vertical Slice
+
+New modules should prefer **Orchestrated Vertical Slice Architecture**:
+
+- `src/agents/` is the orchestrator: LangGraph topology, global Pydantic state, router decisions, node telemetry.
+- `src/core/<feature>/` contains vertical feature slices. A non-trivial slice should expose an `api.py` node adapter, keep pure domain behavior in `core.py`, wrap LLM/DB/Rust/external dependencies in `providers.py`, and define feature-local contracts in `contracts.py` or `schema.py`.
+- `src/utils/`, `src/dao/`, Rust crates, and shared clients are infrastructure. Business core code must not depend directly on SDK clients when a provider boundary is practical.
+- Workflow code wires nodes and edges only; feature packages own the biomedical, translation, standardization, feedback, and report-generation decisions.
+- Cross-node state uses typed Pydantic/dataclass/TypedDict contracts. Do not introduce stable bare-dict return contracts.
 
 ### 1.3 Branching & Commits
 

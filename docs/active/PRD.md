@@ -6,6 +6,19 @@ ACMG Lingua is a Multi-Agent infrastructure platform for medical genetics litera
 
 The system provides a high-quality data foundation for downstream clinical interpretation and research computation. It does not perform final autonomous ACMG/GDV medical classification in the current scope.
 
+## 1.1 Preferred Architecture Direction
+
+New modules and components should prefer **Orchestrated Vertical Slice Architecture**: a thin orchestrator owns workflow topology, routing, and state transitions, while vertical feature slices own cohesive business logic end to end. The orchestrator decides **how the pipeline is connected**; feature packages decide **what a domain step does**.
+
+For backend implementation, this maps to `src/agents/` as the orchestration layer, `src/core/<pipeline-slice>/` as feature slices, `src/core/config.py` plus `src/utils/`/`src/dao/` as shared infrastructure, and Pydantic contracts as the state/data boundary. For frontend implementation, route pages compose feature-oriented components and hooks rather than embedding pipeline logic directly in page files.
+
+Design implications:
+
+- Keep `GraphState`/task state as the single typed source of truth for pipeline data flow.
+- Expose each feature to the orchestrator through a small node/API function that unpacks state, calls feature core logic, and returns a typed state delta.
+- Keep LLM, database, file, and external-service SDK calls behind feature-local providers or shared clients; pure core logic must not depend directly on SDKs.
+- Trace node input/output, duration, warnings, and errors consistently so evidence generation is linearly observable.
+
 ## 2. Core Problems
 
 | Problem | Product Response |

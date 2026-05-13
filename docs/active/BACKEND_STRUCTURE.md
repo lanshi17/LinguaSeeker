@@ -20,6 +20,35 @@ Current MVP state model:
 - Review comments/feedback require login.
 - Deployed task creation should require login; local development may allow unrestricted task creation.
 
+## 1.1 Preferred Module Architecture
+
+Backend modules should prefer **Orchestrated Vertical Slice Architecture**. The physical project keeps the current `backend/src/` layout, but new pipeline capabilities should map to the following roles:
+
+```text
+backend/src/
+├── agents/                         # Orchestrator: LangGraph topology, GraphState, routing
+│   ├── supervisor.py               # Workflow graph and node wiring
+│   ├── state.py                    # Global Pydantic task/graph state
+│   └── router.py                   # Conditional next-hop decisions when needed
+├── core/                           # Feature slices: cohesive business steps
+│   └── <pipeline_feature>/
+│       ├── api.py                  # Node adapter exposed to orchestrator
+│       ├── core.py                 # Pure domain logic
+│       ├── providers.py            # LLM/DB/Rust/external-service adapters
+│       └── contracts.py            # Feature-local Pydantic/dataclass/TypedDict models
+├── utils/                          # Shared telemetry/logging/hash utilities
+├── dao/                            # Shared persistence boundary
+└── core/config.py                  # Shared settings
+```
+
+Contracts:
+
+- `src/agents/state.py` defines the global Pydantic state used by workflow nodes. Treat it as the single source of truth for cross-feature data flow.
+- A feature node receives the global state, extracts only the fields it needs, calls feature-local core logic/providers, and returns a typed state delta.
+- `core.py` should remain pure where practical; SDK clients, model calls, Rust I/O, and database access belong in `providers.py`, `dao/`, or shared clients.
+- `supervisor.py`/workflow code wires nodes and edges only. It must not embed extraction, translation, standardization, or report-generation business logic.
+- Telemetry should wrap every node so input IDs, output IDs, warnings, errors, and duration are traceable without ad-hoc logging in each workflow edge.
+
 ## 2. Directory Structure
 
 ```text

@@ -44,6 +44,27 @@ User Input (PMID / DOI / keyword / local PDF / local DOCX)
 
 ACMG Lingua's current product scope ends at structured evidence extraction, standardization, bilingual review, and evidence summary export. Downstream medical rating can consume the evidence matrix, but final ACMG/GDV classification is out of current MVP scope.
 
+## 1.1 Runtime Architecture Flow
+
+Application flow should be implemented as **Orchestrated Vertical Slice Architecture**:
+
+```text
+Entry/API
+  │
+  ▼
+Orchestrator: workflow topology + GraphState + router
+  │
+  ├──► Feature slice: acquisition / upload / parsing
+  ├──► Feature slice: native extraction / translation / translated extraction / fusion
+  ├──► Feature slice: standardization / evidence matrix
+  └──► Feature slice: bilingual review / feedback / export
+          │
+          ▼
+Shared infrastructure: config, clients, persistence, telemetry
+```
+
+At runtime, `main.py`/FastAPI initializes task input into a typed state object, the orchestrator dispatches the next feature node, each node returns a state delta, and the router determines the next hop. Feature internals may contain `api.py`/node adapters, `core.py` pure domain logic, `providers.py` external dependency wrappers, and `schema.py` or `contracts.py` private models. The orchestrator must not contain biomedical extraction, translation, standardization, or report-generation business rules.
+
 ## 2. Phase 1: Literature Acquisition and Digitization
 
 ### 2.1 Input Routing

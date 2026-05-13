@@ -116,6 +116,29 @@ frontend/
 └── tsconfig.json
 ```
 
+### 3.1 Component Architecture Preference
+
+Frontend modules should mirror **Orchestrated Vertical Slice Architecture** at UI scale:
+
+```text
+app/(route)/page.tsx          # Page-level orchestration and data composition only
+components/<feature>/         # Vertical UI feature slices
+components/ui/                # Shared primitives
+lib/api/                      # Backend API providers
+lib/hooks/                    # Feature/provider hooks
+lib/types/                    # Cross-feature contracts
+stores/                       # Global UI/runtime state only
+```
+
+When a screen grows beyond simple composition, split it by feature responsibility rather than by technical widget type alone. For example, bilingual evidence review should keep document rendering, translated rendering, evidence matrix behavior, and feedback submission as cohesive slices with explicit typed props/contracts. Page files should wire slices together and pass state; they should not contain evidence-specific business rules, source-anchor resolution, or feedback normalization logic.
+
+Component slice rules:
+
+- `api`/hook layer fetches or mutates backend data.
+- `core`/utility functions handle pure UI-domain transformations such as grouping evidence rows or resolving highlight targets.
+- Component views render state and emit typed events.
+- Shared UI primitives stay generic and must not depend on ACMG evidence concepts.
+
 ## 4. Primary Screens
 
 ### 4.1 Analysis Page
