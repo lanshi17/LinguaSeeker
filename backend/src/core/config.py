@@ -338,6 +338,10 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from_email: str = ""
 
+    # ── Cross-lingual output ─────────────────────────────────────────────
+
+    cross_lingual_output_dir: str = "data/cross_lingual_output"
+
     # ── Nested domain models (populated by validator) ────────────────────
 
     llm: LLMConfig = Field(default_factory=LLMConfig, exclude=True)
