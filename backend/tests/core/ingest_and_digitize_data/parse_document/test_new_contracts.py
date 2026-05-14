@@ -70,8 +70,19 @@ def test_parse_and_save_result_creation():
         saved_files=saved,
     )
     assert result.parser_used == "mineru-remote"
+    assert result.images == {}
     assert result.saved_files is not None
     assert result.saved_files.md_path == Path("/tmp/output.md")
     assert result.saved_files.metadata_path == Path("/tmp/metadata.json")
     assert result.saved_files.output_dir == Path("/tmp")
     assert result.saved_files.created_at == now
+
+    # With explicit images
+    result_with_images = ParseAndSaveResult(
+        metadata=DocumentMetadata(total_pages=1),
+        pages=[PageContent(page_number=1, markdown="test")],
+        parser_used="mineru-remote",
+        images={"images/fig.jpg": b"\xff\xd8"},
+        saved_files=saved,
+    )
+    assert result_with_images.images == {"images/fig.jpg": b"\xff\xd8"}
