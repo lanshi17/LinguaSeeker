@@ -96,7 +96,7 @@ def test_cross_lingual_output_fields():
         source_language="zh",
         terminology_map={"基因": "gene"},
         translation_warnings=[],
-        saved_dir="/tmp/out",
+        output_dir="/tmp/out",
         original_md_path="/tmp/out/original.md",
         translated_md_path="/tmp/out/translated.md",
         image_paths=["/tmp/out/images/fig1.png"],

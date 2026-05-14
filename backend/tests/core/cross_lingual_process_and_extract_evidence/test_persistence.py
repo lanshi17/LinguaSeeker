@@ -102,5 +102,5 @@ class TestDocumentPersistenceService:
 
         assert output.formatted_original == "原始文本内容"
         assert output.translated_english == "Original text content"
-        assert output.saved_dir == str(saved.output_dir)
+        assert output.output_dir == str(saved.output_dir)
         assert output.original_md_path == str(saved.original_md_path)

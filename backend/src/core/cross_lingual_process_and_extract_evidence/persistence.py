@@ -5,7 +5,6 @@ import json
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List
 
 from loguru import logger
 
@@ -35,7 +34,7 @@ class DocumentPersistenceService:
         result: TranslationResult,
         output_dir: str,
         doc_id: str,
-        image_paths: List[str] | None = None,
+        image_paths: list[str] | None = None,
     ) -> SavedDocuments:
         """Save translation result and images to local directory.
 
@@ -61,6 +60,7 @@ class DocumentPersistenceService:
         logger.info("Saved translated markdown: {}", translated_path)
 
         # Write metadata
+        now = datetime.now(timezone.utc)
         metadata = {
             "doc_id": doc_id,
             "source_language": result.source_language,
@@ -68,7 +68,7 @@ class DocumentPersistenceService:
             "translation_warnings": result.translation_warnings,
             "sentence_count": len(result.sentences),
             "segment_count": len(result.segments),
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": now.isoformat(),
         }
         meta_path = base / "metadata.json"
         meta_path.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -77,7 +77,7 @@ class DocumentPersistenceService:
         # Copy images
         image_dir = base / "images"
         image_dir.mkdir(exist_ok=True)
-        saved_image_paths: List[Path] = []
+        saved_image_paths: list[Path] = []
         for src in image_paths or []:
             src_path = Path(src)
             if not src_path.exists():
@@ -98,7 +98,7 @@ class DocumentPersistenceService:
             image_dir=image_dir,
             image_paths=saved_image_paths,
             output_dir=base,
-            created_at=datetime.now(timezone.utc),
+            created_at=now,
         )
 
     @staticmethod
@@ -113,7 +113,7 @@ class DocumentPersistenceService:
             source_language=result.source_language,
             terminology_map=result.terminology_map,
             translation_warnings=result.translation_warnings,
-            saved_dir=str(saved.output_dir),
+            output_dir=str(saved.output_dir),
             original_md_path=str(saved.original_md_path),
             translated_md_path=str(saved.translated_md_path),
             image_paths=[str(p) for p in saved.image_paths],

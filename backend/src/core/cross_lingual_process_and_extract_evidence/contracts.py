@@ -98,7 +98,7 @@ class SavedDocuments:
     translated_md_path: Path
     metadata_path: Path
     image_dir: Path
-    image_paths: List[Path]
+    image_paths: list[Path]
     output_dir: Path
     created_at: datetime
 
@@ -114,11 +114,11 @@ class CrossLingualOutput(BaseModel):
     translated_english: str
     source_language: str
     terminology_map: Dict[str, str]
-    translation_warnings: List[str]
-    saved_dir: str
+    translation_warnings: list[str]
+    output_dir: str
     original_md_path: str
     translated_md_path: str
-    image_paths: List[str]
+    image_paths: list[str]
 
 
 # ── Pipeline state (LangGraph) ─────────────────────────────────────────
@@ -138,4 +138,4 @@ class PipelineState(BaseModel):
     source_language: str = ""
     needs_translation: bool = True
     translation_result: Optional[TranslationResult] = None
-    image_paths: List[str] = Field(default_factory=list)
+    image_paths: list[str] = Field(default_factory=list)
