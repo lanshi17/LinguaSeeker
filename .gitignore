@@ -62,3 +62,4 @@ htmlcov/
 # Worktrees
 .worktrees/
 e2e_output
+.codex

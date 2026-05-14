@@ -2,9 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-05-12
-**Completed:** —
+**Completed:** 2026-05-13
 **PR:** —
 
 **Goal:** Refactor the `parse_document` module into two sub-modules (MinerU-remote and MinerU-local) with an orchestrator pattern, shared utilities, and clear input/output schemas.

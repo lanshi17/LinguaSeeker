@@ -26,3 +26,27 @@
 4. Moved HTMLParser import to module level
 
 **Prevention**: When implementing parsing logic, always route test helpers through production code paths. Don't duplicate utility functions — import from the production module. When populating structured data models, verify the fields contain real data, not empty defaults.
+
+## 2026-05-14: Disabled invalid Codex MCP server
+
+**Problem**: Codex global MCP configuration included `time`, but the current session did not expose a corresponding usable MCP tool while `codex mcp list` still showed it enabled.
+
+**Investigation**: Checked `~/.codex/config.toml`, `~/.claude/settings.json`, VS Code MCP configuration, and `codex mcp list`. The active MCP entries were in Codex global config; `time` was the only configured MCP not available in this session.
+
+**Root cause**: Stale/invalid global MCP server configuration for `time` remained in Codex config.
+
+**Fix**: Removed the global MCP server with `codex mcp remove time` and verified the remaining MCP list.
+
+**Prevention**: After adding or changing MCP servers, run `codex mcp list` and verify the tools exposed in the active session match configured entries.
+
+## 2026-05-14: Skill files skipped due to missing YAML frontmatter
+
+**Problem**: Codex skipped loading five skills because their `SKILL.md` files did not start with YAML frontmatter delimited by `---`.
+
+**Investigation**: Checked known valid skill files and confirmed the expected format is a four-line header containing only `name` and `description`, followed by the Markdown body. Inspected the skipped files and found they started directly with `# ...` headings.
+
+**Root cause**: The skill documents had valid body content but lacked the required metadata block, so the loader rejected them before reading the skill content.
+
+**Fix**: Added `name` and `description` frontmatter to `ts-react`, `rust-dev`, `data-analysis`, `agent-dev`, and `bioinformatics` without changing their bodies.
+
+**Prevention**: When adding or syncing skills, validate that every `SKILL.md` begins with `---`, has a valid hyphenated `name`, a trigger-focused `description`, and closes the frontmatter before the Markdown body.
