@@ -46,6 +46,14 @@ class TestFigurePosition:
         fig = FigurePosition(page=1, index=1)
         assert fig.caption is None
 
+    def test_figure_with_img_path(self):
+        fig = FigurePosition(page=1, index=1, caption="Fig 1", img_path="images/fig1.jpg")
+        assert fig.img_path == "images/fig1.jpg"
+
+    def test_figure_img_path_default_none(self):
+        fig = FigurePosition(page=1, index=1)
+        assert fig.img_path is None
+
 
 class TestTableStructure:
     def test_valid_table(self):
