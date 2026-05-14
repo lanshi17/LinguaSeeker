@@ -94,10 +94,12 @@ The sole public method. Consumes upstream parse pages, produces a normalized `Fo
 `MarkdownFormatter.format()` delegates to `_format_markdown()` which runs three phases:
 
 1. **Join & clean**: Concatenates per-page markdown with `\n\n` separators. Runs `_normalize_whitespace()` (collapses ≥3 blank lines, strips trailing spaces) and `_fix_markdown_headings()` (ensures `#` has a space after it).
+`_format_markdown()` also accepts an optional `raw_markdown` parameter that bypasses the per-page join when the caller already has concatenated text.
 
 2. **Bbox tracking**: `build_page_offset_map()` builds a dict where each key is the starting character offset of a page in the concatenated text, and the value is that page number. The +2 padding accounts for the `\n\n` joiner between pages. Example: a 3-page doc with markdown lengths 500, 300, 200 → `{0: 1, 502: 2, 804: 3}`.
 
-3. **Sentence splitting**: `extract_sentences()` uses `re.split(r"(?<=[。！？.!?])\s*")` to split on CJK and Western sentence-ending punctuation. Each sentence gets its `start_offset`/`end_offset` in the full text, and `_resolve_page()` maps those offsets to page numbers via the offset map. The final segment after the last delimiter is captured separately.
+3. **Sentence splitting**: `extract_sentences()` uses a pre-compiled `re.compile(r"(?<=[。！？.!?])\s*")` with `finditer` to split on CJK and Western sentence-ending punctuation. Each sentence gets its `start_offset`/`end_offset` in the full text, and `_resolve_page()` maps those offsets to page numbers via the offset map. The final segment after the last delimiter is captured separately.
+`FormattedDocument.source_language` defaults to `""` when created by the formatter; the orchestrator sets it via `detect_language()` after formatting.
 
 #### Token-Budgeted Segmentation
 
@@ -149,7 +151,7 @@ class MultiStageTranslator(BaseTranslator):
 | Function | Signature | Description |
 |----------|-----------|-------------|
 | `detect_language` | `(text: str, sample_size=4000) -> str` | ISO 639-1 code via `lingua` library |
-| `should_skip_translation` | `(text: str) -> bool` | True if empty, CJK-free, or lingua-detected English |
+| `should_skip_translation` | `(text: str) -> bool` | True if empty or lingua-detected English (CJK fast-path returns False) |
 | `validate_translation_output` | `(source: str, translated: str) -> None` | Raises `ValueError` with `translation_validation_failed:` prefix |
 | `summarize_validation_error` | `(exc: Exception) -> str` | Normalizes validation exception to a string |
 
@@ -162,6 +164,7 @@ class MultiStageTranslator(BaseTranslator):
 | `get_draft_prompt` | `(segment, terminology, structure_plan) -> str` | Translate one segment |
 | `get_polish_prompt` | `(draft, terminology) -> str` | Improve academic English fluency |
 | `get_review_prompt` | `(source, translated) -> str` | Compare source vs translation quality |
+| `get_format_prompt` | `(markdown_content: str) -> str` | Clean/normalize markdown (not used by `MultiStageTranslator`; reserved for future LLM-based formatting stage) |
 
 ### Internal Design
 
@@ -208,7 +211,7 @@ After the pipeline produces `polished`, `translate_to_result()` validates it:
 validate(polished) → if fail → validate(draft) → if fail → warnings only
 ```
 
-Three checks in `validate_translation_output()`:
+Four checks in `validate_translation_output()`:
 | Check | Failure condition | Message |
 |-------|-------------------|---------|
 | Emptiness | `translated` is empty string | `translation_validation_failed: empty` |
