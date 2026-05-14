@@ -55,11 +55,21 @@ class ParseDocumentService:
         files_io.File(str(meta_path)).write(json.dumps(result.metadata.model_dump(), indent=2))
         logger.info(f"Saved metadata to {meta_path}")
 
+        images_dir: Path | None = None
+        if result.images:
+            images_dir = output_path / "images"
+            images_dir.mkdir(parents=True, exist_ok=True)
+            for rel_path, img_bytes in result.images.items():
+                img_file = images_dir / Path(rel_path).name
+                img_file.write_bytes(img_bytes)
+            logger.info(f"Saved {len(result.images)} images to {images_dir}")
+
         return SavedFiles(
             md_path=md_path,
             metadata_path=meta_path,
             output_dir=output_path,
             created_at=datetime.now(timezone.utc),
+            images_dir=images_dir,
         )
 
     async def dedup(
