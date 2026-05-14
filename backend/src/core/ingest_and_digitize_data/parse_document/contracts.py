@@ -121,6 +121,7 @@ class SavedFiles:
     metadata_path: Path
     output_dir: Path
     created_at: datetime
+    images_dir: Path | None = None
 
 
 @dataclass

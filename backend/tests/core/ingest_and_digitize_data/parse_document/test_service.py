@@ -73,6 +73,33 @@ class TestParseDocumentService:
         assert result.images == {"images/fig1.jpg": b"\xff\xd8\xff\xe0"}
 
     @pytest.mark.asyncio
+    async def test_save_persists_images(self, service, tmp_path):
+        result = ParseResult(
+            metadata=DocumentMetadata(total_pages=1),
+            pages=[PageContent(page_number=1, markdown="Content")],
+            images={"images/fig1.jpg": b"\xff\xd8\xff\xe0"},
+        )
+
+        with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io"):
+            saved = await service.save(result, str(tmp_path))
+
+        assert saved.images_dir is not None
+        assert (saved.images_dir / "fig1.jpg").exists()
+        assert (saved.images_dir / "fig1.jpg").read_bytes() == b"\xff\xd8\xff\xe0"
+
+    @pytest.mark.asyncio
+    async def test_save_no_images(self, service, tmp_path):
+        result = ParseResult(
+            metadata=DocumentMetadata(total_pages=1),
+            pages=[PageContent(page_number=1, markdown="Content")],
+        )
+
+        with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io"):
+            saved = await service.save(result, str(tmp_path))
+
+        assert saved.images_dir is None
+
+    @pytest.mark.asyncio
     async def test_dedup(self, service):
         with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io") as mock_files:
             mock_files.check_duplicate.return_value = {"hash": "abc123", "is_duplicate": True}
