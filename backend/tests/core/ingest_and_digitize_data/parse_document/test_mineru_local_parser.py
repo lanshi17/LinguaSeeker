@@ -150,6 +150,7 @@ class TestMinerULocalParserParse:
         assert len(result.pages) == 1
         assert result.full_markdown == "# Hello World"
         assert result.parser_used == "mineru-local"
+        assert result.images == {}
 
     @pytest.mark.asyncio
     async def test_parse_multi_page_aggregation(self, parser):

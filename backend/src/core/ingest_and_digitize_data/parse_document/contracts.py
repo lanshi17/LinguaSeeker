@@ -55,7 +55,12 @@ class PageContent(BaseModel):
 def _figures_from_page(page_number: int, figures: list[dict]) -> list[FigurePosition]:
     """Extract figure positions from raw page data."""
     return [
-        FigurePosition(page=page_number, index=f.get("index", 1), caption=f.get("caption"))
+        FigurePosition(
+            page=page_number,
+            index=f.get("index", 1),
+            caption=f.get("caption"),
+            img_path=f.get("img_path"),
+        )
         for f in figures
     ]
 

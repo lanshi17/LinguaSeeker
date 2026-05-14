@@ -221,3 +221,28 @@ class TestMinerUParser:
 
         page = result["pages"][0]
         assert page["figures"][0]["img_path"] == "images/fig1.jpg"
+
+    def test_build_result_propagates_img_path_to_figure_position(self, parser):
+        """Integration: raw dict with img_path -> ParseResult.pages[0].figures[0].img_path."""
+        raw = {
+            "state": "done",
+            "total_pages": 1,
+            "title": None,
+            "authors": [],
+            "abstract": None,
+            "pages": [
+                {
+                    "page_number": 1,
+                    "markdown": "text",
+                    "figures": [{"index": 1, "caption": "Fig 1", "img_path": "images/fig1.jpg"}],
+                    "tables": [],
+                },
+            ],
+            "full_markdown": "text",
+            "images": {"images/fig1.jpg": b"\xff\xd8\xff\xe0"},
+        }
+        result = parser._build_result(raw)
+
+        assert isinstance(result, ParseResult)
+        assert result.pages[0].figures[0].img_path == "images/fig1.jpg"
+        assert result.images == {"images/fig1.jpg": b"\xff\xd8\xff\xe0"}
