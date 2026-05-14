@@ -26,6 +26,7 @@ class FigurePosition(BaseModel):
     page: int = Field(ge=1)
     index: int = Field(ge=1, description="Figure index on this page")
     caption: str | None = None
+    img_path: str | None = None
 
 
 class TableStructure(BaseModel):
