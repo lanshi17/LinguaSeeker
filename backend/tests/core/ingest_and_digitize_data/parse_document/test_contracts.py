@@ -119,3 +119,19 @@ class TestParseResult:
             full_markdown="Custom markdown",
         )
         assert result.full_markdown == "Custom markdown"
+
+    def test_result_with_images(self):
+        result = ParseResult(
+            metadata=DocumentMetadata(total_pages=1),
+            pages=[PageContent(page_number=1, markdown="Content")],
+            images={"images/fig1.jpg": b"\xff\xd8\xff\xe0", "images/fig2.png": b"\x89PNG"},
+        )
+        assert len(result.images) == 2
+        assert b"\xff\xd8" in result.images["images/fig1.jpg"]
+
+    def test_result_images_default_empty(self):
+        result = ParseResult(
+            metadata=DocumentMetadata(total_pages=1),
+            pages=[PageContent(page_number=1, markdown="Content")],
+        )
+        assert result.images == {}

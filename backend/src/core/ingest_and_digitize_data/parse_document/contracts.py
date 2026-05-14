@@ -99,6 +99,7 @@ class ParseResult(BaseModel):
     pages: list[PageContent]
     full_markdown: str = ""
     parser_used: ParserName = "unknown"
+    images: dict[str, bytes] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def _derive_full_markdown(self) -> ParseResult:
