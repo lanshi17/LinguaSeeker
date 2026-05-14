@@ -64,3 +64,49 @@ def test_pipeline_state_rejects_missing_pages():
     import pytest
     with pytest.raises(Exception):
         PipelineState()  # pages is required
+
+
+def test_saved_documents_fields():
+    """SavedDocuments tracks output file paths."""
+    from pathlib import Path
+    from datetime import datetime, timezone
+
+    from src.core.cross_lingual_process_and_extract_evidence.contracts import SavedDocuments
+
+    saved = SavedDocuments(
+        original_md_path=Path("/tmp/out/original.md"),
+        translated_md_path=Path("/tmp/out/translated.md"),
+        metadata_path=Path("/tmp/out/metadata.json"),
+        image_dir=Path("/tmp/out/images"),
+        image_paths=[Path("/tmp/out/images/fig1.png")],
+        output_dir=Path("/tmp/out"),
+        created_at=datetime.now(timezone.utc),
+    )
+    assert saved.original_md_path.name == "original.md"
+    assert len(saved.image_paths) == 1
+
+
+def test_cross_lingual_output_fields():
+    """CrossLingualOutput is the downstream contract."""
+    from src.core.cross_lingual_process_and_extract_evidence.contracts import CrossLingualOutput
+
+    out = CrossLingualOutput(
+        formatted_original="原始文本",
+        translated_english="Original text",
+        source_language="zh",
+        terminology_map={"基因": "gene"},
+        translation_warnings=[],
+        output_dir="/tmp/out",
+        original_md_path="/tmp/out/original.md",
+        translated_md_path="/tmp/out/translated.md",
+        image_paths=["/tmp/out/images/fig1.png"],
+    )
+    assert out.source_language == "zh"
+    assert out.terminology_map["基因"] == "gene"
+    assert len(out.image_paths) == 1
+
+
+def test_pipeline_state_image_paths():
+    """PipelineState carries image_paths from upstream."""
+    state = PipelineState(pages=[], image_paths=["/data/img1.png", "/data/img2.png"])
+    assert len(state.image_paths) == 2
