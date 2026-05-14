@@ -61,3 +61,77 @@ def test_config_context_from_config_default_temperature():
     del cfg.translation.temperature  # getattr will return default
     ctx = TranslationConfigContext.from_config(cfg)
     assert ctx.temperature == 0.0
+
+
+# ── TranslationService.save() tests ───────────────────────────────────
+
+
+def test_translation_service_save(tmp_path):
+    """TranslationService.save() persists result and returns output."""
+    from src.core.cross_lingual_process_and_extract_evidence.contracts import TranslationResult
+
+    cfg = MagicMock()
+    cfg.translation.model = "test-model"
+    cfg.translation.api_key = "test-key"
+    cfg.translation.base_url = "http://localhost:8001"
+
+    service = TranslationService(cfg=cfg)
+
+    result = TranslationResult(
+        formatted_original="原始文本",
+        translated_english="Original text",
+        source_language="zh",
+        terminology_map={"基因": "gene"},
+        translation_warnings=[],
+        sentences=[],
+        segments=[],
+    )
+
+    output = service.save(
+        result,
+        output_dir=str(tmp_path),
+        doc_id="test_doc",
+    )
+
+    assert output.formatted_original == "原始文本"
+    assert output.translated_english == "Original text"
+    assert output.output_dir.startswith(str(tmp_path))
+    assert output.original_md_path.endswith("original.md")
+
+
+def test_translation_service_save_with_images(tmp_path):
+    """TranslationService.save() forwards image_paths to persistence."""
+    from src.core.cross_lingual_process_and_extract_evidence.contracts import TranslationResult
+
+    # Create fake source images
+    src_dir = tmp_path / "src"
+    src_dir.mkdir()
+    img = src_dir / "fig1.png"
+    img.write_bytes(b"fake_png")
+
+    cfg = MagicMock()
+    cfg.translation.model = "test-model"
+    cfg.translation.api_key = "test-key"
+    cfg.translation.base_url = "http://localhost:8001"
+
+    service = TranslationService(cfg=cfg)
+
+    result = TranslationResult(
+        formatted_original="原始文本",
+        translated_english="Original text",
+        source_language="zh",
+        terminology_map={"基因": "gene"},
+        translation_warnings=[],
+        sentences=[],
+        segments=[],
+    )
+
+    output = service.save(
+        result,
+        output_dir=str(tmp_path / "out"),
+        doc_id="test_doc",
+        image_paths=[str(img)],
+    )
+
+    assert len(output.image_paths) == 1
+    assert output.image_paths[0].endswith("fig1.png")

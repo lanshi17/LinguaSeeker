@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # ── Bbox tracking ────────────────────────────────────────────────────────
@@ -85,6 +87,40 @@ class TranslationResult:
     segments: List[TranslationSegment]
 
 
+# ── Persistence output ─────────────────────────────────────────────────
+
+
+@dataclass
+class SavedDocuments:
+    """Result of persisting cross-lingual documents to storage."""
+
+    original_md_path: Path
+    translated_md_path: Path
+    metadata_path: Path
+    image_dir: Path
+    image_paths: list[Path]
+    output_dir: Path
+    created_at: datetime
+
+
+class CrossLingualOutput(BaseModel):
+    """Typed output contract passed to downstream modules.
+
+    This is the authoritative schema that Phase 3 (standardize entities)
+    receives from Phase 2 (cross-lingual processing).
+    """
+
+    formatted_original: str
+    translated_english: str
+    source_language: str
+    terminology_map: Dict[str, str]
+    translation_warnings: list[str]
+    output_dir: str
+    original_md_path: str
+    translated_md_path: str
+    image_paths: list[str]
+
+
 # ── Pipeline state (LangGraph) ─────────────────────────────────────────
 
 
@@ -102,3 +138,4 @@ class PipelineState(BaseModel):
     source_language: str = ""
     needs_translation: bool = True
     translation_result: Optional[TranslationResult] = None
+    image_paths: list[str] = Field(default_factory=list)
