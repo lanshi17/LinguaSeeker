@@ -334,7 +334,7 @@ class MinerUParser(ParserStrategy):
                     parts.append(md)
                 if block_type == "image":
                     caption = block.get("image_caption", [])
-                    img_path = block.get("img_path", "")
+                    img_path = block.get("img_path")
                     figures.append({
                         "index": len(figures) + 1,
                         "caption": str(caption[0]) if caption else "",
