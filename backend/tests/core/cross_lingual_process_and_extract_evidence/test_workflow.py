@@ -61,3 +61,39 @@ def test_config_context_from_config_default_temperature():
     del cfg.translation.temperature  # getattr will return default
     ctx = TranslationConfigContext.from_config(cfg)
     assert ctx.temperature == 0.0
+
+
+# ── TranslationService.save() tests ───────────────────────────────────
+
+
+def test_translation_service_save(tmp_path):
+    """TranslationService.save() persists result and returns output."""
+    from src.core.cross_lingual_process_and_extract_evidence.contracts import TranslationResult
+
+    cfg = MagicMock()
+    cfg.translation.model = "test-model"
+    cfg.translation.api_key = "test-key"
+    cfg.translation.base_url = "http://localhost:8001"
+
+    service = TranslationService(cfg=cfg)
+
+    result = TranslationResult(
+        formatted_original="原始文本",
+        translated_english="Original text",
+        source_language="zh",
+        terminology_map={"基因": "gene"},
+        translation_warnings=[],
+        sentences=[],
+        segments=[],
+    )
+
+    output = service.save(
+        result,
+        output_dir=str(tmp_path),
+        doc_id="test_doc",
+    )
+
+    assert output.formatted_original == "原始文本"
+    assert output.translated_english == "Original text"
+    assert output.saved_dir.startswith(str(tmp_path))
+    assert output.original_md_path.endswith("original.md")

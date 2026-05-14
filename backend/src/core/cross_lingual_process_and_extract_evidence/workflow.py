@@ -8,7 +8,8 @@ from langgraph.graph import END, StateGraph
 from loguru import logger
 
 from .config_context import TranslationConfigContext
-from .contracts import PipelineState, TranslationResult
+from .contracts import CrossLingualOutput, PipelineState, TranslationResult
+from .persistence import DocumentPersistenceService
 from .cross_lingual.format.formatter import MarkdownFormatter
 from .cross_lingual.translate.language_detector import detect_language
 from .middleware import traced_node
@@ -34,6 +35,7 @@ class TranslationService:
         self._formatter = MarkdownFormatter()
         self._translator = MultiStageTranslator(ctx=self._ctx)
         self._router = LanguageRouter()
+        self._persistence = DocumentPersistenceService()
         self._graph = self._build_graph()
 
     # ── Pipeline nodes (thin delegates) ─────────────────────────────────
@@ -134,3 +136,24 @@ class TranslationService:
             "run_sync() cannot be called from within a running event loop. "
             "Use run() instead."
         )
+
+    def save(
+        self,
+        result: TranslationResult,
+        output_dir: str,
+        doc_id: str,
+        image_paths: list[str] | None = None,
+    ) -> CrossLingualOutput:
+        """Persist result to local storage and return downstream output contract.
+
+        Args:
+            result: TranslationResult from run().
+            output_dir: Root output directory.
+            doc_id: Unique document identifier.
+            image_paths: Optional source image paths to copy.
+
+        Returns:
+            CrossLingualOutput for downstream consumers.
+        """
+        saved = self._persistence.save(result, output_dir, doc_id, image_paths)
+        return self._persistence.to_output(result, saved)
