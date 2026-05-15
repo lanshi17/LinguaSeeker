@@ -246,3 +246,30 @@ class TestMinerUParser:
         assert isinstance(result, ParseResult)
         assert result.pages[0].figures[0].img_path == "images/fig1.jpg"
         assert result.images == {"images/fig1.jpg": b"\xff\xd8\xff\xe0"}
+
+    def test_validate_local_batch_rejects_empty_file_list(self, parser):
+        with pytest.raises(MinerUAPIError, match="at least one file"):
+            parser._validate_local_batch_inputs([], None)
+
+    def test_validate_local_batch_rejects_more_than_50_files(self, parser, tmp_path):
+        paths = []
+        for index in range(51):
+            file_path = tmp_path / f"paper-{index}.pdf"
+            file_path.write_bytes(b"%PDF-1.4\n")
+            paths.append(str(file_path))
+
+        with pytest.raises(MinerUAPIError, match="50 files"):
+            parser._validate_local_batch_inputs(paths, None)
+
+    def test_validate_local_batch_rejects_missing_file(self, parser, tmp_path):
+        missing = tmp_path / "missing.pdf"
+
+        with pytest.raises(MinerUAPIError, match="does not exist"):
+            parser._validate_local_batch_inputs([str(missing)], None)
+
+    def test_validate_local_batch_rejects_data_id_length_mismatch(self, parser, tmp_path):
+        file_path = tmp_path / "paper.pdf"
+        file_path.write_bytes(b"%PDF-1.4\n")
+
+        with pytest.raises(MinerUAPIError, match="data_ids length"):
+            parser._validate_local_batch_inputs([str(file_path)], ["id-1", "id-2"])

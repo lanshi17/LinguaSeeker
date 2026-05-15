@@ -90,6 +90,22 @@ class MinerUParser(ParserStrategy):
 
         return self._build_result(result_data)
 
+    def _validate_local_batch_inputs(self, file_paths: list[str], data_ids: list[str] | None) -> None:
+        """Validate MinerU local-file batch constraints before API calls."""
+        if not file_paths:
+            raise MinerUAPIError("MinerU local batch requires at least one file")
+        if len(file_paths) > 50:
+            raise MinerUAPIError("MinerU local batch cannot exceed 50 files")
+        if data_ids is not None and len(data_ids) != len(file_paths):
+            raise MinerUAPIError("data_ids length must match file_paths length")
+
+        for file_path in file_paths:
+            path = Path(file_path)
+            if not path.exists():
+                raise MinerUAPIError(f"Local file does not exist: {file_path}")
+            if not path.is_file():
+                raise MinerUAPIError(f"Local path is not a file: {file_path}")
+
     async def _create_task(self, pdf_path: str) -> str:
         """Create MinerU parsing task and return task_id."""
         try:
