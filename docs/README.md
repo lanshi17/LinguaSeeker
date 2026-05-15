@@ -45,7 +45,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-05-14 | [evidence extraction design](plans/2026-05-14-evidence-extraction-design.md) | planned |
 | 2026-05-14 | [evidence extraction implementation](plans/2026-05-14-evidence-extraction.md) | planned |
 | 2026-05-14 | [cross-lingual persistence](planned/2026-05-14-cross-lingual-persistence.md) | planned |
-| 2026-05-14 | [parse document image extraction](plans/2026-05-14-parse-document-image-extraction.md) | planned |
 
 ## Active Code Reviews
 
@@ -58,6 +57,8 @@ No active code reviews.
 | date | title | status/PR |
 |---|---|---|
 | 2026-05-12 | [parse document module refactor](archive/plans/2026-05-12-parse-document-refactor.md) | completed — 2026-05-13 |
+| 2026-05-15 | [MinerU local batch upload](archive/plans/2026-05-15-mineru-local-batch-upload.md) | completed — 2026-05-15 |
+| 2026-05-14 | [parse document image extraction](archive/plans/2026-05-14-parse-document-image-extraction.md) | completed — 2026-05-14 |
 | 2026-05-11 | [translation & formatting module](archive/plans/2026-05-11-translation-formatting-module.md) | implemented — branch `feat/cross-lingual-module-v2` |
 | 2026-05-12 | [MinerU2.5-Pro vllm local deployment](archive/plans/2026-05-12-mineru-vllm-local-deployment.md) | completed |
 | 2026-05-11 | [net-io MinerU local upload](archive/plans/2026-05-11-net-io-mineru-local-upload.md) | completed |

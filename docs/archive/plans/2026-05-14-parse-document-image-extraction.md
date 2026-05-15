@@ -8,6 +8,11 @@
 
 **Tech Stack:** Python, Pydantic, pytest, tempfile, zipfile
 
+**Status:** completed
+**Created:** 2026-05-14
+**Completed:** 2026-05-14
+**PR:** —
+
 ---
 
 ## Task 1: Extend `FigurePosition` contract with `img_path`
