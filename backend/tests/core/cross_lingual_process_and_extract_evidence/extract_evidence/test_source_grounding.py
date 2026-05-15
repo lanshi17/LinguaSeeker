@@ -74,3 +74,30 @@ def test_source_grounding_corrects_wrong_offset():
     assert grounded[0].source.page == 2
     assert grounded[0].source.source_precision == SourcePrecision.CORRECTED
     assert grounded[0].raw_source is not None
+
+
+def test_source_grounding_marks_snippet_not_found_as_source_invalid():
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="TP53",
+        source=SourceLocation(
+            span_id="p1",
+            page=1,
+            start_offset=0,
+            end_offset=4,
+            context_type="text",
+            context_ref="Results",
+            text_snippet="TP53",
+            source_precision=SourcePrecision.EXACT,
+        ),
+        confidence=0.9,
+    )
+
+    grounded = SourceGrounder().ground_items(_doc(), [item])
+
+    assert grounded[0].status == EvidenceStatus.SOURCE_INVALID
+    assert grounded[0].raw_source is not None
+    assert grounded[0].raw_source.text_snippet == "TP53"

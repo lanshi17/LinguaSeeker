@@ -34,3 +34,30 @@ def test_quality_validation_marks_unscorable_when_required_item_missing():
     report = QualityValidator(required_field_ids={"B.disease_diagnosis"}).validate([item], contradictions=[])
 
     assert report.scorable is False
+
+
+def test_quality_validator_auto_derives_required_from_catalog():
+    validator = QualityValidator()
+    item = EvidenceItem(
+        field_id="B.disease_diagnosis",
+        category="B",
+        field_name="Disease diagnosis",
+        status=EvidenceStatus.NOT_FOUND,
+        value=None,
+        confidence=0.0,
+    )
+    report = validator.validate([item], contradictions=[])
+    assert report.scorable is False
+
+
+def test_quality_validation_counts_source_invalid():
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.SOURCE_INVALID,
+        value="BRCA1",
+        confidence=0.9,
+    )
+    report = QualityValidator(required_field_ids=set()).validate([item], contradictions=[])
+    assert report.source_invalid_count == 1
