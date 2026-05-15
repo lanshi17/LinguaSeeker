@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from loguru import logger
 
+from .catalog import EVIDENCE_FIELD_SPECS, EvidenceFieldSpec
 from .contracts import (
     EvidenceItem,
     EvidenceStatus,
@@ -15,6 +16,8 @@ from .contracts import (
     SourcePrecision,
     TrackDocument,
 )
+
+_MAX_SNIPPET_MATCHES = 50
 
 
 class SourceGrounder:
@@ -42,10 +45,14 @@ class SourceGrounder:
 
         corrected = self._search_snippet(document, snippet)
         if corrected is None:
-            logger.warning("Snippet '{}' not found in document", snippet)
-            return item
+            logger.warning("Snippet '{}' not found in document, marking SOURCE_INVALID", snippet)
+            return item.model_copy(update={
+                "status": EvidenceStatus.SOURCE_INVALID,
+                "raw_source": source,
+            })
 
         if len(corrected) > 1:
+            # TODO: wire to LLM ambiguity resolution stage (get_source_ambiguity_review_prompt)
             logger.info("Snippet '{}' found {} times, marking ambiguous", snippet, len(corrected))
             new_source = corrected[0].model_copy(update={"source_precision": SourcePrecision.AMBIGUOUS})
             return item.model_copy(update={"source": new_source, "raw_source": source})
@@ -75,6 +82,9 @@ class SourceGrounder:
 
         idx = 0
         while True:
+            if len(results) >= _MAX_SNIPPET_MATCHES:
+                logger.warning("Snippet '{}' found >{} times, truncating", snippet, _MAX_SNIPPET_MATCHES)
+                break
             pos = text.find(snippet, idx)
             if pos == -1:
                 break
@@ -110,8 +120,15 @@ class SourceGrounder:
 class QualityValidator:
     """Rule-based quality validation for extracted evidence."""
 
-    def __init__(self, required_field_ids: set[str]):
-        self._required_field_ids = required_field_ids
+    def __init__(
+        self,
+        required_field_ids: set[str] | None = None,
+        catalog: tuple[EvidenceFieldSpec, ...] = EVIDENCE_FIELD_SPECS,
+    ):
+        if required_field_ids is not None:
+            self._required = required_field_ids
+        else:
+            self._required = {s.field_id for s in catalog if s.required_for_scorable}
 
     def validate(
         self,
@@ -138,7 +155,7 @@ class QualityValidator:
             elif item.status == EvidenceStatus.SOURCE_INVALID:
                 source_invalid_count += 1
 
-        missing_required = self._required_field_ids - {
+        missing_required = self._required - {
             item.field_id for item in items
             if item.status == EvidenceStatus.FOUND
         }

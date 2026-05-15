@@ -38,6 +38,7 @@ class LangChainEvidenceProvider:
     def __init__(self, ctx: EvidenceExtractionConfigContext):
         self._ctx = ctx
         self._secret = SecretStr(ctx.api_key)
+        self._clients: dict[EvidenceModelTier, ChatOpenAI] = {}
 
     def _model_for_tier(self, tier: EvidenceModelTier) -> str:
         if tier == EvidenceModelTier.FAST:
@@ -46,6 +47,17 @@ class LangChainEvidenceProvider:
             return self._ctx.standard_model
         return self._ctx.strong_model
 
+    def _client_for_tier(self, tier: EvidenceModelTier) -> ChatOpenAI:
+        if tier not in self._clients:
+            self._clients[tier] = ChatOpenAI(
+                model=self._model_for_tier(tier),
+                api_key=self._secret,
+                base_url=self._ctx.base_url,
+                temperature=self._ctx.temperature,
+                timeout=self._ctx.timeout,
+            )
+        return self._clients[tier]
+
     def invoke_structured(
         self,
         prompt: str,
@@ -53,14 +65,7 @@ class LangChainEvidenceProvider:
         tier: EvidenceModelTier,
         stage: str,
     ) -> SchemaT:
-        model_name = self._model_for_tier(tier)
-        llm = ChatOpenAI(
-            model=model_name,
-            api_key=self._secret,
-            base_url=self._ctx.base_url,
-            temperature=self._ctx.temperature,
-            timeout=self._ctx.timeout,
-        )
+        llm = self._client_for_tier(tier)
         structured = llm.with_structured_output(output_schema, method="json_schema")
         last_exc: Exception | None = None
         for attempt in range(1, self._ctx.max_retries + 1):
@@ -71,7 +76,7 @@ class LangChainEvidenceProvider:
                 logger.warning("Stage {} transient failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
             except Exception as exc:
                 last_exc = exc
-                if attempt >= 2:
+                if attempt >= self._ctx.max_retries:
                     break
-                logger.warning("Stage {} structured output failure {}/2: {}", stage, attempt, exc)
+                logger.warning("Stage {} structured output failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
         raise RuntimeError(f"Stage {stage} failed structured output") from last_exc
