@@ -406,7 +406,7 @@ New backends should produce data in this shape; `pages_from_raw()` handles the `
 | `pydantic` | Data contracts with validation (BaseModel) |
 | `loguru` | Structured logging |
 | `rust_io.files` | File I/O (`File.write`) and SHA-256 dedup (`check_duplicate`) |
-| `rust_io.net` | MinerU cloud API (`mineru_create_task`, `mineru_get_result`) |
+| `rust_io.net` | MinerU cloud API (`mineru_create_task`, `mineru_get_result`, `mineru_upload_local_files`, `mineru_batch_result`) |
 
 ## Configuration
 
@@ -436,6 +436,9 @@ uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_integratio
 
 # E2E content-list parsing tests
 uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_e2e_*.py -v
+
+# Optional live MinerU smoke test (requires MINERU_REMOTE_API_TOKEN and consumes quota)
+uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_e2e_mineru.py -v -m integration
 
 # Lint
 uv run ruff check src/core/ingest_and_digitize_data/parse_document/
