@@ -64,13 +64,21 @@ class EvidenceStatus(str, Enum):
 
 
 class EvidenceItem(BaseModel):
+    """Extracted evidence for a single catalog field.
+
+    ``assigned_acmg_codes`` and ``assigned_clingen_modules`` capture the
+    LLM's runtime assessment of which codes/modules apply to *this specific
+    extraction instance*. They may differ from the canonical catalog values
+    (which are retrievable via ``get_field_spec(field_id)``).
+    """
+
     field_id: str
     category: str
     field_name: str
     status: EvidenceStatus
     value: str | int | float | bool | list[str] | None
-    acmg_codes: list[str] = Field(default_factory=list)
-    clingen_modules: list[str] = Field(default_factory=list)
+    assigned_acmg_codes: list[str] = Field(default_factory=list)
+    assigned_clingen_modules: list[str] = Field(default_factory=list)
     source: SourceLocation | None = None
     raw_source: SourceLocation | None = None
     confidence: float = Field(ge=0.0, le=1.0)
@@ -150,8 +158,6 @@ class EvidenceExtractionResult(BaseModel):
 
 
 class EvidenceExtractionState(BaseModel):
-    model_config = {"arbitrary_types_allowed": True}
-
     document: TrackDocument
     evidence_map: DocumentEvidenceMap | None = None
     evidence_items: list[EvidenceItem] = Field(default_factory=list)

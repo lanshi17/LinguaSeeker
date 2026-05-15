@@ -2,12 +2,20 @@ import pytest
 from pydantic import ValidationError
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    DocumentEvidenceMap,
+    EvidenceChain,
+    EvidenceExtractionResult,
+    EvidenceExtractionState,
+    EvidenceExtractionStatus,
     EvidenceItem,
     EvidenceStatus,
     ExternalIds,
     PageSpan,
+    QualityIssue,
+    QualityReport,
     SourceLocation,
     SourcePrecision,
+    SpecialEvidenceRecord,
     Track,
     TrackDocument,
 )
@@ -44,8 +52,8 @@ def test_evidence_item_found_requires_confidence_in_range():
         field_name="Gene symbol",
         status=EvidenceStatus.FOUND,
         value="BRCA1",
-        acmg_codes=[],
-        clingen_modules=["variant_evidence"],
+        assigned_acmg_codes=[],
+        assigned_clingen_modules=["variant_evidence"],
         source=source,
         confidence=0.95,
     )
@@ -61,7 +69,117 @@ def test_evidence_item_rejects_invalid_confidence():
             field_name="Gene symbol",
             status=EvidenceStatus.FOUND,
             value="BRCA1",
-            acmg_codes=[],
-            clingen_modules=[],
+            assigned_acmg_codes=[],
+            assigned_clingen_modules=[],
             confidence=1.5,
         )
+
+
+def test_page_span_rejects_invalid_offsets():
+    with pytest.raises(ValidationError):
+        PageSpan(span_id="p1", page=1, start_offset=100, end_offset=50)
+
+
+def test_evidence_item_accepts_boundary_confidence():
+    item_min = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="BRCA1",
+        confidence=0.0,
+    )
+    item_max = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="BRCA1",
+        confidence=1.0,
+    )
+    assert item_min.confidence == 0.0
+    assert item_max.confidence == 1.0
+
+
+def test_evidence_item_rejects_negative_confidence():
+    with pytest.raises(ValidationError):
+        EvidenceItem(
+            field_id="A.gene_symbol",
+            category="A",
+            field_name="Gene symbol",
+            status=EvidenceStatus.FOUND,
+            value="BRCA1",
+            confidence=-0.1,
+        )
+
+
+def test_enum_values():
+    assert Track.ORIGINAL.value == "original"
+    assert Track.TRANSLATED.value == "translated"
+    assert EvidenceStatus.FOUND.value == "found"
+    assert EvidenceStatus.NOT_FOUND.value == "not_found"
+    assert SourcePrecision.EXACT.value == "exact"
+    assert SourcePrecision.CORRECTED.value == "corrected"
+    assert EvidenceExtractionStatus.COMPLETED.value == "completed"
+    assert EvidenceExtractionStatus.NOT_RELEVANT.value == "not_relevant"
+
+
+def test_evidence_chain_defaults():
+    chain = EvidenceChain(chain_id="chain-1")
+    assert chain.gene_text == ""
+    assert chain.gene_id is None
+    assert chain.evidence_field_ids == []
+    assert chain.contradictions == []
+
+
+def test_document_evidence_map_defaults():
+    emap = DocumentEvidenceMap(relevant=True)
+    assert emap.relevant is True
+    assert emap.disease_terms == []
+    assert emap.gene_terms == []
+
+
+def test_special_evidence_record_defaults():
+    rec = SpecialEvidenceRecord(
+        record_type="functional",
+        description="Western blot showed loss of function",
+    )
+    assert rec.confidence == 0.5
+    assert rec.source is None
+    assert rec.evidence_field_ids == []
+
+
+def test_special_evidence_record_rejects_invalid_record_type():
+    with pytest.raises(ValidationError):
+        SpecialEvidenceRecord(record_type="invalid", description="test")
+
+
+def test_quality_report_defaults():
+    report = QualityReport(passed=True)
+    assert report.scorable is True
+    assert report.issues == []
+    assert report.found_count == 0
+
+
+def test_evidence_extraction_result_with_not_relevant():
+    result = EvidenceExtractionResult(
+        status=EvidenceExtractionStatus.NOT_RELEVANT,
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+    )
+    assert result.evidence_items == []
+    assert result.quality_report is None
+
+
+def test_evidence_extraction_state_roundtrip():
+    doc = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text="BRCA1 variant",
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=13)],
+    )
+    state = EvidenceExtractionState(document=doc)
+    data = state.model_dump()
+    restored = EvidenceExtractionState(**data)
+    assert restored.document.document_id == "doc-1"
+    assert restored.status == EvidenceExtractionStatus.COMPLETED
