@@ -1,21 +1,11 @@
 """Tests for module initialization and factory."""
 from __future__ import annotations
 
-from unittest.mock import patch, MagicMock
-
-import pytest
+from unittest.mock import patch
 
 from src.core.ingest_and_digitize_data.parse_document import (
     create_parse_service,
     ParseDocumentService,
-    ParseResult,
-    SavedFiles,
-    DedupResult,
-    ParseAndSaveResult,
-    MinerUAPIError,
-    MinerUTimeoutError,
-    ParseDocumentError,
-    ParserExhaustedError,
 )
 
 
@@ -61,3 +51,15 @@ def test_exports():
     assert "MinerUTimeoutError" in __all__
     assert "ParseDocumentError" in __all__
     assert "ParserExhaustedError" in __all__
+
+
+def test_batch_contracts_exported():
+    from src.core.ingest_and_digitize_data.parse_document import (
+        MinerUBatchStatus,
+        MinerULocalBatchOptions,
+        MinerULocalBatchParseResult,
+    )
+
+    assert MinerUBatchStatus is not None
+    assert MinerULocalBatchOptions is not None
+    assert MinerULocalBatchParseResult is not None

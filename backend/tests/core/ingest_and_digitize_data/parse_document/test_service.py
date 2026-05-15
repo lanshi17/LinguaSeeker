@@ -48,7 +48,7 @@ class TestParseDocumentService:
         )
         mock_orchestrator.parse.return_value = mock_result
 
-        with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io") as mock_files:
+        with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io"):
             result = await service.parse_and_save("https://example.com/test.pdf", output_dir)
 
         assert result.parser_used == "mineru-remote"
@@ -108,3 +108,25 @@ class TestParseDocumentService:
 
             assert len(results) == 1
             assert results[0].is_duplicate is True
+
+    @pytest.mark.asyncio
+    async def test_parse_local_files_delegates_to_remote_batch_parser(self, service, mock_orchestrator, tmp_path):
+        file_path = tmp_path / "paper.pdf"
+        file_path.write_bytes(b"%PDF-1.4\n")
+        expected = MagicMock()
+        mock_orchestrator.parse_local_files = AsyncMock(return_value=expected)
+
+        result = await service.parse_local_files([str(file_path)], data_ids=["paper-1"])
+
+        assert result is expected
+        mock_orchestrator.parse_local_files.assert_awaited_once_with([str(file_path)], data_ids=["paper-1"])
+
+    @pytest.mark.asyncio
+    async def test_parse_local_files_requires_orchestrator_support(self, service, mock_orchestrator, tmp_path):
+        file_path = tmp_path / "paper.pdf"
+        file_path.write_bytes(b"%PDF-1.4\n")
+        if hasattr(mock_orchestrator, "parse_local_files"):
+            del mock_orchestrator.parse_local_files
+
+        with pytest.raises(AttributeError, match="parse_local_files"):
+            await service.parse_local_files([str(file_path)])

@@ -11,6 +11,7 @@ from loguru import logger
 from .base import ParserStrategy
 from .contracts import (
     DedupResult,
+    MinerULocalBatchParseResult,
     ParseAndSaveResult,
     ParseResult,
     SavedFiles,
@@ -33,6 +34,13 @@ class ParseDocumentService:
             ParseResult with metadata, pages, and full markdown.
         """
         return await self._orchestrator.parse(pdf_path)
+
+    async def parse_local_files(self, file_paths: list[str], **kwargs: object) -> MinerULocalBatchParseResult:
+        """Parse local files through a MinerU remote batch upload workflow."""
+        parser = getattr(self._orchestrator, "parse_local_files", None)
+        if parser is None:
+            raise AttributeError("Configured parser does not support parse_local_files")
+        return await parser(file_paths, **kwargs)
 
     async def save(self, result: ParseResult, output_dir: str) -> SavedFiles:
         """Save parsed result to files.
