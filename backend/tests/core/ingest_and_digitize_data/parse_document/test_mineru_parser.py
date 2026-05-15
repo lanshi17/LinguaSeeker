@@ -273,3 +273,83 @@ class TestMinerUParser:
 
         with pytest.raises(MinerUAPIError, match="data_ids length"):
             parser._validate_local_batch_inputs([str(file_path)], ["id-1", "id-2"])
+
+    @pytest.mark.asyncio
+    async def test_upload_local_files_returns_typed_upload_result(self, parser, tmp_path):
+        file_path = tmp_path / "paper.pdf"
+        file_path.write_bytes(b"%PDF-1.4\n")
+        upload_response = {
+            "code": 0,
+            "msg": "ok",
+            "trace_id": "trace-1",
+            "data": {"batch_id": "batch-1", "file_urls": ["https://upload.example/paper"]},
+        }
+
+        with patch("rust_io.net.mineru_upload_local_files", new_callable=AsyncMock, return_value=upload_response) as upload:
+            result = await parser.upload_local_files([str(file_path)], data_ids=["paper-1"], model_version="vlm")
+
+        assert result.batch_id == "batch-1"
+        assert result.file_paths == [str(file_path)]
+        assert result.file_urls == ["https://upload.example/paper"]
+        upload.assert_awaited_once_with(
+            file_paths=[str(file_path)],
+            token="test-token",
+            model_version="vlm",
+            enable_formula=True,
+            enable_table=True,
+            language="ch",
+            data_ids=["paper-1"],
+            is_ocr=None,
+            page_ranges=None,
+            callback=None,
+            seed=None,
+            extra_formats=None,
+            timeout_ms=None,
+            proxy=None,
+        )
+
+    @pytest.mark.asyncio
+    async def test_upload_local_files_rejects_api_error_code(self, parser, tmp_path):
+        file_path = tmp_path / "paper.pdf"
+        file_path.write_bytes(b"%PDF-1.4\n")
+        upload_response = {"code": -60005, "msg": "file too large", "data": {}}
+
+        with patch("rust_io.net.mineru_upload_local_files", new_callable=AsyncMock, return_value=upload_response):
+            with pytest.raises(MinerUAPIError, match="file too large"):
+                await parser.upload_local_files([str(file_path)])
+
+    @pytest.mark.asyncio
+    async def test_poll_batch_result_returns_terminal_status(self, parser):
+        response = {
+            "code": 0,
+            "msg": "ok",
+            "data": {
+                "batch_id": "batch-1",
+                "extract_result": [
+                    {"file_name": "paper.pdf", "state": "done", "full_zip_url": "https://example.com/result.zip", "err_msg": ""}
+                ],
+            },
+        }
+
+        with patch("rust_io.net.mineru_batch_result", new_callable=AsyncMock, return_value=response) as poll:
+            result = await parser.poll_batch_result("batch-1")
+
+        assert result.batch_id == "batch-1"
+        assert result.is_terminal is True
+        assert result.extract_result[0].full_zip_url == "https://example.com/result.zip"
+        poll.assert_awaited_once_with(batch_id="batch-1", token="test-token", timeout_ms=None, proxy=None)
+
+    @pytest.mark.asyncio
+    async def test_poll_batch_until_terminal_times_out(self, parser):
+        response = {
+            "code": 0,
+            "msg": "ok",
+            "data": {
+                "batch_id": "batch-1",
+                "extract_result": [{"file_name": "paper.pdf", "state": "running", "err_msg": ""}],
+            },
+        }
+
+        with patch("rust_io.net.mineru_batch_result", new_callable=AsyncMock, return_value=response):
+            with pytest.raises(MinerUTimeoutError):
+                await parser.poll_batch_until_terminal("batch-1")

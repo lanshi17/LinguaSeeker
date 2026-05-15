@@ -18,6 +18,9 @@ from .base import ParserStrategy
 from .common.converters import block_to_markdown, html_table_to_structured
 from .contracts import (
     DocumentMetadata,
+    MinerUBatchStatus,
+    MinerULocalBatchOptions,
+    MinerULocalBatchUploadResult,
     ParseResult,
     pages_from_raw,
 )
@@ -105,6 +108,123 @@ class MinerUParser(ParserStrategy):
                 raise MinerUAPIError(f"Local file does not exist: {file_path}")
             if not path.is_file():
                 raise MinerUAPIError(f"Local path is not a file: {file_path}")
+
+    def _require_success_response(self, response: dict, operation: str) -> dict:
+        """Return response data or raise a MinerUAPIError."""
+        code = response.get("code")
+        if code not in (0, "0"):
+            message = response.get("msg", "unknown MinerU error")
+            raise MinerUAPIError(f"{operation} failed: {message}")
+
+        data = response.get("data", {})
+        if not isinstance(data, dict):
+            raise MinerUAPIError(f"{operation} returned invalid data: {response}")
+        return data
+
+    async def upload_local_files(
+        self,
+        file_paths: list[str],
+        *,
+        model_version: str = "vlm",
+        enable_formula: bool | None = True,
+        enable_table: bool | None = True,
+        language: str | None = "ch",
+        data_ids: list[str] | None = None,
+        is_ocr: bool | None = None,
+        page_ranges: str | None = None,
+        callback: str | None = None,
+        seed: str | None = None,
+        extra_formats: list[str] | None = None,
+        timeout_ms: int | None = None,
+        proxy: str | None = None,
+    ) -> MinerULocalBatchUploadResult:
+        """Upload local files through MinerU batch upload URLs."""
+        options = MinerULocalBatchOptions(
+            model_version=model_version,
+            enable_formula=enable_formula,
+            enable_table=enable_table,
+            language=language,
+            data_ids=data_ids,
+            is_ocr=is_ocr,
+            page_ranges=page_ranges,
+            callback=callback,
+            seed=seed,
+            extra_formats=extra_formats,
+            timeout_ms=timeout_ms,
+            proxy=proxy,
+        )
+        self._validate_local_batch_inputs(file_paths, options.data_ids)
+
+        try:
+            response = await net_io.mineru_upload_local_files(
+                file_paths=file_paths,
+                token=self._api_token,
+                model_version=options.model_version,
+                enable_formula=options.enable_formula,
+                enable_table=options.enable_table,
+                language=options.language,
+                data_ids=options.data_ids,
+                is_ocr=options.is_ocr,
+                page_ranges=options.page_ranges,
+                callback=options.callback,
+                seed=options.seed,
+                extra_formats=options.extra_formats,
+                timeout_ms=options.timeout_ms,
+                proxy=options.proxy,
+            )
+        except Exception as e:
+            raise MinerUAPIError(f"Failed to upload local files: {e}") from e
+
+        data = self._require_success_response(response, "MinerU local batch upload")
+        batch_id = data.get("batch_id")
+        file_urls = data.get("file_urls")
+        if not isinstance(batch_id, str) or not isinstance(file_urls, list):
+            raise MinerUAPIError(f"Invalid upload response: {response}")
+
+        return MinerULocalBatchUploadResult(
+            batch_id=batch_id,
+            file_paths=file_paths,
+            file_urls=file_urls,
+            trace_id=response.get("trace_id"),
+            message=response.get("msg", "ok"),
+        )
+
+    async def poll_batch_result(
+        self,
+        batch_id: str,
+        *,
+        timeout_ms: int | None = None,
+        proxy: str | None = None,
+    ) -> MinerUBatchStatus:
+        """Fetch the current MinerU batch status once."""
+        try:
+            response = await net_io.mineru_batch_result(
+                batch_id=batch_id,
+                token=self._api_token,
+                timeout_ms=timeout_ms,
+                proxy=proxy,
+            )
+        except Exception as e:
+            raise MinerUAPIError(f"Failed to get batch result: {e}") from e
+
+        data = self._require_success_response(response, "MinerU batch result")
+        return MinerUBatchStatus.model_validate(data)
+
+    async def poll_batch_until_terminal(
+        self,
+        batch_id: str,
+        *,
+        timeout_ms: int | None = None,
+        proxy: str | None = None,
+    ) -> MinerUBatchStatus:
+        """Poll MinerU batch status until every file is done or failed."""
+        for _attempt in range(self._max_poll_attempts):
+            status = await self.poll_batch_result(batch_id, timeout_ms=timeout_ms, proxy=proxy)
+            if status.is_terminal:
+                return status
+            await asyncio.sleep(self._poll_interval)
+
+        raise MinerUTimeoutError(total_timeout=self._poll_interval * self._max_poll_attempts)
 
     async def _create_task(self, pdf_path: str) -> str:
         """Create MinerU parsing task and return task_id."""
