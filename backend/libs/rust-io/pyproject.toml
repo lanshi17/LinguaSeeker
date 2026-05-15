@@ -4,12 +4,27 @@ build-backend = "maturin"
 
 [project]
 name = "rust-io"
-requires-python = ">=3.8"
+requires-python = ">=3.12"
+description = "High-performance Rust native extensions for ACMG Lingua: literature search, MinerU document parsing, file I/O, S3, archives, and SHA-256 dedup."
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "ACMG Lingua Team" },
+]
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
 ]
 dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/[redacted-user]/acmg-lingua"
+Repository = "https://github.com/[redacted-user]/acmg-lingua"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
