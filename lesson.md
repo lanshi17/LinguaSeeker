@@ -62,3 +62,15 @@
 **Solution**: Typed `model_version` and `extra_formats` with the MinerU Literals, refactored `_create_task()` and `_poll_result()` to reuse `_require_success_response()`, and added batch status property tests for `failed`, mixed, and empty states.
 
 **Prevention**: When introducing shared protocol handling, refactor all callers onto the shared helper immediately. Add regression tests for both the new feature path and the legacy path before calling the change done.
+
+## 2026-05-15: Final verification caught stale test import
+
+**Problem**: Task 10 Ruff verification failed on `backend/tests/core/test_parse_document_config.py` with an unused `pytest` import.
+
+**Investigation**: Re-read the Ruff output, inspected the test file, and checked the branch diff. The file did not use `pytest`, and the final verification command intentionally linted it.
+
+**Root cause**: A stale import remained in a config test that was included in the plan's final lint scope.
+
+**Solution**: Removed the unused import without changing test behavior.
+
+**Prevention**: When a final lint command includes files outside the current feature diff, run the exact command early enough to catch pre-existing style drift before final checkpointing.

@@ -1,8 +1,6 @@
 """Tests for parse document configuration."""
 from __future__ import annotations
 
-import pytest
-
 
 def test_parse_document_config_defaults():
     """Test that ParseDocumentConfig has correct defaults."""

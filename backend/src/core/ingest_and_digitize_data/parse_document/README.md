@@ -49,6 +49,7 @@ caller
 
 Data flow:
   PDF URL -> [Remote API / Local VLM] -> ParseResult -> SavedFiles (output.md + metadata.json + images/)
+  Local files -> rust_io.net upload URLs -> MinerU batch polling -> result zips -> ParseResult per completed file
 ```
 
 ## Public API
@@ -301,6 +302,25 @@ result = await service.parse_and_save(
 # result.saved_files.metadata_path = /tmp/output/metadata.json
 # result.saved_files.images_dir    = /tmp/output/images/  (if images were extracted)
 ```
+
+### Batch parse local files and save results
+
+```python
+batch = await service.parse_local_files_and_save(
+    file_paths=["/data/paper-en.pdf", "/data/paper-zh.pdf"],
+    output_dir="/tmp/mineru-batch-output",
+    model_version="vlm",
+    data_ids=["paper-en", "paper-zh"],
+)
+
+for file_name, saved_files in batch.saved_files.items():
+    print(file_name, saved_files.md_path)
+
+for failed_file in batch.parse_result.failed_files:
+    print(f"MinerU failed: {failed_file}")
+```
+
+Batch parsing is a remote MinerU capability, so it is exposed through `MinerURemoteParser` and `ParseDocumentService`, not the local VLM parser. Completed files are parsed through the same zip extraction path as URL-based remote parsing; failed files remain visible in `MinerULocalBatchParseResult.status.extract_result`.
 
 ### Direct local parser (bypass orchestrator)
 
