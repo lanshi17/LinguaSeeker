@@ -383,3 +383,48 @@ class TestMinerUParser:
         with patch("rust_io.net.mineru_batch_result", new_callable=AsyncMock, return_value=response):
             with pytest.raises(MinerUTimeoutError):
                 await parser.poll_batch_until_terminal("batch-1")
+
+    @pytest.mark.asyncio
+    async def test_parse_local_files_returns_results_and_failed_entries(self, parser, tmp_path):
+        first = tmp_path / "first.pdf"
+        second = tmp_path / "second.pdf"
+        first.write_bytes(b"%PDF-1.4\n")
+        second.write_bytes(b"%PDF-1.4\n")
+
+        upload_response = {
+            "code": 0,
+            "msg": "ok",
+            "data": {"batch_id": "batch-1", "file_urls": ["https://upload/1", "https://upload/2"]},
+        }
+        status_response = {
+            "code": 0,
+            "msg": "ok",
+            "data": {
+                "batch_id": "batch-1",
+                "extract_result": [
+                    {"file_name": "first.pdf", "state": "done", "full_zip_url": "https://example.com/first.zip", "err_msg": ""},
+                    {"file_name": "second.pdf", "state": "failed", "err_msg": "parse failed"},
+                ],
+            },
+        }
+
+        raw = {
+            "state": "done",
+            "total_pages": 1,
+            "title": "First",
+            "authors": [],
+            "abstract": None,
+            "pages": [{"page_number": 1, "markdown": "# First", "figures": [], "tables": []}],
+            "full_markdown": "# First",
+            "images": {},
+        }
+
+        with patch("rust_io.net.mineru_upload_local_files", new_callable=AsyncMock, return_value=upload_response), \
+             patch("rust_io.net.mineru_batch_result", new_callable=AsyncMock, return_value=status_response), \
+             patch.object(parser, "_download_and_parse_zip", new_callable=AsyncMock, return_value=raw):
+            result = await parser.parse_local_files([str(first), str(second)])
+
+        assert result.batch_id == "batch-1"
+        assert list(result.results.keys()) == ["first.pdf"]
+        assert result.results["first.pdf"].full_markdown == "# First"
+        assert result.failed_files == ["second.pdf"]

@@ -22,6 +22,7 @@ from .contracts import (
     MinerUBatchStatus,
     MinerUExtraFormat,
     MinerULocalBatchOptions,
+    MinerULocalBatchParseResult,
     MinerULocalBatchUploadResult,
     MinerUModelVersion,
     ParseResult,
@@ -228,6 +229,53 @@ class MinerUParser(ParserStrategy):
             await asyncio.sleep(self._poll_interval)
 
         raise MinerUTimeoutError(total_timeout=self._poll_interval * self._max_poll_attempts)
+
+    async def parse_local_files(
+        self,
+        file_paths: list[str],
+        *,
+        model_version: MinerUModelVersion = "vlm",
+        enable_formula: bool | None = True,
+        enable_table: bool | None = True,
+        language: str | None = "ch",
+        data_ids: list[str] | None = None,
+        is_ocr: bool | None = None,
+        page_ranges: str | None = None,
+        callback: str | None = None,
+        seed: str | None = None,
+        extra_formats: list[MinerUExtraFormat] | None = None,
+        timeout_ms: int | None = None,
+        proxy: str | None = None,
+    ) -> MinerULocalBatchParseResult:
+        """Upload local files, wait for MinerU completion, and parse completed zips."""
+        upload = await self.upload_local_files(
+            file_paths,
+            model_version=model_version,
+            enable_formula=enable_formula,
+            enable_table=enable_table,
+            language=language,
+            data_ids=data_ids,
+            is_ocr=is_ocr,
+            page_ranges=page_ranges,
+            callback=callback,
+            seed=seed,
+            extra_formats=extra_formats,
+            timeout_ms=timeout_ms,
+            proxy=proxy,
+        )
+        status = await self.poll_batch_until_terminal(upload.batch_id, timeout_ms=timeout_ms, proxy=proxy)
+
+        parsed: dict[str, ParseResult] = {}
+        for item in status.extract_result:
+            if item.state != "done":
+                logger.warning(f"MinerU batch file failed or incomplete: {item.file_name}: {item.err_msg}")
+                continue
+            if not item.full_zip_url:
+                raise MinerUAPIError(f"Done batch item has no full_zip_url: {item.file_name}")
+            raw = await self._download_and_parse_zip(item.full_zip_url)
+            parsed[item.file_name] = self._build_result(raw)
+
+        return MinerULocalBatchParseResult(batch_id=upload.batch_id, status=status, results=parsed)
 
     async def _create_task(self, pdf_path: str) -> str:
         """Create MinerU parsing task and return task_id."""
