@@ -166,7 +166,10 @@ class MultiStageTranslator(BaseTranslator):
         merged = "\n\n".join(plans)
 
         # Final consolidation pass if merged result is still within limits
-        if estimate_tokens(merged) < 6000:
+        consolidation_overhead = estimate_tokens(
+            "CONSOLIDATE_STRUCTURE\nMerge the following structure plans into one coherent plan:\n\n"
+        )
+        if estimate_tokens(merged) < (8192 - consolidation_overhead - 100):
             consolidation_prompt = (
                 "CONSOLIDATE_STRUCTURE\n"
                 "Merge the following structure plans into one coherent plan:\n\n"
@@ -216,7 +219,34 @@ class MultiStageTranslator(BaseTranslator):
         logger.info("Stage: review")
         if not translated:
             return ""
-        return self._invoke_with_retry(get_review_prompt(source, translated), "review")
+
+        # Review needs both source and translated, so budget is split
+        overhead = estimate_tokens(get_review_prompt("", ""))
+        max_per_part = (8192 - overhead) // 2
+
+        source_segments = segment_text(source, max_tokens=max_per_part)
+        translated_segments = segment_text(translated, max_tokens=max_per_part)
+
+        # If either needs segmentation, review segment-by-segment
+        if len(source_segments) <= 1 and len(translated_segments) <= 1:
+            return self._invoke_with_retry(
+                get_review_prompt(source, translated), "review",
+            )
+
+        # Align segments (use zip, review shorter set)
+        max_pairs = max(len(source_segments), len(translated_segments))
+        reviews: list[str] = []
+        for idx in range(max_pairs):
+            src = source_segments[idx] if idx < len(source_segments) else ""
+            tgt = translated_segments[idx] if idx < len(translated_segments) else ""
+            if not src or not tgt:
+                continue
+            prompt = get_review_prompt(src, tgt)
+            review = self._invoke_with_retry(prompt, f"review/{idx + 1}")
+            reviews.append(review)
+            logger.info("Review segment {}/{} done", idx + 1, max_pairs)
+
+        return "\n\n".join(reviews)
 
     # ── Full pipeline ────────────────────────────────────────────────────
 
