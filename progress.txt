@@ -26,3 +26,4 @@
 [2026-05-14] Disabled invalid Codex MCP server time from global config [done]
 [2026-05-14] Synced available agent skills into Codex skills directory via symlinks [done]
 [2026-05-14] Restored YAML frontmatter for five skipped skill files [done]
+[2026-05-15] Evidence extraction module implemented with track-agnostic facade, 138-field catalog, 5-stage pipeline, source grounding, quality validation — 104 tests passing, lint clean [done]
