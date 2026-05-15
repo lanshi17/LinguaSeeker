@@ -117,9 +117,32 @@ class MultiStageTranslator(BaseTranslator):
 
     def extract_terminology(self, formatted: FormattedDocument) -> str:
         logger.info("Stage: terminology")
-        return self._invoke_with_retry(
-            get_terminology_prompt(formatted.formatted_markdown), "terminology",
-        )
+        text = formatted.formatted_markdown
+        overhead = estimate_tokens(get_terminology_prompt(""))
+        segments = segment_text(text, max_tokens=8192, prompt_overhead_tokens=overhead)
+
+        if len(segments) <= 1:
+            return self._invoke_with_retry(
+                get_terminology_prompt(text), "terminology",
+            )
+
+        all_terms: list[str] = []
+        for idx, segment in enumerate(segments, start=1):
+            prompt = get_terminology_prompt(segment)
+            terms = self._invoke_with_retry(prompt, f"terminology/{idx}")
+            all_terms.append(terms)
+            logger.info("Terminology segment {}/{} done", idx, len(segments))
+
+        # Merge: deduplicate by keeping unique source:target pairs
+        merged = "\n".join(all_terms)
+        seen: set[str] = set()
+        unique_lines: list[str] = []
+        for line in merged.splitlines():
+            key = line.strip().lower()
+            if key and key not in seen:
+                seen.add(key)
+                unique_lines.append(line.strip())
+        return "\n".join(unique_lines)
 
     def plan_structure(self, formatted: FormattedDocument) -> str:
         logger.info("Stage: structure")
