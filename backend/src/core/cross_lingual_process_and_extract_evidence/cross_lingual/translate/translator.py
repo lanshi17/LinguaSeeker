@@ -146,9 +146,35 @@ class MultiStageTranslator(BaseTranslator):
 
     def plan_structure(self, formatted: FormattedDocument) -> str:
         logger.info("Stage: structure")
-        return self._invoke_with_retry(
-            get_structure_prompt(formatted.formatted_markdown), "structure",
-        )
+        text = formatted.formatted_markdown
+        overhead = estimate_tokens(get_structure_prompt(""))
+        segments = segment_text(text, max_tokens=8192, prompt_overhead_tokens=overhead)
+
+        if len(segments) <= 1:
+            return self._invoke_with_retry(
+                get_structure_prompt(text), "structure",
+            )
+
+        plans: list[str] = []
+        for idx, segment in enumerate(segments, start=1):
+            prompt = get_structure_prompt(segment)
+            plan = self._invoke_with_retry(prompt, f"structure/{idx}")
+            plans.append(plan)
+            logger.info("Structure segment {}/{} done", idx, len(segments))
+
+        # Merge: concatenate structure plans
+        merged = "\n\n".join(plans)
+
+        # Final consolidation pass if merged result is still within limits
+        if estimate_tokens(merged) < 6000:
+            consolidation_prompt = (
+                "CONSOLIDATE_STRUCTURE\n"
+                "Merge the following structure plans into one coherent plan:\n\n"
+                f"{merged}"
+            )
+            return self._invoke_with_retry(consolidation_prompt, "structure/consolidate")
+
+        return merged
 
     def translate_segments(
         self, formatted: FormattedDocument, terminology: str, structure_plan: str,
