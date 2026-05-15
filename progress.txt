@@ -37,3 +37,5 @@
 [2026-05-15] Documented MinerU local-file batch upload parse API and optional live MinerU smoke test [done]
 [2026-05-15] Verified Rust MinerU facade exposes local batch upload primitives and Rust tests pass [done]
 [2026-05-15] Implemented MinerU local-file batch upload API for parse_document with typed contracts, polling, zip parsing, service facade, docs, and tests [done]
+[2026-05-15] Rewrote parse_and_translate.py to use Qwen-MT native translation API with translation_options — simplified from multi-stage pipeline to direct API calls, supports source_lang/target_lang/terms/domains
+[2026-05-15] Fixed MultiStageTranslator 8192 token limit: added segment-and-merge to extract_terminology, plan_structure, polish, review stages, plus truncation of oversized terminology/structure_plan in draft and polish — 110 tests passing, lint clean [done]
