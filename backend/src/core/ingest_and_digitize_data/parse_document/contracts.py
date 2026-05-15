@@ -231,3 +231,12 @@ class ParseAndSaveResult(ParseResult):
     """ParseResult extended with saved file information."""
 
     saved_files: SavedFiles | None = None
+
+
+@dataclass
+class MinerULocalBatchSaveResult:
+    """Saved output paths for a MinerU local-file batch."""
+
+    batch_id: str
+    parse_result: MinerULocalBatchParseResult
+    saved_files: dict[str, SavedFiles]

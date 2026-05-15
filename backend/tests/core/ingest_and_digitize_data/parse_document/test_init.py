@@ -58,8 +58,10 @@ def test_batch_contracts_exported():
         MinerUBatchStatus,
         MinerULocalBatchOptions,
         MinerULocalBatchParseResult,
+        MinerULocalBatchSaveResult,
     )
 
     assert MinerUBatchStatus is not None
     assert MinerULocalBatchOptions is not None
     assert MinerULocalBatchParseResult is not None
+    assert MinerULocalBatchSaveResult is not None
