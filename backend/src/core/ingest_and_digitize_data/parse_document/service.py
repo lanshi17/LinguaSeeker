@@ -12,6 +12,7 @@ from .base import ParserStrategy
 from .contracts import (
     DedupResult,
     MinerULocalBatchParseResult,
+    MinerULocalBatchSaveResult,
     ParseAndSaveResult,
     ParseResult,
     SavedFiles,
@@ -41,6 +42,25 @@ class ParseDocumentService:
         if parser is None:
             raise AttributeError("Configured parser does not support parse_local_files")
         return await parser(file_paths, **kwargs)
+
+    async def parse_local_files_and_save(
+        self,
+        file_paths: list[str],
+        output_dir: str,
+        **kwargs: object,
+    ) -> MinerULocalBatchSaveResult:
+        """Parse local files as a MinerU batch and save each completed result."""
+        parse_result = await self.parse_local_files(file_paths, **kwargs)
+        root = Path(output_dir)
+        saved: dict[str, SavedFiles] = {}
+        for file_name, result in parse_result.results.items():
+            file_output_dir = root / Path(file_name).stem
+            saved[file_name] = await self.save(result, str(file_output_dir))
+        return MinerULocalBatchSaveResult(
+            batch_id=parse_result.batch_id,
+            parse_result=parse_result,
+            saved_files=saved,
+        )
 
     async def save(self, result: ParseResult, output_dir: str) -> SavedFiles:
         """Save parsed result to files.

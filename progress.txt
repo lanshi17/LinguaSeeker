@@ -33,3 +33,4 @@
 [2026-05-15] Addressed code review feedback on MinerU local batch upload parser type safety and response validation [done]
 [2026-05-15] MinerU local batch parse: convert completed batch zips into ParseResult objects and preserve failed entries [done]
 [2026-05-15] Exposed MinerU local batch parsing through ParseDocumentService and parse_document public exports [done]
+[2026-05-15] Added MinerU local batch parse-and-save helper with per-file output directories [done]

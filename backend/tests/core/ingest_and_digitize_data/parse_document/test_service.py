@@ -130,3 +130,39 @@ class TestParseDocumentService:
 
         with pytest.raises(AttributeError, match="parse_local_files"):
             await service.parse_local_files([str(file_path)])
+
+    @pytest.mark.asyncio
+    async def test_parse_local_files_and_save_writes_each_completed_file(self, service, mock_orchestrator, tmp_path):
+        from src.core.ingest_and_digitize_data.parse_document.contracts import (
+            MinerUBatchFileResult,
+            MinerUBatchStatus,
+            MinerULocalBatchParseResult,
+        )
+
+        batch_result = MinerULocalBatchParseResult(
+            batch_id="batch-1",
+            status=MinerUBatchStatus(
+                batch_id="batch-1",
+                extract_result=[
+                    MinerUBatchFileResult(
+                        file_name="paper.pdf",
+                        state="done",
+                        full_zip_url="https://example.com/paper.zip",
+                    )
+                ],
+            ),
+            results={
+                "paper.pdf": ParseResult(
+                    metadata=DocumentMetadata(total_pages=1, title="Paper"),
+                    pages=[PageContent(page_number=1, markdown="# Paper")],
+                    parser_used="mineru-remote",
+                )
+            },
+        )
+        mock_orchestrator.parse_local_files = AsyncMock(return_value=batch_result)
+
+        result = await service.parse_local_files_and_save(["/tmp/paper.pdf"], str(tmp_path))
+
+        assert result.batch_id == "batch-1"
+        assert "paper.pdf" in result.saved_files
+        assert result.saved_files["paper.pdf"].md_path.exists()
