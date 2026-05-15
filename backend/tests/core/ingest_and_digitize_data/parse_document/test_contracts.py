@@ -9,6 +9,7 @@ from src.core.ingest_and_digitize_data.parse_document.contracts import (
     FigurePosition,
     MinerUBatchExtractProgress,
     MinerUBatchFileResult,
+    MinerUBatchStatus,
     MinerULocalBatchOptions,
     MinerULocalBatchUploadResult,
     PageContent,
@@ -174,3 +175,28 @@ def test_batch_file_result_running_progress() -> None:
     )
     assert item.is_done is False
     assert item.is_terminal is False
+
+
+def test_batch_file_result_failed_property() -> None:
+    item = MinerUBatchFileResult(file_name="demo.pdf", state="failed", err_msg="parse error")
+    assert item.is_done is False
+    assert item.is_terminal is True
+
+
+def test_batch_status_terminal_semantics() -> None:
+    mixed = MinerUBatchStatus(
+        batch_id="batch-1",
+        extract_result=[
+            MinerUBatchFileResult(file_name="a.pdf", state="done"),
+            MinerUBatchFileResult(file_name="b.pdf", state="running"),
+        ],
+    )
+    failed = MinerUBatchStatus(
+        batch_id="batch-2",
+        extract_result=[MinerUBatchFileResult(file_name="a.pdf", state="failed", err_msg="parse error")],
+    )
+    empty = MinerUBatchStatus(batch_id="batch-3")
+
+    assert mixed.is_terminal is False
+    assert failed.is_terminal is True
+    assert empty.is_terminal is False

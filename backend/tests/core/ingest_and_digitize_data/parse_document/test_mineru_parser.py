@@ -84,6 +84,18 @@ class TestMinerUParser:
                 await parser.parse("https://example.com/test.pdf")
 
     @pytest.mark.asyncio
+    async def test_parse_create_task_rejects_nonzero_code(self, parser):
+        mock_create_response = {
+            "code": -1,
+            "data": {},
+            "msg": "bad token",
+        }
+
+        with patch("rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response):
+            with pytest.raises(MinerUAPIError, match="MinerU create task failed: bad token"):
+                await parser.parse("https://example.com/test.pdf")
+
+    @pytest.mark.asyncio
     async def test_parse_task_timeout(self, parser):
         mock_create_response = {
             "code": 0,
@@ -117,6 +129,24 @@ class TestMinerUParser:
         with patch("rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response), \
              patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_failed_response):
             with pytest.raises(MinerUAPIError, match="Task failed"):
+                await parser.parse("https://example.com/test.pdf")
+
+    @pytest.mark.asyncio
+    async def test_parse_get_result_rejects_nonzero_code(self, parser):
+        mock_create_response = {
+            "code": 0,
+            "data": {"task_id": "abc-123"},
+            "msg": "ok",
+        }
+        mock_poll_response = {
+            "code": -1,
+            "data": {},
+            "msg": "bad token",
+        }
+
+        with patch("rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response), \
+             patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_poll_response):
+            with pytest.raises(MinerUAPIError, match="MinerU get result failed: bad token"):
                 await parser.parse("https://example.com/test.pdf")
 
     def test_parse_extracted_content_with_content_list(self, parser):
