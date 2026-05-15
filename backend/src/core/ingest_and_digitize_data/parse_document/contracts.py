@@ -215,6 +215,18 @@ class MinerUBatchStatus(BaseModel):
         return bool(self.extract_result) and all(item.is_terminal for item in self.extract_result)
 
 
+class MinerULocalBatchParseResult(BaseModel):
+    """Parsed output for a MinerU local-file batch."""
+
+    batch_id: str
+    status: MinerUBatchStatus
+    results: dict[str, ParseResult] = Field(default_factory=dict)
+
+    @property
+    def failed_files(self) -> list[str]:
+        return [item.file_name for item in self.status.extract_result if item.state == "failed"]
+
+
 class ParseAndSaveResult(ParseResult):
     """ParseResult extended with saved file information."""
 

@@ -31,3 +31,4 @@
 [2026-05-15] Parse document image extraction: extract/persist MinerU images through full pipeline (FigurePosition.img_path, ParseResult.images, SavedFiles.images_dir) [done]
 [2026-05-15] Evidence extraction module implemented with track-agnostic facade, 138-field catalog, 5-stage pipeline, source grounding, quality validation — 104 tests passing, lint clean [done]
 [2026-05-15] Addressed code review feedback on MinerU local batch upload parser type safety and response validation [done]
+[2026-05-15] MinerU local batch parse: convert completed batch zips into ParseResult objects and preserve failed entries [done]
