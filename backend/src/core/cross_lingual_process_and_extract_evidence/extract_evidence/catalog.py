@@ -14,7 +14,6 @@ class EvidenceFieldSpec:
     acmg_codes: tuple[str, ...] = ()
     clingen_modules: tuple[str, ...] = ()
     required_for_scorable: bool = False
-    expected_value_type: str = "text"
 
 
 EVIDENCE_FIELD_SPECS: tuple[EvidenceFieldSpec, ...] = (
