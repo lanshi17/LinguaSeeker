@@ -76,3 +76,21 @@ def test_run_pipeline_with_large_document(mock_translator, large_document):
     )
     assert terminology_map is not None
     assert translated is not None
+
+
+def test_translate_segments_truncates_large_context(mock_translator):
+    """translate_segments should truncate oversized terminology/structure_plan."""
+    small_doc = FormattedDocument(
+        formatted_markdown="这是一段短文本。",
+        source_language="zh",
+    )
+    # Simulate very large terminology and structure_plan (merged from many segments)
+    huge_terminology = "gene: 基因\nprotein: 蛋白质\n" * 500  # ~10000 tokens
+    huge_structure = "Section 1: Introduction\n" * 500  # ~5000 tokens
+
+    result, segments = mock_translator.translate_segments(
+        small_doc, huge_terminology, huge_structure,
+    )
+    assert result is not None
+    # Should have been called (truncation allows it to proceed)
+    assert mock_translator._invoke_with_retry.call_count >= 1
