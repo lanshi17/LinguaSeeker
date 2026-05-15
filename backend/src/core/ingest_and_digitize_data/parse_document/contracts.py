@@ -133,6 +133,88 @@ class DedupResult:
     is_duplicate: bool
 
 
+MinerUModelVersion = Literal["pipeline", "vlm", "MinerU-HTML"]
+MinerUExtraFormat = Literal["docx", "html", "latex"]
+MinerUBatchState = Literal["waiting-file", "pending", "running", "converting", "done", "failed"]
+
+
+class MinerULocalBatchOptions(BaseModel):
+    """Options shared by MinerU local-file batch upload."""
+
+    model_version: MinerUModelVersion = "vlm"
+    enable_formula: bool | None = True
+    enable_table: bool | None = True
+    language: str | None = "ch"
+    data_ids: list[str] | None = None
+    is_ocr: bool | None = None
+    page_ranges: str | None = None
+    callback: str | None = None
+    seed: str | None = None
+    extra_formats: list[MinerUExtraFormat] | None = None
+    timeout_ms: int | None = None
+    proxy: str | None = None
+
+    @model_validator(mode="after")
+    def _validate_callback_seed(self) -> MinerULocalBatchOptions:
+        if self.callback and not self.seed:
+            raise ValueError("seed is required when callback is set")
+        return self
+
+
+class MinerULocalBatchUploadResult(BaseModel):
+    """Result returned after MinerU upload URLs are created and files are PUT."""
+
+    batch_id: str
+    file_paths: list[str]
+    file_urls: list[str]
+    trace_id: str | None = None
+    message: str = "ok"
+
+    @model_validator(mode="after")
+    def _validate_file_url_count(self) -> MinerULocalBatchUploadResult:
+        if len(self.file_urls) != len(self.file_paths):
+            raise ValueError("upload URL count must match file path count")
+        return self
+
+
+class MinerUBatchExtractProgress(BaseModel):
+    """MinerU per-file extraction progress."""
+
+    extracted_pages: int = 0
+    total_pages: int = 0
+    start_time: str | None = None
+
+
+class MinerUBatchFileResult(BaseModel):
+    """MinerU result for one file in a batch."""
+
+    file_name: str
+    state: MinerUBatchState
+    err_msg: str = ""
+    data_id: str | None = None
+    full_zip_url: str | None = None
+    extract_progress: MinerUBatchExtractProgress | None = None
+
+    @property
+    def is_done(self) -> bool:
+        return self.state == "done"
+
+    @property
+    def is_terminal(self) -> bool:
+        return self.state in {"done", "failed"}
+
+
+class MinerUBatchStatus(BaseModel):
+    """Typed MinerU batch polling response data."""
+
+    batch_id: str
+    extract_result: list[MinerUBatchFileResult] = Field(default_factory=list)
+
+    @property
+    def is_terminal(self) -> bool:
+        return bool(self.extract_result) and all(item.is_terminal for item in self.extract_result)
+
+
 class ParseAndSaveResult(ParseResult):
     """ParseResult extended with saved file information."""
 
