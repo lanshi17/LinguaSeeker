@@ -196,7 +196,21 @@ class MultiStageTranslator(BaseTranslator):
         logger.info("Stage: polish")
         if not draft:
             return ""
-        return self._invoke_with_retry(get_polish_prompt(draft, terminology), "polish") or draft
+
+        overhead = estimate_tokens(get_polish_prompt("", terminology))
+        segments = segment_text(draft, max_tokens=8192, prompt_overhead_tokens=overhead)
+
+        if len(segments) <= 1:
+            return self._invoke_with_retry(get_polish_prompt(draft, terminology), "polish") or draft
+
+        polished_parts: list[str] = []
+        for idx, segment in enumerate(segments, start=1):
+            prompt = get_polish_prompt(segment, terminology)
+            polished = self._invoke_with_retry(prompt, f"polish/{idx}")
+            polished_parts.append(polished or segment)
+            logger.info("Polish segment {}/{} done", idx, len(segments))
+
+        return "\n\n".join(polished_parts)
 
     def review(self, source: str, translated: str) -> str:
         logger.info("Stage: review")
