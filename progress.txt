@@ -26,3 +26,6 @@
 [2026-05-14] Disabled invalid Codex MCP server time from global config [done]
 [2026-05-14] Synced available agent skills into Codex skills directory via symlinks [done]
 [2026-05-14] Restored YAML frontmatter for five skipped skill files [done]
+[2026-05-14] Code-reviewed parse-document-image-extraction plan — found 2 blocking gaps (parse_and_save drops images, multi-return-path fragility), 3 important issues (missing integration test, ParseAndSaveResult test gap, local parser regression check), applied fixes to plan document [done]
+[2026-05-14] Planned evidence extraction module with layered facade, 5-stage runtime, full GDV/ACMG catalog, source grounding, and quality validation [planned]
+[2026-05-15] Parse document image extraction: extract/persist MinerU images through full pipeline (FigurePosition.img_path, ParseResult.images, SavedFiles.images_dir) [done]

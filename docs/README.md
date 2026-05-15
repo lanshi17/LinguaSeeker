@@ -40,7 +40,12 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Planned Work
 
-No planned work — all plans are either active or completed.
+| date | title | status/PR |
+|---|---|---|
+| 2026-05-14 | [evidence extraction design](plans/2026-05-14-evidence-extraction-design.md) | planned |
+| 2026-05-14 | [evidence extraction implementation](plans/2026-05-14-evidence-extraction.md) | planned |
+| 2026-05-14 | [cross-lingual persistence](planned/2026-05-14-cross-lingual-persistence.md) | planned |
+| 2026-05-14 | [parse document image extraction](plans/2026-05-14-parse-document-image-extraction.md) | planned |
 
 ## Active Code Reviews
 
