@@ -105,6 +105,19 @@ class ParseDocumentConfig(BaseModel):
     mineru_local_dpi: int = 200
 
 
+class EvidenceExtractionConfig(BaseModel):
+    """Evidence extraction LLM settings."""
+
+    api_key: str = ""
+    base_url: str = ""
+    fast_model: str = ""
+    standard_model: str = ""
+    strong_model: str = ""
+    temperature: float = 0.0
+    timeout: int = 60
+    max_retries: int = 3
+
+
 class RedisConfig(BaseModel):
     """Redis connection."""
 
@@ -342,6 +355,17 @@ class Settings(BaseSettings):
 
     cross_lingual_output_dir: str = "data/cross_lingual_output"
 
+    # ── Evidence Extraction flat fields (EVIDENCE_EXTRACTION_*) ──────────
+
+    evidence_extraction_api_key: str = ""
+    evidence_extraction_base_url: str = ""
+    evidence_extraction_fast_model: str = ""
+    evidence_extraction_standard_model: str = ""
+    evidence_extraction_strong_model: str = ""
+    evidence_extraction_temperature: float = 0.0
+    evidence_extraction_timeout: int = 60
+    evidence_extraction_max_retries: int = 3
+
     # ── Nested domain models (populated by validator) ────────────────────
 
     llm: LLMConfig = Field(default_factory=LLMConfig, exclude=True)
@@ -352,6 +376,9 @@ class Settings(BaseSettings):
     rerank: RerankConfig = Field(default_factory=RerankConfig, exclude=True)
     mineru: MinerUConfig = Field(default_factory=MinerUConfig, exclude=True)
     parse_document: ParseDocumentConfig = Field(default_factory=ParseDocumentConfig, exclude=True)
+    evidence_extraction: EvidenceExtractionConfig = Field(
+        default_factory=EvidenceExtractionConfig, exclude=True,
+    )
     redis: RedisConfig = Field(default_factory=RedisConfig, exclude=True)
     postgresql: PostgreSQLConfig = Field(default_factory=PostgreSQLConfig, exclude=True)
     neo4j: Neo4jConfig = Field(default_factory=Neo4jConfig, exclude=True)
@@ -420,6 +447,16 @@ class Settings(BaseSettings):
             mineru_local_model_id=self.mineru_local_model_id,
             mineru_local_timeout=self.mineru_local_timeout,
             mineru_local_dpi=self.mineru_local_dpi,
+        )
+        self.evidence_extraction = EvidenceExtractionConfig(
+            api_key=self.evidence_extraction_api_key,
+            base_url=self.evidence_extraction_base_url,
+            fast_model=self.evidence_extraction_fast_model,
+            standard_model=self.evidence_extraction_standard_model,
+            strong_model=self.evidence_extraction_strong_model,
+            temperature=self.evidence_extraction_temperature,
+            timeout=self.evidence_extraction_timeout,
+            max_retries=self.evidence_extraction_max_retries,
         )
         self.redis = RedisConfig(
             host=self.redis_host,
