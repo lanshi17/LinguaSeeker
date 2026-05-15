@@ -13,6 +13,7 @@ result = await service.parse("https://example.com/paper.pdf")
 print(result.full_markdown)        # Full document as Markdown
 print(result.metadata.total_pages) # Page count
 print(result.parser_used)          # "mineru-remote" or "mineru-local"
+print(len(result.images))          # Number of extracted images
 ```
 
 ## Architecture
@@ -27,7 +28,7 @@ caller
             -> rust_io.files             # file I/O (write MD, dedup)
 
 Data flow:
-  PDF URL -> [Remote API / Local VLM] -> ParseResult -> SavedFiles (output.md + metadata.json)
+  PDF URL -> [Remote API / Local VLM] -> ParseResult -> SavedFiles (output.md + metadata.json + images/)
 ```
 
 ## Public API
@@ -57,7 +58,7 @@ service = create_parse_service(config=config)
 |--------|-----------|-------------|
 | `__init__` | `(orchestrator: ParserStrategy)` | Create service with orchestrator |
 | `parse` | `async (pdf_path: str) -> ParseResult` | Parse PDF URL, return structured result |
-| `save` | `async (result: ParseResult, output_dir: str) -> SavedFiles` | Save result to files |
+| `save` | `async (result: ParseResult, output_dir: str) -> SavedFiles` | Save result to files (MD + metadata + images) |
 | `dedup` | `async (file_paths: list[str], known_hashes: list[str]) -> list[DedupResult]` | SHA-256 dedup check |
 | `parse_and_save` | `async (pdf_path: str, output_dir: str) -> ParseAndSaveResult` | Parse + save combined |
 
@@ -80,7 +81,7 @@ MinerURemoteParser(
 )
 ```
 
-Thin wrapper over `MinerUParser` (the actual MinerU cloud API implementation via `rust_io.net`). Handles task creation, polling for completion, zip download, and content extraction. Extends `ParserStrategy` with `name = "mineru-remote"`.
+Thin wrapper over `MinerUParser` (internal class not in `__all__`). The parent handles the full MinerU cloud API lifecycle: task creation, polling, zip download, content extraction, and image collection. Extends `ParserStrategy` with `name = "mineru-remote"`.
 
 ### MinerULocalParser
 
@@ -120,6 +121,7 @@ Converts each PDF page to a PIL Image via PyMuPDF (`fitz`), then sends it as a b
 | `page` | `int` (>= 1) | Page number |
 | `index` | `int` (>= 1) | Figure index on this page |
 | `caption` | `str \| None` | Figure caption text |
+| `img_path` | `str \| None` | Relative path to image file within zip (e.g. `"images/fig1.jpg"`) |
 
 ### TableStructure
 
@@ -138,6 +140,7 @@ Converts each PDF page to a PIL Image via PyMuPDF (`fitz`), then sends it as a b
 | `pages` | `list[PageContent]` | Per-page markdown, figures, tables |
 | `full_markdown` | `str` | Auto-derived from `pages` if not provided |
 | `parser_used` | `ParserName` | `"mineru-remote"`, `"mineru-local"`, or `"unknown"` |
+| `images` | `dict[str, bytes]` | Image files keyed by relative path (e.g. `"images/fig1.jpg"`) |
 
 ### ParserName
 
@@ -153,6 +156,7 @@ ParserName = Literal["mineru-remote", "mineru-local", "unknown"]
 | `metadata_path` | `Path` | Path to metadata.json |
 | `output_dir` | `Path` | Output directory |
 | `created_at` | `datetime` | Timestamp (timezone-aware UTC) |
+| `images_dir` | `Path \| None` | Path to images/ directory (only present when images were extracted) |
 
 ### DedupResult
 
@@ -186,21 +190,28 @@ Implements `ParserStrategy` interface. Tries remote parser first, falls back to 
 `MinerURemoteParser` is a thin subclass of `MinerUParser` (internal class not in `__all__`). The parent handles the full MinerU cloud API lifecycle:
 
 1. **`_create_task(pdf_url)`** — POSTs to MinerU API via `rust_io.net.mineru_create_task()`, returns `task_id`
-2. **`_poll_result(task_id)`** — Polls `rust_io.net.mineru_get_result()` every `poll_interval` seconds (up to `max_poll_attempts`). Accepts states: `pending`, `running`, `converting` → `done` (returns zip URL), `failed` (raises `MinerUAPIError`)
-3. **`_download_and_parse_zip(zip_url)`** — Downloads the result zip via `httpx`, extracts to temp directory, then applies a **4-tier content extraction fallback**:
+2. **`_poll_result(task_id)`** — Polls `rust_io.net.mineru_get_result()` every `poll_interval` seconds (up to `max_poll_attempts`). Accepts states: `pending`, `running`, `converting` -> `done` (returns zip URL), `failed` (raises `MinerUAPIError`)
+3. **`_download_and_parse_zip(zip_url)`** — Downloads the result zip via `httpx`, extracts to temp directory, collects images via `_collect_images()`, then applies a **4-tier content extraction fallback**:
 
 | Priority | Format | Fallback condition |
 |----------|--------|--------------------|
 | 1 | `*_content_list.json` | New MinerU format with structured blocks (text/image/table) |
 | 2 | `layout.json` with `pdf_info` | Legacy MinerU format with page content |
 | 3 | Individual `.md` files | Markdown-per-page format |
-| 4 | `full.md` only | Single markdown file → treated as 1-page document |
+| 4 | `full.md` only | Single markdown file -> treated as 1-page document |
 
 If none of these yield content, raises `MinerUAPIError`.
 
-4. **`_build_result(raw_data)`** — Maps internal `_MinerURawResult` → public `ParseResult` with `DocumentMetadata` and `PageContent` via `pages_from_raw()`.
+4. **`_collect_images(extract_dir)`** — Scans `images/` directory inside the extracted zip, reads all image files into memory as bytes keyed by relative path.
+5. **`_build_result(raw_data)`** — Maps internal `_MinerURawResult` -> public `ParseResult` with `DocumentMetadata`, `PageContent`, images, and `pages_from_raw()`.
 
-The `_parse_content_list_json` (priority 1) is the most feature-rich path: it groups content blocks by `page_idx`, converts text blocks to markdown via `block_to_markdown()`, extracts image captions, and parses HTML tables via `html_table_to_structured()`.
+The `_parse_content_list_json` (priority 1) is the most feature-rich path: it groups content blocks by `page_idx`, converts text blocks to markdown via `block_to_markdown()`, extracts image captions and `img_path`, and parses HTML tables via `html_table_to_structured()`.
+
+#### Internal TypedDicts
+
+`_MinerUPageData` — per-page data container with `page_number`, `markdown`, `figures`, `tables`.
+
+`_MinerURawResult` — full extracted result with `state`, `total_pages`, `title`, `authors`, `abstract`, `pages`, `full_markdown`, and `images: dict[str, bytes]`.
 
 ### MinerULocalParser
 
@@ -237,9 +248,13 @@ result = await service.parse("https://example.com/paper.pdf")
 for page in result.pages:
     print(f"Page {page.page_number}: {len(page.markdown)} chars")
     for fig in page.figures:
-        print(f"  Figure {fig.index}: {fig.caption}")
+        print(f"  Figure {fig.index}: {fig.caption} ({fig.img_path})")
     for table in page.tables:
-        print(f"  Table {table.index}: {len(table.headers)} columns × {len(table.rows)} rows")
+        print(f"  Table {table.index}: {len(table.headers)} columns x {len(table.rows)} rows")
+
+# Access extracted images
+for rel_path, img_bytes in result.images.items():
+    print(f"  Image: {rel_path} ({len(img_bytes)} bytes)")
 ```
 
 ### Parse and save to files
@@ -249,8 +264,9 @@ result = await service.parse_and_save(
     pdf_path="https://example.com/paper.pdf",
     output_dir="/tmp/output",
 )
-# result.saved_files.md_path = /tmp/output/output.md
+# result.saved_files.md_path       = /tmp/output/output.md
 # result.saved_files.metadata_path = /tmp/output/metadata.json
+# result.saved_files.images_dir    = /tmp/output/images/  (if images were extracted)
 ```
 
 ### Direct local parser (bypass orchestrator)
@@ -333,7 +349,7 @@ All page-level data flows through `pages_from_raw()`, which expects dicts with k
 {
     "page_number": int,     # 1-indexed
     "markdown": str,        # page content
-    "figures": [{"index": int, "caption": str | None, ...}],
+    "figures": [{"index": int, "caption": str | None, "img_path": str | None, ...}],
     "tables": [{"index": int, "headers": [str, ...], "rows": [[str, ...], ...]}],
 }
 ```
@@ -341,10 +357,10 @@ New backends should produce data in this shape; `pages_from_raw()` handles the `
 
 ## Performance Notes
 
-- **Remote parser latency**: Task-based API with polling — typical turnaround is 30-300 seconds (2s poll interval × up to 150 attempts = 5 minutes max). Reducing `MINERU_REMOTE_POLL_INTERVAL` improves responsiveness at the cost of API rate limits.
-- **Local parser memory**: Each PDF page is rasterized to an in-memory PIL Image. For large documents (>100 pages), memory scales with page count × DPI. At 200 DPI, an A4 page is ~2.3 MP ≈ 9 MB uncompressed. Lower `MINERU_LOCAL_DPI` to 150 or 100 for large documents.
+- **Remote parser latency**: Task-based API with polling — typical turnaround is 30-300 seconds (2s poll interval x up to 150 attempts = 5 minutes max). Reducing `MINERU_REMOTE_POLL_INTERVAL` improves responsiveness at the cost of API rate limits.
+- **Local parser memory**: Each PDF page is rasterized to an in-memory PIL Image. For large documents (>100 pages), memory scales with page count x DPI. At 200 DPI, an A4 page is ~2.3 MP ~ 9 MB uncompressed. Lower `MINERU_LOCAL_DPI` to 150 or 100 for large documents.
 - **Local parser throughput**: Sequential page processing (one VLM call per page). A 10-page document at 120s timeout per page = up to 20 minutes worst case. The model-server timeout governs per-page ceiling.
-- **Zip extraction**: Remote parser downloads the full result zip into memory (`response.content`). Large documents with many figures should monitor memory.
+- **Zip extraction**: Remote parser downloads the full result zip into memory (`response.content`). Large documents with many figures should monitor memory — extracted images are also held in `ParseResult.images` as raw bytes.
 - **SHA-256 dedup**: Computed in Rust via `rust_io.files.check_duplicate()` — I/O bound, not CPU bound.
 
 ## Dependencies

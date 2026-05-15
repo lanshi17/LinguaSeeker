@@ -6,7 +6,7 @@
 
 **Architecture:** MinerU API returns a zip containing `images/` directory with extracted figures. Currently the parser discards these images. We extend `FigurePosition` with `img_path`, collect image bytes during zip parsing, carry them through `ParseResult`, and persist them in `service.save()`.
 
-**Tech Stack:** Python, Pydantic, pytest, tempfile, zipfile, shutil
+**Tech Stack:** Python, Pydantic, pytest, tempfile, zipfile
 
 ---
 
@@ -237,7 +237,7 @@ class _MinerURawResult(TypedDict):
 ```python
 if block_type == "image":
     caption = block.get("image_caption", [])
-    img_path = block.get("img_path", "")
+    img_path = block.get("img_path")  # None when key is missing, consistent with FigurePosition default
     figures.append({
         "index": len(figures) + 1,
         "caption": str(caption[0]) if caption else "",
@@ -259,7 +259,62 @@ def _collect_images(self, extract_dir: Path) -> dict[str, bytes]:
     return images
 ```
 
-5. Update `_parse_extracted_content` to call `_collect_images` and include in result. All return paths need `images=self._collect_images(extract_dir)`.
+5. Update `_parse_extracted_content` to collect images once and merge into whichever format path wins. Instead of sprinkling `images=self._collect_images(extract_dir)` across 4 separate return statements, collect once at the top and merge into the result before returning:
+
+```python
+# In _parse_extracted_content, collect images once, merge at return point:
+images = self._collect_images(extract_dir)
+
+# ... existing format detection logic ...
+
+# Priority 1: content_list.json
+if content_list_files:
+    try:
+        data = json.loads(content_list_files[0].read_text(encoding="utf-8"))
+        if isinstance(data, list) and data:
+            result = self._parse_content_list_json(data, full_markdown)
+            result["images"] = images
+            return result
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        pass
+
+# Priority 2: layout.json
+for jf in json_files:
+    try:
+        data = json.loads(jf.read_text(encoding="utf-8"))
+        result: _MinerURawResult
+        if isinstance(data, dict) and "pdf_info" in data:
+            result = self._parse_content_json(data, md_files)
+        elif isinstance(data, list) and len(data) > 0:
+            result = self._parse_content_json({"pages": data}, md_files)
+        else:
+            continue
+        result["images"] = images
+        return result
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        continue
+
+# Priority 3: markdown files
+if md_files:
+    result = self._parse_markdown_files(md_files)
+    result["images"] = images
+    return result
+
+# Priority 4: full.md only
+if full_markdown:
+    return _MinerURawResult(
+        state="done",
+        total_pages=1,
+        title=None,
+        authors=[],
+        abstract=None,
+        pages=[_MinerUPageData(page_number=1, markdown=full_markdown, figures=[], tables=[])],
+        full_markdown=full_markdown,
+        images=images,
+    )
+```
+
+This is cleaner and prevents silently losing images when a 5th format path is added later.
 
 6. Update `_build_result` to pass images through:
 ```python
@@ -296,6 +351,11 @@ git commit -m "feat: extract image files and img_path from MinerU zip output"
 ```python
 # In test_service.py, add:
 
+
+from unittest.mock import AsyncMock, patch
+
+# Standalone functions (no class needed — save() doesn't use orchestrator):
+
 @pytest.mark.asyncio
 async def test_save_persists_images(tmp_path):
     from src.core.ingest_and_digitize_data.parse_document.contracts import (
@@ -303,7 +363,7 @@ async def test_save_persists_images(tmp_path):
     )
     from src.core.ingest_and_digitize_data.parse_document.service import ParseDocumentService
 
-    service = ParseDocumentService(orchestrator=None)  # orchestrator not needed for save
+    service = ParseDocumentService(orchestrator=AsyncMock())  # orchestrator not needed for save
 
     result = ParseResult(
         metadata=DocumentMetadata(total_pages=1),
@@ -325,7 +385,7 @@ async def test_save_no_images(tmp_path):
     )
     from src.core.ingest_and_digitize_data.parse_document.service import ParseDocumentService
 
-    service = ParseDocumentService(orchestrator=None)
+    service = ParseDocumentService(orchestrator=AsyncMock())
 
     result = ParseResult(
         metadata=DocumentMetadata(total_pages=1),
@@ -337,9 +397,37 @@ async def test_save_no_images(tmp_path):
     assert saved.images_dir is None
 ```
 
+
+# Inside TestParseDocumentService class (needs self.mock_orchestrator fixture):
+
+
+@pytest.mark.asyncio
+async def test_parse_and_save_preserves_images(self, mock_orchestrator, tmp_path):
+    """Verify parse_and_save carries images through to ParseAndSaveResult."""
+    output_dir = str(tmp_path / "output")
+
+    parse_result = ParseResult(
+        metadata=DocumentMetadata(total_pages=1),
+        pages=[PageContent(page_number=1, markdown="Content")],
+        parser_used="mineru-remote",
+        images={"images/fig1.jpg": b"\xff\xd8\xff\xe0"},
+    )
+    mock_orchestrator.parse.return_value = parse_result
+    service = ParseDocumentService(orchestrator=mock_orchestrator)
+
+    with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io"):
+        result = await service.parse_and_save(
+            "https://example.com/test.pdf", output_dir
+        )
+
+    assert len(result.images) == 1
+    assert b"\xff\xd8" in result.images["images/fig1.jpg"]
+    assert result.saved_files is not None
+    assert result.saved_files.images_dir is not None
+
 **Step 2: Run test to verify it fails**
 
-Run: `cd backend && uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_service.py::test_save_persists_images -v`
+Run: `cd backend && uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_service.py::test_save_persists_images tests/core/ingest_and_digitize_data/parse_document/test_service.py::test_parse_and_save_preserves_images -v`
 Expected: FAIL
 
 **Step 3: Write minimal implementation**
@@ -387,6 +475,31 @@ async def save(self, result: ParseResult, output_dir: str) -> SavedFiles:
     )
 ```
 
+> **Note:** `Path(rel_path).name` strips subdirectory prefixes (e.g. `images/sub/a.jpg` → `a.jpg`). If MinerU ever produces nested image directories with same-named files, they would collide. Currently MinerU uses flat `images/` with unique filenames, so this is fine.
+
+
+3. Update `service.parse_and_save()` to pass `images` through:
+```python
+async def parse_and_save(
+    self,
+    pdf_path: str,
+    output_dir: str,
+) -> ParseAndSaveResult:
+    parse_result = await self.parse(pdf_path)
+    saved_files = await self.save(parse_result, output_dir)
+
+    return ParseAndSaveResult(
+        metadata=parse_result.metadata,
+        pages=parse_result.pages,
+        full_markdown=parse_result.full_markdown,
+        parser_used=parse_result.parser_used,
+        images=parse_result.images,
+        saved_files=saved_files,
+    )
+```
+
+> **Note:** Without this, `parse_and_save()` silently drops `images` — the caller receives `images={}` even though images were saved to disk.
+
 **Step 4: Run test to verify it passes**
 
 Run: `cd backend && uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_service.py -v`
@@ -398,7 +511,7 @@ Expected: PASS
 git add backend/src/core/ingest_and_digitize_data/parse_document/contracts.py \
        backend/src/core/ingest_and_digitize_data/parse_document/service.py \
        backend/tests/core/ingest_and_digitize_data/parse_document/test_service.py
-git commit -m "feat: persist extracted images in service.save()"
+git commit -m "feat: persist extracted images in service.save() and parse_and_save()"
 ```
 
 ---
@@ -457,12 +570,49 @@ def _figures_from_page(page_number: int, figures: list[dict]) -> list[FigurePosi
 Run: `cd backend && uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_contracts.py -v`
 Expected: PASS
 
+
+**Step 4b: Add cross-cutting integration test** — verify the full pipe from `_build_result` to `FigurePosition.img_path`:
+
+```python
+# In test_mineru_parser.py, add to TestMinerUParser:
+
+def test_build_result_propagates_img_path(self, parser):
+    """Verify _build_result correctly maps img_path through to FigurePosition."""
+    raw = {
+        "state": "done",
+        "total_pages": 1,
+        "title": None,
+        "authors": [],
+        "abstract": None,
+        "pages": [
+            {
+                "page_number": 1,
+                "markdown": "text",
+                "figures": [
+                    {"index": 1, "caption": "Fig 1", "img_path": "images/fig1.jpg"}
+                ],
+                "tables": [],
+            }
+        ],
+        "full_markdown": "text",
+        "images": {"images/fig1.jpg": b"\xff\xd8"},
+    }
+    result = parser._build_result(raw)
+
+    assert result.pages[0].figures[0].img_path == "images/fig1.jpg"
+    assert len(result.images) == 1
+```
+
+Run: `cd backend && uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_mineru_parser.py::TestMinerUParser::test_build_result_propagates_img_path -v`
+Expected: PASS
+
 **Step 5: Commit**
 
 ```bash
 git add backend/src/core/ingest_and_digitize_data/parse_document/contracts.py \
-       backend/tests/core/ingest_and_digitize_data/parse_document/test_contracts.py
-git commit -m "feat: propagate img_path through _figures_from_page"
+       backend/tests/core/ingest_and_digitize_data/parse_document/test_contracts.py \
+       backend/tests/core/ingest_and_digitize_data/parse_document/test_mineru_parser.py
+git commit -m "feat: propagate img_path through _figures_from_page to ParseResult"
 ```
 
 ---
@@ -476,6 +626,15 @@ git commit -m "feat: propagate img_path through _figures_from_page"
 
 Check that `FigurePosition` (with new `img_path`) and `ParseResult` (with new `images`) are already exported in `__init__.py`. They should be — both were already in `__all__`.
 
+
+
+**Step 1b: Verify downstream callers still work**
+
+Run these tests to confirm that callers unaffected by the `images` default still pass:
+- `cd backend && uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_new_contracts.py -v` — `test_parse_and_save_result_creation` creates `ParseAndSaveResult` without `images`; should pass with default `{}`.
+- `cd backend && uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_mineru_local_parser.py -v` — `MinerULocalParser.parse()` creates `ParseResult` without `images`; the VLM path intentionally produces `images={}` since it gets markdown, not image files.
+- `cd backend && uv run pytest tests/core/ingest_and_digitize_data/parse_document/test_new_service.py -v` — `test_service_parse_and_save` creates `ParseAndSaveResult` without `images`; should pass.
+Expected: ALL PASS
 **Step 2: Run full test suite**
 
 Run: `cd backend && uv run pytest tests/core/ingest_and_digitize_data/parse_document/ -v`
@@ -495,7 +654,7 @@ git commit -m "chore: verify image extraction integration across parse_document 
 
 ---
 
-## Task 7: Update `block_to_markdown` to use local image path
+## Verification: `block_to_markdown` image path handling
 
 **Files:**
 - Modify: `backend/src/core/ingest_and_digitize_data/parse_document/common/converters.py:56-68`
