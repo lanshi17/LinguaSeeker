@@ -16,6 +16,26 @@ print(result.parser_used)          # "mineru-remote" or "mineru-local"
 print(len(result.images))          # Number of extracted images
 ```
 
+### Local File Batch Upload
+
+```python
+from src.core.ingest_and_digitize_data.parse_document import create_parse_service
+
+service = create_parse_service()
+
+result = await service.parse_local_files(
+    ["downloads/en/paper.pdf", "downloads/zh/paper.pdf"],
+    model_version="vlm",
+    data_ids=["paper-en", "paper-zh"],
+    is_ocr=True,
+)
+
+for file_name, parse_result in result.results.items():
+    print(file_name, parse_result.full_markdown[:200])
+
+print(result.failed_files)
+```
+
 ## Architecture
 
 ```
@@ -61,6 +81,8 @@ service = create_parse_service(config=config)
 | `save` | `async (result: ParseResult, output_dir: str) -> SavedFiles` | Save result to files (MD + metadata + images) |
 | `dedup` | `async (file_paths: list[str], known_hashes: list[str]) -> list[DedupResult]` | SHA-256 dedup check |
 | `parse_and_save` | `async (pdf_path: str, output_dir: str) -> ParseAndSaveResult` | Parse + save combined |
+| `parse_local_files` | `async (file_paths: list[str], **kwargs) -> MinerULocalBatchParseResult` | Upload local files with MinerU batch API, poll results, parse completed zips |
+| `parse_local_files_and_save` | `async (file_paths: list[str], output_dir: str, **kwargs) -> MinerULocalBatchSaveResult` | Batch parse local files and save each completed result under `output_dir/<file_stem>/` |
 
 ### ParserStrategy
 
@@ -169,6 +191,17 @@ ParserName = Literal["mineru-remote", "mineru-local", "unknown"]
 ### ParseAndSaveResult
 
 Extends `ParseResult` with `saved_files: SavedFiles | None`.
+
+### MinerU Local Batch Contracts
+
+| Contract | Description |
+|----------|-------------|
+| `MinerULocalBatchOptions` | Shared upload options: model version, OCR, formula/table toggles, language, data IDs, callback/seed, extra formats, timeout/proxy |
+| `MinerULocalBatchUploadResult` | Upload response with `batch_id`, local paths, pre-signed upload URLs, trace ID, and message |
+| `MinerUBatchStatus` | Current batch status from `extract-results/batch/{batch_id}` |
+| `MinerUBatchFileResult` | Per-file state, error message, data ID, `full_zip_url`, and progress |
+| `MinerULocalBatchParseResult` | Completed batch parse output keyed by MinerU file name, with `failed_files` helper |
+| `MinerULocalBatchSaveResult` | Saved output paths for each completed batch file |
 
 ### Exceptions
 

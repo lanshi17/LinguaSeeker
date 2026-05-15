@@ -8,3 +8,4 @@
 [2026-05-07] Web crawling refactor: extracted shared helpers (build_js_helpers, resolve_llm_config, crawl4ai_search), simplified providers and web_providers.py dispatch, added download flow and LLM config tests. [completed]
 [2026-05-12] Code review fixes for parse-document-integration-test: added 12 MinerULocalParser unit tests, fixed test constructors, pages_from_raw reuse, OpenAI response fallback. 50/50 unit tests pass. [done]
 [2026-05-12] Removed PaddleOCR entirely — deleted paddle_parser.py, PaddleOCRConfig, paddle deps from pyproject.toml, updated all tests/docs for MinerU-only architecture. 44/44 tests pass. [done]
+[2026-05-15] Implemented MinerU local-file batch upload API for parse_document with typed contracts, polling, zip parsing, service facade, docs, and tests [done]

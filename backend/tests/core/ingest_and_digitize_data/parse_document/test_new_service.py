@@ -1,9 +1,8 @@
 """Tests for refactored ParseDocumentService."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import datetime
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -11,8 +10,6 @@ from src.core.ingest_and_digitize_data.parse_document.contracts import (
     DocumentMetadata,
     PageContent,
     ParseResult,
-    SavedFiles,
-    DedupResult,
     ParseAndSaveResult,
 )
 from src.core.ingest_and_digitize_data.parse_document.service import ParseDocumentService
@@ -86,7 +83,7 @@ async def test_service_parse_and_save(mock_orchestrator, sample_result, tmp_path
 
     service = ParseDocumentService(orchestrator=mock_orchestrator)
 
-    with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io") as mock_files:
+    with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io"):
         result = await service.parse_and_save("test.pdf", str(tmp_path))
 
         assert isinstance(result, ParseAndSaveResult)
