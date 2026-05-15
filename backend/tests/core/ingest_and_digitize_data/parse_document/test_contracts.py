@@ -46,6 +46,14 @@ class TestFigurePosition:
         fig = FigurePosition(page=1, index=1)
         assert fig.caption is None
 
+    def test_figure_with_img_path(self):
+        fig = FigurePosition(page=1, index=1, caption="Fig 1", img_path="images/fig1.jpg")
+        assert fig.img_path == "images/fig1.jpg"
+
+    def test_figure_img_path_default_none(self):
+        fig = FigurePosition(page=1, index=1)
+        assert fig.img_path is None
+
 
 class TestTableStructure:
     def test_valid_table(self):
@@ -111,3 +119,19 @@ class TestParseResult:
             full_markdown="Custom markdown",
         )
         assert result.full_markdown == "Custom markdown"
+
+    def test_result_with_images(self):
+        result = ParseResult(
+            metadata=DocumentMetadata(total_pages=1),
+            pages=[PageContent(page_number=1, markdown="Content")],
+            images={"images/fig1.jpg": b"\xff\xd8\xff\xe0", "images/fig2.png": b"\x89PNG"},
+        )
+        assert len(result.images) == 2
+        assert b"\xff\xd8" in result.images["images/fig1.jpg"]
+
+    def test_result_images_default_empty(self):
+        result = ParseResult(
+            metadata=DocumentMetadata(total_pages=1),
+            pages=[PageContent(page_number=1, markdown="Content")],
+        )
+        assert result.images == {}

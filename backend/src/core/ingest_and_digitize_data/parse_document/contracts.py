@@ -26,6 +26,7 @@ class FigurePosition(BaseModel):
     page: int = Field(ge=1)
     index: int = Field(ge=1, description="Figure index on this page")
     caption: str | None = None
+    img_path: str | None = None
 
 
 class TableStructure(BaseModel):
@@ -54,7 +55,12 @@ class PageContent(BaseModel):
 def _figures_from_page(page_number: int, figures: list[dict]) -> list[FigurePosition]:
     """Extract figure positions from raw page data."""
     return [
-        FigurePosition(page=page_number, index=f.get("index", 1), caption=f.get("caption"))
+        FigurePosition(
+            page=page_number,
+            index=f.get("index", 1),
+            caption=f.get("caption"),
+            img_path=f.get("img_path"),
+        )
         for f in figures
     ]
 
@@ -98,6 +104,7 @@ class ParseResult(BaseModel):
     pages: list[PageContent]
     full_markdown: str = ""
     parser_used: ParserName = "unknown"
+    images: dict[str, bytes] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def _derive_full_markdown(self) -> ParseResult:
@@ -114,6 +121,7 @@ class SavedFiles:
     metadata_path: Path
     output_dir: Path
     created_at: datetime
+    images_dir: Path | None = None
 
 
 @dataclass
