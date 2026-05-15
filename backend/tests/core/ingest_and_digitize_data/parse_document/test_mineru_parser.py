@@ -161,3 +161,88 @@ class TestMinerUParser:
         assert "Title" in result["full_markdown"]
         assert "![Figure 1]" in result["full_markdown"]
         assert "| A |" in result["full_markdown"]  # markdown table
+
+    def test_parse_extracted_content_collects_images(self, parser):
+        """Verify parser collects image files from zip."""
+        with tempfile.TemporaryDirectory() as tmp:
+            content_dir = Path(tmp) / "extract"
+            content_dir.mkdir()
+
+            # Create images directory with a fake image
+            images_dir = content_dir / "images"
+            images_dir.mkdir()
+            fake_jpg = b"\xff\xd8\xff\xe0\x00fake_jpg_data"
+            (images_dir / "fig1.jpg").write_bytes(fake_jpg)
+
+            # full.md
+            (content_dir / "full.md").write_text("# Title", encoding="utf-8")
+
+            # content_list.json with image block
+            content_list = [
+                {"type": "text", "text": "Title", "text_level": 1, "page_idx": 0},
+                {
+                    "type": "image",
+                    "img_path": "images/fig1.jpg",
+                    "image_caption": ["Figure 1"],
+                    "page_idx": 0,
+                },
+            ]
+            (content_dir / "test_content_list.json").write_text(
+                json.dumps(content_list, ensure_ascii=False), encoding="utf-8"
+            )
+
+            result = parser._parse_extracted_content(content_dir)
+
+        assert result["state"] == "done"
+        assert len(result["images"]) == 1
+        assert "images/fig1.jpg" in result["images"]
+        assert result["images"]["images/fig1.jpg"] == fake_jpg
+
+    def test_parse_extracted_content_figure_has_img_path(self, parser):
+        """Verify figure data includes img_path."""
+        with tempfile.TemporaryDirectory() as tmp:
+            content_dir = Path(tmp) / "extract"
+            content_dir.mkdir()
+            (content_dir / "full.md").write_text("text", encoding="utf-8")
+
+            content_list = [
+                {
+                    "type": "image",
+                    "img_path": "images/fig1.jpg",
+                    "image_caption": ["Figure 1"],
+                    "page_idx": 0,
+                },
+            ]
+            (content_dir / "test_content_list.json").write_text(
+                json.dumps(content_list), encoding="utf-8"
+            )
+
+            result = parser._parse_extracted_content(content_dir)
+
+        page = result["pages"][0]
+        assert page["figures"][0]["img_path"] == "images/fig1.jpg"
+
+    def test_build_result_propagates_img_path_to_figure_position(self, parser):
+        """Integration: raw dict with img_path -> ParseResult.pages[0].figures[0].img_path."""
+        raw = {
+            "state": "done",
+            "total_pages": 1,
+            "title": None,
+            "authors": [],
+            "abstract": None,
+            "pages": [
+                {
+                    "page_number": 1,
+                    "markdown": "text",
+                    "figures": [{"index": 1, "caption": "Fig 1", "img_path": "images/fig1.jpg"}],
+                    "tables": [],
+                },
+            ],
+            "full_markdown": "text",
+            "images": {"images/fig1.jpg": b"\xff\xd8\xff\xe0"},
+        }
+        result = parser._build_result(raw)
+
+        assert isinstance(result, ParseResult)
+        assert result.pages[0].figures[0].img_path == "images/fig1.jpg"
+        assert result.images == {"images/fig1.jpg": b"\xff\xd8\xff\xe0"}

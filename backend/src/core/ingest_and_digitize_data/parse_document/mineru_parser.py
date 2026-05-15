@@ -39,6 +39,7 @@ class _MinerURawResult(TypedDict):
     abstract: str | None
     pages: list[_MinerUPageData]
     full_markdown: str
+    images: dict[str, bytes]
 
 
 class MinerUParser(ParserStrategy):
@@ -162,10 +163,22 @@ class MinerUParser(ParserStrategy):
 
             return self._parse_extracted_content(Path(tmp_dir))
 
+    def _collect_images(self, extract_dir: Path) -> dict[str, bytes]:
+        """Collect image files from extracted zip directory."""
+        images: dict[str, bytes] = {}
+        images_dir = extract_dir / "images"
+        if images_dir.is_dir():
+            for img_file in images_dir.iterdir():
+                if img_file.is_file():
+                    rel_path = f"images/{img_file.name}"
+                    images[rel_path] = img_file.read_bytes()
+        return images
+
     def _parse_extracted_content(self, extract_dir: Path) -> _MinerURawResult:
         """Parse extracted zip content into structured result."""
         json_files = list(extract_dir.rglob("*.json"))
         md_files = list(extract_dir.rglob("*.md"))
+        images = self._collect_images(extract_dir)
 
         # Priority 1: *_content_list.json (new MinerU format with structured blocks)
         content_list_files = [f for f in extract_dir.rglob("*_content_list.json")]
@@ -176,7 +189,9 @@ class MinerUParser(ParserStrategy):
             try:
                 data = json.loads(content_list_files[0].read_text(encoding="utf-8"))
                 if isinstance(data, list) and data:
-                    return self._parse_content_list_json(data, full_markdown)
+                    result = self._parse_content_list_json(data, full_markdown)
+                    result["images"] = images
+                    return result
             except (json.JSONDecodeError, UnicodeDecodeError):
                 pass
 
@@ -185,16 +200,22 @@ class MinerUParser(ParserStrategy):
             try:
                 data = json.loads(jf.read_text(encoding="utf-8"))
                 if isinstance(data, dict) and "pdf_info" in data:
-                    return self._parse_content_json(data, md_files)
+                    result = self._parse_content_json(data, md_files)
+                    result["images"] = images
+                    return result
                 elif isinstance(data, list) and len(data) > 0:
                     content_data = {"pages": data}
-                    return self._parse_content_json(content_data, md_files)
+                    result = self._parse_content_json(content_data, md_files)
+                    result["images"] = images
+                    return result
             except (json.JSONDecodeError, UnicodeDecodeError):
                 continue
 
         # Priority 3: markdown files
         if md_files:
-            return self._parse_markdown_files(md_files)
+            result = self._parse_markdown_files(md_files)
+            result["images"] = images
+            return result
 
         # Priority 4: full.md only
         if full_markdown:
@@ -206,6 +227,7 @@ class MinerUParser(ParserStrategy):
                 abstract=None,
                 pages=[_MinerUPageData(page_number=1, markdown=full_markdown, figures=[], tables=[])],
                 full_markdown=full_markdown,
+                images=images,
             )
 
         raise MinerUAPIError(f"No parseable content found in zip. Files: {list(extract_dir.rglob('*'))}")
@@ -312,7 +334,12 @@ class MinerUParser(ParserStrategy):
                     parts.append(md)
                 if block_type == "image":
                     caption = block.get("image_caption", [])
-                    figures.append({"index": len(figures) + 1, "caption": str(caption[0]) if caption else ""})
+                    img_path = block.get("img_path")
+                    figures.append({
+                        "index": len(figures) + 1,
+                        "caption": str(caption[0]) if caption else "",
+                        "img_path": img_path,
+                    })
                 elif block_type == "table":
                     table_body = block.get("table_body", "")
                     headers, rows = html_table_to_structured(table_body) if table_body else ([], [])
@@ -351,4 +378,5 @@ class MinerUParser(ParserStrategy):
             pages=pages_from_raw(data.get("pages", [])),
             full_markdown=data.get("full_markdown", ""),
             parser_used=self.name,
+            images=data.get("images", {}),
         )
