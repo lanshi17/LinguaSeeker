@@ -35,3 +35,4 @@
 [2026-05-15] Exposed MinerU local batch parsing through ParseDocumentService and parse_document public exports [done]
 [2026-05-15] Added MinerU local batch parse-and-save helper with per-file output directories [done]
 [2026-05-15] Documented MinerU local-file batch upload parse API and optional live MinerU smoke test [done]
+[2026-05-15] Verified Rust MinerU facade exposes local batch upload primitives and Rust tests pass [done]
