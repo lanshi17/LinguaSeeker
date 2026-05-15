@@ -184,7 +184,30 @@ class MultiStageTranslator(BaseTranslator):
     ) -> Tuple[str, List[str]]:
         logger.info("Stage: draft")
         text = formatted.formatted_markdown
+
+        # Ensure terminology + structure_plan leave room for segment content
+        max_overhead = 6000  # Reserve ~2000 tokens for the segment itself
         overhead = estimate_tokens(get_draft_prompt("", terminology, structure_plan))
+        if overhead > max_overhead:
+            # Truncate terminology and structure_plan proportionally
+            term_tokens = estimate_tokens(terminology)
+            struct_tokens = estimate_tokens(structure_plan)
+            total = term_tokens + struct_tokens or 1
+            budget = max_overhead - estimate_tokens(get_draft_prompt("", "", ""))
+            term_budget = int(budget * term_tokens / total)
+            struct_budget = int(budget * struct_tokens / total)
+            # Truncate by character ratio
+            if term_tokens > 0:
+                term_ratio = min(1.0, term_budget / term_tokens)
+                terminology = terminology[:int(len(terminology) * term_ratio)]
+            if struct_tokens > 0:
+                struct_ratio = min(1.0, struct_budget / struct_tokens)
+                structure_plan = structure_plan[:int(len(structure_plan) * struct_ratio)]
+            overhead = estimate_tokens(get_draft_prompt("", terminology, structure_plan))
+            logger.warning(
+                "Truncated terminology/structure_plan to fit token budget (overhead={})", overhead,
+            )
+
         segments = segment_text(text, max_tokens=8192, prompt_overhead_tokens=overhead)
 
         translated_parts: list[str] = []
@@ -200,7 +223,17 @@ class MultiStageTranslator(BaseTranslator):
         if not draft:
             return ""
 
+        # Ensure terminology leaves room for draft segment content
+        max_overhead = 6000
         overhead = estimate_tokens(get_polish_prompt("", terminology))
+        if overhead > max_overhead:
+            budget = max_overhead - estimate_tokens(get_polish_prompt("", ""))
+            term_tokens = estimate_tokens(terminology) or 1
+            ratio = min(1.0, budget / term_tokens)
+            terminology = terminology[:int(len(terminology) * ratio)]
+            overhead = estimate_tokens(get_polish_prompt("", terminology))
+            logger.warning("Truncated terminology to fit token budget (overhead={})", overhead)
+
         segments = segment_text(draft, max_tokens=8192, prompt_overhead_tokens=overhead)
 
         if len(segments) <= 1:
