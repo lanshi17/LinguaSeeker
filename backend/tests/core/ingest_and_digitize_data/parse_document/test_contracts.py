@@ -7,6 +7,10 @@ from pydantic import ValidationError
 from src.core.ingest_and_digitize_data.parse_document.contracts import (
     DocumentMetadata,
     FigurePosition,
+    MinerUBatchExtractProgress,
+    MinerUBatchFileResult,
+    MinerULocalBatchOptions,
+    MinerULocalBatchUploadResult,
     PageContent,
     ParseResult,
     TableStructure,
@@ -135,3 +139,38 @@ class TestParseResult:
             pages=[PageContent(page_number=1, markdown="Content")],
         )
         assert result.images == {}
+
+
+def test_local_batch_options_rejects_callback_without_seed() -> None:
+    with pytest.raises(ValidationError, match="seed is required"):
+        MinerULocalBatchOptions(callback="https://example.com/callback")
+
+
+def test_local_batch_options_rejects_unsupported_extra_format() -> None:
+    with pytest.raises(ValidationError, match="extra_formats"):
+        MinerULocalBatchOptions(extra_formats=["xlsx"])
+
+
+def test_batch_upload_result_requires_matching_url_count() -> None:
+    with pytest.raises(ValueError, match="upload URL count"):
+        MinerULocalBatchUploadResult(batch_id="batch-1", file_paths=["a.pdf", "b.pdf"], file_urls=["https://u1"])
+
+
+def test_batch_file_result_done_property() -> None:
+    item = MinerUBatchFileResult(file_name="demo.pdf", state="done", full_zip_url="https://example.com/result.zip")
+    assert item.is_done is True
+    assert item.is_terminal is True
+
+
+def test_batch_file_result_running_progress() -> None:
+    item = MinerUBatchFileResult(
+        file_name="demo.pdf",
+        state="running",
+        extract_progress=MinerUBatchExtractProgress(
+            extracted_pages=1,
+            total_pages=2,
+            start_time="2026-05-15 10:00:00",
+        ),
+    )
+    assert item.is_done is False
+    assert item.is_terminal is False
