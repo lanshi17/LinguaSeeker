@@ -1,7 +1,6 @@
 """Tests for common module."""
 from __future__ import annotations
 
-import pytest
 
 
 def test_html_table_to_markdown():

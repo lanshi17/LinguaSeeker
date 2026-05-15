@@ -428,3 +428,33 @@ class TestMinerUParser:
         assert list(result.results.keys()) == ["first.pdf"]
         assert result.results["first.pdf"].full_markdown == "# First"
         assert result.failed_files == ["second.pdf"]
+
+    @pytest.mark.asyncio
+    async def test_single_url_parse_still_uses_create_task_not_batch_upload(self, parser):
+        """Regression: single-URL parse() must use mineru_create_task, not batch upload."""
+        mock_create_response = {"code": 0, "data": {"task_id": "task-1"}, "msg": "ok"}
+        mock_poll_response = {
+            "code": 0,
+            "data": {"state": "done", "full_zip_url": "https://example.com/result.zip"},
+            "msg": "ok",
+        }
+        raw = {
+            "state": "done",
+            "total_pages": 1,
+            "title": None,
+            "authors": [],
+            "abstract": None,
+            "pages": [{"page_number": 1, "markdown": "ok", "figures": [], "tables": []}],
+            "full_markdown": "ok",
+            "images": {},
+        }
+
+        with patch("rust_io.net.mineru_create_task", new_callable=AsyncMock, return_value=mock_create_response) as create_task, \
+             patch("rust_io.net.mineru_get_result", new_callable=AsyncMock, return_value=mock_poll_response), \
+             patch("rust_io.net.mineru_upload_local_files", new_callable=AsyncMock) as upload_local_files, \
+             patch.object(parser, "_download_and_parse_zip", new_callable=AsyncMock, return_value=raw):
+            result = await parser.parse("https://example.com/paper.pdf")
+
+        assert result.full_markdown == "ok"
+        create_task.assert_awaited_once()
+        upload_local_files.assert_not_called()

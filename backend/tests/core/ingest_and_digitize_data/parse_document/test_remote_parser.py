@@ -1,7 +1,6 @@
 """Tests for remote parser module."""
 from __future__ import annotations
 
-import pytest
 
 from src.core.ingest_and_digitize_data.parse_document.remote.parser import MinerURemoteParser
 
