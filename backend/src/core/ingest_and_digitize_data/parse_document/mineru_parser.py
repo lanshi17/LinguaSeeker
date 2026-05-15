@@ -6,8 +6,9 @@ import json
 import tempfile
 import zipfile
 from collections import defaultdict
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TypedDict
+from typing import TypedDict, cast
 
 import httpx
 from loguru import logger
@@ -19,8 +20,10 @@ from .common.converters import block_to_markdown, html_table_to_structured
 from .contracts import (
     DocumentMetadata,
     MinerUBatchStatus,
+    MinerUExtraFormat,
     MinerULocalBatchOptions,
     MinerULocalBatchUploadResult,
+    MinerUModelVersion,
     ParseResult,
     pages_from_raw,
 )
@@ -109,7 +112,7 @@ class MinerUParser(ParserStrategy):
             if not path.is_file():
                 raise MinerUAPIError(f"Local path is not a file: {file_path}")
 
-    def _require_success_response(self, response: dict, operation: str) -> dict:
+    def _require_success_response(self, response: Mapping[str, object], operation: str) -> Mapping[str, object]:
         """Return response data or raise a MinerUAPIError."""
         code = response.get("code")
         if code not in (0, "0"):
@@ -117,15 +120,15 @@ class MinerUParser(ParserStrategy):
             raise MinerUAPIError(f"{operation} failed: {message}")
 
         data = response.get("data", {})
-        if not isinstance(data, dict):
+        if not isinstance(data, Mapping):
             raise MinerUAPIError(f"{operation} returned invalid data: {response}")
-        return data
+        return cast(Mapping[str, object], data)
 
     async def upload_local_files(
         self,
         file_paths: list[str],
         *,
-        model_version: str = "vlm",
+        model_version: MinerUModelVersion = "vlm",
         enable_formula: bool | None = True,
         enable_table: bool | None = True,
         language: str | None = "ch",
@@ -134,7 +137,7 @@ class MinerUParser(ParserStrategy):
         page_ranges: str | None = None,
         callback: str | None = None,
         seed: str | None = None,
-        extra_formats: list[str] | None = None,
+        extra_formats: list[MinerUExtraFormat] | None = None,
         timeout_ms: int | None = None,
         proxy: str | None = None,
     ) -> MinerULocalBatchUploadResult:
@@ -238,9 +241,8 @@ class MinerUParser(ParserStrategy):
         except Exception as e:
             raise MinerUAPIError(f"Failed to create task: {e}") from e
 
-        # Response format: {"code": 0, "data": {"task_id": "..."}, "msg": "ok"}
-        data = response.get("data", {})
-        task_id = data.get("task_id") if isinstance(data, dict) else None
+        data = self._require_success_response(response, "MinerU create task")
+        task_id = data.get("task_id")
         if not task_id:
             raise MinerUAPIError(f"No task_id in response: {response}")
 
@@ -252,7 +254,7 @@ class MinerUParser(ParserStrategy):
         Returns:
             URL to the zip file containing parsed results.
         """
-        for attempt in range(self._max_poll_attempts):
+        for _attempt in range(self._max_poll_attempts):
             try:
                 response = await net_io.mineru_get_result(
                     task_id=task_id,
@@ -261,11 +263,7 @@ class MinerUParser(ParserStrategy):
             except Exception as e:
                 raise MinerUAPIError(f"Failed to get result: {e}") from e
 
-            # Response format: {"code": 0, "data": {"state": "...", ...}, "msg": "ok"}
-            data = response.get("data", {})
-            if not isinstance(data, dict):
-                raise MinerUAPIError(f"Invalid response format: {response}")
-
+            data = self._require_success_response(response, "MinerU get result")
             state = data.get("state", "")
 
             if state == "done":
