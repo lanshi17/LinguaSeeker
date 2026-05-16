@@ -44,6 +44,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 |---|---|---|
 | 2026-05-14 | [evidence extraction design](plans/2026-05-14-evidence-extraction-design.md) | planned |
 | 2026-05-14 | [evidence extraction implementation](plans/2026-05-14-evidence-extraction.md) | planned |
+| 2026-05-16 | [evidence extraction output E2E](plans/2026-05-16-evidence-extraction-output-e2e.md) | planned |
 | 2026-05-14 | [cross-lingual persistence](planned/2026-05-14-cross-lingual-persistence.md) | planned |
 
 ## Active Code Reviews

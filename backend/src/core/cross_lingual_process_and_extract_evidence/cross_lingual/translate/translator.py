@@ -16,8 +16,14 @@ from ...config_context import TranslationConfigContext
 from ...contracts import FormattedDocument, TranslationResult, TranslationSegment
 from ..format.segmenter import estimate_tokens, segment_text
 from .base import BaseTranslator
-from .prompts import get_terminology_prompt, get_translate_prompt
+from .language_detector import _CJK_RE, detect_language
+from .prompts import (
+    get_system_prompt_generation_prompt,
+    get_terminology_prompt,
+    get_translate_prompt,
+)
 from .validator import (
+    strip_prompt_artifacts,
     strip_source_contamination,
     summarize_validation_error,
     validate_image_references_preserved,
@@ -36,6 +42,28 @@ class MultiStageTranslator(BaseTranslator):
 
     _MAX_SEGMENT_RETRIES: int = 3
 
+    # Pre-compiled regex for _clean_terminology
+    _TERM_HEADER_RE = re.compile(
+        r"^(?:TERMINOLOGY_STAGE|FORMAT_STAGE|TRANSLATE_STAGE"
+        r"|#\s*Terminology\s+Stage|#\s*Bilingual\s+Term\s+Pairs"
+        r"|##\s*Bilingual\s+Term\s+Pairs|##\s*Preservation\s+Rules"
+        r"|These bilingual term pairs|Bilingual Terminology Map"
+        r"|You are a bilingual|Extract a concise"
+        r"|\d+\.\s+\*\*[A-Z])",
+        re.IGNORECASE,
+    )
+    _TERM_SUBSECTION_RE = re.compile(r"^(?:\d+\.\s+)?\*\*[A-Z].*\*\*\s*:?\s*$")
+    _TERM_BULLET_PAIR_RE = re.compile(r"^[-*]\s+\*\*(.+?)\*\*\s*[→:→]\s*\*\*(.+?)\*\*")
+    _TERM_LANG_SRC_RE = re.compile(
+        r"^[-*]\s*(?:Japanese|Source|Chinese|Korean|Russian):\s*(.+?)\s*$",
+        re.IGNORECASE,
+    )
+    _TERM_LANG_TGT_RE = re.compile(
+        r"^[-*]\s*(?:English|Target):\s*(.+?)\s*$",
+        re.IGNORECASE,
+    )
+    _TERM_SIMPLE_PAIR_RE = re.compile(r"^[-*]?\s*(.+?)\s*[→:→]\s*(.+)$")
+
     def __init__(self, ctx: TranslationConfigContext):
         self._ctx = ctx
         self._llm = ChatOpenAI(
@@ -47,27 +75,35 @@ class MultiStageTranslator(BaseTranslator):
 
     @staticmethod
     def _to_text(content: Any) -> str:
+        """Extract plain text from LLM response content.
+
+        Handles str, list of content blocks, and single content block dicts.
+        Falls back to str() for unknown types.
+        """
         if content is None:
             return ""
         if isinstance(content, str):
             return content.strip()
         if isinstance(content, list):
-            parts = []
+            parts: list[str] = []
             for item in content:
-                if isinstance(item, dict) and item.get("type") == "text":
-                    parts.append(str(item.get("text", "")))
-                elif isinstance(item, str):
+                if isinstance(item, str):
                     parts.append(item)
+                elif isinstance(item, dict):
+                    if item.get("type") in ("text", None):
+                        text = item.get("text") or item.get("content") or ""
+                        if text:
+                            parts.append(str(text))
+                    # Non-text items (image_url, etc.) are intentionally skipped
             return "\n".join(parts).strip()
         if isinstance(content, dict):
-            if content.get("type") == "text":
-                return str(content.get("text", "")).strip()
-            return str(content.get("text", content.get("content", ""))).strip()
+            text = content.get("text") or content.get("content") or ""
+            return str(text).strip()
         return str(content).strip()
 
     # ── Helpers ─────────────────────────────────────────────────────────
 
-    _MAX_RETRIES: int = 5
+    _MAX_RETRIES: int = 3
     _BACKOFF_BASE: float = 30.0  # seconds
     _TRANSIENT_EXCEPTIONS = (
         openai.APITimeoutError,
@@ -78,12 +114,21 @@ class MultiStageTranslator(BaseTranslator):
         httpx.ConnectError,
     )
 
-    def _invoke_with_retry(self, prompt: str, stage: str) -> str:
-        """Call LLM with exponential backoff on transient failures."""
+    def _invoke_with_retry(
+        self, prompt: str, stage: str, system_prompt: str = "",
+    ) -> str:
+        """Call LLM with exponential backoff on transient failures.
+
+        Note: qwen-mt-flash only supports user/assistant roles, so
+        the system prompt is prepended to the human message.
+        """
+        content = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
+        messages = [HumanMessage(content=content)]
+
         last_exc: Exception | None = None
         for attempt in range(1, self._MAX_RETRIES + 1):
             try:
-                response = self._llm.invoke([HumanMessage(content=prompt)])
+                response = self._llm.invoke(messages)
                 return self._to_text(response.content)
             except self._TRANSIENT_EXCEPTIONS as exc:
                 last_exc = exc
@@ -122,6 +167,99 @@ class MultiStageTranslator(BaseTranslator):
             result[source] = target
         return result
 
+    @classmethod
+    def _clean_terminology(cls, raw: str) -> str:
+        """Strip LLM echo artifacts and normalize terminology output.
+
+        The terminology LLM returns structured markdown with headers,
+        bullet points, and formatting. This strips artifacts and
+        normalizes to simple ``source: target`` pairs.
+        """
+        if not raw:
+            return raw
+
+        lines = raw.splitlines()
+        clean: list[str] = []
+        pending_src: str | None = None  # buffered source term for lang-pair format
+
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                continue
+
+            # Skip headers and stage markers
+            if cls._TERM_HEADER_RE.match(stripped):
+                continue
+
+            # Skip sub-section headers (Preservation Rules, HGVS Notations, etc.)
+            if cls._TERM_SUBSECTION_RE.match(stripped):
+                pending_src = None
+                continue
+
+            # Skip "Keep as is" rules
+            if "keep as is" in stripped.lower():
+                pending_src = None
+                continue
+
+            # Try bullet pair: - **source** → **target**
+            m = cls._TERM_BULLET_PAIR_RE.match(stripped)
+            if m:
+                clean.append(f"{m.group(1).strip()}: {m.group(2).strip()}")
+                pending_src = None
+                continue
+
+            # Try Japanese/Source: X → buffer as source
+            m = cls._TERM_LANG_SRC_RE.match(stripped)
+            if m:
+                pending_src = m.group(1).strip()
+                continue
+
+            # Try English/Target: X → pair with buffered source
+            m = cls._TERM_LANG_TGT_RE.match(stripped)
+            if m and pending_src:
+                clean.append(f"{pending_src}: {m.group(1).strip()}")
+                pending_src = None
+                continue
+
+            # Simple pair format (non-bold)
+            m = cls._TERM_SIMPLE_PAIR_RE.match(stripped)
+            if m and "**" not in m.group(1):
+                src, tgt = m.group(1).strip(), m.group(2).strip()
+                if len(src.split()) <= 10 and len(tgt.split()) <= 10:
+                    clean.append(f"{src}: {tgt}")
+                pending_src = None
+                continue
+
+            # Unknown line — reset pending
+            pending_src = None
+
+        return "\n".join(clean).strip()
+
+    def _generate_system_prompt(self, formatted: FormattedDocument) -> str:
+        """Use an LLM to generate an optimal translation system prompt.
+
+        Analyzes the document sample and produces a tailored system message
+        that will be reused for all segment translations of this document.
+        """
+        source_lang = formatted.source_language or "unknown"
+        sample = formatted.formatted_markdown[:2000]
+        meta_prompt = get_system_prompt_generation_prompt(sample, source_lang)
+
+        logger.info("Generating dynamic system prompt for lang={}", source_lang)
+        system_prompt = self._invoke_with_retry(meta_prompt, "system_prompt_gen")
+
+        # Validate: generated prompt should be reasonable length
+        if len(system_prompt) < 50:
+            logger.warning("Generated system prompt too short ({} chars), using fallback", len(system_prompt))
+            return (
+                "You are a professional biomedical translation engine. "
+                "Translate to English. Preserve markdown structure, image references, "
+                "and biomedical literals exactly. Output only translated markdown."
+            )
+
+        logger.info("Generated system prompt ({} chars)", len(system_prompt))
+        return system_prompt
+
     # ── Pipeline stages ──────────────────────────────────────────────────
 
     def extract_terminology(self, formatted: FormattedDocument) -> str:
@@ -131,9 +269,10 @@ class MultiStageTranslator(BaseTranslator):
         segments = segment_text(text, max_tokens=6000, prompt_overhead_tokens=overhead)
 
         if len(segments) <= 1:
-            return self._invoke_with_retry(
+            raw = self._invoke_with_retry(
                 get_terminology_prompt(text), "terminology",
             )
+            return self._clean_terminology(raw)
 
         all_terms: list[str] = []
         for idx, segment in enumerate(segments, start=1):
@@ -151,7 +290,14 @@ class MultiStageTranslator(BaseTranslator):
             if key and key not in seen:
                 seen.add(key)
                 unique_lines.append(line.strip())
-        return "\n".join(unique_lines)
+        return self._clean_terminology("\n".join(unique_lines))
+
+    # Maximum input tokens for qwen-mt-flash
+    _MODEL_MAX_TOKENS: int = 8192
+    # Reserve ~half for output (translation ≈ source length)
+    _INPUT_BUDGET: int = 4000
+    # Context window per side (prev/next)
+    _CONTEXT_CHARS: int = 150
 
     def translate_segments(
         self, formatted: FormattedDocument, terminology: str,
@@ -164,39 +310,75 @@ class MultiStageTranslator(BaseTranslator):
         logger.info("Stage: translate")
         text = formatted.formatted_markdown
 
-        # Calculate token budget for prompt overhead
-        max_overhead = 5000
-        base_prompt_tokens = estimate_tokens(get_translate_prompt("", ""))
-        overhead = estimate_tokens(get_translate_prompt("", terminology))
-        if overhead > max_overhead:
-            budget = max_overhead - base_prompt_tokens
-            term_tokens = estimate_tokens(terminology) or 1
-            ratio = min(1.0, budget / term_tokens * 0.9)
-            terminology = terminology[:int(len(terminology) * ratio)]
-            overhead = estimate_tokens(get_translate_prompt("", terminology))
-            logger.warning(
-                "Truncated terminology to fit token budget (overhead={})", overhead,
-            )
+        # Generate a dynamic system prompt tailored to this document
+        system_prompt = self._generate_system_prompt(formatted)
 
-        segments = segment_text(text, max_tokens=6000, prompt_overhead_tokens=overhead)
+        # Calculate total overhead: system prompt + base template + context
+        sys_tokens = estimate_tokens(system_prompt)
+        base_template = get_translate_prompt("", "", "", "")
+        base_tokens = estimate_tokens(base_template)
+        ctx_sample = "x" * self._CONTEXT_CHARS * 2
+        ctx_tokens = estimate_tokens(ctx_sample)
+
+        # Budget for terminology = INPUT_BUDGET - sys - base - context
+        available = self._INPUT_BUDGET - sys_tokens - base_tokens - ctx_tokens
+        term_tokens = estimate_tokens(terminology)
+        if term_tokens > max(available * 0.4, 500):
+            # Truncate terminology to fit
+            budget_chars = int(len(terminology) * (available * 0.4) / (term_tokens or 1) * 0.9)
+            # Snap to nearest newline to avoid splitting mid-entry
+            cut = terminology.rfind("\n", 0, max(budget_chars, 200))
+            terminology = terminology[:max(cut, 200)]
+            term_tokens = estimate_tokens(terminology)
+            logger.warning("Truncated terminology to {} tokens", term_tokens)
+
+        # Total overhead for segment_text budget
+        overhead = sys_tokens + base_tokens + ctx_tokens + term_tokens
+        max_segment_tokens = self._INPUT_BUDGET - overhead
+        logger.info(
+            "Token budget: sys={} + base={} + ctx={} + terms={} = overhead={}, segment_max={}",
+            sys_tokens, base_tokens, ctx_tokens, term_tokens, overhead, max_segment_tokens,
+        )
+
+        segments = segment_text(text, max_tokens=max(2000, max_segment_tokens), prompt_overhead_tokens=overhead)
 
         translated_parts: list[str] = []
         for idx, segment in enumerate(segments, start=1):
-            translated = self._translate_one_segment(segment, terminology, idx, len(segments))
+            # Provide neighboring context so the LLM can translate coherently
+            prev_ctx = segments[idx - 2][-self._CONTEXT_CHARS:] if idx >= 2 else ""
+            next_ctx = segments[idx][:self._CONTEXT_CHARS] if idx < len(segments) else ""
+            translated = self._translate_one_segment(
+                segment, terminology, idx, len(segments),
+                prev_context=prev_ctx, next_context=next_ctx,
+                system_prompt=system_prompt,
+            )
             translated_parts.append(translated)
             logger.info("Translate segment {}/{} done", idx, len(segments))
 
         return "\n\n".join(translated_parts), segments
 
     def _translate_one_segment(
-        self, source_segment: str, terminology: str, idx: int, total: int,
+        self,
+        source_segment: str,
+        terminology: str,
+        idx: int,
+        total: int,
+        prev_context: str = "",
+        next_context: str = "",
+        system_prompt: str = "",
     ) -> str:
         """Translate a single segment with validation and retry."""
-        prompt = get_translate_prompt(source_segment, terminology)
+        prompt = get_translate_prompt(
+            source_segment, terminology,
+            prev_context=prev_context, next_context=next_context,
+        )
         stage = f"translate/{idx}"
 
         for attempt in range(1, self._MAX_SEGMENT_RETRIES + 1):
-            translated = self._invoke_with_retry(prompt, stage)
+            translated = self._invoke_with_retry(prompt, stage, system_prompt)
+
+            # Strip prompt artifacts echoed back by the LLM
+            translated = strip_prompt_artifacts(translated)
 
             # Strip any source-language contamination from this segment
             translated = strip_source_contamination(
@@ -268,25 +450,21 @@ class MultiStageTranslator(BaseTranslator):
     @staticmethod
     def _detect_source_lang(text: str) -> str:
         """Quick heuristic to detect source language for contamination stripping."""
-        from .language_detector import _CJK_RE
         cjk_count = len(_CJK_RE.findall(text[:500]))
         if cjk_count > 50:
-            # Could be zh or ja — let the detector figure it out
-            from .language_detector import detect_language
             return detect_language(text) or "unknown"
         return "unknown"
 
     # ── Full pipeline ────────────────────────────────────────────────────
 
-    def run_pipeline(self, formatted: FormattedDocument) -> Tuple[str, Dict[str, str], str, str, List[str], List[str]]:
-        # Stage 1: Extract terminology
+    def run_pipeline(self, formatted: FormattedDocument) -> Tuple[Dict[str, str], str, str, str, List[str], List[str]]:
+        # ── Stage 1: Translate (terminology + segment translation) ────────
         terminology = self.extract_terminology(formatted)
-
-        # Stage 2: Translate with built-in constraints
         translated, source_segments = self.translate_segments(formatted, terminology)
 
-        # Stage 3: Validate and clean
+        # ── Stage 2: Review (validate, clean, strip artifacts) ────────────
         warnings: list[str] = []
+        translated = strip_prompt_artifacts(translated)
         translated = strip_source_contamination(translated, formatted.source_language or "unknown")
 
         # Guard: detect LLM repetition loops (translated >> source size)

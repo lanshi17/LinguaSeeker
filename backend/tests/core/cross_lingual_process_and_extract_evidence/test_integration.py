@@ -52,9 +52,10 @@ def test_full_pipeline_chinese(mock_chat_cls, mock_cfg, chinese_pages):
     mock_llm = MagicMock()
     mock_chat_cls.return_value = mock_llm
 
-    # Mock each LLM call: terminology + translate segments
+    # Mock each LLM call: terminology + system prompt gen + translate segments
     mock_llm.invoke.side_effect = [
         _mock_llm_response("基因:gene\n变异:variant"),          # terminology
+        _mock_llm_response("You are a biomedical translation engine. Translate from Chinese to English. Preserve markdown structure."),  # system prompt generation
         _mock_llm_response("The patient carries a novel BRCA1 gene variant. This variant leads to loss of protein function."),  # translate segment 1
     ]
 
