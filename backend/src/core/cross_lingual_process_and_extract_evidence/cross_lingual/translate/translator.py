@@ -222,6 +222,50 @@ class MultiStageTranslator(BaseTranslator):
         return translated  # unreachable, but satisfies type checker
 
     @staticmethod
+    def _trim_repetitive_content(text: str) -> str:
+        """Remove repetitive heading blocks from LLM output.
+
+        When the LLM enters a repetition loop, it generates the same section
+        structure over and over. This function detects repeated heading patterns
+        and keeps only the first occurrence plus any content before it.
+        """
+        paragraphs = re.split(r"\n\s*\n", text)
+        seen_headings: list[str] = []
+        clean_parts: list[str] = []
+        repetition_start: int | None = None
+
+        for idx, para in enumerate(paragraphs):
+            stripped = para.strip()
+            heading_match = re.match(r"^(#{1,6})\s+(.+)", stripped)
+            if heading_match:
+                heading_text = heading_match.group(2).strip().lower()
+                if heading_text in seen_headings:
+                    # Found repeated heading — mark where repetition starts
+                    if repetition_start is None:
+                        repetition_start = idx
+                    continue
+                seen_headings.append(heading_text)
+            if repetition_start is not None:
+                # Skip content after repetition started
+                continue
+            clean_parts.append(para)
+
+        if repetition_start is None:
+            return text
+
+        result = "\n\n".join(clean_parts).strip()
+        if len(result) < 100:
+            # Safety: if trimming removed almost everything, keep original
+            logger.warning("Repetition trim left <100 chars, keeping original")
+            return text
+
+        logger.info(
+            "Trimmed repetitive content: {} -> {} chars ({} paragraphs removed)",
+            len(text), len(result), len(paragraphs) - len(clean_parts),
+        )
+        return result
+
+    @staticmethod
     def _detect_source_lang(text: str) -> str:
         """Quick heuristic to detect source language for contamination stripping."""
         from .language_detector import _CJK_RE
@@ -251,10 +295,12 @@ class MultiStageTranslator(BaseTranslator):
             unique_headings = set(re.findall(r"^#{1,6}\s+.+", translated, re.MULTILINE))
             if len(unique_headings) > 0 and len(translated) / len(unique_headings) > 500:
                 logger.warning(
-                    "Detected LLM repetition loop: {} chars ({}x source), {} unique headings.",
+                    "Detected LLM repetition loop: {} chars ({}x source), {} unique headings. "
+                    "Trimming to first occurrence of repeated content.",
                     len(translated), len(translated) // source_len, len(unique_headings),
                 )
                 warnings.append("repetition_loop")
+                translated = self._trim_repetitive_content(translated)
 
         try:
             validate_translation_output(formatted.formatted_markdown, translated)
