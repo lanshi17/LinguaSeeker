@@ -48,17 +48,14 @@ def _mock_llm_response(text: str):
 
 @patch("src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.ChatOpenAI")
 def test_full_pipeline_chinese(mock_chat_cls, mock_cfg, chinese_pages):
-    """Full pipeline: Chinese → English with all stages."""
+    """Full pipeline: Chinese → English with 3-stage pipeline."""
     mock_llm = MagicMock()
     mock_chat_cls.return_value = mock_llm
 
-    # Mock each LLM call in order
+    # Mock each LLM call: terminology + translate segments
     mock_llm.invoke.side_effect = [
         _mock_llm_response("基因:gene\n变异:variant"),          # terminology
-        _mock_llm_response("Section 1: Patient variant info"),  # structure
-        _mock_llm_response("The patient carries a novel BRCA1 gene variant. This variant leads to loss of protein function."),  # draft
-        _mock_llm_response("The patient carries a novel BRCA1 gene variant. This variant leads to loss of protein function."),  # polish
-        _mock_llm_response("Translation accurate, no gaps found."),  # review
+        _mock_llm_response("The patient carries a novel BRCA1 gene variant. This variant leads to loss of protein function."),  # translate segment 1
     ]
 
     service = TranslationService(cfg=mock_cfg)

@@ -1,4 +1,4 @@
-"""LLM prompt templates for the translation and formatting pipeline."""
+"""LLM prompt templates for the translation pipeline."""
 from __future__ import annotations
 
 
@@ -32,67 +32,33 @@ def get_terminology_prompt(markdown_content: str) -> str:
     )
 
 
-def get_structure_prompt(markdown_content: str) -> str:
-    """Generate prompt for the structure planning stage."""
-    return (
-        "STRUCTURE_STAGE\n"
-        "You are a structure planner for non-English biomedical markdown. "
-        "Analyze the document structure and create a plan for clear English rendering.\n\n"
-        "CRITICAL RULES:\n"
-        "- PRESERVE the original heading hierarchy exactly (# ## ### etc.)\n"
-        "- Do NOT add new headings or sections that don't exist in the source\n"
-        "- Do NOT reorganize or restructure the document\n"
-        "- Only plan sentence-level improvements: restore omitted subjects, "
-        "split long clauses, make logical connectors explicit\n"
-        "- Preserve markdown structure such as bullet lists and tables\n\n"
-        f"SOURCE DOCUMENT:\n{markdown_content}"
-    )
-
-
-def get_draft_prompt(
+def get_translate_prompt(
     markdown_segment: str,
     terminology: str,
-    structure_plan: str,
 ) -> str:
-    """Generate prompt for translating one segment."""
+    """Generate prompt for translating one segment.
+
+    Combines terminology enforcement, structure preservation, and image
+    reference preservation into a single prompt. The LLM translates once
+    — no separate draft/polish/review stages.
+    """
     return (
-        "DRAFT_STAGE\n"
-        "You are a faithful biomedical translation engine. Translate this "
-        "markdown segment into English while preserving markdown structure. "
-        "Obey the terminology map and the structure plan. Preserve HGVS, gene "
-        "symbols, protein names, accession IDs, DOI/PMID strings, and other "
-        "biomedical literals exactly. Do not omit uncertain content; if ambiguity "
-        "remains, keep it explicit rather than rewriting it away.\n\n"
-        "CRITICAL: Preserve ALL image references exactly as-is (e.g., "
-        "![](images/xxx.jpg)). Do not remove, rewrite, or translate them.\n\n"
+        "TRANSLATE_STAGE\n"
+        "You are a faithful biomedical translation engine. Translate the "
+        "following markdown segment into English.\n\n"
+        "CRITICAL RULES:\n"
+        "1. Preserve ALL markdown structure exactly — do NOT add, remove, or "
+        "rearrange headings (# ## ### etc.), bullet lists, tables, or horizontal rules.\n"
+        "2. Preserve ALL image references exactly as-is (e.g., "
+        "![](images/xxx.jpg)). Do not remove, rewrite, or translate them.\n"
+        "3. Preserve ALL biomedical literals exactly: HGVS notation, gene symbols, "
+        "protein names, accession IDs, DOI/PMID strings, drug dosages, lab values.\n"
+        "4. Use the terminology map below for standard terms. If a term appears "
+        "in the map, use the mapped translation consistently.\n"
+        "5. Translate faithfully — do not omit content, do not add new content, "
+        "do not summarize or expand. If ambiguity exists, keep it explicit.\n"
+        "6. Output ONLY the translated markdown. Do NOT append the original text, "
+        "explanations, or meta-commentary.\n\n"
         f"TERMINOLOGY MAP:\n{terminology}\n\n"
-        f"STRUCTURE PLAN:\n{structure_plan}\n\n"
         f"MARKDOWN SEGMENT:\n{markdown_segment}"
-    )
-
-
-def get_polish_prompt(draft: str, terminology: str) -> str:
-    """Generate prompt for polishing the translated draft."""
-    return (
-        "POLISH_STAGE\n"
-        "You are polishing biomedical English prose. Improve fluency for "
-        "academic English while preserving markdown layout and scientific meaning. "
-        "Do not alter biomedical literals or terminology mappings, and avoid "
-        "obvious stock AI phrasing.\n\n"
-        "CRITICAL: Preserve ALL image references exactly as-is (e.g., "
-        "![](images/xxx.jpg)). Do not remove, rewrite, or translate them.\n\n"
-        f"TERMINOLOGY MAP:\n{terminology}\n\n"
-        f"DRAFT MARKDOWN:\n{draft}"
-    )
-
-
-def get_review_prompt(source_markdown: str, translated_markdown: str) -> str:
-    """Generate prompt for reviewing translation quality."""
-    return (
-        "REVIEW_STAGE\n"
-        "Review the translated biomedical markdown against the source. Identify "
-        "unresolved ambiguity, dropped content, terminology drift, or logic gaps. "
-        "Return a short review result only.\n\n"
-        f"SOURCE DOCUMENT:\n{source_markdown}\n\n"
-        f"TRANSLATED DOCUMENT:\n{translated_markdown}"
     )

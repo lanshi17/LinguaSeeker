@@ -141,6 +141,40 @@ def strip_source_contamination(translated: str, source_language: str = "unknown"
     return result
 
 
+def validate_segment(source: str, translated: str) -> None:
+    """Validate a single translated segment.
+
+    Lighter than ``validate_translation_output`` — checks for empty output,
+    source-language contamination, and size anomalies. Used for per-segment
+    retry decisions during translation.
+
+    Raises:
+        ValueError: If the segment fails validation.
+    """
+    translated = str(translated or "").strip()
+    if not translated:
+        raise ValueError("segment_validation_failed: empty")
+
+    # Check CJK ratio — >30% CJK in a segment means likely not translated
+    cjk_count = len(_CJK_RE.findall(translated))
+    total = len(translated) or 1
+    if cjk_count / total > 0.30:
+        raise ValueError("segment_validation_failed: source_language_content")
+
+    # Check if translation is essentially unchanged from source
+    source = str(source or "").strip()
+    if source:
+        ratio = SequenceMatcher(None, source.lower(), translated.lower()).ratio()
+        if ratio >= 0.90:
+            raise ValueError("segment_validation_failed: unchanged")
+
+    # Check for LLM repetition — translated should not be >3x source
+    if source and len(translated) > len(source) * 3:
+        headings = re.findall(r"^#{1,6}\s+.+", translated, re.MULTILINE)
+        if len(set(headings)) < len(headings):
+            raise ValueError("segment_validation_failed: repetition_loop")
+
+
 def validate_image_references_preserved(source: str, translated: str) -> None:
     """Validate that all image references from source are preserved in translation.
 
