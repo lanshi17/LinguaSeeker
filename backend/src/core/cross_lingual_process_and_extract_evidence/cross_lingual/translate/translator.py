@@ -23,7 +23,7 @@ from .prompts import (
     get_structure_prompt,
     get_terminology_prompt,
 )
-from .validator import summarize_validation_error, validate_image_references_preserved, validate_translation_output
+from .validator import strip_source_contamination, summarize_validation_error, validate_image_references_preserved, validate_translation_output
 
 
 class MultiStageTranslator(BaseTranslator):
@@ -302,7 +302,7 @@ class MultiStageTranslator(BaseTranslator):
         logger.info("Review notes: {}", review_notes)
 
         warnings: list[str] = []
-        translated = polished
+        translated = strip_source_contamination(polished, formatted.source_language or "unknown")
         try:
             validate_translation_output(formatted.formatted_markdown, translated)
         except Exception as exc:
@@ -310,8 +310,9 @@ class MultiStageTranslator(BaseTranslator):
             logger.warning("Translation validation warning: {}", warnings[-1])
             if translated != draft:
                 try:
-                    validate_translation_output(formatted.formatted_markdown, draft)
-                    translated = draft
+                    stripped_draft = strip_source_contamination(draft, formatted.source_language or "unknown")
+                    validate_translation_output(formatted.formatted_markdown, stripped_draft)
+                    translated = stripped_draft
                     warnings.append("fell_back_to_draft")
                 except Exception:
                     pass
