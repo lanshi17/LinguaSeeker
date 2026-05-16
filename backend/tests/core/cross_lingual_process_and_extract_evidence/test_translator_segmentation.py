@@ -44,15 +44,16 @@ def test_extract_terminology_segments_large_document(mock_translator, large_docu
 
 def test_translate_segments_segments_large_document(mock_translator, large_document):
     """translate_segments should segment large docs and translate each segment."""
-    result, segments = mock_translator.translate_segments(large_document, "术语:terminology")
+    result, segments, translated_parts = mock_translator.translate_segments(large_document, "术语:terminology")
     assert result is not None
     assert len(segments) > 1
+    assert len(translated_parts) > 1
     assert mock_translator._invoke_with_retry.call_count > 1
 
 
 def test_run_pipeline_with_large_document(mock_translator, large_document):
     """Full pipeline should complete without token limit errors."""
-    terminology_map, structure_plan, draft, translated, segments, warnings = (
+    terminology_map, structure_plan, draft, translated, segments, translated_parts, warnings = (
         mock_translator.run_pipeline(large_document)
     )
     assert terminology_map is not None
@@ -68,6 +69,6 @@ def test_translate_segments_truncates_large_terminology(mock_translator):
     # Simulate very large terminology (merged from many segments)
     huge_terminology = "基因:gene\n蛋白质:protein\n" * 500  # ~10000 tokens
 
-    result, segments = mock_translator.translate_segments(small_doc, huge_terminology)
+    result, segments, translated_parts = mock_translator.translate_segments(small_doc, huge_terminology)
     assert result is not None
     assert mock_translator._invoke_with_retry.call_count >= 1

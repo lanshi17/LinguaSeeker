@@ -6,7 +6,11 @@ from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
-from ...contracts import FormattedDocument, SentenceRegion
+from ...contracts import (
+    FormattedDocument,
+    SentenceDrift,
+    SentenceRegion,
+)
 from .base import BaseFormatter
 
 
@@ -101,6 +105,70 @@ def _fix_markdown_headings(text: str) -> str:
     return text
 
 
+def _find_raw_offset(
+    sentence_text: str,
+    raw_text: str,
+    search_start: int,
+) -> tuple[int, int]:
+    """Find a sentence's position in the raw text by searching for its content.
+
+    Returns (start, end) offsets in raw_text, or (-1, -1) if not found.
+    """
+    # Try exact match first
+    idx = raw_text.find(sentence_text, search_start)
+    if idx != -1:
+        return (idx, idx + len(sentence_text))
+
+    # Try normalized match (collapse whitespace differences)
+    normalized = re.sub(r"\s+", " ", sentence_text.strip())
+    for i in range(search_start, len(raw_text) - len(normalized) + 1):
+        candidate = re.sub(r"\s+", " ", raw_text[i : i + len(sentence_text) + 20].strip())
+        if candidate.startswith(normalized[:50]):
+            # Found approximate match
+            end = min(i + len(sentence_text), len(raw_text))
+            return (i, end)
+
+    return (-1, -1)
+
+
+def compute_format_drift(
+    raw_text: str,
+    formatted_sentences: List[SentenceRegion],
+) -> List[SentenceDrift]:
+    """Compute character drift between raw and formatted text for each sentence.
+
+    For each sentence in the formatted text, finds its corresponding position
+    in the raw text and calculates the offset drift.
+    """
+    drifts: List[SentenceDrift] = []
+    search_start = 0
+
+    for idx, sent in enumerate(formatted_sentences):
+        raw_start, raw_end = _find_raw_offset(sent.text, raw_text, search_start)
+        if raw_start == -1:
+            # Fallback: use proportional mapping
+            ratio = sent.start_offset / max(len(raw_text), 1)
+            raw_start = int(ratio * len(raw_text))
+            raw_end = raw_start + len(sent.text)
+
+        drift = sent.start_offset - raw_start
+        drifts.append(
+            SentenceDrift(
+                sentence_index=idx,
+                page=sent.page,
+                raw_start=raw_start,
+                raw_end=raw_end,
+                formatted_start=sent.start_offset,
+                formatted_end=sent.end_offset,
+                drift=drift,
+                text=sent.text,
+            )
+        )
+        search_start = raw_end
+
+    return drifts
+
+
 def _format_markdown(
     pages: List[Dict[str, Any]],
     raw_markdown: str = "",
@@ -114,6 +182,8 @@ def _format_markdown(
         raw_markdown = "\n\n".join(
             p.get("markdown", "") for p in pages
         )
+
+    raw_copy = raw_markdown  # Preserve for drift computation
 
     # Basic normalization
     formatted = _normalize_whitespace(raw_markdown)
@@ -134,6 +204,7 @@ def _format_markdown(
         formatted_markdown=formatted,
         sentences=sentences,
         metadata={"page_count": len(pages)},
+        raw_markdown=raw_copy,
     )
 
 
@@ -142,3 +213,11 @@ class MarkdownFormatter(BaseFormatter):
 
     def format(self, pages: List[Dict[str, Any]]) -> FormattedDocument:
         return _format_markdown(pages)
+
+    def compute_drift(
+        self,
+        raw_text: str,
+        formatted_sentences: List[SentenceRegion],
+    ) -> List[SentenceDrift]:
+        """Compute format drift for the given sentences."""
+        return compute_format_drift(raw_text, formatted_sentences)
