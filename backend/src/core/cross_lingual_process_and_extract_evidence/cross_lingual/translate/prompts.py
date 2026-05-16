@@ -37,11 +37,14 @@ def get_structure_prompt(markdown_content: str) -> str:
     return (
         "STRUCTURE_STAGE\n"
         "You are a structure planner for non-English biomedical markdown. "
-        "Do not translate terminology. Re-express only the logical structure "
-        "needed for clear English rendering. Restore omitted subjects when "
-        "necessary, split long clauses, make logical connectors explicit, "
-        "and preserve markdown-aware structure such as headings, bullet lists, "
-        "and tables.\n\n"
+        "Analyze the document structure and create a plan for clear English rendering.\n\n"
+        "CRITICAL RULES:\n"
+        "- PRESERVE the original heading hierarchy exactly (# ## ### etc.)\n"
+        "- Do NOT add new headings or sections that don't exist in the source\n"
+        "- Do NOT reorganize or restructure the document\n"
+        "- Only plan sentence-level improvements: restore omitted subjects, "
+        "split long clauses, make logical connectors explicit\n"
+        "- Preserve markdown structure such as bullet lists and tables\n\n"
         f"SOURCE DOCUMENT:\n{markdown_content}"
     )
 
@@ -60,6 +63,8 @@ def get_draft_prompt(
         "symbols, protein names, accession IDs, DOI/PMID strings, and other "
         "biomedical literals exactly. Do not omit uncertain content; if ambiguity "
         "remains, keep it explicit rather than rewriting it away.\n\n"
+        "CRITICAL: Preserve ALL image references exactly as-is (e.g., "
+        "![](images/xxx.jpg)). Do not remove, rewrite, or translate them.\n\n"
         f"TERMINOLOGY MAP:\n{terminology}\n\n"
         f"STRUCTURE PLAN:\n{structure_plan}\n\n"
         f"MARKDOWN SEGMENT:\n{markdown_segment}"
@@ -74,6 +79,8 @@ def get_polish_prompt(draft: str, terminology: str) -> str:
         "academic English while preserving markdown layout and scientific meaning. "
         "Do not alter biomedical literals or terminology mappings, and avoid "
         "obvious stock AI phrasing.\n\n"
+        "CRITICAL: Preserve ALL image references exactly as-is (e.g., "
+        "![](images/xxx.jpg)). Do not remove, rewrite, or translate them.\n\n"
         f"TERMINOLOGY MAP:\n{terminology}\n\n"
         f"DRAFT MARKDOWN:\n{draft}"
     )
