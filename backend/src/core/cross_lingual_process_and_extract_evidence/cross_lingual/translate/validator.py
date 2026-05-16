@@ -99,10 +99,9 @@ def strip_source_contamination(translated: str, source_language: str = "unknown"
         return translated
 
     result = "\n\n".join(clean_parts).strip()
-    if len(result) < len(translated) * 0.3:
-        # Safety: if we removed >70%, the whole thing might be the source text
-        # Return original and let validation catch it
-        logger.warning("Contamination strip removed >70% of text, keeping original")
+    if len(result) < 100:
+        # Safety: if almost nothing remains, likely a false positive
+        logger.warning("Contamination strip left <100 chars, keeping original")
         return translated
 
     logger.info(
