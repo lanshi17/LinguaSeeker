@@ -5,6 +5,7 @@ import re
 from difflib import SequenceMatcher
 
 from lingua import Language
+from loguru import logger
 
 from .language_detector import _CJK_RE, _DETECTOR
 
