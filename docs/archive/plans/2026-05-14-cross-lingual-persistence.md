@@ -9,6 +9,10 @@
 **Tech Stack:** Python, Pydantic, pathlib, loguru, pytest
 
 ---
+**Status:** completed
+**Created:** 2026-05-14
+**Completed:** 2026-05-14
+**PR:** merged
 
 ## Context
 

@@ -9,6 +9,10 @@
 **Tech Stack:** Python, LangChain, OpenAI SDK, qwen-mt-flash, MinerU API
 
 ---
+**Status:** completed
+**Created:** 2026-05-15
+**Completed:** 2026-05-15
+**PR:** merged
 
 ## Problem Analysis
 
