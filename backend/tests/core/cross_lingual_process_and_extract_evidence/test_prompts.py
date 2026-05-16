@@ -1,9 +1,6 @@
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.prompts import (
     get_terminology_prompt,
-    get_structure_prompt,
-    get_draft_prompt,
-    get_polish_prompt,
-    get_review_prompt,
+    get_translate_prompt,
     get_format_prompt,
 )
 
@@ -14,27 +11,20 @@ def test_terminology_prompt_contains_source():
     assert "TERMINOLOGY" in prompt.upper() or "terminology" in prompt.lower()
 
 
-def test_structure_prompt_contains_source():
-    prompt = get_structure_prompt("Some source text.")
-    assert "Some source text" in prompt
-
-
-def test_draft_prompt_contains_all_inputs():
-    prompt = get_draft_prompt("segment", "term_map", "structure_plan")
+def test_translate_prompt_contains_all_inputs():
+    prompt = get_translate_prompt("segment", "term_map")
     assert "segment" in prompt
     assert "term_map" in prompt
-    assert "structure_plan" in prompt
 
 
-def test_polish_prompt_contains_draft():
-    prompt = get_polish_prompt("draft text", "terminology")
-    assert "draft text" in prompt
+def test_translate_prompt_preserves_structure():
+    prompt = get_translate_prompt("segment", "terms")
+    assert "structure" in prompt.lower() or "heading" in prompt.lower() or "preserve" in prompt.lower()
 
 
-def test_review_prompt_contains_both_texts():
-    prompt = get_review_prompt("source", "translated")
-    assert "source" in prompt
-    assert "translated" in prompt
+def test_translate_prompt_preserves_images():
+    prompt = get_translate_prompt("segment", "terms")
+    assert "image" in prompt.lower() or "![]" in prompt
 
 
 def test_format_prompt_contains_markdown():

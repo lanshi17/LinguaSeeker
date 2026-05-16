@@ -18,7 +18,8 @@ class BaseTranslator(ABC):
     def run_pipeline(self, formatted: FormattedDocument) -> Tuple[Dict[str, str], str, str, str, List[str], List[str]]:
         """Run the full translation pipeline.
 
-        Returns (terminology_map, structure_plan, draft, translated, source_segments, warnings).
+        Returns (terminology_map, _reserved, _reserved, translated, source_segments, warnings).
+        The second and third return values are reserved for backward compatibility.
         """
         ...
 
