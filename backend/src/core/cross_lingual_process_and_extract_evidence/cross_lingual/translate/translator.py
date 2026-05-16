@@ -186,23 +186,26 @@ class MultiStageTranslator(BaseTranslator):
         text = formatted.formatted_markdown
 
         # Ensure terminology + structure_plan leave room for segment content
-        max_overhead = 6000  # Reserve ~2000 tokens for the segment itself
+        # Total budget is 8192 tokens; reserve 3000 for actual content segment
+        max_overhead = 5000
+        base_prompt_tokens = estimate_tokens(get_draft_prompt("", "", ""))
         overhead = estimate_tokens(get_draft_prompt("", terminology, structure_plan))
         if overhead > max_overhead:
-            # Truncate terminology and structure_plan proportionally
+            # Aggressively truncate: keep only what fits in budget
+            budget = max_overhead - base_prompt_tokens
             term_tokens = estimate_tokens(terminology)
             struct_tokens = estimate_tokens(structure_plan)
             total = term_tokens + struct_tokens or 1
-            budget = max_overhead - estimate_tokens(get_draft_prompt("", "", ""))
-            term_budget = int(budget * term_tokens / total)
-            struct_budget = int(budget * struct_tokens / total)
-            # Truncate by character ratio
+            # Split budget proportionally
+            term_budget = max(100, int(budget * term_tokens / total))
+            struct_budget = max(100, int(budget * struct_tokens / total))
+            # Truncate by character ratio with safety margin
             if term_tokens > 0:
-                term_ratio = min(1.0, term_budget / term_tokens)
-                terminology = terminology[:int(len(terminology) * term_ratio)]
+                ratio = min(1.0, term_budget / term_tokens * 0.9)  # 10% safety margin
+                terminology = terminology[:int(len(terminology) * ratio)]
             if struct_tokens > 0:
-                struct_ratio = min(1.0, struct_budget / struct_tokens)
-                structure_plan = structure_plan[:int(len(structure_plan) * struct_ratio)]
+                ratio = min(1.0, struct_budget / struct_tokens * 0.9)
+                structure_plan = structure_plan[:int(len(structure_plan) * ratio)]
             overhead = estimate_tokens(get_draft_prompt("", terminology, structure_plan))
             logger.warning(
                 "Truncated terminology/structure_plan to fit token budget (overhead={})", overhead,
@@ -224,12 +227,13 @@ class MultiStageTranslator(BaseTranslator):
             return ""
 
         # Ensure terminology leaves room for draft segment content
-        max_overhead = 6000
+        max_overhead = 5000
+        base_prompt_tokens = estimate_tokens(get_polish_prompt("", ""))
         overhead = estimate_tokens(get_polish_prompt("", terminology))
         if overhead > max_overhead:
-            budget = max_overhead - estimate_tokens(get_polish_prompt("", ""))
+            budget = max_overhead - base_prompt_tokens
             term_tokens = estimate_tokens(terminology) or 1
-            ratio = min(1.0, budget / term_tokens)
+            ratio = min(1.0, budget / term_tokens * 0.9)  # 10% safety margin
             terminology = terminology[:int(len(terminology) * ratio)]
             overhead = estimate_tokens(get_polish_prompt("", terminology))
             logger.warning("Truncated terminology to fit token budget (overhead={})", overhead)
