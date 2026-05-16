@@ -1,9 +1,9 @@
 # Evidence Extraction Design
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-05-14
-**Completed:** -
-**PR:** -
+**Completed:** 2026-05-15
+**PR:** merged
 
 ## Goal
 

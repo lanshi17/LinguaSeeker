@@ -42,11 +42,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status/PR |
 |---|---|---|
-| 2026-05-14 | [evidence extraction design](plans/2026-05-14-evidence-extraction-design.md) | planned |
-| 2026-05-14 | [evidence extraction implementation](plans/2026-05-14-evidence-extraction.md) | planned |
-| 2026-05-16 | [evidence extraction output E2E](plans/2026-05-16-evidence-extraction-output-e2e.md) | planned |
-| 2026-05-14 | [cross-lingual persistence](planned/2026-05-14-cross-lingual-persistence.md) | planned |
-
+| 2026-05-16 | [evidence extraction output E2E](planned/2026-05-16-evidence-extraction-output-e2e.md) | planned |
 ## Active Code Reviews
 
 No active code reviews.
@@ -58,6 +54,11 @@ No active code reviews.
 | date | title | status/PR |
 |---|---|---|
 | 2026-05-12 | [parse document module refactor](archive/plans/2026-05-12-parse-document-refactor.md) | completed — 2026-05-13 |
+| 2026-05-15 | [fix translation quality](archive/plans/2026-05-15-fix-translation-quality.md) | completed — 2026-05-15 |
+| 2026-05-15 | [fix translation token limit](archive/plans/2026-05-15-fix-translation-token-limit.md) | completed — 2026-05-15 |
+| 2026-05-14 | [evidence extraction implementation](archive/plans/2026-05-14-evidence-extraction.md) | completed — 2026-05-15 |
+| 2026-05-14 | [evidence extraction design](archive/plans/2026-05-14-evidence-extraction-design.md) | completed — 2026-05-15 |
+| 2026-05-14 | [cross-lingual persistence](archive/plans/2026-05-14-cross-lingual-persistence.md) | completed — 2026-05-14 |
 | 2026-05-15 | [MinerU local batch upload](archive/plans/2026-05-15-mineru-local-batch-upload.md) | completed — 2026-05-15 |
 | 2026-05-14 | [parse document image extraction](archive/plans/2026-05-14-parse-document-image-extraction.md) | completed — 2026-05-14 |
 | 2026-05-11 | [translation & formatting module](archive/plans/2026-05-11-translation-formatting-module.md) | implemented — branch `feat/cross-lingual-module-v2` |
