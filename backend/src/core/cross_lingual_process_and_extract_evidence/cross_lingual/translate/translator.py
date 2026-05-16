@@ -119,7 +119,7 @@ class MultiStageTranslator(BaseTranslator):
         logger.info("Stage: terminology")
         text = formatted.formatted_markdown
         overhead = estimate_tokens(get_terminology_prompt(""))
-        segments = segment_text(text, max_tokens=8192, prompt_overhead_tokens=overhead)
+        segments = segment_text(text, max_tokens=7000, prompt_overhead_tokens=overhead)
 
         if len(segments) <= 1:
             return self._invoke_with_retry(
@@ -148,7 +148,7 @@ class MultiStageTranslator(BaseTranslator):
         logger.info("Stage: structure")
         text = formatted.formatted_markdown
         overhead = estimate_tokens(get_structure_prompt(""))
-        segments = segment_text(text, max_tokens=8192, prompt_overhead_tokens=overhead)
+        segments = segment_text(text, max_tokens=7000, prompt_overhead_tokens=overhead)
 
         if len(segments) <= 1:
             return self._invoke_with_retry(
@@ -169,7 +169,7 @@ class MultiStageTranslator(BaseTranslator):
         consolidation_overhead = estimate_tokens(
             "CONSOLIDATE_STRUCTURE\nMerge the following structure plans into one coherent plan:\n\n"
         )
-        if estimate_tokens(merged) < (8192 - consolidation_overhead - 100):
+        if estimate_tokens(merged) < (7000 - consolidation_overhead - 100):
             consolidation_prompt = (
                 "CONSOLIDATE_STRUCTURE\n"
                 "Merge the following structure plans into one coherent plan:\n\n"
@@ -211,7 +211,7 @@ class MultiStageTranslator(BaseTranslator):
                 "Truncated terminology/structure_plan to fit token budget (overhead={})", overhead,
             )
 
-        segments = segment_text(text, max_tokens=8192, prompt_overhead_tokens=overhead)
+        segments = segment_text(text, max_tokens=7000, prompt_overhead_tokens=overhead)
 
         translated_parts: list[str] = []
         for idx, segment in enumerate(segments, start=1):
@@ -238,7 +238,7 @@ class MultiStageTranslator(BaseTranslator):
             overhead = estimate_tokens(get_polish_prompt("", terminology))
             logger.warning("Truncated terminology to fit token budget (overhead={})", overhead)
 
-        segments = segment_text(draft, max_tokens=8192, prompt_overhead_tokens=overhead)
+        segments = segment_text(draft, max_tokens=7000, prompt_overhead_tokens=overhead)
 
         if len(segments) <= 1:
             return self._invoke_with_retry(get_polish_prompt(draft, terminology), "polish") or draft
@@ -259,7 +259,7 @@ class MultiStageTranslator(BaseTranslator):
 
         # Review needs both source and translated, so budget is split
         overhead = estimate_tokens(get_review_prompt("", ""))
-        max_per_part = (8192 - overhead) // 2
+        max_per_part = (7000 - overhead) // 2
 
         source_segments = segment_text(source, max_tokens=max_per_part)
         translated_segments = segment_text(translated, max_tokens=max_per_part)
