@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+import time
 from typing import Any, Dict, List, Tuple
 
 import httpx
@@ -63,7 +64,8 @@ class MultiStageTranslator(BaseTranslator):
 
     # ── Helpers ─────────────────────────────────────────────────────────
 
-    _MAX_RETRIES: int = 2
+    _MAX_RETRIES: int = 5
+    _BACKOFF_BASE: float = 30.0  # seconds
     _TRANSIENT_EXCEPTIONS = (
         openai.APITimeoutError,
         openai.APIConnectionError,
@@ -74,7 +76,7 @@ class MultiStageTranslator(BaseTranslator):
     )
 
     def _invoke_with_retry(self, prompt: str, stage: str) -> str:
-        """Call LLM with retry on transient failures only."""
+        """Call LLM with exponential backoff on transient failures."""
         last_exc: Exception | None = None
         for attempt in range(1, self._MAX_RETRIES + 1):
             try:
@@ -82,9 +84,13 @@ class MultiStageTranslator(BaseTranslator):
                 return self._to_text(response.content)
             except self._TRANSIENT_EXCEPTIONS as exc:
                 last_exc = exc
+                delay = self._BACKOFF_BASE * (2 ** (attempt - 1))
                 logger.warning(
-                    "Stage {} attempt {}/{} failed: {}", stage, attempt, self._MAX_RETRIES, exc,
+                    "Stage {} attempt {}/{} failed: {}. Retrying in {:.0f}s",
+                    stage, attempt, self._MAX_RETRIES, exc, delay,
                 )
+                if attempt < self._MAX_RETRIES:
+                    time.sleep(delay)
         raise RuntimeError(f"Stage {stage} failed after {self._MAX_RETRIES} attempts") from last_exc
 
     @staticmethod
