@@ -1,6 +1,7 @@
 """Translation quality validation and assessment."""
 from __future__ import annotations
 
+import re
 from difflib import SequenceMatcher
 
 from lingua import Language
@@ -42,3 +43,25 @@ def summarize_validation_error(exc: Exception) -> str:
     if message.startswith("translation_validation_failed:"):
         return message
     return f"translation_validation_failed: {message or 'unknown'}"
+
+
+def validate_image_references_preserved(source: str, translated: str) -> None:
+    """Validate that all image references from source are preserved in translation.
+
+    Args:
+        source: Original markdown text.
+        translated: Translated markdown text.
+
+    Raises:
+        ValueError: If image references are missing from translation.
+    """
+    image_pattern = re.compile(r"!\[.*?\]\((.*?)\)")
+    source_images = set(image_pattern.findall(source))
+    translated_images = set(image_pattern.findall(translated))
+
+    missing = source_images - translated_images
+    if missing:
+        raise ValueError(
+            f"Image references missing from translation: {missing}. "
+            f"Source has {len(source_images)} images, translated has {len(translated_images)}."
+        )

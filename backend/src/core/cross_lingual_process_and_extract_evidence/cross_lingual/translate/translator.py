@@ -22,7 +22,7 @@ from .prompts import (
     get_structure_prompt,
     get_terminology_prompt,
 )
-from .validator import summarize_validation_error, validate_translation_output
+from .validator import summarize_validation_error, validate_image_references_preserved, validate_translation_output
 
 
 class MultiStageTranslator(BaseTranslator):
@@ -305,6 +305,13 @@ class MultiStageTranslator(BaseTranslator):
                     warnings.append("fell_back_to_draft")
                 except Exception:
                     pass
+
+        # Validate image references preserved
+        try:
+            validate_image_references_preserved(formatted.formatted_markdown, translated)
+        except ValueError as exc:
+            warnings.append(f"image_refs: {exc}")
+            logger.warning("Image reference warning: {}", exc)
 
         terminology_map = self._parse_terminology(terminology)
         return terminology_map, structure_plan, draft, translated, source_segments, warnings
