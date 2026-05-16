@@ -47,13 +47,14 @@ def summarize_validation_error(exc: Exception) -> str:
 
 
 def strip_source_contamination(translated: str, source_language: str = "unknown") -> str:
-    """Strip source-language text appended by the LLM after the translation.
+    """Strip source-language text from LLM translation output.
 
-    Some translation models return both the translation and the original text.
-    This function detects the boundary and returns only the translated portion.
+    Some translation models return both the translation and the original text,
+    either appended after the translation or prepended before it. This function
+    detects both patterns and returns only the translated portion.
 
     Args:
-        translated: The LLM output that may contain appended source text.
+        translated: The LLM output that may contain source text.
         source_language: The source language code (e.g., "ja", "zh", "ru").
 
     Returns:
@@ -63,6 +64,35 @@ def strip_source_contamination(translated: str, source_language: str = "unknown"
         return translated
 
     paragraphs = re.split(r"\n\s*\n", translated)
+
+    # Pass 1: Strip leading source-language paragraphs
+    # Skip paragraphs at the start that are predominantly CJK
+    start_idx = 0
+    for idx, para in enumerate(paragraphs):
+        stripped = para.strip()
+        if not stripped:
+            continue
+        cjk_count = len(_CJK_RE.findall(stripped))
+        total = len(stripped) or 1
+        cjk_ratio = cjk_count / total
+        # A paragraph is "English" if <10% CJK characters
+        if cjk_ratio < 0.10:
+            start_idx = idx
+            break
+        # If >= 10% CJK, treat as source-language — skip it
+        logger.debug(
+            "Skipping leading source paragraph (cjk_ratio={:.2f}): {}...",
+            cjk_ratio, stripped[:60],
+        )
+    else:
+        # All paragraphs are source-language — nothing to strip
+        start_idx = len(paragraphs)
+
+    if start_idx > 0:
+        paragraphs = paragraphs[start_idx:]
+        logger.info("Stripped {} leading source paragraphs", start_idx)
+
+    # Pass 2: Strip trailing source-language paragraphs (original behavior)
     clean_parts: list[str] = []
     contamination_started = False
 
@@ -88,14 +118,14 @@ def strip_source_contamination(translated: str, source_language: str = "unknown"
             if english_chars > 200:
                 contamination_started = True
                 logger.debug(
-                    "Stripping source contamination at paragraph (cjk_ratio={:.2f}): {}...",
+                    "Stripping trailing source contamination at paragraph (cjk_ratio={:.2f}): {}...",
                     cjk_ratio, stripped[:60],
                 )
                 break
 
         clean_parts.append(para)
 
-    if not contamination_started:
+    if not contamination_started and start_idx == 0:
         return translated
 
     result = "\n\n".join(clean_parts).strip()
