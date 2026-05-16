@@ -22,6 +22,16 @@ def validate_translation_output(source_text: str, translated_text: str) -> None:
     if not translated:
         raise ValueError("translation_validation_failed: empty")
 
+    # Check if output is just echoed prompt (no actual translation)
+    prompt_markers = (
+        "SYSTEM PROMPT:", "You are a biomedical translation engine",
+        "You are a prompt engineering expert", "CRITICAL RULES",
+        "TERMINOLOGY STAGE", "TRANSLATE_STAGE",
+    )
+    first_200 = translated[:200].upper()
+    if any(marker.upper() in first_200 for marker in prompt_markers):
+        raise ValueError("translation_validation_failed: prompt_echo_only")
+
     # Check CJK ratio — if >10% CJK, likely not translated
     cjk_count = len(_CJK_RE.findall(translated))
     if cjk_count and len(translated) > 0 and cjk_count / len(translated) > 0.10:
@@ -176,6 +186,7 @@ def validate_segment(source: str, translated: str) -> None:
 
 
 _ARTIFACT_PATTERNS = [
+    r"^SYSTEM\s+PROMPT",
     r"^#{0,3}\s*CRITICAL\s+RULES",
     r"^CRITICAL\s+RULES",
     r"^TERMINOLOGY\s+MAP",
@@ -190,6 +201,7 @@ _ARTIFACT_PATTERNS = [
     r"^\[FOLLOWING\s+CONTEXT",
     r"^You are a faithful biomedical translation engine",
     r"^You are a bilingual biomedical terminology",
+    r"^You are a biomedical translation engine",
     r"^Translate the following markdown segment",
     r"^Preserve ALL markdown structure",
     r"^# Terminology Stage",

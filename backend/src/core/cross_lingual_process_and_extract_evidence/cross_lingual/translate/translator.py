@@ -13,7 +13,12 @@ from loguru import logger
 from pydantic import SecretStr
 
 from ...config_context import TranslationConfigContext
-from ...contracts import FormattedDocument, TranslationResult, TranslationSegment
+from ...contracts import (
+    FormattedDocument,
+    SegmentDrift,
+    TranslationResult,
+    TranslationSegment,
+)
 from ..format.segmenter import estimate_tokens, segment_text
 from .base import BaseTranslator
 from .language_detector import _CJK_RE, detect_language
@@ -122,7 +127,15 @@ class MultiStageTranslator(BaseTranslator):
         Note: qwen-mt-flash only supports user/assistant roles, so
         the system prompt is prepended to the human message.
         """
-        content = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
+        if system_prompt:
+            content = (
+                f"[SYSTEM INSTRUCTIONS — DO NOT output these. Follow them silently.]\n"
+                f"{system_prompt}\n"
+                f"[END SYSTEM INSTRUCTIONS]\n\n"
+                f"{prompt}"
+            )
+        else:
+            content = prompt
         messages = [HumanMessage(content=content)]
 
         last_exc: Exception | None = None
@@ -301,11 +314,14 @@ class MultiStageTranslator(BaseTranslator):
 
     def translate_segments(
         self, formatted: FormattedDocument, terminology: str,
-    ) -> Tuple[str, List[str]]:
+    ) -> Tuple[str, List[str], List[str]]:
         """Translate document segment by segment with per-segment validation.
 
         Each segment gets one translation attempt. If validation fails,
         the segment is retried up to ``_MAX_SEGMENT_RETRIES`` times.
+
+        Returns:
+            Tuple of (joined_translated_text, source_segments, translated_parts).
         """
         logger.info("Stage: translate")
         text = formatted.formatted_markdown
@@ -355,7 +371,7 @@ class MultiStageTranslator(BaseTranslator):
             translated_parts.append(translated)
             logger.info("Translate segment {}/{} done", idx, len(segments))
 
-        return "\n\n".join(translated_parts), segments
+        return "\n\n".join(translated_parts), segments, translated_parts
 
     def _translate_one_segment(
         self,
@@ -457,10 +473,10 @@ class MultiStageTranslator(BaseTranslator):
 
     # ── Full pipeline ────────────────────────────────────────────────────
 
-    def run_pipeline(self, formatted: FormattedDocument) -> Tuple[Dict[str, str], str, str, str, List[str], List[str]]:
+    def run_pipeline(self, formatted: FormattedDocument) -> Tuple[Dict[str, str], str, str, str, List[str], List[str], List[str]]:
         # ── Stage 1: Translate (terminology + segment translation) ────────
         terminology = self.extract_terminology(formatted)
-        translated, source_segments = self.translate_segments(formatted, terminology)
+        translated, source_segments, translated_parts = self.translate_segments(formatted, terminology)
 
         # ── Stage 2: Review (validate, clean, strip artifacts) ────────────
         warnings: list[str] = []
@@ -495,25 +511,28 @@ class MultiStageTranslator(BaseTranslator):
 
         terminology_map = self._parse_terminology(terminology)
         # Return structure_plan="" for backward compatibility with BaseTranslator
-        return terminology_map, "", "", translated, source_segments, warnings
+        return terminology_map, "", "", translated, source_segments, translated_parts, warnings
 
     def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
-        terminology_map, _structure_plan, _draft, translated, source_segments, warnings = (
+        terminology_map, _structure_plan, _draft, translated, source_segments, translated_parts, warnings = (
             self.run_pipeline(formatted)
         )
-        translated_sentences = translated.split("\n\n") if translated else []
         tr_segments: list[TranslationSegment] = []
+        # Compute translated segment offsets by tracking cumulative position
+        translated_offset = 0
         for idx, src_seg in enumerate(source_segments):
             src_bbox = None
             for sent in formatted.sentences:
                 if sent.text.strip() in src_seg.strip() or src_seg.strip() in sent.text:
                     src_bbox = sent
                     break
+            tr_text = translated_parts[idx] if idx < len(translated_parts) else ""
             tr_segments.append(TranslationSegment(
                 index=idx, source_text=src_seg,
-                translated_text=translated_sentences[idx] if idx < len(translated_sentences) else "",
+                translated_text=tr_text,
                 source_bbox=src_bbox,
             ))
+            translated_offset += len(tr_text) + 2  # +2 for "\n\n" joiner
         return TranslationResult(
             formatted_original=formatted.formatted_markdown,
             translated_english=translated,
@@ -521,3 +540,42 @@ class MultiStageTranslator(BaseTranslator):
             terminology_map=terminology_map, translation_warnings=warnings,
             sentences=formatted.sentences, segments=tr_segments,
         )
+
+    @staticmethod
+    def compute_translation_drift(
+        source_segments: List[str],
+        translated_parts: List[str],
+    ) -> List[SegmentDrift]:
+        """Compute character drift between source and translated segments.
+
+        For each segment pair, tracks the offset positions and length changes.
+        """
+        drifts: list[SegmentDrift] = []
+        source_offset = 0
+        translated_offset = 0
+
+        for idx in range(max(len(source_segments), len(translated_parts))):
+            src = source_segments[idx] if idx < len(source_segments) else ""
+            tr = translated_parts[idx] if idx < len(translated_parts) else ""
+            src_len = len(src)
+            tr_len = len(tr)
+            length_drift = tr_len - src_len
+
+            drifts.append(
+                SegmentDrift(
+                    segment_index=idx,
+                    source_start=source_offset,
+                    source_end=source_offset + src_len,
+                    translated_start=translated_offset,
+                    translated_end=translated_offset + tr_len,
+                    source_length=src_len,
+                    translated_length=tr_len,
+                    length_drift=length_drift,
+                    source_text=src[:200],  # Truncate for JSON readability
+                    translated_text=tr[:200],
+                )
+            )
+            source_offset += src_len + 2  # +2 for "\n\n" joiner
+            translated_offset += tr_len + 2
+
+        return drifts

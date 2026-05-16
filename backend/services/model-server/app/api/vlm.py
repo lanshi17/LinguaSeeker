@@ -96,7 +96,7 @@ def _build_pages(pages_data: list[dict]) -> list[VLMPageContent]:
 @router.post("/v1/chat/completions", response_model=VLMExtractResponse)
 def chat_completions(req: VLMExtractRequest):
     """OpenAI-compatible multimodal extraction endpoint."""
-    if _service is None or not _service.ready:
+    if _service is None:
         raise HTTPException(status_code=503, detail="VLM service not available. Configure VLM_MODEL_ID to enable.")
 
     images = _extract_images_from_messages(req.messages)
