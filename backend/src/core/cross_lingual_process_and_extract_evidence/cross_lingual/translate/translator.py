@@ -303,6 +303,21 @@ class MultiStageTranslator(BaseTranslator):
 
         warnings: list[str] = []
         translated = strip_source_contamination(polished, formatted.source_language or "unknown")
+
+        # Guard: detect LLM repetition loops (translated >> source size)
+        source_len = len(formatted.formatted_markdown) or 1
+        if len(translated) > source_len * 5:
+            unique_headings = set(re.findall(r"^#{1,6}\s+.+", translated, re.MULTILINE))
+            if len(unique_headings) > 0 and len(translated) / len(unique_headings) > 500:
+                # Many repeated headings with little content between them
+                logger.warning(
+                    "Detected LLM repetition loop: {} chars ({}x source), {} unique headings. "
+                    "Falling back to draft.",
+                    len(translated), len(translated) // source_len, len(unique_headings),
+                )
+                warnings.append("repetition_loop_fallback")
+                translated = strip_source_contamination(draft, formatted.source_language or "unknown")
+
         try:
             validate_translation_output(formatted.formatted_markdown, translated)
         except Exception as exc:
