@@ -29,7 +29,9 @@ def mock_translator():
         translator = MultiStageTranslator(ctx=ctx)
 
     # Mock _invoke_with_retry to return simple responses
-    translator._invoke_with_retry = MagicMock(side_effect=lambda prompt, stage: f"result_for_{stage}")
+    translator._invoke_with_retry = MagicMock(
+        side_effect=lambda prompt, stage, system_prompt="": f"result_for_{stage}",
+    )
     return translator
 
 

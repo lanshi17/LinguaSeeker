@@ -2,6 +2,7 @@ from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate
     get_terminology_prompt,
     get_translate_prompt,
     get_format_prompt,
+    get_system_prompt_generation_prompt,
 )
 
 
@@ -17,14 +18,17 @@ def test_translate_prompt_contains_all_inputs():
     assert "term_map" in prompt
 
 
-def test_translate_prompt_preserves_structure():
-    prompt = get_translate_prompt("segment", "terms")
-    assert "structure" in prompt.lower() or "heading" in prompt.lower() or "preserve" in prompt.lower()
+def test_system_prompt_gen_includes_structure_and_images():
+    meta = get_system_prompt_generation_prompt("# Title\n\n![](img.png)\n\ntext", "zh")
+    assert "structure" in meta.lower() or "markdown" in meta.lower()
+    assert "image" in meta.lower()
 
 
-def test_translate_prompt_preserves_images():
-    prompt = get_translate_prompt("segment", "terms")
-    assert "image" in prompt.lower() or "![]" in prompt
+def test_translate_prompt_contains_context():
+    prompt = get_translate_prompt("segment", "terms", prev_context="prev", next_context="next")
+    assert "PRECEDING CONTEXT" in prompt
+    assert "FOLLOWING CONTEXT" in prompt
+    assert "segment" in prompt
 
 
 def test_format_prompt_contains_markdown():

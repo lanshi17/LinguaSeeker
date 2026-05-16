@@ -175,6 +175,68 @@ def validate_segment(source: str, translated: str) -> None:
             raise ValueError("segment_validation_failed: repetition_loop")
 
 
+_ARTIFACT_PATTERNS = [
+    r"^#{0,3}\s*CRITICAL\s+RULES",
+    r"^CRITICAL\s+RULES",
+    r"^TERMINOLOGY\s+MAP",
+    r"^TRANSLATE_STAGE",
+    r"^TERMINOLOGY_STAGE",
+    r"^MARKDOWN\s+SEGMENT",
+    r"^SOURCE\s+DOCUMENT",
+    r"^\[TRANSLATION\]",
+    r"^\[TERMINOLOGY\]",
+    r"^\[TRANSLATE\s+THIS\s+SEGMENT\]",
+    r"^\[PRECEDING\s+CONTEXT",
+    r"^\[FOLLOWING\s+CONTEXT",
+    r"^You are a faithful biomedical translation engine",
+    r"^You are a bilingual biomedical terminology",
+    r"^Translate the following markdown segment",
+    r"^Preserve ALL markdown structure",
+    r"^# Terminology Stage",
+    r"^# Bilingual Term Pairs",
+    r"^## Bilingual Term Pairs",
+    r"^## Preservation Rules",
+    r"^\d+\.\s+\*\*Preservation Rules\*\*",
+    r"^\*\*Preservation Rules\*\*",
+    r"^These bilingual term pairs",
+    r"^Bilingual Terminology Map",
+]
+_ARTIFACT_RE = re.compile(
+    "|".join(f"(?:{p})" for p in _ARTIFACT_PATTERNS),
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def strip_prompt_artifacts(text: str) -> str:
+    """Remove prompt instructions that the LLM echoed back in its output.
+
+    Translation models sometimes parrot back the prompt's instruction blocks
+    (CRITICAL RULES, TERMINOLOGY MAP, stage headers, etc.) after the actual
+    translation. This function strips those artifacts.
+    """
+    if not text:
+        return text
+
+    paragraphs = re.split(r"\n\s*\n", text)
+    clean: list[str] = []
+    for para in paragraphs:
+        first_line = para.strip().split("\n", 1)[0].strip()
+        if _ARTIFACT_RE.match(first_line):
+            logger.debug("Stripping prompt artifact: {}...", first_line[:60])
+            break
+        clean.append(para)
+
+    result = "\n\n".join(clean).strip()
+    if not result and text.strip():
+        # Safety: if we stripped everything, keep original
+        logger.warning("Prompt artifact strip removed all content, keeping original")
+        return text
+    return result
+
+
+_IMAGE_REF_RE = re.compile(r"!\[.*?\]\((.*?)\)")
+
+
 def validate_image_references_preserved(source: str, translated: str) -> None:
     """Validate that all image references from source are preserved in translation.
 
@@ -185,9 +247,8 @@ def validate_image_references_preserved(source: str, translated: str) -> None:
     Raises:
         ValueError: If image references are missing from translation.
     """
-    image_pattern = re.compile(r"!\[.*?\]\((.*?)\)")
-    source_images = set(image_pattern.findall(source))
-    translated_images = set(image_pattern.findall(translated))
+    source_images = set(_IMAGE_REF_RE.findall(source))
+    translated_images = set(_IMAGE_REF_RE.findall(translated))
 
     missing = source_images - translated_images
     if missing:
