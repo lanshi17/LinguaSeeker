@@ -539,6 +539,7 @@ class MultiStageTranslator(BaseTranslator):
             source_language=formatted.source_language or "unknown",
             terminology_map=terminology_map, translation_warnings=warnings,
             sentences=formatted.sentences, segments=tr_segments,
+            original_blocks=formatted.original_blocks,
         )
 
     @staticmethod
