@@ -42,7 +42,7 @@ class TranslationService:
 
     @traced_node("format")
     def _node_format(self, state: PipelineState) -> PipelineState:
-        formatted = self._formatter.format(state.pages)
+        formatted = self._formatter.format(state.pages, content_blocks=state.content_blocks)
         state.formatted = formatted
         return state
 
@@ -65,6 +65,7 @@ class TranslationService:
     def _node_skip_translate(self, state: PipelineState) -> PipelineState:
         logger.info("Document is already English, skipping translation")
         text = state.formatted.formatted_markdown if state.formatted else ""
+        blocks = state.formatted.original_blocks if state.formatted else []
         state.translation_result = TranslationResult(
             formatted_original=text,
             translated_english=text,
@@ -73,6 +74,8 @@ class TranslationService:
             translation_warnings=[],
             sentences=state.formatted.sentences if state.formatted else [],
             segments=[],
+            original_blocks=blocks,
+            translated_blocks=blocks,
         )
         return state
 
@@ -100,10 +103,14 @@ class TranslationService:
 
     # ── Public API ───────────────────────────────────────────────────────
 
-    async def run(self, pages: List[Dict[str, Any]]) -> TranslationResult:
+    async def run(
+        self,
+        pages: List[Dict[str, Any]],
+        content_blocks: List[Dict[str, Any]] | None = None,
+    ) -> TranslationResult:
         logger.info("Starting translation pipeline for {} pages", len(pages))
 
-        initial_state = PipelineState(pages=pages)
+        initial_state = PipelineState(pages=pages, content_blocks=content_blocks or [])
         graph = self._graph
 
         try:
@@ -127,11 +134,15 @@ class TranslationService:
         )
         return result
 
-    def run_sync(self, pages: List[Dict[str, Any]]) -> TranslationResult:
+    def run_sync(
+        self,
+        pages: List[Dict[str, Any]],
+        content_blocks: List[Dict[str, Any]] | None = None,
+    ) -> TranslationResult:
         try:
             asyncio.get_running_loop()
         except RuntimeError:
-            return asyncio.run(self.run(pages))
+            return asyncio.run(self.run(pages, content_blocks=content_blocks))
         raise RuntimeError(
             "run_sync() cannot be called from within a running event loop. "
             "Use run() instead."

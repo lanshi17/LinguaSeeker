@@ -408,3 +408,4 @@ class PipelineState(BaseModel):
     needs_translation: bool = True
     translation_result: Optional[TranslationResult] = None
     image_paths: list[str] = Field(default_factory=list)
+    content_blocks: List[Dict[str, Any]] = Field(default_factory=list)
