@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -105,6 +105,10 @@ class ParseResult(BaseModel):
     full_markdown: str = ""
     parser_used: ParserName = "unknown"
     images: dict[str, bytes] = Field(default_factory=dict)
+    content_blocks: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Raw MinerU content_list blocks for structured persistence",
+    )
 
     @model_validator(mode="after")
     def _derive_full_markdown(self) -> ParseResult:
