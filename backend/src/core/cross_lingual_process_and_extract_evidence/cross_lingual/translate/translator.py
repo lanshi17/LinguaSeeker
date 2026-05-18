@@ -31,6 +31,7 @@ from .prompts import (
 from .validator import (
     strip_inline_artifacts,
     strip_prompt_artifacts,
+    strip_prompt_echo,
     strip_source_contamination,
     summarize_validation_error,
     validate_image_references_preserved,
@@ -354,6 +355,7 @@ class MultiStageTranslator(BaseTranslator):
                 block.text, terminology, idx, len(non_empty),
                 system_prompt=system_prompt,
             )
+            translated = strip_prompt_echo(translated)
             translated = strip_inline_artifacts(translated)
             translated = strip_prompt_artifacts(translated)
             translated_texts.append(translated)

@@ -274,6 +274,35 @@ def strip_inline_artifacts(text: str) -> str:
     return result.strip()
 
 
+# Pattern for the [TRANSLATE THIS SEGMENT] marker that separates prompt echo
+# from actual translation output.
+_TRANSLATE_THIS_RE = re.compile(
+    r"\[TRANSLATE\s+THIS\s+SEGMENT\]",
+    re.IGNORECASE,
+)
+
+
+def strip_prompt_echo(text: str) -> str:
+    """Strip LLM prompt echo by splitting on [TRANSLATE THIS SEGMENT].
+
+    When the LLM echoes back the full prompt (system instructions, terminology,
+    context markers) before the actual translation, this function splits on the
+    [TRANSLATE THIS SEGMENT] marker and returns only the translation portion.
+    """
+    if not text:
+        return text
+    match = _TRANSLATE_THIS_RE.search(text)
+    if match:
+        translation = text[match.end():].strip()
+        if translation:
+            logger.debug(
+                "Stripped prompt echo ({} -> {} chars)",
+                len(text), len(translation),
+            )
+            return translation
+    return text
+
+
 _IMAGE_REF_RE = re.compile(r"!\[.*?\]\((.*?)\)")
 
 
