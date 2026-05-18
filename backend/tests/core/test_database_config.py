@@ -26,7 +26,7 @@ def test_postgresql_and_redis_nested_config(monkeypatch) -> None:
     for env_var in DATABASE_ENV_VARS:
         monkeypatch.delenv(env_var, raising=False)
 
-    settings = Settings()
+    settings = Settings(_env_file=None)
 
     assert settings.postgresql.host == "127.0.0.1"
     assert settings.postgresql.port == 5432
