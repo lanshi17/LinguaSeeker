@@ -254,15 +254,14 @@ async def search_multilingual(
                 )
         else:
             # Web provider — delegate to web_providers
-            from .web_providers import WebOnlineAcquisitionGatewayRequest, call_web_provider
+            from .web_providers import call_web_provider
 
-            web_request = WebOnlineAcquisitionGatewayRequest(
-                provider=plan_item["provider"],  # type: ignore[arg-type]
+            web_result = await call_web_provider(
+                provider=plan_item["provider"],
                 action="search",
                 query=query,
                 limit=candidate_limit,
             )
-            web_result = await call_web_provider(web_request)
             for item in web_result.items:
                 if item.get("title"):
                     collected.append(_normalize_candidate(item, plan_item))
@@ -319,8 +318,12 @@ async def search_parallel(
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     collected: List[Dict[str, Any]] = []
-    for result in results:
+    for i, result in enumerate(results):
         if isinstance(result, Exception):
+            import logging
+            logging.getLogger(__name__).warning(
+                "Provider %s search failed: %s", plan[i]["provider"], result
+            )
             continue
         collected.extend(result)
 

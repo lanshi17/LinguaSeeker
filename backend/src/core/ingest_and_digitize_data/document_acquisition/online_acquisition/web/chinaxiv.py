@@ -1,7 +1,6 @@
 """ChinaXiv web provider — Chinese preprint server."""
 from __future__ import annotations
 
-import logging
 from typing import Any, Dict, List, Optional
 
 from .base import (
@@ -10,8 +9,6 @@ from .base import (
     download_pdf_from_candidates,
     extract_pdf_links_from_html,
 )
-
-log = logging.getLogger(__name__)
 
 BASE_URL = "http://www.chinaxiv.org"
 

@@ -37,15 +37,15 @@ async fn search_preprint_server(
 ) -> Result<FetchResult, GatewayError> {
     let count = limit.unwrap_or(10).min(100);
 
-    // bioRxiv/medRxiv API requires date range, use last 30 days
-    // Use a simple date calculation without chrono dependency
+    // bioRxiv/medRxiv /details endpoint requires date range
+    // Use full history: bioRxiv started 2013, medRxiv started 2019
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
     let days_since_epoch = now / 86400;
     let end_date = epoch_days_to_date(days_since_epoch);
-    let start_date = epoch_days_to_date(days_since_epoch.saturating_sub(30));
+    let start_date = if source == "medrxiv" { "2019-01-01" } else { "2013-01-01" };
 
     let url = format!("{}/{}/{}/{}", api_url, start_date, end_date, count);
 
