@@ -199,6 +199,8 @@ _ARTIFACT_PATTERNS = [
     r"^\[TRANSLATE\s+THIS\s+SEGMENT\]",
     r"^\[PRECEDING\s+CONTEXT",
     r"^\[FOLLOWING\s+CONTEXT",
+    r"^\[SYSTEM\s+INSTRUCTIONS",
+    r"^\[IMPORTANT:",
     r"^You are a faithful biomedical translation engine",
     r"^You are a bilingual biomedical terminology",
     r"^You are a biomedical translation engine",
@@ -213,6 +215,17 @@ _ARTIFACT_PATTERNS = [
     r"^These bilingual term pairs",
     r"^Bilingual Terminology Map",
 ]
+
+# Inline patterns to strip from any line within a block (not just first line)
+_INLINE_ARTIFACT_PATTERNS = [
+    r"\[SYSTEM\s+INSTRUCTIONS[^\]]*\]",
+    r"\[IMPORTANT:[^\]]*\]",
+    r"«BLK»",
+]
+_INLINE_ARTIFACT_RE = re.compile(
+    "|".join(f"(?:{p})" for p in _INLINE_ARTIFACT_PATTERNS),
+    re.IGNORECASE,
+)
 _ARTIFACT_RE = re.compile(
     "|".join(f"(?:{p})" for p in _ARTIFACT_PATTERNS),
     re.IGNORECASE | re.MULTILINE,
@@ -244,6 +257,21 @@ def strip_prompt_artifacts(text: str) -> str:
         logger.warning("Prompt artifact strip removed all content, keeping original")
         return text
     return result
+
+
+def strip_inline_artifacts(text: str) -> str:
+    """Remove inline prompt injection markers and block delimiters from text.
+
+    Strips patterns like [SYSTEM INSTRUCTIONS...], [IMPORTANT:...], and «BLK»
+    that the LLM echoed back within translated paragraphs.
+    """
+    if not text:
+        return text
+    result = _INLINE_ARTIFACT_RE.sub("", text)
+    # Clean up resulting double-spaces or empty lines
+    result = re.sub(r"[ \t]{2,}", " ", result)
+    result = re.sub(r"\n{3,}", "\n\n", result)
+    return result.strip()
 
 
 _IMAGE_REF_RE = re.compile(r"!\[.*?\]\((.*?)\)")

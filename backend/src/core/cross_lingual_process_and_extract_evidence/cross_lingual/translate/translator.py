@@ -29,6 +29,7 @@ from .prompts import (
     get_translate_prompt,
 )
 from .validator import (
+    strip_inline_artifacts,
     strip_prompt_artifacts,
     strip_source_contamination,
     summarize_validation_error,
@@ -47,6 +48,7 @@ class MultiStageTranslator(BaseTranslator):
     """
 
     _MAX_SEGMENT_RETRIES: int = 3
+    _MAX_TERMINOLOGY_ENTRIES: int = 100
     _BLOCK_SEP = "\n\n«BLK»\n\n"
 
     # Pre-compiled regex for _clean_terminology
@@ -162,12 +164,16 @@ class MultiStageTranslator(BaseTranslator):
 
         Validates: both sides <=10 words, source side contains non-ASCII
         (since source language is non-English for translation).
+        Deduplicates by target value and caps at _MAX_TERMINOLOGY_ENTRIES.
         """
         result: Dict[str, str] = {}
+        seen_targets: set[str] = set()
         for line in raw.splitlines():
             line = line.strip()
             if not line:
                 continue
+            # Strip numbered prefixes like "33. "
+            line = re.sub(r"^\d+\.\s+", "", line)
             match = re.match(r"^(.+?):\s*(.+)$", line)
             if not match:
                 continue
@@ -179,7 +185,18 @@ class MultiStageTranslator(BaseTranslator):
             # Source side should contain non-ASCII (CJK/non-English term)
             if source.isascii():
                 continue
+            # Deduplicate by normalized target
+            target_norm = target.lower().strip()
+            if target_norm in seen_targets:
+                continue
+            seen_targets.add(target_norm)
             result[source] = target
+            if len(result) >= MultiStageTranslator._MAX_TERMINOLOGY_ENTRIES:
+                logger.warning(
+                    "Terminology map capped at {} entries",
+                    MultiStageTranslator._MAX_TERMINOLOGY_ENTRIES,
+                )
+                break
         return result
 
     @classmethod
@@ -314,6 +331,44 @@ class MultiStageTranslator(BaseTranslator):
     # Context window per side (prev/next)
     _CONTEXT_CHARS: int = 150
 
+    def _translate_blocks(
+        self,
+        formatted: FormattedDocument,
+        terminology: str,
+        non_empty: list[tuple[int, ContentBlock]],
+    ) -> Tuple[str, List[str], List[str]]:
+        """Translate each text/title block individually for guaranteed alignment.
+
+        Returns:
+            Tuple of (joined_translated_text, source_block_texts, translated_block_texts).
+        """
+        system_prompt = self._generate_system_prompt(formatted)
+        self._text_block_indices = [i for i, _ in non_empty]
+
+        source_texts: list[str] = []
+        translated_texts: list[str] = []
+
+        for idx, (block_idx, block) in enumerate(non_empty, start=1):
+            source_texts.append(block.text)
+            translated = self._translate_one_segment(
+                block.text, terminology, idx, len(non_empty),
+                system_prompt=system_prompt,
+            )
+            translated = strip_inline_artifacts(translated)
+            translated = strip_prompt_artifacts(translated)
+            translated_texts.append(translated)
+            logger.debug(
+                "Block {}/{} translated ({} -> {} chars)",
+                idx, len(non_empty), len(block.text), len(translated),
+            )
+
+        joined = self._BLOCK_SEP.join(translated_texts)
+        logger.info(
+            "Translated {}/{} blocks individually",
+            len(non_empty), len(formatted.original_blocks) if formatted.original_blocks else 0,
+        )
+        return joined, source_texts, translated_texts
+
     def translate_segments(
         self, formatted: FormattedDocument, terminology: str,
         blocks: List[ContentBlock] | None = None,
@@ -326,28 +381,27 @@ class MultiStageTranslator(BaseTranslator):
         Args:
             formatted: The formatted document.
             terminology: Extracted terminology string.
-            blocks: Optional ContentBlock list. When provided, blocks are joined
-                with a delimiter into the text to translate, so that per-block
-                translations can be recovered by splitting on the delimiter.
+            blocks: Optional ContentBlock list. When provided, each non-empty
+                text/title block is translated individually for guaranteed
+                block-level alignment.
 
         Returns:
             Tuple of (joined_translated_text, source_segments, translated_parts).
         """
         logger.info("Stage: translate")
-        text = formatted.formatted_markdown
 
-        # When blocks are available, join non-empty text/title blocks with a
-        # delimiter so we can recover per-block translations after translation.
+        # When blocks are available, translate each block individually for
+        # guaranteed block-level alignment.
         self._text_block_indices: list[int] = []
         if blocks:
-            non_empty = [(i, b.text) for i, b in enumerate(blocks) if b.text.strip()]
+            non_empty = [(i, b) for i, b in enumerate(blocks)
+                         if b.text.strip() and b.type in ("text", "title")]
             if non_empty:
-                self._text_block_indices = [i for i, _ in non_empty]
-                text = self._BLOCK_SEP.join(t for _, t in non_empty)
-                logger.info(
-                    "Built marked text from {}/{} blocks ({} chars)",
-                    len(non_empty), len(blocks), len(text),
+                return self._translate_blocks(
+                    formatted, terminology, non_empty,
                 )
+
+        text = formatted.formatted_markdown
 
         # Generate a dynamic system prompt tailored to this document
         system_prompt = self._generate_system_prompt(formatted)
@@ -508,6 +562,7 @@ class MultiStageTranslator(BaseTranslator):
         # ── Stage 2: Review (validate, clean, strip artifacts) ────────────
         warnings: list[str] = []
         translated = strip_prompt_artifacts(translated)
+        translated = strip_inline_artifacts(translated)
         translated = strip_source_contamination(translated, formatted.source_language or "unknown")
 
         # Guard: detect LLM repetition loops (translated >> source size)
@@ -572,6 +627,7 @@ class MultiStageTranslator(BaseTranslator):
             pieces = []
             for p in parts:
                 cleaned = p.replace(sep.strip(), "").strip()
+                cleaned = strip_inline_artifacts(cleaned)
                 if cleaned:
                     pieces.append(cleaned)
             indices = text_block_indices or []
