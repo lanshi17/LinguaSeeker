@@ -1,8 +1,8 @@
 use crate::client::HttpClient;
 use crate::error::GatewayError;
 use crate::providers::{
-    CrossrefProvider, DoajProvider, EuropePmcProvider, JstageProvider, OpenAlexProvider,
-    PmcProvider, SciEloProvider, UnpaywallProvider,
+    BaseProvider, CrossrefProvider, DoajProvider, EuropePmcProvider, JstageProvider,
+    OpenAlexProvider, PmcProvider, SciEloProvider, UnpaywallProvider,
 };
 use crate::types::{Action, FetchParams, FetchResult};
 use futures::future::join_all;
@@ -266,10 +266,14 @@ async fn execute_provider(
             let query = params.query.as_deref().unwrap_or_default();
             SciEloProvider::search(client, query, params.limit).await
         }
+        ("base", Action::Search) => {
+            let query = params.query.as_deref().unwrap_or_default();
+            BaseProvider::search(client, query, params.limit).await
+        }
         ("unpaywall", Action::Search | Action::Download) => {
             UnpaywallProvider::search(client, params).await
         }
-        ("crossref" | "openalex" | "europepmc" | "pmc" | "scielo", Action::Download) => {
+        ("crossref" | "openalex" | "europepmc" | "pmc" | "scielo" | "base", Action::Download) => {
             Err(GatewayError::Other(format!(
                 "action {action:?} is not supported for provider {provider}"
             )))
