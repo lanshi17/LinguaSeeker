@@ -62,6 +62,8 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-05-18 | [database implementation](archive/plans/2026-05-18-database-implementation-plan.md) | completed — branch `database-mvp` |
+| 2026-05-18 | [database design](archive/plans/2026-05-18-database-design.md) | completed — branch `database-mvp` |
 | 2026-05-12 | [parse document module refactor](archive/plans/2026-05-12-parse-document-refactor.md) | completed — 2026-05-13 |
 | 2026-05-15 | [fix translation quality](archive/plans/2026-05-15-fix-translation-quality.md) | completed — 2026-05-15 |
 | 2026-05-15 | [fix translation token limit](archive/plans/2026-05-15-fix-translation-token-limit.md) | completed — 2026-05-15 |
