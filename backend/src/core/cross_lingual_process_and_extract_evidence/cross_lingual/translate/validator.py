@@ -165,10 +165,10 @@ def validate_segment(source: str, translated: str) -> None:
     if not translated:
         raise ValueError("segment_validation_failed: empty")
 
-    # Check CJK ratio — >30% CJK in a segment means likely not translated
+    # Check CJK ratio — >15% CJK in a segment means likely not fully translated
     cjk_count = len(_CJK_RE.findall(translated))
     total = len(translated) or 1
-    if cjk_count / total > 0.30:
+    if cjk_count / total > 0.15:
         raise ValueError("segment_validation_failed: source_language_content")
 
     # Check if translation is essentially unchanged from source
@@ -220,6 +220,7 @@ _ARTIFACT_PATTERNS = [
 _INLINE_ARTIFACT_PATTERNS = [
     r"\[SYSTEM\s+INSTRUCTIONS[^\]]*\]",
     r"\[IMPORTANT:[^\]]*\]",
+    r"\[TRANSLATION\]",
     r"«BLK»",
 ]
 _INLINE_ARTIFACT_RE = re.compile(
@@ -334,6 +335,28 @@ def strip_prompt_echo(text: str) -> str:
             return translation
 
     return text
+
+
+_TERM_ECHO_RE = re.compile(r"^.+:\s+.+(?:\n.+:\s+.+){2,}")
+
+
+def _is_terminology_echo(text: str) -> bool:
+    """Detect when the LLM echoed back the terminology map without translating.
+
+    Returns True if the text looks like 3+ consecutive ``source: target`` pairs,
+    which is the terminology map format — not a translation.
+    """
+    stripped = text.strip()
+    if not stripped:
+        return False
+    # Check for 3+ consecutive "source: target" lines
+    if _TERM_ECHO_RE.match(stripped):
+        # Verify most lines match the pattern
+        lines = stripped.splitlines()
+        pair_count = sum(1 for ln in lines if re.match(r"^.+:\s+.+$", ln.strip()))
+        if pair_count >= 3 and pair_count >= len(lines) * 0.5:
+            return True
+    return False
 
 
 _IMAGE_REF_RE = re.compile(r"!\[.*?\]\((.*?)\)")
