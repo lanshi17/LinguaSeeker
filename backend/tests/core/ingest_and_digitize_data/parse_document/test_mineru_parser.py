@@ -192,6 +192,13 @@ class TestMinerUParser:
         assert "![Figure 1]" in result["full_markdown"]
         assert "| A |" in result["full_markdown"]  # markdown table
 
+        # Verify raw_blocks are preserved (4 non-discarded blocks)
+        assert "raw_blocks" in result
+        assert len(result["raw_blocks"]) == 4
+        assert result["raw_blocks"][0]["type"] == "text"
+        assert result["raw_blocks"][2]["type"] == "image"
+        assert result["raw_blocks"][3]["type"] == "table"
+
     def test_parse_extracted_content_collects_images(self, parser):
         """Verify parser collects image files from zip."""
         with tempfile.TemporaryDirectory() as tmp:
@@ -276,6 +283,47 @@ class TestMinerUParser:
         assert isinstance(result, ParseResult)
         assert result.pages[0].figures[0].img_path == "images/fig1.jpg"
         assert result.images == {"images/fig1.jpg": b"\xff\xd8\xff\xe0"}
+
+    def test_build_result_populates_content_blocks(self, parser):
+        """Verify _build_result passes raw_blocks as content_blocks to ParseResult."""
+        raw_blocks = [
+            {"type": "text", "text": "Title", "text_level": 1, "page_idx": 0},
+            {"type": "image", "img_path": "images/fig.jpg", "page_idx": 0},
+        ]
+        raw = {
+            "state": "done",
+            "total_pages": 1,
+            "title": None,
+            "authors": [],
+            "abstract": None,
+            "pages": [{"page_number": 1, "markdown": "text", "figures": [], "tables": []}],
+            "full_markdown": "text",
+            "images": {},
+            "raw_blocks": raw_blocks,
+        }
+        result = parser._build_result(raw)
+
+        assert isinstance(result, ParseResult)
+        assert len(result.content_blocks) == 2
+        assert result.content_blocks[0]["type"] == "text"
+        assert result.content_blocks[1]["type"] == "image"
+
+    def test_build_result_defaults_content_blocks_empty(self, parser):
+        """Verify _build_result defaults content_blocks to empty list when raw_blocks missing."""
+        raw = {
+            "state": "done",
+            "total_pages": 1,
+            "title": None,
+            "authors": [],
+            "abstract": None,
+            "pages": [{"page_number": 1, "markdown": "text", "figures": [], "tables": []}],
+            "full_markdown": "text",
+            "images": {},
+        }
+        result = parser._build_result(raw)
+
+        assert isinstance(result, ParseResult)
+        assert result.content_blocks == []
 
     def test_validate_local_batch_rejects_empty_file_list(self, parser):
         with pytest.raises(MinerUAPIError, match="at least one file"):

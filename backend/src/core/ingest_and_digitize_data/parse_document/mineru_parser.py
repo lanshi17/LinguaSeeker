@@ -47,6 +47,7 @@ class _MinerURawResult(TypedDict):
     pages: list[_MinerUPageData]
     full_markdown: str
     images: dict[str, bytes]
+    raw_blocks: list[dict]
 
 
 class MinerUParser(ParserStrategy):
@@ -410,6 +411,7 @@ class MinerUParser(ParserStrategy):
                 pages=[_MinerUPageData(page_number=1, markdown=full_markdown, figures=[], tables=[])],
                 full_markdown=full_markdown,
                 images=images,
+                raw_blocks=[],
             )
 
         raise MinerUAPIError(f"No parseable content found in zip. Files: {list(extract_dir.rglob('*'))}")
@@ -429,6 +431,7 @@ class MinerUParser(ParserStrategy):
                     abstract=data.get("abstract"),
                     pages=pages_data,
                     full_markdown="\n\n".join(p.get("markdown", "") for p in pages_data),
+                    raw_blocks=[],
                 )
             raise MinerUAPIError(f"Unexpected JSON structure: {list(data.keys())}")
 
@@ -456,6 +459,7 @@ class MinerUParser(ParserStrategy):
             abstract=data.get("abstract"),
             pages=pages,
             full_markdown="\n\n".join(full_markdown_parts),
+            raw_blocks=[],
         )
 
     def _parse_markdown_files(self, md_files: list[Path]) -> _MinerURawResult:
@@ -480,14 +484,15 @@ class MinerUParser(ParserStrategy):
             abstract=None,
             pages=pages,
             full_markdown="\n\n".join(full_markdown_parts),
+            raw_blocks=[],
         )
 
     def _parse_content_list_json(self, content_list: list[dict], full_markdown: str) -> _MinerURawResult:
         """Parse MinerU *_content_list.json with text, image, table blocks."""
+        raw_blocks = [b for b in content_list if b.get("type") != "discarded"]
+
         pages_map: dict[int, list[dict]] = defaultdict(list)
-        for item in content_list:
-            if item.get("type") == "discarded":
-                continue
+        for item in raw_blocks:
             page_idx = item.get("page_idx", 0)
             pages_map[page_idx].append(item)
 
@@ -500,6 +505,7 @@ class MinerUParser(ParserStrategy):
                 abstract=None,
                 pages=[_MinerUPageData(page_number=1, markdown=full_markdown, figures=[], tables=[])],
                 full_markdown=full_markdown,
+                raw_blocks=raw_blocks,
             )
 
         pages: list[_MinerUPageData] = []
@@ -544,6 +550,7 @@ class MinerUParser(ParserStrategy):
             abstract=None,
             pages=pages,
             full_markdown="\n\n".join(full_parts),
+            raw_blocks=raw_blocks,
         )
 
     def _build_result(self, data: _MinerURawResult) -> ParseResult:
@@ -561,4 +568,5 @@ class MinerUParser(ParserStrategy):
             full_markdown=data.get("full_markdown", ""),
             parser_used=self.name,
             images=data.get("images", {}),
+            content_blocks=data.get("raw_blocks", []),
         )
