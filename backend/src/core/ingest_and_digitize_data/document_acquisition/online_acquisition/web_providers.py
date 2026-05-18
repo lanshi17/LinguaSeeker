@@ -6,7 +6,7 @@ from typing import Any, Dict, Literal
 
 from .contracts import OnlineAcquisitionGatewayResult, OnlineAcquisitionSourceTraceEntry
 
-WebProvider = Literal["pubscholar", "cyberleninka", "hans_publishers", "chinaxiv", "koreascience"]
+WebProvider = Literal["pubscholar", "cyberleninka", "hans_publishers", "chinaxiv", "koreascience", "redalyc", "la_referencia"]
 ActionStrategy = Literal["search", "download"]
 
 
@@ -102,6 +102,16 @@ async def call_web_provider(
             from .web.koreascience import koreascience_download, koreascience_search
         except ImportError:
             return _failure_result("koreascience", RuntimeError("koreascience module not available"), action)
+    elif provider == "redalyc":
+        try:
+            from .web.redalyc import redalyc_download, redalyc_search
+        except ImportError:
+            return _failure_result("redalyc", RuntimeError("redalyc module not available"), action)
+    elif provider == "la_referencia":
+        try:
+            from .web.redalyc import la_referencia_download, la_referencia_search
+        except ImportError:
+            return _failure_result("la_referencia", RuntimeError("la_referencia module not available"), action)
     else:
         return _failure_result(provider, ValueError(f"unknown web provider: {provider}"), action)
 
@@ -115,6 +125,10 @@ async def call_web_provider(
                 result = await chinaxiv_search(query=query, limit=limit, **extra)
             elif provider == "koreascience":
                 result = await koreascience_search(query=query, limit=limit, **extra)
+            elif provider == "redalyc":
+                result = await redalyc_search(query=query, limit=limit, **extra)
+            elif provider == "la_referencia":
+                result = await la_referencia_search(query=query, limit=limit, **extra)
             else:
                 result = await hanspub_search(query=query, limit=limit, **extra)
         else:
@@ -138,6 +152,18 @@ async def call_web_provider(
                 )
             elif provider == "koreascience":
                 result = await koreascience_download(
+                    query=query, detail_link=detail_link,
+                    selected_index=selected_index, selected_title=selected_title,
+                    download_path=download_path, **extra,
+                )
+            elif provider == "redalyc":
+                result = await redalyc_download(
+                    query=query, detail_link=detail_link,
+                    selected_index=selected_index, selected_title=selected_title,
+                    download_path=download_path, **extra,
+                )
+            elif provider == "la_referencia":
+                result = await la_referencia_download(
                     query=query, detail_link=detail_link,
                     selected_index=selected_index, selected_title=selected_title,
                     download_path=download_path, **extra,
