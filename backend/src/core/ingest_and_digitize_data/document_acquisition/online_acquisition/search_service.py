@@ -47,11 +47,13 @@ LANG_PROVIDER_MATRIX: Dict[str, List[ProviderPlanItem]] = {
     ],
     "es": [
         {"route": "api", "provider": "scielo"},
+        {"route": "web", "provider": "redalyc"},
         {"route": "api", "provider": "crossref"},
         {"route": "api", "provider": "unpaywall"},
     ],
     "pt": [
         {"route": "api", "provider": "scielo"},
+        {"route": "web", "provider": "redalyc"},
         {"route": "api", "provider": "crossref"},
         {"route": "api", "provider": "unpaywall"},
     ],
