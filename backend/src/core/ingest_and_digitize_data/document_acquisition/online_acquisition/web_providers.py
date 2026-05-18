@@ -6,7 +6,7 @@ from typing import Any, Dict, Literal
 
 from .contracts import OnlineAcquisitionGatewayResult, OnlineAcquisitionSourceTraceEntry
 
-WebProvider = Literal["pubscholar", "cyberleninka", "hans_publishers", "chinaxiv"]
+WebProvider = Literal["pubscholar", "cyberleninka", "hans_publishers", "chinaxiv", "koreascience"]
 ActionStrategy = Literal["search", "download"]
 
 
@@ -97,6 +97,11 @@ async def call_web_provider(
             from .web.chinaxiv import chinaxiv_download, chinaxiv_search
         except ImportError:
             return _failure_result("chinaxiv", RuntimeError("chinaxiv module not available"), action)
+    elif provider == "koreascience":
+        try:
+            from .web.koreascience import koreascience_download, koreascience_search
+        except ImportError:
+            return _failure_result("koreascience", RuntimeError("koreascience module not available"), action)
     else:
         return _failure_result(provider, ValueError(f"unknown web provider: {provider}"), action)
 
@@ -108,6 +113,8 @@ async def call_web_provider(
                 result = await cyberleninka_search(query=query, limit=limit, **extra)
             elif provider == "chinaxiv":
                 result = await chinaxiv_search(query=query, limit=limit, **extra)
+            elif provider == "koreascience":
+                result = await koreascience_search(query=query, limit=limit, **extra)
             else:
                 result = await hanspub_search(query=query, limit=limit, **extra)
         else:
@@ -125,6 +132,12 @@ async def call_web_provider(
                 )
             elif provider == "chinaxiv":
                 result = await chinaxiv_download(
+                    query=query, detail_link=detail_link,
+                    selected_index=selected_index, selected_title=selected_title,
+                    download_path=download_path, **extra,
+                )
+            elif provider == "koreascience":
+                result = await koreascience_download(
                     query=query, detail_link=detail_link,
                     selected_index=selected_index, selected_title=selected_title,
                     download_path=download_path, **extra,
