@@ -281,25 +281,58 @@ _TRANSLATE_THIS_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Broader set of prompt markers that indicate the start of echoed prompt content.
+# Used to find the LAST such marker and keep only content after it.
+_PROMPT_ECHO_MARKERS_RE = re.compile(
+    r"(?:"
+    r"\[SYSTEM\s+INSTRUCTIONS"
+    r"|\*\*SYSTEM\s+PROMPT"
+    r"|\[TERMINOLOGY\]"
+    r"|\[PRECEDING\s+CONTEXT"
+    r"|\[FOLLOWING\s+CONTEXT"
+    r"|\[TRANSLATE\s+THIS\s+SEGMENT\]"
+    r")",
+    re.IGNORECASE,
+)
+
 
 def strip_prompt_echo(text: str) -> str:
-    """Strip LLM prompt echo by splitting on [TRANSLATE THIS SEGMENT].
+    """Strip LLM prompt echo by finding the last prompt marker.
 
     When the LLM echoes back the full prompt (system instructions, terminology,
-    context markers) before the actual translation, this function splits on the
-    [TRANSLATE THIS SEGMENT] marker and returns only the translation portion.
+    context markers) before the actual translation, this function finds the
+    last prompt marker and returns only the content after it.
     """
     if not text:
         return text
-    match = _TRANSLATE_THIS_RE.search(text)
-    if match:
-        translation = text[match.end():].strip()
-        if translation:
+
+    # Find the last prompt marker — everything before it is echo
+    last_match = None
+    for m in _PROMPT_ECHO_MARKERS_RE.finditer(text):
+        last_match = m
+
+    if last_match:
+        translation = text[last_match.end():].strip()
+        # Strip leading markers like ":" or "**" after the marker
+        translation = re.sub(r"^[:\s*]+", "", translation).strip()
+        if translation and len(translation) > 10:
             logger.debug(
                 "Stripped prompt echo ({} -> {} chars)",
                 len(text), len(translation),
             )
             return translation
+
+    # Fallback: try [TRANSLATE THIS SEGMENT] specifically
+    match = _TRANSLATE_THIS_RE.search(text)
+    if match:
+        translation = text[match.end():].strip()
+        if translation:
+            logger.debug(
+                "Stripped prompt echo via fallback ({} -> {} chars)",
+                len(text), len(translation),
+            )
+            return translation
+
     return text
 
 
