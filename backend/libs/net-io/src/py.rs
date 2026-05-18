@@ -1,9 +1,9 @@
 use crate::client::HttpClient;
 use crate::error::GatewayError;
 use crate::providers::{
-    ArxivProvider, BaseProvider, BioRxivProvider, CoreProvider, CrossrefProvider, DoajProvider,
-    EuropePmcProvider, JstageProvider, MedRxivProvider, OpenAlexProvider, OpenAireProvider,
-    PmcProvider, SciEloProvider, UnpaywallProvider,
+    ArxivProvider, BaseProvider, BioRxivProvider, CiniiProvider, CoreProvider, CrossrefProvider,
+    DoajProvider, EuropePmcProvider, JstageProvider, MedRxivProvider, OpenAlexProvider,
+    OpenAireProvider, PmcProvider, SciEloProvider, UnpaywallProvider,
 };
 use crate::types::{Action, FetchParams, FetchResult};
 use futures::future::join_all;
@@ -291,10 +291,14 @@ async fn execute_provider(
             let query = params.query.as_deref().unwrap_or_default();
             MedRxivProvider::search(client, query, params.limit).await
         }
+        ("cinii", Action::Search) => {
+            let query = params.query.as_deref().unwrap_or_default();
+            CiniiProvider::search(client, query, params.limit).await
+        }
         ("unpaywall", Action::Search | Action::Download) => {
             UnpaywallProvider::search(client, params).await
         }
-        ("crossref" | "openalex" | "europepmc" | "pmc" | "scielo" | "base" | "core" | "openaire" | "arxiv" | "biorxiv" | "medrxiv", Action::Download) => {
+        ("crossref" | "openalex" | "europepmc" | "pmc" | "scielo" | "base" | "core" | "openaire" | "arxiv" | "biorxiv" | "medrxiv" | "cinii", Action::Download) => {
             Err(GatewayError::Other(format!(
                 "action {action:?} is not supported for provider {provider}"
             )))
