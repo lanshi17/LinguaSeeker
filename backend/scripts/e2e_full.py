@@ -60,8 +60,8 @@ async def parse_one(parser: MinerUParser, pdf_path: Path) -> dict:
         {"page_number": p.page_number, "markdown": p.markdown}
         for p in parse_result.pages
     ]
-    logger.info("MinerU done: {} pages, {} chars", len(pages), len(parse_result.full_markdown))
-    return {"pages": pages, "images": parse_result.images}
+    logger.info("MinerU done: {} pages, {} chars, {} blocks", len(pages), len(parse_result.full_markdown), len(parse_result.content_blocks))
+    return {"pages": pages, "images": parse_result.images, "content_blocks": parse_result.content_blocks}
 
 
 async def translate_and_save(
@@ -70,31 +70,40 @@ async def translate_and_save(
     doc_id: str,
     lang: str,
     images: dict,
+    content_blocks: list[dict] | None = None,
 ) -> None:
     """Run translation pipeline and persist results."""
     logger.info("Translating: {}/{}", lang, doc_id)
     t0 = time.time()
-    result = await service.run(pages)
+    result = await service.run(pages, content_blocks=content_blocks)
     elapsed = time.time() - t0
 
     out_dir = OUTPUT_DIR / lang / doc_id
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    (out_dir / "original.md").write_text(result.formatted_original, encoding="utf-8")
-    (out_dir / "translated.md").write_text(result.translated_english, encoding="utf-8")
-
     # Save images
+    image_paths = []
     if images:
         img_dir = out_dir / "images"
         img_dir.mkdir(exist_ok=True)
         for rel_path, img_bytes in images.items():
-            (img_dir / Path(rel_path).name).write_bytes(img_bytes)
+            img_path = img_dir / Path(rel_path).name
+            img_path.write_bytes(img_bytes)
+            image_paths.append(str(img_path))
+
+    # Use service.save() for structured JSON output
+    saved = service.save(
+        result,
+        output_dir=str(OUTPUT_DIR / lang),
+        doc_id=doc_id,
+        image_paths=image_paths if image_paths else None,
+    )
 
     logger.info(
-        "OK {}/{} | lang={} | {:.1f}s | {}→{} chars | segs={} | warnings={}",
+        "OK {}/{} | lang={} | {:.1f}s | {}→{} chars | segs={} | blocks={} | warnings={}",
         lang, doc_id, result.source_language, elapsed,
         len(result.formatted_original), len(result.translated_english),
-        len(result.segments), result.translation_warnings,
+        len(result.segments), len(result.original_blocks), result.translation_warnings,
     )
 
 
@@ -121,7 +130,10 @@ async def run_e2e(targets: list[str]) -> None:
             parsed = await parse_one(parser, pdf_path)
             if not parsed:
                 continue
-            await translate_and_save(service, parsed["pages"], doc_id, lang, parsed.get("images", {}))
+            await translate_and_save(
+                service, parsed["pages"], doc_id, lang,
+                parsed.get("images", {}), parsed.get("content_blocks"),
+            )
         except Exception:
             logger.exception("FAILED {}/{}", lang, doc_id)
 
