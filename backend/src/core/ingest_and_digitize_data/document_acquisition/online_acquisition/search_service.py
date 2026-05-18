@@ -51,6 +51,12 @@ LANG_PROVIDER_MATRIX: Dict[str, List[ProviderPlanItem]] = {
     "en": [
         {"route": "api", "provider": "pmc"},
         {"route": "api", "provider": "crossref"},
+        {"route": "api", "provider": "arxiv"},
+        {"route": "api", "provider": "biorxiv"},
+        {"route": "api", "provider": "medrxiv"},
+        {"route": "api", "provider": "openaire"},
+        {"route": "api", "provider": "base"},
+        {"route": "api", "provider": "core"},
         {"route": "api", "provider": "unpaywall"},
         {"route": "api", "provider": "doaj"},
     ],
