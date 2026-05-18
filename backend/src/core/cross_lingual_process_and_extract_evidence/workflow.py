@@ -154,7 +154,6 @@ class TranslationService:
         output_dir: str,
         doc_id: str,
         image_paths: list[str] | None = None,
-        raw_markdown: str = "",
     ) -> CrossLingualOutput:
         """Persist result to local storage and return downstream output contract.
 
@@ -163,10 +162,9 @@ class TranslationService:
             output_dir: Root output directory.
             doc_id: Unique document identifier.
             image_paths: Optional source image paths to copy.
-            raw_markdown: Original raw text before formatting (for drift computation).
 
         Returns:
             CrossLingualOutput for downstream consumers.
         """
-        saved = self._persistence.save(result, output_dir, doc_id, image_paths, raw_markdown)
+        saved = self._persistence.save(result, output_dir, doc_id, image_paths)
         return self._persistence.to_output(result, saved)
