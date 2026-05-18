@@ -46,7 +46,7 @@ def get_system_prompt_generation_prompt(
         "You are a prompt engineering expert. Given a sample of a biomedical "
         "document, generate an optimal SYSTEM PROMPT for a translation LLM.\n\n"
         "The system prompt must:\n"
-        "1. Define the role (biomedical translation engine, source→English).\n"
+        "1. Define the role: faithful literal translation engine, source→English.\n"
         "2. List rules for preserving markdown structure, image references, "
         "and biomedical literals (HGVS, gene symbols, protein names, "
         "accession IDs, DOI/PMID, drug dosages, lab values).\n"
@@ -58,6 +58,19 @@ def get_system_prompt_generation_prompt(
         "exactly in the translation — do not translate, remove, or modify them.\n"
         "6. Be concise — under 500 words. No examples, no fluff.\n"
         "7. Output ONLY the system prompt text. No wrapper, no explanation.\n\n"
+        "CRITICAL CONSTRAINTS (must be included in the generated prompt):\n"
+        "- Translate LITERALLY. Do NOT upgrade or downgrade evidence strength.\n"
+        "  '提示' → 'suggestive of', NOT 'confirming'. "
+        " '支持' → 'supportive of', NOT 'confirming'. "
+        " '考虑' → 'consistent with', NOT 'diagnosed as'.\n"
+        "- Do NOT add medical inference, clinical summarization, or phenotype "
+        "abstraction. Translate sentence-by-sentence, not idea-by-idea.\n"
+        "- Do NOT infer missing values. If the source has a blank or placeholder, "
+        "keep it as-is or output null.\n"
+        "- Use 'variant' for 变异 by default. Use 'mutation' ONLY when the source "
+        "explicitly writes 突变.\n"
+        "- Do NOT add ACMG/ClinGen classification language.\n"
+        "- Do NOT summarize, aggregate, or restructure clinical findings.\n\n"
         f"SOURCE LANGUAGE: {source_language}\n"
         f"DOCUMENT SAMPLE (first ~2000 chars):\n{markdown_sample[:2000]}"
     )
@@ -84,6 +97,19 @@ def get_translate_prompt(
 
     if terminology:
         parts.append(f"[TERMINOLOGY]\n{terminology}\n")
+
+    parts.append(
+        "[RULES]\n"
+        "- Translate LITERALLY. Do not add, infer, or summarize.\n"
+        "- Preserve evidence strength exactly: 提示→suggestive of, "
+        "支持→supportive of, 考虑→consistent with, 明确→confirmed.\n"
+        "- Use 'variant' for 变异. Use 'mutation' only when source says 突变.\n"
+        "- When the source has missing/blank values (e.g. spaces where numbers "
+        "should be), output the text WITHOUT those values. Do NOT insert 'blank', "
+        "'unknown', or any placeholder word. Just omit the missing part.\n"
+        "- Do not add clinical conclusions, phenotype summaries, or ACMG language.\n"
+        "- Do not summarize or aggregate clinical findings across sentences.\n"
+    )
 
     parts.append(f"[TRANSLATE THIS SEGMENT]\n{markdown_segment}")
     if "«BLK»" in markdown_segment:

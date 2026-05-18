@@ -9,7 +9,7 @@ from typing import Any
 class TranslationConfigContext:
     """Subset of app config needed by translation/formatting modules.
 
-    Built once from ``cfg.translation`` at service init, then injected
+    Built once from ``cfg.llm`` at service init, then injected
     into sub-modules. Prevents raw config leakage into deep code.
     """
 
@@ -20,10 +20,10 @@ class TranslationConfigContext:
 
     @classmethod
     def from_config(cls, cfg: Any) -> TranslationConfigContext:
-        """Build from the global config object (``cfg.translation``)."""
+        """Build from the global config object (``cfg.llm``)."""
         return cls(
-            model=cfg.translation.model,
-            api_key=cfg.translation.api_key,
-            base_url=cfg.translation.base_url,
-            temperature=getattr(cfg.translation, "temperature", 0.0),
+            model=cfg.llm.model,
+            api_key=cfg.llm.api_key,
+            base_url=cfg.llm.base_url,
+            temperature=getattr(cfg.llm, "temperature", 0.0),
         )

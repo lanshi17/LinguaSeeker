@@ -61,9 +61,17 @@ def test_validate_segment_source_language_content():
 
 
 def test_validate_segment_unchanged():
-    source = "This sentence should not be unchanged."
+    # Source with mixed CJK/English — unchanged translation should be flagged
+    # Need >5% CJK (to trigger "unchanged" check) but <15% (to not trigger "source_language_content")
+    source = "The patient carries a novel BRCA1 基因变异 in the 基因 gene sequence 数据."
     with pytest.raises(ValueError, match="unchanged"):
         validate_segment(source, source)
+
+
+def test_validate_segment_unchanged_english_only():
+    # English-only source (author names, affiliations) — should NOT be flagged
+    source = "Zhang Hong, Jiang Zuanhong, Shao Songhua"
+    validate_segment(source, source)  # should not raise
 
 
 def test_validate_segment_good():

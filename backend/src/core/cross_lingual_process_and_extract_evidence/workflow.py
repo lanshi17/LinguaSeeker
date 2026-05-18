@@ -51,6 +51,9 @@ class TranslationService:
         text = state.formatted.formatted_markdown if state.formatted else ""
         lang = state.source_language or detect_language(text)
         state.source_language = lang
+        # Propagate to FormattedDocument so translator can read it
+        if state.formatted:
+            state.formatted.source_language = lang
         state.needs_translation = self._router.route(state) == "translate"
         logger.info("lang={}, needs_translation={}", lang, state.needs_translation)
         return state
