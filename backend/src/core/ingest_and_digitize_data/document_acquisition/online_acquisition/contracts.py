@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 # --- Literal types ---
 
 ApiProvider = Literal[
-    "crossref", "unpaywall", "openalex", "europepmc", "pmc", "jstage", "doaj", "scielo", "base"
+    "crossref", "unpaywall", "openalex", "europepmc", "pmc", "jstage", "doaj", "scielo", "base", "core"
 ]
 WebProvider = Literal["pubscholar", "cyberleninka", "hans_publishers"]
 PreferStrategy = Literal["auto", "api", "web"]

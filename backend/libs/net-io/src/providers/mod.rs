@@ -1,4 +1,5 @@
 mod base_search;
+mod core_search;
 mod crossref;
 mod doaj;
 mod europepmc;
@@ -9,6 +10,7 @@ mod scielo;
 mod unpaywall;
 
 pub use base_search::BaseProvider;
+pub use core_search::CoreProvider;
 pub use crossref::CrossrefProvider;
 pub use doaj::DoajProvider;
 pub use europepmc::EuropePmcProvider;
