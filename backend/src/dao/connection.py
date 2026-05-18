@@ -8,12 +8,13 @@ from typing import TypeVar
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from src.core.config import Settings, get_config
+from src.dao.contracts import AsyncpgConnectArgs
 
 SessionT = TypeVar("SessionT")
 SessionContextFactory = Callable[[], AsyncIterator[SessionT]]
 
 
-def build_asyncpg_connect_args(settings: Settings | None = None) -> dict[str, dict[str, str]]:
+def build_asyncpg_connect_args(settings: Settings | None = None) -> AsyncpgConnectArgs:
     """Build asyncpg connection arguments for app-schema search path behavior."""
     cfg = settings or get_config()
     return {
