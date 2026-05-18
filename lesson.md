@@ -156,3 +156,15 @@
 **Fix**: Copy the `.so` from the feature worktree's build output to the main worktree's backend venv. Long-term: use `--manifest-path` with maturin to target the correct Python, or ensure all local venvs use the same Python version.
 
 **Prevention**: After merging Rust changes across worktrees, rebuild in the target worktree with the correct Python version, or copy the `.so` explicitly.
+
+## 2026-05-18: Database config default test read local dotenv files
+
+**Problem**: After merging `database-mvp` into `dev`, `test_postgresql_and_redis_nested_config` failed because `Settings()` loaded `backend/.env.local` and saw `POSTGRES_USER=acmg_user` instead of the expected default empty user.
+
+**Investigation**: The test cleared process environment variables with `monkeypatch.delenv`, but pydantic-settings still read configured dotenv files. The isolated database worktree did not have the same local dotenv file, so the targeted suite passed there and failed in the main worktree.
+
+**Root cause**: The default-value test was not fully isolated from developer-local dotenv files.
+
+**Solution**: Constructed `Settings(_env_file=None)` in the default-value test so it validates code defaults without reading `.env.local` or `.env`.
+
+**Prevention**: For config tests that assert defaults, disable dotenv loading explicitly. Use environment variables only in tests that are intentionally validating env overrides.
