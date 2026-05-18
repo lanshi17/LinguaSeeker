@@ -48,3 +48,7 @@
 [2026-05-18] Database MVP Task 2: added async SQLAlchemy engine/session helpers and tests [completed]
 [2026-05-18] Database MVP Task 3: added MVP SQLAlchemy ORM metadata models and tests [completed]
 [2026-05-18] Database MVP Batch 1 code review: fixed session helper engine leak risk, confidence constraints, DSN edge tests, and DAO package init [completed]
+[2026-05-18] Database MVP Task 4: added Alembic async migration environment, alembic.ini, env.py, initial migration — 45 tests, lint clean [completed]
+[2026-05-18] Database MVP Task 5: added Redis cache repository with transactional pipeline invalidation — 45 tests, lint clean [completed]
+[2026-05-18] Database MVP Task 6: added flattened search index repository — 45 tests, lint clean [completed]
+[2026-05-18] Database MVP Task 7: updated docs index and .env.example for MVP schema [completed]

@@ -98,3 +98,15 @@
 **Solution**: Removed the default path and made `get_async_session()` require an explicit session factory. Added a regression test that calling it without a factory raises `TypeError`.
 
 **Prevention**: Avoid convenience constructors in lifecycle-sensitive DAO helpers. Tests should cover any fallback branch that allocates external resources, or that branch should not exist.
+
+## 2026-05-18: Alembic script_location resolution is CWD-relative, not ini-relative
+
+**Problem**: `script_location = migrations` in `database/alembic.ini` failed when running `uv run alembic` from `backend/` — Alembic resolved the path relative to CWD rather than the ini file directory.
+
+**Investigation**: Tested with Python `Config.get_main_option('script_location')` and `ScriptDirectory.from_config()`. Confirmed that Alembic's `ScriptDirectory` resolves `script_location` from the current working directory, not from the ini file location, despite documentation suggesting otherwise.
+
+**Root cause**: Alembic resolves relative `script_location` paths against the CWD where the Alembic command is invoked, not against the directory containing `alembic.ini`.
+
+**Solution**: Used Alembic `%(here)s` interpolation which expands to the directory containing the ini file: `script_location = %(here)s/migrations`. This makes migration commands work regardless of CWD — both from repo root and from `backend/` directory.
+
+**Prevention**: When setting up Alembic with a non-standard directory layout (ini file not at project root), always use `%(here)s` in `script_location` to avoid CWD-dependent resolution failures.
