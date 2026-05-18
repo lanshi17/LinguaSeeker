@@ -1,7 +1,6 @@
 """Redalyc and LA Referencia web providers — Latin American open access."""
 from __future__ import annotations
 
-import logging
 from typing import Any, Dict, List, Optional
 
 from .base import (
@@ -10,8 +9,6 @@ from .base import (
     download_pdf_from_candidates,
     extract_pdf_links_from_html,
 )
-
-log = logging.getLogger(__name__)
 
 REDALYC_BASE_URL = "https://www.redalyc.org"
 LA_REFERENCIA_BASE_URL = "https://www.lareferencia.info"

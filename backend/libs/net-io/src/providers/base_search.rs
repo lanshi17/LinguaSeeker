@@ -21,17 +21,17 @@ impl BaseProvider {
             Some(format!("Bearer {}", api_key))
         };
 
-        let url = format!("{}/search", BASE_API_URL);
-        let params = serde_json::json!({
-            "query": query,
-            "format": "json",
-            "limit": count.to_string(),
-        });
+        let url = format!(
+            "{}/search?query={}&format=json&limit={}",
+            BASE_API_URL,
+            urlencoding::encode(query),
+            count
+        );
 
         let json = if let Some(auth_header) = auth {
             client.get_json_with_auth(&url, Some(&auth_header)).await?
         } else {
-            client.get_json(&url, &params).await?
+            client.get_json(&url, &serde_json::json!({})).await?
         };
 
         let mut items = Vec::new();

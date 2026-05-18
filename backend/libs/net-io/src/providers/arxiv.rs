@@ -4,7 +4,7 @@ use crate::types::FetchResult;
 
 pub struct ArxivProvider;
 
-const ARXIV_API_URL: &str = "http://export.arxiv.org/api/query";
+const ARXIV_API_URL: &str = "https://export.arxiv.org/api/query";
 
 impl ArxivProvider {
     pub async fn search(
