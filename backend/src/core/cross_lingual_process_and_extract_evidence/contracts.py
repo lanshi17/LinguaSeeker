@@ -363,8 +363,8 @@ class TranslationResult:
 class SavedDocuments:
     """Result of persisting cross-lingual documents to storage."""
 
-    original_md_path: Path
-    translated_md_path: Path
+    original_json_path: Path
+    translated_json_path: Path
     metadata_path: Path
     image_dir: Path
     image_paths: list[Path]
@@ -385,8 +385,8 @@ class CrossLingualOutput(BaseModel):
     terminology_map: Dict[str, str]
     translation_warnings: list[str]
     output_dir: str
-    original_md_path: str
-    translated_md_path: str
+    original_json_path: str
+    translated_json_path: str
     image_paths: list[str]
 
 

@@ -75,15 +75,15 @@ def test_saved_documents_fields():
     from src.core.cross_lingual_process_and_extract_evidence.contracts import SavedDocuments
 
     saved = SavedDocuments(
-        original_md_path=Path("/tmp/out/original.md"),
-        translated_md_path=Path("/tmp/out/translated.md"),
+        original_json_path=Path("/tmp/out/original.json"),
+        translated_json_path=Path("/tmp/out/translated.json"),
         metadata_path=Path("/tmp/out/metadata.json"),
         image_dir=Path("/tmp/out/images"),
         image_paths=[Path("/tmp/out/images/fig1.png")],
         output_dir=Path("/tmp/out"),
         created_at=datetime.now(timezone.utc),
     )
-    assert saved.original_md_path.name == "original.md"
+    assert saved.original_json_path.name == "original.json"
     assert len(saved.image_paths) == 1
 
 
@@ -98,8 +98,8 @@ def test_cross_lingual_output_fields():
         terminology_map={"基因": "gene"},
         translation_warnings=[],
         output_dir="/tmp/out",
-        original_md_path="/tmp/out/original.md",
-        translated_md_path="/tmp/out/translated.md",
+        original_json_path="/tmp/out/original.json",
+        translated_json_path="/tmp/out/translated.json",
         image_paths=["/tmp/out/images/fig1.png"],
     )
     assert out.source_language == "zh"

@@ -204,10 +204,10 @@ class TestTranslatedLayoutReport:
 
 
 class TestPersistenceSavesLayoutJson:
-    """Tests for persistence service saving layout JSON files."""
+    """Tests for persistence service saving structured JSON files."""
 
-    def test_save_creates_original_layout_json(self, tmp_path):
-        """save() should create original_layout.json."""
+    def test_save_creates_original_json(self, tmp_path):
+        """save() should create original.json with structured blocks."""
         from src.core.cross_lingual_process_and_extract_evidence.persistence import (
             DocumentPersistenceService,
         )
@@ -227,16 +227,16 @@ class TestPersistenceSavesLayoutJson:
         service = DocumentPersistenceService()
         saved = service.save(result, str(tmp_path), "test-doc")
 
-        layout_path = saved.output_dir / "original_layout.json"
-        assert layout_path.exists()
+        original_path = saved.output_dir / "original.json"
+        assert original_path.exists()
 
-        data = json.loads(layout_path.read_text())
+        data = json.loads(original_path.read_text())
         assert "metadata" in data
-        assert "sentences" in data
-        assert "format_drifts" in data
+        assert "blocks" in data
+        assert data["metadata"]["doc_id"] == "test-doc"
 
-    def test_save_creates_translated_layout_json(self, tmp_path):
-        """save() should create translated_layout.json."""
+    def test_save_creates_translated_json(self, tmp_path):
+        """save() should create translated.json with structured blocks."""
         from src.core.cross_lingual_process_and_extract_evidence.persistence import (
             DocumentPersistenceService,
         )
@@ -260,42 +260,37 @@ class TestPersistenceSavesLayoutJson:
         service = DocumentPersistenceService()
         saved = service.save(result, str(tmp_path), "test-doc")
 
-        layout_path = saved.output_dir / "translated_layout.json"
-        assert layout_path.exists()
+        translated_path = saved.output_dir / "translated.json"
+        assert translated_path.exists()
 
-        data = json.loads(layout_path.read_text())
+        data = json.loads(translated_path.read_text())
         assert "metadata" in data
-        assert "terminology_map" in data
-        assert data["terminology_map"]["测试"] == "test"
+        assert "blocks" in data
+        assert data["metadata"]["terminology_map"]["测试"] == "test"
 
-    def test_save_computes_format_drift_with_raw_markdown(self, tmp_path):
-        """save() should compute format drift when raw_markdown is provided."""
+    def test_save_metadata_includes_block_counts(self, tmp_path):
+        """save() should include block counts in metadata.json."""
         from src.core.cross_lingual_process_and_extract_evidence.persistence import (
             DocumentPersistenceService,
         )
 
-        raw = "Original   text.   \n\n\n\nMore content."
-        formatted = "Original text.\n\nMore content."
-
         result = TranslationResult(
-            formatted_original=formatted,
-            translated_english="Translated.",
+            formatted_original="Test.",
+            translated_english="Test.",
             source_language="en",
             terminology_map={},
             translation_warnings=[],
-            sentences=[
-                SentenceRegion(page=1, start_offset=0, end_offset=14, text="Original text."),
-                SentenceRegion(page=1, start_offset=16, end_offset=30, text="More content."),
-            ],
+            sentences=[],
             segments=[],
         )
 
         service = DocumentPersistenceService()
-        saved = service.save(result, str(tmp_path), "test-doc", raw_markdown=raw)
+        saved = service.save(result, str(tmp_path), "test-doc")
 
-        layout_path = saved.output_dir / "original_layout.json"
-        data = json.loads(layout_path.read_text())
+        meta_path = saved.output_dir / "metadata.json"
+        data = json.loads(meta_path.read_text())
 
-        assert len(data["format_drifts"]) == 2
-        assert data["metadata"]["raw_text_length"] == len(raw)
-        assert data["metadata"]["formatted_text_length"] == len(formatted)
+        assert "original_block_count" in data
+        assert "translated_block_count" in data
+        assert data["original_block_count"] == 0
+        assert data["translated_block_count"] == 0
