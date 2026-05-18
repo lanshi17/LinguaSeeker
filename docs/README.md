@@ -45,13 +45,11 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | date | title | status/PR |
 |---|---|---|
 | 2026-05-16 | [evidence extraction output E2E](planned/2026-05-16-evidence-extraction-output-e2e.md) | planned |
-| 2026-05-18 | [database implementation plan](plans/2026-05-18-database-implementation-plan.md) | planned |
 
 ## Planning Drafts
 
 | date | title | status/PR |
 |---|---|---|
-| 2026-05-18 | [database architecture design](plans/2026-05-18-database-design.md) | completed design |
 ## Active Code Reviews
 
 No active code reviews.
