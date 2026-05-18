@@ -13,7 +13,7 @@ ApiProvider = Literal[
     "crossref", "unpaywall", "openalex", "europepmc", "pmc", "jstage", "doaj",
     "scielo", "base", "core", "openaire", "arxiv", "biorxiv", "medrxiv", "cinii"
 ]
-WebProvider = Literal["pubscholar", "cyberleninka", "hans_publishers"]
+WebProvider = Literal["pubscholar", "cyberleninka", "hans_publishers", "chinaxiv"]
 PreferStrategy = Literal["auto", "api", "web"]
 ActionStrategy = Literal["search", "download"]
 
