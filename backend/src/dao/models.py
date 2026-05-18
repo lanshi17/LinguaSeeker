@@ -5,7 +5,20 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, Numeric, String, Text, UniqueConstraint, func, text
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -186,6 +199,7 @@ class RunEvidenceItem(Base, TimestampMixin):
 
     __tablename__ = "run_evidence_items"
     __table_args__ = (
+        CheckConstraint("confidence >= 0 AND confidence <= 1", name="ck_run_evidence_items_confidence_range"),
         Index("ix_run_evidence_items_processing_run_id", "processing_run_id"),
         Index("ix_run_evidence_items_source_document_id", "source_document_id"),
         Index("ix_run_evidence_items_canonical_evidence_id", "canonical_evidence_id"),
@@ -254,6 +268,10 @@ class CanonicalEvidenceItem(Base, TimestampMixin):
 
     __tablename__ = "canonical_evidence_items"
     __table_args__ = (
+        CheckConstraint(
+            "current_best_confidence >= 0 AND current_best_confidence <= 1",
+            name="ck_canonical_evidence_items_current_best_confidence_range",
+        ),
         UniqueConstraint(
             "source_document_id",
             "field_id",

@@ -47,3 +47,4 @@
 [2026-05-18] Database MVP Task 1: added async PostgreSQL DSN helper and config tests [completed]
 [2026-05-18] Database MVP Task 2: added async SQLAlchemy engine/session helpers and tests [completed]
 [2026-05-18] Database MVP Task 3: added MVP SQLAlchemy ORM metadata models and tests [completed]
+[2026-05-18] Database MVP Batch 1 code review: fixed session helper engine leak risk, confidence constraints, DSN edge tests, and DAO package init [completed]

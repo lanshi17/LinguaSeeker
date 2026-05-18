@@ -1,7 +1,7 @@
 """Tests for MVP database ORM metadata."""
 from __future__ import annotations
 
-from sqlalchemy import Index, Table, UniqueConstraint
+from sqlalchemy import CheckConstraint, Index, Table, UniqueConstraint
 
 from src.dao.models import Base
 
@@ -29,6 +29,16 @@ def _unique_constraint_columns(table: Table) -> set[tuple[str, ...]]:
         for constraint in table.constraints
         if isinstance(constraint, UniqueConstraint)
     }
+
+
+def _check_constraint_by_name(table: Table, name: str) -> CheckConstraint:
+    matching = [
+        constraint
+        for constraint in table.constraints
+        if isinstance(constraint, CheckConstraint) and constraint.name == name
+    ]
+    assert len(matching) == 1
+    return matching[0]
 
 
 def _index_by_name(table: Table, name: str) -> Index:
@@ -83,3 +93,23 @@ def test_normalized_entity_unmapped_raw_text_unique_index() -> None:
     assert index.unique
     assert tuple(expression.name for expression in index.expressions) == ("entity_type", "normalized_raw_text")
     assert str(index.dialect_options["postgresql"]["where"]) == "standardization_status = 'unmapped'"
+
+
+def test_run_evidence_confidence_has_database_range_constraint() -> None:
+    """Run-level confidence cannot be outside the normalized 0..1 range."""
+    constraint = _check_constraint_by_name(
+        _table("run_evidence_items"),
+        "ck_run_evidence_items_confidence_range",
+    )
+
+    assert str(constraint.sqltext) == "confidence >= 0 AND confidence <= 1"
+
+
+def test_canonical_evidence_confidence_has_database_range_constraint() -> None:
+    """Canonical confidence cannot be outside the normalized 0..1 range."""
+    constraint = _check_constraint_by_name(
+        _table("canonical_evidence_items"),
+        "ck_canonical_evidence_items_current_best_confidence_range",
+    )
+
+    assert str(constraint.sqltext) == "current_best_confidence >= 0 AND current_best_confidence <= 1"

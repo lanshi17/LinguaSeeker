@@ -55,17 +55,17 @@ def test_async_session_factory_returns_async_sessionmaker() -> None:
 async def test_get_async_session_yields_session_and_closes() -> None:
     """The app session helper yields one session from the provided factory."""
 
-    class FakeSession:
+    class FakeSession(AsyncSession):
         def __init__(self) -> None:
-            self.closed = False
+            self.closed_for_test = False
 
         async def close(self) -> None:
-            self.closed = True
+            self.closed_for_test = True
 
     fake_session = FakeSession()
 
     @asynccontextmanager
-    async def fake_factory() -> AsyncIterator[FakeSession]:
+    async def fake_factory() -> AsyncIterator[AsyncSession]:
         try:
             yield fake_session
         finally:
@@ -73,6 +73,14 @@ async def test_get_async_session_yields_session_and_closes() -> None:
 
     async with get_async_session(fake_factory) as session:
         assert session is fake_session
-        assert not session.closed
+        assert not fake_session.closed_for_test
 
-    assert fake_session.closed
+    assert fake_session.closed_for_test
+
+
+@pytest.mark.asyncio
+async def test_get_async_session_requires_explicit_factory() -> None:
+    """The session helper does not create hidden engines with unmanaged pools."""
+    with pytest.raises(TypeError):
+        async with get_async_session():
+            pass
