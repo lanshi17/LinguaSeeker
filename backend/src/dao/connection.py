@@ -3,15 +3,13 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
-from typing import TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from src.core.config import Settings, get_config
 from src.dao.contracts import AsyncpgConnectArgs
 
-SessionT = TypeVar("SessionT")
-SessionContextFactory = Callable[[], AsyncIterator[SessionT]]
+SessionFactory = Callable[[], AsyncIterator[AsyncSession]] | async_sessionmaker[AsyncSession]
 
 
 def build_asyncpg_connect_args(settings: Settings | None = None) -> AsyncpgConnectArgs:
@@ -42,11 +40,8 @@ def async_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSessio
 
 @asynccontextmanager
 async def get_async_session(
-    session_factory: SessionContextFactory[SessionT] | async_sessionmaker[AsyncSession] | None = None,
-) -> AsyncIterator[SessionT | AsyncSession]:
+    session_factory: SessionFactory,
+) -> AsyncIterator[AsyncSession]:
     """Yield an async database session and close it through its context manager."""
-    if session_factory is None:
-        session_factory = async_session_factory(build_async_engine())
-
     async with session_factory() as session:
         yield session

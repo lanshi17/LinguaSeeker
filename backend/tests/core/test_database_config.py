@@ -4,8 +4,28 @@ from __future__ import annotations
 from src.core.config import Settings
 
 
-def test_postgresql_and_redis_nested_config() -> None:
+DATABASE_ENV_VARS = (
+    "POSTGRES_HOST",
+    "POSTGRES_PORT",
+    "POSTGRES_DB",
+    "POSTGRES_SCHEMA",
+    "POSTGRES_USER",
+    "POSTGRES_PASSWORD",
+    "POSTGRES_POOL_SIZE",
+    "POSTGRES_MAX_OVERFLOW",
+    "REDIS_HOST",
+    "REDIS_PORT",
+    "REDIS_PASSWORD",
+    "REDIS_DB",
+    "REDIS_MAX_CONNECTIONS",
+)
+
+
+def test_postgresql_and_redis_nested_config(monkeypatch) -> None:
     """Settings exposes nested PostgreSQL and Redis configuration."""
+    for env_var in DATABASE_ENV_VARS:
+        monkeypatch.delenv(env_var, raising=False)
+
     settings = Settings()
 
     assert settings.postgresql.host == "127.0.0.1"
@@ -35,3 +55,42 @@ def test_postgresql_dsn_helper_uses_async_sqlalchemy_driver(monkeypatch) -> None
     settings = Settings()
 
     assert settings.postgresql_dsn == "postgresql+asyncpg://db_user:[redacted-email]:55432/acmg_test"
+
+
+def test_postgresql_dsn_helper_omits_empty_userinfo() -> None:
+    """Settings omits userinfo when no PostgreSQL user is configured."""
+    settings = Settings(
+        postgres_user="",
+        postgres_password="",
+        postgres_host="db.internal",
+        postgres_port=55432,
+        postgres_db="acmg_test",
+    )
+
+    assert settings.postgresql_dsn == "postgresql+asyncpg://db.internal:55432/acmg_test"
+
+
+def test_postgresql_dsn_helper_supports_user_without_password() -> None:
+    """Settings keeps the username when no PostgreSQL password is configured."""
+    settings = Settings(
+        postgres_user="db_user",
+        postgres_password="",
+        postgres_host="db.internal",
+        postgres_port=55432,
+        postgres_db="acmg_test",
+    )
+
+    assert settings.postgresql_dsn == "postgresql+asyncpg://[redacted-email]:55432/acmg_test"
+
+
+def test_postgresql_dsn_helper_escapes_database_name() -> None:
+    """Settings escapes special characters in the database component."""
+    settings = Settings(
+        postgres_user="db_user",
+        postgres_password="db_password",
+        postgres_host="db.internal",
+        postgres_port=55432,
+        postgres_db="tenant/db",
+    )
+
+    assert settings.postgresql_dsn == "postgresql+asyncpg://db_user:[redacted-email]:55432/tenant%2Fdb"
