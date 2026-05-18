@@ -11,5 +11,9 @@ class BaseFormatter(ABC):
     """Abstract formatter interface. Swappable for testing or alternative strategies."""
 
     @abstractmethod
-    def format(self, pages: List[Dict[str, Any]]) -> FormattedDocument:
+    def format(
+        self,
+        pages: List[Dict[str, Any]],
+        content_blocks: List[Dict[str, Any]] | None = None,
+    ) -> FormattedDocument:
         ...

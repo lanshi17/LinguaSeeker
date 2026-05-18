@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
+    ContentBlock,
     TranslationResult,
     SentenceRegion,
     SavedDocuments,
@@ -33,15 +34,58 @@ def _make_result(
 
 
 class TestDocumentPersistenceService:
-    def test_save_creates_markdown_files(self, tmp_path: Path):
+    def test_save_creates_json_files(self, tmp_path: Path):
         service = DocumentPersistenceService()
         result = _make_result()
         saved = service.save(result, output_dir=str(tmp_path), doc_id="doc001")
 
-        assert saved.original_md_path.exists()
-        assert saved.translated_md_path.exists()
-        assert saved.original_md_path.read_text(encoding="utf-8") == "原始文本内容"
-        assert saved.translated_md_path.read_text(encoding="utf-8") == "Original text content"
+        assert saved.original_json_path.exists()
+        assert saved.translated_json_path.exists()
+
+        original = json.loads(saved.original_json_path.read_text(encoding="utf-8"))
+        assert original["metadata"]["doc_id"] == "doc001"
+        assert original["metadata"]["source_language"] == "zh"
+        assert "blocks" in original
+
+        translated = json.loads(saved.translated_json_path.read_text(encoding="utf-8"))
+        assert translated["metadata"]["doc_id"] == "doc001"
+        assert translated["metadata"]["terminology_map"] == {"基因": "gene"}
+        assert "blocks" in translated
+
+    def test_save_json_with_populated_blocks(self, tmp_path: Path):
+        service = DocumentPersistenceService()
+        result = TranslationResult(
+            formatted_original="Title. Body text.",
+            translated_english="Title. Body text.",
+            source_language="en",
+            terminology_map={},
+            translation_warnings=[],
+            sentences=[],
+            segments=[],
+            original_blocks=[
+                ContentBlock(type="title", text="Title", text_level=1, page_idx=0),
+                ContentBlock(type="text", text="Body text.", page_idx=0),
+            ],
+            translated_blocks=[
+                ContentBlock(type="title", text="Title", text_level=1, page_idx=0),
+                ContentBlock(type="text", text="Body text.", page_idx=0),
+            ],
+        )
+        saved = service.save(result, output_dir=str(tmp_path), doc_id="doc002")
+
+        original = json.loads(saved.original_json_path.read_text(encoding="utf-8"))
+        assert original["metadata"]["block_count"] == 2
+        assert original["blocks"][0]["type"] == "title"
+        assert original["blocks"][0]["text"] == "Title"
+        assert original["blocks"][0]["text_level"] == 1
+        assert original["blocks"][1]["type"] == "text"
+
+        translated = json.loads(saved.translated_json_path.read_text(encoding="utf-8"))
+        assert translated["metadata"]["block_count"] == 2
+
+        meta = json.loads(saved.metadata_path.read_text(encoding="utf-8"))
+        assert meta["original_block_count"] == 2
+        assert meta["translated_block_count"] == 2
 
     def test_save_creates_metadata_json(self, tmp_path: Path):
         service = DocumentPersistenceService()
@@ -103,4 +147,4 @@ class TestDocumentPersistenceService:
         assert output.formatted_original == "原始文本内容"
         assert output.translated_english == "Original text content"
         assert output.output_dir == str(saved.output_dir)
-        assert output.original_md_path == str(saved.original_md_path)
+        assert output.original_json_path == str(saved.original_json_path)

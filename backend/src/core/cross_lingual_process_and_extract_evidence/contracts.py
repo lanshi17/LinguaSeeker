@@ -26,6 +26,149 @@ class SentenceRegion:
         return self.end_offset - self.start_offset
 
 
+# ── Structured content blocks ────────────────────────────────────────────
+
+
+@dataclass
+class ContentBlock:
+    """A single content block following MinerU content_list.json format.
+
+    Preserves block-level document structure (titles, paragraphs, images,
+    tables, equations, etc.) with bbox coordinates for structured JSON output.
+    """
+
+    type: str  # text, title, image, table, equation, code, list, header, footer, etc.
+    page_idx: int = 0
+    bbox: list[int] = field(default_factory=list)  # [x0, y0, x1, y1] normalized 0-1000
+
+    # text / title fields
+    text: str = ""
+    text_level: int | None = None  # heading level for title type
+
+    # image fields
+    img_path: str = ""
+    content: str = ""  # image description content
+    image_caption: list[str] = field(default_factory=list)
+    image_footnote: list[str] = field(default_factory=list)
+    sub_type: str = ""  # visual sub-type for image/chart
+
+    # table fields
+    table_body: str = ""  # HTML table content
+    table_caption: list[str] = field(default_factory=list)
+    table_footnote: list[str] = field(default_factory=list)
+
+    # equation fields
+    text_format: str = ""  # "latex" for equations
+
+    # code fields
+    code_body: str = ""
+    code_caption: list[str] = field(default_factory=list)
+    code_sub_type: str = ""  # "code" or "algorithm"
+
+    # list fields
+    list_sub_type: str = ""  # "text" or "ref_text"
+    list_items: list[str] = field(default_factory=list)
+
+    # chart fields
+    chart_caption: list[str] = field(default_factory=list)
+    chart_footnote: list[str] = field(default_factory=list)
+
+    # header/footer/page_number/aside_text/page_footnote
+    # uses `text` field above
+
+    def to_dict(self) -> dict[str, Any]:  # noqa: dict-return — MinerU serialization format
+        """Serialize to MinerU content_list.json compatible format."""
+        d: dict[str, Any] = {
+            "type": self.type,
+            "page_idx": self.page_idx,
+        }
+        if self.bbox:
+            d["bbox"] = self.bbox
+
+        if self.type in ("text", "title"):
+            d["text"] = self.text
+            if self.text_level is not None:
+                d["text_level"] = self.text_level
+        elif self.type == "image":
+            if self.img_path:
+                d["img_path"] = self.img_path
+            if self.content:
+                d["content"] = self.content
+            if self.image_caption:
+                d["image_caption"] = self.image_caption
+            if self.image_footnote:
+                d["image_footnote"] = self.image_footnote
+            if self.sub_type:
+                d["sub_type"] = self.sub_type
+        elif self.type == "table":
+            if self.text:
+                d["text"] = self.text
+            if self.img_path:
+                d["img_path"] = self.img_path
+            d["table_body"] = self.table_body
+            if self.table_caption:
+                d["table_caption"] = self.table_caption
+            if self.table_footnote:
+                d["table_footnote"] = self.table_footnote
+        elif self.type == "equation":
+            d["text"] = self.text
+            d["text_format"] = self.text_format
+        elif self.type == "chart":
+            if self.img_path:
+                d["img_path"] = self.img_path
+            if self.content:
+                d["content"] = self.content
+            if self.chart_caption:
+                d["chart_caption"] = self.chart_caption
+            if self.chart_footnote:
+                d["chart_footnote"] = self.chart_footnote
+            if self.sub_type:
+                d["sub_type"] = self.sub_type
+        elif self.type == "code":
+            d["code_body"] = self.code_body
+            if self.code_caption:
+                d["code_caption"] = self.code_caption
+            if self.code_sub_type:
+                d["sub_type"] = self.code_sub_type
+        elif self.type == "list":
+            if self.list_sub_type:
+                d["sub_type"] = self.list_sub_type
+            if self.list_items:
+                d["list_items"] = self.list_items
+        elif self.type in ("header", "footer", "page_number", "aside_text", "page_footnote"):
+            d["text"] = self.text
+
+        return d
+
+    @classmethod
+    def from_mineru_block(cls, block: dict[str, Any]) -> ContentBlock:
+        """Create from a MinerU content_list.json block dict."""
+        block_type = block.get("type", "text")
+        return cls(
+            type=block_type,
+            page_idx=block.get("page_idx", 0),
+            bbox=block.get("bbox", []),
+            text=block.get("text", ""),
+            text_level=block.get("text_level"),
+            img_path=block.get("img_path", ""),
+            content=block.get("content", ""),
+            image_caption=block.get("image_caption", []),
+            image_footnote=block.get("image_footnote", []),
+            sub_type=block.get("sub_type", "") if block_type in ("image", "chart") else "",
+            table_body=block.get("table_body", ""),
+            table_caption=block.get("table_caption", []),
+            table_footnote=block.get("table_footnote", []),
+            text_format=block.get("text_format", ""),
+            code_body=block.get("code_body", ""),
+            code_caption=block.get("code_caption", []),
+            code_sub_type=block.get("sub_type", "") if block_type == "code" else "",
+            list_sub_type=block.get("sub_type", "") if block_type == "list" else "",
+            list_items=block.get("list_items", []),
+            chart_caption=block.get("chart_caption", []),
+            chart_footnote=block.get("chart_footnote", []),
+        )
+
+
 # ── Character drift tracking ─────────────────────────────────────────────
 
 
@@ -164,6 +307,7 @@ class FormattedDocument:
     source_language: str = ""
     metadata: Dict[str, Any] = field(default_factory=dict)
     raw_markdown: str = ""
+    original_blocks: List[ContentBlock] = field(default_factory=list)
 
     @classmethod
     def from_pages(
@@ -208,6 +352,8 @@ class TranslationResult:
     translation_warnings: List[str]
     sentences: List[SentenceRegion]
     segments: List[TranslationSegment]
+    original_blocks: List[ContentBlock] = field(default_factory=list)
+    translated_blocks: List[ContentBlock] = field(default_factory=list)
 
 
 # ── Persistence output ─────────────────────────────────────────────────
@@ -217,8 +363,8 @@ class TranslationResult:
 class SavedDocuments:
     """Result of persisting cross-lingual documents to storage."""
 
-    original_md_path: Path
-    translated_md_path: Path
+    original_json_path: Path
+    translated_json_path: Path
     metadata_path: Path
     image_dir: Path
     image_paths: list[Path]
@@ -239,8 +385,8 @@ class CrossLingualOutput(BaseModel):
     terminology_map: Dict[str, str]
     translation_warnings: list[str]
     output_dir: str
-    original_md_path: str
-    translated_md_path: str
+    original_json_path: str
+    translated_json_path: str
     image_paths: list[str]
 
 
@@ -262,3 +408,4 @@ class PipelineState(BaseModel):
     needs_translation: bool = True
     translation_result: Optional[TranslationResult] = None
     image_paths: list[str] = Field(default_factory=list)
+    content_blocks: List[Dict[str, Any]] = Field(default_factory=list)

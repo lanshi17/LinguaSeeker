@@ -96,7 +96,7 @@ def test_translation_service_save(tmp_path):
     assert output.formatted_original == "原始文本"
     assert output.translated_english == "Original text"
     assert output.output_dir.startswith(str(tmp_path))
-    assert output.original_md_path.endswith("original.md")
+    assert output.original_json_path.endswith("original.json")
 
 
 def test_translation_service_save_with_images(tmp_path):

@@ -14,6 +14,7 @@ from pydantic import SecretStr
 
 from ...config_context import TranslationConfigContext
 from ...contracts import (
+    ContentBlock,
     FormattedDocument,
     SegmentDrift,
     TranslationResult,
@@ -513,6 +514,94 @@ class MultiStageTranslator(BaseTranslator):
         # Return structure_plan="" for backward compatibility with BaseTranslator
         return terminology_map, "", "", translated, source_segments, translated_parts, warnings
 
+    @staticmethod
+    def _find_translated_text_for_block(
+        block: ContentBlock,
+        segments: List[TranslationSegment],
+    ) -> str:
+        """Find translated text for a text/title block using segment alignment.
+
+        Searches segments whose source_text overlaps with the block's text,
+        then concatenates their translations.
+        """
+        block_text = block.text.strip()
+        if not block_text:
+            return ""
+
+        matching_parts: list[str] = []
+        for seg in segments:
+            src = seg.source_text.strip()
+            if not src:
+                continue
+            # Check if segment source overlaps with block text
+            # Use narrower search window to reduce false positives
+            src_start = src[:max(len(block_text) * 2, 100)]
+            if src in block_text or block_text in src_start:
+                matching_parts.append(seg.translated_text)
+
+        if matching_parts:
+            return "\n\n".join(matching_parts)
+
+        # Fallback: try to find a segment that starts with similar text
+        block_start = block_text[:80]
+        for seg in segments:
+            if seg.source_text.strip()[:80] == block_start:
+                return seg.translated_text
+
+        # Last resort: return empty (block will have empty text)
+        return ""
+
+    @staticmethod
+    def _build_translated_blocks(
+        original_blocks: List[ContentBlock],
+        segments: List[TranslationSegment],
+    ) -> List[ContentBlock]:
+        """Map translated text back to original block structure.
+
+        For text/title blocks, uses segment alignment to find the translated
+        content. For non-text blocks (image, table, etc.), copies the original
+        block as-is.
+        """
+        translated_blocks: list[ContentBlock] = []
+        for block in original_blocks:
+            if block.type in ("text", "title"):
+                new_text = MultiStageTranslator._find_translated_text_for_block(
+                    block, segments,
+                )
+                new_block = ContentBlock(
+                    type=block.type,
+                    page_idx=block.page_idx,
+                    bbox=block.bbox,
+                    text=new_text,
+                    text_level=block.text_level,
+                )
+            else:
+                # Non-text blocks: copy as-is
+                new_block = ContentBlock(
+                    type=block.type,
+                    page_idx=block.page_idx,
+                    bbox=block.bbox,
+                    text=block.text,
+                    img_path=block.img_path,
+                    content=block.content,
+                    image_caption=list(block.image_caption),
+                    image_footnote=list(block.image_footnote),
+                    sub_type=block.sub_type,
+                    table_body=block.table_body,
+                    table_caption=list(block.table_caption),
+                    table_footnote=list(block.table_footnote),
+                    text_format=block.text_format,
+                    code_body=block.code_body,
+                    code_caption=list(block.code_caption),
+                    code_sub_type=block.code_sub_type,
+                    list_sub_type=block.list_sub_type,
+                    list_items=list(block.list_items),
+                    chart_caption=list(block.chart_caption),
+                    chart_footnote=list(block.chart_footnote),
+                )
+            translated_blocks.append(new_block)
+        return translated_blocks
+
     def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
         terminology_map, _structure_plan, _draft, translated, source_segments, translated_parts, warnings = (
             self.run_pipeline(formatted)
@@ -533,12 +622,20 @@ class MultiStageTranslator(BaseTranslator):
                 source_bbox=src_bbox,
             ))
             translated_offset += len(tr_text) + 2  # +2 for "\n\n" joiner
+
+        # Build translated blocks by mapping translation back to block structure
+        translated_blocks = self._build_translated_blocks(
+            formatted.original_blocks, tr_segments,
+        )
+
         return TranslationResult(
             formatted_original=formatted.formatted_markdown,
             translated_english=translated,
             source_language=formatted.source_language or "unknown",
             terminology_map=terminology_map, translation_warnings=warnings,
             sentences=formatted.sentences, segments=tr_segments,
+            original_blocks=formatted.original_blocks,
+            translated_blocks=translated_blocks,
         )
 
     @staticmethod

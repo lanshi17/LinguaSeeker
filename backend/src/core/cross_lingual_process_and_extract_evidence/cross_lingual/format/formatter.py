@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 from loguru import logger
 
 from ...contracts import (
+    ContentBlock,
     FormattedDocument,
     SentenceDrift,
     SentenceRegion,
@@ -172,6 +173,7 @@ def compute_format_drift(
 def _format_markdown(
     pages: List[Dict[str, Any]],
     raw_markdown: str = "",
+    content_blocks: List[Dict[str, Any]] | None = None,
 ) -> FormattedDocument:
     """Normalize and format the source document.
 
@@ -193,11 +195,15 @@ def _format_markdown(
     page_offset_map = build_page_offset_map(pages)
     sentences = extract_sentences(formatted, page_offset_map)
 
+    # Build structured blocks from MinerU content_list
+    blocks = [ContentBlock.from_mineru_block(b) for b in (content_blocks or [])]
+
     logger.info(
-        "Formatted document: {} chars, {} sentences, {} pages",
+        "Formatted document: {} chars, {} sentences, {} pages, {} blocks",
         len(formatted),
         len(sentences),
         len(pages),
+        len(blocks),
     )
 
     return FormattedDocument(
@@ -205,14 +211,19 @@ def _format_markdown(
         sentences=sentences,
         metadata={"page_count": len(pages)},
         raw_markdown=raw_copy,
+        original_blocks=blocks,
     )
 
 
 class MarkdownFormatter(BaseFormatter):
     """Concrete formatter implementing the BaseFormatter interface."""
 
-    def format(self, pages: List[Dict[str, Any]]) -> FormattedDocument:
-        return _format_markdown(pages)
+    def format(
+        self,
+        pages: List[Dict[str, Any]],
+        content_blocks: List[Dict[str, Any]] | None = None,
+    ) -> FormattedDocument:
+        return _format_markdown(pages, content_blocks=content_blocks)
 
     def compute_drift(
         self,
