@@ -29,6 +29,7 @@ from .prompts import (
     get_translate_prompt,
 )
 from .validator import (
+    _is_terminology_echo,
     strip_inline_artifacts,
     strip_prompt_artifacts,
     strip_prompt_echo,
@@ -351,13 +352,54 @@ class MultiStageTranslator(BaseTranslator):
 
         for idx, (block_idx, block) in enumerate(non_empty, start=1):
             source_texts.append(block.text)
+
+            # Strip 【关键词】 prefix before translation, re-add after
+            kw_prefix = ""
+            block_text = block.text
+            kw_match = re.match(r"^【[^】]+】\s*", block_text)
+            if kw_match:
+                kw_prefix = kw_match.group(0)
+                block_text = block_text[kw_match.end():]
+
             translated = self._translate_one_segment(
-                block.text, terminology, idx, len(non_empty),
+                block_text, terminology, idx, len(non_empty),
                 system_prompt=system_prompt,
             )
             translated = strip_prompt_echo(translated)
             translated = strip_inline_artifacts(translated)
             translated = strip_prompt_artifacts(translated)
+
+            # Detect terminology echo (LLM returned terminology map instead of translation)
+            if _is_terminology_echo(translated):
+                logger.warning(
+                    "Block {}/{}: LLM echoed terminology map, retrying with explicit instruction",
+                    idx, len(non_empty),
+                )
+                explicit_prompt = (
+                    f"Translate this text to English. Output ONLY the translation, "
+                    f"no explanations or terminology lists:\n{block_text}"
+                )
+                translated = self._invoke_with_retry(
+                    explicit_prompt, f"translate/{idx}/retry",
+                )
+                translated = strip_prompt_echo(translated)
+                translated = strip_inline_artifacts(translated)
+                translated = strip_prompt_artifacts(translated)
+
+            # Re-add stripped prefix (translated if it contained CJK)
+            if kw_prefix:
+                # Translate the bracket prefix itself
+                prefix_clean = kw_prefix.strip()
+                if _CJK_RE.search(prefix_clean):
+                    prefix_tr = self._invoke_with_retry(
+                        f"Translate this label to English (short, 2-5 words): {prefix_clean}",
+                        f"translate/prefix/{idx}",
+                    )
+                    prefix_tr = strip_inline_artifacts(prefix_tr).strip()
+                    translated = f"{prefix_tr} {translated}" if translated else prefix_tr
+                else:
+                    translated = f"{kw_prefix}{translated}"
+
             translated_texts.append(translated)
             logger.debug(
                 "Block {}/{} translated ({} -> {} chars)",
@@ -468,9 +510,19 @@ class MultiStageTranslator(BaseTranslator):
             prev_context=prev_context, next_context=next_context,
         )
         stage = f"translate/{idx}"
+        last_error = ""
 
         for attempt in range(1, self._MAX_SEGMENT_RETRIES + 1):
-            translated = self._invoke_with_retry(prompt, stage, system_prompt)
+            # On retry, use a stronger prompt if previous attempt had CJK issues
+            if attempt > 1 and "source_language_content" in str(last_error):
+                retry_prompt = (
+                    f"Translate the following text from Chinese to English. "
+                    f"Output ONLY the English translation. "
+                    f"Do NOT keep any Chinese characters.\n\n{source_segment}"
+                )
+                translated = self._invoke_with_retry(retry_prompt, stage, system_prompt)
+            else:
+                translated = self._invoke_with_retry(prompt, stage, system_prompt)
 
             # Strip prompt artifacts echoed back by the LLM
             translated = strip_prompt_artifacts(translated)
@@ -485,6 +537,7 @@ class MultiStageTranslator(BaseTranslator):
                 validate_segment(source_segment, translated)
                 return translated
             except ValueError as exc:
+                last_error = str(exc)
                 logger.warning(
                     "Segment {}/{} attempt {}/{} validation failed: {}",
                     idx, total, attempt, self._MAX_SEGMENT_RETRIES, exc,
@@ -619,7 +672,6 @@ class MultiStageTranslator(BaseTranslator):
                 marked text (non-empty text/title blocks).
         """
         sep = MultiStageTranslator._BLOCK_SEP
-        translated_pieces: list[str] = []
         idx_map: dict[int, str] = {}
 
         # Try delimiter-based split first
