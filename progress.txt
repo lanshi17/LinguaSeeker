@@ -44,3 +44,6 @@
 [2026-05-16] Updated parse_document module README — fixed parse_local_files delegation documentation, added internal TypedDicts, content list parsing details, batch upload validation constraints, file layout section, and orchestrator extension guide [done]
 [2026-05-16] Doc organization: archived 5 completed plans (evidence-extraction x2, fix-translation-quality, fix-translation-token-limit, cross-lingual-persistence), moved e2e plan to planned/, removed stale duplicate mineru-local-batch-upload [completed]
 [2026-05-18] Replace .md persistence with structured JSON (original.json, translated.json, metadata.json) preserving MinerU content_list block structure through full pipeline [DONE]
+[2026-05-18] Database architecture design drafted and saved to docs/plans/2026-05-18-database-design.md [completed]
+[2026-05-18] Database implementation plan drafted and saved to docs/plans/2026-05-18-database-implementation-plan.md [completed]
+[2026-05-18] Incorporated DBA review feedback into database implementation plan [completed]

@@ -1,14 +1,15 @@
 # parse_document
 
-> PDF to structured Markdown conversion using MinerU VLM — remote API with local fallback.
+> PDF to structured Markdown conversion using MinerU — remote cloud API with local VLM fallback, plus batch local-file upload support.
 
 ## Quick Start
 
 ```python
 from src.core.ingest_and_digitize_data.parse_document import create_parse_service
 
-service = create_parse_service()  # Uses global config
+service = create_parse_service()  # Reads from global config (ParseDocumentConfig)
 
+# Single remote URL
 result = await service.parse("https://example.com/paper.pdf")
 print(result.full_markdown)        # Full document as Markdown
 print(result.metadata.total_pages) # Page count
@@ -19,8 +20,6 @@ print(len(result.images))          # Number of extracted images
 ### Local File Batch Upload
 
 ```python
-from src.core.ingest_and_digitize_data.parse_document import create_parse_service
-
 service = create_parse_service()
 
 result = await service.parse_local_files(
@@ -40,16 +39,54 @@ print(result.failed_files)
 
 ```
 caller
-  -> create_parse_service()              # factory (reads ParseDocumentConfig)
-       -> ParseDocumentService           # public facade
-            -> DocumentParseOrchestrator  # remote-first fallback
-                 -> MinerURemoteParser    # MinerU cloud API (rust_io.net)
-                 -> MinerULocalParser     # model-server VLM (local)
-            -> rust_io.files             # file I/O (write MD, dedup)
+  └─ create_parse_service()                # __init__.py — factory, reads ParseDocumentConfig
+       └─ ParseDocumentService             # service.py — public facade
+            └─ DocumentParseOrchestrator   # orchestrator.py — remote-first fallback
+                 ├─ MinerURemoteParser     # remote/parser.py — thin wrapper (name="mineru-remote")
+                 │    └─ MinerUParser      # mineru_parser.py — cloud API lifecycle
+                 └─ MinerULocalParser      # local/parser.py — model-server VLM (name="mineru-local")
 
-Data flow:
-  PDF URL -> [Remote API / Local VLM] -> ParseResult -> SavedFiles (output.md + metadata.json + images/)
-  Local files -> rust_io.net upload URLs -> MinerU batch polling -> result zips -> ParseResult per completed file
+Common layer:
+  common/converters.py — block_to_markdown(), html_table_to_markdown(), html_table_to_structured()
+  common/parsers.py    — TableParser(HTMLParser)
+
+Data flow (remote):
+  PDF URL → [MinerU cloud create → poll → download zip] → _parse_extracted_content()
+    → 4-tier fallback: content_list.json → layout.json → per-page .md → full.md
+    → _MinerURawResult → _build_result() → ParseResult
+
+Data flow (local):
+  PDF URL → pdf_to_images(PyMuPDF) → image_to_base64() per page
+    → POST /v1/chat/completions (model-server) → _parse_page_response() → ParseResult
+
+Data flow (batch):
+  Local files → mineru_upload_local_files() → batch_id
+    → poll_batch_until_terminal() → download & parse each completed zip
+    → MinerULocalBatchParseResult
+```
+
+### File Layout
+
+```
+parse_document/
+├── __init__.py           # Public API exports, create_parse_service() factory
+├── base.py               # ParserStrategy(ABC) — abstract base
+├── contracts.py          # Pydantic models & dataclasses — all data contracts
+├── exceptions.py         # ParseDocumentError hierarchy
+├── mineru_parser.py      # MinerUParser — full MinerU cloud API lifecycle + batch
+├── orchestrator.py       # DocumentParseOrchestrator — remote-first fallback
+├── service.py            # ParseDocumentService — facade with save/dedup/batch methods
+├── common/
+│   ├── __init__.py       # Re-exports: block_to_markdown, html_table_to_*, TableParser
+│   ├── converters.py     # Markdown conversion from content blocks & HTML tables
+│   └── parsers.py        # TableParser(HTMLParser) — extracts <th>/<td> rows
+├── local/
+│   ├── __init__.py
+│   ├── helpers.py        # pdf_to_images() (PyMuPDF), image_to_base64() (PIL)
+│   └── parser.py         # MinerULocalParser — page-by-page VLM extraction
+└── remote/
+    ├── __init__.py
+    └── parser.py         # MinerURemoteParser — thin wrapper (name="mineru-remote")
 ```
 
 ## Public API
@@ -75,26 +112,39 @@ service = create_parse_service(config=config)
 
 ### ParseDocumentService
 
+High-level facade. Constructed with a `ParserStrategy` (typically `DocumentParseOrchestrator`).
+
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `__init__` | `(orchestrator: ParserStrategy)` | Create service with orchestrator |
 | `parse` | `async (pdf_path: str) -> ParseResult` | Parse PDF URL, return structured result |
-| `save` | `async (result: ParseResult, output_dir: str) -> SavedFiles` | Save result to files (MD + metadata + images) |
-| `dedup` | `async (file_paths: list[str], known_hashes: list[str]) -> list[DedupResult]` | SHA-256 dedup check |
+| `parse_local_files` | `async (file_paths: list[str], **kwargs) -> MinerULocalBatchParseResult` | Upload local files via MinerU batch API, poll, parse completed zips |
+| `parse_local_files_and_save` | `async (file_paths: list[str], output_dir: str, **kwargs) -> MinerULocalBatchSaveResult` | Batch parse + save each result under `output_dir/<file_stem>/` |
+| `save` | `async (result: ParseResult, output_dir: str) -> SavedFiles` | Persist result to files (MD + metadata.json + images/) |
+| `dedup` | `async (file_paths: list[str], known_hashes: list[str]) -> list[DedupResult]` | SHA-256 dedup via `rust_io.files.check_duplicate()` |
 | `parse_and_save` | `async (pdf_path: str, output_dir: str) -> ParseAndSaveResult` | Parse + save combined |
-| `parse_local_files` | `async (file_paths: list[str], **kwargs) -> MinerULocalBatchParseResult` | Upload local files with MinerU batch API, poll results, parse completed zips |
-| `parse_local_files_and_save` | `async (file_paths: list[str], output_dir: str, **kwargs) -> MinerULocalBatchSaveResult` | Batch parse local files and save each completed result under `output_dir/<file_stem>/` |
 
-### ParserStrategy
+### ParserStrategy (ABC)
 
-Abstract base for parser implementations. Extend this to add new backends.
+Abstract base for all parser implementations. Extend this to add new backends.
 
 | Member | Signature | Description |
 |--------|-----------|-------------|
-| `name` | `-> str` (property) | Unique parser identifier (`"mineru-remote"`, `"mineru-local"`) |
-| `parse` | `async (pdf_path: str) -> ParseResult` | Parse a PDF and return structured results |
+| `name` | `-> str` (property, abstract) | Unique parser identifier (`"mineru-remote"`, `"mineru-local"`) |
+| `parse` | `async (pdf_path: str) -> ParseResult` (abstract) | Parse a PDF and return structured results |
 
-### MinerURemoteParser
+### DocumentParseOrchestrator
+
+```python
+DocumentParseOrchestrator(remote: ParserStrategy, local: ParserStrategy)
+```
+
+Implements `ParserStrategy` with `name = "orchestrator"`. Tries `remote.parse()` first; on any exception, falls back to `local.parse()`. Raises `ParserExhaustedError(errors={...})` if both fail, carrying both exception objects keyed by parser name.
+
+### MinerURemoteParser → MinerUParser
+
+**Location**: `remote/parser.py` (wrapper) + `mineru_parser.py` (implementation).
+
+`MinerURemoteParser` is a thin subclass of `MinerUParser` with `name = "mineru-remote"`. The parent `MinerUParser` handles the full MinerU cloud API lifecycle.
 
 ```python
 MinerURemoteParser(
@@ -104,9 +154,31 @@ MinerURemoteParser(
 )
 ```
 
-Thin wrapper over `MinerUParser` (internal class not in `__all__`). The parent handles the full MinerU cloud API lifecycle: task creation, polling, zip download, content extraction, and image collection. Extends `ParserStrategy` with `name = "mineru-remote"`.
+**Single-file parsing** (`MinerUParser.parse(pdf_path)`):
+1. `_create_task(pdf_url)` → POSTs via `rust_io.net.mineru_create_task()` → `task_id`
+2. `_poll_result(task_id)` → polls `rust_io.net.mineru_get_result()` every `poll_interval` seconds (up to `max_poll_attempts`). Accepts states: `pending`/`running`/`converting` → `done` (returns `full_zip_url`), `failed` (raises `MinerUAPIError`). Times out → `MinerUTimeoutError`.
+3. `_download_and_parse_zip(zip_url)` → downloads zip via `httpx`, extracts to temp directory, applies **4-tier content extraction fallback**:
+
+| Priority | Format | Fallback condition |
+|----------|--------|--------------------|
+| 1 | `*_content_list.json` | New MinerU format with structured blocks (text/image/table) |
+| 2 | `layout.json` with `pdf_info` | Legacy MinerU format with per-page content |
+| 3 | Individual `.md` files | Markdown-per-page format |
+| 4 | `full.md` only | Single markdown → treated as 1-page document |
+
+4. `_build_result(raw_data)` → maps `_MinerURawResult` → `ParseResult` with `DocumentMetadata`, `PageContent`, images, and raw `content_blocks`.
+
+**Local-file batch** (`MinerUParser.parse_local_files(file_paths, ...)`) — the full lifecycle:
+1. `upload_local_files()` → `rust_io.net.mineru_upload_local_files()` + PUT to pre-signed URLs → `MinerULocalBatchUploadResult`
+2. `poll_batch_until_terminal(batch_id)` → loops `poll_batch_result()` until all files terminal
+3. For each `done` file: downloads & parses zip via the same `_download_and_parse_zip()` path
+4. Returns `MinerULocalBatchParseResult` with `results: dict[str, ParseResult]`
+
+Batch constraints: 1–50 files, all local paths must exist, optional `data_ids` must match length.
 
 ### MinerULocalParser
+
+**Location**: `local/parser.py`.
 
 ```python
 MinerULocalParser(
@@ -117,71 +189,80 @@ MinerULocalParser(
 )
 ```
 
-Converts each PDF page to a PIL Image via PyMuPDF (`fitz`), then sends it as a base64-encoded multimodal message to the model-server's `/v1/chat/completions` endpoint. Extends `ParserStrategy` with `name = "mineru-local"`.
+Page-by-page extraction via model-server VLM:
+1. **`pdf_to_images(pdf_path, dpi)`** — PyMuPDF PDF → PIL Images (runs in thread pool via `asyncio.to_thread`)
+2. **`image_to_base64(image)`** — PIL Image → base64 PNG string
+3. **`_extract_page(client, page_number, image)`** — POSTs `{"model": …, "messages": [{"role": "user", "content": [{"type": "text", …}, {"type": "image_url", …}]}]}` to `{base_url}/v1/chat/completions`
+4. Results aggregated into `ParseResult` with `full_markdown` joined by `"\n\n"`
 
-### DocumentMetadata
+**Response format handling** in `_parse_page_response`:
+- **VLMExtractResponse**: `{"full_markdown": "…", "pages": [{"markdown": "…", "figures": […], "tables": […]}]}`
+- **OpenAI chat completions**: `{"choices": [{"message": {"content": "…"}}]}` (fallback, no figure/table extraction)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `total_pages` | `int` (>= 1) | Total number of pages |
-| `title` | `str \| None` | Document title |
-| `authors` | `list[str]` | Author names |
-| `abstract_text` | `str \| None` | Abstract text |
+### Data Contracts
 
-### PageContent
+All contracts defined in `contracts.py`.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `page_number` | `int` (>= 1) | 1-indexed page number |
-| `markdown` | `str` | Page content as Markdown |
-| `figures` | `list[FigurePosition]` | Figure positions on this page |
-| `tables` | `list[TableStructure]` | Table structures on this page |
-
-### FigurePosition
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `page` | `int` (>= 1) | Page number |
-| `index` | `int` (>= 1) | Figure index on this page |
-| `caption` | `str \| None` | Figure caption text |
-| `img_path` | `str \| None` | Relative path to image file within zip (e.g. `"images/fig1.jpg"`) |
-
-### TableStructure
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `page` | `int` (>= 1) | Page number |
-| `index` | `int` (>= 1) | Table index on this page |
-| `headers` | `list[str]` | Column header names |
-| `rows` | `list[list[str]]` | Data rows (all values are strings) |
-
-### ParseResult
+#### ParseResult
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `metadata` | `DocumentMetadata` | Page count, title, authors, abstract |
 | `pages` | `list[PageContent]` | Per-page markdown, figures, tables |
-| `full_markdown` | `str` | Auto-derived from `pages` if not provided |
+| `full_markdown` | `str` | Auto-derived from `"\n\n".join(p.markdown for p in pages)` if not provided |
 | `parser_used` | `ParserName` | `"mineru-remote"`, `"mineru-local"`, or `"unknown"` |
 | `images` | `dict[str, bytes]` | Image files keyed by relative path (e.g. `"images/fig1.jpg"`) |
+| `content_blocks` | `list[dict[str, Any]]` | Raw MinerU `content_list` blocks for structured persistence |
 
-### ParserName
+`full_markdown` is derived via a Pydantic `model_validator(mode="after")` — an explicit value takes precedence.
 
-```python
-ParserName = Literal["mineru-remote", "mineru-local", "unknown"]
-```
+#### DocumentMetadata
 
-### SavedFiles
+| Field | Type | Description |
+|-------|------|-------------|
+| `total_pages` | `int` (≥1) | Total number of pages |
+| `title` | `str \| None` | Document title |
+| `authors` | `list[str]` | Author names |
+| `abstract_text` | `str \| None` | Abstract text |
+
+#### PageContent
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `page_number` | `int` (≥1) | 1-indexed page number |
+| `markdown` | `str` | Page content as Markdown |
+| `figures` | `list[FigurePosition]` | Figure positions on this page |
+| `tables` | `list[TableStructure]` | Table structures on this page |
+
+#### FigurePosition
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `page` | `int` (≥1) | Page number |
+| `index` | `int` (≥1) | Figure index on this page |
+| `caption` | `str \| None` | Figure caption text |
+| `img_path` | `str \| None` | Relative path to image (e.g. `"images/fig1.jpg"`) |
+
+#### TableStructure
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `page` | `int` (≥1) | Page number |
+| `index` | `int` (≥1) | Table index on this page |
+| `headers` | `list[str]` | Column header names |
+| `rows` | `list[list[str]]` | Data rows (all values as strings) |
+
+#### SavedFiles
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `md_path` | `Path` | Path to output.md |
 | `metadata_path` | `Path` | Path to metadata.json |
 | `output_dir` | `Path` | Output directory |
-| `created_at` | `datetime` | Timestamp (timezone-aware UTC) |
-| `images_dir` | `Path \| None` | Path to images/ directory (only present when images were extracted) |
+| `created_at` | `datetime` | Timestamp (UTC, timezone-aware) |
+| `images_dir` | `Path \| None` | Path to images/ (present when images extracted) |
 
-### DedupResult
+#### DedupResult
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -189,20 +270,27 @@ ParserName = Literal["mineru-remote", "mineru-local", "unknown"]
 | `hash` | `str` | SHA-256 content hash |
 | `is_duplicate` | `bool` | Whether hash matches known_hashes |
 
-### ParseAndSaveResult
+#### ParseAndSaveResult
 
 Extends `ParseResult` with `saved_files: SavedFiles | None`.
 
-### MinerU Local Batch Contracts
+#### MinerU Local Batch Contracts
 
 | Contract | Description |
 |----------|-------------|
-| `MinerULocalBatchOptions` | Shared upload options: model version, OCR, formula/table toggles, language, data IDs, callback/seed, extra formats, timeout/proxy |
-| `MinerULocalBatchUploadResult` | Upload response with `batch_id`, local paths, pre-signed upload URLs, trace ID, and message |
-| `MinerUBatchStatus` | Current batch status from `extract-results/batch/{batch_id}` |
-| `MinerUBatchFileResult` | Per-file state, error message, data ID, `full_zip_url`, and progress |
-| `MinerULocalBatchParseResult` | Completed batch parse output keyed by MinerU file name, with `failed_files` helper |
+| `MinerULocalBatchOptions` | Upload options: model version, OCR, formula/table toggles, language, data IDs, callback/seed, extra formats, timeout/proxy |
+| `MinerULocalBatchUploadResult` | Upload response: `batch_id`, local paths, pre-signed upload URLs, trace ID |
+| `MinerUBatchExtractProgress` | Per-file extraction progress (extracted/total pages, start time) |
+| `MinerUBatchFileResult` | Per-file state, error message, data ID, `full_zip_url`, progress. `is_terminal` = state in `{"done", "failed"}` |
+| `MinerUBatchStatus` | Full batch status: `batch_id`, `extract_result: list[MinerUBatchFileResult]`. `is_terminal` = all items terminal |
+| `MinerULocalBatchParseResult` | Completed batch: `batch_id`, `status`, `results: dict[str, ParseResult]`. `failed_files` property |
 | `MinerULocalBatchSaveResult` | Saved output paths for each completed batch file |
+
+#### ParserName
+
+```python
+ParserName = Literal["mineru-remote", "mineru-local", "unknown"]
+```
 
 ### Exceptions
 
@@ -215,62 +303,38 @@ Extends `ParseResult` with `saved_files: SavedFiles | None`.
 
 ## Internal Design
 
-### DocumentParseOrchestrator
+### Common Utilities
 
-Implements `ParserStrategy` interface. Tries remote parser first, falls back to local on any exception. Raises `ParserExhaustedError` if both fail, carrying both error objects in `errors`.
+**TableParser** (`common/parsers.py`):
+`HTMLParser` subclass that extracts `<th>` header rows and `<td>` data rows from HTML `<table>` markup. Tags `<th>` as `has_th = True` and builds `rows: list[list[str]]`.
 
-### MinerURemoteParser / MinerUParser
+**converters.py** exposes three utilities:
+- **`html_table_to_markdown(html)`** — Convert `<table>` → pipe-style Markdown. Pads rows to uniform column count.
+- **`html_table_to_structured(html)`** — Extract `(headers: list[str], rows: list[list[str]])` tuple. First row = headers, rest = data.
+- **`block_to_markdown(block)`** — Convert a `content_list` block dict to Markdown. Handles `"text"` (with optional `text_level` for heading), `"image"` (with caption + footnote), and `"table"` (with caption + HTML body → Markdown + footnote).
 
-`MinerURemoteParser` is a thin subclass of `MinerUParser` (internal class not in `__all__`). The parent handles the full MinerU cloud API lifecycle:
+### Remote Parser: Content Extraction Fallback
 
-1. **`_create_task(pdf_url)`** — POSTs to MinerU API via `rust_io.net.mineru_create_task()`, returns `task_id`
-2. **`_poll_result(task_id)`** — Polls `rust_io.net.mineru_get_result()` every `poll_interval` seconds (up to `max_poll_attempts`). Accepts states: `pending`, `running`, `converting` -> `done` (returns zip URL), `failed` (raises `MinerUAPIError`)
-3. **`_download_and_parse_zip(zip_url)`** — Downloads the result zip via `httpx`, extracts to temp directory, collects images via `_collect_images()`, then applies a **4-tier content extraction fallback**:
+`MinerUParser._parse_extracted_content()` discovers the best available format from a downloaded zip:
 
-| Priority | Format | Fallback condition |
-|----------|--------|--------------------|
-| 1 | `*_content_list.json` | New MinerU format with structured blocks (text/image/table) |
-| 2 | `layout.json` with `pdf_info` | Legacy MinerU format with page content |
-| 3 | Individual `.md` files | Markdown-per-page format |
-| 4 | `full.md` only | Single markdown file -> treated as 1-page document |
+1. **`*_content_list.json`** — Most feature-rich. Groups blocks by `page_idx`, converts text→Markdown via `block_to_markdown()`, extracts image captions and `img_path`, parses HTML tables via `html_table_to_structured()`. Returns per-page figures/tables.
+2. **`layout.json` with `pdf_info`** — Legacy format. Parses `pdf_info[n].page_content` per page. Also handles `"pages"` key as alternative.
+3. **Per-page `.md` files** — Sorted alphabetically, one page per file.
+4. **`full.md` only** — Single markdown → treated as 1-page document with no figure/table extraction.
 
-If none of these yield content, raises `MinerUAPIError`.
+If none yield content, raises `MinerUAPIError`.
 
-4. **`_collect_images(extract_dir)`** — Scans `images/` directory inside the extracted zip, reads all image files into memory as bytes keyed by relative path.
-5. **`_build_result(raw_data)`** — Maps internal `_MinerURawResult` -> public `ParseResult` with `DocumentMetadata`, `PageContent`, images, and `pages_from_raw()`.
+### Local Parser: Image Processing
 
-The `_parse_content_list_json` (priority 1) is the most feature-rich path: it groups content blocks by `page_idx`, converts text blocks to markdown via `block_to_markdown()`, extracts image captions and `img_path`, and parses HTML tables via `html_table_to_structured()`.
-
-#### Internal TypedDicts
-
-`_MinerUPageData` — per-page data container with `page_number`, `markdown`, `figures`, `tables`.
-
-`_MinerURawResult` — full extracted result with `state`, `total_pages`, `title`, `authors`, `abstract`, `pages`, `full_markdown`, and `images: dict[str, bytes]`.
-
-### MinerULocalParser
-
-Page-by-page extraction via model-server VLM:
-1. **`pdf_to_images(pdf_path, dpi)`** — PyMuPDF PDF-to-PIL conversion (runs in thread pool via `asyncio.to_thread`)
-2. **`image_to_base64(image)`** — PIL Image to base64 PNG
-3. **`_extract_page(client, page_number, image)`** — POSTs `{"model": ..., "messages": [{"role": "user", "content": [{"type": "text", ...}, {"type": "image_url", ...}]}]}` to `{base_url}/v1/chat/completions`
-4. Results aggregated into `ParseResult` with `full_markdown` joined by `"\n\n"`
-
-**Response format handling** in `_parse_page_response`:
-- **VLMExtractResponse**: `{"full_markdown": "...", "pages": [{"markdown": "...", "figures": [...], "tables": [...]}]}`
-- **OpenAI chat completions**: `{"choices": [{"message": {"content": "..."}}]}`
-
-The VLMExtractResponse path is preferred; OpenAI format is a fallback and does not include figure/table extraction.
+`MinerULocalParser` runs PDF-to-image conversion via `asyncio.to_thread` to avoid blocking the async event loop. Each page image is base64-encoded and sent as a multimodal chat completion request. Processing is strictly sequential (page 1 → page 2 → …).
 
 ### Full Markdown Auto-Derivation
 
-`ParseResult.full_markdown` is derived from `"\n\n".join(p.markdown for p in pages)` via a Pydantic `model_validator(mode="after")`. An explicit `full_markdown` value takes precedence over auto-derivation.
+`ParseResult` uses a Pydantic `model_validator(mode="after")` that computes `full_markdown = "\n\n".join(p.markdown for p in pages)` when `full_markdown` is empty and pages exist. Explicit values are preserved.
 
-### Common Utilities
+### Data Mapping
 
-- `TableParser(HTMLParser)` — HTML table parser that detects `<th>` header rows and `<td>` data rows
-- `html_table_to_markdown(html)` — Convert HTML `<table>` to pipe-style markdown table
-- `html_table_to_structured(html)` — Extract `(headers, rows)` tuple from HTML `<table>`
-- `block_to_markdown(block)` — Convert a `content_list` block dict to markdown based on `type` (`text`, `title`, `equation`, `image`, `table`)
+`pages_from_raw(pages_data: list[dict])` is the canonical function for converting raw dicts → `list[PageContent]`. New backends should produce dicts with keys: `page_number` (int, 1-indexed), `markdown` (str), `figures` (list of dicts with `index`, `caption`, `img_path`), `tables` (list of dicts with `index`, `headers`, `rows`).
 
 ## Usage Patterns
 
@@ -289,6 +353,9 @@ for page in result.pages:
 # Access extracted images
 for rel_path, img_bytes in result.images.items():
     print(f"  Image: {rel_path} ({len(img_bytes)} bytes)")
+
+# Access raw content blocks for structured persistence
+print(f"Content blocks: {len(result.content_blocks)}")
 ```
 
 ### Parse and save to files
@@ -300,7 +367,7 @@ result = await service.parse_and_save(
 )
 # result.saved_files.md_path       = /tmp/output/output.md
 # result.saved_files.metadata_path = /tmp/output/metadata.json
-# result.saved_files.images_dir    = /tmp/output/images/  (if images were extracted)
+# result.saved_files.images_dir    = /tmp/output/images/  (if images extracted)
 ```
 
 ### Batch parse local files and save results
@@ -320,7 +387,7 @@ for failed_file in batch.parse_result.failed_files:
     print(f"MinerU failed: {failed_file}")
 ```
 
-Batch parsing is a remote MinerU capability, so it is exposed through `MinerURemoteParser` and `ParseDocumentService`, not the local VLM parser. Completed files are parsed through the same zip extraction path as URL-based remote parsing; failed files remain visible in `MinerULocalBatchParseResult.status.extract_result`.
+Batch parsing is a remote MinerU capability exposed through `MinerUParser` and `ParseDocumentService`, not the local VLM parser. Completed files are parsed through the same zip extraction path as URL-based remote parsing.
 
 ### Direct local parser (bypass orchestrator)
 
@@ -381,16 +448,16 @@ for r in results:
            return "new-backend"
 
        async def parse(self, pdf_path: str) -> ParseResult:
-           # Implementation here
+           # Implementation here; use pages_from_raw() for consistency
            ...
    ```
 2. Register it in `create_parse_service()` inside `__init__.py`.
 3. Add configuration fields to `ParseDocumentConfig` in `src/core/config.py`.
-4. If the backend is a third alternative to remote/local, update `DocumentParseOrchestrator` to accept it.
+4. If the backend is a third alternative to remote/local, update `DocumentParseOrchestrator` to accept and try it.
 
 ### Modifying the orchestration strategy
 
-`DocumentParseOrchestrator` currently uses strict remote-first with local-only fallback. To change behavior:
+`DocumentParseOrchestrator` uses strict remote-first with local-only fallback. To change behavior:
 - **Local-first**: Swap the `try/except` blocks in `orchestrator.parse()`.
 - **Parallel**: Send to both simultaneously, take the first success via `asyncio.wait(return_when=FIRST_COMPLETED)`.
 - **Weighted retry**: Add a retry policy per parser before escalating.
@@ -406,13 +473,13 @@ All page-level data flows through `pages_from_raw()`, which expects dicts with k
     "tables": [{"index": int, "headers": [str, ...], "rows": [[str, ...], ...]}],
 }
 ```
-New backends should produce data in this shape; `pages_from_raw()` handles the `PageContent`/`FigurePosition`/`TableStructure` conversion.
+New backends should produce data in this shape; `pages_from_raw()` handles `PageContent`/`FigurePosition`/`TableStructure` conversion.
 
 ## Performance Notes
 
-- **Remote parser latency**: Task-based API with polling — typical turnaround is 30-300 seconds (2s poll interval x up to 150 attempts = 5 minutes max). Reducing `MINERU_REMOTE_POLL_INTERVAL` improves responsiveness at the cost of API rate limits.
-- **Local parser memory**: Each PDF page is rasterized to an in-memory PIL Image. For large documents (>100 pages), memory scales with page count x DPI. At 200 DPI, an A4 page is ~2.3 MP ~ 9 MB uncompressed. Lower `MINERU_LOCAL_DPI` to 150 or 100 for large documents.
-- **Local parser throughput**: Sequential page processing (one VLM call per page). A 10-page document at 120s timeout per page = up to 20 minutes worst case. The model-server timeout governs per-page ceiling.
+- **Remote parser latency**: Task-based API with polling — typical turnaround is 30–300 seconds (2s poll interval × up to 150 attempts = 5 minutes max). Reducing `MINERU_REMOTE_POLL_INTERVAL` improves responsiveness at the cost of API rate limits.
+- **Local parser memory**: Each PDF page is rasterized to an in-memory PIL Image. For large documents (>100 pages), memory scales with page count × DPI. At 200 DPI, an A4 page is ~2.3 MP ≈ 9 MB uncompressed. Lower `MINERU_LOCAL_DPI` to 150 or 100 for large documents.
+- **Local parser throughput**: Sequential page processing (one VLM call per page). A 10-page document at 120s timeout per page = up to 20 minutes worst case. The model-server timeout governs the per-page ceiling.
 - **Zip extraction**: Remote parser downloads the full result zip into memory (`response.content`). Large documents with many figures should monitor memory — extracted images are also held in `ParseResult.images` as raw bytes.
 - **SHA-256 dedup**: Computed in Rust via `rust_io.files.check_duplicate()` — I/O bound, not CPU bound.
 
@@ -420,9 +487,9 @@ New backends should produce data in this shape; `pages_from_raw()` handles the `
 
 | Dependency | Purpose |
 |------------|---------|
-| `httpx` | Async HTTP client for model-server and remote zip download |
-| `pymupdf` (fitz) | PDF-to-image conversion for local parser |
-| `Pillow` (PIL) | Image encoding for local parser |
+| `httpx` | Async HTTP client for model-server VLM calls and remote zip download |
+| `pymupdf` (fitz) | PDF-to-image conversion for local parser (`pdf_to_images`) |
+| `Pillow` (PIL) | Image encoding for local parser (`image_to_base64`) |
 | `pydantic` | Data contracts with validation (BaseModel) |
 | `loguru` | Structured logging |
 | `rust_io.files` | File I/O (`File.write`) and SHA-256 dedup (`check_duplicate`) |
@@ -430,7 +497,7 @@ New backends should produce data in this shape; `pages_from_raw()` handles the `
 
 ## Configuration
 
-Environment variables (loaded via `src.core.config.ParseDocumentConfig`):
+Environment variables loaded via `src.core.config.ParseDocumentConfig`:
 
 | Variable | Config field | Default |
 |----------|-------------|---------|

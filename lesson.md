@@ -74,3 +74,15 @@
 **Solution**: Removed the unused import without changing test behavior.
 
 **Prevention**: When a final lint command includes files outside the current feature diff, run the exact command early enough to catch pre-existing style drift before final checkpointing.
+
+## 2026-05-18: Progress log overwrite during documentation work
+
+**Problem**: While drafting the database design and implementation plan, `progress.txt` was briefly overwritten with a single new line instead of preserving the full project history.
+
+**Investigation**: Compared the working tree against `git show HEAD:progress.txt` and confirmed the file in the tree had collapsed to one entry.
+
+**Root cause**: The file was edited with an accidental whole-file replacement instead of an append-style update.
+
+**Solution**: Restored the full historical log contents and appended the new database planning entries at the end.
+
+**Prevention**: For append-only logs, always diff against `git show HEAD:<file>` before and after editing, and prefer targeted patch updates over whole-file replacement.
