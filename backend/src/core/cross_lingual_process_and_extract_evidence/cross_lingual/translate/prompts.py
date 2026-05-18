@@ -54,8 +54,10 @@ def get_system_prompt_generation_prompt(
         f"({source_language}).\n"
         "4. Include rules specific to the document's domain and structure "
         "(e.g. if it has tables, images, dosage data, genetic notation).\n"
-        "5. Be concise — under 500 words. No examples, no fluff.\n"
-        "6. Output ONLY the system prompt text. No wrapper, no explanation.\n\n"
+        "5. If the source contains «BLK» paragraph separators, preserve them "
+        "exactly in the translation — do not translate, remove, or modify them.\n"
+        "6. Be concise — under 500 words. No examples, no fluff.\n"
+        "7. Output ONLY the system prompt text. No wrapper, no explanation.\n\n"
         f"SOURCE LANGUAGE: {source_language}\n"
         f"DOCUMENT SAMPLE (first ~2000 chars):\n{markdown_sample[:2000]}"
     )
@@ -84,4 +86,9 @@ def get_translate_prompt(
         parts.append(f"[TERMINOLOGY]\n{terminology}\n")
 
     parts.append(f"[TRANSLATE THIS SEGMENT]\n{markdown_segment}")
+    if "«BLK»" in markdown_segment:
+        parts.append(
+            "\n[IMPORTANT: Preserve all «BLK» markers exactly as-is in your "
+            "translation. Do not translate, remove, or modify them.]"
+        )
     return "\n".join(parts)
