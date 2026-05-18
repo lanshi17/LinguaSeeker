@@ -52,3 +52,4 @@
 [2026-05-18] Database MVP Task 5: added Redis cache repository with transactional pipeline invalidation — 45 tests, lint clean [completed]
 [2026-05-18] Database MVP Task 6: added flattened search index repository — 45 tests, lint clean [completed]
 [2026-05-18] Database MVP Task 7: updated docs index and .env.example for MVP schema [completed]
+[2026-05-18] Database MVP Tasks 4-7 code review: fixed migration/model drift, search-index metadata isolation, and dict-return justifications [completed]

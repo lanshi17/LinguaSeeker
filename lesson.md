@@ -110,3 +110,15 @@
 **Solution**: Used Alembic `%(here)s` interpolation which expands to the directory containing the ini file: `script_location = %(here)s/migrations`. This makes migration commands work regardless of CWD — both from repo root and from `backend/` directory.
 
 **Prevention**: When setting up Alembic with a non-standard directory layout (ini file not at project root), always use `%(here)s` in `script_location` to avoid CWD-dependent resolution failures.
+
+## 2026-05-18: Initial migration drifted from ORM metadata after review fixes
+
+**Problem**: Code review found `canonical_evidence_items` in the initial Alembic migration was missing `current_best_status`, `conflict_flag`, and the `review_status` server default. The same review found `frontend_search_index` was attached to `Base.metadata`, which would make Alembic autogenerate treat the manual projection table as write-model drift.
+
+**Investigation**: Compared `backend/src/dao/models.py`, `database/migrations/versions/*_init_mvp_schema.py`, and `backend/src/dao/search_index_repo.py`. Added migration capture tests that inspect `op.create_table("canonical_evidence_items", ...)` and a metadata isolation test for the search index table.
+
+**Root cause**: The migration was manually written before the final ORM review fixes landed, and the read-model projection reused `Base.metadata` for convenience even though Alembic targets that metadata.
+
+**Solution**: Added the missing canonical evidence columns/default to the initial migration, moved `frontend_search_index` to standalone `MetaData`, and added regression tests for both issues.
+
+**Prevention**: When manually maintaining migrations, add tests that compare critical migration DDL against ORM metadata. Keep read-side/manual projection tables off Alembic target metadata unless they are intentionally migration-managed.

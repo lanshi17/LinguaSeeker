@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import sqlalchemy as sa
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 BACKEND_DIR = REPO_ROOT / "backend"
@@ -13,6 +14,39 @@ MIGRATIONS_DIR = REPO_ROOT / "database" / "migrations"
 ENV_PY = MIGRATIONS_DIR / "env.py"
 SCRIPT_MAKO = MIGRATIONS_DIR / "script.py.mako"
 VERSIONS_DIR = MIGRATIONS_DIR / "versions"
+
+
+def _load_initial_revision_module():
+    """Load the initial migration revision as a Python module."""
+    import importlib.util
+
+    revision_paths = list(VERSIONS_DIR.glob("*_init_mvp_schema.py"))
+    assert len(revision_paths) == 1
+    revision_path = revision_paths[0]
+    spec = importlib.util.spec_from_file_location("init_mvp_schema", revision_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _captured_created_table(table_name: str, monkeypatch) -> list[object]:
+    """Capture columns and constraints passed to op.create_table for a table."""
+    module = _load_initial_revision_module()
+    captured: list[object] = []
+
+    def fake_create_table(name: str, *items, **_kwargs) -> None:
+        if name == table_name:
+            captured.extend(items)
+
+    monkeypatch.setattr(module.op, "create_table", fake_create_table)
+    monkeypatch.setattr(module.op, "create_index", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module.op, "create_foreign_key", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module.op, "f", lambda name: name)
+    module.upgrade()
+    assert captured
+    return captured
 
 
 # ── Structural existence ──────────────────────────────────────────────────
@@ -120,6 +154,25 @@ def test_head_revision_points_to_mvp_schema() -> None:
 
     assert base.revision == head.revision, "Head should be the initial migration"
     assert base.down_revision is None, "Initial migration must have down_revision=None"
+
+
+def test_initial_migration_canonical_evidence_matches_orm_columns(monkeypatch) -> None:
+    """Initial migration creates all canonical evidence columns required by the ORM."""
+    items = _captured_created_table("canonical_evidence_items", monkeypatch)
+    columns = {item.name: item for item in items if isinstance(item, sa.Column)}
+
+    assert "current_best_status" in columns
+    assert "conflict_flag" in columns
+    assert columns["review_status"].server_default is not None
+
+
+def test_search_index_table_is_not_in_alembic_target_metadata() -> None:
+    """The manual search-index projection must not pollute Base metadata autogenerate."""
+    from src.dao.models import Base
+    from src.dao.search_index_repo import frontend_search_index
+
+    assert frontend_search_index.metadata is not Base.metadata
+    assert "frontend_search_index" not in Base.metadata.tables
 
 
 # ── Database-dependent tests (skip when PostgreSQL is unavailable) ─────────

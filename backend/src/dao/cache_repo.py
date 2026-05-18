@@ -42,14 +42,16 @@ class CacheRepository:
         return json.dumps(value, ensure_ascii=False)
 
     @staticmethod
-    def _decode(raw: bytes | None) -> dict[str, object] | None:
+    def _decode(raw: bytes | None) -> dict[str, object] | None:  # noqa  # dict-return: unstructured cache JSON.
+        """Decode unstructured Redis JSON payloads; cache values have no fixed schema."""
         if raw is None:
             return None
         return json.loads(raw)  # type: ignore[no-any-return]
 
     # ── Document cache ────────────────────────────────────────────────
 
-    async def get_document(self, document_id: str) -> dict[str, object] | None:
+    async def get_document(self, document_id: str) -> dict[str, object] | None:  # noqa  # dict-return: unstructured cache JSON.
+        """Return an unstructured cached document payload."""
         raw = await self._client.get(f"{CACHE_PREFIX['document']}:{document_id}")
         return self._decode(raw)
 
@@ -69,7 +71,8 @@ class CacheRepository:
 
     async def get_canonical_evidence(
         self, canonical_evidence_id: str
-    ) -> dict[str, object] | None:
+    ) -> dict[str, object] | None:  # noqa  # dict-return: unstructured cache JSON.
+        """Return an unstructured cached canonical evidence payload."""
         raw = await self._client.get(
             f"{CACHE_PREFIX['canonical']}:{canonical_evidence_id}"
         )
@@ -91,7 +94,8 @@ class CacheRepository:
 
     async def get_entity(
         self, entity_id: str
-    ) -> dict[str, object] | None:
+    ) -> dict[str, object] | None:  # noqa  # dict-return: unstructured cache JSON.
+        """Return an unstructured cached entity payload."""
         raw = await self._client.get(f"{CACHE_PREFIX['entity']}:{entity_id}")
         return self._decode(raw)
 

@@ -20,14 +20,6 @@ def _fake_session() -> MagicMock:
     return session
 
 
-def _fake_connection() -> MagicMock:
-    """Return a MagicMock that mimics an async SQLAlchemy connection."""
-    conn = MagicMock()
-    conn.execute = AsyncMock()
-    conn.commit = AsyncMock()
-    return conn
-
-
 # ── Table definition tests ─────────────────────────────────────────────────
 
 

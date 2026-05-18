@@ -350,13 +350,25 @@ def upgrade() -> None:
             postgresql.UUID(as_uuid=True),
             nullable=True,
         ),
+        sa.Column("current_best_status", sa.String(32), nullable=False),
+        sa.Column(
+            "conflict_flag",
+            sa.Boolean(),
+            nullable=False,
+            server_default=sa.text("false"),
+        ),
         sa.Column(
             "active_payload",
             postgresql.JSONB(),
             nullable=False,
             server_default=sa.text("'{}'::jsonb"),
         ),
-        sa.Column("review_status", sa.String(32), nullable=False),
+        sa.Column(
+            "review_status",
+            sa.String(32),
+            nullable=False,
+            server_default="provisional",
+        ),
         sa.Column(
             "current_best_confidence",
             sa.Numeric(5, 4),
