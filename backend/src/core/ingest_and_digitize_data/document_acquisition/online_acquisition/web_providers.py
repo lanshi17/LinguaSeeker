@@ -6,7 +6,7 @@ from typing import Any, Dict, Literal
 
 from .contracts import OnlineAcquisitionGatewayResult, OnlineAcquisitionSourceTraceEntry
 
-WebProvider = Literal["pubscholar", "cyberleninka", "hans_publishers"]
+WebProvider = Literal["pubscholar", "cyberleninka", "hans_publishers", "chinaxiv"]
 ActionStrategy = Literal["search", "download"]
 
 
@@ -92,6 +92,11 @@ async def call_web_provider(
             from .web.hans_publishers import hanspub_download, hanspub_search
         except ImportError:
             return _failure_result("hans_publishers", RuntimeError("hans_publishers module not available"), action)
+    elif provider == "chinaxiv":
+        try:
+            from .web.chinaxiv import chinaxiv_download, chinaxiv_search
+        except ImportError:
+            return _failure_result("chinaxiv", RuntimeError("chinaxiv module not available"), action)
     else:
         return _failure_result(provider, ValueError(f"unknown web provider: {provider}"), action)
 
@@ -101,6 +106,8 @@ async def call_web_provider(
                 result = await pubscholar_search(query=query, limit=limit, **extra)
             elif provider == "cyberleninka":
                 result = await cyberleninka_search(query=query, limit=limit, **extra)
+            elif provider == "chinaxiv":
+                result = await chinaxiv_search(query=query, limit=limit, **extra)
             else:
                 result = await hanspub_search(query=query, limit=limit, **extra)
         else:
@@ -112,6 +119,12 @@ async def call_web_provider(
                 )
             elif provider == "cyberleninka":
                 result = await cyberleninka_download(
+                    query=query, detail_link=detail_link,
+                    selected_index=selected_index, selected_title=selected_title,
+                    download_path=download_path, **extra,
+                )
+            elif provider == "chinaxiv":
+                result = await chinaxiv_download(
                     query=query, detail_link=detail_link,
                     selected_index=selected_index, selected_title=selected_title,
                     download_path=download_path, **extra,

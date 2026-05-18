@@ -24,6 +24,7 @@ class ProviderPlanItem(TypedDict):
 LANG_PROVIDER_MATRIX: Dict[str, List[ProviderPlanItem]] = {
     "zh": [
         {"route": "web", "provider": "pubscholar"},
+        {"route": "web", "provider": "chinaxiv"},
         {"route": "web", "provider": "hans_publishers"},
         {"route": "api", "provider": "crossref"},
         {"route": "api", "provider": "unpaywall"},
