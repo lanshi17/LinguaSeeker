@@ -14,6 +14,7 @@ from sqlalchemy import (
     Column,
     Index,
     Integer,
+    MetaData,
     Numeric,
     String,
     Table,
@@ -24,13 +25,18 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
-from src.dao.models import Base
-
 # ── Table definition ──────────────────────────────────────────────────────
+
+GENE_IDS_PAYLOAD_KEY = "gene_ids"
+VARIANT_IDS_PAYLOAD_KEY = "variant_ids"
+ENTITY_IDS_PAYLOAD_KEY = "entity_ids"
+SEARCH_TEXT_PAYLOAD_KEY = "search_text"
+
+search_index_metadata = MetaData()
 
 frontend_search_index = Table(
     "frontend_search_index",
-    Base.metadata,
+    search_index_metadata,
     Column("id", Integer, primary_key=True),
     Column("canonical_evidence_id", UUID(as_uuid=True), nullable=False),
     Column("pmid", Text, nullable=True),
@@ -80,8 +86,11 @@ class SearchIndexRepository:
         pmid: str | None = None,
         field_id: str | None = None,
         limit: int = 50,
-    ) -> list[dict[str, object]]:
+    ) -> list[dict[str, object]]:  # noqa  # dict-return: unstructured projection rows.
         """Return rows matching any of the provided search criteria.
+
+        Search result rows are read-model projections with a flexible shape
+        mirroring ``frontend_search_index`` columns.
 
         Returns an empty list when no filters are supplied.
         """
@@ -129,7 +138,7 @@ class SearchIndexRepository:
         )
 
         await self._session.execute(
-            text("""
+            text(f"""
                 INSERT INTO frontend_search_index (
                     canonical_evidence_id,
                     pmid,
@@ -148,21 +157,21 @@ class SearchIndexRepository:
                     sdi_pmid.identifier_value AS pmid,
                     sdi_doi.identifier_value AS doi,
                     COALESCE(
-                        cei.active_payload -> 'gene_ids',
+                        cei.active_payload -> '{GENE_IDS_PAYLOAD_KEY}',
                         '[]'::jsonb
                     ) AS gene_ids,
                     COALESCE(
-                        cei.active_payload -> 'variant_ids',
+                        cei.active_payload -> '{VARIANT_IDS_PAYLOAD_KEY}',
                         '[]'::jsonb
                     ) AS variant_ids,
                     COALESCE(
-                        cei.active_payload -> 'entity_ids',
+                        cei.active_payload -> '{ENTITY_IDS_PAYLOAD_KEY}',
                         '[]'::jsonb
                     ) AS entity_ids,
                     cei.field_id,
                     cei.review_status,
                     cei.current_best_confidence,
-                    COALESCE(cei.active_payload ->> 'search_text', '') AS search_text,
+                    COALESCE(cei.active_payload ->> '{SEARCH_TEXT_PAYLOAD_KEY}', '') AS search_text,
                     cei.active_payload
                 FROM canonical_evidence_items cei
                 LEFT JOIN source_document_identifiers sdi_pmid
