@@ -521,6 +521,29 @@ def normalize_openaire(item: Dict[str, Any]) -> OnlineAcquisitionItem:
     )
 
 
+def normalize_preprint(item: Dict[str, Any]) -> OnlineAcquisitionItem:
+    """Normalize preprint server results (arXiv, bioRxiv, medRxiv)."""
+    title = _clean_text(item.get("title"))
+    authors = _normalize_authors(item.get("authors"))
+    doi = _clean_text(item.get("doi"))
+    url = _clean_text(item.get("url"))
+    year = _extract_year(item.get("year"))
+    source = _clean_text(item.get("source")) or "preprint"
+    return OnlineAcquisitionItem(
+        source=source,
+        title=title,
+        authors=authors,
+        journal=None,
+        year=year,
+        doi=doi,
+        url=url,
+        links=_extract_links([url]),
+        language=_clean_text(item.get("language")),
+        identifiers={},
+        keywords=[],
+    )
+
+
 def normalize_europepmc(item: Dict[str, Any]) -> OnlineAcquisitionItem:
     title = _clean_text(item.get("title") or item.get("articleTitle"))
     author_list = item.get("authorList")
@@ -607,6 +630,9 @@ NORMALIZER_MAP: Dict[str, Callable[[Dict[str, Any]], OnlineAcquisitionItem]] = {
     "base": normalize_base,
     "core": normalize_core,
     "openaire": normalize_openaire,
+    "arxiv": normalize_preprint,
+    "biorxiv": normalize_preprint,
+    "medrxiv": normalize_preprint,
     "pubscholar": normalize_web_generic,
     "cyberleninka": normalize_web_generic,
     "hans_publishers": normalize_web_generic,
