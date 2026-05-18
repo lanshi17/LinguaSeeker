@@ -47,6 +47,7 @@ class MultiStageTranslator(BaseTranslator):
     """
 
     _MAX_SEGMENT_RETRIES: int = 3
+    _BLOCK_SEP = "\n\n«BLK»\n\n"
 
     # Pre-compiled regex for _clean_terminology
     _TERM_HEADER_RE = re.compile(
@@ -315,17 +316,38 @@ class MultiStageTranslator(BaseTranslator):
 
     def translate_segments(
         self, formatted: FormattedDocument, terminology: str,
+        blocks: List[ContentBlock] | None = None,
     ) -> Tuple[str, List[str], List[str]]:
         """Translate document segment by segment with per-segment validation.
 
         Each segment gets one translation attempt. If validation fails,
         the segment is retried up to ``_MAX_SEGMENT_RETRIES`` times.
 
+        Args:
+            formatted: The formatted document.
+            terminology: Extracted terminology string.
+            blocks: Optional ContentBlock list. When provided, blocks are joined
+                with a delimiter into the text to translate, so that per-block
+                translations can be recovered by splitting on the delimiter.
+
         Returns:
             Tuple of (joined_translated_text, source_segments, translated_parts).
         """
         logger.info("Stage: translate")
         text = formatted.formatted_markdown
+
+        # When blocks are available, join non-empty text/title blocks with a
+        # delimiter so we can recover per-block translations after translation.
+        self._text_block_indices: list[int] = []
+        if blocks:
+            non_empty = [(i, b.text) for i, b in enumerate(blocks) if b.text.strip()]
+            if non_empty:
+                self._text_block_indices = [i for i, _ in non_empty]
+                text = self._BLOCK_SEP.join(t for _, t in non_empty)
+                logger.info(
+                    "Built marked text from {}/{} blocks ({} chars)",
+                    len(non_empty), len(blocks), len(text),
+                )
 
         # Generate a dynamic system prompt tailored to this document
         system_prompt = self._generate_system_prompt(formatted)
@@ -474,10 +496,14 @@ class MultiStageTranslator(BaseTranslator):
 
     # ── Full pipeline ────────────────────────────────────────────────────
 
-    def run_pipeline(self, formatted: FormattedDocument) -> Tuple[Dict[str, str], str, str, str, List[str], List[str], List[str]]:
+    def run_pipeline(
+        self, formatted: FormattedDocument, blocks: List[ContentBlock] | None = None,
+    ) -> Tuple[Dict[str, str], str, str, str, List[str], List[str], List[str]]:
         # ── Stage 1: Translate (terminology + segment translation) ────────
         terminology = self.extract_terminology(formatted)
-        translated, source_segments, translated_parts = self.translate_segments(formatted, terminology)
+        translated, source_segments, translated_parts = self.translate_segments(
+            formatted, terminology, blocks=blocks,
+        )
 
         # ── Stage 2: Review (validate, clean, strip artifacts) ────────────
         warnings: list[str] = []
@@ -515,59 +541,63 @@ class MultiStageTranslator(BaseTranslator):
         return terminology_map, "", "", translated, source_segments, translated_parts, warnings
 
     @staticmethod
-    def _find_translated_text_for_block(
-        block: ContentBlock,
-        segments: List[TranslationSegment],
-    ) -> str:
-        """Find translated text for a text/title block using segment alignment.
-
-        Searches segments whose source_text overlaps with the block's text,
-        then concatenates their translations.
-        """
-        block_text = block.text.strip()
-        if not block_text:
-            return ""
-
-        matching_parts: list[str] = []
-        for seg in segments:
-            src = seg.source_text.strip()
-            if not src:
-                continue
-            # Check if segment source overlaps with block text
-            # Use narrower search window to reduce false positives
-            src_start = src[:max(len(block_text) * 2, 100)]
-            if src in block_text or block_text in src_start:
-                matching_parts.append(seg.translated_text)
-
-        if matching_parts:
-            return "\n\n".join(matching_parts)
-
-        # Fallback: try to find a segment that starts with similar text
-        block_start = block_text[:80]
-        for seg in segments:
-            if seg.source_text.strip()[:80] == block_start:
-                return seg.translated_text
-
-        # Last resort: return empty (block will have empty text)
-        return ""
-
-    @staticmethod
     def _build_translated_blocks(
         original_blocks: List[ContentBlock],
         segments: List[TranslationSegment],
+        translated_text: str,
+        text_block_indices: list[int] | None = None,
     ) -> List[ContentBlock]:
         """Map translated text back to original block structure.
 
-        For text/title blocks, uses segment alignment to find the translated
-        content. For non-text blocks (image, table, etc.), copies the original
-        block as-is.
+        When the source text was built from blocks joined with _BLOCK_SEP,
+        the translated text can be split on the same delimiter to recover
+        per-block translations. Falls back to segment matching if the
+        delimiter is not found.
+
+        Args:
+            original_blocks: The original content blocks.
+            segments: Translation segments (used for fallback).
+            translated_text: The full translated text (may contain delimiters).
+            text_block_indices: Indices of blocks that were included in the
+                marked text (non-empty text/title blocks).
         """
+        sep = MultiStageTranslator._BLOCK_SEP
+        translated_pieces: list[str] = []
+        idx_map: dict[int, str] = {}
+
+        # Try delimiter-based split first
+        if sep in translated_text:
+            parts = translated_text.split(sep)
+            # Clean up residual markers and empty pieces
+            pieces = []
+            for p in parts:
+                cleaned = p.replace(sep.strip(), "").strip()
+                if cleaned:
+                    pieces.append(cleaned)
+            indices = text_block_indices or []
+            for j, piece in enumerate(pieces):
+                if j < len(indices):
+                    idx_map[indices[j]] = piece
+            logger.info(
+                "Split translated text on block delimiter: {} pieces from {} blocks",
+                len(pieces), len(original_blocks),
+            )
+
+        # Count text/title blocks for single-block shortcut
+        text_blocks = [b for b in original_blocks if b.type in ("text", "title")]
+
         translated_blocks: list[ContentBlock] = []
-        for block in original_blocks:
+        for i, block in enumerate(original_blocks):
             if block.type in ("text", "title"):
-                new_text = MultiStageTranslator._find_translated_text_for_block(
-                    block, segments,
-                )
+                if i in idx_map:
+                    new_text = idx_map[i]
+                elif len(text_blocks) == 1 and translated_text.strip():
+                    # Single text block, no delimiter — use full translation
+                    new_text = translated_text.strip()
+                else:
+                    new_text = MultiStageTranslator._fallback_block_text(
+                        block, segments,
+                    )
                 new_block = ContentBlock(
                     type=block.type,
                     page_idx=block.page_idx,
@@ -602,9 +632,28 @@ class MultiStageTranslator(BaseTranslator):
             translated_blocks.append(new_block)
         return translated_blocks
 
+    @staticmethod
+    def _fallback_block_text(
+        block: ContentBlock,
+        segments: List[TranslationSegment],
+    ) -> str:
+        """Fallback: find translated text via segment matching."""
+        block_text = block.text.strip()
+        if not block_text:
+            return ""
+        for seg in segments:
+            src = seg.source_text.strip()
+            if not src:
+                continue
+            src_start = src[:max(len(block_text) * 2, 100)]
+            if src in block_text or block_text in src_start:
+                return seg.translated_text
+        return ""
+
     def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
+        blocks = formatted.original_blocks or []
         terminology_map, _structure_plan, _draft, translated, source_segments, translated_parts, warnings = (
-            self.run_pipeline(formatted)
+            self.run_pipeline(formatted, blocks=blocks if blocks else None)
         )
         tr_segments: list[TranslationSegment] = []
         # Compute translated segment offsets by tracking cumulative position
@@ -623,9 +672,10 @@ class MultiStageTranslator(BaseTranslator):
             ))
             translated_offset += len(tr_text) + 2  # +2 for "\n\n" joiner
 
-        # Build translated blocks by mapping translation back to block structure
+        # Build translated blocks: split translated text on block delimiter
         translated_blocks = self._build_translated_blocks(
-            formatted.original_blocks, tr_segments,
+            blocks, tr_segments, translated,
+            text_block_indices=getattr(self, '_text_block_indices', None),
         )
 
         return TranslationResult(
@@ -634,7 +684,7 @@ class MultiStageTranslator(BaseTranslator):
             source_language=formatted.source_language or "unknown",
             terminology_map=terminology_map, translation_warnings=warnings,
             sentences=formatted.sentences, segments=tr_segments,
-            original_blocks=formatted.original_blocks,
+            original_blocks=blocks,
             translated_blocks=translated_blocks,
         )
 
