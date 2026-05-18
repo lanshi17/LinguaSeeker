@@ -86,3 +86,73 @@
 **Solution**: Restored the full historical log contents and appended the new database planning entries at the end.
 
 **Prevention**: For append-only logs, always diff against `git show HEAD:<file>` before and after editing, and prefer targeted patch updates over whole-file replacement.
+
+## 2026-05-18: Database MVP batch exposed worktree and tool-environment assumptions
+
+**Problem**: Database implementation setup hit multiple execution issues before and during the first batch: a slash branch name conflicted with the repository's flat `feature` branch ref, an interrupted pytest run left the red-test state incomplete, and `uv run ruff` initially failed because Ruff was only available through the optional dev extra.
+
+**Investigation**: Checked `git branch`, `.git/refs/heads`, `git worktree list`, running pytest processes, and `uv tree --depth 1`. Re-ran the targeted pytest commands from the isolated `database-mvp` worktree and confirmed the failures were setup/tooling issues rather than database code behavior.
+
+**Root cause**: The implementation plan assumed a slash-style feature branch and default dev-tool availability, while this repo currently has a flat branch namespace conflict and installs Ruff under the `dev` extra.
+
+**Solution**: Created the isolated worktree on the flat `database-mvp` branch, resumed from the exact red-test point after interruption, and used `uv run --extra dev ruff check ...` for lint verification.
+
+**Prevention**: Before executing future written plans, verify branch namespace compatibility with `git branch --list`, confirm the worktree path is active before writing tests, and run dev tools through the same uv extras/groups declared in `pyproject.toml`.
+
+## 2026-05-18: Database session helper default created unmanaged engine lifecycle
+
+**Problem**: Code review found that `get_async_session()` created a new async engine when called without a session factory, then dropped the engine reference without disposing its connection pool.
+
+**Investigation**: Re-read `backend/src/dao/connection.py` and confirmed the default path called `build_async_engine()` inside the context helper. The existing test only covered the custom factory path, so the unmanaged-engine path had no coverage.
+
+**Root cause**: A convenience default hid resource ownership inside a dependency helper. Engine lifecycle belongs to application startup/shutdown or explicit test setup, not to a per-session context manager.
+
+**Solution**: Removed the default path and made `get_async_session()` require an explicit session factory. Added a regression test that calling it without a factory raises `TypeError`.
+
+**Prevention**: Avoid convenience constructors in lifecycle-sensitive DAO helpers. Tests should cover any fallback branch that allocates external resources, or that branch should not exist.
+
+## 2026-05-18: Alembic script_location resolution is CWD-relative, not ini-relative
+
+**Problem**: `script_location = migrations` in `database/alembic.ini` failed when running `uv run alembic` from `backend/` — Alembic resolved the path relative to CWD rather than the ini file directory.
+
+**Investigation**: Tested with Python `Config.get_main_option('script_location')` and `ScriptDirectory.from_config()`. Confirmed that Alembic's `ScriptDirectory` resolves `script_location` from the current working directory, not from the ini file location, despite documentation suggesting otherwise.
+
+**Root cause**: Alembic resolves relative `script_location` paths against the CWD where the Alembic command is invoked, not against the directory containing `alembic.ini`.
+
+**Solution**: Used Alembic `%(here)s` interpolation which expands to the directory containing the ini file: `script_location = %(here)s/migrations`. This makes migration commands work regardless of CWD — both from repo root and from `backend/` directory.
+
+**Prevention**: When setting up Alembic with a non-standard directory layout (ini file not at project root), always use `%(here)s` in `script_location` to avoid CWD-dependent resolution failures.
+
+## 2026-05-18: Initial migration drifted from ORM metadata after review fixes
+
+**Problem**: Code review found `canonical_evidence_items` in the initial Alembic migration was missing `current_best_status`, `conflict_flag`, and the `review_status` server default. The same review found `frontend_search_index` was attached to `Base.metadata`, which would make Alembic autogenerate treat the manual projection table as write-model drift.
+
+**Investigation**: Compared `backend/src/dao/models.py`, `database/migrations/versions/*_init_mvp_schema.py`, and `backend/src/dao/search_index_repo.py`. Added migration capture tests that inspect `op.create_table("canonical_evidence_items", ...)` and a metadata isolation test for the search index table.
+
+**Root cause**: The migration was manually written before the final ORM review fixes landed, and the read-model projection reused `Base.metadata` for convenience even though Alembic targets that metadata.
+
+**Solution**: Added the missing canonical evidence columns/default to the initial migration, moved `frontend_search_index` to standalone `MetaData`, and added regression tests for both issues.
+
+**Prevention**: When manually maintaining migrations, add tests that compare critical migration DDL against ORM metadata. Keep read-side/manual projection tables off Alembic target metadata unless they are intentionally migration-managed.
+
+## 2026-05-18: Full backend pytest collection hit duplicate test module names
+
+**Problem**: Running `uv run pytest` from `backend/` failed during collection with an import mismatch between `backend/services/model-server/tests/test_config.py` and `backend/tests/core/test_config.py`.
+
+**Investigation**: The error happened before executing tests and reported that both files were imported as the same top-level module name `test_config`.
+
+**Root cause**: Two test files in different directories share the same basename without package isolation, so pytest can import one as `test_config` and then reject the second file with the same module name.
+
+**Solution**: Verified the database branch with the targeted suite `uv run pytest tests/core/test_database_config.py tests/dao -q`, which covers all changed backend database files. Ruff also passed for the changed backend database and migration files.
+
+**Prevention**: Give duplicate test basenames package-qualified imports by adding `__init__.py` where appropriate, or rename one of the duplicate files before relying on repo-wide pytest collection.
+
+## 2026-05-18: maturin develop picks wrong venv across worktrees
+
+**Problem**: After merging feature branch to main worktree, `maturin develop --release` failed because it found Python 3.11 in `rust-io/.venv` (main worktree) while `uv.lock` requires Python>=3.12.
+
+**Root cause**: Each worktree has its own `rust-io/.venv`. The main worktree's venv was created with Python 3.11; the feature worktree's venv had Python 3.12. After the merge updated `uv.lock` to require 3.12, the main worktree's local venv couldn't install.
+
+**Fix**: Copy the `.so` from the feature worktree's build output to the main worktree's backend venv. Long-term: use `--manifest-path` with maturin to target the correct Python, or ensure all local venvs use the same Python version.
+
+**Prevention**: After merging Rust changes across worktrees, rebuild in the target worktree with the correct Python version, or copy the `.so` explicitly.
