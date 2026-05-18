@@ -1,6 +1,7 @@
 mod arxiv;
 mod base_search;
 mod biorxiv;
+mod cinii;
 mod core_search;
 mod crossref;
 mod doaj;
@@ -15,6 +16,7 @@ mod unpaywall;
 pub use arxiv::ArxivProvider;
 pub use base_search::BaseProvider;
 pub use biorxiv::{BioRxivProvider, MedRxivProvider};
+pub use cinii::CiniiProvider;
 pub use core_search::CoreProvider;
 pub use crossref::CrossrefProvider;
 pub use doaj::DoajProvider;

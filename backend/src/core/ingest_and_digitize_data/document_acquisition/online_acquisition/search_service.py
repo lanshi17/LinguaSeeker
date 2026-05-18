@@ -32,6 +32,7 @@ LANG_PROVIDER_MATRIX: Dict[str, List[ProviderPlanItem]] = {
     ],
     "ja": [
         {"route": "api", "provider": "jstage"},
+        {"route": "api", "provider": "cinii"},
         {"route": "api", "provider": "crossref"},
         {"route": "api", "provider": "unpaywall"},
         {"route": "api", "provider": "doaj"},
