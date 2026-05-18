@@ -477,6 +477,28 @@ def normalize_base(item: Dict[str, Any]) -> OnlineAcquisitionItem:
     )
 
 
+def normalize_core(item: Dict[str, Any]) -> OnlineAcquisitionItem:
+    title = _clean_text(item.get("title"))
+    authors = _normalize_authors(item.get("authors"))
+    doi = _clean_text(item.get("doi"))
+    url = _clean_text(item.get("url"))
+    year = _extract_year(item.get("year"))
+    journal = _clean_text(item.get("journal") or item.get("source"))
+    return OnlineAcquisitionItem(
+        source="core",
+        title=title,
+        authors=authors,
+        journal=journal,
+        year=year,
+        doi=doi,
+        url=url,
+        links=_extract_links([url]),
+        language=_clean_text(item.get("language")),
+        identifiers={},
+        keywords=[],
+    )
+
+
 def normalize_europepmc(item: Dict[str, Any]) -> OnlineAcquisitionItem:
     title = _clean_text(item.get("title") or item.get("articleTitle"))
     author_list = item.get("authorList")
@@ -561,6 +583,7 @@ NORMALIZER_MAP: Dict[str, Callable[[Dict[str, Any]], OnlineAcquisitionItem]] = {
     "europepmc": normalize_europepmc,
     "scielo": normalize_scielo,
     "base": normalize_base,
+    "core": normalize_core,
     "pubscholar": normalize_web_generic,
     "cyberleninka": normalize_web_generic,
     "hans_publishers": normalize_web_generic,
