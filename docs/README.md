@@ -42,10 +42,8 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status/PR |
 |---|---|---|
-| 2026-05-18 | [database implementation](plans/2026-05-18-database-implementation-plan.md) | planned — MVP database layer |
 | 2026-05-16 | [evidence extraction output E2E](planned/2026-05-16-evidence-extraction-output-e2e.md) | planned |
 | 2026-05-17 | [persistence JSON optimization](plans/2026-05-17-persistence-json-optimization.md) | planned |
-| 2026-05-18 | [database design](plans/2026-05-18-database-design.md) | planned — schema architecture |
 ## Active Code Reviews
 
 No active code reviews.
@@ -56,6 +54,8 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-05-18 | [database implementation](archive/plans/2026-05-18-database-implementation-plan.md) | completed — branch `database-mvp` |
+| 2026-05-18 | [database design](archive/plans/2026-05-18-database-design.md) | completed — branch `database-mvp` |
 | 2026-05-12 | [parse document module refactor](archive/plans/2026-05-12-parse-document-refactor.md) | completed — 2026-05-13 |
 | 2026-05-15 | [fix translation quality](archive/plans/2026-05-15-fix-translation-quality.md) | completed — 2026-05-15 |
 | 2026-05-15 | [fix translation token limit](archive/plans/2026-05-15-fix-translation-token-limit.md) | completed — 2026-05-15 |
