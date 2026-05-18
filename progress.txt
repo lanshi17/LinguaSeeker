@@ -43,3 +43,4 @@
 [2026-05-16] Add character drift tracking (SentenceDrift/SegmentDrift contracts, offset computation in formatter+translator), layout persistence (original_layout.json / translated_layout.json), and prompt echo detection (system prompt delimiters, validator patterns) [completed]
 [2026-05-16] Updated parse_document module README — fixed parse_local_files delegation documentation, added internal TypedDicts, content list parsing details, batch upload validation constraints, file layout section, and orchestrator extension guide [done]
 [2026-05-16] Doc organization: archived 5 completed plans (evidence-extraction x2, fix-translation-quality, fix-translation-token-limit, cross-lingual-persistence), moved e2e plan to planned/, removed stale duplicate mineru-local-batch-upload [completed]
+[2026-05-18] Replace .md persistence with structured JSON (original.json, translated.json, metadata.json) preserving MinerU content_list block structure through full pipeline [DONE]
