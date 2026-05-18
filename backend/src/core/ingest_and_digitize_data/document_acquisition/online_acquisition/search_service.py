@@ -5,6 +5,7 @@ search_multilingual calls gateway directly (not workflow) for search operations.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import re
@@ -12,6 +13,7 @@ from typing import Any, Dict, List, Optional, Sequence, TypedDict
 
 from .gateway import search_provider
 from .normalizers import normalize_items
+from .provider_health import get_health_tracker
 
 
 class ProviderPlanItem(TypedDict):
@@ -34,6 +36,17 @@ LANG_PROVIDER_MATRIX: Dict[str, List[ProviderPlanItem]] = {
         {"route": "api", "provider": "unpaywall"},
         {"route": "api", "provider": "doaj"},
         {"route": "api", "provider": "pmc"},
+    ],
+    "ko": [],
+    "es": [
+        {"route": "api", "provider": "scielo"},
+        {"route": "api", "provider": "crossref"},
+        {"route": "api", "provider": "unpaywall"},
+    ],
+    "pt": [
+        {"route": "api", "provider": "scielo"},
+        {"route": "api", "provider": "crossref"},
+        {"route": "api", "provider": "unpaywall"},
     ],
     "en": [
         {"route": "api", "provider": "pmc"},
@@ -168,7 +181,7 @@ def rank_candidates(
     normalized_expected_title = _normalize_title(expected_title)
     normalized_provider = str(preferred_provider or "").strip().lower() or None
 
-    def _score(candidate: Dict[str, Any]) -> tuple[int, int, int]:
+    def _score(candidate: Dict[str, Any]) -> tuple[int, int, int, int]:
         normalized_title = _normalize_title(candidate.get("title"))
         exact_title = int(bool(normalized_expected_title and normalized_title == normalized_expected_title))
         provider_match = int(
@@ -180,7 +193,13 @@ def rank_candidates(
         has_doi = int(
             bool(_clean_identifier(candidate.get("doi") or (candidate.get("identifiers") or {}).get("doi")))
         )
-        return (exact_title, provider_match, has_doi)
+        year_str = str(candidate.get("year") or "")
+        try:
+            year = int(year_str)
+        except (ValueError, TypeError):
+            year = 0
+        year_score = min(year, 2026) if year >= 2000 else 0
+        return (exact_title, provider_match, has_doi, year_score)
 
     return sorted(candidates, key=_score, reverse=True)
 
@@ -202,6 +221,7 @@ async def search_multilingual(
         return []
 
     plan = build_provider_plan(language=language, provider_hints=provider_hints)
+    plan = get_health_tracker().reorder_plan(plan)
     collected: List[Dict[str, Any]] = []
     preferred_provider = plan[0]["provider"] if plan else None
 
@@ -241,4 +261,55 @@ async def search_multilingual(
 
     return rank_candidates(
         collected, expected_title=target, preferred_provider=preferred_provider
+    )[:candidate_limit]
+
+
+async def search_parallel(
+    *,
+    query: str,
+    plan: List[ProviderPlanItem],
+    concurrency: int = 4,
+    candidate_limit: int = 15,
+) -> List[Dict[str, Any]]:
+    """Search multiple providers concurrently, merge and dedupe results."""
+    sem = asyncio.Semaphore(concurrency)
+    preferred_provider = plan[0]["provider"] if plan else None
+
+    async def _search_one(item: ProviderPlanItem) -> List[Dict[str, Any]]:
+        async with sem:
+            if item["route"] == "api":
+                result = await search_provider(
+                    provider=item["provider"],
+                    query=query,
+                    limit=candidate_limit,
+                )
+                items = normalize_items(result.provider, result.items) if result.success else []
+                return [_normalize_candidate(i.model_dump(), item) for i in items]
+            else:
+                from .web_providers import call_web_provider
+
+                web_result = await call_web_provider(
+                    provider=item["provider"],
+                    action="search",
+                    query=query,
+                    limit=candidate_limit,
+                )
+                return [
+                    _normalize_candidate(i, item)
+                    for i in web_result.items
+                    if i.get("title")
+                ]
+
+    tasks = [_search_one(item) for item in plan]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    collected: List[Dict[str, Any]] = []
+    for result in results:
+        if isinstance(result, Exception):
+            continue
+        collected.extend(result)
+
+    collected = dedupe_candidates(collected)
+    return rank_candidates(
+        collected, expected_title=query, preferred_provider=preferred_provider
     )[:candidate_limit]

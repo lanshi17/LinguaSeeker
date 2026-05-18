@@ -192,9 +192,15 @@ def _failure_result(provider: str, error: Exception, action: str = "search") -> 
 
 async def call_provider(request: OnlineAcquisitionGatewayRequest) -> OnlineAcquisitionGatewayResult:
     """Call a single provider via net_io.fetch_one."""
+    import time as _time
+    from .provider_health import get_health_tracker
+
+    start = _time.monotonic()
     try:
         import rust_io.net as net_io
     except ImportError:
+        elapsed = (_time.monotonic() - start) * 1000
+        get_health_tracker().record(request.provider, success=False, latency_ms=elapsed)
         return _failure_result(
             request.provider,
             RuntimeError("net_io not available"),
@@ -208,17 +214,22 @@ async def call_provider(request: OnlineAcquisitionGatewayRequest) -> OnlineAcqui
             action=request.action,
             params=params,
         )
+        elapsed = (_time.monotonic() - start) * 1000
+        success = bool(raw_result.get("success"))
+        get_health_tracker().record(request.provider, success=success, latency_ms=elapsed)
         trace = OnlineAcquisitionSourceTraceEntry(
             provider=request.provider,
             attempt=1,
             action=request.action,
-            success=bool(raw_result.get("success")),
+            success=success,
             items_count=len(raw_result.get("items") or []),
             downloads_count=len(raw_result.get("downloads") or []),
             warnings=list(raw_result.get("warnings") or []),
         )
         return _rust_result_to_gateway(request.provider, raw_result, trace)
     except Exception as exc:
+        elapsed = (_time.monotonic() - start) * 1000
+        get_health_tracker().record(request.provider, success=False, latency_ms=elapsed)
         return _failure_result(request.provider, exc, request.action)
 
 
