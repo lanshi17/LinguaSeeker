@@ -17,6 +17,7 @@ Usage::
 from __future__ import annotations
 
 from functools import lru_cache
+from urllib.parse import quote
 
 from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -530,6 +531,19 @@ class Settings(BaseSettings):
     @property
     def is_development(self) -> bool:
         return self.environment.lower() == "development"
+
+    @property
+    def postgresql_dsn(self) -> str:
+        """Return the async SQLAlchemy PostgreSQL DSN."""
+        userinfo = ""
+        if self.postgresql.user:
+            userinfo = quote(self.postgresql.user, safe="")
+            if self.postgresql.password:
+                userinfo = f"{userinfo}:{quote(self.postgresql.password, safe='')}"
+            userinfo = f"{userinfo}@"
+
+        database = quote(self.postgresql.db, safe="")
+        return f"postgresql+asyncpg://{userinfo}{self.postgresql.host}:{self.postgresql.port}/{database}"
 
 
 # ── Singleton & FastAPI dependency ───────────────────────────────────────
