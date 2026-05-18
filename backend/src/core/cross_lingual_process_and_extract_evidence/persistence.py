@@ -131,6 +131,9 @@ class DocumentPersistenceService:
                 logger.warning("Image not found, skipping: {}", src)
                 continue
             dst = image_dir / src_path.name
+            if src_path.resolve() == dst.resolve():
+                saved_image_paths.append(dst)
+                continue
             shutil.copy2(src_path, dst)
             saved_image_paths.append(dst)
             logger.debug("Copied image: {} -> {}", src_path, dst)
