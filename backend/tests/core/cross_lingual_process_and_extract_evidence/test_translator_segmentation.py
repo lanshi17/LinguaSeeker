@@ -8,8 +8,8 @@ from src.core.cross_lingual_process_and_extract_evidence.contracts import Format
 
 @pytest.fixture
 def large_document():
-    """Create a document that exceeds 8192 tokens (~32000 chars of CJK)."""
-    text = "这是一段测试文本。" * 1200  # ~10800 chars ≈ 10800 tokens
+    """Create a document that exceeds the input budget (~16000 tokens)."""
+    text = "这是一段测试文本。" * 5000  # ~45000 chars ≈ 45000 tokens
     return FormattedDocument(
         formatted_markdown=text,
         source_language="zh",

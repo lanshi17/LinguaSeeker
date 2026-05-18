@@ -1,6 +1,7 @@
 """Translation engine for biomedical documents."""
 from __future__ import annotations
 
+import json
 import re
 import time
 from typing import Any, Dict, List, Tuple
@@ -30,6 +31,8 @@ from .prompts import (
 )
 from .validator import (
     _is_terminology_echo,
+    normalize_cjk_punctuation,
+    normalize_placeholders,
     strip_inline_artifacts,
     strip_prompt_artifacts,
     strip_prompt_echo,
@@ -82,6 +85,13 @@ class MultiStageTranslator(BaseTranslator):
             api_key=SecretStr(self._ctx.api_key),
             base_url=self._ctx.base_url,
             temperature=self._ctx.temperature,
+        )
+        self._json_llm = ChatOpenAI(
+            model=self._ctx.model,
+            api_key=SecretStr(self._ctx.api_key),
+            base_url=self._ctx.base_url,
+            temperature=self._ctx.temperature,
+            model_kwargs={"response_format": {"type": "json_object"}},
         )
 
     @staticmethod
@@ -159,6 +169,40 @@ class MultiStageTranslator(BaseTranslator):
                 if attempt < self._MAX_RETRIES:
                     time.sleep(delay)
         raise RuntimeError(f"Stage {stage} failed after {self._MAX_RETRIES} attempts") from last_exc
+
+    def _invoke_json_with_retry(
+        self, prompt: str, stage: str, system_prompt: str = "",
+    ) -> str:
+        """Call LLM with JSON mode and exponential backoff on transient failures.
+
+        Returns the raw JSON string from the LLM response.
+        """
+        if system_prompt:
+            content = (
+                f"[SYSTEM INSTRUCTIONS — DO NOT output these. Follow them silently.]\n"
+                f"{system_prompt}\n"
+                f"[END SYSTEM INSTRUCTIONS]\n\n"
+                f"{prompt}"
+            )
+        else:
+            content = prompt
+        messages = [HumanMessage(content=content)]
+
+        last_exc: Exception | None = None
+        for attempt in range(1, self._MAX_RETRIES + 1):
+            try:
+                response = self._json_llm.invoke(messages)
+                return self._to_text(response.content)
+            except self._TRANSIENT_EXCEPTIONS as exc:
+                last_exc = exc
+                delay = self._BACKOFF_BASE * (2 ** (attempt - 1))
+                logger.warning(
+                    "JSON stage {} attempt {}/{} failed: {}. Retrying in {:.0f}s",
+                    stage, attempt, self._MAX_RETRIES, exc, delay,
+                )
+                if attempt < self._MAX_RETRIES:
+                    time.sleep(delay)
+        raise RuntimeError(f"JSON stage {stage} failed after {self._MAX_RETRIES} attempts") from last_exc
 
     @staticmethod
     def _parse_terminology(raw: str) -> Dict[str, str]:
@@ -326,10 +370,33 @@ class MultiStageTranslator(BaseTranslator):
                 unique_lines.append(line.strip())
         return self._clean_terminology("\n".join(unique_lines))
 
-    # Maximum input tokens for qwen-mt-flash
-    _MODEL_MAX_TOKENS: int = 8192
-    # Reserve ~half for output (translation ≈ source length)
-    _INPUT_BUDGET: int = 4000
+    def _extract_terminology_json_pairs(self, text: str) -> list[str]:
+        """Extract terminology via JSON mode for more reliable parsing.
+
+        Returns a list of ``source: target`` strings.
+        """
+        prompt = (
+            "Extract bilingual term pairs from the following biomedical text. "
+            "Return a JSON object with a single key \"terms\" whose value is an array "
+            "of strings in the format \"source_term: target_term\". "
+            "Focus on biomedical terms, drug names, gene names, disease names, "
+            "and technical abbreviations. Include at most 30 pairs.\n\n"
+            f"Text:\n{text[:6000]}"
+        )
+        try:
+            raw = self._invoke_json_with_retry(prompt, "terminology_json")
+            data = json.loads(raw)
+            terms = data.get("terms", [])
+            if isinstance(terms, list):
+                return [str(t).strip() for t in terms if t]
+        except (json.JSONDecodeError, KeyError, TypeError) as exc:
+            logger.warning("JSON terminology extraction failed: {}", exc)
+        return []
+
+    # Maximum context tokens for the general-purpose LLM
+    _MODEL_MAX_TOKENS: int = 200_000
+    # Reserve for input (system prompt + terminology + segment + context)
+    _INPUT_BUDGET: int = 16_000
     # Context window per side (prev/next)
     _CONTEXT_CHARS: int = 150
 
@@ -368,6 +435,8 @@ class MultiStageTranslator(BaseTranslator):
             translated = strip_prompt_echo(translated)
             translated = strip_inline_artifacts(translated)
             translated = strip_prompt_artifacts(translated)
+            translated = normalize_cjk_punctuation(translated)
+            translated = normalize_placeholders(translated)
 
             # Detect terminology echo (LLM returned terminology map instead of translation)
             if _is_terminology_echo(translated):
@@ -385,6 +454,8 @@ class MultiStageTranslator(BaseTranslator):
                 translated = strip_prompt_echo(translated)
                 translated = strip_inline_artifacts(translated)
                 translated = strip_prompt_artifacts(translated)
+                translated = normalize_cjk_punctuation(translated)
+                translated = normalize_placeholders(translated)
 
             # Re-add stripped prefix (translated if it contained CJK)
             if kw_prefix:
@@ -521,6 +592,21 @@ class MultiStageTranslator(BaseTranslator):
                     f"Do NOT keep any Chinese characters.\n\n{source_segment}"
                 )
                 translated = self._invoke_with_retry(retry_prompt, stage, system_prompt)
+            elif attempt == 1:
+                # First attempt: use JSON mode to prevent prompt echo
+                json_prompt = (
+                    f"{prompt}\n\n"
+                    "Return a JSON object with key \"translation\" containing the translated text."
+                )
+                try:
+                    raw = self._invoke_json_with_retry(json_prompt, stage, system_prompt)
+                    data = json.loads(raw)
+                    translated = data.get("translation", "")
+                    if not translated:
+                        raise ValueError("empty translation field")
+                except (json.JSONDecodeError, KeyError, ValueError):
+                    # Fallback to non-JSON mode
+                    translated = self._invoke_with_retry(prompt, stage, system_prompt)
             else:
                 translated = self._invoke_with_retry(prompt, stage, system_prompt)
 
@@ -619,6 +705,8 @@ class MultiStageTranslator(BaseTranslator):
         translated = strip_prompt_artifacts(translated)
         translated = strip_inline_artifacts(translated)
         translated = strip_source_contamination(translated, formatted.source_language or "unknown")
+        translated = normalize_cjk_punctuation(translated)
+        translated = normalize_placeholders(translated)
 
         # Guard: detect LLM repetition loops (translated >> source size)
         source_len = len(formatted.formatted_markdown) or 1
@@ -650,12 +738,78 @@ class MultiStageTranslator(BaseTranslator):
         # Return structure_plan="" for backward compatibility with BaseTranslator
         return terminology_map, "", "", translated, source_segments, translated_parts, warnings
 
+    def _translate_auxiliary_blocks(
+        self,
+        blocks: list[ContentBlock],
+        system_prompt: str = "",
+    ) -> dict[int, dict[str, Any]]:
+        """Translate auxiliary fields (table_body, captions, footnotes) for non-text blocks.
+
+        Returns a dict mapping block index to translated auxiliary fields.
+        """
+        aux_translations: dict[int, dict[str, Any]] = {}
+        # Collect all translatable auxiliary text
+        to_translate: list[tuple[int, str, str]] = []  # (block_idx, field, text)
+        for i, block in enumerate(blocks):
+            if block.type == "table":
+                for cap in block.table_caption:
+                    if cap.strip() and _CJK_RE.search(cap):
+                        to_translate.append((i, "table_caption", cap.strip()))
+                for fn in block.table_footnote:
+                    if fn.strip() and _CJK_RE.search(fn):
+                        to_translate.append((i, "table_footnote", fn.strip()))
+            elif block.type == "image":
+                for cap in block.image_caption:
+                    if cap.strip() and _CJK_RE.search(cap):
+                        to_translate.append((i, "image_caption", cap.strip()))
+                for fn in block.image_footnote:
+                    if fn.strip() and _CJK_RE.search(fn):
+                        to_translate.append((i, "image_footnote", fn.strip()))
+
+        if not to_translate:
+            return aux_translations
+
+        # Batch translate in groups of 10
+        batch_size = 10
+        for batch_start in range(0, len(to_translate), batch_size):
+            batch = to_translate[batch_start:batch_start + batch_size]
+            items_json = [
+                {"index": idx, "field": field, "text": text}
+                for idx, (block_idx, field, text) in enumerate(batch)
+            ]
+            prompt = (
+                "Translate each item from Chinese to English. "
+                "Return a JSON object with key \"translations\" whose value is an array "
+                "of objects, each with \"index\" (int) and \"translation\" (string). "
+                "Preserve numbering and formatting.\n\n"
+                f"Items:\n{json.dumps(items_json, ensure_ascii=False)}"
+            )
+            try:
+                raw = self._invoke_json_with_retry(prompt, "aux_translate", system_prompt)
+                data = json.loads(raw)
+                translations = data.get("translations", [])
+                for item in translations:
+                    idx = item.get("index")
+                    translation = item.get("translation", "")
+                    if idx is not None and 0 <= idx < len(batch):
+                        block_idx, field, _orig = batch[idx]
+                        if block_idx not in aux_translations:
+                            aux_translations[block_idx] = {}
+                        if field not in aux_translations[block_idx]:
+                            aux_translations[block_idx][field] = []
+                        aux_translations[block_idx][field].append(translation)
+            except (json.JSONDecodeError, KeyError, TypeError) as exc:
+                logger.warning("Auxiliary translation batch failed: {}", exc)
+
+        return aux_translations
+
     @staticmethod
     def _build_translated_blocks(
         original_blocks: List[ContentBlock],
         segments: List[TranslationSegment],
         translated_text: str,
         text_block_indices: list[int] | None = None,
+        aux_translations: dict[int, dict[str, Any]] | None = None,
     ) -> List[ContentBlock]:
         """Map translated text back to original block structure.
 
@@ -670,6 +824,8 @@ class MultiStageTranslator(BaseTranslator):
             translated_text: The full translated text (may contain delimiters).
             text_block_indices: Indices of blocks that were included in the
                 marked text (non-empty text/title blocks).
+            aux_translations: Optional dict of auxiliary field translations
+                keyed by block index.
         """
         sep = MultiStageTranslator._BLOCK_SEP
         idx_map: dict[int, str] = {}
@@ -696,8 +852,18 @@ class MultiStageTranslator(BaseTranslator):
         # Count text/title blocks for single-block shortcut
         text_blocks = [b for b in original_blocks if b.type in ("text", "title")]
 
+        # Block types that are not body text — filter from downstream output
+        _NON_BODY_TYPES = {"header", "footer", "page_number"}
+
         translated_blocks: list[ContentBlock] = []
+        empty_count = 0
+        filtered_non_body = 0
         for i, block in enumerate(original_blocks):
+            # Filter non-body blocks (headers, footers, page numbers)
+            if block.type in _NON_BODY_TYPES:
+                filtered_non_body += 1
+                continue
+
             if block.type in ("text", "title"):
                 if i in idx_map:
                     new_text = idx_map[i]
@@ -708,6 +874,10 @@ class MultiStageTranslator(BaseTranslator):
                     new_text = MultiStageTranslator._fallback_block_text(
                         block, segments,
                     )
+                # Filter empty text/title blocks
+                if not new_text.strip():
+                    empty_count += 1
+                    continue
                 new_block = ContentBlock(
                     type=block.type,
                     page_idx=block.page_idx,
@@ -716,20 +886,31 @@ class MultiStageTranslator(BaseTranslator):
                     text_level=block.text_level,
                 )
             else:
-                # Non-text blocks: copy as-is
+                # Non-text blocks: copy with aux translations if available
+                aux = (aux_translations or {}).get(i, {})
+                content = block.content
+                sub_type = block.sub_type
+
+                # Strip Mermaid diagrams from image blocks — these are
+                # LLM-generated reconstructions, not original content.
+                # Keep only the image and caption for downstream.
+                if sub_type == "flowchart" and "mermaid" in (content or "").lower():
+                    content = ""
+                    sub_type = "diagram"
+
                 new_block = ContentBlock(
                     type=block.type,
                     page_idx=block.page_idx,
                     bbox=block.bbox,
                     text=block.text,
                     img_path=block.img_path,
-                    content=block.content,
-                    image_caption=list(block.image_caption),
-                    image_footnote=list(block.image_footnote),
-                    sub_type=block.sub_type,
+                    content=content,
+                    image_caption=aux.get("image_caption", list(block.image_caption)),
+                    image_footnote=aux.get("image_footnote", list(block.image_footnote)),
+                    sub_type=sub_type,
                     table_body=block.table_body,
-                    table_caption=list(block.table_caption),
-                    table_footnote=list(block.table_footnote),
+                    table_caption=aux.get("table_caption", list(block.table_caption)),
+                    table_footnote=aux.get("table_footnote", list(block.table_footnote)),
                     text_format=block.text_format,
                     code_body=block.code_body,
                     code_caption=list(block.code_caption),
@@ -740,6 +921,11 @@ class MultiStageTranslator(BaseTranslator):
                     chart_footnote=list(block.chart_footnote),
                 )
             translated_blocks.append(new_block)
+
+        if empty_count:
+            logger.info("Filtered {} empty text/title blocks", empty_count)
+        if filtered_non_body:
+            logger.info("Filtered {} non-body blocks (header/footer/page_number)", filtered_non_body)
         return translated_blocks
 
     @staticmethod
@@ -782,10 +968,14 @@ class MultiStageTranslator(BaseTranslator):
             ))
             translated_offset += len(tr_text) + 2  # +2 for "\n\n" joiner
 
+        # Translate auxiliary fields (captions, footnotes) for non-text blocks
+        aux_translations = self._translate_auxiliary_blocks(blocks)
+
         # Build translated blocks: split translated text on block delimiter
         translated_blocks = self._build_translated_blocks(
             blocks, tr_segments, translated,
             text_block_indices=getattr(self, '_text_block_indices', None),
+            aux_translations=aux_translations,
         )
 
         return TranslationResult(

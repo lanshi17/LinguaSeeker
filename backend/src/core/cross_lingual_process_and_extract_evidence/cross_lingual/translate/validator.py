@@ -172,11 +172,16 @@ def validate_segment(source: str, translated: str) -> None:
         raise ValueError("segment_validation_failed: source_language_content")
 
     # Check if translation is essentially unchanged from source
+    # Skip for English-only source (author names, affiliations) — LLM correctly
+    # leaves these unchanged, but validation would flag as false positive.
     source = str(source or "").strip()
     if source:
-        ratio = SequenceMatcher(None, source.lower(), translated.lower()).ratio()
-        if ratio >= 0.90:
-            raise ValueError("segment_validation_failed: unchanged")
+        source_cjk = len(_CJK_RE.findall(source))
+        source_total = len(source) or 1
+        if source_cjk / source_total >= 0.05:
+            ratio = SequenceMatcher(None, source.lower(), translated.lower()).ratio()
+            if ratio >= 0.90:
+                raise ValueError("segment_validation_failed: unchanged")
 
     # Check for LLM repetition — translated should not be >3x source
     if source and len(translated) > len(source) * 3:
@@ -381,3 +386,70 @@ def validate_image_references_preserved(source: str, translated: str) -> None:
             f"Image references missing from translation: {missing}. "
             f"Source has {len(source_images)} images, translated has {len(translated_images)}."
         )
+
+
+# Translation table for CJK punctuation -> ASCII equivalents
+_CJK_PUNCT_MAP = {
+    0x3000: " ",   # full-width space
+    0xFF0C: ",",   # Chinese comma
+    0x3002: ".",   # Chinese period
+    0xFF1B: ";",   # Chinese semicolon
+    0xFF1A: ":",   # Chinese colon
+    0xFF08: "(",   # Chinese left paren
+    0xFF09: ")",   # Chinese right paren
+    0xFF1F: "?",   # Chinese question mark
+    0xFF01: "!",   # Chinese exclamation
+    0x201C: '"',   # left double quotation mark
+    0x201D: '"',   # right double quotation mark
+    0x2018: "'",   # left single quotation mark
+    0x2019: "'",   # right single quotation mark
+    0x3010: "[",   # left black lenticular bracket
+    0x3011: "]",   # right black lenticular bracket
+    0x300A: "<",   # left double angle bracket
+    0x300B: ">",   # right double angle bracket
+    0x3001: ",",   # Chinese enumeration comma
+}
+_CJK_PUNCT_TABLE = str.maketrans(_CJK_PUNCT_MAP)
+
+
+def normalize_cjk_punctuation(text: str) -> str:
+    """Replace stray CJK punctuation with ASCII equivalents.
+
+    After translation, some CJK punctuation may remain (full-width spaces,
+    Chinese commas, etc.). This normalizes them to ASCII equivalents.
+    """
+    if not text:
+        return text
+    return text.translate(_CJK_PUNCT_TABLE)
+
+
+# Patterns for OCR/parse artifacts that produce empty placeholders
+_PLACEHOLDER_PATTERNS = [
+    (re.compile(r"\[\s*\]"), ""),           # [ ] → remove
+    (re.compile(r"\(year\)"), ""),          # (year) → remove
+    (re.compile(r"\(month\)"), ""),         # (month) → remove
+    (re.compile(r"\(day\)"), ""),           # (day) → remove
+    (re.compile(r"\[year\]"), ""),          # [year] → remove
+    (re.compile(r"\[month\]"), ""),         # [month] → remove
+    (re.compile(r"\[day\]"), ""),           # [day] → remove
+    (re.compile(r"\[age\]"), ""),           # [age] → remove
+    (re.compile(r"\[imaging\]"), ""),       # [imaging] → remove
+    # LLM-generated "blank" placeholders from OCR-missing values
+    (re.compile(r"\bblank\b"), ""),         # standalone "blank" → remove
+    (re.compile(r"\[blank\]"), ""),         # [blank] → remove
+]
+
+
+def normalize_placeholders(text: str) -> str:
+    """Normalize OCR/parse placeholder artifacts.
+
+    Removes empty brackets and generic placeholder text that results from
+    failed OCR extraction. These pollute downstream NER/variant extraction.
+    """
+    if not text:
+        return text
+    for pattern, replacement in _PLACEHOLDER_PATTERNS:
+        text = pattern.sub(replacement, text)
+    # Clean up resulting double-spaces
+    text = re.sub(r"  +", " ", text)
+    return text.strip()

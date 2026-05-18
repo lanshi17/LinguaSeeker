@@ -8,10 +8,10 @@ from src.core.cross_lingual_process_and_extract_evidence.workflow import Transla
 @pytest.fixture
 def mock_config():
     cfg = MagicMock()
-    cfg.translation.api_key = "test-key"
-    cfg.translation.base_url = "http://localhost:8001/v1"
-    cfg.translation.model = "test-model"
-    cfg.translation.temperature = 0.0
+    cfg.llm.api_key = "test-key"
+    cfg.llm.base_url = "http://localhost:8001/v1"
+    cfg.llm.model = "test-model"
+    cfg.llm.temperature = 0.0
     return cfg
 
 
@@ -55,10 +55,10 @@ def test_config_context_from_config(mock_config):
 
 def test_config_context_from_config_default_temperature():
     cfg = MagicMock()
-    cfg.translation.api_key = "key"
-    cfg.translation.base_url = "http://localhost"
-    cfg.translation.model = "model"
-    del cfg.translation.temperature  # getattr will return default
+    cfg.llm.api_key = "key"
+    cfg.llm.base_url = "http://localhost"
+    cfg.llm.model = "model"
+    del cfg.llm.temperature  # getattr will return default
     ctx = TranslationConfigContext.from_config(cfg)
     assert ctx.temperature == 0.0
 
@@ -71,9 +71,9 @@ def test_translation_service_save(tmp_path):
     from src.core.cross_lingual_process_and_extract_evidence.contracts import TranslationResult
 
     cfg = MagicMock()
-    cfg.translation.model = "test-model"
-    cfg.translation.api_key = "test-key"
-    cfg.translation.base_url = "http://localhost:8001"
+    cfg.llm.model = "test-model"
+    cfg.llm.api_key = "test-key"
+    cfg.llm.base_url = "http://localhost:8001"
 
     service = TranslationService(cfg=cfg)
 
@@ -110,9 +110,9 @@ def test_translation_service_save_with_images(tmp_path):
     img.write_bytes(b"fake_png")
 
     cfg = MagicMock()
-    cfg.translation.model = "test-model"
-    cfg.translation.api_key = "test-key"
-    cfg.translation.base_url = "http://localhost:8001"
+    cfg.llm.model = "test-model"
+    cfg.llm.api_key = "test-key"
+    cfg.llm.base_url = "http://localhost:8001"
 
     service = TranslationService(cfg=cfg)
 

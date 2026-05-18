@@ -12,10 +12,10 @@ from src.core.cross_lingual_process_and_extract_evidence.workflow import Transla
 @pytest.fixture
 def mock_cfg():
     cfg = MagicMock()
-    cfg.translation.api_key = "test-key"
-    cfg.translation.base_url = "http://localhost:8001/v1"
-    cfg.translation.model = "test-model"
-    cfg.translation.temperature = 0.0
+    cfg.llm.api_key = "test-key"
+    cfg.llm.base_url = "http://localhost:8001/v1"
+    cfg.llm.model = "test-model"
+    cfg.llm.temperature = 0.0
     return cfg
 
 
@@ -52,11 +52,11 @@ def test_full_pipeline_chinese(mock_chat_cls, mock_cfg, chinese_pages):
     mock_llm = MagicMock()
     mock_chat_cls.return_value = mock_llm
 
-    # Mock each LLM call: terminology + system prompt gen + translate segments
+    # Mock each LLM call: terminology + system prompt gen + translate (JSON mode + fallback)
     mock_llm.invoke.side_effect = [
         _mock_llm_response("基因:gene\n变异:variant"),          # terminology
         _mock_llm_response("You are a biomedical translation engine. Translate from Chinese to English. Preserve markdown structure."),  # system prompt generation
-        _mock_llm_response("The patient carries a novel BRCA1 gene variant. This variant leads to loss of protein function."),  # translate segment 1
+        _mock_llm_response('{"translation": "The patient carries a novel BRCA1 gene variant. This variant leads to loss of protein function."}'),  # JSON mode translate
     ]
 
     service = TranslationService(cfg=mock_cfg)
