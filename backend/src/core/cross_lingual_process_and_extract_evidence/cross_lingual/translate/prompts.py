@@ -55,7 +55,9 @@ def get_format_prompt(markdown_content: str) -> str:
         "- Missing lab values: '尿蛋白 ，' → '尿蛋白 [REDACTED]，'\n"
         "- Missing dosage: '环孢素 ，' → '环孢素 [REDACTED]，'\n"
         "- Empty brackets: '（ ）' → '（[REDACTED]）'\n"
-        "Do NOT insert [REDACTED] for OCR truncations (Task 3) or intentional blanks.\n\n"
+        "Do NOT insert [REDACTED] for OCR truncations (Task 3) or intentional blanks.\n"
+        "CRITICAL: NEVER insert [REDACTED] inside an existing word. "
+        "e.g., 'References' must stay 'References', NOT 'Re[REDACTED]ferences'.\n\n"
         "## Task 3: Repair OCR truncations (do NOT use [REDACTED] here)\n"
         "When medical terms are partially missing due to OCR, restore them:\n"
         "- '长 间期' → '长 R-R 间期' (restore 'R-R')\n"
@@ -170,6 +172,11 @@ def get_translate_prompt(
         "Do NOT remove, translate, or replace them with 'blank'/'unknown'.\n"
         "- Do not add clinical conclusions, phenotype summaries, or ACMG language.\n"
         "- Do not summarize or aggregate clinical findings across sentences.\n"
+        "- Preserve product names, vector names, strain designations, catalog "
+        "numbers, and accession IDs EXACTLY as written in the source, even if "
+        "they appear to contain typos. Do NOT silently 'correct' them "
+        "(e.g. 'pET156' stays 'pET156', not 'pET15b'; "
+        "'CondonPlus' stays 'CondonPlus', not 'CodonPlus').\n"
     )
 
     parts.append(f"[TRANSLATE THIS SEGMENT]\n{markdown_segment}")
@@ -216,6 +223,11 @@ def get_full_document_translate_prompt(
         "'aged [REDACTED] years', 'In [REDACTED], the onset...'). "
         "Do NOT remove, translate, or replace them with 'blank'/'unknown'.\n"
         "- Do not add clinical conclusions, phenotype summaries, or ACMG language.\n"
+        "- Preserve product names, vector names, strain designations, catalog "
+        "numbers, and accession IDs EXACTLY as written in the source, even if "
+        "they appear to contain typos. Do NOT silently 'correct' them "
+        "(e.g. 'pET156' stays 'pET156', not 'pET15b'; "
+        "'CondonPlus' stays 'CondonPlus', not 'CodonPlus').\n"
         "- Output ONLY the translated document with [BLOCK_N] markers.\n"
     )
 
@@ -254,7 +266,11 @@ def get_self_review_prompt(source_text: str, translated_text: str) -> str:
         "(e.g. 'Fabry disease; genetic disease' not 'Fabry disease; Genetic disease').\n"
         "11. Fix 'Email: :' or 'Email:' with missing address → 'Email: [unavailable]'.\n"
         "12. Do NOT add content, inference, or clinical conclusions.\n"
-        "    Only fix formatting and terminology issues.\n\n"
+        "    Only fix formatting and terminology issues.\n"
+        "13. Product names, vector names, strain designations, and catalog numbers\n"
+        "    must match the source EXACTLY. If the translation changed 'pET156' to\n"
+        "    'pET15b' or 'CondonPlus' to 'CodonPlus', revert to the source form.\n"
+        "    Do NOT silently 'correct' apparent typos in identifiers.\n\n"
         "Output ONLY the corrected English translation. "
         "No explanations, no preamble, no diff.\n\n"
         f"[SOURCE]\n{source_text}\n\n"

@@ -16,6 +16,7 @@ from .contracts import (
 )
 from .doi_fallback import doi_fallback_download, probe_doi_landing_page
 from .gateway import _normalize_doi, download_from_provider, search_provider
+from .literature_type_classifier import LiteratureType, classify_item, filter_by_type
 from .normalizers import normalize_items
 from .web_providers import call_web_provider
 
@@ -125,6 +126,26 @@ async def _try_doi_fallback(
     return None
 
 
+def _apply_literature_type_filter(
+    items: List[OnlineAcquisitionItem],
+    literature_types: List[str],
+) -> List[OnlineAcquisitionItem]:
+    """Tag items with literature_type and filter if types specified."""
+    if not literature_types:
+        for item in items:
+            item.literature_type = classify_item(item)
+        return items
+
+    type_set = {LiteratureType(t) for t in literature_types}
+    filtered: List[OnlineAcquisitionItem] = []
+    for item in items:
+        lt = classify_item(item)
+        item.literature_type = lt
+        if lt in type_set:
+            filtered.append(item)
+    return filtered
+
+
 async def _handle_search(
     request: OnlineAcquisitionRequest,
     identifiers: Dict[str, Optional[str]],
@@ -147,6 +168,7 @@ async def _handle_search(
         )
         all_results.append(result)
         items = normalize_items(result.provider, result.items) if result.success else []
+        items = _apply_literature_type_filter(items, request.literature_types)
         warnings.extend(result.warnings)
         route.used = "api"
         route.reason = f"api_provider:{request.api_provider}"
@@ -175,6 +197,7 @@ async def _handle_search(
         )
         all_results.append(result)
         items = normalize_items(result.provider, result.items) if result.success else []
+        items = _apply_literature_type_filter(items, request.literature_types)
         warnings.extend(result.warnings)
         if items:
             route.used = "api"

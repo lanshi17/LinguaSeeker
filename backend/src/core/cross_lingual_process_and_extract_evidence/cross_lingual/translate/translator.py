@@ -36,6 +36,7 @@ from .validator import (
     _is_terminology_echo,
     fix_email_placeholder,
     fix_ocr_truncations,
+    fix_word_boundary_redacted,
     mark_redacted_values,
     normalize_cjk_punctuation,
     normalize_keywords_capitalization,
@@ -236,6 +237,10 @@ class MultiStageTranslator(BaseTranslator):
                 continue
             source = match.group(1).strip()
             target = match.group(2).strip()
+            # Strip instruction annotations like "(保留)", "(keep)", "(preserve)"
+            target = re.sub(r"\s*\(保留\)\s*$", "", target)
+            target = re.sub(r"\s*\(keep\)\s*$", "", target, flags=re.IGNORECASE)
+            target = re.sub(r"\s*\(preserve\)\s*$", "", target, flags=re.IGNORECASE)
             # Skip long entries (notes, explanations, sentences)
             # Use char length for CJK text where word splitting doesn't work
             if len(source) > 50 or len(target) > 50:
@@ -417,22 +422,34 @@ class MultiStageTranslator(BaseTranslator):
     # ── Block marker helpers ──────────────────────────────────────────────
 
     @staticmethod
+    def _is_predominantly_english(text: str) -> bool:
+        """Check if text is predominantly English (low CJK ratio)."""
+        cjk_count = len(_CJK_RE.findall(text))
+        total = len(text.strip()) or 1
+        return cjk_count / total < 0.05
+
+    @staticmethod
     def _join_blocks_with_markers(
         non_empty: list[tuple[int, ContentBlock]],
-    ) -> Tuple[str, list[int], list[str]]:
+    ) -> Tuple[str, list[int], list[str], dict[int, str]]:
         """Join text/title blocks into one string with [BLOCK_N] markers.
 
         Strips ``【摘要】`` prefix (dropped) and ``【关键词】`` prefix
         (saved for re-add after translation). Inserts ``[REDACTED]``
-        markers where OCR values are missing.
+        markers where OCR values are missing. English-only blocks are
+        preserved as-is so the LLM doesn't re-translate them.
 
         Returns:
-            Tuple of (marked_text, block_indices, stripped_prefixes).
-            ``stripped_prefixes[i]`` corresponds to ``block_indices[i]``.
+            Tuple of (marked_text, block_indices, stripped_prefixes,
+            english_overrides). ``stripped_prefixes[i]`` corresponds
+            to ``block_indices[i]``. ``english_overrides`` maps
+            sequence numbers to original English text for blocks that
+            should not be re-translated.
         """
         parts: list[str] = []
         indices: list[int] = []
         prefixes: list[str] = []
+        english_overrides: dict[int, str] = {}
 
         for seq, (block_idx, block) in enumerate(non_empty, start=1):
             text = block.text
@@ -452,9 +469,16 @@ class MultiStageTranslator(BaseTranslator):
 
             indices.append(block_idx)
             prefixes.append(prefix)
-            parts.append(f"[BLOCK_{seq}] {text}")
 
-        return "\n\n".join(parts), indices, prefixes
+            # If text is already English, preserve it and tell the LLM
+            # to pass it through unchanged
+            if MultiStageTranslator._is_predominantly_english(text):
+                english_overrides[seq] = text
+                parts.append(f"[BLOCK_{seq}] {text}")
+            else:
+                parts.append(f"[BLOCK_{seq}] {text}")
+
+        return "\n\n".join(parts), indices, prefixes, english_overrides
 
     @staticmethod
     def _split_by_markers(marked_text: str, n_expected: int) -> list[str]:
@@ -514,13 +538,13 @@ class MultiStageTranslator(BaseTranslator):
         source_texts = [block.text for _, block in non_empty]
 
         # Join blocks with markers (strips prefixes)
-        marked_source, block_indices, stripped_prefixes = (
+        marked_source, block_indices, stripped_prefixes, english_overrides = (
             self._join_blocks_with_markers(non_empty)
         )
 
         logger.info(
-            "Translating {} blocks in single call ({} chars)",
-            len(non_empty), len(marked_source),
+            "Translating {} blocks in single call ({} chars), {} English-only blocks preserved",
+            len(non_empty), len(marked_source), len(english_overrides),
         )
 
         # Single LLM call for the entire document
@@ -537,9 +561,17 @@ class MultiStageTranslator(BaseTranslator):
         # Split on markers
         translated_parts = self._split_by_markers(translated, len(non_empty))
 
-        # Re-add stripped prefixes
+        # Fix [REDACTED] incorrectly inserted inside English words
+        translated_parts = [fix_word_boundary_redacted(p) for p in translated_parts]
+
+        # Re-add stripped prefixes and restore English-only blocks
         for idx, prefix in enumerate(stripped_prefixes):
-            if prefix and idx < len(translated_parts):
+            seq = idx + 1  # 1-based sequence number
+            if seq in english_overrides:
+                # Preserve original English text — don't use LLM translation
+                translated_parts[idx] = english_overrides[seq]
+                logger.debug("Preserved English block {}: {}...", seq, english_overrides[seq][:60])
+            elif prefix and idx < len(translated_parts):
                 part = translated_parts[idx]
                 if _CJK_RE.search(prefix):
                     prefix_tr = self._invoke_with_retry(
@@ -839,6 +871,7 @@ class MultiStageTranslator(BaseTranslator):
         translated = normalize_placeholders(translated)
         translated = fix_email_placeholder(translated)
         translated = fix_ocr_truncations(translated)
+        translated = fix_word_boundary_redacted(translated)
 
         # Guard: detect LLM repetition loops (translated >> source size)
         source_len = len(formatted.formatted_markdown) or 1
@@ -1048,6 +1081,7 @@ class MultiStageTranslator(BaseTranslator):
                 new_text = normalize_cjk_punctuation(new_text)
                 new_text = fix_email_placeholder(new_text)
                 new_text = fix_ocr_truncations(new_text)
+                new_text = fix_word_boundary_redacted(new_text)
                 new_block = ContentBlock(
                     type=block.type,
                     page_idx=block.page_idx,

@@ -20,6 +20,9 @@ ActionStrategy = Literal["search", "download"]
 
 # --- Request ---
 
+LiteratureTypeFilter = Literal["case_report", "sequencing", "functional"]
+
+
 class OnlineAcquisitionRequest(BaseModel):
     """Unified request for literature search/download."""
 
@@ -30,6 +33,7 @@ class OnlineAcquisitionRequest(BaseModel):
     raw: bool = False
     limit: int = 20
     language: Optional[str] = "auto"
+    literature_types: List[LiteratureTypeFilter] = Field(default_factory=list)
 
     api_provider: Optional[ApiProvider] = None
     web_provider: Optional[WebProvider] = None
@@ -86,6 +90,7 @@ class OnlineAcquisitionItem(BaseModel):
     issn: List[str] = Field(default_factory=list)
     identifiers: Dict[str, Any] = Field(default_factory=dict)
     keywords: List[str] = Field(default_factory=list)
+    literature_type: Optional[str] = None
 
 
 # --- Route Info ---
