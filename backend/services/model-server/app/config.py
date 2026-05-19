@@ -35,8 +35,8 @@ class Settings(BaseSettings):
     llm_model_id: str = ""
 
     # VLM model (MinerU)
-    vlm_model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B"
-    vlm_image_analysis: bool = True
+    vlm_model_id: str = "opendatalab--MinerU2.5-Pro-2604-1.2B"
+    vlm_image_analysis: bool = False
 
     # vllm shared settings
     vllm_gpu_memory_utilization: float = 0.9

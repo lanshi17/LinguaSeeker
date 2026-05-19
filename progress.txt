@@ -58,4 +58,5 @@
 [2026-05-18] Database MVP Tasks 4-7 code review: fixed migration/model drift, search-index metadata isolation, and dict-return justifications [completed]
 [2026-05-18] Database MVP completion docs: generated DAO module guide and archived database design/implementation docs [completed]
 [2026-05-18] expand-online-acquisition-providers: Merged to dev. 12 providers + 3 strategies, 13 tests passing. Worktree cleaned up. [DONE]
-[2026-05-18] Added Korean ("ko") language search queries to bench_download.py, manually classified 11 benchmark downloads, deduplicated report.json by DOI (67→63 records, unclassified 49→37) [done]
+[2026-05-18] Korean ("ko") in bench_download; manual PDF classification + SHA256 dedup + title backfill → report.json 75→53, unclassified 49→12; organized downloads/ into 4-category subdirs per lang; merged 4 benchmark scripts into single benchmark.py with download/optimize/analyze subcommands [done]
+[2026-05-19] Fixed model-server VLM default wiring and docs: disable VLM by default, hide /v1/chat/completions when VLM_MODEL_ID is unset, add regression test for conditional router registration, verify 19 model-server tests passing [done]

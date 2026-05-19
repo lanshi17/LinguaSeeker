@@ -168,3 +168,15 @@
 **Solution**: Constructed `Settings(_env_file=None)` in the default-value test so it validates code defaults without reading `.env.local` or `.env`.
 
 **Prevention**: For config tests that assert defaults, disable dotenv loading explicitly. Use environment variables only in tests that are intentionally validating env overrides.
+
+## 2026-05-19: model-server VLM default config exposed stale 503 behavior
+
+**Problem**: `POST /v1/chat/completions` on the running model-server returned `503 Service Unavailable` with `{"detail":"VLM service not available. Configure VLM_MODEL_ID to enable."}`.
+
+**Investigation**: Checked the live process start time, `/health`, OpenAPI, `app/config.py`, `main.py`, and the model-server logs. The live `8001` process started on 2026-05-16 and was still running old wiring. The repo's `.env.local` also defined `VLM_MODEL`, not `VLM_MODEL_ID`, while `backend/services/model-server` only read `VLM_MODEL_ID`. Targeted tests failed because `app/config.py` defaulted `vlm_model_id` to the MinerU model and `vlm_image_analysis` to `True`, contradicting the tests and README.
+
+**Root cause**: Two issues combined. First, model-server config defaults enabled VLM even when the environment did not configure it. Second, the long-lived 8001 process was not restarted after source changes, so it kept serving the stale 503 behavior.
+
+**Solution**: Set `vlm_model_id` default to empty string and `vlm_image_analysis` default to `False`, added a regression test that `/v1/chat/completions` is absent from OpenAPI when `VLM_MODEL_ID` is unset, updated the model-server README to describe 404 vs 503 behavior correctly, and verified a fresh process returns 404 without VLM config and 400 when VLM is explicitly enabled but the request is text-only.
+
+**Prevention**: Keep config defaults aligned with tests and docs, prefer explicit enablement for optional model services, and restart stale long-lived service processes after changing startup wiring. For runtime checks, confirm the live process start time matches the code on disk before trusting logs.
