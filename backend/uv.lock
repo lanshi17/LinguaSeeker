@@ -42,6 +42,7 @@ dependencies = [
     { name = "requests", extra = ["socks"] },
     { name = "rust-io" },
     { name = "selectolax" },
+    { name = "socks" },
     { name = "sqlalchemy" },
     { name = "tokenizers" },
     { name = "torch" },
@@ -91,6 +92,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5.0" },
     { name = "rust-io", editable = "libs/rust-io" },
     { name = "selectolax", specifier = ">=0.4.8" },
+    { name = "socks", specifier = ">=0" },
     { name = "sqlalchemy", specifier = ">=2.0.0" },
     { name = "tokenizers", specifier = ">=0.22.0,<=0.23.0" },
     { name = "torch", specifier = ">=2.11.0" },
@@ -3260,6 +3262,12 @@ sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/44/7b/af302bebf22c74
 wheels = [
     { url = "https://pypi.tuna.tsinghua.edu.cn/packages/ed/dc/c02e01294f7265e63a7315fe086dd1df7dacb9f840a804da846b96d01b96/snowballstemmer-2.2.0-py2.py3-none-any.whl", hash = "sha256:c8e1716e83cc398ae16824e5572ae04e0d9fc2c6b985fb0f900f5f0c96ecba1a", size = 93002, upload-time = "2021-11-16T18:38:34.792Z" },
 ]
+
+[[package]]
+name = "socks"
+version = "0"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/3b/a3/2192084c11c90df6947635a06181f5c1f9df94ae71be1808f4df91579640/socks-0.tar.gz", hash = "sha256:727e9b4620730601c0360a00c7f4ae26295146c0a91af173bd155cc991edf765", size = 618, upload-time = "2019-09-20T20:25:45.064Z" }
 
 [[package]]
 name = "socksio"

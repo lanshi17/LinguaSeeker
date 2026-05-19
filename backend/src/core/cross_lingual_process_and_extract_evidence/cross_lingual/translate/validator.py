@@ -525,6 +525,23 @@ def fix_ocr_truncations(text: str) -> str:
     return text
 
 
+# Pattern for [REDACTED] incorrectly inserted inside English words.
+# e.g., "Re[REDACTED]ferences" → "References"
+_REDACTED_IN_WORD_RE = re.compile(r"(?<=[A-Za-z])\[REDACTED\](?=[A-Za-z])")
+
+
+def fix_word_boundary_redacted(text: str) -> str:
+    """Remove [REDACTED] markers incorrectly inserted inside English words.
+
+    The formatter LLM sometimes inserts [REDACTED] mid-word, e.g.
+    ``Re[REDACTED]ferences`` instead of ``References``. This strips
+    such markers while preserving legitimate [REDACTED] placeholders.
+    """
+    if not text:
+        return text
+    return _REDACTED_IN_WORD_RE.sub("", text)
+
+
 _KEYWORDS_RE = re.compile(
     r"^((?:Key\s*)?Words?\s*:?\s*)(.+)$",
     re.IGNORECASE,

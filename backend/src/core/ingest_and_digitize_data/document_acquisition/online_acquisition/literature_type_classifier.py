@@ -30,6 +30,18 @@ _CASE_REPORT_PATTERNS = [
     re.compile(r"\bclinical\s+case\b", re.IGNORECASE),
     re.compile(r"\bpatient\s+report\b", re.IGNORECASE),
     re.compile(r"\bcase\s+presentation\b", re.IGNORECASE),
+    # Chinese
+    re.compile(r"病例报告|病例分析|病例研究|个案报道|临床病例|病例系列"),
+    # Japanese
+    re.compile(r"症例報告|症例研究|臨床症例|ケースレポート"),
+    # Korean
+    re.compile(r"증례\s*보고|증례\s*연구|임상\s*증례|케이스\s*리포트"),
+    # Spanish
+    re.compile(r"caso\s+cl[ií]nico|reporte\s+de\s+caso|serie\s+de\s+casos|estudio\s+de\s+caso", re.IGNORECASE),
+    # Portuguese
+    re.compile(r"relato\s+de\s+caso|s[eé]rie\s+de\s+casos|caso\s+cl[ií]nico|estudo\s+de\s+caso", re.IGNORECASE),
+    # Russian
+    re.compile(r"случай\s+(?:из\s+)?практики|описание\s+случая|клинический\s+случай|серия\s+случаев|казуистика"),
 ]
 
 _CASE_REPORT_JOURNAL_PATTERNS = [
@@ -55,6 +67,18 @@ _SEQUENCING_PATTERNS = [
     re.compile(r"\bsequencing[\s-](?:based|method|approach|platform)\b", re.IGNORECASE),
     re.compile(r"\bNGS[\s-](?:based|panel|analysis)\b", re.IGNORECASE),
     re.compile(r"\b(?:Ion\s+Torrent|Illumina|MiSeq|NextSeq|NovaSeq|PacBio|Oxford\s+Nanopore)\b", re.IGNORECASE),
+    # Chinese
+    re.compile(r"基因测序|基因组测序|外显子测序|靶向测序|二代测序|高通量测序|全基因组测序|全外显子测序|基因检测|基因panel"),
+    # Japanese
+    re.compile(r"遺伝子シークエンス|ゲノムシーケンシング|エクソームシーケンシング|ターゲットシーケンシング|次世代シーケンス|遺伝子検査"),
+    # Korean
+    re.compile(r"유전자\s*시퀀싱|게놈\s*시퀀싱|엑솜\s*시퀀싱|표적\s*시퀀싱|차세대\s*시퀀싱|유전자\s*검사"),
+    # Spanish
+    re.compile(r"secuenciaci[oó]n\s+gen[oó]mica|secuenciaci[oó]n\s+de\s+pr[oó]xima\s+generaci[oó]n|secuenciaci[oó]n\s+del\s+exoma|panel\s+de\s+genes", re.IGNORECASE),
+    # Portuguese
+    re.compile(r"sequenciamento\s+gen[oô]mico|sequenciamento\s+de\s+pr[oó]xima\s+gera[cç][aã]o|sequenciamento\s+do\s+exoma|painel\s+de\s+genes", re.IGNORECASE),
+    # Russian
+    re.compile(r"секвенирование|секвенирования|геномное\s+секвенирование|экзомное\s+секвенирование|целевое\s+секвенирование|панель\s+генов|НГС|нового\s+поколения"),
 ]
 
 _FUNCTIONAL_PATTERNS = [
@@ -76,6 +100,18 @@ _FUNCTIONAL_PATTERNS = [
     re.compile(r"\bmechanis(?:m|tic)\s+stud(?:y|ies)\b", re.IGNORECASE),
     re.compile(r"\b(?:CRISPR|Cas9|gene\s+editing)\b", re.IGNORECASE),
     re.compile(r"\b(?:plasmid|vector|construct)\b.*\b(?:express|transfect)\b", re.IGNORECASE),
+    # Chinese
+    re.compile(r"体外实验|体内实验|功能研究|功能分析|基因敲除|基因敲低|过表达|细胞系|功能验证|机制研究|蛋白表达|增殖|凋亡|迁移|侵袭"),
+    # Japanese
+    re.compile(r"in\s+vitro|in\s+vivo|機能解析|機能研究|ノックダウン|ノックアウト|過剰発現|細胞株|メカニズム研究|タンパク質発現"),
+    # Korean
+    re.compile(r"기능\s*연구|기능\s*분석|녹다운|녹아웃|과발현|세포주|메커니즘\s*연구|단백질\s*발현|apoptosis|proliferation"),
+    # Spanish
+    re.compile(r"estudio\s+funcional|an[aá]lisis\s+funcional|in\s+vitro|in\s+vivo|silenciamiento|sobreexpresi[oó]n|l[ií]neas\s+celulares", re.IGNORECASE),
+    # Portuguese
+    re.compile(r"estudo\s+funcional|an[aá]lise\s+funcional|in\s+vitro|in\s+vivo|silenciamento|sobreexpress[aã]o|linhagens\s+celulares", re.IGNORECASE),
+    # Russian
+    re.compile(r"функциональное\s+исследование|in\s+vitro|in\s+vivo|нокаут|нокдаун|сверхэкспрессия|клеточная\s+линия|механизм|апоптоз|пролиферация|миграция|инвазия"),
 ]
 
 
