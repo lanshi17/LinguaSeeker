@@ -10,9 +10,9 @@
 
 ---
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-05-16
-**Completed:** -
+**Completed:** 2026-05-19
 **PR:** -
 
 ## Scope
