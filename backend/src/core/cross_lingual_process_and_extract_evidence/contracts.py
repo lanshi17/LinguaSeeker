@@ -73,6 +73,10 @@ class ContentBlock:
     chart_caption: list[str] = field(default_factory=list)
     chart_footnote: list[str] = field(default_factory=list)
 
+    # quality flags
+    needs_manual_review: bool = False
+    review_reason: str = ""
+
     # header/footer/page_number/aside_text/page_footnote
     # uses `text` field above
 
@@ -137,6 +141,11 @@ class ContentBlock:
                 d["list_items"] = self.list_items
         elif self.type in ("header", "footer", "page_number", "aside_text", "page_footnote"):
             d["text"] = self.text
+
+        if self.needs_manual_review:
+            d["needs_manual_review"] = True
+            if self.review_reason:
+                d["review_reason"] = self.review_reason
 
         return d
 
