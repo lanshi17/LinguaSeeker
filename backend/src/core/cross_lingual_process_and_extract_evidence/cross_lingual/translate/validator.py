@@ -437,6 +437,11 @@ _PLACEHOLDER_PATTERNS = [
     # LLM-generated "blank" placeholders from OCR-missing values
     (re.compile(r"\bblank\b"), ""),         # standalone "blank" → remove
     (re.compile(r"\[blank\]"), ""),         # [blank] → remove
+    # Bare CJK date placeholders that the LLM may pass through untranslated
+    (re.compile(r"年\s*月\s*日"), ""),       # 年月日 → remove
+    (re.compile(r"\byear[,\s]+month[,\s]+day\b"), ""),  # LLM-translated date placeholder (with/without commas)
+    # Empty parentheses from OCR (no content inside)
+    (re.compile(r"\(\s*\)"), ""),            # () → remove
 ]
 
 
@@ -450,6 +455,157 @@ def normalize_placeholders(text: str) -> str:
         return text
     for pattern, replacement in _PLACEHOLDER_PATTERNS:
         text = pattern.sub(replacement, text)
+    # Clean up orphan prepositions left after placeholder removal ("On ,", "in .")
+    text = re.sub(r"\b(?:on|in|at|of)\s*([,.\;])", r"\1", text, flags=re.IGNORECASE)
+    # Clean up consecutive orphan prepositions ("on in the Department")
+    text = re.sub(r"\b(?:on|in|at)\s+(in|at|of)\b", r"\1", text, flags=re.IGNORECASE)
+    # Clean up leading punctuation left after preposition removal (", the patient...")
+    text = re.sub(r"^\s*[,;]\s*", "", text)
     # Clean up resulting double-spaces
     text = re.sub(r"  +", " ", text)
     return text.strip()
+
+
+# Pattern for redundant email colon when address is missing (OCR artifact)
+_EMAIL_COLON_RE = re.compile(r"[Ee]mail\s*:\s*:")
+_EMAIL_EMPTY_RE = re.compile(r"[Ee]mail\s*:\s*$")
+# Trailing orphan colon after author name (no email label)
+_TRAILING_ORPHAN_COLON_RE = re.compile(r",\s*:\s*$")
+
+
+def fix_email_placeholder(text: str) -> str:
+    """Fix redundant email colons from OCR-missing addresses.
+
+    Transforms 'Email: :' → 'Email: [unavailable]',
+    'Email:' (at end of line) → 'Email: [unavailable]',
+    and trailing ', :' (orphan colon without email label) → ''.
+    """
+    if not text:
+        return text
+    text = _EMAIL_COLON_RE.sub("Email: [unavailable]", text)
+    text = _EMAIL_EMPTY_RE.sub("Email: [unavailable]", text)
+    text = _TRAILING_ORPHAN_COLON_RE.sub("", text)
+    return text
+
+
+# OCR truncation patterns common in biomedical CJK documents
+# Matches "galactosidase ( , )" or "galactosidase A ( , )" — empty abbreviation
+_GALACTOSIDASE_RE = re.compile(
+    r"(?<!α-)\bgalactosidase(?:\s+A)?\s*\(\s*,\s*\)",
+    re.IGNORECASE,
+)
+_LINKED_ORPHAN_RE = re.compile(
+    r"(?<![A-Za-z])-linked\b",
+)
+
+
+# Also match "α-galactosidase A ( , )" — prefix present but abbreviation missing
+_GALACTOSIDASE_FULL_RE = re.compile(
+    r"α-galactosidase(?:\s+A)?\s*\(\s*,\s*\)",
+    re.IGNORECASE,
+)
+# Trailing comma inside parenthetical: "(α-Gal A, )" → "(α-Gal A)"
+_TRAILING_COMMA_IN_PARENS_RE = re.compile(r",\s*\)")
+
+
+def fix_ocr_truncations(text: str) -> str:
+    """Fix common OCR truncation patterns in biomedical translations.
+
+    Restores terms that upstream OCR commonly truncates:
+    - ``galactosidase ( , )`` → ``α-galactosidase A (α-Gal A)``
+    - ``α-galactosidase A ( , )`` → ``α-galactosidase A (α-Gal A)``
+    - ``-linked`` (missing X prefix) → ``X-linked``
+    """
+    if not text:
+        return text
+    text = _GALACTOSIDASE_RE.sub("α-galactosidase A (α-Gal A)", text)
+    text = _GALACTOSIDASE_FULL_RE.sub("α-galactosidase A (α-Gal A)", text)
+    text = _LINKED_ORPHAN_RE.sub("X-linked", text)
+    text = _TRAILING_COMMA_IN_PARENS_RE.sub(")", text)
+    return text
+
+
+_KEYWORDS_RE = re.compile(
+    r"^((?:Key\s*)?Words?\s*:?\s*)(.+)$",
+    re.IGNORECASE,
+)
+
+
+# Minimal patterns for obvious structural artifacts (empty brackets only).
+# Complex missing-value detection is handled by LLM in formatter stage.
+_REDACTED_PATTERNS = [
+    # Empty brackets: "（ ）" → "（[REDACTED]）"
+    (re.compile(r"（\s+）"), "（[REDACTED]）"),
+    (re.compile(r"\(\s+\)"), "([REDACTED])"),
+]
+
+# Generic CJK-gap detection: catches whitespace between CJK characters
+# followed by common value indicators (units, counters, punctuation).
+# This is a safety net for values the LLM formatter may have missed.
+_CJK_GAP_PATTERNS = [
+    # CJK + space + counter word: "纳入了 例" → "纳入了 [REDACTED] 例"
+    (re.compile(r"([一-鿿])\s+([例个次名岁天月年期])"), r"\1 [REDACTED] \2"),
+    # CJK + space + punctuation: "尿蛋白 ，" → "尿蛋白 [REDACTED]，"
+    (re.compile(r"([一-鿿])\s+([，。；：、])"), r"\1 [REDACTED]\2"),
+    # CJK + space + CJK (only when both sides are value-related characters)
+    # e.g., "心脏 超" but not "患者 男性" (intentional spacing)
+    (re.compile(r"([一-鿿])\s+([一-鿿])(?=[，。；：、\s])"), r"\1 [REDACTED] \2"),
+]
+
+
+def mark_redacted_values(text: str) -> str:
+    """Insert [REDACTED] markers where OCR values are missing.
+
+    Uses a two-pass approach:
+    1. LLM formatter (primary) - handles complex patterns in get_format_prompt
+    2. Regex safety net (this function) - catches remaining CJK gaps
+
+    In Chinese medical documents, redacted/sensitive values appear as
+    bare spaces between characters. The regex patterns here are intentionally
+    generic to catch any gaps the LLM formatter missed.
+    """
+    if not text:
+        return text
+    # Pass 1: structural artifacts (empty brackets)
+    for pattern, replacement in _REDACTED_PATTERNS:
+        text = pattern.sub(replacement, text)
+    # Pass 2: generic CJK-gap safety net
+    for pattern, replacement in _CJK_GAP_PATTERNS:
+        text = pattern.sub(replacement, text)
+    # Clean up double markers
+    text = re.sub(r"\[REDACTED\]\s*\[REDACTED\]", "[REDACTED]", text)
+    return text
+
+
+def normalize_keywords_capitalization(text: str) -> str:
+    """Normalize keyword list capitalization to sentence case.
+
+    After the 'Keywords' label, lowercases the first letter of each
+    semicolon-separated term unless it looks like an abbreviation
+    (all-caps) or proper noun (starts with uppercase followed by
+    lowercase but is a known biomedical proper noun).
+    """
+    if not text:
+        return text
+    m = _KEYWORDS_RE.match(text.strip())
+    if not m:
+        return text
+    label = m.group(1)
+    body = m.group(2)
+    terms = [t.strip() for t in body.split(";")]
+    normalized: list[str] = []
+    for term in terms:
+        if not term:
+            continue
+        # Keep abbreviations (all-caps like GLA, ERT) as-is
+        if term[:1].isupper() and len(term) > 1 and term[1:2].isupper():
+            normalized.append(term)
+        # Keep proper nouns (mixed case like "Fabry", "Parkinson") as-is
+        elif any(c.isupper() for c in term[1:]):
+            normalized.append(term)
+        # Lowercase first letter of common terms
+        elif term[0].isupper():
+            normalized.append(term[0].lower() + term[1:])
+        else:
+            normalized.append(term)
+    return label + "; ".join(normalized)

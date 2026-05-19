@@ -32,7 +32,16 @@ class TranslationService:
 
     def __init__(self, cfg: Any):
         self._ctx = TranslationConfigContext.from_config(cfg)
-        self._formatter = MarkdownFormatter()
+        # Create LLM for formatter (redaction detection + OCR repair)
+        from langchain_openai import ChatOpenAI
+        from pydantic import SecretStr
+        formatter_llm = ChatOpenAI(
+            model=self._ctx.model,
+            api_key=SecretStr(self._ctx.api_key),
+            base_url=self._ctx.base_url,
+            temperature=self._ctx.temperature,
+        )
+        self._formatter = MarkdownFormatter(llm=formatter_llm)
         self._translator = MultiStageTranslator(ctx=self._ctx)
         self._router = LanguageRouter()
         self._persistence = DocumentPersistenceService()

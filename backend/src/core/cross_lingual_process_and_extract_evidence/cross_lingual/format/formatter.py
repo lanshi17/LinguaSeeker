@@ -218,12 +218,71 @@ def _format_markdown(
 class MarkdownFormatter(BaseFormatter):
     """Concrete formatter implementing the BaseFormatter interface."""
 
+    def __init__(self, llm: Any = None):
+        """Initialize formatter with optional LLM for enhanced formatting.
+
+        Args:
+            llm: Optional LLM instance for redaction detection and OCR repair.
+                 When provided, the formatter will use LLM to identify missing
+                 values and insert [REDACTED] markers.
+        """
+        self._llm = llm
+
     def format(
         self,
         pages: List[Dict[str, Any]],
         content_blocks: List[Dict[str, Any]] | None = None,
     ) -> FormattedDocument:
-        return _format_markdown(pages, content_blocks=content_blocks)
+        doc = _format_markdown(pages, content_blocks=content_blocks)
+        if self._llm and doc.formatted_markdown.strip():
+            doc = self._apply_llm_formatting(doc)
+        return doc
+
+    def _apply_llm_formatting(self, doc: FormattedDocument) -> FormattedDocument:
+        """Use LLM to detect redactions and repair OCR artifacts."""
+        from ..translate.prompts import get_format_prompt
+        from ..translate.translator import MultiStageTranslator
+
+        prompt = get_format_prompt(doc.formatted_markdown)
+        logger.info("LLM formatting: {} chars", len(doc.formatted_markdown))
+
+        try:
+            # Use the translator's LLM invocation with retry
+            from langchain_core.messages import HumanMessage
+            response = self._llm.invoke([HumanMessage(content=prompt)])
+            formatted = response.content if hasattr(response, 'content') else str(response)
+
+            # Safety: if output is too different in length, keep original
+            if abs(len(formatted) - len(doc.formatted_markdown)) > len(doc.formatted_markdown) * 0.3:
+                logger.warning(
+                    "LLM format output length mismatch ({} vs {} chars), keeping original",
+                    len(formatted), len(doc.formatted_markdown),
+                )
+                return doc
+
+            # Count [REDACTED] markers added
+            orig_count = doc.formatted_markdown.count("[REDACTED]")
+            new_count = formatted.count("[REDACTED]")
+            if new_count > orig_count:
+                logger.info("LLM format added {} [REDACTED] markers", new_count - orig_count)
+
+            # Update document with LLM-formatted text
+            from .formatter import extract_sentences, build_page_offset_map
+            page_offset_map = build_page_offset_map(
+                [{"page_number": i, "markdown": ""} for i in range(doc.metadata.get("page_count", 1))]
+            )
+            sentences = extract_sentences(formatted, page_offset_map)
+
+            return FormattedDocument(
+                formatted_markdown=formatted,
+                sentences=sentences,
+                metadata=doc.metadata,
+                raw_markdown=doc.raw_markdown,
+                original_blocks=doc.original_blocks,
+            )
+        except Exception as exc:
+            logger.warning("LLM formatting failed: {}, keeping original", exc)
+            return doc
 
     def compute_drift(
         self,

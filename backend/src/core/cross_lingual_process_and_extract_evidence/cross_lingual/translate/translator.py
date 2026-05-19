@@ -25,13 +25,20 @@ from ..format.segmenter import estimate_tokens, segment_text
 from .base import BaseTranslator
 from .language_detector import _CJK_RE, detect_language
 from .prompts import (
+    get_full_document_translate_prompt,
+    get_self_review_prompt,
     get_system_prompt_generation_prompt,
     get_terminology_prompt,
     get_translate_prompt,
 )
 from .validator import (
+    _IMAGE_REF_RE,
     _is_terminology_echo,
+    fix_email_placeholder,
+    fix_ocr_truncations,
+    mark_redacted_values,
     normalize_cjk_punctuation,
+    normalize_keywords_capitalization,
     normalize_placeholders,
     strip_inline_artifacts,
     strip_prompt_artifacts,
@@ -55,6 +62,7 @@ class MultiStageTranslator(BaseTranslator):
     _MAX_SEGMENT_RETRIES: int = 3
     _MAX_TERMINOLOGY_ENTRIES: int = 100
     _BLOCK_SEP = "\n\n«BLK»\n\n"
+    _BLOCK_MARKER_RE = re.compile(r"\[BLOCK_(\d+)\]")
 
     # Pre-compiled regex for _clean_terminology
     _TERM_HEADER_RE = re.compile(
@@ -208,8 +216,8 @@ class MultiStageTranslator(BaseTranslator):
     def _parse_terminology(raw: str) -> Dict[str, str]:
         """Parse 'source: target' lines into a dict.
 
-        Validates: both sides <=10 words, source side contains non-ASCII
-        (since source language is non-English for translation).
+        Validates: short terms (not sentences/notes), source side contains
+        non-ASCII (since source language is non-English for translation).
         Deduplicates by target value and caps at _MAX_TERMINOLOGY_ENTRIES.
         """
         result: Dict[str, str] = {}
@@ -220,12 +228,18 @@ class MultiStageTranslator(BaseTranslator):
                 continue
             # Strip numbered prefixes like "33. "
             line = re.sub(r"^\d+\.\s+", "", line)
+            # Skip lines starting with * (LLM notes/explanations)
+            if line.startswith("*"):
+                continue
             match = re.match(r"^(.+?):\s*(.+)$", line)
             if not match:
                 continue
             source = match.group(1).strip()
             target = match.group(2).strip()
-            # Skip lines that look like English notes/comments
+            # Skip long entries (notes, explanations, sentences)
+            # Use char length for CJK text where word splitting doesn't work
+            if len(source) > 50 or len(target) > 50:
+                continue
             if len(source.split()) > 10 or len(target.split()) > 10:
                 continue
             # Source side should contain non-ASCII (CJK/non-English term)
@@ -400,13 +414,95 @@ class MultiStageTranslator(BaseTranslator):
     # Context window per side (prev/next)
     _CONTEXT_CHARS: int = 150
 
+    # ── Block marker helpers ──────────────────────────────────────────────
+
+    @staticmethod
+    def _join_blocks_with_markers(
+        non_empty: list[tuple[int, ContentBlock]],
+    ) -> Tuple[str, list[int], list[str]]:
+        """Join text/title blocks into one string with [BLOCK_N] markers.
+
+        Strips ``【摘要】`` prefix (dropped) and ``【关键词】`` prefix
+        (saved for re-add after translation). Inserts ``[REDACTED]``
+        markers where OCR values are missing.
+
+        Returns:
+            Tuple of (marked_text, block_indices, stripped_prefixes).
+            ``stripped_prefixes[i]`` corresponds to ``block_indices[i]``.
+        """
+        parts: list[str] = []
+        indices: list[int] = []
+        prefixes: list[str] = []
+
+        for seq, (block_idx, block) in enumerate(non_empty, start=1):
+            text = block.text
+
+            # Strip 【…】 bracket prefixes
+            prefix = ""
+            kw_match = re.match(r"^【[^】]+】\s*", text)
+            if kw_match:
+                bracket = kw_match.group(0)
+                text = text[kw_match.end():]
+                # Keep 【关键词】 for re-add; drop 【摘要】
+                if "摘要" not in bracket:
+                    prefix = bracket.strip()
+
+            # Mark redacted values before translation
+            text = mark_redacted_values(text)
+
+            indices.append(block_idx)
+            prefixes.append(prefix)
+            parts.append(f"[BLOCK_{seq}] {text}")
+
+        return "\n\n".join(parts), indices, prefixes
+
+    @staticmethod
+    def _split_by_markers(marked_text: str, n_expected: int) -> list[str]:
+        """Split LLM output on [BLOCK_N] markers.
+
+        Returns a list of translated texts, one per block. If markers
+        are missing, returns the full text as a single element.
+        """
+        marker_re = re.compile(r"\[BLOCK_(\d+)\]")
+        segments: dict[int, str] = {}
+        last_end = 0
+
+        for m in marker_re.finditer(marked_text):
+            seq = int(m.group(1))
+            content_start = m.end()
+            # Find the next marker (or end of string)
+            next_m = marker_re.search(marked_text, content_start)
+            content_end = next_m.start() if next_m else len(marked_text)
+            content = marked_text[content_start:content_end].strip()
+            # Strip leading newlines/separators
+            content = content.lstrip("\n").strip()
+            if content:
+                segments[seq] = content
+            last_end = content_end
+
+        if not segments:
+            # No markers found — return full text as single element
+            return [marked_text.strip()]
+
+        # Reconstruct in order
+        result: list[str] = []
+        for seq in range(1, n_expected + 1):
+            result.append(segments.get(seq, ""))
+        return result
+
+    # ── Full-document translation ─────────────────────────────────────────
+
     def _translate_blocks(
         self,
         formatted: FormattedDocument,
         terminology: str,
         non_empty: list[tuple[int, ContentBlock]],
     ) -> Tuple[str, List[str], List[str]]:
-        """Translate each text/title block individually for guaranteed alignment.
+        """Translate all text/title blocks in a single LLM call.
+
+        Uses ``[BLOCK_N]`` markers to join blocks before translation,
+        then splits the translated output on the same markers to recover
+        per-block translations.
 
         Returns:
             Tuple of (joined_translated_text, source_block_texts, translated_block_texts).
@@ -414,75 +510,103 @@ class MultiStageTranslator(BaseTranslator):
         system_prompt = self._generate_system_prompt(formatted)
         self._text_block_indices = [i for i, _ in non_empty]
 
-        source_texts: list[str] = []
-        translated_texts: list[str] = []
+        # Save original source texts before prefix stripping
+        source_texts = [block.text for _, block in non_empty]
 
-        for idx, (block_idx, block) in enumerate(non_empty, start=1):
-            source_texts.append(block.text)
+        # Join blocks with markers (strips prefixes)
+        marked_source, block_indices, stripped_prefixes = (
+            self._join_blocks_with_markers(non_empty)
+        )
 
-            # Strip 【关键词】 prefix before translation, re-add after
-            kw_prefix = ""
-            block_text = block.text
-            kw_match = re.match(r"^【[^】]+】\s*", block_text)
-            if kw_match:
-                kw_prefix = kw_match.group(0)
-                block_text = block_text[kw_match.end():]
+        logger.info(
+            "Translating {} blocks in single call ({} chars)",
+            len(non_empty), len(marked_source),
+        )
 
-            translated = self._translate_one_segment(
-                block_text, terminology, idx, len(non_empty),
-                system_prompt=system_prompt,
-            )
-            translated = strip_prompt_echo(translated)
-            translated = strip_inline_artifacts(translated)
-            translated = strip_prompt_artifacts(translated)
-            translated = normalize_cjk_punctuation(translated)
-            translated = normalize_placeholders(translated)
+        # Single LLM call for the entire document
+        prompt = get_full_document_translate_prompt(marked_source, terminology)
+        translated = self._invoke_with_retry(prompt, "translate/full", system_prompt)
 
-            # Detect terminology echo (LLM returned terminology map instead of translation)
-            if _is_terminology_echo(translated):
-                logger.warning(
-                    "Block {}/{}: LLM echoed terminology map, retrying with explicit instruction",
-                    idx, len(non_empty),
-                )
-                explicit_prompt = (
-                    f"Translate this text to English. Output ONLY the translation, "
-                    f"no explanations or terminology lists:\n{block_text}"
-                )
-                translated = self._invoke_with_retry(
-                    explicit_prompt, f"translate/{idx}/retry",
-                )
-                translated = strip_prompt_echo(translated)
-                translated = strip_inline_artifacts(translated)
-                translated = strip_prompt_artifacts(translated)
-                translated = normalize_cjk_punctuation(translated)
-                translated = normalize_placeholders(translated)
+        # Strip prompt artifacts
+        translated = strip_prompt_echo(translated)
+        translated = strip_inline_artifacts(translated)
+        translated = strip_prompt_artifacts(translated)
+        translated = normalize_cjk_punctuation(translated)
+        translated = normalize_placeholders(translated)
 
-            # Re-add stripped prefix (translated if it contained CJK)
-            if kw_prefix:
-                # Translate the bracket prefix itself
-                prefix_clean = kw_prefix.strip()
-                if _CJK_RE.search(prefix_clean):
+        # Split on markers
+        translated_parts = self._split_by_markers(translated, len(non_empty))
+
+        # Re-add stripped prefixes
+        for idx, prefix in enumerate(stripped_prefixes):
+            if prefix and idx < len(translated_parts):
+                part = translated_parts[idx]
+                if _CJK_RE.search(prefix):
                     prefix_tr = self._invoke_with_retry(
-                        f"Translate this label to English (short, 2-5 words): {prefix_clean}",
-                        f"translate/prefix/{idx}",
+                        f"Translate this label to English (short, 2-5 words): {prefix}",
+                        f"translate/prefix/{idx + 1}",
                     )
                     prefix_tr = strip_inline_artifacts(prefix_tr).strip()
-                    translated = f"{prefix_tr} {translated}" if translated else prefix_tr
+                    translated_parts[idx] = (
+                        f"{prefix_tr} {part}" if part else prefix_tr
+                    )
                 else:
-                    translated = f"{kw_prefix}{translated}"
+                    translated_parts[idx] = f"{prefix}{part}"
 
-            translated_texts.append(translated)
-            logger.debug(
-                "Block {}/{} translated ({} -> {} chars)",
-                idx, len(non_empty), len(block.text), len(translated),
-            )
-
-        joined = self._BLOCK_SEP.join(translated_texts)
+        joined = self._BLOCK_SEP.join(translated_parts)
         logger.info(
-            "Translated {}/{} blocks individually",
-            len(non_empty), len(formatted.original_blocks) if formatted.original_blocks else 0,
+            "Translated {} blocks in single call ({} -> {} chars)",
+            len(non_empty), len(marked_source), len(joined),
         )
-        return joined, source_texts, translated_texts
+        return joined, source_texts, translated_parts
+
+    # ── Self-review ──────────────────────────────────────────────────────
+
+    def _self_review(
+        self,
+        source_text: str,
+        translated_text: str,
+        system_prompt: str = "",
+    ) -> str:
+        """Post-translation quality review and correction.
+
+        Sends the source + translation to the LLM for a generic quality
+        check. Returns the corrected translation, or the original if
+        the review fails or introduces new issues.
+        """
+        prompt = get_self_review_prompt(source_text, translated_text)
+        logger.info("Running self-review ({} source chars)", len(source_text))
+
+        try:
+            reviewed = self._invoke_with_retry(prompt, "self_review", system_prompt)
+        except RuntimeError as exc:
+            logger.warning("Self-review failed: {}, keeping original", exc)
+            return translated_text
+
+        reviewed = strip_prompt_echo(reviewed)
+        reviewed = strip_inline_artifacts(reviewed)
+        reviewed = strip_prompt_artifacts(reviewed)
+
+        # Safety: if review destroyed markers or lost too much content, revert
+        if len(reviewed) < len(translated_text) * 0.5:
+            logger.warning(
+                "Self-review too short ({} vs {} chars), keeping original",
+                len(reviewed), len(translated_text),
+            )
+            return translated_text
+
+        # Check that block markers survived (if present in original)
+        orig_markers = set(self._BLOCK_MARKER_RE.findall(translated_text))
+        reviewed_markers = set(self._BLOCK_MARKER_RE.findall(reviewed))
+        if orig_markers and not reviewed_markers:
+            logger.warning("Self-review lost block markers, keeping original")
+            return translated_text
+
+        logger.info(
+            "Self-review complete ({} -> {} chars)",
+            len(translated_text), len(reviewed),
+        )
+        return reviewed
 
     def translate_segments(
         self, formatted: FormattedDocument, terminology: str,
@@ -510,7 +634,8 @@ class MultiStageTranslator(BaseTranslator):
         self._text_block_indices: list[int] = []
         if blocks:
             non_empty = [(i, b) for i, b in enumerate(blocks)
-                         if b.text.strip() and b.type in ("text", "title")]
+                         if b.text.strip() and (b.type in ("text", "title") or
+                                                (b.type == "footer" and self._DOI_RE.search(b.text)))]
             if non_empty:
                 return self._translate_blocks(
                     formatted, terminology, non_empty,
@@ -694,19 +819,26 @@ class MultiStageTranslator(BaseTranslator):
     def run_pipeline(
         self, formatted: FormattedDocument, blocks: List[ContentBlock] | None = None,
     ) -> Tuple[Dict[str, str], str, str, str, List[str], List[str], List[str]]:
-        # ── Stage 1: Translate (terminology + segment translation) ────────
+        # ── Stage 1: Translate (terminology + full-document translation) ──
         terminology = self.extract_terminology(formatted)
         translated, source_segments, translated_parts = self.translate_segments(
             formatted, terminology, blocks=blocks,
         )
 
-        # ── Stage 2: Review (validate, clean, strip artifacts) ────────────
+        # ── Stage 2: Self-review (LLM quality check and correction) ──────
+        translated = self._self_review(
+            formatted.formatted_markdown, translated,
+        )
+
+        # ── Stage 3: Normalize (validate, clean, strip artifacts) ────────
         warnings: list[str] = []
         translated = strip_prompt_artifacts(translated)
         translated = strip_inline_artifacts(translated)
         translated = strip_source_contamination(translated, formatted.source_language or "unknown")
         translated = normalize_cjk_punctuation(translated)
         translated = normalize_placeholders(translated)
+        translated = fix_email_placeholder(translated)
+        translated = fix_ocr_truncations(translated)
 
         # Guard: detect LLM repetition loops (translated >> source size)
         source_len = len(formatted.formatted_markdown) or 1
@@ -728,11 +860,27 @@ class MultiStageTranslator(BaseTranslator):
             logger.warning("Translation validation warning: {}", warnings[-1])
 
         # Validate image references preserved
-        try:
-            validate_image_references_preserved(formatted.formatted_markdown, translated)
-        except ValueError as exc:
-            warnings.append(f"image_refs: {exc}")
-            logger.warning("Image reference warning: {}", exc)
+        # Check block-level images (MinerU format) first, then inline markdown refs
+        if blocks:
+            source_img_paths = {b.img_path for b in blocks if b.img_path}
+            # translated_blocks not yet built here, check inline refs in translated text
+            translated_img_paths = set(_IMAGE_REF_RE.findall(translated))
+            if source_img_paths and not translated_img_paths:
+                # Images are preserved as blocks, not inline refs — this is expected
+                logger.info(
+                    "Image blocks preserved: {} source images (block-level, not inline)",
+                    len(source_img_paths),
+                )
+            elif source_img_paths - translated_img_paths:
+                missing = source_img_paths - translated_img_paths
+                warnings.append(f"image_refs: {len(missing)} image references missing")
+                logger.warning("Image references missing: {}", missing)
+        else:
+            try:
+                validate_image_references_preserved(formatted.formatted_markdown, translated)
+            except ValueError as exc:
+                warnings.append(f"image_refs: {exc}")
+                logger.warning("Image reference warning: {}", exc)
 
         terminology_map = self._parse_terminology(terminology)
         # Return structure_plan="" for backward compatibility with BaseTranslator
@@ -850,21 +998,38 @@ class MultiStageTranslator(BaseTranslator):
             )
 
         # Count text/title blocks for single-block shortcut
-        text_blocks = [b for b in original_blocks if b.type in ("text", "title")]
+        # Include footer blocks with DOI information as they are also text-based
+        text_blocks = [b for b in original_blocks if b.type in ("text", "title") or
+                       (b.type == "footer" and MultiStageTranslator._DOI_RE.search(b.text))]
 
         # Block types that are not body text — filter from downstream output
+        # Exception: footer blocks containing DOI information are preserved
         _NON_BODY_TYPES = {"header", "footer", "page_number"}
 
         translated_blocks: list[ContentBlock] = []
         empty_count = 0
         filtered_non_body = 0
+        doi_blocks_preserved = 0
         for i, block in enumerate(original_blocks):
             # Filter non-body blocks (headers, footers, page numbers)
+            # but preserve footer blocks containing DOI information
             if block.type in _NON_BODY_TYPES:
+                # Check if this footer block contains DOI information
+                if block.type == "footer" and MultiStageTranslator._DOI_RE.search(block.text):
+                    doi_blocks_preserved += 1
+                    # Preserve DOI footer as-is (no translation needed)
+                    translated_blocks.append(ContentBlock(
+                        type=block.type,
+                        page_idx=block.page_idx,
+                        bbox=block.bbox,
+                        text=block.text,
+                    ))
+                    continue
                 filtered_non_body += 1
                 continue
 
-            if block.type in ("text", "title"):
+            # Handle text/title blocks AND footer blocks with DOI information
+            if block.type in ("text", "title") or (block.type == "footer" and MultiStageTranslator._DOI_RE.search(block.text)):
                 if i in idx_map:
                     new_text = idx_map[i]
                 elif len(text_blocks) == 1 and translated_text.strip():
@@ -878,12 +1043,17 @@ class MultiStageTranslator(BaseTranslator):
                 if not new_text.strip():
                     empty_count += 1
                     continue
+                # Per-block post-processing (placeholders, punctuation, email, OCR)
+                new_text = normalize_placeholders(new_text)
+                new_text = normalize_cjk_punctuation(new_text)
+                new_text = fix_email_placeholder(new_text)
+                new_text = fix_ocr_truncations(new_text)
                 new_block = ContentBlock(
                     type=block.type,
                     page_idx=block.page_idx,
                     bbox=block.bbox,
                     text=new_text,
-                    text_level=block.text_level,
+                    text_level=block.text_level if block.type in ("text", "title") else None,
                 )
             else:
                 # Non-text blocks: copy with aux translations if available
@@ -894,9 +1064,13 @@ class MultiStageTranslator(BaseTranslator):
                 # Strip Mermaid diagrams from image blocks — these are
                 # LLM-generated reconstructions, not original content.
                 # Keep only the image and caption for downstream.
+                needs_review = False
+                review_reason = ""
                 if sub_type == "flowchart" and "mermaid" in (content or "").lower():
                     content = ""
-                    sub_type = "diagram"
+                    sub_type = "pedigree"
+                    needs_review = True
+                    review_reason = "Mermaid structure does not represent pedigree topology"
 
                 new_block = ContentBlock(
                     type=block.type,
@@ -919,6 +1093,8 @@ class MultiStageTranslator(BaseTranslator):
                     list_items=list(block.list_items),
                     chart_caption=list(block.chart_caption),
                     chart_footnote=list(block.chart_footnote),
+                    needs_manual_review=needs_review,
+                    review_reason=review_reason,
                 )
             translated_blocks.append(new_block)
 
@@ -926,6 +1102,8 @@ class MultiStageTranslator(BaseTranslator):
             logger.info("Filtered {} empty text/title blocks", empty_count)
         if filtered_non_body:
             logger.info("Filtered {} non-body blocks (header/footer/page_number)", filtered_non_body)
+        if doi_blocks_preserved:
+            logger.info("Preserved {} footer blocks containing DOI information", doi_blocks_preserved)
         return translated_blocks
 
     @staticmethod
@@ -945,6 +1123,62 @@ class MultiStageTranslator(BaseTranslator):
             if src in block_text or block_text in src_start:
                 return seg.translated_text
         return ""
+
+    # Pattern to detect DOI content in footer blocks
+    _DOI_RE = re.compile(
+        r"(?:DOI|doi)\s*[:\s：]*\d+\.\d+/"  # DOI: 10.xxxx/... (including Chinese colon ：)
+        r"|https?://doi\.org/"  # https://doi.org/...
+        r"|https?://dx\.doi\.org/"  # http://dx.doi.org/...
+    )
+
+    # Patterns that indicate truncated or incomplete references
+    _TRUNCATED_REF_RE = re.compile(
+        r"(?:by et al\.)"                         # "by et al." — missing author name
+        r"|(?:In \d{1,2},\s*et al\.)"            # "In 20, et al." (truncated year)
+        r"|(?:^|\.\s+)et al\.\s*\[\d+\]"         # "et al. [12]" at start of sentence
+    )
+    # Pattern for 2-digit year that's likely truncated (e.g., "In 20," instead of "In 2020,")
+    _TRUNCATED_YEAR_RE = re.compile(r"\bIn (\d{2}),\s")
+
+    @staticmethod
+    def _flag_quality_issues(blocks: list[ContentBlock]) -> int:
+        """Flag blocks that need manual review due to quality issues.
+
+        Detects truncated references, ambiguous pronouns, and other
+        patterns that indicate OCR/translation problems.
+
+        Returns the number of blocks flagged.
+        """
+        flagged = 0
+        for block in blocks:
+            if block.type not in ("text", "title"):
+                continue
+            text = block.text
+            reasons: list[str] = []
+
+            # Truncated references: "et al. [12]" with no author/year
+            if MultiStageTranslator._TRUNCATED_REF_RE.search(text):
+                reasons.append("truncated reference (missing author/year)")
+
+            # Truncated 2-digit years: "In 20," instead of "In 2020,"
+            year_match = MultiStageTranslator._TRUNCATED_YEAR_RE.search(text)
+            if year_match:
+                reasons.append(f"truncated year ({year_match.group(1)} digits)")
+
+            # Ambiguous pronoun "including that" without clear antecedent
+            if re.search(r"including that[,;.\s]", text):
+                reasons.append("ambiguous pronoun 'including that' — should spell out noun (e.g. 'including ERT')")
+
+            # "suspicious pathogenic" — should be "suspected pathogenic variant"
+            if re.search(r"\bsuspicious\b", text, re.I):
+                reasons.append("'suspicious' should be 'suspected' in medical English")
+
+            if reasons:
+                block.needs_manual_review = True
+                block.review_reason = "; ".join(reasons)
+                flagged += 1
+
+        return flagged
 
     def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
         blocks = formatted.original_blocks or []
@@ -977,6 +1211,12 @@ class MultiStageTranslator(BaseTranslator):
             text_block_indices=getattr(self, '_text_block_indices', None),
             aux_translations=aux_translations,
         )
+
+        # Flag blocks with quality issues for manual review
+        flagged = self._flag_quality_issues(translated_blocks)
+        if flagged:
+            warnings.append(f"manual_review: {flagged} blocks flagged for review")
+            logger.info("Flagged {} blocks for manual review", flagged)
 
         return TranslationResult(
             formatted_original=formatted.formatted_markdown,
