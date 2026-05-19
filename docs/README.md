@@ -7,7 +7,6 @@ docs/
 ├── README.md
 ├── active/           # In-progress implementation plans and working notes
 ├── planned/          # Planned work that has not started
-├── plans/            # Current planning drafts kept at requested stable paths
 ├── codereview/       # Active code reviews (empty when all reviews are resolved)
 ├── archive/
 │   ├── plans/        # Completed or superseded plans
@@ -19,7 +18,6 @@ docs/
 
 - `planned/`: planned work that has not started.
 - `active/`: in-progress implementation plans and working notes.
-- `plans/`: current planning drafts kept at requested stable paths before implementation starts.
 - `codereview/`: active code review reports and review follow-ups.
 - `archive/plans/`: completed or superseded plans.
 - `archive/codereview/`: completed code reviews whose findings are resolved or no longer active.
@@ -44,12 +42,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status/PR |
 |---|---|---|
-| 2026-05-16 | [evidence extraction output E2E](planned/2026-05-16-evidence-extraction-output-e2e.md) | planned |
 
-## Planning Drafts
-
-| date | title | status/PR |
-|---|---|---|
 ## Active Code Reviews
 
 No active code reviews.
@@ -62,6 +55,8 @@ No active code reviews.
 |---|---|---|
 | 2026-05-18 | [database implementation](archive/plans/2026-05-18-database-implementation-plan.md) | completed — branch `database-mvp` |
 | 2026-05-18 | [database design](archive/plans/2026-05-18-database-design.md) | completed — branch `database-mvp` |
+| 2026-05-17 | [persistence JSON optimization](archive/plans/2026-05-17-persistence-json-optimization.md) | completed — 2026-05-19 |
+| 2026-05-16 | [evidence extraction output E2E](archive/plans/2026-05-16-evidence-extraction-output-e2e.md) | completed — 2026-05-19 |
 | 2026-05-12 | [parse document module refactor](archive/plans/2026-05-12-parse-document-refactor.md) | completed — 2026-05-13 |
 | 2026-05-15 | [fix translation quality](archive/plans/2026-05-15-fix-translation-quality.md) | completed — 2026-05-15 |
 | 2026-05-15 | [fix translation token limit](archive/plans/2026-05-15-fix-translation-token-limit.md) | completed — 2026-05-15 |
