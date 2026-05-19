@@ -38,21 +38,13 @@ class LLMConfig(BaseModel):
     max_retries: int = 3
 
 
-class TranslationConfig(BaseModel):
-    """Multi-language translation LLM."""
+class MultimodalLLMConfig(BaseModel):
+    """Multimodal LLM (text + vision)."""
 
+    enabled: bool = False
     api_key: str = ""
     base_url: str = ""
     model: str = ""
-
-
-class VisionConfig(BaseModel):
-    """Vision / image extraction LLM."""
-
-    api_key: str = ""
-    base_url: str = ""
-    model: str = ""
-    enable: bool = False
 
 
 class ArbitrationConfig(BaseModel):
@@ -233,18 +225,12 @@ class Settings(BaseSettings):
     llm_timeout: int = 60
     llm_max_retries: int = 3
 
-    # ── Translation flat fields (MT_*) ───────────────────────────────────
+    # ── Multimodal LLM flat fields (MULTIMODAL_LLM_*) ────────────────────
 
-    mt_api_key: str = ""
-    mt_base_url: str = ""
-    mt_model: str = ""
-
-    # ── Vision flat fields (VLM_*) ───────────────────────────────────────
-
-    vlm_api_key: str = ""
-    vlm_base_url: str = ""
-    vlm_model: str = ""
-    vlm_enable: bool = False
+    multimodal_llm_enabled: bool = False
+    multimodal_llm_api_key: str = ""
+    multimodal_llm_base_url: str = ""
+    multimodal_llm_model: str = ""
 
     # ── Arbitration flat fields (ARBITRATION_*) ──────────────────────────
 
@@ -370,8 +356,7 @@ class Settings(BaseSettings):
     # ── Nested domain models (populated by validator) ────────────────────
 
     llm: LLMConfig = Field(default_factory=LLMConfig, exclude=True)
-    translation: TranslationConfig = Field(default_factory=TranslationConfig, exclude=True)
-    vision: VisionConfig = Field(default_factory=VisionConfig, exclude=True)
+    multimodal_llm: MultimodalLLMConfig = Field(default_factory=MultimodalLLMConfig, exclude=True)
     arbitration: ArbitrationConfig = Field(default_factory=ArbitrationConfig, exclude=True)
     embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig, exclude=True)
     rerank: RerankConfig = Field(default_factory=RerankConfig, exclude=True)
@@ -402,16 +387,11 @@ class Settings(BaseSettings):
             timeout=self.llm_timeout,
             max_retries=self.llm_max_retries,
         )
-        self.translation = TranslationConfig(
-            api_key=self.mt_api_key,
-            base_url=self.mt_base_url,
-            model=self.mt_model,
-        )
-        self.vision = VisionConfig(
-            api_key=self.vlm_api_key,
-            base_url=self.vlm_base_url,
-            model=self.vlm_model,
-            enable=self.vlm_enable,
+        self.multimodal_llm = MultimodalLLMConfig(
+            enabled=self.multimodal_llm_enabled,
+            api_key=self.multimodal_llm_api_key,
+            base_url=self.multimodal_llm_base_url,
+            model=self.multimodal_llm_model,
         )
         self.arbitration = ArbitrationConfig(
             api_key=self.arbitration_api_key,

@@ -149,7 +149,7 @@ async def main() -> None:
     )
     parse_service = ParseDocumentService(orchestrator=mineru_parser)
 
-    # Translation service (uses MT_MODEL via TranslationConfigContext)
+    # Translation service (uses LLM_MODEL via TranslationConfigContext)
     translation_service = TranslationService(cfg=cfg)
 
     results: dict[str, bool] = {}

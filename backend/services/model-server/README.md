@@ -115,7 +115,8 @@ Supporting types:
 | `POST` | `/v1/chat/completions` | `VLMExtractRequest` | `VLMExtractResponse` | Multimodal document extraction (OpenAI-compatible) |
 
 The VLM endpoint (`/v1/chat/completions`) is **only registered** when `VLM_MODEL_ID` is configured.
-Requests without a configured VLM return **503**.
+When VLM is disabled, the route is omitted and clients get **404**. In custom wiring/tests,
+calling the route without `bind()` returns **503**.
 
 #### Bind functions (API ← Service wiring)
 
@@ -212,7 +213,8 @@ which orchestrates a two-step process (structure detection → content extractio
 - **API layer:** Catches `VLMInferenceError` → 502 (upstream failure); unexpected `Exception` → 500.
 - **Request validation:** Pydantic `ValidationError` on malformed input → FastAPI auto-returns 422.
 - **VLM-specific:** `_parse_figure()` and `_parse_table()` catch `ValidationError` on upstream data → 502 with detail.
-- **Service unavailable:** VLM endpoint returns 503 when `_service` is `None` or not `ready`.
+- **Service unavailable:** in custom wiring/tests, the VLM endpoint returns 503 when `_service` is `None`.
+  In the normal startup path, the route is not registered unless `VLM_MODEL_ID` is set, so clients see 404 instead.
 - **No retry logic** — callers (the backend gateway) must implement retries.
 
 ### Logging
