@@ -4,13 +4,22 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_SERVICE_ROOT = Path(__file__).resolve().parents[1]
+_BACKEND_ROOT = Path(__file__).resolve().parents[3]
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=(".env.local", ".env"),
+        env_file=(
+            _BACKEND_ROOT / ".env",
+            _BACKEND_ROOT / ".env.local",
+            _SERVICE_ROOT / ".env",
+            _SERVICE_ROOT / ".env.local",
+        ),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -35,7 +44,7 @@ class Settings(BaseSettings):
     llm_model_id: str = ""
 
     # VLM model (MinerU)
-    vlm_model_id: str = "opendatalab--MinerU2.5-Pro-2604-1.2B"
+    vlm_model_id: str = ""
     vlm_image_analysis: bool = False
 
     # vllm shared settings

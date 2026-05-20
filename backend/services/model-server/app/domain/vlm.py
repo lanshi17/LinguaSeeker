@@ -74,6 +74,10 @@ class VLMService(BaseModelService):
         )
         logger.info("MinerUClient initialized (image_analysis={flag})", flag=self._image_analysis)
 
+    def unload(self) -> None:
+        super().unload()
+        self._client = None
+
     def infer(self, image: Image.Image) -> VLMInferResult:
         """Extract structured content from an image.
 

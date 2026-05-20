@@ -25,14 +25,15 @@ class EmbeddingService(BaseModelService):
         logger.info("Loading embedding model via vllm: {id}", id=self._model_id)
         self._model = vllm.LLM(
             model=self._model_id,
-            task="embed",
+            runner="pooling",
+            convert="embed",
             gpu_memory_utilization=self._gpu_memory_utilization,
             trust_remote_code=True,
         )
 
     def infer(self, texts: list[str], normalize: bool = True) -> np.ndarray:
         self.ensure_loaded()
-        outputs = self._model.embed(texts)
+        outputs = self._model.embed(texts, use_tqdm=False)
         embeddings = np.array([o.outputs.embedding for o in outputs])
         if normalize:
             norms = np.linalg.norm(embeddings, axis=1, keepdims=True)

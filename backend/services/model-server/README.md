@@ -1,7 +1,8 @@
 # Model Server
 
 > Standalone FastAPI microservice providing OpenAI-compatible Embedding, Rerank, and VLM document extraction APIs.
-> All inference runs through a unified vllm engine. Models lazy-load on first request.
+> All inference runs through vllm. Models lazy-load per request and are unloaded after inference so the services can
+> share a single GPU.
 
 ## Quick Start
 
@@ -42,7 +43,7 @@ Set `VLM_MODEL_ID=opendatalab/MinerU2.5-Pro-2604-1.2B` in `.env.local` to enable
      ▼             ▼             ▼
 ┌─────────────────────────────────────────┐
 │              vllm.LLM                    │   ← Unified inference engine
-│  task="embed" │ task="score" │ VLM llm  │
+│ pooling/embed │ pooling/score │ VLM llm │
 └─────────────────────────────────────────┘
 ```
 
@@ -51,7 +52,7 @@ Set `VLM_MODEL_ID=opendatalab/MinerU2.5-Pro-2604-1.2B` in `.env.local` to enable
 2. Route calls `_service.infer(…)` on the bound domain service
 3. Service calls `self.ensure_loaded()` → triggers `_load()` on first call (lazy init)
 4. `_load()` creates a `vllm.LLM` instance → downloads model weights from HuggingFace Hub
-5. Subsequent requests skip `_load()` and call `infer()` directly on the already-warm engine
+5. The API route calls `unload()` in a `finally` block after inference to release vllm engine resources
 
 **Wiring pattern:** Each API module exposes a module-level `bind(service)` function.
 `main.py` creates service instances, calls `bind()`, then `include_router()` on the FastAPI app.
@@ -67,6 +68,7 @@ Abstract base for all model services. Owns lazy loading and readiness tracking.
 |--------|-----------|-------------|
 | `__init__` | `(self, model_id: str, gpu_memory_utilization: float = 0.9)` | Store model identity; nothing is loaded yet |
 | `ensure_loaded` | `() -> None` | Trigger `_load()` on first call; no-op after |
+| `unload` | `() -> None` | Shutdown the vllm engine and mark the service not ready |
 | `_load` | `(self) -> None` (abstract) | Create the `vllm.LLM` instance; called once |
 | `infer` | `(self, **kwargs)` (abstract) | Run inference; calls `ensure_loaded()` first |
 
@@ -177,22 +179,24 @@ Access via `from app.config import get_config; cfg = get_config()`.
 
 ### Lazy loading
 
-All services extend `BaseModelService`, which wraps vllm model creation in a lazy pattern:
+All services extend `BaseModelService`, which wraps vllm model creation in a lazy-per-request pattern:
 
 1. `__init__` stores the model ID — **no GPU memory allocated**
 2. First `infer()` call triggers `ensure_loaded()` → `_load()`
 3. `_load()` creates `vllm.LLM(…)` — downloads weights, allocates VRAM
-4. `_ready` flag flips to `True`; subsequent infer calls skip `_load()`
+4. `_ready` flag flips to `True`
+5. The API route calls `unload()` after the request, shutting down the vllm engine and flipping `_ready` back to `False`
 
-Startup time is < 1s (no model loading). First request latency depends on model size and download speed (typically 5-30s for first cold start).
+Startup time is < 1s (no model loading). Each request pays model load/warm-up cost, which keeps the service usable on
+single-GPU developer machines where multiple vllm engines cannot stay resident together.
 
 ### vllm engine integration
 
 Each domain service configures vllm differently:
 
 ```
-EmbeddingService → vllm.LLM(task="embed")       → model.embed(texts)
-RerankService    → vllm.LLM(task="score")       → model.score(pairs)
+EmbeddingService → vllm.LLM(runner="pooling", convert="embed") → model.embed(texts, use_tqdm=False)
+RerankService    → vllm.LLM(runner="pooling")                  → model.score(query, documents, use_tqdm=False)
 VLMService       → vllm.LLM(logits_processors=[MinerULogitsProcessor])
                    → MinerUClient(backend="vllm-engine", vllm_llm=…)
                    → client.two_step_extract(image)
@@ -203,9 +207,9 @@ which orchestrates a two-step process (structure detection → content extractio
 
 ### Concurrency model
 
-- **Single process, single vllm instance per service.** vllm handles batching internally.
+- **Single process, one vllm engine during an active request.** API routes unload engines after inference to avoid
+  cross-service GPU memory contention.
 - **No async in the model layer.** `infer()` methods are synchronous; FastAPI runs them in thread pools by default.
-- **No explicit locking.** vllm's internal scheduler serializes concurrent requests safely.
 - **Not horizontally sharded.** All inference runs on the GPU(s) visible to the single uvicorn process.
 
 ### Error handling
@@ -294,14 +298,13 @@ async def extract_document(image: Image.Image) -> dict:
 
 ```python
 async def wait_until_ready(timeout: float = 300) -> None:
-    """Poll /health until all configured models report ready."""
+    """Poll /health until the model server process is reachable."""
     import asyncio
     async with httpx.AsyncClient() as client:
         deadline = asyncio.get_event_loop().time() + timeout
         while asyncio.get_event_loop().time() < deadline:
             resp = await client.get("http://localhost:8001/health")
-            data = resp.json()
-            if all(data["models"].values()):
+            if resp.status_code == 200:
                 return
             await asyncio.sleep(2)
         raise TimeoutError("Model server not ready")
@@ -314,6 +317,7 @@ from app.domain.embedding import EmbeddingService
 
 svc = EmbeddingService(model_id="Qwen/Qwen3-Embedding-0.6B")
 vectors = svc.infer(["hello", "world"])  # Triggers _load() on first call
+svc.unload()
 assert vectors.shape == (2, 1024)
 ```
 
@@ -356,16 +360,19 @@ The VLM path has two integration points:
 
 ### Common pitfalls
 
-- **vllm is process-global.** Don't create multiple instances for the same model — vllm manages a GPU memory pool. Unexpected CUDA OOMs happen when two services share a GPU and total memory exceeds available VRAM.
+- **vllm can leave child processes alive if not shut down.** Keep `unload()` in request-finally paths so vllm engine
+  resources are released even when inference raises.
 - **Model download on first load.** If HuggingFace Hub is slow or blocked, `_load()` hangs. Pre-download models to `HF_HOME` or set `HF_ENDPOINT` to a mirror.
 - **Don't call `infer()` from async coroutines without thread offloading.** vllm's `.embed()`, `.score()`, and `.chat()` are synchronous GPU operations. FastAPI's default thread pool handles this, but raw `asyncio.create_task(svc.infer(…))` will block the event loop.
 - **VLM service is optional.** Routes referencing it are only registered when `VLM_MODEL_ID` is set. Backend callers should check `/health` before calling the VLM endpoint.
 
 ## Performance Notes
 
-- **First-request latency:** 5-30s (model download + GPU warm-up). Subsequent requests are sub-second for small batches.
+- **Request latency:** 5-30s for model load/warm-up on each request. This favors reliability on one GPU over low-latency
+  always-resident engines.
 - **Embedding throughput:** ~100 texts/sec on RTX 4060 (Qwen3-Embedding-0.6B, batch size auto-managed by vllm).
-- **Memory footprint:** Each model occupies 0.5-3 GB VRAM. `VLLM_GPU_MEMORY_UTILIZATION=0.9` means vllm reserves 90% of GPU memory at init, which may cause OOM if multiple services are loaded concurrently on a single GPU. Reduce this value or run services on separate GPUs.
+- **Memory footprint:** `VLLM_GPU_MEMORY_UTILIZATION=0.9` means vllm may reserve most GPU memory during a request.
+  Engines are unloaded after inference so embedding, rerank, and VLM can be used sequentially on a single GPU.
 - **Base64 image overhead:** VLM endpoint accepts base64-encoded images. A 1920×1080 PNG adds ~3-4 MB to each request body. For production, consider adding a `/v1/extract/file` endpoint that accepts multipart uploads directly.
 - **No batching across requests.** vllm's internal batching operates within a single `model.embed()` / `model.score()` / `client.two_step_extract()` call. If you need throughput, send larger batches per request.
 - **Logging I/O:** The request monitoring middleware and DEBUG-level file logging add overhead per request. In high-throughput scenarios, reduce file log level to INFO.

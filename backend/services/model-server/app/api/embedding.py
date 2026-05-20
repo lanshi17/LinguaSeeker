@@ -28,7 +28,10 @@ def create_embeddings(req: EmbeddingRequest):
     assert _service is not None, "EmbeddingService not registered"
 
     texts = [req.input] if isinstance(req.input, str) else req.input
-    vectors = _service.infer(texts)
+    try:
+        vectors = _service.infer(texts)
+    finally:
+        _service.unload()
 
     data = [EmbeddingObject(embedding=vec.tolist(), index=i) for i, vec in enumerate(vectors)]
     token_count = sum(len(t.split()) for t in texts)
