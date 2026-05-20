@@ -13,7 +13,7 @@ def test_main_imports():
 
 def test_main_does_not_register_vlm_route_without_model(monkeypatch):
     """VLM route should not be exposed unless VLM_MODEL_ID is configured."""
-    monkeypatch.delenv("VLM_MODEL_ID", raising=False)
+    monkeypatch.setenv("VLM_MODEL_ID", "")
 
     from app.config import get_config
     get_config.cache_clear()

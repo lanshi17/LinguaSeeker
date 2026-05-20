@@ -113,6 +113,8 @@ def chat_completions(req: VLMExtractRequest):
     except Exception as exc:
         logger.error("VLM inference failed: {exc}", exc=exc)
         raise HTTPException(status_code=500, detail=f"VLM inference failed: {exc}") from exc
+    finally:
+        _service.unload()
 
     return VLMExtractResponse(
         id=result.id,

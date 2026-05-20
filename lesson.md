@@ -180,3 +180,31 @@
 **Solution**: Set `vlm_model_id` default to empty string and `vlm_image_analysis` default to `False`, added a regression test that `/v1/chat/completions` is absent from OpenAPI when `VLM_MODEL_ID` is unset, updated the model-server README to describe 404 vs 503 behavior correctly, and verified a fresh process returns 404 without VLM config and 400 when VLM is explicitly enabled but the request is text-only.
 
 **Prevention**: Keep config defaults aligned with tests and docs, prefer explicit enablement for optional model services, and restart stale long-lived service processes after changing startup wiring. For runtime checks, confirm the live process start time matches the code on disk before trusting logs.
+
+## 2026-05-20: model-server vLLM API and engine lifecycle drift
+
+**Problem**: A fresh model-server process started successfully, but real `/v1/embeddings` and `/v1/rerank` calls failed with HTTP 500 or left `VLLM::EngineCore` child processes holding GPU memory after the parent process exited.
+
+**Investigation**: Reproduced the failure with `uv run python main.py` plus HTTP requests. Logs showed `EngineArgs.__init__() got an unexpected keyword argument 'task'`, then later CUDA memory errors when loading rerank after embedding. Inspected local `vllm.LLM` signatures and GPU process state with `nvidia-smi`.
+
+**Root cause**: The model-server used older vLLM constructor arguments (`task="embed"` / `task="score"`) while the installed vLLM 0.20.2 expects `runner="pooling"` and `convert="embed"` for embeddings. The service also kept vLLM engines resident after requests, which is not viable on a single 8GB GPU and can leave child EngineCore processes alive if not shut down.
+
+**Solution**: Updated embedding/rerank vLLM calls to the current pooling API, changed rerank scoring to `score(query, documents)`, added `BaseModelService.unload()` to shut down `llm_engine.engine_core`, and call it from embedding, rerank, and VLM route `finally` blocks. Added regression tests for config path resolution, vLLM argument shape, scoring call shape, and engine shutdown.
+
+**Prevention**: When integrating fast-moving inference libraries, inspect installed API signatures in the active `uv` environment before coding. Include live HTTP smoke tests that load real models, and always verify GPU process cleanup after vLLM failures or service shutdown.
+
+## 2026-05-20: _trim_repetitive_content safety threshold too aggressive
+
+**Problem**: `_trim_repetitive_content` had a `len(result) < 100` safety check that kept the original repetitive text when the unique content was short (<100 chars). This defeated deduplication for short documents with heavy repetition.
+
+**Root cause**: Absolute character threshold (100) doesn't account for source document length. A short source with 5 repetitions produces a short trimmed result, triggering the false safety.
+
+**Fix**: Changed to relative threshold: `len(result) < 30 and len(result) < len(text) * 0.10`. This keeps the original only when the trimmed result is both absolutely and relatively tiny.
+
+**Also fixed**: The algorithm skipped ALL content after the first repeated heading, even content under first-occurrence headings. Rewrote to track heading+body blocks and only skip blocks with repeated headings.
+
+## 2026-05-20: fix_word_boundary_redacted missing adjacent case
+
+**Problem**: `fix_word_boundary_redacted` only handled mid-word `[REDACTED]` (e.g., `Re[REDACTED]ferences`) but not adjacent cases like `References [REDACTED]` where the LLM inserts `[REDACTED]` after common English section headings.
+
+**Fix**: Added `_REDACTED_ADJ_HEADING_RE` pattern that matches `[REDACTED]` adjacent to common section headings (References, Abstract, Introduction, Methods, Results, Discussion, Conclusion, etc.) and strips it while preserving the heading.

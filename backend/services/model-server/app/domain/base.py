@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 from abc import ABC, abstractmethod
+from typing import Any
 
 from app.utils.logger import get_logger
 
@@ -41,8 +42,30 @@ class BaseModelService(ABC):
         self._ready = True
         logger.info("Model loaded: {id} ({elapsed:.1f}s)", id=self._model_id, elapsed=elapsed)
 
+    def unload(self) -> None:
+        """Release vllm engine resources after an inference request."""
+        if self._model is None:
+            self._ready = False
+            return
+
+        logger.info("Unloading model: {id}", id=self._model_id)
+        engine_core = _get_nested_attr(self._model, ("llm_engine", "engine_core"))
+        if engine_core is not None and hasattr(engine_core, "shutdown"):
+            engine_core.shutdown(timeout=0)
+        self._model = None
+        self._ready = False
+
     @abstractmethod
     def _load(self) -> None: ...
 
     @abstractmethod
     def infer(self, **kwargs): ...
+
+
+def _get_nested_attr(obj: Any, names: tuple[str, ...]) -> Any | None:
+    current = obj
+    for name in names:
+        current = getattr(current, name, None)
+        if current is None:
+            return None
+    return current

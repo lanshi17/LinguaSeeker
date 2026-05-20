@@ -60,3 +60,6 @@
 [2026-05-18] expand-online-acquisition-providers: Merged to dev. 12 providers + 3 strategies, 13 tests passing. Worktree cleaned up. [DONE]
 [2026-05-18] Korean ("ko") in bench_download; manual PDF classification + SHA256 dedup + title backfill → report.json 75→53, unclassified 49→12; organized downloads/ into 4-category subdirs per lang; merged 4 benchmark scripts into single benchmark.py with download/optimize/analyze subcommands [done]
 [2026-05-19] Fixed model-server VLM default wiring and docs: disable VLM by default, hide /v1/chat/completions when VLM_MODEL_ID is unset, add regression test for conditional router registration, verify 19 model-server tests passing [done]
+[2026-05-20] Fixed model-server runtime usability: align vLLM 0.20 pooling API, resolve dotenv path drift, unload engines after inference, verify embedding/rerank HTTP requests and 23 model-server tests passing [done]
+[2026-05-20] [translation-e2e-tests] [done] Added 26 e2e tests for 3 systematic translation bugs: [REDACTED] mislabeling (incl. adjacent heading fix), document boundary isolation, product name preservation. Fixed _trim_repetitive_content safety threshold bug.
+[2026-05-20] [translation-e2e-real-data] [done] Ran e2e_full.py on 法布雷病1例.pdf. All 3 bugs verified fixed: no false [REDACTED] in headings, clean document boundary isolation, medical terms preserved.

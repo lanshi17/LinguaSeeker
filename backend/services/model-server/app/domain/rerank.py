@@ -25,13 +25,12 @@ class RerankService(BaseModelService):
         logger.info("Loading rerank model via vllm: {id}", id=self._model_id)
         self._model = vllm.LLM(
             model=self._model_id,
-            task="score",
+            runner="pooling",
             gpu_memory_utilization=self._gpu_memory_utilization,
             trust_remote_code=True,
         )
 
     def infer(self, query: str, documents: list[str]) -> np.ndarray:
         self.ensure_loaded()
-        pairs = [[query, doc] for doc in documents]
-        outputs = self._model.score(pairs)
+        outputs = self._model.score(query, documents, use_tqdm=False)
         return np.array([o.outputs.score for o in outputs])

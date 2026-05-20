@@ -529,17 +529,44 @@ def fix_ocr_truncations(text: str) -> str:
 # e.g., "Re[REDACTED]ferences" → "References"
 _REDACTED_IN_WORD_RE = re.compile(r"(?<=[A-Za-z])\[REDACTED\](?=[A-Za-z])")
 
+# Pattern for [REDACTED] adjacent to common English section headings.
+# e.g., "References [REDACTED]" or "[REDACTED] Abstract" — the LLM
+# misinterprets headings as containing missing values.
+_REDACTED_HEADING_WORDS = (
+    "References", "Abstract", "Introduction", "Background",
+    "Methods", "Results", "Discussion", "Conclusion",
+    "Acknowledgments", "Acknowledgements", "Keywords",
+)
+_REDACTED_ADJ_HEADING_RE = re.compile(
+    r"(?:"
+    + "|".join(re.escape(w) for w in _REDACTED_HEADING_WORDS)
+    + r")\s*\[REDACTED\]|"
+    r"\[REDACTED\]\s*(?:"
+    + "|".join(re.escape(w) for w in _REDACTED_HEADING_WORDS)
+    + r")",
+    re.IGNORECASE,
+)
+
+
+def _strip_adjacent_heading_redacted(match: re.Match) -> str:
+    """Strip [REDACTED] from a heading-adjacent match, keeping the heading."""
+    text = match.group(0)
+    return re.sub(r"\[REDACTED\]\s*", "", text).strip()
+
 
 def fix_word_boundary_redacted(text: str) -> str:
-    """Remove [REDACTED] markers incorrectly inserted inside English words.
+    """Remove [REDACTED] markers incorrectly inserted around English words.
 
     The formatter LLM sometimes inserts [REDACTED] mid-word, e.g.
-    ``Re[REDACTED]ferences`` instead of ``References``. This strips
-    such markers while preserving legitimate [REDACTED] placeholders.
+    ``Re[REDACTED]ferences`` instead of ``References``, or adjacent to
+    section headings, e.g. ``References [REDACTED]``. This strips such
+    markers while preserving legitimate [REDACTED] placeholders.
     """
     if not text:
         return text
-    return _REDACTED_IN_WORD_RE.sub("", text)
+    text = _REDACTED_IN_WORD_RE.sub("", text)
+    text = _REDACTED_ADJ_HEADING_RE.sub(_strip_adjacent_heading_redacted, text)
+    return text
 
 
 _KEYWORDS_RE = re.compile(

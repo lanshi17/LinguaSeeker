@@ -800,41 +800,68 @@ class MultiStageTranslator(BaseTranslator):
 
         When the LLM enters a repetition loop, it generates the same section
         structure over and over. This function detects repeated heading patterns
-        and keeps only the first occurrence plus any content before it.
+        and keeps only the first occurrence of each heading plus its body.
         """
         paragraphs = re.split(r"\n\s*\n", text)
         seen_headings: list[str] = []
         clean_parts: list[str] = []
-        repetition_start: int | None = None
+        current_heading: str | None = None
+        current_body: list[str] = []
+        removed_count = 0
 
-        for idx, para in enumerate(paragraphs):
+        def _flush() -> None:
+            """Flush the current heading+body block."""
+            nonlocal removed_count
+            if current_heading is None and not current_body:
+                return
+            block = "\n\n".join(current_body).strip() if current_body else ""
+            heading_lower = current_heading.lower() if current_heading else ""
+            if heading_lower and heading_lower in seen_headings:
+                # Repeated heading — discard this block
+                removed_count += 1 + len(current_body)
+            else:
+                if heading_lower:
+                    seen_headings.append(heading_lower)
+                if current_heading is not None:
+                    clean_parts.append(current_heading)
+                if block:
+                    clean_parts.append(block)
+
+        for para in paragraphs:
             stripped = para.strip()
             heading_match = re.match(r"^(#{1,6})\s+(.+)", stripped)
             if heading_match:
-                heading_text = heading_match.group(2).strip().lower()
-                if heading_text in seen_headings:
-                    # Found repeated heading — mark where repetition starts
-                    if repetition_start is None:
-                        repetition_start = idx
-                    continue
-                seen_headings.append(heading_text)
-            if repetition_start is not None:
-                # Skip content after repetition started
-                continue
-            clean_parts.append(para)
+                # New heading — flush previous block
+                _flush()
+                current_heading = stripped
+                current_body = []
+            else:
+                if current_heading is not None:
+                    current_body.append(stripped)
+                else:
+                    # Content before any heading
+                    clean_parts.append(stripped)
 
-        if repetition_start is None:
+        # Flush final block
+        _flush()
+
+        if removed_count == 0:
             return text
 
-        result = "\n\n".join(clean_parts).strip()
-        if len(result) < 100:
-            # Safety: if trimming removed almost everything, keep original
-            logger.warning("Repetition trim left <100 chars, keeping original")
+        result = "\n\n".join(p for p in clean_parts if p).strip()
+        # Safety: if trimming removed >90% of content AND result is very short,
+        # keep original. This avoids false positives when the source itself is
+        # short, while still catching genuine repetition in longer documents.
+        if len(result) < 30 and len(result) < len(text) * 0.10:
+            logger.warning(
+                "Repetition trim left {} chars ({:.0f}% of original), keeping original",
+                len(result), len(result) / max(len(text), 1) * 100,
+            )
             return text
 
         logger.info(
             "Trimmed repetitive content: {} -> {} chars ({} paragraphs removed)",
-            len(text), len(result), len(paragraphs) - len(clean_parts),
+            len(text), len(result), removed_count,
         )
         return result
 

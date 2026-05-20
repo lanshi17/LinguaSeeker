@@ -47,6 +47,7 @@ def test_vlm_extract_text_only_returns_400():
 
 def test_vlm_extract_with_image():
     client, svc = _make_test_client()
+    mineru_client = svc._client
     img_b64 = _make_test_image_b64()
     resp = client.post("/v1/chat/completions", json={
         "model": "opendatalab/MinerU2.5-Pro-2604-1.2B",
@@ -56,7 +57,9 @@ def test_vlm_extract_with_image():
         ]}],
     })
     assert resp.status_code == 200
-    svc._client.two_step_extract.assert_called_once()
+    mineru_client.two_step_extract.assert_called_once()
+    assert svc._client is None
+    assert svc.ready is False
 
 
 def test_vlm_multi_image_returns_400():
