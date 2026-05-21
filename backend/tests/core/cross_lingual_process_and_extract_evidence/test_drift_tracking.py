@@ -16,8 +16,8 @@ from src.core.cross_lingual_process_and_extract_evidence.contracts import (
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.format.formatter import (
     compute_format_drift,
 )
-from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import (
-    MultiStageTranslator,
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.postprocess import (
+    compute_translation_drift,
 )
 
 
@@ -86,7 +86,7 @@ class TestComputeTranslationDrift:
         # Both 12 chars
         source = ["Hello world!", "Goodbye worl"]
         translated = ["Hola mundo!!", "Adios mundo!"]
-        drifts = MultiStageTranslator.compute_translation_drift(source, translated)
+        drifts = compute_translation_drift(source, translated)
         assert len(drifts) == 2
         assert drifts[0].length_drift == 0
         assert drifts[1].length_drift == 0
@@ -95,7 +95,7 @@ class TestComputeTranslationDrift:
         """Longer translation should show positive length drift."""
         source = ["Short."]
         translated = ["This is a much longer translation."]
-        drifts = MultiStageTranslator.compute_translation_drift(source, translated)
+        drifts = compute_translation_drift(source, translated)
         assert len(drifts) == 1
         assert drifts[0].length_drift > 0
         assert drifts[0].translated_length > drifts[0].source_length
@@ -104,7 +104,7 @@ class TestComputeTranslationDrift:
         """Shorter translation should show negative length drift."""
         source = ["This is a very long source sentence."]
         translated = ["Short."]
-        drifts = MultiStageTranslator.compute_translation_drift(source, translated)
+        drifts = compute_translation_drift(source, translated)
         assert len(drifts) == 1
         assert drifts[0].length_drift < 0
 
@@ -112,7 +112,7 @@ class TestComputeTranslationDrift:
         """Offsets should accumulate correctly across segments."""
         source = ["First.", "Second.", "Third."]
         translated = ["Primero.", "Segundo.", "Tercero."]
-        drifts = MultiStageTranslator.compute_translation_drift(source, translated)
+        drifts = compute_translation_drift(source, translated)
 
         # First segment starts at 0
         assert drifts[0].source_start == 0
@@ -124,14 +124,14 @@ class TestComputeTranslationDrift:
 
     def test_empty_segments(self):
         """Empty segment lists should return empty drifts."""
-        drifts = MultiStageTranslator.compute_translation_drift([], [])
+        drifts = compute_translation_drift([], [])
         assert drifts == []
 
     def test_mismatched_lengths(self):
         """Mismatched segment counts should handle gracefully."""
         source = ["One.", "Two."]
         translated = ["Only one translation."]
-        drifts = MultiStageTranslator.compute_translation_drift(source, translated)
+        drifts = compute_translation_drift(source, translated)
         assert len(drifts) == 2
         assert drifts[1].translated_text == ""
 

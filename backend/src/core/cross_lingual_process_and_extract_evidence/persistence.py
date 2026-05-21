@@ -90,7 +90,8 @@ class DocumentPersistenceService:
         # Compute translation drift from segments
         source_parts = [seg.source_text for seg in result.segments]
         translated_parts = [seg.translated_text for seg in result.segments]
-        translation_drifts = MultiStageTranslator.compute_translation_drift(
+        from .cross_lingual.translate.postprocess import compute_translation_drift
+        translation_drifts = compute_translation_drift(
             source_parts, translated_parts,
         )
 

@@ -29,6 +29,10 @@ from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate
     join_blocks_with_markers,
     split_by_markers,
 )
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.postprocess import (
+    build_translated_blocks,
+    trim_repetitive_content,
+)
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import (
     MultiStageTranslator,
 )
@@ -292,7 +296,7 @@ class TestDocumentBoundary:
             f"Discussion{self.SEP}"
             f"Fabry disease is an X-linked inherited disorder"
         )
-        result = MultiStageTranslator._build_translated_blocks(
+        result = build_translated_blocks(
             original, [], translated, text_block_indices=[0, 1, 2, 3],
         )
         assert len(result) == 4
@@ -326,10 +330,10 @@ class TestDocumentBoundary:
             f"The patient carried a PAH gene variant"
         )
 
-        result1 = MultiStageTranslator._build_translated_blocks(
+        result1 = build_translated_blocks(
             doc1_blocks, [], doc1_translated, text_block_indices=[0, 1],
         )
-        result2 = MultiStageTranslator._build_translated_blocks(
+        result2 = build_translated_blocks(
             doc2_blocks, [], doc2_translated, text_block_indices=[0, 1],
         )
 
@@ -529,10 +533,10 @@ class TestPipelineRegression:
             f"The proband carried a PAH gene c.1222C>T"
         )
 
-        result1 = MultiStageTranslator._build_translated_blocks(
+        result1 = build_translated_blocks(
             art1, [], art1_translated, text_block_indices=[0, 1],
         )
-        result2 = MultiStageTranslator._build_translated_blocks(
+        result2 = build_translated_blocks(
             art2, [], art2_translated, text_block_indices=[0, 1],
         )
 
@@ -553,7 +557,7 @@ class TestPipelineRegression:
         ]
         # Simulate LLM that does NOT change names (correct behavior)
         correct_output = "The target protein was expressed using pET156 vector in CondonPlus host strain."
-        result = MultiStageTranslator._build_translated_blocks(
+        result = build_translated_blocks(
             source_blocks, [], correct_output, text_block_indices=[0],
         )
         assert "pET156" in result[0].text
@@ -586,7 +590,7 @@ class TestPipelineRegression:
             "## Methods\n\nWe analyzed GLA gene.\n\n"
             "## Methods\n\nWe analyzed GLA gene.\n\n"
         )
-        result = MultiStageTranslator._trim_repetitive_content(repetitive)
+        result = trim_repetitive_content(repetitive)
         headings = re.findall(r"^## Introduction", result, re.MULTILINE)
         assert len(headings) == 1, f"Expected 1 'Introduction', got {len(headings)}"
         headings = re.findall(r"^## Methods", result, re.MULTILINE)
