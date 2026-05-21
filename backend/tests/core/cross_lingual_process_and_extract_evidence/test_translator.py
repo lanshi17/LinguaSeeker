@@ -8,6 +8,11 @@ from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     TranslationSegment,
 )
 from src.core.cross_lingual_process_and_extract_evidence.config_context import TranslationConfigContext
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers import (
+    _to_text,
+    invoke_json_with_retry,
+    invoke_with_retry,
+)
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import MultiStageTranslator
 
 
@@ -38,17 +43,29 @@ def test_translator_llm(mock_ctx):
     assert t._llm is not None
 
 
+def test_providers_create_llm():
+    from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers import create_llm
+    llm = create_llm(model="test-model", api_key="test-key", base_url="http://localhost:8001/v1", temperature=0.0)
+    assert llm is not None
+
+
+def test_providers_create_json_llm():
+    from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers import create_json_llm
+    llm = create_json_llm(model="test-model", api_key="test-key", base_url="http://localhost:8001/v1", temperature=0.0)
+    assert llm is not None
+
+
 def test_to_text_none():
-    assert MultiStageTranslator._to_text(None) == ""
+    assert _to_text(None) == ""
 
 
 def test_to_text_string():
-    assert MultiStageTranslator._to_text(" hello ") == "hello"
+    assert _to_text(" hello ") == "hello"
 
 
 def test_to_text_list():
     content = [{"type": "text", "text": "hello"}, {"type": "text", "text": "world"}]
-    assert "hello" in MultiStageTranslator._to_text(content)
+    assert "hello" in _to_text(content)
 
 
 # ── _parse_terminology tests ─────────────────────────────────────────
@@ -99,7 +116,7 @@ def test_invoke_with_retry_success(mock_ctx):
     mock_response = MagicMock()
     mock_response.content = "success"
     with patch("langchain_openai.ChatOpenAI.invoke", return_value=mock_response):
-        result = t._invoke_with_retry("test prompt", "test")
+        result = invoke_with_retry(t._llm, "test prompt", "test")
         assert result == "success"
 
 
@@ -113,7 +130,7 @@ def test_invoke_with_retry_transient_then_success(mock_ctx):
         httpx.ConnectError("connection failed"),
         mock_response,
     ]):
-        result = t._invoke_with_retry("test prompt", "test")
+        result = invoke_with_retry(t._llm, "test prompt", "test")
         assert result == "success"
 
 
@@ -121,7 +138,7 @@ def test_invoke_with_retry_non_transient_no_retry(mock_ctx):
     t = MultiStageTranslator(ctx=mock_ctx)
     with patch("langchain_openai.ChatOpenAI.invoke", side_effect=ValueError("bad input")):
         with pytest.raises(ValueError, match="bad input"):
-            t._invoke_with_retry("test prompt", "test")
+            invoke_with_retry(t._llm, "test prompt", "test")
 
 
 # ── _build_translated_blocks tests ────────────────────────────────────
