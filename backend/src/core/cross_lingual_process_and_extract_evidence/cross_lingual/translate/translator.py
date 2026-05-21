@@ -20,7 +20,6 @@ from .blocks import (
 from .postprocess import (
     build_translated_blocks,
     check_block_language,
-    compute_translation_drift,
     deduplicate_bilingual_blocks,
     flag_quality_issues,
     trim_repetitive_content,
@@ -36,7 +35,6 @@ from ...config_context import TranslationConfigContext
 from ...contracts import (
     ContentBlock,
     FormattedDocument,
-    SegmentDrift,
     TranslationResult,
     TranslationSegment,
 )
@@ -52,13 +50,10 @@ from .prompts import (
 )
 from .validator import (
     _IMAGE_REF_RE,
-    _is_terminology_echo,
     fix_email_placeholder,
     fix_ocr_truncations,
     fix_word_boundary_redacted,
-    mark_redacted_values,
     normalize_cjk_punctuation,
-    normalize_keywords_capitalization,
     normalize_placeholders,
     strip_inline_artifacts,
     strip_prompt_artifacts,
