@@ -14,6 +14,9 @@ from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate
     invoke_json_with_retry,
     invoke_with_retry,
 )
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.postprocess import (
+    build_translated_blocks,
+)
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import MultiStageTranslator
 
 
@@ -149,7 +152,7 @@ _SEP = _BLOCK_SEP
 
 def test_build_translated_blocks_empty():
     segments = []
-    result = MultiStageTranslator._build_translated_blocks([], segments, "")
+    result = build_translated_blocks([], segments, "")
     assert result == []
 
 
@@ -159,7 +162,7 @@ def test_build_translated_blocks_delimiter_split():
         ContentBlock(type="text", text="Body text", page_idx=0),
     ]
     translated = f"Título{_SEP}Texto del cuerpo"
-    result = MultiStageTranslator._build_translated_blocks(
+    result = build_translated_blocks(
         original, [], translated, text_block_indices=[0, 1],
     )
 
@@ -175,7 +178,7 @@ def test_build_translated_blocks_delimiter_split():
 def test_build_translated_blocks_title_preserves_level():
     original = [ContentBlock(type="title", text="Chapter 1", text_level=1, page_idx=0)]
     translated = "Capítulo 1"
-    result = MultiStageTranslator._build_translated_blocks(original, [], translated)
+    result = build_translated_blocks(original, [], translated)
 
     assert result[0].type == "title"
     assert result[0].text == "Capítulo 1"
@@ -192,7 +195,7 @@ def test_build_translated_blocks_image_copied_as_is():
         sub_type="photo",
         page_idx=1,
     )]
-    result = MultiStageTranslator._build_translated_blocks(original, [], "some text")
+    result = build_translated_blocks(original, [], "some text")
 
     assert len(result) == 1
     assert result[0].type == "image"
@@ -212,7 +215,7 @@ def test_build_translated_blocks_table_copied_as_is():
         table_footnote=["* p<0.05"],
         page_idx=2,
     )]
-    result = MultiStageTranslator._build_translated_blocks(original, [], "some text")
+    result = build_translated_blocks(original, [], "some text")
 
     assert result[0].type == "table"
     assert result[0].table_body == "<table><tr><td>1</td></tr></table>"
@@ -227,7 +230,7 @@ def test_build_translated_blocks_mixed_types():
         ContentBlock(type="image", img_path="images/fig.jpg", page_idx=1),
     ]
     translated = f"Título{_SEP}Texto del cuerpo"
-    result = MultiStageTranslator._build_translated_blocks(
+    result = build_translated_blocks(
         original, [], translated, text_block_indices=[0, 1],
     )
 
@@ -246,7 +249,7 @@ def test_build_translated_blocks_fallback_no_delimiter():
     segments = [
         TranslationSegment(index=0, source_text="Hello world", translated_text="Hola mundo"),
     ]
-    result = MultiStageTranslator._build_translated_blocks(original, segments, "Hola mundo")
+    result = build_translated_blocks(original, segments, "Hola mundo")
 
     assert len(result) == 1
     assert result[0].text == "Hola mundo"
