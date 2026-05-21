@@ -11,7 +11,6 @@ from src.core.cross_lingual_process_and_extract_evidence.config_context import T
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.blocks import _BLOCK_SEP
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers import (
     _to_text,
-    invoke_json_with_retry,
     invoke_with_retry,
 )
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.postprocess import (
