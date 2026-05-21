@@ -3,19 +3,20 @@ from __future__ import annotations
 
 import json
 import re
-import time
 from typing import Any, Dict, List, Tuple
 
 
 class TranslationError(RuntimeError):
     """Raised when translation critically fails (e.g. LLM returns unchanged text)."""
 
-import httpx
-import openai
-from langchain_core.messages import HumanMessage
-from langchain_openai import ChatOpenAI
 from loguru import logger
-from pydantic import SecretStr
+
+from .providers import (
+    create_json_llm,
+    create_llm,
+    invoke_json_with_retry,
+    invoke_with_retry,
+)
 
 from ...config_context import TranslationConfigContext
 from ...contracts import (
@@ -93,129 +94,8 @@ class MultiStageTranslator(BaseTranslator):
 
     def __init__(self, ctx: TranslationConfigContext):
         self._ctx = ctx
-        self._llm = ChatOpenAI(
-            model=self._ctx.model,
-            api_key=SecretStr(self._ctx.api_key),
-            base_url=self._ctx.base_url,
-            temperature=self._ctx.temperature,
-        )
-        self._json_llm = ChatOpenAI(
-            model=self._ctx.model,
-            api_key=SecretStr(self._ctx.api_key),
-            base_url=self._ctx.base_url,
-            temperature=self._ctx.temperature,
-            model_kwargs={"response_format": {"type": "json_object"}},
-        )
-
-    @staticmethod
-    def _to_text(content: Any) -> str:
-        """Extract plain text from LLM response content.
-
-        Handles str, list of content blocks, and single content block dicts.
-        Falls back to str() for unknown types.
-        """
-        if content is None:
-            return ""
-        if isinstance(content, str):
-            return content.strip()
-        if isinstance(content, list):
-            parts: list[str] = []
-            for item in content:
-                if isinstance(item, str):
-                    parts.append(item)
-                elif isinstance(item, dict):
-                    if item.get("type") in ("text", None):
-                        text = item.get("text") or item.get("content") or ""
-                        if text:
-                            parts.append(str(text))
-                    # Non-text items (image_url, etc.) are intentionally skipped
-            return "\n".join(parts).strip()
-        if isinstance(content, dict):
-            text = content.get("text") or content.get("content") or ""
-            return str(text).strip()
-        return str(content).strip()
-
-    # ── Helpers ─────────────────────────────────────────────────────────
-
-    _MAX_RETRIES: int = 3
-    _BACKOFF_BASE: float = 30.0  # seconds
-    _TRANSIENT_EXCEPTIONS = (
-        openai.APITimeoutError,
-        openai.APIConnectionError,
-        openai.RateLimitError,
-        openai.InternalServerError,
-        httpx.TimeoutException,
-        httpx.ConnectError,
-    )
-
-    def _invoke_with_retry(
-        self, prompt: str, stage: str, system_prompt: str = "",
-    ) -> str:
-        """Call LLM with exponential backoff on transient failures.
-
-        Note: qwen-mt-flash only supports user/assistant roles, so
-        the system prompt is prepended to the human message.
-        """
-        if system_prompt:
-            content = (
-                f"[SYSTEM INSTRUCTIONS — DO NOT output these. Follow them silently.]\n"
-                f"{system_prompt}\n"
-                f"[END SYSTEM INSTRUCTIONS]\n\n"
-                f"{prompt}"
-            )
-        else:
-            content = prompt
-        messages = [HumanMessage(content=content)]
-
-        last_exc: Exception | None = None
-        for attempt in range(1, self._MAX_RETRIES + 1):
-            try:
-                response = self._llm.invoke(messages)
-                return self._to_text(response.content)
-            except self._TRANSIENT_EXCEPTIONS as exc:
-                last_exc = exc
-                delay = self._BACKOFF_BASE * (2 ** (attempt - 1))
-                logger.warning(
-                    "Stage {} attempt {}/{} failed: {}. Retrying in {:.0f}s",
-                    stage, attempt, self._MAX_RETRIES, exc, delay,
-                )
-                if attempt < self._MAX_RETRIES:
-                    time.sleep(delay)
-        raise RuntimeError(f"Stage {stage} failed after {self._MAX_RETRIES} attempts") from last_exc
-
-    def _invoke_json_with_retry(
-        self, prompt: str, stage: str, system_prompt: str = "",
-    ) -> str:
-        """Call LLM with JSON mode and exponential backoff on transient failures.
-
-        Returns the raw JSON string from the LLM response.
-        """
-        if system_prompt:
-            content = (
-                f"[SYSTEM INSTRUCTIONS — DO NOT output these. Follow them silently.]\n"
-                f"{system_prompt}\n"
-                f"[END SYSTEM INSTRUCTIONS]\n\n"
-                f"{prompt}"
-            )
-        else:
-            content = prompt
-        messages = [HumanMessage(content=content)]
-
-        last_exc: Exception | None = None
-        for attempt in range(1, self._MAX_RETRIES + 1):
-            try:
-                response = self._json_llm.invoke(messages)
-                return self._to_text(response.content)
-            except self._TRANSIENT_EXCEPTIONS as exc:
-                last_exc = exc
-                delay = self._BACKOFF_BASE * (2 ** (attempt - 1))
-                logger.warning(
-                    "JSON stage {} attempt {}/{} failed: {}. Retrying in {:.0f}s",
-                    stage, attempt, self._MAX_RETRIES, exc, delay,
-                )
-                if attempt < self._MAX_RETRIES:
-                    time.sleep(delay)
-        raise RuntimeError(f"JSON stage {stage} failed after {self._MAX_RETRIES} attempts") from last_exc
+        self._llm = create_llm(ctx.model, ctx.api_key, ctx.base_url, ctx.temperature)
+        self._json_llm = create_json_llm(ctx.model, ctx.api_key, ctx.base_url, ctx.temperature)
 
     @staticmethod
     def _parse_terminology(raw: str, source_language: str = "unknown") -> Dict[str, str]:
@@ -358,7 +238,7 @@ class MultiStageTranslator(BaseTranslator):
         meta_prompt = get_system_prompt_generation_prompt(sample, source_lang)
 
         logger.info("Generating dynamic system prompt for lang={}", source_lang)
-        system_prompt = self._invoke_with_retry(meta_prompt, "system_prompt_gen")
+        system_prompt = invoke_with_retry(self._llm,meta_prompt, "system_prompt_gen")
 
         # Validate: generated prompt should be reasonable length
         if len(system_prompt) < 50:
@@ -381,7 +261,7 @@ class MultiStageTranslator(BaseTranslator):
         segments = segment_text(text, max_tokens=6000, prompt_overhead_tokens=overhead)
 
         if len(segments) <= 1:
-            raw = self._invoke_with_retry(
+            raw = invoke_with_retry(self._llm,
                 get_terminology_prompt(text), "terminology",
             )
             return self._clean_terminology(raw)
@@ -389,7 +269,7 @@ class MultiStageTranslator(BaseTranslator):
         all_terms: list[str] = []
         for idx, segment in enumerate(segments, start=1):
             prompt = get_terminology_prompt(segment)
-            terms = self._invoke_with_retry(prompt, f"terminology/{idx}")
+            terms = invoke_with_retry(self._llm,prompt, f"terminology/{idx}")
             all_terms.append(terms)
             logger.info("Terminology segment {}/{} done", idx, len(segments))
 
@@ -418,7 +298,7 @@ class MultiStageTranslator(BaseTranslator):
             f"Text:\n{text[:6000]}"
         )
         try:
-            raw = self._invoke_json_with_retry(prompt, "terminology_json")
+            raw = invoke_json_with_retry(self._json_llm,prompt, "terminology_json")
             data = json.loads(raw)
             terms = data.get("terms", [])
             if isinstance(terms, list):
@@ -703,7 +583,7 @@ class MultiStageTranslator(BaseTranslator):
 
         # Single LLM call for the entire document
         prompt = get_full_document_translate_prompt(marked_source, terminology)
-        translated = self._invoke_with_retry(prompt, "translate/full", system_prompt)
+        translated = invoke_with_retry(self._llm,prompt, "translate/full", system_prompt)
 
         # Strip prompt artifacts
         translated = strip_prompt_echo(translated)
@@ -728,7 +608,7 @@ class MultiStageTranslator(BaseTranslator):
             elif prefix and idx < len(translated_parts):
                 part = translated_parts[idx]
                 if _CJK_RE.search(prefix):
-                    prefix_tr = self._invoke_with_retry(
+                    prefix_tr = invoke_with_retry(self._llm,
                         f"Translate this label to English (short, 2-5 words): {prefix}",
                         f"translate/prefix/{idx + 1}",
                     )
@@ -767,7 +647,7 @@ class MultiStageTranslator(BaseTranslator):
         logger.info("Running self-review ({} source chars)", len(source_text))
 
         try:
-            reviewed = self._invoke_with_retry(prompt, "self_review", system_prompt)
+            reviewed = invoke_with_retry(self._llm,prompt, "self_review", system_prompt)
         except RuntimeError as exc:
             logger.warning("Self-review failed: {}, keeping original", exc)
             return translated_text
@@ -905,7 +785,7 @@ class MultiStageTranslator(BaseTranslator):
                     f"Output ONLY the English translation. "
                     f"Do NOT keep any Chinese characters.\n\n{source_segment}"
                 )
-                translated = self._invoke_with_retry(retry_prompt, stage, system_prompt)
+                translated = invoke_with_retry(self._llm,retry_prompt, stage, system_prompt)
             elif attempt == 1:
                 # First attempt: use JSON mode to prevent prompt echo
                 json_prompt = (
@@ -913,16 +793,16 @@ class MultiStageTranslator(BaseTranslator):
                     "Return a JSON object with key \"translation\" containing the translated text."
                 )
                 try:
-                    raw = self._invoke_json_with_retry(json_prompt, stage, system_prompt)
+                    raw = invoke_json_with_retry(self._json_llm,json_prompt, stage, system_prompt)
                     data = json.loads(raw)
                     translated = data.get("translation", "")
                     if not translated:
                         raise ValueError("empty translation field")
                 except (json.JSONDecodeError, KeyError, ValueError):
                     # Fallback to non-JSON mode
-                    translated = self._invoke_with_retry(prompt, stage, system_prompt)
+                    translated = invoke_with_retry(self._llm,prompt, stage, system_prompt)
             else:
-                translated = self._invoke_with_retry(prompt, stage, system_prompt)
+                translated = invoke_with_retry(self._llm,prompt, stage, system_prompt)
 
             # Strip prompt artifacts echoed back by the LLM
             translated = strip_prompt_artifacts(translated)
@@ -1155,7 +1035,7 @@ class MultiStageTranslator(BaseTranslator):
                 f"Items:\n{json.dumps(items_json, ensure_ascii=False)}"
             )
             try:
-                raw = self._invoke_json_with_retry(prompt, "aux_translate", system_prompt)
+                raw = invoke_json_with_retry(self._json_llm,prompt, "aux_translate", system_prompt)
                 data = json.loads(raw)
                 translations = data.get("translations", [])
                 for item in translations:
