@@ -24,6 +24,11 @@ from src.core.cross_lingual_process_and_extract_evidence.contracts import (
 from src.core.cross_lingual_process_and_extract_evidence.config_context import (
     TranslationConfigContext,
 )
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.blocks import (
+    _BLOCK_SEP,
+    join_blocks_with_markers,
+    split_by_markers,
+)
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import (
     MultiStageTranslator,
 )
@@ -235,7 +240,7 @@ class TestRedactedMislabeling:
 class TestDocumentBoundary:
     """Content from one article must NOT leak into another."""
 
-    SEP = MultiStageTranslator._BLOCK_SEP
+    SEP = _BLOCK_SEP
 
     def test_split_by_markers_preserves_boundaries(self):
         """_split_by_markers must return per-block content without mixing."""
@@ -245,7 +250,7 @@ class TestDocumentBoundary:
             "[BLOCK_2] Second article title\n\n"
             "Second article body text."
         )
-        parts = MultiStageTranslator._split_by_markers(marked, 2)
+        parts = split_by_markers(marked, 2)
         assert len(parts) == 2
         assert "First article" in parts[0]
         assert "Second article" in parts[1]
@@ -262,7 +267,7 @@ class TestDocumentBoundary:
                 f"with identifier DOC{i+1}_MARKER"
             )
         marked = "\n\n".join(blocks)
-        parts = MultiStageTranslator._split_by_markers(marked, 5)
+        parts = split_by_markers(marked, 5)
         assert len(parts) == 5
         for i, part in enumerate(parts):
             assert f"DOC{i+1}_MARKER" in part
@@ -340,7 +345,7 @@ class TestDocumentBoundary:
         blocks = _make_blocks(["Title A", "Body A", "Title B", "Body B"])
         non_empty = list(enumerate(blocks))
         marked, indices, prefixes, overrides = (
-            MultiStageTranslator._join_blocks_with_markers(non_empty)
+            join_blocks_with_markers(non_empty)
         )
         assert "[BLOCK_1]" in marked
         assert "[BLOCK_2]" in marked
@@ -502,7 +507,7 @@ class TestPipelineRegression:
 
     def test_two_article_blocks_isolated(self):
         """Two articles' blocks must be isolated after _build_translated_blocks."""
-        sep = MultiStageTranslator._BLOCK_SEP
+        sep = _BLOCK_SEP
         # Article 1 blocks
         art1 = [
             ContentBlock(type="title", text="法布雷病1例报告", page_idx=0),

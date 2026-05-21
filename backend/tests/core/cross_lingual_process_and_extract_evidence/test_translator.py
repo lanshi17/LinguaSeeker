@@ -8,6 +8,7 @@ from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     TranslationSegment,
 )
 from src.core.cross_lingual_process_and_extract_evidence.config_context import TranslationConfigContext
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.blocks import _BLOCK_SEP
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers import (
     _to_text,
     invoke_json_with_retry,
@@ -143,7 +144,7 @@ def test_invoke_with_retry_non_transient_no_retry(mock_ctx):
 
 # ── _build_translated_blocks tests ────────────────────────────────────
 
-_SEP = MultiStageTranslator._BLOCK_SEP
+_SEP = _BLOCK_SEP
 
 
 def test_build_translated_blocks_empty():
