@@ -1,6 +1,6 @@
 """End-to-end translation pipeline test.
 
-Reads parsed markdown from output/{lang}/{doc}/original.md,
+Reads parsed markdown from output/cross_lingual/{lang}/{doc}/original.md,
 runs the translation pipeline, and saves results.
 """
 from __future__ import annotations
@@ -17,12 +17,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.core.config import get_config
 from src.core.cross_lingual_process_and_extract_evidence.workflow import TranslationService
 
-OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output"
+OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output" / "cross_lingual"
 
 
 def find_test_docs() -> list[tuple[str, str, Path]]:
     """Find existing original.md files for testing. Returns (lang, doc_id, path)."""
     docs = []
+    if not OUTPUT_DIR.exists():
+        logger.error("Output directory not found: {}", OUTPUT_DIR)
+        return docs
     for lang_dir in sorted(OUTPUT_DIR.iterdir()):
         if not lang_dir.is_dir():
             continue

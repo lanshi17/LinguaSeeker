@@ -157,6 +157,30 @@ class EvidenceExtractionResult(BaseModel):
     quality_report: QualityReport | None = None
 
 
+class DualTrackDocuments(BaseModel):
+    document_id: str
+    original: TrackDocument
+    translated: TrackDocument
+
+    @model_validator(mode="after")
+    def validate_tracks(self) -> DualTrackDocuments:
+        if self.original.track != Track.ORIGINAL:
+            raise ValueError("original document must use track=original")
+        if self.translated.track != Track.TRANSLATED:
+            raise ValueError("translated document must use track=translated")
+        if self.original.document_id != self.document_id:
+            raise ValueError("original document_id must match dual document_id")
+        if self.translated.document_id != self.document_id:
+            raise ValueError("translated document_id must match dual document_id")
+        return self
+
+
+class DualEvidenceExtractionResult(BaseModel):
+    document_id: str
+    original_result: EvidenceExtractionResult
+    translated_result: EvidenceExtractionResult
+
+
 class EvidenceExtractionState(BaseModel):
     document: TrackDocument
     evidence_map: DocumentEvidenceMap | None = None

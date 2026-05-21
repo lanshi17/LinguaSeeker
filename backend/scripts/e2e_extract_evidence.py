@@ -1,0 +1,187 @@
+"""Run extract_evidence E2E over persisted original/translated JSON outputs.
+
+Usage:
+    cd backend
+
+    uv run python scripts/e2e_extract_evidence.py
+    uv run python scripts/e2e_extract_evidence.py --input-dir output/zh/法布雷病1例
+    uv run python scripts/e2e_extract_evidence.py --output-dir output/extract_evidence
+"""
+from __future__ import annotations
+
+import argparse
+import asyncio
+import json
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Protocol
+
+from loguru import logger
+from pydantic import BaseModel
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from src.core.config import get_config
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import EvidenceExtractionService
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    DualEvidenceExtractionResult,
+    DualTrackDocuments,
+    EvidenceExtractionResult,
+    EvidenceStatus,
+)
+
+
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+LEGACY_FABRY_INPUT_DIR = BACKEND_DIR / "output" / "zh" / "法布雷病1例"
+CROSS_LINGUAL_FABRY_INPUT_DIR = BACKEND_DIR / "output" / "cross_lingual" / "zh" / "法布雷病1例"
+DEFAULT_INPUT_DIR = (
+    LEGACY_FABRY_INPUT_DIR
+    if LEGACY_FABRY_INPUT_DIR.exists()
+    else CROSS_LINGUAL_FABRY_INPUT_DIR
+)
+DEFAULT_OUTPUT_DIR = BACKEND_DIR / "output" / "extract_evidence"
+
+
+class DualEvidenceService(Protocol):
+    async def run_dual(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:
+        """Run original and translated evidence extraction."""
+
+
+def _configure_logger() -> None:
+    logger.remove()
+    logger.add(sys.stderr, level="INFO", format="{time:HH:mm:ss} | {level:<7} | {message}")
+
+
+def _ensure_evidence_env_from_llm() -> None:
+    """Map local LLM_* settings to EVIDENCE_EXTRACTION_* for this process only."""
+    mappings = {
+        "EVIDENCE_EXTRACTION_API_KEY": "LLM_API_KEY",
+        "EVIDENCE_EXTRACTION_BASE_URL": "LLM_BASE_URL",
+        "EVIDENCE_EXTRACTION_FAST_MODEL": "LLM_MODEL",
+        "EVIDENCE_EXTRACTION_STANDARD_MODEL": "LLM_MODEL",
+        "EVIDENCE_EXTRACTION_STRONG_MODEL": "LLM_MODEL",
+    }
+    for evidence_key, llm_key in mappings.items():
+        if os.environ.get(evidence_key):
+            continue
+        if os.environ.get(llm_key):
+            os.environ[evidence_key] = os.environ[llm_key]
+
+
+def _json_ready(value: BaseModel | dict[str, Any]) -> dict[str, Any]:
+    if isinstance(value, BaseModel):
+        return value.model_dump(mode="json")
+    return value
+
+
+def _write_json(path: Path, data: BaseModel | dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(_json_ready(data), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
+def _track_summary(result: EvidenceExtractionResult) -> dict[str, Any]:
+    found_count = sum(1 for item in result.evidence_items if item.status == EvidenceStatus.FOUND)
+    source_invalid_count = sum(
+        1 for item in result.evidence_items
+        if item.status == EvidenceStatus.SOURCE_INVALID
+    )
+    ambiguous_count = sum(
+        1 for item in result.evidence_items
+        if item.source is not None and item.source.source_precision.value == "ambiguous"
+    )
+    return {
+        "status": result.status.value,
+        "track": result.track.value,
+        "evidence_item_count": len(result.evidence_items),
+        "found_count": found_count,
+        "source_invalid_count": source_invalid_count,
+        "ambiguous_source_count": ambiguous_count,
+        "special_evidence_count": len(result.special_evidence),
+        "quality_passed": result.quality_report.passed if result.quality_report else None,
+        "quality_scorable": result.quality_report.scorable if result.quality_report else None,
+    }
+
+
+def _summary(result: DualEvidenceExtractionResult, input_dir: Path, saved_dir: Path) -> dict[str, Any]:
+    return {
+        "document_id": result.document_id,
+        "input_dir": str(input_dir),
+        "output_dir": str(saved_dir),
+        "created_at": datetime.now().isoformat(),
+        "original": _track_summary(result.original_result),
+        "translated": _track_summary(result.translated_result),
+    }
+
+
+async def run_extract_evidence(
+    input_dir: Path,
+    output_dir: Path,
+    service: DualEvidenceService | None = None,
+    run_id: str | None = None,
+) -> Path:
+    """Run dual-track extraction and save full plus per-track outputs."""
+    input_dir = input_dir.resolve()
+    output_dir = output_dir.resolve()
+    documents = EvidenceExtractionService.build_dual_documents_from_output_dir(input_dir)
+    if service is None:
+        _ensure_evidence_env_from_llm()
+        get_config.cache_clear()
+        service = EvidenceExtractionService(cfg=get_config())
+
+    effective_run_id = run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
+    saved_dir = output_dir / documents.document_id / effective_run_id
+
+    logger.info("Running extract_evidence: input={}, output={}", input_dir, saved_dir)
+    result = await service.run_dual(documents)
+
+    _write_json(saved_dir / "result.json", result)
+    _write_json(saved_dir / "original_result.json", result.original_result)
+    _write_json(saved_dir / "translated_result.json", result.translated_result)
+    _write_json(saved_dir / "summary.json", _summary(result, input_dir, saved_dir))
+
+    logger.info(
+        "Saved extract_evidence outputs: original_found={}, translated_found={}",
+        _track_summary(result.original_result)["found_count"],
+        _track_summary(result.translated_result)["found_count"],
+    )
+    return saved_dir
+
+
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run extract_evidence E2E over persisted cross-lingual output")
+    parser.add_argument(
+        "--input-dir",
+        default=str(DEFAULT_INPUT_DIR),
+        help=f"Directory containing original.json and translated.json (default: {DEFAULT_INPUT_DIR})",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=str(DEFAULT_OUTPUT_DIR),
+        help=f"Directory where extraction results are saved (default: {DEFAULT_OUTPUT_DIR})",
+    )
+    parser.add_argument(
+        "--run-id",
+        default=None,
+        help="Optional stable run id; defaults to timestamp",
+    )
+    return parser.parse_args()
+
+
+async def _main() -> None:
+    _configure_logger()
+    args = _parse_args()
+    saved_dir = await run_extract_evidence(
+        input_dir=Path(args.input_dir),
+        output_dir=Path(args.output_dir),
+        run_id=args.run_id,
+    )
+    logger.info("Output directory: {}", saved_dir)
+
+
+if __name__ == "__main__":
+    asyncio.run(_main())

@@ -2,16 +2,12 @@ from unittest.mock import MagicMock
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     DocumentEvidenceMap,
-    EvidenceChain,
-    EvidenceExtractionState,
-    EvidenceExtractionStatus,
     EvidenceItem,
     EvidenceStatus,
     PageSpan,
     QualityReport,
     SourceLocation,
     SourcePrecision,
-    SpecialEvidenceRecord,
     Track,
     TrackDocument,
 )

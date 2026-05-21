@@ -1,6 +1,6 @@
 # extract_evidence
 
-> Track-agnostic GDV/ACMG evidence extraction module. Given one formatted document track (original or translated), extracts structured evidence items, evidence chains, and special evidence records across 10 evidence categories with validated source spans.
+> Track-agnostic GDV/ACMG evidence extraction module. Given one formatted document track (original or translated), extracts structured evidence items, evidence chains, and special evidence records across 10 evidence categories with validated source spans. The public facade also supports dual-track runs that execute original and translated tracks independently.
 
 ## Quick Start
 
@@ -34,6 +34,16 @@ Or synchronously:
 result = service.run_sync(document)
 ```
 
+For a persisted cross-lingual output directory:
+
+```python
+documents = EvidenceExtractionService.build_dual_documents_from_output_dir(
+    "backend/output/zh/法布雷病1例"
+)
+dual_result = await service.run_dual(documents)
+# dual_result.original_result and dual_result.translated_result are independent runs.
+```
+
 ## Architecture
 
 ```
@@ -43,9 +53,9 @@ EvidenceExtractionService (public facade)
  │
  ├── LangChainEvidenceProvider        ← tier-based ChatOpenAI (fast/standard/strong)
  │    ├── _client_for_tier()          ← cached httpx session per tier
- │    └── invoke_structured()         ← retry: transient (max_retries), non-transient (max_retries)
+ │    └── invoke_structured()         ← JSON schema first; JSON-text fallback for compatible model servers
  │
- └── EvidenceExtractionWorkflow       ← LangGraph StateGraph
+ └── EvidenceExtractionWorkflow       ← LangGraph StateGraph for one TrackDocument
       │
       ├─ [entry] evidence_map ───────→ EvidenceMapStage (FAST tier)
       │    ├─ relevant? → not_relevant → END
@@ -74,6 +84,10 @@ TrackDocument → [evidence_map] → DocumentEvidenceMap
                                → [source_grounding] → EvidenceItem[] (grounded)
                                → [quality_validation] → QualityReport
                                → EvidenceExtractionResult
+
+DualTrackDocuments → run(original) → original EvidenceExtractionResult
+                   → run(translated) → translated EvidenceExtractionResult
+                   → DualEvidenceExtractionResult
 ```
 
 ## Public API
@@ -90,8 +104,18 @@ class EvidenceExtractionService:
     async def run(self, document: TrackDocument) -> EvidenceExtractionResult:
         """Run the full 5-stage pipeline asynchronously."""
 
+    async def run_dual(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:
+        """Run original and translated tracks independently."""
+
     def run_sync(self, document: TrackDocument) -> EvidenceExtractionResult:
         """Synchronous wrapper. Raises RuntimeError if called from an async event loop."""
+
+    def run_dual_sync(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:
+        """Synchronous wrapper for dual-track extraction."""
+
+    @staticmethod
+    def build_dual_documents_from_output_dir(output_dir: str | Path) -> DualTrackDocuments:
+        """Build original/translated TrackDocument inputs from original.json and translated.json."""
 ```
 
 ### `EvidenceExtractionConfigContext`
@@ -99,6 +123,8 @@ class EvidenceExtractionService:
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `from_config` | `(cfg: Any) -> EvidenceExtractionConfigContext` | Classmethod. Extracts evidence extraction settings from the global config. |
+
+Model servers that do not support OpenAI `response_format={"type": "json_schema"}` are supported by a JSON-text fallback. The fallback still validates outputs with Pydantic `TypeAdapter`, including `list[EvidenceItem]` stage outputs.
 
 ### `EvidenceFieldSpec` (`catalog.py`)
 
@@ -232,6 +258,8 @@ All models are Pydantic v2 `BaseModel` with strict validation.
 | `QualityReport` | Aggregate report: passed, scorable, issue list, counts |
 | `EvidenceExtractionStatus` | Enum: `COMPLETED`, `NOT_RELEVANT` |
 | `EvidenceExtractionResult` | Public output: status + all extracted data |
+| `DualTrackDocuments` | Pair of original and translated `TrackDocument` inputs; validates track assignments |
+| `DualEvidenceExtractionResult` | Public dual output containing independent original and translated results |
 | `EvidenceExtractionState` | LangGraph internal state (document + all stage outputs) |
 
 ## Internal Design

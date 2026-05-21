@@ -3,6 +3,7 @@ from pydantic import ValidationError
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     DocumentEvidenceMap,
+    DualTrackDocuments,
     EvidenceChain,
     EvidenceExtractionResult,
     EvidenceExtractionState,
@@ -11,7 +12,6 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     EvidenceStatus,
     ExternalIds,
     PageSpan,
-    QualityIssue,
     QualityReport,
     SourceLocation,
     SourcePrecision,
@@ -32,6 +32,44 @@ def test_track_document_accepts_upstream_spans():
 
     assert doc.track == Track.ORIGINAL
     assert doc.page_spans[0].span_id == "p1"
+
+
+def test_dual_track_documents_require_original_and_translated_tracks():
+    original = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text="源文本",
+        page_spans=[PageSpan(span_id="original-p1", page=1, start_offset=0, end_offset=3)],
+    )
+    translated = TrackDocument(
+        document_id="doc-1",
+        track=Track.TRANSLATED,
+        formatted_text="Translated text",
+        page_spans=[PageSpan(span_id="translated-p1", page=1, start_offset=0, end_offset=15)],
+    )
+
+    documents = DualTrackDocuments(document_id="doc-1", original=original, translated=translated)
+
+    assert documents.original.track == Track.ORIGINAL
+    assert documents.translated.track == Track.TRANSLATED
+
+
+def test_dual_track_documents_reject_wrong_track_assignment():
+    original = TrackDocument(
+        document_id="doc-1",
+        track=Track.TRANSLATED,
+        formatted_text="Translated text",
+        page_spans=[PageSpan(span_id="translated-p1", page=1, start_offset=0, end_offset=15)],
+    )
+    translated = TrackDocument(
+        document_id="doc-1",
+        track=Track.TRANSLATED,
+        formatted_text="Translated text",
+        page_spans=[PageSpan(span_id="translated-p1", page=1, start_offset=0, end_offset=15)],
+    )
+
+    with pytest.raises(ValidationError):
+        DualTrackDocuments(document_id="doc-1", original=original, translated=translated)
 
 
 def test_evidence_item_found_requires_confidence_in_range():

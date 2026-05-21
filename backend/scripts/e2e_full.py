@@ -1,13 +1,32 @@
-"""Full end-to-end: local PDF → MinerU remote parse → translate → save.
+"""Full end-to-end pipeline: composable stages for real integration testing.
+
+Supported stages (comma-separated via --stages):
+    parse       MinerU remote PDF → parsed.json
+    translate   Translation pipeline → translated.json + metadata.json
+    extract     Evidence extraction → evidence.json (placeholder)
 
 Usage:
     cd backend
-    uv run python scripts/e2e_full.py                     # all PDFs in downloads/
-    uv run python scripts/e2e_full.py downloads/ja/52_26.pdf  # single file
+
+    # Full pipeline (parse + translate)
+    uv run python scripts/e2e_full.py
+
+    # Parse only
+    uv run python scripts/e2e_full.py --stages parse
+
+    # Translate only (reads from parsed.json)
+    uv run python scripts/e2e_full.py --stages translate
+
+    # Custom PDF list
+    uv run python scripts/e2e_full.py downloads/ja/52_26.pdf
+
+    # Custom output dir
+    uv run python scripts/e2e_full.py --output-dir /tmp/e2e_test
 """
 from __future__ import annotations
 
 import asyncio
+import json
 import sys
 import time
 from pathlib import Path
@@ -21,7 +40,9 @@ from src.core.cross_lingual_process_and_extract_evidence.workflow import Transla
 from src.core.ingest_and_digitize_data.parse_document.remote.parser import MinerURemoteParser
 
 DOWNLOADS_DIR = Path(__file__).resolve().parents[1] / "downloads"
-OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output"
+DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output" / "cross_lingual"
+
+ALL_STAGES = ("parse", "translate", "extract")
 
 
 def collect_pdfs(targets: list[str]) -> list[Path]:
@@ -41,9 +62,27 @@ def collect_pdfs(targets: list[str]) -> list[Path]:
     return pdfs
 
 
-async def parse_one(parser: MinerURemoteParser, pdf_path: Path) -> dict:
-    """Parse a single PDF via MinerU remote API, return pages dict list."""
-    logger.info("MinerU parsing: {}", pdf_path.name)
+def save_json(path: Path, data: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def load_json(path: Path) -> dict | list | None:
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+# ── Stage implementations ──────────────────────────────────────────────
+
+
+async def stage_parse(
+    parser: MinerURemoteParser,
+    pdf_path: Path,
+    out_dir: Path,
+) -> dict | None:
+    """Parse PDF via MinerU remote API → save parsed.json."""
+    logger.info("[parse] {}", pdf_path.name)
     result = await parser.parse_local_files(
         file_paths=[str(pdf_path)],
         model_version="vlm",
@@ -52,37 +91,63 @@ async def parse_one(parser: MinerURemoteParser, pdf_path: Path) -> dict:
     )
 
     if result.failed_files:
-        logger.error("MinerU failed for {}: {}", pdf_path.name, result.failed_files)
-        return {}
+        logger.error("[parse] MinerU failed for {}: {}", pdf_path.name, result.failed_files)
+        return None
 
     parse_result = list(result.results.values())[0]
     pages = [
         {"page_number": p.page_number, "markdown": p.markdown}
         for p in parse_result.pages
     ]
-    logger.info("MinerU done: {} pages, {} chars, {} blocks", len(pages), len(parse_result.full_markdown), len(parse_result.content_blocks))
-    return {"pages": pages, "images": parse_result.images, "content_blocks": parse_result.content_blocks}
+
+    parsed = {
+        "pages": pages,
+        "images": parse_result.images,
+        "content_blocks": parse_result.content_blocks,
+    }
+
+    save_json(out_dir / "parsed.json", {
+        "pages": pages,
+        "content_blocks": parse_result.content_blocks,
+    })
+
+    logger.info(
+        "[parse] OK: {} pages, {} chars, {} blocks",
+        len(pages), len(parse_result.full_markdown), len(parse_result.content_blocks),
+    )
+    return parsed
 
 
-async def translate_and_save(
+async def stage_translate(
     service: TranslationService,
-    pages: list[dict],
+    parsed: dict | None,
+    out_dir: Path,
     doc_id: str,
-    lang: str,
-    images: dict,
-    content_blocks: list[dict] | None = None,
-) -> None:
-    """Run translation pipeline and persist results."""
-    logger.info("Translating: {}/{}", lang, doc_id)
+) -> bool:
+    """Translate parsed content → save via persistence layer."""
+    # Load from file if not passed in-memory
+    if parsed is None:
+        parsed_file = out_dir / "parsed.json"
+        loaded = load_json(parsed_file)
+        if loaded is None:
+            logger.error("[translate] No parsed data found at {}", parsed_file)
+            return False
+        parsed = loaded
+
+    pages = parsed.get("pages", [])
+    content_blocks = parsed.get("content_blocks")
+    if not pages:
+        logger.error("[translate] Empty pages for {}", doc_id)
+        return False
+
+    logger.info("[translate] Translating: {}", doc_id)
     t0 = time.time()
     result = await service.run(pages, content_blocks=content_blocks)
     elapsed = time.time() - t0
 
-    out_dir = OUTPUT_DIR / lang / doc_id
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    # Save images
+    # Save images if they exist in parsed data
     image_paths = []
+    images = parsed.get("images", {})
     if images:
         img_dir = out_dir / "images"
         img_dir.mkdir(exist_ok=True)
@@ -91,23 +156,40 @@ async def translate_and_save(
             img_path.write_bytes(img_bytes)
             image_paths.append(str(img_path))
 
-    # Use service.save() for structured JSON output
-    saved = service.save(
+    # Save via persistence layer (original.json + translated.json + metadata.json)
+    service.save(
         result,
-        output_dir=str(OUTPUT_DIR / lang),
+        output_dir=str(out_dir.parent),  # parent because save() appends doc_id
         doc_id=doc_id,
         image_paths=image_paths if image_paths else None,
     )
 
     logger.info(
-        "OK {}/{} | lang={} | {:.1f}s | {}→{} chars | segs={} | blocks={} | warnings={}",
-        lang, doc_id, result.source_language, elapsed,
+        "[translate] OK: lang={} | {:.1f}s | {}→{} chars | segs={} | blocks={} | warnings={}",
+        result.source_language, elapsed,
         len(result.formatted_original), len(result.translated_english),
         len(result.segments), len(result.original_blocks), result.translation_warnings,
     )
+    return True
 
 
-async def run_e2e(targets: list[str]) -> None:
+async def stage_extract(
+    parsed: dict | None,
+    out_dir: Path,
+) -> bool:
+    """Evidence extraction — placeholder for future implementation."""
+    logger.info("[extract] Not yet implemented, skipping")
+    return True
+
+
+# ── Pipeline orchestrator ──────────────────────────────────────────────
+
+
+async def run_pipeline(
+    stages: list[str],
+    targets: list[str],
+    output_dir: Path,
+) -> None:
     logger.remove()
     logger.add(sys.stderr, level="INFO", format="{time:HH:mm:ss} | {level:<7} | {message}")
 
@@ -120,25 +202,77 @@ async def run_e2e(targets: list[str]) -> None:
     service = TranslationService(cfg=cfg)
 
     pdfs = collect_pdfs(targets)
-    logger.info("E2E: {} PDFs to process", len(pdfs))
+    logger.info("Pipeline: stages={}, PDFs={}, output={}", stages, len(pdfs), output_dir)
+
+    stats: dict[str, int] = {s: 0 for s in stages}
+    failures: list[str] = []
 
     for pdf_path in pdfs:
         lang = pdf_path.parent.name
         doc_id = pdf_path.stem
+        out_dir = output_dir / lang / doc_id
+
+        logger.info("── {} / {} ──", lang, doc_id)
+        parsed: dict | None = None
 
         try:
-            parsed = await parse_one(parser, pdf_path)
-            if not parsed:
-                continue
-            await translate_and_save(
-                service, parsed["pages"], doc_id, lang,
-                parsed.get("images", {}), parsed.get("content_blocks"),
-            )
+            # parse
+            if "parse" in stages:
+                parsed = await stage_parse(parser, pdf_path, out_dir)
+                if parsed is None:
+                    failures.append(f"{lang}/{doc_id}")
+                    continue
+                stats["parse"] += 1
+
+            # translate
+            if "translate" in stages:
+                ok = await stage_translate(service, parsed, out_dir, doc_id)
+                if ok:
+                    stats["translate"] += 1
+                else:
+                    failures.append(f"{lang}/{doc_id}")
+                    continue
+
+            # extract
+            if "extract" in stages:
+                ok = await stage_extract(parsed, out_dir)
+                if ok:
+                    stats["extract"] += 1
+
         except Exception:
             logger.exception("FAILED {}/{}", lang, doc_id)
+            failures.append(f"{lang}/{doc_id}")
 
-    logger.info("E2E complete. Output in {}", OUTPUT_DIR)
+    # Summary
+    logger.info("═══ Pipeline complete ═══")
+    for stage, count in stats.items():
+        logger.info("  {}: {} OK", stage, count)
+    if failures:
+        logger.warning("  Failures: {}", failures)
+    logger.info("Output: {}", output_dir)
 
 
 if __name__ == "__main__":
-    asyncio.run(run_e2e(sys.argv[1:]))
+    import argparse
+
+    parser = argparse.ArgumentParser(description="E2E pipeline test")
+    parser.add_argument(
+        "--stages",
+        default="parse,translate",
+        help=f"Comma-separated stages: {','.join(ALL_STAGES)} (default: parse,translate)",
+    )
+    parser.add_argument("pdfs", nargs="*", help="PDF files to process")
+    parser.add_argument(
+        "--output-dir",
+        default=str(DEFAULT_OUTPUT_DIR),
+        help=f"Output directory (default: {DEFAULT_OUTPUT_DIR})",
+    )
+    args = parser.parse_args()
+
+    stages = [s.strip() for s in args.stages.split(",")]
+    invalid = [s for s in stages if s not in ALL_STAGES]
+    if invalid:
+        logger.error("Unknown stages: {}. Valid: {}", invalid, ALL_STAGES)
+        sys.exit(1)
+
+    asyncio.run(run_pipeline(stages, args.pdfs, Path(args.output_dir)))
