@@ -252,3 +252,40 @@ def test_build_translated_blocks_fallback_no_delimiter():
 
     assert len(result) == 1
     assert result[0].text == "Hola mundo"
+
+
+def test_build_translated_blocks_preserves_doi_footer():
+    """Footer blocks with DOI info must be preserved (not filtered as non-body)."""
+    original = [
+        ContentBlock(type="title", text="Title", page_idx=0),
+        ContentBlock(type="text", text="Body text", page_idx=0),
+        ContentBlock(type="footer", text="DOI: 10.1234/example.2024", page_idx=0),
+    ]
+    translated = f"Translated Title{_BLOCK_SEP}Translated Body"
+    result = build_translated_blocks(
+        original, [], translated, text_block_indices=[0, 1],
+    )
+    # Title + Body translated, DOI footer preserved as-is
+    assert len(result) == 3
+    assert result[0].text == "Translated Title"
+    assert result[1].text == "Translated Body"
+    assert result[2].type == "footer"
+    assert "DOI" in result[2].text
+    assert result[2].text == "DOI: 10.1234/example.2024"
+
+
+def test_translate_segments_includes_doi_footer_blocks():
+    """translate_segments must include DOI footer blocks in the marked text."""
+    from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.blocks import (
+        is_short_keyword,
+    )
+    blocks = [
+        (0, ContentBlock(type="title", text="Example Paper", page_idx=0)),
+        (1, ContentBlock(type="text", text="Some body text here", page_idx=0)),
+        (2, ContentBlock(type="footer", text="DOI: 10.1234/example.2024", page_idx=0)),
+        (3, ContentBlock(type="footer", text="Page 1 of 10", page_idx=0)),
+    ]
+    # DOI footer should be included (not filtered), page-only footer should be skipped
+    doi_block = blocks[2][1]
+    assert doi_block.type == "footer"
+    assert "DOI" in doi_block.text
