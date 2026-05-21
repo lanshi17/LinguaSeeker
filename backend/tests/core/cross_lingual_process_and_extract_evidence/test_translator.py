@@ -275,17 +275,29 @@ def test_build_translated_blocks_preserves_doi_footer():
 
 
 def test_translate_segments_includes_doi_footer_blocks():
-    """translate_segments must include DOI footer blocks in the marked text."""
-    from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.blocks import (
-        is_short_keyword,
-    )
+    """translate_segments must include DOI footer blocks in the marked text.
+
+    Replicates the filtering logic at translator.py:483 to verify that
+    DOI footer blocks pass the filter while page-only footers are excluded.
+    """
+    from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.postprocess import _DOI_RE
+
     blocks = [
-        (0, ContentBlock(type="title", text="Example Paper", page_idx=0)),
-        (1, ContentBlock(type="text", text="Some body text here", page_idx=0)),
-        (2, ContentBlock(type="footer", text="DOI: 10.1234/example.2024", page_idx=0)),
-        (3, ContentBlock(type="footer", text="Page 1 of 10", page_idx=0)),
+        ContentBlock(type="title", text="Example Paper", page_idx=0),
+        ContentBlock(type="text", text="Some body text here", page_idx=0),
+        ContentBlock(type="footer", text="DOI: 10.1234/example.2024", page_idx=0),
+        ContentBlock(type="footer", text="Page 1 of 10", page_idx=0),
+        ContentBlock(type="header", text="Journal Header", page_idx=0),
     ]
-    # DOI footer should be included (not filtered), page-only footer should be skipped
-    doi_block = blocks[2][1]
-    assert doi_block.type == "footer"
-    assert "DOI" in doi_block.text
+    # Replicate the filter from translate_segments (translator.py:483-485)
+    non_empty = [(i, b) for i, b in enumerate(blocks)
+                 if b.text.strip() and (b.type in ("text", "title") or
+                                        (b.type == "footer" and _DOI_RE.search(b.text)))]
+    indices = [i for i, _ in non_empty]
+    # title (0), text (1), DOI footer (2) should be included
+    # page-only footer (3) and header (4) should be excluded
+    assert 0 in indices  # title
+    assert 1 in indices  # text
+    assert 2 in indices  # DOI footer
+    assert 3 not in indices  # page-only footer
+    assert 4 not in indices  # header

@@ -293,13 +293,13 @@ After translation, `translate_to_result()` builds the final `TranslationResult`:
 2. Add the stage method to `MultiStageTranslator`:
    ```python
    def my_stage(self, context: str) -> str:
-       return self._invoke_with_retry(get_my_stage_prompt(context), "my_stage")
+       return invoke_with_retry(self._llm, get_my_stage_prompt(context), "my_stage")
    ```
 3. Wire into `run_pipeline()`.
 
 ### Common pitfalls
 
-- **Don't call LLM methods directly** — always use `_invoke_with_retry()` to get transient failure handling.
+- **Don't call LLM methods directly** — always use `invoke_with_retry()` from `providers.py` to get transient failure handling.
 - **Don't mutate `FormattedDocument` or `TranslationResult`** — they're plain dataclasses, but treat them as immutable outputs.
 - **Don't change the `run_pipeline()` return tuple** without updating `translate_to_result()` and all callers.
 - **Token estimation is approximate.** If tight context windows matter, use an actual tokenizer rather than the heuristic `estimate_tokens()`.
@@ -309,7 +309,7 @@ After translation, `translate_to_result()` builds the final `TranslationResult`:
 
 - **`estimate_tokens()`** is O(n) over the text with per-character inspection. For a 50KB document, this is ~50K operations (~1ms). The result is not cached, but each call typically processes a different segment.
 - **`segment_text()`** worst case: a single 50KB paragraph with no sentence boundaries → one hard-split chunk. Best case: many small paragraphs that all fit within budget → single segment.
-- **LLM calls are the bottleneck.** Each stage is a synchronous network round-trip. A 5-page CJK document with 4 segments makes 7 LLM calls (terminology + structure + 4 drafts + polish + review) — expect 10-30 seconds total.
+- **LLM calls are the bottleneck.** Each stage is a synchronous network round-trip. A 5-page CJK document makes LLM calls for terminology extraction, per-block/segment translation, and self-review — expect 10-30 seconds total.
 - **Draft segments are serial**, not parallel. This is intentional: parallel drafts would lose context at segment boundaries, requiring an additional merge stage. If latency becomes critical, consider segment-level batching with an explicit merge pass.
 
 ## Dependencies
