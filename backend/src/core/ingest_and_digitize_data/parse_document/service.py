@@ -147,5 +147,6 @@ class ParseDocumentService:
             full_markdown=parse_result.full_markdown,
             parser_used=parse_result.parser_used,
             images=parse_result.images,
+            content_blocks=parse_result.content_blocks,
             saved_files=saved_files,
         )

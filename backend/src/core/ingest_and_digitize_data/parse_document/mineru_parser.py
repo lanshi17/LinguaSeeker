@@ -347,10 +347,16 @@ class MinerUParser(ParserStrategy):
             return self._parse_extracted_content(Path(tmp_dir))
 
     def _collect_images(self, extract_dir: Path) -> dict[str, bytes]:
-        """Collect image files from extracted zip directory."""
+        """Collect image files from extracted zip directory.
+
+        Searches for ``images/`` directories at any nesting level to handle
+        layouts where the zip root contains a subdirectory (e.g.
+        ``some-root/images/fig.jpg``).
+        """
         images: dict[str, bytes] = {}
-        images_dir = extract_dir / "images"
-        if images_dir.is_dir():
+        for images_dir in extract_dir.rglob("images"):
+            if not images_dir.is_dir():
+                continue
             for img_file in images_dir.iterdir():
                 if img_file.is_file():
                     rel_path = f"images/{img_file.name}"

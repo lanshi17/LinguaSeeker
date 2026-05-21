@@ -235,6 +235,43 @@ class TestMinerUParser:
         assert "images/fig1.jpg" in result["images"]
         assert result["images"]["images/fig1.jpg"] == fake_jpg
 
+    def test_parse_extracted_content_collects_nested_images(self, parser):
+        """Regression: images/ in a nested subdirectory are collected."""
+        with tempfile.TemporaryDirectory() as tmp:
+            content_dir = Path(tmp) / "extract"
+            nested_root = content_dir / "some-root"
+            nested_root.mkdir(parents=True)
+
+            # nested images directory
+            images_dir = nested_root / "images"
+            images_dir.mkdir()
+            fake_png = b"\x89PNG\r\n\x1a\n"
+            (images_dir / "fig1.png").write_bytes(fake_png)
+
+            # full.md at nested root
+            (nested_root / "full.md").write_text("# Title", encoding="utf-8")
+
+            # content_list.json at nested root
+            content_list = [
+                {"type": "text", "text": "Title", "text_level": 1, "page_idx": 0},
+                {
+                    "type": "image",
+                    "img_path": "images/fig1.png",
+                    "image_caption": ["Figure 1"],
+                    "page_idx": 0,
+                },
+            ]
+            (nested_root / "test_content_list.json").write_text(
+                json.dumps(content_list, ensure_ascii=False), encoding="utf-8"
+            )
+
+            result = parser._parse_extracted_content(content_dir)
+
+        assert result["state"] == "done"
+        assert len(result["images"]) == 1
+        assert "images/fig1.png" in result["images"]
+        assert result["images"]["images/fig1.png"] == fake_png
+
     def test_parse_extracted_content_figure_has_img_path(self, parser):
         """Verify figure data includes img_path."""
         with tempfile.TemporaryDirectory() as tmp:
