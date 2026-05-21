@@ -46,7 +46,7 @@ def _mock_llm_response(text: str):
     return response
 
 
-@patch("src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.ChatOpenAI")
+@patch("src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers.ChatOpenAI")
 def test_full_pipeline_chinese(mock_chat_cls, mock_cfg, chinese_pages):
     """Full pipeline: Chinese → English with 3-stage pipeline."""
     mock_llm = MagicMock()
@@ -76,7 +76,7 @@ def test_full_pipeline_chinese(mock_chat_cls, mock_cfg, chinese_pages):
     assert len(result.sentences) > 0
 
 
-@patch("src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.ChatOpenAI")
+@patch("src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers.ChatOpenAI")
 def test_pipeline_skip_english(mock_chat_cls, mock_cfg, english_pages):
     """Pipeline should skip translation for English documents."""
     mock_llm = MagicMock()

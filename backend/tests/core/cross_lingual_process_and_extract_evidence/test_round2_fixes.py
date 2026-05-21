@@ -12,6 +12,11 @@ import pytest
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     ContentBlock,
 )
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.blocks import (
+    _KW_MERGE_SEP,
+    merge_short_keywords,
+    split_merged_keywords,
+)
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import (
     MultiStageTranslator,
     TranslationError,
@@ -33,7 +38,7 @@ class TestKeywordMerging:
             (1, ContentBlock(type="text", text="变异", page_idx=0)),
             (2, ContentBlock(type="text", text="蛋白质", page_idx=0)),
         ]
-        merged, merge_map = MultiStageTranslator._merge_short_keywords(blocks)
+        merged, merge_map = merge_short_keywords(blocks)
         # All 3 are short → merged into 1 block
         assert len(merged) == 1
         assert "基因" in merged[0][1].text
@@ -48,7 +53,7 @@ class TestKeywordMerging:
             (0, ContentBlock(type="text", text="这是一个正常的长文本块", page_idx=0)),
             (1, ContentBlock(type="text", text="另一个正常的长文本块内容", page_idx=0)),
         ]
-        merged, merge_map = MultiStageTranslator._merge_short_keywords(blocks)
+        merged, merge_map = merge_short_keywords(blocks)
         assert len(merged) == 2
         assert all(v == 1 for v in merge_map.values())
 
@@ -59,7 +64,7 @@ class TestKeywordMerging:
             (1, ContentBlock(type="text", text="这是一个正常的长文本块", page_idx=0)),
             (2, ContentBlock(type="text", text="变异", page_idx=0)),
         ]
-        merged, merge_map = MultiStageTranslator._merge_short_keywords(blocks)
+        merged, merge_map = merge_short_keywords(blocks)
         # Short blocks separated by long block → not adjacent → 3 total
         assert len(merged) == 3
         assert all(v == 1 for v in merge_map.values())
@@ -71,7 +76,7 @@ class TestKeywordMerging:
             (1, ContentBlock(type="text", text="变异", page_idx=0)),
             (2, ContentBlock(type="text", text="这是一个正常的长文本块", page_idx=0)),
         ]
-        merged, merge_map = MultiStageTranslator._merge_short_keywords(blocks)
+        merged, merge_map = merge_short_keywords(blocks)
         # First 2 short blocks merged, long block separate → 2 total
         assert len(merged) == 2
         assert merge_map[0] == 2  # 2 blocks merged into first
@@ -80,10 +85,10 @@ class TestKeywordMerging:
     def test_split_merged_keywords_restores_count(self):
         """After translation, merged keywords must be split back."""
         # The merge separator is "；" (Chinese semicolon)
-        sep = MultiStageTranslator._KW_MERGE_SEP
+        sep = _KW_MERGE_SEP
         translated_parts = [f"gene{sep}variant{sep}protein"]
         merge_map = {0: 3}  # output index 0 came from 3 blocks
-        result = MultiStageTranslator._split_merged_keywords(translated_parts, merge_map)
+        result = split_merged_keywords(translated_parts, merge_map)
         assert len(result) == 3
         assert result[0] == "gene"
         assert result[1] == "variant"
@@ -93,7 +98,7 @@ class TestKeywordMerging:
         """LLM may translate using '; ' (semicolon+space) instead of Chinese."""
         translated_parts = ["gene; variant; protein"]
         merge_map = {0: 3}
-        result = MultiStageTranslator._split_merged_keywords(translated_parts, merge_map)
+        result = split_merged_keywords(translated_parts, merge_map)
         assert len(result) == 3
         assert result[0] == "gene"
         assert result[1] == "variant"
@@ -103,7 +108,7 @@ class TestKeywordMerging:
         """When separator is missing, merged text goes in first slot."""
         translated_parts = ["gene variant protein"]  # no separator
         merge_map = {0: 3}
-        result = MultiStageTranslator._split_merged_keywords(translated_parts, merge_map)
+        result = split_merged_keywords(translated_parts, merge_map)
         assert len(result) == 3
         assert result[0] == "gene variant protein"
         assert result[1] == ""
@@ -115,7 +120,7 @@ class TestKeywordMerging:
             (0, ContentBlock(type="text", text="基因", page_idx=2, bbox=[10, 20, 30, 40])),
             (1, ContentBlock(type="text", text="变异", page_idx=2)),
         ]
-        merged, _ = MultiStageTranslator._merge_short_keywords(blocks)
+        merged, _ = merge_short_keywords(blocks)
         # The merged block uses a new ContentBlock, so check the tuple structure
         assert len(merged) == 1
         assert merged[0][0] == 0  # first block index preserved
@@ -127,7 +132,7 @@ class TestKeywordMerging:
             (1, ContentBlock(type="text", text="这是一个正常的长文本块内容", page_idx=0)),
             (2, ContentBlock(type="text", text="变异", page_idx=0)),
         ]
-        merged, merge_map = MultiStageTranslator._merge_short_keywords(blocks)
+        merged, merge_map = merge_short_keywords(blocks)
         # Short blocks separated by a long block should not merge across it
         assert len(merged) == 3
         assert all(v == 1 for v in merge_map.values())

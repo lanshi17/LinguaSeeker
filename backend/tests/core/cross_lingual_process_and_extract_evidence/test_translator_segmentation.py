@@ -25,13 +25,19 @@ def mock_translator():
     ctx.base_url = "http://test"
     ctx.temperature = 0.0
 
-    with patch("src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.ChatOpenAI"):
+    with patch("src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers.ChatOpenAI"):
         translator = MultiStageTranslator(ctx=ctx)
 
-    # Mock _invoke_with_retry to return simple responses
-    translator._invoke_with_retry = MagicMock(
-        side_effect=lambda prompt, stage, system_prompt="": f"result_for_{stage}",
+    # Mock invoke_with_retry at module level to return simple responses
+    mock_invoke = MagicMock(
+        side_effect=lambda llm, prompt, stage, system_prompt="": f"result_for_{stage}",
     )
+    patcher = patch(
+        "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry",
+        mock_invoke,
+    )
+    patcher.start()
+    translator._mock_invoke = mock_invoke
     return translator
 
 
@@ -39,7 +45,7 @@ def test_extract_terminology_segments_large_document(mock_translator, large_docu
     """extract_terminology should segment and make multiple LLM calls for large docs."""
     result = mock_translator.extract_terminology(large_document)
     assert result is not None
-    assert mock_translator._invoke_with_retry.call_count > 1
+    assert mock_translator._mock_invoke.call_count > 1
 
 
 def test_translate_segments_segments_large_document(mock_translator, large_document):
@@ -48,7 +54,7 @@ def test_translate_segments_segments_large_document(mock_translator, large_docum
     assert result is not None
     assert len(segments) > 1
     assert len(translated_parts) > 1
-    assert mock_translator._invoke_with_retry.call_count > 1
+    assert mock_translator._mock_invoke.call_count > 1
 
 
 def test_run_pipeline_with_large_document(mock_translator, large_document):
@@ -71,4 +77,4 @@ def test_translate_segments_truncates_large_terminology(mock_translator):
 
     result, segments, translated_parts = mock_translator.translate_segments(small_doc, huge_terminology)
     assert result is not None
-    assert mock_translator._invoke_with_retry.call_count >= 1
+    assert mock_translator._mock_invoke.call_count >= 1
