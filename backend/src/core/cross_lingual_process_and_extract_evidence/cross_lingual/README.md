@@ -241,7 +241,7 @@ LLM retry logic lives in `providers.py` (module-level functions):
 | `invoke_with_retry(llm, prompt, stage, system_prompt)` | Text generation with retry |
 | `invoke_json_with_retry(llm, prompt, stage, system_prompt)` | JSON-mode generation with retry |
 
-Both retry up to `_MAX_RETRIES` (2) on transient exceptions (timeout, connection, rate limit, server error). Non-transient exceptions propagate immediately.
+Both retry up to `_MAX_RETRIES` (3) on transient exceptions (timeout, connection, rate limit, server error). Non-transient exceptions propagate immediately.
 
 #### Post-Processing (`postprocess.py`)
 
@@ -279,13 +279,13 @@ After translation, `translate_to_result()` builds the final `TranslationResult`:
        def run_pipeline(self, formatted: FormattedDocument) -> Tuple[...]: ...
        def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult: ...
    ```
-2. `run_pipeline()` returns `(terminology_map, structure_plan, draft, translated, source_segments, warnings)`.
+2. `run_pipeline()` returns `(terminology_map, structure_plan, "", translated, source_segments, translated_parts, warnings)`.
 3. `translate_to_result()` wraps this into `TranslationResult` with per-segment bbox mapping.
 4. The orchestrator (`TranslationService`) injects the translator; change it there.
 
 ### Adding a new prompt stage
 
-1. Add the prompt function to `prompts.py`:
+1. Add the prompt function to the appropriate module in `prompts/`:
    ```python
    def get_my_stage_prompt(context: str) -> str:
        return f"MY_STAGE\n...\n\nCONTEXT:\n{context}"
