@@ -6,6 +6,10 @@ import re
 import time
 from typing import Any, Dict, List, Tuple
 
+
+class TranslationError(RuntimeError):
+    """Raised when translation critically fails (e.g. LLM returns unchanged text)."""
+
 import httpx
 import openai
 from langchain_core.messages import HumanMessage
@@ -214,13 +218,20 @@ class MultiStageTranslator(BaseTranslator):
         raise RuntimeError(f"JSON stage {stage} failed after {self._MAX_RETRIES} attempts") from last_exc
 
     @staticmethod
-    def _parse_terminology(raw: str) -> Dict[str, str]:
+    def _parse_terminology(raw: str, source_language: str = "unknown") -> Dict[str, str]:
         """Parse 'source: target' lines into a dict.
 
-        Validates: short terms (not sentences/notes), source side contains
-        non-ASCII (since source language is non-English for translation).
+        Validates: short terms (not sentences/notes), source side is not
+        identical to target (avoids English→English echo).  For CJK source
+        languages the source side must contain non-ASCII characters; for
+        Latin-script sources (es, pt, ru, etc.) ASCII source terms are
+        accepted since the source itself uses Latin characters.
         Deduplicates by target value and caps at _MAX_TERMINOLOGY_ENTRIES.
         """
+        # CJK languages require non-ASCII source terms
+        _CJK_LANGS = {"zh", "ja", "ko"}
+        require_non_ascii = source_language in _CJK_LANGS
+
         result: Dict[str, str] = {}
         seen_targets: set[str] = set()
         for line in raw.splitlines():
@@ -247,8 +258,12 @@ class MultiStageTranslator(BaseTranslator):
                 continue
             if len(source.split()) > 10 or len(target.split()) > 10:
                 continue
-            # Source side should contain non-ASCII (CJK/non-English term)
-            if source.isascii():
+            # For CJK sources, require non-ASCII (actual CJK characters).
+            # For Latin-script sources, accept ASCII but skip if source ≈ target
+            # (the LLM echoed the term without translating).
+            if require_non_ascii and source.isascii():
+                continue
+            if source.lower().strip() == target.lower().strip():
                 continue
             # Deduplicate by normalized target
             target_norm = target.lower().strip()
@@ -428,6 +443,141 @@ class MultiStageTranslator(BaseTranslator):
         total = len(text.strip()) or 1
         return cjk_count / total < 0.05
 
+    # ── Short keyword block merging ─────────────────────────────────────
+
+    # CJK characters for short-block detection
+    _SHORT_KW_CJK_RE = re.compile(r"[一-鿿]")
+
+    @staticmethod
+    def _is_short_keyword(text: str) -> bool:
+        """Check if text is a short isolated keyword (1-4 CJK chars).
+
+        Short keyword blocks (e.g. "古菌", "硫化叶菌", "重组") are
+        vulnerable to context pollution when the LLM fills them with
+        nearby content. These should be merged before translation.
+        """
+        stripped = text.strip()
+        if not stripped:
+            return False
+        cjk_chars = MultiStageTranslator._SHORT_KW_CJK_RE.findall(stripped)
+        return 1 <= len(cjk_chars) <= 4 and len(stripped) <= 10
+
+    # Merge separator used between merged keyword texts
+    _KW_MERGE_SEP = "；"
+
+    @staticmethod
+    def _merge_short_keywords(
+        non_empty: list[tuple[int, ContentBlock]],
+    ) -> Tuple[
+        list[tuple[int, ContentBlock]],
+        dict[int, int],  # merged_count_per_output_index
+    ]:
+        """Merge adjacent short keyword blocks into single blocks.
+
+        When the LLM translates isolated 1-4 char CJK keyword blocks,
+        it often fills them with nearby content (context pollution).
+        This merges adjacent short keywords into one block (joined with
+        ``；``) so the LLM sees a meaningful phrase to translate.
+
+        Returns:
+            Tuple of (merged_blocks, merge_map). ``merge_map[i]`` is the
+            number of original blocks merged into output block ``i``.
+            A value of 1 means no merge; value >1 means N blocks were
+            merged.
+        """
+        if not non_empty:
+            return [], {}
+
+        merged: list[tuple[int, ContentBlock]] = []
+        merge_map: dict[int, int] = {}
+        run_indices: list[int] = []  # original block_indices in current run
+        run_texts: list[str] = []
+
+        def _flush_run() -> None:
+            if not run_indices:
+                return
+            if len(run_indices) >= 2:
+                # Merge: join texts, keep first block_idx
+                combined = MultiStageTranslator._KW_MERGE_SEP.join(run_texts)
+                merged.append((
+                    run_indices[0],
+                    ContentBlock(type="text", text=combined),
+                ))
+                merge_map[len(merged) - 1] = len(run_indices)
+            else:
+                # Single — not merged, pass through original
+                merged.append(non_empty[run_indices[0]])
+                merge_map[len(merged) - 1] = 1
+            run_indices.clear()
+            run_texts.clear()
+
+        for i, (block_idx, block) in enumerate(non_empty):
+            text = block.text.strip()
+            if MultiStageTranslator._is_short_keyword(text):
+                run_indices.append(i)
+                run_texts.append(text)
+            else:
+                _flush_run()
+                merged.append((block_idx, block))
+                merge_map[len(merged) - 1] = 1
+        _flush_run()
+
+        logger.info(
+            "Keyword merge: {} blocks → {} blocks ({} groups merged)",
+            len(non_empty), len(merged),
+            sum(1 for v in merge_map.values() if v > 1),
+        )
+        return merged, merge_map
+
+    @staticmethod
+    def _split_merged_keywords(
+        translated_parts: list[str],
+        merge_map: dict[int, int],
+    ) -> list[str]:
+        """Split merged keyword blocks back into individual translations.
+
+        After translation, merged keyword blocks (joined with ``；``)
+        are split back into individual keyword translations. If the
+        LLM used a different separator (e.g. "; " or ", "), we detect
+        that and split accordingly.
+
+        Args:
+            translated_parts: Translated text per merged block.
+            merge_map: From ``_merge_short_keywords`` — maps output index
+                to number of original blocks merged.
+
+        Returns:
+            Expanded list with one entry per original block.
+        """
+        result: list[str] = []
+        for i, text in enumerate(translated_parts):
+            count = merge_map.get(i, 1)
+            if count <= 1:
+                result.append(text)
+                continue
+
+            # Try splitting on common separators the LLM might use
+            # Order: ；(original), ; (ASCII), , (comma)
+            parts: list[str] | None = None
+            for sep in ("；", "; ", ", "):
+                candidate = [p.strip() for p in text.split(sep) if p.strip()]
+                if len(candidate) == count:
+                    parts = candidate
+                    break
+
+            if parts:
+                result.extend(parts)
+            else:
+                # Can't split cleanly — keep merged text in first slot,
+                # fill remaining with empty
+                result.append(text)
+                result.extend([""] * (count - 1))
+                logger.warning(
+                    "Could not split merged keyword block {} (expected {} parts): {}",
+                    i, count, text[:60],
+                )
+        return result
+
     @staticmethod
     def _join_blocks_with_markers(
         non_empty: list[tuple[int, ContentBlock]],
@@ -526,7 +676,8 @@ class MultiStageTranslator(BaseTranslator):
 
         Uses ``[BLOCK_N]`` markers to join blocks before translation,
         then splits the translated output on the same markers to recover
-        per-block translations.
+        per-block translations. Adjacent short keyword blocks are merged
+        before translation to prevent context pollution.
 
         Returns:
             Tuple of (joined_translated_text, source_block_texts, translated_block_texts).
@@ -537,14 +688,17 @@ class MultiStageTranslator(BaseTranslator):
         # Save original source texts before prefix stripping
         source_texts = [block.text for _, block in non_empty]
 
+        # Merge adjacent short keyword blocks to prevent context pollution
+        merged_blocks, merge_map = self._merge_short_keywords(non_empty)
+
         # Join blocks with markers (strips prefixes)
         marked_source, block_indices, stripped_prefixes, english_overrides = (
-            self._join_blocks_with_markers(non_empty)
+            self._join_blocks_with_markers(merged_blocks)
         )
 
         logger.info(
             "Translating {} blocks in single call ({} chars), {} English-only blocks preserved",
-            len(non_empty), len(marked_source), len(english_overrides),
+            len(merged_blocks), len(marked_source), len(english_overrides),
         )
 
         # Single LLM call for the entire document
@@ -559,7 +713,7 @@ class MultiStageTranslator(BaseTranslator):
         translated = normalize_placeholders(translated)
 
         # Split on markers
-        translated_parts = self._split_by_markers(translated, len(non_empty))
+        translated_parts = self._split_by_markers(translated, len(merged_blocks))
 
         # Fix [REDACTED] incorrectly inserted inside English words
         translated_parts = [fix_word_boundary_redacted(p) for p in translated_parts]
@@ -584,6 +738,9 @@ class MultiStageTranslator(BaseTranslator):
                     )
                 else:
                     translated_parts[idx] = f"{prefix}{part}"
+
+        # Split merged keyword blocks back into individual translations
+        translated_parts = self._split_merged_keywords(translated_parts, merge_map)
 
         joined = self._BLOCK_SEP.join(translated_parts)
         logger.info(
@@ -916,8 +1073,13 @@ class MultiStageTranslator(BaseTranslator):
         try:
             validate_translation_output(formatted.formatted_markdown, translated)
         except Exception as exc:
-            warnings.append(summarize_validation_error(exc))
-            logger.warning("Translation validation warning: {}", warnings[-1])
+            error_summary = summarize_validation_error(exc)
+            warnings.append(error_summary)
+            logger.warning("Translation validation warning: {}", error_summary)
+            # Critical failures: refuse to produce a result that is clearly
+            # untranslated. Raising prevents the caller from persisting garbage.
+            if any(kw in error_summary for kw in ("unchanged", "non_english_output", "empty")):
+                raise TranslationError(error_summary) from exc
 
         # Validate image references preserved
         # Check block-level images (MinerU format) first, then inline markdown refs
@@ -942,7 +1104,7 @@ class MultiStageTranslator(BaseTranslator):
                 warnings.append(f"image_refs: {exc}")
                 logger.warning("Image reference warning: {}", exc)
 
-        terminology_map = self._parse_terminology(terminology)
+        terminology_map = self._parse_terminology(terminology, formatted.source_language or "unknown")
         # Return structure_plan="" for backward compatibility with BaseTranslator
         return terminology_map, "", "", translated, source_segments, translated_parts, warnings
 
@@ -1165,6 +1327,11 @@ class MultiStageTranslator(BaseTranslator):
             logger.info("Filtered {} non-body blocks (header/footer/page_number)", filtered_non_body)
         if doi_blocks_preserved:
             logger.info("Preserved {} footer blocks containing DOI information", doi_blocks_preserved)
+        logger.info(
+            "Block mapping: {} original → {} translated ({} filtered: {} non-body + {} empty)",
+            len(original_blocks), len(translated_blocks),
+            filtered_non_body + empty_count, filtered_non_body, empty_count,
+        )
         return translated_blocks
 
     @staticmethod
@@ -1200,6 +1367,140 @@ class MultiStageTranslator(BaseTranslator):
     )
     # Pattern for 2-digit year that's likely truncated (e.g., "In 20," instead of "In 2020,")
     _TRUNCATED_YEAR_RE = re.compile(r"\bIn (\d{2}),\s")
+
+    # ── Per-block language detection ──────────────────────────────────────
+
+    # Script-specific character ranges for language detection
+    _CYRILLIC_RE = re.compile(r"[а-яА-ЯёЁ]")
+    _HIRAGANA_KATAKANA_RE = re.compile(r"[ぁ-んァ-ヶ]")
+    _HANGUL_RE = re.compile(r"[가-힯]")
+
+    # Thresholds for per-block language check
+    _UNTRANSLATED_BLOCK_RATIO = 0.40  # raise if >40% blocks still in source lang
+    _BLOCK_SOURCE_LANG_THRESHOLD = 0.15  # block is "source language" if >15% source chars
+
+    @staticmethod
+    def _check_block_language(
+        blocks: list[ContentBlock],
+        source_language: str,
+    ) -> None:
+        """Check translated blocks for remaining source-language text.
+
+        Catches partial translation failures where only some blocks were
+        actually translated (e.g. ru doc where only the first page was
+        translated, leaving 45/57 blocks in Russian).
+
+        Raises:
+            TranslationError: If >40% of text/title blocks are still in
+            the source language.
+        """
+        if source_language in ("en", "unknown"):
+            return
+
+        # Select the appropriate source-language character detector
+        if source_language == "ru":
+            src_re = MultiStageTranslator._CYRILLIC_RE
+        elif source_language in ("zh", "ja"):
+            src_re = _CJK_RE
+        elif source_language == "ko":
+            src_re = MultiStageTranslator._HANGUL_RE
+        else:
+            # For es/pt/fr/de — use a simple heuristic: check if text
+            # looks like it wasn't translated (high similarity to source)
+            return  # Already covered by validate_translation_output
+
+        text_blocks = [
+            b for b in blocks
+            if b.type in ("text", "title") and b.text.strip()
+        ]
+        if not text_blocks:
+            return
+
+        untranslated = 0
+        for block in text_blocks:
+            text = block.text.strip()
+            if not text:
+                continue
+            src_chars = len(src_re.findall(text))
+            ratio = src_chars / max(len(text), 1)
+            if ratio > MultiStageTranslator._BLOCK_SOURCE_LANG_THRESHOLD:
+                untranslated += 1
+
+        total = len(text_blocks)
+        if total == 0:
+            return
+        ratio = untranslated / total
+        if ratio > MultiStageTranslator._UNTRANSLATED_BLOCK_RATIO:
+            raise TranslationError(
+                f"translation_validation_failed: per_block_check — "
+                f"{untranslated}/{total} blocks still in {source_language} "
+                f"({ratio:.0%} > {MultiStageTranslator._UNTRANSLATED_BLOCK_RATIO:.0%} threshold)"
+            )
+        if untranslated > 0:
+            logger.warning(
+                "Per-block language check: {}/{} blocks still in {} ({:.0f}%)",
+                untranslated, total, source_language, ratio * 100,
+            )
+
+    # ── Bilingual block deduplication ────────────────────────────────────
+
+    _DEDUP_SIMILARITY_THRESHOLD = 0.75  # token overlap ratio to consider duplicate
+
+    @staticmethod
+    def _deduplicate_bilingual_blocks(
+        blocks: list[ContentBlock],
+    ) -> list[ContentBlock]:
+        """Remove duplicate blocks from bilingual documents.
+
+        In bilingual documents (e.g. zh with English abstract), adjacent
+        text blocks may contain the same content in two languages. After
+        translation both become English, creating near-duplicate blocks.
+
+        This method detects adjacent text/title blocks with high token
+        overlap and removes the duplicate, keeping the first occurrence.
+        """
+        if len(blocks) < 2:
+            return blocks
+
+        def _tokens(text: str) -> set[str]:
+            """Extract lowercase alphanumeric tokens for comparison."""
+            return set(re.findall(r"[a-z0-9]+", text.lower()))
+
+        result: list[ContentBlock] = []
+        removed = 0
+        for i, block in enumerate(blocks):
+            if block.type not in ("text", "title") or not block.text.strip():
+                result.append(block)
+                continue
+
+            # Check against the previous text block in result
+            prev = result[-1] if result else None
+            if (
+                prev
+                and prev.type in ("text", "title")
+                and prev.text.strip()
+            ):
+                tokens_cur = _tokens(block.text)
+                tokens_prev = _tokens(prev.text)
+                if tokens_cur and tokens_prev:
+                    overlap = len(tokens_cur & tokens_prev) / max(
+                        len(tokens_cur | tokens_prev), 1,
+                    )
+                    if overlap > MultiStageTranslator._DEDUP_SIMILARITY_THRESHOLD:
+                        # Keep the longer block (likely the translated one)
+                        if len(block.text) > len(prev.text):
+                            result[-1] = block
+                        removed += 1
+                        continue
+
+            result.append(block)
+
+        if removed:
+            logger.info(
+                "Deduplicated {} bilingual block pairs ({} → {})",
+                removed, len(blocks), len(result),
+            )
+        return result
 
     @staticmethod
     def _flag_quality_issues(blocks: list[ContentBlock]) -> int:
@@ -1271,6 +1572,15 @@ class MultiStageTranslator(BaseTranslator):
             blocks, tr_segments, translated,
             text_block_indices=getattr(self, '_text_block_indices', None),
             aux_translations=aux_translations,
+        )
+
+        # Deduplicate adjacent bilingual blocks (e.g. zh docs with English abstract)
+        translated_blocks = self._deduplicate_bilingual_blocks(translated_blocks)
+
+        # Per-block language detection: catch partial translation failures
+        # (e.g. ru doc where only first page was translated)
+        self._check_block_language(
+            translated_blocks, formatted.source_language or "unknown",
         )
 
         # Flag blocks with quality issues for manual review

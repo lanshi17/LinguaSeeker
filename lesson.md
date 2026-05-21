@@ -208,3 +208,130 @@
 **Problem**: `fix_word_boundary_redacted` only handled mid-word `[REDACTED]` (e.g., `Re[REDACTED]ferences`) but not adjacent cases like `References [REDACTED]` where the LLM inserts `[REDACTED]` after common English section headings.
 
 **Fix**: Added `_REDACTED_ADJ_HEADING_RE` pattern that matches `[REDACTED]` adjacent to common section headings (References, Abstract, Introduction, Methods, Results, Discussion, Conclusion, etc.) and strips it while preserving the heading.
+
+## 2026-05-20: Translation output review — es/pt untranslated, REDACTED still broken in names
+
+**Review scope**: All 24 documents in `backend/output/` across 6 source languages (en, ja, zh, es, pt, ru), all targeting English.
+
+### Problem 1: es/ and pt/ translations completely failed (6 documents, CRITICAL)
+
+All Spanish (es×3) and Portuguese (pt×3) documents were saved with source text identical to translated text. Translation validation correctly detected `translation_validation_failed: unchanged` and `translation_validation_failed: non_english_output`, but results were persisted anyway.
+
+**Root cause**: LLM returned the input text verbatim instead of translating. Likely causes: (a) translation prompt insufficient, (b) LLM weaker at ES/PT→EN, (c) documents contain mixed-language content confusing the LLM.
+
+**Fix needed**: Investigate translation prompt and add retry with explicit language instruction. Add post-translation check that blocks saving of completely untranslated output.
+
+### Problem 2: [REDACTED] still inserted inside proper names (10 documents, HIGH)
+
+Despite the 2026-05-20 fix for heading-adjacent [REDACTED], the formatter LLM continues to insert [REDACTED] inside transliterated proper names in ja→en and zh→en translations:
+- "Takayuki [REDACTED]okia" (should be "Takayuki Motoki" from 元木崇之)
+- "Takayuki [REDACTED]omotob" (should be "Takayuki Iwamoto" from 岩本高行)
+
+The existing `_REDACTED_IN_WORD_RE` only matches when both sides are letters. In these cases, `[REDACTED]` is preceded by a space, so the regex misses it.
+
+**Fix needed**: Extend the regex to match `[REDACTED]` at word boundaries (`\b\[REDACTED\](?=[A-Za-z])`). Also add negative examples with transliterated names to the formatter prompt.
+
+### Problem 3: Block count mismatches across all non-en documents (20 documents, MEDIUM)
+
+All translations have fewer blocks than originals (-12% to -50%). Image reference warnings in 3 documents suggest image blocks may be dropped.
+
+### Problem 4: Empty terminology maps (13/20 documents, MEDIUM)
+
+Only 7 documents have terminology maps. Terminology extraction may be skipped for some languages.
+
+### Problem 5: zh_functional suspicious char ratio (1 document, LOW)
+
+zh_functional has char ratio 0.58 (translation shorter than source), unusual for zh→en. Possible content truncation.
+
+**Full report**: `/tmp/translation_review_report.md` — per-document table with block counts, char ratios, REDACTED counts, terminology entries, and warnings for all 24 documents.
+
+### Problem 6: es/pt translations completely unchanged + [REDACTED] name-internal insertion
+
+**Root cause analysis**:
+
+1. **es/pt unchanged translations (CRITICAL)**: LLM returned source text unchanged for all 6 es/pt documents. Validation correctly detected failure (`unchanged` / `non_english_output`) but only appended warnings — the result was still persisted via `DocumentPersistenceService.save()`.
+
+2. **[REDACTED] inside names (HIGH)**: `_REDACTED_IN_WORD_RE` regex `(?<=[A-Za-z])\[REDACTED\](?=[A-Za-z])` required a letter on BOTH sides. Pattern "Takayuki [REDACTED]okia" has space before `[REDACTED]`, not a letter — missed by regex.
+
+3. **Empty terminology maps (MEDIUM)**: `_parse_terminology()` had `source.isascii()` filter that rejected all Latin-script source terms. Correct for CJK→en but wrong for es/pt→en where source terms are Latin-script.
+
+**Solutions**:
+
+1. `run_pipeline()` now raises `TranslationError` on critical validation failures (`unchanged`, `non_english_output`, `empty`), preventing persistence of garbage translations. Caller must handle the exception.
+
+2. Broadened `_REDACTED_IN_WORD_RE` to also match `\[REDACTED\](?=[a-z]` — catches space-before-lowercase pattern like `[REDACTED]okia`.
+
+3. `_parse_terminology()` now accepts `source_language` parameter. For CJK languages (zh/ja/ko), keeps non-ASCII filter. For Latin-script languages (es/pt/ru/etc.), accepts ASCII source terms but skips source≈target echo.
+
+**Files changed**:
+- `backend/src/core/cross_lingual_process_and_extract_evidence/cross_lingual/translate/validator.py` — regex fix
+- `backend/src/core/cross_lingual_process_and_extract_evidence/cross_lingual/translate/translator.py` — TranslationError, _parse_terminology language-awareness
+- `backend/src/core/cross_lingual_process_and_extract_evidence/workflow.py` — TranslationError import
+- `backend/tests/.../test_translator.py` — updated + new test for Latin-script terminology
+
+**Prevention**: Translation validation failures must be treated as hard errors, not soft warnings, when the failure is clearly critical (unchanged output, wrong language). Non-critical warnings (image refs, repetition) remain soft.
+
+## 2026-05-20: Deep translation review — additional findings after second pass
+
+### Problem 7: zh_functional keyword blocks hallucinated with repeated title/abstract (CRITICAL, 1 doc)
+
+Original keywords (古菌, 硫化叶菌, 重组, RadA, stRadC, Hjc — 6 separate blocks) were replaced in the translated output with repeated copies of the full paper title (3×) and abstract opening (2×). Only "Hjc" was correctly translated. This is LLM hallucination on short isolated text blocks — the model filled small keyword slots with surrounding context instead of translating.
+
+**Root cause**: LLM translation of very short isolated text blocks (1-4 CJK chars) is prone to context contamination. The model saw the full title/abstract nearby and repeated them instead of translating the isolated keyword.
+
+**Fix needed**: (a) Add a pre-merge pass for adjacent short keyword blocks before sending to LLM, translating them as a group "古菌；硫化叶菌；重组；RadA；stRadC；Hjc", then splitting after. (b) Add post-translation validation that detects repeated long strings across adjacent blocks.
+
+### Problem 8: ru document only partially translated (CRITICAL, 1 doc)
+
+The Russian document (elibrary_53981733_40074746, TRPV4-associated neuropathies) had page 1 translated (title, abstract, keywords, citation) but ALL body text from "Введение" (Introduction) onward remained in Russian — approximately 99 of 109 blocks untranslated. First-pass review misclassified this as "usable" because char ratio (0.94) didn't flag it.
+
+**Root cause**: The translation pipeline likely processes serially and the LLM call for page 2+ failed silently, leaving subsequent blocks as Russian source text. Same root cause as es/pt but with a single page succeeding.
+
+**Fix needed**: Add per-block or per-page translation success tracking. After translation, verify each block's detected language matches target language (English), not just aggregate char ratio.
+
+### Problem 9: zh bilingual document block duplication (MEDIUM, 3+ docs)
+
+Chinese medical journals often include both Chinese and English versions of title/authors/abstract in the same PDF. The pipeline translates the Chinese blocks AND preserves the pre-existing English blocks, creating redundant copies of the same content (e.g., English title appears twice, English author list appears twice).
+
+**Fix needed**: Add a deduplication pass that detects near-identical adjacent blocks (similarity > 0.9) and removes the duplicate, preferring the translated version (which has consistent terminology) over the original English version (which may have inconsistent terminology).
+
+---
+
+## 2026-05-20: Translation Round 2 fixes — keyword hallucination, per-block lang detection, bilingual dedup
+
+### Fix 1: Keyword merging for short CJK blocks (Problem 7)
+
+**Problem**: LLM fills short 1-4 char CJK keyword blocks with nearby content (title/abstract) instead of translating them.
+
+**Root cause**: Isolated short blocks provide insufficient context for the LLM, causing it to "hallucinate" by repeating nearby long text.
+
+**Fix**: Added `_merge_short_keywords()` preprocessing step that merges adjacent short keyword blocks into a single block joined with `；` before translation. After translation, `_split_merged_keywords()` restores individual translations. The merge only affects adjacent short blocks — long blocks act as barriers.
+
+**Files**: `translator.py` — `_merge_short_keywords`, `_split_merged_keywords`, `_is_short_keyword`, `_KW_MERGE_SEP`; modified `_translate_blocks` to call merge/split.
+
+### Fix 2: Per-block language detection (Problem 8)
+
+**Problem**: Partial translation failures (e.g. ru doc where only page 1 was translated) were not caught by aggregate char ratio checks.
+
+**Root cause**: `validate_translation_output` checks overall text, not per-block. A document with 10% translated blocks could pass if that 10% was long enough.
+
+**Fix**: Added `_check_block_language()` method that uses script-specific regex (Cyrillic for ru, CJK for zh/ja, Hangul for ko) to detect blocks still in source language. Raises `TranslationError` if >40% of text/title blocks remain untranslated. Called in `translate_to_result()` after `_build_translated_blocks()`.
+
+**Files**: `translator.py` — `_check_block_language`, `_CYRILLIC_RE`, `_HIRAGANA_KATAKANA_RE`, `_HANGUL_RE`, `_UNTRANSLATED_BLOCK_RATIO`, `_BLOCK_SOURCE_LANG_THRESHOLD`.
+
+### Fix 3: Bilingual block deduplication (Problem 9)
+
+**Problem**: Bilingual zh documents have adjacent blocks with same content in Chinese and English. After translation, both become English, creating duplicates.
+
+**Root cause**: The pipeline doesn't distinguish between source-language blocks and pre-existing English blocks in bilingual documents.
+
+**Fix**: Added `_deduplicate_bilingual_blocks()` method that detects adjacent text/title blocks with >75% token overlap and removes the duplicate, keeping the longer block (likely the translated one). Called in `translate_to_result()` after `_build_translated_blocks()` and before `_check_block_language()`.
+
+**Files**: `translator.py` — `_deduplicate_bilingual_blocks`, `_DEDUP_SIMILARITY_THRESHOLD`.
+
+### Tests
+
+- `test_round2_fixes.py`: 24 tests covering all 3 fixes (keyword merging: 9, per-block detection: 8, bilingual dedup: 7)
+- `test_translator.py`: 21 existing tests — all pass
+- `test_e2e_es_pt.py`: 71 existing tests — all pass
+- Total: 265 tests pass, 1 skipped (pre-existing DAX-1 dash encoding issue)
