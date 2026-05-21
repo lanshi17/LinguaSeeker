@@ -62,8 +62,17 @@ def test_parse_terminology_valid():
 
 def test_parse_terminology_skips_ascii_only_lines():
     raw = "Note: this is important\n基因:gene"
-    result = MultiStageTranslator._parse_terminology(raw)
+    # For CJK source languages, ASCII-only source terms are filtered
+    result = MultiStageTranslator._parse_terminology(raw, source_language="zh")
     assert result == {"基因": "gene"}
+
+
+def test_parse_terminology_accepts_ascii_for_latin_script():
+    raw = "cancer:mama\nsíntoma:symptom"
+    # For Latin-script source languages, ASCII source terms are accepted
+    result = MultiStageTranslator._parse_terminology(raw, source_language="es")
+    assert "cancer" in result
+    assert result["cancer"] == "mama"
 
 
 def test_parse_terminology_skips_long_lines():

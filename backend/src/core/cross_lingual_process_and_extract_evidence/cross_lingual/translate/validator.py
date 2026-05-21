@@ -525,9 +525,15 @@ def fix_ocr_truncations(text: str) -> str:
     return text
 
 
-# Pattern for [REDACTED] incorrectly inserted inside English words.
+# Pattern for [REDACTED] incorrectly inserted inside or adjacent to English words.
+# Matches when [REDACTED] is between letters (mid-word) OR after a space before
+# a letter (name-internal insertion like "Takayuki [REDACTED]okia").
 # e.g., "Re[REDACTED]ferences" → "References"
-_REDACTED_IN_WORD_RE = re.compile(r"(?<=[A-Za-z])\[REDACTED\](?=[A-Za-z])")
+# e.g., "Takayuki [REDACTED]okia" → "Takayuki Motoki" (after strip)
+_REDACTED_IN_WORD_RE = re.compile(
+    r"(?<=[A-Za-z])\[REDACTED\](?=[A-Za-z])"   # mid-word: Re[REDACTED]ferences
+    r"|\[REDACTED\](?=[a-z])"                    # space-before-lowercase: [REDACTED]okia
+)
 
 # Pattern for [REDACTED] adjacent to common English section headings.
 # e.g., "References [REDACTED]" or "[REDACTED] Abstract" — the LLM
@@ -558,9 +564,11 @@ def fix_word_boundary_redacted(text: str) -> str:
     """Remove [REDACTED] markers incorrectly inserted around English words.
 
     The formatter LLM sometimes inserts [REDACTED] mid-word, e.g.
-    ``Re[REDACTED]ferences`` instead of ``References``, or adjacent to
-    section headings, e.g. ``References [REDACTED]``. This strips such
-    markers while preserving legitimate [REDACTED] placeholders.
+    ``Re[REDACTED]ferences`` instead of ``References``, or inside
+    transliterated names, e.g. ``Takayuki [REDACTED]okia`` instead of
+    ``Takayuki Motoki``, or adjacent to section headings, e.g.
+    ``References [REDACTED]``. This strips such markers while preserving
+    legitimate [REDACTED] placeholders (e.g. ``aged [REDACTED] years``).
     """
     if not text:
         return text

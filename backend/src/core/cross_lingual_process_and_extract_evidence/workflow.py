@@ -14,7 +14,7 @@ from .cross_lingual.format.formatter import MarkdownFormatter
 from .cross_lingual.translate.language_detector import detect_language
 from .middleware import traced_node
 from .router import LanguageRouter
-from .cross_lingual.translate.translator import MultiStageTranslator
+from .cross_lingual.translate.translator import MultiStageTranslator, TranslationError
 
 
 class TranslationService:
@@ -69,7 +69,10 @@ class TranslationService:
 
     @traced_node("translate")
     def _node_translate(self, state: PipelineState) -> PipelineState:
-        result = self._translator.translate_to_result(state.formatted)
+        try:
+            result = self._translator.translate_to_result(state.formatted)
+        except TranslationError:
+            raise  # Let critical failures propagate — do not persist garbage
         state.translation_result = result
         return state
 
