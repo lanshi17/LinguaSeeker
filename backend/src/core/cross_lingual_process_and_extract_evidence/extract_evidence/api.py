@@ -1,12 +1,18 @@
-"""Public facade for one-track evidence extraction."""
+"""Public facade for one-track and dual-track evidence extraction."""
 from __future__ import annotations
 
 import asyncio
+import json
+from pathlib import Path
 from typing import Any
 
 from .config_context import EvidenceExtractionConfigContext
 from .contracts import (
+    DualEvidenceExtractionResult,
+    DualTrackDocuments,
     EvidenceExtractionResult,
+    PageSpan,
+    Track,
     TrackDocument,
 )
 from .providers import LangChainEvidenceProvider
@@ -14,7 +20,7 @@ from .workflow import EvidenceExtractionWorkflow
 
 
 class EvidenceExtractionService:
-    """Public facade for one-track evidence extraction.
+    """Public facade for one-track and dual-track evidence extraction.
 
     Usage::
 
@@ -46,6 +52,15 @@ class EvidenceExtractionService:
             quality_report=state.quality_report,
         )
 
+    async def run_dual(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:
+        original_result = await self.run(documents.original)
+        translated_result = await self.run(documents.translated)
+        return DualEvidenceExtractionResult(
+            document_id=documents.document_id,
+            original_result=original_result,
+            translated_result=translated_result,
+        )
+
     def run_sync(self, document: TrackDocument) -> EvidenceExtractionResult:
         try:
             asyncio.get_running_loop()
@@ -55,3 +70,87 @@ class EvidenceExtractionService:
             "run_sync() cannot be called from within a running event loop. "
             "Use run() instead."
         )
+
+    def run_dual_sync(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(self.run_dual(documents))
+        raise RuntimeError(
+            "run_dual_sync() cannot be called from within a running event loop. "
+            "Use run_dual() instead."
+        )
+
+    @staticmethod
+    def build_dual_documents_from_output_dir(output_dir: str | Path) -> DualTrackDocuments:
+        base = Path(output_dir)
+        original = _build_track_document_from_json(base / "original.json", Track.ORIGINAL)
+        translated = _build_track_document_from_json(base / "translated.json", Track.TRANSLATED)
+        return DualTrackDocuments(
+            document_id=original.document_id,
+            original=original,
+            translated=translated,
+        )
+
+
+def _build_track_document_from_json(path: Path, track: Track) -> TrackDocument:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    metadata = data.get("metadata", {})
+    document_id = metadata.get("doc_id") or path.parent.name
+    blocks = data.get("blocks", [])
+    formatted_text, page_spans = _format_blocks_with_page_spans(blocks, track)
+    return TrackDocument(
+        document_id=document_id,
+        track=track,
+        formatted_text=formatted_text,
+        page_spans=page_spans,
+        metadata={
+            "source_path": str(path),
+            "source_language": str(metadata.get("source_language", "")),
+        },
+    )
+
+
+def _format_blocks_with_page_spans(blocks: list[dict[str, Any]], track: Track) -> tuple[str, list[PageSpan]]:
+    text_parts: list[str] = []
+    page_ranges: dict[int, list[int]] = {}
+    offset = 0
+
+    for block in blocks:
+        part = _block_text(block)
+        if not part:
+            continue
+        if text_parts:
+            offset += 1
+        start = offset
+        text_parts.append(part)
+        offset += len(part)
+        page_idx = int(block.get("page_idx", 0))
+        if page_idx not in page_ranges:
+            page_ranges[page_idx] = [start, offset]
+        else:
+            page_ranges[page_idx][1] = offset
+
+    formatted_text = "\n".join(text_parts)
+    page_spans = [
+        PageSpan(
+            span_id=f"{track.value}-p{page_idx + 1}",
+            page=page_idx + 1,
+            start_offset=start,
+            end_offset=end,
+        )
+        for page_idx, (start, end) in sorted(page_ranges.items())
+    ]
+    if not page_spans:
+        page_spans.append(
+            PageSpan(span_id=f"{track.value}-p1", page=1, start_offset=0, end_offset=0)
+        )
+    return formatted_text, page_spans
+
+
+def _block_text(block: dict[str, Any]) -> str:
+    for key in ("text", "content", "table_body", "code_body"):
+        value = block.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""

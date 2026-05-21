@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from enum import Enum
+import json
+from typing import Any
 from typing import TypeVar
 
 import httpx
@@ -9,7 +11,7 @@ import openai
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from loguru import logger
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, SecretStr, TypeAdapter
 
 from .config_context import EvidenceExtractionConfigContext
 
@@ -66,6 +68,8 @@ class LangChainEvidenceProvider:
         stage: str,
     ) -> SchemaT:
         llm = self._client_for_tier(tier)
+        if not _is_pydantic_model_schema(output_schema):
+            return self._invoke_json_text(llm, prompt, output_schema)
         structured = llm.with_structured_output(output_schema, method="json_schema")
         last_exc: Exception | None = None
         for attempt in range(1, self._ctx.max_retries + 1):
@@ -76,7 +80,58 @@ class LangChainEvidenceProvider:
                 logger.warning("Stage {} transient failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
             except Exception as exc:
                 last_exc = exc
+                if self._is_unsupported_response_format(exc):
+                    logger.warning(
+                        "Stage {} model does not support json_schema response_format; falling back to JSON text",
+                        stage,
+                    )
+                    return self._invoke_json_text(llm, prompt, output_schema)
                 if attempt >= self._ctx.max_retries:
                     break
                 logger.warning("Stage {} structured output failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
         raise RuntimeError(f"Stage {stage} failed structured output") from last_exc
+
+    @staticmethod
+    def _is_unsupported_response_format(exc: Exception) -> bool:
+        text = str(exc).lower()
+        return "response_format" in text and (
+            "unavailable" in text
+            or "unsupported" in text
+            or "invalid_request_error" in text
+        )
+
+    def _invoke_json_text(
+        self,
+        llm: ChatOpenAI,
+        prompt: str,
+        output_schema: type[SchemaT],
+    ) -> SchemaT:
+        adapter = TypeAdapter(output_schema)
+        schema = adapter.json_schema()
+        fallback_prompt = (
+            f"{prompt}\n\n"
+            "Return only valid JSON matching this JSON Schema. "
+            "Do not wrap it in Markdown code fences.\n"
+            f"{json.dumps(schema, ensure_ascii=False)}"
+        )
+        message = llm.invoke([HumanMessage(content=fallback_prompt)])
+        content = message.content
+        if not isinstance(content, str):
+            raise RuntimeError("Fallback JSON response content is not text")
+        return adapter.validate_json(_strip_json_fences(content))
+
+
+def _strip_json_fences(content: str) -> str:
+    text = content.strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        return "\n".join(lines).strip()
+    return text
+
+
+def _is_pydantic_model_schema(output_schema: Any) -> bool:
+    return isinstance(output_schema, type) and issubclass(output_schema, BaseModel)

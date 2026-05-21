@@ -13,6 +13,8 @@ import json
 import re
 import sys
 import time
+import hashlib
+from loguru import logger
 from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -34,6 +36,24 @@ from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.l
 
 DOWNLOAD_ROOT = Path(__file__).resolve().parent / "downloads"
 REPORT_PATH = DOWNLOAD_ROOT / "report.json"
+
+MODULE_DIR = Path(__file__).resolve().parent
+LOG_DIR = MODULE_DIR / "log"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def setup_logging(log_dir: Path = LOG_DIR, level: str = "INFO") -> None:
+    """Configure loguru to log to console and rotating file under module log dir."""
+    logger.remove()
+    # console
+    logger.add(sys.stderr, level=level, format="{time:YYYY-MM-DD HH:mm:ss} {level: <8} {message}")
+    # file with rotation and retention
+    logger.add(str(log_dir / "benchmark.log"), rotation="5 MB", retention=5, encoding="utf-8", level=level,
+               format="{time:YYYY-MM-DD HH:mm:ss} {level: <8} {message}")
+    # reduce noise from httpx/urllib3
+    import logging as _pylogging
+    _pylogging.getLogger("httpx").setLevel(_pylogging.WARNING)
+    _pylogging.getLogger("urllib3").setLevel(_pylogging.WARNING)
 
 LANG_NAMES: Dict[str, str] = {
     "zh": "Chinese", "ja": "Japanese", "es": "Spanish",
@@ -193,13 +213,15 @@ async def _download_from_url(url: str, dest: Path, timeout: int = 30) -> bool:
     """Download PDF from URL, scan HTML for PDF links if needed."""
     dest.parent.mkdir(parents=True, exist_ok=True)
     try:
-        async with httpx.AsyncClient(
+        logger.debug(f"Fetching URL: {url}")
+            async with httpx.AsyncClient(
             timeout=timeout, follow_redirects=True, verify=False,
             headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124.0 ACMG-Lingua/1.0"},
         ) as client:
             r = await client.get(url)
             if r.content[:4] == b"%PDF":
                 dest.write_bytes(r.content)
+                logger.info(f"Wrote PDF: {dest} ({len(r.content)} bytes)")
                 return True
             if b"<html" in r.content[:2048].lower():
                 # Try .pdf links, /bitstream/ paths (DSpace), and download handlers
@@ -217,10 +239,13 @@ async def _download_from_url(url: str, dest: Path, timeout: int = 30) -> bool:
                         r2 = await client.get(abs_url)
                         if r2.content[:4] == b"%PDF":
                             dest.write_bytes(r2.content)
+                            logger.info(f"Wrote PDF: {dest} ({len(r2.content)} bytes) via {abs_url}")
                             return True
                     except Exception:
+                        logger.debug(f"Failed to get nested PDF link {abs_url}")
                         continue
     except Exception:
+        logger.exception(f"Exception while downloading URL: {url}")
         pass
     return False
 
@@ -273,6 +298,7 @@ async def _try_openalex_oa(
 
 
 async def cmd_download(lang_filter: Optional[str] = None) -> None:
+    setup_logging()
     stats = BenchmarkStats()
     start = time.monotonic()
 
@@ -281,10 +307,9 @@ async def cmd_download(lang_filter: Optional[str] = None) -> None:
         all_langs = [lang_filter]
     target_per_lang = 20
 
-    print("=" * 60)
-    print(f"Downloading via OpenAlex OA (target {target_per_lang} per lang)")
-    print(f"Languages: {', '.join(all_langs)}")
-    print("=" * 60)
+    logger.info("Starting download benchmark")
+    logger.info(f"Downloading via OpenAlex OA (target {target_per_lang} per lang)")
+    logger.info(f"Languages: {', '.join(all_langs)}")
 
     for lang in all_langs:
         cfg = LANG_SEARCHES[lang]
@@ -306,9 +331,11 @@ async def cmd_download(lang_filter: Optional[str] = None) -> None:
                 stats.by_type[record.literature_type] = stats.by_type.get(record.literature_type, 0) + 1
                 stats.by_method[record.method] = stats.by_method.get(record.method, 0) + 1
                 downloaded += 1
-                print(f"  [{lang}] {downloaded}/{target_per_lang} OK {record.file_size // 1024}KB [{record.literature_type}]")
+                msg = f"[{lang}] {downloaded}/{target_per_lang} OK {record.file_size // 1024}KB [{record.literature_type}]"
+                logger.info(msg)
             else:
                 stats.total_attempted += 1
+                logger.debug(f"No result for query '{query}' in {lang}")
 
     stats.elapsed_sec = round(time.monotonic() - start, 1)
 
@@ -318,8 +345,8 @@ async def cmd_download(lang_filter: Optional[str] = None) -> None:
     with open(report_path, "w") as f:
         json.dump(asdict(stats), f, indent=2, default=str, ensure_ascii=False)
 
-    print(f"\nDone. {stats.total_downloaded}/{stats.total_attempted} downloaded in {stats.elapsed_sec:.1f}s")
-    print(f"Report: {report_path}")
+    logger.info(f"\nDone. {stats.total_downloaded}/{stats.total_attempted} downloaded in {stats.elapsed_sec:.1f}s")
+    logger.info(f"Report: {report_path}")
 
 
 
@@ -357,6 +384,9 @@ def cmd_analyze(report_path: Optional[Path] = None) -> None:
         print(f"Report not found: {path}")
         sys.exit(1)
 
+    setup_logging()
+    logger.info(f"Starting analysis for report: {path}")
+
     with open(path) as f:
         data = json.load(f)
 
@@ -368,18 +398,90 @@ def cmd_analyze(report_path: Optional[Path] = None) -> None:
     ok_records = [r for r in records if r["success"]]
     fail_records = [r for r in records if not r["success"]]
 
+    # === Validation & de-duplication ===
+    # Compute file-level validation information (exists, sha256) and detect duplicates
+    sha_map: Dict[str, List[int]] = {}
+    file_path_map: Dict[str, List[int]] = {}
+    suspicious_count = 0
+    for i, r in enumerate(records):
+        r.setdefault("_validation", {})
+        val = r["_validation"]
+        val["exists"] = False
+        val["sha256"] = None
+        val["duplicate"] = False
+        val["suspicious"] = []
+
+        fp = r.get("file_path") or ""
+        if not fp:
+            val["suspicious"].append("missing_file_path")
+            suspicious_count += 1
+            continue
+
+        p = Path(fp)
+        if not p.exists():
+            val["suspicious"].append("file_not_found")
+            suspicious_count += 1
+            continue
+
+        try:
+            val["exists"] = True
+            # compute sha256 for real de-duplication
+            h = hashlib.sha256()
+            with p.open("rb") as fh:
+                for chunk in iter(lambda: fh.read(8192), b""):
+                    h.update(chunk)
+            s = h.hexdigest()
+            val["sha256"] = s
+            sha_map.setdefault(s, []).append(i)
+            file_path_map.setdefault(str(p), []).append(i)
+
+            # suspicious heuristics
+            if r.get("file_size", 0) <= 0:
+                val["suspicious"].append("zero_file_size")
+            if r.get("elapsed_ms", 0) <= 0:
+                val["suspicious"].append("zero_elapsed_ms")
+            if not r.get("title"):
+                val["suspicious"].append("missing_title")
+            if not r.get("source_url") and not r.get("doi"):
+                val["suspicious"].append("missing_source")
+            if val["suspicious"]:
+                suspicious_count += 1
+        except Exception as e:
+            val["suspicious"].append(f"read_error:{e}")
+            suspicious_count += 1
+
+    # mark duplicates by identical sha256
+    duplicate_groups = [ids for ids in sha_map.values() if len(ids) > 1]
+    for grp in duplicate_groups:
+        for idx in grp:
+            records[idx]["_validation"]["duplicate"] = True
+
+    # also mark duplicates by identical file path (defensive)
+    for ids in file_path_map.values():
+        if len(ids) > 1:
+            for idx in ids:
+                records[idx]["_validation"]["duplicate"] = True
+
+    unique_files = len(sha_map)
+    dup_count = sum(1 for r in records if r.get("_validation", {}).get("duplicate"))
+
     # ── Overview ──
-    print("=" * 64)
-    print("  BENCHMARK DOWNLOAD REPORT — DATA ANALYSIS")
-    print("=" * 64)
-    print(f"  Attempted:  {total_attempted}")
-    print(f"  Downloaded: {total_downloaded}")
+    logger.info("=" * 64)
+    logger.info("  BENCHMARK DOWNLOAD REPORT — DATA ANALYSIS")
+    logger.info("=" * 64)
+    logger.info(f"  Attempted:  {total_attempted}")
+    logger.info(f"  Downloaded: {total_downloaded}")
     rate = total_downloaded / max(total_attempted, 1) * 100
-    print(f"  Success:    {rate:.1f}%")
-    print(f"  Elapsed:    {elapsed:.1f}s ({elapsed / 60:.1f} min)")
+    logger.info(f"  Success:    {rate:.1f}%")
+    logger.info(f"  Elapsed:    {elapsed:.1f}s ({elapsed / 60:.1f} min)")
     if ok_records:
         avg_ms = sum(r["elapsed_ms"] for r in ok_records) / len(ok_records)
-        print(f"  Avg DL:     {avg_ms / 1000:.1f}s per file")
+        logger.info(f"  Avg DL:     {avg_ms / 1000:.1f}s per file")
+
+    # Validation summary
+    logger.info(f"\n  Unique files (by sha256): {unique_files}")
+    logger.info(f"  Duplicate records detected: {dup_count}")
+    logger.info(f"  Suspicious records flagged: {suspicious_count}")
 
     # ── By Language ──
     lang_ok = Counter(r["lang"] for r in ok_records)
@@ -411,11 +513,23 @@ def cmd_analyze(report_path: Optional[Path] = None) -> None:
 
     # ── By Method ──
     method_ok = Counter(r["method"] for r in ok_records)
-    print(f"\n{'─' * 64}")
-    print("  BY DOWNLOAD METHOD")
-    print(f"{'─' * 64}")
+    logger.info(f"\n{'─' * 64}")
+    logger.info("  BY DOWNLOAD METHOD")
+    logger.info(f"{'─' * 64}")
     for m, cnt in method_ok.most_common():
-        print(f"  {m:<22} {cnt:>4}")
+        logger.info(f"  {m:<22} {cnt:>4}")
+
+    # write validated report copy
+    # Write validated report back to report.json (replace original)
+    try:
+        validated_path = path.parent / "report.json"
+        with open(validated_path, "w") as vf:
+            json.dump(data, vf, indent=2, ensure_ascii=False)
+        logger.info(f"\n  Validated report written to: {validated_path}")
+    except Exception:
+        logger.exception("Failed to write validated report.json")
+
+    # Suspicious records CSV export was removed per request.
 
     # ── File Size Stats ──
     sizes = [r["file_size"] for r in ok_records if r["file_size"] > 0]

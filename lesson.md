@@ -335,3 +335,39 @@ Chinese medical journals often include both Chinese and English versions of titl
 - `test_translator.py`: 21 existing tests — all pass
 - `test_e2e_es_pt.py`: 71 existing tests — all pass
 - Total: 265 tests pass, 1 skipped (pre-existing DAX-1 dash encoding issue)
+
+## 2026-05-21: Local skill and MCP startup warnings
+
+**Problem**: Codex startup reported 5 skipped skills because `SKILL.md` files lacked YAML frontmatter, and the `time` MCP client failed during startup handshaking.
+
+**Investigation**: Checked the five reported skill files under `/home/yangzs/.cc-switch/skills/` and confirmed each started with a Markdown heading instead of `---`-delimited `name` and `description` frontmatter. Checked `/home/yangzs/.codex/config.toml` and found `time` configured as `npx -y @modelcontextprotocol/server-time`. Running that command returned npm `E404`, confirming the package does not exist in the npm registry. Probed `uvx mcp-server-time --local-timezone=Asia/Shanghai` with a JSON-RPC `initialize` request and got a valid MCP initialize response.
+
+**Root cause**: The skills were missing required metadata, and the `time` MCP server referenced a nonexistent npm package instead of the available Python MCP server package.
+
+**Solution**: Added minimal valid frontmatter to `ts-react`, `rust-dev`, `data-analysis`, `agent-dev`, and `bioinformatics` skills. Updated Codex `time` MCP config to use `uvx mcp-server-time --local-timezone=Asia/Shanghai`.
+
+**Prevention**: Validate skill files for `---`, `name`, and `description` before syncing, and test stdio MCP servers with a direct JSON-RPC `initialize` probe after changing launcher commands.
+
+## 2026-05-21: Dual evidence extraction fixture path and lint cleanup
+
+**Problem**: The first Fabry dual-track e2e test built the fixture path as `<repo>/output/zh/法布雷病1例` instead of `<repo>/backend/output/zh/法布雷病1例`. Ruff also exposed stale unused imports in nearby tests and an invalid `# noqa` directive on a helper that did not return a dict.
+
+**Investigation**: Ran the targeted RED/GREEN test command and inspected the `FileNotFoundError` path. Re-ran Ruff on the extract_evidence source and tests to isolate style issues introduced or exposed by the change.
+
+**Root cause**: The test file's `Path.parents` index was off by one because tests run under `backend/tests/...`. The lint issues were stale imports and an unnecessary noqa comment rather than behavior defects.
+
+**Solution**: Corrected the fixture root to `backend/output/zh/法布雷病1例`, removed stale imports, and removed the invalid noqa.
+
+**Prevention**: For fixture tests under nested test directories, verify `Path(__file__).resolve().parents[...]` with the actual failing path before assuming the repository root. Keep noqa comments tied to real linter codes only.
+
+## 2026-05-21: Real LLM evidence extraction needed JSON-text fallback
+
+**Problem**: The real-LLM Fabry dual-track e2e failed on the local OpenAI-compatible model endpoint. First, the endpoint rejected `response_format=json_schema` with `This response_format type is unavailable now`. After adding fallback for model classes, the catalog stage failed locally before the HTTP call because LangChain could not build `with_structured_output()` for `list[EvidenceItem]`.
+
+**Investigation**: Ran the real e2e with temporary `EVIDENCE_EXTRACTION_*` variables mapped from `backend/.env.local` LLM settings. Read the full stack traces and confirmed two separate failures: provider capability mismatch at the HTTP boundary, and local schema construction mismatch for parametrized list schemas.
+
+**Root cause**: The provider assumed every configured OpenAI-compatible service supports OpenAI strict structured outputs. It also assumed `with_structured_output()` accepts `list[BaseModel]`, but this LangChain/OpenAI path expects a model/tool-like schema rather than a Python parametrized list alias.
+
+**Solution**: Added a provider fallback path that prompts for plain JSON and validates with Pydantic `TypeAdapter`. BaseModel schemas still try strict `json_schema` first; list schemas go directly through JSON-text validation. Added provider regression tests for unsupported response format and list-schema validation.
+
+**Prevention**: For OpenAI-compatible model servers, test both the transport-level structured-output capability and local schema construction behavior. Use `TypeAdapter` when stage outputs are parametrized containers such as `list[EvidenceItem]`.

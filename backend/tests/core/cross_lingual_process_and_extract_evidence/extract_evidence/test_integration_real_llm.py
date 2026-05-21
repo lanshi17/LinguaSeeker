@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -12,6 +13,8 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     Track,
     TrackDocument,
 )
+
+_FABRY_OUTPUT_DIR = Path(__file__).resolve().parents[4] / "output" / "zh" / "法布雷病1例"
 
 _REQUIRED_ENV = [
     "EVIDENCE_EXTRACTION_API_KEY",
@@ -55,3 +58,38 @@ async def test_evidence_extraction_with_real_llm():
         assert len(found_items) > 0
         assert any(i.source is not None for i in found_items)
         assert result.quality_report is not None
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(_skip, reason=_skip_reason)
+@pytest.mark.asyncio
+async def test_fabry_dual_track_evidence_extraction_with_real_llm():
+    from src.core.config import get_config
+
+    cfg = get_config()
+    service = EvidenceExtractionService(cfg=cfg)
+    documents = EvidenceExtractionService.build_dual_documents_from_output_dir(_FABRY_OUTPUT_DIR)
+
+    result = await service.run_dual(documents)
+
+    assert result.document_id == "法布雷病1例"
+    assert result.original_result.track == Track.ORIGINAL
+    assert result.translated_result.track == Track.TRANSLATED
+    assert result.original_result.status in (EvidenceExtractionStatus.COMPLETED, EvidenceExtractionStatus.NOT_RELEVANT)
+    assert result.translated_result.status in (
+        EvidenceExtractionStatus.COMPLETED,
+        EvidenceExtractionStatus.NOT_RELEVANT,
+    )
+
+    completed_results = [
+        track_result for track_result in (result.original_result, result.translated_result)
+        if track_result.status == EvidenceExtractionStatus.COMPLETED
+    ]
+    assert completed_results
+    assert any(
+        item.status.value == "found"
+        for track_result in completed_results
+        for item in track_result.evidence_items
+    )
+    for track_result in completed_results:
+        assert track_result.quality_report is not None
