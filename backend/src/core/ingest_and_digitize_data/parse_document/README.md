@@ -42,8 +42,7 @@ caller
   └─ create_parse_service()                # __init__.py — factory, reads ParseDocumentConfig
        └─ ParseDocumentService             # service.py — public facade
             └─ DocumentParseOrchestrator   # orchestrator.py — remote-first fallback
-                 ├─ MinerURemoteParser     # remote/parser.py — thin wrapper (name="mineru-remote")
-                 │    └─ MinerUParser      # mineru_parser.py — cloud API lifecycle
+                 ├─ MinerURemoteParser     # remote/parser.py — cloud API lifecycle + batch upload (name="mineru-remote")
                  └─ MinerULocalParser      # local/parser.py — model-server VLM (name="mineru-local")
 
 Common layer:
@@ -73,7 +72,6 @@ parse_document/
 ├── base.py               # ParserStrategy(ABC) — abstract base
 ├── contracts.py          # Pydantic models & dataclasses — all data contracts
 ├── exceptions.py         # ParseDocumentError hierarchy
-├── mineru_parser.py      # MinerUParser — full MinerU cloud API lifecycle + batch
 ├── orchestrator.py       # DocumentParseOrchestrator — remote-first fallback
 ├── service.py            # ParseDocumentService — facade with save/dedup/batch methods
 ├── common/
@@ -86,7 +84,7 @@ parse_document/
 │   └── parser.py         # MinerULocalParser — page-by-page VLM extraction
 └── remote/
     ├── __init__.py
-    └── parser.py         # MinerURemoteParser — thin wrapper (name="mineru-remote")
+    └── parser.py         # MinerURemoteParser — cloud API lifecycle + batch upload (name="mineru-remote")
 ```
 
 ## Public API
@@ -140,11 +138,11 @@ DocumentParseOrchestrator(remote: ParserStrategy, local: ParserStrategy)
 
 Implements `ParserStrategy` with `name = "orchestrator"`. Tries `remote.parse()` first; on any exception, falls back to `local.parse()`. Raises `ParserExhaustedError(errors={...})` if both fail, carrying both exception objects keyed by parser name.
 
-### MinerURemoteParser → MinerUParser
+### MinerURemoteParser
 
-**Location**: `remote/parser.py` (wrapper) + `mineru_parser.py` (implementation).
+**Location**: `remote/parser.py`.
 
-`MinerURemoteParser` is a thin subclass of `MinerUParser` with `name = "mineru-remote"`. The parent `MinerUParser` handles the full MinerU cloud API lifecycle.
+`MinerURemoteParser` implements `ParserStrategy` with `name = "mineru-remote"`. Handles the full MinerU cloud API lifecycle: single-file URL parsing and local-file batch upload.
 
 ```python
 MinerURemoteParser(
@@ -154,7 +152,7 @@ MinerURemoteParser(
 )
 ```
 
-**Single-file parsing** (`MinerUParser.parse(pdf_path)`):
+**Single-file parsing** (`MinerURemoteParser.parse(pdf_path)`):
 1. `_create_task(pdf_url)` → POSTs via `rust_io.net.mineru_create_task()` → `task_id`
 2. `_poll_result(task_id)` → polls `rust_io.net.mineru_get_result()` every `poll_interval` seconds (up to `max_poll_attempts`). Accepts states: `pending`/`running`/`converting` → `done` (returns `full_zip_url`), `failed` (raises `MinerUAPIError`). Times out → `MinerUTimeoutError`.
 3. `_download_and_parse_zip(zip_url)` → downloads zip via `httpx`, extracts to temp directory, applies **4-tier content extraction fallback**:
@@ -168,7 +166,7 @@ MinerURemoteParser(
 
 4. `_build_result(raw_data)` → maps `_MinerURawResult` → `ParseResult` with `DocumentMetadata`, `PageContent`, images, and raw `content_blocks`.
 
-**Local-file batch** (`MinerUParser.parse_local_files(file_paths, ...)`) — the full lifecycle:
+**Local-file batch** (`MinerURemoteParser.parse_local_files(file_paths, ...)`) — the full lifecycle:
 1. `upload_local_files()` → `rust_io.net.mineru_upload_local_files()` + PUT to pre-signed URLs → `MinerULocalBatchUploadResult`
 2. `poll_batch_until_terminal(batch_id)` → loops `poll_batch_result()` until all files terminal
 3. For each `done` file: downloads & parses zip via the same `_download_and_parse_zip()` path

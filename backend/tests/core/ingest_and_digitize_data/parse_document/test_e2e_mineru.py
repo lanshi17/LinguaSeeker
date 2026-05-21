@@ -33,8 +33,8 @@ from src.core.ingest_and_digitize_data.parse_document.exceptions import MinerUAP
 from src.core.ingest_and_digitize_data.parse_document.local.parser import (
     MinerULocalParser,
 )
-from src.core.ingest_and_digitize_data.parse_document.mineru_parser import (
-    MinerUParser,
+from src.core.ingest_and_digitize_data.parse_document.remote.parser import (
+    MinerURemoteParser,
 )
 
 DOWNLOADS_DIR = Path(__file__).resolve().parents[4] / "downloads"
@@ -262,11 +262,11 @@ def _parse_zip_content(extract_dir: Path) -> ParseResult:
 def _parse_content_list(content_list: list[dict], full_markdown: str) -> ParseResult:
     """Parse MinerU *_content_list.json using production code path.
 
-    Routes through MinerUParser._parse_content_list_json + _build_result
+    Routes through MinerURemoteParser._parse_content_list_json + _build_result
     to exercise the full production pipeline (including pages_from_raw,
     _figures_from_page, _tables_from_page).
     """
-    parser = MinerUParser(api_token="dummy", poll_interval=0.1, max_poll_attempts=1)
+    parser = MinerURemoteParser(api_token="dummy", poll_interval=0.1, max_poll_attempts=1)
     raw = parser._parse_content_list_json(content_list, full_markdown)
     return parser._build_result(raw)
 
