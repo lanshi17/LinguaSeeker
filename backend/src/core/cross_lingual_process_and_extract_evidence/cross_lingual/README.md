@@ -336,9 +336,13 @@ uv run pytest tests/core/cross_lingual_process_and_extract_evidence/ -v -k "form
 |-----------|--------|-------------|
 | `test_formatter.py` | `format/formatter.py` | Offset map construction, sentence extraction with page resolution, whitespace normalization, heading fix |
 | `test_segmenter.py` | `format/segmenter.py` | Token estimation (ASCII, CJK, mixed), paragraph splitting, sentence splitting, hard chunk splitting, budget enforcement |
-| `test_translator.py` | `translate/translator.py` | LLM init, `_to_text` content extraction, `_parse_terminology` parsing/validation, retry logic (success, transient→success, non-transient→fail) |
+| `test_translator.py` | `translate/translator.py`, `translate/providers.py`, `translate/postprocess.py` | LLM init, `_to_text` content extraction, `_parse_terminology` parsing/validation, retry logic, `build_translated_blocks`, DOI footer preservation |
 | `test_language_detector.py` | `translate/language_detector.py` | Language detection for zh/ja/en/ru, CJK fast-path, empty text, skip logic |
-| `test_validator.py` | `translate/validator.py` | Empty check, CJK ratio check, similarity check, language check, error summarization |
-| `test_prompts.py` | `translate/prompts.py` | All 5 prompt templates contain expected stage markers and input placeholders |
+| `test_validator.py` | `translate/validator/` | Empty check, CJK ratio check, similarity check, language check, error summarization |
+| `test_prompts.py` | `translate/prompts/` | All 7 prompt templates contain expected stage markers and input placeholders |
+| `test_round2_fixes.py` | `translate/blocks.py`, `translate/postprocess.py` | Keyword merging, per-block language detection, bilingual block deduplication |
+| `test_drift_tracking.py` | `translate/postprocess.py`, `format/formatter.py` | Translation drift computation, format drift computation |
+| `test_e2e_es_pt.py` | `translate/translator.py`, `translate/validator/` | es/pt translation failures, terminology extraction, `[REDACTED]` regex |
+| `test_e2e_translation.py` | `translate/` (integration) | Document boundary isolation, product name preservation, repetition loop detection |
 
 LLM-dependent tests use `unittest.mock.patch` on `ChatOpenAI.invoke` — no real API calls.
