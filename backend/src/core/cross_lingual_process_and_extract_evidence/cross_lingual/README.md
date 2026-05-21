@@ -34,26 +34,28 @@ result = translator.translate_to_result(formatted)
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                      cross_lingual/                          │
-│                                                              │
-│  ┌───────────────────────┐   ┌─────────────────────────────┐ │
-│  │       format/          │   │        translate/           │ │
-│  │                        │   │                             │ │
-│  │  BaseFormatter (ABC)   │   │  BaseTranslator (ABC)       │ │
-│  │       ▲                │   │       ▲                     │ │
-│  │       │                │   │       │                     │ │
-│  │  MarkdownFormatter     │   │  MultiStageTranslator       │ │
-│  │                        │   │                             │ │
-│  │  segment_text()        │   │  detect_language()          │ │
-│  │  estimate_tokens()     │   │  should_skip_translation()  │ │
-│  │  extract_sentences()   │   │  validate_translation()     │ │
-│  │  build_page_offset_map │   │  prompt templates           │ │
-│  └───────────────────────┘   └─────────────────────────────┘ │
-│                                                              │
-│  Input: pages (List[Dict])    Input: FormattedDocument       │
-│  Output: FormattedDocument    Output: TranslationResult      │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                          cross_lingual/                                  │
+│                                                                          │
+│  ┌───────────────────────┐   ┌────────────────────────────────────────┐ │
+│  │       format/          │   │              translate/                │ │
+│  │                        │   │                                        │ │
+│  │  BaseFormatter (ABC)   │   │  BaseTranslator (ABC)                  │ │
+│  │       ▲                │   │       ▲                                │ │
+│  │       │                │   │       │                                │ │
+│  │  MarkdownFormatter     │   │  MultiStageTranslator                  │ │
+│  │                        │   │                                        │ │
+│  │  segment_text()        │   │  providers.py    — LLM client + retry  │ │
+│  │  estimate_tokens()     │   │  blocks.py       — block operations   │ │
+│  │  extract_sentences()   │   │  postprocess.py  — dedup, quality     │ │
+│  │  build_page_offset_map │   │  exceptions.py   — TranslationError   │ │
+│  │                        │   │  prompts/        — stage prompts       │ │
+│  │                        │   │  validator/      — validation + norms  │ │
+│  └───────────────────────┘   └────────────────────────────────────────┘ │
+│                                                                          │
+│  Input: pages (List[Dict])    Input: FormattedDocument                   │
+│  Output: FormattedDocument    Output: TranslationResult                  │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Data flow:**
@@ -167,6 +169,31 @@ class MultiStageTranslator(BaseTranslator):
 | `get_format_prompt` | `(markdown_content: str) -> str` | Clean/normalize markdown (not used by `MultiStageTranslator`; reserved for future LLM-based formatting stage) |
 
 ### Internal Design
+
+#### Module Structure
+
+```
+translate/
+├── __init__.py          # Re-exports public API
+├── base.py              # BaseTranslator ABC
+├── language_detector.py # Language detection via lingua
+├── providers.py         # LLM client factory + retry logic
+├── blocks.py            # Block merge/split/marker operations
+├── postprocess.py       # Dedup, quality flagging, language check, block building
+├── exceptions.py        # TranslationError
+├── prompts/             # Stage-specific prompt templates
+│   ├── __init__.py
+│   ├── format.py        # Formatting/normalization prompts
+│   ├── terminology.py   # Terminology extraction prompts
+│   └── translate.py     # Translation + self-review prompts
+├── validator/           # Validation and post-processing
+│   ├── __init__.py
+│   ├── core.py          # Validation functions
+│   ├── normalize.py     # Text normalization (punctuation, placeholders, OCR fix)
+│   ├── artifacts.py     # Prompt artifact stripping
+│   └── redacted.py      # Redacted value marking
+└── translator.py        # MultiStageTranslator orchestration
+```
 
 #### Five-Stage Translation Pipeline
 
