@@ -11,12 +11,8 @@ from loguru import logger
 from .contracts import (
     CrossLingualOutput,
     SavedDocuments,
-    SegmentDrift,
-    SentenceDrift,
     TranslationResult,
 )
-from .cross_lingual.format.formatter import compute_format_drift
-from .cross_lingual.translate.translator import MultiStageTranslator
 
 
 class DocumentPersistenceService:
