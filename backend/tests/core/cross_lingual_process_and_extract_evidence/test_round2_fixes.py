@@ -12,9 +12,17 @@ import pytest
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     ContentBlock,
 )
-from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import (
-    MultiStageTranslator,
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.blocks import (
+    _KW_MERGE_SEP,
+    merge_short_keywords,
+    split_merged_keywords,
+)
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.exceptions import (
     TranslationError,
+)
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.postprocess import (
+    check_block_language,
+    deduplicate_bilingual_blocks,
 )
 
 
@@ -33,7 +41,7 @@ class TestKeywordMerging:
             (1, ContentBlock(type="text", text="变异", page_idx=0)),
             (2, ContentBlock(type="text", text="蛋白质", page_idx=0)),
         ]
-        merged, merge_map = MultiStageTranslator._merge_short_keywords(blocks)
+        merged, merge_map = merge_short_keywords(blocks)
         # All 3 are short → merged into 1 block
         assert len(merged) == 1
         assert "基因" in merged[0][1].text
@@ -48,7 +56,7 @@ class TestKeywordMerging:
             (0, ContentBlock(type="text", text="这是一个正常的长文本块", page_idx=0)),
             (1, ContentBlock(type="text", text="另一个正常的长文本块内容", page_idx=0)),
         ]
-        merged, merge_map = MultiStageTranslator._merge_short_keywords(blocks)
+        merged, merge_map = merge_short_keywords(blocks)
         assert len(merged) == 2
         assert all(v == 1 for v in merge_map.values())
 
@@ -59,7 +67,7 @@ class TestKeywordMerging:
             (1, ContentBlock(type="text", text="这是一个正常的长文本块", page_idx=0)),
             (2, ContentBlock(type="text", text="变异", page_idx=0)),
         ]
-        merged, merge_map = MultiStageTranslator._merge_short_keywords(blocks)
+        merged, merge_map = merge_short_keywords(blocks)
         # Short blocks separated by long block → not adjacent → 3 total
         assert len(merged) == 3
         assert all(v == 1 for v in merge_map.values())
@@ -71,7 +79,7 @@ class TestKeywordMerging:
             (1, ContentBlock(type="text", text="变异", page_idx=0)),
             (2, ContentBlock(type="text", text="这是一个正常的长文本块", page_idx=0)),
         ]
-        merged, merge_map = MultiStageTranslator._merge_short_keywords(blocks)
+        merged, merge_map = merge_short_keywords(blocks)
         # First 2 short blocks merged, long block separate → 2 total
         assert len(merged) == 2
         assert merge_map[0] == 2  # 2 blocks merged into first
@@ -80,10 +88,10 @@ class TestKeywordMerging:
     def test_split_merged_keywords_restores_count(self):
         """After translation, merged keywords must be split back."""
         # The merge separator is "；" (Chinese semicolon)
-        sep = MultiStageTranslator._KW_MERGE_SEP
+        sep = _KW_MERGE_SEP
         translated_parts = [f"gene{sep}variant{sep}protein"]
         merge_map = {0: 3}  # output index 0 came from 3 blocks
-        result = MultiStageTranslator._split_merged_keywords(translated_parts, merge_map)
+        result = split_merged_keywords(translated_parts, merge_map)
         assert len(result) == 3
         assert result[0] == "gene"
         assert result[1] == "variant"
@@ -93,7 +101,7 @@ class TestKeywordMerging:
         """LLM may translate using '; ' (semicolon+space) instead of Chinese."""
         translated_parts = ["gene; variant; protein"]
         merge_map = {0: 3}
-        result = MultiStageTranslator._split_merged_keywords(translated_parts, merge_map)
+        result = split_merged_keywords(translated_parts, merge_map)
         assert len(result) == 3
         assert result[0] == "gene"
         assert result[1] == "variant"
@@ -103,7 +111,7 @@ class TestKeywordMerging:
         """When separator is missing, merged text goes in first slot."""
         translated_parts = ["gene variant protein"]  # no separator
         merge_map = {0: 3}
-        result = MultiStageTranslator._split_merged_keywords(translated_parts, merge_map)
+        result = split_merged_keywords(translated_parts, merge_map)
         assert len(result) == 3
         assert result[0] == "gene variant protein"
         assert result[1] == ""
@@ -115,7 +123,7 @@ class TestKeywordMerging:
             (0, ContentBlock(type="text", text="基因", page_idx=2, bbox=[10, 20, 30, 40])),
             (1, ContentBlock(type="text", text="变异", page_idx=2)),
         ]
-        merged, _ = MultiStageTranslator._merge_short_keywords(blocks)
+        merged, _ = merge_short_keywords(blocks)
         # The merged block uses a new ContentBlock, so check the tuple structure
         assert len(merged) == 1
         assert merged[0][0] == 0  # first block index preserved
@@ -127,7 +135,7 @@ class TestKeywordMerging:
             (1, ContentBlock(type="text", text="这是一个正常的长文本块内容", page_idx=0)),
             (2, ContentBlock(type="text", text="变异", page_idx=0)),
         ]
-        merged, merge_map = MultiStageTranslator._merge_short_keywords(blocks)
+        merged, merge_map = merge_short_keywords(blocks)
         # Short blocks separated by a long block should not merge across it
         assert len(merged) == 3
         assert all(v == 1 for v in merge_map.values())
@@ -152,7 +160,7 @@ class TestPerBlockLanguageDetection:
         ]
         # 5/5 blocks still have Cyrillic → 100% > 40% threshold
         with pytest.raises(TranslationError, match="per_block_check"):
-            MultiStageTranslator._check_block_language(blocks, "ru")
+            check_block_language(blocks, "ru")
 
     def test_russian_translated_passes(self):
         """When most blocks are translated to English, check must pass."""
@@ -164,7 +172,7 @@ class TestPerBlockLanguageDetection:
             ContentBlock(type="text", text="Final English translated block content", page_idx=0),
         ]
         # 1/5 blocks with Cyrillic → 20% < 40% threshold → should not raise
-        MultiStageTranslator._check_block_language(blocks, "ru")
+        check_block_language(blocks, "ru")
 
     def test_zh_untranslated_raises(self):
         """When >40% blocks still contain CJK, TranslationError must be raised."""
@@ -177,7 +185,7 @@ class TestPerBlockLanguageDetection:
         ]
         # 4/5 blocks with CJK → 80% > 40% threshold
         with pytest.raises(TranslationError, match="per_block_check"):
-            MultiStageTranslator._check_block_language(blocks, "zh")
+            check_block_language(blocks, "zh")
 
     def test_en_source_skipped(self):
         """English source documents must skip the check entirely."""
@@ -185,26 +193,26 @@ class TestPerBlockLanguageDetection:
             ContentBlock(type="text", text="Any text", page_idx=0),
         ]
         # Should not raise for English source
-        MultiStageTranslator._check_block_language(blocks, "en")
+        check_block_language(blocks, "en")
 
     def test_unknown_source_skipped(self):
         """Unknown source language must skip the check."""
         blocks = [
             ContentBlock(type="text", text="Any text", page_idx=0),
         ]
-        MultiStageTranslator._check_block_language(blocks, "unknown")
+        check_block_language(blocks, "unknown")
 
     def test_es_pt_skipped(self):
         """es/pt source languages skip per-block check (covered by validate_translation_output)."""
         blocks = [
             ContentBlock(type="text", text="Texto en español sin traducir", page_idx=0),
         ]
-        MultiStageTranslator._check_block_language(blocks, "es")
-        MultiStageTranslator._check_block_language(blocks, "pt")
+        check_block_language(blocks, "es")
+        check_block_language(blocks, "pt")
 
     def test_empty_blocks_no_error(self):
         """Empty block list must not raise."""
-        MultiStageTranslator._check_block_language([], "ru")
+        check_block_language([], "ru")
 
     def test_only_non_text_blocks_skipped(self):
         """Image/table blocks should not count in the language check."""
@@ -213,7 +221,7 @@ class TestPerBlockLanguageDetection:
             ContentBlock(type="table", table_body="<table></table>", page_idx=0),
         ]
         # No text blocks → should not raise
-        MultiStageTranslator._check_block_language(blocks, "ru")
+        check_block_language(blocks, "ru")
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -231,7 +239,7 @@ class TestBilingualBlockDedup:
             ContentBlock(type="text", text="Breast cancer diagnosis involves multiple clinical steps", page_idx=0),
             ContentBlock(type="text", text="Breast cancer diagnosis involves multiple clinical steps", page_idx=0),
         ]
-        result = MultiStageTranslator._deduplicate_bilingual_blocks(blocks)
+        result = deduplicate_bilingual_blocks(blocks)
         # The two identical text blocks should be deduped
         assert len(result) == 2
 
@@ -242,7 +250,7 @@ class TestBilingualBlockDedup:
             ContentBlock(type="text", text="Genetic testing reveals BRCA1 mutations", page_idx=0),
             ContentBlock(type="text", text="Treatment options include surgery and chemotherapy", page_idx=0),
         ]
-        result = MultiStageTranslator._deduplicate_bilingual_blocks(blocks)
+        result = deduplicate_bilingual_blocks(blocks)
         assert len(result) == 3
 
     def test_non_text_blocks_preserved(self):
@@ -252,7 +260,7 @@ class TestBilingualBlockDedup:
             ContentBlock(type="image", img_path="fig.jpg", page_idx=0),
             ContentBlock(type="text", text="Different content after image", page_idx=0),
         ]
-        result = MultiStageTranslator._deduplicate_bilingual_blocks(blocks)
+        result = deduplicate_bilingual_blocks(blocks)
         assert len(result) == 3
         assert result[1].type == "image"
 
@@ -261,12 +269,12 @@ class TestBilingualBlockDedup:
         blocks = [
             ContentBlock(type="text", text="Only one block", page_idx=0),
         ]
-        result = MultiStageTranslator._deduplicate_bilingual_blocks(blocks)
+        result = deduplicate_bilingual_blocks(blocks)
         assert len(result) == 1
 
     def test_empty_list_unchanged(self):
         """Empty block list must be returned as-is."""
-        result = MultiStageTranslator._deduplicate_bilingual_blocks([])
+        result = deduplicate_bilingual_blocks([])
         assert result == []
 
     def test_keeps_longer_block(self):
@@ -274,7 +282,7 @@ class TestBilingualBlockDedup:
         shorter = ContentBlock(type="text", text="BRCA1 mutations in breast cancer patients are pathogenic", page_idx=0)
         longer = ContentBlock(type="text", text="BRCA1 mutations in breast cancer patients are generally pathogenic", page_idx=0)
         blocks = [shorter, longer]
-        result = MultiStageTranslator._deduplicate_bilingual_blocks(blocks)
+        result = deduplicate_bilingual_blocks(blocks)
         # Tokens overlap: {brca1, mutations, in, breast, cancer, patients, are, pathogenic} = 8
         # Union adds "generally" = 9 total
         # Similarity = 8/9 ≈ 0.89 > 0.75 → deduped
@@ -289,7 +297,7 @@ class TestBilingualBlockDedup:
             ContentBlock(type="text", text="This study investigates the role of BRCA1 in breast cancer", page_idx=0),
             ContentBlock(type="text", text="This study investigates the role of BRCA1 in breast cancer", page_idx=0),
         ]
-        result = MultiStageTranslator._deduplicate_bilingual_blocks(blocks)
+        result = deduplicate_bilingual_blocks(blocks)
         # The two identical text blocks should be deduped
         text_blocks = [b for b in result if b.type == "text"]
         assert len(text_blocks) == 1

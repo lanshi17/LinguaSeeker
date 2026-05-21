@@ -11,12 +11,8 @@ from loguru import logger
 from .contracts import (
     CrossLingualOutput,
     SavedDocuments,
-    SegmentDrift,
-    SentenceDrift,
     TranslationResult,
 )
-from .cross_lingual.format.formatter import compute_format_drift
-from .cross_lingual.translate.translator import MultiStageTranslator
 
 
 class DocumentPersistenceService:
@@ -90,7 +86,8 @@ class DocumentPersistenceService:
         # Compute translation drift from segments
         source_parts = [seg.source_text for seg in result.segments]
         translated_parts = [seg.translated_text for seg in result.segments]
-        translation_drifts = MultiStageTranslator.compute_translation_drift(
+        from .cross_lingual.translate.postprocess import compute_translation_drift
+        translation_drifts = compute_translation_drift(
             source_parts, translated_parts,
         )
 
