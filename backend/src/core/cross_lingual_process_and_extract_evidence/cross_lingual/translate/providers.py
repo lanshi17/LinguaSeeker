@@ -1,0 +1,158 @@
+"""LLM client factory and retry logic for translation pipeline."""
+from __future__ import annotations
+
+import time
+from typing import Any
+
+import httpx
+import openai
+from langchain_core.messages import HumanMessage
+from langchain_openai import ChatOpenAI
+from loguru import logger
+from pydantic import SecretStr
+
+_MAX_RETRIES: int = 3
+_BACKOFF_BASE: float = 30.0  # seconds
+_TRANSIENT_EXCEPTIONS = (
+    openai.APITimeoutError,
+    openai.APIConnectionError,
+    openai.RateLimitError,
+    openai.InternalServerError,
+    httpx.TimeoutException,
+    httpx.ConnectError,
+)
+
+
+def create_llm(
+    model: str,
+    api_key: str,
+    base_url: str,
+    temperature: float = 0.0,
+) -> ChatOpenAI:
+    """Create a standard ChatOpenAI instance."""
+    return ChatOpenAI(
+        model=model,
+        api_key=SecretStr(api_key),
+        base_url=base_url,
+        temperature=temperature,
+    )
+
+
+def create_json_llm(
+    model: str,
+    api_key: str,
+    base_url: str,
+    temperature: float = 0.0,
+) -> ChatOpenAI:
+    """Create a ChatOpenAI instance with JSON response format."""
+    return ChatOpenAI(
+        model=model,
+        api_key=SecretStr(api_key),
+        base_url=base_url,
+        temperature=temperature,
+        model_kwargs={"response_format": {"type": "json_object"}},
+    )
+
+
+def _to_text(content: Any) -> str:
+    """Extract plain text from LLM response content.
+
+    Handles str, list of content blocks, and single content block dicts.
+    Falls back to str() for unknown types.
+    """
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        parts: list[str] = []
+        for item in content:
+            if isinstance(item, str):
+                parts.append(item)
+            elif isinstance(item, dict):
+                if item.get("type") in ("text", None):
+                    text = item.get("text") or item.get("content") or ""
+                    if text:
+                        parts.append(str(text))
+        return "\n".join(parts).strip()
+    if isinstance(content, dict):
+        text = content.get("text") or content.get("content") or ""
+        return str(text).strip()
+    return str(content).strip()
+
+
+def invoke_with_retry(
+    llm: ChatOpenAI,
+    prompt: str,
+    stage: str,
+    system_prompt: str = "",
+) -> str:
+    """Call LLM with exponential backoff on transient failures.
+
+    Note: qwen-mt-flash only supports user/assistant roles, so
+    the system prompt is prepended to the human message.
+    """
+    if system_prompt:
+        content = (
+            f"[SYSTEM INSTRUCTIONS — DO NOT output these. Follow them silently.]\n"
+            f"{system_prompt}\n"
+            f"[END SYSTEM INSTRUCTIONS]\n\n"
+            f"{prompt}"
+        )
+    else:
+        content = prompt
+    messages = [HumanMessage(content=content)]
+
+    last_exc: Exception | None = None
+    for attempt in range(1, _MAX_RETRIES + 1):
+        try:
+            response = llm.invoke(messages)
+            return _to_text(response.content)
+        except _TRANSIENT_EXCEPTIONS as exc:
+            last_exc = exc
+            delay = _BACKOFF_BASE * (2 ** (attempt - 1))
+            logger.warning(
+                "Stage {} attempt {}/{} failed: {}. Retrying in {:.0f}s",
+                stage, attempt, _MAX_RETRIES, exc, delay,
+            )
+            if attempt < _MAX_RETRIES:
+                time.sleep(delay)
+    raise RuntimeError(f"Stage {stage} failed after {_MAX_RETRIES} attempts") from last_exc
+
+
+def invoke_json_with_retry(
+    llm: ChatOpenAI,
+    prompt: str,
+    stage: str,
+    system_prompt: str = "",
+) -> str:
+    """Call LLM with JSON mode and exponential backoff on transient failures.
+
+    Returns the raw JSON string from the LLM response.
+    """
+    if system_prompt:
+        content = (
+            f"[SYSTEM INSTRUCTIONS — DO NOT output these. Follow them silently.]\n"
+            f"{system_prompt}\n"
+            f"[END SYSTEM INSTRUCTIONS]\n\n"
+            f"{prompt}"
+        )
+    else:
+        content = prompt
+    messages = [HumanMessage(content=content)]
+
+    last_exc: Exception | None = None
+    for attempt in range(1, _MAX_RETRIES + 1):
+        try:
+            response = llm.invoke(messages)
+            return _to_text(response.content)
+        except _TRANSIENT_EXCEPTIONS as exc:
+            last_exc = exc
+            delay = _BACKOFF_BASE * (2 ** (attempt - 1))
+            logger.warning(
+                "JSON stage {} attempt {}/{} failed: {}. Retrying in {:.0f}s",
+                stage, attempt, _MAX_RETRIES, exc, delay,
+            )
+            if attempt < _MAX_RETRIES:
+                time.sleep(delay)
+    raise RuntimeError(f"JSON stage {stage} failed after {_MAX_RETRIES} attempts") from last_exc

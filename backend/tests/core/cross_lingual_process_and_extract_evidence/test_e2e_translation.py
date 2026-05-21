@@ -12,32 +12,37 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     ContentBlock,
     FormattedDocument,
-    TranslationSegment,
 )
 from src.core.cross_lingual_process_and_extract_evidence.config_context import (
     TranslationConfigContext,
+)
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.blocks import (
+    _BLOCK_SEP,
+    join_blocks_with_markers,
+    split_by_markers,
+)
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.postprocess import (
+    build_translated_blocks,
+    trim_repetitive_content,
 )
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import (
     MultiStageTranslator,
 )
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.validator import (
     fix_word_boundary_redacted,
-    strip_source_contamination,
-    validate_translation_output,
     normalize_placeholders,
     normalize_cjk_punctuation,
     fix_email_placeholder,
     fix_ocr_truncations,
     strip_prompt_artifacts,
     strip_inline_artifacts,
-    strip_prompt_echo,
 )
 
 # Path to real parsed output from 法布雷病1例.pdf
@@ -195,7 +200,6 @@ class TestRedactedMislabeling:
 
     def test_pipeline_strips_false_redacted_from_references(self):
         """run_pipeline output must not contain Re[REDACTED]ferences."""
-        source = "## References\n\n1. Smith et al. 2020\n2. Jones et al. 2021"
         translated = (
             "## Re[REDACTED]ferences\n\n1. Smith et al. 2020\n"
             "2. Ab[REDACTED]stract of Jones et al. 2021"
@@ -208,7 +212,6 @@ class TestRedactedMislabeling:
 
     def test_pipeline_preserves_legitimate_redacted(self):
         """Legitimate [REDACTED] markers from source must survive the pipeline."""
-        source = "患者男性，[REDACTED] 岁，因水肿入院。"
         translated = "A male patient, aged [REDACTED] years, was admitted for edema."
         # [REDACTED] should survive post-processing
         result = fix_word_boundary_redacted(translated)
@@ -235,7 +238,7 @@ class TestRedactedMislabeling:
 class TestDocumentBoundary:
     """Content from one article must NOT leak into another."""
 
-    SEP = MultiStageTranslator._BLOCK_SEP
+    SEP = _BLOCK_SEP
 
     def test_split_by_markers_preserves_boundaries(self):
         """_split_by_markers must return per-block content without mixing."""
@@ -245,7 +248,7 @@ class TestDocumentBoundary:
             "[BLOCK_2] Second article title\n\n"
             "Second article body text."
         )
-        parts = MultiStageTranslator._split_by_markers(marked, 2)
+        parts = split_by_markers(marked, 2)
         assert len(parts) == 2
         assert "First article" in parts[0]
         assert "Second article" in parts[1]
@@ -262,7 +265,7 @@ class TestDocumentBoundary:
                 f"with identifier DOC{i+1}_MARKER"
             )
         marked = "\n\n".join(blocks)
-        parts = MultiStageTranslator._split_by_markers(marked, 5)
+        parts = split_by_markers(marked, 5)
         assert len(parts) == 5
         for i, part in enumerate(parts):
             assert f"DOC{i+1}_MARKER" in part
@@ -287,7 +290,7 @@ class TestDocumentBoundary:
             f"Discussion{self.SEP}"
             f"Fabry disease is an X-linked inherited disorder"
         )
-        result = MultiStageTranslator._build_translated_blocks(
+        result = build_translated_blocks(
             original, [], translated, text_block_indices=[0, 1, 2, 3],
         )
         assert len(result) == 4
@@ -321,10 +324,10 @@ class TestDocumentBoundary:
             f"The patient carried a PAH gene variant"
         )
 
-        result1 = MultiStageTranslator._build_translated_blocks(
+        result1 = build_translated_blocks(
             doc1_blocks, [], doc1_translated, text_block_indices=[0, 1],
         )
-        result2 = MultiStageTranslator._build_translated_blocks(
+        result2 = build_translated_blocks(
             doc2_blocks, [], doc2_translated, text_block_indices=[0, 1],
         )
 
@@ -340,7 +343,7 @@ class TestDocumentBoundary:
         blocks = _make_blocks(["Title A", "Body A", "Title B", "Body B"])
         non_empty = list(enumerate(blocks))
         marked, indices, prefixes, overrides = (
-            MultiStageTranslator._join_blocks_with_markers(non_empty)
+            join_blocks_with_markers(non_empty)
         )
         assert "[BLOCK_1]" in marked
         assert "[BLOCK_2]" in marked
@@ -502,7 +505,7 @@ class TestPipelineRegression:
 
     def test_two_article_blocks_isolated(self):
         """Two articles' blocks must be isolated after _build_translated_blocks."""
-        sep = MultiStageTranslator._BLOCK_SEP
+        sep = _BLOCK_SEP
         # Article 1 blocks
         art1 = [
             ContentBlock(type="title", text="法布雷病1例报告", page_idx=0),
@@ -524,10 +527,10 @@ class TestPipelineRegression:
             f"The proband carried a PAH gene c.1222C>T"
         )
 
-        result1 = MultiStageTranslator._build_translated_blocks(
+        result1 = build_translated_blocks(
             art1, [], art1_translated, text_block_indices=[0, 1],
         )
-        result2 = MultiStageTranslator._build_translated_blocks(
+        result2 = build_translated_blocks(
             art2, [], art2_translated, text_block_indices=[0, 1],
         )
 
@@ -548,7 +551,7 @@ class TestPipelineRegression:
         ]
         # Simulate LLM that does NOT change names (correct behavior)
         correct_output = "The target protein was expressed using pET156 vector in CondonPlus host strain."
-        result = MultiStageTranslator._build_translated_blocks(
+        result = build_translated_blocks(
             source_blocks, [], correct_output, text_block_indices=[0],
         )
         assert "pET156" in result[0].text
@@ -581,7 +584,7 @@ class TestPipelineRegression:
             "## Methods\n\nWe analyzed GLA gene.\n\n"
             "## Methods\n\nWe analyzed GLA gene.\n\n"
         )
-        result = MultiStageTranslator._trim_repetitive_content(repetitive)
+        result = trim_repetitive_content(repetitive)
         headings = re.findall(r"^## Introduction", result, re.MULTILINE)
         assert len(headings) == 1, f"Expected 1 'Introduction', got {len(headings)}"
         headings = re.findall(r"^## Methods", result, re.MULTILINE)

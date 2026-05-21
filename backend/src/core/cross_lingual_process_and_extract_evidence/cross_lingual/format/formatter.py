@@ -241,7 +241,6 @@ class MarkdownFormatter(BaseFormatter):
     def _apply_llm_formatting(self, doc: FormattedDocument) -> FormattedDocument:
         """Use LLM to detect redactions and repair OCR artifacts."""
         from ..translate.prompts import get_format_prompt
-        from ..translate.translator import MultiStageTranslator
 
         prompt = get_format_prompt(doc.formatted_markdown)
         logger.info("LLM formatting: {} chars", len(doc.formatted_markdown))

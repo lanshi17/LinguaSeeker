@@ -12,7 +12,6 @@ Uses real parsed data from: backend/output/es/ and backend/output/pt/
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -32,7 +31,6 @@ from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.validator import (
     fix_word_boundary_redacted,
     validate_translation_output,
-    summarize_validation_error,
 )
 
 # ── Real data paths ────────────────────────────────────────────────────────
@@ -405,11 +403,11 @@ class TestPipelineIntegration:
         """When LLM returns Spanish text unchanged, TranslationError must be raised."""
         source = "Experiencia de cuidadores familiares de mujeres con cáncer de mama: una revisión integradora"
         # _invoke_with_retry returns str directly; simulate LLM returning unchanged text
-        with patch.object(
-            MultiStageTranslator, '_invoke_with_retry',
+        with patch(
+            'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry',
             return_value=source,
-        ), patch.object(
-            MultiStageTranslator, '_invoke_json_with_retry',
+        ), patch(
+            'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry',
             return_value='{"terms": []}',
         ):
             translator = MultiStageTranslator(ctx=self._mock_ctx())
@@ -420,11 +418,11 @@ class TestPipelineIntegration:
     def test_unchanged_pt_triggers_error(self):
         """When LLM returns Portuguese text unchanged, TranslationError must be raised."""
         source = "Câncer de Mama X Diagnóstico"
-        with patch.object(
-            MultiStageTranslator, '_invoke_with_retry',
+        with patch(
+            'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry',
             return_value=source,
-        ), patch.object(
-            MultiStageTranslator, '_invoke_json_with_retry',
+        ), patch(
+            'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry',
             return_value='{"terms": []}',
         ):
             translator = MultiStageTranslator(ctx=self._mock_ctx())
@@ -436,11 +434,10 @@ class TestPipelineIntegration:
         """A proper translation must complete without error."""
         source = "Experiencia de cuidadores familiares de mujeres con cáncer de mama"
         translated = "Experience of family caregivers of women with breast cancer"
-        system_prompt = "You are a biomedical translation engine. Translate to English."
         terminology = "cáncer: cancer\nmama: breast"
 
         call_count = 0
-        def mock_invoke(prompt, stage, system_prompt=""):
+        def mock_invoke(llm, prompt, stage, system_prompt=""):
             nonlocal call_count
             call_count += 1
             if "system_prompt_gen" in stage:
@@ -449,11 +446,11 @@ class TestPipelineIntegration:
                 return terminology
             return translated
 
-        with patch.object(
-            MultiStageTranslator, '_invoke_with_retry',
+        with patch(
+            'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry',
             side_effect=mock_invoke,
-        ), patch.object(
-            MultiStageTranslator, '_invoke_json_with_retry',
+        ), patch(
+            'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry',
             return_value=f'{{"translation": "{translated}"}}',
         ):
             translator = MultiStageTranslator(ctx=self._mock_ctx())

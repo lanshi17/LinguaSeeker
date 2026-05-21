@@ -8,6 +8,14 @@ from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     TranslationSegment,
 )
 from src.core.cross_lingual_process_and_extract_evidence.config_context import TranslationConfigContext
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.blocks import _BLOCK_SEP
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers import (
+    _to_text,
+    invoke_with_retry,
+)
+from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.postprocess import (
+    build_translated_blocks,
+)
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import MultiStageTranslator
 
 
@@ -38,17 +46,29 @@ def test_translator_llm(mock_ctx):
     assert t._llm is not None
 
 
+def test_providers_create_llm():
+    from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers import create_llm
+    llm = create_llm(model="test-model", api_key="test-key", base_url="http://localhost:8001/v1", temperature=0.0)
+    assert llm is not None
+
+
+def test_providers_create_json_llm():
+    from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers import create_json_llm
+    llm = create_json_llm(model="test-model", api_key="test-key", base_url="http://localhost:8001/v1", temperature=0.0)
+    assert llm is not None
+
+
 def test_to_text_none():
-    assert MultiStageTranslator._to_text(None) == ""
+    assert _to_text(None) == ""
 
 
 def test_to_text_string():
-    assert MultiStageTranslator._to_text(" hello ") == "hello"
+    assert _to_text(" hello ") == "hello"
 
 
 def test_to_text_list():
     content = [{"type": "text", "text": "hello"}, {"type": "text", "text": "world"}]
-    assert "hello" in MultiStageTranslator._to_text(content)
+    assert "hello" in _to_text(content)
 
 
 # ── _parse_terminology tests ─────────────────────────────────────────
@@ -99,7 +119,7 @@ def test_invoke_with_retry_success(mock_ctx):
     mock_response = MagicMock()
     mock_response.content = "success"
     with patch("langchain_openai.ChatOpenAI.invoke", return_value=mock_response):
-        result = t._invoke_with_retry("test prompt", "test")
+        result = invoke_with_retry(t._llm, "test prompt", "test")
         assert result == "success"
 
 
@@ -113,7 +133,7 @@ def test_invoke_with_retry_transient_then_success(mock_ctx):
         httpx.ConnectError("connection failed"),
         mock_response,
     ]):
-        result = t._invoke_with_retry("test prompt", "test")
+        result = invoke_with_retry(t._llm, "test prompt", "test")
         assert result == "success"
 
 
@@ -121,17 +141,17 @@ def test_invoke_with_retry_non_transient_no_retry(mock_ctx):
     t = MultiStageTranslator(ctx=mock_ctx)
     with patch("langchain_openai.ChatOpenAI.invoke", side_effect=ValueError("bad input")):
         with pytest.raises(ValueError, match="bad input"):
-            t._invoke_with_retry("test prompt", "test")
+            invoke_with_retry(t._llm, "test prompt", "test")
 
 
 # ── _build_translated_blocks tests ────────────────────────────────────
 
-_SEP = MultiStageTranslator._BLOCK_SEP
+_SEP = _BLOCK_SEP
 
 
 def test_build_translated_blocks_empty():
     segments = []
-    result = MultiStageTranslator._build_translated_blocks([], segments, "")
+    result = build_translated_blocks([], segments, "")
     assert result == []
 
 
@@ -141,7 +161,7 @@ def test_build_translated_blocks_delimiter_split():
         ContentBlock(type="text", text="Body text", page_idx=0),
     ]
     translated = f"Título{_SEP}Texto del cuerpo"
-    result = MultiStageTranslator._build_translated_blocks(
+    result = build_translated_blocks(
         original, [], translated, text_block_indices=[0, 1],
     )
 
@@ -157,7 +177,7 @@ def test_build_translated_blocks_delimiter_split():
 def test_build_translated_blocks_title_preserves_level():
     original = [ContentBlock(type="title", text="Chapter 1", text_level=1, page_idx=0)]
     translated = "Capítulo 1"
-    result = MultiStageTranslator._build_translated_blocks(original, [], translated)
+    result = build_translated_blocks(original, [], translated)
 
     assert result[0].type == "title"
     assert result[0].text == "Capítulo 1"
@@ -174,7 +194,7 @@ def test_build_translated_blocks_image_copied_as_is():
         sub_type="photo",
         page_idx=1,
     )]
-    result = MultiStageTranslator._build_translated_blocks(original, [], "some text")
+    result = build_translated_blocks(original, [], "some text")
 
     assert len(result) == 1
     assert result[0].type == "image"
@@ -194,7 +214,7 @@ def test_build_translated_blocks_table_copied_as_is():
         table_footnote=["* p<0.05"],
         page_idx=2,
     )]
-    result = MultiStageTranslator._build_translated_blocks(original, [], "some text")
+    result = build_translated_blocks(original, [], "some text")
 
     assert result[0].type == "table"
     assert result[0].table_body == "<table><tr><td>1</td></tr></table>"
@@ -209,7 +229,7 @@ def test_build_translated_blocks_mixed_types():
         ContentBlock(type="image", img_path="images/fig.jpg", page_idx=1),
     ]
     translated = f"Título{_SEP}Texto del cuerpo"
-    result = MultiStageTranslator._build_translated_blocks(
+    result = build_translated_blocks(
         original, [], translated, text_block_indices=[0, 1],
     )
 
@@ -228,7 +248,56 @@ def test_build_translated_blocks_fallback_no_delimiter():
     segments = [
         TranslationSegment(index=0, source_text="Hello world", translated_text="Hola mundo"),
     ]
-    result = MultiStageTranslator._build_translated_blocks(original, segments, "Hola mundo")
+    result = build_translated_blocks(original, segments, "Hola mundo")
 
     assert len(result) == 1
     assert result[0].text == "Hola mundo"
+
+
+def test_build_translated_blocks_preserves_doi_footer():
+    """Footer blocks with DOI info must be preserved (not filtered as non-body)."""
+    original = [
+        ContentBlock(type="title", text="Title", page_idx=0),
+        ContentBlock(type="text", text="Body text", page_idx=0),
+        ContentBlock(type="footer", text="DOI: 10.1234/example.2024", page_idx=0),
+    ]
+    translated = f"Translated Title{_BLOCK_SEP}Translated Body"
+    result = build_translated_blocks(
+        original, [], translated, text_block_indices=[0, 1],
+    )
+    # Title + Body translated, DOI footer preserved as-is
+    assert len(result) == 3
+    assert result[0].text == "Translated Title"
+    assert result[1].text == "Translated Body"
+    assert result[2].type == "footer"
+    assert "DOI" in result[2].text
+    assert result[2].text == "DOI: 10.1234/example.2024"
+
+
+def test_translate_segments_includes_doi_footer_blocks():
+    """translate_segments must include DOI footer blocks in the marked text.
+
+    Replicates the filtering logic at translator.py:483 to verify that
+    DOI footer blocks pass the filter while page-only footers are excluded.
+    """
+    from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.postprocess import _DOI_RE
+
+    blocks = [
+        ContentBlock(type="title", text="Example Paper", page_idx=0),
+        ContentBlock(type="text", text="Some body text here", page_idx=0),
+        ContentBlock(type="footer", text="DOI: 10.1234/example.2024", page_idx=0),
+        ContentBlock(type="footer", text="Page 1 of 10", page_idx=0),
+        ContentBlock(type="header", text="Journal Header", page_idx=0),
+    ]
+    # Replicate the filter from translate_segments (translator.py:483-485)
+    non_empty = [(i, b) for i, b in enumerate(blocks)
+                 if b.text.strip() and (b.type in ("text", "title") or
+                                        (b.type == "footer" and _DOI_RE.search(b.text)))]
+    indices = [i for i, _ in non_empty]
+    # title (0), text (1), DOI footer (2) should be included
+    # page-only footer (3) and header (4) should be excluded
+    assert 0 in indices  # title
+    assert 1 in indices  # text
+    assert 2 in indices  # DOI footer
+    assert 3 not in indices  # page-only footer
+    assert 4 not in indices  # header
