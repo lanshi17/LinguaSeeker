@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import re
 
-from loguru import logger
-
 
 # Translation table for CJK punctuation -> ASCII equivalents
 _CJK_PUNCT_MAP = {

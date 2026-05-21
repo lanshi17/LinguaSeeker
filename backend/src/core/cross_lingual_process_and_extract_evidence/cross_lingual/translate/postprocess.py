@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List
+from typing import Any, List
 
 from loguru import logger
 
@@ -13,7 +13,7 @@ from ...contracts import (
 )
 from .blocks import _BLOCK_SEP
 from .exceptions import TranslationError
-from .language_detector import _CJK_RE, detect_language
+from .language_detector import _CJK_RE
 from .validator.artifacts import strip_inline_artifacts
 from .validator.normalize import (
     fix_email_placeholder,
