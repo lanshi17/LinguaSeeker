@@ -73,6 +73,32 @@ class TestParseDocumentService:
         assert result.images == {"images/fig1.jpg": b"\xff\xd8\xff\xe0"}
 
     @pytest.mark.asyncio
+    async def test_parse_and_save_preserves_content_blocks(self, service, mock_orchestrator, tmp_path):
+        """Regression: parse_and_save() must not drop content_blocks."""
+        output_dir = str(tmp_path / "output")
+
+        blocks = [
+            {"type": "text", "text": "Title", "text_level": 1, "page_idx": 0},
+            {"type": "image", "img_path": "images/fig.jpg", "page_idx": 0},
+            {"type": "table", "table_body": "<table><tr><td>A</td></tr></table>", "page_idx": 0},
+        ]
+        mock_result = ParseResult(
+            metadata=DocumentMetadata(total_pages=1, title="Test"),
+            pages=[PageContent(page_number=1, markdown="# Test")],
+            parser_used="mineru-remote",
+            content_blocks=blocks,
+        )
+        mock_orchestrator.parse.return_value = mock_result
+
+        with patch("src.core.ingest_and_digitize_data.parse_document.service.files_io"):
+            result = await service.parse_and_save("https://example.com/test.pdf", output_dir)
+
+        assert len(result.content_blocks) == 3
+        assert result.content_blocks[0]["type"] == "text"
+        assert result.content_blocks[1]["type"] == "image"
+        assert result.content_blocks[2]["type"] == "table"
+
+    @pytest.mark.asyncio
     async def test_save_persists_images(self, service, tmp_path):
         result = ParseResult(
             metadata=DocumentMetadata(total_pages=1),
