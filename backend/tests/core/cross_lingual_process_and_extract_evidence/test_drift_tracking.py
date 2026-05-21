@@ -1,8 +1,5 @@
 """Tests for character drift tracking between raw, formatted, and translated text."""
 import json
-import pytest
-from pathlib import Path
-from unittest.mock import MagicMock
 
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     OriginalLayoutReport,
@@ -39,7 +36,6 @@ class TestComputeFormatDrift:
     def test_drift_from_whitespace_normalization(self):
         """Whitespace normalization should cause positive drift."""
         raw = "First sentence.   \n\n\n\nSecond sentence."
-        formatted = "First sentence.\n\nSecond sentence."
         sentences = [
             SentenceRegion(page=1, start_offset=0, end_offset=15, text="First sentence."),
             SentenceRegion(page=1, start_offset=17, end_offset=34, text="Second sentence."),

@@ -12,14 +12,13 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     ContentBlock,
     FormattedDocument,
-    TranslationSegment,
 )
 from src.core.cross_lingual_process_and_extract_evidence.config_context import (
     TranslationConfigContext,
@@ -38,15 +37,12 @@ from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate
 )
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.validator import (
     fix_word_boundary_redacted,
-    strip_source_contamination,
-    validate_translation_output,
     normalize_placeholders,
     normalize_cjk_punctuation,
     fix_email_placeholder,
     fix_ocr_truncations,
     strip_prompt_artifacts,
     strip_inline_artifacts,
-    strip_prompt_echo,
 )
 
 # Path to real parsed output from 法布雷病1例.pdf
@@ -204,7 +200,6 @@ class TestRedactedMislabeling:
 
     def test_pipeline_strips_false_redacted_from_references(self):
         """run_pipeline output must not contain Re[REDACTED]ferences."""
-        source = "## References\n\n1. Smith et al. 2020\n2. Jones et al. 2021"
         translated = (
             "## Re[REDACTED]ferences\n\n1. Smith et al. 2020\n"
             "2. Ab[REDACTED]stract of Jones et al. 2021"
@@ -217,7 +212,6 @@ class TestRedactedMislabeling:
 
     def test_pipeline_preserves_legitimate_redacted(self):
         """Legitimate [REDACTED] markers from source must survive the pipeline."""
-        source = "患者男性，[REDACTED] 岁，因水肿入院。"
         translated = "A male patient, aged [REDACTED] years, was admitted for edema."
         # [REDACTED] should survive post-processing
         result = fix_word_boundary_redacted(translated)

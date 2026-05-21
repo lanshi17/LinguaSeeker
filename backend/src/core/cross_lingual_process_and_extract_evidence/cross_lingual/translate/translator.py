@@ -18,6 +18,7 @@ from .blocks import (
     split_merged_keywords,
 )
 from .postprocess import (
+    _DOI_RE,
     build_translated_blocks,
     check_block_language,
     deduplicate_bilingual_blocks,
@@ -481,7 +482,7 @@ class MultiStageTranslator(BaseTranslator):
         if blocks:
             non_empty = [(i, b) for i, b in enumerate(blocks)
                          if b.text.strip() and (b.type in ("text", "title") or
-                                                (b.type == "footer" and self._DOI_RE.search(b.text)))]
+                                                (b.type == "footer" and _DOI_RE.search(b.text)))]
             if non_empty:
                 return self._translate_blocks(
                     formatted, terminology, non_empty,

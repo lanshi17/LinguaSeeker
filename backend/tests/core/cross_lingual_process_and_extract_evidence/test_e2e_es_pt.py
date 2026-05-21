@@ -12,7 +12,6 @@ Uses real parsed data from: backend/output/es/ and backend/output/pt/
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -32,7 +31,6 @@ from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.validator import (
     fix_word_boundary_redacted,
     validate_translation_output,
-    summarize_validation_error,
 )
 
 # ── Real data paths ────────────────────────────────────────────────────────
@@ -436,7 +434,6 @@ class TestPipelineIntegration:
         """A proper translation must complete without error."""
         source = "Experiencia de cuidadores familiares de mujeres con cáncer de mama"
         translated = "Experience of family caregivers of women with breast cancer"
-        system_prompt = "You are a biomedical translation engine. Translate to English."
         terminology = "cáncer: cancer\nmama: breast"
 
         call_count = 0

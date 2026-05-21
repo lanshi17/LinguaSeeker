@@ -131,42 +131,43 @@ The sole public method. Consumes upstream parse pages, produces a normalized `Fo
 ```python
 class MultiStageTranslator(BaseTranslator):
     def __init__(self, ctx: TranslationConfigContext) -> None: ...
-    def run_pipeline(self, formatted: FormattedDocument) -> Tuple[
-        Dict[str, str], str, str, str, List[str], List[str]
+    def run_pipeline(self, formatted: FormattedDocument, blocks: List[ContentBlock] | None = None) -> Tuple[
+        Dict[str, str], str, str, str, List[str], List[str], List[str]
     ]: ...
     def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult: ...
 
     # Individual stages (callable independently for testing/debugging)
     def extract_terminology(self, formatted: FormattedDocument) -> str: ...
-    def plan_structure(self, formatted: FormattedDocument) -> str: ...
     def translate_segments(
-        self, formatted: FormattedDocument, terminology: str, structure_plan: str,
-    ) -> Tuple[str, List[str]]: ...
-    def polish(self, draft: str, terminology: str) -> str: ...
-    def review(self, source: str, translated: str) -> str: ...
+        self, formatted: FormattedDocument, terminology: str, blocks: List[ContentBlock] | None = None,
+    ) -> Tuple[str, List[str], List[str]]: ...
 ```
 
-`run_pipeline()` returns a 6-tuple: `(terminology_map, structure_plan, draft, translated, source_segments, warnings)`. `translate_to_result()` wraps this into the standard `TranslationResult` dataclass with per-segment bbox mapping.
+`run_pipeline()` returns a 7-tuple: `(terminology_map, structure_plan, "", translated, source_segments, translated_parts, warnings)`. `translate_to_result()` wraps this into the standard `TranslationResult` dataclass with per-segment bbox mapping.
 
 #### Module-level functions
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `detect_language` | `(text: str, sample_size=4000) -> str` | ISO 639-1 code via `lingua` library |
-| `should_skip_translation` | `(text: str) -> bool` | True if empty or lingua-detected English (CJK fast-path returns False) |
-| `validate_translation_output` | `(source: str, translated: str) -> None` | Raises `ValueError` with `translation_validation_failed:` prefix |
-| `summarize_validation_error` | `(exc: Exception) -> str` | Normalizes validation exception to a string |
+| Function | Module | Signature | Description |
+|----------|--------|-----------|-------------|
+| `detect_language` | `language_detector` | `(text: str, sample_size=4000) -> str` | ISO 639-1 code via `lingua` library |
+| `validate_translation_output` | `validator` | `(source: str, translated: str) -> None` | Raises `ValueError` with `translation_validation_failed:` prefix |
+| `validate_segment` | `validator` | `(source: str, translated: str) -> None` | Per-segment validation |
+| `build_translated_blocks` | `postprocess` | `(original_blocks, segments, translated_text, ...) -> List[ContentBlock]` | Map translated text back to block structure |
+| `deduplicate_bilingual_blocks` | `postprocess` | `(blocks: List[ContentBlock]) -> List[ContentBlock]` | Remove adjacent near-duplicate blocks |
+| `check_block_language` | `postprocess` | `(blocks: List[ContentBlock], source_language: str) -> None` | Detect partial translation failures |
+| `invoke_with_retry` | `providers` | `(llm, prompt, stage, system_prompt) -> str` | LLM text generation with retry |
+| `invoke_json_with_retry` | `providers` | `(llm, prompt, stage, system_prompt) -> str` | LLM JSON-mode generation with retry |
 
-#### Prompt functions
+#### Prompt functions (`prompts/`)
 
-| Function | Signature | Purpose |
-|----------|-----------|---------|
-| `get_terminology_prompt` | `(markdown_content: str) -> str` | Extract bilingual term pairs |
-| `get_structure_prompt` | `(markdown_content: str) -> str` | Plan logical structure for English rendering |
-| `get_draft_prompt` | `(segment, terminology, structure_plan) -> str` | Translate one segment |
-| `get_polish_prompt` | `(draft, terminology) -> str` | Improve academic English fluency |
-| `get_review_prompt` | `(source, translated) -> str` | Compare source vs translation quality |
-| `get_format_prompt` | `(markdown_content: str) -> str` | Clean/normalize markdown (not used by `MultiStageTranslator`; reserved for future LLM-based formatting stage) |
+| Function | Module | Signature | Purpose |
+|----------|--------|-----------|---------|
+| `get_terminology_prompt` | `terminology` | `(markdown_content: str) -> str` | Extract bilingual term pairs |
+| `get_system_prompt_generation_prompt` | `terminology` | `(source_language: str) -> str` | Generate system prompt for translation |
+| `get_translate_prompt` | `translate` | `(segment, terminology, ...) -> str` | Translate one segment |
+| `get_full_document_translate_prompt` | `translate` | `(markdown, terminology, ...) -> str` | Full-document translation |
+| `get_self_review_prompt` | `translate` | `(source, translated) -> str` | Quality check and correction |
+| `get_format_prompt` | `format` | `(markdown_content: str) -> str` | Clean/normalize markdown |
 
 ### Internal Design
 
@@ -195,83 +196,65 @@ translate/
 └── translator.py        # MultiStageTranslator orchestration
 ```
 
-#### Five-Stage Translation Pipeline
+#### Translation Pipeline
 
-Each stage is a separate method on `MultiStageTranslator`, called sequentially in `run_pipeline()`:
+`run_pipeline()` executes three stages sequentially:
 
 ```
-terminology → structure → draft (N segments) → polish → review → validate
+terminology → translate → self-review → normalize → validate
 ```
 
 1. **Terminology** (`extract_terminology`): LLM extracts bilingual term pairs. Output parsed by `_parse_terminology()`:
    - Lines must match `source: target` format
    - Both sides ≤10 words (filters out commentary lines)
-   - Source side must contain non-ASCII (the document is non-English)
+   - Source side must contain non-ASCII for CJK/Cyrillic; Latin-script languages (es/pt) accept ASCII terms
+   - Source ≈ target echo (same word) is filtered
    - Result: `Dict[str, str]` injected into all subsequent prompts
 
-2. **Structure** (`plan_structure`): LLM plans the logical structure — restores omitted subjects, splits long clauses, makes connectors explicit. This is output as a text plan, not structured data; it's injected verbatim into draft prompts.
+2. **Translate** (`translate_segments`): Block-aware translation. When MinerU blocks are available, each text/title/DOI-footer block is translated individually for guaranteed block-level alignment. Otherwise, the markdown is segmented via `segment_text()` and translated segment-by-segment. Short CJK keyword blocks (≤4 chars) are merged before translation to prevent hallucination, then split back afterward.
 
-3. **Draft** (`translate_segments`): The formatted markdown is segmented via `segment_text()` with the draft prompt overhead deducted. Each segment is translated separately with the same terminology map and structure plan. Segments are translated **serially** (not parallel) to maintain cross-segment coherence. Output is joined with `\n\n`.
+3. **Self-review** (`_self_review`): LLM compares source vs translated, catches silent corrections of product names, gene identifiers, and other proper nouns.
 
-4. **Polish** (`polish`): Single-pass fluency improvement. If the LLM returns an empty string (unusual), the draft is preserved.
+4. **Normalize**: Post-processing pipeline applied to the translated text:
+   - Strip prompt artifacts and inline artifacts
+   - Strip source-language contamination
+   - Normalize CJK punctuation, placeholders, email addresses
+   - Fix OCR truncations and word-boundary `[REDACTED]` insertions
+   - Detect and trim LLM repetition loops
 
-5. **Review** (`review`): Quality check comparing source vs translated. Output is logged but not used programmatically — it's informative only.
+5. **Validate** (`validate_translation_output`): Critical check. Four checks:
+   | Check | Failure condition | Message |
+   |-------|-------------------|---------|
+   | Emptiness | `translated` is empty string | `translation_validation_failed: empty` |
+   | CJK ratio | >10% CJK characters in output | `translation_validation_failed: non_english_output` |
+   | Similarity | ≥85% similarity with source (unchanged) | `translation_validation_failed: unchanged` |
+   | Language detection | `lingua` detects non-English | `translation_validation_failed: non_english_output` |
+
+   Critical failures (unchanged, non_english_output, empty) raise `TranslationError` — the pipeline aborts rather than persisting garbage. Non-critical warnings are collected and returned.
 
 #### Retry Strategy
 
-```python
-_MAX_RETRIES = 2
-_TRANSIENT_EXCEPTIONS = (
-    openai.APITimeoutError, openai.APIConnectionError,
-    openai.RateLimitError, openai.InternalServerError,
-    httpx.TimeoutException, httpx.ConnectError,
-)
-```
+LLM retry logic lives in `providers.py` (module-level functions):
 
-`_invoke_with_retry(prompt, stage)` wraps every LLM call. On transient failures, it retries up to `_MAX_RETRIES` (2) with warning logging. Non-transient exceptions (e.g., `ValueError`) propagate immediately — they are not retried.
+| Function | Purpose |
+|----------|---------|
+| `invoke_with_retry(llm, prompt, stage, system_prompt)` | Text generation with retry |
+| `invoke_json_with_retry(llm, prompt, stage, system_prompt)` | JSON-mode generation with retry |
 
-#### Validation & Fallback
+Both retry up to `_MAX_RETRIES` (2) on transient exceptions (timeout, connection, rate limit, server error). Non-transient exceptions propagate immediately.
 
-After the pipeline produces `polished`, `translate_to_result()` validates it:
+#### Post-Processing (`postprocess.py`)
 
-```
-validate(polished) → if fail → validate(draft) → if fail → warnings only
-```
+After translation, `translate_to_result()` builds the final `TranslationResult`:
 
-Four checks in `validate_translation_output()`:
-| Check | Failure condition | Message |
-|-------|-------------------|---------|
-| Emptiness | `translated` is empty string | `translation_validation_failed: empty` |
-| CJK ratio | >10% CJK characters in output | `translation_validation_failed: non_english_output` |
-| Similarity | ≥85% similarity with source (unchanged) | `translation_validation_failed: unchanged` |
-| Language detection | `lingua` detects non-English | `translation_validation_failed: non_english_output` |
-
-The fallback chain: **polished → draft → warnings only**. The pipeline never aborts on validation failure; it degrades gracefully.
-
-#### Bbox Mapping in translate_to_result
-
-For each translated segment, `translate_to_result()` maps it back to the source `SentenceRegion` by text containment:
-- If a source sentence's text is contained in the segment text (or vice versa), that sentence's bbox is attached to the `TranslationSegment`.
-
-This means the bbox mapping is approximate — it's a best-effort containment match, not character-precise alignment. For precise alignment, the downstream visualization layer should use the `sentences` field directly.
+1. **Block building** (`build_translated_blocks`): Maps translated text back to original block structure using delimiter-based split or segment matching
+2. **Bilingual dedup** (`deduplicate_bilingual_blocks`): Removes adjacent near-duplicate blocks from bilingual documents (e.g. zh with English abstract)
+3. **Per-block language check** (`check_block_language`): Catches partial translation failures where only some blocks were translated (e.g. ru doc where only first page was translated)
+4. **Quality flagging** (`flag_quality_issues`): Flags blocks with truncated references, ambiguous pronouns, or medical English issues
 
 #### Language Detection
 
-`detect_language()` uses `lingua-language-detector` (`≥2.2.0`) with a 4000-character sample. `should_skip_translation()` adds a CJK regex fast-path:
-- If the text contains any CJK characters (`[㐀-鿿぀-ヿ가-힯]`), it's definitely not English → return `False` immediately
-- Otherwise, run `lingua` detection → return `True` if detected language is `"en"`
-
-The module-level `_DETECTOR` singleton is built once with `LanguageDetectorBuilder.from_all_languages().build()` and reused across all calls.
-
-#### Response Content Extraction
-
-`MultiStageTranslator._to_text()` handles the various content formats that `ChatOpenAI.invoke()` can return:
-- `None` → `""`
-- `str` → `.strip()`
-- `list[dict]` → extracts `text` fields from `{"type": "text", "text": "..."}` items
-- `dict` → extracts `text` or `content` field
-
-This is necessary because LangChain's `AIMessage.content` can be a string or a list of content blocks depending on the model configuration.
+`detect_language()` uses `lingua-language-detector` (`≥2.2.0`) with a 4000-character sample. The module-level `_DETECTOR` singleton is built once with `LanguageDetectorBuilder.from_all_languages().build()` and reused across all calls.
 
 ---
 
