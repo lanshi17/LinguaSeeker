@@ -51,7 +51,7 @@ def service():
 
 
 @pytest.fixture
-def mineru_parser():
+def local_parser():
     from src.core.config import get_config
 
     cfg = get_config()
@@ -81,10 +81,10 @@ class TestParseDocumentReal:
     """Real integration tests — parses actual PDFs and saves output."""
 
     @pytest.mark.asyncio
-    async def test_mineru_local(self, pdf_inventory, mineru_parser):
+    async def test_mineru_local(self, pdf_inventory, local_parser):
         """Parse each PDF with local MinerU VLM and save output."""
         for pdf_path, lang in pdf_inventory:
-            result = await mineru_parser.parse(pdf_path)
+            result = await local_parser.parse(pdf_path)
 
             assert isinstance(result, ParseResult)
             assert result.metadata.total_pages >= 1

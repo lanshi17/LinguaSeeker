@@ -13,7 +13,6 @@ Pipeline:
 from __future__ import annotations
 
 import asyncio
-import json
 import sys
 import time
 from pathlib import Path
@@ -24,7 +23,7 @@ from loguru import logger
 
 from src.core.config import get_config
 from src.core.ingest_and_digitize_data.parse_document.local.parser import MinerULocalParser
-from src.core.ingest_and_digitize_data.parse_document.mineru_parser import MinerUParser
+from src.core.ingest_and_digitize_data.parse_document.remote.parser import MinerURemoteParser
 from src.core.ingest_and_digitize_data.parse_document.service import ParseDocumentService
 from src.core.cross_lingual_process_and_extract_evidence.workflow import TranslationService
 
@@ -52,7 +51,7 @@ async def process_single_pdf(
     language: str,
     parse_service: ParseDocumentService,
     translation_service: TranslationService,
-    mineru_parser: MinerUParser,
+    remote_parser: MinerURemoteParser,
     local_parser: MinerULocalParser,
 ) -> bool:
     doc_id = pdf_path.stem
@@ -66,7 +65,7 @@ async def process_single_pdf(
     # Try MinerU remote (upload local file)
     try:
         logger.info("  [1/2] Parsing via MinerU remote...")
-        batch = await mineru_parser.parse_local_files(
+        batch = await remote_parser.parse_local_files(
             file_paths=[str(pdf_path)],
             model_version="vlm",
             enable_formula=True,
@@ -136,7 +135,7 @@ async def main() -> None:
     cfg = get_config()
 
     # Parse services
-    mineru_parser = MinerUParser(
+    remote_parser = MinerURemoteParser(
         api_token=cfg.mineru.api_token,
         poll_interval=cfg.parse_document.mineru_remote_poll_interval,
         max_poll_attempts=cfg.parse_document.mineru_remote_max_poll_attempts,
@@ -147,7 +146,7 @@ async def main() -> None:
         timeout=cfg.parse_document.mineru_local_timeout,
         dpi=cfg.parse_document.mineru_local_dpi,
     )
-    parse_service = ParseDocumentService(orchestrator=mineru_parser)
+    parse_service = ParseDocumentService(orchestrator=remote_parser)
 
     # Translation service (uses LLM_MODEL via TranslationConfigContext)
     translation_service = TranslationService(cfg=cfg)
@@ -162,7 +161,7 @@ async def main() -> None:
             language=language,
             parse_service=parse_service,
             translation_service=translation_service,
-            mineru_parser=mineru_parser,
+            remote_parser=remote_parser,
             local_parser=local_parser,
         )
         results[f"{language}/{pdf_path.name}"] = success

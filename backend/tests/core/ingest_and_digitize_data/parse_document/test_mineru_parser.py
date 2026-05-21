@@ -13,13 +13,13 @@ from src.core.ingest_and_digitize_data.parse_document.exceptions import (
     MinerUAPIError,
     MinerUTimeoutError,
 )
-from src.core.ingest_and_digitize_data.parse_document.mineru_parser import MinerUParser
+from src.core.ingest_and_digitize_data.parse_document.remote.parser import MinerURemoteParser
 
 
-class TestMinerUParser:
+class TestMinerURemoteParser:
     @pytest.fixture
     def parser(self):
-        return MinerUParser(
+        return MinerURemoteParser(
             api_token="test-token",
             poll_interval=0.1,
             max_poll_attempts=5,

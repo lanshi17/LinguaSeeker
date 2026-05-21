@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.core.config import get_config
 from src.core.cross_lingual_process_and_extract_evidence.workflow import TranslationService
-from src.core.ingest_and_digitize_data.parse_document.mineru_parser import MinerUParser
+from src.core.ingest_and_digitize_data.parse_document.remote.parser import MinerURemoteParser
 
 DOWNLOADS_DIR = Path(__file__).resolve().parents[1] / "downloads"
 OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output"
@@ -41,7 +41,7 @@ def collect_pdfs(targets: list[str]) -> list[Path]:
     return pdfs
 
 
-async def parse_one(parser: MinerUParser, pdf_path: Path) -> dict:
+async def parse_one(parser: MinerURemoteParser, pdf_path: Path) -> dict:
     """Parse a single PDF via MinerU remote API, return pages dict list."""
     logger.info("MinerU parsing: {}", pdf_path.name)
     result = await parser.parse_local_files(
@@ -112,7 +112,7 @@ async def run_e2e(targets: list[str]) -> None:
     logger.add(sys.stderr, level="INFO", format="{time:HH:mm:ss} | {level:<7} | {message}")
 
     cfg = get_config()
-    parser = MinerUParser(
+    parser = MinerURemoteParser(
         api_token=cfg.mineru_api_token,
         poll_interval=cfg.parse_document.mineru_remote_poll_interval,
         max_poll_attempts=cfg.parse_document.mineru_remote_max_poll_attempts,
