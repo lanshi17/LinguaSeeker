@@ -31,7 +31,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/case_report/en_pmc7075944_covid19.pdf",
       "file_size": 1940781,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "d36c75ceb383f88bf359e310f96930234387d6962692d2878138cf576d5ee51f",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -43,7 +53,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/functional/en_3_1.pdf",
       "file_size": 317244,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "3edf657b12f04b283758bc0669eea9f3226726defd972c4513abb0eac15a758b",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -55,7 +75,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/functional/en_5_1.pdf",
       "file_size": 411342,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "877a85381f96e44852145cf7ef7d17f788aedc4cdbfa230266e2e2298bedf627",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -67,7 +97,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/functional/en_7_0.pdf",
       "file_size": 978321,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "b3049c16410fd57cab818fd1e603a465a6ee24c0aae66729b96190cdcaa4341b",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -79,7 +119,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/sequencing/en_0_0.pdf",
       "file_size": 289044,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "da2dd3e77a4d32fb0fefbca0a9f10e208ecfec786b99df02d39d6fca008d0a5d",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -91,7 +141,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/sequencing/en_1_0.pdf",
       "file_size": 302876,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "36b2e911171d6a7439cac6e082c4b450f557817157f5431b79f92c2918844976",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -103,7 +163,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/sequencing/en_8_0.pdf",
       "file_size": 4287961,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "13c23edc3fd842f511853bd9d44489b041647508964d24d50a709f968795a914",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -115,7 +185,15 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/unclassified/en_0_0.pdf",
       "file_size": 4565351,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": false,
+        "sha256": null,
+        "duplicate": false,
+        "suspicious": [
+          "file_not_found"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -127,7 +205,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/functional/en_13_3.pdf",
       "file_size": 1892639,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "f67217bafdf46863c968311bab8dab14f73d504f21c7f7a1afe369d547a903d1",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -139,7 +227,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/sequencing/en_16_3.pdf",
       "file_size": 2027961,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "564f6ac8f979e859ddbece07eeb2ba480aeb11d2abf3a77b7273b09247b5d20e",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -151,7 +249,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/functional/en_17_1.pdf",
       "file_size": 4058043,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "a8ed221a5a27d712b44a036993beca1031fc823ff5d81b41dc005be13318c8e5",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -163,7 +271,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/functional/en_2_0.pdf",
       "file_size": 5070742,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "4864e2cca26f46db72808a7a32cc1a1f00b9b12f2e8b6aa9fe6d2b80371541dc",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -175,7 +293,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/functional/en_4_0.pdf",
       "file_size": 3391162,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "d3a0164a1a91ad538679f7de1bdc23e280e10c58a95c8cf6bc78b1d457c454a6",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -187,7 +315,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/sequencing/en_5_0.pdf",
       "file_size": 1467320,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "f95d9f0fab8673bb36a26465aa9103d0bf0e689305bf5de457f04192fd35cc3c",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -199,7 +337,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/sequencing/en_6_1.pdf",
       "file_size": 298468,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "3c1b5b748285dacb4de2abe8f5c91dc95ddfbe61d654f053ad62a4c0e0460c38",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -211,7 +359,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/functional/en_8_0.pdf",
       "file_size": 1492570,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "1d80dc13964dc9fb15951088181b9d5a6623ed14f76c0adf8f025f135757990e",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "en",
@@ -223,7 +381,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/en/sequencing/en_9_0.pdf",
       "file_size": 5399709,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "a8cfe0c10fe5b524e8d3ec83074cd2d38d01f1c00c910a27c046313beeaaafaa",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -235,7 +403,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/case_report/es_3_2.pdf",
       "file_size": 1228212,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "369a622f61ce7525a9cbc83aa706c0045382cb28a83210653527adaea9d7e5cc",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -247,7 +425,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/case_report/es_case_report.pdf",
       "file_size": 289580,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "2a03354be3a8bcd362434327af5b0089057ceee95b0f72c39eb392df08413cfa",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -259,7 +447,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/functional/es_2_0.pdf",
       "file_size": 1629103,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "4d5858039833817d855c11ade4760ef0c6e8dfa4f207dc1750d54cd555bf753f",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -271,7 +469,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/functional/es_functional.pdf",
       "file_size": 9711498,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "3760c7a5dbb886945f54cd602140f7b3b3e3ba8f2f63ff2cf20a54be72476667",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -283,7 +491,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/sequencing/es_6_1.pdf",
       "file_size": 140554,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "66f008e1463da2dd71bd77f153c29439edfe80cee8580cff1d3a7ac57bee7b52",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -295,7 +513,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/sequencing/es_cancer_mama.pdf",
       "file_size": 870849,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "7a1b78e0f88b32c4e50808af2aab07af2ae799d5d9ab827d028bfc1d4a0bdfa4",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -307,7 +535,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/sequencing/es_sequencing.pdf",
       "file_size": 1058501,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "95ce517011b87c9db52cdcb210d86391b61fc5a8aa8f50e4421a252e49f8ccd7",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -319,7 +557,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/unclassified/es_0_0.pdf",
       "file_size": 295760,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "d95d707464e46ec617ce722f336850fa177b13b22763afe980d08ca28eee9896",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -331,7 +579,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/case_report/es_0_4.pdf",
       "file_size": 271140,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "0cf121fcebb12bd751d2d648fadf1a7022c23c8947b309d998b14dbae100f74e",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -343,7 +601,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/functional/es_11_0.pdf",
       "file_size": 970907,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "0a70a4319771c9b0879ab08870e08fe02b6b30edc7a9d17f6bb055720258ed95",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -355,7 +623,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/functional/es_12_4.pdf",
       "file_size": 410468,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "81e3327489f1421735794b43cdfbc0efe9fd38ffad1445ce4bd58847d226c805",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -367,7 +645,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/unclassified/es_13_0.pdf",
       "file_size": 47132,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "d1ec62df5d79e12296d69c81fbfae5167450269d169ae797211ba574986dedf3",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -379,7 +667,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/unclassified/es_14_1.pdf",
       "file_size": 226157,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "513d11cb185009e6a28505336551dca460f6cc8fc17da01aeda419ef32cce219",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -391,7 +689,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/sequencing/es_15_1.pdf",
       "file_size": 714970,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "8413fb0af33e7e2fda9145cd4452e4f25256624969d165fbf998905614db25da",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -403,7 +711,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/case_report/es_1_2.pdf",
       "file_size": 71940,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "826e5e2691c6a63579577190eed45a6a4b1f2c57d68001df3fb45f666668042c",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -415,7 +733,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/sequencing/es_2_0.pdf",
       "file_size": 724787,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "c4deea33dd9fea342806fa88112fd483217cd5e1f0d532dccb1e3114786282db",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -427,7 +755,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/unclassified/es_4_1.pdf",
       "file_size": 1256229,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "13e9a2f8f64a8d83a3345efebae433417e3c1bc70fabe3cddcbae3221207c3ae",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -439,7 +777,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/functional/es_5_1.pdf",
       "file_size": 381191,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "74db5886a570849d6a64c6a94837942b68fe8c2dcadfc75795d540d0a2eb3390",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -451,7 +799,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/functional/es_7_0.pdf",
       "file_size": 9431445,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "6c2944b3f9b0039d17122053fd9d5a40de3d6304bea506a33b8482d4ec2596b9",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "es",
@@ -463,7 +821,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/es/case_report/es_8_0.pdf",
       "file_size": 877860,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "67984444f0f97686cbabb20f8d2db49043c4e99cfb41bf3bb0631ede83f347b3",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -475,7 +843,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/case_report/ja_case_report.pdf",
       "file_size": 6323452,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "7b40d37dc8ff0d8fef44c9e5547fd08378400c5ade668087b7e2ccf983dbb224",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -487,7 +865,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/case_report/ja_mammography.pdf",
       "file_size": 772639,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "6b94e4c1fff810604e0e6bc6bcd0c91c219d97850527ff81059503e45678c490",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -499,7 +887,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/functional/ja_0_0.pdf",
       "file_size": 360596,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "be3e085a1069b72843bdb296aab261fcf02c52a82acaf59d1b827c8a6b93f0c6",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -511,7 +909,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/functional/ja_1_0.pdf",
       "file_size": 94835,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "8348fcbb8ddca593bd819568e141cf27519f64ae4da36b6c2d2c4e9e648d5de8",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -523,7 +931,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/functional/ja_functional.pdf",
       "file_size": 1069966,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "4ab6ea5185967b11d26f66ec406023cbd35db76ca50e97408d31d20ba8059cb5",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -535,7 +953,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/sequencing/ja_0_1.pdf",
       "file_size": 1006757,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "a6a5fed01266d52d728fb8b62eb23eeba54db1d3c1fede587423fa914d79fa92",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -547,7 +975,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/case_report/ja_10_0.pdf",
       "file_size": 8812079,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "248ff69f2af686f7fc55121cd9c6540d9d44edb216d69a670f3ad8b9d4767563",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -559,7 +997,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/unclassified/ja_11_0.pdf",
       "file_size": 439087,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "611f8932b72d526e37d2c4c886f52526123e7c8e28c775ef3b5512f0bcff5d02",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -571,7 +1019,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/sequencing/ja_1_0.pdf",
       "file_size": 169085,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "de9c8f1f21c8eb82d61255a8db950f927b435d744201b6577433425a359e2746",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -583,7 +1041,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/unclassified/ja_2_0.pdf",
       "file_size": 650701,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "0f65919a37294ad1da66b253e55f847d42f0018c6eea9b0a559354a97a58e664",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -595,7 +1063,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/unclassified/ja_3_0.pdf",
       "file_size": 167650,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "280cbfdab5287b41e79a0216347d57420df23e10f59646a39862565253ab99db",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -607,7 +1085,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/unclassified/ja_4_1.pdf",
       "file_size": 564246,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "485d8f78f35b58401b4196073342d3be70dd49a55f839f02292beb70e4b42801",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -619,7 +1107,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/unclassified/ja_7_0.pdf",
       "file_size": 1290352,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "26d157ef926aa7fe0857e1c54e9de0780534481f333b406c3314ff9308802882",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -631,7 +1129,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/unclassified/ja_8_0.pdf",
       "file_size": 166748,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "12edfb7d8e5a93169789b2d1e1538949bedb1f678b489093c894f812175bd7fe",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ja",
@@ -643,7 +1151,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ja/unclassified/ja_9_0.pdf",
       "file_size": 297380,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "53c891ae1dde5579740c8b8eed84b73314659197ffeb7175febe976a32883bd0",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -655,7 +1173,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/case_report/ko_case_report.pdf",
       "file_size": 967464,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "3cfa3c4e33d09cb4be6ad8fe7db506dc88c6493e207b4a6cc4c2d18503ad6c55",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -667,7 +1195,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_0_0.pdf",
       "file_size": 762715,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "abb511df32bbc4560296354de7d4c47573feb7b8b3d6e969bab316c8d5fa57db",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -679,7 +1217,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_0_2.pdf",
       "file_size": 159189,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "9aa92774f191d7b335a90602400cd7c04e6ec08dfd40f5b0fed6562f4a006edf",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -691,7 +1239,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_10_1.pdf",
       "file_size": 707184,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "fb2cdfc313c482f565226344e824899d4d03beabff794efa2eda6c830e2a8dc4",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -703,7 +1261,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_11_0.pdf",
       "file_size": 1156005,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "f3da14ccf8a022928e83997eeef115ddf4eb60c5d9bccd8a5ec92a2b34b62b68",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -715,7 +1283,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_12_0.pdf",
       "file_size": 754451,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "03f880c4f1cd7101adee7ebf5f293121b213502fb1a46bc8e6802159bf15e903",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -727,7 +1305,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_13_3.pdf",
       "file_size": 1414961,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "cf128234c85d3768204966b1dcca100040ee425ee1e0c973e24e7d05b317b51c",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -739,7 +1327,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_14_0.pdf",
       "file_size": 2385008,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "bba9af7d79ca25560440617706218b3ce5669c6eb6791f7c068c337245ce2402",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -751,7 +1349,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_2_0.pdf",
       "file_size": 946286,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "54308b6c727e19c4b66c62d87d36cb5986c48d04c32f20d13dfa28e26bb85715",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -763,7 +1371,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_2_1.pdf",
       "file_size": 679877,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "f7d73624537ee24509ec9961767c40a0a3948596ef01ec5a8fc6a4f21650e384",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -775,7 +1393,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_3_0.pdf",
       "file_size": 619686,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "a0063c995a0869b7957caae21d3546e07a34e065b3cb3e32508bda914b59e0c5",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -787,7 +1415,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_4_1.pdf",
       "file_size": 2047696,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "9bfbe69e8aeb04703e1764bfc877534f157564b8249dcd63112aa6c385d804f5",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -799,7 +1437,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_6_2.pdf",
       "file_size": 2727139,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "20d1ef3411ea8b3e0c1a8daf5fe252b325358d6dd48c6b40b582751b8985b5a8",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -811,7 +1459,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_7_0.pdf",
       "file_size": 518618,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "4f8b2881386e107aa2ed8d82af4eb0a5deacdf2c3717de98c5fc999b97038b79",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -823,7 +1481,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_9_4.pdf",
       "file_size": 242609,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "ac91428d3da51f0ed5c21d69cb6afafd999a3305bd8966f5116065c8742a3b91",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ko",
@@ -835,7 +1503,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ko/unclassified/ko_breast_cancer.pdf",
       "file_size": 518474,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "36b63f096a61ef9e8cb3fedfcc43cf772512cfa098b4d7464ffde118effcff73",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -847,7 +1525,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/case_report/pt_1_0.pdf",
       "file_size": 215616,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "7eb5f815476c7154842ba1c4020d6c0feae4b385e86c6ad57b254ba36b84256b",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -859,7 +1547,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/case_report/pt_2_0.pdf",
       "file_size": 185369,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "6b6e784ae397f4d3986937d4b1a621d58f91d7eeaaa42d6b3788bf29074b073b",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -871,7 +1569,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/case_report/pt_case_report.pdf",
       "file_size": 296989,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "b92a818347e358996a4e74d02b1ed51263e166de95a0fa4e69c98fca02c7891f",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -883,7 +1591,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/functional/pt_5_0.pdf",
       "file_size": 222200,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "d028f7af85ea295c3ecb4b0141b504e0f05c86ed508c03fc99f5d137e413efb1",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -895,7 +1613,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/functional/pt_7_0.pdf",
       "file_size": 41774,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "ff87854f584afa724851b8277676e5e995261ef5f8110c8c4dd40ae97af775ac",
+        "duplicate": true,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -907,7 +1635,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/sequencing/pt_cancer_mama.pdf",
       "file_size": 189181,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "856de1061e724643fbd10a089dde4ca25767550f8a35ec70f6130f058c10358b",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -919,7 +1657,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/functional/pt_0_0.pdf",
       "file_size": 136122,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "17ce5ce141c07e5b16445ce365b7fdb9a4d141449da9c4e5751c8a0e5a46fda1",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -931,7 +1679,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/unclassified/pt_10_1.pdf",
       "file_size": 166028,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "eb28ef0bef1b5d6be2201f9068d887608e824c9becd3ab83b7f60563bc1a41a4",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -943,7 +1701,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/functional/pt_12_0.pdf",
       "file_size": 226161,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "e1bdbf25ad49db5bd25535c1d8f9e2892c8689d50f12f39099a5b21cd6c0b0ec",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -955,7 +1723,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/unclassified/pt_13_0.pdf",
       "file_size": 470980,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "0b5b914f51b86e13a1a54378ec105e4b2d4cea008be6b962bc213f93e914260d",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -967,7 +1745,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/functional/pt_1_0.pdf",
       "file_size": 3852037,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "7d3e93cc6618181ffefb125c6c25cefeac80986ea8ce444f0123772d0ea4426a",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -979,7 +1767,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/unclassified/pt_4_0.pdf",
       "file_size": 115504,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "8c131f921e77ddc9429fb387931db4ebae0d785fd7c337e91195f0d02920ec6c",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -991,7 +1789,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/unclassified/pt_5_0.pdf",
       "file_size": 874195,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "86ce07c6e93066a80ee6a1236bccbbb4f828cfe5d1896adff455951c596448ec",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -1003,7 +1811,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/case_report/pt_5_1.pdf",
       "file_size": 140891,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "7a80d13f56e5cb9c6ff0445592881d994ed6cbdf4f61b63c557e3a4566b9a759",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -1015,7 +1833,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/unclassified/pt_6_0.pdf",
       "file_size": 128457,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "4a12969341be53bef1223c243867996ae16a06820f6a1a73fd6f077c818e9a47",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -1027,7 +1855,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/functional/pt_7_0.pdf",
       "file_size": 348476,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "ff87854f584afa724851b8277676e5e995261ef5f8110c8c4dd40ae97af775ac",
+        "duplicate": true,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "pt",
@@ -1039,7 +1877,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/pt/unclassified/pt_cuidado.pdf",
       "file_size": 770366,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "6e7da6e0d2ace370a20fd120c92ce7f2d82f734f018c0a3b7d39acf315b966c4",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ru",
@@ -1051,7 +1899,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ru/case_report/ru_3_0.pdf",
       "file_size": 107502,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "1f6cb0475ffa67b54c3edfc726ef2b60fa65a8411045afa09cbf0633074854fa",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ru",
@@ -1063,7 +1921,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ru/functional/ru_4_0.pdf",
       "file_size": 1769441,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "42d7206d0677082b92869ca25b8e8c7384cea40a236651e732cb194336b6c112",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ru",
@@ -1075,7 +1943,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ru/functional/ru_5_0.pdf",
       "file_size": 677412,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "fc05cb70fd3f9771b446e34ba1cd6bde6029b7be4bc3ea1d3ea6e8c2ea1a9a63",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ru",
@@ -1087,7 +1965,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ru/sequencing/ru_0_0.pdf",
       "file_size": 199596,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "00592f626ac04a29ddbe4bc3724024e1a3829540f9e689f8584677bbb265b979",
+        "duplicate": true,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ru",
@@ -1099,7 +1987,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ru/sequencing/ru_0_0.pdf",
       "file_size": 699330,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "00592f626ac04a29ddbe4bc3724024e1a3829540f9e689f8584677bbb265b979",
+        "duplicate": true,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ru",
@@ -1111,7 +2009,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ru/functional/ru_1_0.pdf",
       "file_size": 137832,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "6706f3188dd5843f4bf2945c87d3d10b591ea1e54de010ad4af220d47a4b4e34",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ru",
@@ -1123,7 +2031,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ru/sequencing/ru_1_1.pdf",
       "file_size": 1470167,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "5cdeec521b72acf9298347d4ab59c29f8035649cc337fd39cf1cd021d0390241",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ru",
@@ -1135,7 +2053,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ru/unclassified/ru_4_0.pdf",
       "file_size": 492797,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "372a0c4a056211b2369950cb48cc89a6191acec81f708b57403cb1cd820cffa6",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ru",
@@ -1147,7 +2075,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ru/unclassified/ru_5_0.pdf",
       "file_size": 106273,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "fab9374ad36074ec78e9ba5a4772d1b31c07fc8c47b056d22410dde4b45199e5",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "ru",
@@ -1159,7 +2097,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/ru/unclassified/ru_8_3.pdf",
       "file_size": 332512,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "9060b7fb04186df8fcefafa4abe7c42289cbdcf12af99dcfd1b825c951ca60df",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1171,7 +2119,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/functional/zh_0_0.pdf",
       "file_size": 314749,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "c6c21b79a352bac16d50ea161a62a5e4011fc2b89898726dea838e90ffc8b196",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1183,7 +2141,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/functional/zh_10_1.pdf",
       "file_size": 1211117,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "99489f9b76412590503b168ccd79e7b2624b3d581fdd1301357ccec6032a4f4e",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1195,7 +2163,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/functional/zh_11_2.pdf",
       "file_size": 595933,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "7f2d5dc2f98dcb7a422a08fd4cc6b6c59444f6ed6ce55881a202167b3d6bbaec",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1207,7 +2185,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/functional/zh_12_0.pdf",
       "file_size": 2513847,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "fb79352ad26204afc6676b132ddbe736daf63850e4d2a1d1f45c435acd0edc08",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1219,7 +2207,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/functional/zh_13_0.pdf",
       "file_size": 345596,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "77875819879693941146ee5a9fc3a4f50c1aedde36552a0bb47a812c380f323a",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1231,7 +2229,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/functional/zh_2_0.pdf",
       "file_size": 380665,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "a71e471b32b6258a68b2da73477d612a97d76c8b2248dcb77b618bff4e142cb2",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1243,7 +2251,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/functional/zh_3_1.pdf",
       "file_size": 788914,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "e503165e4c44c432752557dbe75f39b57a36cdf9514c1a7d1331500bb5ac08b4",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1255,7 +2273,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/functional/zh_5_0.pdf",
       "file_size": 413939,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "ba7f004242918c517eabad87fe555d7b0982f660f5ba6aa12c6629b6d8a19780",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1267,7 +2295,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/functional/zh_7_0.pdf",
       "file_size": 659298,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "51c58b178275aa1d5a9128a583d7b159b9c0eb20ceb4b467c2f9bc406f65f64c",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1279,7 +2317,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/sequencing/zh_1_0.pdf",
       "file_size": 3936078,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "1f869ce6a281eab158e1acc4c120984272fb335f72391b20857bcf03b01b64e2",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1291,7 +2339,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/sequencing/zh_sequencing.pdf",
       "file_size": 1177786,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "cd00f81356f8c0be843eb1028840aa1d9df3d224eeb0714c7515f5d15d88d2a5",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1303,7 +2361,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/functional/zh_4_0.pdf",
       "file_size": 594638,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "9f852fed8588b2d19b5b56cfe286395a2e920495e142d34dc3b63131dba8323e",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1315,7 +2383,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/unclassified/zh_6_0.pdf",
       "file_size": 2066334,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "ed71ae3494b50d8c71c14d6193cf563e258e81cc099febad7f24c27755069275",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1327,7 +2405,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/unclassified/zh_8_0.pdf",
       "file_size": 312971,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "4b65fb58c83c3047f09858109c88d494d7ff0b8c95b2d97f6d8201eaabb5bbe1",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     },
     {
       "lang": "zh",
@@ -1339,7 +2427,17 @@
       "file_path": "benchmark/literature_acquisition/downloads/zh/unclassified/zh_breast_cancer_surgery.pdf",
       "file_size": 679088,
       "source_url": "",
-      "elapsed_ms": 0
+      "elapsed_ms": 0,
+      "_validation": {
+        "exists": true,
+        "sha256": "87bce76007c740094a7364f3e8e207cbe47afb4676e17b9718bd14bf767eb16f",
+        "duplicate": false,
+        "suspicious": [
+          "zero_elapsed_ms",
+          "missing_title",
+          "missing_source"
+        ]
+      }
     }
   ]
 }

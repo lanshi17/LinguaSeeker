@@ -214,7 +214,7 @@ async def _download_from_url(url: str, dest: Path, timeout: int = 30) -> bool:
     dest.parent.mkdir(parents=True, exist_ok=True)
     try:
         logger.debug(f"Fetching URL: {url}")
-            async with httpx.AsyncClient(
+        async with httpx.AsyncClient(
             timeout=timeout, follow_redirects=True, verify=False,
             headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124.0 ACMG-Lingua/1.0"},
         ) as client:
