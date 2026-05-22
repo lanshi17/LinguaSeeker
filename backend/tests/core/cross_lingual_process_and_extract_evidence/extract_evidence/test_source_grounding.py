@@ -101,3 +101,32 @@ def test_source_grounding_marks_snippet_not_found_as_source_invalid():
     assert grounded[0].status == EvidenceStatus.SOURCE_INVALID
     assert grounded[0].raw_source is not None
     assert grounded[0].raw_source.text_snippet == "TP53"
+
+
+def test_source_grounding_marks_missing_image_source_as_ocr_gap():
+    item = EvidenceItem(
+        field_id="A.variant_hgvs_p",
+        category="A",
+        field_name="HGVS protein variant",
+        status=EvidenceStatus.FOUND,
+        value="p.R227X",
+        source=SourceLocation(
+            span_id="fig-1",
+            page=2,
+            start_offset=0,
+            end_offset=6,
+            context_type="figure",
+            context_ref="Figure 1",
+            text_snippet="p.R227X",
+            block_type="image",
+            source_precision=SourcePrecision.EXACT,
+        ),
+        confidence=0.9,
+        inference_basis=["Variant appears in sequencing trace image."],
+    )
+
+    grounded = SourceGrounder().ground_items(_doc(), [item])
+
+    assert grounded[0].status == EvidenceStatus.OCR_GAP
+    assert grounded[0].raw_source is not None
+    assert grounded[0].inference_basis == ["Variant appears in sequencing trace image."]

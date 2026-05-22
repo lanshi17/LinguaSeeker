@@ -12,6 +12,14 @@ def test_evidence_map_prompt_mentions_no_scoring():
     assert "doc-1" in prompt
 
 
+def test_evidence_map_prompt_requests_json_object():
+    prompt = get_evidence_map_prompt(document_id="doc-1", track=Track.ORIGINAL, text="BRCA1")
+
+    assert "json" in prompt.lower()
+    assert '"relevant": false' in prompt.lower()
+    assert '"gene_terms": []' in prompt
+
+
 def test_catalog_prompt_includes_catalog_field_ids():
     prompt = get_catalog_extraction_prompt(
         document_id="doc-1",
@@ -24,3 +32,19 @@ def test_catalog_prompt_includes_catalog_field_ids():
     assert "A.variant_type" in prompt
     assert "status" in prompt
     assert "not_found" in prompt
+
+
+def test_catalog_prompt_defines_ocr_gap_and_external_completion_boundaries():
+    prompt = get_catalog_extraction_prompt(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        text="BRCA1",
+        catalog=EVIDENCE_FIELD_SPECS,
+        evidence_map_summary="relevant",
+    )
+
+    assert "ocr_gap" in prompt
+    assert "Do not invent external database values" in prompt
+    assert "baseline biochemical markers" in prompt
+    assert "treatment response" in prompt
+    assert "diagnosis_sufficiency" in prompt

@@ -156,10 +156,45 @@ def test_enum_values():
     assert Track.TRANSLATED.value == "translated"
     assert EvidenceStatus.FOUND.value == "found"
     assert EvidenceStatus.NOT_FOUND.value == "not_found"
+    assert EvidenceStatus.OCR_GAP.value == "ocr_gap"
     assert SourcePrecision.EXACT.value == "exact"
     assert SourcePrecision.CORRECTED.value == "corrected"
     assert EvidenceExtractionStatus.COMPLETED.value == "completed"
     assert EvidenceExtractionStatus.NOT_RELEVANT.value == "not_relevant"
+
+
+def test_source_location_carries_block_type_for_image_and_table_review():
+    source = SourceLocation(
+        span_id="img-1",
+        page=2,
+        start_offset=100,
+        end_offset=125,
+        context_type="figure",
+        context_ref="Figure 1",
+        text_snippet="Sequencing trace image",
+        block_type="image",
+        source_precision=SourcePrecision.EXACT,
+    )
+
+    assert source.block_type == "image"
+
+
+def test_evidence_item_carries_inference_and_external_completion_metadata():
+    item = EvidenceItem(
+        field_id="D.allele_frequency",
+        category="D",
+        field_name="Allele frequency",
+        status=EvidenceStatus.NOT_FOUND,
+        value=None,
+        confidence=0.0,
+        inference_basis=["document does not mention gnomAD or population frequency"],
+        requires_external_completion=True,
+        external_completion_note="Population frequency must be completed by an external annotation provider.",
+    )
+
+    assert item.inference_basis == ["document does not mention gnomAD or population frequency"]
+    assert item.requires_external_completion is True
+    assert "external annotation" in item.external_completion_note
 
 
 def test_evidence_chain_defaults():
@@ -195,8 +230,15 @@ def test_special_evidence_record_rejects_invalid_record_type():
 def test_quality_report_defaults():
     report = QualityReport(passed=True)
     assert report.scorable is True
+    assert report.score_gate_passed is False
+    assert report.human_review_required is False
+    assert report.human_review_reasons == []
     assert report.issues == []
     assert report.found_count == 0
+    assert report.not_found_count == 0
+    assert report.source_invalid_count == 0
+    assert report.ocr_gap_count == 0
+    assert report.ambiguous_source_count == 0
 
 
 def test_evidence_extraction_result_with_not_relevant():

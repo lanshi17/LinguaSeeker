@@ -11,6 +11,7 @@ from .contracts import (
     EvidenceExtractionStatus,
     TrackDocument,
 )
+from .core import EvidenceChainBuilder
 from .providers import LangChainEvidenceProvider
 from .stages.catalog_extraction import CatalogExtractionStage
 from .stages.evidence_map import EvidenceMapStage
@@ -28,6 +29,7 @@ class EvidenceExtractionWorkflow:
         self._special_evidence = SpecialEvidenceStage(provider)
         self._source_grounding = SourceGroundingStage()
         self._quality_validation = QualityValidationStage()
+        self._chain_builder = EvidenceChainBuilder()
         self._graph = self._build_graph()
 
     def _node_evidence_map(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
@@ -52,9 +54,17 @@ class EvidenceExtractionWorkflow:
         state.evidence_items = grounded
         return state
 
+    def _node_chain_building(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        state.evidence_chains = self._chain_builder.build(state.evidence_items)
+        return state
+
     def _node_quality_validation(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         contradictions = state.evidence_map.contradictions if state.evidence_map else []
-        report = self._quality_validation.run(state.evidence_items, contradictions)
+        report = self._quality_validation.run(
+            state.evidence_items,
+            contradictions,
+            evidence_chain_count=len(state.evidence_chains),
+        )
         state.quality_report = report
         return state
 
@@ -69,6 +79,7 @@ class EvidenceExtractionWorkflow:
         graph.add_node("catalog_extraction", self._node_catalog_extraction)
         graph.add_node("special_evidence", self._node_special_evidence)
         graph.add_node("source_grounding", self._node_source_grounding)
+        graph.add_node("chain_building", self._node_chain_building)
         graph.add_node("quality_validation", self._node_quality_validation)
         graph.add_node("not_relevant", self._node_not_relevant)
 
@@ -78,9 +89,10 @@ class EvidenceExtractionWorkflow:
             lambda s: "not_relevant" if s.status == EvidenceExtractionStatus.NOT_RELEVANT else "catalog_extraction",
             {"not_relevant": "not_relevant", "catalog_extraction": "catalog_extraction"},
         )
-        graph.add_edge("catalog_extraction", "special_evidence")
-        graph.add_edge("special_evidence", "source_grounding")
-        graph.add_edge("source_grounding", "quality_validation")
+        graph.add_edge("catalog_extraction", "source_grounding")
+        graph.add_edge("source_grounding", "chain_building")
+        graph.add_edge("chain_building", "special_evidence")
+        graph.add_edge("special_evidence", "quality_validation")
         graph.add_edge("quality_validation", END)
         graph.add_edge("not_relevant", END)
 

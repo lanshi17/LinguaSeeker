@@ -62,16 +62,20 @@ EvidenceExtractionService (public facade)
       │    └─ relevant? → catalog_extraction
       │
       ├─ catalog_extraction ─────────→ CatalogExtractionStage (STRONG tier)
-      │    └─ extracts EvidenceItem[] from 138-field catalog
+      │    ├─ extracts EvidenceItem[] candidates
+      │    └─ EvidenceItemNormalizer expands to the full 138-field catalog
       │
       ├─ special_evidence ───────────→ SpecialEvidenceStage (STRONG tier)
       │    └─ second pass for functional/case-control/authority/contradiction
       │
       ├─ source_grounding ───────────→ SourceGroundingStage (deterministic)
-      │    └─ SourceGrounder: exact match → snippet search → SOURCE_INVALID
+      │    └─ SourceGrounder: exact match → snippet search → OCR_GAP/SOURCE_INVALID
+      │
+      ├─ chain_building ─────────────→ EvidenceChainBuilder (deterministic)
+      │    └─ builds conservative gene-disease-variant identity chains
       │
       └─ quality_validation ─────────→ QualityValidationStage (deterministic)
-           ├─ QualityValidator: required fields, missing source, contradiction aggregation
+           ├─ QualityValidator: required fields, source gaps, scoring/review gates
            └─ IntraTrackConflictChecker: same-field conflict detection
 ```
 
@@ -80,8 +84,9 @@ EvidenceExtractionService (public facade)
 ```
 TrackDocument → [evidence_map] → DocumentEvidenceMap
                                → [catalog_extraction] → EvidenceItem[]
-                               → [special_evidence] → SpecialEvidenceRecord[]
-                               → [source_grounding] → EvidenceItem[] (grounded)
+                               → [special_evidence] → SpecialEvidenceRecord[] (filtered)
+                               → [source_grounding] → EvidenceItem[] (grounded or gap-marked)
+                               → [chain_building] → EvidenceChain[]
                                → [quality_validation] → QualityReport
                                → EvidenceExtractionResult
 
@@ -124,6 +129,8 @@ class EvidenceExtractionService:
 |--------|-----------|-------------|
 | `from_config` | `(cfg: Any) -> EvidenceExtractionConfigContext` | Classmethod. Extracts evidence extraction settings from the global config. |
 
+`evidence_map` uses OpenAI JSON mode (`response_format={"type": "json_object"}` via `json_mode`) plus an explicit JSON example in the prompt so models that only support JSON text can still return a valid `DocumentEvidenceMap`.
+
 Model servers that do not support OpenAI `response_format={"type": "json_schema"}` are supported by a JSON-text fallback. The fallback still validates outputs with Pydantic `TypeAdapter`, including `list[EvidenceItem]` stage outputs.
 
 ### `EvidenceFieldSpec` (`catalog.py`)
@@ -137,8 +144,7 @@ Model servers that do not support OpenAI `response_format={"type": "json_schema"
 | `description` | `str` | Full description |
 | `acmg_codes` | `tuple[str, ...]` | Associated ACMG codes (PVS1, PS1, etc.) |
 | `clingen_modules` | `tuple[str, ...]` | Associated ClinGen GDV modules |
-| `required_for_scorable` | `bool` | Whether this field is required for a scorable evidence matrix |
-| `expected_value_type` | `str` | Expected value type (default `"text"`) |
+| `required_for_scorable` | `bool` | Whether this field currently gates automatic scoring readiness |
 
 ### `get_field_spec()` (`catalog.py`)
 
@@ -187,14 +193,49 @@ class EvidenceModelTier(str, Enum):
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `ground_items` | `(document: TrackDocument, items: list[EvidenceItem]) -> list[EvidenceItem]` | Three-tier resolution per item: 1) exact offset match → keep, 2) snippet text search → correct offsets + mark `CORRECTED`, 3) not found → mark `SOURCE_INVALID`. Preserves original source as `raw_source` on corrected/invalid items. Multiple matches are marked `AMBIGUOUS` (first match used, logged). |
+| `ground_items` | `(document: TrackDocument, items: list[EvidenceItem]) -> list[EvidenceItem]` | Three-tier resolution per item: 1) exact offset match → keep, 2) snippet text search → correct offsets + mark `CORRECTED`, 3) not found → mark `OCR_GAP` for image/table/figure sources or `SOURCE_INVALID` otherwise. Preserves original source as `raw_source` on corrected/gap/invalid items. Multiple matches are marked `AMBIGUOUS` (first match used, logged). |
+
+### `EvidenceItemNormalizer` (`core.py`)
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `normalize` | `(items: list[EvidenceItem]) -> list[EvidenceItem]` | Expands sparse LLM output to every catalog field, keeps the best candidate per field, clears scoring assignments from non-found items, and marks `D.allele_frequency` as requiring external completion when absent. |
+
+### `EvidenceChainBuilder` (`core.py`)
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `build` | `(items: list[EvidenceItem]) -> list[EvidenceChain]` | Builds a draft identity chain only when grounded gene, disease, and variant fields are present. Chains do not imply ACMG classification. |
+
+### `SpecialEvidenceValidator` (`core.py`)
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `filter_records` | `(records: list[SpecialEvidenceRecord], current_items: list[EvidenceItem], document: TrackDocument) -> list[SpecialEvidenceRecord]` | Drops untraceable special evidence, case-control records mapped to non-`G.*` fields, `[REDACTED]` statistical case-control records, and records referencing invalid/missing catalog fields. |
 
 ### `QualityValidator` (`core.py`)
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `__init__` | `(required_field_ids: set[str] \| None = None, catalog: tuple[EvidenceFieldSpec, ...] = EVIDENCE_FIELD_SPECS)` | Optional explicit required fields. Default: auto-derives from catalog `required_for_scorable` flags. |
-| `validate` | `(items: list[EvidenceItem], contradictions: list[str]) -> QualityReport` | Counts found/not_found/source_invalid. Flags missing_source (error), missing_required (warning), contradictions (warning). `passed=False` if any error. `scorable=False` if any required field is absent. |
+| `validate` | `(items: list[EvidenceItem], contradictions: list[str], evidence_chain_count: int = 0) -> QualityReport` | Counts found/not_found/source_invalid/ocr_gap/ambiguous. Flags missing_source (error), missing_required (warning), contradictions (warning). `passed` means structurally consumable; `score_gate_passed` means safe for automated scoring. |
+
+## Status and Gate Semantics
+
+`EvidenceStatus` separates absence from extraction failure:
+
+| Status | Meaning | Scoring impact |
+|--------|---------|----------------|
+| `found` | Value is extracted and has a source candidate | Can participate if source is exact/corrected |
+| `not_found` | The document does not provide the field | Missing required fields block scoring |
+| `source_invalid` | The model supplied a source that cannot be grounded in the document text | Blocks scoring and triggers review |
+| `ocr_gap` | Evidence appears to live in an image/table/figure path that text extraction did not expose | Blocks track-level automated scoring and triggers OCR/image review, even when the affected field is not individually required |
+
+`QualityReport.passed` is not a scoring approval. It only means the result is structurally consumable. Use `QualityReport.score_gate_passed` before automated ACMG scoring. Human review is triggered for OCR gaps, ambiguous sources, invalid sources, contradictions, missing required fields, or missing grounded evidence chains.
+
+External database evidence is not invented during document extraction. Fields such as `D.allele_frequency` may set `requires_external_completion=True`; a later annotation provider should fill those values with explicit source provenance.
+
+Biochemical markers should prefer baseline disease evidence. Treatment response can be captured as auxiliary context, but it does not make ACMG scoring pass by itself.
 
 ### `IntraTrackConflictChecker` (`core.py`)
 
@@ -221,10 +262,11 @@ Thin wrappers that each own one pipeline step. Deterministic stages are provider
 | Stage | Class | Input | Output | Provider? |
 |-------|-------|-------|--------|-----------|
 | evidence_map | `EvidenceMapStage` | `TrackDocument` | `DocumentEvidenceMap` | FAST |
-| catalog_extraction | `CatalogExtractionStage` | `TrackDocument, DocumentEvidenceMap` | `list[EvidenceItem]` | STRONG |
-| special_evidence | `SpecialEvidenceStage` | `TrackDocument, list[EvidenceItem]` | `list[SpecialEvidenceRecord]` | STRONG |
+| catalog_extraction | `CatalogExtractionStage` | `TrackDocument, DocumentEvidenceMap` | full-catalog `list[EvidenceItem]` | STRONG |
+| special_evidence | `SpecialEvidenceStage` | `TrackDocument, list[EvidenceItem]` | filtered `list[SpecialEvidenceRecord]` | STRONG |
 | source_grounding | `SourceGroundingStage` | `TrackDocument, list[EvidenceItem]` | `list[EvidenceItem]` | none |
-| quality_validation | `QualityValidationStage` | `list[EvidenceItem], list[str]` | `QualityReport` | none |
+| chain_building | `EvidenceChainBuilder` | `list[EvidenceItem]` | `list[EvidenceChain]` | none |
+| quality_validation | `QualityValidationStage` | `list[EvidenceItem], list[str], evidence_chain_count` | `QualityReport` | none |
 
 ### EvidenceExtractionWorkflow (`workflow.py`)
 
@@ -248,14 +290,14 @@ All models are Pydantic v2 `BaseModel` with strict validation.
 | `PageSpan` | span_id, page, start/end offsets. Validates `end >= start`. |
 | `TrackDocument` | A single document track with formatted text and page spans |
 | `SourcePrecision` | Enum: `EXACT`, `CORRECTED`, `AMBIGUOUS` |
-| `SourceLocation` | A source anchor with context_type (text/table/figure/supplementary/caption), text_snippet, precision |
-| `EvidenceStatus` | Enum: `FOUND`, `NOT_FOUND`, `SOURCE_INVALID` |
-| `EvidenceItem` | Per-field extracted evidence with assigned ACMG codes, source, confidence |
+| `SourceLocation` | A source anchor with context_type, block_type, text_snippet, precision |
+| `EvidenceStatus` | Enum: `FOUND`, `NOT_FOUND`, `SOURCE_INVALID`, `OCR_GAP` |
+| `EvidenceItem` | Per-field extracted evidence with assigned ACMG codes, source, confidence, inference basis, and external completion metadata |
 | `EvidenceChain` | Gene-disease-variant grouped evidence with contradictions and quality warnings |
 | `DocumentEvidenceMap` | Document-level relevance scan output |
 | `SpecialEvidenceRecord` | Non-field evidence: functional, case_control, authority, contradiction |
 | `QualityIssue` | Single validation issue with type, field_id, severity |
-| `QualityReport` | Aggregate report: passed, scorable, issue list, counts |
+| `QualityReport` | Aggregate report: passed, scorable, score gate, review gate, issue list, split counts |
 | `EvidenceExtractionStatus` | Enum: `COMPLETED`, `NOT_RELEVANT` |
 | `EvidenceExtractionResult` | Public output: status + all extracted data |
 | `DualTrackDocuments` | Pair of original and translated `TrackDocument` inputs; validates track assignments |
@@ -269,7 +311,7 @@ All models are Pydantic v2 `BaseModel` with strict validation.
 `SourceGrounder._ground_one()` applies a three-tier resolution strategy:
 
 1. **Exact match** — verify `document.formatted_text[start:end] == snippet`. If matching, keep the source as `EXACT`.
-2. **Snippet search** — `str.find(snippet)` over the full document text. If exactly one match is found, rebuild the `SourceLocation` with corrected offsets and mark `CORRECTED`. If multiple matches, take the first, mark `AMBIGUOUS`, and log. If zero matches, mark `SOURCE_INVALID`.
+2. **Snippet search** — `str.find(snippet)` over the full document text. If exactly one match is found, rebuild the `SourceLocation` with corrected offsets and mark `CORRECTED`. If multiple matches, take the first, mark `AMBIGUOUS`, and log. If zero matches, mark `OCR_GAP` for image/table/figure sources or `SOURCE_INVALID` otherwise.
 3. **Span assignment** — each found position is mapped to a `PageSpan` via `_find_span()` which checks `start/end` containment.
 
 The search is bounded at `_MAX_SNIPPET_MATCHES = 50` to prevent unbounded iteration on single-character snippets.
@@ -280,14 +322,14 @@ The original LLM-provided source is always preserved as `item.raw_source` when g
 
 `QualityValidator.validate()` applies these rules in order:
 
-1. Count items by status: `FOUND` / `NOT_FOUND` / `SOURCE_INVALID`
+1. Count items by status/source quality: `FOUND` / `NOT_FOUND` / `SOURCE_INVALID` / `OCR_GAP` / ambiguous source
 2. Flag `FOUND` items without a source as `missing_source` (severity: `error`)
 3. Compute missing required fields: `self._required - {found item field_ids}`.
    Required fields default to those with `required_for_scorable=True` in the catalog:
    `A.gene_symbol`, `A.variant_hgvs_c`, `A.variant_hgvs_p`, `B.disease_diagnosis`, `B.diagnosis_sufficiency`, `D.allele_frequency`.
 4. Flag missing required fields as `missing_required` (severity: `warning`)
 5. Attach upstream contradictions as `QualityIssue` records
-6. Set `passed = not any(severity == "error")` and `scorable = no missing required fields`
+6. Set `passed = not any(severity == "error")`; set `scorable=False` for missing required fields, OCR gaps, or ambiguous sources; set `score_gate_passed=True` only when the result is passed, scorable, and has at least one grounded evidence chain.
 
 ### Provider retry strategy
 
@@ -464,7 +506,7 @@ cd backend
 uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/ -v
 ```
 
-Current coverage: 35 unit tests across 9 test files (plus 1 skipped integration test). All LLM-dependent stages use mocked providers.
+Current coverage: 63 unit tests across 9 test files (plus 2 skipped integration tests). All LLM-dependent stages use mocked providers.
 
 | Test file | Tests | Coverage |
 |-----------|-------|----------|
@@ -477,8 +519,8 @@ Current coverage: 35 unit tests across 9 test files (plus 1 skipped integration 
 | `test_quality_validation.py` | 2 | Missing source flagged, required field unscorable |
 | `test_stages.py` | 5 | Each stage calls correct tier/uses correct core class |
 | `test_workflow.py` | 2 | Full workflow not_relevant path, service facade |
-| `test_integration_real_llm.py` | 1 | Skipped unless env vars configured; real LLM round-trip |
-| **Total** | **36** (1 skipped) | |
+| `test_integration_real_llm.py` | 2 | Skipped unless env vars configured; real LLM round-trip |
+| **Total** | **65** (2 skipped) | |
 
 ### Integration test
 

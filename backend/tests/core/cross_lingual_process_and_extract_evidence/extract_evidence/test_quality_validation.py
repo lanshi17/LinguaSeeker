@@ -1,8 +1,10 @@
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     EvidenceItem,
     EvidenceStatus,
+    SourceLocation,
+    SourcePrecision,
 )
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.core import QualityValidator
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.core import EvidenceItemNormalizer, QualityValidator
 
 
 def test_quality_validation_flags_found_item_without_source():
@@ -61,3 +63,186 @@ def test_quality_validation_counts_source_invalid():
     )
     report = QualityValidator(required_field_ids=set()).validate([item], contradictions=[])
     assert report.source_invalid_count == 1
+
+
+def test_quality_validation_blocks_score_for_required_source_invalid():
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.SOURCE_INVALID,
+        value="GLA",
+        confidence=0.9,
+    )
+
+    report = QualityValidator(required_field_ids={"A.gene_symbol"}).validate([item], contradictions=[])
+
+    assert report.passed is True
+    assert report.scorable is False
+    assert report.score_gate_passed is False
+    assert report.human_review_required is True
+    assert "A.gene_symbol" in report.human_review_reasons[0]
+
+
+def test_quality_validation_counts_ocr_gap_and_requires_review():
+    item = EvidenceItem(
+        field_id="A.variant_hgvs_p",
+        category="A",
+        field_name="HGVS protein variant",
+        status=EvidenceStatus.OCR_GAP,
+        value="p.R227X",
+        confidence=0.7,
+    )
+
+    report = QualityValidator(required_field_ids={"A.variant_hgvs_p"}).validate([item], contradictions=[])
+
+    assert report.ocr_gap_count == 1
+    assert report.scorable is False
+    assert report.human_review_required is True
+
+
+def test_quality_validation_counts_ambiguous_sources_and_requires_review():
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="GLA",
+        confidence=0.9,
+        source=SourceLocation(
+            span_id="p1",
+            page=1,
+            start_offset=0,
+            end_offset=3,
+            context_type="text",
+            context_ref="",
+            text_snippet="GLA",
+            source_precision=SourcePrecision.AMBIGUOUS,
+        ),
+    )
+
+    report = QualityValidator(required_field_ids={"A.gene_symbol"}).validate([item], contradictions=[])
+
+    assert report.ambiguous_source_count == 1
+    assert report.scorable is False
+    assert report.human_review_required is True
+
+
+def test_quality_validation_requires_chain_for_score_gate():
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="GLA",
+        confidence=0.9,
+        source=SourceLocation(
+            span_id="p1",
+            page=1,
+            start_offset=0,
+            end_offset=3,
+            context_type="text",
+            context_ref="",
+            text_snippet="GLA",
+        ),
+    )
+
+    report = QualityValidator(required_field_ids={"A.gene_symbol"}).validate(
+        [item],
+        contradictions=[],
+        evidence_chain_count=0,
+    )
+
+    assert report.passed is True
+    assert report.scorable is True
+    assert report.score_gate_passed is False
+    assert report.human_review_required is True
+
+
+def test_normalizer_expands_sparse_llm_output_to_full_catalog():
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="GLA",
+        confidence=0.9,
+        source=SourceLocation(
+            span_id="p1",
+            page=1,
+            start_offset=0,
+            end_offset=3,
+            context_type="text",
+            context_ref="",
+            text_snippet="GLA",
+        ),
+    )
+
+    normalized = EvidenceItemNormalizer().normalize([item])
+
+    field_ids = {i.field_id for i in normalized}
+    assert "A.gene_symbol" in field_ids
+    assert "D.allele_frequency" in field_ids
+    assert next(i for i in normalized if i.field_id == "D.allele_frequency").status == EvidenceStatus.NOT_FOUND
+
+
+def test_normalizer_clears_scoring_assignments_for_non_found_items():
+    item = EvidenceItem(
+        field_id="D.allele_frequency",
+        category="D",
+        field_name="Allele frequency",
+        status=EvidenceStatus.NOT_FOUND,
+        value=None,
+        assigned_acmg_codes=["PM2"],
+        assigned_clingen_modules=["variant_evidence"],
+        confidence=0.0,
+    )
+
+    normalized = EvidenceItemNormalizer().normalize([item])
+    allele_frequency = next(i for i in normalized if i.field_id == "D.allele_frequency")
+
+    assert allele_frequency.assigned_acmg_codes == []
+    assert allele_frequency.assigned_clingen_modules == []
+    assert allele_frequency.requires_external_completion is True
+
+
+def test_normalizer_routes_model_source_invalid_with_source_back_to_grounding():
+    item = EvidenceItem(
+        field_id="B.diagnosis_sufficiency",
+        category="B",
+        field_name="Diagnosis sufficiency",
+        status=EvidenceStatus.SOURCE_INVALID,
+        value="Diagnosis confirmed by genetic testing and clinical features",
+        confidence=0.8,
+        source=SourceLocation(
+            span_id="p1",
+            page=1,
+            start_offset=10,
+            end_offset=30,
+            context_type="text",
+            context_ref="",
+            text_snippet="diagnosed by sequencing",
+        ),
+    )
+
+    normalized = EvidenceItemNormalizer().normalize([item])
+    diagnosis = next(i for i in normalized if i.field_id == "B.diagnosis_sufficiency")
+
+    assert diagnosis.status == EvidenceStatus.FOUND
+
+
+def test_normalizer_keeps_source_invalid_without_source_invalid():
+    item = EvidenceItem(
+        field_id="B.diagnosis_sufficiency",
+        category="B",
+        field_name="Diagnosis sufficiency",
+        status=EvidenceStatus.SOURCE_INVALID,
+        value="Diagnosis confirmed by genetic testing and clinical features",
+        confidence=0.8,
+    )
+
+    normalized = EvidenceItemNormalizer().normalize([item])
+    diagnosis = next(i for i in normalized if i.field_id == "B.diagnosis_sufficiency")
+
+    assert diagnosis.status == EvidenceStatus.SOURCE_INVALID
+    assert diagnosis.value == "Diagnosis confirmed by genetic testing and clinical features"

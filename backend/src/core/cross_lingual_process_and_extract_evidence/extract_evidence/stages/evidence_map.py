@@ -21,4 +21,5 @@ class EvidenceMapStage:
             output_schema=DocumentEvidenceMap,
             tier=EvidenceModelTier.FAST,
             stage="evidence_map",
+            response_method="json_mode",
         )
