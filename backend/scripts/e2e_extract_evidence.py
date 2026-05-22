@@ -105,6 +105,10 @@ def _track_summary(result: EvidenceExtractionResult) -> dict[str, Any]:
             1 for item in result.evidence_items
             if item.status == EvidenceStatus.OCR_GAP
         )
+        table_ungrounded_count = sum(
+            1 for item in result.evidence_items
+            if item.status == EvidenceStatus.TABLE_UNGROUNDED
+        )
         ambiguous_count = sum(
             1 for item in result.evidence_items
             if item.source is not None and item.source.source_precision.value == "ambiguous"
@@ -114,6 +118,7 @@ def _track_summary(result: EvidenceExtractionResult) -> dict[str, Any]:
         not_found_count = report.not_found_count
         source_invalid_count = report.source_invalid_count
         ocr_gap_count = report.ocr_gap_count
+        table_ungrounded_count = report.table_ungrounded_count
         ambiguous_count = report.ambiguous_source_count
     return {
         "status": result.status.value,
@@ -123,6 +128,7 @@ def _track_summary(result: EvidenceExtractionResult) -> dict[str, Any]:
         "not_found_count": not_found_count,
         "source_invalid_count": source_invalid_count,
         "ocr_gap_count": ocr_gap_count,
+        "table_ungrounded_count": table_ungrounded_count,
         "ambiguous_source_count": ambiguous_count,
         "special_evidence_count": len(result.special_evidence),
         "quality_passed": report.passed if report else None,

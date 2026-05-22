@@ -63,6 +63,7 @@ class EvidenceStatus(str, Enum):
     NOT_FOUND = "not_found"
     SOURCE_INVALID = "source_invalid"
     OCR_GAP = "ocr_gap"
+    TABLE_UNGROUNDED = "table_ungrounded"
 
 
 class EvidenceItem(BaseModel):
@@ -146,6 +147,7 @@ class QualityReport(BaseModel):
     not_found_count: int = 0
     source_invalid_count: int = 0
     ocr_gap_count: int = 0
+    table_ungrounded_count: int = 0
     ambiguous_source_count: int = 0
     human_review_required: bool = False
     human_review_reasons: list[str] = Field(default_factory=list)

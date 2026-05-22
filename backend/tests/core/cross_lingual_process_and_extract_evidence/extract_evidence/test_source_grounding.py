@@ -132,6 +132,70 @@ def test_source_grounding_marks_missing_image_source_as_ocr_gap():
     assert grounded[0].inference_basis == ["Variant appears in sequencing trace image."]
 
 
+def test_source_grounding_marks_ellipsis_snippet_as_invalid():
+    document = TrackDocument(
+        document_id="doc-ellipsis",
+        track=Track.ORIGINAL,
+        formatted_text="This is a pathogenic mutation and the most common mutation leading to classic phenotype.",
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=88)],
+    )
+    item = EvidenceItem(
+        field_id="J.known_pathogenic_variant_reference",
+        category="J",
+        field_name="Known pathogenic variant reference",
+        status=EvidenceStatus.FOUND,
+        value="p.R227X is a known pathogenic mutation",
+        source=SourceLocation(
+            span_id="raw-ellipsis",
+            page=1,
+            start_offset=0,
+            end_offset=56,
+            context_type="text",
+            context_ref="discussion",
+            text_snippet="This is a pathogenic mutation... the most common mutation",
+            source_precision=SourcePrecision.EXACT,
+        ),
+        confidence=0.8,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])
+
+    assert grounded[0].status == EvidenceStatus.SOURCE_INVALID
+    assert grounded[0].raw_source is not None
+
+
+def test_source_grounding_marks_table_miss_as_table_ungrounded():
+    document = TrackDocument(
+        document_id="doc-table-miss",
+        track=Track.ORIGINAL,
+        formatted_text="Table 1 laboratory results are not fully text-extracted here.",
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=61)],
+    )
+    item = EvidenceItem(
+        field_id="B.biochemical_markers",
+        category="B",
+        field_name="Biochemical markers",
+        status=EvidenceStatus.FOUND,
+        value="Lyso-GL-3 80.23 ng/mL",
+        source=SourceLocation(
+            span_id="table-1",
+            page=1,
+            start_offset=0,
+            end_offset=0,
+            context_type="table",
+            context_ref="Table 1",
+            text_snippet="治疗前 136 49 阴性 238.8 80.23",
+            block_type="table",
+            source_precision=SourcePrecision.EXACT,
+        ),
+        confidence=0.8,
+    )
+
+    grounded = SourceGrounder().ground_items(document, [item])
+
+    assert grounded[0].status == EvidenceStatus.TABLE_UNGROUNDED
+
+
 def test_source_grounding_normalizes_cjk_ocr_spacing_before_marking_invalid():
     document = TrackDocument(
         document_id="doc-zh",

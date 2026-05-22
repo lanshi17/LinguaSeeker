@@ -101,6 +101,23 @@ def test_quality_validation_counts_ocr_gap_and_requires_review():
     assert report.human_review_required is True
 
 
+def test_quality_validation_counts_table_ungrounded_like_ocr_gap_for_review():
+    item = EvidenceItem(
+        field_id="B.biochemical_markers",
+        category="B",
+        field_name="Biochemical markers",
+        status=EvidenceStatus.TABLE_UNGROUNDED,
+        value="Lyso-GL-3 80.23 ng/mL",
+        confidence=0.7,
+    )
+
+    report = QualityValidator(required_field_ids={"B.biochemical_markers"}).validate([item], contradictions=[])
+
+    assert report.ocr_gap_count == 0
+    assert report.human_review_required is True
+    assert "B.biochemical_markers" in report.human_review_reasons[0]
+
+
 def test_quality_validation_counts_ambiguous_sources_and_requires_review():
     item = EvidenceItem(
         field_id="A.gene_symbol",

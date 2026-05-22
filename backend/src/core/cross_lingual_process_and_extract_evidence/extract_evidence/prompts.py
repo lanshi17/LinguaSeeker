@@ -90,6 +90,12 @@ RULES:
 7. Do not invent external database values. If allele frequency or ClinVar-like data is absent, mark it not_found and note that external completion is required.
 8. For B.diagnosis_sufficiency, require an explicit diagnostic statement supported by genetic testing and/or clinical criteria.
 9. For B.biochemical_markers, prefer baseline biochemical markers. Mention treatment response only as auxiliary context, not as scoring evidence.
+10. source.text_snippet must be a verbatim continuous substring of DOCUMENT TEXT.
+11. Copy punctuation exactly as it appears in the source, including Chinese punctuation (、。，；). Do not normalize or substitute.
+12. Do not use "..." or "……" to bridge gaps, compress text, or join non-adjacent spans.
+13. For translated track, still copy the snippet from the translated document text as written; do not retranslate or paraphrase it.
+14. The snippet must be a verbatim continuous substring of the source text.
+15. Copy punctuation exactly as it appears in the source text.
 
 DOCUMENT TEXT:
 {text}
@@ -124,10 +130,14 @@ For each finding, provide:
 - confidence: 0.0-1.0
 
 SOURCE RULES:
-- Reuse exact document wording for source.text_snippet whenever possible.
+- Reuse exact document wording.
+- source.text_snippet must be a verbatim continuous substring of DOCUMENT TEXT.
+- Copy punctuation exactly as it appears in the source, including Chinese punctuation (、。，；). Do not normalize or substitute.
 - Do not shorten snippets with "..." or paraphrase them.
 - If a snippet comes from a title, discussion paragraph, table caption, or table body, keep that exact text.
 - If exact character offsets are uncertain, still provide the best exact source snippet; offsets may be 0 temporarily.
+- The snippet must be a verbatim continuous substring of the source text.
+- Copy punctuation exactly as it appears in the source text.
 
 Do not score or classify ACMG/GDV evidence. Only extract structured facts.
 

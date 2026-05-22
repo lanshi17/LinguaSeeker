@@ -448,3 +448,18 @@ Chinese medical journals often include both Chinese and English versions of titl
 **Solution**: Added normalized grounding for OCR-spaced CJK snippets, table-aware fallback matching, and nearest-candidate preference for `B.disease_diagnosis`. Relaxed special-evidence validation to accept traceable zero-offset snippets and traceable non-`G.*` case-control discussion evidence while still rejecting `[REDACTED]` statistical records. Added `human_review_by_category` alongside the existing flat reason list and propagated it into the E2E summary output. Verified with targeted extract-evidence tests, workflow/contract regression tests, and Ruff.
 
 **Prevention**: When tightening quality gates, always replay a real fixture diff against the immediately previous good run and add tests for the exact false-negative patterns before shipping the stricter logic. For grounding code, treat OCR-spaced CJK text, repeated title/body mentions, and table-derived evidence as first-class search cases rather than fallback edge cases.
+
+## 2026-05-22: prompt snippet drift and table-path grounding needed separate handling
+
+**Problem**: The new Fabry log showed a smaller, more specific regression surface than the previous run: SOURCE_INVALIDs came from snippet drift in LLM-generated source text, while table-backed evidence was being collapsed into OCR-style failures even when the data existed.
+
+**Investigation**: Re-read `backend/output/extract_evidence/法布雷病1例/20260522_183101` and compared the surviving false negatives against the code path in `SourceGrounder` and the prompt builders. The residual failures clustered around three behaviors: deleted/reworded source snippets, ellipsis-spliced snippets, and table misses being treated as image/OCR loss.
+
+**Root cause**:
+1. The prompt did not explicitly require `source.text_snippet` to be a verbatim continuous substring with punctuation copied exactly.
+2. `SourceGrounder` had no hard ellipsis rejection, so `...`-bridged snippets could survive into grounding.
+3. Table-backed misses were still being labeled as OCR gaps even when the data path was obviously table-specific, which hid the distinction between a text-extraction limit and a table-grounding limit.
+
+**Solution**: Added strict verbatim and punctuation-copy rules to both catalog and special-evidence prompts, hard-rejected ellipsis snippets as `SOURCE_INVALID`, introduced `TABLE_UNGROUNDED` for table-path misses, and threaded that status into validation and E2E summaries. Added regression tests for prompt text, ellipsis invalidation, and table-path handling, then verified the targeted suite and Ruff.
+
+**Prevention**: When the failure class is “snippet drift,” make the prompt rules machine-checkable and exact. When the failure class is “data exists but the path is wrong,” represent that explicitly with its own status instead of reusing OCR-gap semantics.
