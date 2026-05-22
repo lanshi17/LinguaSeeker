@@ -96,6 +96,7 @@ class EvidenceItemNormalizer:
         rank = {
             EvidenceStatus.FOUND: 3,
             EvidenceStatus.SOURCE_INVALID: 2,
+            EvidenceStatus.TABLE_UNGROUNDED: 1,
             EvidenceStatus.OCR_GAP: 1,
             EvidenceStatus.NOT_FOUND: 0,
         }
@@ -124,11 +125,28 @@ class SourceGrounder:
         source = item.source
         snippet = source.text_snippet
 
+        if self._snippet_has_ellipsis(snippet):
+            logger.warning("Snippet '{}' contains ellipsis, marking SOURCE_INVALID (ellipsis_detected)", snippet)
+            return item.model_copy(update={
+                "status": EvidenceStatus.SOURCE_INVALID,
+                "raw_source": source,
+                "assigned_acmg_codes": [],
+                "assigned_clingen_modules": [],
+            })
+
         if self._is_exact_match(document, source):
             return item
 
         corrected = self._search_snippet(document, source, snippet, item.field_id)
         if corrected is None:
+            if self._looks_like_table_source(source):
+                logger.warning("Snippet '{}' not found in table source, marking TABLE_UNGROUNDED", snippet)
+                return item.model_copy(update={
+                    "status": EvidenceStatus.TABLE_UNGROUNDED,
+                    "raw_source": source,
+                    "assigned_acmg_codes": [],
+                    "assigned_clingen_modules": [],
+                })
             if self._looks_like_ocr_gap(source):
                 logger.warning("Snippet '{}' not found in document image/table source, marking OCR_GAP", snippet)
                 return item.model_copy(update={
@@ -160,7 +178,11 @@ class SourceGrounder:
 
     @staticmethod
     def _looks_like_ocr_gap(source: SourceLocation) -> bool:
-        return source.block_type in {"image", "figure", "table"} or source.context_type in {"figure", "table", "caption"}
+        return source.block_type in {"image", "figure"} or source.context_type in {"figure"}
+
+    @staticmethod
+    def _looks_like_table_source(source: SourceLocation) -> bool:
+        return source.block_type == "table" or source.context_type == "table" or source.context_ref.lower().startswith("table")
 
     def _is_exact_match(self, document: TrackDocument, source: SourceLocation) -> bool:
         text = document.formatted_text
@@ -198,6 +220,10 @@ class SourceGrounder:
                 return table_results
 
         return None
+
+    @staticmethod
+    def _snippet_has_ellipsis(snippet: str) -> bool:
+        return bool(_ELLIPSIS_PATTERN.search(snippet))
 
     def _find_snippet_occurrences(
         self,
@@ -477,6 +503,7 @@ class QualityValidator:
         human_review_reasons: list[str] = []
         human_review_by_category: dict[str, list[str]] = {
             "source_grounding": [],
+            "table_grounding": [],
             "scoring_gate": [],
             "contradictions": [],
             "workflow": [],
@@ -485,6 +512,7 @@ class QualityValidator:
         not_found_count = 0
         source_invalid_count = 0
         ocr_gap_count = 0
+        table_ungrounded_count = 0
         ambiguous_source_count = 0
 
         for item in items:
@@ -514,6 +542,11 @@ class QualityValidator:
                 reason = f"{item.field_id} may require OCR/image review"
                 human_review_reasons.append(reason)
                 human_review_by_category["source_grounding"].append(reason)
+            elif item.status == EvidenceStatus.TABLE_UNGROUNDED:
+                table_ungrounded_count += 1
+                reason = f"{item.field_id} may require table-path grounding"
+                human_review_reasons.append(reason)
+                human_review_by_category["table_grounding"].append(reason)
 
         missing_required = self._required - {
             item.field_id for item in items
@@ -545,7 +578,7 @@ class QualityValidator:
 
         passed = not any(i.severity == "error" for i in issues)
         scorable = len(missing_required) == 0
-        if ocr_gap_count > 0 or ambiguous_source_count > 0:
+        if ocr_gap_count > 0 or ambiguous_source_count > 0 or table_ungrounded_count > 0:
             scorable = False
         score_gate_passed = passed and scorable and evidence_chain_count > 0
         if passed and scorable and evidence_chain_count == 0:
@@ -562,6 +595,7 @@ class QualityValidator:
             not_found_count=not_found_count,
             source_invalid_count=source_invalid_count,
             ocr_gap_count=ocr_gap_count,
+            table_ungrounded_count=table_ungrounded_count,
             ambiguous_source_count=ambiguous_source_count,
             human_review_required=len(human_review_reasons) > 0,
             human_review_reasons=human_review_reasons,
