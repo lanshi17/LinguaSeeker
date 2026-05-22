@@ -371,3 +371,15 @@ Chinese medical journals often include both Chinese and English versions of titl
 **Solution**: Added a provider fallback path that prompts for plain JSON and validates with Pydantic `TypeAdapter`. BaseModel schemas still try strict `json_schema` first; list schemas go directly through JSON-text validation. Added provider regression tests for unsupported response format and list-schema validation.
 
 **Prevention**: For OpenAI-compatible model servers, test both the transport-level structured-output capability and local schema construction behavior. Use `TypeAdapter` when stage outputs are parametrized containers such as `list[EvidenceItem]`.
+
+## 2026-05-21: Extract evidence E2E script exposed config and JSON repair gaps
+
+**Problem**: The first run of `scripts/e2e_extract_evidence.py` failed because `EVIDENCE_EXTRACTION_*` credentials were empty. After sourcing `.env.local`, the script later failed when the JSON-text fallback received invalid LLM JSON: first an illegal backslash escape, then malformed JSON that needed model repair.
+
+**Investigation**: Ran the script against `output/cross_lingual/zh/法布雷病1例` and read the full stack traces. The credential failure came from creating `EvidenceExtractionService` with a cached config built before env mapping. The JSON failures came from fallback parsing in `providers.py`.
+
+**Root cause**: The script assumed evidence extraction env vars were configured directly, while local development commonly has only `LLM_*`. The provider fallback assumed JSON-text output would be syntactically valid after simple fence stripping.
+
+**Solution**: Updated the script to map `LLM_*` or loaded `cfg.llm` values into `EVIDENCE_EXTRACTION_*` inside the process before creating the service and clearing the config cache. Added invalid JSON escape repair and one LLM-based JSON repair retry in the provider fallback, with regression tests.
+
+**Prevention**: E2E scripts that depend on role-specific LLM config should validate or derive that config before constructing services. JSON-text fallback paths need tests for common malformed model output, not only happy-path JSON.

@@ -18,7 +18,14 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import EvidenceExtractionWorkflow
 
 
-_FABRY_OUTPUT_DIR = Path(__file__).resolve().parents[4] / "output" / "zh" / "法布雷病1例"
+_BACKEND_DIR = Path(__file__).resolve().parents[4]
+_LEGACY_FABRY_OUTPUT_DIR = _BACKEND_DIR / "output" / "zh" / "法布雷病1例"
+_CROSS_LINGUAL_FABRY_OUTPUT_DIR = _BACKEND_DIR / "output" / "cross_lingual" / "zh" / "法布雷病1例"
+_FABRY_OUTPUT_DIR = (
+    _LEGACY_FABRY_OUTPUT_DIR
+    if _LEGACY_FABRY_OUTPUT_DIR.exists()
+    else _CROSS_LINGUAL_FABRY_OUTPUT_DIR
+)
 
 
 @pytest.fixture

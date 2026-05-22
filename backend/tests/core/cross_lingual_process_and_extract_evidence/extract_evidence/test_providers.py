@@ -114,3 +114,67 @@ def test_provider_fallback_validates_list_schema():
     assert len(result) == 1
     assert result[0].answer == "ok"
     chat.with_structured_output.assert_not_called()
+
+
+def test_provider_fallback_repairs_invalid_json_backslash_escapes():
+    ctx = EvidenceExtractionConfigContext(
+        api_key="key",
+        base_url="http://localhost:8001/v1",
+        fast_model="fast",
+        standard_model="standard",
+        strong_model="strong",
+    )
+
+    with patch(
+        "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.providers.ChatOpenAI"
+    ) as chat_cls:
+        chat = MagicMock()
+        structured = MagicMock()
+        structured.invoke.side_effect = ValueError("This response_format type is unavailable now")
+        fallback_message = MagicMock()
+        fallback_message.content = '{"answer": "GLA\\p.R227X"}'
+        chat.invoke.return_value = fallback_message
+        chat.with_structured_output.return_value = structured
+        chat_cls.return_value = chat
+
+        provider = LangChainEvidenceProvider(ctx)
+        result = provider.invoke_structured(
+            prompt="Return JSON.",
+            output_schema=DemoSchema,
+            tier=EvidenceModelTier.STRONG,
+            stage="demo",
+        )
+
+    assert result.answer == "GLA\\p.R227X"
+
+
+def test_provider_fallback_reasks_llm_to_repair_invalid_json():
+    ctx = EvidenceExtractionConfigContext(
+        api_key="key",
+        base_url="http://localhost:8001/v1",
+        fast_model="fast",
+        standard_model="standard",
+        strong_model="strong",
+    )
+
+    with patch(
+        "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.providers.ChatOpenAI"
+    ) as chat_cls:
+        chat = MagicMock()
+        invalid_message = MagicMock()
+        invalid_message.content = '{"answer": "broken"'
+        repaired_message = MagicMock()
+        repaired_message.content = '[{"answer": "ok"}]'
+        chat.invoke.side_effect = [invalid_message, repaired_message]
+        chat_cls.return_value = chat
+
+        provider = LangChainEvidenceProvider(ctx)
+        result = provider.invoke_structured(
+            prompt="Return JSON.",
+            output_schema=list[DemoSchema],
+            tier=EvidenceModelTier.STRONG,
+            stage="demo",
+        )
+
+    assert result[0].answer == "ok"
+    assert chat.invoke.call_count == 2
