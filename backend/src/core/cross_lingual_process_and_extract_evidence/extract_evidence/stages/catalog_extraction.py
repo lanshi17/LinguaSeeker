@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from ..catalog import EVIDENCE_FIELD_SPECS
 from ..contracts import DocumentEvidenceMap, EvidenceItem, TrackDocument
+from ..core import EvidenceItemNormalizer
 from ..prompts import get_catalog_extraction_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 
@@ -10,6 +11,7 @@ from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 class CatalogExtractionStage:
     def __init__(self, provider: LangChainEvidenceProvider):
         self._provider = provider
+        self._normalizer = EvidenceItemNormalizer()
 
     def run(
         self,
@@ -30,7 +32,7 @@ class CatalogExtractionStage:
             tier=EvidenceModelTier.STRONG,
             stage="catalog_extraction",
         )
-        return items if isinstance(items, list) else []
+        return self._normalizer.normalize(items) if isinstance(items, list) else self._normalizer.normalize([])
 
     @staticmethod
     def _summarize_map(emap: DocumentEvidenceMap) -> str:

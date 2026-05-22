@@ -5,6 +5,7 @@ from enum import Enum
 import json
 import re
 from typing import Any
+from typing import Literal
 from typing import TypeVar
 
 import httpx
@@ -68,11 +69,12 @@ class LangChainEvidenceProvider:
         output_schema: type[SchemaT],
         tier: EvidenceModelTier,
         stage: str,
+        response_method: Literal["json_schema", "json_mode"] = "json_schema",
     ) -> SchemaT:
         llm = self._client_for_tier(tier)
         if not _is_pydantic_model_schema(output_schema):
             return self._invoke_json_text(llm, prompt, output_schema)
-        structured = llm.with_structured_output(output_schema, method="json_schema")
+        structured = llm.with_structured_output(output_schema, method=response_method)
         last_exc: Exception | None = None
         for attempt in range(1, self._ctx.max_retries + 1):
             try:
@@ -84,8 +86,9 @@ class LangChainEvidenceProvider:
                 last_exc = exc
                 if self._is_unsupported_response_format(exc):
                     logger.warning(
-                        "Stage {} model does not support json_schema response_format; falling back to JSON text",
+                        "Stage {} model does not support {} response_format; falling back to JSON text",
                         stage,
+                        response_method,
                     )
                     return self._invoke_json_text(llm, prompt, output_schema)
                 if attempt >= self._ctx.max_retries:

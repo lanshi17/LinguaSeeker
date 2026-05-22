@@ -93,25 +93,43 @@ def _write_json(path: Path, data: BaseModel | dict[str, Any]) -> None:
 
 
 def _track_summary(result: EvidenceExtractionResult) -> dict[str, Any]:
-    found_count = sum(1 for item in result.evidence_items if item.status == EvidenceStatus.FOUND)
-    source_invalid_count = sum(
-        1 for item in result.evidence_items
-        if item.status == EvidenceStatus.SOURCE_INVALID
-    )
-    ambiguous_count = sum(
-        1 for item in result.evidence_items
-        if item.source is not None and item.source.source_precision.value == "ambiguous"
-    )
+    report = result.quality_report
+    if report is None:
+        found_count = sum(1 for item in result.evidence_items if item.status == EvidenceStatus.FOUND)
+        not_found_count = sum(1 for item in result.evidence_items if item.status == EvidenceStatus.NOT_FOUND)
+        source_invalid_count = sum(
+            1 for item in result.evidence_items
+            if item.status == EvidenceStatus.SOURCE_INVALID
+        )
+        ocr_gap_count = sum(
+            1 for item in result.evidence_items
+            if item.status == EvidenceStatus.OCR_GAP
+        )
+        ambiguous_count = sum(
+            1 for item in result.evidence_items
+            if item.source is not None and item.source.source_precision.value == "ambiguous"
+        )
+    else:
+        found_count = report.found_count
+        not_found_count = report.not_found_count
+        source_invalid_count = report.source_invalid_count
+        ocr_gap_count = report.ocr_gap_count
+        ambiguous_count = report.ambiguous_source_count
     return {
         "status": result.status.value,
         "track": result.track.value,
         "evidence_item_count": len(result.evidence_items),
         "found_count": found_count,
+        "not_found_count": not_found_count,
         "source_invalid_count": source_invalid_count,
+        "ocr_gap_count": ocr_gap_count,
         "ambiguous_source_count": ambiguous_count,
         "special_evidence_count": len(result.special_evidence),
-        "quality_passed": result.quality_report.passed if result.quality_report else None,
-        "quality_scorable": result.quality_report.scorable if result.quality_report else None,
+        "quality_passed": report.passed if report else None,
+        "quality_scorable": report.scorable if report else None,
+        "score_gate_passed": report.score_gate_passed if report else None,
+        "human_review_required": report.human_review_required if report else None,
+        "human_review_reasons": report.human_review_reasons if report else [],
     }
 
 
@@ -152,10 +170,12 @@ async def run_extract_evidence(
     _write_json(saved_dir / "translated_result.json", result.translated_result)
     _write_json(saved_dir / "summary.json", _summary(result, input_dir, saved_dir))
 
+    original_summary = _track_summary(result.original_result)
+    translated_summary = _track_summary(result.translated_result)
     logger.info(
         "Saved extract_evidence outputs: original_found={}, translated_found={}",
-        _track_summary(result.original_result)["found_count"],
-        _track_summary(result.translated_result)["found_count"],
+        original_summary["found_count"],
+        translated_summary["found_count"],
     )
     return saved_dir
 

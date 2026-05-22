@@ -54,6 +54,7 @@ class FabryFixtureProvider:
         output_schema: type[Any],
         tier: Any,
         stage: str,
+        response_method: str = "json_schema",
     ) -> Any:
         track = self._track_from_prompt(prompt)
         self.calls.append((stage, track))
@@ -69,9 +70,9 @@ class FabryFixtureProvider:
             start = text.index(snippet)
             return [
                 EvidenceItem(
-                    field_id="A.disease_name",
-                    category="A",
-                    field_name="Disease name",
+                    field_id="B.disease_diagnosis",
+                    category="B",
+                    field_name="Disease diagnosis",
                     status=EvidenceStatus.FOUND,
                     value=snippet,
                     source=SourceLocation(
@@ -124,8 +125,16 @@ async def test_fabry_output_fixture_runs_original_and_translated_tracks_independ
     assert result.document_id == "法布雷病1例"
     assert result.original_result.track == Track.ORIGINAL
     assert result.translated_result.track == Track.TRANSLATED
-    assert result.original_result.evidence_items[0].value == "法布雷病"
-    assert result.translated_result.evidence_items[0].value == "Fabry disease"
+    original_diagnosis = next(
+        item for item in result.original_result.evidence_items
+        if item.field_id == "B.disease_diagnosis"
+    )
+    translated_diagnosis = next(
+        item for item in result.translated_result.evidence_items
+        if item.field_id == "B.disease_diagnosis"
+    )
+    assert original_diagnosis.value == "法布雷病"
+    assert translated_diagnosis.value == "Fabry disease"
     assert "法布雷病" in documents.original.formatted_text
     assert "Fabry disease" in documents.translated.formatted_text
     assert documents.original.formatted_text != documents.translated.formatted_text

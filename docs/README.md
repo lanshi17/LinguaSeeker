@@ -55,6 +55,7 @@ No active code reviews.
 |---|---|---|
 | 2026-05-18 | [database implementation](archive/plans/2026-05-18-database-implementation-plan.md) | completed — branch `database-mvp` |
 | 2026-05-18 | [database design](archive/plans/2026-05-18-database-design.md) | completed — branch `database-mvp` |
+| 2026-05-22 | [extract evidence quality gates](archive/plans/2026-05-22-extract-evidence-quality-gates.md) | completed — branch `fix/extract-evidence-quality-gates` |
 | 2026-05-17 | [persistence JSON optimization](archive/plans/2026-05-17-persistence-json-optimization.md) | completed — 2026-05-19 |
 | 2026-05-16 | [evidence extraction output E2E](archive/plans/2026-05-16-evidence-extraction-output-e2e.md) | completed — 2026-05-19 |
 | 2026-05-12 | [parse document module refactor](archive/plans/2026-05-12-parse-document-refactor.md) | completed — 2026-05-13 |

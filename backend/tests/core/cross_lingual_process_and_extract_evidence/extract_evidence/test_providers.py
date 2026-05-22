@@ -51,6 +51,37 @@ def test_provider_uses_strong_model_for_strong_tier():
     )
 
 
+def test_provider_uses_json_mode_when_requested():
+    ctx = EvidenceExtractionConfigContext(
+        api_key="key",
+        base_url="http://localhost:8001/v1",
+        fast_model="fast",
+        standard_model="standard",
+        strong_model="strong",
+    )
+
+    with patch(
+        "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.providers.ChatOpenAI"
+    ) as chat_cls:
+        chat = MagicMock()
+        structured = MagicMock()
+        structured.invoke.return_value = DemoSchema(answer="ok")
+        chat.with_structured_output.return_value = structured
+        chat_cls.return_value = chat
+
+        provider = LangChainEvidenceProvider(ctx)
+        result = provider.invoke_structured(
+            prompt='Return JSON with {"answer": "ok"}.',
+            output_schema=DemoSchema,
+            tier=EvidenceModelTier.FAST,
+            stage="evidence_map",
+            response_method="json_mode",
+        )
+
+    assert result.answer == "ok"
+    chat.with_structured_output.assert_called_once_with(DemoSchema, method="json_mode")
+
+
 def test_provider_falls_back_to_plain_json_when_response_format_is_unsupported():
     ctx = EvidenceExtractionConfigContext(
         api_key="key",

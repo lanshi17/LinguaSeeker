@@ -13,5 +13,6 @@ class QualityValidationStage:
         self,
         items: list[EvidenceItem],
         contradictions: list[str],
+        evidence_chain_count: int = 0,
     ) -> QualityReport:
-        return self._validator.validate(items, contradictions)
+        return self._validator.validate(items, contradictions, evidence_chain_count=evidence_chain_count)

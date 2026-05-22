@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
 
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import EVIDENCE_FIELD_SPECS
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     DocumentEvidenceMap,
     EvidenceItem,
@@ -42,6 +43,7 @@ def test_evidence_map_stage_calls_fast_tier():
     provider.invoke_structured.assert_called_once()
     call_kwargs = provider.invoke_structured.call_args
     assert call_kwargs.kwargs["tier"] == EvidenceModelTier.FAST
+    assert call_kwargs.kwargs["response_method"] == "json_mode"
 
 
 def test_catalog_extraction_stage_calls_strong_tier():
@@ -64,7 +66,9 @@ def test_catalog_extraction_stage_calls_strong_tier():
     stage = CatalogExtractionStage(provider)
     result = stage.run(_doc(), DocumentEvidenceMap(relevant=True))
 
-    assert len(result) == 1
+    assert len(result) == len(EVIDENCE_FIELD_SPECS)
+    assert next(i for i in result if i.field_id == "A.gene_symbol").value == "GLA"
+    assert next(i for i in result if i.field_id == "D.allele_frequency").status == EvidenceStatus.NOT_FOUND
     call_kwargs = provider.invoke_structured.call_args
     assert call_kwargs.kwargs["tier"] == EvidenceModelTier.STRONG
 
@@ -79,6 +83,255 @@ def test_special_evidence_stage_calls_strong_tier():
     assert result == []
     call_kwargs = provider.invoke_structured.call_args
     assert call_kwargs.kwargs["tier"] == EvidenceModelTier.STRONG
+
+
+def test_special_evidence_stage_filters_untraceable_case_control_records():
+    provider = MagicMock()
+    provider.invoke_structured.return_value = [
+        {
+            "record_type": "case_control",
+            "description": "A large screening study included [REDACTED] patients.",
+            "evidence_field_ids": ["B.case_count"],
+            "source": {
+                "span_id": "s1",
+                "page": 1,
+                "start_offset": 0,
+                "end_offset": 0,
+                "context_type": "text",
+                "context_ref": "Discussion",
+                "text_snippet": "A large screening study included [REDACTED] patients.",
+                "source_precision": "ambiguous",
+            },
+            "confidence": 0.8,
+        }
+    ]
+
+    stage = SpecialEvidenceStage(provider)
+    result = stage.run(_doc(), [])
+
+    assert result == []
+
+
+def test_special_evidence_stage_keeps_case_control_records_for_g_fields():
+    provider = MagicMock()
+    provider.invoke_structured.return_value = [
+        {
+            "record_type": "case_control",
+            "description": "A case-control study reported enrichment in affected cases.",
+            "evidence_field_ids": ["G.case_count", "G.control_count"],
+            "source": {
+                "span_id": "s1",
+                "page": 1,
+                "start_offset": 14,
+                "end_offset": 27,
+                "context_type": "text",
+                "context_ref": "Results",
+                "text_snippet": "Fabry disease",
+                "source_precision": "exact",
+            },
+            "confidence": 0.8,
+        }
+    ]
+
+    text = _doc().formatted_text
+    start = text.index("Fabry disease")
+    stage = SpecialEvidenceStage(provider)
+    result = stage.run(
+        _doc(),
+        [
+            EvidenceItem(
+                field_id="G.case_count",
+                category="G",
+                field_name="Case count",
+                status=EvidenceStatus.FOUND,
+                value="12",
+                confidence=0.9,
+                source=SourceLocation(
+                    span_id="p1",
+                    page=1,
+                    start_offset=start,
+                    end_offset=start + len("Fabry disease"),
+                    context_type="text",
+                    context_ref="",
+                    text_snippet="Fabry disease",
+                ),
+            ),
+            EvidenceItem(
+                field_id="G.control_count",
+                category="G",
+                field_name="Control count",
+                status=EvidenceStatus.FOUND,
+                value="8",
+                confidence=0.9,
+                source=SourceLocation(
+                    span_id="p1",
+                    page=1,
+                    start_offset=start,
+                    end_offset=start + len("Fabry disease"),
+                    context_type="text",
+                    context_ref="",
+                    text_snippet="Fabry disease",
+                ),
+            ),
+            EvidenceItem(
+                field_id="G.control_count",
+                category="G",
+                field_name="Control count",
+                status=EvidenceStatus.FOUND,
+                value="8",
+                confidence=0.9,
+                source=SourceLocation(
+                    span_id="p1",
+                    page=1,
+                    start_offset=start,
+                    end_offset=start + len("Fabry disease"),
+                    context_type="text",
+                    context_ref="",
+                    text_snippet="Fabry disease",
+                ),
+            )
+        ],
+    )
+
+    assert len(result) == 1
+    assert result[0].record_type == "case_control"
+
+
+def test_special_evidence_stage_rejects_short_untraceable_snippet():
+    provider = MagicMock()
+    provider.invoke_structured.return_value = [
+        {
+            "record_type": "authority",
+            "description": "Short snippet should not be traceable by substring fallback.",
+            "evidence_field_ids": ["J.known_pathogenic_variant_reference"],
+            "source": {
+                "span_id": "s1",
+                "page": 1,
+                "start_offset": 0,
+                "end_offset": 3,
+                "context_type": "text",
+                "context_ref": "Discussion",
+                "text_snippet": "GLA",
+                "source_precision": "exact",
+            },
+            "confidence": 0.8,
+        }
+    ]
+
+    stage = SpecialEvidenceStage(provider)
+    result = stage.run(
+        _doc(),
+        [
+            EvidenceItem(
+                field_id="J.known_pathogenic_variant_reference",
+                category="J",
+                field_name="Known pathogenic variant reference",
+                status=EvidenceStatus.FOUND,
+                value="GLA is pathogenic",
+                confidence=0.9,
+                source=SourceLocation(
+                    span_id="p1",
+                    page=1,
+                    start_offset=38,
+                    end_offset=41,
+                    context_type="text",
+                    context_ref="",
+                    text_snippet="GLA",
+                ),
+            )
+        ],
+    )
+
+    assert result == []
+
+
+def test_special_evidence_stage_keeps_valid_authority_for_found_field():
+    provider = MagicMock()
+    current_item = EvidenceItem(
+        field_id="J.known_pathogenic_variant_reference",
+        category="J",
+        field_name="Known pathogenic variant reference",
+        status=EvidenceStatus.FOUND,
+        value="p.R227X is pathogenic",
+        confidence=0.9,
+        source=SourceLocation(
+            span_id="p1",
+            page=1,
+            start_offset=0,
+            end_offset=10,
+            context_type="text",
+            context_ref="",
+            text_snippet="Patient 1",
+        ),
+    )
+    provider.invoke_structured.return_value = [
+        {
+            "record_type": "authority",
+            "description": "p.R227X is a known pathogenic variant.",
+            "evidence_field_ids": ["J.known_pathogenic_variant_reference"],
+            "source": {
+                "span_id": "p1",
+                "page": 1,
+                "start_offset": 0,
+                "end_offset": 9,
+                "context_type": "text",
+                "context_ref": "Discussion",
+                "text_snippet": "Patient 1",
+                "source_precision": "exact",
+            },
+            "confidence": 0.9,
+        }
+    ]
+
+    stage = SpecialEvidenceStage(provider)
+    result = stage.run(_doc(), [current_item])
+
+    assert len(result) == 1
+    assert result[0].record_type == "authority"
+
+
+def test_special_evidence_stage_filters_source_snippet_not_in_document():
+    provider = MagicMock()
+    current_item = EvidenceItem(
+        field_id="J.known_pathogenic_variant_reference",
+        category="J",
+        field_name="Known pathogenic variant reference",
+        status=EvidenceStatus.FOUND,
+        value="p.R227X is pathogenic",
+        confidence=0.9,
+        source=SourceLocation(
+            span_id="p1",
+            page=1,
+            start_offset=0,
+            end_offset=9,
+            context_type="text",
+            context_ref="",
+            text_snippet="Patient 1",
+        ),
+    )
+    provider.invoke_structured.return_value = [
+        {
+            "record_type": "authority",
+            "description": "p.R227X is a known pathogenic variant.",
+            "evidence_field_ids": ["J.known_pathogenic_variant_reference"],
+            "source": {
+                "span_id": "p1",
+                "page": 1,
+                "start_offset": 10,
+                "end_offset": 20,
+                "context_type": "text",
+                "context_ref": "Discussion",
+                "text_snippet": "not in document",
+                "source_precision": "exact",
+            },
+            "confidence": 0.9,
+        }
+    ]
+
+    stage = SpecialEvidenceStage(provider)
+    result = stage.run(_doc(), [current_item])
+
+    assert result == []
 
 
 def test_source_grounding_stage_uses_grounder():

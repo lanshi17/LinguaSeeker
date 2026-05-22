@@ -1,7 +1,10 @@
 """Special evidence pass — functional, case-control, authority, contradiction evidence."""
 from __future__ import annotations
 
+from pydantic import ValidationError
+
 from ..contracts import EvidenceItem, SpecialEvidenceRecord, TrackDocument
+from ..core import SpecialEvidenceValidator
 from ..prompts import get_special_evidence_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 
@@ -9,6 +12,7 @@ from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 class SpecialEvidenceStage:
     def __init__(self, provider: LangChainEvidenceProvider):
         self._provider = provider
+        self._validator = SpecialEvidenceValidator()
 
     def run(
         self,
@@ -28,7 +32,24 @@ class SpecialEvidenceStage:
             tier=EvidenceModelTier.STRONG,
             stage="special_evidence",
         )
-        return records if isinstance(records, list) else []
+        parsed = self._parse_records(records)
+        return self._validator.filter_records(parsed, current_items, document)
+
+    @staticmethod
+    def _parse_records(records: object) -> list[SpecialEvidenceRecord]:
+        if not isinstance(records, list):
+            return []
+        parsed: list[SpecialEvidenceRecord] = []
+        for record in records:
+            if isinstance(record, SpecialEvidenceRecord):
+                parsed.append(record)
+                continue
+            if isinstance(record, dict):
+                try:
+                    parsed.append(SpecialEvidenceRecord(**record))
+                except ValidationError:
+                    continue
+        return parsed
 
     @staticmethod
     def _summarize_items(items: list[EvidenceItem]) -> str:

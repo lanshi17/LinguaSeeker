@@ -54,6 +54,7 @@ class SourceLocation(BaseModel):
     context_type: Literal["text", "table", "figure", "supplementary", "caption"]
     context_ref: str
     text_snippet: str
+    block_type: Literal["text", "table", "figure", "image", "caption", "supplementary"] = "text"
     source_precision: SourcePrecision = SourcePrecision.EXACT
 
 
@@ -61,6 +62,7 @@ class EvidenceStatus(str, Enum):
     FOUND = "found"
     NOT_FOUND = "not_found"
     SOURCE_INVALID = "source_invalid"
+    OCR_GAP = "ocr_gap"
 
 
 class EvidenceItem(BaseModel):
@@ -83,6 +85,9 @@ class EvidenceItem(BaseModel):
     raw_source: SourceLocation | None = None
     confidence: float = Field(ge=0.0, le=1.0)
     notes: str = ""
+    inference_basis: list[str] = Field(default_factory=list)
+    requires_external_completion: bool = False
+    external_completion_note: str = ""
 
 
 class EvidenceChain(BaseModel):
@@ -135,10 +140,15 @@ class QualityIssue(BaseModel):
 class QualityReport(BaseModel):
     passed: bool
     scorable: bool = True
+    score_gate_passed: bool = False
     issues: list[QualityIssue] = Field(default_factory=list)
     found_count: int = 0
     not_found_count: int = 0
     source_invalid_count: int = 0
+    ocr_gap_count: int = 0
+    ambiguous_source_count: int = 0
+    human_review_required: bool = False
+    human_review_reasons: list[str] = Field(default_factory=list)
 
 
 class EvidenceExtractionStatus(str, Enum):

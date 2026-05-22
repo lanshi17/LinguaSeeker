@@ -383,3 +383,39 @@ Chinese medical journals often include both Chinese and English versions of titl
 **Solution**: Updated the script to map `LLM_*` or loaded `cfg.llm` values into `EVIDENCE_EXTRACTION_*` inside the process before creating the service and clearing the config cache. Added invalid JSON escape repair and one LLM-based JSON repair retry in the provider fallback, with regression tests.
 
 **Prevention**: E2E scripts that depend on role-specific LLM config should validate or derive that config before constructing services. JSON-text fallback paths need tests for common malformed model output, not only happy-path JSON.
+
+## 2026-05-22: Worktree plan document was written to the main workspace
+
+**Problem**: While implementing extract evidence quality gates in an isolated git worktree, the implementation plan was first created under the main workspace `docs/plans/` instead of the active worktree.
+
+**Investigation**: `git status --short` in the main workspace showed an unexpected untracked plan document. The isolated worktree did not contain that file. The path check confirmed the file existed only under `/data/yangzs/Projects/01_ACMG_Lingua/docs/plans/`.
+
+**Root cause**: The file creation used a relative path while the active tool context was still the main workspace, even though subsequent shell commands were already running in the worktree.
+
+**Solution**: Moved the plan document into the isolated worktree under `docs/active/2026-05-22-extract-evidence-quality-gates.md` and updated the worktree `docs/README.md` index. The main workspace untracked plan file was removed by the move; unrelated main-workspace changes were left untouched.
+
+**Prevention**: After creating or switching to a worktree, use absolute paths or confirm `git status --short` in both main and worktree before the first file edit. Avoid `apply_patch` with relative paths until the target workspace path is explicit.
+
+## 2026-05-22: evidence_map needed JSON mode instead of json_schema
+
+**Problem**: The `evidence_map` stage logged `model does not support json_schema response_format; falling back to JSON text` on some models, even though the stage only needs a simple relevance map and not full schema enforcement.
+
+**Investigation**: Checked the evidence extraction provider, stage wiring, prompts, and the translation pipeline's JSON mode helper. Confirmed `evidence_map` was still using `with_structured_output(..., method="json_schema")`, while the prompt did not provide a concrete JSON example.
+
+**Root cause**: The stage was routed through the stricter structured-output path even though it only needs a JSON object. That forced unsupported models onto the slower fallback path unnecessarily.
+
+**Solution**: Switched `evidence_map` to `json_mode`, added an explicit JSON object example to the prompt, and kept the JSON-text fallback for broader compatibility. Added regression tests for the prompt content, provider method choice, and stage wiring.
+
+**Prevention**: For small JSON-only outputs, prefer JSON mode plus a concrete example prompt. Reserve `json_schema` for stages that actually benefit from schema-level enforcement.
+
+## 2026-05-22: Fabry fixture signature drift exposed test-double mismatch
+
+**Problem**: The real Fabry dual-track e2e failed with `TypeError` because the deterministic test double `FabryFixtureProvider.invoke_structured()` did not accept the new `response_method` keyword used by `EvidenceMapStage`.
+
+**Investigation**: Re-ran the single failing test and confirmed the failure originated at the stage/provider boundary before any extraction logic executed.
+
+**Root cause**: The stage interface gained a `response_method` argument, but the fixture provider stayed on the older signature. The review also surfaced a permissive substring fallback in `_source_is_traceable` and missing regression coverage for ambiguous chains and `G.*` case-control filtering.
+
+**Solution**: Added the `response_method` parameter to the fixture provider, tightened the short-snippet traceability fallback, added regression tests for ambiguous-source chain suppression and `G.*` case-control filtering, and refreshed the module README/progress counts.
+
+**Prevention**: When a stage API changes, update deterministic test doubles in the same patch set. Add a regression test at the boundary where the new parameter is consumed so fixture drift fails immediately.

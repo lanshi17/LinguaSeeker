@@ -1,11 +1,24 @@
 """Prompt builders for evidence extraction stages."""
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .catalog import EvidenceFieldSpec
     from .contracts import Track
+
+
+_EVIDENCE_MAP_JSON_EXAMPLE = {
+    "relevant": False,
+    "disease_terms": [],
+    "gene_terms": [],
+    "variant_terms": [],
+    "case_references": [],
+    "authority_references": [],
+    "contradictions": [],
+    "structure_hints": [],
+}
 
 
 def _catalog_compact_text(catalog: tuple[EvidenceFieldSpec, ...]) -> str:
@@ -38,6 +51,11 @@ TASK: Determine if this document contains GDV/ACMG-relevant evidence. If relevan
 
 Do not score or classify ACMG/GDV evidence. Only scan for relevance and structure.
 
+JSON OUTPUT:
+Return only a single valid json object. Do not wrap it in markdown code fences or add commentary.
+Use this exact shape:
+{json.dumps(_EVIDENCE_MAP_JSON_EXAMPLE, ensure_ascii=False, indent=2)}
+
 DOCUMENT TEXT:
 {text}
 """
@@ -68,6 +86,10 @@ RULES:
 3. For "found" items, you MUST provide a source with span_id, page, start_offset, end_offset, context_type, context_ref, and text_snippet.
 4. Extract assigned_acmg_codes and assigned_clingen_modules based on what the document supports.
 5. Set confidence based on extraction certainty (0.0-1.0).
+6. Use status="ocr_gap" only when the document indicates the evidence is in an image/table/figure but the text needed for extraction is unavailable.
+7. Do not invent external database values. If allele frequency or ClinVar-like data is absent, mark it not_found and note that external completion is required.
+8. For B.diagnosis_sufficiency, require an explicit diagnostic statement supported by genetic testing and/or clinical criteria.
+9. For B.biochemical_markers, prefer baseline biochemical markers. Mention treatment response only as auxiliary context, not as scoring evidence.
 
 DOCUMENT TEXT:
 {text}
