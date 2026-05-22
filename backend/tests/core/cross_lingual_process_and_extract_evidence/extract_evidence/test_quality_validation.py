@@ -159,6 +159,46 @@ def test_quality_validation_requires_chain_for_score_gate():
     assert report.human_review_required is True
 
 
+def test_quality_validation_keeps_structural_and_scoring_review_reasons_grouped():
+    item = EvidenceItem(
+        field_id="B.disease_diagnosis",
+        category="B",
+        field_name="Disease diagnosis",
+        status=EvidenceStatus.FOUND,
+        value="Fabry disease",
+        confidence=0.95,
+        source=SourceLocation(
+            span_id="p1",
+            page=1,
+            start_offset=0,
+            end_offset=13,
+            context_type="text",
+            context_ref="title",
+            text_snippet="Fabry disease",
+            source_precision=SourcePrecision.AMBIGUOUS,
+        ),
+    )
+
+    report = QualityValidator(required_field_ids={"B.disease_diagnosis"}).validate(
+        [item],
+        contradictions=["Conflict in diagnosis wording"],
+        evidence_chain_count=0,
+    )
+
+    assert report.human_review_required is True
+    assert report.human_review_reasons
+    assert report.human_review_by_category["source_grounding"] == [
+        "B.disease_diagnosis has ambiguous source grounding",
+    ]
+    assert report.human_review_by_category["scoring_gate"] == [
+        "B.disease_diagnosis is required for scoring but is not grounded",
+    ]
+    assert report.human_review_by_category["contradictions"] == [
+        "Contradiction requires review: Conflict in diagnosis wording",
+    ]
+    assert report.human_review_by_category["workflow"] == []
+
+
 def test_normalizer_expands_sparse_llm_output_to_full_catalog():
     item = EvidenceItem(
         field_id="A.gene_symbol",

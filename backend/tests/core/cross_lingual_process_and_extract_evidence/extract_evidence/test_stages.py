@@ -334,6 +334,115 @@ def test_special_evidence_stage_filters_source_snippet_not_in_document():
     assert result == []
 
 
+def test_special_evidence_stage_keeps_traceable_authority_with_zero_offsets():
+    provider = MagicMock()
+    current_item = EvidenceItem(
+        field_id="J.known_pathogenic_variant_reference",
+        category="J",
+        field_name="Known pathogenic variant reference",
+        status=EvidenceStatus.FOUND,
+        value="p.R227X is pathogenic",
+        confidence=0.9,
+        source=SourceLocation(
+            span_id="p1",
+            page=1,
+            start_offset=0,
+            end_offset=13,
+            context_type="text",
+            context_ref="Discussion",
+            text_snippet="Fabry disease",
+        ),
+    )
+    provider.invoke_structured.return_value = [
+        {
+            "record_type": "authority",
+            "description": "Fabry disease has an expert consensus in China.",
+            "evidence_field_ids": ["J.known_pathogenic_variant_reference"],
+            "source": {
+                "span_id": "disc-1",
+                "page": 1,
+                "start_offset": 0,
+                "end_offset": 0,
+                "context_type": "text",
+                "context_ref": "Discussion",
+                "text_snippet": "Fabry disease",
+                "source_precision": "exact",
+            },
+            "confidence": 0.9,
+        }
+    ]
+
+    stage = SpecialEvidenceStage(provider)
+    result = stage.run(_doc(), [current_item])
+
+    assert len(result) == 1
+    assert result[0].record_type == "authority"
+
+
+def test_special_evidence_stage_keeps_non_g_case_control_when_document_text_is_traceable():
+    provider = MagicMock()
+    provider.invoke_structured.return_value = [
+        {
+            "record_type": "case_control",
+            "description": "A retrospective analysis reported Fabry disease progression rates.",
+            "evidence_field_ids": ["B.disease_diagnosis", "B.case_notes"],
+            "source": {
+                "span_id": "disc-2",
+                "page": 1,
+                "start_offset": 0,
+                "end_offset": 0,
+                "context_type": "text",
+                "context_ref": "Discussion",
+                "text_snippet": "Fabry disease",
+                "source_precision": "exact",
+            },
+            "confidence": 0.8,
+        }
+    ]
+    current_items = [
+        EvidenceItem(
+            field_id="B.disease_diagnosis",
+            category="B",
+            field_name="Disease diagnosis",
+            status=EvidenceStatus.FOUND,
+            value="Fabry disease",
+            confidence=0.9,
+            source=SourceLocation(
+                span_id="p1",
+                page=1,
+                start_offset=14,
+                end_offset=27,
+                context_type="text",
+                context_ref="",
+                text_snippet="Fabry disease",
+            ),
+        ),
+        EvidenceItem(
+            field_id="B.case_notes",
+            category="B",
+            field_name="Case notes",
+            status=EvidenceStatus.FOUND,
+            value="retrospective analysis mentioned",
+            confidence=0.9,
+            source=SourceLocation(
+                span_id="p1",
+                page=1,
+                start_offset=14,
+                end_offset=27,
+                context_type="text",
+                context_ref="",
+                text_snippet="Fabry disease",
+            ),
+        ),
+    ]
+
+    stage = SpecialEvidenceStage(provider)
+    result = stage.run(_doc(), current_items)
+
+    assert len(result) == 1
+    assert result[0].record_type == "case_control"
+
+
 def test_source_grounding_stage_uses_grounder():
     text = "Patient 1 had Fabry disease and carried a hemizygous GLA c.1000G>A variant."
     gla_start = text.index("GLA")

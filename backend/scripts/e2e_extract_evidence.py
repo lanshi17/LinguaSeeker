@@ -130,6 +130,7 @@ def _track_summary(result: EvidenceExtractionResult) -> dict[str, Any]:
         "score_gate_passed": report.score_gate_passed if report else None,
         "human_review_required": report.human_review_required if report else None,
         "human_review_reasons": report.human_review_reasons if report else [],
+        "human_review_by_category": report.human_review_by_category if report else {},
     }
 
 

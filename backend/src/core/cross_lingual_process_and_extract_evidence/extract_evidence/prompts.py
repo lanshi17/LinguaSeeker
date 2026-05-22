@@ -123,6 +123,12 @@ For each finding, provide:
 - source: location in document
 - confidence: 0.0-1.0
 
+SOURCE RULES:
+- Reuse exact document wording for source.text_snippet whenever possible.
+- Do not shorten snippets with "..." or paraphrase them.
+- If a snippet comes from a title, discussion paragraph, table caption, or table body, keep that exact text.
+- If exact character offsets are uncertain, still provide the best exact source snippet; offsets may be 0 temporarily.
+
 Do not score or classify ACMG/GDV evidence. Only extract structured facts.
 
 DOCUMENT TEXT:

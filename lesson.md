@@ -431,3 +431,20 @@ Chinese medical journals often include both Chinese and English versions of titl
 **Solution**: Resolved `progress.txt` by keeping both sets of entries, added a merge-completion log line, and left the benchmark edits untouched so the workspace still reflects the user's local changes.
 
 **Prevention**: When merging with autostash, inspect `progress.txt` explicitly before dropping the stash and treat tracked log files as likely conflict points.
+
+## 2026-05-22: extract_evidence quality gates over-filtered grounded evidence
+
+**Problem**: The Fabry regression run under `backend/output/extract_evidence/法布雷病1例/20260522_154916` dropped `FOUND` counts, marked grounded Chinese snippets as `source_invalid`, turned translated `B.disease_diagnosis` into `ambiguous`, and filtered all special evidence records to zero.
+
+**Investigation**: Compared `20260522_154916` against the earlier `20260522_113744` output, then traced the behavior back to the `2e1014a5` quality-gate patch. Reproduced the regressions with focused tests for CJK OCR spacing, table-backed grounding, repeated title disease mentions, zero-offset special-evidence snippets, non-`G.*` case-control records, and human-review reason layering.
+
+**Root cause**:
+1. `SourceGrounder` only performed literal substring matching, so OCR-spaced CJK snippets like `基 因 变 异` failed even when the normalized text existed in-document.
+2. Table-backed sources were treated as missing text because grounding never fell back to caption/body-like table text in `formatted_text`.
+3. Repeated disease-title mentions always became `AMBIGUOUS`; there was no field-specific candidate preference for title-like `B.disease_diagnosis`.
+4. `SpecialEvidenceValidator` rejected zero-offset but traceable snippets and hard-blocked all non-`G.*` case-control records, which removed authority/discussion evidence that the earlier output had preserved.
+5. Review output was only flattened into `human_review_reasons`, which made downstream interpretation noisy.
+
+**Solution**: Added normalized grounding for OCR-spaced CJK snippets, table-aware fallback matching, and nearest-candidate preference for `B.disease_diagnosis`. Relaxed special-evidence validation to accept traceable zero-offset snippets and traceable non-`G.*` case-control discussion evidence while still rejecting `[REDACTED]` statistical records. Added `human_review_by_category` alongside the existing flat reason list and propagated it into the E2E summary output. Verified with targeted extract-evidence tests, workflow/contract regression tests, and Ruff.
+
+**Prevention**: When tightening quality gates, always replay a real fixture diff against the immediately previous good run and add tests for the exact false-negative patterns before shipping the stricter logic. For grounding code, treat OCR-spaced CJK text, repeated title/body mentions, and table-derived evidence as first-class search cases rather than fallback edge cases.

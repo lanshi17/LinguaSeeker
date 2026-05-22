@@ -64,6 +64,7 @@ def _result(document_id: str, track: Track, value: str) -> EvidenceExtractionRes
             score_gate_passed=False,
             human_review_required=True,
             human_review_reasons=["No grounded evidence chain was produced"],
+            human_review_by_category={"workflow": ["No grounded evidence chain was produced"]},
         ),
     )
 
@@ -99,6 +100,9 @@ async def test_run_extract_evidence_writes_dual_track_outputs(tmp_path: Path):
     assert summary_data["original"]["ocr_gap_count"] == 0
     assert summary_data["original"]["score_gate_passed"] is False
     assert summary_data["original"]["human_review_required"] is True
+    assert summary_data["original"]["human_review_by_category"]["workflow"] == [
+        "No grounded evidence chain was produced",
+    ]
 
 
 def test_ensure_evidence_env_falls_back_to_loaded_llm_config(monkeypatch: pytest.MonkeyPatch):

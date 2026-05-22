@@ -149,6 +149,7 @@ class QualityReport(BaseModel):
     ambiguous_source_count: int = 0
     human_review_required: bool = False
     human_review_reasons: list[str] = Field(default_factory=list)
+    human_review_by_category: dict[str, list[str]] = Field(default_factory=dict)
 
 
 class EvidenceExtractionStatus(str, Enum):
