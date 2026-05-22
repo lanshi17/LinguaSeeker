@@ -419,3 +419,15 @@ Chinese medical journals often include both Chinese and English versions of titl
 **Solution**: Added the `response_method` parameter to the fixture provider, tightened the short-snippet traceability fallback, added regression tests for ambiguous-source chain suppression and `G.*` case-control filtering, and refreshed the module README/progress counts.
 
 **Prevention**: When a stage API changes, update deterministic test doubles in the same patch set. Add a regression test at the boundary where the new parameter is consumed so fixture drift fails immediately.
+
+## 2026-05-22: Autostash merge conflict in progress.txt
+
+**Problem**: Fast-forwarding the extract-evidence quality gate work into `dev` left an autostash conflict in `progress.txt`, while unrelated benchmark edits remained in the working tree.
+
+**Investigation**: Checked `git status`, the conflict markers, and both conflict sides to confirm that the branch version held the extract-evidence progress entries and the stash side held the `extract-evidence-output-review` note.
+
+**Root cause**: `git merge --autostash` reapplied a tracked progress update on top of another tracked progress update, so Git could not append the entries automatically.
+
+**Solution**: Resolved `progress.txt` by keeping both sets of entries, added a merge-completion log line, and left the benchmark edits untouched so the workspace still reflects the user's local changes.
+
+**Prevention**: When merging with autostash, inspect `progress.txt` explicitly before dropping the stash and treat tracked log files as likely conflict points.
