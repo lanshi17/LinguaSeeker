@@ -23,6 +23,25 @@ def test_quality_validation_flags_found_item_without_source():
     assert report.issues[0].issue_type == "missing_source"
 
 
+def test_quality_validation_treats_case_count_without_source_as_non_blocking():
+    item = EvidenceItem(
+        field_id="B.case_count",
+        category="B",
+        field_name="Independent case count",
+        status=EvidenceStatus.FOUND,
+        value=1,
+        confidence=1.0,
+        notes="Single case report; only one patient.",
+    )
+
+    report = QualityValidator(required_field_ids=set()).validate([item], contradictions=[], evidence_chain_count=1)
+
+    assert report.passed is True
+    assert report.scorable is True
+    assert report.score_gate_passed is True
+    assert "B.case_count is inferred from document structure and has no traceable source" in report.human_review_reasons
+
+
 def test_quality_validation_marks_unscorable_when_required_item_missing():
     item = EvidenceItem(
         field_id="B.disease_diagnosis",

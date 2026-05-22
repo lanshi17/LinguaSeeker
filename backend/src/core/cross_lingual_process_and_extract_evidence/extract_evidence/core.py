@@ -115,6 +115,9 @@ class SourceGrounder:
     ) -> list[EvidenceItem]:
         grounded: list[EvidenceItem] = []
         for item in items:
+            if item.status == EvidenceStatus.FOUND and item.source is None and item.field_id == "B.case_count":
+                grounded.append(item.model_copy(update={"status": EvidenceStatus.TABLE_UNGROUNDED}))
+                continue
             if item.status != EvidenceStatus.FOUND or item.source is None:
                 grounded.append(item)
                 continue
@@ -519,12 +522,17 @@ class QualityValidator:
             if item.status == EvidenceStatus.FOUND:
                 found_count += 1
                 if item.source is None:
-                    issues.append(QualityIssue(
-                        issue_type="missing_source",
-                        field_id=item.field_id,
-                        description=f"Found item {item.field_id} has no source",
-                        severity="error",
-                    ))
+                    if item.field_id == "B.case_count":
+                        reason = f"{item.field_id} is inferred from document structure and has no traceable source"
+                        human_review_by_category["workflow"].append(reason)
+                        human_review_reasons.append(reason)
+                    else:
+                        issues.append(QualityIssue(
+                            issue_type="missing_source",
+                            field_id=item.field_id,
+                            description=f"Found item {item.field_id} has no source",
+                            severity="error",
+                        ))
                 elif item.source.source_precision == SourcePrecision.AMBIGUOUS:
                     ambiguous_source_count += 1
                     reason = f"{item.field_id} has ambiguous source grounding"
