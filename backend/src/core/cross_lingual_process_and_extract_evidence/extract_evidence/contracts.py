@@ -124,6 +124,10 @@ class SpecialEvidenceRecord(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0, default=0.5)
 
 
+class SpecialEvidenceResponse(BaseModel):
+    records: list[SpecialEvidenceRecord] = Field(default_factory=list)
+
+
 class QualityIssue(BaseModel):
     issue_type: Literal[
         "missing_source",

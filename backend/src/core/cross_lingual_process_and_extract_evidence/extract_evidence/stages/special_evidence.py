@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pydantic import ValidationError
 
-from ..contracts import EvidenceItem, SpecialEvidenceRecord, TrackDocument
+from ..contracts import EvidenceItem, SpecialEvidenceRecord, SpecialEvidenceResponse, TrackDocument
 from ..core import SpecialEvidenceValidator
 from ..prompts import get_special_evidence_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
@@ -28,15 +28,20 @@ class SpecialEvidenceStage:
         )
         records = self._provider.invoke_structured(
             prompt=prompt,
-            output_schema=list[SpecialEvidenceRecord],
+            output_schema=SpecialEvidenceResponse,
             tier=EvidenceModelTier.STRONG,
             stage="special_evidence",
+            response_method="json_mode",
         )
         parsed = self._parse_records(records)
         return self._validator.filter_records(parsed, current_items, document)
 
     @staticmethod
     def _parse_records(records: object) -> list[SpecialEvidenceRecord]:
+        if isinstance(records, SpecialEvidenceResponse):
+            records = records.records
+        elif isinstance(records, dict) and "records" in records:
+            records = records["records"]
         if not isinstance(records, list):
             return []
         parsed: list[SpecialEvidenceRecord] = []

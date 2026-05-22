@@ -83,6 +83,7 @@ def test_special_evidence_stage_calls_strong_tier():
     assert result == []
     call_kwargs = provider.invoke_structured.call_args
     assert call_kwargs.kwargs["tier"] == EvidenceModelTier.STRONG
+    assert call_kwargs.kwargs["response_method"] == "json_mode"
 
 
 def test_special_evidence_stage_filters_untraceable_case_control_records():
