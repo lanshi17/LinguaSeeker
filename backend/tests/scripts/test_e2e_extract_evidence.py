@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
 
+import scripts.e2e_extract_evidence as runner
 from scripts.e2e_extract_evidence import run_extract_evidence
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     DualEvidenceExtractionResult,
@@ -84,6 +86,35 @@ async def test_run_extract_evidence_writes_dual_track_outputs(tmp_path: Path):
     assert translated_data["track"] == "translated"
     assert summary_data["original"]["found_count"] == 1
     assert summary_data["translated"]["found_count"] == 1
+
+
+def test_ensure_evidence_env_falls_back_to_loaded_llm_config(monkeypatch: pytest.MonkeyPatch):
+    class FakeLlm:
+        api_key = "key"
+        base_url = "http://localhost:8001/v1"
+        model = "model"
+
+    class FakeConfig:
+        llm = FakeLlm()
+
+    for name in (
+        "EVIDENCE_EXTRACTION_API_KEY",
+        "EVIDENCE_EXTRACTION_BASE_URL",
+        "EVIDENCE_EXTRACTION_FAST_MODEL",
+        "EVIDENCE_EXTRACTION_STANDARD_MODEL",
+        "EVIDENCE_EXTRACTION_STRONG_MODEL",
+        "LLM_API_KEY",
+        "LLM_BASE_URL",
+        "LLM_MODEL",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(runner, "get_config", lambda: FakeConfig())
+
+    runner._ensure_evidence_env_from_llm()
+
+    assert os.environ["EVIDENCE_EXTRACTION_API_KEY"] == "key"
+    assert os.environ["EVIDENCE_EXTRACTION_BASE_URL"] == "http://localhost:8001/v1"
+    assert os.environ["EVIDENCE_EXTRACTION_STRONG_MODEL"] == "model"
 
 
 def _write_fixture(input_dir: Path) -> None:

@@ -56,18 +56,26 @@ def _configure_logger() -> None:
 
 def _ensure_evidence_env_from_llm() -> None:
     """Map local LLM_* settings to EVIDENCE_EXTRACTION_* for this process only."""
+    try:
+        cfg_llm = get_config().llm
+    except Exception:
+        cfg_llm = None
     mappings = {
-        "EVIDENCE_EXTRACTION_API_KEY": "LLM_API_KEY",
-        "EVIDENCE_EXTRACTION_BASE_URL": "LLM_BASE_URL",
-        "EVIDENCE_EXTRACTION_FAST_MODEL": "LLM_MODEL",
-        "EVIDENCE_EXTRACTION_STANDARD_MODEL": "LLM_MODEL",
-        "EVIDENCE_EXTRACTION_STRONG_MODEL": "LLM_MODEL",
+        "EVIDENCE_EXTRACTION_API_KEY": ("LLM_API_KEY", "api_key"),
+        "EVIDENCE_EXTRACTION_BASE_URL": ("LLM_BASE_URL", "base_url"),
+        "EVIDENCE_EXTRACTION_FAST_MODEL": ("LLM_MODEL", "model"),
+        "EVIDENCE_EXTRACTION_STANDARD_MODEL": ("LLM_MODEL", "model"),
+        "EVIDENCE_EXTRACTION_STRONG_MODEL": ("LLM_MODEL", "model"),
     }
-    for evidence_key, llm_key in mappings.items():
+    for evidence_key, (llm_key, cfg_attr) in mappings.items():
         if os.environ.get(evidence_key):
             continue
         if os.environ.get(llm_key):
             os.environ[evidence_key] = os.environ[llm_key]
+            continue
+        cfg_value = getattr(cfg_llm, cfg_attr, "") if cfg_llm is not None else ""
+        if cfg_value:
+            os.environ[evidence_key] = cfg_value
 
 
 def _json_ready(value: BaseModel | dict[str, Any]) -> dict[str, Any]:

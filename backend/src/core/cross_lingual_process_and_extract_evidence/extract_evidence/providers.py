@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from enum import Enum
 import json
+import re
 from typing import Any
 from typing import TypeVar
 
@@ -11,6 +12,7 @@ import openai
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from loguru import logger
+from pydantic import ValidationError
 from pydantic import BaseModel, SecretStr, TypeAdapter
 
 from .config_context import EvidenceExtractionConfigContext
@@ -118,7 +120,30 @@ class LangChainEvidenceProvider:
         content = message.content
         if not isinstance(content, str):
             raise RuntimeError("Fallback JSON response content is not text")
-        return adapter.validate_json(_strip_json_fences(content))
+        json_text = _repair_invalid_json_escapes(_strip_json_fences(content))
+        try:
+            return adapter.validate_json(json_text)
+        except ValidationError:
+            repaired = self._repair_json_with_llm(llm, json_text, schema)
+            return adapter.validate_json(repaired)
+
+    def _repair_json_with_llm(
+        self,
+        llm: ChatOpenAI,
+        invalid_json: str,
+        schema: dict[str, Any],
+    ) -> str:
+        repair_prompt = (
+            "Repair the following invalid JSON so it exactly matches the JSON Schema. "
+            "Return only valid JSON. Do not add Markdown fences or explanation.\n\n"
+            f"JSON Schema:\n{json.dumps(schema, ensure_ascii=False)}\n\n"
+            f"Invalid JSON:\n{invalid_json}"
+        )
+        message = llm.invoke([HumanMessage(content=repair_prompt)])
+        content = message.content
+        if not isinstance(content, str):
+            raise RuntimeError("JSON repair response content is not text")
+        return _repair_invalid_json_escapes(_strip_json_fences(content))
 
 
 def _strip_json_fences(content: str) -> str:
@@ -131,6 +156,10 @@ def _strip_json_fences(content: str) -> str:
             lines = lines[:-1]
         return "\n".join(lines).strip()
     return text
+
+
+def _repair_invalid_json_escapes(content: str) -> str:
+    return re.sub(r'\\(?!["\\/bfnrtu])', r"\\\\", content)
 
 
 def _is_pydantic_model_schema(output_schema: Any) -> bool:
