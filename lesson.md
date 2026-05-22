@@ -475,3 +475,15 @@ Chinese medical journals often include both Chinese and English versions of titl
 **Solution**: Wrapped the output in a Pydantic `SpecialEvidenceResponse` with a `records` field and forced `json_mode` for the stage. That keeps the response shape stable, avoids the brittle bare-list text fallback, and still preserves the post-parse validator filtering. Added tests at the provider and stage boundary and verified the full targeted suite plus Ruff.
 
 **Prevention**: For any stage that can emit long prose, prefer a wrapper object over a naked list and use the response mode with the simplest stable contract. Keep brittle repair paths behind a typed envelope, not directly on the user-facing payload shape.
+
+## 2026-05-22: inferred case_count without source was blocking the gate
+
+**Problem**: The translated v3 output had `B.case_count` marked `FOUND` with `source=null`, which triggered a hard `missing_source` error in quality validation and blocked the translated track even though the value was only an inferred case count from article structure.
+
+**Investigation**: Rechecked the latest Fabry output and confirmed the item was an inference-only count, not a traceable excerpt. The failure was localized to the gate: the item should remain visible for review, but it should not fail the score gate the way a true source-bearing `FOUND` item would.
+
+**Root cause**: The quality path treated every `FOUND` item without a source as structurally invalid, even for fields that can reasonably be inferred from document structure. That made `B.case_count` a gate blocker instead of a reviewable inference.
+
+**Solution**: Added a narrow exception for `B.case_count` so it is downgraded into non-blocking handling without changing the broader `FOUND` semantics for other fields. Kept review visibility via the human-review reason list and verified the targeted extract-evidence suite plus Ruff.
+
+**Prevention**: Separate “traceable evidence” from “inference from document structure” in the contract or prompt design. Fields that can be inferred should not be forced through the same source requirements as verbatim evidence spans.
