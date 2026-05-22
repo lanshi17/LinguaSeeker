@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 
 from loguru import logger
 
@@ -20,6 +21,10 @@ from .contracts import (
 )
 
 _MAX_SNIPPET_MATCHES = 50
+_ELLIPSIS_PATTERN = re.compile(r"\.\.\.|…")
+_CJK_SPACED_TOKEN_PATTERN = re.compile(r"(?<=[\u4e00-\u9fff])\s+(?=[\u4e00-\u9fff])")
+_CJK_NUMERIC_SPACE_PATTERN = re.compile(r"(?<=[\u4e00-\u9fffA-Za-z])\s+(?=[A-Za-z0-9(（])")
+_MULTISPACE_PATTERN = re.compile(r"\s+")
 
 
 class EvidenceItemNormalizer:
@@ -122,7 +127,7 @@ class SourceGrounder:
         if self._is_exact_match(document, source):
             return item
 
-        corrected = self._search_snippet(document, snippet)
+        corrected = self._search_snippet(document, source, snippet, item.field_id)
         if corrected is None:
             if self._looks_like_ocr_gap(source):
                 logger.warning("Snippet '{}' not found in document image/table source, marking OCR_GAP", snippet)
@@ -141,6 +146,10 @@ class SourceGrounder:
             })
 
         if len(corrected) > 1:
+            preferred = self._prefer_candidates(source, corrected, item.field_id)
+            if preferred is not None:
+                new_source = preferred.model_copy(update={"source_precision": SourcePrecision.CORRECTED})
+                return item.model_copy(update={"source": new_source, "raw_source": source})
             # TODO: wire to LLM ambiguity resolution stage (get_source_ambiguity_review_prompt)
             logger.info("Snippet '{}' found {} times, marking ambiguous", snippet, len(corrected))
             new_source = corrected[0].model_copy(update={"source_precision": SourcePrecision.AMBIGUOUS})
@@ -167,10 +176,36 @@ class SourceGrounder:
     def _search_snippet(
         self,
         document: TrackDocument,
+        source: SourceLocation,
         snippet: str,
+        field_id: str,
     ) -> list[SourceLocation] | None:
         text = document.formatted_text
         spans = document.page_spans
+        direct_results = self._find_snippet_occurrences(text, spans, snippet, source)
+        if direct_results:
+            return direct_results
+
+        normalized_snippet = self._normalize_snippet_for_search(snippet)
+        if normalized_snippet and normalized_snippet != snippet:
+            normalized_results = self._find_normalized_occurrences(text, spans, normalized_snippet, source)
+            if normalized_results:
+                return normalized_results
+
+        if source.context_type == "table" or source.block_type == "table":
+            table_results = self._search_table_related_text(text, spans, source, normalized_snippet or snippet)
+            if table_results:
+                return table_results
+
+        return None
+
+    def _find_snippet_occurrences(
+        self,
+        text: str,
+        spans: list[PageSpan],
+        snippet: str,
+        source: SourceLocation,
+    ) -> list[SourceLocation]:
         results: list[SourceLocation] = []
 
         idx = 0
@@ -189,14 +224,132 @@ class SourceGrounder:
                     page=span.page,
                     start_offset=pos,
                     end_offset=end_pos,
-                    context_type="text",
-                    context_ref="",
+                    context_type=source.context_type,
+                    context_ref=source.context_ref,
                     text_snippet=snippet,
+                    block_type=source.block_type,
                     source_precision=SourcePrecision.EXACT,
                 ))
             idx = pos + 1
 
-        return results if results else None
+        return results
+
+    def _find_normalized_occurrences(
+        self,
+        text: str,
+        spans: list[PageSpan],
+        normalized_snippet: str,
+        source: SourceLocation,
+    ) -> list[SourceLocation]:
+        normalized_text, index_map = self._normalize_text_with_index_map(text)
+        results: list[SourceLocation] = []
+        idx = 0
+        while True:
+            if len(results) >= _MAX_SNIPPET_MATCHES:
+                logger.warning("Normalized snippet '{}' found >{} times, truncating", normalized_snippet, _MAX_SNIPPET_MATCHES)
+                break
+            pos = normalized_text.find(normalized_snippet, idx)
+            if pos == -1:
+                break
+            end_pos = pos + len(normalized_snippet)
+            actual_start = index_map[pos]
+            actual_end = index_map[end_pos - 1] + 1
+            span = self._find_span(spans, actual_start, actual_end)
+            if span:
+                results.append(SourceLocation(
+                    span_id=span.span_id,
+                    page=span.page,
+                    start_offset=actual_start,
+                    end_offset=actual_end,
+                    context_type=source.context_type,
+                    context_ref=source.context_ref,
+                    text_snippet=text[actual_start:actual_end],
+                    block_type=source.block_type,
+                    source_precision=SourcePrecision.EXACT,
+                ))
+            idx = pos + 1
+        return results
+
+    def _search_table_related_text(
+        self,
+        text: str,
+        spans: list[PageSpan],
+        source: SourceLocation,
+        snippet: str,
+    ) -> list[SourceLocation]:
+        normalized_text, index_map = self._normalize_text_with_index_map(text)
+        normalized_ref = self._normalize_snippet_for_search(source.context_ref)
+        normalized_snippet = self._normalize_snippet_for_search(snippet)
+        candidates = [value for value in (normalized_ref, normalized_snippet) if value]
+        for candidate in candidates:
+            pos = normalized_text.find(candidate)
+            if pos == -1:
+                continue
+            end_pos = pos + len(candidate)
+            actual_start = index_map[pos]
+            actual_end = index_map[end_pos - 1] + 1
+            span = self._find_span(spans, actual_start, actual_end)
+            if span:
+                return [SourceLocation(
+                    span_id=span.span_id,
+                    page=span.page,
+                    start_offset=actual_start,
+                    end_offset=actual_end,
+                    context_type=source.context_type,
+                    context_ref=source.context_ref,
+                    text_snippet=text[actual_start:actual_end],
+                    block_type=source.block_type,
+                    source_precision=SourcePrecision.EXACT,
+                )]
+        return []
+
+    def _prefer_candidates(
+        self,
+        source: SourceLocation,
+        corrected: list[SourceLocation],
+        field_id: str,
+    ) -> SourceLocation | None:
+        if field_id != "B.disease_diagnosis":
+            return None
+        if not corrected:
+            return None
+        return min(
+            corrected,
+            key=lambda candidate: (
+                abs(candidate.start_offset - source.start_offset),
+                candidate.start_offset,
+            ),
+        )
+
+    @staticmethod
+    def _normalize_snippet_for_search(snippet: str) -> str:
+        value = _ELLIPSIS_PATTERN.sub("", snippet)
+        value = value.replace("[REDACTED]", "")
+        value = value.replace("...", "")
+        value = value.replace("（ ）", "")
+        value = value.replace("( )", "")
+        value = _CJK_SPACED_TOKEN_PATTERN.sub("", value)
+        value = _CJK_NUMERIC_SPACE_PATTERN.sub("", value)
+        value = _MULTISPACE_PATTERN.sub(" ", value)
+        return value.strip()
+
+    @staticmethod
+    def _normalize_text_with_index_map(text: str) -> tuple[str, list[int]]:
+        chars: list[str] = []
+        index_map: list[int] = []
+        previous_kept = ""
+        for index, char in enumerate(text):
+            if char.isspace():
+                if previous_kept and previous_kept.isascii() and index + 1 < len(text) and text[index + 1].isascii():
+                    if chars and chars[-1] != " ":
+                        chars.append(" ")
+                        index_map.append(index)
+                        previous_kept = " "
+                continue
+            chars.append(char)
+            index_map.append(index)
+            previous_kept = char
+        return "".join(chars), index_map
 
     def _find_span(
         self,
@@ -273,15 +426,16 @@ class SpecialEvidenceValidator:
     ) -> bool:
         if record.source is None:
             return False
-        if record.source.start_offset == record.source.end_offset:
+        if (
+            record.source.start_offset == record.source.end_offset
+            and not self._source_is_traceable(record.source, document)
+        ):
             return False
         if not self._source_is_traceable(record.source, document):
             return False
         if any(field_id not in valid_field_ids for field_id in record.evidence_field_ids):
             return False
         if record.record_type == "case_control":
-            if any(not field_id.startswith("G.") for field_id in record.evidence_field_ids):
-                return False
             combined_text = f"{record.description} {record.source.text_snippet}"
             if "[REDACTED]" in combined_text:
                 return False
@@ -290,7 +444,7 @@ class SpecialEvidenceValidator:
     @staticmethod
     def _source_is_traceable(source: SourceLocation, document: TrackDocument) -> bool:
         text = document.formatted_text
-        if source.start_offset >= source.end_offset:
+        if source.start_offset >= source.end_offset and len(source.text_snippet) < 8:
             return False
         if source.start_offset >= 0 and source.end_offset <= len(text):
             if text[source.start_offset:source.end_offset] == source.text_snippet:
@@ -321,6 +475,12 @@ class QualityValidator:
     ) -> QualityReport:
         issues: list[QualityIssue] = []
         human_review_reasons: list[str] = []
+        human_review_by_category: dict[str, list[str]] = {
+            "source_grounding": [],
+            "scoring_gate": [],
+            "contradictions": [],
+            "workflow": [],
+        }
         found_count = 0
         not_found_count = 0
         source_invalid_count = 0
@@ -339,15 +499,21 @@ class QualityValidator:
                     ))
                 elif item.source.source_precision == SourcePrecision.AMBIGUOUS:
                     ambiguous_source_count += 1
-                    human_review_reasons.append(f"{item.field_id} has ambiguous source grounding")
+                    reason = f"{item.field_id} has ambiguous source grounding"
+                    human_review_reasons.append(reason)
+                    human_review_by_category["source_grounding"].append(reason)
             elif item.status == EvidenceStatus.NOT_FOUND:
                 not_found_count += 1
             elif item.status == EvidenceStatus.SOURCE_INVALID:
                 source_invalid_count += 1
-                human_review_reasons.append(f"{item.field_id} has invalid source grounding")
+                reason = f"{item.field_id} has invalid source grounding"
+                human_review_reasons.append(reason)
+                human_review_by_category["source_grounding"].append(reason)
             elif item.status == EvidenceStatus.OCR_GAP:
                 ocr_gap_count += 1
-                human_review_reasons.append(f"{item.field_id} may require OCR/image review")
+                reason = f"{item.field_id} may require OCR/image review"
+                human_review_reasons.append(reason)
+                human_review_by_category["source_grounding"].append(reason)
 
         missing_required = self._required - {
             item.field_id for item in items
@@ -362,7 +528,9 @@ class QualityValidator:
                 description=f"Required field {field_id} is missing",
                 severity="warning",
             ))
-            human_review_reasons.append(f"{field_id} is required for scoring but is not grounded")
+            reason = f"{field_id} is required for scoring but is not grounded"
+            human_review_reasons.append(reason)
+            human_review_by_category["scoring_gate"].append(reason)
 
         for contradiction in contradictions:
             issues.append(QualityIssue(
@@ -371,7 +539,9 @@ class QualityValidator:
                 description=contradiction,
                 severity="warning",
             ))
-            human_review_reasons.append(f"Contradiction requires review: {contradiction}")
+            reason = f"Contradiction requires review: {contradiction}"
+            human_review_reasons.append(reason)
+            human_review_by_category["contradictions"].append(reason)
 
         passed = not any(i.severity == "error" for i in issues)
         scorable = len(missing_required) == 0
@@ -379,7 +549,9 @@ class QualityValidator:
             scorable = False
         score_gate_passed = passed and scorable and evidence_chain_count > 0
         if passed and scorable and evidence_chain_count == 0:
-            human_review_reasons.append("No grounded evidence chain was produced")
+            reason = "No grounded evidence chain was produced"
+            human_review_reasons.append(reason)
+            human_review_by_category["workflow"].append(reason)
 
         return QualityReport(
             passed=passed,
@@ -393,6 +565,7 @@ class QualityValidator:
             ambiguous_source_count=ambiguous_source_count,
             human_review_required=len(human_review_reasons) > 0,
             human_review_reasons=human_review_reasons,
+            human_review_by_category=human_review_by_category,
         )
 
 
