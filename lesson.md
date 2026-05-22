@@ -463,3 +463,15 @@ Chinese medical journals often include both Chinese and English versions of titl
 **Solution**: Added strict verbatim and punctuation-copy rules to both catalog and special-evidence prompts, hard-rejected ellipsis snippets as `SOURCE_INVALID`, introduced `TABLE_UNGROUNDED` for table-path misses, and threaded that status into validation and E2E summaries. Added regression tests for prompt text, ellipsis invalidation, and table-path handling, then verified the targeted suite and Ruff.
 
 **Prevention**: When the failure class is “snippet drift,” make the prompt rules machine-checkable and exact. When the failure class is “data exists but the path is wrong,” represent that explicitly with its own status instead of reusing OCR-gap semantics.
+
+## 2026-05-22: special_evidence JSON text fallback was too fragile
+
+**Problem**: Running `uv run scripts/e2e_extract_evidence.py` on the Fabry fixture aborted inside the translated track with `pydantic_core.ValidationError: Invalid JSON: invalid escape`, originating from the `special_evidence` stage.
+
+**Investigation**: Traced the exception to the provider's JSON-text fallback path. The stage was still asking for a bare `list[SpecialEvidenceRecord]`, which forced a brittle text-only repair path. The model output contained backslashes that the fallback repair path could not fully normalize before `validate_json()`.
+
+**Root cause**: `special_evidence` was using the least stable structured-output shape for a stage that already emits complex natural-language descriptions. A bare list schema plus text fallback made the pipeline fragile to escape sequences in the model response.
+
+**Solution**: Wrapped the output in a Pydantic `SpecialEvidenceResponse` with a `records` field and forced `json_mode` for the stage. That keeps the response shape stable, avoids the brittle bare-list text fallback, and still preserves the post-parse validator filtering. Added tests at the provider and stage boundary and verified the full targeted suite plus Ruff.
+
+**Prevention**: For any stage that can emit long prose, prefer a wrapper object over a naked list and use the response mode with the simplest stable contract. Keep brittle repair paths behind a typed envelope, not directly on the user-facing payload shape.
