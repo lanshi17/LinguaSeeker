@@ -143,3 +143,78 @@ def test_grounder_preserves_special_record_on_failure_with_no_source():
 
     assert grounded.source is None
     assert grounded.raw_source is not None
+
+
+def test_grounder_grounds_caption_text_not_present_in_formatted_text():
+    text = "BRCA1 c.5266dupC"
+    doc = TrackDocument(
+        document_id="doc-caption",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+        blocks=[
+            ContentBlock(
+                type="table",
+                page_idx=0,
+                table_body="BRCA1 c.5266dupC",
+                table_caption=["Table 1. Variants"],
+                bbox=[5, 6, 7, 8],
+            )
+        ],
+    )
+    item = EvidenceItem(
+        field_id="J.known_pathogenic_variant_reference",
+        category="J",
+        field_name="Known pathogenic variant reference",
+        status=EvidenceStatus.FOUND,
+        value="Table 1",
+        confidence=0.9,
+        raw_source=SourceLocation(
+            block_index=0,
+            context_type="table",
+            context_ref="Table 1. Variants",
+            text_snippet="Table 1. Variants",
+        ),
+    )
+
+    grounded = SourceGrounder().ground_items(doc, [item])[0]
+
+    assert grounded.status == EvidenceStatus.FOUND
+    assert grounded.source is not None
+    assert grounded.source.block_index == 0
+    assert grounded.source.bbox == [5, 6, 7, 8]
+    assert grounded.source.text_snippet == "Table 1. Variants"
+
+
+def test_grounder_uses_matched_block_for_duplicate_snippet_provenance():
+    text = "BRCA1\nBRCA1"
+    doc = TrackDocument(
+        document_id="doc-dup",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=len(text))],
+        blocks=[
+            ContentBlock(type="text", page_idx=0, text="BRCA1", bbox=[1, 1, 2, 2]),
+            ContentBlock(type="text", page_idx=0, text="BRCA1", bbox=[9, 9, 10, 10]),
+        ],
+    )
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="BRCA1",
+        confidence=0.9,
+        raw_source=SourceLocation(
+            block_index=1,
+            context_type="text",
+            context_ref="",
+            text_snippet="BRCA1",
+        ),
+    )
+
+    grounded = SourceGrounder().ground_items(doc, [item])[0]
+
+    assert grounded.source is not None
+    assert grounded.source.block_index == 1
+    assert grounded.source.bbox == [9, 9, 10, 10]

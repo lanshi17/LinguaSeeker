@@ -207,8 +207,13 @@ class GroupAssigner:
                 group_ids.append(group_id)
 
         for gene_item in gene_items:
+            has_variant_group = any(
+                group_id.startswith(f"gene={normalize_group_token(gene_item.value)}|")
+                and not group_id.endswith(f"variant={_MISSING_GROUP_VALUE}")
+                for group_id in group_ids
+            )
             group_id = make_group_id(gene_item.value, "")
-            if group_id not in group_ids:
+            if not has_variant_group and group_id not in group_ids:
                 group_ids.append(group_id)
 
         return sorted(group_ids)
@@ -589,17 +594,40 @@ class SourceGrounder:
         block: ContentBlock,
     ) -> SourceLocation | None:
         start = document.formatted_text.find(text_snippet)
-        if start < 0:
-            return None
-        end = start + len(text_snippet)
-        span = self._find_span(document.page_spans, start, end)
+        if start >= 0:
+            end = start + len(text_snippet)
+            span = self._find_span(document.page_spans, start, end)
+            if span is None:
+                return None
+            return SourceLocation(
+                span_id=span.span_id,
+                page=span.page,
+                start_offset=start,
+                end_offset=end,
+                context_type=source.context_type,
+                context_ref=source.context_ref,
+                text_snippet=text_snippet,
+                block_index=block_index,
+                bbox=block.bbox,
+                block_type=self._map_block_type(block.type),
+                source_precision=SourcePrecision.EXACT,
+            )
+
+        block_text = self._block_readable_text(block)
+        snippet_offset = block_text.find(text_snippet)
+        span = self._find_span(document.page_spans, 0, len(document.formatted_text))
         if span is None:
-            return None
+            span = PageSpan(
+                span_id=f"{document.track.value}-p{block.page_idx + 1}",
+                page=block.page_idx + 1,
+                start_offset=0,
+                end_offset=max(len(document.formatted_text), 0),
+            )
         return SourceLocation(
             span_id=span.span_id,
             page=span.page,
-            start_offset=start,
-            end_offset=end,
+            start_offset=span.start_offset + max(snippet_offset, 0),
+            end_offset=span.start_offset + max(snippet_offset, 0) + len(text_snippet),
             context_type=source.context_type,
             context_ref=source.context_ref,
             text_snippet=text_snippet,
@@ -888,6 +916,14 @@ class SpecialEvidenceValidator:
 
     @staticmethod
     def _source_is_traceable(source: SourceLocation, document: TrackDocument) -> bool:
+        if 0 <= source.block_index < len(document.blocks):
+            block = document.blocks[source.block_index]
+            block_text_parts = [*block.table_caption, *block.image_caption, *block.chart_caption]
+            for value in (block.text, block.content, block.table_body):
+                if value.strip():
+                    block_text_parts.append(value.strip())
+            if source.text_snippet in "\n".join(block_text_parts):
+                return True
         text = document.formatted_text
         if source.start_offset >= source.end_offset and len(source.text_snippet) < 8:
             return False

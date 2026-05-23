@@ -394,6 +394,43 @@ def test_special_evidence_stage_keeps_traceable_authority_with_zero_offsets():
     assert result[0].raw_source is not None
 
 
+def test_special_evidence_stage_keeps_caption_sourced_record_before_grounding():
+    provider = MagicMock()
+    provider.invoke_structured.return_value = [
+        {
+            "record_type": "authority",
+            "description": "Caption-carried authority evidence.",
+            "evidence_field_ids": ["J.known_pathogenic_variant_reference"],
+            "source": {
+                "block_index": 0,
+                "context_type": "table",
+                "context_ref": "Table 1. Variants",
+                "text_snippet": "Table 1. Variants",
+            },
+            "confidence": 0.9,
+        }
+    ]
+    current_item = EvidenceItem(
+        field_id="J.known_pathogenic_variant_reference",
+        category="J",
+        field_name="Known pathogenic variant reference",
+        status=EvidenceStatus.FOUND,
+        value="variant reference",
+        confidence=0.9,
+        raw_source=SourceLocation(
+            block_index=0,
+            context_type="table",
+            context_ref="Table 1. Variants",
+            text_snippet="Table 1. Variants",
+        ),
+    )
+
+    result = SpecialEvidenceStage(provider).run(_doc(), [current_item])
+
+    assert len(result) == 1
+    assert result[0].raw_source is not None
+
+
 def test_special_evidence_stage_keeps_non_g_case_control_when_document_text_is_traceable():
     provider = MagicMock()
     provider.invoke_structured.return_value = [
