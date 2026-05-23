@@ -84,3 +84,4 @@
 [2026-05-22] [extract-evidence-v3-case-count-implicit] [done] Downgraded inferred B.case_count without source to non-blocking table-grounded handling so translated quality gate can pass while preserving review visibility; verified targeted extract-evidence tests pass and Ruff clean.
 [2026-05-23] [extract-evidence-block-aware-refactor-plan] [planned] Planned block-aware source grounding, variant-centered group assignment, multi-chain assembly, special-evidence grouping, quality-gate semantics, and three-layer regression coverage.
 [2026-05-23] Block-aware evidence extraction Task 1: add local ContentBlock contracts, group-aware public fields, and case_ids chain contract [completed]
+[2026-05-23] Block-aware evidence extraction Task 2: preserve parsed content blocks in extract_evidence API input and backward-compatible JSON loading [completed]
