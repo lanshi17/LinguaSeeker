@@ -89,3 +89,6 @@
 [2026-05-23] Block-aware evidence extraction Task 4: move LLM-produced sources into raw_source before grounding and keep sparse stage outputs [completed]
 [2026-05-23] Block-aware evidence extraction Task 5: add deterministic variant-centered group assignment for evidence items and special records [completed]
 [2026-05-23] Block-aware evidence extraction Task 6: add per-group evidence normalization with full-catalog backfill per group [completed]
+[2026-05-23] Block-aware evidence extraction Task 7: ground evidence and special records by content blocks with bbox/block-type propagation [completed]
+[2026-05-23] Block-aware evidence extraction Task 8: assemble grouped variant-centered chains with case aggregation and special evidence attachment [completed]
+[2026-05-23] Block-aware evidence extraction Task 9: replace validation scoring semantics with chain-aware quality gate behavior [completed]

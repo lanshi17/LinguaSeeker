@@ -17,7 +17,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.provid
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import CatalogExtractionStage
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.evidence_map import EvidenceMapStage
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.quality_validation import QualityValidationStage
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.quality_validation import QualityGateStage
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.source_grounding import SourceGroundingStage
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.special_evidence import SpecialEvidenceStage
 
@@ -477,8 +477,9 @@ def test_source_grounding_stage_uses_grounder():
     )
 
     stage = SourceGroundingStage()
-    result = stage.run(_doc(), [item])
+    result, special = stage.run(_doc(), [item], [])
 
+    assert special == []
     assert result[0].source.source_precision == SourcePrecision.EXACT
 
 
@@ -497,8 +498,8 @@ def test_quality_validation_stage_returns_report():
         confidence=0.9,
     )
 
-    stage = QualityValidationStage()
-    report = stage.run([item], contradictions=[])
+    stage = QualityGateStage()
+    report = stage.run([item], contradictions=[], chains=[], special_records=[])
 
     assert isinstance(report, QualityReport)
     assert report.passed is True

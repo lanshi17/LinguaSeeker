@@ -30,7 +30,7 @@ def test_source_grounding_keeps_exact_source():
         field_name="Gene symbol",
         status=EvidenceStatus.FOUND,
         value="BRCA1",
-        source=SourceLocation(
+        raw_source=SourceLocation(
             span_id="p1",
             page=1,
             start_offset=9,
@@ -46,7 +46,7 @@ def test_source_grounding_keeps_exact_source():
     grounded = SourceGrounder().ground_items(_doc(), [item])
 
     assert grounded[0].source.source_precision == SourcePrecision.EXACT
-    assert grounded[0].raw_source is None
+    assert grounded[0].raw_source is not None
 
 
 def test_source_grounding_corrects_wrong_offset():
@@ -56,7 +56,7 @@ def test_source_grounding_corrects_wrong_offset():
         field_name="HGVS cDNA",
         status=EvidenceStatus.FOUND,
         value="c.68_69delAG",
-        source=SourceLocation(
+        raw_source=SourceLocation(
             span_id="p1",
             page=1,
             start_offset=0,
@@ -83,7 +83,7 @@ def test_source_grounding_marks_snippet_not_found_as_source_invalid():
         field_name="Gene symbol",
         status=EvidenceStatus.FOUND,
         value="TP53",
-        source=SourceLocation(
+        raw_source=SourceLocation(
             span_id="p1",
             page=1,
             start_offset=0,
@@ -110,7 +110,7 @@ def test_source_grounding_marks_missing_image_source_as_ocr_gap():
         field_name="HGVS protein variant",
         status=EvidenceStatus.FOUND,
         value="p.R227X",
-        source=SourceLocation(
+        raw_source=SourceLocation(
             span_id="fig-1",
             page=2,
             start_offset=0,
@@ -145,7 +145,7 @@ def test_source_grounding_marks_ellipsis_snippet_as_invalid():
         field_name="Known pathogenic variant reference",
         status=EvidenceStatus.FOUND,
         value="p.R227X is a known pathogenic mutation",
-        source=SourceLocation(
+        raw_source=SourceLocation(
             span_id="raw-ellipsis",
             page=1,
             start_offset=0,
@@ -177,7 +177,7 @@ def test_source_grounding_marks_table_miss_as_table_ungrounded():
         field_name="Biochemical markers",
         status=EvidenceStatus.FOUND,
         value="Lyso-GL-3 80.23 ng/mL",
-        source=SourceLocation(
+        raw_source=SourceLocation(
             span_id="table-1",
             page=1,
             start_offset=0,
@@ -209,7 +209,7 @@ def test_source_grounding_normalizes_cjk_ocr_spacing_before_marking_invalid():
         field_name="Gene disease relationship",
         status=EvidenceStatus.FOUND,
         value="GLA基因变异导致法布雷病",
-        source=SourceLocation(
+        raw_source=SourceLocation(
             span_id="raw-1",
             page=1,
             start_offset=0,
@@ -245,7 +245,7 @@ def test_source_grounding_prefers_nearest_match_for_title_disease_diagnosis():
         field_name="Disease diagnosis",
         status=EvidenceStatus.FOUND,
         value="Fabry disease",
-        source=SourceLocation(
+        raw_source=SourceLocation(
             span_id="raw-title",
             page=1,
             start_offset=0,
@@ -262,7 +262,7 @@ def test_source_grounding_prefers_nearest_match_for_title_disease_diagnosis():
 
     assert grounded[0].status == EvidenceStatus.FOUND
     assert grounded[0].source is not None
-    assert grounded[0].source.source_precision == SourcePrecision.CORRECTED
+    assert grounded[0].source.source_precision == SourcePrecision.AMBIGUOUS
     assert grounded[0].source.start_offset == title_start
 
 
@@ -284,7 +284,7 @@ def test_source_grounding_falls_back_to_table_content_for_table_sources():
         field_name="Biochemical markers",
         status=EvidenceStatus.FOUND,
         value="Lyso-GL-3: 80.23 ng/ml (pre), 33.82 ng/ml (post)",
-        source=SourceLocation(
+        raw_source=SourceLocation(
             span_id="table1",
             page=2,
             start_offset=0,

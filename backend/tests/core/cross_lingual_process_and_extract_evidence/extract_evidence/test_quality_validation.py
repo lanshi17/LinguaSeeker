@@ -1,6 +1,8 @@
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    EvidenceChain,
     EvidenceItem,
     EvidenceStatus,
+    SpecialEvidenceRecord,
     SourceLocation,
     SourcePrecision,
 )
@@ -34,7 +36,11 @@ def test_quality_validation_treats_case_count_without_source_as_non_blocking():
         notes="Single case report; only one patient.",
     )
 
-    report = QualityValidator(required_field_ids=set()).validate([item], contradictions=[], evidence_chain_count=1)
+    report = QualityValidator(required_field_ids=set()).validate(
+        [item],
+        contradictions=[],
+        chains=[EvidenceChain(chain_id="gene=G|variant=V", chain_level="full")],
+    )
 
     assert report.passed is True
     assert report.scorable is True
@@ -186,11 +192,11 @@ def test_quality_validation_requires_chain_for_score_gate():
     report = QualityValidator(required_field_ids={"A.gene_symbol"}).validate(
         [item],
         contradictions=[],
-        evidence_chain_count=0,
+        chains=[],
     )
 
     assert report.passed is True
-    assert report.scorable is True
+    assert report.scorable is False
     assert report.score_gate_passed is False
     assert report.human_review_required is True
 
@@ -218,7 +224,7 @@ def test_quality_validation_keeps_structural_and_scoring_review_reasons_grouped(
     report = QualityValidator(required_field_ids={"B.disease_diagnosis"}).validate(
         [item],
         contradictions=["Conflict in diagnosis wording"],
-        evidence_chain_count=0,
+        chains=[],
     )
 
     assert report.human_review_required is True
@@ -232,7 +238,35 @@ def test_quality_validation_keeps_structural_and_scoring_review_reasons_grouped(
     assert report.human_review_by_category["contradictions"] == [
         "Contradiction requires review: Conflict in diagnosis wording",
     ]
-    assert report.human_review_by_category["workflow"] == []
+    assert report.human_review_by_category["workflow"] == [
+        "No full evidence chain was produced",
+    ]
+
+
+def test_quality_validation_marks_special_record_with_only_raw_source_for_review():
+    record = SpecialEvidenceRecord(
+        record_type="functional",
+        description="Assay evidence",
+        group_id="gene=BRCA1|variant=c.5266dupC",
+        raw_source=SourceLocation(
+            block_index=1,
+            context_type="figure",
+            context_ref="Figure 1",
+            text_snippet="assay evidence",
+        ),
+    )
+
+    report = QualityValidator(required_field_ids=set()).validate(
+        [],
+        contradictions=[],
+        chains=[],
+        special_records=[record],
+    )
+
+    assert report.human_review_required is True
+    assert report.human_review_by_category["source_grounding"] == [
+        "Special evidence functional requires source grounding review",
+    ]
 
 
 def test_normalizer_expands_sparse_llm_output_to_full_catalog():

@@ -271,6 +271,22 @@ Only 7 documents have terminology maps. Terminology extraction may be skipped fo
 
 **Prevention**: When refactoring pipeline phase boundaries, identify every consumer that depends on the old phase ordering before changing runtime shape. Preserve the old API where needed, and add a new method for the new phase semantics instead of overloading one helper with both meanings.
 
+## 2026-05-23: Batch-3 extract_evidence refactor required workflow-level integration, not just local logic
+
+**Problem**: Tasks 7-9 each passed in isolation once their local logic was updated, but the first batch-level verification still failed because workflow and stage integration lagged behind the refactors. The concrete gaps were an old `QualityValidationStage` import in `workflow.py`, the old `SourceGroundingStage.run(document, items)` signature, and legacy tests still expecting pre-refactor chain/grounding semantics.
+
+**Investigation**: Ran each task slice first (`test_source_grounder.py`, `test_chain_builder.py`, `test_quality_validator.py`) and then a combined Batch 3 verification slice. The combined run surfaced integration failures immediately: import drift, stage signature mismatch, and one remaining Ruff failure from a missing `ContentBlock` import in `core.py`.
+
+**Root cause**: The plan refactors three adjacent phases of the same workflow. Local tests proved the new behavior, but the orchestration layer still encoded the old topology and old call signatures. This is a classic failure mode when staged refactors change both data shape and control flow.
+
+**Solution**:
+1. Reworked `SourceGrounder` to consume `raw_source`, propagate block metadata, and ground special records separately.
+2. Refactored `EvidenceChainBuilder` to build per-group `full` / `partial` / `singleton` chains and attach `special_evidence_ids`.
+3. Updated `QualityValidator` to accept chains and special records, and renamed the stage to `QualityGateStage`.
+4. Updated `workflow.py` to pass grounded special records into chain assembly and quality gating, and to use the new stage signatures.
+
+**Prevention**: For multi-phase workflow refactors, do not trust isolated task slices alone. After each task-level green run, immediately run one combined “batch integration slice” that includes the touched workflow/stage tests. It catches import drift and signature mismatches before they accumulate.
+
 ### Problem 5: zh_functional suspicious char ratio (1 document, LOW)
 
 zh_functional has char ratio 0.58 (translation shorter than source), unusual for zh→en. Possible content truncation.

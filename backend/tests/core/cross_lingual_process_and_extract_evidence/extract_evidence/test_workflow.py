@@ -84,6 +84,7 @@ def _found_item(field_id: str, value: str) -> EvidenceItem:
         status=EvidenceStatus.FOUND,
         value=value,
         confidence=0.9,
+        group_id="gene=GLA|variant=p.R227X",
         source=SourceLocation(
             span_id="p1",
             page=1,
@@ -103,14 +104,15 @@ def test_evidence_chain_builder_creates_identity_chain_from_grounded_fields():
         _found_item("A.variant_hgvs_p", "p.R227X"),
     ]
 
-    chains = EvidenceChainBuilder().build(items)
+    chains = EvidenceChainBuilder().build(items, [])
 
     assert len(chains) == 1
     assert chains[0].gene_text == "GLA"
     assert chains[0].disease_text == "Fabry disease"
     assert chains[0].variant_text == "p.R227X"
-    assert chains[0].evidence_field_ids == ["A.gene_symbol", "B.disease_diagnosis", "A.variant_hgvs_p"]
-    assert chains[0].chain_id == "A.gene_symbol-B.disease_diagnosis-A.variant_hgvs_p"
+    assert chains[0].chain_level == "full"
+    assert chains[0].chain_id == "gene=GLA|variant=p.R227X"
+    assert set(chains[0].evidence_field_ids) == {"A.gene_symbol", "B.disease_diagnosis", "A.variant_hgvs_p"}
 
 
 def test_evidence_chain_builder_skips_ambiguous_sources():
@@ -137,6 +139,10 @@ def test_evidence_chain_builder_skips_ambiguous_sources():
         _found_item("A.variant_hgvs_p", "p.R227X"),
     ]
 
-    chains = EvidenceChainBuilder().build(items)
+    chains = EvidenceChainBuilder().build(items, [])
 
-    assert chains == []
+    assert len(chains) == 1
+    assert chains[0].chain_level == "partial"
+    assert chains[0].gene_text == ""
+    assert chains[0].disease_text == "Fabry disease"
+    assert chains[0].variant_text == "p.R227X"

@@ -15,7 +15,7 @@ from .core import EvidenceChainBuilder
 from .providers import LangChainEvidenceProvider
 from .stages.catalog_extraction import CatalogExtractionStage
 from .stages.evidence_map import EvidenceMapStage
-from .stages.quality_validation import QualityValidationStage
+from .stages.quality_validation import QualityGateStage
 from .stages.source_grounding import SourceGroundingStage
 from .stages.special_evidence import SpecialEvidenceStage
 
@@ -28,7 +28,7 @@ class EvidenceExtractionWorkflow:
         self._catalog_extraction = CatalogExtractionStage(provider)
         self._special_evidence = SpecialEvidenceStage(provider)
         self._source_grounding = SourceGroundingStage()
-        self._quality_validation = QualityValidationStage()
+        self._quality_validation = QualityGateStage()
         self._chain_builder = EvidenceChainBuilder()
         self._graph = self._build_graph()
 
@@ -50,12 +50,17 @@ class EvidenceExtractionWorkflow:
         return state
 
     def _node_source_grounding(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
-        grounded = self._source_grounding.run(state.document, state.evidence_items)
-        state.evidence_items = grounded
+        grounded_items, grounded_special = self._source_grounding.run(
+            state.document,
+            state.evidence_items,
+            state.special_evidence,
+        )
+        state.evidence_items = grounded_items
+        state.special_evidence = grounded_special
         return state
 
     def _node_chain_building(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
-        state.evidence_chains = self._chain_builder.build(state.evidence_items)
+        state.evidence_chains = self._chain_builder.build(state.evidence_items, state.special_evidence)
         return state
 
     def _node_quality_validation(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
@@ -63,6 +68,8 @@ class EvidenceExtractionWorkflow:
         report = self._quality_validation.run(
             state.evidence_items,
             contradictions,
+            chains=state.evidence_chains,
+            special_records=state.special_evidence,
             evidence_chain_count=len(state.evidence_chains),
         )
         state.quality_report = report
