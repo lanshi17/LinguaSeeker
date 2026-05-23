@@ -1,6 +1,9 @@
 import json
 
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import _build_track_document_from_json
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
+    _block_text,
+    _build_track_document_from_json,
+)
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import Track
 
 
@@ -40,3 +43,14 @@ def test_build_track_document_accepts_historical_json_without_blocks(tmp_path):
 
     assert doc.blocks == []
     assert doc.page_spans[0].span_id == "original-p1"
+
+
+def test_block_text_preserves_historical_body_only_behavior():
+    block = {
+        "type": "table",
+        "page_idx": 0,
+        "table_body": "Gene Variant\nBRCA1 c.5266dupC",
+        "table_caption": ["Table 1. Variants"],
+    }
+
+    assert _block_text(block) == "Gene Variant\nBRCA1 c.5266dupC"

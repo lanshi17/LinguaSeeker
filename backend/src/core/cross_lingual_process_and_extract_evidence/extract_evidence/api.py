@@ -172,22 +172,8 @@ def _format_blocks_with_page_spans(blocks: list[dict[str, Any]], track: Track) -
 
 
 def _block_text(block: dict[str, Any]) -> str:
-    captions: list[str] = []
-    for key in ("table_caption", "image_caption", "chart_caption"):
-        value = block.get(key)
-        if isinstance(value, list):
-            captions.extend(str(v).strip() for v in value if str(v).strip())
-
-    bodies: list[str] = []
     for key in ("text", "content", "table_body", "code_body"):
         value = block.get(key)
         if isinstance(value, str) and value.strip():
-            bodies.append(value.strip())
-
-    if captions and bodies:
-        return "\n".join([*captions, *bodies])
-    if captions:
-        return "\n".join(captions)
-    if bodies:
-        return "\n".join(bodies)
+            return value.strip()
     return ""
