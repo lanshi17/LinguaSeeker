@@ -239,6 +239,22 @@ All translations have fewer blocks than originals (-12% to -50%). Image referenc
 
 Only 7 documents have terminology maps. Terminology extraction may be skipped for some languages.
 
+## 2026-05-23: Block-aware extract_evidence contract changes require localized compatibility fixes
+
+**Problem**: Executing the block-aware evidence extraction plan required changing public contracts early (`ContentBlock`, `group_id`, `case_ids`, block-only `SourceLocation` defaults). Those changes immediately broke collection and risked rippling through unrelated extraction behavior if applied too broadly.
+
+**Investigation**: Added task-specific failing tests first (`test_api_contracts.py`, `test_api_backward_compat.py`, prompt/stage regressions), then traced actual impact with targeted `rg` over `extract_evidence/` and its tests. Confirmed the first-batch surface was limited to contracts, `api.py`, prompt builders, catalog/special stages, and `EvidenceChainBuilder`.
+
+**Root cause**: The existing module assumed text-only documents and single `case_id` chain output. The new plan introduces block-aware inputs and grouped chain semantics incrementally, so task-order mismatches can produce false failures unless each task updates the minimum dependent code.
+
+**Solution**:
+1. Added only the minimal local `ContentBlock` subset inside `extract_evidence/contracts.py`, without importing the upstream cross-lingual dataclass.
+2. Updated `EvidenceChainBuilder` just enough to emit `case_ids` and `chain_level` while keeping current chain selection behavior unchanged.
+3. Preserved API backward compatibility by parsing `blocks` locally and falling back cleanly when historical JSON has none.
+4. Switched catalog/special prompts to block text only after adding targeted tests that assert prompt content and stage wiring.
+
+**Prevention**: For staged contract refactors in this module, add the failing boundary tests first, then map direct symbol usage before editing. Update only the minimum downstream code required to keep the current batch green; defer semantic rewrites to the task that owns them.
+
 ### Problem 5: zh_functional suspicious char ratio (1 document, LOW)
 
 zh_functional has char ratio 0.58 (translation shorter than source), unusual for zh→en. Possible content truncation.
