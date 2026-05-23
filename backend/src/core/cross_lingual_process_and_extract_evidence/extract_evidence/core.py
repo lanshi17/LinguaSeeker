@@ -405,16 +405,20 @@ class EvidenceChainBuilder:
 
         field_ids = [gene.field_id, disease.field_id, variant.field_id]
         case = valid_by_field.get("B.case_id")
+        case_ids: list[str] = []
         if case is not None:
             field_ids.append(case.field_id)
+            if case.value is not None:
+                case_ids.append(str(case.value))
 
         chain_id = "-".join(field_ids)
         return [EvidenceChain(
             chain_id=chain_id,
+            chain_level="full",
             gene_text=str(gene.value or ""),
             disease_text=str(disease.value or ""),
             variant_text=str(variant.value or ""),
-            case_id=str(case.value) if case and case.value is not None else None,
+            case_ids=case_ids,
             evidence_field_ids=field_ids,
         )]
 

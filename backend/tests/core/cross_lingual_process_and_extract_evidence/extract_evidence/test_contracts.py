@@ -2,6 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    ContentBlock,
     DocumentEvidenceMap,
     DualTrackDocuments,
     EvidenceChain,
@@ -27,11 +28,13 @@ def test_track_document_accepts_upstream_spans():
         track=Track.ORIGINAL,
         formatted_text="Patient 1 has BRCA1 c.68_69delAG.",
         page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=36)],
+        blocks=[ContentBlock(type="text", page_idx=0, text="Patient 1 has BRCA1 c.68_69delAG.")],
         external_ids=ExternalIds(pmid="123"),
     )
 
     assert doc.track == Track.ORIGINAL
     assert doc.page_spans[0].span_id == "p1"
+    assert doc.blocks[0].type == "text"
 
 
 def test_dual_track_documents_require_original_and_translated_tracks():
@@ -199,8 +202,11 @@ def test_evidence_item_carries_inference_and_external_completion_metadata():
 
 def test_evidence_chain_defaults():
     chain = EvidenceChain(chain_id="chain-1")
+    assert chain.chain_level == "singleton"
     assert chain.gene_text == ""
     assert chain.gene_id is None
+    assert chain.case_ids == []
+    assert chain.special_evidence_ids == []
     assert chain.evidence_field_ids == []
     assert chain.contradictions == []
 
@@ -218,6 +224,7 @@ def test_special_evidence_record_defaults():
         description="Western blot showed loss of function",
     )
     assert rec.confidence == 0.5
+    assert rec.group_id == ""
     assert rec.source is None
     assert rec.evidence_field_ids == []
 
