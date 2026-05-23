@@ -1,7 +1,7 @@
 """Source grounding stage — validates and repairs source spans."""
 from __future__ import annotations
 
-from ..contracts import EvidenceItem, TrackDocument
+from ..contracts import EvidenceItem, SpecialEvidenceRecord, TrackDocument
 from ..core import SourceGrounder
 
 
@@ -13,5 +13,9 @@ class SourceGroundingStage:
         self,
         document: TrackDocument,
         items: list[EvidenceItem],
-    ) -> list[EvidenceItem]:
-        return self._grounder.ground_items(document, items)
+        special_records: list[SpecialEvidenceRecord],
+    ) -> tuple[list[EvidenceItem], list[SpecialEvidenceRecord]]:
+        return (
+            self._grounder.ground_items(document, items),
+            self._grounder.ground_special_records(document, special_records),
+        )
