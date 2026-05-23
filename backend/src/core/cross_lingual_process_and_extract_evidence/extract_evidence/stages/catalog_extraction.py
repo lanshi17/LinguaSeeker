@@ -4,7 +4,7 @@ from __future__ import annotations
 from ..catalog import EVIDENCE_FIELD_SPECS
 from ..contracts import DocumentEvidenceMap, EvidenceItem, TrackDocument
 from ..core import EvidenceItemNormalizer
-from ..prompts import get_catalog_extraction_prompt
+from ..prompts import build_block_prompt_text, get_catalog_extraction_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 
 
@@ -22,7 +22,7 @@ class CatalogExtractionStage:
         prompt = get_catalog_extraction_prompt(
             document_id=document.document_id,
             track=document.track,
-            text=document.formatted_text,
+            text=build_block_prompt_text(document),
             catalog=EVIDENCE_FIELD_SPECS,
             evidence_map_summary=summary,
         )

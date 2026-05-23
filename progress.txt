@@ -85,3 +85,4 @@
 [2026-05-23] [extract-evidence-block-aware-refactor-plan] [planned] Planned block-aware source grounding, variant-centered group assignment, multi-chain assembly, special-evidence grouping, quality-gate semantics, and three-layer regression coverage.
 [2026-05-23] Block-aware evidence extraction Task 1: add local ContentBlock contracts, group-aware public fields, and case_ids chain contract [completed]
 [2026-05-23] Block-aware evidence extraction Task 2: preserve parsed content blocks in extract_evidence API input and backward-compatible JSON loading [completed]
+[2026-05-23] Block-aware evidence extraction Task 3: build block-aware prompt text and wire catalog/special stages to document blocks [completed]

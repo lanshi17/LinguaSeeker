@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import EVIDENCE_FIELD_SPECS
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    ContentBlock,
     DocumentEvidenceMap,
     EvidenceItem,
     EvidenceStatus,
@@ -28,6 +29,14 @@ def _doc() -> TrackDocument:
         track=Track.ORIGINAL,
         formatted_text="Patient 1 had Fabry disease and carried a hemizygous GLA c.1000G>A variant.",
         page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=78)],
+        blocks=[
+            ContentBlock(
+                type="table",
+                page_idx=0,
+                table_caption=["Table 1. Variants"],
+                table_body="Patient 1 had Fabry disease and carried a hemizygous GLA c.1000G>A variant.",
+            )
+        ],
     )
 
 
@@ -71,6 +80,7 @@ def test_catalog_extraction_stage_calls_strong_tier():
     assert next(i for i in result if i.field_id == "D.allele_frequency").status == EvidenceStatus.NOT_FOUND
     call_kwargs = provider.invoke_structured.call_args
     assert call_kwargs.kwargs["tier"] == EvidenceModelTier.STRONG
+    assert "[Block 0 | table | page 1 | caption: Table 1. Variants]" in call_kwargs.kwargs["prompt"]
 
 
 def test_special_evidence_stage_calls_strong_tier():
@@ -84,6 +94,7 @@ def test_special_evidence_stage_calls_strong_tier():
     call_kwargs = provider.invoke_structured.call_args
     assert call_kwargs.kwargs["tier"] == EvidenceModelTier.STRONG
     assert call_kwargs.kwargs["response_method"] == "json_mode"
+    assert "[Block 0 | table | page 1 | caption: Table 1. Variants]" in call_kwargs.kwargs["prompt"]
 
 
 def test_special_evidence_stage_filters_untraceable_case_control_records():

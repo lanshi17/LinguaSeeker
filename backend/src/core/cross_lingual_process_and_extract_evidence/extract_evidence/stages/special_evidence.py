@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from ..contracts import EvidenceItem, SpecialEvidenceRecord, SpecialEvidenceResponse, TrackDocument
 from ..core import SpecialEvidenceValidator
-from ..prompts import get_special_evidence_prompt
+from ..prompts import build_block_prompt_text, get_special_evidence_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 
 
@@ -23,7 +23,7 @@ class SpecialEvidenceStage:
         prompt = get_special_evidence_prompt(
             document_id=document.document_id,
             track=document.track,
-            text=document.formatted_text,
+            text=build_block_prompt_text(document),
             current_items_summary=summary,
         )
         records = self._provider.invoke_structured(
