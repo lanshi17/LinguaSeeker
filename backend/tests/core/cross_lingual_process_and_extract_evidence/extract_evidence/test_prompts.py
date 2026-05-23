@@ -1,6 +1,11 @@
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import EVIDENCE_FIELD_SPECS
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import Track
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    ContentBlock,
+    Track,
+    TrackDocument,
+)
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.prompts import (
+    build_block_prompt_text,
     get_catalog_extraction_prompt,
     get_evidence_map_prompt,
 )
@@ -61,6 +66,44 @@ def test_catalog_prompt_requires_verbatim_source_snippets():
 
     assert "snippet must be a verbatim" in prompt.lower()
     assert "copy punctuation exactly" in prompt.lower()
+
+
+def test_build_block_prompt_text_uses_original_block_indices_and_captions():
+    doc = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text="",
+        page_spans=[],
+        blocks=[
+            ContentBlock(type="header", page_idx=0, text="Header"),
+            ContentBlock(
+                type="table",
+                page_idx=1,
+                table_caption=["Table 1. Variants"],
+                table_body="BRCA1 c.5266dupC",
+            ),
+        ],
+    )
+
+    text = build_block_prompt_text(doc)
+
+    assert "[Block 0 | text | page 1]" in text
+    assert "[Block 1 | table | page 2 | caption: Table 1. Variants]" in text
+    assert "BRCA1 c.5266dupC" in text
+
+
+def test_catalog_prompt_uses_block_sources_without_offsets():
+    prompt = get_catalog_extraction_prompt(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        text="[Block 1 | table | page 2]\nBRCA1",
+        catalog=EVIDENCE_FIELD_SPECS,
+        evidence_map_summary="relevant",
+    )
+
+    assert "block_index" in prompt
+    assert "Do not calculate character offsets" in prompt
+    assert "raw source" not in prompt.lower()
 
 
 def test_special_evidence_prompt_requires_verbatim_snippets():
