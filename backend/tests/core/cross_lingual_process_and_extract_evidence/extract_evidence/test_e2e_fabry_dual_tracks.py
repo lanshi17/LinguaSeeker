@@ -26,6 +26,10 @@ _FABRY_OUTPUT_DIR = (
     if _LEGACY_FABRY_OUTPUT_DIR.exists()
     else _CROSS_LINGUAL_FABRY_OUTPUT_DIR
 )
+_FABRY_OUTPUT_READY = (
+    (_FABRY_OUTPUT_DIR / "original.json").exists()
+    and (_FABRY_OUTPUT_DIR / "translated.json").exists()
+)
 
 
 @pytest.fixture
@@ -58,7 +62,7 @@ class FabryFixtureProvider:
     ) -> Any:
         track = self._track_from_prompt(prompt)
         self.calls.append((stage, track))
-        if stage == "evidence_map":
+        if stage == "relevance_scan":
             return DocumentEvidenceMap(
                 relevant=True,
                 disease_terms=["法布雷病"] if track == Track.ORIGINAL else ["Fabry disease"],
@@ -114,6 +118,7 @@ class FabryFixtureProvider:
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(not _FABRY_OUTPUT_READY, reason="Fabry output fixture is not available in this worktree")
 async def test_fabry_output_fixture_runs_original_and_translated_tracks_independently(mock_config: MagicMock):
     documents = EvidenceExtractionService.build_dual_documents_from_output_dir(_FABRY_OUTPUT_DIR)
     provider = FabryFixtureProvider()
@@ -141,10 +146,10 @@ async def test_fabry_output_fixture_runs_original_and_translated_tracks_independ
     assert [span.page for span in documents.original.page_spans] == [1, 2, 3, 4]
     assert [span.page for span in documents.translated.page_spans] == [1, 2, 3, 4]
     assert provider.calls == [
-        ("evidence_map", Track.ORIGINAL),
+        ("relevance_scan", Track.ORIGINAL),
         ("catalog_extraction", Track.ORIGINAL),
         ("special_evidence", Track.ORIGINAL),
-        ("evidence_map", Track.TRANSLATED),
+        ("relevance_scan", Track.TRANSLATED),
         ("catalog_extraction", Track.TRANSLATED),
         ("special_evidence", Track.TRANSLATED),
     ]

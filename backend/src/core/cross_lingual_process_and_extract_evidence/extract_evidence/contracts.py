@@ -31,11 +31,25 @@ class PageSpan(BaseModel):
         return self
 
 
+class ContentBlock(BaseModel):
+    type: str = "text"
+    page_idx: int = 0
+    bbox: list[int] = Field(default_factory=list)
+    text: str = ""
+    content: str = ""
+    table_body: str = ""
+    img_path: str = ""
+    image_caption: list[str] = Field(default_factory=list)
+    table_caption: list[str] = Field(default_factory=list)
+    chart_caption: list[str] = Field(default_factory=list)
+
+
 class TrackDocument(BaseModel):
     document_id: str
     track: Track
     formatted_text: str
     page_spans: list[PageSpan]
+    blocks: list[ContentBlock] = Field(default_factory=list)
     external_ids: ExternalIds = Field(default_factory=ExternalIds)
     metadata: dict[str, str] = Field(default_factory=dict)
 
@@ -47,13 +61,15 @@ class SourcePrecision(str, Enum):
 
 
 class SourceLocation(BaseModel):
-    span_id: str
-    page: int
-    start_offset: int
-    end_offset: int
+    span_id: str = ""
+    page: int = 0
+    start_offset: int = -1
+    end_offset: int = -1
     context_type: Literal["text", "table", "figure", "supplementary", "caption"]
     context_ref: str
     text_snippet: str
+    block_index: int = -1
+    bbox: list[int] = Field(default_factory=list)
     block_type: Literal["text", "table", "figure", "image", "caption", "supplementary"] = "text"
     source_precision: SourcePrecision = SourcePrecision.EXACT
 
@@ -85,6 +101,7 @@ class EvidenceItem(BaseModel):
     source: SourceLocation | None = None
     raw_source: SourceLocation | None = None
     confidence: float = Field(ge=0.0, le=1.0)
+    group_id: str = ""
     notes: str = ""
     inference_basis: list[str] = Field(default_factory=list)
     requires_external_completion: bool = False
@@ -93,13 +110,15 @@ class EvidenceItem(BaseModel):
 
 class EvidenceChain(BaseModel):
     chain_id: str
+    chain_level: Literal["full", "partial", "singleton"] = "singleton"
     gene_text: str = ""
     gene_id: str | None = None
     disease_text: str = ""
     disease_id: str | None = None
     variant_text: str = ""
     variant_id: str | None = None
-    case_id: str | None = None
+    case_ids: list[str] = Field(default_factory=list)
+    special_evidence_ids: list[str] = Field(default_factory=list)
     evidence_field_ids: list[str] = Field(default_factory=list)
     contradictions: list[str] = Field(default_factory=list)
     quality_warnings: list[str] = Field(default_factory=list)
@@ -119,8 +138,10 @@ class DocumentEvidenceMap(BaseModel):
 class SpecialEvidenceRecord(BaseModel):
     record_type: Literal["functional", "case_control", "authority", "contradiction"]
     description: str
+    group_id: str = ""
     evidence_field_ids: list[str] = Field(default_factory=list)
     source: SourceLocation | None = None
+    raw_source: SourceLocation | None = None
     confidence: float = Field(ge=0.0, le=1.0, default=0.5)
 
 

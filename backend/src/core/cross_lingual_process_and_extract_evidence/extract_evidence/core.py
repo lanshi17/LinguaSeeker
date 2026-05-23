@@ -8,6 +8,7 @@ from loguru import logger
 
 from .catalog import EVIDENCE_FIELD_SPECS, EvidenceFieldSpec
 from .contracts import (
+    ContentBlock,
     EvidenceChain,
     EvidenceItem,
     EvidenceStatus,
@@ -25,6 +26,17 @@ _ELLIPSIS_PATTERN = re.compile(r"\.\.\.|…")
 _CJK_SPACED_TOKEN_PATTERN = re.compile(r"(?<=[\u4e00-\u9fff])\s+(?=[\u4e00-\u9fff])")
 _CJK_NUMERIC_SPACE_PATTERN = re.compile(r"(?<=[\u4e00-\u9fffA-Za-z])\s+(?=[A-Za-z0-9(（])")
 _MULTISPACE_PATTERN = re.compile(r"\s+")
+_MISSING_GROUP_VALUE = "__missing__"
+
+
+def normalize_group_token(value: object) -> str:
+    text = str(value or "").strip()
+    text = re.sub(r"\s+", "", text)
+    return text or _MISSING_GROUP_VALUE
+
+
+def make_group_id(gene: object, variant: object) -> str:
+    return f"gene={normalize_group_token(gene)}|variant={normalize_group_token(variant)}"
 
 
 class EvidenceItemNormalizer:
@@ -47,6 +59,31 @@ class EvidenceItemNormalizer:
             if item is None:
                 item = self._not_found_item(spec)
             normalized.append(self._normalize_one(spec, item))
+        return normalized
+
+    def normalize_grouped(self, items: list[EvidenceItem]) -> list[EvidenceItem]:
+        grouped: dict[str, list[EvidenceItem]] = {}
+        for item in items:
+            group_id = item.group_id or make_group_id("", "")
+            grouped.setdefault(group_id, []).append(item)
+
+        normalized: list[EvidenceItem] = []
+        for group_id, group_items in grouped.items():
+            by_field: dict[str, EvidenceItem] = {}
+            for item in group_items:
+                current = by_field.get(item.field_id)
+                if current is None:
+                    by_field[item.field_id] = item
+                    continue
+                by_field[item.field_id] = self._choose_better(current, item)
+
+            for spec in self._catalog:
+                item = by_field.get(spec.field_id)
+                if item is None:
+                    item = self._not_found_item(spec).model_copy(update={"group_id": group_id})
+                elif not item.group_id:
+                    item = item.model_copy(update={"group_id": group_id})
+                normalized.append(self._normalize_one(spec, item))
         return normalized
 
     def _normalize_one(self, spec: EvidenceFieldSpec, item: EvidenceItem) -> EvidenceItem:
@@ -105,6 +142,268 @@ class EvidenceItemNormalizer:
         return candidate if candidate_score > current_score else current
 
 
+class RawSourceNormalizer:
+    """Moves ungrounded LLM sources to raw_source before grounding."""
+
+    def normalize_items(self, items: list[EvidenceItem]) -> list[EvidenceItem]:
+        normalized: list[EvidenceItem] = []
+        for item in items:
+            if item.status == EvidenceStatus.NOT_FOUND:
+                continue
+            if item.source is None:
+                normalized.append(item)
+                continue
+            normalized.append(item.model_copy(update={
+                "raw_source": item.source,
+                "source": None,
+            }))
+        return normalized
+
+    def normalize_special_records(self, records: list[SpecialEvidenceRecord]) -> list[SpecialEvidenceRecord]:
+        normalized: list[SpecialEvidenceRecord] = []
+        for record in records:
+            if record.source is None:
+                normalized.append(record)
+                continue
+            normalized.append(record.model_copy(update={
+                "raw_source": record.source,
+                "source": None,
+            }))
+        return normalized
+
+
+class GroupAssigner:
+    """Assigns deterministic variant-centered group ids to evidence."""
+
+    _VARIANT_FIELDS = {"A.variant_hgvs_c", "A.variant_hgvs_p", "F.tested_variant"}
+    _GENE_FIELD = "A.gene_symbol"
+
+    def assign(
+        self,
+        document: TrackDocument,
+        items: list[EvidenceItem],
+        special_records: list[SpecialEvidenceRecord],
+    ) -> tuple[list[EvidenceItem], list[SpecialEvidenceRecord]]:
+        group_ids = self._build_group_ids(document, items)
+        grouped_items = [
+            item.model_copy(update={"group_id": self._assign_item_group(item, group_ids, items, document)})
+            for item in items
+        ]
+        grouped_special = [
+            record.model_copy(update={"group_id": self._assign_special_group(record, group_ids, grouped_items)})
+            for record in special_records
+        ]
+        return grouped_items, grouped_special
+
+    def _build_group_ids(self, document: TrackDocument, items: list[EvidenceItem]) -> list[str]:
+        gene_items = [item for item in items if item.field_id == self._GENE_FIELD and item.value is not None]
+        variant_items = [item for item in items if item.field_id in self._VARIANT_FIELDS and item.value is not None]
+
+        group_ids: list[str] = []
+        for variant_item in variant_items:
+            gene_value = self._resolve_gene_for_variant(variant_item, gene_items, document)
+            group_id = make_group_id(gene_value, variant_item.value)
+            if group_id not in group_ids:
+                group_ids.append(group_id)
+
+        for gene_item in gene_items:
+            has_variant_group = any(
+                group_id.startswith(f"gene={normalize_group_token(gene_item.value)}|")
+                and not group_id.endswith(f"variant={_MISSING_GROUP_VALUE}")
+                for group_id in group_ids
+            )
+            group_id = make_group_id(gene_item.value, "")
+            if not has_variant_group and group_id not in group_ids:
+                group_ids.append(group_id)
+
+        return sorted(group_ids)
+
+    def _resolve_gene_for_variant(
+        self,
+        variant_item: EvidenceItem,
+        gene_items: list[EvidenceItem],
+        document: TrackDocument,
+    ) -> object:
+        variant_block = self._block_index_for_item(variant_item)
+        if gene_items:
+            same_block = [item for item in gene_items if self._block_index_for_item(item) == variant_block]
+            if same_block:
+                return same_block[0].value
+            nearest_gene = min(
+                gene_items,
+                key=lambda item: (
+                    abs(self._block_index_for_item(item) - variant_block),
+                    normalize_group_token(item.value),
+                ),
+            )
+            if nearest_gene.value:
+                return nearest_gene.value
+
+        text = self._document_block_text(document, variant_block)
+        for gene_item in gene_items:
+            gene_text = str(gene_item.value or "").strip()
+            if gene_text and gene_text in text:
+                return gene_text
+        inferred_gene = self._infer_gene_from_text(text)
+        if inferred_gene:
+            return inferred_gene
+        return ""
+
+    def _assign_item_group(
+        self,
+        item: EvidenceItem,
+        group_ids: list[str],
+        items: list[EvidenceItem],
+        document: TrackDocument,
+    ) -> str:
+        if item.field_id == self._GENE_FIELD:
+            variant = self._match_variant_for_gene(item, items)
+            return make_group_id(item.value, variant)
+        if item.field_id in self._VARIANT_FIELDS:
+            gene = self._resolve_gene_for_variant(item, [candidate for candidate in items if candidate.field_id == self._GENE_FIELD], document)
+            return make_group_id(gene, item.value)
+
+        matched = self._match_group_by_text(item, group_ids)
+        if matched is not None:
+            return matched
+        return self._nearest_group(item, group_ids, items)
+
+    def _assign_special_group(
+        self,
+        record: SpecialEvidenceRecord,
+        group_ids: list[str],
+        grouped_items: list[EvidenceItem],
+    ) -> str:
+        matched = self._match_group_by_text(record, group_ids)
+        if matched is not None:
+            return matched
+        return self._nearest_group_for_block(self._block_index_for_special_record(record), group_ids, grouped_items)
+
+    def _match_variant_for_gene(self, gene_item: EvidenceItem, items: list[EvidenceItem]) -> object:
+        same_block_variants = [
+            item for item in items
+            if item.field_id in self._VARIANT_FIELDS and self._block_index_for_item(item) == self._block_index_for_item(gene_item)
+        ]
+        if same_block_variants:
+            return same_block_variants[0].value
+        nearest_variants = [item for item in items if item.field_id in self._VARIANT_FIELDS]
+        if not nearest_variants:
+            return ""
+        nearest = min(
+            nearest_variants,
+            key=lambda item: (
+                abs(self._block_index_for_item(item) - self._block_index_for_item(gene_item)),
+                normalize_group_token(item.value),
+            ),
+        )
+        return nearest.value
+
+    def _match_group_by_text(self, obj: EvidenceItem | SpecialEvidenceRecord, group_ids: list[str]) -> str | None:
+        haystacks = self._text_haystacks(obj)
+        matches: list[str] = []
+        for group_id in group_ids:
+            gene_token, variant_token = self._parse_group_id(group_id)
+            for haystack in haystacks:
+                gene_ok = gene_token == _MISSING_GROUP_VALUE or gene_token in haystack
+                variant_ok = variant_token == _MISSING_GROUP_VALUE or variant_token in haystack
+                if gene_ok and variant_ok:
+                    matches.append(group_id)
+                    break
+        if not matches:
+            return None
+        return sorted(matches, key=self._group_sort_key)[0]
+
+    def _nearest_group(
+        self,
+        item: EvidenceItem,
+        group_ids: list[str],
+        items: list[EvidenceItem],
+    ) -> str:
+        return self._nearest_group_for_block(self._block_index_for_item(item), group_ids, items)
+
+    def _nearest_group_for_block(
+        self,
+        block_index: int,
+        group_ids: list[str],
+        items: list[EvidenceItem],
+    ) -> str:
+        if not group_ids:
+            return make_group_id("", "")
+        anchors: dict[str, list[int]] = {group_id: [] for group_id in group_ids}
+        for candidate in items:
+            candidate_group = candidate.group_id
+            if candidate_group in anchors:
+                anchors[candidate_group].append(self._block_index_for_item(candidate))
+
+        ranked = []
+        for group_id in group_ids:
+            distances = anchors.get(group_id) or []
+            ranked.append((
+                min(abs(block - block_index) for block in distances) if distances else float("inf"),
+                self._group_sort_key(group_id),
+                group_id,
+            ))
+        ranked.sort()
+        return ranked[0][2]
+
+    def _group_sort_key(self, group_id: str) -> tuple[int, str]:
+        gene_token, variant_token = self._parse_group_id(group_id)
+        complete = 0 if gene_token != _MISSING_GROUP_VALUE and variant_token != _MISSING_GROUP_VALUE else 1
+        return (complete, group_id)
+
+    @staticmethod
+    def _parse_group_id(group_id: str) -> tuple[str, str]:
+        parts = dict(part.split("=", maxsplit=1) for part in group_id.split("|"))
+        return parts.get("gene", _MISSING_GROUP_VALUE), parts.get("variant", _MISSING_GROUP_VALUE)
+
+    @staticmethod
+    def _block_index_for_item(item: EvidenceItem) -> int:
+        source = item.raw_source or item.source
+        if source is None:
+            return -1
+        return source.block_index
+
+    @staticmethod
+    def _block_index_for_special_record(record: SpecialEvidenceRecord) -> int:
+        source = record.raw_source or record.source
+        if source is None:
+            return -1
+        return source.block_index
+
+    @staticmethod
+    def _document_block_text(document: TrackDocument, block_index: int) -> str:
+        if block_index < 0 or block_index >= len(document.blocks):
+            return document.formatted_text
+        block = document.blocks[block_index]
+        parts = [*block.table_caption, *block.image_caption, *block.chart_caption]
+        for value in (block.text, block.content, block.table_body):
+            if value.strip():
+                parts.append(value.strip())
+        return "\n".join(parts)
+
+    @staticmethod
+    def _text_haystacks(obj: EvidenceItem | SpecialEvidenceRecord) -> list[str]:
+        haystacks: list[str] = []
+        if isinstance(obj, EvidenceItem):
+            for value in (obj.value, obj.notes):
+                if value is not None:
+                    haystacks.append(normalize_group_token(value))
+            source = obj.raw_source or obj.source
+            if source is not None:
+                haystacks.append(normalize_group_token(source.text_snippet))
+        else:
+            haystacks.append(normalize_group_token(obj.description))
+            source = obj.raw_source or obj.source
+            if source is not None:
+                haystacks.append(normalize_group_token(source.text_snippet))
+        return haystacks
+
+    @staticmethod
+    def _infer_gene_from_text(text: str) -> str:
+        match = re.search(r"\b([A-Z][A-Z0-9-]{1,})\b", text)
+        return match.group(1) if match else ""
+
+
 class SourceGrounder:
     """Validates and repairs source spans against the document."""
 
@@ -115,17 +414,40 @@ class SourceGrounder:
     ) -> list[EvidenceItem]:
         grounded: list[EvidenceItem] = []
         for item in items:
-            if item.status == EvidenceStatus.FOUND and item.source is None and item.field_id == "B.case_count":
+            source = self._raw_input_source(item)
+            if item.status == EvidenceStatus.FOUND and source is None and item.field_id == "B.case_count":
                 grounded.append(item.model_copy(update={"status": EvidenceStatus.TABLE_UNGROUNDED}))
                 continue
-            if item.status != EvidenceStatus.FOUND or item.source is None:
+            if item.status != EvidenceStatus.FOUND or source is None:
                 grounded.append(item)
                 continue
-            grounded.append(self._ground_one(document, item))
+            grounded.append(self._ground_one(document, item, source))
         return grounded
 
-    def _ground_one(self, document: TrackDocument, item: EvidenceItem) -> EvidenceItem:
-        source = item.source
+    def ground_special_records(
+        self,
+        document: TrackDocument,
+        records: list[SpecialEvidenceRecord],
+    ) -> list[SpecialEvidenceRecord]:
+        grounded: list[SpecialEvidenceRecord] = []
+        for record in records:
+            source = record.raw_source or record.source
+            if source is None:
+                grounded.append(record)
+                continue
+            grounded_source = self._ground_source(document, source)
+            if grounded_source is None:
+                grounded.append(record.model_copy(update={"source": None}))
+                continue
+            grounded.append(record.model_copy(update={"source": grounded_source, "raw_source": source}))
+        return grounded
+
+    def _ground_one(
+        self,
+        document: TrackDocument,
+        item: EvidenceItem,
+        source: SourceLocation,
+    ) -> EvidenceItem:
         snippet = source.text_snippet
 
         if self._snippet_has_ellipsis(snippet):
@@ -133,28 +455,34 @@ class SourceGrounder:
             return item.model_copy(update={
                 "status": EvidenceStatus.SOURCE_INVALID,
                 "raw_source": source,
+                "source": None,
                 "assigned_acmg_codes": [],
                 "assigned_clingen_modules": [],
             })
 
-        if self._is_exact_match(document, source):
+        legacy_source = item.source is not None and item.raw_source is None
+        if legacy_source and self._is_exact_match(document, source) and not document.blocks:
             return item
 
-        corrected = self._search_snippet(document, source, snippet, item.field_id)
-        if corrected is None:
-            if self._looks_like_table_source(source):
+        grounded_source = self._ground_source(document, source)
+        if grounded_source is None:
+            block = self._block_for_index(document, source.block_index)
+            mapped_type = self._map_block_type(block.type) if block is not None else source.block_type
+            if mapped_type == "table":
                 logger.warning("Snippet '{}' not found in table source, marking TABLE_UNGROUNDED", snippet)
                 return item.model_copy(update={
                     "status": EvidenceStatus.TABLE_UNGROUNDED,
                     "raw_source": source,
+                    "source": None,
                     "assigned_acmg_codes": [],
                     "assigned_clingen_modules": [],
                 })
-            if self._looks_like_ocr_gap(source):
+            if mapped_type in {"image", "figure"}:
                 logger.warning("Snippet '{}' not found in document image/table source, marking OCR_GAP", snippet)
                 return item.model_copy(update={
                     "status": EvidenceStatus.OCR_GAP,
                     "raw_source": source,
+                    "source": None,
                     "assigned_acmg_codes": [],
                     "assigned_clingen_modules": [],
                 })
@@ -162,30 +490,152 @@ class SourceGrounder:
             return item.model_copy(update={
                 "status": EvidenceStatus.SOURCE_INVALID,
                 "raw_source": source,
+                "source": None,
                 "assigned_acmg_codes": [],
                 "assigned_clingen_modules": [],
             })
 
+        if legacy_source and item.raw_source is None and grounded_source.source_precision == SourcePrecision.EXACT:
+            return item.model_copy(update={"source": grounded_source})
+        return item.model_copy(update={"source": grounded_source, "raw_source": source})
+
+    def _ground_source(self, document: TrackDocument, source: SourceLocation) -> SourceLocation | None:
+        block = self._block_for_index(document, source.block_index)
+        if block is not None:
+            block_text = self._block_readable_text(block)
+            if source.text_snippet and source.text_snippet in block_text:
+                return self._build_source_from_text(document, source, source.text_snippet, block_index=source.block_index, block=block)
+
+        if self._is_exact_match(document, source):
+            block_match = self._find_block_for_offsets(document, source.start_offset, source.end_offset)
+            if block_match is None:
+                return source.model_copy(update={"block_index": -1, "bbox": [], "source_precision": SourcePrecision.EXACT})
+            block_index, matched_block = block_match
+            return source.model_copy(update={
+                "block_index": block_index,
+                "bbox": matched_block.bbox,
+                "block_type": self._map_block_type(matched_block.type),
+                "source_precision": SourcePrecision.EXACT,
+            })
+
+        corrected = self._search_snippet(document, source, source.text_snippet, "")
+        if corrected is None:
+            return None
         if len(corrected) > 1:
-            preferred = self._prefer_candidates(source, corrected, item.field_id)
-            if preferred is not None:
-                new_source = preferred.model_copy(update={"source_precision": SourcePrecision.CORRECTED})
-                return item.model_copy(update={"source": new_source, "raw_source": source})
-            # TODO: wire to LLM ambiguity resolution stage (get_source_ambiguity_review_prompt)
-            logger.info("Snippet '{}' found {} times, marking ambiguous", snippet, len(corrected))
-            new_source = corrected[0].model_copy(update={"source_precision": SourcePrecision.AMBIGUOUS})
-            return item.model_copy(update={"source": new_source, "raw_source": source})
+            logger.info("Snippet '{}' found {} times, marking ambiguous", source.text_snippet, len(corrected))
+            corrected_source = corrected[0].model_copy(update={"source_precision": SourcePrecision.AMBIGUOUS})
+        else:
+            corrected_source = corrected[0].model_copy(update={"source_precision": SourcePrecision.CORRECTED})
 
-        new_source = corrected[0].model_copy(update={"source_precision": SourcePrecision.CORRECTED})
-        return item.model_copy(update={"source": new_source, "raw_source": source})
+        block_match = self._find_block_for_offsets(document, corrected_source.start_offset, corrected_source.end_offset)
+        if block_match is None:
+            return corrected_source.model_copy(update={"block_index": -1, "bbox": []})
+        block_index, matched_block = block_match
+        return corrected_source.model_copy(update={
+            "block_index": block_index,
+            "bbox": matched_block.bbox,
+            "block_type": self._map_block_type(matched_block.type),
+        })
 
     @staticmethod
-    def _looks_like_ocr_gap(source: SourceLocation) -> bool:
-        return source.block_type in {"image", "figure"} or source.context_type in {"figure"}
+    def _raw_input_source(item: EvidenceItem) -> SourceLocation | None:
+        return item.raw_source or item.source
 
     @staticmethod
-    def _looks_like_table_source(source: SourceLocation) -> bool:
-        return source.block_type == "table" or source.context_type == "table" or source.context_ref.lower().startswith("table")
+    def _block_for_index(document: TrackDocument, block_index: int) -> ContentBlock | None:
+        if block_index < 0 or block_index >= len(document.blocks):
+            return None
+        return document.blocks[block_index]
+
+    @staticmethod
+    def _block_readable_text(block: ContentBlock) -> str:
+        parts = [*block.table_caption, *block.image_caption, *block.chart_caption]
+        for value in (block.text, block.content, block.table_body):
+            if value.strip():
+                parts.append(value.strip())
+        return "\n".join(parts).strip()
+
+    @staticmethod
+    def _map_block_type(block_type: str) -> str:
+        if block_type == "table":
+            return "table"
+        if block_type == "image":
+            return "image"
+        if block_type == "chart":
+            return "figure"
+        return "text"
+
+    def _find_block_for_offsets(
+        self,
+        document: TrackDocument,
+        start: int,
+        end: int,
+    ) -> tuple[int, ContentBlock] | None:
+        if not document.blocks:
+            return None
+        for index, block in enumerate(document.blocks):
+            block_text = self._block_readable_text(block)
+            if not block_text:
+                continue
+            pos = document.formatted_text.find(block_text)
+            if pos == -1:
+                continue
+            block_end = pos + len(block_text)
+            if pos <= start and end <= block_end:
+                return index, block
+        return None
+
+    def _build_source_from_text(
+        self,
+        document: TrackDocument,
+        source: SourceLocation,
+        text_snippet: str,
+        block_index: int,
+        block: ContentBlock,
+    ) -> SourceLocation | None:
+        start = document.formatted_text.find(text_snippet)
+        if start >= 0:
+            end = start + len(text_snippet)
+            span = self._find_span(document.page_spans, start, end)
+            if span is None:
+                return None
+            return SourceLocation(
+                span_id=span.span_id,
+                page=span.page,
+                start_offset=start,
+                end_offset=end,
+                context_type=source.context_type,
+                context_ref=source.context_ref,
+                text_snippet=text_snippet,
+                block_index=block_index,
+                bbox=block.bbox,
+                block_type=self._map_block_type(block.type),
+                source_precision=SourcePrecision.EXACT,
+            )
+
+        block_text = self._block_readable_text(block)
+        snippet_offset = block_text.find(text_snippet)
+        span = self._find_span(document.page_spans, 0, len(document.formatted_text))
+        if span is None:
+            span = PageSpan(
+                span_id=f"{document.track.value}-p{block.page_idx + 1}",
+                page=block.page_idx + 1,
+                start_offset=0,
+                end_offset=max(len(document.formatted_text), 0),
+            )
+        return SourceLocation(
+            span_id=span.span_id,
+            page=span.page,
+            start_offset=span.start_offset + max(snippet_offset, 0),
+            end_offset=span.start_offset + max(snippet_offset, 0) + len(text_snippet),
+            context_type=source.context_type,
+            context_ref=source.context_ref,
+            text_snippet=text_snippet,
+            block_index=block_index,
+            bbox=block.bbox,
+            block_type=self._map_block_type(block.type),
+            source_precision=SourcePrecision.EXACT,
+        )
 
     def _is_exact_match(self, document: TrackDocument, source: SourceLocation) -> bool:
         text = document.formatted_text
@@ -205,6 +655,7 @@ class SourceGrounder:
         snippet: str,
         field_id: str,
     ) -> list[SourceLocation] | None:
+        del field_id
         text = document.formatted_text
         spans = document.page_spans
         direct_results = self._find_snippet_occurrences(text, spans, snippet, source)
@@ -216,11 +667,6 @@ class SourceGrounder:
             normalized_results = self._find_normalized_occurrences(text, spans, normalized_snippet, source)
             if normalized_results:
                 return normalized_results
-
-        if source.context_type == "table" or source.block_type == "table":
-            table_results = self._search_table_related_text(text, spans, source, normalized_snippet or snippet)
-            if table_results:
-                return table_results
 
         return None
 
@@ -256,6 +702,8 @@ class SourceGrounder:
                     context_type=source.context_type,
                     context_ref=source.context_ref,
                     text_snippet=snippet,
+                    block_index=source.block_index,
+                    bbox=source.bbox,
                     block_type=source.block_type,
                     source_precision=SourcePrecision.EXACT,
                 ))
@@ -293,62 +741,13 @@ class SourceGrounder:
                     context_type=source.context_type,
                     context_ref=source.context_ref,
                     text_snippet=text[actual_start:actual_end],
+                    block_index=source.block_index,
+                    bbox=source.bbox,
                     block_type=source.block_type,
                     source_precision=SourcePrecision.EXACT,
                 ))
             idx = pos + 1
         return results
-
-    def _search_table_related_text(
-        self,
-        text: str,
-        spans: list[PageSpan],
-        source: SourceLocation,
-        snippet: str,
-    ) -> list[SourceLocation]:
-        normalized_text, index_map = self._normalize_text_with_index_map(text)
-        normalized_ref = self._normalize_snippet_for_search(source.context_ref)
-        normalized_snippet = self._normalize_snippet_for_search(snippet)
-        candidates = [value for value in (normalized_ref, normalized_snippet) if value]
-        for candidate in candidates:
-            pos = normalized_text.find(candidate)
-            if pos == -1:
-                continue
-            end_pos = pos + len(candidate)
-            actual_start = index_map[pos]
-            actual_end = index_map[end_pos - 1] + 1
-            span = self._find_span(spans, actual_start, actual_end)
-            if span:
-                return [SourceLocation(
-                    span_id=span.span_id,
-                    page=span.page,
-                    start_offset=actual_start,
-                    end_offset=actual_end,
-                    context_type=source.context_type,
-                    context_ref=source.context_ref,
-                    text_snippet=text[actual_start:actual_end],
-                    block_type=source.block_type,
-                    source_precision=SourcePrecision.EXACT,
-                )]
-        return []
-
-    def _prefer_candidates(
-        self,
-        source: SourceLocation,
-        corrected: list[SourceLocation],
-        field_id: str,
-    ) -> SourceLocation | None:
-        if field_id != "B.disease_diagnosis":
-            return None
-        if not corrected:
-            return None
-        return min(
-            corrected,
-            key=lambda candidate: (
-                abs(candidate.start_offset - source.start_offset),
-                candidate.start_offset,
-            ),
-        )
 
     @staticmethod
     def _normalize_snippet_for_search(snippet: str) -> str:
@@ -393,30 +792,69 @@ class SourceGrounder:
 
 
 class EvidenceChainBuilder:
-    """Builds conservative identity chains from grounded evidence items."""
+    """Builds variant-centered identity chains from grounded grouped evidence."""
 
-    def build(self, items: list[EvidenceItem]) -> list[EvidenceChain]:
-        valid_by_field = {item.field_id: item for item in items if self._is_valid_grounded(item)}
-        gene = valid_by_field.get("A.gene_symbol")
-        disease = valid_by_field.get("B.disease_diagnosis")
-        variant = valid_by_field.get("A.variant_hgvs_c") or valid_by_field.get("A.variant_hgvs_p")
-        if gene is None or disease is None or variant is None:
-            return []
+    def build(
+        self,
+        items: list[EvidenceItem],
+        special_records: list[SpecialEvidenceRecord],
+    ) -> list[EvidenceChain]:
+        grouped_items: dict[str, list[EvidenceItem]] = {}
+        for item in items:
+            if not self._is_valid_grounded(item):
+                continue
+            group_id = item.group_id
+            if not group_id:
+                continue
+            grouped_items.setdefault(group_id, []).append(item)
 
-        field_ids = [gene.field_id, disease.field_id, variant.field_id]
-        case = valid_by_field.get("B.case_id")
-        if case is not None:
-            field_ids.append(case.field_id)
+        chains: list[EvidenceChain] = []
+        for group_id, group_items in grouped_items.items():
+            by_field: dict[str, list[EvidenceItem]] = {}
+            for item in group_items:
+                by_field.setdefault(item.field_id, []).append(item)
 
-        chain_id = "-".join(field_ids)
-        return [EvidenceChain(
-            chain_id=chain_id,
-            gene_text=str(gene.value or ""),
-            disease_text=str(disease.value or ""),
-            variant_text=str(variant.value or ""),
-            case_id=str(case.value) if case and case.value is not None else None,
-            evidence_field_ids=field_ids,
-        )]
+            gene = self._first_value(by_field, "A.gene_symbol")
+            disease = self._first_value(by_field, "B.disease_diagnosis")
+            variant = self._first_value(by_field, "A.variant_hgvs_c") or self._first_value(by_field, "A.variant_hgvs_p")
+
+            core_count = sum(1 for value in (gene, disease, variant) if value is not None)
+            if core_count == 0:
+                continue
+            if core_count == 3:
+                chain_level = "full"
+            elif core_count == 2:
+                chain_level = "partial"
+            else:
+                chain_level = "singleton"
+
+            case_ids = sorted({
+                str(item.value)
+                for item in by_field.get("B.case_id", [])
+                if item.value is not None
+            })
+            special_indices = [
+                index for index, record in enumerate(special_records)
+                if record.group_id == group_id
+            ]
+            contradictions = [
+                record.description
+                for record in special_records
+                if record.group_id == group_id and record.record_type == "contradiction"
+            ]
+
+            chains.append(EvidenceChain(
+                chain_id=group_id,
+                chain_level=chain_level,
+                gene_text=str(gene.value) if gene is not None and gene.value is not None else "",
+                disease_text=str(disease.value) if disease is not None and disease.value is not None else "",
+                variant_text=str(variant.value) if variant is not None and variant.value is not None else "",
+                case_ids=case_ids,
+                special_evidence_ids=[f"special-{index}" for index in special_indices],
+                evidence_field_ids=sorted({item.field_id for item in group_items}),
+                contradictions=contradictions,
+            ))
+        return sorted(chains, key=lambda chain: chain.chain_id)
 
     @staticmethod
     def _is_valid_grounded(item: EvidenceItem) -> bool:
@@ -426,6 +864,11 @@ class EvidenceChainBuilder:
             and item.source is not None
             and item.source.source_precision != SourcePrecision.AMBIGUOUS
         )
+
+    @staticmethod
+    def _first_value(by_field: dict[str, list[EvidenceItem]], field_id: str) -> EvidenceItem | None:
+        values = by_field.get(field_id, [])
+        return values[0] if values else None
 
 
 class SpecialEvidenceValidator:
@@ -440,7 +883,7 @@ class SpecialEvidenceValidator:
         valid_field_ids = {
             item.field_id
             for item in current_items
-            if item.status == EvidenceStatus.FOUND and item.source is not None
+            if item.status == EvidenceStatus.FOUND and (item.source is not None or item.raw_source is not None)
         }
         return [
             record for record in records
@@ -453,25 +896,34 @@ class SpecialEvidenceValidator:
         valid_field_ids: set[str],
         document: TrackDocument,
     ) -> bool:
-        if record.source is None:
+        source = record.source or record.raw_source
+        if source is None:
             return False
         if (
-            record.source.start_offset == record.source.end_offset
-            and not self._source_is_traceable(record.source, document)
+            source.start_offset == source.end_offset
+            and not self._source_is_traceable(source, document)
         ):
             return False
-        if not self._source_is_traceable(record.source, document):
+        if not self._source_is_traceable(source, document):
             return False
         if any(field_id not in valid_field_ids for field_id in record.evidence_field_ids):
             return False
         if record.record_type == "case_control":
-            combined_text = f"{record.description} {record.source.text_snippet}"
+            combined_text = f"{record.description} {source.text_snippet}"
             if "[REDACTED]" in combined_text:
                 return False
         return True
 
     @staticmethod
     def _source_is_traceable(source: SourceLocation, document: TrackDocument) -> bool:
+        if 0 <= source.block_index < len(document.blocks):
+            block = document.blocks[source.block_index]
+            block_text_parts = [*block.table_caption, *block.image_caption, *block.chart_caption]
+            for value in (block.text, block.content, block.table_body):
+                if value.strip():
+                    block_text_parts.append(value.strip())
+            if source.text_snippet in "\n".join(block_text_parts):
+                return True
         text = document.formatted_text
         if source.start_offset >= source.end_offset and len(source.text_snippet) < 8:
             return False
@@ -500,8 +952,12 @@ class QualityValidator:
         self,
         items: list[EvidenceItem],
         contradictions: list[str],
+        chains: list[EvidenceChain] | None = None,
+        special_records: list[SpecialEvidenceRecord] | None = None,
         evidence_chain_count: int = 0,
     ) -> QualityReport:
+        chains = chains or []
+        special_records = special_records or []
         issues: list[QualityIssue] = []
         human_review_reasons: list[str] = []
         human_review_by_category: dict[str, list[str]] = {
@@ -584,12 +1040,52 @@ class QualityValidator:
             human_review_reasons.append(reason)
             human_review_by_category["contradictions"].append(reason)
 
+        for record in special_records:
+            if record.raw_source is not None and record.source is None:
+                reason = f"Special evidence {record.record_type} requires source grounding review"
+                human_review_reasons.append(reason)
+                human_review_by_category["source_grounding"].append(reason)
+
         passed = not any(i.severity == "error" for i in issues)
-        scorable = len(missing_required) == 0
-        if ocr_gap_count > 0 or ambiguous_source_count > 0 or table_ungrounded_count > 0:
+        full_chains = [chain for chain in chains if chain.chain_level == "full"]
+        incomplete_chains = [chain for chain in chains if chain.chain_level in {"partial", "singleton"}]
+        full_chain_group_ids = {chain.chain_id for chain in full_chains}
+        full_chain_items = [item for item in items if item.group_id in full_chain_group_ids]
+        full_chain_missing_required = self._required - {
+            item.field_id for item in full_chain_items
+            if item.status == EvidenceStatus.FOUND
+            and item.source is not None
+            and item.source.source_precision != SourcePrecision.AMBIGUOUS
+        }
+
+        scorable = len(full_chains) > 0 and len(full_chain_missing_required) == 0
+        if any(
+            item.status in {
+                EvidenceStatus.SOURCE_INVALID,
+                EvidenceStatus.OCR_GAP,
+                EvidenceStatus.TABLE_UNGROUNDED,
+            }
+            for item in full_chain_items
+        ):
             scorable = False
-        score_gate_passed = passed and scorable and evidence_chain_count > 0
-        if passed and scorable and evidence_chain_count == 0:
+        if any(
+            item.status == EvidenceStatus.FOUND
+            and item.source is not None
+            and item.source.source_precision == SourcePrecision.AMBIGUOUS
+            for item in full_chain_items
+        ):
+            scorable = False
+        score_gate_passed = passed and scorable
+
+        if incomplete_chains:
+            reason = "Incomplete evidence chain requires review"
+            human_review_reasons.append(reason)
+            human_review_by_category["workflow"].append(reason)
+        if passed and items and not full_chains and evidence_chain_count == 0:
+            reason = "No full evidence chain was produced"
+            human_review_reasons.append(reason)
+            human_review_by_category["workflow"].append(reason)
+        if passed and scorable and not chains and evidence_chain_count == 0:
             reason = "No grounded evidence chain was produced"
             human_review_reasons.append(reason)
             human_review_by_category["workflow"].append(reason)

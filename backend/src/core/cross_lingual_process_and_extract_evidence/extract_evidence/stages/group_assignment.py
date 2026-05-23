@@ -1,13 +1,13 @@
-"""Source grounding stage — validates and repairs source spans."""
+"""Group assignment stage for variant-centered evidence chains."""
 from __future__ import annotations
 
 from ..contracts import EvidenceItem, SpecialEvidenceRecord, TrackDocument
-from ..core import SourceGrounder
+from ..core import GroupAssigner
 
 
-class SourceGroundingStage:
+class GroupAssignmentStage:
     def __init__(self):
-        self._grounder = SourceGrounder()
+        self._assigner = GroupAssigner()
 
     def run(
         self,
@@ -15,7 +15,4 @@ class SourceGroundingStage:
         items: list[EvidenceItem],
         special_records: list[SpecialEvidenceRecord],
     ) -> tuple[list[EvidenceItem], list[SpecialEvidenceRecord]]:
-        return (
-            self._grounder.ground_items(document, items),
-            self._grounder.ground_special_records(document, special_records),
-        )
+        return self._assigner.assign(document, items, special_records)

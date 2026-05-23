@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .catalog import EvidenceFieldSpec
-    from .contracts import Track
+    from .contracts import ContentBlock, Track, TrackDocument
 
 
 _EVIDENCE_MAP_JSON_EXAMPLE = {
@@ -19,6 +19,50 @@ _EVIDENCE_MAP_JSON_EXAMPLE = {
     "contradictions": [],
     "structure_hints": [],
 }
+
+
+def map_block_type(block_type: str) -> str:
+    if block_type == "table":
+        return "table"
+    if block_type == "image":
+        return "image"
+    if block_type == "chart":
+        return "figure"
+    return "text"
+
+
+def block_readable_text(block: ContentBlock) -> str:
+    parts: list[str] = []
+    parts.extend(block.table_caption)
+    parts.extend(block.image_caption)
+    parts.extend(block.chart_caption)
+    for value in (block.text, block.content, block.table_body):
+        if value.strip():
+            parts.append(value.strip())
+    return "\n".join(parts).strip()
+
+
+def block_context_ref(block: ContentBlock) -> str:
+    captions = block.table_caption or block.image_caption or block.chart_caption
+    return captions[0] if captions else ""
+
+
+def build_block_prompt_text(document: TrackDocument) -> str:
+    if not document.blocks:
+        return document.formatted_text
+    parts: list[str] = []
+    for index, block in enumerate(document.blocks):
+        body = block_readable_text(block)
+        if not body:
+            continue
+        mapped_type = map_block_type(block.type)
+        caption = block_context_ref(block)
+        caption_part = f" | caption: {caption}" if caption else ""
+        parts.append(
+            f"[Block {index} | {mapped_type} | page {block.page_idx + 1}{caption_part}]\n"
+            f"{body}"
+        )
+    return "\n\n".join(parts)
 
 
 def _catalog_compact_text(catalog: tuple[EvidenceFieldSpec, ...]) -> str:
@@ -83,21 +127,22 @@ EVIDENCE CATALOG (field_id: field_name [ACMG_codes], * = required for scoring):
 RULES:
 1. For each catalog field, set status="found" with the extracted value, or status="not_found" if absent.
 2. Do not score or classify ACMG/GDV evidence.
-3. For "found" items, you MUST provide a source with span_id, page, start_offset, end_offset, context_type, context_ref, and text_snippet.
+3. For "found" items, you MUST provide a source with block_index, context_type, context_ref, and text_snippet.
 4. Extract assigned_acmg_codes and assigned_clingen_modules based on what the document supports.
 5. Set confidence based on extraction certainty (0.0-1.0).
 6. Use status="ocr_gap" only when the document indicates the evidence is in an image/table/figure but the text needed for extraction is unavailable.
 7. Do not invent external database values. If allele frequency or ClinVar-like data is absent, mark it not_found and note that external completion is required.
 8. For B.diagnosis_sufficiency, require an explicit diagnostic statement supported by genetic testing and/or clinical criteria.
 9. For B.biochemical_markers, prefer baseline biochemical markers. Mention treatment response only as auxiliary context, not as scoring evidence.
-10. source.text_snippet must be a verbatim continuous substring of DOCUMENT TEXT.
+10. source.text_snippet must be a verbatim continuous substring of DOCUMENT BLOCKS.
 11. Copy punctuation exactly as it appears in the source, including Chinese punctuation (、。，；). Do not normalize or substitute.
 12. Do not use "..." or "……" to bridge gaps, compress text, or join non-adjacent spans.
 13. For translated track, still copy the snippet from the translated document text as written; do not retranslate or paraphrase it.
 14. The snippet must be a verbatim continuous substring of the source text.
 15. Copy punctuation exactly as it appears in the source text.
+16. Do not calculate character offsets. Leave start_offset and end_offset absent or at defaults.
 
-DOCUMENT TEXT:
+DOCUMENT BLOCKS:
 {text}
 """
 
@@ -131,17 +176,18 @@ For each finding, provide:
 
 SOURCE RULES:
 - Reuse exact document wording.
-- source.text_snippet must be a verbatim continuous substring of DOCUMENT TEXT.
+- source.text_snippet must be a verbatim continuous substring of DOCUMENT BLOCKS.
 - Copy punctuation exactly as it appears in the source, including Chinese punctuation (、。，；). Do not normalize or substitute.
 - Do not shorten snippets with "..." or paraphrase them.
 - If a snippet comes from a title, discussion paragraph, table caption, or table body, keep that exact text.
-- If exact character offsets are uncertain, still provide the best exact source snippet; offsets may be 0 temporarily.
+- Use block_index, context_type, context_ref, and text_snippet to identify the source.
+- Do not calculate character offsets. Leave start_offset and end_offset absent or at defaults.
 - The snippet must be a verbatim continuous substring of the source text.
 - Copy punctuation exactly as it appears in the source text.
 
 Do not score or classify ACMG/GDV evidence. Only extract structured facts.
 
-DOCUMENT TEXT:
+DOCUMENT BLOCKS:
 {text}
 """
 

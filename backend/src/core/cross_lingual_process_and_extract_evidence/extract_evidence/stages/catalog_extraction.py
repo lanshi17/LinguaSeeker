@@ -3,15 +3,15 @@ from __future__ import annotations
 
 from ..catalog import EVIDENCE_FIELD_SPECS
 from ..contracts import DocumentEvidenceMap, EvidenceItem, TrackDocument
-from ..core import EvidenceItemNormalizer
-from ..prompts import get_catalog_extraction_prompt
+from ..core import RawSourceNormalizer
+from ..prompts import build_block_prompt_text, get_catalog_extraction_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 
 
 class CatalogExtractionStage:
     def __init__(self, provider: LangChainEvidenceProvider):
         self._provider = provider
-        self._normalizer = EvidenceItemNormalizer()
+        self._raw_source_normalizer = RawSourceNormalizer()
 
     def run(
         self,
@@ -22,7 +22,7 @@ class CatalogExtractionStage:
         prompt = get_catalog_extraction_prompt(
             document_id=document.document_id,
             track=document.track,
-            text=document.formatted_text,
+            text=build_block_prompt_text(document),
             catalog=EVIDENCE_FIELD_SPECS,
             evidence_map_summary=summary,
         )
@@ -32,7 +32,7 @@ class CatalogExtractionStage:
             tier=EvidenceModelTier.STRONG,
             stage="catalog_extraction",
         )
-        return self._normalizer.normalize(items) if isinstance(items, list) else self._normalizer.normalize([])
+        return self._raw_source_normalizer.normalize_items(items) if isinstance(items, list) else []
 
     @staticmethod
     def _summarize_map(emap: DocumentEvidenceMap) -> str:

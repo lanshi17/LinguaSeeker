@@ -120,10 +120,25 @@ def _track_summary(result: EvidenceExtractionResult) -> dict[str, Any]:
         ocr_gap_count = report.ocr_gap_count
         table_ungrounded_count = report.table_ungrounded_count
         ambiguous_count = report.ambiguous_source_count
+    group_ids = sorted({item.group_id for item in result.evidence_items if item.group_id})
+    chain_levels: dict[str, int] = {}
+    case_ids = sorted({
+        case_id
+        for chain in result.evidence_chains
+        for case_id in chain.case_ids
+    })
+    special_evidence_ids = sorted({
+        special_id
+        for chain in result.evidence_chains
+        for special_id in chain.special_evidence_ids
+    })
+    for chain in result.evidence_chains:
+        chain_levels[chain.chain_level] = chain_levels.get(chain.chain_level, 0) + 1
     return {
         "status": result.status.value,
         "track": result.track.value,
         "evidence_item_count": len(result.evidence_items),
+        "group_count": len(group_ids),
         "found_count": found_count,
         "not_found_count": not_found_count,
         "source_invalid_count": source_invalid_count,
@@ -131,6 +146,9 @@ def _track_summary(result: EvidenceExtractionResult) -> dict[str, Any]:
         "table_ungrounded_count": table_ungrounded_count,
         "ambiguous_source_count": ambiguous_count,
         "special_evidence_count": len(result.special_evidence),
+        "chain_levels": chain_levels,
+        "case_ids": case_ids,
+        "special_evidence_ids": special_evidence_ids,
         "quality_passed": report.passed if report else None,
         "quality_scorable": report.scorable if report else None,
         "score_gate_passed": report.score_gate_passed if report else None,

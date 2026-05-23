@@ -4,14 +4,15 @@ from __future__ import annotations
 from pydantic import ValidationError
 
 from ..contracts import EvidenceItem, SpecialEvidenceRecord, SpecialEvidenceResponse, TrackDocument
-from ..core import SpecialEvidenceValidator
-from ..prompts import get_special_evidence_prompt
+from ..core import RawSourceNormalizer, SpecialEvidenceValidator
+from ..prompts import build_block_prompt_text, get_special_evidence_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 
 
 class SpecialEvidenceStage:
     def __init__(self, provider: LangChainEvidenceProvider):
         self._provider = provider
+        self._raw_source_normalizer = RawSourceNormalizer()
         self._validator = SpecialEvidenceValidator()
 
     def run(
@@ -23,7 +24,7 @@ class SpecialEvidenceStage:
         prompt = get_special_evidence_prompt(
             document_id=document.document_id,
             track=document.track,
-            text=document.formatted_text,
+            text=build_block_prompt_text(document),
             current_items_summary=summary,
         )
         records = self._provider.invoke_structured(
@@ -34,6 +35,7 @@ class SpecialEvidenceStage:
             response_method="json_mode",
         )
         parsed = self._parse_records(records)
+        parsed = self._raw_source_normalizer.normalize_special_records(parsed)
         return self._validator.filter_records(parsed, current_items, document)
 
     @staticmethod
