@@ -116,3 +116,16 @@ def test_group_assigner_falls_back_to_nearest_group_for_special_records():
     _, grouped_special = GroupAssigner().assign(doc, items, records)
 
     assert grouped_special[0].group_id == "gene=GLA|variant=c.679C>T"
+
+
+def test_group_assigner_does_not_emit_orphan_gene_only_group_when_variant_group_exists():
+    doc = TrackDocument(document_id="doc-1", track=Track.ORIGINAL, formatted_text="", page_spans=[])
+    items = [
+        _item("A.gene_symbol", "BRCA1", block_index=0),
+        _item("A.variant_hgvs_c", "c.5266dupC", block_index=0),
+        _item("B.disease_diagnosis", "BRCA1-associated cancer", block_index=1),
+    ]
+
+    grouped_items, _ = GroupAssigner().assign(doc, items, [])
+
+    assert {item.group_id for item in grouped_items} == {"gene=BRCA1|variant=c.5266dupC"}
