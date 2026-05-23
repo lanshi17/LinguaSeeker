@@ -105,8 +105,10 @@ class FabryFixtureProvider:
 
     @staticmethod
     def _document_text_from_prompt(prompt: str) -> str:
-        marker = "DOCUMENT TEXT:\n"
-        return prompt.split(marker, maxsplit=1)[1]
+        for marker in ("DOCUMENT BLOCKS:\n", "DOCUMENT TEXT:\n"):
+            if marker in prompt:
+                return prompt.split(marker, maxsplit=1)[1]
+        raise AssertionError("prompt did not include document body")
 
     @staticmethod
     def _span_for_offset(text: str, snippet: str, start: int, track: Track) -> PageSpan:
