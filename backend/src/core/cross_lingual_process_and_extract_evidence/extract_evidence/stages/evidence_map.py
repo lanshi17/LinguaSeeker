@@ -6,7 +6,7 @@ from ..prompts import get_evidence_map_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 
 
-class EvidenceMapStage:
+class RelevanceScanStage:
     def __init__(self, provider: LangChainEvidenceProvider):
         self._provider = provider
 
@@ -20,6 +20,6 @@ class EvidenceMapStage:
             prompt=prompt,
             output_schema=DocumentEvidenceMap,
             tier=EvidenceModelTier.FAST,
-            stage="evidence_map",
+            stage="relevance_scan",
             response_method="json_mode",
         )

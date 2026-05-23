@@ -16,7 +16,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.provid
     EvidenceModelTier,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import CatalogExtractionStage
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.evidence_map import EvidenceMapStage
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.evidence_map import RelevanceScanStage
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.quality_validation import QualityGateStage
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.source_grounding import SourceGroundingStage
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.special_evidence import SpecialEvidenceStage
@@ -44,7 +44,7 @@ def test_evidence_map_stage_calls_fast_tier():
     emap = DocumentEvidenceMap(relevant=True, gene_terms=["GLA"])
     provider.invoke_structured.return_value = emap
 
-    stage = EvidenceMapStage(provider)
+    stage = RelevanceScanStage(provider)
     result = stage.run(_doc())
 
     assert result.relevant is True

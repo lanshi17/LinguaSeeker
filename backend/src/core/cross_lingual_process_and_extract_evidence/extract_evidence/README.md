@@ -1,6 +1,6 @@
 # extract_evidence
 
-> Track-agnostic GDV/ACMG evidence extraction module. Given one formatted document track (original or translated), extracts structured evidence items, evidence chains, and special evidence records across 10 evidence categories with validated source spans. The public facade also supports dual-track runs that execute original and translated tracks independently.
+> Track-agnostic GDV/ACMG evidence extraction module. Given one formatted document track (original or translated), extracts grouped evidence items, variant-centered evidence chains, and special evidence records across 10 evidence categories with block-aware grounding. The public facade also supports dual-track runs that execute original and translated tracks independently.
 
 ## Quick Start
 
@@ -57,37 +57,40 @@ EvidenceExtractionService (public facade)
  │
  └── EvidenceExtractionWorkflow       ← LangGraph StateGraph for one TrackDocument
       │
-      ├─ [entry] evidence_map ───────→ EvidenceMapStage (FAST tier)
+      ├─ [entry] relevance_scan ─────→ RelevanceScanStage (FAST tier)
       │    ├─ relevant? → not_relevant → END
       │    └─ relevant? → catalog_extraction
       │
       ├─ catalog_extraction ─────────→ CatalogExtractionStage (STRONG tier)
-      │    ├─ extracts EvidenceItem[] candidates
-      │    └─ EvidenceItemNormalizer expands to the full 138-field catalog
+      │    └─ extracts sparse EvidenceItem[] with raw_source only
       │
       ├─ special_evidence ───────────→ SpecialEvidenceStage (STRONG tier)
       │    └─ second pass for functional/case-control/authority/contradiction
       │
+      ├─ group_assignment ───────────→ GroupAssignmentStage (deterministic)
+      │    └─ assigns variant-centered group_id values before grounding
+      │
       ├─ source_grounding ───────────→ SourceGroundingStage (deterministic)
-      │    └─ SourceGrounder: exact match → snippet search → OCR_GAP/SOURCE_INVALID
+      │    └─ SourceGrounder: raw_source → block/text grounding → OCR_GAP/SOURCE_INVALID
       │
-      ├─ chain_building ─────────────→ EvidenceChainBuilder (deterministic)
-      │    └─ builds conservative gene-disease-variant identity chains
+      ├─ chain_assembly ─────────────→ EvidenceChainBuilder (deterministic)
+      │    └─ builds full/partial/singleton variant-centered chains
       │
-      └─ quality_validation ─────────→ QualityValidationStage (deterministic)
-           ├─ QualityValidator: required fields, source gaps, scoring/review gates
+      └─ quality_gate ───────────────→ QualityGateStage (deterministic)
+           ├─ QualityValidator: chain-aware scoring/review gates
            └─ IntraTrackConflictChecker: same-field conflict detection
 ```
 
 ### Data flow
 
 ```
-TrackDocument → [evidence_map] → DocumentEvidenceMap
-                               → [catalog_extraction] → EvidenceItem[]
-                               → [special_evidence] → SpecialEvidenceRecord[] (filtered)
-                               → [source_grounding] → EvidenceItem[] (grounded or gap-marked)
-                               → [chain_building] → EvidenceChain[]
-                               → [quality_validation] → QualityReport
+TrackDocument → [relevance_scan] → DocumentEvidenceMap
+                                → [catalog_extraction] → sparse EvidenceItem[]
+                                → [special_evidence] → sparse SpecialEvidenceRecord[]
+                                → [group_assignment] → grouped items + grouped special records
+                                → [source_grounding] → grounded items + grounded special records
+                                → [chain_assembly] → EvidenceChain[]
+                                → [quality_gate] → QualityReport
                                → EvidenceExtractionResult
 
 DualTrackDocuments → run(original) → original EvidenceExtractionResult
@@ -107,7 +110,7 @@ class EvidenceExtractionService:
         """cfg must have ``cfg.evidence_extraction`` with EvidenceExtractionConfig fields."""
 
     async def run(self, document: TrackDocument) -> EvidenceExtractionResult:
-        """Run the full 5-stage pipeline asynchronously."""
+        """Run the full 7-stage pipeline asynchronously."""
 
     async def run_dual(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:
         """Run original and translated tracks independently."""
@@ -129,7 +132,7 @@ class EvidenceExtractionService:
 |--------|-----------|-------------|
 | `from_config` | `(cfg: Any) -> EvidenceExtractionConfigContext` | Classmethod. Extracts evidence extraction settings from the global config. |
 
-`evidence_map` uses OpenAI JSON mode (`response_format={"type": "json_object"}` via `json_mode`) plus an explicit JSON example in the prompt so models that only support JSON text can still return a valid `DocumentEvidenceMap`.
+`relevance_scan` uses OpenAI JSON mode (`response_format={"type": "json_object"}` via `json_mode`) plus an explicit JSON example in the prompt so models that only support JSON text can still return a valid `DocumentEvidenceMap`.
 
 Model servers that do not support OpenAI `response_format={"type": "json_schema"}` are supported by a JSON-text fallback. The fallback still validates outputs with Pydantic `TypeAdapter`, including `list[EvidenceItem]` stage outputs.
 
@@ -184,7 +187,7 @@ Module-level tuple of all 138 evidence fields across 10 categories (A-J), frozen
 
 ```python
 class EvidenceModelTier(str, Enum):
-    FAST = "fast"        # evidence_map (relevance scan)
+    FAST = "fast"        # relevance_scan
     STANDARD = "standard"
     STRONG = "strong"    # catalog_extraction, special_evidence
 ```
@@ -193,19 +196,21 @@ class EvidenceModelTier(str, Enum):
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `ground_items` | `(document: TrackDocument, items: list[EvidenceItem]) -> list[EvidenceItem]` | Three-tier resolution per item: 1) exact offset match → keep, 2) snippet text search → correct offsets + mark `CORRECTED`, 3) not found → mark `OCR_GAP` for image/table/figure sources or `SOURCE_INVALID` otherwise. Preserves original source as `raw_source` on corrected/gap/invalid items. Multiple matches are marked `AMBIGUOUS` (first match used, logged). |
+| `ground_items` | `(document: TrackDocument, items: list[EvidenceItem]) -> list[EvidenceItem]` | Grounds `raw_source` into `source`. Uses block text first when `TrackDocument.blocks` is available, then normalized snippet search over `formatted_text`, and propagates `block_index`, `bbox`, and mapped `block_type` into the grounded source. |
+| `ground_special_records` | `(document: TrackDocument, records: list[SpecialEvidenceRecord]) -> list[SpecialEvidenceRecord]` | Grounds special evidence independently. Failed grounding preserves the record with `source=None` and `raw_source` intact for review. |
 
 ### `EvidenceItemNormalizer` (`core.py`)
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `normalize` | `(items: list[EvidenceItem]) -> list[EvidenceItem]` | Expands sparse LLM output to every catalog field, keeps the best candidate per field, clears scoring assignments from non-found items, and marks `D.allele_frequency` as requiring external completion when absent. |
+| `normalize` | `(items: list[EvidenceItem]) -> list[EvidenceItem]` | Legacy global full-catalog normalization helper, kept for older callers and tests. |
+| `normalize_grouped` | `(items: list[EvidenceItem]) -> list[EvidenceItem]` | Expands grouped sparse evidence to a full per-group catalog, keeping the best candidate per field within each group. |
 
 ### `EvidenceChainBuilder` (`core.py`)
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `build` | `(items: list[EvidenceItem]) -> list[EvidenceChain]` | Builds a draft identity chain only when grounded gene, disease, and variant fields are present. Chains do not imply ACMG classification. |
+| `build` | `(items: list[EvidenceItem], special_records: list[SpecialEvidenceRecord]) -> list[EvidenceChain]` | Builds per-group `full` / `partial` / `singleton` chains. Aggregates `case_ids`, attaches `special_evidence_ids`, and includes contradiction descriptions from same-group special records. |
 
 ### `SpecialEvidenceValidator` (`core.py`)
 
@@ -218,7 +223,7 @@ class EvidenceModelTier(str, Enum):
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `__init__` | `(required_field_ids: set[str] \| None = None, catalog: tuple[EvidenceFieldSpec, ...] = EVIDENCE_FIELD_SPECS)` | Optional explicit required fields. Default: auto-derives from catalog `required_for_scorable` flags. |
-| `validate` | `(items: list[EvidenceItem], contradictions: list[str], evidence_chain_count: int = 0) -> QualityReport` | Counts found/not_found/source_invalid/ocr_gap/ambiguous. Flags missing_source (error), missing_required (warning), contradictions (warning). `passed` means structurally consumable; `score_gate_passed` means safe for automated scoring. |
+| `validate` | `(items: list[EvidenceItem], contradictions: list[str], chains: list[EvidenceChain] \| None = None, special_records: list[SpecialEvidenceRecord] \| None = None, evidence_chain_count: int = 0) -> QualityReport` | Chain-aware quality gate. `scorable` means at least one `full` chain is automatically scoreable; incomplete chains and ungrounded special evidence trigger review without necessarily blocking a separate full chain. |
 
 ## Status and Gate Semantics
 
@@ -250,7 +255,7 @@ class IntraTrackConflictChecker:
 
 | Function | Signature | Tier |
 |----------|-----------|------|
-| `get_evidence_map_prompt` | `(document_id: str, track: Track, text: str) -> str` | FAST |
+| `get_evidence_map_prompt` | `(document_id: str, track: Track, text: str) -> str` | FAST (`relevance_scan`) |
 | `get_catalog_extraction_prompt` | `(document_id: str, track: Track, text: str, catalog: tuple[EvidenceFieldSpec, ...], evidence_map_summary: str) -> str` | STRONG |
 | `get_special_evidence_prompt` | `(document_id: str, track: Track, text: str, current_items_summary: str) -> str` | STRONG |
 | `get_source_ambiguity_review_prompt` | `(document_text: str, snippet: str, candidate_locations: list[dict[str, int]]) -> str` | not yet wired |
@@ -261,12 +266,13 @@ Thin wrappers that each own one pipeline step. Deterministic stages are provider
 
 | Stage | Class | Input | Output | Provider? |
 |-------|-------|-------|--------|-----------|
-| evidence_map | `EvidenceMapStage` | `TrackDocument` | `DocumentEvidenceMap` | FAST |
-| catalog_extraction | `CatalogExtractionStage` | `TrackDocument, DocumentEvidenceMap` | full-catalog `list[EvidenceItem]` | STRONG |
-| special_evidence | `SpecialEvidenceStage` | `TrackDocument, list[EvidenceItem]` | filtered `list[SpecialEvidenceRecord]` | STRONG |
-| source_grounding | `SourceGroundingStage` | `TrackDocument, list[EvidenceItem]` | `list[EvidenceItem]` | none |
-| chain_building | `EvidenceChainBuilder` | `list[EvidenceItem]` | `list[EvidenceChain]` | none |
-| quality_validation | `QualityValidationStage` | `list[EvidenceItem], list[str], evidence_chain_count` | `QualityReport` | none |
+| relevance_scan | `RelevanceScanStage` | `TrackDocument` | `DocumentEvidenceMap` | FAST |
+| catalog_extraction | `CatalogExtractionStage` | `TrackDocument, DocumentEvidenceMap` | sparse `list[EvidenceItem]` | STRONG |
+| special_evidence | `SpecialEvidenceStage` | `TrackDocument, list[EvidenceItem]` | sparse `list[SpecialEvidenceRecord]` | STRONG |
+| group_assignment | `GroupAssignmentStage` | `TrackDocument, list[EvidenceItem], list[SpecialEvidenceRecord]` | grouped items + grouped special records | none |
+| source_grounding | `SourceGroundingStage` | `TrackDocument, list[EvidenceItem], list[SpecialEvidenceRecord]` | grounded items + grounded special records | none |
+| chain_assembly | `EvidenceChainBuilder` | `list[EvidenceItem], list[SpecialEvidenceRecord]` | `list[EvidenceChain]` | none |
+| quality_gate | `QualityGateStage` | `list[EvidenceItem], list[str], list[EvidenceChain], list[SpecialEvidenceRecord]` | `QualityReport` | none |
 
 ### EvidenceExtractionWorkflow (`workflow.py`)
 
@@ -276,7 +282,7 @@ class EvidenceExtractionWorkflow:
         """Builds and compiles the LangGraph StateGraph."""
 
     async def run(self, document: TrackDocument) -> EvidenceExtractionState:
-        """Execute the 5-stage pipeline. Uses run_in_executor for async safety."""
+        """Execute the 7-stage pipeline. Uses run_in_executor for async safety."""
 ```
 
 ### Contract Models (`contracts.py`)
@@ -288,12 +294,12 @@ All models are Pydantic v2 `BaseModel` with strict validation.
 | `Track` | Enum: `ORIGINAL` / `TRANSLATED` |
 | `ExternalIds` | PMID, DOI, PMCID |
 | `PageSpan` | span_id, page, start/end offsets. Validates `end >= start`. |
-| `TrackDocument` | A single document track with formatted text and page spans |
+| `TrackDocument` | A single document track with formatted text, page spans, and optional minimal `blocks` for block-aware grounding |
 | `SourcePrecision` | Enum: `EXACT`, `CORRECTED`, `AMBIGUOUS` |
-| `SourceLocation` | A source anchor with context_type, block_type, text_snippet, precision |
+| `SourceLocation` | A source anchor with `block_index`, `bbox`, `context_type`, `block_type`, `text_snippet`, and precision |
 | `EvidenceStatus` | Enum: `FOUND`, `NOT_FOUND`, `SOURCE_INVALID`, `OCR_GAP` |
-| `EvidenceItem` | Per-field extracted evidence with assigned ACMG codes, source, confidence, inference basis, and external completion metadata |
-| `EvidenceChain` | Gene-disease-variant grouped evidence with contradictions and quality warnings |
+| `EvidenceItem` | Per-field extracted evidence with `group_id`, `raw_source`, grounded `source`, confidence, inference basis, and external completion metadata |
+| `EvidenceChain` | Variant-centered grouped evidence with `chain_level`, `case_ids`, `special_evidence_ids`, contradictions, and quality warnings |
 | `DocumentEvidenceMap` | Document-level relevance scan output |
 | `SpecialEvidenceRecord` | Non-field evidence: functional, case_control, authority, contradiction |
 | `QualityIssue` | Single validation issue with type, field_id, severity |
@@ -308,28 +314,25 @@ All models are Pydantic v2 `BaseModel` with strict validation.
 
 ### Source grounding algorithm
 
-`SourceGrounder._ground_one()` applies a three-tier resolution strategy:
+`SourceGrounder` now treats the LLM-provided source as `raw_source` and resolves a new grounded `source`:
 
-1. **Exact match** — verify `document.formatted_text[start:end] == snippet`. If matching, keep the source as `EXACT`.
-2. **Snippet search** — `str.find(snippet)` over the full document text. If exactly one match is found, rebuild the `SourceLocation` with corrected offsets and mark `CORRECTED`. If multiple matches, take the first, mark `AMBIGUOUS`, and log. If zero matches, mark `OCR_GAP` for image/table/figure sources or `SOURCE_INVALID` otherwise.
-3. **Span assignment** — each found position is mapped to a `PageSpan` via `_find_span()` which checks `start/end` containment.
+1. **Block-first grounding** — when `TrackDocument.blocks` is present and `raw_source.block_index` is valid, search within that block’s readable text and reuse its `bbox`.
+2. **Exact text fallback** — if offsets are already valid against `formatted_text`, keep them and backfill block metadata when possible.
+3. **Normalized snippet search** — search the full document text, including the existing CJK normalization path.
+4. **Failure mapping** — table misses become `TABLE_UNGROUNDED`, image/figure misses become `OCR_GAP`, and all other misses become `SOURCE_INVALID`.
 
-The search is bounded at `_MAX_SNIPPET_MATCHES = 50` to prevent unbounded iteration on single-character snippets.
-
-The original LLM-provided source is always preserved as `item.raw_source` when grounding changes the source (corrected, ambiguous, or invalid).
+Historical JSON without blocks is still supported: grounding falls back to pure text search with `block_index=-1` and `bbox=[]`.
 
 ### Quality validation rules
 
-`QualityValidator.validate()` applies these rules in order:
+`QualityValidator.validate()` is now chain-aware:
 
-1. Count items by status/source quality: `FOUND` / `NOT_FOUND` / `SOURCE_INVALID` / `OCR_GAP` / ambiguous source
-2. Flag `FOUND` items without a source as `missing_source` (severity: `error`)
-3. Compute missing required fields: `self._required - {found item field_ids}`.
-   Required fields default to those with `required_for_scorable=True` in the catalog:
-   `A.gene_symbol`, `A.variant_hgvs_c`, `A.variant_hgvs_p`, `B.disease_diagnosis`, `B.diagnosis_sufficiency`, `D.allele_frequency`.
-4. Flag missing required fields as `missing_required` (severity: `warning`)
-5. Attach upstream contradictions as `QualityIssue` records
-6. Set `passed = not any(severity == "error")`; set `scorable=False` for missing required fields, OCR gaps, or ambiguous sources; set `score_gate_passed=True` only when the result is passed, scorable, and has at least one grounded evidence chain.
+1. Count item statuses globally for reporting.
+2. Keep `passed = not any(severity == "error")` for structural validity.
+3. Compute `full_chains`, `partial_chains`, and `singleton_chains`.
+4. `scorable=True` means at least one `full` chain exists and the full-chain groups do not have blocking source issues.
+5. Partial/singleton chains and special records with `raw_source` but no grounded `source` trigger human review without necessarily blocking a separate full chain.
+6. `score_gate_passed=True` requires both `passed` and `scorable`.
 
 ### Provider retry strategy
 
@@ -464,7 +467,7 @@ Modify `LangChainEvidenceProvider._TRANSIENT_EXCEPTIONS` in `providers.py` to ad
 
 ### Known bottlenecks
 
-- **LLM calls dominate latency** — each pipeline incurs up to 3 LLM round-trips (evidence_map + catalog_extraction + special_evidence). Expected latency: 5-30 seconds per document depending on model and document length.
+- **LLM calls dominate latency** — each pipeline incurs up to 3 LLM round-trips (`relevance_scan` + `catalog_extraction` + `special_evidence`). Expected latency: 5-30 seconds per document depending on model and document length.
 - **Catalog extraction sends the entire 138-field catalog in the prompt** — the compact format adds ~2KB of prompt tokens. For very long documents, the combined prompt may approach token limits.
 - **Snippet search for common substrings** — very common text like "the" or "1" in single-character snippets will find up to 50 matches, creating 50 `SourceLocation` objects. This is bounded but still allocates.
 
@@ -490,7 +493,7 @@ All settings via environment variables (flat naming convention, auto-mapped by p
 |----------|---------|-------------|
 | `EVIDENCE_EXTRACTION_API_KEY` | `""` | LLM API key |
 | `EVIDENCE_EXTRACTION_BASE_URL` | `""` | LLM base URL (OpenAI-compatible) |
-| `EVIDENCE_EXTRACTION_FAST_MODEL` | `""` | Model for evidence_map stage |
+| `EVIDENCE_EXTRACTION_FAST_MODEL` | `""` | Model for relevance_scan stage |
 | `EVIDENCE_EXTRACTION_STANDARD_MODEL` | `""` | Model for standard-tier stages |
 | `EVIDENCE_EXTRACTION_STRONG_MODEL` | `""` | Model for catalog_extraction and special_evidence |
 | `EVIDENCE_EXTRACTION_TEMPERATURE` | `0.0` | LLM temperature (0.0 = deterministic) |
@@ -506,7 +509,7 @@ cd backend
 uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/ -v
 ```
 
-Current coverage: 63 unit tests across 9 test files (plus 2 skipped integration tests). All LLM-dependent stages use mocked providers.
+Current coverage: 112 unit tests across 18 test files (plus 3 skipped integration tests). All LLM-dependent stages use mocked providers.
 
 | Test file | Tests | Coverage |
 |-----------|-------|----------|
@@ -514,13 +517,20 @@ Current coverage: 63 unit tests across 9 test files (plus 2 skipped integration 
 | `test_config_context.py` | 1 | Config context construction from mock |
 | `test_contracts.py` | 14 | All model validations, enum values, defaults, roundtrips |
 | `test_prompts.py` | 2 | Prompt content assertions |
-| `test_providers.py` | 1 | Tier-based model selection, ChatOpenAI constructor args |
-| `test_source_grounding.py` | 2 | Exact match preserved, wrong offset corrected |
-| `test_quality_validation.py` | 2 | Missing source flagged, required field unscorable |
-| `test_stages.py` | 5 | Each stage calls correct tier/uses correct core class |
-| `test_workflow.py` | 2 | Full workflow not_relevant path, service facade |
+| `test_providers.py` | 6 | Tier/model selection, JSON mode, fallback repair paths |
+| `test_source_grounding.py` | 9 | Legacy and raw-source grounding behavior |
+| `test_source_grounder.py` | 6 | Block-aware bbox/block-type grounding and special-record preservation |
+| `test_quality_validation.py` | 15 | Quality-gate semantics and legacy normalizer behavior |
+| `test_quality_validator.py` | 4 | Chain-aware scorable / score gate behavior |
+| `test_normalizer.py` | 5 | Raw source normalization and grouped catalog backfill |
+| `test_group_assignment.py` | 6 | Variant-centered group assignment and nearest-block fallback |
+| `test_chain_builder.py` | 4 | Full/partial/singleton chain assembly and special evidence attachment |
+| `test_stages.py` | 15 | Stage tier usage, sparse outputs, grounding and quality stage signatures |
+| `test_workflow.py` | 4 | Not-relevant path, service facade, grouped chain builder behavior |
+| `test_workflow_integration.py` | 1 | Block/group/ground/gate workflow order |
+| `test_e2e_fabry_dual_tracks.py` | 1 | Fixture-backed dual-track workflow smoke test (skipped when fixture absent) |
 | `test_integration_real_llm.py` | 2 | Skipped unless env vars configured; real LLM round-trip |
-| **Total** | **65** (2 skipped) | |
+| **Total** | **112** (3 skipped) | |
 
 ### Integration test
 
@@ -538,7 +548,7 @@ cd backend
 uv run pytest tests/core/cross_lingual_process_and_extract_evidence/ -v
 ```
 
-104 tests across the full cross-lingual module (translation, formatting, persistence, and evidence extraction).
+318 tests across the full cross-lingual module, plus 65 documented skips for fixture- or env-dependent scenarios.
 
 ### What's not tested
 
