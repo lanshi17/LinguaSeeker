@@ -42,6 +42,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-05-23 | [block-aware evidence extraction](plans/2026-05-23-block-aware-evidence-extraction.md) | planned |
 
 ## Active Code Reviews
 
