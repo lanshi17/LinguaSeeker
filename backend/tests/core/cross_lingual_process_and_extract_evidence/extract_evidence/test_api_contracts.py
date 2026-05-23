@@ -72,3 +72,18 @@ def test_group_fields_are_public_contracts():
     assert record.group_id == item.group_id
     assert chain.case_ids == ["case-1", "case-2"]
     assert chain.special_evidence_ids == ["special-0"]
+
+
+def test_result_model_dump_exposes_group_and_chain_fields():
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="BRCA1",
+        confidence=0.9,
+        group_id="gene=BRCA1|variant=c.5266dupC",
+    )
+    result = item.model_dump()
+
+    assert result["group_id"] == "gene=BRCA1|variant=c.5266dupC"

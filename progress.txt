@@ -92,3 +92,4 @@
 [2026-05-23] Block-aware evidence extraction Task 7: ground evidence and special records by content blocks with bbox/block-type propagation [completed]
 [2026-05-23] Block-aware evidence extraction Task 8: assemble grouped variant-centered chains with case aggregation and special evidence attachment [completed]
 [2026-05-23] Block-aware evidence extraction Task 9: replace validation scoring semantics with chain-aware quality gate behavior [completed]
+[2026-05-23] [extract-evidence-block-aware-refactor] [implemented]
