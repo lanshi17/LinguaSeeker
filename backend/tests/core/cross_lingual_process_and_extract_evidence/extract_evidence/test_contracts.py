@@ -226,6 +226,7 @@ def test_special_evidence_record_defaults():
     assert rec.confidence == 0.5
     assert rec.group_id == ""
     assert rec.source is None
+    assert rec.raw_source is None
     assert rec.evidence_field_ids == []
 
 

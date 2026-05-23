@@ -255,6 +255,22 @@ Only 7 documents have terminology maps. Terminology extraction may be skipped fo
 
 **Prevention**: For staged contract refactors in this module, add the failing boundary tests first, then map direct symbol usage before editing. Update only the minimum downstream code required to keep the current batch green; defer semantic rewrites to the task that owns them.
 
+## 2026-05-23: Batch-2 extract_evidence refactor exposed hidden stage coupling
+
+**Problem**: Batch 2 changed catalog/special extraction to emit sparse, `raw_source`-only records, but existing validators and tests still assumed stage output was already full-catalog normalized and `source`-grounded. Without tightening those assumptions, the new stages would either drop valid special evidence or give misleading green tests.
+
+**Investigation**: Added failing tests first for `RawSourceNormalizer`, grouped normalization, and variant-centered grouping. Then traced all direct dependencies on `item.source`, global `normalize()`, and full-catalog stage expectations using targeted `rg` across `extract_evidence/` and its tests.
+
+**Root cause**: The original module conflated three phases: LLM extraction shape, normalization/backfill, and source grounding. Batch 2 splits them, so code that implicitly relied on previous phase ordering needed to be made explicit.
+
+**Solution**:
+1. Added `RawSourceNormalizer` and moved stage outputs to `raw_source` before any grounding.
+2. Updated `SpecialEvidenceValidator` to accept `raw_source` during the pre-grounding phase instead of hard-requiring grounded `source`.
+3. Added `GroupAssigner` plus a thin `group_assignment` stage wrapper, with deterministic tie-breaks and local gene inference from block text when explicit gene items are absent.
+4. Added `EvidenceItemNormalizer.normalize_grouped()` while keeping legacy `normalize()` intact for older callers and tests.
+
+**Prevention**: When refactoring pipeline phase boundaries, identify every consumer that depends on the old phase ordering before changing runtime shape. Preserve the old API where needed, and add a new method for the new phase semantics instead of overloading one helper with both meanings.
+
 ### Problem 5: zh_functional suspicious char ratio (1 document, LOW)
 
 zh_functional has char ratio 0.58 (translation shorter than source), unusual for zh→en. Possible content truncation.

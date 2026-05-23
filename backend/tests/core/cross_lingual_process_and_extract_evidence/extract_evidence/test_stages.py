@@ -1,6 +1,5 @@
 from unittest.mock import MagicMock
 
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import EVIDENCE_FIELD_SPECS
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     ContentBlock,
     DocumentEvidenceMap,
@@ -75,9 +74,10 @@ def test_catalog_extraction_stage_calls_strong_tier():
     stage = CatalogExtractionStage(provider)
     result = stage.run(_doc(), DocumentEvidenceMap(relevant=True))
 
-    assert len(result) == len(EVIDENCE_FIELD_SPECS)
-    assert next(i for i in result if i.field_id == "A.gene_symbol").value == "GLA"
-    assert next(i for i in result if i.field_id == "D.allele_frequency").status == EvidenceStatus.NOT_FOUND
+    assert len(result) == 1
+    assert result[0].value == "GLA"
+    assert result[0].source is None
+    assert result[0].raw_source is not None
     call_kwargs = provider.invoke_structured.call_args
     assert call_kwargs.kwargs["tier"] == EvidenceModelTier.STRONG
     assert "[Block 0 | table | page 1 | caption: Table 1. Variants]" in call_kwargs.kwargs["prompt"]
@@ -300,6 +300,8 @@ def test_special_evidence_stage_keeps_valid_authority_for_found_field():
 
     assert len(result) == 1
     assert result[0].record_type == "authority"
+    assert result[0].source is None
+    assert result[0].raw_source is not None
 
 
 def test_special_evidence_stage_filters_source_snippet_not_in_document():
@@ -389,6 +391,7 @@ def test_special_evidence_stage_keeps_traceable_authority_with_zero_offsets():
 
     assert len(result) == 1
     assert result[0].record_type == "authority"
+    assert result[0].raw_source is not None
 
 
 def test_special_evidence_stage_keeps_non_g_case_control_when_document_text_is_traceable():
@@ -453,6 +456,7 @@ def test_special_evidence_stage_keeps_non_g_case_control_when_document_text_is_t
 
     assert len(result) == 1
     assert result[0].record_type == "case_control"
+    assert result[0].raw_source is not None
 
 
 def test_source_grounding_stage_uses_grounder():

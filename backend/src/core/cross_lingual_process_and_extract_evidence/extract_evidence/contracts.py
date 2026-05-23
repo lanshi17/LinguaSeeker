@@ -141,6 +141,7 @@ class SpecialEvidenceRecord(BaseModel):
     group_id: str = ""
     evidence_field_ids: list[str] = Field(default_factory=list)
     source: SourceLocation | None = None
+    raw_source: SourceLocation | None = None
     confidence: float = Field(ge=0.0, le=1.0, default=0.5)
 
 
