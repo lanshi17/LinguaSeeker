@@ -239,6 +239,54 @@ All translations have fewer blocks than originals (-12% to -50%). Image referenc
 
 Only 7 documents have terminology maps. Terminology extraction may be skipped for some languages.
 
+## 2026-05-23: Block-aware extract_evidence contract changes require localized compatibility fixes
+
+**Problem**: Executing the block-aware evidence extraction plan required changing public contracts early (`ContentBlock`, `group_id`, `case_ids`, block-only `SourceLocation` defaults). Those changes immediately broke collection and risked rippling through unrelated extraction behavior if applied too broadly.
+
+**Investigation**: Added task-specific failing tests first (`test_api_contracts.py`, `test_api_backward_compat.py`, prompt/stage regressions), then traced actual impact with targeted `rg` over `extract_evidence/` and its tests. Confirmed the first-batch surface was limited to contracts, `api.py`, prompt builders, catalog/special stages, and `EvidenceChainBuilder`.
+
+**Root cause**: The existing module assumed text-only documents and single `case_id` chain output. The new plan introduces block-aware inputs and grouped chain semantics incrementally, so task-order mismatches can produce false failures unless each task updates the minimum dependent code.
+
+**Solution**:
+1. Added only the minimal local `ContentBlock` subset inside `extract_evidence/contracts.py`, without importing the upstream cross-lingual dataclass.
+2. Updated `EvidenceChainBuilder` just enough to emit `case_ids` and `chain_level` while keeping current chain selection behavior unchanged.
+3. Preserved API backward compatibility by parsing `blocks` locally and falling back cleanly when historical JSON has none.
+4. Switched catalog/special prompts to block text only after adding targeted tests that assert prompt content and stage wiring.
+
+**Prevention**: For staged contract refactors in this module, add the failing boundary tests first, then map direct symbol usage before editing. Update only the minimum downstream code required to keep the current batch green; defer semantic rewrites to the task that owns them.
+
+## 2026-05-23: Batch-2 extract_evidence refactor exposed hidden stage coupling
+
+**Problem**: Batch 2 changed catalog/special extraction to emit sparse, `raw_source`-only records, but existing validators and tests still assumed stage output was already full-catalog normalized and `source`-grounded. Without tightening those assumptions, the new stages would either drop valid special evidence or give misleading green tests.
+
+**Investigation**: Added failing tests first for `RawSourceNormalizer`, grouped normalization, and variant-centered grouping. Then traced all direct dependencies on `item.source`, global `normalize()`, and full-catalog stage expectations using targeted `rg` across `extract_evidence/` and its tests.
+
+**Root cause**: The original module conflated three phases: LLM extraction shape, normalization/backfill, and source grounding. Batch 2 splits them, so code that implicitly relied on previous phase ordering needed to be made explicit.
+
+**Solution**:
+1. Added `RawSourceNormalizer` and moved stage outputs to `raw_source` before any grounding.
+2. Updated `SpecialEvidenceValidator` to accept `raw_source` during the pre-grounding phase instead of hard-requiring grounded `source`.
+3. Added `GroupAssigner` plus a thin `group_assignment` stage wrapper, with deterministic tie-breaks and local gene inference from block text when explicit gene items are absent.
+4. Added `EvidenceItemNormalizer.normalize_grouped()` while keeping legacy `normalize()` intact for older callers and tests.
+
+**Prevention**: When refactoring pipeline phase boundaries, identify every consumer that depends on the old phase ordering before changing runtime shape. Preserve the old API where needed, and add a new method for the new phase semantics instead of overloading one helper with both meanings.
+
+## 2026-05-23: Batch-3 extract_evidence refactor required workflow-level integration, not just local logic
+
+**Problem**: Tasks 7-9 each passed in isolation once their local logic was updated, but the first batch-level verification still failed because workflow and stage integration lagged behind the refactors. The concrete gaps were an old `QualityValidationStage` import in `workflow.py`, the old `SourceGroundingStage.run(document, items)` signature, and legacy tests still expecting pre-refactor chain/grounding semantics.
+
+**Investigation**: Ran each task slice first (`test_source_grounder.py`, `test_chain_builder.py`, `test_quality_validator.py`) and then a combined Batch 3 verification slice. The combined run surfaced integration failures immediately: import drift, stage signature mismatch, and one remaining Ruff failure from a missing `ContentBlock` import in `core.py`.
+
+**Root cause**: The plan refactors three adjacent phases of the same workflow. Local tests proved the new behavior, but the orchestration layer still encoded the old topology and old call signatures. This is a classic failure mode when staged refactors change both data shape and control flow.
+
+**Solution**:
+1. Reworked `SourceGrounder` to consume `raw_source`, propagate block metadata, and ground special records separately.
+2. Refactored `EvidenceChainBuilder` to build per-group `full` / `partial` / `singleton` chains and attach `special_evidence_ids`.
+3. Updated `QualityValidator` to accept chains and special records, and renamed the stage to `QualityGateStage`.
+4. Updated `workflow.py` to pass grounded special records into chain assembly and quality gating, and to use the new stage signatures.
+
+**Prevention**: For multi-phase workflow refactors, do not trust isolated task slices alone. After each task-level green run, immediately run one combined “batch integration slice” that includes the touched workflow/stage tests. It catches import drift and signature mismatches before they accumulate.
+
 ### Problem 5: zh_functional suspicious char ratio (1 document, LOW)
 
 zh_functional has char ratio 0.58 (translation shorter than source), unusual for zh→en. Possible content truncation.

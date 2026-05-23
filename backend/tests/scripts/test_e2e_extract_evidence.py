@@ -9,6 +9,7 @@ import pytest
 import scripts.e2e_extract_evidence as runner
 from scripts.e2e_extract_evidence import run_extract_evidence
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    EvidenceChain,
     DualEvidenceExtractionResult,
     EvidenceExtractionResult,
     EvidenceExtractionStatus,
@@ -45,6 +46,7 @@ def _result(document_id: str, track: Track, value: str) -> EvidenceExtractionRes
                 field_name="Disease name",
                 status=EvidenceStatus.FOUND,
                 value=value,
+                group_id="gene=GLA|variant=__missing__",
                 source=SourceLocation(
                     span_id=f"{track.value}-p1",
                     page=1,
@@ -55,6 +57,14 @@ def _result(document_id: str, track: Track, value: str) -> EvidenceExtractionRes
                     text_snippet=value,
                 ),
                 confidence=0.95,
+            )
+        ],
+        evidence_chains=[
+            EvidenceChain(
+                chain_id="gene=GLA|variant=__missing__",
+                chain_level="singleton",
+                case_ids=["case-1"],
+                special_evidence_ids=["special-0"],
             )
         ],
         quality_report=QualityReport(
@@ -100,6 +110,10 @@ async def test_run_extract_evidence_writes_dual_track_outputs(tmp_path: Path):
     assert summary_data["original"]["ocr_gap_count"] == 0
     assert summary_data["original"]["score_gate_passed"] is False
     assert summary_data["original"]["human_review_required"] is True
+    assert summary_data["original"]["group_count"] == 1
+    assert summary_data["original"]["chain_levels"] == {"singleton": 1}
+    assert summary_data["original"]["case_ids"] == ["case-1"]
+    assert summary_data["original"]["special_evidence_ids"] == ["special-0"]
     assert summary_data["original"]["human_review_by_category"]["workflow"] == [
         "No grounded evidence chain was produced",
     ]

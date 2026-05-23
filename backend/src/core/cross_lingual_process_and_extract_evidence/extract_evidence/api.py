@@ -8,6 +8,7 @@ from typing import Any
 
 from .config_context import EvidenceExtractionConfigContext
 from .contracts import (
+    ContentBlock,
     DualEvidenceExtractionResult,
     DualTrackDocuments,
     EvidenceExtractionResult,
@@ -98,17 +99,39 @@ def _build_track_document_from_json(path: Path, track: Track) -> TrackDocument:
     metadata = data.get("metadata", {})
     document_id = metadata.get("doc_id") or path.parent.name
     blocks = data.get("blocks", [])
+    parsed_blocks = _parse_content_blocks(blocks)
     formatted_text, page_spans = _format_blocks_with_page_spans(blocks, track)
     return TrackDocument(
         document_id=document_id,
         track=track,
         formatted_text=formatted_text,
         page_spans=page_spans,
+        blocks=parsed_blocks,
         metadata={
             "source_path": str(path),
             "source_language": str(metadata.get("source_language", "")),
         },
     )
+
+
+def _parse_content_blocks(blocks: list[dict[str, Any]]) -> list[ContentBlock]:
+    parsed: list[ContentBlock] = []
+    for block in blocks:
+        if not isinstance(block, dict):
+            continue
+        parsed.append(ContentBlock(
+            type=str(block.get("type", "text")),
+            page_idx=int(block.get("page_idx", 0)),
+            bbox=list(block.get("bbox", [])),
+            text=str(block.get("text", "")),
+            content=str(block.get("content", "")),
+            table_body=str(block.get("table_body", "")),
+            img_path=str(block.get("img_path", "")),
+            image_caption=[str(v) for v in block.get("image_caption", [])],
+            table_caption=[str(v) for v in block.get("table_caption", [])],
+            chart_caption=[str(v) for v in block.get("chart_caption", [])],
+        ))
+    return parsed
 
 
 def _format_blocks_with_page_spans(blocks: list[dict[str, Any]], track: Track) -> tuple[str, list[PageSpan]]:

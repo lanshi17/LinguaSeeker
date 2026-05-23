@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import EVIDENCE_FIELD_SPECS
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    ContentBlock,
     DocumentEvidenceMap,
     EvidenceItem,
     EvidenceStatus,
@@ -16,8 +16,8 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.provid
     EvidenceModelTier,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import CatalogExtractionStage
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.evidence_map import EvidenceMapStage
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.quality_validation import QualityValidationStage
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.evidence_map import RelevanceScanStage
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.quality_validation import QualityGateStage
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.source_grounding import SourceGroundingStage
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.special_evidence import SpecialEvidenceStage
 
@@ -28,6 +28,14 @@ def _doc() -> TrackDocument:
         track=Track.ORIGINAL,
         formatted_text="Patient 1 had Fabry disease and carried a hemizygous GLA c.1000G>A variant.",
         page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=78)],
+        blocks=[
+            ContentBlock(
+                type="table",
+                page_idx=0,
+                table_caption=["Table 1. Variants"],
+                table_body="Patient 1 had Fabry disease and carried a hemizygous GLA c.1000G>A variant.",
+            )
+        ],
     )
 
 
@@ -36,7 +44,7 @@ def test_evidence_map_stage_calls_fast_tier():
     emap = DocumentEvidenceMap(relevant=True, gene_terms=["GLA"])
     provider.invoke_structured.return_value = emap
 
-    stage = EvidenceMapStage(provider)
+    stage = RelevanceScanStage(provider)
     result = stage.run(_doc())
 
     assert result.relevant is True
@@ -66,11 +74,13 @@ def test_catalog_extraction_stage_calls_strong_tier():
     stage = CatalogExtractionStage(provider)
     result = stage.run(_doc(), DocumentEvidenceMap(relevant=True))
 
-    assert len(result) == len(EVIDENCE_FIELD_SPECS)
-    assert next(i for i in result if i.field_id == "A.gene_symbol").value == "GLA"
-    assert next(i for i in result if i.field_id == "D.allele_frequency").status == EvidenceStatus.NOT_FOUND
+    assert len(result) == 1
+    assert result[0].value == "GLA"
+    assert result[0].source is None
+    assert result[0].raw_source is not None
     call_kwargs = provider.invoke_structured.call_args
     assert call_kwargs.kwargs["tier"] == EvidenceModelTier.STRONG
+    assert "[Block 0 | table | page 1 | caption: Table 1. Variants]" in call_kwargs.kwargs["prompt"]
 
 
 def test_special_evidence_stage_calls_strong_tier():
@@ -84,6 +94,7 @@ def test_special_evidence_stage_calls_strong_tier():
     call_kwargs = provider.invoke_structured.call_args
     assert call_kwargs.kwargs["tier"] == EvidenceModelTier.STRONG
     assert call_kwargs.kwargs["response_method"] == "json_mode"
+    assert "[Block 0 | table | page 1 | caption: Table 1. Variants]" in call_kwargs.kwargs["prompt"]
 
 
 def test_special_evidence_stage_filters_untraceable_case_control_records():
@@ -289,6 +300,8 @@ def test_special_evidence_stage_keeps_valid_authority_for_found_field():
 
     assert len(result) == 1
     assert result[0].record_type == "authority"
+    assert result[0].source is None
+    assert result[0].raw_source is not None
 
 
 def test_special_evidence_stage_filters_source_snippet_not_in_document():
@@ -378,6 +391,44 @@ def test_special_evidence_stage_keeps_traceable_authority_with_zero_offsets():
 
     assert len(result) == 1
     assert result[0].record_type == "authority"
+    assert result[0].raw_source is not None
+
+
+def test_special_evidence_stage_keeps_caption_sourced_record_before_grounding():
+    provider = MagicMock()
+    provider.invoke_structured.return_value = [
+        {
+            "record_type": "authority",
+            "description": "Caption-carried authority evidence.",
+            "evidence_field_ids": ["J.known_pathogenic_variant_reference"],
+            "source": {
+                "block_index": 0,
+                "context_type": "table",
+                "context_ref": "Table 1. Variants",
+                "text_snippet": "Table 1. Variants",
+            },
+            "confidence": 0.9,
+        }
+    ]
+    current_item = EvidenceItem(
+        field_id="J.known_pathogenic_variant_reference",
+        category="J",
+        field_name="Known pathogenic variant reference",
+        status=EvidenceStatus.FOUND,
+        value="variant reference",
+        confidence=0.9,
+        raw_source=SourceLocation(
+            block_index=0,
+            context_type="table",
+            context_ref="Table 1. Variants",
+            text_snippet="Table 1. Variants",
+        ),
+    )
+
+    result = SpecialEvidenceStage(provider).run(_doc(), [current_item])
+
+    assert len(result) == 1
+    assert result[0].raw_source is not None
 
 
 def test_special_evidence_stage_keeps_non_g_case_control_when_document_text_is_traceable():
@@ -442,6 +493,7 @@ def test_special_evidence_stage_keeps_non_g_case_control_when_document_text_is_t
 
     assert len(result) == 1
     assert result[0].record_type == "case_control"
+    assert result[0].raw_source is not None
 
 
 def test_source_grounding_stage_uses_grounder():
@@ -462,8 +514,9 @@ def test_source_grounding_stage_uses_grounder():
     )
 
     stage = SourceGroundingStage()
-    result = stage.run(_doc(), [item])
+    result, special = stage.run(_doc(), [item], [])
 
+    assert special == []
     assert result[0].source.source_precision == SourcePrecision.EXACT
 
 
@@ -482,8 +535,8 @@ def test_quality_validation_stage_returns_report():
         confidence=0.9,
     )
 
-    stage = QualityValidationStage()
-    report = stage.run([item], contradictions=[])
+    stage = QualityGateStage()
+    report = stage.run([item], contradictions=[], chains=[], special_records=[])
 
     assert isinstance(report, QualityReport)
     assert report.passed is True

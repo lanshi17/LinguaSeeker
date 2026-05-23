@@ -83,3 +83,13 @@
 [2026-05-22] [extract-evidence-special-evidence-json-stability] [done] Reworked special evidence structured output to use a Pydantic wrapper plus json_mode, which prevents invalid escape JSON failures from aborting dual-track extraction; verified provider/stage/e2e tests pass and Ruff clean.
 [2026-05-22] [extract-evidence-v3-case-count-implicit] [done] Downgraded inferred B.case_count without source to non-blocking table-grounded handling so translated quality gate can pass while preserving review visibility; verified targeted extract-evidence tests pass and Ruff clean.
 [2026-05-23] [extract-evidence-block-aware-refactor-plan] [planned] Planned block-aware source grounding, variant-centered group assignment, multi-chain assembly, special-evidence grouping, quality-gate semantics, and three-layer regression coverage.
+[2026-05-23] Block-aware evidence extraction Task 1: add local ContentBlock contracts, group-aware public fields, and case_ids chain contract [completed]
+[2026-05-23] Block-aware evidence extraction Task 2: preserve parsed content blocks in extract_evidence API input and backward-compatible JSON loading [completed]
+[2026-05-23] Block-aware evidence extraction Task 3: build block-aware prompt text and wire catalog/special stages to document blocks [completed]
+[2026-05-23] Block-aware evidence extraction Task 4: move LLM-produced sources into raw_source before grounding and keep sparse stage outputs [completed]
+[2026-05-23] Block-aware evidence extraction Task 5: add deterministic variant-centered group assignment for evidence items and special records [completed]
+[2026-05-23] Block-aware evidence extraction Task 6: add per-group evidence normalization with full-catalog backfill per group [completed]
+[2026-05-23] Block-aware evidence extraction Task 7: ground evidence and special records by content blocks with bbox/block-type propagation [completed]
+[2026-05-23] Block-aware evidence extraction Task 8: assemble grouped variant-centered chains with case aggregation and special evidence attachment [completed]
+[2026-05-23] Block-aware evidence extraction Task 9: replace validation scoring semantics with chain-aware quality gate behavior [completed]
+[2026-05-23] [extract-evidence-block-aware-refactor] [implemented]
