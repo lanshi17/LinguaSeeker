@@ -17,6 +17,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     EvidenceStatus,
     QualityReport,
     SourceLocation,
+    SourcePrecision,
     Track,
 )
 
@@ -55,8 +56,33 @@ def _result(document_id: str, track: Track, value: str) -> EvidenceExtractionRes
                     context_type="text",
                     context_ref="fixture",
                     text_snippet=value,
+                    block_index=0,
+                    source_precision=SourcePrecision.CORRECTED,
+                ),
+                raw_source=SourceLocation(
+                    span_id=f"{track.value}-p1",
+                    page=1,
+                    start_offset=0,
+                    end_offset=len(value),
+                    context_type="text",
+                    context_ref="fixture",
+                    text_snippet=value,
+                    block_index=1,
                 ),
                 confidence=0.95,
+                assigned_acmg_codes=["PP4"],
+                assigned_clingen_modules=["phenotype_consistency"],
+            ),
+            EvidenceItem(
+                field_id="D.allele_frequency",
+                category="D",
+                field_name="Allele frequency",
+                status=EvidenceStatus.NOT_FOUND,
+                value=None,
+                confidence=0.0,
+                group_id="gene=GLA|variant=__missing__",
+                requires_external_completion=True,
+                external_completion_note="Population frequency must be completed externally.",
             )
         ],
         evidence_chains=[
@@ -114,6 +140,13 @@ async def test_run_extract_evidence_writes_dual_track_outputs(tmp_path: Path):
     assert summary_data["original"]["chain_levels"] == {"singleton": 1}
     assert summary_data["original"]["case_ids"] == ["case-1"]
     assert summary_data["original"]["special_evidence_ids"] == ["special-0"]
+    assert summary_data["original"]["grounded_source_count"] == 1
+    assert summary_data["original"]["raw_source_count"] == 1
+    assert summary_data["original"]["block_grounded_source_count"] == 1
+    assert summary_data["original"]["source_precision_counts"] == {"corrected": 1}
+    assert summary_data["original"]["external_completion_required_count"] == 1
+    assert summary_data["original"]["assigned_acmg_codes"] == ["PP4"]
+    assert summary_data["original"]["assigned_clingen_modules"] == ["phenotype_consistency"]
     assert summary_data["original"]["human_review_by_category"]["workflow"] == [
         "No grounded evidence chain was produced",
     ]
