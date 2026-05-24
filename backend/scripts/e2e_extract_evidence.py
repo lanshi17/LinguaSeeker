@@ -134,6 +134,28 @@ def _track_summary(result: EvidenceExtractionResult) -> dict[str, Any]:
     })
     for chain in result.evidence_chains:
         chain_levels[chain.chain_level] = chain_levels.get(chain.chain_level, 0) + 1
+    grounded_source_count = sum(1 for item in result.evidence_items if item.source is not None)
+    raw_source_count = sum(1 for item in result.evidence_items if item.raw_source is not None)
+    block_grounded_source_count = sum(
+        1 for item in result.evidence_items
+        if item.source is not None and item.source.block_index >= 0
+    )
+    source_precision_counts: dict[str, int] = {}
+    for item in result.evidence_items:
+        if item.source is None:
+            continue
+        precision = item.source.source_precision.value
+        source_precision_counts[precision] = source_precision_counts.get(precision, 0) + 1
+    assigned_acmg_codes = sorted({
+        code
+        for item in result.evidence_items
+        for code in item.assigned_acmg_codes
+    })
+    assigned_clingen_modules = sorted({
+        module
+        for item in result.evidence_items
+        for module in item.assigned_clingen_modules
+    })
     return {
         "status": result.status.value,
         "track": result.track.value,
@@ -149,6 +171,15 @@ def _track_summary(result: EvidenceExtractionResult) -> dict[str, Any]:
         "chain_levels": chain_levels,
         "case_ids": case_ids,
         "special_evidence_ids": special_evidence_ids,
+        "grounded_source_count": grounded_source_count,
+        "raw_source_count": raw_source_count,
+        "block_grounded_source_count": block_grounded_source_count,
+        "source_precision_counts": source_precision_counts,
+        "external_completion_required_count": sum(
+            1 for item in result.evidence_items if item.requires_external_completion
+        ),
+        "assigned_acmg_codes": assigned_acmg_codes,
+        "assigned_clingen_modules": assigned_clingen_modules,
         "quality_passed": report.passed if report else None,
         "quality_scorable": report.scorable if report else None,
         "score_gate_passed": report.score_gate_passed if report else None,
