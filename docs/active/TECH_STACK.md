@@ -4,12 +4,15 @@
 
 | Layer | Technology | Version | Current Role |
 |---|---|---|---|
-| Frontend | Next.js | 15 | App Router, SSR, API proxy |
-| UI | React | 18 | Component model |
+| Frontend | Next.js | 15 | App Router, SSR, API proxy, tab-based layout |
+| UI | React | 18 | Component model, concurrent features |
 | Language | TypeScript | 5.5+ | Strict frontend type safety |
 | Styling | Tailwind CSS | 3.4 | Utility-first UI styling |
-| State | Zustand | 4.5 | Client runtime state |
-| Data Fetching | React Query + Axios | 5.50 / 1.7 | Server state + HTTP |
+| UI Components | shadcn/ui (Radix UI) | latest | Headless primitives: Drawer, Dialog, Accordion, Command (HPO autocomplete), Tabs |
+| Chat/Streaming | Vercel AI SDK | 4.x | `useChat` hook, SSE streaming, `streamUI` for inline evidence cards |
+| Markdown Render | react-markdown + remark-gfm | 9.x / 4.x | Workspace MD view with custom anchor components |
+| State | Zustand | 4.5 | `chatStore` (messages, editing card ID), `workspaceStore` (highlight anchor, reviewed cards), `taskBoardStore` (filters, selection) |
+| Server State | React Query + Axios | 5.50 / 1.7 | Server state caching + HTTP client |
 | Backend | FastAPI | 0.111+ | Async API, auth, tasks, orchestration |
 | Python | CPython | 3.12+ | Backend runtime |
 | ORM | SQLAlchemy | 2.0+ | Async PostgreSQL access |
@@ -179,40 +182,104 @@ Standalone FastAPI model service exposes OpenAI-compatible endpoints:
 ```text
 frontend/
 ├── app/
-│   ├── api/                    # Proxy routes only when needed
-│   ├── auth/                   # login/register/verify-email
+│   ├── api/                         # Next.js API routes (proxy, auth callbacks)
+│   ├── layout.tsx                   # Root layout with global topbar tabs
+│   ├── page.tsx                     # Redirect to AI Assistant
 │   └── (dashboard)/
-│       ├── analysis/           # Upload/search/new task
-│       ├── results/            # Bilingual evidence matrix review
-│       └── settings/
+│       ├── layout.tsx               # Dashboard shell with 4 tabs
+│       ├── assistant/               # Tab 1: AI Assistant (chat-driven)
+│       │   └── page.tsx
+│       ├── task-board/              # Tab 2: Task Board
+│       │   ├── page.tsx
+│       │   └── workspace/
+│       │       └── [taskId]/page.tsx  # Evidence Workspace
+│       ├── knowledge-base/          # Tab 3: Knowledge Base Query
+│       │   ├── page.tsx
+│       │   └── variant/
+│       │       └── [variantId]/page.tsx
+│       └── settings/                # Tab 4: Settings
+│           └── page.tsx
 ├── components/
-│   ├── ui/
-│   ├── forms/
-│   ├── charts/
-│   ├── document-panel.tsx
-│   ├── translated-document-panel.tsx
-│   ├── evidence-panel.tsx
-│   └── processing-status.tsx
+│   ├── ui/                          # shadcn/ui: Button, Input, Select, Dialog, Drawer, Accordion, Command, Tabs, Badge, Spinner
+│   ├── layout/
+│   │   ├── topbar.tsx               # Global fixed topbar with 4 tabs
+│   │   └── dashboard-shell.tsx
+│   ├── assistant/                   # AI Assistant feature slice
+│   │   ├── chat-panel.tsx           # Main chat area with message bubbles
+│   │   ├── chat-input.tsx           # Drag-drop upload + PMID input + send
+│   │   ├── session-sidebar.tsx      # Collapsible history session list
+│   │   ├── evidence-card.tsx        # Inline evidence form card (editable)
+│   │   ├── system-message.tsx       # SSE typewriter system message bubble
+│   │   └── batch-mode-toggle.tsx
+│   ├── task-board/                  # Task Board feature slice
+│   │   ├── task-list.tsx            # Task row cards with status colors
+│   │   ├── status-filter-bar.tsx    # Horizontal status tabs with counts
+│   │   ├── batch-action-bar.tsx     # Floating multi-select action bar
+│   │   ├── resource-panel.tsx       # Collapsible resource monitoring
+│   │   └── delta-audit-panel.tsx    # Slide-out delta audit log
+│   ├── workspace/                   # Evidence Workspace feature slice
+│   │   ├── md-document-view.tsx     # Markdown rendered document (left pane)
+│   │   ├── evidence-card-list.tsx   # Evidence cards (right pane)
+│   │   ├── traceability-drawer.tsx  # Source paragraph slide-out drawer
+│   │   ├── edit-dialog.tsx          # Modal edit form for evidence card
+│   │   └── shortcut-hint.tsx        # Keyboard shortcut reference card
+│   ├── knowledge-base/              # Knowledge Base feature slice
+│   │   ├── search-bar.tsx           # Multi-mode search (exact / AI / filters)
+│   │   ├── evidence-matrix.tsx      # Accordion-grouped evidence matrix
+│   │   ├── variant-metadata.tsx     # Variant metadata dashboard
+│   │   ├── comparison-view.tsx      # Side-by-side evidence comparison
+│   │   └── export-menu.tsx          # CSV / ACMG draft generation
+│   └── settings/                    # Settings feature slice
+│       ├── vocabulary-manager.tsx   # Ontology version cards
+│       ├── template-editor.tsx      # Extraction prompt template cards
+│       └── config-panel.tsx         # MinerU / DB connection config
 ├── lib/
 │   ├── api/
+│   │   ├── client.ts                # Axios instance
+│   │   ├── tasks.ts                 # Task CRUD + batch ops
+│   │   ├── chat.ts                  # Chat session + SSE stream
+│   │   ├── knowledge-base.ts        # Search, variant detail, NL-to-SQL
+│   │   ├── hpo.ts                   # HPO autocomplete search
+│   │   ├── delta.ts                 # Delta audit log
+│   │   └── settings.ts              # Ontology versions, config
 │   ├── hooks/
+│   │   ├── use-chat.ts              # Vercel AI SDK useChat wrapper
+│   │   ├── use-evidence-cards.ts    # Card state management
+│   │   ├── use-task-board.ts        # Task list + filters + selection
+│   │   ├── use-workspace.ts         # Workspace state + keyboard shortcuts
+│   │   └── use-knowledge-base.ts    # Search + variant detail
 │   ├── types/
+│   │   ├── chat.ts                  # Message, EvidenceCard, Session
+│   │   ├── task.ts                  # Task, TaskStatus, BatchOp
+│   │   ├── evidence.ts              # EvidenceItem, EvidenceMatrix, EvidenceDimension
+│   │   ├── variant.ts               # Variant, MetadataDashboard
+│   │   ├── delta.ts                 # DeltaEntry, AuditLog
+│   │   └── api.ts                   # Shared API response wrappers
 │   └── utils/
+│       ├── format.ts                # HGVS, date, number formatters
+│       └── keyboard.ts              # Workspace keyboard shortcut manager
 ├── stores/
+│   ├── chat-store.ts                # Messages, current session, editing card ID
+│   ├── workspace-store.ts           # Highlight anchor, reviewed card IDs, scroll position
+│   └── task-board-store.ts          # Status filter, search query, selected task IDs
 ├── styles/
-└── tests/
+│   └── globals.css                  # Tailwind + breathing-light animation
+├── public/
+├── tests/
+├── next.config.ts
+├── package.json
+└── tsconfig.json
 ```
 
 ### 4.2 Frontend Responsibilities
 
-- Render task creation forms for PDF, DOCX, PMID, DOI, and keyword search.
-- Stream status via WebSocket across parsing, native extraction, translation, translated extraction, fusion, standardization, and report preparation.
-- Render original parsed documents, translated documents, tables, figures, and synchronized bilingual highlights.
-- Present standardized evidence matrices with confidence, fusion status, and match rationale.
-- Capture structured review comments and extraction corrections.
-- Request PDF/DOCX evidence summary export.
+- **AI Assistant tab**: Chat-driven upload (drag-drop PDF, PMID input), SSE streaming parse progress via Vercel AI SDK, inline evidence form cards, natural language correction, session persistence.
+- **Task Board tab**: Status-filtered task list, multi-select batch operations, resource monitoring panel, delta audit log slide-out.
+- **Evidence Workspace**: Left/right split (Markdown document + evidence cards), scroll-into-view source highlighting, keyboard shortcuts (J/K/E/Enter/Esc/Ctrl+Z), traceability drawer.
+- **Knowledge Base tab**: Multi-mode search (exact/AI/advanced filters), variant detail page with evidence matrix, row comparison, traceability drawer, CSV export, ACMG classification draft generation.
+- **Settings tab**: Ontology version management, extraction template editing, MinerU/DB configuration.
 
-FastAPI remains authoritative for API behavior and JWT verification. Next.js does not sign or verify JWTs.
+FastAPI remains authoritative for API behavior and JWT verification. Next.js does not sign or verify JWTs. In open-source deployment, the frontend does not enforce per-user access control; transparency is maintained via audit logs.
 
 ## 5. Database and State Architecture
 
@@ -231,6 +298,8 @@ Core tables to design:
 - `fused_evidence_items` — deduplicated evidence with agreement/conflict status and bilingual spans.
 - `standardized_entities` — original value, translated value, standardized value, source DB, match rationale.
 - `evidence_matrices` — normalized per-document/per-task evidence matrix snapshots.
+- `delta_audit_logs` — per-task field modification history for transparency (task_id, field_path, old_value, new_value, timestamp).
+- `chat_sessions` — persisted chat conversations with message history and associated task IDs.
 - `review_comments` — expert feedback by target type.
 - `processing_logs` — persisted trace for completed tasks.
 - `cache_entries` — cache keys and reusable output pointers.
@@ -244,7 +313,7 @@ Current MVP may keep pending/running task state in memory:
 
 - Running tasks may disappear on backend restart.
 - Completed task metadata, original/translated document outputs, evidence matrices, reports, and comments persist.
-- WebSocket status streams from in-memory runtime state.
+- SSE streams chat and processing status via Vercel AI SDK (no WebSocket dependency).
 - Redis is deferred unless task runtime is re-scoped.
 
 ### 5.3 Public Database Sources

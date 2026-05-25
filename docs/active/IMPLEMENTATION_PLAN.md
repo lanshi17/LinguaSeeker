@@ -8,7 +8,7 @@ Implementation follows a four-phase evidence infrastructure pipeline. The curren
 Acquire/Upload → Parse/Digitize → Native Extraction → Translation → Translated Extraction → Fusion → Standardization → Evidence Matrix → Bilingual Review/Export
 ```
 
-Current MVP behavior remains async task-based: `POST /api/v1/tasks` creates a task, WebSocket streams progress, and `GET /api/v1/tasks/{task_id}/result` returns the completed bilingual evidence matrix.
+Current MVP behavior: `POST /api/v1/tasks` creates a task, SSE streams chat + processing progress via Vercel AI SDK, `GET /api/v1/tasks/{task_id}/result` returns the completed evidence matrix. Four-tab frontend: AI Assistant (chat-driven extraction), Task Board, Knowledge Base, Settings.
 
 Autonomous ACMG/AMP classification and full ClinGen GDV scoring are out of current MVP scope unless explicitly re-scoped. The evidence matrix is designed to become the data foundation for downstream medical rating.
 
@@ -43,12 +43,13 @@ Acceptance criteria for each module task should verify that orchestration contai
 ## 2. Phase Overview
 
 ```text
-0. Cross-Cutting Foundation: Auth, API, DB, task runtime, frontend shell       [TO BUILD]
-1. Literature Acquisition, Upload & Digitization                              [PARTIALLY DONE]
-2. Dual Cross-Lingual Extraction, Translation & Fusion                         [TO BUILD]
-3. Entity Standardization & Evidence Matrix Persistence                        [TO BUILD]
-4. Bilingual Visualization, Expert Feedback & Report Export                    [TO BUILD]
-P1/Future: Redis, Neo4j, MinIO, medical rating workflows, fine-tuning loop      [DEFERRED]
+0. Cross-Cutting Foundation: Auth, API, DB, task runtime, frontend tab shell          [TO BUILD]
+1. Literature Acquisition, Upload & Digitization                                     [PARTIALLY DONE]
+2. Dual Cross-Lingual Extraction, Translation & Fusion                               [TO BUILD]
+3. Entity Standardization & Evidence Matrix Persistence                              [TO BUILD]
+4. Frontend UI: AI Assistant, Task Board, Knowledge Base, Workspace, Settings, Export [TO BUILD]
+P1: HPO autocomplete, NL-to-SQL, batch processing, resource monitoring, ACMG draft     [DEFERRED]
+P1/Future: Redis, Neo4j, MinIO, medical rating, fine-tuning loop                       [DEFERRED]
 ```
 
 ## 3. Detailed Implementation Plan
@@ -59,23 +60,23 @@ These are prerequisites for all phases.
 
 | # | Task | Description | Verify |
 |---|---|---|---|
-| 0.1 | PostgreSQL schema design | Tables for users, task metadata, original/translated documents, source spans, translated spans, native evidence, translated evidence, fused evidence, standardized entities, evidence matrices, review comments, feedback dataset items, cache entries | Alembic migration runs and tables exist |
-| 0.2 | SQLAlchemy ORM models | `src/dao/models.py` for current MVP tables | Models import and basic CRUD works |
+| 0.1 | PostgreSQL schema design | Tables for users, tasks, documents, spans, evidence, entities, matrices, delta_audit_logs, chat_sessions, feedback, cache | Alembic migration runs and tables exist |
+| 0.2 | SQLAlchemy ORM models | `src/dao/models.py` including delta, chat, kb models | Models import and basic CRUD works |
 | 0.3 | Database connection | `src/dao/connection.py` async session factory | Session creation works |
 | 0.4 | Local storage layout | Uploaded/fetched documents, parsed outputs, translated outputs, tables, figures, reports | Files save/read through configured paths |
-| 0.5 | API router setup | `src/api/routes/` for auth, literature, tasks, health, ws | FastAPI starts and `/api/v1/*` routes register |
+| 0.5 | API router setup | `src/api/routes/` for auth, literature, tasks, health, chat, kb, hpo, delta, settings | FastAPI starts and `/api/v1/*` routes register |
 | 0.6 | JWT auth | FastAPI signs/verifies 24h JWTs; optional vs required user dependencies | Invalid tokens rejected on protected routes |
-| 0.7 | Registration/login/email verification | Public register + required email verification + login | Register, verify, login returns token |
+| 0.7 | Registration/login/email verification | Public register + email verification + login (open-source: optional auth gate) | Register, verify, login returns token |
 | 0.8 | Task runtime manager | In-memory pending/running task registry and status updates | Running task status available until restart |
-| 0.9 | Task creation API | `POST /api/v1/tasks` supports multipart PDF/DOCX and JSON PMID/DOI/keyword candidate | Create returns `task_id` immediately |
+| 0.9 | Task creation API | `POST /api/v1/tasks` supports multipart PDF/DOCX and JSON PMID/DOI/keyword | Create returns `task_id` immediately |
 | 0.10 | Task status/result API | `GET /api/v1/tasks`, `GET /api/v1/tasks/{task_id}`, `GET /api/v1/tasks/{task_id}/result` | Public reads return expected metadata/result |
-| 0.11 | WebSocket status API | `WS /api/v1/tasks/{task_id}/ws` streams acquisition/parsing/native_extraction/translation/translated_extraction/fusion/standardization/report status | Client receives progress |
-| 0.12 | Review/feedback API | Persist comments and structured feedback with original/translated anchors; login required | Feedback appears in result/export |
-| 0.13 | Cache metadata | PDF/DOCX hash + PMID/DOI + parser/translation/native-extraction/translated-extraction/fusion/model versions | Reused outputs produce normal task flow |
-| 0.14 | Frontend API client | Axios client for `/api/v1/*`, optional JWT attachment | Requests route through Next.js proxy |
-| 0.15 | Frontend auth pages | Login, register, email verification pages | User can register, verify, log in |
-| 0.16 | Frontend task dashboard | Active/recent in-memory tasks plus persisted completed results | Dashboard lists available tasks/results |
-| 0.17 | Frontend WebSocket hook | Connect to `/api/v1/tasks/{task_id}/ws` | Progress updates render in UI |
+| 0.11 | SSE chat streaming API | `POST /api/v1/chat/stream` streams parse progress and evidence cards via SSE (Vercel AI SDK) | Client receives SSE events: progress, card, complete, error |
+| 0.12 | Review/feedback API | Persist comments and structured feedback with original/translated anchors | Feedback appears in result/export |
+| 0.13 | Delta audit API | `GET /api/v1/tasks/{task_id}/delta` returns field modification history | Delta entries returned in diff format |
+| 0.14 | Cache metadata | PDF/DOCX hash + PMID/DOI + parser/translation/extraction/fusion/model versions | Reused outputs produce normal task flow |
+| 0.15 | Frontend API client | Axios client for `/api/v1/*` | Requests route through Next.js proxy |
+| 0.16 | Frontend tab shell | Topbar with 4 tabs: AI Assistant, Task Board, Knowledge Base, Settings; dashboard layout | Tabs render, navigation works |
+| 0.17 | Frontend SSE chat hook | `useChat` (Vercel AI SDK) wrapper for chat streaming | Progress + evidence cards render in chat |
 | 0.18 | Frontend verification commands | Wire `npm run lint` and `npm run type-check` | Both commands run successfully |
 
 ### 3.1 Phase 1: Literature Acquisition, Upload and Digitization
@@ -96,8 +97,8 @@ Most literature acquisition work is partially present. Remaining work:
 | 1.10 | Layout analyzer | Extract tables as JSON/CSV and figures/pedigrees/plots as source-linked regions | Tables/figures have IDs and spans |
 | 1.11 | VLM figure descriptions | Generate descriptions for medically relevant images | Figure evidence includes description and source region |
 | 1.12 | Text chunking | Section/paragraph splitting with `max_tokens`, preserving source spans | Long docs split without losing anchors |
-| 1.13 | Frontend upload/input form | PDF, DOCX, PMID, DOI, keyword search and selection | User can create tasks from all supported sources |
-| 1.14 | Frontend processing status | WebSocket-driven step indicators | Real-time status updates render |
+| 1.13 | Frontend chat input | Drag-drop PDF zone, PMID text input, natural language instruction, batch mode toggle (.txt upload) | User can create tasks from chat |
+| 1.14 | Frontend chat panel | Message bubble stream (text, system-progress with SSE typewriter, evidence card), session sidebar | Full chat flow works end-to-end |
 | 1.15 | Cache reuse integration | Hash and PMID/DOI keys can reuse outputs without exposing cache markers | Repeated inputs create new task IDs and complete normally |
 
 ### 3.2 Phase 2: Dual Cross-Lingual Extraction, Translation, and Fusion
@@ -139,20 +140,28 @@ This phase is the highest-priority quality layer. The implementation must avoid 
 | 3.13 | Evidence matrix builder | Combine fused evidence items and standardized entities into matrix snapshot | EvidenceMatrix validates and persists |
 | 3.14 | Supervisor integration | Add standardization and matrix persistence node | Pipeline: fused evidence → standardized evidence matrix |
 
-### 3.4 Phase 4: Bilingual Visualization, Expert Feedback, and Export
+### 3.4 Phase 4: Frontend UI — AI Assistant, Task Board, Knowledge Base, Workspace, Settings
 
 | # | Task | Description | Verify |
 |---|---|---|---|
-| 4.1 | Source linker | Map evidence items to original anchors and translated anchors/bbox/table/figure spans | Click evidence → highlight both source views |
-| 4.2 | Report generator | Evidence summary PDF and DOCX with metadata, matrix, snippets, fusion status, confidence, feedback | Reports generated with non-diagnostic disclaimer |
-| 4.3 | Review comment service | Save general comments/rationale without mutating evidence rows | Comments persist and export |
-| 4.4 | Structured feedback service | Save feedback by target type: native_extraction/translated_extraction/translation/fusion/entity/evidence/missed_evidence/report | Feedback persists and targets correct item |
-| 4.5 | Dataset capture hook | Store corrected original-translation-evidence triples for future fine-tuning/prompt improvement | Curated dataset rows can be queried |
-| 4.6 | Frontend three-panel UI | Original document + translated document + evidence panel | Panels render and scroll link correctly |
-| 4.7 | Frontend evidence matrix display | Expandable evidence rows with category, confidence, fusion status, match status, original/translated anchors | Matrix renders correctly |
-| 4.8 | Frontend feedback form | Structured feedback with optional original and translated anchors; login required | Feedback submits and appears in result/export |
-| 4.9 | Frontend report export | Download button triggers backend PDF/DOCX generation | Report downloads |
-| 4.10 | Dashboard result view | Active/recent tasks plus persisted completed results | Completed results remain after reload |
+| 4.1 | Evidence card component | Inline editable card in chat: HPO autocomplete (Command), ACMG rule dropdown, text fields, source expansion, confirm/re-extract buttons | Cards render and edits persist via delta API |
+| 4.2 | Natural language correction | Parse user NL corrections in chat, update card fields, re-render | "change PS3 to PS3_moderate" updates corresponding card |
+| 4.3 | Session persistence | Save/restore chat history via `GET/POST /api/v1/chat/sessions`; sidebar search by PMID/gene/date | Session restored with full context on click |
+| 4.4 | Task Board page | Status filter bar with counts, task row cards (color-coded), search, time range filter | Tasks listed and filterable by status |
+| 4.5 | Batch operations | Multi-select tasks, floating action bar: batch retry, batch delete, batch export CSV | Batch actions apply to selected tasks |
+| 4.6 | Resource monitoring panel | Collapsible panel: queue depth, active processes, 24h avg time, daily throughput | Panel renders with live data from `/api/v1/system/status` |
+| 4.7 | Delta audit panel | Slide-out from task row `···` menu: field modification history in diff format | Delta entries render correctly |
+| 4.8 | Evidence Workspace page | Left/right split: react-markdown document view + evidence card list; card-click → scrollIntoView highlight | Document scrolls to highlighted paragraph on card click |
+| 4.9 | Workspace keyboard shortcuts | J/K card navigation, E edit dialog, Enter confirm, Esc close, Ctrl+Z undo; shortcut hint card | All shortcuts functional |
+| 4.10 | Traceability drawer | Slide-out panel: literature metadata + original Markdown paragraph with highlighted source sentence | Drawer opens and shows correct source |
+| 4.11 | Knowledge Base search page | Multi-mode search bar (exact/ai/advanced), variant autocomplete, results list | Search returns variant results |
+| 4.12 | Variant detail page | Metadata dashboard, accordion-grouped evidence matrix with quality labels, row comparison, traceability drawer, export menu | Full variant detail renders correctly |
+| 4.13 | AI query (NL-to-SQL) | Toggle to AI mode, input NL, display generated SQL in `<code>` block, execute, render results | NL query produces SQL + results |
+| 4.14 | Settings page | Vocabulary version cards with update triggers, extraction template cards, MinerU/DB config panel | Settings render and mutations persist |
+| 4.15 | ACMG draft generation | "生成 ACMG 分类草稿" button → opens new AI Assistant session with draft + disclaimer | Draft renders in chat with disclaimer |
+| 4.16 | Batch processing mode | Chat toggle → upload .txt of PMIDs → background processing → notification in sidebar | Batch tasks appear in task board pending-review |
+| 4.17 | Report export | PDF/DOCX evidence summary with non-diagnostic disclaimer | Report downloads successfully |
+| 4.18 | Frontend end-to-end | Chat upload PDF → SSE progress → inline cards → NL correction → confirm → task board → workspace review → knowledge base search → export | Full user journey works without errors |
 
 ## 4. Dependency Graph
 
@@ -170,7 +179,7 @@ This phase is the highest-priority quality layer. The implementation must avoid 
 3. Entity standardization + evidence matrix persistence
     │
     ▼
-4. Bilingual visualization + structured expert feedback + export
+4. Frontend UI: AI Assistant + Task Board + Knowledge Base + Workspace + Settings + Export
 ```
 
 ## 5. Parallelizable Work
@@ -184,7 +193,7 @@ These can run concurrently once dependencies are satisfied:
 - **2.8-2.10** fusion/source-linking depends on native, translation, and translated extraction contracts.
 - **3.1-3.5** data loaders by source database.
 - **3.6-3.9** matchers after relevant loaders.
-- **4.1-4.5** backend review/export || **4.6-4.10** frontend review UI.
+- **4.1-4.3** chat/evidence cards || **4.4-4.7** task board/delta || **4.8-4.10** workspace || **4.11-4.15** knowledge base/settings/drafts || **4.16-4.18** batch/export/e2e.
 
 ## 6. Old Version Reuse Map
 
@@ -208,11 +217,11 @@ These can run concurrently once dependencies are satisfied:
 
 | Phase | Checkpoint |
 |---|---|
-| 0 | DB created, FastAPI starts, auth works, `/api/v1/tasks` returns `task_id`, WebSocket connects, frontend lint/type-check pass |
-| 1 | PDF/DOCX/PMID/DOI/keyword candidate → task → metadata → traceable rendered document; no-bbox output fails truthfully |
+| 0 | DB created, FastAPI starts, auth works, `/api/v1/tasks` returns `task_id`, SSE chat stream connects, 4-tab frontend renders, lint/type-check pass |
+| 1 | Chat PDF/PMID input → SSE progress → traceable rendered document; no-bbox output fails truthfully |
 | 2 | Non-English source → native JSON → translated document → translated JSON → fused evidence with bilingual anchors, fusion status, and confidence |
 | 3 | Fused evidence JSON → standardized entities with original + translated + standardized values + match rationale → persisted evidence matrix |
-| 4 | End-to-end: create task → progress UI → bilingual source-linked evidence review → structured feedback → PDF/DOCX evidence summary export |
+| 4 | End-to-end: chat upload → SSE → inline cards → NL correction → confirm → task board → workspace review with shortcuts → knowledge base search → knowledge base matrix → traceability drawer → ACMG draft → export |
 
 ## 8. Deferred / P1 Work
 
@@ -225,8 +234,8 @@ These are out of current MVP unless explicitly re-scoped:
 - Neo4j production graph integration.
 - MinIO object storage.
 - Password reset and refresh-token flows.
-- Chat Assistant beyond status-oriented UX.
+- Password reset and refresh-token flows.
+- Multi-user authentication and per-user access control (open-source: audit logs replace permissions).
 - Embedded native PDF viewer beyond rendered MD/HTML source view.
 - Automated PHI de-identification or privacy enforcement.
 - Full active-learning fine-tuning automation; current plan only stores curated feedback data.
-- React Testing Library and E2E hardening beyond current lint/type-check verification.
