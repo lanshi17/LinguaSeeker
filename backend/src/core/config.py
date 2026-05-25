@@ -60,8 +60,8 @@ class EmbeddingConfig(BaseModel):
     """Embedding model."""
 
     base_url: str = ""
-    model: str = ""
-    dimension: int = 1536
+    model: str = "Qwen/Qwen3-Embedding-0.6B"
+    dimension: int = 1024
     batch_size: int = 10
 
 
@@ -69,7 +69,7 @@ class RerankConfig(BaseModel):
     """Rerank model."""
 
     base_url: str = ""
-    model: str = ""
+    model: str = "BAAI/bge-reranker-v2-m3"
     top_k: int = 10
     score_threshold: float = 0.7
 
@@ -242,14 +242,14 @@ class Settings(BaseSettings):
     # ── Embedding flat fields (EMBEDDING_*) ──────────────────────────────
 
     embedding_base_url: str = ""
-    embedding_model: str = ""
-    embedding_dimension: int = 1536
+    embedding_model: str = "Qwen/Qwen3-Embedding-0.6B"
+    embedding_dimension: int = 1024
     embedding_batch_size: int = 10
 
     # ── Rerank flat fields (RERANK_*) ────────────────────────────────────
 
     rerank_base_url: str = ""
-    rerank_model: str = ""
+    rerank_model: str = "BAAI/bge-reranker-v2-m3"
     rerank_top_k: int = 10
     rerank_score_threshold: float = 0.7
 
