@@ -150,3 +150,28 @@ def test_terminology_relationship_object_is_nullable() -> None:
     table = _table("terminology_relationships")
 
     assert table.c.object_entry_id.nullable is True
+
+
+def test_terminology_embeddings_table_in_metadata() -> None:
+    """ORM metadata includes the terminology_embeddings table."""
+    assert "terminology_embeddings" in Base.metadata.tables
+
+
+def test_terminology_embeddings_has_embedding_column() -> None:
+    """Terminology embeddings table has an embedding column."""
+    table = _table("terminology_embeddings")
+    assert "embedding" in table.columns
+
+
+def test_terminology_embeddings_entry_model_unique() -> None:
+    """Each entry has at most one embedding per model version."""
+    assert ("entry_id", "model_version") in _unique_constraint_columns(
+        _table("terminology_embeddings")
+    )
+
+
+def test_terminology_embeddings_cascade_delete() -> None:
+    """Embedding is deleted when the parent entry is deleted (CASCADE)."""
+    table = _table("terminology_embeddings")
+    fk = next(c for c in table.foreign_key_constraints if "entry_id" in [p.name for p in c.columns])
+    assert fk.ondelete == "CASCADE"
