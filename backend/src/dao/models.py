@@ -303,3 +303,78 @@ class CanonicalEvidenceItem(Base, TimestampMixin):
     conflict_flag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     review_status: Mapped[str] = mapped_column(String(32), nullable=False, default="provisional")
     active_payload: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
+
+
+class TerminologyEntry(Base, TimestampMixin):
+    """Unified reference entity imported from terminology databases."""
+
+    __tablename__ = "terminology_entries"
+    __table_args__ = (
+        UniqueConstraint("source_db", "external_id", name="uq_terminology_entries_source_external_id"),
+        Index("ix_terminology_entries_entity_type_normalized_name", "entity_type", "normalized_name"),
+        Index("ix_terminology_entries_source_db", "source_db"),
+    )
+
+    entry_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_db: Mapped[str] = mapped_column(String(64), nullable=False)
+    external_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    display_name: Mapped[str] = mapped_column(Text, nullable=False)
+    normalized_name: Mapped[str] = mapped_column(Text, nullable=False)
+    aliases: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
+    raw_payload: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
+    version: Mapped[str] = mapped_column(String(128), nullable=False)
+
+
+class TerminologyAlias(Base, TimestampMixin):
+    """Indexed lookup alias for terminology matching."""
+
+    __tablename__ = "terminology_aliases"
+    __table_args__ = (
+        UniqueConstraint(
+            "entry_id",
+            "normalized_alias",
+            "alias_type",
+            name="uq_terminology_aliases_entry_alias_type",
+        ),
+        Index("ix_terminology_aliases_lookup", "entity_type", "normalized_alias"),
+        Index("ix_terminology_aliases_entry_id", "entry_id"),
+    )
+
+    alias_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    entry_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("terminology_entries.entry_id"),
+        nullable=False,
+    )
+    entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    alias_text: Mapped[str] = mapped_column(Text, nullable=False)
+    normalized_alias: Mapped[str] = mapped_column(Text, nullable=False)
+    alias_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_db: Mapped[str] = mapped_column(String(64), nullable=False)
+
+
+class TerminologyRelationship(Base, TimestampMixin):
+    """Structured relationship between terminology entries or scalar assertions."""
+
+    __tablename__ = "terminology_relationships"
+    __table_args__ = (
+        Index("ix_terminology_relationships_subject_type", "subject_entry_id", "relationship_type"),
+        Index("ix_terminology_relationships_object_type", "object_entry_id", "relationship_type"),
+    )
+
+    relationship_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    subject_entry_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("terminology_entries.entry_id"),
+        nullable=False,
+    )
+    object_entry_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("terminology_entries.entry_id"),
+        nullable=True,
+    )
+    relationship_type: Mapped[str] = mapped_column(String(96), nullable=False)
+    source_db: Mapped[str] = mapped_column(String(64), nullable=False)
+    evidence_level: Mapped[str | None] = mapped_column(String(96), nullable=True)
+    raw_payload: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
