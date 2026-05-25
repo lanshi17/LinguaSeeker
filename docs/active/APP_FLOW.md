@@ -1,438 +1,448 @@
 # APP_FLOW — ACMG Lingua Application Flow
 
-## 1. End-to-End Business Flow
+## 1. Navigation & Architecture Overview
 
-```text
-User Input (PMID / DOI / keyword / local PDF / local DOCX)
-        │
-        ▼
-┌─────────────────────────────────────────────────────────────┐
-│ Phase 1: Literature Acquisition & Digitization              │
-│ - Literature Agent fetches PMID/DOI/keyword-selected files   │
-│ - Upload workflow accepts local PDF/DOCX                     │
-│ - Metadata extraction before full parsing                    │
-│ - MinerU/PaddleOCR converts PDF to MD/HTML                   │
-│ - DOCX parser extracts text, tables, images                  │
-│ - Layout analysis extracts tables, figures, bbox anchors     │
-└──────────────────────────────┬──────────────────────────────┘
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│ Phase 2: Dual Cross-Lingual Evidence Extraction             │
-│ - Coarse filtering locates evidence-bearing regions          │
-│ - Original-language native extraction produces native JSON   │
-│ - Translation produces English/Chinese review text           │
-│ - Translated-text secondary extraction produces translated JSON│
-│ - Fusion compares, deduplicates, and anchors both passes     │
-└──────────────────────────────┬──────────────────────────────┘
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│ Phase 3: Entity Standardization & Knowledge Alignment        │
-│ - HGNC / ClinVar / dbSNP / OMIM / HPO / ClinGen matching     │
-│ - Exact match → synonym → vector fuzzy → conflict resolver   │
-│ - Store standardized evidence matrix with bilingual anchors  │
-└──────────────────────────────┬──────────────────────────────┘
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│ Phase 4: Bilingual Visualization & Expert Loop               │
-│ - Side-by-side original/translated evidence review           │
-│ - Click evidence → highlight original and translated spans   │
-│ - Structured expert feedback and correction capture          │
-│ - PDF/DOCX evidence summary report export                    │
-│ - Curated original-translation-evidence dataset for tuning   │
-└─────────────────────────────────────────────────────────────┘
+ACMG Lingua organizes all user interaction through four fixed tabs in the global topbar:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ACMG-Lingua   [AI 助手]  [任务看板]  [知识库查询]  [设置]       │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-ACMG Lingua's current product scope ends at structured evidence extraction, standardization, bilingual review, and evidence summary export. Downstream medical rating can consume the evidence matrix, but final ACMG/GDV classification is out of current MVP scope.
+| Tab | Route | Core Flow |
+|---|---|---|
+| AI Assistant | `/(dashboard)/assistant` | Upload → parse → extract → correct → ingest (chat-driven) |
+| Task Board | `/(dashboard)/task-board` | Monitor → filter → batch-operate → enter workspace |
+| Knowledge Base | `/(dashboard)/knowledge-base` | Search → explore → trace → compare → export |
+| Settings | `/(dashboard)/settings` | View versions → update → configure |
 
-## 1.1 Runtime Architecture Flow
+The Evidence Workspace (`/task-board/workspace/[taskId]`) and Variant Detail (`/knowledge-base/variant/[variantId]`) are sub-pages reachable from their parent tabs, with back-navigation preserving parent state.
 
-Application flow should be implemented as **Orchestrated Vertical Slice Architecture**:
+## 2. Architecture: Orchestrated Vertical Slices at Runtime
 
-```text
-Entry/API
+```
+Entry (Topbar tabs)
   │
   ▼
-Orchestrator: workflow topology + GraphState + router
+Page-level orchestration (app/**/page.tsx)
+  │  Data composition, routing, state wiring only
   │
-  ├──► Feature slice: acquisition / upload / parsing
-  ├──► Feature slice: native extraction / translation / translated extraction / fusion
-  ├──► Feature slice: standardization / evidence matrix
-  └──► Feature slice: bilingual review / feedback / export
+  ├──► Feature slice: AI Assistant (chat, evidence cards, sessions)
+  ├──► Feature slice: Task Board (list, filters, batch, delta audit)
+  ├──► Feature slice: Evidence Workspace (MD view, cards, shortcuts, traceability)
+  ├──► Feature slice: Knowledge Base (search, matrix, comparison, export)
+  └──► Feature slice: Settings (vocabularies, templates, config)
           │
           ▼
-Shared infrastructure: config, clients, persistence, telemetry
+Shared infrastructure: API clients, hooks, types, stores, UI primitives
 ```
 
-At runtime, `main.py`/FastAPI initializes task input into a typed state object, the orchestrator dispatches the next feature node, each node returns a state delta, and the router determines the next hop. Feature internals may contain `api.py`/node adapters, `core.py` pure domain logic, `providers.py` external dependency wrappers, and `schema.py` or `contracts.py` private models. The orchestrator must not contain biomedical extraction, translation, standardization, or report-generation business rules.
+At runtime, the frontend calls FastAPI `/api/v1/*` endpoints. FastAPI owns business logic, orchestration, and persistence. Next.js proxies API calls and renders UI.
 
-## 2. Phase 1: Literature Acquisition and Digitization
+## 3. Tab 1: AI Assistant Flow
 
-### 2.1 Input Routing
+This is the primary entry point. All literature processing is chat-driven.
 
-`POST /api/v1/tasks` is the authoritative task creation endpoint.
+### 3.1 Start a Session
 
-```text
-User Input
-    ├── Local PDF ─────────────► POST /api/v1/tasks multipart ─► Document parsing
-    ├── Local DOCX ────────────► POST /api/v1/tasks multipart ─► Document parsing
-    ├── PMID ─────────────────► POST /api/v1/tasks JSON ───────► Fetch literature
-    ├── DOI ──────────────────► POST /api/v1/tasks JSON ───────► Fetch literature
-    └── Keyword
+```
+User opens AI Assistant tab
+  │
+  ├── New session: empty chat with input box
+  │     └── Session sidebar shows previous conversations (collapsible)
+  │
+  └── Click existing session in sidebar → restore full chat history + context
+```
+
+### 3.2 Chat-Driven Extraction (Three-Round Flow)
+
+```
+Round 1 — Ingestion & Parse Feedback
+─────────────────────────────────────
+User action: Drag PDF / Type PMID / NL instruction ("提取 PMID 38000001 的证据")
+  │
+  ▼
+POST /api/v1/chat/stream  (SSE)
+  │
+  ▼
+System message bubble (SSE typewriter):
+  "正在解析 PDF...  ✓ 提取到 32 页 Markdown
+   识别文献：PMID 38000001 | Zhang et al. 2024 | Nature Genetics
+   启动证据提取 Agent...
+     → 扫描功能实验段落
+     → 发现 Luciferase assay 数据
+     → 映射 HPO 词表...
+   提取完成，请确认下方证据卡片。"
+  │  (On MinerU failure: "解析失败：[原因]" — no complex recovery)
+  │
+  ▼
+Round 2 — Inline Evidence Cards
+─────────────────────────────────────
+System renders evidence form cards as special message bubbles in chat:
+  ┌─────────────────────────────────────┐
+  │ 🧬 证据卡片 #1/3 · 功能实验证据      │
+  │ 变异: NM_000251.3:c.942+3A>T [只读] │
+  │ 基因: MLH1                    [只读] │
+  │ 表型: [HP:0001250 ×] [+添加]        │
+  │ ACMG: [PS3 ▾]                       │
+  │ 原文: "Luciferase activity..."       │
+  │         [✓ 确认]  [↺ 重新提取]       │
+  └─────────────────────────────────────┘
+  │
+  ▼
+User actions on cards:
+  ├── Inline edit fields (HPO autocomplete, ACMG rule dropdown, text fields)
+  │     └── Delta silently recorded → no popup
+  ├── Click "查看原文上下文" → expand ±3 paragraph context in-card
+  ├── Click "✓ 确认入库" → card marked confirmed, evidence persisted
+  └── Click "↺ 重新提取此条" → re-extract this evidence item
+  │
+  ▼
+Round 3 — Natural Language Correction
+─────────────────────────────────────
+User types correction in chat input:
+  "第一张卡片的表型应该是 HP:0001250 癫痫发作，不是 HP:0001251"
+  │
+  ▼
+System parses intent → updates card fields → re-renders cards
+  │  (All corrections stay in conversation — no separate edit dialogs)
+  │
+  ▼
+User confirms all cards → task moves to "已完成" on Task Board
+```
+
+### 3.3 Batch Mode Flow
+
+```
+User toggles "批量模式" near input
+  │
+  ▼
+Upload .txt file with PMID list (one per line)
+  │
+  ▼
+System creates background tasks for each PMID
+  │  (User can continue working — no need to wait)
+  │
+  ▼
+Results appear in Task Board "待复核" queue
+  │
+  ▼
+Notification entry in session sidebar: "批量任务完成 (20 篇)"
+```
+
+### 3.4 Session Persistence
+
+```
+Chat session saved on every message exchange:
+  ├── session_id
+  ├── task_id (associated literature task)
+  ├── messages[] (all message types: text, system, evidence-card)
+  └── metadata (PMID, title, created_at, updated_at)
+
+Session sidebar:
+  ├── Search by PMID, gene name, date
+  ├── Click session → restore full history from POST /api/v1/chat/sessions/:id
+  └── Session naming: auto from literature title or PMID
+```
+
+## 4. Tab 2: Task Board Flow
+
+### 4.1 Browse & Filter
+
+```
+User opens Task Board tab
+  │
+  ▼
+GET /api/v1/tasks?status=all
+  │
+  ▼
+Status filter bar with counts:
+  [全部 (142)] [解析中 (3)] [提取中 (7)] [待复核 (28)] [已完成 (98)] [失败 (6)]
+  │
+  ├── Click status → filter tasks by status
+  ├── Search box → fuzzy search by PMID, gene, title
+  └── Time range filter → date range selector
+```
+
+### 4.2 Task List Interaction
+
+```
+Task row:
+  ┌───────────────────────────────────────────────────────────────┐
+  │ ○ [待复核] PMID 38000001 Zhang et al. 2024 · MLH1            │
+  │             已提取 3 条证据    2 小时前    [查看工作台] [···] │
+  └───────────────────────────────────────────────────────────────┘
+  │
+  ├── Click "查看工作台" → navigate to workspace/[taskId]
+  │     └── Back button returns to task board, preserving filter + scroll
+  │
+  ├── Click "···" → delta audit panel slides out
+  │     └── GET /api/v1/tasks/:id/delta
+  │     └── Shows modification history in diff format:
+  │         2024-01-15 14:32  表型字段  HP:0001251 → HP:0001250
+  │         2024-01-15 14:35  ACMG规则  PS3 → PS3_moderate
+  │
+  └── Click "重试" (failed tasks) → POST /api/v1/tasks/:id/retry
+```
+
+### 4.3 Batch Operations
+
+```
+User checks multiple tasks (checkboxes)
+  │
+  ▼
+Floating action bar:
+  已选 12 条  [批量重试]  [批量删除]  [批量导出 CSV]  [×取消]
+  │
+  ├── 批量重试 → POST /api/v1/tasks/batch/retry
+  ├── 批量删除 → DELETE /api/v1/tasks/batch
+  ├── 批量导出 CSV → GET /api/v1/tasks/batch/export?ids=...
+  └── ×取消 → clear selection
+```
+
+### 4.4 Resource Monitoring
+
+```
+Collapse/expand panel (top-right):
+  ┌────────────────────────────┐
+  │  系统状态               ▾  │
+  │  队列深度      7 个任务    │  ← GET /api/v1/system/status
+  │  当前处理      2 个进程    │
+  │  24h 平均耗时  43 s/篇     │
+  │  今日处理量    31 篇       │
+  └────────────────────────────┘
+```
+
+## 5. Evidence Workspace Flow (from Task Board)
+
+Not an independent tab. Entered via "查看工作台" on task board.
+
+### 5.1 Layout & Core Interaction
+
+```
+← 返回看板    PMID 38000001 · Zhang et al. 2024 · MLH1      [导出] [完成复核]
+
+┌──────────────────────────────┬──────────────────────────────┐
+│  MD Document View (55%)      │  Evidence Cards (45%)        │
+│                              │                              │
+│  react-markdown rendering    │  Card list with:             │
+│  with data-anchor-id on <p>  │  - Evidence type             │
+│                              │  - Editable fields            │
+│  Click card →                │  - Source snippet             │
+│  scrollIntoView to anchor    │  - Confirm/edit buttons       │
+│  Breathing-light highlight   │                              │
+│  (1.5s fade in/out)          │  Click card → highlight MD   │
+└──────────────────────────────┴──────────────────────────────┘
+```
+
+### 5.2 Keyboard Shortcuts
+
+```
+J / K       → Navigate cards up/down → auto-highlight source paragraph
+E           → Open edit dialog for current card
+Enter       → Confirm current card (mark reviewed)
+Esc         → Close dialog/drawer
+Ctrl+Z      → Undo last modification
+
+First entry → show dismissible shortcut reference card (bottom-right)
+```
+
+### 5.3 Edit Flow
+
+```
+User presses E (or clicks [编辑] on card)
+  │
+  ▼
+Modal dialog opens:
+  ├── Dynamic form based on evidence dimension
+  │     ├── HPO field → Command (cmdk) with /api/v1/hpo/search?q=
+  │     ├── ACMG rule → Select dropdown
+  │     └── Free text → Textarea
+  ├── Save → POST /api/v1/evidence/:id (delta recorded silently)
+  └── Cancel → close, no changes
+```
+
+### 5.4 Traceability Drawer
+
+```
+Click [溯源 →] on evidence row (in workspace or knowledge base)
+  │
+  ▼
+Slide-out drawer (right side):
+  ├── Literature metadata header
+  ├── Original Markdown paragraph
+  │     └── Source sentence highlighted with background color
+  └── "在工作台中完整审阅" link → full workspace
+```
+
+### 5.5 Complete Review
+
+```
+User presses "完成复核" button
+  │
+  ▼
+All confirmed cards marked as reviewed
+  │
+  ▼
+Task status: "待复核" → "已完成"
+  │
+  ▼
+Back to task board (filter/scroll preserved)
+```
+
+## 6. Tab 3: Knowledge Base Query Flow
+
+### 6.1 Search
+
+```
+User opens Knowledge Base tab
+  │
+  ├── Exact search (default):
+  │     Input HGVS / gene / PMID → GET /api/v1/kb/search?q=...
+  │     Autocomplete suggestions from known variants
+  │
+  ├── AI Query mode (toggle):
+  │     Input NL description → POST /api/v1/kb/nl-to-sql
+  │       → Backend calls Claude API for Text-to-SQL
+  │       → Returns SQL string + result set
+  │       → User reviews SQL in <code> block (transparency)
+  │       → Results rendered in evidence matrix
+  │
+  └── Advanced filters (collapsible):
+        Evidence dimension dropdown
+        Year range [2020]–[2024]
+        ACMG rule multi-select
+        Gene name input
+        Data source: machine / expert / all
+        → GET /api/v1/kb/search?dimension=...&year_min=...&year_max=...
+```
+
+### 6.2 Variant Detail Page
+
+```
+Search result clicked → navigate to /knowledge-base/variant/[variantId]
+  │
+  ▼
+GET /api/v1/kb/variant/:id
+  │
+  ▼
+Top: Metadata Dashboard (fixed)
+  NM_000251.3:c.942+3A>T (MLH1)  ClinVar: 致病性  ·  gnomAD: 0.00003
+  转录本: NM_000251.3 | 蛋白变化: p.Gln315Lys | 收录文献: 7 篇 | 证据条目: 24 条
+  │
+  ▼
+Body: Evidence Matrix (Accordion groups)
+  ▼ 功能与生化实验证据 (8 条)
+    ┌──────────────────────────────────────────────────────────┐
+    │ 2024  Luciferase 活性↓42%  [功能缺失][PS3]  PMID 38xxx  │
+    │       [专家校正]  [溯源 →]                                │
+    │ 2023  RNA 拼接异常       [异常拼接][PS3]  PMID 37xxx     │
+    │       [机器提取]  [溯源 →]                                │
+    └──────────────────────────────────────────────────────────┘
+  ▶ 人群频率证据 (3 条)
+  ▶ 临床表型与家系证据 (9 条)
+  ▶ 计算预测证据 (4 条)
+  │
+  ▼
+Interactions:
+  ├── Click [溯源 →] → traceability drawer (same as workspace)
+  ├── Check rows → "对比" button → side-by-side comparison modal
+  │     ┌──────────────────┬──────────────────┐
+  │     │ PMID 38000001    │ PMID 36100099    │
+  │     │ Luciferase assay │ MMR 活性检测      │
+  │     │ 活性 ↓42%        │ 活性完全缺失      │
+  │     │ 结论: 功能缺失    │ 结论: 功能缺失    │
+  │     └──────────────────┴──────────────────┘
+  ├── Export CSV → GET /api/v1/kb/variant/:id/export?format=csv
+  └── Generate ACMG draft → POST /api/v1/kb/variant/:id/acmg-draft
+        → Opens new AI Assistant session with draft
+        → Draft disclaimer: "此文本由 AI 根据已收录证据自动生成，请专家完整审核后使用"
+        → Expert modifies in conversation → exports as PDF
+```
+
+## 7. Tab 4: Settings Flow
+
+```
+User opens Settings tab (admin only)
+  │
+  ├── Vocabulary Manager:
+  │     GET /api/v1/settings/vocabularies
+  │     ┌──────────────────────────────┐
+  │     │ HPO       v2024-01-16  [更新] │
+  │     │ OMIM      2024.01      [更新] │
+  │     │ ClinVar   2024-01      [更新] │
+  │     │ gnomAD    v4.0.0       [更新] │
+  │     └──────────────────────────────┘
+  │     Click [更新] → POST /api/v1/settings/vocabularies/:name/check-update
+  │
+  ├── Template Editor:
+  │     GET /api/v1/settings/templates
+  │     Cards per evidence dimension showing prompt summary + last modified
+  │     Edit → modal with full prompt text
+  │     Save → PUT /api/v1/settings/templates/:id
+  │     "新增自定义维度" → POST /api/v1/settings/templates
+  │
+  └── Config Panel:
+        MinerU: OCR toggle, table mode, max pages, timeout
+        Database: SQLite / PostgreSQL, path, test connection
+        → PUT /api/v1/settings/config
+```
+
+## 8. Runtime Architecture Flow (Backend)
+
+```
+User Action (chat / task board / knowledge base / settings)
+  │
+  ▼
+FastAPI /api/v1/* endpoint
+  │
+  ├── POST /api/v1/chat/stream          → SSE stream: parse progress + evidence cards
+  ├── GET/POST /api/v1/tasks/*          → Task CRUD + batch operations
+  ├── GET /api/v1/tasks/:id/delta       → Delta audit log
+  ├── GET /api/v1/kb/search             → Knowledge base search
+  ├── POST /api/v1/kb/nl-to-sql         → Natural language → SQL
+  ├── GET /api/v1/kb/variant/:id        → Variant detail + evidence matrix
+  ├── GET /api/v1/hpo/search?q=         → HPO autocomplete
+  └── GET/PUT /api/v1/settings/*        → Vocabulary, template, config
+  │
+  ▼
+Orchestrator (src/agents/)
+  │  Workflow topology, GraphState, routing
+  │
+  ├──► Feature: acquisition/upload/parsing
+  ├──► Feature: native extraction → translation → translated extraction → fusion
+  ├──► Feature: entity standardization → evidence matrix
+  └──► Feature: review, feedback, export, delta audit
           │
-          ├── Search first: GET /api/v1/literature/search
-          │
-          └── User selects analyzable candidate
-                └── POST /api/v1/tasks with selected_candidate
+          ▼
+Shared infrastructure: config, DAO, Rust I/O, telemetry, cache
 ```
 
-For keyword-created tasks, `selected_candidate` must include:
+## 9. Communication Architecture
 
-- `provider`
-- `title`
-- `canonical_id` when available (`doi`, `pmid`, or URL)
-- `selected_download_url`
+```
+Frontend                          Backend
+────────                          ───────
+AI Assistant (useChat)  ──SSE──►  POST /api/v1/chat/stream
+                                ◄── SSE events: progress, cards, complete, error
 
-A keyword candidate must expose a downloadable document URL before it can enter analysis.
+Task Board              ──REST─►  GET/POST/PATCH/DELETE /api/v1/tasks/*
+                                ◄── JSON responses
 
-### 2.2 Document Parsing Pipeline
+Knowledge Base          ──REST─►  GET /api/v1/kb/*
+                                ◄── JSON responses
 
-```text
-PDF/DOCX Input
-    │
-    ├── Metadata extraction
-    │     └── DOI, PMID, authors, year, journal, candidate source quality
-    │
-    ├── PDF path
-    │     ├── MinerU primary parse
-    │     └── PaddleOCR fallback when MinerU fails
-    │
-    ├── DOCX path
-    │     └── Structured text/table/image extraction
-    │
-    ├── Layout analysis
-    │     ├── Markdown/HTML text
-    │     ├── Table JSON/CSV
-    │     ├── Figure/pedigree/plot image regions
-    │     └── VLM descriptions for medically relevant images
-    │
-    └── Traceability gate
-          ├── page + section/line + source_anchor + bbox available → continue
-          └── no source anchors/bbox-backed spans → fail task clearly
+HPO Autocomplete        ──REST─►  GET /api/v1/hpo/search?q=
+                                ◄── JSON: [{code, term}]
+
+Delta Audit             ──REST─►  GET /api/v1/tasks/:id/delta
+                                ◄── JSON: [{timestamp, field, old, new}]
+
+Settings                ──REST─►  GET/PUT /api/v1/settings/*
+                                ◄── JSON responses
 ```
 
-Evidence extraction requires traceable source anchors or bbox-backed spans. Output that cannot support source-linked review cannot enter the standardized evidence matrix.
+---
 
-### 2.3 Chunking Strategy
-
-1. Split rendered document by logical sections when headings are available: abstract, methods, results, discussion, tables, figures, supplementary material.
-2. Split each section by paragraph, table row, or figure panel.
-3. Estimate token size for each chunk.
-4. Split oversized paragraphs by sentence; split oversized sentences by character window.
-5. Merge adjacent chunks within `max_tokens` while preserving source span mapping.
-
-### 2.4 Cache Reuse
-
-Every request creates a new `task_id`, even when previous outputs are reused.
-
-Cache keys include:
-
-- PDF/DOCX SHA256 hash.
-- PMID.
-- DOI.
-- Parser version.
-- Translation version.
-- Native extraction prompt/model version.
-- Translated extraction prompt/model version.
-- Fusion prompt/model version.
-
-The frontend receives normal processing-stage updates and does not need a cache-hit marker.
-
-## 3. Phase 2: Cross-Lingual Processing and Dual Evidence Extraction
-
-### 3.1 Why Dual Extraction Is Required
-
-Medical genetics evidence depends on exact strings and context: HGVS variants, gene names, HPO phenotypes, family segregation, assay thresholds, figure labels, and table values. Translation can distort these details, but translated text is still valuable for reviewer comprehension and secondary extraction. ACMG Lingua therefore uses dual extraction and cross-validation:
-
-```text
-Source-language document chunk
-    │
-    ▼
-Coarse evidence filtering
-    │   identifies chunks likely containing phenotype, variant, segregation,
-    │   functional assay, population frequency, method, or result evidence
-    ▼
-Original-language native extraction
-    │   extracts native JSON + original source anchors
-    ▼
-Translation to English/Chinese
-    │   translates evidence-bearing chunks or document sections
-    ▼
-Translated-text secondary extraction
-    │   extracts translated JSON + translated source anchors
-    ▼
-Fusion and cross-validation
-    │   compares native JSON vs translated JSON
-    │   deduplicates equivalent items
-    │   flags disagreement/missing evidence
-    │   creates original↔translated anchor pairs
-    ▼
-Standard Evidence Item
-    │   original_value + translated_value + bilingual_spans + confidence + fusion_status
-```
-
-Full translated renderings are generated for reviewer convenience and for secondary extraction. Extraction-critical data must retain both original source anchors and translated-text anchors when translated text exists.
-
-### 3.2 Target Evidence Types
-
-```text
-Dual Evidence Extraction Output
-    ├── Document metadata
-    │     └── DOI, PMID, authors, year, journal, language
-    ├── Variant data
-    │     └── gene, HGVS, transcript, genomic coordinates, original mention
-    ├── Disease and phenotype data
-    │     └── disease name, HPO terms, clinical descriptors
-    ├── Functional/experimental data
-    │     └── assay method, material, controls, thresholds, quantitative result, conclusion
-    ├── Genetic data
-    │     └── segregation, de novo, case-control, proband count when present
-    ├── Population data
-    │     └── frequency, ancestry subset, source
-    ├── Computational data
-    │     └── conservation, protein predictors, splicing predictors when reported
-    ├── Fusion status
-    │     └── native_only / translated_only / agreed / conflict / manually_corrected
-    └── Bi-directional traceability
-          └── original page/line/bbox + translated page/line/bbox + table/figure IDs
-```
-
-Each evidence field has a confidence score and fusion status. Missing original anchoring, missing translated anchoring, or disagreement between extraction passes must be visible in downstream review.
-
-## 4. Phase 3: Entity Standardization and Knowledge Alignment
-
-```text
-Fused Evidence JSON
-    │
-    ├── Gene mentions ─────────────► HGNC exact/synonym match
-    ├── Disease mentions ──────────► OMIM / MONDO / HPO match
-    ├── Phenotype mentions ────────► HPO match
-    ├── Variant mentions ─────────► HGVS normalization → ClinVar / dbSNP
-    ├── Population frequency ─────► gnomAD lookup when available
-    ├── Gene-disease context ─────► ClinGen / OMIM support context when available
-    │
-    ▼
-Match decision
-    ├── Exact match → accept
-    ├── Synonym match → accept with source
-    ├── Single high-similarity vector match → accept with score
-    ├── Multiple plausible candidates → conflict resolver Agent
-    └── No reliable match → keep original and flag unstandardized
-    │
-    ▼
-Standard Evidence Matrix
-    └── original_value + translated_value + standardized_value
-        + source_db + match_status + rationale + bilingual_spans
-```
-
-Ambiguous aliases are resolved using article context, co-mentioned disease, variant coordinates, organism/species, original-language terms, translated terms, and surrounding biomedical terms.
-
-## 5. Phase 4: Bilingual Evidence Visualization and Expert Loop
-
-### 5.1 Processing Status
-
-The frontend connects to `WS /api/v1/tasks/{task_id}/ws` after task creation. Final results are fetched with `GET /api/v1/tasks/{task_id}/result`.
-
-```json
-{ "type": "status", "step": "acquisition", "progress": 20 }
-{ "type": "status", "step": "parsing", "progress": 45 }
-{ "type": "status", "step": "native_extraction", "progress": 58 }
-{ "type": "status", "step": "translation", "progress": 68 }
-{ "type": "status", "step": "translated_extraction", "progress": 76 }
-{ "type": "status", "step": "fusion", "progress": 84 }
-{ "type": "status", "step": "standardization", "progress": 92 }
-{ "type": "status", "step": "report_preparation", "progress": 97 }
-{ "type": "complete", "task_id": "xxx" }
-{ "type": "error", "step": "parsing", "message": "Traceable parsing failed" }
-```
-
-### 5.2 Evidence Review UI
-
-```text
-┌────────────────────────────────────────────────────────────────────────────┐
-│ Topbar: task, status, fusion warnings, export                             │
-├──────────────────────────────┬──────────────────────────────┬─────────────┤
-│ Original Document Panel      │ Translated Document Panel    │ Evidence    │
-│                              │                              │ Panel       │
-│ Original MD/HTML             │ English/Chinese MD/HTML      │ Matrix rows │
-│ Original tables/figures      │ Translated tables/figures    │ Fusion      │
-│ Highlighted original span    │ Highlighted translated span  │ Confidence  │
-│ linked by original anchor    │ linked by translated anchor  │ Feedback    │
-└──────────────────────────────┴──────────────────────────────┴─────────────┘
-```
-
-Clicking an evidence item scrolls both the original document and translated document to the corresponding highlighted spans. Table and figure evidence should highlight row/cell/region in both views when available.
-
-### 5.3 Human Feedback Targets
-
-Expert feedback is structured by target type:
-
-- `native_extraction`: original-language extraction is wrong.
-- `translated_extraction`: translated-text extraction is wrong or missing.
-- `translation`: translated structured field/snippet is wrong.
-- `fusion`: native and translated outputs were incorrectly merged, split, or deduplicated.
-- `entity`: standardized gene/disease/variant/phenotype mapping is wrong.
-- `evidence_item`: extracted evidence is missing, wrong, or over-interpreted.
-- `missed_evidence`: important phenotype, method, or result was not extracted.
-- `report`: evidence summary wording/commentary issue.
-
-Feedback is persisted for audit and future dataset construction. Current-stage feedback does not directly mutate evidence rows unless a reviewed correction workflow is implemented.
-
-### 5.4 Report Export Content
-
-Evidence summary report exports include:
-
-1. Report title and non-diagnostic disclaimer.
-2. Document metadata and source list.
-3. Standardized evidence matrix.
-4. Native extraction JSON summary and translated extraction JSON summary.
-5. Fusion status: agreed, native-only, translated-only, conflict, manually corrected.
-6. Extracted phenotype, method, experiment result, population, and computational evidence.
-7. Entity standardization table with match status/rationale.
-8. Original snippets and translated snippets.
-9. Table/figure references and VLM descriptions.
-10. Confidence scores and low-confidence/fusion-conflict flags.
-11. Expert comments and structured feedback.
-12. Appendix with original anchors, translated anchors, page/line references, and bbox/table/figure IDs.
-
-## 6. API Flow Summary
-
-```text
-Frontend (Next.js)
-    │
-    ├── /api/v1/* proxy via next.config.ts
-    ▼
-Backend (FastAPI)
-    ├── POST /api/v1/auth/register
-    ├── POST /api/v1/auth/verify-email
-    ├── POST /api/v1/auth/login
-    ├── GET  /api/v1/literature/search
-    ├── POST /api/v1/tasks
-    ├── GET  /api/v1/tasks/{task_id}
-    ├── WS   /api/v1/tasks/{task_id}/ws
-    ├── GET  /api/v1/tasks/{task_id}/result
-    ├── POST /api/v1/tasks/{task_id}/comments
-    ├── POST /api/v1/tasks/{task_id}/export
-    ├── GET  /api/v1/evidence          # P1/future
-    └── GET  /api/v1/health
-```
-
-Task/result reads are public in the current MVP. Comments/feedback require login. Deployed task creation should require login; local development may allow unrestricted task creation.
-
-## 7. Business Topology
-
-```mermaid
-flowchart LR
-  subgraph A["第一阶段：文件获取"]
-    A1([输入]) --> A2{来源类型}
-    A2 -->|PMID / DOI / 关键词| A3[文献检索]
-    A3 --> A4{获取方式}
-    A4 -->|开放获取| A5[API 调用]
-    A4 -->|需爬取| A6[Web 爬取]
-    A5 & A6 --> A7[(PDF / DOCX 文件)]
-    A2 -->|本地上传| A7
-  end
-
-  subgraph B["第二/三阶段：双重提取与标准化"]
-    B1[文件解析\nMinerU / PaddleOCR] --> B2[转换为 Markdown\n图表分离提取]
-    B2 --> B3_1[原生提取：非英文原文识别]
-    B3_1 --> B3_2[文档翻译与译文二次提取]
-    B3_2 --> B3_3[双语证据交叉融合\n建立双向锚点]
-    B3_3 --> B4[生成标准证据矩阵\n数据库知识对齐]
-    B4 --> B5{提取置信度\n是否达标?}
-    B5 -->|是| B6[(结构化证据矩阵)]
-    B5 -->|否| B3_3
-  end
-
-  subgraph C["第四阶段：专家双向溯源与输出"]
-    C1[UI 双语视图展示\n原文/译文高亮联动核对] --> C2{人工复查通过?}
-    C2 -->|通过| C3([导出证据总结与报告])
-    C2 -->|不通过\n发现错漏| C4[结构化人工反馈纠偏]
-    C4 -->|微调数据回流| C1
-  end
-
-  A7 --> B1
-  B6 --> C1
-```
-
-```plantuml
-@startuml
-
-skinparam backgroundColor transparent
-skinparam defaultFontName sans-serif
-skinparam defaultFontSize 13
-skinparam ArrowColor #888780
-skinparam ArrowFontColor #5F5E5A
-skinparam ArrowFontSize 12
-skinparam RoundCorner 8
-
-skinparam ActivityBackgroundColor #EEEDFE
-skinparam ActivityBorderColor #7F77DD
-skinparam ActivityFontColor #3C3489
-skinparam ActivityDiamondBackgroundColor #EEEDFE
-skinparam ActivityDiamondBorderColor #7F77DD
-skinparam ActivityDiamondFontColor #3C3489
-
-skinparam swimlane {
-  BorderColor #BBBBBB
-  TitleFontSize 13
-  TitleFontColor #444441
-}
-
-|#E8F4FB|第一阶段\n文件获取|
-
-start
-
-:输入;
-
-if (来源类型?) then (PMID/DOI/关键词)
-  :文献检索;
-  if (获取方式?) then (开放获取)
-    :API 调用;
-  else (需爬取)
-    :Web 爬取;
-  endif
-else (本地上传)
-endif
-
-:PDF / DOCX 文件;
-
-|#EBF5EB|第二三阶段\n双重提取与标准化|
-
-:文件解析\nMinerU / PaddleOCR;
-:转换为 Markdown\n图表分离提取;
-:原生提取：非英文原文识别;
-:文档翻译与译文二次提取;
-:双语证据交叉验证融合\n建立原文与译文双向锚点;
-
-repeat
-  :生成标准证据矩阵\n数据库知识对齐;
-repeat while (提取置信度达标?) is (否) not (是)
-
-:结构化证据矩阵;
-
-|#F0EEF8|第四阶段\n专家双向溯源与输出|
-
-repeat
-  :UI 双语视图展示\n原文/译文高亮联动核对;
-  if (人工复查通过?) then (是)
-  else (否/发现错漏)
-    :结构化人工反馈纠偏;
-  endif
-repeat while (复查通过?) is (否) not (是)
-
-:导出证据总结与报告;
-
-stop
-
-@enduml
-```
+*Document version v2.0 · 2026-05-25 · Complete restructure for tab-based navigation and chat-driven extraction*

@@ -6,19 +6,18 @@ ACMG Lingua backend is a FastAPI async application organized around a four-phase
 
 Backend responsibilities:
 
-- Own `/api/v1/*` API contracts, JWT signing/verification, task lifecycle, persistence, and evidence report generation.
-- Orchestrate Multi-Agent workflows for acquisition, parsing, native extraction, translation, translated extraction, fusion, standardization, and feedback capture.
+- Own `/api/v1/*` API contracts, JWT signing/verification, task lifecycle, persistence, evidence report generation, chat streaming (SSE), knowledge base queries, HPO autocomplete, NL-to-SQL, and delta audit logging.
+- Orchestrate Multi-Agent workflows for acquisition, parsing, native extraction, translation, translated extraction, fusion, standardization, feedback capture, and batch processing.
 - Reject or flag outputs that cannot be traced back to original anchors and translated anchors when translated text exists.
-- Persist standardized evidence matrices and corrected original-translation-evidence triples for future model/prompt improvement.
+- Persist standardized evidence matrices, chat sessions, delta audit logs, and corrected original-translation-evidence triples for future model/prompt improvement.
 - Keep Rust PyO3 crates constrained to low-level I/O.
 
-Current MVP state model:
+Open-source deployment state model:
 
 - Pending/running task state may be in memory and can disappear on backend restart.
-- Completed task metadata, original/translated document outputs, evidence matrices, reports, cache metadata, and feedback persist.
-- Task and result reads are public.
-- Review comments/feedback require login.
-- Deployed task creation should require login; local development may allow unrestricted task creation.
+- Completed task metadata, chat sessions, delta audit logs, document outputs, evidence matrices, reports, and feedback persist.
+- Task board, knowledge base, and chat sessions are publicly readable — no per-user data isolation in open-source mode.
+- Deployed task creation may require login; local development may allow unrestricted task creation and modification.
 
 ## 1.1 Preferred Module Architecture
 
@@ -132,6 +131,11 @@ backend/
 │   │       ├── comment_service.py                            # Review comments
 │   │       ├── source_linker.py                              # original/translated anchor ↔ evidence linking
 │   │       └── dataset_builder.py                            # Future active-learning dataset capture
+│   │       ├── delta_audit_service.py                       # Per-task field modification history
+│   │       ├── chat_service.py                              # Chat session persistence and SSE streaming
+│   │       ├── knowledge_base_service.py                    # Variant search, evidence matrix, NL-to-SQL
+│   │       ├── hpo_service.py                               # HPO autocomplete and lookup
+│   │       └── acmg_draft_service.py                        # ACMG classification draft generation
 │   ├── api/
 │   │   ├── __init__.py
 │   │   ├── deps.py
@@ -142,7 +146,11 @@ backend/
 │   │   │   ├── tasks.py
 │   │   │   ├── evidence.py
 │   │   │   ├── health.py
-│   │   │   └── ws.py
+│   │   │   ├── chat.py                                    # SSE chat streaming + session management
+│   │   │   ├── kb.py                                      # Knowledge base search + variant detail + NL-to-SQL
+│   │   │   ├── hpo.py                                     # HPO autocomplete/search
+│   │   │   ├── delta.py                                   # Delta audit log
+│   │   │   └── settings.py                                # Vocabulary, template, config management
 │   │   └── middleware/
 │   │       ├── __init__.py
 │   │       ├── auth.py
@@ -164,6 +172,9 @@ backend/
 │   │   │   ├── comment_repo.py
 │   │   │   ├── feedback_repo.py
 │   │   │   └── cache_repo.py
+│   │   │   ├── delta_repo.py
+│   │   │   ├── chat_repo.py
+│   │   │   └── kb_repo.py
 │   │   └── connection.py
 │   └── utils/
 │       ├── __init__.py
@@ -209,10 +220,10 @@ Supported task inputs:
 Runtime behavior:
 
 - Pending/running state may be in memory for MVP.
-- WebSocket status is served from runtime state at `/api/v1/tasks/{task_id}/ws`.
-- Completed metadata/results persist.
+- SSE chat streaming and processing progress via Vercel AI SDK (no WebSocket dependency).
+- `POST /api/v1/chat/stream` streams parse progress and evidence cards to frontend.
+- Completed metadata/results persist including chat sessions and delta logs.
 - `GET /api/v1/tasks/{task_id}/result` returns the bilingual evidence matrix result.
-- If the backend restarts, running tasks may be lost and must be recreated.
 
 ### 3.3 Phase 1: Acquisition, Upload, and Parsing
 
@@ -263,15 +274,19 @@ Supported sources include HGNC, ClinVar, dbSNP, OMIM, HPO, ClinGen, and gnomAD w
 
 ### 3.6 Phase 4: Bilingual Review, Feedback, and Reports
 
-Review services support:
+Review and knowledge services support:
 
 - Source-linked bilingual evidence matrix display.
-- Review comments.
+- Chat session persistence and SSE streaming (`chat_service.py`).
+- HPO autocomplete and lookup (`hpo_service.py`).
+- Knowledge base search, variant detail, NL-to-SQL query (`knowledge_base_service.py`).
+- Delta audit logging for all field modifications (`delta_audit_service.py`).
+- ACMG classification draft generation (`acmg_draft_service.py`).
 - Structured feedback by target type: native extraction, translated extraction, translation, fusion, entity, evidence item, missed evidence, report.
 - PDF/DOCX evidence summary report generation.
 - Future dataset capture of corrected original-translation-evidence triples.
 
-Current-stage feedback does not directly mutate evidence rows unless a reviewed correction workflow is implemented.
+User modifications to evidence cards are silently recorded as delta entries. Current-stage feedback does not directly mutate evidence rows unless a reviewed correction workflow is implemented.
 
 ## 4. Data Contracts
 
@@ -545,3 +560,89 @@ Phase-specific tests should cover:
 | `src/infrastructure/` | DAO layer | PostgreSQL patterns; Redis/Neo4j deferred |
 | `src/tools/external/` | Phase 3 | External DB tools |
 | `src/config.py` | `src/core/config.py` | Config patterns |
+
+### 4.3 Chat and SSE Contracts
+
+```python
+class ChatStreamRequest(BaseModel):
+    source_type: Literal["pmid", "doi", "pdf_upload"]
+    source_value: str | None = None  # PMID, DOI, or uploaded file reference
+    language_instruction: str | None = None  # Natural language extraction instruction
+
+class SSEProgressEvent(TypedDict):
+    type: Literal["progress"]
+    step: str  # "parsing", "extracting", "standardizing"
+    message: str
+    progress_pct: int | None
+
+class SSECardEvent(TypedDict):
+    type: Literal["card"]
+    card: dict  # Evidence card JSON
+
+class SSECompleteEvent(TypedDict):
+    type: Literal["complete"]
+    task_id: str
+
+class SSEErrorEvent(TypedDict):
+    type: Literal["error"]
+    step: str
+    message: str
+```
+
+### 4.4 Knowledge Base and Delta Contracts
+
+```python
+class KBSearchRequest(BaseModel):
+    query: str
+    mode: Literal["exact", "ai", "advanced"] = "exact"
+    dimension: str | None = None
+    acmg_rule: str | None = None
+    gene: str | None = None
+    year_min: int | None = None
+    year_max: int | None = None
+    data_source: Literal["all", "machine", "expert"] = "all"
+
+class NLToSQLRequest(BaseModel):
+    natural_language: str
+
+class NLToSQLResponse(BaseModel):
+    sql: str
+    results: list[dict]
+    row_count: int
+
+class VariantDetailResponse(BaseModel):
+    variant_hgvs: str
+    gene_symbol: str
+    clinvar_classification: str | None
+    gnomad_af: float | None
+    transcript: str | None
+    protein_change: str | None
+    literature_count: int
+    evidence_count: int
+    evidence_matrix: list[dict]  # Grouped by dimension
+
+class DeltaEntry(BaseModel):
+    task_id: str
+    timestamp: datetime
+    field_path: str  # e.g. "evidence_cards[0].phenotype"
+    old_value: str | None
+    new_value: str | None
+
+class HPOAutocompleteItem(BaseModel):
+    code: str  # e.g. "HP:0001250"
+    term: str  # e.g. "癫痫发作"
+
+class ACMGDraftRequest(BaseModel):
+    variant_id: str
+
+class ACMGDraftResponse(BaseModel):
+    draft_text: str
+    disclaimer: str  # "此文本由 AI 根据已收录证据自动生成，请专家完整审核后使用"
+    session_id: str  # New AI Assistant session ID
+
+class BatchTaskRequest(BaseModel):
+    pmids: list[str]
+
+class BatchTaskResponse(BaseModel):
+    created_task_ids: list[str]
+    failed_pmids: list[dict]  # [{pmid, reason}]

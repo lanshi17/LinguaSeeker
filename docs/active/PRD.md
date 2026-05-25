@@ -2,9 +2,18 @@
 
 ## 1. Product Positioning
 
-ACMG Lingua is a Multi-Agent infrastructure platform for medical genetics literature automation and structured evidence extraction. The product focuses on the upstream bottlenecks before medical rating: literature acquisition, multimodal document parsing, dual extraction across original and translated text, entity standardization, evidence matrix construction, bilingual source-linked review, and expert feedback capture.
+ACMG Lingua is a next-generation medical genetics literature evidence mining and structured traceability workbench. It is an "evidence porter" — absolutely loyal to source data, ensuring every piece of extracted information is 100% traceable to its original location in the literature. The system organizes evidence collection, extraction, standardization, and expert review behind four fixed tabs: AI Assistant, Task Board, Knowledge Base Query, and Settings.
 
 The system provides a high-quality data foundation for downstream clinical interpretation and research computation. It does not perform final autonomous ACMG/GDV medical classification in the current scope.
+
+### Design Principles
+
+- **Minimal**: Every screen element must justify its existence. No decorative chrome.
+- **Transparent**: Every piece of data must be traceable to its source. No black-box summaries that hide extraction provenance.
+- **Restrained**: The system is an evidence porter, not a diagnostician. It collects, structures, and presents — it does not interpret.
+- **Conversation-driven**: Literature processing is driven through natural conversation in the AI Assistant tab, not through multi-page form wizards.
+- **Tab-organized**: Four fixed tabs provide clear, single-responsibility workspaces. No nested menus or hidden pages.
+- **Open by default**: No user isolation in open-source deployment. Transparency replaces permission systems — all actions are recorded in audit logs.
 
 ## 1.1 Preferred Architecture Direction
 
@@ -31,60 +40,47 @@ Design implications:
 
 ## 3. Target Users
 
-The personas below are product users, not authorization roles. Current-stage authorization treats authenticated users as one user class.
+The personas below are product users, not authorization roles. In open-source deployment, there is no user isolation — all tabs and task lists are visible to all visitors. Data transparency is maintained through audit logs rather than permission systems.
 
 | User Persona | Technical Level | Primary Use Case |
 |---|---|---|
-| Clinical Geneticist | No coding | Quickly review bilingual source-linked structured evidence extracted from papers. |
-| Bioinformatics Analyst | Low/no coding | Batch collect and normalize variant/gene literature evidence. |
-| Researcher | No coding | Mine multilingual literature for phenotypes, experiments, population data, and relationships. |
-| Genetic Counselor | No coding | Review bilingual evidence chains and export evidence summary reports. |
-| Lab Technician | No coding | Upload local PDF/DOCX documents and verify extracted data. |
+| Clinical Geneticist | No coding | Chat with AI Assistant to upload papers and review inline evidence cards; search knowledge base for variant evidence. |
+| Bioinformatics Analyst | Low/no coding | Batch collect and normalize variant/gene literature evidence; monitor task board; export structured data from knowledge base. |
+| Researcher | No coding | Mine multilingual literature via AI Assistant; query knowledge base with natural language for phenotypes, experiments, population data. |
+| Genetic Counselor | No coding | Review evidence chains in workspace; generate ACMG classification drafts; export evidence summary reports. |
+| Lab Technician | No coding | Upload local PDF/DOCX documents via AI Assistant; verify extracted data in evidence cards. |
 
-## 4. Core User Stories
+### US-1: Chat-Driven Literature Upload and Processing
 
-### US-1: Literature Upload and Processing
+As a clinical geneticist, I open the AI Assistant tab, drag a PDF into the chat input, or type a PMID. The system streams parsing progress as a system message bubble with SSE typewriter effect, then renders structured evidence form cards inline in the chat. I can edit fields directly in the cards, correct errors via natural language, and confirm each card for ingestion.
 
-As a clinical geneticist, I upload a PDF or DOCX paper describing a functional assay. The system:
+### US-2: Inline Evidence Card Editing and Natural Language Correction
 
-1. Extracts metadata before full parsing when possible: DOI, PMID, authors, year, journal.
-2. Parses the document with MinerU/PaddleOCR or DOCX parsing into Markdown/HTML plus source anchors and bounding boxes.
-3. Separates text, tables, figures, pedigrees, and medically relevant image regions.
-4. Extracts target evidence in the original source language.
-5. Translates the document or relevant sections to English/Chinese.
-6. Extracts target evidence from the translated text a second time.
-7. Fuses original-language and translated-text extraction results into one standardized evidence matrix with bilingual source links.
+As a researcher reviewing extracted evidence, I see evidence form cards embedded in the chat stream. I click into any editable field (HPO phenotype, ACMG rule, conclusion label) and modify it inline. When I notice a systematic error, I type a natural language correction in the chat input ("change all PS3 to PS3_moderate for this paper"), and the system updates the cards accordingly. All edits are silently recorded in the delta audit log.
 
-### US-2: Dual Cross-Lingual Evidence Extraction
+### US-3: Task Board Monitoring and Batch Operations
 
-As a researcher, I process a non-English paper. The system performs original-language extraction first, then translated-text secondary extraction, compares both JSON outputs, flags mismatches, deduplicates equivalent items, and preserves both original and translated snippets for review.
+As a bioinformatics analyst, I switch to the Task Board tab to see all tasks across their lifecycle: parsing, extracting, pending review, completed, failed. I filter by status, search by PMID or gene name, select multiple failed tasks, and trigger batch retry. I open the resource monitoring panel to check queue depth and processing throughput.
 
-### US-3: Evidence Matrix Construction
+### US-4: Evidence Workspace Review with Source Traceability
 
-As a bioinformatics analyst, I need a machine-readable evidence matrix containing variants, genes, diseases, phenotypes, experimental methods, experimental results, population frequencies, table values, figure-derived evidence, confidence scores, original source anchors, and translated-text anchors.
+As a reviewer, I click "View Workspace" on a task board entry. The workspace shows the parsed Markdown document on the left and evidence cards on the right. I click a card, and the left pane scrolls to the corresponding source paragraph with a breathing-light highlight. I use keyboard shortcuts (J/K to navigate cards, E to edit, Enter to confirm) for rapid review. I open the traceability drawer to see the exact original text that produced each data point.
 
-### US-4: Bilingual Source-Linked Evidence Review
+### US-5: Knowledge Base Query and Evidence Matrix Exploration
 
-As a reviewer, I click an extracted data point such as a population frequency, HPO phenotype, or biochemical assay result. The UI shows a bilingual side-by-side view: one pane highlights the original source paragraph/table/figure region and the other highlights the translated paragraph/table/figure region.
+As a genetic counselor, I switch to the Knowledge Base Query tab and search for a variant by HGVS notation or gene symbol. I see a metadata dashboard and a flat evidence matrix grouped by ACMG/ClinGen evidence dimension. I expand groups, compare evidence rows across papers, and trace any data point back to its source literature via the slide-out drawer. I export a CSV of the evidence matrix or generate an ACMG classification draft.
 
-### US-5: Structured Expert Feedback
+### US-6: Natural Language to SQL Query
 
-As an expert reviewer, I can record structured feedback at the correct failure point:
+As a researcher, I switch the knowledge base search to AI Query mode and type: "find all functional assay evidence for BRCA1 published after 2022 with loss-of-function conclusions." The system generates and displays the corresponding SQL, executes it, and renders the result set in the evidence matrix. I can inspect and copy the SQL for my own use.
 
-- Original-language extraction error.
-- Translated-text extraction error.
-- Translation error.
-- Fusion/deduplication mismatch.
-- Entity standardization error.
-- Missed target phenotype, method, or result.
-- Report wording issue.
+### US-7: Batch Offline Processing
 
-Feedback is persisted for audit, report export, and future dataset/prompt/model improvement. Current-stage feedback does not mutate extracted evidence automatically unless a reviewed correction workflow is implemented.
+As a lab technician, I toggle batch mode in the AI Assistant, upload a `.txt` file containing 20 PMIDs, and continue working. The system silently processes all papers in the background. When I return to the Task Board, all 20 tasks appear in the "pending review" queue. A notification entry appears in my chat history sidebar.
 
-### US-6: Evidence Summary Export
+### US-8: Settings and Vocabulary Management
 
-As a reviewer, I export a PDF/DOCX evidence summary report containing document metadata, standardized evidence matrix, original snippets, translated snippets, bilingual anchors, confidence scores, fusion status, and review feedback.
-
+As a system administrator, I open the Settings tab to view current ontology versions (HPO, OMIM, ClinVar, gnomAD), trigger version checks and updates, review extraction prompt templates per evidence dimension, and configure MinerU parsing parameters and database connection strings.
 ## 5. Functional Requirements
 
 ### Phase 1: Literature Acquisition and Digitization
@@ -133,18 +129,25 @@ As a reviewer, I export a PDF/DOCX evidence summary report containing document m
 | F3.8 | Invoke heuristic + Agent conflict resolution for ambiguous aliases or multiple candidate entities. | P1 |
 | F3.9 | Store standardized evidence matrix with match rationale and bilingual traceability. | P0 |
 
-### Phase 4: Evidence Visualization and Expert Bi-Directional Human-in-the-Loop
+### Phase 4: Evidence Visualization, Task Management, Knowledge Base, and Expert-in-the-Loop
 
 | ID | Requirement | Priority |
 |---|---|---|
-| F4.1 | Display parsed original document, translated document, and standardized evidence matrix in a bilingual split-panel UI. | P0 |
-| F4.2 | Synchronize evidence clicks with highlights in original text/table/figure spans and translated text/table/figure spans. | P0 |
-| F4.3 | Show confidence scores, extraction agreement status, and fusion uncertainty flags. | P0 |
-| F4.4 | Accept structured expert feedback by target type: original extraction, translated extraction, translation, fusion, entity, evidence item, missed evidence, report. | P1 |
-| F4.5 | Store corrected original-translation-evidence triples for future dataset/fine-tuning workflows. | P1 |
-| F4.6 | Export evidence summary report as PDF. | P0 |
-| F4.7 | Export evidence summary report as DOCX. | P1 |
-| F4.8 | Stream real-time processing status through WebSocket. | P0 |
+| F4.1 | AI Assistant tab: chat-driven upload (drag-drop PDF, PMID input), SSE streaming parse progress, inline evidence form cards with editable fields. | P0 |
+| F4.2 | Evidence cards: HPO autocomplete search, ACMG rule selector, conclusion label dropdown, source snippet expansion, silent delta recording on edits. | P0 |
+| F4.3 | Natural language correction in chat: user describes errors, system updates card fields and re-renders. | P0 |
+| F4.4 | Chat session persistence: history sidebar with search by PMID/gene/date; click to restore full conversation context. | P0 |
+| F4.5 | Task Board tab: status-filtered list, search, multi-select, batch retry/delete/export CSV. | P0 |
+| F4.6 | Resource monitoring panel: queue depth, active processes, 24h average time, daily throughput. | P1 |
+| F4.7 | Delta audit log: per-task modification history in diff format, accessible from task row menu. | P1 |
+| F4.8 | Evidence Workspace: left/right split (Markdown document + evidence cards), scroll-into-view source highlighting with breathing-light animation. | P0 |
+| F4.9 | Workspace keyboard shortcuts: J/K card navigation, E edit, Enter confirm, Esc close, Ctrl+Z undo. | P1 |
+| F4.10 | Traceability drawer: slide-out panel showing original Markdown paragraph with highlighted source sentence. | P0 |
+| F4.11 | Knowledge Base Query tab: HGVS/gene/PMID exact search, AI natural language to SQL mode, advanced filter panel. | P0 |
+| F4.12 | Variant detail page: metadata dashboard, evidence matrix grouped by ACMG/ClinGen dimension, quality labels, row comparison mode, traceability drawer. | P0 |
+| F4.13 | Export: CSV of evidence matrix, ACMG classification draft generation with disclaimer. | P0 |
+| F4.14 | Settings tab: ontology version display and update triggers, extraction prompt template cards, MinerU config, DB connection settings. | P1 |
+| F4.15 | Batch processing mode: upload .txt file of PMIDs, silent background processing, results in task board pending-review queue. | P1 |
 
 ### Cross-Cutting Requirements
 
@@ -152,11 +155,13 @@ As a reviewer, I export a PDF/DOCX evidence summary report containing document m
 |---|---|---|
 | F5.1 | FastAPI owns `/api/v1/*` API behavior and JWT signing/verification. | P0 |
 | F5.2 | Next.js proxies API calls and renders UI; it does not sign or verify JWTs. | P0 |
-| F5.3 | Registration, email verification, login, and 24h JWT TTL. | P0 |
-| F5.4 | Async task creation/status/result flow; running task state may be in-memory for MVP. | P0 |
-| F5.5 | Persist completed metadata, original document outputs, translated document outputs, evidence matrix, reports, and feedback. | P0 |
+| F5.3 | Chat sessions, task board, and knowledge base are publicly visible in open-source deployment; audit logs replace permission-based isolation. | P0 |
+| F5.4 | Async task creation/status/result flow; SSE streams chat and processing progress via Vercel AI SDK. | P0 |
+| F5.5 | Persist chat sessions, delta edits, completed metadata, document outputs, evidence matrix, reports, and feedback. | P0 |
 | F5.6 | Cache by PDF/DOCX hash, PMID, DOI, prompt version, parser version, translation version, extraction model versions, and model config. | P1 |
 | F5.7 | Use loguru logs under `logs/`. | P0 |
+| F5.8 | HPO autocomplete/search API for evidence card phenotype fields. | P0 |
+| F5.9 | NL-to-SQL endpoint for knowledge base natural language queries; return generated SQL alongside results for transparency. | P1 |
 
 ## 6. Non-Functional Requirements
 
