@@ -9,6 +9,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -19,7 +20,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB, ARRAY, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -378,3 +379,31 @@ class TerminologyRelationship(Base, TimestampMixin):
     source_db: Mapped[str] = mapped_column(String(64), nullable=False)
     evidence_level: Mapped[str | None] = mapped_column(String(96), nullable=True)
     raw_payload: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
+
+
+class TerminologyEmbedding(Base):
+    """Vector embedding for terminology entries used in semantic similarity search."""
+
+    __tablename__ = "terminology_embeddings"
+    __table_args__ = (
+        UniqueConstraint("entry_id", "model_version", name="uq_terminology_embeddings_entry_model"),
+        Index("ix_terminology_embeddings_entity_type", "entity_type"),
+    )
+
+    embedding_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    entry_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("terminology_entries.entry_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(
+        ARRAY(Float), nullable=False
+    )
+    model_version: Mapped[str] = mapped_column(String(128), nullable=False)
+    source_text: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
