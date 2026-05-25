@@ -535,3 +535,15 @@ Chinese medical journals often include both Chinese and English versions of titl
 **Solution**: Added a narrow exception for `B.case_count` so it is downgraded into non-blocking handling without changing the broader `FOUND` semantics for other fields. Kept review visibility via the human-review reason list and verified the targeted extract-evidence suite plus Ruff.
 
 **Prevention**: Separate “traceable evidence” from “inference from document structure” in the contract or prompt design. Fields that can be inferred should not be forced through the same source requirements as verbatim evidence spans.
+
+## 2026-05-25: benchmark analyze 增加 LLM PDF 领域分类时的执行路径问题
+
+**Problem**: 在执行 `benchmark.py analyze --llm-classify` 时，工具链有时不会按预期工作目录执行命令，导致结果检查和落盘确认出现偏差。
+
+**Investigation**: 对比脚本输出与 `report.json` 内容，发现命令执行状态与文件落盘状态不一致。进一步通过绝对路径 + `PYTHONPATH` 方式执行后，`medical_domain` 与 `analysis_summary` 正常写入。
+
+**Root cause**: 终端调用在部分场景下会简化命令并丢失 `cd ... &&` 的上下文假设，脚本实际运行目录与预期不一致。
+
+**Solution**: 对 backend 脚本统一采用绝对路径调用，并显式设置 `PYTHONPATH=/home/yangzs/Projects/01_ACMG_Lingua/backend`；结果校验以文件内容为准（检查 `medical_domain`、`analysis_summary` 字段）。
+
+**Prevention**: 后续需要依赖相对导入路径的脚本执行时，默认使用绝对路径 + 显式 `PYTHONPATH`，并在任务结束前做一次文件级落盘核验。

@@ -41,6 +41,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "immunology",
+        "subdomain": "allergy",
+        "confidence": "high",
+        "rationale": "The study focuses on allergic reactions and immune mechanisms in response to tick saliva and red meat consumption, specifically the alpha-Gal syndrome (red meat allergy), which is an immunological condition.",
+        "evidence_excerpt": "Allergic Reactions and Immunity in Response to Tick Salivary Biogenic Substances and Red Meat Consumption in the Zebrafish Model",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -63,6 +71,15 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "unknown",
+        "subdomain": "",
+        "confidence": "low",
+        "rationale": "",
+        "evidence_excerpt": "",
+        "model": "",
+        "error": "llm_invalid_json"
       }
     },
     {
@@ -85,6 +102,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "other",
+        "subdomain": "plant_methods",
+        "confidence": "high",
+        "rationale": "The PDF excerpt describes plant transient expression vectors and methods for functional genomics, promoter activity, and RNA silencing in plants, which does not fall under any human medical domain.",
+        "evidence_excerpt": "Transient expression vectors for functional genomics, quantification of promoter activity and RNA silencing in plants",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -107,6 +132,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast_cancer",
+        "confidence": "high",
+        "rationale": "The paper focuses on circulating tumor cells (CTCs) in breast cancer, their gene expression profiling, and clinical implications, which are core topics in oncology, specifically breast cancer research.",
+        "evidence_excerpt": "Open Access Gene expression profile of circulating tumor cells in breast cancer by RT-qPCR... Background: Circulating tumor cells (CTCs) have been associated with prognosis especially in breast cancer...",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -129,6 +162,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer genomics",
+        "confidence": "high",
+        "rationale": "The excerpt explicitly describes a study on somatic mutations in breast cancer whole-genome sequences, which falls under oncology, specifically breast cancer genomics.",
+        "evidence_excerpt": "Landscape of somatic mutations in 560 breast cancer whole-genome sequences",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -151,6 +192,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "hereditary cancer genetics",
+        "confidence": "high",
+        "rationale": "The article focuses on using next-generation sequencing to diagnose hereditary breast and ovarian cancer, which is a core area of oncology. The study targets genes implicated in cancer susceptibility.",
+        "evidence_excerpt": "Next-generation sequencing for the diagnosis of hereditary breast and ovarian cancer using genomic capture targeting multiple candidate genes",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -173,6 +222,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "gynecologic oncology",
+        "confidence": "high",
+        "rationale": "The PDF excerpt is from Oncotarget, focusing on high-grade serous ovarian cancer, BRCA1/2 mutations, neoantigen load, tumor-infiltrating lymphocytes, and PD-1/PD-L1 expression. The study investigates the association between BRCA1/2-mutation status and immunogenicity in ovarian cancer, which falls squarely within oncology, specifically gynecologic oncology.",
+        "evidence_excerpt": "Association and prognostic significance of BRCA1/2-mutation status with neoantigen load, number of tumor-infiltrating lymphocytes and expression of PD-1/PD-L1 in high grade serous ovarian cancer",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -193,6 +250,15 @@
         "suspicious": [
           "file_not_found"
         ]
+      },
+      "medical_domain": {
+        "domain": "unknown",
+        "subdomain": "",
+        "confidence": "low",
+        "rationale": "",
+        "evidence_excerpt": "",
+        "model": "",
+        "error": "file_not_found"
       }
     },
     {
@@ -215,6 +281,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "immunotherapy",
+        "confidence": "high",
+        "rationale": "The excerpt focuses on CAR T cell therapy and PD-1 disruption to enhance anti-tumor efficacy, which is directly related to cancer treatment.",
+        "evidence_excerpt": "CRISPR/Cas9-mediated PD-1 disruption enhances anti-tumor efficacy of human chimeric antigen receptor T cells",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -237,6 +311,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "pediatric_oncology",
+        "confidence": "high",
+        "rationale": "The article describes a clinical next generation sequencing program in pediatric hematology-oncology practice, focusing on molecular characterization and clinical impact in pediatric cancer patients.",
+        "evidence_excerpt": "Implementation of next generation sequencing into pediatric hematology-oncology practice: moving beyond actionable alterations",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -259,6 +341,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer",
+        "confidence": "high",
+        "rationale": "The title and excerpt explicitly discuss breast cancer cells, their stem/progenitor properties, invasion, and metastasis, which are core topics in oncology.",
+        "evidence_excerpt": "CD44+/CD24- breast cancer cells exhibit enhanced invasive properties: an early step necessary for metastasis",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -281,6 +371,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast_cancer",
+        "confidence": "high",
+        "rationale": "The paper focuses on BRCA1/2 mutations, which are primarily associated with breast and ovarian cancers, and investigates perturbations in telomere biology as a mechanism for malignant transformation. The journal is Oncotarget, an oncology-focused journal.",
+        "evidence_excerpt": "BRCA1/2 mutations perturb telomere biology: characterization of structural and functional abnormalities in vitro and in vivo. ... BRCA1 mutation is associated with carcinogenesis, especially of breast tissue.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -303,6 +401,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer",
+        "confidence": "high",
+        "rationale": "The paper explicitly discusses breast cancer cell lines, cancer stem cells, tumorigenicity, and chemotherapy resistance, all within the context of breast cancer research.",
+        "evidence_excerpt": "Human breast cancer cell lines contain stem-like cells that self-renew, give rise to phenotypically diverse progeny and survive chemotherapy",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -325,6 +431,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "liquid_biopsy",
+        "confidence": "high",
+        "rationale": "The study focuses on whole-exome sequencing of cell-free DNA to profile tumors in metastatic breast and prostate cancers, addressing precision oncology and liquid biopsy techniques.",
+        "evidence_excerpt": "Whole-exome sequencing of cell-free DNA (cfDNA) could enable comprehensive profiling of tumors from blood... demonstrate high concordance of cfDNA and metastatic tumor whole-exome sequencing.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -347,6 +461,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "cancer genetics",
+        "confidence": "high",
+        "rationale": "The abstract focuses on breast and ovarian cancer susceptibility genes BRCA1/BRCA2, mutation prevalence, penetrance, and population-based screening, all within the field of oncology with a genetic focus.",
+        "evidence_excerpt": "The breast-ovarian cancer susceptibility genes BRCA1 and BRCA2 were isolated in 1994 and 1995 respectively. Since then, over thirty studies have investigated the frequency of mutations in these genes in high-risk breast and breast-ovarian cancer families.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -369,6 +491,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "ovarian cancer",
+        "confidence": "high",
+        "rationale": "The paper explicitly focuses on ovarian cancer cells and the role of miR-21 in epithelial to mesenchymal transition, which is a cancer-related process.",
+        "evidence_excerpt": "Lentiviral CRISPR/Cas9 vector mediated miR-21 gene editing inhibits the epithelial to mesenchymal transition in ovarian cancer cells",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -391,6 +521,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "pediatric_oncology",
+        "confidence": "high",
+        "rationale": "The article focuses on liquid biopsy analysis for pediatric cancers, specifically Ewing sarcoma, using cell-free DNA sequencing to detect tumor-derived DNA and epigenetic signatures.",
+        "evidence_excerpt": "Multimodal analysis of cell-free DNA whole- genome sequencing for pediatric cancers with low mutational burden",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -413,6 +551,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "orthopedics",
+        "subdomain": "bone disease",
+        "confidence": "medium",
+        "rationale": "The paper focuses on osteopetrosis, a congenital bone disease, detailing its clinical presentation, diagnosis, and treatment, which falls under orthopedics. While genetic aspects are discussed, the primary domain is orthopedic.",
+        "evidence_excerpt": "La osteopetrosis (OP) es una enfermedad ósea congénita que se produce por una alteración funcional en los osteoclastos",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -435,6 +581,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast oncology",
+        "confidence": "high",
+        "rationale": "The article is a case report of squamous cell-type metaplastic breast carcinoma, a rare breast malignancy, focusing on histopathological diagnosis and prognostic factors.",
+        "evidence_excerpt": "carcinoma metaplásico de la mama tipo células escamosas",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -457,6 +611,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "veterinary oncology",
+        "confidence": "high",
+        "rationale": "The study investigates gene expression of ATM and TP53 in canine transmissible venereal tumor (TVT), focusing on mechanisms of metastasis, which is within oncology.",
+        "evidence_excerpt": "The objective of this study was to evaluate the gene expression of ATM and TP53 in canine transmissible venereal tumor samples.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -479,6 +641,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "other",
+        "subdomain": "food science",
+        "confidence": "low",
+        "rationale": "The document is a doctoral thesis on olive oil as a functional food, focusing on analytical and technological perspectives. It does not directly pertain to a medical domain, but rather to food science and chemistry.",
+        "evidence_excerpt": "ACEITE DE OLIVA COMO ALIMENTO FUNCIONAL: NUEVAS PERSPECTIVAS ANALÍTICAS Y TECNOLÓGICAS",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -501,6 +671,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast_cancer_genetics",
+        "confidence": "high",
+        "rationale": "The PDF excerpt is a review on genetic and genomic advances in breast cancer, discussing predisposition genes, genomic subtypes, and clinical implications. It clearly belongs to oncology with a focus on cancer genetics.",
+        "evidence_excerpt": "Se presenta una revisión sobre el estado del conocimiento de la genética y la genómica del cáncer de mama.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -523,6 +701,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer",
+        "confidence": "high",
+        "rationale": "The paper is an integrative review specifically about family caregivers of women with breast cancer, which falls under oncology.",
+        "evidence_excerpt": "Experiencia de cuidadores familiares de mujeres con cáncer de mama: una revisión integradora",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -545,6 +731,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "precision_oncology",
+        "confidence": "high",
+        "rationale": "El título y el resumen del PDF se centran en la oncología de precisión y el uso de NGS como herramienta diagnóstica, pronóstica y predictiva en cáncer. Todo el contenido trata sobre cáncer, biomarcadores y terapias dirigidas, lo que corresponde claramente al dominio de oncología.",
+        "evidence_excerpt": "La secuenciación de nueva generación como herramienta diagnóstica, pronóstica y predictiva en la oncología de precisión. ... El cáncer sigue siendo una de las principales causas de muerte en todo el mundo. ... la oncología de precisión, impulsada en gran parte por la implementación de estas técnicas a la práctica clínica, es ya una realidad.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -567,6 +761,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "pathology",
+        "subdomain": "molecular diagnostics",
+        "confidence": "medium",
+        "rationale": "The article is a review of molecular techniques (PCR, NGS, microarrays) used in clinical diagnosis across multiple diseases, including infectious diseases and cancer. It emphasizes laboratory-based diagnostic methods, aligning with pathology.",
+        "evidence_excerpt": "Las técnicas de biología molecular se han convertido en herramientas indispensables en el diagnóstico clínico y la medicina.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -589,6 +791,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer genetics",
+        "confidence": "high",
+        "rationale": "The case series describes mutations in BRCA1 and BRCA2 genes in Colombian women with personal or family history of breast cancer, focusing on hereditary breast and ovarian cancer syndrome.",
+        "evidence_excerpt": "OBJETIVO: describir variantes de secuencia en los genes BRCA1 y BRCA2 en una muestra de pacientes colombianas con historia personal o familiar de cáncer de mama sugestiva de riesgo genético.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -611,6 +821,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "cancer biology",
+        "confidence": "high",
+        "rationale": "The document primarily discusses O-GlcNAcylation and its impact on adhesion molecules in carcinomas, focusing on tumor progression and metastasis, which are core topics in oncology.",
+        "evidence_excerpt": "O-GlcNAcylation and Adhesion Molecules in Carcinomas ... La O-GlcNAcilación impacta en las moléculas de adhesión en diversos carcinomas, y una reflexión sobre diversas direcciones de investigación en este tema.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -633,6 +851,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer",
+        "confidence": "high",
+        "rationale": "The article focuses on breast cancer in indigenous Peruvian women, specifically HER2/neu expression and survival, which is a core oncology topic.",
+        "evidence_excerpt": "cáncer de mama, anticuerpos, monoclonal, estadificación de neoplasias, HER2, inmunohistoquímica",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -655,6 +881,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "public_health",
+        "subdomain": "violence prevention",
+        "confidence": "high",
+        "rationale": "The excerpt discusses violence as a major public health issue, focusing on the World Report on Violence and Health and public health approaches to prevention.",
+        "evidence_excerpt": "In 1996, the World Health Assembly declared violence a major public health issue.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -677,6 +911,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "other",
+        "subdomain": "open_access_repository",
+        "confidence": "high",
+        "rationale": "The PDF excerpt discusses open access policies, copyright, and licensing terms for the GREDOS repository at the University of Salamanca, which is unrelated to any medical or clinical topic.",
+        "evidence_excerpt": "Acceso abierto, Derechos de autor, Licencia de uso y Licencia de distribución no exclusiva Acceso abierto La Universidad de Salamanca, a través de GREDOS, se suma a las iniciativas en pro del acceso abierto a la información científica...",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -699,6 +941,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "genetics",
+        "subdomain": "hereditary disease diagnostics",
+        "confidence": "high",
+        "rationale": "The literature focuses on molecular diagnostic strategies for Fanconi anemia, a genetic disorder with chromosomal instability, involving multiple genes. The primary emphasis is on genetic testing methodologies such as MLPA and NGS for identifying pathogenic variants.",
+        "evidence_excerpt": "Anemia de Fanconi, Parte 2. Estrategia metodológica para el diagnóstico molecular en pacientes con anemia de Fanconi... Debido a esta heterogeneidad, el diagnóstico molecular es complicado, por lo que se necesita una estrategia con varias metodologías como el ensayo de amplificación de sondas dependiente de ligandos múltiples (MLPA), secuenciación de nueva generación...",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -721,6 +971,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "genetics",
+        "subdomain": "genetic_syndromes",
+        "confidence": "high",
+        "rationale": "The case report focuses on Noonan syndrome, a genetic disorder with autosomal dominant inheritance, and discusses genetic basis, chromosomal location, and clinical genetic diagnosis. While ophthalmic manifestations are detailed, the primary domain is genetics.",
+        "evidence_excerpt": "É uma doença genética autossômica dominante... O gene responsável por esta síndrome foi mapeado no braço longo do cromossomo 12... Seu exame citogenético revelou cariótipo masculino normal (46, XY)...",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -743,6 +1001,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "hereditary breast cancer",
+        "confidence": "high",
+        "rationale": "The document is a review article on hereditary breast cancer, discussing genetic mutations (BRCA1, BRCA2, PALB2, etc.), risk assessment, and treatment options such as PARP inhibitors. This clearly falls within the oncology domain, specifically focusing on hereditary breast cancer.",
+        "evidence_excerpt": "Hasta el 10 % de los pacientes con cáncer de mama (CM) han heredado mutaciones en línea germinal... Los inhibidores de la poli(ADP-ribosa) polimerasa (PARP) son una opción terapéutica dirigida que ha demostrado actividad en el cáncer de mama hereditario.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -765,6 +1031,15 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "unknown",
+        "subdomain": "",
+        "confidence": "low",
+        "rationale": "",
+        "evidence_excerpt": "",
+        "model": "",
+        "error": "pdf_text_empty"
       }
     },
     {
@@ -787,6 +1062,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "lung_cancer",
+        "confidence": "high",
+        "rationale": "The study explicitly investigates the selective cytotoxic activity of muricin H against lung cancer cell line H460, with IC50 determination and selectivity index. The title and abstract focus on cancer cell lines and antineoplastic activity.",
+        "evidence_excerpt": "Efecto citotóxico selectivo in vitro de muricin H (acetogenina de Annona muricata) en cultivos celulares de cáncer de pulmón",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -809,6 +1092,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "molecular oncology",
+        "confidence": "medium",
+        "rationale": "The thesis investigates regulation of the PEIG-1/GPRC5A gene by 12-O-tetradecanoylphorbol-13-acetate (TPA), a well-known tumor promoter, indicating a focus on cancer-related gene regulation.",
+        "evidence_excerpt": "Regulación del gen PEIG-1/GPRC5A por 12-O-tetradecanoilforbol-13-acetato",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -831,6 +1122,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "genetics",
+        "subdomain": "neurogenetics",
+        "confidence": "high",
+        "rationale": "The case report focuses on a novel mutation in the ATM gene causing Ataxia Telangiectasia, a genetic disorder with neurological manifestations. The primary emphasis is on the genetic etiology and molecular findings.",
+        "evidence_excerpt": "New mutation in ATM gen in patient whitt Ataxia Telangiectasia.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -853,6 +1152,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast oncology",
+        "confidence": "high",
+        "rationale": "The case report focuses on metaplastic carcinoma of the breast, a rare breast cancer subtype. The content includes diagnosis, treatment, and pathological analysis of breast cancer patients, which falls under oncology.",
+        "evidence_excerpt": "We treated two patients with a rare metaplastic carcinoma of the breast.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -875,6 +1182,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast_cancer_screening",
+        "confidence": "high",
+        "rationale": "The report is a case study on breast cancer patients, examining the relationship between mammographic compressed breast thickness and prognosis, with implications for screening.",
+        "evidence_excerpt": "乳癌症例におけるマンモグラフィの圧迫乳房厚と予後についての検討",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -897,6 +1212,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "anticancer drug development",
+        "confidence": "high",
+        "rationale": "The entire excerpt discusses cancer biology, apoptosis, autophagy, and screening of compounds for tumor-selective cytotoxicity, which are core topics in oncology.",
+        "evidence_excerpt": "要約：癌とは，遺伝子の病気であり，遺伝子変異による正常な機能の喪失に続き発生する．",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -919,6 +1242,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "immunology",
+        "subdomain": "viral_immunology",
+        "confidence": "high",
+        "rationale": "The excerpt primarily discusses the role of cytidine deaminases such as AID and APOBEC3 in viral infection and immune responses, including antibody gene rearrangement and innate immunity against HIV.",
+        "evidence_excerpt": "ウイルス感染とcytidine deaminase ... APOBEC3 は、ここ数年HIV ウイルスにhypermutation を導入することでHIVを不活性化する自然免疫のeffecter分子として注目されている。",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -941,6 +1272,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "cancer_genetics",
+        "confidence": "high",
+        "rationale": "The excerpt focuses on the discovery of GRWD1 as a novel oncogene, its role in regulating p53 through RPL11-MDM2 pathway, and large-scale clinical database analysis (TCGA) across multiple cancer types to correlate expression with prognosis. The primary domain is oncology, specifically cancer genetics.",
+        "evidence_excerpt": "GRWD1 のがん遺伝子としての機能の発見および臨床的意義の解明を目指した大規模臨床データベース解析",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -963,6 +1302,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "lung cancer diagnostics",
+        "confidence": "high",
+        "rationale": "The article focuses exclusively on improving detection rates of gene mutations in lung cancer, particularly EGFR mutations, and discusses molecular targeted therapy selection, which is a core aspect of oncology.",
+        "evidence_excerpt": "肺がんにおける遺伝子変異検出は，分子標的薬選択に必須の検査であり，その精度が重要であるが，マルチプレックス検査はシングルプレックス検査と比較し，感度が低いことが課題である．そこで我々は遺伝子変異検出率向上を目的に，生検検体では量不足による解析不能防止のため，必要な薄切枚数を増加し，手術検体では核酸品質低下防止のため，ホルマリン固定条件を工夫した．その結果，遺伝子変異検出率が向上したので，報告する．",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -985,6 +1332,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "head_and_neck_oncology",
+        "confidence": "high",
+        "rationale": "This is a case report of a papillary adenocarcinoma arising from a thyroglossal duct cyst, a rare neoplasm that falls under oncology, specifically head and neck oncology.",
+        "evidence_excerpt": "右側頸部甲状舌管嚢胞から発生したと思われる乳頭状腺癌の1例",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1007,6 +1362,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "neurology",
+        "subdomain": "molecular neuroimaging",
+        "confidence": "high",
+        "rationale": "The excerpt focuses on molecular imaging techniques using PET for brain function research, including applications in neurotransmitter imaging and Alzheimer's disease. It discusses probes, blood-brain barrier, and specific neurological conditions.",
+        "evidence_excerpt": "PET を用いた脳機能の分子イメージング法／最近では，アルツハイマー病などの神経疾患の脳内に特異的に蓄積するタンパクの定量化や遺伝子発現量の解析による遺伝子治療の効果判定などにも活用されている。",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1029,6 +1392,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "gynecological_oncology",
+        "confidence": "high",
+        "rationale": "The paper specifically analyzes circulating tumor DNA in gynecological cancer patients, focusing on ovarian and endometrial cancers for liquid biopsy applications.",
+        "evidence_excerpt": "婦人科癌患者における血中循環腫瘍ゲノムの解析",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1051,6 +1422,15 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "unknown",
+        "subdomain": "",
+        "confidence": "low",
+        "rationale": "",
+        "evidence_excerpt": "",
+        "model": "",
+        "error": "pdf_text_empty"
       }
     },
     {
@@ -1073,6 +1453,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "endocrinology",
+        "subdomain": "lipid metabolism",
+        "confidence": "high",
+        "rationale": "The research focuses on nuclear receptors involved in metabolism, obesity, and lipid abnormalities, which are core topics in endocrinology.",
+        "evidence_excerpt": "代謝関連核内受容体遺伝子変異機能解析と肥満および脂質代謝異常",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1095,6 +1483,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "cardiology",
+        "subdomain": "heart failure & arrhythmia",
+        "confidence": "high",
+        "rationale": "The entire text focuses on ryanodine receptor dysfunction in heart failure, discussing calcium handling, excitation-contraction coupling, and arrhythmogenesis, which are core topics in cardiology.",
+        "evidence_excerpt": "心不全は心筋の収縮，弛緩の障害を基盤とする症候群であり",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1117,6 +1513,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "endocrinology",
+        "subdomain": "pituitary disorders",
+        "confidence": "high",
+        "rationale": "The literature focuses on a case of congenital combined pituitary hormone deficiency due to POU1F1 gene mutation, which is primarily an endocrine disorder involving pituitary hormone deficiencies and growth hormone replacement therapy.",
+        "evidence_excerpt": "POU1F1 遺伝子変異による 先天性複合性下垂体機能低下症の成人臨床像",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1139,6 +1543,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "pediatric oncology",
+        "confidence": "high",
+        "rationale": "The research focuses on neuroblastoma, a pediatric solid tumor, and investigates α-dystroglycan glycosylation as a therapeutic target. The study involves cancer cell lines, xenograft models, and potential treatment with ribitol, all within the context of oncology.",
+        "evidence_excerpt": "Effect of LARGE1 systemic gene delivery by adeno-associated virus on metastatic potential in high-risk neuroblastoma",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1161,6 +1573,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "unknown",
+        "subdomain": "",
+        "confidence": "low",
+        "rationale": "The PDF excerpt contains only binary encoding artifacts and no readable text, making it impossible to determine the medical domain.",
+        "evidence_excerpt": "Received binary data; no meaningful content.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1183,6 +1603,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "surgical oncology",
+        "confidence": "high",
+        "rationale": "The case report focuses on a complication (nerve injury) following breast cancer surgery, specifically axillary lymph node dissection, which falls under oncology.",
+        "evidence_excerpt": "유방암 환자에서 액와 림프절 제거술 후 발생한 내측전완피부신경 손상",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1205,6 +1633,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "gastric cancer",
+        "confidence": "high",
+        "rationale": "The study is a meta-analysis of D1 versus D2 lymph node dissection for gastric cancer, a surgical oncology topic within oncology.",
+        "evidence_excerpt": "A meta-analysis of D1 versus D2 lymph node dissection... Surgery is the only curative treatment for patients with gastric cancer.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1227,6 +1663,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer",
+        "confidence": "high",
+        "rationale": "The PDF excerpt discusses the use of lymphoscintigraphy and intraoperative gamma probe for sentinel lymph node biopsy in breast cancer patients, focusing on detection of metastasis and correlation with axillary lymph node status. The content is clearly within the field of oncology, specifically breast cancer management.",
+        "evidence_excerpt": "유방암환자의전초림프절생검에서유방림프신티그라피와 수술중감마프로우브의유용성 (Use of Mammary Lymphoscintigraphy and Intraoperative Radioguided Gamma Probe in Sentinel Lymph Node Biopsy of Breast Cancer)",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1249,6 +1693,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "other",
+        "subdomain": "bibliographic_metadata",
+        "confidence": "high",
+        "rationale": "The excerpt describes citation export formats for KCI, not medical content.",
+        "evidence_excerpt": "KCI 서지정보 반출목록 설명 참고문헌 형식 [1] [학술지(정기간행물)] 저자/제목/학술지명/발행연도/권(호) 통권/시작페이지~끝페이지/발행기관/DOI ...",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1271,6 +1723,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "infectious_disease",
+        "subdomain": "virology",
+        "confidence": "high",
+        "rationale": "The document focuses on genomic surveillance of SARS-CoV-2 variants in a specific region, which is a core activity in infectious disease epidemiology and virology.",
+        "evidence_excerpt": "경북권역 내에서 발생하는 코로나바이러스감염증-19 원인 바이러스(SARS-CoV-2, 코로나19 바이러스) 변이를 감시하기 위하여",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1293,6 +1753,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "infectious_disease",
+        "subdomain": "wastewater surveillance",
+        "confidence": "high",
+        "rationale": "The excerpt focuses on using wastewater to monitor infectious diseases, particularly SARS-CoV-2 and its variants, and discusses its role in epidemiological surveillance and public health response.",
+        "evidence_excerpt": "하수를 활용한 severe acute respiratory syndrome coronavirus 2와 같은 병원체 모니터링은 감염병 감시 체계에서 매우 효과적인 도구로 자리 잡아가고 있다.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1315,6 +1783,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "gynecologic oncology",
+        "confidence": "high",
+        "rationale": "Title and abstract explicitly mention human ovarian carcinoma and oncogenesis, placing it squarely in oncology with a focus on ovarian cancer.",
+        "evidence_excerpt": "사람 난소암에 대한 암화과정의 기전과 암유전자의 활성화 Mechanism of oncogenesis and activation of oncogene in human ovarian carcinoma",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1337,6 +1813,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "leukemia",
+        "confidence": "high",
+        "rationale": "The study focuses on the effects of p53 and Rb tumor suppressor genes on growth and apoptosis of HL60 leukemic cells, which is a cancer cell line. The primary topic is cancer biology, specifically leukemia.",
+        "evidence_excerpt": "p53 및 Rb 항암유전자가 HL60 암세포주의 성장과 세포사멸에 미치는 영향 (Effects of p53 and Rb Tumor Suppressor Genes on the Growth and Apoptosis of the HL60 Leukemic Cells)",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1359,6 +1843,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "infectious_disease",
+        "subdomain": "vector-borne disease",
+        "confidence": "high",
+        "rationale": "The document focuses on tick surveillance and detection of tick-borne pathogens such as SFTS, Lyme disease, and Q fever, classifying it as infectious disease, specifically vector-borne disease.",
+        "evidence_excerpt": "참진드기는 바이러스뿐만 아니라 세균, 원충 등 다양한 병원체를 전파하는 감염병 매개체이다.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1381,6 +1873,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "cancer nursing",
+        "confidence": "high",
+        "rationale": "The PDF excerpt focuses on colorectal cancer patients receiving chemotherapy and examines patient activation and quality of life, which is squarely within the domain of oncology. The journal is Asian Oncology Nursing, confirming the oncology focus.",
+        "evidence_excerpt": "본 연구는 케모포트를 통해 일회용 약물주입기로 항암화학요법을 받는 대장암 환자를 대상으로 환자 활성화 수준과 삶의 질 정도를 확인하고, 삶의 질에 미치는 영향요인을 규명하고자 한다.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1403,6 +1903,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "thyroid cancer",
+        "confidence": "high",
+        "rationale": "The PDF excerpt is from a Korean oncology nursing journal (Asian Oncology Nursing) and focuses on thyroid cancer patients receiving radioactive iodine treatment. The keywords '갑상선암' (thyroid cancer) and '방사성 요오드 치료' (radioactive iodine therapy) are prominent throughout. The study aims to understand illness experiences of young adult thyroid cancer patients, clearly falling within oncology.",
+        "evidence_excerpt": "갑상선암 발생자 수는 33,914명(12.0%)으로 전체 암 중 1위... 본 연구는 방사성 요오드 치료를 받은 청년기 갑상선 암 환자의 질병 경험...",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1425,6 +1933,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "neurology",
+        "subdomain": "prion_diseases",
+        "confidence": "high",
+        "rationale": "The document focuses on Creutzfeldt-Jakob disease, a fatal neurodegenerative prion disease affecting the central nervous system. It discusses clinical symptoms, diagnostic methods, and pathophysiology, all within the realm of neurology.",
+        "evidence_excerpt": "크로이츠펠트-야콥병(Creutzfeldt-Jakob disease, CJD) 은 사람에서 발생하는 전염성 해면상뇌병증(transmissible spongiform encephalopathies) 또는 프리온(prion) 질환으로 치명적인 신경계의 퇴행성 질환 중 하나 로 알려져 있다",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1447,6 +1963,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "gene therapy",
+        "confidence": "high",
+        "rationale": "The PDF excerpt explicitly discusses the effect of retrovirus and p53 tumor suppressor gene in gene therapy of cancer cells, directly indicating an oncology focus.",
+        "evidence_excerpt": "레트로바이러스와 p53항암유전자가 암세포의 유전자치료에 미치는 영향",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1469,6 +1993,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "pancreatic neoplasms",
+        "confidence": "high",
+        "rationale": "The literature focuses on solid and papillary epithelial neoplasm (SPEN) of the pancreas, a rare pancreatic tumor with malignant potential, and discusses its clinical features, diagnosis, and surgical treatment.",
+        "evidence_excerpt": "Solid and papillary epithelial neoplasm (SPEN) of the pancreas is a rare tumor with low grade malignant potential... complete resection of this neoplasm is the treatment of choice and the prognosis is excellent.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1491,6 +2023,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "gastrointestinal oncology",
+        "confidence": "high",
+        "rationale": "The PDF excerpt explicitly discusses gastric cancer, its recurrence after curative resection, and clinicopathological analysis, which are core topics in oncology.",
+        "evidence_excerpt": "위암은 국내에서 발생 빈도가 가장 높은 암으로 진단에 있어서는 조기위암의 발견이 점차 많아지고 있다. ... 재발위암의 일부에서는 재수술이 가능하여 장기생존을 가능하게 할 수도 있지만...",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1513,6 +2053,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast_cancer",
+        "confidence": "high",
+        "rationale": "The PDF excerpt exclusively discusses breast cancer patients, their nursing needs, and consultation content analysis. The text mentions '재가 유방암' (home-based breast cancer), '상담일지' (consultation logs), and '간호요구도' (nursing needs). The journal is a Korean public health nursing journal, but the specific topic is breast cancer management, which is a core oncology subdomain.",
+        "evidence_excerpt": "중심단어 : 재가 유방암, 상담, 간호요구도, 내용분석 상담일지에 근거한 재가 유방암 환자의 간호요구도 내용분석",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1535,6 +2083,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "genetics",
+        "subdomain": "cancer genetics",
+        "confidence": "high",
+        "rationale": "The paper focuses on a case report of a RAD51D mutation in a breast cancer patient, emphasizing genetic predisposition, NGS sequencing, and implications for hereditary cancer. The primary discussion revolves around genetic mutation and its role in breast cancer risk.",
+        "evidence_excerpt": "Mutation RAD51D and breast cancer: case report and literature findings ... The same revealed a pathogenic alteration in heterozygosity in the RAD51D gene.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1557,6 +2113,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "otolaryngology",
+        "subdomain": "laryngology",
+        "confidence": "high",
+        "rationale": "The case report discusses sulcus vocalis, a condition affecting the vocal folds, and presents four cases in a single family. The journal is Brazilian Journal of Otorhinolaryngology, and the focus is on genetic etiology and laryngeal examination. This falls under the specialty of otolaryngology, specifically laryngology.",
+        "evidence_excerpt": "Sulco vocal: provável etiologia genética. Relato de quatro casos em familiares Sulcus vocalis: probable genetic etiology. Report of four cases in close relatives",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1579,6 +2143,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast oncology",
+        "confidence": "high",
+        "rationale": "The entire PDF excerpt is a case report detailing invasive breast carcinoma, including risk factors, screening, staging, treatment, and impact of COVID-19 on diagnosis.",
+        "evidence_excerpt": "O câncer de mama é o mais comum em mulheres ... Este trabalho apresenta um relato de caso de uma paciente com carcinoma invasivo de mama do tipo não especial.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1601,6 +2173,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "colorectal_cancer",
+        "confidence": "high",
+        "rationale": "The PDF excerpt focuses on the oncogenetic analysis of the PI3K-AKT-mTOR pathway in colorectal cancer, using cancer genomics data from The Cancer Genome Atlas. The abstract emphasizes colorectal cancer epidemiology, molecular subtypes, and genetic alterations, clearly placing it within oncology.",
+        "evidence_excerpt": "Introdução: O câncer colorretal (CCR) é uma doença multifatorial... A via de sinalização PI3K-AKT-mTOR possui relevância em aspectos de carcinogênese e de terapêutica no CCR. O estudo atual propõe-se a fazer uma análise oncogenética dessa via.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1623,6 +2203,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "hematologic oncology",
+        "confidence": "high",
+        "rationale": "The document focuses on CAR-T technology for the management of T-cell acute lymphoblastic leukemia, a type of blood cancer, which falls under oncology.",
+        "evidence_excerpt": "TECNOLOGIA CAR-T NO MANEJO DA LEUCEMIA LINFOBLÁSTICA AGUDA DE CÉLULAS T",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1645,6 +2233,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast oncology",
+        "confidence": "high",
+        "rationale": "The document is an integrative review specifically focused on breast cancer (neoplasia de mama), its diagnosis, and screening methods such as mammography. The entire content revolves around breast oncology, with emphasis on early detection and prevention.",
+        "evidence_excerpt": "O câncer é uma doença causada por uma multiplicação celular desordenada... Câncer de Mama X Diagnóstico... O programa de rastreamento a partir da mamografia é de grande importância e eficácia para o diagnóstico precoce do câncer de mama.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1667,6 +2263,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast oncology",
+        "confidence": "high",
+        "rationale": "The PDF excerpt focuses on TP53 mutations in malignant breast tumors, examining associations with risk factors, clinical-pathological characteristics, and risk of death, which is a classic oncology topic.",
+        "evidence_excerpt": "Mutações no gene TP53 em tumores malignos de mama: associação com fatores de risco e características clínico-patológicas, inclusive risco de óbito",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1689,6 +2293,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer",
+        "confidence": "high",
+        "rationale": "The paper focuses on the classification of breast tumors based on the 2012 WHO classification, with emphasis on diagnostic and therapeutic implications, which is core to oncology.",
+        "evidence_excerpt": "Classificação dos tumores da mama: atualização baseada na nova classificação da Organização Mundial da Saúde de 2012",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1711,6 +2323,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer",
+        "confidence": "high",
+        "rationale": "The article focuses on immunohistochemistry for assessing prognostic and predictive factors in breast cancer, detecting micrometastases in sentinel lymph nodes, and diagnosing mammary lesions, all of which are central to oncology.",
+        "evidence_excerpt": "Contribuição da imuno-histoquímica na avaliação de fatores prognósticos e preditivos do câncer de mama e no diagnóstico de lesões mamárias",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1733,6 +2353,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "genetics",
+        "subdomain": "gene therapy",
+        "confidence": "high",
+        "rationale": "The PDF excerpt discusses gene therapy, genetic doping, and their implications for sports, which is directly related to genetics.",
+        "evidence_excerpt": "Terapia gênica, doping genético e esporte: fundamentação e implicações para o futuro",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1755,6 +2383,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "cancer_genomics",
+        "confidence": "high",
+        "rationale": "The dissertation focuses on functional study of somatic retrocopy events in tumor cell line models, which is directly related to cancer genomics.",
+        "evidence_excerpt": "Estudo funcional de eventos somáticos de retrocópias em modelos de linhagens tumorais",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1777,6 +2413,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "cervical cancer",
+        "confidence": "high",
+        "rationale": "The study investigates the relationship between HPV and cervical adenocarcinoma, a type of cancer, focusing on detection of HPV DNA and sequencing in cervical cancer samples.",
+        "evidence_excerpt": "Introdução: A infecção pelo Papilomavírus Humano (HPV) é essencial para o desenvolvimento do câncer cervical",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1799,6 +2443,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "immunology",
+        "subdomain": "",
+        "confidence": "high",
+        "rationale": "The article primarily focuses on the immunomodulatory and protective properties of milk whey proteins, including immune system stimulation, protection against pathogens, viruses, cancer, and cardiovascular diseases. The extensive discussion on immune-related functions places it within the immunology domain.",
+        "evidence_excerpt": "Atividade imunomoduladora... promovia estímulo imunológico superior... poder imunoestimulante...",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1821,6 +2473,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "neurology",
+        "subdomain": "cerebrovascular disorders",
+        "confidence": "high",
+        "rationale": "The case report describes cerebral venous sinus thrombosis, a neurological condition, with associated prothrombin gene mutation. The primary clinical presentation is neurological (seizures, papilledema, venous infarction). Although the etiology involves genetics and hematology, the clinical domain is neurology.",
+        "evidence_excerpt": "Trombose venosa cerebral é entidade de grande gravidade se não identificada e tratada precocemente.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1843,6 +2503,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "infectious_disease",
+        "subdomain": "Helicobacter pylori infection",
+        "confidence": "high",
+        "rationale": "The article primarily discusses the biopathology of Helicobacter pylori, including its infection mechanisms, virulence factors, and role in gastric diseases such as gastritis, peptic ulcer, and gastric cancer. The focus is on the infectious agent and its pathogenic process.",
+        "evidence_excerpt": "A infecção pelo Helicobacter pylori (H. pylori) induz inflamação persistente na mucosa gástrica com diferentes lesões orgânicas em humanos, tais como gastrite crônica, úlcera péptica e câncer gástrico.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1865,6 +2533,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "hematologic malignancies",
+        "confidence": "high",
+        "rationale": "The paper focuses on CAR-T therapy for T-cell acute lymphoblastic leukemia, a type of hematologic cancer, which falls under oncology.",
+        "evidence_excerpt": "TECNOLOGIA CAR-T NO MANEJO DA LEUCEMIA LINFOBLÁSTICA AGUDA DE CÉLULAS T",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1887,6 +2563,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer",
+        "confidence": "high",
+        "rationale": "The entire excerpt focuses on breast cancer, its treatment, and the use of spirituality and religion as coping resources, which aligns with oncology.",
+        "evidence_excerpt": "Spirituality and religion as resources for confronting breast cancer",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1909,6 +2593,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "endocrinology",
+        "subdomain": "thyroid_disorders",
+        "confidence": "high",
+        "rationale": "The case report focuses on thyroid nodules and papillary thyroid cancer in a child with Cowden syndrome, presented at a conference on thyroid diseases, and authored by an endocrinology research center.",
+        "evidence_excerpt": "Синдром Коудена... папиллярный рак щитовидной железы... ФГБУ «НМИЦ эндокринологии»... Фундаментальная наука и современные подходы к диагностике и лечению заболеваний щитовидной железы.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1931,6 +2623,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "gastrointestinal oncology",
+        "confidence": "high",
+        "rationale": "The PDF excerpt is from a journal titled 'Вопросы онкологии' and is a review focusing on HER2-positive gastric cancer therapy, discussing molecular genetic features and clinical trial results, which is directly an oncology topic.",
+        "evidence_excerpt": "ВОПРОСЫ ОНКОЛОГИИ. 2023, ТОМ 69, № 1 45 ... Терапия HER2-положительного рака желудка — обзор молекулярно-генетических особенностей сигнального пути, результатов клинических исследований",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1953,6 +2653,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "gynecologic_oncology",
+        "confidence": "high",
+        "rationale": "The article is a review on the role of long non-coding RNAs and DNA methylation in the pathogenesis of ovarian cancer, a gynecologic malignancy.",
+        "evidence_excerpt": "Рак яичников (РЯ) представляет собой группу агрессивных гетерогенных злокачественных опухолей... The present review focuses on one of the main regulators of cell processes that lead to the formation of tumors, namely, long non-coding RNAs (lncRNAs).",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1975,6 +2683,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer",
+        "confidence": "high",
+        "rationale": "The document focuses on breast cancer (РМЖ) and genetic mutations in BRCA1 and CHEK2, which are core oncology topics.",
+        "evidence_excerpt": "Рак молочной железы (РМЖ) это опухоль молочной железы злокачественного характера, которая занимает ведущее место как в структуре онкозаболеваний у женщин, так и среди причин смертности женского населения от злокачественных новообразований.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -1997,6 +2713,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast_cancer",
+        "confidence": "high",
+        "rationale": "The paper focuses on breast cancer (РМЖ), its genetic predisposition through BRCA1 and CHEK2 mutations, and associations with matrix metalloproteinase gene polymorphisms.",
+        "evidence_excerpt": "Рак молочной железы (РМЖ) это опухоль молочной железы злокачественного характера... Роль высокопенетрантных мутаций в генах BRCA1 и CHEK2...",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2019,6 +2743,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "genetics",
+        "subdomain": "genetic association study",
+        "confidence": "high",
+        "rationale": "The study investigates the association of a single nucleotide polymorphism in the GSR gene with risk of uterine fibroids, a genetic epidemiology study. The title and text explicitly refer to 'медицинская генетика' (medical genetics) and focus on genetic predisposition.",
+        "evidence_excerpt": "Ген глутатионредуктазы GSR как возможный ген-кандидат предрасположенности к миоме матки ... изучение ассоциации однонуклеотидного полиморфизма rs2551715 гена GSR с риском развития ММ",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2041,6 +2773,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "hereditary ovarian cancer genetics",
+        "confidence": "high",
+        "rationale": "The PDF excerpt is a scientific review on hereditary ovarian cancer, focusing on genetic predisposition, candidate genes (BRCA1, BRCA2, etc.), and their role in pathogenesis. The content is primarily oncological, with a strong genetic component.",
+        "evidence_excerpt": "Наследственный рак яичников: вклад изменений генов-кандидатов в патогенез заболевания",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2063,6 +2803,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer",
+        "confidence": "high",
+        "rationale": "The excerpt is from a clinical practice guideline for breast cancer (рак молочной железы) published by the Russian Society of Clinical Oncology (RUSSCO), focusing on staging, classification, and drug treatment.",
+        "evidence_excerpt": "РАК МОЛОЧНОЙ ЖЕЛЕЗЫ ... Практические рекомендации по лекарственному лечению рака молочной железы.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2085,6 +2833,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "infectious_disease",
+        "subdomain": "virology",
+        "confidence": "high",
+        "rationale": "The paper focuses on detection and quantification of Alphatorquevirus DNA in biological samples of healthy volunteers and patients with infectious diseases and secondary immunodeficiency, published in a journal titled 'Clinical infectology and parasitology'. The primary aim is to assess prevalence and viral load as potential biomarkers for immune status in infectious disease contexts.",
+        "evidence_excerpt": "Выявление и количественное определение ДНК вирусов рода Alphatorquevirus в биологическом материале здоровых добровольцев и пациентов с инфекционными заболеваниями и вторичным иммунодефицитным состоянием",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2107,6 +2863,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "gastroenterology",
+        "subdomain": "esophageal epithelium",
+        "confidence": "high",
+        "rationale": "The study focuses on the effects of peptide morphogen hydra and cyclophosphamide on the morphometric and histochemical parameters of mouse esophageal epithelium, with direct relevance to esophagitis, Barrett's esophagus, and esophageal cancer, which are core topics in gastroenterology.",
+        "evidence_excerpt": "Заболевания пищевода, включая эзофагиты различной этиологии, метаплазию (болезнь Барретта) и рак, представляют серьезную медицинскую проблему... понимание регуляции пролиферации и дифференцировки эпителия пищевода критически важно",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2129,6 +2893,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "肿瘤转移相关基因检测",
+        "confidence": "high",
+        "rationale": "论文标题和摘要明确指向肿瘤转移相关基因表达谱检测，研究对象为大肠腺癌原发癌和转移癌细胞，属于肿瘤学领域。",
+        "evidence_excerpt": "一维微流控微珠阵列芯片用于肿瘤转移相关基因表达谱检测...以来源于同一病人大肠腺癌的原发癌和转移癌细胞为研究对象...成功地对两种癌细胞中多个肿瘤转移相关基因转录水平的表达进行了检测。",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2151,6 +2923,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "hepatocellular carcinoma",
+        "confidence": "high",
+        "rationale": "标题和摘要明确提到HIF与肝癌发展预后，内容围绕肝癌机制、治疗和预后，属于肿瘤学范畴。",
+        "evidence_excerpt": "缺氧诱导因子（HIF）与肝癌发展预后的综述",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2173,6 +2953,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "hepatocellular carcinoma",
+        "confidence": "high",
+        "rationale": "论文标题和摘要明确研究肝癌细胞中Prohibitin 1的上调与增殖和迁移的关系，属于肿瘤学领域中的肝癌研究。",
+        "evidence_excerpt": "Prohibitin 1 的上调参与肝癌细胞的增殖和迁移",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2195,6 +2983,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer",
+        "confidence": "high",
+        "rationale": "论文标题和摘要明确针对ErbB2阳性乳腺癌，研究Immunocaspase-3基因修饰T细胞的靶向杀伤作用，属于肿瘤学范畴，具体为乳腺癌的基因治疗。",
+        "evidence_excerpt": "重组逆病毒介导的Immunocaspase-3分泌性T细胞对ErbB2阳性乳腺癌的杀伤作用",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2217,6 +3013,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "immunology",
+        "subdomain": "asthma immunology",
+        "confidence": "high",
+        "rationale": "文章核心研究UVB辐射通过神经内分泌轴（α-MSH）抑制2型天然淋巴细胞（ILC2）功能，从而减轻哮喘，属于免疫调节机制在呼吸系统疾病中的应用，主要涉及免疫学领域。",
+        "evidence_excerpt": "太阳辐射减轻哮喘机制研究取得新突破 ——UVB辐射通过降低2型天然淋巴细胞功能发挥 抗哮喘作用",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2239,6 +3043,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "genetics",
+        "subdomain": "DNA repair and radiation biology",
+        "confidence": "medium",
+        "rationale": "研究集中于耐辐射球菌的DNA修复开关基因pprI的功能，涉及突变株构建和功能补偿，属于基础遗传学和分子生物学范畴，与辐射抗性相关，但不直接对应临床医学领域。",
+        "evidence_excerpt": "耐辐射球菌DNA 修复开关基因pprI 缺陷性突变和功能补偿性突变株的建立",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2261,6 +3073,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "genetics",
+        "subdomain": "DNA repair and recombination",
+        "confidence": "low",
+        "rationale": "The article focuses on the functional analysis of a RadA paralog, stRadC2, in the hyperthermophilic archaeon Sulfolobus tokodaii, which is involved in DNA recombination and repair. While it mentions a connection to human Rad51 paralogs and cancer, the primary research is on archaeal molecular biology and genetics, not directly on human disease or clinical medicine.",
+        "evidence_excerpt": "文中提到: '真核生物和广古菌的Rad51/RadA 同系物在重组和修复过程中起重要作用, 比如Rad51 同系物Rad51C 的突变体与人类乳腺癌和卵巢癌的发生直接相关.' 但本文主要研究古菌蛋白, 属于基础遗传学.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2283,6 +3103,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "genetics",
+        "subdomain": "gene_editing",
+        "confidence": "high",
+        "rationale": "The document focuses entirely on CRISPR gene editing technology, its applications in human genetics, and ethical discussions. The primary domain is genetics, with a subdomain of gene editing.",
+        "evidence_excerpt": "CRISPR技术来源于细菌本身对抗噬菌体的“免疫系统”. 这项技术利用单链引导RNA(sgRNA)和Cas9蛋白, 可以在体内和体外简单、迅速、低成本实现基因编辑.",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2305,6 +3133,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "functional precision oncology",
+        "confidence": "high",
+        "rationale": "文献标题和内容聚焦于功能性精准肿瘤学，讨论桥接基因型与表型、肿瘤易损性、异质性等，明确属于肿瘤学领域。",
+        "evidence_excerpt": "桥接基因型与表型的功能性精准肿瘤学",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2327,6 +3163,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "cancer genomics",
+        "confidence": "high",
+        "rationale": "The study focuses on identifying cancer-related polyadenylated and non-polyadenylated RNAs in human breast and lung cancer cell lines using transcriptome sequencing, with functional enrichment analysis revealing associations with cell cycle, apoptosis, and cell death pathways critical to cancer development.",
+        "evidence_excerpt": "基于转录组测序在人类全基因组内鉴定与癌症相关的polyadenylation 和non-polyadenylation RNA",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2349,6 +3193,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "genetics",
+        "subdomain": "genomics",
+        "confidence": "high",
+        "rationale": "文献标题和摘要明确指出基于二代全基因组测序的快速基因组组装技术流程，属于基因组学方法学，不涉及特定疾病或临床专科。",
+        "evidence_excerpt": "摘要：高通量测序技术的快速发展、测序成本的降低以及生物信息技术的发展，使得全基因组数据广泛应用于生物学研究的各个领域。... 本文提供了一套基于二代低深度全基因组测序的快速基因组组装程序使用流程...",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2371,6 +3223,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "head and neck cancer",
+        "confidence": "high",
+        "rationale": "The PDF excerpt discusses the amplification and expression of c-myc and c-erbB-2 oncogenes in nasopharyngeal carcinoma (NPC), using techniques such as FISH and IHC. The focus is on genetic aberrations in cancer, specifically NPC, which is a type of head and neck cancer.",
+        "evidence_excerpt": "c-myc 和 c-erbB-2 在鼻咽癌（NPC）中的扩增和表达研究，使用FISH和IHC方法，涉及染色体改变。",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2393,6 +3253,15 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "unknown",
+        "subdomain": "",
+        "confidence": "low",
+        "rationale": "",
+        "evidence_excerpt": "",
+        "model": "",
+        "error": "pdf_text_empty"
       }
     },
     {
@@ -2415,6 +3284,14 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "obstetrics_gynecology",
+        "subdomain": "cancer_screening",
+        "confidence": "high",
+        "rationale": "文献主题为适龄妇女乳腺癌和宫颈癌筛查的临床意义，属于妇产科领域中的肿瘤筛查。",
+        "evidence_excerpt": "摘 要：目的：本次研究主要讨论适龄女性乳腺癌和宫颈癌筛查结论以及临床表现的意义。方法：本次研究主要选择2019年1月至2021年12月在我院开展乳腺癌和宫颈癌筛查的6500名适龄女性作为研究主体。",
+        "model": "deepseek-v4-flash"
       }
     },
     {
@@ -2437,7 +3314,128 @@
           "missing_title",
           "missing_source"
         ]
+      },
+      "medical_domain": {
+        "domain": "oncology",
+        "subdomain": "breast cancer",
+        "confidence": "high",
+        "rationale": "论文题目和摘要明确讨论乳腺癌治疗中整形外科技术的应用，主要内容涉及乳腺癌术后乳房重建，属于肿瘤学范畴中的乳腺癌治疗研究。",
+        "evidence_excerpt": "整形外科技术在乳腺癌治疗中的应用研究进展 ... 乳腺癌是中国女性发病率最高的恶性肿瘤 ... 现本文将乳腺癌术后乳房重建时机,重建分类与方法,乳房重建辅助技术及整形外科技术在乳腺癌治疗中的影响及研究进展作一综述。",
+        "model": "deepseek-v4-flash"
       }
     }
-  ]
+  ],
+  "analysis_summary": {
+    "by_language_and_literature_type": {
+      "en": {
+        "case_report": 1,
+        "functional": 9,
+        "sequencing": 7
+      },
+      "es": {
+        "case_report": 5,
+        "sequencing": 6,
+        "functional": 5,
+        "unclassified": 4
+      },
+      "ja": {
+        "case_report": 3,
+        "functional": 2,
+        "sequencing": 3,
+        "unclassified": 7
+      },
+      "ko": {
+        "case_report": 1,
+        "unclassified": 15
+      },
+      "pt": {
+        "functional": 7,
+        "case_report": 3,
+        "sequencing": 1,
+        "unclassified": 6
+      },
+      "ru": {
+        "case_report": 1,
+        "functional": 3,
+        "sequencing": 3,
+        "unclassified": 3
+      },
+      "zh": {
+        "functional": 10,
+        "sequencing": 2,
+        "unclassified": 3
+      }
+    },
+    "by_medical_domain": {
+      "immunology": 4,
+      "unknown": 6,
+      "other": 4,
+      "oncology": 68,
+      "orthopedics": 1,
+      "pathology": 1,
+      "public_health": 1,
+      "genetics": 10,
+      "neurology": 3,
+      "endocrinology": 3,
+      "cardiology": 1,
+      "infectious_disease": 5,
+      "otolaryngology": 1,
+      "gastroenterology": 1,
+      "obstetrics_gynecology": 1
+    },
+    "by_language_and_medical_domain": {
+      "en": {
+        "immunology": 1,
+        "unknown": 2,
+        "other": 1,
+        "oncology": 13
+      },
+      "es": {
+        "orthopedics": 1,
+        "oncology": 11,
+        "other": 2,
+        "pathology": 1,
+        "public_health": 1,
+        "genetics": 3,
+        "unknown": 1
+      },
+      "ja": {
+        "oncology": 8,
+        "immunology": 1,
+        "neurology": 1,
+        "unknown": 2,
+        "endocrinology": 2,
+        "cardiology": 1
+      },
+      "ko": {
+        "oncology": 11,
+        "other": 1,
+        "infectious_disease": 3,
+        "neurology": 1
+      },
+      "pt": {
+        "genetics": 2,
+        "otolaryngology": 1,
+        "oncology": 11,
+        "immunology": 1,
+        "neurology": 1,
+        "infectious_disease": 1
+      },
+      "ru": {
+        "endocrinology": 1,
+        "oncology": 6,
+        "genetics": 1,
+        "infectious_disease": 1,
+        "gastroenterology": 1
+      },
+      "zh": {
+        "oncology": 8,
+        "immunology": 1,
+        "genetics": 4,
+        "unknown": 1,
+        "obstetrics_gynecology": 1
+      }
+    },
+    "llm_classification_enabled": false
+  }
 }

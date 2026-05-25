@@ -94,3 +94,4 @@
 [2026-05-23] Block-aware evidence extraction Task 9: replace validation scoring semantics with chain-aware quality gate behavior [completed]
 [2026-05-23] [extract-evidence-block-aware-refactor] [implemented]
 [2026-05-24] Updated extract evidence E2E script summary for block-aware evidence item outputs [done]
+[2026-05-25] Enhanced literature benchmark analysis: added language×literature-type stats, LLM PDF medical-domain classification, and persisted analysis_summary/medical_domain into report.json [done]
