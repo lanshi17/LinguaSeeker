@@ -18,6 +18,7 @@ EXPECTED_TABLES = {
     "terminology_entries",
     "terminology_aliases",
     "terminology_relationships",
+    "terminology_embeddings",
     "users",
 }
 
@@ -150,3 +151,23 @@ def test_terminology_relationship_object_is_nullable() -> None:
     table = _table("terminology_relationships")
 
     assert table.c.object_entry_id.nullable is True
+
+
+def test_terminology_embeddings_table_exists() -> None:
+    """Terminology embeddings are stored separately from source aliases."""
+    table = _table("terminology_embeddings")
+
+    assert table.c.entry_id.nullable is False
+    assert table.c.embedding_text_hash.nullable is False
+    assert table.c.embedding_model.nullable is False
+
+
+def test_terminology_embeddings_unique_text_per_model() -> None:
+    """One embedding row exists per terminology entry/text/model tuple."""
+    table = _table("terminology_embeddings")
+
+    assert (
+        "entry_id",
+        "embedding_text_hash",
+        "embedding_model",
+    ) in _unique_constraint_columns(table)

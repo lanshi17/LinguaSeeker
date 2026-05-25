@@ -19,6 +19,7 @@ from sqlalchemy import (
     func,
     text,
 )
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -378,3 +379,33 @@ class TerminologyRelationship(Base, TimestampMixin):
     source_db: Mapped[str] = mapped_column(String(64), nullable=False)
     evidence_level: Mapped[str | None] = mapped_column(String(96), nullable=True)
     raw_payload: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
+
+
+class TerminologyEmbedding(Base, TimestampMixin):
+    """pgvector embedding for terminology semantic retrieval."""
+
+    __tablename__ = "terminology_embeddings"
+    __table_args__ = (
+        UniqueConstraint(
+            "entry_id",
+            "embedding_text_hash",
+            "embedding_model",
+            name="uq_terminology_embeddings_entry_text_model",
+        ),
+        Index("ix_terminology_embeddings_entity_type_model", "entity_type", "embedding_model"),
+        Index("ix_terminology_embeddings_entry_id", "entry_id"),
+    )
+
+    embedding_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    entry_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("terminology_entries.entry_id"),
+        nullable=False,
+    )
+    entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_db: Mapped[str] = mapped_column(String(64), nullable=False)
+    external_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    embedding_text: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding_text_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    embedding_model: Mapped[str] = mapped_column(String(255), nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(Vector(1024), nullable=False)
