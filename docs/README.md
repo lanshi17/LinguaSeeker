@@ -42,6 +42,8 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-05-25 | [phase 3 entity standardization design](plans/2026-05-25-phase-3-standardization-design.md) | planned |
+| 2026-05-25 | [phase 3 entity standardization implementation](plans/2026-05-25-phase-3-standardization.md) | planned |
 | 2026-05-23 | [block-aware evidence extraction](plans/2026-05-23-block-aware-evidence-extraction.md) | planned |
 
 ## Active Code Reviews

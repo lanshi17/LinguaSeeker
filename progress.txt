@@ -95,3 +95,4 @@
 [2026-05-23] [extract-evidence-block-aware-refactor] [implemented]
 [2026-05-24] Updated extract evidence E2E script summary for block-aware evidence item outputs [done]
 [2026-05-25] Enhanced literature benchmark analysis: added language×literature-type stats, LLM PDF medical-domain classification, and persisted analysis_summary/medical_domain into report.json [done]
+[2026-05-25] Planned Phase 3 entity standardization MVP with terminology reference tables, deterministic matching, ClinVar 1-star import, and evidence persistence [planned]
