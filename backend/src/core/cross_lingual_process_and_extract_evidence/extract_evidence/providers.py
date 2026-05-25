@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from enum import Enum
 import json
-import re
+
 from typing import Any
 from typing import Literal
 from typing import TypeVar
@@ -123,12 +123,12 @@ class LangChainEvidenceProvider:
         content = message.content
         if not isinstance(content, str):
             raise RuntimeError("Fallback JSON response content is not text")
-        json_text = _repair_invalid_json_escapes(_strip_json_fences(content))
+        json_text = _strip_json_fences(content)
         try:
-            return adapter.validate_json(json_text)
-        except ValidationError:
+            return adapter.validate_python(json.loads(json_text))
+        except (ValidationError, ValueError, json.JSONDecodeError):
             repaired = self._repair_json_with_llm(llm, json_text, schema)
-            return adapter.validate_json(repaired)
+            return adapter.validate_python(json.loads(repaired))
 
     def _repair_json_with_llm(
         self,
@@ -146,7 +146,7 @@ class LangChainEvidenceProvider:
         content = message.content
         if not isinstance(content, str):
             raise RuntimeError("JSON repair response content is not text")
-        return _repair_invalid_json_escapes(_strip_json_fences(content))
+        return _strip_json_fences(content)
 
 
 def _strip_json_fences(content: str) -> str:
@@ -159,10 +159,6 @@ def _strip_json_fences(content: str) -> str:
             lines = lines[:-1]
         return "\n".join(lines).strip()
     return text
-
-
-def _repair_invalid_json_escapes(content: str) -> str:
-    return re.sub(r'\\(?!["\\/bfnrtu])', r"\\\\", content)
 
 
 def _is_pydantic_model_schema(output_schema: Any) -> bool:
