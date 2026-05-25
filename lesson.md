@@ -547,3 +547,23 @@ Chinese medical journals often include both Chinese and English versions of titl
 **Solution**: 对 backend 脚本统一采用绝对路径调用，并显式设置 `PYTHONPATH=/home/yangzs/Projects/01_ACMG_Lingua/backend`；结果校验以文件内容为准（检查 `medical_domain`、`analysis_summary` 字段）。
 
 **Prevention**: 后续需要依赖相对导入路径的脚本执行时，默认使用绝对路径 + 显式 `PYTHONPATH`，并在任务结束前做一次文件级落盘核验。
+
+## 2026-05-25: Phase 3 E2E script needs document-root refresh path and sync/async helper compatibility
+
+**Problem**: 实现阶段三 E2E 脚本时，第一次测试暴露了两个问题：`--refresh-upstream` 把阶段二刷新输出写到了错误层级；同时，测试里把辅助函数 monkeypatch 成同步函数后，脚本直接 `await` 会报 `NoneType can't be used in 'await' expression`。
+
+**Investigation**: 先用 TDD 为 `backend/scripts/e2e_standardize_entities.py` 写了脚本级测试，覆盖默认输入目录、可选刷新上游、可选术语导入和输出摘要。红灯阶段显示新脚本缺失；首版实现后，测试进一步定位到刷新目录和 sync/async helper 兼容性两个边界问题。
+
+**Root cause**:
+1. `run_extract_evidence()` 会按 `output_dir / document_id / run_id` 落盘；如果把刷新目标目录设成 `.../extract_evidence/<doc>`，实际会多嵌一层 `<doc>/<doc>/<run>`。
+2. 脚本内部默认 helper 是 async，但测试替身为了简化断言使用了同步 lambda，调用方对 helper 返回值形态做了过强假设。
+
+**Solution**:
+1. 刷新上游时把目标目录改为 `extract_evidence_dir.parent.parent`，即 `.../extract_evidence/` 文档根的上一级，再使用返回的 `saved_dir` 作为真实输入。
+2. 增加 `_maybe_await()`，对辅助钩子统一兼容 sync/async 两种返回值。
+3. 为脚本补充 targeted pytest + Ruff 校验，并把真实运行阻塞点单独核验：当前本地 PostgreSQL `127.0.0.1:5432` 未启动，Docker Socket 也不可用，因此未能完成真实落库 smoke run。
+
+**Prevention**:
+1. 复用已有 E2E 脚本时，先核对它的最终落盘路径，不要只按参数名猜输出层级。
+2. 对脚本内部可 monkeypatch 的 helper，调用侧默认做 sync/async 双兼容，降低测试替身耦合。
+3. 宣称“真实 E2E 已跑通”之前，先单独验证基础设施可用性：LLM 环境变量、数据库连通性、容器运行权限。
