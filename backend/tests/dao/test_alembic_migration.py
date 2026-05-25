@@ -31,6 +31,21 @@ def _load_initial_revision_module():
     return module
 
 
+def _load_terminology_revision_module():
+    """Load the terminology migration revision as a Python module."""
+    import importlib.util
+
+    revision_paths = list(VERSIONS_DIR.glob("*add_terminology_reference_tables.py"))
+    assert len(revision_paths) == 1
+    revision_path = revision_paths[0]
+    spec = importlib.util.spec_from_file_location("add_terminology_reference_tables", revision_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def _captured_created_table(table_name: str, monkeypatch) -> list[object]:
     """Capture columns and constraints passed to op.create_table for a table."""
     module = _load_initial_revision_module()
@@ -134,8 +149,8 @@ def test_revision_chain_has_initial_revision() -> None:
     assert len(revisions) >= 1, "At least one migration revision must exist"
 
 
-def test_head_revision_points_to_mvp_schema() -> None:
-    """The head revision is the initial migration with down_revision=None."""
+def test_head_revision_points_to_terminology_schema() -> None:
+    """The head revision extends the initial MVP schema with terminology tables."""
     backend_str = str(BACKEND_DIR)
     if backend_str not in sys.path:
         sys.path.insert(0, backend_str)
@@ -148,12 +163,14 @@ def test_head_revision_points_to_mvp_schema() -> None:
     script = ScriptDirectory.from_config(config)
 
     head = script.get_revision("head")
-    # walk_revisions iterates head → base; base is the initial migration.
     revisions = list(script.walk_revisions())
     base = revisions[-1]
 
-    assert base.revision == head.revision, "Head should be the initial migration"
-    assert base.down_revision is None, "Initial migration must have down_revision=None"
+    assert head is not None
+    assert head.revision == "add_terminology_20260525"
+    assert head.down_revision == "4a82b5793055"
+    assert base.revision == "4a82b5793055"
+    assert base.down_revision is None
 
 
 def test_initial_migration_canonical_evidence_matches_orm_columns(monkeypatch) -> None:
@@ -173,6 +190,24 @@ def test_search_index_table_is_not_in_alembic_target_metadata() -> None:
 
     assert frontend_search_index.metadata is not Base.metadata
     assert "frontend_search_index" not in Base.metadata.tables
+
+
+def test_terminology_migration_relationship_object_nullable(monkeypatch) -> None:
+    """Terminology migration keeps object_entry_id nullable for scalar assertions."""
+    module = _load_terminology_revision_module()
+    captured: list[object] = []
+
+    def fake_create_table(name: str, *items, **_kwargs) -> None:
+        if name == "terminology_relationships":
+            captured.extend(items)
+
+    monkeypatch.setattr(module.op, "create_table", fake_create_table)
+    monkeypatch.setattr(module.op, "create_index", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module.op, "f", lambda name: name)
+    module.upgrade()
+
+    columns = {item.name: item for item in captured if isinstance(item, sa.Column)}
+    assert columns["object_entry_id"].nullable is True
 
 
 # ── Database-dependent tests (skip when PostgreSQL is unavailable) ─────────
