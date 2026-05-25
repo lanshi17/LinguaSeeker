@@ -2,7 +2,7 @@
 
 Usage:
     uv run python benchmark/literature_acquisition/benchmark.py download [--lang zh]
-    uv run python benchmark/literature_acquisition/benchmark.py analyze [report.json]
+    uv run python benchmark/literature_acquisition/benchmark.py analyze [report.json] [--llm-classify]
 """
 
 from __future__ import annotations
@@ -18,10 +18,11 @@ from loguru import logger
 from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 from urllib.parse import urljoin
 
 import httpx
+import fitz
 
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
     OnlineAcquisitionItem,
@@ -29,6 +30,7 @@ from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.c
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.literature_type_classifier import (
     classify_item,
 )
+from src.core.config import get_config
 
 # ═══════════════════════════════════════════════════════════════════
 # Constants
@@ -89,6 +91,16 @@ class BenchmarkStats:
     by_method: Dict[str, int] = field(default_factory=dict)
     elapsed_sec: float = 0.0
     records: List[DownloadRecord] = field(default_factory=list)
+
+
+@dataclass
+class MedicalDomainClassification:
+    domain: str
+    subdomain: str
+    confidence: str
+    rationale: str
+    evidence_excerpt: str
+    model: str
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -378,7 +390,225 @@ def _norm_type(t: str) -> str:
     return "unclassified"
 
 
-def cmd_analyze(report_path: Optional[Path] = None) -> None:
+def _extract_json_object(text: str) -> Optional[Dict[str, Any]]:
+    """Best-effort extraction of a JSON object from model output."""
+    text = (text or "").strip()
+    if not text:
+        return None
+    try:
+        obj = json.loads(text)
+        if isinstance(obj, dict):
+            return obj
+    except Exception:
+        pass
+
+    match = re.search(r"\{[\s\S]*\}", text)
+    if not match:
+        return None
+    try:
+        obj = json.loads(match.group(0))
+        if isinstance(obj, dict):
+            return obj
+    except Exception:
+        return None
+    return None
+
+
+def _extract_pdf_text_for_classification(pdf_path: Path, max_pages: int, max_chars: int) -> str:
+    """Extract plain text from the first pages of a PDF for lightweight domain classification."""
+    try:
+        doc = fitz.open(str(pdf_path))
+    except Exception:
+        return ""
+
+    chunks: List[str] = []
+    try:
+        page_count = min(max_pages, len(doc))
+        for i in range(page_count):
+            txt = cast(str, doc[i].get_text("text") or "")
+            txt = re.sub(r"\s+", " ", txt).strip()
+            if txt:
+                chunks.append(txt)
+            if sum(len(c) for c in chunks) >= max_chars:
+                break
+    finally:
+        doc.close()
+
+    merged = "\n".join(chunks)
+    return merged[:max_chars]
+
+
+def _classify_medical_domain_via_llm(
+    *,
+    title: str,
+    lang: str,
+    literature_type: str,
+    pdf_text: str,
+    timeout_sec: int,
+) -> tuple[Optional[MedicalDomainClassification], str]:
+    """Classify a paper's medical domain using configured default LLM."""
+    cfg = get_config()
+    model_name = (cfg.llm.model or "").strip()
+    base_url = (cfg.llm.base_url or "").strip().rstrip("/")
+    api_key = (cfg.llm.api_key or "").strip()
+
+    if not model_name:
+        return None, "missing_llm_model"
+    if not base_url:
+        return None, "missing_llm_base_url"
+
+    allowed_domains = [
+        "oncology", "genetics", "hematology", "cardiology", "neurology", "endocrinology",
+        "immunology", "infectious_disease", "nephrology", "gastroenterology", "pulmonology",
+        "dermatology", "obstetrics_gynecology", "pediatrics", "psychiatry", "ophthalmology",
+        "orthopedics", "otolaryngology", "urology", "pathology", "radiology", "surgery",
+        "critical_care", "public_health", "other", "unknown",
+    ]
+    system_prompt = (
+        "You are a medical literature triage assistant. "
+        "Given title and PDF excerpt, classify the primary medical domain. "
+        "Return strict JSON only with keys: domain, subdomain, confidence, rationale, evidence_excerpt. "
+        f"Domain must be one of: {', '.join(allowed_domains)}. "
+        "confidence must be one of: high, medium, low."
+    )
+    user_prompt = (
+        f"language={lang}\n"
+        f"literature_type={literature_type}\n"
+        f"title={title or 'N/A'}\n\n"
+        "PDF excerpt:\n"
+        f"{pdf_text[:12000]}"
+    )
+
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
+    payload: Dict[str, Any] = {
+        "model": model_name,
+        "temperature": 0,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        "response_format": {"type": "json_object"},
+    }
+
+    try:
+        with httpx.Client(timeout=timeout_sec, follow_redirects=True) as client:
+            resp = client.post(f"{base_url}/v1/chat/completions", headers=headers, json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+        content = (((data.get("choices") or [{}])[0].get("message") or {}).get("content") or "").strip()
+    except Exception as exc:
+        return None, f"llm_request_failed:{exc}"
+
+    parsed = _extract_json_object(content)
+    if not parsed:
+        return None, "llm_invalid_json"
+
+    domain = str(parsed.get("domain", "unknown")).strip().lower().replace(" ", "_")
+    if domain not in allowed_domains:
+        domain = "unknown"
+
+    confidence = str(parsed.get("confidence", "low")).strip().lower()
+    if confidence not in {"high", "medium", "low"}:
+        confidence = "low"
+
+    result = MedicalDomainClassification(
+        domain=domain,
+        subdomain=str(parsed.get("subdomain", "")).strip()[:80],
+        confidence=confidence,
+        rationale=str(parsed.get("rationale", "")).strip()[:400],
+        evidence_excerpt=str(parsed.get("evidence_excerpt", "")).strip()[:400],
+        model=model_name,
+    )
+    return result, ""
+
+
+def _run_llm_domain_classification(
+    records: List[Dict[str, Any]],
+    *,
+    max_pages: int,
+    max_chars: int,
+    timeout_sec: int,
+    force: bool,
+) -> None:
+    """Populate per-record medical domain labels via PDF text + LLM."""
+    candidates = [r for r in records if r.get("success") and r.get("file_path")]
+    logger.info(f"LLM domain classification: candidates={len(candidates)}")
+
+    done = 0
+    skipped = 0
+    failed = 0
+
+    for rec in candidates:
+        existing = rec.get("medical_domain")
+        if existing and not force:
+            skipped += 1
+            continue
+
+        pdf_path = Path(str(rec.get("file_path") or ""))
+        if not pdf_path.exists():
+            rec["medical_domain"] = {
+                "domain": "unknown",
+                "subdomain": "",
+                "confidence": "low",
+                "rationale": "",
+                "evidence_excerpt": "",
+                "model": "",
+                "error": "file_not_found",
+            }
+            failed += 1
+            continue
+
+        text = _extract_pdf_text_for_classification(pdf_path, max_pages=max_pages, max_chars=max_chars)
+        if not text:
+            rec["medical_domain"] = {
+                "domain": "unknown",
+                "subdomain": "",
+                "confidence": "low",
+                "rationale": "",
+                "evidence_excerpt": "",
+                "model": "",
+                "error": "pdf_text_empty",
+            }
+            failed += 1
+            continue
+
+        result, err = _classify_medical_domain_via_llm(
+            title=str(rec.get("title") or ""),
+            lang=str(rec.get("lang") or ""),
+            literature_type=str(rec.get("literature_type") or ""),
+            pdf_text=text,
+            timeout_sec=timeout_sec,
+        )
+        if result:
+            rec["medical_domain"] = asdict(result)
+            done += 1
+        else:
+            rec["medical_domain"] = {
+                "domain": "unknown",
+                "subdomain": "",
+                "confidence": "low",
+                "rationale": "",
+                "evidence_excerpt": "",
+                "model": "",
+                "error": err or "unknown_error",
+            }
+            failed += 1
+
+    logger.info(f"LLM domain classification done={done}, skipped={skipped}, failed={failed}")
+
+
+def cmd_analyze(
+    report_path: Optional[Path] = None,
+    *,
+    llm_classify: bool = False,
+    llm_max_pages: int = 4,
+    llm_max_chars: int = 12000,
+    llm_timeout: int = 60,
+    llm_force: bool = False,
+) -> None:
     path = report_path or REPORT_PATH
     if not path.exists():
         print(f"Report not found: {path}")
@@ -494,9 +724,31 @@ def cmd_analyze(report_path: Optional[Path] = None) -> None:
     for lang in sorted(lang_all, key=lambda x: lang_all[x], reverse=True):
         n_ok = lang_ok.get(lang, 0)
         n_all = lang_all[lang]
-        r = n_ok / max(n_all, 1) * 100
+        rate_pct = n_ok / max(n_all, 1) * 100
         name = LANG_NAMES.get(lang, lang)
-        print(f"  {name:<14} {n_ok:>4} {n_all:>6} {r:>6.1f}%  {_bar(n_ok, n_all)}")
+        print(f"  {name:<14} {n_ok:>4} {n_all:>6} {rate_pct:>6.1f}%  {_bar(n_ok, n_all)}")
+
+    # ── By Language × Literature Type (downloaded only) ──
+    lang_type_counts: Dict[str, Dict[str, int]] = {}
+    for r in ok_records:
+        lang = str(r.get("lang") or "")
+        t = _norm_type(str(r.get("literature_type") or ""))
+        lang_type_counts.setdefault(lang, {})
+        lang_type_counts[lang][t] = lang_type_counts[lang].get(t, 0) + 1
+
+    all_types = ["case_report", "sequencing", "functional", "unclassified"]
+    print(f"\n{'─' * 64}")
+    print("  LANGUAGE × LITERATURE TYPE (downloaded only)")
+    print(f"{'─' * 64}")
+    header = f"  {'Language':<14} {'Total':>5} " + " ".join(f"{t[:10]:>10}" for t in all_types)
+    print(header)
+    print(f"  {'─' * 13} {'─' * 5} " + " ".join(f"{'─' * 10}" for _ in all_types))
+    for lang in sorted(lang_type_counts):
+        name = LANG_NAMES.get(lang, lang)
+        row = lang_type_counts[lang]
+        total_lang = sum(row.values())
+        cols = " ".join(f"{row.get(t, 0):>10}" for t in all_types)
+        print(f"  {name:<14} {total_lang:>5} {cols}")
 
     # ── By Literature Type ──
     type_ok = Counter(_norm_type(r["literature_type"]) for r in ok_records)
@@ -518,6 +770,45 @@ def cmd_analyze(report_path: Optional[Path] = None) -> None:
     logger.info(f"{'─' * 64}")
     for m, cnt in method_ok.most_common():
         logger.info(f"  {m:<22} {cnt:>4}")
+
+    # Optional LLM medical-domain classification
+    if llm_classify:
+        logger.info("\nRunning LLM medical-domain classification from PDF content...")
+        _run_llm_domain_classification(
+            records,
+            max_pages=llm_max_pages,
+            max_chars=llm_max_chars,
+            timeout_sec=llm_timeout,
+            force=llm_force,
+        )
+
+    domain_counts = Counter(
+        str((r.get("medical_domain") or {}).get("domain") or "unknown")
+        for r in ok_records
+        if r.get("medical_domain")
+    )
+    if domain_counts:
+        print(f"\n{'─' * 64}")
+        print("  MEDICAL DOMAIN (LLM, downloaded only)")
+        print(f"{'─' * 64}")
+        for d, cnt in domain_counts.most_common():
+            print(f"  {d:<24} {cnt:>4}  {_bar(cnt, len(ok_records))}")
+
+    domain_by_lang: Dict[str, Dict[str, int]] = {}
+    for r in ok_records:
+        if not r.get("medical_domain"):
+            continue
+        lang = str(r.get("lang") or "")
+        domain = str((r.get("medical_domain") or {}).get("domain") or "unknown")
+        domain_by_lang.setdefault(lang, {})
+        domain_by_lang[lang][domain] = domain_by_lang[lang].get(domain, 0) + 1
+
+    data["analysis_summary"] = {
+        "by_language_and_literature_type": lang_type_counts,
+        "by_medical_domain": dict(domain_counts),
+        "by_language_and_medical_domain": domain_by_lang,
+        "llm_classification_enabled": llm_classify,
+    }
 
     # write validated report copy
     # Write validated report back to report.json (replace original)
@@ -609,13 +900,25 @@ def main() -> None:
 
     p_an = sub.add_parser("analyze", help="Print analysis of report.json")
     p_an.add_argument("path", nargs="?", help="Path to report.json (default: downloads/report.json)")
+    p_an.add_argument("--llm-classify", action="store_true", help="Use LLM to classify medical domain from PDFs")
+    p_an.add_argument("--llm-max-pages", type=int, default=4, help="Max pages extracted from each PDF for LLM")
+    p_an.add_argument("--llm-max-chars", type=int, default=12000, help="Max extracted chars sent to LLM")
+    p_an.add_argument("--llm-timeout", type=int, default=60, help="LLM request timeout in seconds")
+    p_an.add_argument("--llm-force", action="store_true", help="Reclassify records even if medical_domain exists")
 
     args = parser.parse_args()
 
     if args.cmd == "download":
         asyncio.run(cmd_download(args.lang))
     elif args.cmd == "analyze":
-        cmd_analyze(Path(args.path) if args.path else None)
+        cmd_analyze(
+            Path(args.path) if args.path else None,
+            llm_classify=args.llm_classify,
+            llm_max_pages=args.llm_max_pages,
+            llm_max_chars=args.llm_max_chars,
+            llm_timeout=args.llm_timeout,
+            llm_force=args.llm_force,
+        )
 
 
 if __name__ == "__main__":
