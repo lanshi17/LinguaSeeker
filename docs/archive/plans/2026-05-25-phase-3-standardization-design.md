@@ -1,9 +1,9 @@
 # Phase 3 Entity Standardization Design
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-05-25
-**Completed:** —
-**PR:** —
+**Completed:** 2026-05-25
+**PR:** pending
 
 ## Goal
 
