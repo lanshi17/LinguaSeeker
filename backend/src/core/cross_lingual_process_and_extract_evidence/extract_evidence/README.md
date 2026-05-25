@@ -509,13 +509,15 @@ cd backend
 uv run pytest tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/ -v
 ```
 
-Current coverage: 112 unit tests across 18 test files (plus 3 skipped integration tests). All LLM-dependent stages use mocked providers.
+Current coverage: 117 unit tests across 19 test files (plus 3 skipped integration tests). All LLM-dependent stages use mocked providers.
 
 | Test file | Tests | Coverage |
 |-----------|-------|----------|
 | `test_catalog.py` | 3 | Catalog integrity, field ID uniqueness, lookup |
 | `test_config_context.py` | 1 | Config context construction from mock |
 | `test_contracts.py` | 14 | All model validations, enum values, defaults, roundtrips |
+| `test_api_contracts.py` | 4 | Block-aware contract fields, group/chain public API surface |
+| `test_api_backward_compat.py` | 3 | Historical JSON without blocks, block text preservation |
 | `test_prompts.py` | 2 | Prompt content assertions |
 | `test_providers.py` | 6 | Tier/model selection, JSON mode, fallback repair paths |
 | `test_source_grounding.py` | 9 | Legacy and raw-source grounding behavior |
@@ -530,7 +532,7 @@ Current coverage: 112 unit tests across 18 test files (plus 3 skipped integratio
 | `test_workflow_integration.py` | 1 | Block/group/ground/gate workflow order |
 | `test_e2e_fabry_dual_tracks.py` | 1 | Fixture-backed dual-track workflow smoke test (skipped when fixture absent) |
 | `test_integration_real_llm.py` | 2 | Skipped unless env vars configured; real LLM round-trip |
-| **Total** | **112** (3 skipped) | |
+| **Total** | **117** (3 skipped) | |
 
 ### Integration test
 
