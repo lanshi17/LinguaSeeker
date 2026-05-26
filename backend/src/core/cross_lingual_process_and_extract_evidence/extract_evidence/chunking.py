@@ -3,7 +3,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .contracts import ContentBlock, DocumentEvidenceMap, TrackDocument
+from .contracts import (
+    ContentBlock,
+    DocumentEvidenceMap,
+    EvidenceItem,
+    EvidenceStatus,
+    SpecialEvidenceRecord,
+    TrackDocument,
+)
 from .prompts import block_readable_text, format_block_prompt_entry
 from ..cross_lingual.format.segmenter import estimate_tokens, segment_text
 
@@ -119,6 +126,57 @@ def build_block_prompt_chunks(
         )
         for idx, (_, indices) in enumerate(raw_chunks)
     ]
+
+
+def merge_sparse_evidence_items(items: list[EvidenceItem]) -> list[EvidenceItem]:
+    """Deduplicate sparse chunk extraction output without full-catalog backfill."""
+    by_key: dict[tuple[str, str, int, str], EvidenceItem] = {}
+    for item in items:
+        key = _item_key(item)
+        current = by_key.get(key)
+        if current is None or _item_rank(item) > _item_rank(current):
+            by_key[key] = item
+    return list(by_key.values())
+
+
+def _item_key(item: EvidenceItem) -> tuple[str, str, int, str]:
+    source = item.raw_source or item.source
+    block_index = source.block_index if source is not None else -1
+    snippet = source.text_snippet if source is not None else ""
+    return (
+        item.field_id,
+        str(item.value).strip().casefold(),
+        block_index,
+        snippet.strip().casefold(),
+    )
+
+
+def _item_rank(item: EvidenceItem) -> tuple[int, float]:
+    status_rank = {
+        EvidenceStatus.FOUND: 3,
+        EvidenceStatus.SOURCE_INVALID: 2,
+        EvidenceStatus.TABLE_UNGROUNDED: 1,
+        EvidenceStatus.OCR_GAP: 1,
+        EvidenceStatus.NOT_FOUND: 0,
+    }
+    return (status_rank[item.status], item.confidence)
+
+
+def merge_special_evidence_records(records: list[SpecialEvidenceRecord]) -> list[SpecialEvidenceRecord]:
+    """Deduplicate sparse special-evidence records from chunked extraction."""
+    by_key: dict[tuple[str, str, int, str], SpecialEvidenceRecord] = {}
+    for record in records:
+        source = record.raw_source or record.source
+        key = (
+            record.record_type,
+            record.description.strip().casefold(),
+            source.block_index if source is not None else -1,
+            (source.text_snippet if source is not None else "").strip().casefold(),
+        )
+        current = by_key.get(key)
+        if current is None or record.confidence > current.confidence:
+            by_key[key] = record
+    return list(by_key.values())
 
 
 def _add_seam_context(segments: list[str], idx: int, chars: int) -> str:

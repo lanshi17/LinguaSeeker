@@ -3,10 +3,16 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.chunki
     build_block_prompt_chunks,
     build_text_prompt_chunks,
     merge_evidence_maps,
+    merge_sparse_evidence_items,
+    merge_special_evidence_records,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     ContentBlock,
     DocumentEvidenceMap,
+    EvidenceItem,
+    EvidenceStatus,
+    SourceLocation,
+    SpecialEvidenceRecord,
     Track,
     TrackDocument,
 )
@@ -135,3 +141,56 @@ def test_block_prompt_chunks_include_seam_context():
     assert "BRCA1" in joined_all
     # Seam markers should be present
     assert "PREVIOUS" in joined_all or "NEXT" in joined_all
+
+
+def _item(field_id: str, value: str, confidence: float) -> EvidenceItem:
+    category, field_name = field_id.split(".", maxsplit=1)
+    return EvidenceItem(
+        field_id=field_id,
+        category=category,
+        field_name=field_name,
+        status=EvidenceStatus.FOUND,
+        value=value,
+        confidence=confidence,
+        raw_source=SourceLocation(
+            block_index=0,
+            context_type="text",
+            context_ref="",
+            text_snippet=value,
+        ),
+    )
+
+
+def test_merge_sparse_evidence_items_keeps_best_duplicate():
+    low = _item("A.gene_symbol", "GLA", 0.6)
+    high = _item("A.gene_symbol", "GLA", 0.9)
+    other = _item("A.variant_hgvs_c", "c.1000G>A", 0.8)
+
+    merged = merge_sparse_evidence_items([low, high, other])
+
+    assert len(merged) == 2
+    assert merged[0].field_id == "A.gene_symbol"
+    assert merged[0].confidence == 0.9
+    assert merged[1].field_id == "A.variant_hgvs_c"
+
+
+def test_merge_special_evidence_records_deduplicates_same_source():
+    source = SourceLocation(
+        block_index=0,
+        context_type="text",
+        context_ref="",
+        text_snippet="Functional assay showed reduced activity.",
+    )
+    first = SpecialEvidenceRecord(
+        record_type="functional",
+        description="Reduced activity",
+        evidence_field_ids=["H.functional_assay"],
+        raw_source=source,
+        confidence=0.7,
+    )
+    second = first.model_copy(update={"confidence": 0.9})
+
+    merged = merge_special_evidence_records([first, second])
+
+    assert len(merged) == 1
+    assert merged[0].confidence == 0.9
