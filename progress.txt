@@ -107,3 +107,4 @@
 [2026-05-25] Phase 3 entity standardization MVP implemented with terminology reference tables, deterministic matching, and evidence persistence [completed]
 [2026-05-25] [Phase 3 final review follow-up: chain-scoped bindings and typed run-item spec contract fixed] [done]
 [2026-05-25] [Phase 3 post-final-review fixes: enum-safe payload persistence, import commit, and robust OBO stanza parsing] [done]
+[2026-05-25] pgvector vector database: extension, migration, model, VectorRepository, EmbeddingProvider, TerminologyEmbeddingService, VectorFallbackMatcher, CLI, docs [completed]

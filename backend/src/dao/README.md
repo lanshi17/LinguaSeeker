@@ -60,6 +60,10 @@ The normalized PostgreSQL write model is migration-managed through `Base.metadat
 | `EvidenceEntityBinding` | `evidence_entity_bindings` | Hyperedge-style evidence-to-entity roles. |
 | `EntityMergeEvent` | `entity_merge_events` | Audit history for entity merges. |
 | `User` | `users` | Minimal auth and review ownership table. |
+| `TerminologyEntry` | `terminology_entries` | Unified reference entity imported from terminology databases. |
+| `TerminologyAlias` | `terminology_aliases` | Indexed lookup alias for terminology matching. |
+| `TerminologyRelationship` | `terminology_relationships` | Structured relationship between terminology entries. |
+| `TerminologyEmbedding` | `terminology_embeddings` | Vector embeddings for terminology entries with HNSW index for cosine similarity search. |
 
 ### cache_repo.py
 
@@ -120,6 +124,19 @@ async with get_async_session(session_factory) as session:
         variant_ids=["rs80357906"],
         limit=25,
     )
+```
+
+### Vector Similarity Search
+
+```python
+from src.dao.vector_repo import VectorRepository
+
+repo = VectorRepository(session)
+results = await repo.search_similar(
+    entity_type="gene",
+    embedding=[0.1] * 1536,
+    limit=10,
+)
 ```
 
 ### Invalidate Cache After A Run Completes
