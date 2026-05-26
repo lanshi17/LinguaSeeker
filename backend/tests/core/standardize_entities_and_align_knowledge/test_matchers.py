@@ -16,6 +16,9 @@ from src.core.standardize_entities_and_align_knowledge.matchers import (
     HybridTerminologyMatcher,
     TerminologyMatcher,
 )
+from src.core.standardize_entities_and_align_knowledge.similarity_match.core import (
+    SemanticMatchServiceError,
+)
 
 
 class FakeRepository:
@@ -238,3 +241,36 @@ async def test_hybrid_matcher_does_not_override_precise_standardized_result() ->
     assert match.external_id == "HGNC:1100"
     assert match.match_method == MatchMethod.PRECISE
     assert semantic_matcher.calls == 0
+
+
+class FailingSimilarityMatcher:
+    """Similarity matcher that raises SemanticMatchServiceError."""
+
+    def __init__(self):
+        self.calls = 0
+
+    async def match(self, candidate):
+        self.calls += 1
+        raise SemanticMatchServiceError("model-server unreachable")
+
+
+@pytest.mark.asyncio
+async def test_hybrid_matcher_degrades_to_unmapped_on_semantic_service_error() -> None:
+    """When semantic matching fails with service error, hybrid matcher returns unmapped."""
+    candidate = StandardizationCandidate(
+        candidate_id="c-error",
+        entity_type=EntityType.GENE,
+        role=BindingRole.SUBJECT,
+        raw_text="BRCA one",
+        chain_id="chain-1",
+        track="original",
+    )
+    precise = EntityMatch(candidate, MatchStatus.UNMAPPED, None, "BRCA one")
+    semantic_matcher = FailingSimilarityMatcher()
+
+    match = await HybridTerminologyMatcher(FakePreciseMatcher(precise), semantic_matcher).match(candidate)
+
+    assert match.status == MatchStatus.UNMAPPED
+    assert match.match_method == MatchMethod.SIMILARITY
+    assert "semantic matching unavailable" in match.rationale
+    assert semantic_matcher.calls == 1

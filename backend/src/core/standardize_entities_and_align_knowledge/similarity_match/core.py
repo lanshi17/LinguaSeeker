@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from loguru import logger
-
 from src.core.standardize_entities_and_align_knowledge.contracts import (
     EntityMatch,
     MatchMethod,
@@ -12,6 +10,14 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     SimilarityCandidate,
     StandardizationCandidate,
 )
+
+
+class NoSemanticMatchFound(Exception):
+    """Raised when semantic matching finds no suitable candidate (normal negative result)."""
+
+
+class SemanticMatchServiceError(Exception):
+    """Raised when semantic matching fails due to infrastructure errors."""
 
 
 @dataclass(frozen=True)
@@ -34,60 +40,61 @@ class SimilarityTerminologyMatcher:
         self._config = config
 
     async def match(self, candidate: StandardizationCandidate) -> EntityMatch:
-        """Run semantic matching for one candidate."""
-        try:
-            embedding_result = await self._embedding_provider.embed_texts(candidate.raw_text)
-            query_vector = embedding_result.vectors[0]
-            nearest = await self._repository.find_nearest(
-                entity_type=candidate.entity_type,
-                query_vector=query_vector,
-                embedding_model=self._config.embedding_model,
-                limit=self._config.rerank_top_k,
-            )
-            if not nearest:
-                return self._unmapped(candidate, "no semantic terminology candidate")
+        """Run semantic matching for one candidate.
 
-            rerank_result = await self._rerank_provider.rerank(
-                candidate.raw_text,
-                tuple(item.embedding_text for item in nearest),
-                top_k=self._config.rerank_top_k,
-            )
-            ranked = self._merge_rerank_scores(nearest, rerank_result.results)
-            if not ranked:
-                return self._unmapped(candidate, "semantic rerank returned no candidates")
+        Raises:
+            SemanticMatchServiceError: If embedding, rerank, or retrieval fails due to
+                infrastructure errors (network, model-server, database).
+        """
+        embedding_result = await self._embedding_provider.embed_texts(candidate.raw_text)
+        query_vector = embedding_result.vectors[0]
+        nearest = await self._repository.find_nearest(
+            entity_type=candidate.entity_type,
+            query_vector=query_vector,
+            embedding_model=self._config.embedding_model,
+            limit=self._config.rerank_top_k,
+        )
+        if not nearest:
+            return self._unmapped(candidate, "no semantic terminology candidate")
 
-            top = ranked[0]
-            second_score = ranked[1].rerank_score if len(ranked) > 1 else None
-            top_score = top.rerank_score or 0.0
-            if top_score < self._config.rerank_score_threshold:
-                return self._unmapped(candidate, "semantic rerank score below threshold")
-            if second_score is not None and top_score - second_score < self._config.min_rerank_margin:
-                return EntityMatch(
-                    candidate=candidate,
-                    status=MatchStatus.AMBIGUOUS,
-                    external_id=None,
-                    display_name=candidate.raw_text,
-                    terminology_candidates=tuple(item.terminology for item in ranked[:2]),
-                    rationale="semantic rerank candidates are too close",
-                    match_method=MatchMethod.SIMILARITY,
-                    similarity_score=top_score,
-                    raw_payload={"semantic_candidates": _candidate_payloads(ranked[:2])},
-                )
+        rerank_result = await self._rerank_provider.rerank(
+            candidate.raw_text,
+            tuple(item.embedding_text for item in nearest),
+            top_k=self._config.rerank_top_k,
+        )
+        ranked = self._merge_rerank_scores(nearest, rerank_result.results)
+        if not ranked:
+            return self._unmapped(candidate, "semantic rerank returned no candidates")
 
+        top = ranked[0]
+        second_score = ranked[1].rerank_score if len(ranked) > 1 else None
+        top_score = top.rerank_score or 0.0
+        if top_score < self._config.rerank_score_threshold:
+            return self._unmapped(candidate, "semantic rerank score below threshold")
+        if second_score is not None and top_score - second_score < self._config.min_rerank_margin:
             return EntityMatch(
                 candidate=candidate,
-                status=MatchStatus.STANDARDIZED,
-                external_id=top.terminology.external_id,
-                display_name=top.terminology.display_name,
-                terminology_candidates=(top.terminology,),
-                rationale="semantic pgvector retrieval plus rerank match",
+                status=MatchStatus.AMBIGUOUS,
+                external_id=None,
+                display_name=candidate.raw_text,
+                terminology_candidates=tuple(item.terminology for item in ranked[:2]),
+                rationale="semantic rerank candidates are too close",
                 match_method=MatchMethod.SIMILARITY,
                 similarity_score=top_score,
-                raw_payload={"semantic_candidates": _candidate_payloads(ranked[:3])},
+                raw_payload={"semantic_candidates": _candidate_payloads(ranked[:2])},
             )
-        except Exception as exc:
-            logger.warning("Semantic matching failed for candidate {}: {}", candidate.candidate_id, exc)
-            return self._unmapped(candidate, f"semantic matching unavailable: {exc.__class__.__name__}")
+
+        return EntityMatch(
+            candidate=candidate,
+            status=MatchStatus.STANDARDIZED,
+            external_id=top.terminology.external_id,
+            display_name=top.terminology.display_name,
+            terminology_candidates=(top.terminology,),
+            rationale="semantic pgvector retrieval plus rerank match",
+            match_method=MatchMethod.SIMILARITY,
+            similarity_score=top_score,
+            raw_payload={"semantic_candidates": _candidate_payloads(ranked[:3])},
+        )
 
     def _merge_rerank_scores(self, nearest, rerank_items) -> tuple[SimilarityCandidate, ...]:
         """Attach rerank scores back to nearest-neighbor candidates."""
