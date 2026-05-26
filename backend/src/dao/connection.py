@@ -9,6 +9,14 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from src.core.config import Settings, get_config
 from src.dao.contracts import AsyncpgConnectArgs
 
+# ── pgvector type registration ────────────────────────────────────────────
+# Register the pgvector Vector type at module load so it's available
+# for raw-SQL similarity operators (<->, <=>) in repository queries.
+try:
+    from pgvector.sqlalchemy import Vector  # noqa: F401
+except ImportError:
+    Vector = None  # type: ignore[assignment]
+
 SessionFactory = Callable[[], AsyncIterator[AsyncSession]] | async_sessionmaker[AsyncSession]
 
 

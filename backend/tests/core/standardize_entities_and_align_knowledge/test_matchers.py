@@ -1,6 +1,9 @@
 """Tests for deterministic terminology matching."""
 from __future__ import annotations
 
+import uuid
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 
 from src.core.standardize_entities_and_align_knowledge.contracts import (
@@ -153,3 +156,68 @@ def test_rank_raises_for_unsupported_entity_type() -> None:
 
     with pytest.raises(ValueError, match="Unsupported entity type"):
         matcher._rank("protein", ())  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
+async def test_vector_fallback_matcher_returns_candidates():
+    """VectorFallbackMatcher returns candidates when embedding service returns results."""
+    from src.core.standardize_entities_and_align_knowledge.matchers import VectorFallbackMatcher
+
+    mock_embedding_svc = MagicMock()
+    mock_embedding_svc.search_similar = AsyncMock(return_value=[
+        {"external_id": "HGNC:1100", "display_name": "BRCA1", "source_db": "HGNC",
+         "entity_type": "gene", "distance": 0.05, "entry_id": str(uuid.uuid4()),
+         "source_text": "BRCA1"},
+    ])
+
+    matcher = VectorFallbackMatcher(embedding_service=mock_embedding_svc, min_distance=0.3)
+    candidate = StandardizationCandidate(
+        candidate_id="c1",
+        entity_type=EntityType.GENE,
+        raw_text="BRAC1",
+        role=BindingRole.SUBJECT,
+        track="original",
+        chain_id="chain-1",
+    )
+    results = await matcher.search(candidate)
+    assert len(results) > 0
+    assert results[0].external_id == "HGNC:1100"
+
+
+@pytest.mark.asyncio
+async def test_vector_fallback_matcher_filters_by_distance():
+    """VectorFallbackMatcher filters out results beyond min_distance."""
+    from src.core.standardize_entities_and_align_knowledge.matchers import VectorFallbackMatcher
+
+    mock_embedding_svc = MagicMock()
+    mock_embedding_svc.search_similar = AsyncMock(return_value=[
+        {"external_id": "FAR", "display_name": "far", "source_db": "X",
+         "entity_type": "gene", "distance": 0.9, "entry_id": str(uuid.uuid4()),
+         "source_text": "far"},
+    ])
+
+    matcher = VectorFallbackMatcher(embedding_service=mock_embedding_svc, min_distance=0.3)
+    candidate = StandardizationCandidate(
+        candidate_id="c1", entity_type=EntityType.GENE, raw_text="BRCA1",
+        role=BindingRole.SUBJECT, track="original", chain_id="chain-1",
+    )
+    results = await matcher.search(candidate)
+    assert len(results) == 0  # 0.9 > 0.3 threshold
+
+
+@pytest.mark.asyncio
+async def test_terminology_matcher_uses_vector_fallback():
+    """TerminologyMatcher falls back to vector when deterministic returns nothing."""
+    mock_repo = MagicMock()
+    mock_repo.find_alias_candidates = AsyncMock(return_value=[])
+
+    mock_vector = MagicMock()
+    mock_vector.search = AsyncMock(return_value=[])
+    matcher = TerminologyMatcher(repository=mock_repo, vector_fallback=mock_vector)
+    candidate = StandardizationCandidate(
+        candidate_id="c1", entity_type=EntityType.GENE, raw_text="unknown_gene",
+        role=BindingRole.SUBJECT, track="original", chain_id="chain-1",
+    )
+    match = await matcher.match(candidate)
+    assert match.status == MatchStatus.UNMAPPED  # deterministic fails, vector has nothing
+    mock_vector.search.assert_called_once_with(candidate)
