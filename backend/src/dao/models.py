@@ -22,6 +22,8 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
+from pgvector.sqlalchemy import Vector
+
 
 class Base(DeclarativeBase):
     """Base metadata registry for DAO models."""
@@ -325,6 +327,10 @@ class TerminologyEntry(Base, TimestampMixin):
     raw_payload: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
     version: Mapped[str] = mapped_column(String(128), nullable=False)
 
+    embeddings: Mapped[list[TerminologyEmbedding]] = relationship(
+        back_populates="entry", cascade="all, delete-orphan"
+    )
+
 
 class TerminologyAlias(Base, TimestampMixin):
     """Indexed lookup alias for terminology matching."""
@@ -378,3 +384,31 @@ class TerminologyRelationship(Base, TimestampMixin):
     source_db: Mapped[str] = mapped_column(String(64), nullable=False)
     evidence_level: Mapped[str | None] = mapped_column(String(96), nullable=True)
     raw_payload: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
+
+
+class TerminologyEmbedding(Base):
+    """Vector embedding for terminology entries used in semantic similarity search."""
+
+    __tablename__ = "terminology_embeddings"
+    __table_args__ = (
+        UniqueConstraint("entry_id", "model_version", name="uq_terminology_embeddings_entry_model"),
+        Index("ix_terminology_embeddings_entity_type", "entity_type"),
+    )
+
+    embedding_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    entry_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("terminology_entries.entry_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(Vector(1536), nullable=False)
+    model_version: Mapped[str] = mapped_column(String(128), nullable=False)
+    source_text: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    entry: Mapped[TerminologyEntry] = relationship(back_populates="embeddings")
