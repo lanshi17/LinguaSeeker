@@ -9,14 +9,16 @@ def test_model_server_url_default():
 
 def test_standardization_similarity_model_defaults_match_model_server() -> None:
     """Backend semantic matching defaults align with model-server defaults."""
-    from src.core.config import Settings
+    from src.core.config import EmbeddingConfig, RerankConfig
 
-    settings = Settings()
+    # Test pure defaults by instantiating the config models directly
+    embedding = EmbeddingConfig()
+    rerank = RerankConfig()
 
-    assert settings.embedding.base_url == ""
-    assert settings.embedding.model == "Qwen/Qwen3-Embedding-0.6B"
-    assert settings.embedding.dimension == 1024
-    assert settings.rerank.model == "BAAI/bge-reranker-v2-m3"
+    assert embedding.base_url == ""
+    assert embedding.model == "Qwen/Qwen3-Embedding-0.6B"
+    assert embedding.dimension == 1024
+    assert rerank.model == "BAAI/bge-reranker-v2-m3"
 
 
 def test_embedding_dimension_must_match_pgvector() -> None:
