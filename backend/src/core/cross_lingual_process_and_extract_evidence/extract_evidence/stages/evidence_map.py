@@ -1,25 +1,46 @@
 """Evidence map stage — relevance scan and structure discovery."""
 from __future__ import annotations
 
+from ..chunking import DEFAULT_INPUT_BUDGET_TOKENS, build_text_prompt_chunks, merge_evidence_maps
 from ..contracts import DocumentEvidenceMap, TrackDocument
 from ..prompts import get_evidence_map_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
+from ...cross_lingual.format.segmenter import estimate_tokens
 
 
 class RelevanceScanStage:
-    def __init__(self, provider: LangChainEvidenceProvider):
+    def __init__(
+        self,
+        provider: LangChainEvidenceProvider,
+        input_budget_tokens: int = DEFAULT_INPUT_BUDGET_TOKENS,
+    ):
         self._provider = provider
+        self._input_budget_tokens = input_budget_tokens
 
     def run(self, document: TrackDocument) -> DocumentEvidenceMap:
-        prompt = get_evidence_map_prompt(
+        overhead = estimate_tokens(get_evidence_map_prompt(
             document_id=document.document_id,
             track=document.track,
-            text=document.formatted_text,
+            text="",
+        ))
+        chunks = build_text_prompt_chunks(
+            document.formatted_text,
+            input_budget_tokens=self._input_budget_tokens,
+            prompt_overhead_tokens=overhead,
         )
-        return self._provider.invoke_structured(
-            prompt=prompt,
-            output_schema=DocumentEvidenceMap,
-            tier=EvidenceModelTier.FAST,
-            stage="relevance_scan",
-            response_method="json_mode",
-        )
+        maps: list[DocumentEvidenceMap] = []
+        for chunk in chunks:
+            chunk_note = f"\n\nCHUNK {chunk.index}/{chunk.total}\n"
+            prompt = get_evidence_map_prompt(
+                document_id=document.document_id,
+                track=document.track,
+                text=f"{chunk_note}{chunk.text}",
+            )
+            maps.append(self._provider.invoke_structured(
+                prompt=prompt,
+                output_schema=DocumentEvidenceMap,
+                tier=EvidenceModelTier.FAST,
+                stage="relevance_scan" if chunk.total == 1 else f"relevance_scan/{chunk.index}",
+                response_method="json_mode",
+            ))
+        return merge_evidence_maps(maps)
