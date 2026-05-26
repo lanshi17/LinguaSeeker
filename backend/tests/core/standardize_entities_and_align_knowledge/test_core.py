@@ -7,6 +7,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     BindingRole,
     EntityMatch,
     EntityType,
+    MatchMethod,
     MatchStatus,
     StandardizationCandidate,
     StandardizationInput,
@@ -169,3 +170,40 @@ async def test_standardization_service_summarizes_mixed_statuses_and_preserves_e
     persisted_matches = repo.bindings[0][1]
     assert [match.candidate.candidate_id for match in persisted_matches] == ["c1", "c2", "c3"]
     assert repo.bindings[0][2] == result.normalized_entity_ids
+
+
+@pytest.mark.asyncio
+async def test_standardization_service_counts_similarity_standardized_match() -> None:
+    """Service summary treats accepted similarity matches as standardized."""
+    candidate = StandardizationCandidate(
+        candidate_id="c1",
+        entity_type=EntityType.GENE,
+        role=BindingRole.SUBJECT,
+        raw_text="BRCA one",
+        chain_id="chain-1",
+        track="original",
+    )
+    input_data = StandardizationInput(
+        document_id="doc-1",
+        source_document_id="source-1",
+        processing_run_id="run-1",
+        candidates=(candidate,),
+        evidence_items=(),
+    )
+
+    class SimilarityOnlyMatcher:
+        async def match(self, candidate):
+            return EntityMatch(
+                candidate=candidate,
+                status=MatchStatus.STANDARDIZED,
+                external_id="HGNC:1100",
+                display_name="BRCA1",
+                match_method=MatchMethod.SIMILARITY,
+                similarity_score=0.91,
+            )
+
+    repo = FakeRepository()
+    result = await StandardizationService(SimilarityOnlyMatcher(), repo).run(input_data)
+
+    assert result.standardized_count == 1
+    assert repo.normalized[0].match_method == MatchMethod.SIMILARITY
