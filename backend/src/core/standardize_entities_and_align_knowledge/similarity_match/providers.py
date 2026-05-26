@@ -28,8 +28,10 @@ class ModelServerEmbeddingProvider:
         self._client = client
         self._timeout = timeout
 
-    async def embed_texts(self, texts: Sequence[str]) -> EmbeddingBatchResult:
+    async def embed_texts(self, texts: str | Sequence[str]) -> EmbeddingBatchResult:
         """Embed texts through model-server `/v1/embeddings`."""
+        if isinstance(texts, str):
+            texts = (texts,)
         payload = {"input": list(texts), "model": self._model}
         if self._client is not None:
             return await self._post_embeddings(self._client, payload)
@@ -68,11 +70,13 @@ class ModelServerRerankProvider:
     async def rerank(
         self,
         query: str,
-        documents: Sequence[str],
+        documents: str | Sequence[str],
         *,
         top_k: int | None,
     ) -> RerankBatchResult:
         """Rerank documents through model-server `/v1/rerank`."""
+        if isinstance(documents, str):
+            documents = (documents,)
         payload = {"query": query, "documents": list(documents), "model": self._model, "top_k": top_k}
         if self._client is not None:
             return await self._post_rerank(self._client, payload)
