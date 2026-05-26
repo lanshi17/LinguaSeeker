@@ -62,3 +62,40 @@ def test_merge_evidence_maps_stable_deduplicates_terms():
     assert merged.gene_terms == ["GLA", "BRCA1"]
     assert merged.variant_terms == ["c.1000G>A"]
     assert merged.structure_hints == ["Table 1", "Figure 2"]
+
+
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.chunking import (
+    build_block_prompt_chunks,
+)
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    ContentBlock,
+    Track,
+    TrackDocument,
+)
+
+
+def test_block_prompt_chunks_preserve_original_indices():
+    doc = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text="",
+        page_spans=[],
+        blocks=[
+            ContentBlock(type="text", page_idx=0, text="A" * 120),
+            ContentBlock(type="text", page_idx=1, text="B" * 120),
+            ContentBlock(type="table", page_idx=2, table_body="C" * 120),
+        ],
+    )
+
+    chunks = build_block_prompt_chunks(
+        doc,
+        input_budget_tokens=80,
+        prompt_overhead_tokens=10,
+    )
+
+    assert len(chunks) > 1
+    joined = "\n".join(chunk.text for chunk in chunks)
+    assert "[Block 0 | text | page 1]" in joined
+    assert "[Block 1 | text | page 2]" in joined
+    assert "[Block 2 | table | page 3]" in joined
+    assert sorted(index for chunk in chunks for index in chunk.block_indices) == [0, 1, 2]

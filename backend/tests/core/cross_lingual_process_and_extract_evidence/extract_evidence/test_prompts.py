@@ -118,3 +118,23 @@ def test_special_evidence_prompt_requires_verbatim_snippets():
 
     assert "reuse exact document wording" in prompt.lower()
     assert "copy punctuation exactly" in prompt.lower()
+
+
+def test_build_block_prompt_text_can_select_original_block_indices():
+    doc = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text="",
+        page_spans=[],
+        blocks=[
+            ContentBlock(type="text", page_idx=0, text="Title"),
+            ContentBlock(type="text", page_idx=1, text="BRCA1 c.5266dupC"),
+            ContentBlock(type="table", page_idx=2, table_body="GLA c.1000G>A"),
+        ],
+    )
+
+    text = build_block_prompt_text(doc, block_indices=(1, 2))
+
+    assert "[Block 0" not in text
+    assert "[Block 1 | text | page 2]" in text
+    assert "[Block 2 | table | page 3]" in text

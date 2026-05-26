@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .contracts import DocumentEvidenceMap
-from ..cross_lingual.format.segmenter import segment_text
+from .contracts import ContentBlock, DocumentEvidenceMap, TrackDocument
+from .prompts import block_readable_text, format_block_prompt_entry
+from ..cross_lingual.format.segmenter import estimate_tokens, segment_text
 
 DEFAULT_INPUT_BUDGET_TOKENS = 16_000
 _SAFETY_MARGIN_TOKENS = 20
@@ -64,3 +65,64 @@ def _dedupe(values: list[str]) -> list[str]:
         seen.add(key)
         result.append(value)
     return result
+
+
+def build_block_prompt_chunks(
+    document: TrackDocument,
+    input_budget_tokens: int = DEFAULT_INPUT_BUDGET_TOKENS,
+    prompt_overhead_tokens: int = 0,
+) -> list[EvidencePromptChunk]:
+    """Split document blocks into prompt-safe chunks while preserving block indices."""
+    if not document.blocks:
+        return build_text_prompt_chunks(document.formatted_text, input_budget_tokens, prompt_overhead_tokens)
+
+    effective_budget = max(1, input_budget_tokens - prompt_overhead_tokens - _SAFETY_MARGIN_TOKENS)
+    pending_texts: list[str] = []
+    pending_indices: list[int] = []
+    raw_chunks: list[tuple[str, tuple[int, ...]]] = []
+
+    for block_index, block in enumerate(document.blocks):
+        body = block_readable_text(block)
+        if not body:
+            continue
+        entries = _block_entries(block_index, block, body, effective_budget)
+        for entry_text, entry_indices in entries:
+            candidate = "\n\n".join([*pending_texts, entry_text]) if pending_texts else entry_text
+            if pending_texts and estimate_tokens(candidate) > effective_budget:
+                raw_chunks.append(("\n\n".join(pending_texts), tuple(pending_indices)))
+                pending_texts = [entry_text]
+                pending_indices = list(entry_indices)
+                continue
+            pending_texts.append(entry_text)
+            pending_indices.extend(entry_indices)
+
+    if pending_texts:
+        raw_chunks.append(("\n\n".join(pending_texts), tuple(pending_indices)))
+
+    total = len(raw_chunks)
+    return [
+        EvidencePromptChunk(index=index, total=total, text=text, block_indices=indices)
+        for index, (text, indices) in enumerate(raw_chunks, start=1)
+    ]
+
+
+def _block_entries(
+    block_index: int,
+    block: ContentBlock,
+    body: str,
+    effective_budget: int,
+) -> list[tuple[str, tuple[int, ...]]]:
+    entry = format_block_prompt_entry(block_index, block, body)
+    if estimate_tokens(entry) <= effective_budget:
+        return [(entry, (block_index,))]
+
+    header_overhead = estimate_tokens(format_block_prompt_entry(block_index, block, ""))
+    body_segments = segment_text(
+        body,
+        max_tokens=effective_budget,
+        prompt_overhead_tokens=header_overhead,
+    )
+    return [
+        (format_block_prompt_entry(block_index, block, segment), (block_index,))
+        for segment in body_segments
+    ]
