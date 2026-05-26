@@ -55,25 +55,51 @@ def _configure_logger() -> None:
 
 
 def _ensure_evidence_env_from_llm() -> None:
-    """Map local LLM_* settings to EVIDENCE_EXTRACTION_* for this process only."""
+    """Map fast/reasoning LLM settings to EVIDENCE_EXTRACTION_* for this process only."""
     try:
-        cfg_llm = get_config().llm
+        cfg = get_config()
+        cfg_llm = cfg.llm
+        cfg_reasoning = getattr(cfg, "reasoning", None)
     except Exception:
         cfg_llm = None
+        cfg_reasoning = None
     mappings = {
-        "EVIDENCE_EXTRACTION_API_KEY": ("LLM_API_KEY", "api_key"),
-        "EVIDENCE_EXTRACTION_BASE_URL": ("LLM_BASE_URL", "base_url"),
-        "EVIDENCE_EXTRACTION_FAST_MODEL": ("LLM_MODEL", "model"),
-        "EVIDENCE_EXTRACTION_STANDARD_MODEL": ("LLM_MODEL", "model"),
-        "EVIDENCE_EXTRACTION_STRONG_MODEL": ("LLM_MODEL", "model"),
+        "EVIDENCE_EXTRACTION_API_KEY": (
+            ("FAST_LLM_API_KEY", "LLM_API_KEY"),
+            cfg_llm,
+            "api_key",
+        ),
+        "EVIDENCE_EXTRACTION_BASE_URL": (
+            ("FAST_LLM_BASE_URL", "LLM_BASE_URL"),
+            cfg_llm,
+            "base_url",
+        ),
+        "EVIDENCE_EXTRACTION_FAST_MODEL": (
+            ("FAST_LLM_MODEL", "LLM_MODEL"),
+            cfg_llm,
+            "model",
+        ),
+        "EVIDENCE_EXTRACTION_STANDARD_MODEL": (
+            ("FAST_LLM_MODEL", "LLM_MODEL"),
+            cfg_llm,
+            "model",
+        ),
+        "EVIDENCE_EXTRACTION_STRONG_MODEL": (
+            ("REASONING_LLM_MODEL", "FAST_LLM_MODEL", "LLM_MODEL"),
+            cfg_reasoning if cfg_reasoning is not None and getattr(cfg_reasoning, "model", "") else cfg_llm,
+            "model",
+        ),
     }
-    for evidence_key, (llm_key, cfg_attr) in mappings.items():
+    for evidence_key, (env_keys, cfg_obj, cfg_attr) in mappings.items():
         if os.environ.get(evidence_key):
             continue
-        if os.environ.get(llm_key):
-            os.environ[evidence_key] = os.environ[llm_key]
+        for env_key in env_keys:
+            if os.environ.get(env_key):
+                os.environ[evidence_key] = os.environ[env_key]
+                break
+        if os.environ.get(evidence_key):
             continue
-        cfg_value = getattr(cfg_llm, cfg_attr, "") if cfg_llm is not None else ""
+        cfg_value = getattr(cfg_obj, cfg_attr, "") if cfg_obj is not None else ""
         if cfg_value:
             os.environ[evidence_key] = cfg_value
 

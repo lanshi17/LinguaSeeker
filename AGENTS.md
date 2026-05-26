@@ -226,7 +226,7 @@
 | 场景 | 配置变量 | 说明 |
 |---|---|---|
 | **默认通用任务** | `LLM_MODEL` | 通用文本生成、摘要、分析、翻译等 |
-| **审查/验证/仲裁** | `ARBITRATION_MODEL` | 证据审查、结果验证、多源仲裁等需要高精度的场景 |
+| **审查/验证/推理** | `REASONING_LLM_MODEL` | 证据审查、结果验证、多源推理/仲裁等需要高精度的场景 |
 | **多模态任务** | `MULTIMODAL_LLM_MODEL` | 图片识别、图表提取、PDF 视觉信息解析等需要多模态能力的场景 |
 
 - 代码中必须根据实际场景选择对应的模型配置变量，**禁止混用**。
@@ -422,7 +422,7 @@ The literature acquisition gateway supports multiple providers (Crossref, OpenAl
 
 #### Configuration
 
-All config via environment variables or `.env` / `.env.local` files. Key config domains: `LLM_*`, `MT_*` (translation), `VLM_*` (vision), `ARBITRATION_*`, `EMBEDDING_*`, `RERANK_*`, `MINERU_*`, `POSTGRES_*`, `REDIS_*`, `NEO4J_*`, `MINIO_*`, `SMTP_*`.
+All config via environment variables or `.env` / `.env.local` files. Key config domains: `LLM_*`, `MT_*` (translation), `VLM_*` (vision), `REASONING_LLM_*`, `EMBEDDING_*`, `RERANK_*`, `MINERU_*`, `POSTGRES_*`, `REDIS_*`, `NEO4J_*`, `MINIO_*`, `SMTP_*`.
 
 #### Testing
 

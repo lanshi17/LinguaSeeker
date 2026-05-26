@@ -312,7 +312,7 @@ matcher = TerminologyMatcher(repository=repo, vector_fallback=vector_matcher)
 These are intentionally out of scope in the current implementation:
 
 - fused-result input path (`FusedResultAdapter`)
-- LLM/agent-driven entity arbitration
+- LLM/agent-driven entity reasoning
 - full dbSNP import
 - review queue UI
 - full MONDO graph import
