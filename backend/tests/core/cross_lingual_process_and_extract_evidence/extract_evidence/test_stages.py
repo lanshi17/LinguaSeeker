@@ -540,3 +540,32 @@ def test_quality_validation_stage_returns_report():
 
     assert isinstance(report, QualityReport)
     assert report.passed is True
+
+
+def test_evidence_map_stage_chunks_long_document_and_merges_maps():
+    provider = MagicMock()
+    provider.invoke_structured.side_effect = [
+        DocumentEvidenceMap(relevant=False, gene_terms=["GLA"]),
+        DocumentEvidenceMap(relevant=True, gene_terms=["GLA", "BRCA1"], variant_terms=["c.5266dupC"]),
+    ]
+    document = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text="\n\n".join([
+            "GLA " + ("A" * 160),
+            "BRCA1 c.5266dupC " + ("B" * 160),
+        ]),
+        page_spans=[PageSpan(span_id="p1", page=1, start_offset=0, end_offset=400)],
+    )
+
+    stage = RelevanceScanStage(provider, input_budget_tokens=300)
+    result = stage.run(document)
+
+    assert result.relevant is True
+    assert result.gene_terms == ["GLA", "BRCA1"]
+    assert result.variant_terms == ["c.5266dupC"]
+    assert provider.invoke_structured.call_count == 2
+    assert [call.kwargs["stage"] for call in provider.invoke_structured.call_args_list] == [
+        "relevance_scan/1",
+        "relevance_scan/2",
+    ]
