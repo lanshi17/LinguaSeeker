@@ -569,3 +569,69 @@ def test_evidence_map_stage_chunks_long_document_and_merges_maps():
         "relevance_scan/1",
         "relevance_scan/2",
     ]
+
+
+def test_catalog_extraction_stage_chunks_block_prompts_and_keeps_global_block_indices():
+    provider = MagicMock()
+    provider.invoke_structured.side_effect = [
+        [
+            EvidenceItem(
+                field_id="A.gene_symbol",
+                category="A",
+                field_name="Gene symbol",
+                status=EvidenceStatus.FOUND,
+                value="GLA",
+                confidence=0.8,
+                source=SourceLocation(
+                    block_index=0,
+                    context_type="text",
+                    context_ref="",
+                    text_snippet="GLA",
+                ),
+            )
+        ],
+        [
+            EvidenceItem(
+                field_id="A.variant_hgvs_c",
+                category="A",
+                field_name="HGVS coding variant",
+                status=EvidenceStatus.FOUND,
+                value="c.1000G>A",
+                confidence=0.9,
+                source=SourceLocation(
+                    block_index=2,
+                    context_type="table",
+                    context_ref="",
+                    text_snippet="c.1000G>A",
+                ),
+            )
+        ],
+    ]
+    document = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text="",
+        page_spans=[],
+        blocks=[
+            ContentBlock(type="text", page_idx=0, text="GLA " + ("A" * 160)),
+            ContentBlock(type="text", page_idx=1, text="middle " + ("B" * 160)),
+            ContentBlock(type="table", page_idx=2, table_body="c.1000G>A " + ("C" * 160)),
+        ],
+    )
+
+    result = CatalogExtractionStage(provider, input_budget_tokens=2520).run(
+        document,
+        DocumentEvidenceMap(relevant=True, gene_terms=["GLA"]),
+    )
+
+    assert provider.invoke_structured.call_count == 2
+    prompts = [call.kwargs["prompt"] for call in provider.invoke_structured.call_args_list]
+    assert "[Block 0 | text | page 1]" in prompts[0]
+    assert "[Block 2 | table | page 3]" in "\n".join(prompts)
+    assert [call.kwargs["stage"] for call in provider.invoke_structured.call_args_list] == [
+        "catalog_extraction/1",
+        "catalog_extraction/2",
+    ]
+    assert [item.value for item in result] == ["GLA", "c.1000G>A"]
+    assert all(item.source is None for item in result)
+    assert all(item.raw_source is not None for item in result)
