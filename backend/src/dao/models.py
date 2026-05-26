@@ -9,7 +9,6 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     DateTime,
-    Float,
     ForeignKey,
     Index,
     Integer,
@@ -20,8 +19,10 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB, ARRAY, UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+from pgvector.sqlalchemy import Vector
 
 
 class Base(DeclarativeBase):
@@ -326,6 +327,10 @@ class TerminologyEntry(Base, TimestampMixin):
     raw_payload: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
     version: Mapped[str] = mapped_column(String(128), nullable=False)
 
+    embeddings: Mapped[list[TerminologyEmbedding]] = relationship(
+        back_populates="entry", cascade="all, delete-orphan"
+    )
+
 
 class TerminologyAlias(Base, TimestampMixin):
     """Indexed lookup alias for terminology matching."""
@@ -399,11 +404,11 @@ class TerminologyEmbedding(Base):
         nullable=False,
     )
     entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
-    embedding: Mapped[list[float]] = mapped_column(
-        ARRAY(Float), nullable=False
-    )
+    embedding = mapped_column(Vector(1536), nullable=False)
     model_version: Mapped[str] = mapped_column(String(128), nullable=False)
     source_text: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+
+    entry: Mapped[TerminologyEntry] = relationship(back_populates="embeddings")

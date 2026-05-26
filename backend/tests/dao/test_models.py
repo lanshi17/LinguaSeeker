@@ -175,3 +175,11 @@ def test_terminology_embeddings_cascade_delete() -> None:
     table = _table("terminology_embeddings")
     fk = next(c for c in table.foreign_key_constraints if "entry_id" in [p.name for p in c.columns])
     assert fk.ondelete == "CASCADE"
+
+
+def test_terminology_embeddings_embedding_is_vector_type() -> None:
+    """The embedding column is pgvector Vector type, not plain ARRAY."""
+    from pgvector.sqlalchemy import Vector
+
+    col = _table("terminology_embeddings").c.embedding
+    assert isinstance(col.type, Vector)
