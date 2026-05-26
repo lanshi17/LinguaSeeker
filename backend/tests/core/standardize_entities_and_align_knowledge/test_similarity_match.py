@@ -114,8 +114,8 @@ def _build_candidate() -> StandardizationCandidate:
 
 
 @pytest.mark.asyncio
-async def test_similarity_matcher_propagates_embedding_provider_error() -> None:
-    """Embedding provider errors propagate as-is (not swallowed)."""
+async def test_similarity_matcher_wraps_embedding_provider_error() -> None:
+    """Embedding provider failures become SemanticMatchServiceError for hybrid fallback."""
     matcher = SimilarityTerminologyMatcher(
         embedding_provider=FailingEmbeddingProvider(),
         rerank_provider=FakeRerankProvider(),
@@ -127,13 +127,13 @@ async def test_similarity_matcher_propagates_embedding_provider_error() -> None:
         ),
     )
 
-    with pytest.raises(ConnectionError, match="model-server unreachable"):
+    with pytest.raises(SemanticMatchServiceError, match="model-server unreachable"):
         await matcher.match(_build_candidate())
 
 
 @pytest.mark.asyncio
-async def test_similarity_matcher_propagates_rerank_provider_error() -> None:
-    """Rerank provider errors propagate as-is (not swallowed)."""
+async def test_similarity_matcher_wraps_rerank_provider_error() -> None:
+    """Rerank failures become SemanticMatchServiceError for hybrid fallback."""
     matcher = SimilarityTerminologyMatcher(
         embedding_provider=FakeEmbeddingProvider(),
         rerank_provider=FailingRerankProvider(),
@@ -145,13 +145,13 @@ async def test_similarity_matcher_propagates_rerank_provider_error() -> None:
         ),
     )
 
-    with pytest.raises(TimeoutError, match="rerank service timeout"):
+    with pytest.raises(SemanticMatchServiceError, match="rerank service timeout"):
         await matcher.match(_build_candidate())
 
 
 @pytest.mark.asyncio
-async def test_similarity_matcher_propagates_repository_error() -> None:
-    """Repository errors propagate as-is (not swallowed)."""
+async def test_similarity_matcher_wraps_repository_error() -> None:
+    """Repository failures become SemanticMatchServiceError for hybrid fallback."""
     matcher = SimilarityTerminologyMatcher(
         embedding_provider=FakeEmbeddingProvider(),
         rerank_provider=FakeRerankProvider(),
@@ -163,7 +163,7 @@ async def test_similarity_matcher_propagates_repository_error() -> None:
         ),
     )
 
-    with pytest.raises(RuntimeError, match="database connection lost"):
+    with pytest.raises(SemanticMatchServiceError, match="database connection lost"):
         await matcher.match(_build_candidate())
 
 

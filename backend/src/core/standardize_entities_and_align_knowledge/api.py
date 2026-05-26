@@ -18,6 +18,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
 from src.core.standardize_entities_and_align_knowledge.core import StandardizationService
 from src.core.standardize_entities_and_align_knowledge.importers import (
     ImportBatch,
+    build_clinvar_core_tsv,
     iter_clinvar_batches,
     parse_clingen_rows,
     parse_hgnc_rows,
@@ -140,7 +141,7 @@ async def import_terminology(
                 await repository.upsert_terminology_batch(batch)
                 logger.info("Imported batch {}/{} [{}]", index, len(batches), source_db)
             if "clinvar" in source_names:
-                clinvar_path = Path(terminology_root) / "clinvar" / "variant_summary.txt"
+                clinvar_path = _ensure_clinvar_core_path(Path(terminology_root) / "clinvar" / "variant_summary.txt")
                 await _maybe_await(
                     _import_clinvar_stream(
                         repository=repository,
@@ -251,3 +252,14 @@ async def _import_clinvar_stream(
         total_aliases,
         total_relationships,
     )
+
+
+def _ensure_clinvar_core_path(path: Path) -> Path:
+    """Return the reduced ClinVar TSV path, generating it from raw export when needed."""
+    core_path = path.with_name("variant_summary.core.tsv")
+    if core_path.exists() and core_path.stat().st_mtime >= path.stat().st_mtime:
+        return core_path
+    logger.info("Building ClinVar core TSV: source={}, target={}", path, core_path)
+    rows_written = build_clinvar_core_tsv(path, core_path)
+    logger.info("Built ClinVar core TSV: rows={}", rows_written)
+    return core_path

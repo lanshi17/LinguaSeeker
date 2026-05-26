@@ -66,6 +66,87 @@ class FakeSession:
         return None
 
 
+class BulkSession:
+    """Async session stub that exercises the repository bulk upsert path."""
+
+    def __init__(self) -> None:
+        self.statements: list[object] = []
+
+    async def execute(self, statement):
+        self.statements.append(statement)
+        statement_text = str(statement)
+        if "INSERT INTO terminology_entries" in statement_text:
+            return FakeResult(
+                [
+                    (uuid.UUID(int=1), "HGNC:1100"),
+                    (uuid.UUID(int=2), "HGNC:1101"),
+                ],
+            )
+        if "FROM terminology_aliases" in statement_text:
+            return FakeResult([("BRCA1", uuid.UUID(int=1))])
+        return FakeResult([])
+
+    async def flush(self) -> None:
+        return None
+
+
+class FakeDriverConnection:
+    """Driver stub that records COPY calls made through asyncpg."""
+
+    def __init__(self) -> None:
+        self.copy_calls: list[dict[str, object]] = []
+
+    async def copy_records_to_table(
+        self,
+        table_name,
+        *,
+        records,
+        columns=None,
+        schema_name=None,
+        timeout=None,
+        where=None,
+    ):
+        self.copy_calls.append(
+            {
+                "table_name": table_name,
+                "records": list(records),
+                "columns": list(columns or []),
+                "schema_name": schema_name,
+                "timeout": timeout,
+                "where": where,
+            },
+        )
+        return "COPY 1"
+
+
+class FakeRawConnection:
+    """SQLAlchemy raw-connection shim exposing the driver connection."""
+
+    def __init__(self, driver_connection: FakeDriverConnection) -> None:
+        self.driver_connection = driver_connection
+
+
+class FakeAsyncConnection:
+    """AsyncConnection shim for get_raw_connection()."""
+
+    def __init__(self, raw_connection: FakeRawConnection) -> None:
+        self._raw_connection = raw_connection
+
+    async def get_raw_connection(self) -> FakeRawConnection:
+        return self._raw_connection
+
+
+class CopySession(BulkSession):
+    """Bulk session stub with raw asyncpg COPY capability."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.driver = FakeDriverConnection()
+
+    async def connection(self) -> FakeAsyncConnection:
+        return FakeAsyncConnection(FakeRawConnection(self.driver))
+
+
 class FakeResult:
     """Minimal result stub for query helpers returning mapping rows."""
 
@@ -169,6 +250,194 @@ async def test_upsert_terminology_batch_adds_entries_aliases_and_relationships()
     await repo.upsert_terminology_batch(batch)
 
     assert len(session.added) == 3
+
+
+@pytest.mark.asyncio
+async def test_upsert_terminology_batch_uses_bulk_returning_for_real_session() -> None:
+    """Bulk sessions should use RETURNING-based inserts instead of rowwise lookups."""
+    session = BulkSession()
+    repo = StandardizationRepository(session)
+    batch = ImportBatch(
+        entries=(
+            ImportEntry(
+                entity_type=EntityType.GENE,
+                source_db="HGNC",
+                external_id="HGNC:1100",
+                display_name="BRCA1",
+                normalized_name="BRCA1",
+                aliases=("BRCA1",),
+                raw_payload={"approved_name": "BRCA1 DNA repair associated"},
+                version="test",
+            ),
+        ),
+        aliases=(
+            ImportAlias(
+                external_id="HGNC:1100",
+                entity_type=EntityType.GENE,
+                source_db="HGNC",
+                alias_text="BRCA1",
+                normalized_alias="BRCA1",
+                alias_type="primary",
+            ),
+        ),
+    )
+
+    await repo.upsert_terminology_batch(batch)
+
+    assert len(session.statements) == 2
+    assert "RETURNING" in str(session.statements[0])
+
+
+@pytest.mark.asyncio
+async def test_upsert_terminology_batch_resolves_existing_alias_references_in_bulk_path() -> None:
+    """Bulk terminology imports must still resolve relationship references through aliases."""
+    session = BulkSession()
+    repo = StandardizationRepository(session)
+    batch = ImportBatch(
+        relationships=(
+            ImportRelationship(
+                subject_external_id="BRCA1",
+                object_external_id=None,
+                relationship_type="gene_has_dosage_sensitivity",
+                source_db="ClinGen",
+                evidence_level="3",
+                raw_payload={"score": "3"},
+            ),
+        ),
+    )
+
+    await repo.upsert_terminology_batch(batch)
+
+    assert any("FROM terminology_aliases" in str(statement) for statement in session.statements)
+    assert any("INSERT INTO terminology_relationships" in str(statement) for statement in session.statements)
+
+
+@pytest.mark.asyncio
+async def test_upsert_terminology_batch_uses_copy_staging_when_driver_supports_it() -> None:
+    """Real asyncpg sessions should stage large terminology batches via COPY."""
+    session = CopySession()
+    repo = StandardizationRepository(session)
+    batch = ImportBatch(
+        entries=(
+            ImportEntry(
+                entity_type=EntityType.GENE,
+                source_db="HGNC",
+                external_id="HGNC:1100",
+                display_name="BRCA1",
+                normalized_name="BRCA1",
+                aliases=("BRCA1",),
+                raw_payload={"approved_name": "BRCA1 DNA repair associated"},
+                version="test",
+            ),
+        ),
+        aliases=(
+            ImportAlias(
+                external_id="HGNC:1100",
+                entity_type=EntityType.GENE,
+                source_db="HGNC",
+                alias_text="BRCA1",
+                normalized_alias="BRCA1",
+                alias_type="primary",
+            ),
+        ),
+    )
+
+    await repo.upsert_terminology_batch(batch)
+
+    assert session.driver.copy_calls
+    assert session.driver.copy_calls[0]["table_name"].startswith("tmp_terminology_entries")
+    assert session.driver.copy_calls[0]["columns"][0] == "entry_id"
+
+
+@pytest.mark.asyncio
+async def test_upsert_terminology_batch_deduplicates_alias_conflict_keys_for_copy() -> None:
+    """COPY alias staging must collapse duplicate conflict keys within one batch."""
+    session = CopySession()
+    repo = StandardizationRepository(session)
+    batch = ImportBatch(
+        entries=(
+            ImportEntry(
+                entity_type=EntityType.GENE,
+                source_db="HGNC",
+                external_id="HGNC:1100",
+                display_name="BRCA1",
+                normalized_name="BRCA1",
+                aliases=("BRCA1",),
+                raw_payload={"approved_name": "BRCA1 DNA repair associated"},
+                version="test",
+            ),
+        ),
+        aliases=(
+            ImportAlias(
+                external_id="HGNC:1100",
+                entity_type=EntityType.GENE,
+                source_db="HGNC",
+                alias_text="LY6-D",
+                normalized_alias="LY6-D",
+                alias_type="alias",
+            ),
+            ImportAlias(
+                external_id="HGNC:1100",
+                entity_type=EntityType.GENE,
+                source_db="HGNC",
+                alias_text="LY6-D",
+                normalized_alias="LY6-D",
+                alias_type="alias",
+            ),
+        ),
+    )
+
+    await repo.upsert_terminology_batch(batch)
+
+    alias_copy = next(call for call in session.driver.copy_calls if call["table_name"].startswith("tmp_terminology_aliases"))
+    assert len(alias_copy["records"]) == 1
+
+
+@pytest.mark.asyncio
+async def test_upsert_terminology_batch_deduplicates_relationship_conflict_keys_for_copy() -> None:
+    """COPY relationship staging must collapse duplicate relationship identity keys within one batch."""
+    session = CopySession()
+    repo = StandardizationRepository(session)
+    batch = ImportBatch(
+        entries=(
+            ImportEntry(
+                entity_type=EntityType.GENE,
+                source_db="HGNC",
+                external_id="HGNC:1100",
+                display_name="BRCA1",
+                normalized_name="BRCA1",
+                aliases=("BRCA1",),
+                raw_payload={"approved_name": "BRCA1 DNA repair associated"},
+                version="test",
+            ),
+        ),
+        relationships=(
+            ImportRelationship(
+                subject_external_id="HGNC:1100",
+                object_external_id=None,
+                relationship_type="gene_has_dosage_sensitivity",
+                source_db="ClinGen",
+                evidence_level="3",
+                raw_payload={"score": "3"},
+            ),
+            ImportRelationship(
+                subject_external_id="HGNC:1100",
+                object_external_id=None,
+                relationship_type="gene_has_dosage_sensitivity",
+                source_db="ClinGen",
+                evidence_level="3",
+                raw_payload={"score": "3"},
+            ),
+        ),
+    )
+
+    await repo.upsert_terminology_batch(batch)
+
+    relationship_copy = next(
+        call for call in session.driver.copy_calls
+        if call["table_name"].startswith("tmp_terminology_relationships")
+    )
+    assert len(relationship_copy["records"]) == 1
 
 
 @pytest.mark.asyncio

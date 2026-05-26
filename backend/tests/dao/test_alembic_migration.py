@@ -61,6 +61,21 @@ def _load_embedding_revision_module():
     return module
 
 
+def _load_relationship_identity_revision_module():
+    """Load the terminology relationship identity constraint revision as a Python module."""
+    import importlib.util
+
+    revision_paths = list(VERSIONS_DIR.glob("*add_terminology_relationship_identity_constraint.py"))
+    assert len(revision_paths) == 1
+    revision_path = revision_paths[0]
+    spec = importlib.util.spec_from_file_location("add_terminology_relationship_identity_constraint", revision_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def _captured_created_table(table_name: str, monkeypatch) -> list[object]:
     """Capture columns and constraints passed to op.create_table for a table."""
     module = _load_initial_revision_module()
@@ -203,8 +218,79 @@ def test_head_revision_points_to_pgvector_embeddings() -> None:
     head = script.get_revision("head")
 
     assert head is not None
-    assert head.revision == "add_terminology_embeddings_20260525"
-    assert head.down_revision == "add_terminology_20260525"
+    assert head.revision == "add_term_embed_20260525"
+    assert head.down_revision == "add_term_rel_id_20260526"
+
+
+def test_relationship_identity_revision_extends_terminology_schema() -> None:
+    """The relationship identity constraint revision sits between terminology and embeddings."""
+    backend_str = str(BACKEND_DIR)
+    if backend_str not in sys.path:
+        sys.path.insert(0, backend_str)
+
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    config = Config(str(ALEMBIC_INI))
+    config.set_main_option("script_location", str(MIGRATIONS_DIR))
+    script = ScriptDirectory.from_config(config)
+
+    relationship_identity = script.get_revision("add_term_rel_id_20260526")
+
+    assert relationship_identity is not None
+    assert relationship_identity.down_revision == "add_terminology_20260525"
+
+
+def test_terminology_relationships_migration_defines_unique_identity_constraint(monkeypatch) -> None:
+    """Terminology relationships must have a 4-column identity uniqueness guarantee."""
+    module = _load_terminology_revision_module()
+    captured: list[object] = []
+
+    def fake_create_table(name: str, *items, **_kwargs) -> None:
+        if name == "terminology_relationships":
+            captured.extend(items)
+
+    monkeypatch.setattr(module.op, "create_table", fake_create_table)
+    monkeypatch.setattr(module.op, "create_index", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module.op, "f", lambda name: name)
+
+    module.upgrade()
+
+    unique_constraints = [
+        item for item in captured
+        if isinstance(item, sa.UniqueConstraint)
+    ]
+    assert any(
+        tuple(constraint.columns.keys() or getattr(constraint, "_pending_colargs", ())) == (
+            "subject_entry_id",
+            "object_entry_id",
+            "relationship_type",
+            "source_db",
+        )
+        for constraint in unique_constraints
+    )
+
+
+def test_relationship_identity_revision_creates_unique_constraint(monkeypatch) -> None:
+    """The follow-up revision explicitly creates the relationship identity constraint."""
+    module = _load_relationship_identity_revision_module()
+    captured: list[tuple[str, str, tuple[str, ...]]] = []
+
+    monkeypatch.setattr(
+        module.op,
+        "create_unique_constraint",
+        lambda name, table_name, columns: captured.append((name, table_name, tuple(columns))),
+    )
+
+    module.upgrade()
+
+    assert captured == [
+        (
+            "uq_terminology_relationships_identity",
+            "terminology_relationships",
+            ("subject_entry_id", "object_entry_id", "relationship_type", "source_db"),
+        ),
+    ]
 
 
 def test_embedding_migration_creates_pgvector_extension(monkeypatch) -> None:

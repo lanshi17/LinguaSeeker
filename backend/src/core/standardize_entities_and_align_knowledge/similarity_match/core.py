@@ -46,22 +46,30 @@ class SimilarityTerminologyMatcher:
             SemanticMatchServiceError: If embedding, rerank, or retrieval fails due to
                 infrastructure errors (network, model-server, database).
         """
-        embedding_result = await self._embedding_provider.embed_texts(candidate.raw_text)
-        query_vector = embedding_result.vectors[0]
-        nearest = await self._repository.find_nearest(
-            entity_type=candidate.entity_type,
-            query_vector=query_vector,
-            embedding_model=self._config.embedding_model,
-            limit=self._config.rerank_top_k,
-        )
+        try:
+            embedding_result = await self._embedding_provider.embed_texts(candidate.raw_text)
+            query_vector = embedding_result.vectors[0]
+            nearest = await self._repository.find_nearest(
+                entity_type=candidate.entity_type,
+                query_vector=query_vector,
+                embedding_model=self._config.embedding_model,
+                limit=self._config.rerank_top_k,
+            )
+        except NoSemanticMatchFound:
+            return self._unmapped(candidate, "no semantic terminology candidate")
+        except Exception as exc:  # noqa: BLE001 - infrastructure errors should downgrade at hybrid layer.
+            raise SemanticMatchServiceError(str(exc)) from exc
         if not nearest:
             return self._unmapped(candidate, "no semantic terminology candidate")
 
-        rerank_result = await self._rerank_provider.rerank(
-            candidate.raw_text,
-            tuple(item.embedding_text for item in nearest),
-            top_k=self._config.rerank_top_k,
-        )
+        try:
+            rerank_result = await self._rerank_provider.rerank(
+                candidate.raw_text,
+                tuple(item.embedding_text for item in nearest),
+                top_k=self._config.rerank_top_k,
+            )
+        except Exception as exc:  # noqa: BLE001 - infrastructure errors should downgrade at hybrid layer.
+            raise SemanticMatchServiceError(str(exc)) from exc
         ranked = self._merge_rerank_scores(nearest, rerank_result.results)
         if not ranked:
             return self._unmapped(candidate, "semantic rerank returned no candidates")

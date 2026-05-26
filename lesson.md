@@ -647,3 +647,83 @@ Chinese medical journals often include both Chinese and English versions of titl
 **Prevention**:
 1. “streaming”要定义到系统边界，而不是只看文件读取阶段。
 2. 面对百万级以上行数时，默认先审视“是否有 monolithic in-memory aggregate”与“是否逐条 DB round-trip”。
+
+## 2026-05-26: 本地 Phase 3 实测被两个基础问题同时掩盖了
+
+**Problem**: 用户已经在 `backend/.env.local` 配好了 FAST/REASONING LLM 与 PostgreSQL，但本地运行时仍然出现“LLM 变量未设置”和 `127.0.0.1:5432 connection refused`。同时，术语导入 bulk 路径虽然提速了 entry upsert，却把 `ClinGen` 这类依赖已存在 HGNC alias 的 relationship 解析静默丢掉了。
+
+**Investigation**:
+1. 直接在 `backend/` 目录实例化 `Settings()`，确认 `FAST_LLM_*`、`REASONING_LLM_*` 和 `POSTGRES_*` 实际都能读到；说明不是字段名不兼容，而是 env 文件定位与运行目录耦合。
+2. 回看 `SettingsConfigDict(env_file=(\".env.local\", \".env\"))`，发现它按当前工作目录找文件；从仓库根或其他目录启动脚本时，会误判成“变量未设置”。
+3. 给 repository 补红灯测试后确认，`RETURNING`-based bulk path 只拿到了本 batch 新写入/更新的 `external_id -> entry_id` 映射，没有继续解析关系里通过 alias 引用的已有实体，导致 `ClinGen` dosage / gene-disease 关系在 bulk 模式下会漏写。
+
+**Root cause**:
+1. 配置层默认 env-file 解析依赖 cwd，而不是仓库/服务的稳定绝对路径。
+2. bulk upsert 优化时只关注 entry insert 吞吐，漏掉了“关系目标可能来自历史已导入实体而非当前 batch”的数据依赖。
+
+**Solution**:
+1. 将 `src/core/config.py` 的默认 `env_file` 改为仓库根和 `backend/` 下的绝对路径列表，彻底去掉 cwd 依赖。
+2. 在 Phase 3 repository 中：
+   - 支持通过 asyncpg `copy_records_to_table` + temp staging table 导入 entries/aliases/relationships；
+   - 在 bulk path 中补齐 `external_id` 再查询和 alias reference 解析，保证 `ClinGen` 等关系仍能连到已存在 HGNC 实体。
+3. 用定向 pytest + Ruff 验证配置加载、COPY 路径和 alias relationship 回归。
+
+**Prevention**:
+1. 所有需要 `.env.local` 的后端脚本都应使用与 cwd 无关的绝对 env-file 定位。
+2. 做 bulk/import 优化时，除了吞吐，还必须列出“本批新数据”“库内历史数据”“alias/外键引用”三类引用来源，并分别验证。
+
+## 2026-05-26: 真实 Phase 3 E2E 会把“测试里没覆盖的 schema 漂移”和“真实数据脏点”一次性暴露出来
+
+**Problem**: 用 `backend/output/extract_evidence/法布雷病1例/latest` 做真实 Phase 3 E2E 时，先后暴露出一串只在真实环境里才会触发的问题：
+1. OMIM / ClinGen 文件有前置说明行，parser 返回空 batch。
+2. COPY 导入对 HGNC alias 和 ClinGen relationship 的批内重复键会触发 `ON CONFLICT ... cannot affect row a second time`。
+3. 本地数据库缺少 `terminology_relationships` 唯一约束，导致关系 upsert 失败。
+4. Alembic revision id 超过 32 字符，迁移更新 `alembic_version` 时直接截断报错。
+5. Phase 3 E2E 在持久化 `run_evidence_items` 前没有先写 `source_documents` / `processing_runs`，外键直接失败。
+6. 本地 model-server 未启动时，semantic matching 不该让整个 E2E 崩掉。
+
+**Investigation**:
+1. 先用真实 PostgreSQL 逐步跑 `import_terminology.py`，把错误从“连接失败”缩到具体的 SQL/constraint/cardinality/fk 问题。
+2. 对每个真实错误先补红灯测试，再修：
+   - importer 测试覆盖 OMIM/ClinGen preamble/header 变体；
+   - repository 测试覆盖 alias/relationship COPY 去重；
+   - matcher/similarity 测试覆盖 semantic 服务故障降级；
+   - alembic 测试覆盖关系唯一约束和 revision 链。
+3. 每次只推进一个真实阻塞点，避免把导入、迁移、E2E 三条链路混在一起排查。
+
+**Root cause**:
+1. 之前大多是 stub / fake session 测试，覆盖不到真实文件格式、真实约束缺失和真实外键依赖。
+2. COPY/staging 优化只考虑了吞吐，没有同时考虑“批内重复键”。
+3. schema 演进和本地库实际状态有漂移，尤其是唯一约束与 revision id 长度。
+4. E2E 脚本默认假设上游父表和模型服务都已经可用。
+
+**Solution**:
+1. importer：
+   - 支持 OMIM `#` 注释前言后再找真实 header；
+   - 支持 ClinGen CSV 前置说明行和两套 header 变体。
+2. repository：
+   - COPY entries/aliases/relationships 前按各自冲突键批内去重；
+   - 关系 upsert 按列冲突定义工作；
+   - 真实 E2E 前自动补齐 `SourceDocument` / `ProcessingRun` 父记录。
+3. migration：
+   - 新增补关系唯一约束的增量 migration；
+   - 将新增 revision id 缩短到 32 字符以内，避免 `alembic_version` 截断。
+4. matching：
+   - semantic provider / repository / rerank 的基础设施错误统一包装成 `SemanticMatchServiceError`；
+   - Hybrid matcher 统一降级为 `UNMAPPED`，真实 E2E 不再因本地 model-server 未启动而中断。
+
+**Outcome**:
+真实 Phase 3 E2E 已跑通，输出目录：
+`backend/output/standardize_entities/法布雷病1例/latest-real`
+
+关键结果：
+- `match_count=13`
+- `standardized_count=5`
+- `ambiguous_count=0`
+- `unmapped_count=8`
+
+**Prevention**:
+1. 任何“性能优化”只要切到 raw SQL/COPY，就必须补“真实批内重复键”测试。
+2. 任何 E2E 脚本只要会落库，就必须显式负责父表存在性，而不是依赖外部预置状态。
+3. 新增 Alembic revision id 时，先检查是否超过本库 `alembic_version.version_num` 长度限制。
+4. 真库实测要尽早做，不能等到所有单测都绿了再第一次碰真实数据。

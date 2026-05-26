@@ -1,6 +1,6 @@
 """add terminology embeddings pgvector table
 
-Revision ID: add_terminology_embeddings_20260525
+Revision ID: add_term_embed_20260525
 Revises: add_terminology_20260525
 Create Date: 2026-05-25
 """
@@ -13,8 +13,8 @@ import sqlalchemy as sa
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects import postgresql
 
-revision: str = "add_terminology_embeddings_20260525"
-down_revision: Union[str, None] = "add_terminology_20260525"
+revision: str = "add_term_embed_20260525"
+down_revision: Union[str, None] = "add_term_rel_id_20260526"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

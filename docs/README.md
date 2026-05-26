@@ -42,6 +42,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-05-26 | [extract evidence long document chunking](plans/2026-05-26-extract-evidence-long-document-chunking.md) | planned |
 | 2026-05-25 | [standardization precise similarity match](plans/2026-05-25-standardization-precise-similarity-match.md) | planned |
 | 2026-05-23 | [block-aware evidence extraction](plans/2026-05-23-block-aware-evidence-extraction.md) | planned |
 | 2026-05-21 | [cross-lingual refactor](plans/2026-05-21-cross-lingual-refactor.md) | planned |

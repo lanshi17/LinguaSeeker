@@ -36,10 +36,14 @@ class FakeRepository:
     """Repository stub capturing persistence calls for verification."""
 
     def __init__(self) -> None:
+        self.parents = []
         self.normalized = []
         self.run_items = []
         self.bindings = []
         self.canonical = []
+
+    async def ensure_run_parents(self, *, source_document_id: str, processing_run_id: str) -> None:
+        self.parents.append((source_document_id, processing_run_id))
 
     async def upsert_normalized_entity(self, match):
         self.normalized.append(match)
@@ -79,6 +83,7 @@ async def test_standardization_service_matches_and_persists_candidates() -> None
     result = await StandardizationService(FakeMatcher(), repo).run(input_data)
 
     assert result.match_count == 1
+    assert repo.parents == [("source-1", "run-1")]
     assert repo.normalized[0].external_id == "HGNC:1100"
     assert repo.run_items
     assert repo.bindings

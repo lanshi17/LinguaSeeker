@@ -1,4 +1,6 @@
 """Tests for model server config in Settings."""
+from pathlib import Path
+
 from src.core.config import Settings
 
 
@@ -40,3 +42,12 @@ def test_embedding_dimension_must_match_pgvector() -> None:
             os.environ.pop("EMBEDDING_DIMENSION", None)
         else:
             os.environ["EMBEDDING_DIMENSION"] = original
+
+
+def test_settings_default_env_files_include_repo_and_backend_locations() -> None:
+    """Default env-file search paths are absolute and independent of cwd."""
+    backend_root = Path(__file__).resolve().parents[2]
+    env_files = Settings.model_config.get("env_file")
+
+    assert isinstance(env_files, tuple)
+    assert str(backend_root / ".env.local") in env_files
