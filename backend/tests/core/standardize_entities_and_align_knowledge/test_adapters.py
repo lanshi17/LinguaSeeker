@@ -50,6 +50,8 @@ def test_dual_result_adapter_extracts_chain_candidates() -> None:
         EntityType.DISEASE,
         EntityType.VARIANT,
     ]
+    variant_candidate = output.candidates[2]
+    assert variant_candidate.metadata["gene_symbol"] == "BRCA1"
 
 
 def test_dual_result_adapter_extracts_phenotypes_from_supported_fields() -> None:
@@ -132,3 +134,71 @@ def test_dual_result_adapter_deduplicates_same_chain_across_tracks() -> None:
     gene_candidates = [candidate for candidate in output.candidates if candidate.entity_type == EntityType.GENE]
     assert len(gene_candidates) == 1
     assert gene_candidates[0].track == "original"
+
+
+def test_dual_result_adapter_splits_chinese_compound_phenotypes() -> None:
+    """The adapter splits 顿号-separated Chinese phenotype strings into individual candidates."""
+    result = DualEvidenceExtractionResult(
+        document_id="doc-cn",
+        original_result=EvidenceExtractionResult(
+            status=EvidenceExtractionStatus.COMPLETED,
+            document_id="doc-cn",
+            track=Track.ORIGINAL,
+            evidence_items=[
+                EvidenceItem(
+                    field_id="B.clinical_phenotypes",
+                    category="B",
+                    field_name="Key clinical phenotypes",
+                    status=EvidenceStatus.FOUND,
+                    value="水肿、蛋白尿、心律失常",
+                    confidence=0.9,
+                    group_id="gene=GLA|variant=__missing__",
+                ),
+            ],
+        ),
+        translated_result=EvidenceExtractionResult(
+            status=EvidenceExtractionStatus.COMPLETED,
+            document_id="doc-cn",
+            track=Track.TRANSLATED,
+        ),
+    )
+    adapter = DualResultAdapter()
+    output = adapter.to_standardization_input(
+        result, source_document_id="s1", processing_run_id="r1",
+    )
+    phenotype_texts = [c.raw_text for c in output.candidates if c.entity_type == EntityType.PHENOTYPE]
+    assert phenotype_texts == ["水肿", "蛋白尿", "心律失常"]
+
+
+def test_dual_result_adapter_splits_english_comma_phenotypes() -> None:
+    """The adapter splits comma-separated English phenotype strings into individual candidates."""
+    result = DualEvidenceExtractionResult(
+        document_id="doc-en",
+        original_result=EvidenceExtractionResult(
+            status=EvidenceExtractionStatus.COMPLETED,
+            document_id="doc-en",
+            track=Track.ORIGINAL,
+            evidence_items=[
+                EvidenceItem(
+                    field_id="B.clinical_phenotypes",
+                    category="B",
+                    field_name="Key clinical phenotypes",
+                    status=EvidenceStatus.FOUND,
+                    value="edema, proteinuria, arrhythmia",
+                    confidence=0.9,
+                    group_id="gene=GLA|variant=__missing__",
+                ),
+            ],
+        ),
+        translated_result=EvidenceExtractionResult(
+            status=EvidenceExtractionStatus.COMPLETED,
+            document_id="doc-en",
+            track=Track.TRANSLATED,
+        ),
+    )
+    adapter = DualResultAdapter()
+    output = adapter.to_standardization_input(
+        result, source_document_id="s1", processing_run_id="r1",
+    )
+    phenotype_texts = [c.raw_text for c in output.candidates if c.entity_type == EntityType.PHENOTYPE]
+    assert phenotype_texts == ["edema", "proteinuria", "arrhythmia"]

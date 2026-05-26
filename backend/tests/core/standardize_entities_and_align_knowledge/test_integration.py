@@ -20,7 +20,6 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     TerminologyCandidate,
 )
 from src.core.standardize_entities_and_align_knowledge.matchers import HybridTerminologyMatcher
-from src.core.standardize_entities_and_align_knowledge.precise_match.core import PreciseTerminologyMatcher
 
 
 class FakeRepository:
@@ -32,6 +31,9 @@ class FakeRepository:
         self.run_items: list[tuple[object, tuple[EntityMatch, ...]]] = []
         self.bindings: list[tuple[object, tuple[EntityMatch, ...], tuple[str, ...]]] = []
         self.canonical: list[tuple[object, tuple[EntityMatch, ...], tuple[str, ...]]] = []
+
+    async def ensure_run_parents(self, *, source_document_id: str, processing_run_id: str) -> None:
+        pass
 
     async def find_alias_candidates(self, entity_type, raw_text):
         return self._lookup.get((entity_type, raw_text), ())

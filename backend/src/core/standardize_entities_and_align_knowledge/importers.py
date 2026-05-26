@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
@@ -34,6 +35,32 @@ CLINVAR_CORE_FIELDS = (
     "RS# (dbSNP)",
     "PhenotypeIDS",
 )
+
+AA3_TO_1 = {
+    "Ala": "A",
+    "Arg": "R",
+    "Asn": "N",
+    "Asp": "D",
+    "Cys": "C",
+    "Gln": "Q",
+    "Glu": "E",
+    "Gly": "G",
+    "His": "H",
+    "Ile": "I",
+    "Leu": "L",
+    "Lys": "K",
+    "Met": "M",
+    "Phe": "F",
+    "Pro": "P",
+    "Ser": "S",
+    "Thr": "T",
+    "Trp": "W",
+    "Tyr": "Y",
+    "Val": "V",
+    "Ter": "X",
+}
+
+HGVS_PROTEIN_3LETTER_RE = re.compile(r"(p\.)(([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|Ter))")
 
 
 @dataclass(frozen=True)
@@ -328,6 +355,7 @@ def build_clinvar_core_tsv(source_path: Path, target_path: Path) -> int:
     """Write a reduced ClinVar TSV with only fields needed for Phase 3 alignment."""
     target_path.parent.mkdir(parents=True, exist_ok=True)
     rows_written = 0
+    previous_row: tuple[str, ...] | None = None
     with source_path.open(encoding="utf-8", newline="") as source_handle, target_path.open(
         "w",
         encoding="utf-8",
@@ -340,8 +368,15 @@ def build_clinvar_core_tsv(source_path: Path, target_path: Path) -> int:
         writer = csv.writer(target_handle, delimiter="\t", lineterminator="\n")
         writer.writerow(CLINVAR_CORE_FIELDS)
         for row in reader:
-            writer.writerow([str(row.get(field, "") or "").strip() for field in CLINVAR_CORE_FIELDS])
+            review_status = str(row.get("ReviewStatus", "") or "").strip()
+            if not is_importable_clinvar_review_status(review_status):
+                continue
+            reduced_row = tuple(str(row.get(field, "") or "").strip() for field in CLINVAR_CORE_FIELDS)
+            if reduced_row == previous_row:
+                continue
+            writer.writerow(reduced_row)
             rows_written += 1
+            previous_row = reduced_row
     return rows_written
 
 
@@ -376,6 +411,9 @@ def iter_clinvar_batches(path: Path, version: str, chunk_size: int) -> Iterator[
 
         external_id = f"ClinVarVariation:{variation_id}"
         alias_values = [name]
+        protein_alias = _derive_hgvs_protein_alias(name)
+        if protein_alias:
+            alias_values.append(protein_alias)
         rs_value = _normalize_rsid(row.get("RS# (dbSNP)"))
         if rs_value:
             alias_values.append(rs_value)
@@ -408,6 +446,17 @@ def iter_clinvar_batches(path: Path, version: str, chunk_size: int) -> Iterator[
                 alias_type="name",
             ),
         )
+        if protein_alias:
+            aliases.append(
+                ImportAlias(
+                    external_id=external_id,
+                    entity_type=EntityType.VARIANT,
+                    source_db="ClinVar",
+                    alias_text=protein_alias,
+                    normalized_alias=normalize_variant_text(protein_alias),
+                    alias_type="protein_short",
+                ),
+            )
         if rs_value:
             aliases.append(
                 ImportAlias(
@@ -466,6 +515,9 @@ def _parse_clinvar_rows_legacy(path: Path, version: str) -> ImportBatch:
 
         external_id = f"ClinVarVariation:{variation_id}"
         alias_values = [name]
+        protein_alias = _derive_hgvs_protein_alias(name)
+        if protein_alias:
+            alias_values.append(protein_alias)
         rs_value = _normalize_rsid(row.get("RS# (dbSNP)"))
         if rs_value:
             alias_values.append(rs_value)
@@ -498,6 +550,17 @@ def _parse_clinvar_rows_legacy(path: Path, version: str) -> ImportBatch:
                 alias_type="name",
             ),
         )
+        if protein_alias:
+            aliases.append(
+                ImportAlias(
+                    external_id=external_id,
+                    entity_type=EntityType.VARIANT,
+                    source_db="ClinVar",
+                    alias_text=protein_alias,
+                    normalized_alias=normalize_variant_text(protein_alias),
+                    alias_type="protein_short",
+                ),
+            )
         if rs_value:
             aliases.append(
                 ImportAlias(
@@ -710,6 +773,18 @@ def _normalize_rsid(value: str | None) -> str | None:
     if not raw_value or raw_value == "-":
         return None
     return raw_value if raw_value.startswith("rs") else f"rs{raw_value}"
+
+
+def _derive_hgvs_protein_alias(name: str) -> str | None:
+    """Derive a compact one-letter HGVS protein alias like `p.R227X` from ClinVar names."""
+    match = HGVS_PROTEIN_3LETTER_RE.search(name or "")
+    if match is None:
+        return None
+    ref = AA3_TO_1.get(match.group(3))
+    alt = AA3_TO_1.get(match.group(5))
+    if ref is None or alt is None:
+        return None
+    return f"{match.group(1)}{ref}{match.group(4)}{alt}"
 
 
 def _clinvar_review_stars(review_status: str) -> str | None:

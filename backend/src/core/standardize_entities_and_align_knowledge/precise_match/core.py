@@ -30,7 +30,7 @@ class PreciseTerminologyMatcher:
     async def match(self, candidate: StandardizationCandidate) -> EntityMatch:
         """Match one candidate to zero, one, or many deterministic terminology entries."""
         choices = await self._repository.find_alias_candidates(candidate.entity_type, candidate.raw_text)
-        ranked = self._rank(candidate.entity_type, choices)
+        ranked = self._rank(candidate.entity_type, choices, candidate)
 
         if len(ranked) == 1:
             selected = ranked[0]
@@ -66,6 +66,7 @@ class PreciseTerminologyMatcher:
         self,
         entity_type: EntityType,
         choices: tuple[TerminologyCandidate, ...],
+        candidate: StandardizationCandidate | None = None,
     ) -> tuple[TerminologyCandidate, ...]:
         """Apply deterministic source ranking by entity type."""
         if entity_type == EntityType.GENE:
@@ -84,9 +85,10 @@ class PreciseTerminologyMatcher:
                 tuple(candidate for candidate in choices if candidate.source_db == "HPO"),
             )
         if entity_type == EntityType.VARIANT:
-            return self._apply_alias_type_priority(
+            ranked = self._apply_alias_type_priority(
                 tuple(candidate for candidate in choices if candidate.source_db == "ClinVar"),
             )
+            return self._filter_variant_candidates_by_gene_context(ranked, candidate)
         raise ValueError(f"Unsupported entity type: {entity_type}")
 
     def _apply_alias_type_priority(
@@ -102,3 +104,21 @@ class PreciseTerminologyMatcher:
             for candidate in choices
             if ALIAS_TYPE_PRIORITY.get(candidate.alias_type, 99) == best_priority
         )
+
+    def _filter_variant_candidates_by_gene_context(
+        self,
+        choices: tuple[TerminologyCandidate, ...],
+        candidate: StandardizationCandidate | None,
+    ) -> tuple[TerminologyCandidate, ...]:
+        """Reduce ClinVar variant ambiguities using chain gene-symbol context when available."""
+        if not choices or candidate is None:
+            return choices
+        gene_symbol = str(candidate.metadata.get("gene_symbol", "") or "").strip()
+        if not gene_symbol:
+            return choices
+        filtered = tuple(
+            item
+            for item in choices
+            if str(item.raw_payload.get("gene_symbol", "") or "").strip() == gene_symbol
+        )
+        return filtered or choices

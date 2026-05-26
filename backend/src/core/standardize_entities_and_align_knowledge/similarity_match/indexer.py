@@ -7,6 +7,7 @@ from collections.abc import Iterable
 from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from src.core.standardize_entities_and_align_knowledge.contracts import EntityType
 from src.dao.models import TerminologyEmbedding, TerminologyEntry
 
 
@@ -36,20 +37,38 @@ class TerminologyEmbeddingIndexer:
         self._session = session
         self._embedding_provider = embedding_provider
 
-    async def build(self, *, embedding_model: str, batch_size: int) -> int:
+    async def build(
+        self,
+        *,
+        embedding_model: str,
+        batch_size: int,
+        entity_types: set[EntityType] | None = None,
+        source_dbs: set[str] | None = None,
+    ) -> int:
         """Embed terminology entries, cleaning stale rows and upserting current ones."""
-        result = await self._session.execute(select(TerminologyEntry).order_by(TerminologyEntry.entry_id))
-        entries = tuple(result.scalars().all())
+        statement = select(TerminologyEntry)
+        if entity_types:
+            statement = statement.where(TerminologyEntry.entity_type.in_([entity_type.value for entity_type in entity_types]))
+        if source_dbs:
+            statement = statement.where(TerminologyEntry.source_db.in_(source_dbs))
+        result = await self._session.execute(statement.order_by(TerminologyEntry.entry_id))
+        entries = tuple(
+            entry
+            for entry in result.scalars().all()
+            if (not entity_types or EntityType(entry.entity_type) in entity_types)
+            and (not source_dbs or entry.source_db in source_dbs)
+        )
 
         # Delete stale embeddings for entries that will be re-embedded.
         entry_ids = [entry.entry_id for entry in entries]
         if entry_ids:
-            await self._session.execute(
-                delete(TerminologyEmbedding.__table__).where(
-                    TerminologyEmbedding.entry_id.in_(entry_ids),
-                    TerminologyEmbedding.embedding_model == embedding_model,
-                ),
-            )
+            for entry_id_batch in _batched_values(entry_ids, 5000):
+                await self._session.execute(
+                    delete(TerminologyEmbedding.__table__).where(
+                        TerminologyEmbedding.entry_id.in_(entry_id_batch),
+                        TerminologyEmbedding.embedding_model == embedding_model,
+                    ),
+                )
 
         written = 0
         for batch in _batched(entries, batch_size):
@@ -83,3 +102,9 @@ def _batched(entries: Iterable[TerminologyEntry], batch_size: int) -> Iterable[t
             batch = []
     if batch:
         yield tuple(batch)
+
+
+def _batched_values(values: list[object], batch_size: int) -> Iterable[list[object]]:
+    """Yield fixed-size batches for non-ORM value lists such as UUIDs."""
+    for start in range(0, len(values), batch_size):
+        yield values[start : start + batch_size]

@@ -43,12 +43,16 @@ class ModelServerEmbeddingProvider:
         client: httpx.AsyncClient,
         payload: dict[str, object],
     ) -> EmbeddingBatchResult:
-        response = await client.post(f"{self._base_url}/v1/embeddings", json=payload)
+        response = await client.post(f"{self._api_root()}/embeddings", json=payload)
         response.raise_for_status()
         body = response.json()
         data = sorted(body.get("data", []), key=lambda item: item.get("index", 0))
         vectors = tuple(tuple(float(value) for value in item["embedding"]) for item in data)
         return EmbeddingBatchResult(model=str(body.get("model") or self._model), vectors=vectors)
+
+    def _api_root(self) -> str:
+        """Normalize provider base URLs so callers may pass either host root or `/v1` root."""
+        return self._base_url if self._base_url.endswith("/v1") else f"{self._base_url}/v1"
 
 
 class ModelServerRerankProvider:
@@ -88,7 +92,7 @@ class ModelServerRerankProvider:
         client: httpx.AsyncClient,
         payload: dict[str, object],
     ) -> RerankBatchResult:
-        response = await client.post(f"{self._base_url}/v1/rerank", json=payload)
+        response = await client.post(f"{self._api_root()}/rerank", json=payload)
         response.raise_for_status()
         body = response.json()
         results = tuple(
@@ -100,3 +104,7 @@ class ModelServerRerankProvider:
             for item in body.get("results", [])
         )
         return RerankBatchResult(model=str(body.get("model") or self._model), results=results)
+
+    def _api_root(self) -> str:
+        """Normalize provider base URLs so callers may pass either host root or `/v1` root."""
+        return self._base_url if self._base_url.endswith("/v1") else f"{self._base_url}/v1"

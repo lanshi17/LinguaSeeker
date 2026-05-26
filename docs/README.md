@@ -61,6 +61,7 @@ No active code reviews.
 | 2026-05-18 | [database design](archive/plans/2026-05-18-database-design.md) | completed — branch `database-mvp` |
 | 2026-05-25 | [phase 3 entity standardization implementation](archive/plans/2026-05-25-phase-3-standardization.md) | completed — Phase 3 MVP |
 | 2026-05-25 | [phase 3 entity standardization design](archive/plans/2026-05-25-phase-3-standardization-design.md) | completed — Phase 3 MVP |
+| 2026-05-26 | [standardize entities audit and match fixes](archive/plans/2026-05-26-standardize-entities-audit-and-match-fixes.md) | completed — audit output and match fixes |
 | 2026-05-22 | [extract evidence quality gates](archive/plans/2026-05-22-extract-evidence-quality-gates.md) | completed — branch `fix/extract-evidence-quality-gates` |
 | 2026-05-17 | [persistence JSON optimization](archive/plans/2026-05-17-persistence-json-optimization.md) | completed — 2026-05-19 |
 | 2026-05-16 | [evidence extraction output E2E](archive/plans/2026-05-16-evidence-extraction-output-e2e.md) | completed — 2026-05-19 |

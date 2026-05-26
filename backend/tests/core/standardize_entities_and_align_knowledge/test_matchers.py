@@ -155,6 +155,45 @@ async def test_no_candidates_yields_unmapped() -> None:
     assert match.external_id is None
 
 
+@pytest.mark.asyncio
+async def test_variant_match_prefers_candidate_with_matching_gene_symbol_context() -> None:
+    """Variant alias ambiguities should be reduced when one ClinVar candidate matches the chain gene context."""
+    candidate = StandardizationCandidate(
+        candidate_id="c-variant",
+        entity_type=EntityType.VARIANT,
+        role=BindingRole.TARGET,
+        raw_text="p.R227X",
+        chain_id="chain-1",
+        track="original",
+        metadata={"gene_symbol": "GLA"},
+    )
+    same_alias_other_gene = TerminologyCandidate(
+        entry_id="entry-other",
+        entity_type=EntityType.VARIANT,
+        source_db="ClinVar",
+        external_id="ClinVarVariation:999",
+        display_name="NM_000348.4(SRD5A2):c.679C>T (p.Arg227Ter)",
+        normalized_alias="p.R227X",
+        alias_type="protein_short",
+        raw_payload={"gene_symbol": "SRD5A2"},
+    )
+    same_alias_expected_gene = TerminologyCandidate(
+        entry_id="entry-gla",
+        entity_type=EntityType.VARIANT,
+        source_db="ClinVar",
+        external_id="ClinVarVariation:10733",
+        display_name="NM_000169.3(GLA):c.679C>T (p.Arg227Ter)",
+        normalized_alias="p.R227X",
+        alias_type="protein_short",
+        raw_payload={"gene_symbol": "GLA"},
+    )
+
+    match = await TerminologyMatcher(FakeRepository([same_alias_other_gene, same_alias_expected_gene])).match(candidate)
+
+    assert match.status == MatchStatus.STANDARDIZED
+    assert match.external_id == "ClinVarVariation:10733"
+
+
 def test_rank_raises_for_unsupported_entity_type() -> None:
     """Unsupported entity types fail loudly instead of silently returning no matches."""
     matcher = TerminologyMatcher(FakeRepository([]))

@@ -44,4 +44,5 @@ class StandardizationService:
             ambiguous_count=sum(match.status == MatchStatus.AMBIGUOUS for match in matches),
             unmapped_count=sum(match.status == MatchStatus.UNMAPPED for match in matches),
             normalized_entity_ids=entity_ids,
+            matches=matches,
         )

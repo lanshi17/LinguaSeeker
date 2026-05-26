@@ -9,7 +9,14 @@ from scripts.e2e_standardize_entities import (
     DEFAULT_EXTRACT_EVIDENCE_DIR,
     run_standardize_entities,
 )
-from src.core.standardize_entities_and_align_knowledge.contracts import StandardizationResult
+from src.core.standardize_entities_and_align_knowledge.contracts import (
+    BindingRole,
+    EntityMatch,
+    EntityType,
+    MatchStatus,
+    StandardizationCandidate,
+    StandardizationResult,
+)
 
 
 class FakeStandardizationService:
@@ -24,6 +31,17 @@ class FakeStandardizationService:
         processing_run_id: str,
     ) -> StandardizationResult:
         self.calls.append((result.document_id, source_document_id, processing_run_id))
+        matches = (
+            EntityMatch(
+                candidate=StandardizationCandidate(
+                    candidate_id="c1", entity_type=EntityType.GENE,
+                    role=BindingRole.SUBJECT, raw_text="GLA",
+                    chain_id="chain-1", track="original",
+                ),
+                status=MatchStatus.STANDARDIZED,
+                external_id="HGNC:4296", display_name="GLA",
+            ),
+        )
         return StandardizationResult(
             document_id=result.document_id,
             match_count=4,
@@ -31,6 +49,7 @@ class FakeStandardizationService:
             ambiguous_count=1,
             unmapped_count=0,
             normalized_entity_ids=("entity-1", "entity-2", "entity-3", "entity-4"),
+            matches=matches,
         )
 
 
@@ -116,11 +135,15 @@ async def test_run_standardize_entities_writes_outputs_without_refresh(
     assert refresh_calls == []
 
     result_data = json.loads((saved_dir / "result.json").read_text(encoding="utf-8"))
+    matches_data = json.loads((saved_dir / "matches.json").read_text(encoding="utf-8"))
     summary_data = json.loads((saved_dir / "summary.json").read_text(encoding="utf-8"))
     upstream_data = json.loads((saved_dir / "upstream_result.json").read_text(encoding="utf-8"))
 
     assert result_data["document_id"] == "法布雷病1例"
     assert result_data["standardized_count"] == 3
+    assert len(matches_data["matches"]) == 1
+    assert matches_data["matches"][0]["raw_text"] == "GLA"
+    assert matches_data["matches"][0]["status"] == "standardized"
     assert summary_data["document_id"] == "法布雷病1例"
     assert summary_data["extract_evidence_dir"] == str(input_dir.resolve())
     assert summary_data["output_dir"] == str(saved_dir)

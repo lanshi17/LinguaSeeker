@@ -125,3 +125,4 @@ class StandardizationResult:
     ambiguous_count: int
     unmapped_count: int
     normalized_entity_ids: tuple[str, ...]
+    matches: tuple[EntityMatch, ...] = ()

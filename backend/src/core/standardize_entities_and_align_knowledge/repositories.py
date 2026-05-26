@@ -21,6 +21,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
 from src.core.standardize_entities_and_align_knowledge.importers import ImportBatch
 from src.core.standardize_entities_and_align_knowledge.normalizers import (
     make_entity_scope_hash,
+    normalize_disease_lookup_text,
     normalize_gene_symbol,
     normalize_lookup_text,
     normalize_variant_text,
@@ -961,6 +962,8 @@ class StandardizationRepository:
             return normalize_gene_symbol(raw_text)
         if entity_type == EntityType.VARIANT:
             return normalize_variant_text(raw_text)
+        if entity_type == EntityType.DISEASE:
+            return normalize_disease_lookup_text(raw_text)
         return normalize_lookup_text(raw_text)
 
     async def _find_entry_by_external_id(self, external_id: str) -> TerminologyEntry | None:
