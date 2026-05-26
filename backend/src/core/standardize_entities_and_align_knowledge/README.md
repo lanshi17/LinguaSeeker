@@ -256,12 +256,62 @@ Change those together and add a repository/service test before modifying product
 - `DualResultAdapter` deduplicates by `(entity_type, normalized_text, chain_id)` so duplicate original/translated chains do not double the candidate count.
 - Repository helpers currently run per-entity/per-relationship lookups. This is correct for MVP but not optimized for large batch import throughput.
 
+## Vector Similarity Search (pgvector)
+
+Phase 3 supports optional semantic similarity search via pgvector as a fallback
+when deterministic matching returns no results.
+
+### Architecture
+
+```text
+TerminologyMatcher (deterministic)
+    │
+    └── no results?
+        └── VectorFallbackMatcher
+            └── TerminologyEmbeddingService
+                ├── EmbeddingProvider → model-server /v1/embeddings
+                └── VectorRepository → pgvector <=> cosine distance
+```
+
+### Enabling
+
+1. Ensure `pgvector_enabled: true` in PostgreSQL config
+2. Run the pgvector migration: `uv run alembic upgrade head`
+3. Start model-server on port 8001 with embedding model loaded
+4. Generate embeddings: `uv run python scripts/import_terminology.py --generate-embeddings`
+
+### Usage
+
+```python
+from src.core.standardize_entities_and_align_knowledge.matchers import (
+    TerminologyMatcher,
+    VectorFallbackMatcher,
+)
+from src.core.standardize_entities_and_align_knowledge.embedding_service import (
+    TerminologyEmbeddingService,
+)
+
+# Wire vector fallback (optional — matcher works without it)
+embedding_svc = TerminologyEmbeddingService(...)
+vector_matcher = VectorFallbackMatcher(embedding_service=embedding_svc)
+matcher = TerminologyMatcher(repository=repo, vector_fallback=vector_matcher)
+```
+
+### Tables
+
+- `terminology_embeddings`: embedding vectors indexed by HNSW for cosine similarity search
+
+### Performance
+
+- HNSW index with m=16, ef_construction=200 provides fast approximate nearest neighbor search
+- Embedding generation is batched (configurable batch_size, default 10)
+- Consider running embedding generation during off-peak hours for large terminology databases
+
 ## Unsupported Next Iteration Features
 
 These are intentionally out of scope in the current implementation:
 
 - fused-result input path (`FusedResultAdapter`)
-- semantic retrieval or vector disambiguation
 - LLM/agent-driven entity arbitration
 - full dbSNP import
 - review queue UI
