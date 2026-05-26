@@ -127,8 +127,16 @@ class LangChainEvidenceProvider:
         try:
             return adapter.validate_python(json.loads(json_text))
         except (ValidationError, ValueError, json.JSONDecodeError):
-            repaired = self._repair_json_with_llm(llm, json_text, schema)
-            return adapter.validate_python(json.loads(repaired))
+            # Try a simple repair for lone backslash escapes (e.g. "GLA\p.R227X")
+            try:
+                import re
+
+                repaired_candidate = re.sub(r"\\(?![\"\\/bfnrtu])", r"\\\\", json_text)
+                return adapter.validate_python(json.loads(repaired_candidate))
+            except Exception:
+                # Fall back to asking the LLM to repair the JSON
+                repaired = self._repair_json_with_llm(llm, json_text, schema)
+                return adapter.validate_python(json.loads(repaired))
 
     def _repair_json_with_llm(
         self,

@@ -1,6 +1,7 @@
 """Public facade for Phase 3 entity standardization."""
 from __future__ import annotations
 
+import inspect
 import time
 from pathlib import Path
 from typing import Any
@@ -17,8 +18,8 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
 from src.core.standardize_entities_and_align_knowledge.core import StandardizationService
 from src.core.standardize_entities_and_align_knowledge.importers import (
     ImportBatch,
+    iter_clinvar_batches,
     parse_clingen_rows,
-    parse_clinvar_rows,
     parse_hgnc_rows,
     parse_hpo_rows,
     parse_omim_rows,
@@ -86,6 +87,13 @@ class EntityStandardizationService:
         return await StandardizationService(matcher, repository).run(input_data)
 
 
+async def _maybe_await(value: Any) -> Any:
+    """Await helper results only when they are actually awaitable."""
+    if inspect.isawaitable(value):
+        return await value
+    return value
+
+
 async def import_terminology(
     *,
     cfg: Any,
@@ -131,6 +139,16 @@ async def import_terminology(
                 )
                 await repository.upsert_terminology_batch(batch)
                 logger.info("Imported batch {}/{} [{}]", index, len(batches), source_db)
+            if "clinvar" in source_names:
+                clinvar_path = Path(terminology_root) / "clinvar" / "variant_summary.txt"
+                await _maybe_await(
+                    _import_clinvar_stream(
+                        repository=repository,
+                        path=clinvar_path,
+                        version=version,
+                        chunk_size=10_000,
+                    ),
+                )
             await session.commit()
             logger.info("Committed terminology import transaction")
     finally:
@@ -183,8 +201,6 @@ def _load_import_batches(
         batches.append(parse_hpo_rows(source_root / "hpo", version=version))
     if "clingen" in sources:
         batches.append(parse_clingen_rows(source_root / "clingen", version=version))
-    if "clinvar" in sources:
-        batches.append(parse_clinvar_rows(source_root / "clinvar" / "variant_summary.txt", version=version))
 
     return tuple(batches)
 
@@ -198,3 +214,40 @@ def _describe_batch_source(batch: ImportBatch) -> str:
     if batch.relationships:
         return batch.relationships[0].source_db
     return "empty"
+
+
+async def _import_clinvar_stream(
+    *,
+    repository: StandardizationRepository,
+    path: Path,
+    version: str,
+    chunk_size: int,
+) -> None:
+    """Import ClinVar in bounded chunks to avoid monolithic memory growth."""
+    logger.info("Streaming ClinVar import: path={}, chunk_size={}", path, chunk_size)
+    chunk_count = 0
+    total_entries = 0
+    total_aliases = 0
+    total_relationships = 0
+    for chunk_count, batch in enumerate(
+        iter_clinvar_batches(path=path, version=version, chunk_size=chunk_size),
+        start=1,
+    ):
+        total_entries += len(batch.entries)
+        total_aliases += len(batch.aliases)
+        total_relationships += len(batch.relationships)
+        logger.info(
+            "Importing ClinVar chunk {}: entries={}, aliases={}, relationships={}",
+            chunk_count,
+            len(batch.entries),
+            len(batch.aliases),
+            len(batch.relationships),
+        )
+        await repository.upsert_terminology_batch(batch)
+    logger.info(
+        "Completed ClinVar streaming import: chunks={}, entries={}, aliases={}, relationships={}",
+        chunk_count,
+        total_entries,
+        total_aliases,
+        total_relationships,
+    )

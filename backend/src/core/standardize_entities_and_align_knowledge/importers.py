@@ -290,6 +290,118 @@ def parse_clingen_rows(root: Path, version: str) -> ImportBatch:
 
 def parse_clinvar_rows(path: Path, version: str) -> ImportBatch:
     """Parse ClinVar variant summary rows into variant entries and review relationships."""
+    batches = list(iter_clinvar_batches(path=path, version=version, chunk_size=50_000))
+    entries = tuple(entry for batch in batches for entry in batch.entries)
+    aliases = tuple(alias for batch in batches for alias in batch.aliases)
+    relationships = tuple(relationship for batch in batches for relationship in batch.relationships)
+    return ImportBatch(entries=entries, aliases=aliases, relationships=relationships)
+
+
+def iter_clinvar_batches(path: Path, version: str, chunk_size: int) -> Iterator[ImportBatch]:
+    """Yield ClinVar import batches in bounded chunks for streaming import."""
+    entries: list[ImportEntry] = []
+    aliases: list[ImportAlias] = []
+    relationships: list[ImportRelationship] = []
+
+    def flush_batch() -> ImportBatch | None:
+        if not entries and not aliases and not relationships:
+            return None
+        batch = ImportBatch(
+            entries=tuple(entries),
+            aliases=tuple(aliases),
+            relationships=tuple(relationships),
+        )
+        entries.clear()
+        aliases.clear()
+        relationships.clear()
+        return batch
+
+    for row in _iter_tsv_rows(path):
+        review_status = (row.get("ReviewStatus") or "").strip()
+        if not is_importable_clinvar_review_status(review_status):
+            continue
+
+        variation_id = (row.get("VariationID") or "").strip()
+        name = (row.get("Name") or "").strip()
+        if not variation_id or not name:
+            continue
+
+        external_id = f"ClinVarVariation:{variation_id}"
+        alias_values = [name]
+        rs_value = _normalize_rsid(row.get("RS# (dbSNP)"))
+        if rs_value:
+            alias_values.append(rs_value)
+
+        entries.append(
+            ImportEntry(
+                entity_type=EntityType.VARIANT,
+                source_db="ClinVar",
+                external_id=external_id,
+                display_name=name,
+                normalized_name=normalize_variant_text(name),
+                aliases=tuple(alias_values),
+                raw_payload={
+                    "review_status": review_status,
+                    "review_stars": _clinvar_review_stars(review_status),
+                    "clinical_significance": (row.get("ClinicalSignificance") or "").strip(),
+                    "gene_symbol": (row.get("GeneSymbol") or "").strip(),
+                    "variation_id": variation_id,
+                },
+                version=version,
+            ),
+        )
+        aliases.append(
+            ImportAlias(
+                external_id=external_id,
+                entity_type=EntityType.VARIANT,
+                source_db="ClinVar",
+                alias_text=name,
+                normalized_alias=normalize_variant_text(name),
+                alias_type="name",
+            ),
+        )
+        if rs_value:
+            aliases.append(
+                ImportAlias(
+                    external_id=external_id,
+                    entity_type=EntityType.VARIANT,
+                    source_db="ClinVar",
+                    alias_text=rs_value,
+                    normalized_alias=normalize_variant_text(rs_value),
+                    alias_type="rsid",
+                ),
+            )
+
+        relationships.append(
+            ImportRelationship(
+                subject_external_id=external_id,
+                object_external_id=None,
+                relationship_type="variant_has_clinical_significance",
+                source_db="ClinVar",
+                evidence_level=_clinvar_review_stars(review_status),
+                raw_payload={
+                    "clinical_significance": (row.get("ClinicalSignificance") or "").strip(),
+                    "review_status": review_status,
+                    "review_stars": _clinvar_review_stars(review_status),
+                    "variation_id": variation_id,
+                    "phenotype_ids": (row.get("PhenotypeIDS") or "").strip(),
+                    "phenotype_list": (row.get("PhenotypeList") or "").strip(),
+                },
+            ),
+        )
+
+        if len(entries) >= chunk_size:
+            batch = flush_batch()
+            if batch is not None:
+                yield batch
+
+    final_batch = flush_batch()
+    if final_batch is not None:
+        yield final_batch
+
+
+def _parse_clinvar_rows_legacy(path: Path, version: str) -> ImportBatch:
+    """Legacy monolithic ClinVar parser retained for reference-compatible behavior."""
     entries: list[ImportEntry] = []
     aliases: list[ImportAlias] = []
     relationships: list[ImportRelationship] = []
@@ -368,11 +480,7 @@ def parse_clinvar_rows(path: Path, version: str) -> ImportBatch:
             ),
         )
 
-    return ImportBatch(
-        entries=tuple(entries),
-        aliases=tuple(aliases),
-        relationships=tuple(relationships),
-    )
+    return ImportBatch(entries=tuple(entries), aliases=tuple(aliases), relationships=tuple(relationships))
 
 
 def _collect_alias_values(primary_symbol: str, *fields: str | None) -> list[str]:

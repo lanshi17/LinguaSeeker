@@ -39,7 +39,6 @@ def test_load_import_batches_dispatches_requested_sources_only(monkeypatch) -> N
     monkeypatch.setattr(api_module, "parse_omim_rows", _fake_omim)
     monkeypatch.setattr(api_module, "parse_hpo_rows", lambda *args, **kwargs: "hpo-batch")
     monkeypatch.setattr(api_module, "parse_clingen_rows", lambda *args, **kwargs: "clingen-batch")
-    monkeypatch.setattr(api_module, "parse_clinvar_rows", lambda *args, **kwargs: "clinvar-batch")
 
     batches = api_module._load_import_batches(
         terminology_root=Path("/tmp/terminology"),
@@ -69,6 +68,12 @@ async def test_import_terminology_loads_batches_and_calls_repository(monkeypatch
             disposed["value"] = True
 
     monkeypatch.setattr(api_module, "_load_import_batches", lambda **kwargs: tuple(loaded_batches))
+    clinvar_stream_calls: list[tuple[Path, str, int]] = []
+    monkeypatch.setattr(
+        api_module,
+        "_import_clinvar_stream",
+        lambda *, repository, path, version, chunk_size: clinvar_stream_calls.append((path, version, chunk_size)),
+    )
     monkeypatch.setattr(api_module, "build_async_engine", lambda cfg: FakeEngine())
     monkeypatch.setattr(api_module, "async_session_factory", lambda engine: "factory")
     commit_called = {"value": False}
@@ -100,6 +105,11 @@ async def test_import_terminology_loads_batches_and_calls_repository(monkeypatch
     )
 
     assert received_batches == loaded_batches
+    assert clinvar_stream_calls == [(
+        tmp_path / "clinvar" / "variant_summary.txt",
+        "test-version",
+        10_000,
+    )]
     assert commit_called["value"] is True
     assert disposed["value"] is True
 

@@ -366,6 +366,13 @@ class TerminologyRelationship(Base, TimestampMixin):
 
     __tablename__ = "terminology_relationships"
     __table_args__ = (
+        UniqueConstraint(
+            "subject_entry_id",
+            "object_entry_id",
+            "relationship_type",
+            "source_db",
+            name="uq_terminology_relationships_identity",
+        ),
         Index("ix_terminology_relationships_subject_type", "subject_entry_id", "relationship_type"),
         Index("ix_terminology_relationships_object_type", "object_entry_id", "relationship_type"),
     )
@@ -405,7 +412,7 @@ class TerminologyEmbedding(Base, TimestampMixin):
     embedding_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     entry_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("terminology_entries.entry_id"),
+        ForeignKey("terminology_entries.entry_id", ondelete="CASCADE"),
         nullable=False,
     )
     entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
