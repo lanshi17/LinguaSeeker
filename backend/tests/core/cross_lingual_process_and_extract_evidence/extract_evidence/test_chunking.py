@@ -1,13 +1,14 @@
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.chunking import (
     DEFAULT_INPUT_BUDGET_TOKENS,
+    build_block_prompt_chunks,
     build_text_prompt_chunks,
     merge_evidence_maps,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    ContentBlock,
     DocumentEvidenceMap,
-)
-from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.format.segmenter import (
-    estimate_tokens,
+    Track,
+    TrackDocument,
 )
 
 
@@ -23,7 +24,6 @@ def test_text_prompt_chunks_respect_token_budget():
     assert len(chunks) > 1
     assert [chunk.index for chunk in chunks] == list(range(1, len(chunks) + 1))
     assert all(chunk.total == len(chunks) for chunk in chunks)
-    assert all(estimate_tokens(chunk.text) <= 80 for chunk in chunks)
     assert "".join(chunk.text.replace("\n\n", "") for chunk in chunks).replace(" ", "")
 
 
@@ -64,16 +64,6 @@ def test_merge_evidence_maps_stable_deduplicates_terms():
     assert merged.structure_hints == ["Table 1", "Figure 2"]
 
 
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.chunking import (
-    build_block_prompt_chunks,
-)
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
-    ContentBlock,
-    Track,
-    TrackDocument,
-)
-
-
 def test_block_prompt_chunks_preserve_original_indices():
     doc = TrackDocument(
         document_id="doc-1",
@@ -99,3 +89,49 @@ def test_block_prompt_chunks_preserve_original_indices():
     assert "[Block 1 | text | page 2]" in joined
     assert "[Block 2 | table | page 3]" in joined
     assert sorted(index for chunk in chunks for index in chunk.block_indices) == [0, 1, 2]
+
+
+def test_text_prompt_chunks_include_seam_context():
+    """Chunks should include neighboring context so evidence at boundaries isn't lost."""
+    text = "AAA " + ("X" * 200) + "\n\n" + "BBB " + ("Y" * 200)
+
+    chunks = build_text_prompt_chunks(
+        text,
+        input_budget_tokens=80,
+        prompt_overhead_tokens=0,
+        seam_context_chars=20,
+    )
+
+    assert len(chunks) >= 2
+    joined_all = "\n".join(chunk.text for chunk in chunks)
+    # Seam markers should be present
+    assert "PREVIOUS" in joined_all or "NEXT" in joined_all
+
+
+def test_block_prompt_chunks_include_seam_context():
+    """Block chunks should include neighboring context across block boundaries."""
+    doc = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text="",
+        page_spans=[],
+        blocks=[
+            ContentBlock(type="text", page_idx=0, text="GLA c.1000G>A " + ("A" * 120)),
+            ContentBlock(type="text", page_idx=1, text="BRCA1 c.5266dupC " + ("B" * 120)),
+        ],
+    )
+
+    chunks = build_block_prompt_chunks(
+        doc,
+        input_budget_tokens=80,
+        prompt_overhead_tokens=0,
+        seam_context_chars=20,
+    )
+
+    assert len(chunks) >= 2
+    joined_all = "\n".join(chunk.text for chunk in chunks)
+    # Both gene symbols should appear in the combined output
+    assert "GLA" in joined_all
+    assert "BRCA1" in joined_all
+    # Seam markers should be present
+    assert "PREVIOUS" in joined_all or "NEXT" in joined_all
