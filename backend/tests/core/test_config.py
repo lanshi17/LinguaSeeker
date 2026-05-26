@@ -1,4 +1,4 @@
-"""Tests for model server and LLM config in Settings."""
+"""Tests for model server config in Settings."""
 from src.core.config import Settings
 
 
@@ -7,35 +7,34 @@ def test_model_server_url_default():
     assert settings.model_server_url == "http://localhost:8001"
 
 
-def test_fast_llm_env_populates_llm_nested_config(monkeypatch) -> None:
-    monkeypatch.setenv("FAST_LLM_API_KEY", "fast-key")
-    monkeypatch.setenv("FAST_LLM_BASE_URL", "https://fast.example/v1")
-    monkeypatch.setenv("FAST_LLM_MODEL", "fast-model")
-    monkeypatch.setenv("FAST_LLM_TEMPERATURE", "0.2")
-    monkeypatch.setenv("FAST_LLM_MAX_TOKENS", "4096")
-    monkeypatch.setenv("FAST_LLM_TIMEOUT", "30")
-    monkeypatch.setenv("FAST_LLM_MAX_RETRIES", "5")
+def test_standardization_similarity_model_defaults_match_model_server() -> None:
+    """Backend semantic matching defaults align with model-server defaults."""
+    from src.core.config import Settings
 
-    settings = Settings(_env_file=None)
+    settings = Settings()
 
-    assert settings.llm.api_key == "fast-key"
-    assert settings.llm.base_url == "https://fast.example/v1"
-    assert settings.llm.model == "fast-model"
-    assert settings.llm.temperature == 0.2
-    assert settings.llm.max_tokens == 4096
-    assert settings.llm.timeout == 30
-    assert settings.llm.max_retries == 5
+    assert settings.embedding.base_url == ""
+    assert settings.embedding.model == "Qwen/Qwen3-Embedding-0.6B"
+    assert settings.embedding.dimension == 1024
+    assert settings.rerank.model == "BAAI/bge-reranker-v2-m3"
 
 
-def test_reasoning_llm_env_populates_reasoning_nested_config(monkeypatch) -> None:
-    monkeypatch.setenv("REASONING_LLM_API_KEY", "reason-key")
-    monkeypatch.setenv("REASONING_LLM_BASE_URL", "https://reason.example/v1")
-    monkeypatch.setenv("REASONING_LLM_MODEL", "reason-model")
-    monkeypatch.setenv("REASONING_LLM_REASONING_EFFORT", "xhigh")
+def test_embedding_dimension_must_match_pgvector() -> None:
+    """Configuration fails fast if embedding dimension does not match pgvector column."""
+    import os
 
-    settings = Settings(_env_file=None)
+    from src.core.config import Settings
 
-    assert settings.reasoning.api_key == "reason-key"
-    assert settings.reasoning.base_url == "https://reason.example/v1"
-    assert settings.reasoning.model == "reason-model"
-    assert settings.reasoning.reasoning_effort == "xhigh"
+    original = os.environ.get("EMBEDDING_DIMENSION")
+    try:
+        os.environ["EMBEDDING_DIMENSION"] = "768"
+        try:
+            Settings()
+            raise AssertionError("Expected ValueError for mismatched dimension")
+        except ValueError as exc:
+            assert "does not match pgvector column dimension" in str(exc)
+    finally:
+        if original is None:
+            os.environ.pop("EMBEDDING_DIMENSION", None)
+        else:
+            os.environ["EMBEDDING_DIMENSION"] = original

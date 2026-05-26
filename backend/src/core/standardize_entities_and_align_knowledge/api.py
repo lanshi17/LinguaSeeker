@@ -23,9 +23,21 @@ from src.core.standardize_entities_and_align_knowledge.importers import (
     parse_hpo_rows,
     parse_omim_rows,
 )
-from src.core.standardize_entities_and_align_knowledge.matchers import TerminologyMatcher
+from src.core.standardize_entities_and_align_knowledge.matchers import HybridTerminologyMatcher
+from src.core.standardize_entities_and_align_knowledge.precise_match.core import PreciseTerminologyMatcher
 from src.core.standardize_entities_and_align_knowledge.repositories import (
     StandardizationRepository,
+)
+from src.core.standardize_entities_and_align_knowledge.similarity_match.core import (
+    SimilarityMatchConfig,
+    SimilarityTerminologyMatcher,
+)
+from src.core.standardize_entities_and_align_knowledge.similarity_match.providers import (
+    ModelServerEmbeddingProvider,
+    ModelServerRerankProvider,
+)
+from src.core.standardize_entities_and_align_knowledge.similarity_match.repositories import (
+    PgvectorTerminologyRepository,
 )
 from src.dao.connection import async_session_factory, build_async_engine, get_async_session
 
@@ -46,7 +58,25 @@ class EntityStandardizationService:
     ) -> StandardizationResult:
         """Standardize one dual-track evidence extraction result."""
         repository = StandardizationRepository(self._session)
-        matcher = TerminologyMatcher(repository)
+        precise_matcher = PreciseTerminologyMatcher(repository)
+        semantic_base_url = self._cfg.embedding.base_url or self._cfg.model_server_url
+        similarity_matcher = SimilarityTerminologyMatcher(
+            embedding_provider=ModelServerEmbeddingProvider(
+                base_url=semantic_base_url,
+                model=self._cfg.embedding.model,
+            ),
+            rerank_provider=ModelServerRerankProvider(
+                base_url=self._cfg.rerank.base_url or self._cfg.model_server_url,
+                model=self._cfg.rerank.model,
+            ),
+            repository=PgvectorTerminologyRepository(self._session),
+            config=SimilarityMatchConfig(
+                embedding_model=self._cfg.embedding.model,
+                rerank_top_k=self._cfg.rerank.top_k,
+                rerank_score_threshold=self._cfg.rerank.score_threshold,
+            ),
+        )
+        matcher = HybridTerminologyMatcher(precise_matcher, similarity_matcher)
         adapter = DualResultAdapter()
         input_data = adapter.to_standardization_input(
             result,
@@ -106,6 +136,33 @@ async def import_terminology(
     finally:
         await engine.dispose()
     logger.info("Terminology import completed in {:.2f}s", time.perf_counter() - started_at)
+
+
+async def build_terminology_embeddings(*, cfg: Any) -> int:
+    """Build pgvector embeddings for imported terminology entries."""
+    from src.core.standardize_entities_and_align_knowledge.similarity_match.indexer import (
+        TerminologyEmbeddingIndexer,
+    )
+    from src.core.standardize_entities_and_align_knowledge.similarity_match.providers import (
+        ModelServerEmbeddingProvider,
+    )
+
+    engine = build_async_engine(cfg)
+    session_factory = async_session_factory(engine)
+    try:
+        async with get_async_session(session_factory) as session:
+            provider = ModelServerEmbeddingProvider(
+                base_url=(cfg.embedding.base_url or cfg.model_server_url),
+                model=cfg.embedding.model,
+            )
+            count = await TerminologyEmbeddingIndexer(session, provider).build(
+                embedding_model=cfg.embedding.model,
+                batch_size=cfg.embedding.batch_size,
+            )
+            await session.commit()
+            return count
+    finally:
+        await engine.dispose()
 
 
 def _load_import_batches(

@@ -233,6 +233,14 @@ class StandardizationRepository:
             )
 
         existing = (await self.session.execute(statement)).scalars().first()
+        payload = {
+            "candidate_id": match.candidate.candidate_id,
+            "rationale": match.rationale,
+            "match_method": match.match_method.value,
+            "similarity_score": match.similarity_score,
+            "terminology_candidate_ids": [candidate.entry_id for candidate in match.terminology_candidates],
+            **match.raw_payload,
+        }
         if existing is None:
             existing = NormalizedEntity(
                 entity_type=match.candidate.entity_type.value,
@@ -241,22 +249,14 @@ class StandardizationRepository:
                 display_name=match.display_name,
                 aliases=[match.candidate.raw_text],
                 standardization_status=match.status.value,
-                raw_payload={
-                    "candidate_id": match.candidate.candidate_id,
-                    "rationale": match.rationale,
-                    "terminology_candidate_ids": [candidate.entry_id for candidate in match.terminology_candidates],
-                },
+                raw_payload=payload,
             )
             self.session.add(existing)
             await self.session.flush()
         else:
             existing.display_name = match.display_name
             existing.aliases = list({*existing.aliases, match.candidate.raw_text})
-            existing.raw_payload = {
-                **existing.raw_payload,
-                "rationale": match.rationale,
-                "terminology_candidate_ids": [candidate.entry_id for candidate in match.terminology_candidates],
-            }
+            existing.raw_payload = {**existing.raw_payload, **payload}
 
         return str(existing.entity_id)
 
