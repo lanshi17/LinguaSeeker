@@ -51,6 +51,26 @@ async def test_generate_and_store_embeddings_upserts():
 
 
 @pytest.mark.asyncio
+async def test_generate_and_store_skips_when_all_embedded():
+    """generate_and_store returns 0 when all entries already have embeddings."""
+    mock_session = MagicMock()
+    mock_mappings = MagicMock()
+    mock_mappings.all.return_value = []
+    mock_result = MagicMock()
+    mock_result.mappings.return_value = mock_mappings
+    mock_session.execute = AsyncMock(return_value=mock_result)
+
+    svc = TerminologyEmbeddingService(
+        session=mock_session,
+        repository=MagicMock(),
+        provider=MagicMock(),
+        model_version="test-v1",
+    )
+    count = await svc.generate_and_store(EntityType.GENE)
+    assert count == 0
+
+
+@pytest.mark.asyncio
 async def test_search_similar_delegates_to_repository():
     """search_similar generates query embedding and delegates to repository."""
     mock_repo = MagicMock()
