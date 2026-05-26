@@ -16,8 +16,11 @@ from src.core.standardize_entities_and_align_knowledge import api as api_module
 from src.core.standardize_entities_and_align_knowledge.contracts import (
     EntityMatch,
     EntityType,
+    MatchStatus,
     TerminologyCandidate,
 )
+from src.core.standardize_entities_and_align_knowledge.matchers import HybridTerminologyMatcher
+from src.core.standardize_entities_and_align_knowledge.precise_match.core import PreciseTerminologyMatcher
 
 
 class FakeRepository:
@@ -48,6 +51,19 @@ class FakeRepository:
 
     async def upsert_canonical_evidence(self, input_data, matches, entity_ids):
         self.canonical.append((input_data, matches, entity_ids))
+
+
+class FakeSimilarityMatcher:
+    """Similarity matcher stub that always returns unmapped for test isolation."""
+
+    async def match(self, candidate):
+        return EntityMatch(
+            candidate=candidate,
+            status=MatchStatus.UNMAPPED,
+            external_id=None,
+            display_name=candidate.raw_text,
+            rationale="fake semantic matcher: no match",
+        )
 
 
 def build_minimal_dual_result(*, gene: str, disease: str, variant: str, phenotype: str) -> DualEvidenceExtractionResult:
@@ -94,6 +110,34 @@ def build_minimal_dual_result(*, gene: str, disease: str, variant: str, phenotyp
         original_result=original,
         translated_result=translated,
     )
+
+
+class FakeEmbeddingConfig:
+    """Minimal embedding config for integration tests."""
+
+    def __init__(self) -> None:
+        self.base_url = ""
+        self.model = "test-model"
+        self.batch_size = 10
+
+
+class FakeRerankConfig:
+    """Minimal rerank config for integration tests."""
+
+    def __init__(self) -> None:
+        self.base_url = ""
+        self.model = "test-rerank-model"
+        self.top_k = 10
+        self.score_threshold = 0.7
+
+
+class FakeConfig:
+    """Minimal config for integration tests."""
+
+    def __init__(self) -> None:
+        self.embedding = FakeEmbeddingConfig()
+        self.rerank = FakeRerankConfig()
+        self.model_server_url = "http://localhost:8001"
 
 
 def build_service_with_fake_repository(monkeypatch: pytest.MonkeyPatch) -> api_module.EntityStandardizationService:
@@ -146,7 +190,8 @@ def build_service_with_fake_repository(monkeypatch: pytest.MonkeyPatch) -> api_m
     }
 
     monkeypatch.setattr(api_module, "StandardizationRepository", FakeRepository)
-    return api_module.EntityStandardizationService(cfg=object(), session=lookup)
+    monkeypatch.setattr(api_module, "HybridTerminologyMatcher", lambda precise, sim: HybridTerminologyMatcher(precise, FakeSimilarityMatcher()))
+    return api_module.EntityStandardizationService(cfg=FakeConfig(), session=lookup)
 
 
 @pytest.mark.asyncio
@@ -235,7 +280,8 @@ async def test_dual_result_standardization_pipeline_reports_unmapped_and_ambiguo
         return repo
 
     monkeypatch.setattr(api_module, "StandardizationRepository", _factory)
-    service = api_module.EntityStandardizationService(cfg=object(), session=lookup)
+    monkeypatch.setattr(api_module, "HybridTerminologyMatcher", lambda precise, sim: HybridTerminologyMatcher(precise, FakeSimilarityMatcher()))
+    service = api_module.EntityStandardizationService(cfg=FakeConfig(), session=lookup)
 
     output = await service.run_dual_result(
         result,

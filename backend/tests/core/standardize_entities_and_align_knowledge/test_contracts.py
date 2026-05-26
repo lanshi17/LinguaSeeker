@@ -6,7 +6,9 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     CanonicalStatusRank,
     EntityMatch,
     EntityType,
+    MatchMethod,
     MatchStatus,
+    SimilarityCandidate,
     StandardizationCandidate,
     TerminologyCandidate,
 )
@@ -95,3 +97,46 @@ def test_entity_match_keeps_candidate_status_and_resolution_details() -> None:
     assert match.status == MatchStatus.STANDARDIZED
     assert match.terminology_candidates == (terminology_candidate,)
     assert match.rationale == "exact rsid match"
+
+
+def test_entity_match_defaults_to_precise_method() -> None:
+    """Existing exact matches keep precise matching as the default method."""
+    candidate = StandardizationCandidate(
+        candidate_id="c1",
+        entity_type=EntityType.GENE,
+        role=BindingRole.SUBJECT,
+        raw_text="BRCA1",
+        chain_id="chain-1",
+        track="original",
+    )
+
+    match = EntityMatch(
+        candidate=candidate,
+        status=MatchStatus.UNMAPPED,
+        external_id=None,
+        display_name="BRCA1",
+    )
+
+    assert match.match_method == MatchMethod.PRECISE
+    assert match.similarity_score is None
+
+
+def test_similarity_candidate_contract_is_typed() -> None:
+    """Similarity retrieval returns typed candidates, not raw dictionaries."""
+    candidate = SimilarityCandidate(
+        terminology=TerminologyCandidate(
+            entry_id="entry-1",
+            entity_type=EntityType.GENE,
+            source_db="HGNC",
+            external_id="HGNC:1100",
+            display_name="BRCA1",
+            normalized_alias="brca1",
+            alias_type="semantic",
+        ),
+        embedding_text="BRCA1 BRCA1 DNA repair associated",
+        vector_distance=0.12,
+        rerank_score=None,
+    )
+
+    assert candidate.terminology.external_id == "HGNC:1100"
+    assert candidate.vector_distance == 0.12

@@ -46,6 +46,21 @@ def _load_terminology_revision_module():
     return module
 
 
+def _load_embedding_revision_module():
+    """Load the terminology embedding migration revision as a Python module."""
+    import importlib.util
+
+    revision_paths = list(VERSIONS_DIR.glob("*add_terminology_embeddings_pgvector.py"))
+    assert len(revision_paths) == 1
+    revision_path = revision_paths[0]
+    spec = importlib.util.spec_from_file_location("add_terminology_embeddings_pgvector", revision_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def _captured_created_table(table_name: str, monkeypatch) -> list[object]:
     """Capture columns and constraints passed to op.create_table for a table."""
     module = _load_initial_revision_module()
@@ -150,7 +165,30 @@ def test_revision_chain_has_initial_revision() -> None:
 
 
 def test_head_revision_points_to_terminology_schema() -> None:
-    """The head revision extends the initial MVP schema with terminology tables."""
+    """The terminology revision extends the initial MVP schema."""
+    backend_str = str(BACKEND_DIR)
+    if backend_str not in sys.path:
+        sys.path.insert(0, backend_str)
+
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    config = Config(str(ALEMBIC_INI))
+    config.set_main_option("script_location", str(MIGRATIONS_DIR))
+    script = ScriptDirectory.from_config(config)
+
+    revisions = list(script.walk_revisions())
+    base = revisions[-1]
+
+    terminology = script.get_revision("add_terminology_20260525")
+    assert terminology is not None
+    assert terminology.down_revision == "4a82b5793055"
+    assert base.revision == "4a82b5793055"
+    assert base.down_revision is None
+
+
+def test_head_revision_points_to_pgvector_embeddings() -> None:
+    """The Alembic head includes pgvector terminology embeddings."""
     backend_str = str(BACKEND_DIR)
     if backend_str not in sys.path:
         sys.path.insert(0, backend_str)
@@ -163,14 +201,25 @@ def test_head_revision_points_to_terminology_schema() -> None:
     script = ScriptDirectory.from_config(config)
 
     head = script.get_revision("head")
-    revisions = list(script.walk_revisions())
-    base = revisions[-1]
 
     assert head is not None
-    assert head.revision == "enable_pgvector_20260525"
+    assert head.revision == "add_terminology_embeddings_20260525"
     assert head.down_revision == "add_terminology_20260525"
-    assert base.revision == "4a82b5793055"
-    assert base.down_revision is None
+
+
+def test_embedding_migration_creates_pgvector_extension(monkeypatch) -> None:
+    """The embedding migration enables pgvector before creating vector columns."""
+    module = _load_embedding_revision_module()
+    statements: list[str] = []
+
+    monkeypatch.setattr(module.op, "execute", lambda statement: statements.append(str(statement)))
+    monkeypatch.setattr(module.op, "create_table", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module.op, "create_index", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module.op, "f", lambda name: name)
+
+    module.upgrade()
+
+    assert "CREATE EXTENSION IF NOT EXISTS vector" in statements
 
 
 def test_initial_migration_canonical_evidence_matches_orm_columns(monkeypatch) -> None:
@@ -260,6 +309,10 @@ async def test_upgrade_head_creates_tables() -> None:
         "run_evidence_items",
         "evidence_entity_bindings",
         "canonical_evidence_items",
+        "terminology_entries",
+        "terminology_aliases",
+        "terminology_relationships",
+        "terminology_embeddings",
         "users",
     }
     assert expected <= tables, f"Missing tables: {expected - tables}"

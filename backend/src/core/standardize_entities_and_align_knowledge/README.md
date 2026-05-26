@@ -36,6 +36,13 @@ uv run ../scripts/import_terminology.py \
   --sources hgnc omim hpo clingen clinvar
 ```
 
+Building terminology embeddings for semantic matching:
+
+```bash
+cd backend
+uv run ../scripts/build_terminology_embeddings.py
+```
+
 ## Architecture
 
 ```text
@@ -43,9 +50,15 @@ DualEvidenceExtractionResult
   -> DualResultAdapter
   -> StandardizationInput
   -> StandardizationService
-     -> TerminologyMatcher
+     -> HybridTerminologyMatcher
+        -> precise_match.PreciseTerminologyMatcher (deterministic alias lookup)
+        -> similarity_match.SimilarityTerminologyMatcher (semantic fallback)
+           -> model-server /v1/embeddings
+           -> terminology_embeddings pgvector retrieval
+           -> model-server /v1/rerank
      -> StandardizationRepository
         -> terminology_entries / terminology_aliases / terminology_relationships
+        -> terminology_embeddings (pgvector)
         -> normalized_entities / run_evidence_items / evidence_entity_bindings / canonical_evidence_items
 ```
 
@@ -55,7 +68,9 @@ The slice follows the repo’s vertical-slice layout:
 - `contracts.py`: typed service contracts
 - `adapters.py`: Phase 2 to Phase 3 boundary adapter
 - `importers.py`: local terminology file parsers
-- `matchers.py`: deterministic source-priority matching
+- `matchers.py`: matcher facade with `HybridTerminologyMatcher`
+- `precise_match/`: deterministic source-priority matching
+- `similarity_match/`: semantic matching via pgvector and model-server
 - `repositories.py`: write boundary to SQLAlchemy ORM models
 - `normalizers.py`: shared text normalization and scope hashing
 - `core.py`: orchestration only
@@ -74,6 +89,12 @@ The slice follows the repo’s vertical-slice layout:
 | Method | Signature | Description |
 |---|---|---|
 | `import_terminology` | `(*, cfg: Any, terminology_root: Path, version: str, sources: list[str]) -> None` | Loads requested local terminology batches, opens an async DB session, and upserts each batch. |
+
+### `build_terminology_embeddings`
+
+| Method | Signature | Description |
+|---|---|---|
+| `build_terminology_embeddings` | `(*, cfg: Any) -> int` | Builds pgvector embeddings for imported terminology entries. Returns count of embeddings written. Idempotent via upsert. |
 
 ### `StandardizationResult`
 
@@ -135,7 +156,9 @@ Important implementation details:
 
 ## Matcher Rules
 
-`TerminologyMatcher` is deterministic only. There is no fuzzy text matching, vector retrieval, or LLM disambiguation.
+`HybridTerminologyMatcher` runs precise matching first, then falls back to semantic matching for unmapped candidates.
+
+### Precise Matching
 
 Source priority by entity type:
 
@@ -148,7 +171,19 @@ Alias priority within a source:
 
 `primary > alias > previous_symbol > name > rsid`
 
-If exactly one candidate remains after ranking, the result is `standardized`. If multiple remain, it is `ambiguous`. If none remain, it is `unmapped`.
+If exactly one candidate remains after ranking, the result is `standardized`. If multiple remain, it is `ambiguous`. If none remain, it falls through to semantic matching.
+
+### Semantic Matching
+
+When precise matching returns `unmapped`, the system:
+
+1. Embeds the candidate text via model-server `/v1/embeddings`
+2. Retrieves nearest neighbors from `terminology_embeddings` using pgvector cosine distance
+3. Reranks candidates via model-server `/v1/rerank`
+4. Accepts the top candidate if rerank score exceeds threshold (default 0.7)
+5. Returns `ambiguous` if top two candidates are too close (margin < 0.05)
+
+Semantic matches are persisted with `match_method="similarity"` and include `similarity_score` and `semantic_candidates` in the raw payload for auditability.
 
 ## Repository Write Boundaries
 
@@ -326,6 +361,8 @@ These are intentionally out of scope in the current implementation:
 | `sqlalchemy` | ORM-backed persistence to the MVP schema |
 | `asyncpg` | PostgreSQL async driver used by `dao.connection` |
 | `alembic` | migration management for terminology reference tables |
+| `pgvector` | PostgreSQL vector similarity search for semantic matching |
+| `httpx` | Async HTTP client for model-server embedding and rerank calls |
 | `pytest` / `pytest-asyncio` | unit and integration-style verification |
 | `ruff` | lint enforcement |
 
@@ -335,17 +372,20 @@ Targeted verification used for this module:
 
 ```bash
 cd backend
-uv run pytest tests/core/standardize_entities_and_align_knowledge tests/dao/test_models.py tests/dao/test_alembic_migration.py -v
-uv run --extra dev ruff check src/core/standardize_entities_and_align_knowledge src/dao tests/core/standardize_entities_and_align_knowledge tests/dao
+uv run pytest tests/core/standardize_entities_and_align_knowledge tests/dao/test_models.py tests/dao/test_alembic_migration.py tests/core/test_config.py -v
+uv run ruff check src tests
 ```
 
 Coverage areas currently present:
 
-- ORM + Alembic parity for terminology tables
+- ORM + Alembic parity for terminology and pgvector tables
 - contract and normalizer stability
 - parser behavior and helper edge cases
 - deterministic matcher ranking
+- semantic matcher with mock embedding/rerank providers
+- hybrid matcher fallback behavior
 - adapter candidate extraction and deduplication
 - service orchestration
 - facade integration with fake repository/session wiring
 - repository staging behavior for terminology batches and evidence persistence
+- embedding dimension validation

@@ -19,6 +19,7 @@ from sqlalchemy import (
     func,
     text,
 )
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -386,29 +387,31 @@ class TerminologyRelationship(Base, TimestampMixin):
     raw_payload: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
 
 
-class TerminologyEmbedding(Base):
-    """Vector embedding for terminology entries used in semantic similarity search."""
+class TerminologyEmbedding(Base, TimestampMixin):
+    """pgvector embedding for terminology semantic retrieval."""
 
     __tablename__ = "terminology_embeddings"
     __table_args__ = (
-        UniqueConstraint("entry_id", "model_version", name="uq_terminology_embeddings_entry_model"),
-        Index("ix_terminology_embeddings_entity_type", "entity_type"),
+        UniqueConstraint(
+            "entry_id",
+            "embedding_text_hash",
+            "embedding_model",
+            name="uq_terminology_embeddings_entry_text_model",
+        ),
+        Index("ix_terminology_embeddings_entity_type_model", "entity_type", "embedding_model"),
+        Index("ix_terminology_embeddings_entry_id", "entry_id"),
     )
 
-    embedding_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    embedding_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     entry_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("terminology_entries.entry_id", ondelete="CASCADE"),
+        ForeignKey("terminology_entries.entry_id"),
         nullable=False,
     )
     entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
-    embedding: Mapped[list[float]] = mapped_column(Vector(1536), nullable=False)
-    model_version: Mapped[str] = mapped_column(String(128), nullable=False)
-    source_text: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
-    )
-
-    entry: Mapped[TerminologyEntry] = relationship(back_populates="embeddings")
+    source_db: Mapped[str] = mapped_column(String(64), nullable=False)
+    external_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    embedding_text: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding_text_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    embedding_model: Mapped[str] = mapped_column(String(255), nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(Vector(1024), nullable=False)

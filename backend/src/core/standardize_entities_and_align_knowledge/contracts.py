@@ -32,6 +32,13 @@ class MatchStatus(str, Enum):
     AMBIGUOUS = "ambiguous"
 
 
+class MatchMethod(str, Enum):
+    """How an entity match was produced."""
+
+    PRECISE = "precise"
+    SIMILARITY = "similarity"
+
+
 class CanonicalStatusRank(str, Enum):
     """Canonical evidence precedence ordered as symbolic status labels."""
 
@@ -72,6 +79,16 @@ class TerminologyCandidate:
 
 
 @dataclass(frozen=True)
+class SimilarityCandidate:
+    """Semantic retrieval candidate returned from pgvector and rerank."""
+
+    terminology: TerminologyCandidate
+    embedding_text: str
+    vector_distance: float
+    rerank_score: float | None = None
+
+
+@dataclass(frozen=True)
 class EntityMatch:
     """Resolved or unresolved standardization result for one candidate."""
 
@@ -81,6 +98,9 @@ class EntityMatch:
     display_name: str
     terminology_candidates: tuple[TerminologyCandidate, ...] = ()
     rationale: str = ""
+    match_method: MatchMethod = MatchMethod.PRECISE
+    similarity_score: float | None = None
+    raw_payload: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
