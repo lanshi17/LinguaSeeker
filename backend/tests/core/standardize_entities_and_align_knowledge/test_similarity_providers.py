@@ -44,6 +44,38 @@ async def test_embedding_provider_calls_model_server_embeddings() -> None:
 
 
 @pytest.mark.asyncio
+async def test_embedding_provider_wraps_single_string() -> None:
+    """Embedding provider wraps a single string in a tuple instead of splitting characters."""
+    import json
+
+    captured_input: list[str] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        captured_input.extend(body["input"])
+        return httpx.Response(
+            200,
+            json={
+                "object": "list",
+                "model": "Qwen/Qwen3-Embedding-0.6B",
+                "data": [{"object": "embedding", "embedding": [0.1, 0.2], "index": 0}],
+                "usage": {"prompt_tokens": 1, "total_tokens": 1},
+            },
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        provider = ModelServerEmbeddingProvider(
+            base_url="http://model-server",
+            model="Qwen/Qwen3-Embedding-0.6B",
+            client=client,
+        )
+        result = await provider.embed_texts("BRCA1")
+
+    assert captured_input == ["BRCA1"]
+    assert result.vectors == ((0.1, 0.2),)
+
+
+@pytest.mark.asyncio
 async def test_rerank_provider_returns_ranked_scores() -> None:
     """Rerank provider maps model-server rerank results into typed scores."""
     async def handler(request: httpx.Request) -> httpx.Response:
