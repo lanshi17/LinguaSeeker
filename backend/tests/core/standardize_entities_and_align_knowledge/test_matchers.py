@@ -208,8 +208,6 @@ async def test_vector_fallback_matcher_filters_by_distance():
 @pytest.mark.asyncio
 async def test_terminology_matcher_uses_vector_fallback():
     """TerminologyMatcher falls back to vector when deterministic returns nothing."""
-    from src.core.standardize_entities_and_align_knowledge.matchers import VectorFallbackMatcher
-
     mock_repo = MagicMock()
     mock_repo.find_alias_candidates = AsyncMock(return_value=[])
 

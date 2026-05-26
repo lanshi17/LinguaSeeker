@@ -167,8 +167,8 @@ def test_head_revision_points_to_terminology_schema() -> None:
     base = revisions[-1]
 
     assert head is not None
-    assert head.revision == "add_terminology_20260525"
-    assert head.down_revision == "4a82b5793055"
+    assert head.revision == "enable_pgvector_20260525"
+    assert head.down_revision == "add_terminology_20260525"
     assert base.revision == "4a82b5793055"
     assert base.down_revision is None
 
