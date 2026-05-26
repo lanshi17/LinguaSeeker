@@ -309,6 +309,10 @@ async def test_upgrade_head_creates_tables() -> None:
         "run_evidence_items",
         "evidence_entity_bindings",
         "canonical_evidence_items",
+        "terminology_entries",
+        "terminology_aliases",
+        "terminology_relationships",
+        "terminology_embeddings",
         "users",
     }
     assert expected <= tables, f"Missing tables: {expected - tables}"

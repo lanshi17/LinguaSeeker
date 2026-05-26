@@ -23,6 +23,11 @@ from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+# ── Constants ───────────────────────────────────────────────────────────
+
+PGVECTOR_DIMENSION: int = 1024
+
+
 # ── Nested domain models ────────────────────────────────────────────────
 
 
@@ -378,6 +383,12 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _build_nested(self) -> Settings:
         """Construct nested domain models from the flat env-var fields."""
+        if self.embedding_dimension != PGVECTOR_DIMENSION:
+            raise ValueError(
+                f"EMBEDDING_DIMENSION={self.embedding_dimension} does not match "
+                f"pgvector column dimension {PGVECTOR_DIMENSION}. "
+                f"Set EMBEDDING_DIMENSION={PGVECTOR_DIMENSION} or update the migration."
+            )
         self.llm = LLMConfig(
             api_key=self.llm_api_key,
             base_url=self.llm_base_url,
