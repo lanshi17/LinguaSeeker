@@ -1,10 +1,17 @@
 """Configuration management middleware.
 
 All settings are loaded from ``.env.local`` / ``.env`` / environment variables
-via pydantic-settings.  Flat fields match env var names (case-insensitive);
-nested domain models are constructed from those fields by a ``model_validator``.
+via pydantic-settings. Preferred env prefixes are ``FAST_LLM_*`` and
+``REASONING_LLM_*``. Legacy ``LLM_*`` / ``REASONING_LLM_*`` variables remain
+supported as fallbacks. Nested domain models are constructed from the resolved
+flat fields by a ``model_validator``.
 
-Usage::
+    from src.core.config import get_config
+
+    cfg = get_config()              # singleton
+    cfg.llm.api_key                 # preferred: nested access
+    cfg.postgresql.host             # nested domain
+    cfg.llm_api_key                 # also available as flat field
 
     from src.core.config import get_config
 
@@ -47,8 +54,8 @@ class MultimodalLLMConfig(BaseModel):
     model: str = ""
 
 
-class ArbitrationConfig(BaseModel):
-    """Expert arbitration agent (stronger reasoning model)."""
+class ReasoningConfig(BaseModel):
+    """Expert reasoning agent (stronger reasoning model)."""
 
     api_key: str = ""
     model: str = ""
@@ -215,7 +222,7 @@ class Settings(BaseSettings):
     api_host: str = "localhost"
     api_port: int = 8000
 
-    # ── LLM flat fields (LLM_*) ─────────────────────────────────────────
+    # ── Legacy LLM flat fields (LLM_*) ──────────────────────────────────
 
     llm_api_key: str = ""
     llm_base_url: str = ""
@@ -225,6 +232,16 @@ class Settings(BaseSettings):
     llm_timeout: int = 60
     llm_max_retries: int = 3
 
+    # ── Preferred fast LLM flat fields (FAST_LLM_*) ────────────────────
+
+    fast_llm_api_key: str = ""
+    fast_llm_base_url: str = ""
+    fast_llm_model: str = ""
+    fast_llm_temperature: float | None = None
+    fast_llm_max_tokens: int = 0
+    fast_llm_timeout: int = 0
+    fast_llm_max_retries: int = 0
+
     # ── Multimodal LLM flat fields (MULTIMODAL_LLM_*) ────────────────────
 
     multimodal_llm_enabled: bool = False
@@ -232,12 +249,23 @@ class Settings(BaseSettings):
     multimodal_llm_base_url: str = ""
     multimodal_llm_model: str = ""
 
-    # ── Arbitration flat fields (ARBITRATION_*) ──────────────────────────
+    # ── Legacy reasoning flat fields (previously ARBITRATION_*) ────────
 
-    arbitration_api_key: str = ""
-    arbitration_model: str = ""
-    arbitration_reasoning_effort: str = "high"
-    arbitration_base_url: str = ""
+    reasoning_api_key: str = ""
+    reasoning_model: str = ""
+    reasoning_effort: str = "high"
+    reasoning_base_url: str = ""
+
+    # ── Preferred reasoning LLM flat fields (REASONING_LLM_*) ──────────
+
+    reasoning_llm_api_key: str = ""
+    reasoning_llm_model: str = ""
+    reasoning_llm_reasoning_effort: str = ""
+    reasoning_llm_base_url: str = ""
+    reasoning_llm_temperature: float | None = None
+    reasoning_llm_max_tokens: int = 0
+    reasoning_llm_timeout: int = 0
+    reasoning_llm_max_retries: int = 0
 
     # ── Embedding flat fields (EMBEDDING_*) ──────────────────────────────
 
@@ -357,7 +385,7 @@ class Settings(BaseSettings):
 
     llm: LLMConfig = Field(default_factory=LLMConfig, exclude=True)
     multimodal_llm: MultimodalLLMConfig = Field(default_factory=MultimodalLLMConfig, exclude=True)
-    arbitration: ArbitrationConfig = Field(default_factory=ArbitrationConfig, exclude=True)
+    reasoning: ReasoningConfig = Field(default_factory=ReasoningConfig, exclude=True)
     embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig, exclude=True)
     rerank: RerankConfig = Field(default_factory=RerankConfig, exclude=True)
     mineru: MinerUConfig = Field(default_factory=MinerUConfig, exclude=True)
@@ -378,14 +406,27 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _build_nested(self) -> Settings:
         """Construct nested domain models from the flat env-var fields."""
+        fast_api_key = self.fast_llm_api_key or self.llm_api_key
+        fast_base_url = self.fast_llm_base_url or self.llm_base_url
+        fast_model = self.fast_llm_model or self.llm_model
+        fast_temperature = self.fast_llm_temperature if self.fast_llm_temperature is not None else self.llm_temperature
+        fast_max_tokens = self.fast_llm_max_tokens or self.llm_max_tokens
+        fast_timeout = self.fast_llm_timeout or self.llm_timeout
+        fast_max_retries = self.fast_llm_max_retries or self.llm_max_retries
+
+        reasoning_api_key = self.reasoning_llm_api_key or self.reasoning_api_key
+        reasoning_model = self.reasoning_llm_model or self.reasoning_model
+        reasoning_effort = self.reasoning_llm_reasoning_effort or self.reasoning_effort
+        reasoning_base_url = self.reasoning_llm_base_url or self.reasoning_base_url
+
         self.llm = LLMConfig(
-            api_key=self.llm_api_key,
-            base_url=self.llm_base_url,
-            model=self.llm_model,
-            temperature=self.llm_temperature,
-            max_tokens=self.llm_max_tokens,
-            timeout=self.llm_timeout,
-            max_retries=self.llm_max_retries,
+            api_key=fast_api_key,
+            base_url=fast_base_url,
+            model=fast_model,
+            temperature=fast_temperature,
+            max_tokens=fast_max_tokens,
+            timeout=fast_timeout,
+            max_retries=fast_max_retries,
         )
         self.multimodal_llm = MultimodalLLMConfig(
             enabled=self.multimodal_llm_enabled,
@@ -393,11 +434,11 @@ class Settings(BaseSettings):
             base_url=self.multimodal_llm_base_url,
             model=self.multimodal_llm_model,
         )
-        self.arbitration = ArbitrationConfig(
-            api_key=self.arbitration_api_key,
-            model=self.arbitration_model,
-            reasoning_effort=self.arbitration_reasoning_effort,
-            base_url=self.arbitration_base_url,
+        self.reasoning = ReasoningConfig(
+            api_key=reasoning_api_key,
+            model=reasoning_model,
+            reasoning_effort=reasoning_effort,
+            base_url=reasoning_base_url,
         )
         self.embedding = EmbeddingConfig(
             base_url=self.embedding_base_url,

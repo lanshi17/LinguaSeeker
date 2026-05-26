@@ -1,8 +1,11 @@
 """Public facade for Phase 3 entity standardization."""
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import Any
+
+from loguru import logger
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     DualEvidenceExtractionResult,
@@ -61,18 +64,48 @@ async def import_terminology(
     sources: list[str],
 ) -> None:
     """Import local terminology sources through the repository facade."""
+    started_at = time.perf_counter()
     source_names = tuple(source.lower() for source in sources)
+    logger.info(
+        "Starting terminology import: root={}, version={}, sources={}",
+        terminology_root,
+        version,
+        list(source_names),
+    )
     batches = _load_import_batches(terminology_root=terminology_root, version=version, sources=source_names)
+    total_entries = sum(len(batch.entries) for batch in batches)
+    total_aliases = sum(len(batch.aliases) for batch in batches)
+    total_relationships = sum(len(batch.relationships) for batch in batches)
+    logger.info(
+        "Parsed terminology batches: batches={}, entries={}, aliases={}, relationships={}",
+        len(batches),
+        total_entries,
+        total_aliases,
+        total_relationships,
+    )
     engine = build_async_engine(cfg)
     session_factory = async_session_factory(engine)
     try:
         async with get_async_session(session_factory) as session:
             repository = StandardizationRepository(session)
-            for batch in batches:
+            for index, batch in enumerate(batches, start=1):
+                source_db = _describe_batch_source(batch)
+                logger.info(
+                    "Importing batch {}/{} [{}]: entries={}, aliases={}, relationships={}",
+                    index,
+                    len(batches),
+                    source_db,
+                    len(batch.entries),
+                    len(batch.aliases),
+                    len(batch.relationships),
+                )
                 await repository.upsert_terminology_batch(batch)
+                logger.info("Imported batch {}/{} [{}]", index, len(batches), source_db)
             await session.commit()
+            logger.info("Committed terminology import transaction")
     finally:
         await engine.dispose()
+    logger.info("Terminology import completed in {:.2f}s", time.perf_counter() - started_at)
 
 
 def _load_import_batches(
@@ -86,7 +119,7 @@ def _load_import_batches(
     source_root = Path(terminology_root)
 
     if "hgnc" in sources:
-        batches.append(parse_hgnc_rows(source_root / "hgnc_complete_set.txt", version=version))
+        batches.append(parse_hgnc_rows(source_root / "hgnc" / "hgnc_complete_set.txt", version=version))
     if "omim" in sources:
         batches.append(parse_omim_rows(source_root / "omim", version=version))
     if "hpo" in sources:
@@ -97,3 +130,14 @@ def _load_import_batches(
         batches.append(parse_clinvar_rows(source_root / "clinvar" / "variant_summary.txt", version=version))
 
     return tuple(batches)
+
+
+def _describe_batch_source(batch: ImportBatch) -> str:
+    """Return a human-readable source label for one parsed batch."""
+    if batch.entries:
+        return batch.entries[0].source_db
+    if batch.aliases:
+        return batch.aliases[0].source_db
+    if batch.relationships:
+        return batch.relationships[0].source_db
+    return "empty"

@@ -154,12 +154,18 @@ async def test_run_extract_evidence_writes_dual_track_outputs(tmp_path: Path):
 
 def test_ensure_evidence_env_falls_back_to_loaded_llm_config(monkeypatch: pytest.MonkeyPatch):
     class FakeLlm:
-        api_key = "key"
+        api_key = "fast-key"
         base_url = "http://localhost:8001/v1"
-        model = "model"
+        model = "fast-model"
+
+    class FakeReasoning:
+        api_key = "reason-key"
+        base_url = "http://localhost:8002/v1"
+        model = "reason-model"
 
     class FakeConfig:
         llm = FakeLlm()
+        reasoning = FakeReasoning()
 
     for name in (
         "EVIDENCE_EXTRACTION_API_KEY",
@@ -167,18 +173,23 @@ def test_ensure_evidence_env_falls_back_to_loaded_llm_config(monkeypatch: pytest
         "EVIDENCE_EXTRACTION_FAST_MODEL",
         "EVIDENCE_EXTRACTION_STANDARD_MODEL",
         "EVIDENCE_EXTRACTION_STRONG_MODEL",
-        "LLM_API_KEY",
-        "LLM_BASE_URL",
-        "LLM_MODEL",
+        "FAST_LLM_API_KEY",
+        "FAST_LLM_BASE_URL",
+        "FAST_LLM_MODEL",
+        "REASONING_LLM_API_KEY",
+        "REASONING_LLM_BASE_URL",
+        "REASONING_LLM_MODEL",
     ):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setattr(runner, "get_config", lambda: FakeConfig())
 
     runner._ensure_evidence_env_from_llm()
 
-    assert os.environ["EVIDENCE_EXTRACTION_API_KEY"] == "key"
+    assert os.environ["EVIDENCE_EXTRACTION_API_KEY"] == "fast-key"
     assert os.environ["EVIDENCE_EXTRACTION_BASE_URL"] == "http://localhost:8001/v1"
-    assert os.environ["EVIDENCE_EXTRACTION_STRONG_MODEL"] == "model"
+    assert os.environ["EVIDENCE_EXTRACTION_FAST_MODEL"] == "fast-model"
+    assert os.environ["EVIDENCE_EXTRACTION_STANDARD_MODEL"] == "fast-model"
+    assert os.environ["EVIDENCE_EXTRACTION_STRONG_MODEL"] == "reason-model"
 
 
 def _write_fixture(input_dir: Path) -> None:

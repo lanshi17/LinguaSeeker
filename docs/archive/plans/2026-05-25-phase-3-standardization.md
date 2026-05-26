@@ -1551,6 +1551,6 @@ git commit -m "docs(standardization): document phase three module"
 
 - Keep `database/terminology_database/` untracked unless the project explicitly decides to version local terminology files.
 - Do not import the 28G dbSNP file in this plan.
-- Do not add model configuration for embedding or arbitration in this plan.
+- Do not add model configuration for embedding or reasoning in this plan.
 - Do not mutate existing Phase 2 extraction contracts unless a failing Phase 3 adapter test proves a contract gap.
 - Do not use bare `dict` return annotations in backend code. Use dataclasses, Pydantic models, or `TypedDict`; add `# noqa: dict-return` only for intentionally unstructured SQL projection rows.

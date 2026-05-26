@@ -110,3 +110,5 @@
 [2026-05-25] [Phase 3 precise/similarity matching split with pgvector semantic fallback planned] [planned]
 [2026-05-25] Added Phase 3 E2E script `backend/scripts/e2e_standardize_entities.py` with default Fabry latest input, optional `--refresh-upstream`, optional terminology import, JSON output persistence, targeted pytest coverage, and Ruff verification [done]
 [2026-05-25] pgvector vector database: extension, migration, model, VectorRepository, EmbeddingProvider, TerminologyEmbeddingService, VectorFallbackMatcher, CLI, docs [completed]
+[2026-05-26] Updated config compatibility for FAST_LLM_* and REASONING_LLM_* prefixes, kept cfg.llm/cfg.reasoning stable, and mapped extract_evidence strong tier to reasoning model with targeted pytest + Ruff verification [done]
+[2026-05-26] Fixed Phase 3 terminology import HGNC root path resolution (`terminology_root/hgnc/hgnc_complete_set.txt`) with targeted API test and Ruff verification [done]

@@ -567,3 +567,38 @@ Chinese medical journals often include both Chinese and English versions of titl
 1. 复用已有 E2E 脚本时，先核对它的最终落盘路径，不要只按参数名猜输出层级。
 2. 对脚本内部可 monkeypatch 的 helper，调用侧默认做 sync/async 双兼容，降低测试替身耦合。
 3. 宣称“真实 E2E 已跑通”之前，先单独验证基础设施可用性：LLM 环境变量、数据库连通性、容器运行权限。
+
+## 2026-05-26: FAST_LLM / REASONING_LLM naming migration needs compatibility at config boundary
+
+**Problem**: 项目新的 `.env.local` 约定把通用模型拆成 `FAST_LLM_*` 和 `REASONING_LLM_*` 两组，但代码仍主要读取旧的 `LLM_*` / `ARBITRATION_*`（已改为 reasoning 命名）。这会导致配置文件明明已经更新，运行时代码却继续拿到空值或错误模型分层。
+
+**Investigation**: 先直接验证 `Settings()` 的实际解析结果，再补最小红灯测试，覆盖两类行为：`FAST_LLM_* -> cfg.llm`、`REASONING_LLM_* -> cfg.reasoning`，以及 `scripts/e2e_extract_evidence.py` 中强模型不应再回落到快速模型。测试先按预期失败，确认问题在配置兼容层和脚本映射层，而不是使用方。
+
+**Root cause**:
+1. `pydantic-settings` 只会自动填充已声明的字段；新增前缀没有对应 flat fields，自然不会进入 `Settings`。
+2. 现有代码把“默认模型”和“强模型”绑定到旧命名约定，`extract_evidence` 的 `STRONG` tier 仍错误映射到 `LLM_MODEL`。
+
+**Solution**:
+1. 在 `src/core/config.py` 新增 `fast_llm_*` 和 `reasoning_llm_*` flat fields。
+2. 保持调用面不变：`cfg.llm` 继续代表快速模型，`cfg.reasoning` 继续代表推理模型，但在 `_build_nested()` 中优先取 `FAST_LLM_*` / `REASONING_LLM_*`，旧 `LLM_*` / `ARBITRATION_*` 仅作兼容回退。
+3. 更新 `scripts/e2e_extract_evidence.py::_ensure_evidence_env_from_llm()`，让 `FAST/ STANDARD` tier 走快速模型，`STRONG` tier 优先走推理模型，再回退到旧变量或快速模型。
+4. 只用受影响范围做 fresh verification，避免把无关工作区改动混进结论。
+
+**Prevention**:
+1. 配置命名迁移时，先在配置边界做兼容，再改调用方；不要要求全仓库一次性切换字段名。
+2. 模型分层至少要有一条脚本级回归测试，明确哪个 tier 对应哪个 env/source。
+3. 验证配置问题时，区分 `os.environ` 和 `Settings()` 解析结果；前者没导出，不代表 `.env.local` 没生效。
+
+## 2026-05-26: Terminology import root-path bug was isolated to HGNC loader wiring
+
+**Problem**: 真实执行 `uv run python ../scripts/import_terminology.py --terminology-root ../database/terminology_database ...` 时，迁移已成功，但术语导入在 HGNC 阶段直接报 `FileNotFoundError`，路径错误指向 `../database/terminology_database/hgnc_complete_set.txt`。
+
+**Investigation**: 对照 `database/terminology_database/` 实际目录结构检查后确认，只有 HGNC 数据放在 `hgnc/hgnc_complete_set.txt` 子目录下；OMIM/HPO/ClinGen/ClinVar 的 loader 都已经按子目录解析。补了一条红灯测试，把 facade 的 HGNC 路径期望固定为 `terminology_root / "hgnc" / "hgnc_complete_set.txt"`，测试先按预期失败，再修实现。
+
+**Root cause**: `src/core/standardize_entities_and_align_knowledge/api.py::_load_import_batches()` 对 HGNC 这一路单独写错了路径，把它当成了术语根目录下的直文件，而不是 `hgnc/` 子目录内文件。
+
+**Solution**: 将 HGNC loader 路径修正为 `source_root / "hgnc" / "hgnc_complete_set.txt"`，并用 targeted pytest + Ruff 验证。
+
+**Prevention**:
+1. facade 层拼接数据根目录时，所有 source 的路径规则都要有测试覆盖，避免只有某一路“手写特例”漂移。
+2. 对真实数据导入链路，先用 `find database/terminology_database -maxdepth 2 -type f` 校对物理布局，再写 loader 入口路径。
