@@ -19,7 +19,6 @@ from sqlalchemy import (
     func,
     text,
 )
-from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 

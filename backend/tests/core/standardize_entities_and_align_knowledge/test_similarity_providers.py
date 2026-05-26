@@ -4,6 +4,16 @@ from __future__ import annotations
 import httpx
 import pytest
 
+from src.core.standardize_entities_and_align_knowledge.contracts import (
+    BindingRole,
+    EntityType,
+    MatchStatus,
+    StandardizationCandidate,
+)
+from src.core.standardize_entities_and_align_knowledge.matchers import HybridTerminologyMatcher
+from src.core.standardize_entities_and_align_knowledge.similarity_match.core import (
+    SemanticMatchServiceError,
+)
 from src.core.standardize_entities_and_align_knowledge.similarity_match.providers import (
     ModelServerEmbeddingProvider,
     ModelServerRerankProvider,
@@ -102,3 +112,43 @@ async def test_rerank_provider_returns_ranked_scores() -> None:
     assert result.model == "BAAI/bge-reranker-v2-m3"
     assert result.results[0].index == 1
     assert result.results[0].relevance_score == 0.91
+
+
+@pytest.mark.asyncio
+async def test_hybrid_matcher_downgrades_similarity_service_errors_to_unmapped() -> None:
+    """Model-server outages should not crash Phase 3 matching."""
+
+    class FakePreciseMatcher:
+        async def match(self, candidate):
+            from src.core.standardize_entities_and_align_knowledge.contracts import (
+                EntityMatch,
+                MatchMethod,
+            )
+
+            return EntityMatch(
+                candidate=candidate,
+                status=MatchStatus.UNMAPPED,
+                external_id=None,
+                display_name=candidate.raw_text,
+                rationale="no deterministic terminology candidate",
+                match_method=MatchMethod.PRECISE,
+            )
+
+    class FailingSimilarityMatcher:
+        async def match(self, candidate):
+            raise SemanticMatchServiceError("model server unavailable")
+
+    matcher = HybridTerminologyMatcher(FakePreciseMatcher(), FailingSimilarityMatcher())
+    candidate = StandardizationCandidate(
+        candidate_id="chain-1:variant",
+        entity_type=EntityType.VARIANT,
+        role=BindingRole.SUBJECT,
+        raw_text="p.R227X",
+        chain_id="chain-1",
+        track="original",
+    )
+
+    result = await matcher.match(candidate)
+
+    assert result.status == MatchStatus.UNMAPPED
+    assert "semantic matching unavailable" in result.rationale

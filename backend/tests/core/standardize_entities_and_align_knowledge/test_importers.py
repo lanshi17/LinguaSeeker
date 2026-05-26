@@ -9,6 +9,7 @@ from src.core.standardize_entities_and_align_knowledge.importers import (
     _iter_tsv_rows,
     _normalize_rsid,
     _split_comma_values,
+    build_clinvar_core_tsv,
     iter_clinvar_batches,
     is_importable_clinvar_review_status,
     parse_clingen_rows,
@@ -96,6 +97,49 @@ def test_parse_clingen_rows_builds_mondo_entries_and_relationships(tmp_path: Pat
     assert relationship.object_external_id == "MONDO:0012934"
 
 
+def test_parse_omim_rows_skips_preface_comments_before_header(tmp_path: Path) -> None:
+    """Real OMIM exports may include preface comment lines before the tabular header."""
+    root = tmp_path / "omim"
+    root.mkdir()
+    (root / "mimTitles.txt").write_text(
+        "# Copyright\n"
+        "# Generated: 2026-05-26\n"
+        "# Prefix\tMIM Number\tPreferred Title; symbol\n"
+        "NULL\t100100\tExample disease\n",
+        encoding="utf-8",
+    )
+
+    batch = parse_omim_rows(root, version="omim_test")
+
+    assert batch.entries[0].external_id == "OMIM:100100"
+    assert batch.entries[0].display_name == "Example disease"
+
+
+def test_parse_clingen_rows_skips_preamble_before_csv_header(tmp_path: Path) -> None:
+    """Real ClinGen exports may include several prose rows before the actual CSV header."""
+    root = tmp_path / "clingen"
+    root.mkdir()
+    (root / "Clingen-Gene-Disease-Summary.csv").write_text(
+        "\"CLINGEN GENE DISEASE VALIDITY CURATIONS\",\"\"\n"
+        "\"FILE CREATED: 2026-05-25\",\"\"\n"
+        "\"GENE SYMBOL\",\"GENE ID (HGNC)\",\"DISEASE LABEL\",\"DISEASE ID (MONDO)\",\"CLASSIFICATION\"\n"
+        "\"BRCA2\",\"1101\",\"Breast cancer\",\"MONDO:0012934\",\"Definitive\"\n",
+        encoding="utf-8",
+    )
+    (root / "Clingen-Dosage-Sensitivity.csv").write_text(
+        "\"CLINGEN DOSAGE SENSITIVITY CURATIONS\",\"\"\n"
+        "\"FILE CREATED: 2026-05-25\",\"\"\n"
+        "\"GENE SYMBOL\",\"HGNC ID\",\"HAPLOINSUFFICIENCY\",\"TRIPLOSENSITIVITY\",\"ONLINE REPORT\",\"DATE\"\n"
+        "\"GLA\",\"4296\",\"3\",\"0\",\"https://example.test\",\"2026-05-25\"\n",
+        encoding="utf-8",
+    )
+
+    batch = parse_clingen_rows(root, version="clingen_test")
+
+    assert any(entry.external_id == "MONDO:0012934" for entry in batch.entries)
+    assert any(relationship.relationship_type == "gene_has_dosage_sensitivity" for relationship in batch.relationships)
+
+
 def test_parse_clinvar_rows_keeps_significance_as_scalar_relationship(tmp_path: Path) -> None:
     """ClinVar rows create variant entries, rsID aliases, and scalar significance relationships."""
     path = tmp_path / "variant_summary.txt"
@@ -145,6 +189,45 @@ def test_iter_clinvar_batches_yields_chunked_batches(tmp_path: Path) -> None:
         "ClinVarVariation:12346",
     ]
     assert all(len(batch.entries) == 1 for batch in batches)
+
+
+def test_build_clinvar_core_tsv_keeps_only_requested_fields(tmp_path: Path) -> None:
+    """ClinVar pre-processing writes a reduced TSV containing only core alignment fields."""
+    source = tmp_path / "variant_summary.txt"
+    target = tmp_path / "variant_summary.core.tsv"
+    source.write_text(
+        "#AlleleID\tType\tName\tGeneID\tGeneSymbol\tHGNC_ID\tClinicalSignificance\tClinSigSimple\tLastEvaluated\tRS# (dbSNP)\t"
+        "nsv/esv (dbVar)\tRCVaccession\tPhenotypeIDS\tPhenotypeList\tOrigin\tOriginSimple\tAssembly\tChromosomeAccession\t"
+        "Chromosome\tStart\tStop\tReferenceAllele\tAlternateAllele\tCytogenetic\tReviewStatus\tNumberSubmitters\tGuidelines\t"
+        "TestedInGTR\tOtherIDs\tSubmitterCategories\tVariationID\n"
+        "1\tsingle nucleotide variant\tNM_000059.4(BRCA2):c.5946del\t675\tBRCA2\tHGNC:1101\tPathogenic\t1\t2024-01-01\t80359550\t"
+        "-\tRCV0001\tOMIM:612555\tBreast cancer\tgermline\tgermline\tGRCh38\tNC_000013.11\t13\t1\t1\tA\t-\t-\t"
+        "criteria provided, single submitter\t1\t-\tN\t-\t-\t12345\n",
+        encoding="utf-8",
+    )
+
+    rows_written = build_clinvar_core_tsv(source, target)
+
+    assert rows_written == 1
+    written = target.read_text(encoding="utf-8").splitlines()
+    assert written[0] == "\t".join([
+        "VariationID",
+        "Name",
+        "GeneSymbol",
+        "ClinicalSignificance",
+        "ReviewStatus",
+        "RS# (dbSNP)",
+        "PhenotypeIDS",
+    ])
+    assert written[1] == "\t".join([
+        "12345",
+        "NM_000059.4(BRCA2):c.5946del",
+        "BRCA2",
+        "Pathogenic",
+        "criteria provided, single submitter",
+        "80359550",
+        "OMIM:612555",
+    ])
 
 
 def test_collect_alias_values_deduplicates_and_preserves_first_seen_order() -> None:

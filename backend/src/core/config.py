@@ -24,6 +24,7 @@ flat fields by a ``model_validator``.
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from urllib.parse import quote
 
 from pydantic import BaseModel, Field, model_validator
@@ -33,6 +34,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # ── Constants ───────────────────────────────────────────────────────────
 
 PGVECTOR_DIMENSION: int = 1024
+BACKEND_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = BACKEND_ROOT.parent
+DEFAULT_ENV_FILES = (
+    str(REPO_ROOT / ".env"),
+    str(REPO_ROOT / ".env.local"),
+    str(BACKEND_ROOT / ".env"),
+    str(BACKEND_ROOT / ".env.local"),
+)
 
 
 # ── Nested domain models ────────────────────────────────────────────────
@@ -210,7 +219,7 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=(".env.local", ".env"),
+        env_file=DEFAULT_ENV_FILES,
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",

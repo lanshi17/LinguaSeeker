@@ -69,10 +69,16 @@ async def test_import_terminology_loads_batches_and_calls_repository(monkeypatch
 
     monkeypatch.setattr(api_module, "_load_import_batches", lambda **kwargs: tuple(loaded_batches))
     clinvar_stream_calls: list[tuple[Path, str, int]] = []
+    preprocess_calls: list[tuple[Path, Path]] = []
     monkeypatch.setattr(
         api_module,
         "_import_clinvar_stream",
         lambda *, repository, path, version, chunk_size: clinvar_stream_calls.append((path, version, chunk_size)),
+    )
+    monkeypatch.setattr(
+        api_module,
+        "_ensure_clinvar_core_path",
+        lambda path: preprocess_calls.append((path, path.with_name("variant_summary.core.tsv"))) or path.with_name("variant_summary.core.tsv"),
     )
     monkeypatch.setattr(api_module, "build_async_engine", lambda cfg: FakeEngine())
     monkeypatch.setattr(api_module, "async_session_factory", lambda engine: "factory")
@@ -105,8 +111,12 @@ async def test_import_terminology_loads_batches_and_calls_repository(monkeypatch
     )
 
     assert received_batches == loaded_batches
-    assert clinvar_stream_calls == [(
+    assert preprocess_calls == [(
         tmp_path / "clinvar" / "variant_summary.txt",
+        tmp_path / "clinvar" / "variant_summary.core.tsv",
+    )]
+    assert clinvar_stream_calls == [(
+        tmp_path / "clinvar" / "variant_summary.core.tsv",
         "test-version",
         10_000,
     )]

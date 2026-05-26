@@ -21,6 +21,10 @@ class StandardizationService:
 
     async def run(self, input_data: StandardizationInput) -> StandardizationResult:
         """Run deterministic matching and persist the resulting normalized state."""
+        await self._repository.ensure_run_parents(
+            source_document_id=input_data.source_document_id,
+            processing_run_id=input_data.processing_run_id,
+        )
         matches_list = []
         for candidate in input_data.candidates:
             matches_list.append(await self._matcher.match(candidate))

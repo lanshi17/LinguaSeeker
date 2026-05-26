@@ -25,6 +25,16 @@ ZERO_STAR_REVIEW_STATUSES = {
     "no classifications from unflagged records",
 }
 
+CLINVAR_CORE_FIELDS = (
+    "VariationID",
+    "Name",
+    "GeneSymbol",
+    "ClinicalSignificance",
+    "ReviewStatus",
+    "RS# (dbSNP)",
+    "PhenotypeIDS",
+)
+
 
 @dataclass(frozen=True)
 class ImportEntry:
@@ -161,7 +171,7 @@ def parse_omim_rows(root: Path, version: str) -> ImportBatch:
     entries: list[ImportEntry] = []
     aliases: list[ImportAlias] = []
 
-    for row in _iter_tsv_rows(path):
+    for row in _iter_tsv_rows(path, header_prefix="Prefix\tMIM Number\tPreferred Title; symbol"):
         mim_number = (row.get("MIM Number") or "").strip()
         title = (row.get("Preferred Title; symbol") or "").strip()
         if not mim_number or not title:
@@ -217,9 +227,15 @@ def parse_clingen_rows(root: Path, version: str) -> ImportBatch:
     summary_path = root / "Clingen-Gene-Disease-Summary.csv"
     if summary_path.exists():
         with summary_path.open(encoding="utf-8", newline="") as handle:
-            reader = csv.DictReader(handle)
+            reader = _csv_dict_reader_from_header(
+                handle,
+                header_prefixes=(
+                    "GENE SYMBOL,GENE ID (HGNC),DISEASE LABEL,DISEASE ID (MONDO)",
+                    "GENE SYMBOL,DISEASE LABEL,DISEASE ID,CLASSIFICATION",
+                ),
+            )
             for row in reader:
-                disease_id = (row.get("DISEASE ID") or "").strip()
+                disease_id = (row.get("DISEASE ID") or row.get("DISEASE ID (MONDO)") or "").strip()
                 disease_label = (row.get("DISEASE LABEL") or "").strip()
                 gene_symbol = (row.get("GENE SYMBOL") or "").strip()
                 classification = (row.get("CLASSIFICATION") or "").strip()
@@ -264,10 +280,21 @@ def parse_clingen_rows(root: Path, version: str) -> ImportBatch:
     dosage_path = root / "Clingen-Dosage-Sensitivity.csv"
     if dosage_path.exists():
         with dosage_path.open(encoding="utf-8", newline="") as handle:
-            reader = csv.DictReader(handle)
+            reader = _csv_dict_reader_from_header(
+                handle,
+                header_prefixes=(
+                    "GENE SYMBOL,HGNC ID,HAPLOINSUFFICIENCY,TRIPLOSENSITIVITY",
+                    "Gene Symbol,Dosage Sensitivity Map,Score",
+                ),
+            )
             for row in reader:
                 gene_symbol = (row.get("Gene Symbol") or row.get("GENE SYMBOL") or "").strip()
-                score = (row.get("Score") or row.get("Haploinsufficiency Score") or "").strip()
+                score = (
+                    row.get("Score")
+                    or row.get("Haploinsufficiency Score")
+                    or row.get("HAPLOINSUFFICIENCY")
+                    or ""
+                ).strip()
                 if not gene_symbol:
                     continue
                 relationships.append(
@@ -295,6 +322,27 @@ def parse_clinvar_rows(path: Path, version: str) -> ImportBatch:
     aliases = tuple(alias for batch in batches for alias in batch.aliases)
     relationships = tuple(relationship for batch in batches for relationship in batch.relationships)
     return ImportBatch(entries=entries, aliases=aliases, relationships=relationships)
+
+
+def build_clinvar_core_tsv(source_path: Path, target_path: Path) -> int:
+    """Write a reduced ClinVar TSV with only fields needed for Phase 3 alignment."""
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    rows_written = 0
+    with source_path.open(encoding="utf-8", newline="") as source_handle, target_path.open(
+        "w",
+        encoding="utf-8",
+        newline="",
+    ) as target_handle:
+        header_line = _find_header_line(source_handle, comment_prefix="#")
+        if header_line is None:
+            return 0
+        reader = csv.DictReader(chain([header_line], source_handle), delimiter="\t")
+        writer = csv.writer(target_handle, delimiter="\t", lineterminator="\n")
+        writer.writerow(CLINVAR_CORE_FIELDS)
+        for row in reader:
+            writer.writerow([str(row.get(field, "") or "").strip() for field in CLINVAR_CORE_FIELDS])
+            rows_written += 1
+    return rows_written
 
 
 def iter_clinvar_batches(path: Path, version: str, chunk_size: int) -> Iterator[ImportBatch]:
@@ -502,17 +550,55 @@ def _split_comma_values(value: str | None) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
-def _iter_tsv_rows(path: Path) -> Iterator[dict[str, str]]:
+def _iter_tsv_rows(path: Path, header_prefix: str | None = None) -> Iterator[dict[str, str]]:
     """Yield TSV rows while stripping a leading hash from the header if present."""
     with path.open(encoding="utf-8", newline="") as handle:
-        first_line = handle.readline()
-        if not first_line:
+        header_line = _find_header_line(handle, header_prefix=header_prefix, comment_prefix="#")
+        if header_line is None:
             return
-        if first_line.startswith("#"):
-            first_line = first_line[1:]
-        reader = csv.DictReader(chain([first_line], handle), delimiter="\t")
+        reader = csv.DictReader(chain([header_line], handle), delimiter="\t")
         for row in reader:
             yield dict(row)
+
+
+def _csv_dict_reader_from_header(handle, *, header_prefixes: tuple[str, ...]) -> csv.DictReader:
+    """Build a CSV DictReader after skipping preamble lines before the actual header."""
+    header_line = _find_csv_header_line(handle, header_prefixes=header_prefixes)
+    if header_line is None:
+        return csv.DictReader([])
+    return csv.DictReader(chain([header_line], handle))
+
+
+def _find_header_line(
+    handle,
+    *,
+    header_prefix: str | None = None,
+    header_prefixes: tuple[str, ...] = (),
+    comment_prefix: str | None = None,
+) -> str | None:
+    """Return the first line that matches the expected header prefix."""
+    expected_prefixes = header_prefixes or ((header_prefix,) if header_prefix is not None else ())
+    for line in handle:
+        candidate = line[1:] if comment_prefix and line.startswith(comment_prefix) else line
+        stripped = candidate.lstrip("\ufeff").strip().strip('"')
+        if not stripped:
+            continue
+        if not expected_prefixes or any(stripped.startswith(prefix) for prefix in expected_prefixes):
+            return candidate
+    return None
+
+
+def _find_csv_header_line(handle, *, header_prefixes: tuple[str, ...]) -> str | None:
+    """Return the first CSV line whose parsed cells match any expected header prefix."""
+    for line in handle:
+        stripped = line.lstrip("\ufeff").strip()
+        if not stripped:
+            continue
+        cells = next(csv.reader([line]))
+        normalized = ",".join(cell.strip() for cell in cells)
+        if any(normalized.startswith(prefix) for prefix in header_prefixes):
+            return line
+    return None
 
 
 def _parse_hpo_json_rows(path: Path, version: str) -> ImportBatch:
