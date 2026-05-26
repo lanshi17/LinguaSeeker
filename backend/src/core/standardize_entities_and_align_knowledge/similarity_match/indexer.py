@@ -5,6 +5,7 @@ import hashlib
 from collections.abc import Iterable
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from src.dao.models import TerminologyEmbedding, TerminologyEntry
 
@@ -36,7 +37,7 @@ class TerminologyEmbeddingIndexer:
         self._embedding_provider = embedding_provider
 
     async def build(self, *, embedding_model: str, batch_size: int) -> int:
-        """Embed terminology entries that do not yet have current model embeddings."""
+        """Embed terminology entries, upserting to stay idempotent."""
         result = await self._session.execute(select(TerminologyEntry).order_by(TerminologyEntry.entry_id))
         entries = tuple(result.scalars().all())
         written = 0
@@ -44,17 +45,28 @@ class TerminologyEmbeddingIndexer:
             texts = tuple(build_embedding_text(entry) for entry in batch)
             vectors = (await self._embedding_provider.embed_texts(texts)).vectors
             for entry, text, vector in zip(batch, texts, vectors, strict=True):
-                embedding = TerminologyEmbedding(
-                    entry_id=entry.entry_id,
-                    entity_type=entry.entity_type,
-                    source_db=entry.source_db,
-                    external_id=entry.external_id,
-                    embedding_text=text,
-                    embedding_text_hash=make_embedding_text_hash(text),
-                    embedding_model=embedding_model,
-                    embedding=list(vector),
+                text_hash = make_embedding_text_hash(text)
+                stmt = (
+                    pg_insert(TerminologyEmbedding.__table__)
+                    .values(
+                        entry_id=entry.entry_id,
+                        entity_type=entry.entity_type,
+                        source_db=entry.source_db,
+                        external_id=entry.external_id,
+                        embedding_text=text,
+                        embedding_text_hash=text_hash,
+                        embedding_model=embedding_model,
+                        embedding=list(vector),
+                    )
+                    .on_conflict_do_update(
+                        constraint="uq_terminology_embeddings_entry_text_model",
+                        set_={
+                            "embedding_text": text,
+                            "embedding": list(vector),
+                        },
+                    )
                 )
-                self._session.add(embedding)
+                await self._session.execute(stmt)
                 written += 1
             await self._session.flush()
         return written
