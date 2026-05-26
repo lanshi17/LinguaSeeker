@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -47,21 +48,33 @@ def block_context_ref(block: ContentBlock) -> str:
     return captions[0] if captions else ""
 
 
-def build_block_prompt_text(document: TrackDocument) -> str:
+def format_block_prompt_entry(index: int, block: ContentBlock, body: str | None = None) -> str:
+    block_body = body if body is not None else block_readable_text(block)
+    mapped_type = map_block_type(block.type)
+    caption = block_context_ref(block)
+    caption_part = f" | caption: {caption}" if caption else ""
+    return (
+        f"[Block {index} | {mapped_type} | page {block.page_idx + 1}{caption_part}]\n"
+        f"{block_body}"
+    )
+
+
+def build_block_prompt_text(
+    document: TrackDocument,
+    block_indices: Sequence[int] | None = None,
+) -> str:
     if not document.blocks:
         return document.formatted_text
+    indices = block_indices if block_indices is not None else range(len(document.blocks))
     parts: list[str] = []
-    for index, block in enumerate(document.blocks):
+    for index in indices:
+        if index < 0 or index >= len(document.blocks):
+            continue
+        block = document.blocks[index]
         body = block_readable_text(block)
         if not body:
             continue
-        mapped_type = map_block_type(block.type)
-        caption = block_context_ref(block)
-        caption_part = f" | caption: {caption}" if caption else ""
-        parts.append(
-            f"[Block {index} | {mapped_type} | page {block.page_idx + 1}{caption_part}]\n"
-            f"{body}"
-        )
+        parts.append(format_block_prompt_entry(index, block, body))
     return "\n\n".join(parts)
 
 
