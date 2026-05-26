@@ -96,6 +96,34 @@ def build_minimal_dual_result(*, gene: str, disease: str, variant: str, phenotyp
     )
 
 
+class FakeEmbeddingConfig:
+    """Minimal embedding config for integration tests."""
+
+    def __init__(self) -> None:
+        self.base_url = ""
+        self.model = "test-model"
+        self.batch_size = 10
+
+
+class FakeRerankConfig:
+    """Minimal rerank config for integration tests."""
+
+    def __init__(self) -> None:
+        self.base_url = ""
+        self.model = "test-rerank-model"
+        self.top_k = 10
+        self.score_threshold = 0.7
+
+
+class FakeConfig:
+    """Minimal config for integration tests."""
+
+    def __init__(self) -> None:
+        self.embedding = FakeEmbeddingConfig()
+        self.rerank = FakeRerankConfig()
+        self.model_server_url = "http://localhost:8001"
+
+
 def build_service_with_fake_repository(monkeypatch: pytest.MonkeyPatch) -> api_module.EntityStandardizationService:
     """Create the facade service with an in-memory repository implementation."""
     lookup = {
@@ -146,7 +174,7 @@ def build_service_with_fake_repository(monkeypatch: pytest.MonkeyPatch) -> api_m
     }
 
     monkeypatch.setattr(api_module, "StandardizationRepository", FakeRepository)
-    return api_module.EntityStandardizationService(cfg=object(), session=lookup)
+    return api_module.EntityStandardizationService(cfg=FakeConfig(), session=lookup)
 
 
 @pytest.mark.asyncio
@@ -235,7 +263,7 @@ async def test_dual_result_standardization_pipeline_reports_unmapped_and_ambiguo
         return repo
 
     monkeypatch.setattr(api_module, "StandardizationRepository", _factory)
-    service = api_module.EntityStandardizationService(cfg=object(), session=lookup)
+    service = api_module.EntityStandardizationService(cfg=FakeConfig(), session=lookup)
 
     output = await service.run_dual_result(
         result,
