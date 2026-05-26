@@ -35,7 +35,7 @@ def test_pgvector_creates_extension(monkeypatch):
     monkeypatch.setattr("alembic.op.f", lambda name: name)
     mod = _load_pgvector_revision()
     mod.upgrade()
-    assert any("CREATE EXTENSION" in s.upper() and "vector" in s.lower() for s in sqls)
+    assert "CREATE EXTENSION IF NOT EXISTS vector" in [s.strip() for s in sqls]
 
 
 def test_pgvector_creates_embeddings_table(monkeypatch):
