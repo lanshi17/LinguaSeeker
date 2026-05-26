@@ -9,6 +9,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     QualityReport,
     SourceLocation,
     SourcePrecision,
+    SpecialEvidenceResponse,
     Track,
     TrackDocument,
 )
@@ -635,3 +636,44 @@ def test_catalog_extraction_stage_chunks_block_prompts_and_keeps_global_block_in
     assert [item.value for item in result] == ["GLA", "c.1000G>A"]
     assert all(item.source is None for item in result)
     assert all(item.raw_source is not None for item in result)
+
+
+def test_special_evidence_stage_chunks_long_document_prompts():
+    provider = MagicMock()
+    provider.invoke_structured.side_effect = [
+        SpecialEvidenceResponse(records=[]),
+        SpecialEvidenceResponse(records=[]),
+    ]
+    current_item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="GLA",
+        confidence=0.9,
+        raw_source=SourceLocation(
+            block_index=0,
+            context_type="text",
+            context_ref="",
+            text_snippet="GLA",
+        ),
+    )
+    document = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text="",
+        page_spans=[],
+        blocks=[
+            ContentBlock(type="text", page_idx=0, text="GLA " + ("A" * 160)),
+            ContentBlock(type="text", page_idx=1, text="functional assay " + ("B" * 160)),
+        ],
+    )
+
+    result = SpecialEvidenceStage(provider, input_budget_tokens=500).run(document, [current_item])
+
+    assert result == []
+    assert provider.invoke_structured.call_count == 2
+    assert [call.kwargs["stage"] for call in provider.invoke_structured.call_args_list] == [
+        "special_evidence/1",
+        "special_evidence/2",
+    ]
