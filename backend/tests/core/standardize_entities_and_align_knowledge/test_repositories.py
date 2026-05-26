@@ -9,6 +9,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     BindingRole,
     EntityMatch,
     EntityType,
+    MatchMethod,
     MatchStatus,
     StandardizationCandidate,
     StandardizationInput,
@@ -377,3 +378,34 @@ async def test_insert_run_evidence_items_normalizes_enum_payload_values_from_ada
     assert run_rows[0].status == "found"
     assert len(binding_rows) == 1
     assert len(canonical_rows) == 1
+
+
+@pytest.mark.asyncio
+async def test_upsert_normalized_entity_persists_similarity_rationale() -> None:
+    """Semantic match metadata is preserved for audit and review."""
+    session = FakeSession()
+    repo = StandardizationRepository(session)
+    match = EntityMatch(
+        candidate=StandardizationCandidate(
+            candidate_id="chain-1:gene",
+            entity_type=EntityType.GENE,
+            role=BindingRole.SUBJECT,
+            raw_text="BRCA one",
+            chain_id="chain-1",
+            track="original",
+        ),
+        status=MatchStatus.STANDARDIZED,
+        external_id="HGNC:1100",
+        display_name="BRCA1",
+        rationale="semantic pgvector retrieval plus rerank match",
+        match_method=MatchMethod.SIMILARITY,
+        similarity_score=0.91,
+        raw_payload={"semantic_candidates": [{"external_id": "HGNC:1100"}]},
+    )
+
+    await repo.upsert_normalized_entity(match)
+
+    normalized_entity = session.added[0]
+    assert normalized_entity.raw_payload["match_method"] == "similarity"
+    assert normalized_entity.raw_payload["similarity_score"] == 0.91
+    assert normalized_entity.raw_payload["semantic_candidates"][0]["external_id"] == "HGNC:1100"
