@@ -75,6 +75,33 @@ async def import_terminology(
         await engine.dispose()
 
 
+async def build_terminology_embeddings(*, cfg: Any) -> int:
+    """Build pgvector embeddings for imported terminology entries."""
+    from src.core.standardize_entities_and_align_knowledge.similarity_match.indexer import (
+        TerminologyEmbeddingIndexer,
+    )
+    from src.core.standardize_entities_and_align_knowledge.similarity_match.providers import (
+        ModelServerEmbeddingProvider,
+    )
+
+    engine = build_async_engine(cfg)
+    session_factory = async_session_factory(engine)
+    try:
+        async with get_async_session(session_factory) as session:
+            provider = ModelServerEmbeddingProvider(
+                base_url=(cfg.embedding.base_url or cfg.model_server_url),
+                model=cfg.embedding.model,
+            )
+            count = await TerminologyEmbeddingIndexer(session, provider).build(
+                embedding_model=cfg.embedding.model,
+                batch_size=cfg.embedding.batch_size,
+            )
+            await session.commit()
+            return count
+    finally:
+        await engine.dispose()
+
+
 def _load_import_batches(
     *,
     terminology_root: Path,
