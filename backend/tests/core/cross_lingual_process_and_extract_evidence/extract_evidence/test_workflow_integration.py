@@ -78,3 +78,56 @@ async def test_workflow_runs_block_group_ground_chain_quality_order():
     assert all(item.group_id for item in state.evidence_items)
     assert state.quality_report is not None
     assert state.quality_report.human_review_required is True
+
+
+class ChunkingProvider:
+    def __init__(self):
+        self.stages: list[str] = []
+
+    def invoke_structured(self, prompt, output_schema, tier, stage, response_method="json_schema"):
+        del prompt, output_schema, tier, response_method
+        self.stages.append(stage)
+        if stage.startswith("relevance_scan"):
+            return DocumentEvidenceMap(relevant=True, gene_terms=["GLA"])
+        if stage.startswith("catalog_extraction"):
+            return [
+                EvidenceItem(
+                    field_id="A.gene_symbol",
+                    category="A",
+                    field_name="Gene symbol",
+                    status=EvidenceStatus.FOUND,
+                    value="GLA",
+                    confidence=0.9,
+                    raw_source=SourceLocation(
+                        block_index=0, context_type="text", context_ref="", text_snippet="GLA",
+                    ),
+                )
+            ]
+        if stage.startswith("special_evidence"):
+            return SpecialEvidenceResponse(records=[])
+        raise AssertionError(stage)
+
+
+@pytest.mark.asyncio
+async def test_workflow_accepts_chunking_budget_override_for_regression():
+    provider = ChunkingProvider()
+    text = "GLA " + ("A" * 200) + "\n\n" + ("B" * 200)
+    document = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text=text,
+        page_spans=[],
+        blocks=[
+            ContentBlock(type="text", page_idx=0, text="GLA " + ("A" * 200)),
+            ContentBlock(type="text", page_idx=1, text="B" * 200),
+        ],
+    )
+
+    workflow = EvidenceExtractionWorkflow(provider=provider, input_budget_tokens=90)
+    state = await workflow.run(document)
+
+    assert state.evidence_map is not None
+    assert state.evidence_map.relevant is True
+    assert any(stage.startswith("relevance_scan/") for stage in provider.stages)
+    assert any(stage.startswith("catalog_extraction/") for stage in provider.stages)
+    assert any(stage.startswith("special_evidence/") for stage in provider.stages)

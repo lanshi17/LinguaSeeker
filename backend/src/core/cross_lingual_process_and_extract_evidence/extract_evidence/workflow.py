@@ -17,6 +17,7 @@ from .contracts import (
     EvidenceExtractionStatus,
     TrackDocument,
 )
+from .chunking import DEFAULT_INPUT_BUDGET_TOKENS
 from .core import EvidenceChainBuilder
 from .providers import LangChainEvidenceProvider
 from .stages.catalog_extraction import CatalogExtractionStage
@@ -30,10 +31,14 @@ from .stages.special_evidence import SpecialEvidenceStage
 class EvidenceExtractionWorkflow:
     """LangGraph workflow for block-aware evidence extraction."""
 
-    def __init__(self, provider: LangChainEvidenceProvider):
-        self._relevance_scan = RelevanceScanStage(provider)
-        self._catalog_extraction = CatalogExtractionStage(provider)
-        self._special_evidence = SpecialEvidenceStage(provider)
+    def __init__(
+        self,
+        provider: LangChainEvidenceProvider,
+        input_budget_tokens: int = DEFAULT_INPUT_BUDGET_TOKENS,
+    ):
+        self._relevance_scan = RelevanceScanStage(provider, input_budget_tokens=input_budget_tokens)
+        self._catalog_extraction = CatalogExtractionStage(provider, input_budget_tokens=input_budget_tokens)
+        self._special_evidence = SpecialEvidenceStage(provider, input_budget_tokens=input_budget_tokens)
         self._group_assignment = GroupAssignmentStage()
         self._source_grounding = SourceGroundingStage()
         self._quality_gate = QualityGateStage()
