@@ -5,12 +5,17 @@ import pytest
 
 from src.core.standardize_entities_and_align_knowledge.contracts import (
     BindingRole,
+    EntityMatch,
     EntityType,
+    MatchMethod,
     MatchStatus,
     StandardizationCandidate,
     TerminologyCandidate,
 )
-from src.core.standardize_entities_and_align_knowledge.matchers import TerminologyMatcher
+from src.core.standardize_entities_and_align_knowledge.matchers import (
+    HybridTerminologyMatcher,
+    TerminologyMatcher,
+)
 
 
 class FakeRepository:
@@ -153,3 +158,83 @@ def test_rank_raises_for_unsupported_entity_type() -> None:
 
     with pytest.raises(ValueError, match="Unsupported entity type"):
         matcher._rank("protein", ())  # type: ignore[arg-type]
+
+
+class FakePreciseMatcher:
+    """Precise matcher test double."""
+
+    def __init__(self, match):
+        self.match_result = match
+        self.calls = 0
+
+    async def match(self, candidate):
+        self.calls += 1
+        return self.match_result
+
+
+class FakeSimilarityMatcher:
+    """Similarity matcher test double."""
+
+    def __init__(self, match):
+        self.match_result = match
+        self.calls = 0
+
+    async def match(self, candidate):
+        self.calls += 1
+        return self.match_result
+
+
+@pytest.mark.asyncio
+async def test_hybrid_matcher_uses_similarity_for_unmapped_precise_result() -> None:
+    """Similarity matching is a fallback for precise unmapped candidates."""
+    candidate = StandardizationCandidate(
+        candidate_id="c-semantic",
+        entity_type=EntityType.GENE,
+        role=BindingRole.SUBJECT,
+        raw_text="BRCA one",
+        chain_id="chain-1",
+        track="original",
+    )
+    precise = EntityMatch(candidate, MatchStatus.UNMAPPED, None, "BRCA one")
+    semantic = EntityMatch(
+        candidate,
+        MatchStatus.STANDARDIZED,
+        "HGNC:1100",
+        "BRCA1",
+        match_method=MatchMethod.SIMILARITY,
+    )
+    semantic_matcher = FakeSimilarityMatcher(semantic)
+
+    match = await HybridTerminologyMatcher(FakePreciseMatcher(precise), semantic_matcher).match(candidate)
+
+    assert match.external_id == "HGNC:1100"
+    assert match.match_method == MatchMethod.SIMILARITY
+    assert semantic_matcher.calls == 1
+
+
+@pytest.mark.asyncio
+async def test_hybrid_matcher_does_not_override_precise_standardized_result() -> None:
+    """Precise standardized results are authoritative."""
+    candidate = StandardizationCandidate(
+        candidate_id="c-precise",
+        entity_type=EntityType.GENE,
+        role=BindingRole.SUBJECT,
+        raw_text="BRCA1",
+        chain_id="chain-1",
+        track="original",
+    )
+    precise = EntityMatch(candidate, MatchStatus.STANDARDIZED, "HGNC:1100", "BRCA1")
+    semantic = EntityMatch(
+        candidate,
+        MatchStatus.STANDARDIZED,
+        "HGNC:9999",
+        "Wrong",
+        match_method=MatchMethod.SIMILARITY,
+    )
+    semantic_matcher = FakeSimilarityMatcher(semantic)
+
+    match = await HybridTerminologyMatcher(FakePreciseMatcher(precise), semantic_matcher).match(candidate)
+
+    assert match.external_id == "HGNC:1100"
+    assert match.match_method == MatchMethod.PRECISE
+    assert semantic_matcher.calls == 0
