@@ -404,7 +404,7 @@ class TerminologyEmbedding(Base):
         nullable=False,
     )
     entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
-    embedding = mapped_column(Vector(1536), nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(Vector(1536), nullable=False)
     model_version: Mapped[str] = mapped_column(String(128), nullable=False)
     source_text: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(

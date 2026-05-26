@@ -15,6 +15,7 @@ class FakeSession:
         self.search_rows = search_rows or []
         self.statements = []
         self.added = []
+        self.deleted = []
 
     async def execute(self, statement):
         self.statements.append(statement)
@@ -46,6 +47,9 @@ class FakeSession:
     def add(self, obj):
         self.added.append(obj)
 
+    async def delete(self, obj):
+        self.deleted.append(obj)
+
     async def flush(self):
         pass
 
@@ -74,8 +78,8 @@ async def test_search_similar_returns_ranked_results():
 
 
 @pytest.mark.asyncio
-async def test_search_similar_uses_cosine_operator():
-    """search_similar uses the <=> cosine distance operator."""
+async def test_search_similar_uses_cosine_distance():
+    """search_similar uses the <=> cosine distance operator via Vector.cosine_distance()."""
     session = FakeSession()
     repo = VectorRepository(session)
     await repo.search_similar(
@@ -89,8 +93,23 @@ async def test_search_similar_uses_cosine_operator():
 
 
 @pytest.mark.asyncio
+async def test_search_similar_filters_by_model_version():
+    """search_similar filters by model_version when provided."""
+    session = FakeSession()
+    repo = VectorRepository(session)
+    await repo.search_similar(
+        entity_type="gene",
+        embedding=[0.1] * 1536,
+        limit=5,
+        model_version="v1",
+    )
+    stmt = str(session.statements[0].compile(compile_kwargs={"literal_binds": True}))
+    assert "model_version" in stmt.lower()
+
+
+@pytest.mark.asyncio
 async def test_upsert_embeddings_inserts_new_rows():
-    """upsert_embeddings inserts embeddings for entries that don't have them."""
+    """upsert_embeddings deletes existing and inserts new embeddings."""
     session = FakeSession()
     repo = VectorRepository(session)
     await repo.upsert_embeddings(
