@@ -9,6 +9,7 @@ from src.core.standardize_entities_and_align_knowledge.importers import (
     _iter_tsv_rows,
     _normalize_rsid,
     _split_comma_values,
+    iter_clinvar_batches,
     is_importable_clinvar_review_status,
     parse_clingen_rows,
     parse_clinvar_rows,
@@ -117,6 +118,33 @@ def test_parse_clinvar_rows_keeps_significance_as_scalar_relationship(tmp_path: 
     assert relationship.relationship_type == "variant_has_clinical_significance"
     assert relationship.object_external_id is None
     assert relationship.raw_payload["clinical_significance"] == "Pathogenic"
+
+
+def test_iter_clinvar_batches_yields_chunked_batches(tmp_path: Path) -> None:
+    """ClinVar streaming yields bounded-size batches instead of one monolithic payload."""
+    path = tmp_path / "variant_summary.txt"
+    path.write_text(
+        "#AlleleID\tType\tName\tGeneID\tGeneSymbol\tHGNC_ID\tClinicalSignificance\tClinSigSimple\tLastEvaluated\tRS# (dbSNP)\t"
+        "nsv/esv (dbVar)\tRCVaccession\tPhenotypeIDS\tPhenotypeList\tOrigin\tOriginSimple\tAssembly\tChromosomeAccession\t"
+        "Chromosome\tStart\tStop\tReferenceAllele\tAlternateAllele\tCytogenetic\tReviewStatus\tNumberSubmitters\tGuidelines\t"
+        "TestedInGTR\tOtherIDs\tSubmitterCategories\tVariationID\n"
+        "1\tsingle nucleotide variant\tNM_000059.4(BRCA2):c.5946del\t675\tBRCA2\tHGNC:1101\tPathogenic\t1\t2024-01-01\t80359550\t"
+        "-\tRCV0001\tOMIM:612555\tBreast cancer\tgermline\tgermline\tGRCh38\tNC_000013.11\t13\t1\t1\tA\t-\t-\t"
+        "criteria provided, single submitter\t1\t-\tN\t-\t-\t12345\n"
+        "2\tsingle nucleotide variant\tNM_000059.4(BRCA2):c.7008-2A>T\t675\tBRCA2\tHGNC:1101\tLikely pathogenic\t1\t2024-01-01\t80359551\t"
+        "-\tRCV0002\tOMIM:612555\tBreast cancer\tgermline\tgermline\tGRCh38\tNC_000013.11\t13\t2\t2\tA\t-\t-\t"
+        "criteria provided, single submitter\t1\t-\tN\t-\t-\t12346\n",
+        encoding="utf-8",
+    )
+
+    batches = list(iter_clinvar_batches(path, version="clinvar_test", chunk_size=1))
+
+    assert len(batches) == 2
+    assert [batch.entries[0].external_id for batch in batches] == [
+        "ClinVarVariation:12345",
+        "ClinVarVariation:12346",
+    ]
+    assert all(len(batch.entries) == 1 for batch in batches)
 
 
 def test_collect_alias_values_deduplicates_and_preserves_first_seen_order() -> None:

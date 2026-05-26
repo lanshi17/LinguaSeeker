@@ -111,4 +111,9 @@
 [2026-05-25] pgvector vector database: extension, migration, model, VectorRepository, EmbeddingProvider, TerminologyEmbeddingService, VectorFallbackMatcher, CLI, docs [completed]
 [2026-05-26] Updated config compatibility for FAST_LLM_* and REASONING_LLM_* prefixes, kept cfg.llm/cfg.reasoning stable, and mapped extract_evidence strong tier to reasoning model with targeted pytest + Ruff verification [done]
 [2026-05-26] Fixed Phase 3 terminology import HGNC root path resolution (`terminology_root/hgnc/hgnc_complete_set.txt`) with targeted API test and Ruff verification [done]
+<<<<<<< Updated upstream
 [2026-05-26] [Phase 3 precise/similarity matching split with pgvector semantic fallback implemented] [done]
+=======
+[2026-05-26] Added observable progress logging for Phase 3 terminology import CLI/facade: source-level parse counts, batch import progress, transaction commit, and total elapsed time [done]
+[2026-05-26] Added ClinVar chunked streaming import path in Phase 3 facade/importers to remove monolithic in-memory batch growth; targeted importer/API tests and Ruff verification passed [done]
+>>>>>>> Stashed changes

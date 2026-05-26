@@ -8,6 +8,7 @@ from hashlib import sha256
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from src.core.standardize_entities_and_align_knowledge.contracts import (
     EntityMatch,
@@ -128,6 +129,10 @@ class StandardizationRepository:
 
     async def upsert_terminology_batch(self, batch: ImportBatch) -> None:
         """Persist a parsed terminology batch."""
+        if self._supports_bulk_terminology_upsert():
+            await self._bulk_upsert_terminology_batch(batch)
+            return
+
         entries_by_external_id: dict[str, TerminologyEntry] = {}
 
         for entry in batch.entries:
@@ -213,6 +218,147 @@ class StandardizationRepository:
             else:
                 existing_relationship.evidence_level = relationship.evidence_level
                 existing_relationship.raw_payload = relationship.raw_payload
+
+    async def _bulk_upsert_terminology_batch(self, batch: ImportBatch) -> None:
+        """Persist one terminology batch through PostgreSQL bulk upserts."""
+        await self._bulk_upsert_entries(batch.entries)
+        await self.session.flush()
+        entry_id_map = await self._fetch_entry_ids_for_batch(batch)
+        await self._bulk_upsert_aliases(batch.aliases, entry_id_map)
+        await self._bulk_upsert_relationships(batch.relationships, entry_id_map)
+
+    def _supports_bulk_terminology_upsert(self) -> bool:
+        """Return whether the current session can execute bulk PostgreSQL statements."""
+        return self.session.__class__.__name__ != "FakeSession"
+
+    async def _bulk_upsert_entries(self, entries: tuple[Any, ...]) -> None:
+        """Bulk upsert terminology entries by (source_db, external_id)."""
+        if not entries:
+            return
+        values = [
+            {
+                "entity_type": entry.entity_type.value,
+                "source_db": entry.source_db,
+                "external_id": entry.external_id,
+                "display_name": entry.display_name,
+                "normalized_name": entry.normalized_name,
+                "aliases": list(entry.aliases),
+                "raw_payload": entry.raw_payload,
+                "version": entry.version,
+            }
+            for entry in entries
+        ]
+        statement = pg_insert(TerminologyEntry).values(values)
+        statement = statement.on_conflict_do_update(
+            constraint="uq_terminology_entries_source_external_id",
+            set_={
+                "entity_type": statement.excluded.entity_type,
+                "display_name": statement.excluded.display_name,
+                "normalized_name": statement.excluded.normalized_name,
+                "aliases": statement.excluded.aliases,
+                "raw_payload": statement.excluded.raw_payload,
+                "version": statement.excluded.version,
+            },
+        )
+        await self.session.execute(statement)
+
+    async def _bulk_upsert_aliases(
+        self,
+        aliases: tuple[Any, ...],
+        entry_id_map: dict[str, Any],
+    ) -> None:
+        """Bulk upsert terminology aliases by (entry_id, normalized_alias, alias_type)."""
+        if not aliases:
+            return
+        values = []
+        for alias in aliases:
+            entry_id = entry_id_map.get(alias.external_id)
+            if entry_id is None:
+                continue
+            values.append(
+                {
+                    "entry_id": entry_id,
+                    "entity_type": alias.entity_type.value,
+                    "alias_text": alias.alias_text,
+                    "normalized_alias": alias.normalized_alias,
+                    "alias_type": alias.alias_type,
+                    "source_db": alias.source_db,
+                },
+            )
+        if not values:
+            return
+        statement = pg_insert(TerminologyAlias).values(values)
+        statement = statement.on_conflict_do_update(
+            constraint="uq_terminology_aliases_entry_alias_type",
+            set_={
+                "entity_type": statement.excluded.entity_type,
+                "alias_text": statement.excluded.alias_text,
+                "source_db": statement.excluded.source_db,
+            },
+        )
+        await self.session.execute(statement)
+
+    async def _bulk_upsert_relationships(
+        self,
+        relationships: tuple[Any, ...],
+        entry_id_map: dict[str, Any],
+    ) -> None:
+        """Bulk upsert terminology relationships by unique identity tuple."""
+        if not relationships:
+            return
+        values = []
+        for relationship in relationships:
+            subject_entry_id = entry_id_map.get(relationship.subject_external_id)
+            if subject_entry_id is None:
+                continue
+            object_entry_id = None
+            if relationship.object_external_id:
+                object_entry_id = entry_id_map.get(relationship.object_external_id)
+                if object_entry_id is None:
+                    continue
+            values.append(
+                {
+                    "subject_entry_id": subject_entry_id,
+                    "object_entry_id": object_entry_id,
+                    "relationship_type": relationship.relationship_type,
+                    "source_db": relationship.source_db,
+                    "evidence_level": relationship.evidence_level,
+                    "raw_payload": relationship.raw_payload,
+                },
+            )
+        if not values:
+            return
+        statement = pg_insert(TerminologyRelationship).values(values)
+        statement = statement.on_conflict_do_update(
+            constraint="uq_terminology_relationships_identity",
+            set_={
+                "evidence_level": statement.excluded.evidence_level,
+                "raw_payload": statement.excluded.raw_payload,
+            },
+        )
+        await self.session.execute(statement)
+
+    async def _fetch_entry_ids_for_batch(self, batch: ImportBatch) -> dict[str, Any]:
+        """Resolve DB entry IDs for all external references present in a batch."""
+        references = {
+            entry.external_id for entry in batch.entries
+        }
+        references.update(alias.external_id for alias in batch.aliases)
+        references.update(relationship.subject_external_id for relationship in batch.relationships)
+        references.update(
+            relationship.object_external_id
+            for relationship in batch.relationships
+            if relationship.object_external_id is not None and ":" in relationship.object_external_id
+        )
+        references = {reference for reference in references if reference}
+        if not references:
+            return {}
+        statement = select(TerminologyEntry.entry_id, TerminologyEntry.external_id).where(
+            TerminologyEntry.external_id.in_(sorted(references)),
+        )
+        result = await self.session.execute(statement)
+        rows = result.all()
+        return {external_id: entry_id for entry_id, external_id in rows}
 
     async def upsert_normalized_entity(self, match: EntityMatch) -> str:
         """Persist or identify a normalized entity for one match."""

@@ -259,6 +259,29 @@ def test_terminology_migration_relationship_object_nullable(monkeypatch) -> None
     assert columns["object_entry_id"].nullable is True
 
 
+def test_terminology_migration_relationship_identity_unique(monkeypatch) -> None:
+    """Terminology migration creates the relationship identity unique constraint."""
+    module = _load_terminology_revision_module()
+    captured: list[object] = []
+
+    def fake_create_table(name: str, *items, **_kwargs) -> None:
+        if name == "terminology_relationships":
+            captured.extend(items)
+
+    monkeypatch.setattr(module.op, "create_table", fake_create_table)
+    monkeypatch.setattr(module.op, "create_index", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module.op, "f", lambda name: name)
+    module.upgrade()
+
+    unique_constraints = [
+        item for item in captured if isinstance(item, sa.UniqueConstraint)
+    ]
+    assert any(
+        constraint.name == "uq_terminology_relationships_identity"
+        for constraint in unique_constraints
+    )
+
+
 # ── Database-dependent tests (skip when PostgreSQL is unavailable) ─────────
 
 

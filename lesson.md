@@ -602,3 +602,48 @@ Chinese medical journals often include both Chinese and English versions of titl
 **Prevention**:
 1. facade 层拼接数据根目录时，所有 source 的路径规则都要有测试覆盖，避免只有某一路“手写特例”漂移。
 2. 对真实数据导入链路，先用 `find database/terminology_database -maxdepth 2 -type f` 校对物理布局，再写 loader 入口路径。
+
+## 2026-05-26: Long-running terminology import needs explicit progress telemetry
+
+**Problem**: 真实执行 `uv run python ../scripts/import_terminology.py ...` 时，命令可能运行很久，但几乎没有任何进度反馈，使用者无法判断当前是在解析哪一个 source、是否已经开始写库、还是卡住了。
+
+**Investigation**: 检查 CLI 和 facade 后确认，现有实现只在可选 embedding 阶段打日志，核心术语导入链路没有 source 级别可观察性。先补了一条最小测试保证 facade 仍按 batch 顺序写库，再在 CLI 和 facade 两层加日志而不改变导入行为。
+
+**Root cause**: 导入流程把“解析所有 batch”和“逐 batch 写库”都封装在 facade 内，但没有暴露任何中间状态；CLI 入口也没有统一 logger 配置和总耗时统计。
+
+**Solution**:
+1. 在 `import_terminology()` facade 中增加日志：
+   - 导入开始（root/version/sources）
+   - 所有 batch 解析完成后的总计数（entries/aliases/relationships）
+   - 每个 batch 的开始/结束导入日志
+   - transaction commit 完成
+   - 总耗时
+2. 在 `scripts/import_terminology.py` 里统一 logger 输出格式，并打印 CLI 请求摘要、embedding 阶段起止和总耗时。
+3. 用 targeted pytest + Ruff 验证，保证日志增强没有改变导入语义。
+
+**Prevention**:
+1. 对任何可能运行超过几十秒的数据导入脚本，默认加入 source 级别进度日志和总耗时。
+2. 观测点要放在“解析完成”和“写库完成”两个边界上，这样用户能区分 CPU/IO/DB 三类瓶颈。
+
+## 2026-05-26: ClinVar “streamed parser” still needs true streaming all the way to the DB boundary
+
+**Problem**: Phase 3 文档里原本写着 “ClinVar import is streamed row-by-row”，但真实实现虽然逐行读取 TSV，最后还是把 3.7G / 898 万行数据累成一个巨大的 `ImportBatch`，然后再交给逐条 ORM upsert。对大文件来说，这会同时拖垮内存占用和数据库吞吐。
+
+**Investigation**: 核查后确认性能瓶颈不在 CPU（i7-14700 / 28 threads 远够用），而在导入结构：
+1. parser 端把全部 ClinVar 结果聚合到内存；
+2. repository 端对每条 entry/alias/relationship 逐条 `SELECT` + `add`。
+先补红灯测试，要求 ClinVar 能按 chunk 产出多个小 `ImportBatch`，再在 facade 里把 ClinVar 从普通 `_load_import_batches()` 路径中剥离，改为专门的 streaming import path。
+
+**Root cause**: 之前的“streamed”只覆盖了文件读取阶段，没有贯通到 API facade 和 DB 写入边界；真正的内存峰值和慢查询都发生在后半段。
+
+**Solution**:
+1. 新增 `iter_clinvar_batches(path, version, chunk_size)`，按 chunk 产出有界 `ImportBatch`。
+2. `import_terminology()` facade 对 `ClinVar` 单独走 `_import_clinvar_stream(...)`，不再把它塞进普通的 monolithic batch 列表。
+3. 保留 `parse_clinvar_rows()` 兼容接口，但不再作为真实大文件导入主路径。
+4. 用 targeted pytest + Ruff 验证 importer/API 行为。
+
+**Current status**: 这一步已经消除了 ClinVar 导入的最大内存炸点，但 DB 侧仍然是逐条 ORM upsert，吞吐瓶颈还在。下一步若继续追求“最大性能”，必须进入 bulk SQL / staging table 路线。
+
+**Prevention**:
+1. “streaming”要定义到系统边界，而不是只看文件读取阶段。
+2. 面对百万级以上行数时，默认先审视“是否有 monolithic in-memory aggregate”与“是否逐条 DB round-trip”。

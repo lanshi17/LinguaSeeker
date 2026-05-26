@@ -9,6 +9,9 @@ from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urljoin
 
 import httpx
+import time as _time
+
+from .provider_health import get_health_tracker
 
 from .contracts import OnlineAcquisitionGatewayRequest, OnlineAcquisitionGatewayResult, OnlineAcquisitionSourceTraceEntry
 
@@ -192,9 +195,6 @@ def _failure_result(provider: str, error: Exception, action: str = "search") -> 
 
 async def call_provider(request: OnlineAcquisitionGatewayRequest) -> OnlineAcquisitionGatewayResult:
     """Call a single provider via net_io.fetch_one."""
-    import time as _time
-    from .provider_health import get_health_tracker
-
     start = _time.monotonic()
     try:
         import rust_io.net as net_io

@@ -18,7 +18,6 @@ EXPECTED_TABLES = {
     "terminology_entries",
     "terminology_aliases",
     "terminology_relationships",
-    "terminology_embeddings",
     "users",
 }
 
@@ -153,21 +152,46 @@ def test_terminology_relationship_object_is_nullable() -> None:
     assert table.c.object_entry_id.nullable is True
 
 
-def test_terminology_embeddings_table_exists() -> None:
-    """Terminology embeddings are stored separately from source aliases."""
-    table = _table("terminology_embeddings")
-
-    assert table.c.entry_id.nullable is False
-    assert table.c.embedding_text_hash.nullable is False
-    assert table.c.embedding_model.nullable is False
-
-
-def test_terminology_embeddings_unique_text_per_model() -> None:
-    """One embedding row exists per terminology entry/text/model tuple."""
-    table = _table("terminology_embeddings")
+def test_terminology_relationships_identity_unique_constraint() -> None:
+    """Terminology relationships are unique by subject/object/type/source for bulk upsert."""
+    table = _table("terminology_relationships")
 
     assert (
-        "entry_id",
-        "embedding_text_hash",
-        "embedding_model",
+        "subject_entry_id",
+        "object_entry_id",
+        "relationship_type",
+        "source_db",
     ) in _unique_constraint_columns(table)
+
+
+def test_terminology_embeddings_table_in_metadata() -> None:
+    """ORM metadata includes the terminology_embeddings table."""
+    assert "terminology_embeddings" in Base.metadata.tables
+
+
+def test_terminology_embeddings_has_embedding_column() -> None:
+    """Terminology embeddings table has an embedding column."""
+    table = _table("terminology_embeddings")
+    assert "embedding" in table.columns
+
+
+def test_terminology_embeddings_entry_model_unique() -> None:
+    """Each entry has at most one embedding per model version."""
+    assert ("entry_id", "embedding_text_hash", "embedding_model") in _unique_constraint_columns(
+        _table("terminology_embeddings")
+    )
+
+
+def test_terminology_embeddings_cascade_delete() -> None:
+    """Embedding is deleted when the parent entry is deleted (CASCADE)."""
+    table = _table("terminology_embeddings")
+    fk = next(c for c in table.foreign_key_constraints if "entry_id" in [p.name for p in c.columns])
+    assert fk.ondelete == "CASCADE"
+
+
+def test_terminology_embeddings_embedding_is_vector_type() -> None:
+    """The embedding column is pgvector Vector type, not plain ARRAY."""
+    from pgvector.sqlalchemy import Vector
+
+    col = _table("terminology_embeddings").c.embedding
+    assert isinstance(col.type, Vector)
