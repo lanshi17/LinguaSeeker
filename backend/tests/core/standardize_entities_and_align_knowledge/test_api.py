@@ -124,6 +124,63 @@ async def test_import_terminology_loads_batches_and_calls_repository(monkeypatch
     assert disposed["value"] is True
 
 
+@pytest.mark.asyncio
+async def test_import_clinvar_stream_commits_each_chunk(monkeypatch, tmp_path: Path) -> None:
+    """ClinVar streaming should commit per chunk instead of holding one giant transaction."""
+    chunk_commit_calls = {"value": 0}
+    received_batches: list[ImportBatch] = []
+
+    class FakeRepository:
+        def __init__(self, session) -> None:
+            self.session = session
+
+        async def upsert_terminology_batch(self, batch) -> None:
+            received_batches.append(batch)
+
+    class FakeSession:
+        async def commit(self) -> None:
+            chunk_commit_calls["value"] += 1
+
+    monkeypatch.setattr(
+        api_module,
+        "iter_clinvar_batches",
+        lambda **kwargs: iter(
+            (
+                ImportBatch(entries=(ImportEntry(
+                    entity_type=EntityType.VARIANT,
+                    source_db="ClinVar",
+                    external_id="ClinVarVariation:1",
+                    display_name="variant-1",
+                    normalized_name="variant-1",
+                    aliases=("variant-1",),
+                    raw_payload={},
+                    version="v1",
+                ),)),
+                ImportBatch(entries=(ImportEntry(
+                    entity_type=EntityType.VARIANT,
+                    source_db="ClinVar",
+                    external_id="ClinVarVariation:2",
+                    display_name="variant-2",
+                    normalized_name="variant-2",
+                    aliases=("variant-2",),
+                    raw_payload={},
+                    version="v1",
+                ),)),
+            ),
+        ),
+    )
+
+    await api_module._import_clinvar_stream(
+        repository=FakeRepository(FakeSession()),
+        path=tmp_path / "variant_summary.core.tsv",
+        version="v1",
+        chunk_size=10_000,
+    )
+
+    assert len(received_batches) == 2
+    assert chunk_commit_calls["value"] == 2
+
+
 def test_describe_batch_source_prefers_entries_then_aliases_then_relationships() -> None:
     batch_from_entries = ImportBatch(
         entries=(
@@ -169,3 +226,112 @@ def test_describe_batch_source_prefers_entries_then_aliases_then_relationships()
     assert api_module._describe_batch_source(batch_from_aliases) == "OMIM"
     assert api_module._describe_batch_source(batch_from_relationships) == "ClinVar"
     assert api_module._describe_batch_source(empty_batch) == "empty"
+
+
+def test_matches_json_serialization() -> None:
+    """EntityMatch list serializes to auditable matches.json format."""
+    from src.core.standardize_entities_and_align_knowledge.contracts import (
+        BindingRole,
+        EntityMatch,
+        EntityType,
+        MatchMethod,
+        MatchStatus,
+        StandardizationCandidate,
+    )
+
+    candidate = StandardizationCandidate(
+        candidate_id="c1",
+        entity_type=EntityType.GENE,
+        role=BindingRole.SUBJECT,
+        raw_text="GLA",
+        chain_id="chain-1",
+        track="original",
+    )
+    match = EntityMatch(
+        candidate=candidate,
+        status=MatchStatus.STANDARDIZED,
+        external_id="HGNC:4296",
+        display_name="GLA",
+        rationale="unique HGNC primary match",
+        match_method=MatchMethod.PRECISE,
+    )
+    entries = api_module.serialize_matches((match,))
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry["raw_text"] == "GLA"
+    assert entry["entity_type"] == "gene"
+    assert entry["status"] == "standardized"
+    assert entry["external_id"] == "HGNC:4296"
+    assert entry["display_name"] == "GLA"
+    assert entry["rationale"] == "unique HGNC primary match"
+    assert entry["match_method"] == "precise"
+
+
+def test_summary_includes_terminology_health_status() -> None:
+    """Summary output includes DB terminology count and embedding availability."""
+    summary = api_module.build_summary_metadata(
+        imported_terminology=False,
+        terminology_sources=["hgnc", "omim"],
+        terminology_version="2026-05-26",
+        terminology_entry_count=0,
+        embedding_available=False,
+    )
+    assert summary["imported_terminology"] is False
+    assert summary["terminology_entry_count"] == 0
+    assert summary["embedding_available"] is False
+    assert summary["terminology_sources"] == ["hgnc", "omim"]
+
+
+@pytest.mark.asyncio
+async def test_build_terminology_embeddings_passes_scope_filters(monkeypatch) -> None:
+    """Embedding facade should support narrowing the vectorization scope."""
+    disposed = {"value": False}
+    build_calls: list[dict[str, object]] = []
+
+    class FakeEngine:
+        async def dispose(self) -> None:
+            disposed["value"] = True
+
+    class FakeIndexer:
+        def __init__(self, session, provider) -> None:
+            self.session = session
+            self.provider = provider
+
+        async def build(self, **kwargs):
+            build_calls.append(kwargs)
+            return 7
+
+    @asynccontextmanager
+    async def fake_get_async_session(factory):
+        class FakeSession:
+            async def commit(self) -> None:
+                return None
+
+        yield FakeSession()
+
+    monkeypatch.setattr(api_module, "build_async_engine", lambda cfg: FakeEngine())
+    monkeypatch.setattr(api_module, "async_session_factory", lambda engine: "factory")
+    monkeypatch.setattr(api_module, "get_async_session", fake_get_async_session)
+    monkeypatch.setattr(
+        "src.core.standardize_entities_and_align_knowledge.similarity_match.indexer.TerminologyEmbeddingIndexer",
+        FakeIndexer,
+    )
+
+    class FakeCfg:
+        model_server_url = "http://localhost:8001"
+        embedding = type("EmbeddingCfg", (), {"base_url": "", "model": "embed-model", "batch_size": 16})()
+
+    count = await api_module.build_terminology_embeddings(
+        cfg=FakeCfg(),
+        entity_types={EntityType.DISEASE, EntityType.PHENOTYPE},
+        source_dbs={"OMIM", "HPO", "MONDO"},
+    )
+
+    assert count == 7
+    assert build_calls == [{
+        "embedding_model": "embed-model",
+        "batch_size": 16,
+        "entity_types": {EntityType.DISEASE, EntityType.PHENOTYPE},
+        "source_dbs": {"OMIM", "HPO", "MONDO"},
+    }]
+    assert disposed["value"] is True

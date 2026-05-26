@@ -86,6 +86,34 @@ async def test_embedding_provider_wraps_single_string() -> None:
 
 
 @pytest.mark.asyncio
+async def test_embedding_provider_does_not_duplicate_v1_prefix() -> None:
+    """A base URL already ending in `/v1` should still call `/v1/embeddings` once."""
+    requests: list[httpx.Request] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(
+            200,
+            json={
+                "object": "list",
+                "model": "Qwen/Qwen3-Embedding-0.6B",
+                "data": [{"object": "embedding", "embedding": [0.1, 0.2], "index": 0}],
+                "usage": {"prompt_tokens": 1, "total_tokens": 1},
+            },
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        provider = ModelServerEmbeddingProvider(
+            base_url="http://model-server/v1",
+            model="Qwen/Qwen3-Embedding-0.6B",
+            client=client,
+        )
+        await provider.embed_texts("BRCA1")
+
+    assert requests[0].url.path == "/v1/embeddings"
+
+
+@pytest.mark.asyncio
 async def test_rerank_provider_returns_ranked_scores() -> None:
     """Rerank provider maps model-server rerank results into typed scores."""
     async def handler(request: httpx.Request) -> httpx.Response:

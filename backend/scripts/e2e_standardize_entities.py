@@ -32,7 +32,9 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
 )
 from src.core.standardize_entities_and_align_knowledge.api import (
     EntityStandardizationService,
+    build_summary_metadata,
     import_terminology,
+    serialize_matches,
 )
 from src.core.standardize_entities_and_align_knowledge.contracts import StandardizationResult
 from src.dao.connection import async_session_factory, build_async_engine, get_async_session
@@ -133,8 +135,10 @@ def _summary(
     terminology_root: Path,
     terminology_version: str,
     terminology_sources: list[str],
+    terminology_entry_count: int = 0,
+    embedding_available: bool = False,
 ) -> dict[str, Any]:
-    return {
+    summary = {
         "document_id": standardization_result.document_id,
         "extract_evidence_dir": str(extract_evidence_dir),
         "output_dir": str(saved_dir),
@@ -152,11 +156,16 @@ def _summary(
         "original_evidence_item_count": len(dual_result.original_result.evidence_items),
         "translated_evidence_item_count": len(dual_result.translated_result.evidence_items),
         "refreshed_upstream": refreshed_upstream,
-        "imported_terminology": imported_terminology,
-        "terminology_root": str(terminology_root),
-        "terminology_version": terminology_version,
-        "terminology_sources": terminology_sources,
     }
+    summary.update(build_summary_metadata(
+        imported_terminology=imported_terminology,
+        terminology_sources=terminology_sources,
+        terminology_version=terminology_version,
+        terminology_entry_count=terminology_entry_count,
+        embedding_available=embedding_available,
+    ))
+    summary["terminology_root"] = str(terminology_root)
+    return summary
 
 
 async def run_standardize_entities(
@@ -231,6 +240,7 @@ async def run_standardize_entities(
             await engine.dispose()
 
     _write_json(saved_dir / "result.json", result)
+    _write_json(saved_dir / "matches.json", {"matches": serialize_matches(result.matches)})
     _write_json(saved_dir / "upstream_result.json", dual_result)
     _write_json(
         saved_dir / "summary.json",

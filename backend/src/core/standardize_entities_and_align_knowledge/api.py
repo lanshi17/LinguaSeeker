@@ -13,6 +13,8 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
 )
 from src.core.standardize_entities_and_align_knowledge.adapters import DualResultAdapter
 from src.core.standardize_entities_and_align_knowledge.contracts import (
+    EntityMatch,
+    EntityType,
     StandardizationResult,
 )
 from src.core.standardize_entities_and_align_knowledge.core import StandardizationService
@@ -42,6 +44,56 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.reposito
     PgvectorTerminologyRepository,
 )
 from src.dao.connection import async_session_factory, build_async_engine, get_async_session
+
+
+def serialize_matches(matches: tuple[EntityMatch, ...]) -> list[dict[str, Any]]:
+    """Serialize EntityMatch tuple into auditable JSON-serializable dicts."""
+    entries: list[dict[str, Any]] = []
+    for match in matches:
+        entry: dict[str, Any] = {
+            "candidate_id": match.candidate.candidate_id,
+            "raw_text": match.candidate.raw_text,
+            "entity_type": match.candidate.entity_type.value,
+            "chain_id": match.candidate.chain_id,
+            "track": match.candidate.track,
+            "field_id": match.candidate.field_id,
+            "status": match.status.value,
+            "external_id": match.external_id,
+            "display_name": match.display_name,
+            "rationale": match.rationale,
+            "match_method": match.match_method.value,
+            "similarity_score": match.similarity_score,
+        }
+        if match.terminology_candidates:
+            entry["terminology_candidates"] = [
+                {
+                    "external_id": tc.external_id,
+                    "display_name": tc.display_name,
+                    "source_db": tc.source_db,
+                    "alias_type": tc.alias_type,
+                }
+                for tc in match.terminology_candidates
+            ]
+        entries.append(entry)
+    return entries
+
+
+def build_summary_metadata(
+    *,
+    imported_terminology: bool,
+    terminology_sources: list[str],
+    terminology_version: str,
+    terminology_entry_count: int = 0,
+    embedding_available: bool = False,
+) -> dict[str, Any]:
+    """Build truthful summary metadata with terminology health indicators."""
+    return {
+        "imported_terminology": imported_terminology,
+        "terminology_sources": terminology_sources,
+        "terminology_version": terminology_version,
+        "terminology_entry_count": terminology_entry_count,
+        "embedding_available": embedding_available,
+    }
 
 
 class EntityStandardizationService:
@@ -157,7 +209,12 @@ async def import_terminology(
     logger.info("Terminology import completed in {:.2f}s", time.perf_counter() - started_at)
 
 
-async def build_terminology_embeddings(*, cfg: Any) -> int:
+async def build_terminology_embeddings(
+    *,
+    cfg: Any,
+    entity_types: set[EntityType] | None = None,
+    source_dbs: set[str] | None = None,
+) -> int:
     """Build pgvector embeddings for imported terminology entries."""
     from src.core.standardize_entities_and_align_knowledge.similarity_match.indexer import (
         TerminologyEmbeddingIndexer,
@@ -177,6 +234,8 @@ async def build_terminology_embeddings(*, cfg: Any) -> int:
             count = await TerminologyEmbeddingIndexer(session, provider).build(
                 embedding_model=cfg.embedding.model,
                 batch_size=cfg.embedding.batch_size,
+                entity_types=entity_types,
+                source_dbs=source_dbs,
             )
             await session.commit()
             return count
@@ -245,6 +304,7 @@ async def _import_clinvar_stream(
             len(batch.relationships),
         )
         await repository.upsert_terminology_batch(batch)
+        await repository.session.commit()
     logger.info(
         "Completed ClinVar streaming import: chunks={}, entries={}, aliases={}, relationships={}",
         chunk_count,

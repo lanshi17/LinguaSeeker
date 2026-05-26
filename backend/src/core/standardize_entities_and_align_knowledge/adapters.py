@@ -1,6 +1,7 @@
 """Adapters that translate Phase 2 evidence output into Phase 3 input."""
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
@@ -33,6 +34,8 @@ PHENOTYPE_FIELD_IDS = {
     "I.animal_model_phenotype",
     "I.cell_model_phenotype",
 }
+
+_PHENOTYPE_SPLIT_RE = re.compile(r"[、,;；]")
 
 
 class DualResultAdapter:
@@ -96,6 +99,7 @@ class DualResultAdapter:
                 raw_text=chain.variant_text,
                 chain_id=chain.chain_id,
                 track=result.track.value,
+                metadata={"gene_symbol": chain.gene_text.strip()},
             )
 
     def _add_phenotype_candidates(
@@ -129,6 +133,7 @@ class DualResultAdapter:
         chain_id: str,
         track: str,
         field_id: str = "",
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Append one deduplicated candidate when the text is non-empty."""
         text = raw_text.strip()
@@ -147,6 +152,7 @@ class DualResultAdapter:
                 chain_id=chain_id,
                 track=track,
                 field_id=field_id,
+                metadata=dict(metadata or {}),
             ),
         )
 
@@ -158,4 +164,8 @@ class DualResultAdapter:
         if value is None:
             return []
         text = str(value).strip()
-        return [text] if text else []
+        if not text:
+            return []
+        if item.field_id in PHENOTYPE_FIELD_IDS and _PHENOTYPE_SPLIT_RE.search(text):
+            return [part.strip() for part in _PHENOTYPE_SPLIT_RE.split(text) if part.strip()]
+        return [text]

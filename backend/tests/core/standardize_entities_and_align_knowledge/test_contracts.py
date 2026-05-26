@@ -10,6 +10,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     MatchStatus,
     SimilarityCandidate,
     StandardizationCandidate,
+    StandardizationResult,
     TerminologyCandidate,
 )
 
@@ -140,3 +141,33 @@ def test_similarity_candidate_contract_is_typed() -> None:
 
     assert candidate.terminology.external_id == "HGNC:1100"
     assert candidate.vector_distance == 0.12
+
+
+def test_standardization_result_carries_matches() -> None:
+    """StandardizationResult includes the full match tuple for audit output."""
+    candidate = StandardizationCandidate(
+        candidate_id="c1",
+        entity_type=EntityType.GENE,
+        role=BindingRole.SUBJECT,
+        raw_text="BRCA1",
+        chain_id="chain-1",
+        track="original",
+    )
+    match = EntityMatch(
+        candidate=candidate,
+        status=MatchStatus.STANDARDIZED,
+        external_id="HGNC:1100",
+        display_name="BRCA1",
+        rationale="unique HGNC primary match",
+    )
+    result = StandardizationResult(
+        document_id="doc-1",
+        match_count=1,
+        standardized_count=1,
+        ambiguous_count=0,
+        unmapped_count=0,
+        normalized_entity_ids=("e1",),
+        matches=(match,),
+    )
+    assert len(result.matches) == 1
+    assert result.matches[0].candidate.raw_text == "BRCA1"

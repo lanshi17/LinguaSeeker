@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from src.core.standardize_entities_and_align_knowledge.normalizers import (
     make_entity_scope_hash,
+    normalize_disease_lookup_text,
     normalize_gene_symbol,
     normalize_lookup_text,
     normalize_variant_text,
@@ -69,3 +70,28 @@ def test_entity_scope_hash_for_empty_bindings_matches_empty_stable_value() -> No
         "e3b0c44298fc1c149afbf4c8996fb924"
         "27ae41e4649b934ca495991b7852b855"
     )
+
+
+def test_normalize_lookup_text_preserves_chinese() -> None:
+    """Chinese characters pass through normalization unchanged for alias lookup."""
+    assert normalize_lookup_text("法布雷病") == "法布雷病"
+
+
+def test_normalize_variant_text_preserves_protein_notation() -> None:
+    """Protein variant notation like p.R227X is preserved for lookup."""
+    assert normalize_variant_text("p.R227X") == "p.R227X"
+
+
+def test_normalize_disease_lookup_text_maps_chinese_to_english() -> None:
+    """Chinese disease names are mapped to English equivalents for terminology lookup."""
+    assert normalize_disease_lookup_text("法布雷病") == "fabry disease"
+
+
+def test_normalize_disease_lookup_text_passes_through_english() -> None:
+    """English disease names pass through cross-lingual normalization unchanged."""
+    assert normalize_disease_lookup_text("Fabry disease") == "fabry disease"
+
+
+def test_normalize_disease_lookup_text_passes_through_unknown_chinese() -> None:
+    """Unknown Chinese disease names pass through as normalized lookup text."""
+    assert normalize_disease_lookup_text("未知疾病") == "未知疾病"

@@ -164,6 +164,26 @@ def test_parse_clinvar_rows_keeps_significance_as_scalar_relationship(tmp_path: 
     assert relationship.raw_payload["clinical_significance"] == "Pathogenic"
 
 
+def test_parse_clinvar_rows_adds_one_letter_protein_alias_when_name_contains_hgvs_p(tmp_path: Path) -> None:
+    """ClinVar protein names should generate a short one-letter HGVS alias for exact variant matching."""
+    path = tmp_path / "variant_summary.txt"
+    path.write_text(
+        "#AlleleID\tType\tName\tGeneID\tGeneSymbol\tHGNC_ID\tClinicalSignificance\tClinSigSimple\tLastEvaluated\tRS# (dbSNP)\t"
+        "nsv/esv (dbVar)\tRCVaccession\tPhenotypeIDS\tPhenotypeList\tOrigin\tOriginSimple\tAssembly\tChromosomeAccession\t"
+        "Chromosome\tStart\tStop\tReferenceAllele\tAlternateAllele\tCytogenetic\tReviewStatus\tNumberSubmitters\tGuidelines\t"
+        "TestedInGTR\tOtherIDs\tSubmitterCategories\tVariationID\n"
+        "1\tsingle nucleotide variant\tNM_000169.3(GLA):c.679C>T (p.Arg227Ter)\t2717\tGLA\tHGNC:4296\tPathogenic\t1\t2024-01-01\t104894841\t"
+        "-\tRCV0001\tOMIM:301500\tFabry disease\tgermline\tgermline\tGRCh38\tNC_000023.11\tX\t1\t1\tC\tT\t-\t"
+        "criteria provided, multiple submitters, no conflicts\t1\t-\tN\t-\t-\t10733\n",
+        encoding="utf-8",
+    )
+
+    batch = parse_clinvar_rows(path, version="clinvar_test")
+
+    alias_texts = {alias.alias_text for alias in batch.aliases}
+    assert "p.R227X" in alias_texts
+
+
 def test_iter_clinvar_batches_yields_chunked_batches(tmp_path: Path) -> None:
     """ClinVar streaming yields bounded-size batches instead of one monolithic payload."""
     path = tmp_path / "variant_summary.txt"
@@ -228,6 +248,31 @@ def test_build_clinvar_core_tsv_keeps_only_requested_fields(tmp_path: Path) -> N
         "80359550",
         "OMIM:612555",
     ])
+
+
+def test_build_clinvar_core_tsv_filters_zero_star_rows_and_contiguous_duplicates(tmp_path: Path) -> None:
+    """ClinVar pre-processing should keep only importable rows and collapse exact contiguous duplicates."""
+    source = tmp_path / "variant_summary.txt"
+    target = tmp_path / "variant_summary.core.tsv"
+    source.write_text(
+        "#AlleleID\tType\tName\tGeneID\tGeneSymbol\tHGNC_ID\tClinicalSignificance\tClinSigSimple\tLastEvaluated\tRS# (dbSNP)\t"
+        "nsv/esv (dbVar)\tRCVaccession\tPhenotypeIDS\tPhenotypeList\tOrigin\tOriginSimple\tAssembly\tChromosomeAccession\t"
+        "Chromosome\tStart\tStop\tReferenceAllele\tAlternateAllele\tCytogenetic\tReviewStatus\tNumberSubmitters\tGuidelines\t"
+        "TestedInGTR\tOtherIDs\tSubmitterCategories\tVariationID\n"
+        "1\tsnv\tVariant A\t1\tGENE1\tHGNC:1\tPathogenic\t1\t2024-01-01\t101\t-\tRCV1\tOMIM:1\tPhenotype A\t-\t-\tGRCh38\t-\t1\t1\t1\tA\tT\t-\tcriteria provided, single submitter\t1\t-\tN\t-\t-\t100\n"
+        "1\tsnv\tVariant A\t1\tGENE1\tHGNC:1\tPathogenic\t1\t2024-01-01\t101\t-\tRCV1\tOMIM:1\tPhenotype A\t-\t-\tGRCh38\t-\t1\t1\t1\tA\tT\t-\tcriteria provided, single submitter\t1\t-\tN\t-\t-\t100\n"
+        "2\tsnv\tVariant B\t2\tGENE2\tHGNC:2\tLikely benign\t1\t2024-01-01\t102\t-\tRCV2\tOMIM:2\tPhenotype B\t-\t-\tGRCh38\t-\t1\t1\t1\tA\tT\t-\tno assertion criteria provided\t1\t-\tN\t-\t-\t200\n"
+        "3\tsnv\tVariant C\t3\tGENE3\tHGNC:3\tPathogenic\t1\t2024-01-01\t103\t-\tRCV3\tOMIM:3\tPhenotype C\t-\t-\tGRCh38\t-\t1\t1\t1\tA\tT\t-\treviewed by expert panel\t1\t-\tN\t-\t-\t300\n",
+        encoding="utf-8",
+    )
+
+    rows_written = build_clinvar_core_tsv(source, target)
+
+    assert rows_written == 2
+    written = target.read_text(encoding="utf-8").splitlines()
+    assert len(written) == 3
+    assert written[1].startswith("100\tVariant A\tGENE1\tPathogenic")
+    assert written[2].startswith("300\tVariant C\tGENE3\tPathogenic")
 
 
 def test_collect_alias_values_deduplicates_and_preserves_first_seen_order() -> None:

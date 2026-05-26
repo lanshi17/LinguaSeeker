@@ -212,3 +212,28 @@ async def test_standardization_service_counts_similarity_standardized_match() ->
 
     assert result.standardized_count == 1
     assert repo.normalized[0].match_method == MatchMethod.SIMILARITY
+
+
+@pytest.mark.asyncio
+async def test_standardization_service_result_includes_matches() -> None:
+    """Service result carries the full matches tuple for downstream audit output."""
+    candidate = StandardizationCandidate(
+        candidate_id="c1",
+        entity_type=EntityType.GENE,
+        role=BindingRole.SUBJECT,
+        raw_text="BRCA1",
+        chain_id="chain-1",
+        track="original",
+    )
+    input_data = StandardizationInput(
+        document_id="doc-1",
+        source_document_id="source-1",
+        processing_run_id="run-1",
+        candidates=(candidate,),
+        evidence_items=(),
+    )
+    repo = FakeRepository()
+    result = await StandardizationService(FakeMatcher(), repo).run(input_data)
+    assert len(result.matches) == 1
+    assert result.matches[0].candidate.raw_text == "BRCA1"
+    assert result.matches[0].status == MatchStatus.STANDARDIZED

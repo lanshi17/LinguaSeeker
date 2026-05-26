@@ -727,3 +727,90 @@ Chinese medical journals often include both Chinese and English versions of titl
 2. 任何 E2E 脚本只要会落库，就必须显式负责父表存在性，而不是依赖外部预置状态。
 3. 新增 Alembic revision id 时，先检查是否超过本库 `alembic_version.version_num` 长度限制。
 4. 真库实测要尽早做，不能等到所有单测都绿了再第一次碰真实数据。
+
+## 2026-05-26: ClinVar 接入如果只“导进去”还不够，必须同时处理别名歧义和超大事务
+
+**Problem**: 把 ClinVar 接入真实导入链路后，第一次真实导入虽然能跑很久，但在提交阶段因为单事务持有过多锁而触发 PostgreSQL `out of shared memory / max_locks_per_transaction`。即使导入成功，`p.R227X` 也只是从 `unmapped` 变成 `ambiguous`，因为 ClinVar 中同一 protein-short alias 会命中多个基因背景不同的变异。
+
+**Investigation**:
+1. 对 `variant_summary.core.tsv` 抽样统计后确认：
+   - 大量 `VariationID` 重复，但在核心字段裁剪后多数是完全重复行；
+   - 重复行在文件中是连续出现的，可以在预处理阶段流式去重。
+2. 用真实 Fabry 案例验证后确认：
+   - 接入 ClinVar 后 `p.R227X` 已能命中多个 `protein_short` alias；
+   - 真正缺的是用链上的 `gene=GLA` 进一步消歧。
+3. 继续真实导入 ClinVar 时，发现 400+ chunk 虽然逐 chunk upsert，但仍放在一个外层事务里，commit 时集中爆掉共享内存。
+
+**Root cause**:
+1. ClinVar 数据量过大，不能沿用“整个源一笔事务提交”的策略。
+2. 变异短写法（如 `p.R227X`）本身跨基因可重名，只靠 alias 文本无法唯一命中。
+3. model-server provider 的 base URL 归一化不严谨，`/v1` 会被重复拼接成 `/v1/v1/...`。
+
+**Solution**:
+1. ClinVar 预处理：
+   - 只保留核心字段；
+   - 过滤不可导入 review status；
+   - 去掉连续完全重复行；
+   - 真实 core 文件从 3.7G 原始 TSV 收缩到约 699M。
+2. ClinVar 导入：
+   - 改为每个 chunk 自己 commit，不再让 400+ chunk 共用一个巨型事务。
+3. ClinVar variant alias：
+   - 从 `p.Arg227Ter` 派生 `p.R227X` 这类 one-letter protein alias；
+   - precise variant matcher 再用 `candidate.metadata["gene_symbol"]` 过滤同 alias 的跨基因候选。
+4. semantic provider：
+   - 统一 base URL 归一化，避免 `/v1/v1/embeddings` 这类错误路径。
+
+**Outcome**:
+Fabry 真实 Phase 3 E2E 结果变化：
+- 初始：`standardized=5, ambiguous=0, unmapped=8`
+- 仅接 ClinVar：`standardized=5, ambiguous=1, unmapped=7`
+- 加入 gene-context 消歧后：`standardized=6, ambiguous=0`
+
+关键收益是：
+- `p.R227X` 最终标准化为 `ClinVarVariation:10733`
+- 对应展示名：`NM_000169.3(GLA):c.679C>T (p.Arg227Ter)`
+
+**Prevention**:
+1. 超大参考库接入时，预处理和导入事务策略必须一起设计，不能只做字段裁剪。
+2. 变异 alias 只要存在跨基因重名，就必须引入 gene/transcript context 参与精确匹配。
+3. 对 provider base URL 的 `/v1` 归一化要写成测试，不能靠运行时日志兜底。
+
+## 2026-05-26: 审查产物时也必须遵守 Python 只走 uv 的规则
+
+**Problem**: 审查 `backend/output/standardize_entities/法布雷病1例/latest-real-clinvar` 时，曾用 `python -m json.tool` 临时查看 JSON。虽然只是只读检查，但仍违反了本项目“Python 操作必须通过 `uv`”的依赖/环境规则。
+
+**Investigation**:
+1. 该操作发生在快速查看 JSON 内容阶段，本可直接使用 `jq`，无需启动 Python。
+2. 后续数据库查询已改为 `uv run python`，符合项目约定。
+
+**Root cause**: 把“只读 JSON 格式化”误当成普通 shell 查看操作，忽略了项目对 Python 命令入口的硬性约束。
+
+**Solution**: 后续 JSON 查看优先使用 `jq`；确需 Python 时统一使用 `uv run python`，并从 `backend/` 或稳定项目路径执行。
+
+**Prevention**: 在本仓库中执行任何 `python` 前先做一次入口检查：能用 `jq`/shell 工具解决则不用 Python；必须用 Python 时命令必须以 `uv run python` 开头。
+
+## 2026-05-26: 审查“已完成”实现时必须重新跑完整目标测试
+
+**Problem**: 一次 Phase 3 修复总结声称“100 Phase 3 tests pass”，但重新运行目标套件时先暴露出新加的 async 测试没有 `@pytest.mark.asyncio`，补上标记后又暴露生产代码缺少 `TerminologyEmbeddingIndexer.build(entity_types=..., source_dbs=...)` 参数支持。同时，混合导入 `hgnc + clinvar` 时因为 `clinvar` 分支跳过最终 `session.commit()`，在 ClinVar stream 被 mock、为空或首 chunk 前失败时，非 ClinVar batch 会停留在未提交事务里。
+
+**Investigation**:
+1. 先跑完整 Phase 3 目标套件，确认失败是 `test_similarity_indexer.py::test_embedding_indexer_can_filter_entity_types_and_sources`。
+2. 与同目录其他 async 测试对比，发现缺少 `@pytest.mark.asyncio` 是第一层问题。
+3. 加上标记后重新运行，真实错误变为 `TerminologyEmbeddingIndexer.build()` 不接受 `entity_types` / `source_dbs`。
+4. 审查 `import_terminology()` 事务流时发现：`clinvar` 被选中后只依赖 `_import_clinvar_stream()` 的 chunk commit，外层预加载批次没有最终 commit。
+
+**Root cause**:
+1. 新测试没有被正确标记，导致 pytest 没有真正执行 async 断言路径。
+2. 测试期望的 indexer 过滤能力没有落到生产实现。
+3. 为解决 ClinVar 大事务引入 chunk commit 时，把“ClinVar chunk 提交”和“其他 source batch 最终提交”混为一谈。
+
+**Solution**:
+1. 给新 async 测试加 `@pytest.mark.asyncio`。
+2. 给 `TerminologyEmbeddingIndexer.build()` 增加 `entity_types` 和 `source_dbs` 过滤参数，并同时在 SQL 查询和 fake-session 结果上保持过滤语义。
+3. `import_terminology()` 无论是否包含 ClinVar，最后都执行一次 `session.commit()`，提交外层仍未提交的非 ClinVar batch。
+4. 将已完成的计划文档归档到 `docs/archive/plans/` 并更新 `docs/README.md`。
+
+**Prevention**:
+1. 审查他人“测试已通过”的总结时，必须自己重跑覆盖目标，而不是采信摘要。
+2. 新增 async 测试后必须确认 pytest 真正执行 coroutine，而不是被插件错误拦截。
+3. 任何分块提交优化都要单独检查混合 source、空 stream、首 chunk 失败三种事务边界。
