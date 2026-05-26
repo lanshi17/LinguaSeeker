@@ -415,3 +415,5 @@ class TerminologyEmbedding(Base, TimestampMixin):
     embedding_text_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     embedding_model: Mapped[str] = mapped_column(String(255), nullable=False)
     embedding: Mapped[list[float]] = mapped_column(Vector(1024), nullable=False)
+
+    entry: Mapped[TerminologyEntry] = relationship(back_populates="embeddings")
