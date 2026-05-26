@@ -4,7 +4,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Iterable
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from src.dao.models import TerminologyEmbedding, TerminologyEntry
@@ -37,34 +37,35 @@ class TerminologyEmbeddingIndexer:
         self._embedding_provider = embedding_provider
 
     async def build(self, *, embedding_model: str, batch_size: int) -> int:
-        """Embed terminology entries, upserting to stay idempotent."""
+        """Embed terminology entries, cleaning stale rows and upserting current ones."""
         result = await self._session.execute(select(TerminologyEntry).order_by(TerminologyEntry.entry_id))
         entries = tuple(result.scalars().all())
+
+        # Delete stale embeddings for entries that will be re-embedded.
+        entry_ids = [entry.entry_id for entry in entries]
+        if entry_ids:
+            await self._session.execute(
+                delete(TerminologyEmbedding.__table__).where(
+                    TerminologyEmbedding.entry_id.in_(entry_ids),
+                    TerminologyEmbedding.embedding_model == embedding_model,
+                ),
+            )
+
         written = 0
         for batch in _batched(entries, batch_size):
             texts = tuple(build_embedding_text(entry) for entry in batch)
             vectors = (await self._embedding_provider.embed_texts(texts)).vectors
             for entry, text, vector in zip(batch, texts, vectors, strict=True):
                 text_hash = make_embedding_text_hash(text)
-                stmt = (
-                    pg_insert(TerminologyEmbedding.__table__)
-                    .values(
-                        entry_id=entry.entry_id,
-                        entity_type=entry.entity_type,
-                        source_db=entry.source_db,
-                        external_id=entry.external_id,
-                        embedding_text=text,
-                        embedding_text_hash=text_hash,
-                        embedding_model=embedding_model,
-                        embedding=list(vector),
-                    )
-                    .on_conflict_do_update(
-                        constraint="uq_terminology_embeddings_entry_text_model",
-                        set_={
-                            "embedding_text": text,
-                            "embedding": list(vector),
-                        },
-                    )
+                stmt = pg_insert(TerminologyEmbedding.__table__).values(
+                    entry_id=entry.entry_id,
+                    entity_type=entry.entity_type,
+                    source_db=entry.source_db,
+                    external_id=entry.external_id,
+                    embedding_text=text,
+                    embedding_text_hash=text_hash,
+                    embedding_model=embedding_model,
+                    embedding=list(vector),
                 )
                 await self._session.execute(stmt)
                 written += 1
