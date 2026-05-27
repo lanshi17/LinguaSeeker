@@ -32,15 +32,16 @@ cfg = get_config()
 
 _embedding_svc = EmbeddingService(
     model_id=cfg.embedding_model_id,
-    gpu_memory_utilization=cfg.vllm_gpu_memory_utilization,
+    gpu_memory_utilization=cfg.embedding_gpu_memory_utilization,
+    max_model_len=cfg.embedding_max_model_len,
 )
 _rerank_svc = RerankService(
     model_id=cfg.rerank_model_id,
-    gpu_memory_utilization=cfg.vllm_gpu_memory_utilization,
+    gpu_memory_utilization=cfg.rerank_gpu_memory_utilization,
 )
 _vlm_svc = VLMService(
     model_id=cfg.vlm_model_id,
-    gpu_memory_utilization=cfg.vllm_gpu_memory_utilization,
+    gpu_memory_utilization=cfg.vlm_gpu_memory_utilization,
     image_analysis=cfg.vlm_image_analysis,
 ) if cfg.vlm_model_id else None
 

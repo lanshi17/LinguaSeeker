@@ -5,12 +5,13 @@ Adapted from ``alembic init -t async`` with repo-relative import handling.
 from __future__ import annotations
 
 import asyncio
+import copy
 import sys
 from logging.config import fileConfig
 from pathlib import Path
 
 from alembic import context
-from sqlalchemy import pool
+from sqlalchemy import pool, text
 from sqlalchemy.ext.asyncio import create_async_engine
 
 # ── Ensure backend/src is importable from repo root ─────────────────────
@@ -39,6 +40,21 @@ def get_url() -> str:
     return get_config().postgresql_dsn
 
 
+def get_search_path() -> str:
+    """Return the schema search_path from application config."""
+    from src.core.config import get_config  # noqa: E402
+
+    cfg = get_config()
+    return f"{cfg.postgresql.schema_},public"
+
+
+def _create_schema_metadata(schema: str):
+    """Return a copy of target_metadata with schema set, to avoid mutating the global."""
+    md = copy.copy(target_metadata)
+    md.schema = schema
+    return md
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -46,22 +62,35 @@ def run_migrations_offline() -> None:
     generating migration scripts for review.
     """
     url = get_url()
+    schema = get_search_path().split(",")[0]
     context.configure(
         url=url,
-        target_metadata=target_metadata,
+        target_metadata=_create_schema_metadata(schema),
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        version_table_schema=schema,
+        include_schemas=True,
     )
 
     with context.begin_transaction():
+        context.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema}"))
+        context.execute(text(f"SET search_path TO {schema},public"))
         context.run_migrations()
 
 
 def do_run_migrations(connection):
     """Synchronous migration runner called inside run_sync."""
-    context.configure(connection=connection, target_metadata=target_metadata)
+    schema = get_search_path().split(",")[0]
+    context.configure(
+        connection=connection,
+        target_metadata=_create_schema_metadata(schema),
+        version_table_schema=schema,
+        include_schemas=True,
+    )
 
     with context.begin_transaction():
+        context.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema}"))
+        context.execute(text(f"SET search_path TO {schema},public"))
         context.run_migrations()
 
 
@@ -72,6 +101,9 @@ async def run_migrations_online() -> None:
     connectable = create_async_engine(
         configuration["sqlalchemy.url"],
         poolclass=pool.NullPool,
+        connect_args={
+            "server_settings": {"search_path": get_search_path()},
+        },
     )
 
     async with connectable.connect() as connection:

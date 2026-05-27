@@ -11,7 +11,7 @@ VERSIONS = ROOT / "database" / "migrations" / "versions"
 
 
 def _load_pgvector_revision():
-    for path in sorted(VERSIONS.glob("*_enable_pgvector*.py")):
+    for path in sorted(VERSIONS.glob("*_add_terminology_embeddings_pgvector*.py")):
         spec = importlib.util.spec_from_file_location("pgv", path)
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)

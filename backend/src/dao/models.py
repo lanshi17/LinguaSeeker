@@ -365,12 +365,15 @@ class TerminologyRelationship(Base, TimestampMixin):
 
     __tablename__ = "terminology_relationships"
     __table_args__ = (
+        # NULLS NOT DISTINCT: treats NULL object_entry_id as equal,
+        # preventing duplicate scalar assertions (NULL != NULL in standard unique constraints).
         UniqueConstraint(
             "subject_entry_id",
             "object_entry_id",
             "relationship_type",
             "source_db",
             name="uq_terminology_relationships_identity",
+            postgresql_nulls_not_distinct=True,
         ),
         Index("ix_terminology_relationships_subject_type", "subject_entry_id", "relationship_type"),
         Index("ix_terminology_relationships_object_type", "object_entry_id", "relationship_type"),

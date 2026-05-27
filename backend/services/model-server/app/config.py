@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     # Embedding model
     embedding_model_id: str = "Qwen/Qwen3-Embedding-0.6B"
     embedding_dimension: int = 1024
+    embedding_max_model_len: int = 32768
 
     # Rerank model
     rerank_model_id: str = "BAAI/bge-reranker-v2-m3"
@@ -49,6 +50,9 @@ class Settings(BaseSettings):
 
     # vllm shared settings
     vllm_gpu_memory_utilization: float = 0.9
+    embedding_gpu_memory_utilization: float = 0.9
+    rerank_gpu_memory_utilization: float = 0.9
+    vlm_gpu_memory_utilization: float = 0.9
 
 
 @lru_cache(maxsize=1)

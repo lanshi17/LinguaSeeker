@@ -18,8 +18,10 @@ class EmbeddingService(BaseModelService):
         self,
         model_id: str = "Qwen/Qwen3-Embedding-0.6B",
         gpu_memory_utilization: float = 0.9,
+        max_model_len: int = 32768,
     ) -> None:
         super().__init__(model_id, gpu_memory_utilization)
+        self._max_model_len = max_model_len
 
     def _load(self) -> None:
         logger.info("Loading embedding model via vllm: {id}", id=self._model_id)
@@ -28,6 +30,7 @@ class EmbeddingService(BaseModelService):
             runner="pooling",
             convert="embed",
             gpu_memory_utilization=self._gpu_memory_utilization,
+            max_model_len=self._max_model_len,
             trust_remote_code=True,
         )
 

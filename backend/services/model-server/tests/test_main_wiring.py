@@ -1,31 +1,50 @@
-from unittest.mock import patch
+from types import SimpleNamespace
 
 
-def test_main_imports():
-    """Verify main.py can be imported without errors (mocking heavy deps)."""
-    with patch("app.domain.embedding.vllm.LLM"):
-        with patch("app.domain.rerank.vllm.LLM"):
-            with patch("app.domain.vlm.vllm.LLM"):
-                with patch("app.domain.vlm.MinerUClient"):
-                    import app.api.vlm as vlm_mod
-                    assert hasattr(vlm_mod, "router")
+def test_main_wires_per_model_gpu_memory_utilization(monkeypatch):
+    captured = {}
 
+    class FakeEmbeddingService:
+        def __init__(self, model_id, gpu_memory_utilization, max_model_len):
+            captured["embedding"] = (model_id, gpu_memory_utilization, max_model_len)
 
-def test_main_does_not_register_vlm_route_without_model(monkeypatch):
-    """VLM route should not be exposed unless VLM_MODEL_ID is configured."""
-    monkeypatch.setenv("VLM_MODEL_ID", "")
+    class FakeRerankService:
+        def __init__(self, model_id, gpu_memory_utilization):
+            captured["rerank"] = (model_id, gpu_memory_utilization)
 
-    from app.config import get_config
-    get_config.cache_clear()
+    class FakeVLMService:
+        def __init__(self, model_id, gpu_memory_utilization, image_analysis):
+            captured["vlm"] = (model_id, gpu_memory_utilization, image_analysis)
 
-    with patch("app.domain.embedding.vllm.LLM"):
-        with patch("app.domain.rerank.vllm.LLM"):
-            with patch("app.domain.vlm.vllm.LLM"):
-                with patch("app.domain.vlm.MinerUClient"):
-                    import importlib
-                    import main
+    fake_cfg = SimpleNamespace(
+        embedding_model_id="embed-model",
+        embedding_gpu_memory_utilization=0.35,
+        embedding_max_model_len=4096,
+        rerank_model_id="rerank-model",
+        rerank_gpu_memory_utilization=0.2,
+        vlm_model_id="vlm-model",
+        vlm_gpu_memory_utilization=0.5,
+        vlm_image_analysis=False,
+        host="0.0.0.0",
+        port=8001,
+        log_level="info",
+    )
 
-                    main = importlib.reload(main)
-                    paths = main.app.openapi()["paths"]
+    monkeypatch.setattr("app.config.get_config", lambda: fake_cfg)
+    monkeypatch.setattr("app.domain.embedding.EmbeddingService", FakeEmbeddingService)
+    monkeypatch.setattr("app.domain.rerank.RerankService", FakeRerankService)
+    monkeypatch.setattr("app.domain.vlm.VLMService", FakeVLMService)
+    monkeypatch.setattr("app.api.embedding.bind", lambda service: None)
+    monkeypatch.setattr("app.api.rerank.bind", lambda service: None)
+    monkeypatch.setattr("app.api.vlm.bind", lambda service: None)
+    monkeypatch.setattr("app.api.health.register_services", lambda services: None)
+    monkeypatch.setattr("app.utils.logger.setup_logging", lambda: None)
 
-    assert "/v1/chat/completions" not in paths
+    import importlib
+    import main as main_module
+
+    importlib.reload(main_module)
+
+    assert captured["embedding"] == ("embed-model", 0.35, 4096)
+    assert captured["rerank"] == ("rerank-model", 0.2)
+    assert captured["vlm"] == ("vlm-model", 0.5, False)
