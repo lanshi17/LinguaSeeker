@@ -593,11 +593,15 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table("evidence_entity_bindings")
+    # Drop circular FK constraints before dropping the tables they reference.
+    op.drop_constraint("fk_run_evidence_items_canonical_evidence_id", "run_evidence_items", type_="foreignkey")
+    op.drop_constraint("fk_canonical_evidence_items_current_best_run_evidence_id", "canonical_evidence_items", type_="foreignkey")
     op.drop_table("run_evidence_items")
     op.drop_table("canonical_evidence_items")
     op.drop_table("entity_merge_events")
     op.drop_table("normalized_entities")
     op.drop_table("processing_runs")
     op.drop_table("source_document_identifiers")
+    op.drop_constraint("fk_source_documents_latest_processing_run_id", "source_documents", type_="foreignkey")
     op.drop_table("source_documents")
     op.drop_table("users")

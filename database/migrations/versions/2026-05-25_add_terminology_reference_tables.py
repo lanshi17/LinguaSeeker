@@ -94,12 +94,15 @@ def upgrade() -> None:
             name=op.f("fk_terminology_relationships_subject_entry_id"),
         ),
         sa.PrimaryKeyConstraint("relationship_id", name=op.f("pk_terminology_relationships")),
+        # NULLS NOT DISTINCT: treats NULL object_entry_id as equal,
+        # preventing duplicate scalar assertions (NULL != NULL in standard unique constraints).
         sa.UniqueConstraint(
             "subject_entry_id",
             "object_entry_id",
             "relationship_type",
             "source_db",
             name=op.f("uq_terminology_relationships_identity"),
+            postgresql_nulls_not_distinct=True,
         ),
     )
     op.create_index(

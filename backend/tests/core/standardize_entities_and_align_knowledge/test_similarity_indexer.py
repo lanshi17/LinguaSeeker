@@ -58,6 +58,7 @@ class FakeSession:
     def __init__(self, rows) -> None:
         self.rows = rows
         self.statements: list[object] = []
+        self.commit_calls = 0
 
     async def execute(self, statement):
         self.statements.append(statement)
@@ -65,6 +66,9 @@ class FakeSession:
 
     async def flush(self) -> None:
         return None
+
+    async def commit(self) -> None:
+        self.commit_calls += 1
 
 
 class FakeEmbeddingProvider:
@@ -112,3 +116,23 @@ async def test_embedding_indexer_chunks_large_delete_sets() -> None:
 
     delete_statements = [statement for statement in session.statements if "DELETE FROM terminology_embeddings" in str(statement)]
     assert len(delete_statements) >= 2
+
+
+@pytest.mark.asyncio
+async def test_embedding_indexer_commits_each_embedding_batch_when_session_supports_commit() -> None:
+    """Long-running embedding builds should commit incrementally instead of only at the end."""
+    rows = [
+        FakeEntry("e1", "gene", "HGNC", "GLA", "HGNC:4296"),
+        FakeEntry("e2", "disease", "OMIM", "FABRY DISEASE", "OMIM:301500"),
+        FakeEntry("e3", "phenotype", "HPO", "Edema", "HP:0000969"),
+    ]
+    session = FakeSession(rows)
+    indexer = TerminologyEmbeddingIndexer(session, FakeEmbeddingProvider())
+
+    count = await indexer.build(
+        embedding_model="test-model",
+        batch_size=2,
+    )
+
+    assert count == 3
+    assert session.commit_calls == 2

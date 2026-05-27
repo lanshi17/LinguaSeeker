@@ -14,7 +14,7 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects import postgresql
 
 revision: str = "add_term_embed_20260525"
-down_revision: Union[str, None] = "add_term_rel_id_20260526"
+down_revision: Union[str, None] = "add_terminology_20260525"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -38,6 +38,7 @@ def upgrade() -> None:
             ["entry_id"],
             ["terminology_entries.entry_id"],
             name=op.f("fk_terminology_embeddings_entry_id"),
+            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("embedding_id", name=op.f("pk_terminology_embeddings")),
         sa.UniqueConstraint(

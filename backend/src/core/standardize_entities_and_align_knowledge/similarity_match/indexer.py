@@ -89,6 +89,8 @@ class TerminologyEmbeddingIndexer:
                 await self._session.execute(stmt)
                 written += 1
             await self._session.flush()
+            if hasattr(self._session, "commit"):
+                await self._session.commit()
         return written
 
 

@@ -9,6 +9,7 @@ def test_embedding_service_load_vllm():
         svc = EmbeddingService(
             model_id="Qwen/Qwen3-Embedding-0.6B",
             gpu_memory_utilization=0.5,
+            max_model_len=4096,
         )
         assert svc.model_id == "Qwen/Qwen3-Embedding-0.6B"
         assert svc.ready is False
@@ -18,6 +19,7 @@ def test_embedding_service_load_vllm():
             runner="pooling",
             convert="embed",
             gpu_memory_utilization=0.5,
+            max_model_len=4096,
             trust_remote_code=True,
         )
 

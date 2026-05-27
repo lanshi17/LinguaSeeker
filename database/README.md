@@ -6,10 +6,9 @@
 
 ```bash
 # From repo root:
-cd database
 
 # Copy and customize environment
-cp config/.env.example config/.env
+cp database/config/.env.example database/config/.env
 
 # Run migrations (requires PostgreSQL running)
 uv run alembic -c database/alembic.ini upgrade head
@@ -249,8 +248,8 @@ backend/.env / .env.local ──► backend/src/core/config.py (pydantic-setting
 ### Running Migrations (Standard Workflow)
 
 ```bash
-# 1. Ensure PostgreSQL is running (via podman-compose or docker-compose)
-podman compose -f database/.old_version/podman-compose.yml up -d postgresql
+# 1. Ensure PostgreSQL is running (via docker-compose)
+docker compose up -d postgresql
 
 # 2. Apply all pending migrations
 uv run alembic -c database/alembic.ini upgrade head
@@ -326,8 +325,8 @@ Read projections (like `frontend_search_index`) should:
 When adding a new database service (e.g., a vector store):
 1. Add config to `database/config/.env` and `database/config/.env.example`
 2. Add a nested config model to `backend/src/core/config.py` (follow `RedisConfig` / `Neo4jConfig` pattern)
-3. Add the service definition to `podman-compose.yml` (in `.old_version/` — this is the reference compose file)
-4. If the service needs initialization scripts, add them under `database/.old_version/scripts/`
+3. Add the service definition to `docker-compose.yml` (at the repo root)
+4. If the service needs initialization scripts, add them under `scripts/`
 
 ### Common Pitfalls
 
@@ -411,13 +410,6 @@ database/
 │   ├── script.py.mako           Migration script template (upgrade/downgrade stubs)
 │   └── versions/
 │       └── 2026-05-18_4a82b5793055_init_mvp_schema.py    Initial MVP schema (9 tables)
-├── seeds/
-│   └── .gitkeep                 Placeholder for future seed data
-└── .old_version/                Previous codebase reference
-    ├── podman-compose.yml       Reference compose file (all 5 services with health checks)
-    ├── scripts/dbctl.sh         Unified container lifecycle management
-    ├── sql/
-    │   ├── init_database_schema.sql     Legacy raw SQL schema (pre-Alembic)
-    │   └── seed_data.sql                Legacy seed data
-    └── README.md                Legacy database management guide
+└── seeds/
+    └── .gitkeep                 Placeholder for future seed data
 ```

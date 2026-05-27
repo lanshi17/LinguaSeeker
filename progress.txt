@@ -121,3 +121,4 @@
 [2026-05-26] Completed real ClinVar import via reduced core TSV with per-chunk commits, added ClinVar protein short alias derivation plus gene-context variant disambiguation, and reran Fabry Phase 3 E2E to standardize `p.R227X` as `ClinVarVariation:10733` [done]
 [2026-05-26] Reviewed Phase 3 standard terminology output at `backend/output/standardize_entities/法布雷病1例/latest-real-clinvar` and identified traceability, disease alias, variant disambiguation, and phenotype normalization gaps [done]
 [2026-05-26] Reviewed and patched Phase 3 audit/match fixes: restored full target test pass, added embedding index filters, fixed mixed-source terminology import commit, and archived the completed plan doc [done]
+[2026-05-27] [model-server embedding_max_model_len 配置修复：补测试锁配置链、透传参数到 EmbeddingService、本地 .env.local 覆盖为 4096、精准进程清理、验证 /v1/embeddings+rerank 200、Phase 3 Fabry E2E 稳定跑完无回归] [done]

@@ -27,10 +27,7 @@ def bind(service: RerankService) -> None:
 def create_rerank(req: RerankRequest):
     assert _service is not None, "RerankService not registered"
 
-    try:
-        scores = _service.infer(req.query, req.documents)
-    finally:
-        _service.unload()
+    scores = _service.infer(req.query, req.documents)
 
     indexed = sorted(enumerate(scores), key=lambda x: x[1], reverse=True)
     if req.top_k:

@@ -814,3 +814,44 @@ Fabry 真实 Phase 3 E2E 结果变化：
 1. 审查他人“测试已通过”的总结时，必须自己重跑覆盖目标，而不是采信摘要。
 2. 新增 async 测试后必须确认 pytest 真正执行 coroutine，而不是被插件错误拦截。
 3. 任何分块提交优化都要单独检查混合 source、空 stream、首 chunk 失败三种事务边界。
+
+## 2026-05-27: model-server embedding_max_model_len 配置修复与进程管理
+
+**Problem**: Phase 3 E2E 在语义层 (semantic) 执行时出现 embedding 接口 500 错误，导致 `水肿`/`蛋白尿`/`心律失常` 等 phenotype 无法通过 pgvector 语义匹配标准化。
+
+**Investigation**:
+1. 先确认 vllm.LLM 的 `max_model_len` 参数支持，以及 model-server 的装配入口。
+2. 补测试锁死配置链：`test_config.py` 验证默认值 32768 和 env 覆盖 4096；`test_embedding_service.py` 验证装配时参数透传；`test_main_wiring.py` 验证 cfg → service 整条链路。
+3. 修改 `app/config.py` 增加 `embedding_max_model_len: int = 32768`，`app/services/embedding.py` 装配时透传 `max_model_len=cfg.embedding_max_model_len`。
+4. 本地 `.env.local` 添加 `EMBEDDING_MAX_MODEL_LEN=4096` 降低显存占用。
+5. 测试被本地 .env 污染：将默认值测试的 `_env_file=None` 避免环境影响。
+6. 服务进程残留问题：`pkill -f model-server` 误杀当前 shell，改用 `lsof -ti:8001 | xargs -r kill` 精准清理。
+7. 前台启动验证配置生效：`uv run python main.py` 确认无启动错误。
+
+**Root cause**:
+1. vllm 初始化时默认 `max_model_len` 过大，本地显存不足导致加载失败。
+2. 配置项未在 config 层声明，无法通过 env 注入覆盖。
+3. 进程清理命令过于宽泛，导致重启时端口仍被旧进程占用。
+
+**Solution**:
+1. config 层增加 `embedding_max_model_len`，默认 32768（云端），本地通过 env 覆盖为 4096。
+2. EmbeddingService 装配时显式透传 `max_model_len` 参数。
+3. 测试使用 `_env_file=None` 隔离环境变量污染。
+4. 进程清理改用 `lsof -ti:8001` 精准定位 + kill。
+5. 重启后验证 `/health`、`/v1/embeddings`、`/v1/rerank` 均返回 200。
+
+**Result**:
+- Phase 3 E2E `latest-real-semantic-stable` 稳定跑完，无 embedding 500 错误。
+- 标准化结果：`match=18, standardized=7, ambiguous=1, unmapped=10`，与 embedfix 版本一致，无回归。
+- 7 项成功标准化：
+  - gene: `GLA` → HGNC:4296
+  - disease: `法布雷病`/`Fabry disease` → OMIM:301500
+  - variant: `p.R227X` → ClinVarVariation:10733
+  - phenotype: `Edema`/`Proteinuria`/`Arrhythmia` → HP:0000969/HP:0000093/HP:0011675
+
+**Prevention**:
+1. vllm 类模型的 `max_model_len` 必须在 config 层暴露为可配置项，避免硬编码。
+2. 测试默认值验证必须 `_env_file=None` 隔离本地 .env 污染。
+3. 服务进程清理必须精准定位端口占用 PID，避免 `pkill -f` 误伤。
+4. 重启服务后必须先验证基础接口 (`/health`, `/v1/*`) 再跑完整 E2E，避免在异常进程状态下浪费调试时间。
+
