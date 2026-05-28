@@ -1,12 +1,25 @@
 """Vector similarity search repository backed by pgvector."""
 from __future__ import annotations
 
+import hashlib
 import uuid
-from typing import Any
+from typing import Any, TypedDict
 
 from sqlalchemy import delete as sa_delete, select
 
 from src.dao.models import TerminologyEmbedding, TerminologyEntry
+
+
+class VectorSearchRow(TypedDict):
+    """Typed projection row returned by vector similarity search."""
+
+    entry_id: uuid.UUID
+    entity_type: str
+    source_db: str
+    external_id: str
+    display_name: str
+    embedding_text: str
+    distance: float
 
 
 class VectorRepository:
@@ -22,8 +35,8 @@ class VectorRepository:
         embedding: list[float],
         limit: int = 10,
         min_distance: float | None = None,
-        model_version: str | None = None,
-    ) -> list[dict[str, object]]:
+        embedding_model: str | None = None,
+    ) -> list[VectorSearchRow]:
         """Search terminology embeddings by cosine similarity.
 
         Args:
@@ -31,11 +44,11 @@ class VectorRepository:
             embedding: The query embedding vector.
             limit: Maximum number of results.
             min_distance: Optional minimum cosine distance threshold (lower = more similar).
-            model_version: Optional filter by embedding model version.
+            embedding_model: Optional filter by embedding model identity.
 
         Returns:
             List of result dicts with entry_id, entity_type, source_db, external_id,
-            display_name, source_text, and distance.
+            display_name, embedding_text, and distance.
         """
         distance_expr = TerminologyEmbedding.embedding.cosine_distance(embedding).label("distance")
         statement = (
@@ -45,7 +58,7 @@ class VectorRepository:
                 TerminologyEntry.source_db,
                 TerminologyEntry.external_id,
                 TerminologyEntry.display_name,
-                TerminologyEmbedding.source_text,
+                TerminologyEmbedding.embedding_text,
                 distance_expr,
             )
             .join(TerminologyEmbedding, TerminologyEmbedding.entry_id == TerminologyEntry.entry_id)
@@ -53,8 +66,8 @@ class VectorRepository:
             .order_by(distance_expr)
             .limit(limit)
         )
-        if model_version is not None:
-            statement = statement.where(TerminologyEmbedding.model_version == model_version)
+        if embedding_model is not None:
+            statement = statement.where(TerminologyEmbedding.embedding_model == embedding_model)
         if min_distance is not None:
             statement = statement.where(
                 TerminologyEmbedding.embedding.cosine_distance(embedding) < min_distance
@@ -69,7 +82,7 @@ class VectorRepository:
                 "source_db": row["source_db"],
                 "external_id": row["external_id"],
                 "display_name": row["display_name"],
-                "source_text": row["source_text"],
+                "embedding_text": row["embedding_text"],
                 "distance": float(row["distance"]),
             }
             for row in rows
@@ -80,27 +93,36 @@ class VectorRepository:
         *,
         entry_ids: list[uuid.UUID],
         entity_type: str,
-        model_version: str,
+        source_db: str,
+        external_ids: list[str],
+        embedding_model: str,
         embeddings: list[list[float]],
-        source_texts: list[str],
+        embedding_texts: list[str],
     ) -> None:
         """Insert or update embeddings for terminology entries.
 
-        Existing embeddings for the same (entry_id, model_version) are replaced.
+        Existing embeddings for the same (entry_id, embedding_model) are replaced.
         """
-        for entry_id, emb, source_text in zip(entry_ids, embeddings, source_texts):
+        input_lengths = {len(entry_ids), len(external_ids), len(embeddings), len(embedding_texts)}
+        if len(input_lengths) != 1:
+            raise ValueError("entry_ids, external_ids, embeddings, and embedding_texts must have the same length.")
+
+        for entry_id, external_id, emb, embedding_text in zip(entry_ids, external_ids, embeddings, embedding_texts):
             await self.session.execute(
                 sa_delete(TerminologyEmbedding)
                 .where(TerminologyEmbedding.entry_id == entry_id)
-                .where(TerminologyEmbedding.model_version == model_version)
+                .where(TerminologyEmbedding.embedding_model == embedding_model)
             )
 
             self.session.add(TerminologyEmbedding(
                 entry_id=entry_id,
                 entity_type=entity_type,
+                source_db=source_db,
+                external_id=external_id,
+                embedding_text=embedding_text,
+                embedding_text_hash=hashlib.sha256(embedding_text.encode("utf-8")).hexdigest(),
+                embedding_model=embedding_model,
                 embedding=emb,
-                model_version=model_version,
-                source_text=source_text,
             ))
 
         await self.session.flush()

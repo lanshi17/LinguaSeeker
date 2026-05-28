@@ -1,7 +1,6 @@
 """Tests for online acquisition contracts."""
 
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
-    OnlineAcquisitionGatewayRequest,
     OnlineAcquisitionGatewayResult,
     OnlineAcquisitionItem,
     OnlineAcquisitionRequest,

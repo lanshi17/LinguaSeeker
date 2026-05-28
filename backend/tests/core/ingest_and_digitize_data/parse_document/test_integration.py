@@ -55,6 +55,17 @@ def local_parser():
     from src.core.config import get_config
 
     cfg = get_config()
+    import httpx
+
+    try:
+        resp = httpx.get(f"{cfg.model_server_url}/health", timeout=5.0)
+        resp.raise_for_status()
+        models = resp.json().get("models", {})
+        if not isinstance(models, dict) or not models.get("vlm", False):
+            pytest.skip(f"model-server VLM not available at {cfg.model_server_url}")
+    except Exception:
+        pytest.skip(f"model-server not available at {cfg.model_server_url}")
+
     return MinerULocalParser(model_server_url=cfg.model_server_url)
 
 

@@ -1,6 +1,6 @@
 """Tests for gateway module — with mocked net_io."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 

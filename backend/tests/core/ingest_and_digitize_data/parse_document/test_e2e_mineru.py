@@ -347,6 +347,9 @@ def local_parser():
     try:
         resp = httpx.get(f"{cfg.model_server_url}/health", timeout=5.0)
         resp.raise_for_status()
+        models = resp.json().get("models", {})
+        if not isinstance(models, dict) or not models.get("vlm", False):
+            pytest.skip(f"model-server VLM not available at {cfg.model_server_url}")
     except Exception:
         pytest.skip(f"model-server not available at {cfg.model_server_url}")
 

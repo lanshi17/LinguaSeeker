@@ -204,8 +204,8 @@ def test_head_revision_points_to_pgvector_embeddings() -> None:
     head = script.get_revision("head")
 
     assert head is not None
-    assert head.revision == "add_term_embed_20260525"
-    assert head.down_revision == "add_terminology_20260525"
+    assert head.revision == "add_nulls_distinct_20260527"
+    assert head.down_revision == "add_term_embed_20260525"
 
 
 def test_terminology_relationships_migration_defines_unique_identity_constraint(monkeypatch) -> None:
@@ -372,3 +372,95 @@ async def test_upgrade_head_creates_tables() -> None:
     assert expected <= tables, f"Missing tables: {expected - tables}"
 
     await engine.dispose()
+
+
+@pytest.mark.skip(reason="Requires a running PostgreSQL instance")
+@pytest.mark.asyncio
+async def test_nulls_not_distinct_constraint_prevents_duplicate_scalar_assertions() -> None:
+    """NULLS NOT DISTINCT on terminology_relationships treats NULL object_entry_id as equal.
+
+    Two INSERTs with the same (subject_entry_id, NULL, relationship_type, source_db)
+    must trigger ON CONFLICT DO UPDATE rather than inserting a second row.
+    """
+    import uuid
+
+    from sqlalchemy import text
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    from src.core.config import Settings
+
+    cfg = Settings()
+    engine = create_async_engine(cfg.postgresql_dsn)
+
+    try:
+        async with engine.begin() as conn:
+            schema = cfg.postgresql.schema_
+            await conn.execute(text(f"SET search_path TO {schema},public"))
+
+            # Insert a subject entry for the relationship.
+            subject_id = uuid.uuid4()
+            await conn.execute(
+                text("""
+                    INSERT INTO terminology_entries
+                        (entry_id, entity_type, source_db, external_id,
+                         display_name, normalized_name, version)
+                    VALUES
+                        (:id, 'gene', 'test', 'HGNC:1234', 'BRCA1', 'brca1', 'v1')
+                """),
+                {"id": subject_id},
+            )
+
+            # First insert: scalar assertion (NULL object_entry_id).
+            rel_id_1 = uuid.uuid4()
+            await conn.execute(
+                text("""
+                    INSERT INTO terminology_relationships
+                        (relationship_id, subject_entry_id, object_entry_id,
+                         relationship_type, source_db, evidence_level, raw_payload)
+                    VALUES
+                        (:rid, :sid, NULL, 'assertion', 'test', 'strong', '{}'::jsonb)
+                """),
+                {"rid": rel_id_1, "sid": subject_id},
+            )
+
+            # Second insert: same scalar assertion → must conflict and update.
+            rel_id_2 = uuid.uuid4()
+            result = await conn.execute(
+                text("""
+                    INSERT INTO terminology_relationships
+                        (relationship_id, subject_entry_id, object_entry_id,
+                         relationship_type, source_db, evidence_level, raw_payload)
+                    VALUES
+                        (:rid, :sid, NULL, 'assertion', 'test', 'moderate', '{}'::jsonb)
+                    ON CONFLICT (subject_entry_id, object_entry_id,
+                                 relationship_type, source_db)
+                    DO UPDATE SET evidence_level = EXCLUDED.evidence_level
+                    RETURNING relationship_id, evidence_level
+                """),
+                {"rid": rel_id_2, "sid": subject_id},
+            )
+            row = result.mappings().first()
+            assert row is not None, "ON CONFLICT DO UPDATE should return the conflicting row"
+            # The UPDATE should have set evidence_level to 'moderate'.
+            assert row["evidence_level"] == "moderate"
+            # The returned ID should be the original, not the new one.
+            assert row["relationship_id"] == rel_id_1
+
+            # Verify only one row exists.
+            count_result = await conn.execute(
+                text("""
+                    SELECT count(*) AS cnt
+                    FROM terminology_relationships
+                    WHERE subject_entry_id = :sid
+                      AND relationship_type = 'assertion'
+                      AND source_db = 'test'
+                """),
+                {"sid": subject_id},
+            )
+            assert count_result.scalar() == 1, "NULLS NOT DISTINCT must prevent duplicate scalar rows"
+
+            # Cleanup.
+            await conn.execute(text("DELETE FROM terminology_relationships WHERE source_db = 'test'"))
+            await conn.execute(text("DELETE FROM terminology_entries WHERE source_db = 'test'"))
+    finally:
+        await engine.dispose()

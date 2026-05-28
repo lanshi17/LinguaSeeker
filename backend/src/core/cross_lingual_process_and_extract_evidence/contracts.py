@@ -80,7 +80,7 @@ class ContentBlock:
     # header/footer/page_number/aside_text/page_footnote
     # uses `text` field above
 
-    def to_dict(self) -> dict[str, Any]:  # noqa: dict-return — MinerU serialization format
+    def to_dict(self) -> dict[str, Any]:  # noqa  # dict-return: MinerU serialization format.
         """Serialize to MinerU content_list.json compatible format."""
         d: dict[str, Any] = {
             "type": self.type,
