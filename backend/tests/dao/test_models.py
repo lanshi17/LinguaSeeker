@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from sqlalchemy import CheckConstraint, Index, Table, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB
 
 from src.dao.models import Base
 
@@ -19,6 +20,9 @@ EXPECTED_TABLES = {
     "terminology_aliases",
     "terminology_relationships",
     "users",
+    "review_audit_events",  # Phase 4
+    "chat_sessions",        # Phase 4
+    "chat_messages",        # Phase 4
 }
 
 
@@ -195,3 +199,66 @@ def test_terminology_embeddings_embedding_is_vector_type() -> None:
 
     col = _table("terminology_embeddings").c.embedding
     assert isinstance(col.type, Vector)
+
+
+# ── Phase 4: review_audit_events, chat_sessions, chat_messages ────────────────
+
+
+def test_review_chat_tables_exist() -> None:
+    """ORM metadata includes Phase 4 review and chat tables."""
+    metadata = Base.metadata
+    assert "review_audit_events" in metadata.tables
+    assert "chat_sessions" in metadata.tables
+    assert "chat_messages" in metadata.tables
+
+
+def test_review_audit_events_canonical_evidence_fk() -> None:
+    """Review audit events reference the canonical evidence they modify."""
+    table = _table("review_audit_events")
+    fk_cols = [c for c in table.columns if c.foreign_keys]
+    assert any(
+        "canonical_evidence_items.canonical_evidence_id" in str(fk)
+        for c in fk_cols
+        for fk in c.foreign_keys
+    )
+
+
+def test_review_audit_events_field_deltas_jsonb() -> None:
+    """Field deltas stored as JSONB for flexible delta tracking.
+
+    Under SQLite in-memory tests JSONB is swapped to JSON for compatibility,
+    so we accept either type.
+    """
+    from sqlalchemy import JSON
+
+    table = _table("review_audit_events")
+    col = table.c.field_deltas
+    assert isinstance(col.type, (JSONB, JSON))
+
+
+def test_chat_sessions_processing_run_fk() -> None:
+    """Chat sessions bound to a processing run."""
+    table = _table("chat_sessions")
+    fk_cols = [c for c in table.columns if c.foreign_keys]
+    assert any(
+        "processing_runs.processing_run_id" in str(fk)
+        for c in fk_cols
+        for fk in c.foreign_keys
+    )
+
+
+def test_chat_messages_session_fk() -> None:
+    """Chat messages reference their session."""
+    table = _table("chat_messages")
+    fk_cols = [c for c in table.columns if c.foreign_keys]
+    assert any(
+        "chat_sessions.chat_session_id" in str(fk)
+        for c in fk_cols
+        for fk in c.foreign_keys
+    )
+
+
+def test_chat_messages_role_column() -> None:
+    """Messages distinguish user vs assistant."""
+    table = _table("chat_messages")
+    assert "role" in table.c

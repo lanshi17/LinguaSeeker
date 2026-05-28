@@ -1,0 +1,129 @@
+"""Tests for chat service."""
+from __future__ import annotations
+
+import uuid
+
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.core.visualize_evidence_with_expert_in_loop.chat_service import (
+    ChatService,
+)
+
+
+@pytest.mark.asyncio
+class TestChatService:
+    """ChatService manages sessions and messages."""
+
+    async def test_create_session(self, db_session: AsyncSession) -> None:
+        """Creates a chat session bound to a processing run."""
+        run_id = await self._create_test_run(db_session)
+        service = ChatService(db_session)
+
+        session = await service.create_session(processing_run_id=run_id, user_id=None)
+
+        assert session.processing_run_id == run_id
+        assert session.message_count == 0
+
+    async def test_append_message(self, db_session: AsyncSession) -> None:
+        """Appends a message to a session."""
+        run_id = await self._create_test_run(db_session)
+        service = ChatService(db_session)
+        session = await service.create_session(processing_run_id=run_id, user_id=None)
+
+        msg = await service.append_message(
+            session_id=session.chat_session_id,
+            role="user",
+            content="What is the gene?",
+            evidence_id=None,
+            entity_id=None,
+        )
+
+        assert msg.role == "user"
+        assert msg.content == "What is the gene?"
+
+    async def test_list_messages_ordered(self, db_session: AsyncSession) -> None:
+        """Lists messages in chronological order."""
+        run_id = await self._create_test_run(db_session)
+        service = ChatService(db_session)
+        session = await service.create_session(processing_run_id=run_id, user_id=None)
+
+        await service.append_message(
+            session_id=session.chat_session_id,
+            role="user",
+            content="Q1",
+            evidence_id=None,
+            entity_id=None,
+        )
+        await service.append_message(
+            session_id=session.chat_session_id,
+            role="assistant",
+            content="A1",
+            evidence_id=None,
+            entity_id=None,
+        )
+        await service.append_message(
+            session_id=session.chat_session_id,
+            role="user",
+            content="Q2",
+            evidence_id=None,
+            entity_id=None,
+        )
+
+        messages = await service.list_messages(session_id=session.chat_session_id)
+
+        assert len(messages) == 3
+        assert messages[0].role == "user"
+        assert messages[0].content == "Q1"
+        assert messages[1].role == "assistant"
+        assert messages[2].content == "Q2"
+
+    async def test_list_sessions_by_run(self, db_session: AsyncSession) -> None:
+        """Lists all sessions for a processing run."""
+        run_id = await self._create_test_run(db_session)
+        service = ChatService(db_session)
+
+        await service.create_session(processing_run_id=run_id, user_id=None)
+        await service.create_session(processing_run_id=run_id, user_id=None)
+
+        sessions = await service.list_sessions(processing_run_id=run_id)
+
+        assert len(sessions) == 2
+
+    async def test_list_messages_with_limit(self, db_session: AsyncSession) -> None:
+        """Limits the number of returned messages."""
+        run_id = await self._create_test_run(db_session)
+        service = ChatService(db_session)
+        session = await service.create_session(processing_run_id=run_id, user_id=None)
+
+        for i in range(10):
+            await service.append_message(
+                session_id=session.chat_session_id,
+                role="user",
+                content=f"Message {i}",
+                evidence_id=None,
+                entity_id=None,
+            )
+
+        messages = await service.list_messages(
+            session_id=session.chat_session_id, limit=5
+        )
+
+        assert len(messages) == 5
+
+    async def _create_test_run(self, session: AsyncSession) -> uuid.UUID:
+        """Helper: create a test processing run."""
+        from src.dao.models import ProcessingRun, SourceDocument
+
+        doc = SourceDocument(source_document_id=uuid.uuid4(), raw_metadata={})
+        session.add(doc)
+        await session.flush()
+
+        run = ProcessingRun(
+            processing_run_id=uuid.uuid4(),
+            source_document_id=doc.source_document_id,
+            run_status="completed",
+        )
+        session.add(run)
+        await session.flush()
+        return run.processing_run_id
