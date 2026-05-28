@@ -16,7 +16,7 @@ from .contracts import (
 )
 from .doi_fallback import doi_fallback_download, probe_doi_landing_page
 from .gateway import _normalize_doi, download_from_provider, search_provider
-from .literature_type_classifier import LiteratureType, classify_item, filter_by_type
+from .literature_type_classifier import LiteratureType, classify_item
 from .normalizers import normalize_items
 from .web_providers import call_web_provider
 

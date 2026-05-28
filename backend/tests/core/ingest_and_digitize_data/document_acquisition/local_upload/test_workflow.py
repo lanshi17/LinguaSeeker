@@ -3,7 +3,6 @@
 import tempfile
 import os
 
-from src.core.ingest_and_digitize_data.document_acquisition.local_upload.contracts import LocalUploadResult
 from src.core.ingest_and_digitize_data.document_acquisition.local_upload.workflow import upload_document
 
 

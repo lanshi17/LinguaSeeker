@@ -4,13 +4,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     ContentBlock,
     TranslationResult,
-    SentenceRegion,
-    SavedDocuments,
 )
 from src.core.cross_lingual_process_and_extract_evidence.persistence import (
     DocumentPersistenceService,

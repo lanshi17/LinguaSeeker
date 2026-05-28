@@ -3,7 +3,6 @@ import time
 
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.provider_health import (
     ProviderHealthTracker,
-    get_health_tracker,
 )
 
 

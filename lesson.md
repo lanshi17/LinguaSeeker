@@ -855,3 +855,14 @@ Fabry 真实 Phase 3 E2E 结果变化：
 3. 服务进程清理必须精准定位端口占用 PID，避免 `pkill -f` 误伤。
 4. 重启服务后必须先验证基础接口 (`/health`, `/v1/*`) 再跑完整 E2E，避免在异常进程状态下浪费调试时间。
 
+## 2026-05-27: Backend/database audit found stale DAO tests and collection drift
+
+**Problem**: During backend/database review, `uv run pytest tests/dao/test_vector_repo.py -q` failed all 4 tests, and repo-wide `uv run pytest -q --maxfail=1` failed during collection with a `test_config` import mismatch.
+
+**Investigation**: Compared `src.dao.vector_repo.VectorRepository` with `src.dao.models.TerminologyEmbedding` and the pgvector migration. The ORM/migration expose `embedding_text`, `embedding_text_hash`, and `embedding_model`; the stale DAO repository and its tests still reference `source_text` and `model_version`. For collection, both `backend/tests/core/test_config.py` and `backend/services/model-server/tests/test_config.py` are collected as top-level `test_config` modules because most test directories are not packages.
+
+**Root cause**: Phase 3 pgvector schema evolution left the older shared `src/dao/vector_repo.py` path and tests behind while active Phase 3 code moved to `standardize_entities_and_align_knowledge/similarity_match/repositories.py`. The pytest import mismatch is a test package isolation issue, not a business-code failure.
+
+**Solution**: Not remediated in this audit pass. Recommended fixes are to either remove/replace the stale `VectorRepository` with the active typed pgvector repository or align it to the current `TerminologyEmbedding` schema, and to package or rename duplicate `test_config.py` modules so repo-wide pytest collection is stable.
+
+**Prevention**: When schema fields are renamed, search all repositories and tests for old field names, not only the active feature path. Add a repo-wide pytest collection check after introducing service-local tests with common basenames.
