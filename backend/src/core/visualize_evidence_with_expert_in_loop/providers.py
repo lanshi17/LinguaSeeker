@@ -1,0 +1,110 @@
+"""LLM provider wrappers for Phase 4 chat service."""
+from __future__ import annotations
+
+import json
+from collections.abc import AsyncIterator
+
+import httpx
+
+from src.core.config import get_config
+
+
+class ReasoningLLMProvider:
+    """Wrapper for REASONING_LLM_MODEL (high-accuracy reasoning)."""
+
+    def __init__(self) -> None:
+        cfg = get_config()
+        self._api_key = cfg.reasoning.api_key
+        self._model = cfg.reasoning.model
+        self._base_url = cfg.reasoning.base_url
+        self._timeout = cfg.reasoning_llm_timeout or 60
+
+    async def generate(
+        self,
+        *,
+        system_prompt: str,
+        user_message: str,
+        context: str = "",
+    ) -> str:
+        """Generate a reply using the reasoning LLM.
+
+        Args:
+            system_prompt: System instruction for the LLM.
+            user_message: User's question or instruction.
+            context: Evidence context block (injected into system prompt).
+
+        Returns:
+            Generated reply text.
+        """
+        full_system = f"{system_prompt}\n\n{context}" if context else system_prompt
+
+        messages = [
+            {"role": "system", "content": full_system},
+            {"role": "user", "content": user_message},
+        ]
+
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            response = await client.post(
+                f"{self._base_url}/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self._api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": self._model,
+                    "messages": messages,
+                    "temperature": 0.3,
+                },
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
+
+    async def stream(
+        self,
+        *,
+        system_prompt: str,
+        user_message: str,
+        context: str = "",
+    ) -> AsyncIterator[str]:
+        """Stream reply chunks from the reasoning LLM.
+
+        Yields:
+            Text chunks as they arrive from the LLM.
+        """
+        full_system = f"{system_prompt}\n\n{context}" if context else system_prompt
+
+        messages = [
+            {"role": "system", "content": full_system},
+            {"role": "user", "content": user_message},
+        ]
+
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            async with client.stream(
+                "POST",
+                f"{self._base_url}/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self._api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": self._model,
+                    "messages": messages,
+                    "temperature": 0.3,
+                    "stream": True,
+                },
+            ) as response:
+                response.raise_for_status()
+                async for line in response.aiter_lines():
+                    if line.startswith("data: "):
+                        data_str = line[6:]
+                        if data_str.strip() == "[DONE]":
+                            break
+                        try:
+                            data = json.loads(data_str)
+                            delta = data["choices"][0].get("delta", {})
+                            content = delta.get("content", "")
+                            if content:
+                                yield content
+                        except (json.JSONDecodeError, KeyError, IndexError):
+                            continue

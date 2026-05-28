@@ -426,3 +426,102 @@ class TerminologyEmbedding(Base, TimestampMixin):
     embedding: Mapped[list[float]] = mapped_column(Vector(1024), nullable=False)
 
     entry: Mapped[TerminologyEntry] = relationship(back_populates="embeddings")
+
+
+# ── Phase 4: review_audit_events, chat_sessions, chat_messages ────────────────
+
+
+class ReviewAuditEvent(Base):
+    """Audit trail for evidence review operations."""
+
+    __tablename__ = "review_audit_events"
+    __table_args__ = (
+        Index("ix_review_audit_events_canonical_evidence_id", "canonical_evidence_id"),
+        Index("ix_review_audit_events_reviewer_id", "reviewer_id"),
+    )
+
+    review_event_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    canonical_evidence_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("canonical_evidence_items.canonical_evidence_id"),
+        nullable=False,
+    )
+    reviewer_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.user_id"),
+        nullable=True,
+    )
+    target_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    old_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    new_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    field_deltas: Mapped[list[dict]] = mapped_column(JSONB, nullable=False, default=list)
+    change_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+
+class ChatSession(Base, TimestampMixin):
+    """Chat session bound to a processing run."""
+
+    __tablename__ = "chat_sessions"
+    __table_args__ = (
+        Index("ix_chat_sessions_processing_run_id", "processing_run_id"),
+    )
+
+    chat_session_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    processing_run_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("processing_runs.processing_run_id"),
+        nullable=False,
+    )
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.user_id"),
+        nullable=True,
+    )
+
+
+class ChatMessage(Base):
+    """Chat message in a session."""
+
+    __tablename__ = "chat_messages"
+    __table_args__ = (
+        Index("ix_chat_messages_chat_session_id", "chat_session_id"),
+    )
+
+    message_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    chat_session_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("chat_sessions.chat_session_id"),
+        nullable=False,
+    )
+    role: Mapped[str] = mapped_column(String(16), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=True,
+    )
+    entity_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
