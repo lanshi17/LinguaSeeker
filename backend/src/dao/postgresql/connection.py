@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from src.core.config import Settings, get_config
-from src.dao.contracts import AsyncpgConnectArgs
+from src.dao.postgresql.contracts import AsyncpgConnectArgs
 
 # ── pgvector type registration ────────────────────────────────────────────
 # Register the pgvector Vector type at module load so it's available
