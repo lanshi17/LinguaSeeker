@@ -447,6 +447,7 @@ The graph is built in `TranslationService._build_graph()`. Add nodes and edges t
 | `httpx` | (transitive) | HTTP transport for LLM calls |
 | `pydantic` | >=2.7.0 | PipelineState schema, CrossLingualOutput contract |
 | `loguru` | >=0.7.0 | Structured logging |
+| `rust_io.files` (via `src.utils.rust_io`) | (optional) | File I/O for persistence — falls back to stdlib `Path.write_text()` when unavailable |
 
 ## Testing
 

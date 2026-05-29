@@ -60,7 +60,7 @@ H. Service facade naming inconsistency ← P2 (deferred)
    api.py / service.py / workflow.py used interchangeably
 
 I. delta_audit.py directly imports DAO model ← P2 (deferred, documented)
-   src/api/v1/delta_audit.py:19 → from src.dao.models import ReviewAuditEvent
+   src/api/v1/delta_audit.py:19 → from src.dao.postgresql.models import ReviewAuditEvent
    Used in _to_response() for ORM→API conversion. Does not violate api→dao layering,
    but inconsistent with the contracts pattern (should use contract types, not raw ORM models).
 ```

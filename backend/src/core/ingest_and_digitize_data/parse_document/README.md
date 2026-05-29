@@ -490,8 +490,8 @@ New backends should produce data in this shape; `pages_from_raw()` handles `Page
 | `Pillow` (PIL) | Image encoding for local parser (`image_to_base64`) |
 | `pydantic` | Data contracts with validation (BaseModel) |
 | `loguru` | Structured logging |
-| `rust_io.files` | File I/O (`File.write`) and SHA-256 dedup (`check_duplicate`) |
-| `rust_io.net` | MinerU cloud API (`mineru_create_task`, `mineru_get_result`, `mineru_upload_local_files`, `mineru_batch_result`) |
+| `rust_io.files` (via `src.utils.rust_io`) | File I/O (`File.write`) and SHA-256 dedup (`check_duplicate`) |
+| `rust_io.net` (via `src.utils.rust_io`) | MinerU cloud API (`mineru_create_task`, `mineru_get_result`, `mineru_upload_local_files`, `mineru_batch_result`) |
 
 ## Configuration
 

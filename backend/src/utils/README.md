@@ -53,12 +53,16 @@ Flat module structure — no sub-packages. Each module is independently importab
 
 ### rust_io.py
 
+Centralized lazy imports for the two PyO3 native extensions (`rust_io.files`, `rust_io.net`). Replaces scattered `try/except ImportError` blocks across 6 consumer modules.
+
 | Symbol | Type | Description |
 |--------|------|-------------|
 | `files_io` | `module \| None` | `rust_io.files` PyO3 module, or `None` if native extension unavailable. |
 | `net_io` | `module \| None` | `rust_io.net` PyO3 module, or `None` if native extension unavailable. |
 | `FILES_AVAILABLE` | `bool` | `True` if `rust_io.files` loaded successfully. |
 | `NET_AVAILABLE` | `bool` | `True` if `rust_io.net` loaded successfully. |
+
+**Error behavior:** When the native extension is missing, `files_io` / `net_io` are set to `None`. Attribute access on `None` (e.g., `files_io.File(...)`) raises `AttributeError`, **not** `ImportError`. The module catches `_NATIVE_IMPORT_ERRORS = (ImportError, RuntimeError, SystemError, OSError)` to handle all failure modes of PyO3 extension loading.
 
 ## Usage Patterns
 
@@ -101,15 +105,33 @@ def _node_detect_language(self, state: PipelineState) -> PipelineState:
 
 ### rust_io — feature-degraded native extension access
 
-```python
-from src.utils.rust_io import net_io, NET_AVAILABLE
+**Canonical pattern** — guard with `is not None` (preferred over `NET_AVAILABLE`/`FILES_AVAILABLE` flags):
 
-if NET_AVAILABLE:
+```python
+from src.utils.rust_io import net_io
+
+if net_io is not None:
     results = await net_io.fetch_one(provider="crossref", action="search", params=params)
 else:
     # Fall back to pure-Python HTTP client
     results = await python_fallback_search(params)
 ```
+
+**File I/O with stdlib fallback** — recommended for modules that don't hard-depend on rust_io:
+
+```python
+from pathlib import Path
+from src.utils.rust_io import files_io
+
+def _write_json(path: Path, data: str) -> None:
+    """Write JSON string to file, using rust_io when available, stdlib otherwise."""
+    if files_io is not None:
+        files_io.File(str(path)).write(data)
+    else:
+        path.write_text(data, encoding="utf-8")
+```
+
+**Hard-dependency modules** — modules where rust_io is required (e.g., `parse_document`) may use `files_io` / `net_io` unconditionally. They will raise `AttributeError` if the extension is missing, which is acceptable since the module is non-functional without it.
 
 ## Internal Design
 
@@ -119,7 +141,7 @@ else:
 
 **traced_node** — Triple-layer decorator: outer `@traceable` (LangSmith), middle `@functools.wraps` (name preservation), inner wrapper (loguru logging + exception re-raise). Returns the original exception type after logging.
 
-**rust_io** — Module-level try/except with boolean flags. Import failures are logged as warnings, not raised, enabling graceful degradation in environments without the Rust extensions compiled.
+**rust_io** — Module-level try/except with boolean flags. Catches `_NATIVE_IMPORT_ERRORS = (ImportError, RuntimeError, SystemError, OSError)` — broader than just `ImportError` because PyO3 extensions can fail with `RuntimeError` (Rust panic during init), `SystemError` (internal `PyModule_New` failure), or `OSError` (incompatible native libs). Import failures are logged as warnings, not raised, enabling graceful degradation. Consumer modules check `if files_io is not None:` before use, or use unconditionally for hard-dependency paths.
 
 ## Testing
 

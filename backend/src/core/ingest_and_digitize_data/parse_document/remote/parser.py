@@ -160,6 +160,9 @@ class MinerURemoteParser(ParserStrategy):
         )
         self._validate_local_batch_inputs(file_paths, options.data_ids)
 
+        if net_io is None:
+            raise RuntimeError("net_io extension is required for MinerU batch parsing but is not installed")
+
         try:
             response = await net_io.mineru_upload_local_files(
                 file_paths=file_paths,
@@ -202,6 +205,9 @@ class MinerURemoteParser(ParserStrategy):
         proxy: str | None = None,
     ) -> MinerUBatchStatus:
         """Fetch the current MinerU batch status once."""
+        if net_io is None:
+            raise RuntimeError("net_io extension is required but is not installed")
+
         try:
             response = await net_io.mineru_batch_result(
                 batch_id=batch_id,
@@ -280,6 +286,9 @@ class MinerURemoteParser(ParserStrategy):
 
     async def _create_task(self, pdf_path: str) -> str:
         """Create MinerU parsing task and return task_id."""
+        if net_io is None:
+            raise RuntimeError("net_io extension is required but is not installed")
+
         try:
             response = await net_io.mineru_create_task(
                 url=pdf_path,
@@ -303,6 +312,9 @@ class MinerURemoteParser(ParserStrategy):
         Returns:
             URL to the zip file containing parsed results.
         """
+        if net_io is None:
+            raise RuntimeError("net_io extension is required but is not installed")
+
         for _attempt in range(self._max_poll_attempts):
             try:
                 response = await net_io.mineru_get_result(

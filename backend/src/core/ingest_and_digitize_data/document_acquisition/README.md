@@ -361,8 +361,8 @@ Edit `API_PROVIDER_CHAIN` in `workflow.py` to change the order or add/remove pro
 
 | Dependency | Purpose |
 |------------|---------|
-| `rust_io.net` (`net-io` PyO3 crate) | HTTP I/O for API providers (crossref, unpaywall, etc.) |
-| `rust_io.files` (`rust-io` PyO3 crate) | SHA-256 hashing and file write for local upload |
+| `rust_io.net` (via `src.utils.rust_io`) | HTTP I/O for API providers (crossref, unpaywall, etc.) |
+| `rust_io.files` (via `src.utils.rust_io`) | SHA-256 hashing and file write for local upload |
 | `httpx` | Async HTTP for DOI fallback, web scrapers, PDF download |
 | `selectolax` | Fast HTML parsing for web scrapers |
 | `crawl4ai` | Headless browser automation for JS-rendered academic sites |
