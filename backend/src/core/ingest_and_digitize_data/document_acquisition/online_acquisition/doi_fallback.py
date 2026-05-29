@@ -10,6 +10,8 @@ from urllib.parse import urljoin
 
 import httpx
 
+from src.utils.text import sanitize_filename
+
 _PDF_LINK_PATTERNS = [
     re.compile(r'href=["\']([^"\']*\.pdf[^"\']*)["\']', re.IGNORECASE),
     re.compile(r'href=["\']([^"\']*download[^"\']*pdf[^"\']*)["\']', re.IGNORECASE),
@@ -49,10 +51,6 @@ def _extract_pdf_links(html: str, base_url: str) -> List[str]:
 def _is_chinese_domain(url: str) -> bool:
     lower = url.lower()
     return any(domain in lower for domain in _CHINESE_DOMAINS)
-
-
-def _sanitize_filename(name: str) -> str:
-    return re.sub(r"[^\w\-.]", "_", name)
 
 
 async def probe_doi_landing_page(
@@ -145,7 +143,7 @@ async def doi_fallback_download(
     if probe.get("success") and probe.get("pdf_url"):
         try:
             os.makedirs(download_path, exist_ok=True)
-            filename = _sanitize_filename(doi.replace("/", "_")) + ".pdf"
+            filename = sanitize_filename(doi.replace("/", "_")) + ".pdf"
             file_path = os.path.join(download_path, filename)
             async with httpx.AsyncClient(
                 timeout=timeout,
