@@ -7,7 +7,7 @@ from typing import Any, TypedDict
 
 from sqlalchemy import delete as sa_delete, select
 
-from src.dao.models import TerminologyEmbedding, TerminologyEntry
+from src.dao.postgresql.models import TerminologyEmbedding, TerminologyEntry
 
 
 class VectorSearchRow(TypedDict):
