@@ -142,3 +142,5 @@
   - pipeline.py: POST /api/v1/pipeline/run + GET /api/v1/pipeline/runs/{id}/status
   - App lifespan initialization with DocumentParseOrchestrator (C2 fix)
   - 56 tests passing (agents + API)
+[2026-05-29] Extract cross-cutting utilities to backend/src/utils/ (sanitize_filename, strip_json_fences, traced_node) — 3 consumers migrated, middleware.py deleted, 18 new tests [DONE]
+[2026-05-29] DAO 子目录重构：PostgreSQL/Redis/Neo4j/MinIO 子模块分离 [完成]
