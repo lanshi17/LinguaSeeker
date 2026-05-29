@@ -81,7 +81,7 @@ class FeedbackService:
         evidence.review_status = new_status.value
         await self._session.flush()
 
-        if field_deltas:
+        if field_deltas or new_status != old_status:
             await self._delta_service.record_audit_event(
                 self._session,
                 canonical_evidence_id=canonical_evidence_id,

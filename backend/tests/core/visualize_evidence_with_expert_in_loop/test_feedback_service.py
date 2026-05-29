@@ -104,9 +104,49 @@ class TestFeedbackService:
             )
 
     async def test_patch_empty_fields_rejected(self, db_session: AsyncSession) -> None:
-        """Empty fields dict is rejected by contract validation."""
-        with pytest.raises(ValueError, match="at least 1"):
+        """Empty fields dict with no status change is rejected by contract validation."""
+        with pytest.raises(ValueError, match="at least one"):
             EvidencePatchRequest(fields={})
+
+    async def test_patch_status_only_accepted(self, db_session: AsyncSession) -> None:
+        """Empty fields with new_status is a valid status-only patch."""
+        req = EvidencePatchRequest(fields={}, new_status=ReviewStatus.APPROVED)
+        assert req.new_status == ReviewStatus.APPROVED
+        assert req.fields == {}
+
+    async def test_status_only_change_records_audit_event(self, db_session: AsyncSession) -> None:
+        """Status-only change (no field deltas) still records an audit event."""
+        from sqlalchemy import select
+
+        from src.dao.models import ReviewAuditEvent
+
+        evidence_id = await self._create_test_evidence(db_session)
+        service = FeedbackService(db_session)
+
+        # Status-only patch: provisional -> approved, no field changes
+        patch = EvidencePatchRequest(
+            fields={},
+            new_status=ReviewStatus.APPROVED,
+            change_reason="status-only approval",
+        )
+        result = await service.patch_evidence(
+            canonical_evidence_id=evidence_id,
+            patch=patch,
+            reviewer_id=None,
+        )
+        assert result.deltas == 0
+        assert result.new_status == ReviewStatus.APPROVED
+
+        # Verify audit event was recorded
+        stmt = select(ReviewAuditEvent).where(
+            ReviewAuditEvent.canonical_evidence_id == evidence_id
+        )
+        events = (await db_session.execute(stmt)).scalars().all()
+        assert len(events) == 1
+        assert events[0].old_status == "provisional"
+        assert events[0].new_status == "approved"
+        assert events[0].field_deltas == []
+        assert events[0].change_reason == "status-only approval"
 
     async def test_patch_nonexistent_evidence_raises(self, db_session: AsyncSession) -> None:
         """Patching nonexistent evidence raises NoResultFound."""
