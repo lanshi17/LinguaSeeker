@@ -51,7 +51,14 @@ async def test_phase_3_adapter_success(sample_state: PipelineGraphState):
         )
     )
 
-    adapter = Phase3Adapter(standardization_service=mock_standardization)
+    mock_session_factory = MagicMock()
+    mock_session_factory.return_value.__aenter__ = AsyncMock(return_value=MagicMock())
+    mock_session_factory.return_value.__aexit__ = AsyncMock(return_value=False)
+
+    adapter = Phase3Adapter(
+        standardization_service=mock_standardization,
+        session_factory=mock_session_factory,
+    )
 
     with patch("builtins.open", MagicMock()):
         with patch("json.load", return_value={}):
@@ -74,7 +81,11 @@ async def test_phase_3_adapter_skipped_not_relevant(sample_state: PipelineGraphS
     mock_standardization = MagicMock()
     mock_standardization.run_dual_result = AsyncMock()
 
-    adapter = Phase3Adapter(standardization_service=mock_standardization)
+    mock_session_factory = MagicMock()
+    adapter = Phase3Adapter(
+        standardization_service=mock_standardization,
+        session_factory=mock_session_factory,
+    )
 
     result_state = await adapter.run(sample_state)
 
@@ -90,7 +101,11 @@ async def test_phase_3_adapter_skipped_no_entities(sample_state: PipelineGraphSt
 
     mock_standardization = MagicMock()
 
-    adapter = Phase3Adapter(standardization_service=mock_standardization)
+    mock_session_factory = MagicMock()
+    adapter = Phase3Adapter(
+        standardization_service=mock_standardization,
+        session_factory=mock_session_factory,
+    )
 
     result_state = await adapter.run(sample_state)
 
@@ -120,7 +135,14 @@ async def test_phase_3_adapter_skipped_when_zero_standardized(
         )
     )
 
-    adapter = Phase3Adapter(standardization_service=mock_standardization)
+    mock_session_factory = MagicMock()
+    mock_session_factory.return_value.__aenter__ = AsyncMock(return_value=MagicMock())
+    mock_session_factory.return_value.__aexit__ = AsyncMock(return_value=False)
+
+    adapter = Phase3Adapter(
+        standardization_service=mock_standardization,
+        session_factory=mock_session_factory,
+    )
 
     with patch("builtins.open", MagicMock()):
         with patch("json.load", return_value={}):

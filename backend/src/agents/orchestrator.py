@@ -27,7 +27,7 @@ from src.agents.contracts import (
     PipelineStatus,
     RetryablePhaseError,
 )
-from src.agents.state_persistence import StatePersistenceService
+from src.agents.state_persistence import SessionBoundStatePersistence
 
 # Upstream dependencies for single-phase mode validation
 REQUIRED_UPSTREAM: dict[int, list[int]] = {
@@ -47,7 +47,7 @@ class PipelineOrchestrator:
     def __init__(
         self,
         phase_adapters: dict[str, Any],
-        state_persistence: StatePersistenceService,
+        state_persistence: SessionBoundStatePersistence,
         retry_executor: RetryablePhaseExecutor,
     ):
         self._adapters = phase_adapters

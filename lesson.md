@@ -879,3 +879,20 @@ Fabry 真实 Phase 3 E2E 结果变化：
 5. Mid-function imports inside `try` blocks mask `ImportError` as `PermanentPhaseError` — move contract imports to module level.
 
 **Prevention**: When using LangGraph, always match API to node function type: async nodes → `ainvoke()`, sync nodes → `invoke()`.
+
+## Architecture Cleanup (2026-05-29)
+
+### Problem
+API routes (`src/api/v1/`) directly instantiated core services, bypassing the `agents` layer.
+`deps.py` and `main.py` each created independent SQLAlchemy engines (dual connection pools).
+
+### Resolution
+1. Extracted engine/session_factory creation into `src/api/wiring.py` as single source of truth.
+2. Created `Phase4ServiceFactory` in `src/agents/` so Phase 4 API routes delegate through agents layer.
+3. Refactored `EntityStandardizationService.__init__` to not take session — session is now a method parameter.
+4. Merged `state_persistence.py` and `state_persistence_factory.py` into one file with two classes.
+
+### Prevention
+- New API routes MUST NOT import from `src/core/` service modules directly.
+- New service facades MUST NOT require `AsyncSession` in `__init__` — pass it as method parameter or use factory.
+- All DI assembly goes in `src/api/wiring.py`, not in `app/main.py` lifespan.

@@ -7,12 +7,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps import get_db_session
+from src.api.deps import get_db_session, get_phase4_factory
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     EvidencePatchRequest,
 )
 from src.core.visualize_evidence_with_expert_in_loop.feedback_service import (
-    FeedbackService,
     PatchResult,
 )
 
@@ -26,7 +25,8 @@ async def patch_evidence(
     session: AsyncSession = Depends(get_db_session),
 ) -> PatchResult:
     """Apply a patch to an evidence card and record audit event."""
-    service = FeedbackService(session)
+    factory = get_phase4_factory()
+    service = factory.create_feedback_service(session)
     try:
         return await service.patch_evidence(
             canonical_evidence_id=canonical_evidence_id,

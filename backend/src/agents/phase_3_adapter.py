@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.agents.contracts import (
     Phase3Output,
@@ -43,8 +44,10 @@ class Phase3Adapter:
     def __init__(
         self,
         standardization_service: EntityStandardizationService,
+        session_factory: async_sessionmaker[AsyncSession],
     ):
         self._standardization = standardization_service
+        self._session_factory = session_factory
 
     async def run(self, state: PipelineGraphState) -> PipelineGraphState:
         """Execute Phase 3: standardize entities.
@@ -89,12 +92,14 @@ class Phase3Adapter:
 
             dual_result = DualEvidenceExtractionResult.model_validate(extraction_data)
 
-            # Run standardization (B8 fix: positional arg for result)
-            standardization_result = await self._standardization.run_dual_result(
-                dual_result,
-                source_document_id=state.source_document_id,
-                processing_run_id=state.processing_run_id,
-            )
+            # Run standardization with a fresh session
+            async with self._session_factory() as session:
+                standardization_result = await self._standardization.run_dual_result(
+                    session,
+                    dual_result,
+                    source_document_id=state.source_document_id,
+                    processing_run_id=state.processing_run_id,
+                )
 
             state.phase_3_output = Phase3Output(
                 match_count=standardization_result.match_count,

@@ -145,3 +145,4 @@
 [2026-05-29] Extract cross-cutting utilities to backend/src/utils/ (sanitize_filename, strip_json_fences, traced_node) — 3 consumers migrated, middleware.py deleted, 18 new tests [DONE]
 [2026-05-29] DAO 子目录重构：PostgreSQL/Redis/Neo4j/MinIO 子模块分离 [完成]
 [2026-05-29] rust-io 引用优化：创建 src/utils/rust_io.py 集中导入模块，消除 6 个文件的散落 import，修复 web/base.py broad Exception catch，Phase 2 persistence.py 接入 files_io（带 stdlib 回退），代码审查修复 4 个关键问题，575 tests passing [DONE]
+[2026-05-29] Architecture cleanup: unified session factory in wiring.py, Phase4ServiceFactory as agents-layer boundary, removed SessionBound wrapper, merged state_persistence, extracted wire_dependencies() from lifespan — 888 tests passing [DONE]
