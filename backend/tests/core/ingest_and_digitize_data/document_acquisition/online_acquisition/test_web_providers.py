@@ -10,13 +10,13 @@ from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.w
 )
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.web.base import (
     safe_json_loads,
-    sanitize_filename,
     extract_pdf_links_from_html,
     scrape_html_elements,
     choose_item,
     build_js_helpers,
     resolve_llm_config,
 )
+from src.utils.text import sanitize_filename
 
 
 class TestBaseUtilities:

@@ -11,6 +11,8 @@ from urllib.parse import urljoin
 import httpx
 from selectolax.parser import HTMLParser
 
+from src.utils.text import sanitize_filename
+
 
 def safe_json_loads(text: str) -> Any:
     """Parse JSON, extracting from mixed content if needed."""
@@ -23,13 +25,6 @@ def safe_json_loads(text: str) -> Any:
         if match:
             return json.loads(match.group(1))
     return {}
-
-
-def sanitize_filename(name: str) -> str:
-    """Sanitize filename by removing invalid characters."""
-    name = re.sub(r'[\\/:*?"<>|]+', "_", name)
-    name = re.sub(r"\s+", " ", name).strip()
-    return (name or "paper")[:120]
 
 
 def extract_pdf_links_from_html(html: str, base_url: str) -> List[str]:
