@@ -15,7 +15,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.dao.models import Base
+from src.dao.postgresql.models import Base
 
 # SQLite in-memory for unit tests (fast, no external dependency)
 SQLITE_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
