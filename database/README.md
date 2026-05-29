@@ -201,8 +201,8 @@ JSON array of TLS certificate configurations. Currently has TLS disabled (`"enab
 
 The env.py uses **SQLAlchemy 2.0 async engine** for online migrations:
 
-1. Adds `backend/` to `sys.path` so `src.dao.models` is importable from the repo root
-2. Imports `Base` from `src.dao.models` as `target_metadata`
+1. Adds `backend/` to `sys.path` so `src.dao.postgresql.models` is importable from the repo root
+2. Imports `Base` from `src.dao.postgresql.models` as `target_metadata`
 3. `get_url()` calls `get_config().postgresql_dsn` — no hardcoded DSN
 4. Online mode: creates an `AsyncEngine` with `NullPool`, runs migrations inside `connection.run_sync()`
 5. Offline mode: emits SQL to stdout with `literal_binds=True`

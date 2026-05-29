@@ -88,12 +88,10 @@ class TestRustResultToGateway:
 class TestCallProvider:
     @pytest.mark.asyncio
     async def test_net_io_not_available(self):
-        # Patch gateway's own copy of NET_AVAILABLE (imported as a module-level
-        # constant via "from src.utils.rust_io import NET_AVAILABLE" — patching
-        # the source module won't affect the imported copy for immutable bool).
+        # Patch gateway's net_io to None to simulate missing rust_io extension.
         with patch(
-            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway.NET_AVAILABLE",
-            False,
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway.net_io",
+            None,
         ):
             result = await call_provider(OnlineAcquisitionGatewayRequest(provider="crossref"))
             assert result.success is False

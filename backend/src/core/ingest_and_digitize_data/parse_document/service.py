@@ -77,8 +77,15 @@ class ParseDocumentService:
 
         md_path = output_path / "output.md"
         if files_io is not None:
-            files_io.File(str(md_path)).write(result.full_markdown)
+            try:
+                files_io.File(str(md_path)).write(result.full_markdown)
+            except OSError:
+                raise
+            except (RuntimeError, SystemError) as e:
+                # Normalize PyO3 native exceptions to OSError for consistency
+                raise OSError(f"Failed to write {md_path}: {e}") from e
         else:
+            logger.warning("files_io not available, using stdlib fallback for markdown write")
             md_path.write_text(result.full_markdown, encoding="utf-8")
         logger.info(f"Saved markdown to {md_path}")
 
@@ -88,8 +95,15 @@ class ParseDocumentService:
         combined_meta["content_blocks"] = result.content_blocks
         meta_json = json.dumps(combined_meta, indent=2)
         if files_io is not None:
-            files_io.File(str(meta_path)).write(meta_json)
+            try:
+                files_io.File(str(meta_path)).write(meta_json)
+            except OSError:
+                raise
+            except (RuntimeError, SystemError) as e:
+                # Normalize PyO3 native exceptions to OSError for consistency
+                raise OSError(f"Failed to write {meta_path}: {e}") from e
         else:
+            logger.warning("files_io not available, using stdlib fallback for metadata write")
             meta_path.write_text(meta_json, encoding="utf-8")
         logger.info(f"Saved metadata to {meta_path}")
 
