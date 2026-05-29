@@ -40,11 +40,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Planned Work
 
-| date | title | status/PR |
-|---|---|---|
-| 2026-05-26 | [extract evidence long document chunking](plans/2026-05-26-extract-evidence-long-document-chunking.md) | planned |
-| 2026-05-25 | [standardization precise similarity match](plans/2026-05-25-standardization-precise-similarity-match.md) | planned |
-| 2026-05-23 | [block-aware evidence extraction](plans/2026-05-23-block-aware-evidence-extraction.md) | planned |
+No planned work at this time.
 
 ## Active Code Reviews
 
@@ -56,7 +52,11 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-05-29 | [pipeline orchestrator](archive/plans/2026-05-29-pipeline-orchestrator.md) | completed — LangGraph 3-phase orchestrator |
 | 2026-05-28 | [Phase 4 visualization expert loop](archive/plans/2026-05-28-phase4-visualization-expert-loop.md) | completed — Phase 4 P0 |
+| 2026-05-26 | [extract evidence long document chunking](archive/plans/2026-05-26-extract-evidence-long-document-chunking.md) | completed |
+| 2026-05-25 | [standardization precise similarity match](archive/plans/2026-05-25-standardization-precise-similarity-match.md) | completed |
+| 2026-05-23 | [block-aware evidence extraction](archive/plans/2026-05-23-block-aware-evidence-extraction.md) | completed |
 | 2026-05-25 | [pgvector vector database](archive/plans/2026-05-25-pgvector-vector-database.md) | completed — Phase 3 vector search |
 | 2026-05-21 | [cross-lingual refactor](archive/plans/2026-05-21-cross-lingual-refactor.md) | completed — 3-stage pipeline |
 | 2026-05-18 | [database implementation](archive/plans/2026-05-18-database-implementation-plan.md) | completed — branch `database-mvp` |
