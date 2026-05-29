@@ -76,14 +76,21 @@ class ParseDocumentService:
         output_path.mkdir(parents=True, exist_ok=True)
 
         md_path = output_path / "output.md"
-        files_io.File(str(md_path)).write(result.full_markdown)
+        if files_io is not None:
+            files_io.File(str(md_path)).write(result.full_markdown)
+        else:
+            md_path.write_text(result.full_markdown, encoding="utf-8")
         logger.info(f"Saved markdown to {md_path}")
 
         meta_path = output_path / "metadata.json"
         combined_meta = result.metadata.model_dump()
         combined_meta["pages"] = [p.model_dump() for p in result.pages]
         combined_meta["content_blocks"] = result.content_blocks
-        files_io.File(str(meta_path)).write(json.dumps(combined_meta, indent=2))
+        meta_json = json.dumps(combined_meta, indent=2)
+        if files_io is not None:
+            files_io.File(str(meta_path)).write(meta_json)
+        else:
+            meta_path.write_text(meta_json, encoding="utf-8")
         logger.info(f"Saved metadata to {meta_path}")
 
         images_dir: Path | None = None
@@ -117,6 +124,9 @@ class ParseDocumentService:
         Returns:
             List of DedupResult for each file.
         """
+        if files_io is None:
+            raise RuntimeError("files_io extension is required for deduplication but is not installed")
+
         results = []
         for file_path in file_paths:
             raw = files_io.check_duplicate(file_path, known_hashes)

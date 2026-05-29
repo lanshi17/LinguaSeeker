@@ -29,27 +29,27 @@ backend/src/core/config.py
     │
     ├──► database/alembic.ini ──► database/migrations/env.py
     │       Alembic bootstrap          Async engine from config, imports
-    │       (script_location,          src.dao.models.Base.metadata
+    │       (script_location,          src.dao.postgresql.models.Base.metadata
     │        logging)                  Runs offline or online mode
     │
     ├──► database/migrations/versions/
     │       Migration revision chain (head → 4a82b5793055_init_mvp_schema)
     │
     ▼
-backend/src/dao/models.py
+backend/src/dao/postgresql/models.py
     │  SQLAlchemy 2.0 ORM: SourceDocument, ProcessingRun,
     │  CanonicalEvidenceItem, RunEvidenceItem, NormalizedEntity,
     │  EntityMergeEvent, EvidenceEntityBinding, User
     │
-    ├──► backend/src/dao/connection.py
+    ├──► backend/src/dao/postgresql/connection.py
     │       build_async_engine() → AsyncEngine (asyncpg)
     │       async_session_factory() → async_sessionmaker
     │       get_async_session() → context-managed session
     │
-    ├──► backend/src/dao/cache_repo.py
+    ├──► backend/src/dao/redis/cache_repo.py
     │       Redis read-cache for documents, evidence, entities
     │
-    └──► backend/src/dao/search_index_repo.py
+    └──► backend/src/dao/postgresql/search_index_repo.py
             Flattened read-projection for frontend search
 ```
 
@@ -238,7 +238,7 @@ backend/.env / .env.local ──► backend/src/core/config.py (pydantic-setting
                               Settings.postgresql_dsn, etc.
                               │
                               ├──► database/migrations/env.py (alembic at migrate time)
-                              └──► backend/src/dao/connection.py (runtime engine)
+                              └──► backend/src/dao/postgresql/connection.py (runtime engine)
 ```
 
 **The two `.env` files serve different purposes.** Container `.env` provides service-level credentials. Application `.env` provides the connection parameters the backend uses to connect to those services.
@@ -261,7 +261,7 @@ uv run alembic -c database/alembic.ini current
 ### Adding a New Table
 
 ```bash
-# 1. Add the SQLAlchemy model to backend/src/dao/models.py
+# 1. Add the SQLAlchemy model to backend/src/dao/postgresql/models.py
 # 2. Auto-generate the migration
 uv run alembic -c database/alembic.ini revision --autogenerate -m "add_new_table"
 
@@ -294,7 +294,7 @@ uv run alembic -c database/alembic.ini downgrade 4a82b5793055
 
 ### Adding a New Write-Model Table
 
-1. **Add the ORM model** to `backend/src/dao/models.py`:
+1. **Add the ORM model** to `backend/src/dao/postgresql/models.py`:
    - Subclass `Base` (for migration-managed tables) or use standalone `MetaData()` (for read projections)
    - Include `TimestampMixin` if the table needs `created_at`/`updated_at`
    - Use `Mapped[type]` with `mapped_column()` for SQLAlchemy 2.0 style
@@ -317,7 +317,7 @@ uv run alembic -c database/alembic.ini downgrade 4a82b5793055
 
 Read projections (like `frontend_search_index`) should:
 1. Use standalone `MetaData()` — NOT `Base.metadata` — to avoid polluting Alembic autogenerate
-2. Keep refresh SQL in a repository method (`backend/src/dao/search_index_repo.py`)
+2. Keep refresh SQL in a repository method (`backend/src/dao/postgresql/search_index_repo.py`)
 3. Test table shape and query behavior separately from migration tests
 
 ### Adding a New Infrastructure Service
@@ -353,7 +353,7 @@ When adding a new database service (e.g., a vector store):
 | asyncpg | — | PostgreSQL async driver (behind SQLAlchemy) |
 | pydantic-settings | — | `Settings` singleton that provides `postgresql_dsn` to `env.py` |
 | PostgreSQL | 16 | Primary relational database |
-| Redis | 8.0 | Cache layer (via `backend/src/dao/cache_repo.py`) |
+| Redis | 8.0 | Cache layer (via `backend/src/dao/redis/cache_repo.py`) |
 | Neo4j | Community | Graph database for entity relationships |
 | Qdrant | GPU-NVIDIA latest | Vector database for semantic search |
 | MinIO | latest (aistor) | S3-compatible object storage |
