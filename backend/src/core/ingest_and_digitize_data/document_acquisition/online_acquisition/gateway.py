@@ -13,6 +13,8 @@ import time as _time
 
 from .provider_health import get_health_tracker
 
+from src.utils.text import sanitize_filename
+
 from .contracts import OnlineAcquisitionGatewayRequest, OnlineAcquisitionGatewayResult, OnlineAcquisitionSourceTraceEntry
 
 _PDF_LINK_PATTERNS = [
@@ -28,12 +30,6 @@ _HYPHEN_TABLE = str.maketrans(_HYPHEN_CHARS, "-" * len(_HYPHEN_CHARS))
 def _normalize_doi(doi: str) -> str:
     """Normalize unicode hyphen/dash variants to ASCII hyphen in DOIs."""
     return doi.translate(_HYPHEN_TABLE)
-
-
-def _sanitize_filename(name: str) -> str:
-    cleaned = re.sub(r"[\\/:*?\"<>|]+", "_", str(name or "").strip())
-    cleaned = re.sub(r"\s+", " ", cleaned).strip()
-    return (cleaned or "paper")[:120]
 
 
 def _extract_pdf_links_from_html(html: str, base_url: str) -> List[str]:
@@ -87,7 +83,7 @@ async def _download_pdf_from_candidates(
     warnings: List[str] = []
     queue = [str(url).strip() for url in candidates if str(url).strip()]
     visited: set[str] = set()
-    target = Path(download_path) / f"{_sanitize_filename(filename_stem)}.pdf"
+    target = Path(download_path) / f"{sanitize_filename(filename_stem)}.pdf"
     target.parent.mkdir(parents=True, exist_ok=True)
 
     async with httpx.AsyncClient(
