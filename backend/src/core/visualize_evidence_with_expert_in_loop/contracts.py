@@ -6,7 +6,7 @@ from enum import Enum
 from typing import ClassVar, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class ReviewStatus(str, Enum):
@@ -150,7 +150,7 @@ class ChatMessageResponse(BaseModel):
 class EvidencePatchRequest(BaseModel):
     """Request body for PATCH /api/v1/evidence/{id}."""
 
-    fields: dict[str, str | list[str] | None] = Field(..., min_length=1)
+    fields: dict[str, str | list[str] | None] = Field(default_factory=dict)
     change_reason: str | None = None
     new_status: ReviewStatus | None = None
 
@@ -164,3 +164,10 @@ class EvidencePatchRequest(BaseModel):
                 f"Invalid fields: {invalid}. Must be subset of {EvidenceCardPayload.DIFF_FIELDS}"
             )
         return v
+
+    @model_validator(mode="after")
+    def require_fields_or_status(self) -> EvidencePatchRequest:
+        """Reject completely empty patches (no fields and no status change)."""
+        if not self.fields and self.new_status is None:
+            raise ValueError("Provide at least one of 'fields' or 'new_status'")
+        return self
