@@ -1,7 +1,7 @@
 """Tests for utils/text.py."""
 from __future__ import annotations
 
-from src.utils.text import sanitize_filename
+from src.utils.text import sanitize_filename, strip_json_fences
 
 
 class TestSanitizeFilename:
@@ -27,3 +27,29 @@ class TestSanitizeFilename:
 
     def test_multiple_spaces(self):
         assert sanitize_filename('file   name') == 'file name'
+
+
+class TestStripJsonFences:
+    def test_strip_fences(self):
+        content = '```json\n{"key": "value"}\n```'
+        assert strip_json_fences(content) == '{"key": "value"}'
+
+    def test_no_fences(self):
+        content = '{"key": "value"}'
+        assert strip_json_fences(content) == '{"key": "value"}'
+
+    def test_fences_without_language(self):
+        content = '```\n{"key": "value"}\n```'
+        assert strip_json_fences(content) == '{"key": "value"}'
+
+    def test_empty_string(self):
+        assert strip_json_fences("") == ""
+
+    def test_only_fences(self):
+        content = '```\n```'
+        assert strip_json_fences(content) == ""
+
+    def test_multiline_json(self):
+        content = '```json\n{\n  "key": "value"\n}\n```'
+        result = strip_json_fences(content)
+        assert result == '{\n  "key": "value"\n}'
