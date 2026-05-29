@@ -19,6 +19,7 @@ from src.agents.contracts import (
     PermanentPhaseError,
     RetryablePhaseError,
     SkipPhase3Reason,
+    build_retryable_errors,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     DualEvidenceExtractionResult,
@@ -29,15 +30,7 @@ if TYPE_CHECKING:
         EntityStandardizationService,
     )
 
-# Transient errors that should be retried
-_RETRYABLE_ERRORS: tuple[type, ...] = (ConnectionError, TimeoutError, OSError)
-
-try:
-    import httpx
-
-    _RETRYABLE_ERRORS += (httpx.TimeoutException,)
-except ImportError:
-    pass
+_RETRYABLE_ERRORS = build_retryable_errors()
 
 
 class Phase3Adapter:
@@ -114,10 +107,19 @@ class Phase3Adapter:
             if standardization_result.standardized_count == 0:
                 state.skip_phase_3_reason = SkipPhase3Reason.NO_CANDIDATES
                 state.phase_3_status = PhaseStatusDetail(
-                    status=PhaseStatus.SKIPPED,
+                    status=PhaseStatus.COMPLETED,
                     started_at=state.phase_3_status.started_at,
                     completed_at=datetime.now().isoformat(),
-                    summary={"reason": "no_candidates"},
+                    duration_seconds=(
+                        datetime.now() - datetime.fromisoformat(state.phase_3_status.started_at)
+                    ).total_seconds()
+                    if state.phase_3_status.started_at
+                    else None,
+                    summary={
+                        "match_count": 0,
+                        "standardized_count": 0,
+                        "skip_reason": "no_candidates",
+                    },
                 )
                 logger.info(
                     "Phase 3 completed but no candidates: run={}",

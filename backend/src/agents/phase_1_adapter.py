@@ -16,6 +16,7 @@ from src.agents.contracts import (
     PipelineGraphState,
     PermanentPhaseError,
     RetryablePhaseError,
+    build_retryable_errors,
 )
 from src.core.ingest_and_digitize_data.document_acquisition.contracts import (
     AcquisitionSource,
@@ -30,36 +31,7 @@ if TYPE_CHECKING:
         ParseDocumentService,
     )
 
-# Transient errors that should be retried
-_RETRYABLE_ERRORS: tuple[type, ...] = (
-    ConnectionError,
-    TimeoutError,
-    OSError,
-)
-
-# Import project-specific transient errors
-try:
-    import httpx
-
-    _RETRYABLE_ERRORS += (httpx.TimeoutException,)
-except ImportError:
-    pass
-
-try:
-    import openai
-
-    _RETRYABLE_ERRORS += (openai.APITimeoutError, openai.RateLimitError)
-except ImportError:
-    pass
-
-try:
-    from src.core.ingest_and_digitize_data.parse_document.exceptions import (
-        MinerUTimeoutError,
-    )
-
-    _RETRYABLE_ERRORS += (MinerUTimeoutError,)
-except ImportError:
-    pass
+_RETRYABLE_ERRORS = build_retryable_errors()
 
 # Permanent errors that should NOT be retried
 try:

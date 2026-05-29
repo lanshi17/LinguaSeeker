@@ -6,6 +6,7 @@ for dual-track evidence extraction.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import datetime
 from pathlib import Path
@@ -21,6 +22,7 @@ from src.agents.contracts import (
     PermanentPhaseError,
     RetryablePhaseError,
     SkipPhase3Reason,
+    build_retryable_errors,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
     EvidenceExtractionService,
@@ -34,35 +36,7 @@ if TYPE_CHECKING:
         TranslationService,
     )
 
-# Transient errors that should be retried
-_RETRYABLE_ERRORS: tuple[type, ...] = (
-    ConnectionError,
-    TimeoutError,
-    OSError,
-)
-
-try:
-    import httpx
-
-    _RETRYABLE_ERRORS += (httpx.TimeoutException,)
-except ImportError:
-    pass
-
-try:
-    import openai
-
-    _RETRYABLE_ERRORS += (openai.APITimeoutError, openai.RateLimitError)
-except ImportError:
-    pass
-
-try:
-    from src.core.ingest_and_digitize_data.parse_document.exceptions import (
-        MinerUTimeoutError,
-    )
-
-    _RETRYABLE_ERRORS += (MinerUTimeoutError,)
-except ImportError:
-    pass
+_RETRYABLE_ERRORS = build_retryable_errors()
 
 
 class Phase2Adapter:
@@ -124,7 +98,8 @@ class Phase2Adapter:
             output_dir = f"data/pipeline/{state.processing_run_id}/phase_2"
             Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-            cross_lingual_output = self._translation.save(
+            cross_lingual_output = await asyncio.to_thread(
+                self._translation.save,
                 result=translation_result,
                 output_dir=output_dir,
                 doc_id=state.source_document_id,
