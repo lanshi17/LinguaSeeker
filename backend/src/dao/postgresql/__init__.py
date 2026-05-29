@@ -70,42 +70,43 @@ __all__ = [
     "get_async_session",
 ]
 
+# Module-level mapping for lazy imports to avoid recreating dict on every access
+_LAZY_IMPORTS: dict[str, str] = {
+    "async_session_factory": "src.dao.postgresql.connection",
+    "build_async_engine": "src.dao.postgresql.connection",
+    "build_asyncpg_connect_args": "src.dao.postgresql.connection",
+    "get_async_session": "src.dao.postgresql.connection",
+    "AsyncpgConnectArgs": "src.dao.postgresql.contracts",
+    "Base": "src.dao.postgresql.models",
+    "CanonicalEvidenceItem": "src.dao.postgresql.models",
+    "ChatMessage": "src.dao.postgresql.models",
+    "ChatSession": "src.dao.postgresql.models",
+    "EntityMergeEvent": "src.dao.postgresql.models",
+    "EvidenceEntityBinding": "src.dao.postgresql.models",
+    "NormalizedEntity": "src.dao.postgresql.models",
+    "PipelineRunState": "src.dao.postgresql.models",
+    "ProcessingRun": "src.dao.postgresql.models",
+    "ReviewAuditEvent": "src.dao.postgresql.models",
+    "RunEvidenceItem": "src.dao.postgresql.models",
+    "SourceDocument": "src.dao.postgresql.models",
+    "SourceDocumentIdentifier": "src.dao.postgresql.models",
+    "TerminologyAlias": "src.dao.postgresql.models",
+    "TerminologyEmbedding": "src.dao.postgresql.models",
+    "TerminologyEntry": "src.dao.postgresql.models",
+    "TerminologyRelationship": "src.dao.postgresql.models",
+    "User": "src.dao.postgresql.models",
+    "SearchIndexRepository": "src.dao.postgresql.search_index_repo",
+    "frontend_search_index": "src.dao.postgresql.search_index_repo",
+    "VectorRepository": "src.dao.postgresql.vector_repo",
+}
+
 
 def __getattr__(name: str):  # type: ignore[no-untyped-def]
     """Lazy-load exports on first access to avoid eager pgvector dependency."""
     import importlib
 
-    _lazy_imports: dict[str, str] = {
-        "async_session_factory": "src.dao.postgresql.connection",
-        "build_async_engine": "src.dao.postgresql.connection",
-        "build_asyncpg_connect_args": "src.dao.postgresql.connection",
-        "get_async_session": "src.dao.postgresql.connection",
-        "AsyncpgConnectArgs": "src.dao.postgresql.contracts",
-        "Base": "src.dao.postgresql.models",
-        "CanonicalEvidenceItem": "src.dao.postgresql.models",
-        "ChatMessage": "src.dao.postgresql.models",
-        "ChatSession": "src.dao.postgresql.models",
-        "EntityMergeEvent": "src.dao.postgresql.models",
-        "EvidenceEntityBinding": "src.dao.postgresql.models",
-        "NormalizedEntity": "src.dao.postgresql.models",
-        "PipelineRunState": "src.dao.postgresql.models",
-        "ProcessingRun": "src.dao.postgresql.models",
-        "ReviewAuditEvent": "src.dao.postgresql.models",
-        "RunEvidenceItem": "src.dao.postgresql.models",
-        "SourceDocument": "src.dao.postgresql.models",
-        "SourceDocumentIdentifier": "src.dao.postgresql.models",
-        "TerminologyAlias": "src.dao.postgresql.models",
-        "TerminologyEmbedding": "src.dao.postgresql.models",
-        "TerminologyEntry": "src.dao.postgresql.models",
-        "TerminologyRelationship": "src.dao.postgresql.models",
-        "User": "src.dao.postgresql.models",
-        "SearchIndexRepository": "src.dao.postgresql.search_index_repo",
-        "frontend_search_index": "src.dao.postgresql.search_index_repo",
-        "VectorRepository": "src.dao.postgresql.vector_repo",
-    }
-
-    if name in _lazy_imports:
-        module = importlib.import_module(_lazy_imports[name])
+    if name in _LAZY_IMPORTS:
+        module = importlib.import_module(_LAZY_IMPORTS[name])
         return getattr(module, name)
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

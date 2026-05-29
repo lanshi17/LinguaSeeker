@@ -20,15 +20,16 @@ from .contracts import (
 def _write_json(path: Path, data: str) -> None:
     """Write JSON string to file, using rust_io when available, stdlib otherwise.
 
-    Rust-backed IO exceptions are normalized to OSError so callers can use
-    a single ``except OSError`` handler regardless of the underlying backend.
+    Rust-backed IO exceptions (RuntimeError from panics, SystemError from PyO3
+    internals) are normalized to OSError for consistent I/O error handling.
+    MemoryError and other critical exceptions propagate unchanged.
     """
     if files_io is not None:
         try:
             files_io.File(str(path)).write(data)
         except OSError:
             raise
-        except Exception as e:
+        except (RuntimeError, SystemError) as e:
             # PyO3 native exceptions (e.g. Rust panic, IOError from tokio)
             # are not OSError subclasses — wrap them for consistent handling.
             raise OSError(f"Failed to write {path}: {e}") from e

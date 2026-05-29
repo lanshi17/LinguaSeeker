@@ -13,7 +13,7 @@ import time as _time
 
 from .provider_health import get_health_tracker
 
-from src.utils.rust_io import net_io, NET_AVAILABLE
+from src.utils.rust_io import net_io
 from src.utils.text import sanitize_filename
 
 from .contracts import OnlineAcquisitionGatewayRequest, OnlineAcquisitionGatewayResult, OnlineAcquisitionSourceTraceEntry
@@ -193,7 +193,7 @@ def _failure_result(provider: str, error: Exception, action: str = "search") -> 
 async def call_provider(request: OnlineAcquisitionGatewayRequest) -> OnlineAcquisitionGatewayResult:
     """Call a single provider via net_io.fetch_one."""
     start = _time.monotonic()
-    if not NET_AVAILABLE:
+    if net_io is None:
         elapsed = (_time.monotonic() - start) * 1000
         get_health_tracker().record(request.provider, success=False, latency_ms=elapsed)
         return _failure_result(
