@@ -16,6 +16,8 @@ from loguru import logger
 from pydantic import ValidationError
 from pydantic import BaseModel, SecretStr, TypeAdapter
 
+from src.utils.text import strip_json_fences
+
 from .config_context import EvidenceExtractionConfigContext
 
 
@@ -123,7 +125,7 @@ class LangChainEvidenceProvider:
         content = message.content
         if not isinstance(content, str):
             raise RuntimeError("Fallback JSON response content is not text")
-        json_text = _strip_json_fences(content)
+        json_text = strip_json_fences(content)
         try:
             return adapter.validate_python(json.loads(json_text))
         except (ValidationError, ValueError, json.JSONDecodeError):
@@ -154,19 +156,7 @@ class LangChainEvidenceProvider:
         content = message.content
         if not isinstance(content, str):
             raise RuntimeError("JSON repair response content is not text")
-        return _strip_json_fences(content)
-
-
-def _strip_json_fences(content: str) -> str:
-    text = content.strip()
-    if text.startswith("```"):
-        lines = text.splitlines()
-        if lines and lines[0].startswith("```"):
-            lines = lines[1:]
-        if lines and lines[-1].startswith("```"):
-            lines = lines[:-1]
-        return "\n".join(lines).strip()
-    return text
+        return strip_json_fences(content)
 
 
 def _is_pydantic_model_schema(output_schema: Any) -> bool:
