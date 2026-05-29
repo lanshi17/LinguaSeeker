@@ -126,3 +126,19 @@
 [2026-05-27] Fixed database audit findings: deleted duplicate constraint migration, fixed env.py schema search_path, added NULLS NOT DISTINCT for nullable object_entry_id, dropped circular FK constraints in init downgrade, replaced credentials in .env.example, fixed README paths and stale .old_version refs, added pgvector migration test filename fix, applied and verified all migrations against staging DB [done]
 [2026-05-28] [phase4-visualization-expert-loop] [done] Implemented P0 features: feedback service with delta audit, source linker with bilingual traceability, chat service with AI replies and SSE streaming. 3 new tables (review_audit_events, chat_sessions, chat_messages), 5 service modules, full API route coverage. 76 Phase 4 + DAO tests passing, ruff clean.
 [2026-05-29] Phase 4 E2E script + 5-stage full pipeline + P0 audit event fix [completed]
+[2026-05-29] Pipeline Orchestrator Implementation (v5) — 1 main agent + 3 phase adapters (LangGraph) [COMPLETED]
+  - contracts.py: PipelineGraphState (Pydantic), PhaseStatus/PhaseStatusDetail, PipelineMode, SourceType,
+    PipelineStatus, Phase1Output/Phase2Output/Phase3Output, PhaseErrorDetail,
+    RetryablePhaseError/PermanentPhaseError, SkipPhase3Reason enum
+  - state_persistence.py: Save/load state to PostgreSQL at phase boundaries
+  - state_persistence_factory.py: Session-per-request pattern (C1 fix)
+  - session_bound_standardization.py: Session-per-request for EntityStandardizationService
+  - phase_1_adapter.py: Acquisition + Parsing (raises classified errors, correct field names)
+  - phase_2_adapter.py: Translation + EvidenceExtractionService.run_dual() + build_dual_documents_from_output_dir()
+  - phase_3_adapter.py: Entity Standardization (raises classified errors, skip_phase_3_reason support)
+  - orchestrator.py: LangGraph StateGraph with 3 phase nodes + upstream validation + persistence
+  - runner.py: Background execution with asyncio.Semaphore(2) + DB fallback
+  - concurrency.py: Retry logic with RetryablePhaseError/PermanentPhaseError
+  - pipeline.py: POST /api/v1/pipeline/run + GET /api/v1/pipeline/runs/{id}/status
+  - App lifespan initialization with DocumentParseOrchestrator (C2 fix)
+  - 56 tests passing (agents + API)

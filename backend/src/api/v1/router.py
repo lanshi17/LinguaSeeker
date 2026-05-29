@@ -3,11 +3,14 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from src.api.v1 import chat, delta_audit, evidence, source_link
+from src.api.v1 import chat, delta_audit, evidence, pipeline, source_link
 
 router = APIRouter(prefix="/api/v1")
 
-# Phase 4 routes
+# Pipeline orchestrator routes
+router.include_router(pipeline.router, prefix="/pipeline", tags=["pipeline"])
+
+# Phase 4 routes (expert review — independent of orchestrator)
 router.include_router(evidence.router, prefix="/evidence", tags=["evidence"])
 router.include_router(delta_audit.router, prefix="/delta-audit", tags=["delta-audit"])
 router.include_router(source_link.router, prefix="/source-link", tags=["source-link"])

@@ -866,3 +866,16 @@ Fabry 真实 Phase 3 E2E 结果变化：
 **Solution**: Not remediated in this audit pass. Recommended fixes are to either remove/replace the stale `VectorRepository` with the active typed pgvector repository or align it to the current `TerminologyEmbedding` schema, and to package or rename duplicate `test_config.py` modules so repo-wide pytest collection is stable.
 
 **Prevention**: When schema fields are renamed, search all repositories and tests for old field names, not only the active feature path. Add a repo-wide pytest collection check after introducing service-local tests with common basenames.
+
+## 2026-05-29: Pipeline Orchestrator v5 — Implementation Lessons
+
+**Problem**: LangGraph async/sync API mismatch caused `TypeError: No synchronous function provided`.
+
+**Key corrections**:
+1. LangGraph async node functions require `ainvoke()`, not `invoke()` — sync `invoke()` doesn't support async node functions.
+2. Mock `AsyncMock.side_effect` with sync lambdas returns unawaited coroutines — use `async def` for side effects that call async operations.
+3. Mock adapters returning the same state object for all phases causes incorrect assertions — each phase needs its own state copy.
+4. `datetime.fromisoformat(datetime.now().isoformat())` is wasteful — use `datetime.now()` directly.
+5. Mid-function imports inside `try` blocks mask `ImportError` as `PermanentPhaseError` — move contract imports to module level.
+
+**Prevention**: When using LangGraph, always match API to node function type: async nodes → `ainvoke()`, sync nodes → `invoke()`.
