@@ -2,11 +2,21 @@
 
 > Async PostgreSQL, Redis cache, and read-side search-index helpers for the backend persistence layer.
 
+## Sub-package Organization
+
+```
+src/dao/
+├── postgresql/    # SQLAlchemy ORM models, connection, and query repositories
+├── redis/         # Async Redis cache operations
+├── neo4j/         # Graph database access (placeholder)
+└── minio/         # MinIO / S3-compatible object storage (placeholder)
+```
+
 ## Quick Start
 
 ```python
-from src.dao.connection import async_session_factory, build_async_engine, get_async_session
-from src.dao.search_index_repo import SearchIndexRepository
+from src.dao.postgresql.connection import async_session_factory, build_async_engine, get_async_session
+from src.dao.postgresql.search_index_repo import SearchIndexRepository
 
 engine = build_async_engine()
 session_factory = async_session_factory(engine)
@@ -24,19 +34,19 @@ The application owns the engine lifecycle. Call `await engine.dispose()` during 
 src.core.config.Settings
         |
         v
-connection.py  ->  AsyncEngine / async_sessionmaker / session context
+postgresql/connection.py  ->  AsyncEngine / async_sessionmaker / session context
         |
-        +--> models.py              normalized write-model metadata
-        +--> search_index_repo.py   flattened read projection queries
-        +--> cache_repo.py          Redis read-cache and invalidation
-        +--> contracts.py           typed infrastructure contracts
+        +--> postgresql/models.py              normalized write-model metadata
+        +--> postgresql/search_index_repo.py   flattened read projection queries
+        +--> redis/cache_repo.py               Redis read-cache and invalidation
+        +--> postgresql/contracts.py           typed infrastructure contracts
 ```
 
-The normalized PostgreSQL write model is migration-managed through `Base.metadata` in `models.py`. The `frontend_search_index` table in `search_index_repo.py` uses standalone `MetaData` so Alembic autogenerate does not treat the manual read projection as core write-model drift.
+The normalized PostgreSQL write model is migration-managed through `Base.metadata` in `postgresql/models.py`. The `frontend_search_index` table in `postgresql/search_index_repo.py` uses standalone `MetaData` so Alembic autogenerate does not treat the manual read projection as core write-model drift.
 
 ## Public API
 
-### connection.py
+### postgresql/connection.py
 
 | Function | Signature | Description |
 |---|---|---|
@@ -45,7 +55,7 @@ The normalized PostgreSQL write model is migration-managed through `Base.metadat
 | `async_session_factory` | `async_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]` | Binds `AsyncSession` instances to an engine with `expire_on_commit=False`. |
 | `get_async_session` | `get_async_session(session_factory: SessionFactory) -> AsyncIterator[AsyncSession]` | Context-managed session helper. It requires an explicit factory to avoid hidden engine creation. |
 
-### models.py
+### postgresql/models.py
 
 `Base` is the Alembic target metadata for the normalized schema.
 
@@ -65,7 +75,7 @@ The normalized PostgreSQL write model is migration-managed through `Base.metadat
 | `TerminologyRelationship` | `terminology_relationships` | Structured relationship between terminology entries. |
 | `TerminologyEmbedding` | `terminology_embeddings` | Vector embeddings for terminology entries with HNSW index for cosine similarity search. |
 
-### cache_repo.py
+### redis/cache_repo.py
 
 | Method | Signature | Description |
 |---|---|---|
@@ -79,7 +89,7 @@ The normalized PostgreSQL write model is migration-managed through `Base.metadat
 
 The `dict` return annotations are intentional because cached JSON payloads are unstructured read-cache values, not stable module contracts.
 
-### search_index_repo.py
+### postgresql/search_index_repo.py
 
 | Method | Signature | Description |
 |---|---|---|
@@ -90,7 +100,7 @@ The `dict` return annotations are intentional because cached JSON payloads are u
 
 ## Internal Design
 
-`models.py` keeps JSONB as plain storage. Pydantic/FastAPI boundaries must validate JSON payload shapes before DAO writes. This avoids ORM-level schema coupling and keeps database migrations focused on durable relational structure.
+`postgresql/models.py` keeps JSONB as plain storage. Pydantic/FastAPI boundaries must validate JSON payload shapes before DAO writes. This avoids ORM-level schema coupling and keeps database migrations focused on durable relational structure.
 
 The entity model uses two partial unique indexes:
 
@@ -104,7 +114,7 @@ The entity model uses two partial unique indexes:
 ### Create A Session Factory At Startup
 
 ```python
-from src.dao.connection import async_session_factory, build_async_engine
+from src.dao.postgresql.connection import async_session_factory, build_async_engine
 
 engine = build_async_engine()
 session_factory = async_session_factory(engine)
@@ -115,8 +125,8 @@ Keep both objects in application state. Dispose the engine on shutdown.
 ### Use The Search Projection
 
 ```python
-from src.dao.connection import get_async_session
-from src.dao.search_index_repo import SearchIndexRepository
+from src.dao.postgresql.connection import get_async_session
+from src.dao.postgresql.search_index_repo import SearchIndexRepository
 
 async with get_async_session(session_factory) as session:
     rows = await SearchIndexRepository(session).search(
@@ -129,7 +139,7 @@ async with get_async_session(session_factory) as session:
 ### Vector Similarity Search
 
 ```python
-from src.dao.vector_repo import VectorRepository
+from src.dao.postgresql.vector_repo import VectorRepository
 
 repo = VectorRepository(session)
 results = await repo.search_similar(
@@ -142,7 +152,7 @@ results = await repo.search_similar(
 ### Invalidate Cache After A Run Completes
 
 ```python
-from src.dao.cache_repo import CacheRepository
+from src.dao.redis.cache_repo import CacheRepository
 
 cache = CacheRepository(redis_client)
 await cache.invalidate_all(
@@ -156,8 +166,8 @@ await cache.invalidate_all(
 
 When adding a write-model table:
 
-1. Add a SQLAlchemy 2.0 declarative model to `models.py`.
-2. Add metadata tests in `backend/tests/dao/test_models.py`.
+1. Add a SQLAlchemy 2.0 declarative model to `postgresql/models.py`.
+2. Add metadata tests in `backend/tests/dao/postgresql/test_models.py`.
 3. Add or update an Alembic migration under `database/migrations/versions/`.
 4. Add a migration test that guards critical columns, constraints, or indexes.
 
@@ -166,6 +176,13 @@ When adding a read-side projection:
 1. Prefer standalone `MetaData()` unless the projection is intentionally migration-managed through `Base.metadata`.
 2. Keep refresh SQL in a repository method.
 3. Add tests for table shape and query behavior.
+
+When adding a new storage backend:
+
+1. Create a new sub-package under `src/dao/` (e.g., `src/dao/neo4j/`).
+2. Implement connection, models, and repository modules within the sub-package.
+3. Add tests under `backend/tests/dao/<backend>/`.
+4. Update this README with the new sub-package documentation.
 
 ## Performance Notes
 
@@ -188,8 +205,8 @@ When adding a read-side projection:
 
 ```bash
 cd backend
-uv run pytest tests/core/test_database_config.py tests/dao -v
-uv run --extra dev ruff check src/dao tests/dao tests/core/test_database_config.py
+uv run pytest tests/dao -v
+uv run --extra dev ruff check src/dao tests/dao tests/conftest.py
 ```
 
 Integration tests that require live PostgreSQL or Redis are marked skipped by default.
