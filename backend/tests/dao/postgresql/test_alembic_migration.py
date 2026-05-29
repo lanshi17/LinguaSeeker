@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import sqlalchemy as sa
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
 BACKEND_DIR = REPO_ROOT / "backend"
 ALEMBIC_INI = REPO_ROOT / "database" / "alembic.ini"
 MIGRATIONS_DIR = REPO_ROOT / "database" / "migrations"

@@ -3,14 +3,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
 
 
 def test_unstructured_dict_return_annotations_are_justified() -> None:
     """DAO bare dict return annotations use the project-required noqa marker."""
     files = [
-        REPO_ROOT / "backend" / "src" / "dao" / "cache_repo.py",
-        REPO_ROOT / "backend" / "src" / "dao" / "search_index_repo.py",
+        REPO_ROOT / "backend" / "src" / "dao" / "redis" / "cache_repo.py",
+        REPO_ROOT / "backend" / "src" / "dao" / "postgresql" / "search_index_repo.py",
     ]
 
     for path in files:
