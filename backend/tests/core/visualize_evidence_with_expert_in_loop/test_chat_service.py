@@ -113,7 +113,7 @@ class TestChatService:
 
     async def _create_test_run(self, session: AsyncSession) -> uuid.UUID:
         """Helper: create a test processing run."""
-        from src.dao.models import ProcessingRun, SourceDocument
+        from src.dao.postgresql.models import ProcessingRun, SourceDocument
 
         doc = SourceDocument(source_document_id=uuid.uuid4(), raw_metadata={})
         session.add(doc)

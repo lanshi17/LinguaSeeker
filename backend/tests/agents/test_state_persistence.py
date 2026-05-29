@@ -3,7 +3,7 @@ import uuid
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.dao.models import PipelineRunState
+from src.dao.postgresql.models import PipelineRunState
 
 
 @pytest.mark.asyncio
