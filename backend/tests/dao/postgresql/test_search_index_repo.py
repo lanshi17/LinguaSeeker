@@ -25,7 +25,7 @@ def _fake_session() -> MagicMock:
 
 def test_search_index_table_exists() -> None:
     """search_index_repo exports a frontend_search_index Table."""
-    from src.dao.search_index_repo import frontend_search_index
+    from src.dao.postgresql.search_index_repo import frontend_search_index
 
     assert isinstance(frontend_search_index, Table)
     assert frontend_search_index.name == "frontend_search_index"
@@ -33,7 +33,7 @@ def test_search_index_table_exists() -> None:
 
 def test_search_index_table_has_required_columns() -> None:
     """The search index table contains all MVP frontend-query columns."""
-    from src.dao.search_index_repo import frontend_search_index
+    from src.dao.postgresql.search_index_repo import frontend_search_index
 
     columns = {c.name for c in frontend_search_index.columns}
 
@@ -55,7 +55,7 @@ def test_search_index_table_has_required_columns() -> None:
 
 def test_search_index_table_has_unique_index_on_canonical_id() -> None:
     """The table has a unique index on canonical_evidence_id for CONCURRENTLY refresh."""
-    from src.dao.search_index_repo import frontend_search_index
+    from src.dao.postgresql.search_index_repo import frontend_search_index
 
     index_names = {idx.name for idx in frontend_search_index.indexes}
     assert "ix_frontend_search_index_canonical_evidence_id" in index_names
@@ -67,7 +67,7 @@ def test_search_index_table_has_unique_index_on_canonical_id() -> None:
 @pytest.mark.asyncio
 async def test_search_by_gene_returns_rows() -> None:
     """Search by gene returns matching rows from the index."""
-    from src.dao.search_index_repo import SearchIndexRepository
+    from src.dao.postgresql.search_index_repo import SearchIndexRepository
 
     session = _fake_session()
     mock_result = MagicMock()
@@ -86,7 +86,7 @@ async def test_search_by_gene_returns_rows() -> None:
 @pytest.mark.asyncio
 async def test_search_by_variant_returns_rows() -> None:
     """Search by variant returns matching rows."""
-    from src.dao.search_index_repo import SearchIndexRepository
+    from src.dao.postgresql.search_index_repo import SearchIndexRepository
 
     session = _fake_session()
     mock_result = MagicMock()
@@ -104,7 +104,7 @@ async def test_search_by_variant_returns_rows() -> None:
 @pytest.mark.asyncio
 async def test_search_by_doi_returns_rows() -> None:
     """Search by DOI returns matching rows."""
-    from src.dao.search_index_repo import SearchIndexRepository
+    from src.dao.postgresql.search_index_repo import SearchIndexRepository
 
     session = _fake_session()
     mock_result = MagicMock()
@@ -121,7 +121,7 @@ async def test_search_by_doi_returns_rows() -> None:
 @pytest.mark.asyncio
 async def test_search_by_pmid_returns_rows() -> None:
     """Search by PMID returns matching rows."""
-    from src.dao.search_index_repo import SearchIndexRepository
+    from src.dao.postgresql.search_index_repo import SearchIndexRepository
 
     session = _fake_session()
     mock_result = MagicMock()
@@ -138,7 +138,7 @@ async def test_search_by_pmid_returns_rows() -> None:
 @pytest.mark.asyncio
 async def test_search_no_filters_returns_empty_does_not_crash() -> None:
     """Search with no filters does not execute a wasteful query."""
-    from src.dao.search_index_repo import SearchIndexRepository
+    from src.dao.postgresql.search_index_repo import SearchIndexRepository
 
     session = _fake_session()
     repo = SearchIndexRepository(session)
@@ -155,7 +155,7 @@ async def test_search_no_filters_returns_empty_does_not_crash() -> None:
 @pytest.mark.asyncio
 async def test_refresh_truncates_and_rebuilds() -> None:
     """Refresh truncates the search index and rebuilds from canonical evidence."""
-    from src.dao.search_index_repo import SearchIndexRepository
+    from src.dao.postgresql.search_index_repo import SearchIndexRepository
 
     session = _fake_session()
     repo = SearchIndexRepository(session)
@@ -181,8 +181,8 @@ async def test_refresh_and_search_integration() -> None:
     from sqlalchemy import text
 
     from src.core.config import Settings
-    from src.dao.connection import async_session_factory, build_async_engine
-    from src.dao.search_index_repo import SearchIndexRepository
+    from src.dao.postgresql.connection import async_session_factory, build_async_engine
+    from src.dao.postgresql.search_index_repo import SearchIndexRepository
 
     settings = Settings()
     engine = build_async_engine(settings)

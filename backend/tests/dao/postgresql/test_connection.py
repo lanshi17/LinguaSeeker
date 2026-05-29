@@ -8,7 +8,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from src.core.config import Settings
-from src.dao.connection import (
+from src.dao.postgresql.connection import (
     async_session_factory,
     build_async_engine,
     build_asyncpg_connect_args,

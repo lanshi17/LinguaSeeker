@@ -5,7 +5,7 @@ import uuid
 
 import pytest
 
-from src.dao.vector_repo import VectorRepository
+from src.dao.postgresql.vector_repo import VectorRepository
 
 
 class FakeSession:
