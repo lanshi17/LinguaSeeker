@@ -107,21 +107,21 @@ def test_versions_directory_exists() -> None:
 
 
 def test_env_py_imports_models_metadata() -> None:
-    """env.py references Base from src.dao.models and resolves to correct metadata."""
+    """env.py references Base from src.dao.postgresql.models and resolves to correct metadata."""
     backend_str = str(BACKEND_DIR)
     if backend_str not in sys.path:
         sys.path.insert(0, backend_str)
 
     source = ENV_PY.read_text()
-    assert "from src.dao.models import Base" in source, (
-        "env.py must import Base from src.dao.models"
+    assert "from src.dao.postgresql.models import Base" in source, (
+        "env.py must import Base from src.dao.postgresql.models"
     )
     assert "target_metadata = Base.metadata" in source, (
         "env.py must wire target_metadata to Base.metadata"
     )
 
     # Verify the metadata contains the expected tables.
-    from src.dao.models import Base  # noqa: E402
+    from src.dao.postgresql.models import Base  # noqa: E402
 
     metadata = Base.metadata
     assert "source_documents" in metadata.tables, "source_documents must be in metadata"
@@ -265,8 +265,8 @@ def test_initial_migration_canonical_evidence_matches_orm_columns(monkeypatch) -
 
 def test_search_index_table_is_not_in_alembic_target_metadata() -> None:
     """The manual search-index projection must not pollute Base metadata autogenerate."""
-    from src.dao.models import Base
-    from src.dao.search_index_repo import frontend_search_index
+    from src.dao.postgresql.models import Base
+    from src.dao.postgresql.search_index_repo import frontend_search_index
 
     assert frontend_search_index.metadata is not Base.metadata
     assert "frontend_search_index" not in Base.metadata.tables

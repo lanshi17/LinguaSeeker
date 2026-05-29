@@ -4,7 +4,7 @@ from __future__ import annotations
 from sqlalchemy import CheckConstraint, Index, Table, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 
-from src.dao.models import Base
+from src.dao.postgresql.models import Base
 
 
 EXPECTED_TABLES = {
