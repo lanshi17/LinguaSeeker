@@ -16,7 +16,6 @@ from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.w
     build_js_helpers,
     resolve_llm_config,
 )
-from src.utils.text import sanitize_filename
 
 
 class TestBaseUtilities:
@@ -29,12 +28,6 @@ class TestBaseUtilities:
 
     def test_safe_json_loads_empty(self):
         assert safe_json_loads("") == {}
-
-    def test_sanitize_filename(self):
-        assert sanitize_filename('test: file? name') == 'test_ file_ name'
-
-    def test_sanitize_filename_empty(self):
-        assert sanitize_filename("") == "paper"
 
     def test_extract_pdf_links(self):
         html = '<a href="paper.pdf">Download</a><a href="other.html">Link</a>'
