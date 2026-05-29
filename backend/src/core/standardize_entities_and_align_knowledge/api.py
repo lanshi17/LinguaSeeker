@@ -43,7 +43,7 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.provider
 from src.core.standardize_entities_and_align_knowledge.similarity_match.repositories import (
     PgvectorTerminologyRepository,
 )
-from src.dao.connection import async_session_factory, build_async_engine, get_async_session
+from src.dao.postgresql.connection import async_session_factory, build_async_engine, get_async_session
 
 
 def serialize_matches(matches: tuple[EntityMatch, ...]) -> list[dict[str, Any]]:

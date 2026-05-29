@@ -10,18 +10,14 @@ from typing import List, Optional
 
 from loguru import logger
 
+from src.utils.rust_io import files_io
+
 from .contracts import (
     ALLOWED_EXTENSIONS,
     MAX_FILE_SIZE_BYTES,
     LocalStoredFile,
     LocalUploadedFile,
 )
-
-try:
-    import rust_io.files as files_io
-except ImportError:
-    files_io = None  # type: ignore[assignment]
-    logger.warning("rust_io.files not available, falling back to Python I/O")
 
 
 def validate_local_upload(file: LocalUploadedFile) -> List[str]:

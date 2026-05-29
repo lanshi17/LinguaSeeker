@@ -8,7 +8,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from src.core.standardize_entities_and_align_knowledge.contracts import EntityType
-from src.dao.models import TerminologyEmbedding, TerminologyEntry
+from src.dao.postgresql.models import TerminologyEmbedding, TerminologyEntry
 
 
 def build_embedding_text(entry: TerminologyEntry) -> str:

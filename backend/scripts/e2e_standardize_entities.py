@@ -37,7 +37,7 @@ from src.core.standardize_entities_and_align_knowledge.api import (
     serialize_matches,
 )
 from src.core.standardize_entities_and_align_knowledge.contracts import StandardizationResult
-from src.dao.connection import async_session_factory, build_async_engine, get_async_session
+from src.dao.postgresql.connection import async_session_factory, build_async_engine, get_async_session
 
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]

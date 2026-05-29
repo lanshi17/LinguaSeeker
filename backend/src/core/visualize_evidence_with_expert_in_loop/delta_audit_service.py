@@ -12,7 +12,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     ReviewStatus,
     TargetType,
 )
-from src.dao.models import ReviewAuditEvent
+from src.dao.postgresql.models import ReviewAuditEvent
 
 
 class DeltaAuditService:

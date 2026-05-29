@@ -26,7 +26,7 @@ from src.core.standardize_entities_and_align_knowledge.normalizers import (
     normalize_lookup_text,
     normalize_variant_text,
 )
-from src.dao.models import (
+from src.dao.postgresql.models import (
     CanonicalEvidenceItem,
     EvidenceEntityBinding,
     NormalizedEntity,

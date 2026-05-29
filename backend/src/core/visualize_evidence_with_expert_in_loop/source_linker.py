@@ -10,7 +10,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     BilingualSpan,
     TrackSpan,
 )
-from src.dao.models import RunEvidenceItem
+from src.dao.postgresql.models import RunEvidenceItem
 
 
 class SourceLinker:

@@ -10,7 +10,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     SimilarityCandidate,
     TerminologyCandidate,
 )
-from src.dao.models import TerminologyEmbedding, TerminologyEntry
+from src.dao.postgresql.models import TerminologyEmbedding, TerminologyEntry
 
 
 class PgvectorTerminologyRepository:

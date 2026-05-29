@@ -13,7 +13,7 @@ from typing import TypedDict, cast
 import httpx
 from loguru import logger
 
-import rust_io.net as net_io
+from src.utils.rust_io import net_io
 
 from ..base import ParserStrategy
 from ..common.converters import block_to_markdown, html_table_to_structured

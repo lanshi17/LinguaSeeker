@@ -6,7 +6,7 @@ from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from src.core.config import get_config
-from src.dao.connection import async_session_factory, build_async_engine
+from src.dao.postgresql.connection import async_session_factory, build_async_engine
 
 _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None

@@ -8,11 +8,21 @@ from pathlib import Path
 
 from loguru import logger
 
+from src.utils.rust_io import files_io
+
 from .contracts import (
     CrossLingualOutput,
     SavedDocuments,
     TranslationResult,
 )
+
+
+def _write_json(path: Path, data: str) -> None:
+    """Write JSON string to file, using rust_io when available, stdlib otherwise."""
+    if files_io is not None:
+        files_io.File(str(path)).write(data)
+    else:
+        path.write_text(data, encoding="utf-8")
 
 
 class DocumentPersistenceService:
@@ -61,9 +71,7 @@ class DocumentPersistenceService:
             },
             "blocks": [b.to_dict() for b in result.original_blocks],
         }
-        original_path.write_text(
-            json.dumps(original_data, ensure_ascii=False, indent=2), encoding="utf-8",
-        )
+        _write_json(original_path, json.dumps(original_data, ensure_ascii=False, indent=2))
         logger.info("Saved original JSON: {}", original_path)
 
         # Save translated.json (structured blocks with translations)
@@ -78,9 +86,7 @@ class DocumentPersistenceService:
             },
             "blocks": [b.to_dict() for b in result.translated_blocks],
         }
-        translated_path.write_text(
-            json.dumps(translated_data, ensure_ascii=False, indent=2), encoding="utf-8",
-        )
+        _write_json(translated_path, json.dumps(translated_data, ensure_ascii=False, indent=2))
         logger.info("Saved translated JSON: {}", translated_path)
 
         # Compute translation drift from segments
@@ -115,7 +121,7 @@ class DocumentPersistenceService:
             "created_at": now.isoformat(),
         }
         meta_path = base / "metadata.json"
-        meta_path.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_json(meta_path, json.dumps(metadata, ensure_ascii=False, indent=2))
         logger.info("Saved metadata: {}", meta_path)
 
         # Copy images

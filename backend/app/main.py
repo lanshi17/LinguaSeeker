@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
 
     # Initialize pipeline orchestrator
     from src.core.config import get_config
-    from src.dao.connection import (
+    from src.dao.postgresql.connection import (
         async_session_factory,
         build_async_engine,
     )
