@@ -6,13 +6,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps import get_db_session
+from src.api.deps import get_db_session, get_phase4_factory
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     BilingualSpan,
     TrackSpan,
-)
-from src.core.visualize_evidence_with_expert_in_loop.source_linker import (
-    SourceLinker,
 )
 
 router = APIRouter()
@@ -24,7 +21,8 @@ async def get_bilingual_span(
     session: AsyncSession = Depends(get_db_session),
 ) -> BilingualSpan:
     """Retrieve bilingual traceability span for an evidence card."""
-    linker = SourceLinker(session)
+    factory = get_phase4_factory()
+    linker = factory.create_source_linker(session)
     return await linker.get_bilingual_span(
         canonical_evidence_id=canonical_evidence_id
     )
@@ -40,7 +38,8 @@ async def get_track_span(
 
     Returns 404-style null if no span exists for the specified track.
     """
-    linker = SourceLinker(session)
+    factory = get_phase4_factory()
+    linker = factory.create_source_linker(session)
     return await linker.get_track_span(
         canonical_evidence_id=canonical_evidence_id,
         track=track,

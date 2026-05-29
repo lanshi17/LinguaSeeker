@@ -99,19 +99,19 @@ def build_summary_metadata(
 class EntityStandardizationService:
     """Facade that wires the adapter, matcher, and orchestration service."""
 
-    def __init__(self, cfg: Any, session: Any):
+    def __init__(self, cfg: Any):
         self._cfg = cfg
-        self._session = session
 
     async def run_dual_result(
         self,
+        session: Any,
         result: DualEvidenceExtractionResult,
         *,
         source_document_id: str,
         processing_run_id: str,
     ) -> StandardizationResult:
         """Standardize one dual-track evidence extraction result."""
-        repository = StandardizationRepository(self._session)
+        repository = StandardizationRepository(session)
         precise_matcher = PreciseTerminologyMatcher(repository)
         semantic_base_url = self._cfg.embedding.base_url or self._cfg.model_server_url
         similarity_matcher = SimilarityTerminologyMatcher(
@@ -123,7 +123,7 @@ class EntityStandardizationService:
                 base_url=self._cfg.rerank.base_url or self._cfg.model_server_url,
                 model=self._cfg.rerank.model,
             ),
-            repository=PgvectorTerminologyRepository(self._session),
+            repository=PgvectorTerminologyRepository(session),
             config=SimilarityMatchConfig(
                 embedding_model=self._cfg.embedding.model,
                 rerank_top_k=self._cfg.rerank.top_k,

@@ -6,15 +6,12 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps import get_db_session
+from src.api.deps import get_db_session, get_phase4_factory
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     DeltaEntry,
     ReviewAuditEventResponse,
     ReviewStatus,
     TargetType,
-)
-from src.core.visualize_evidence_with_expert_in_loop.delta_audit_service import (
-    DeltaAuditService,
 )
 from src.dao.postgresql.models import ReviewAuditEvent
 
@@ -29,7 +26,7 @@ async def list_audit_events(
     session: AsyncSession = Depends(get_db_session),
 ) -> list[ReviewAuditEventResponse]:
     """List review audit events with optional filters."""
-    service = DeltaAuditService()
+    service = get_phase4_factory().delta_audit
     events = await service.list_audit_events(
         session,
         canonical_evidence_id=canonical_evidence_id,

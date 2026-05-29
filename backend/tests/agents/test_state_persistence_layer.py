@@ -11,7 +11,7 @@ from src.agents.contracts import (
     PhaseStatusDetail,
     PhaseErrorDetail,
 )
-from src.agents.state_persistence import StatePersistenceService
+from src.agents.state_persistence import DirectStatePersistence
 
 
 @pytest.fixture
@@ -34,8 +34,8 @@ def sample_state() -> PipelineGraphState:
 
 @pytest.mark.asyncio
 async def test_save_state(db_session: AsyncSession, sample_state: PipelineGraphState):
-    """StatePersistenceService can save state to database."""
-    service = StatePersistenceService(db_session)
+    """DirectStatePersistence can save state to database."""
+    service = DirectStatePersistence(db_session)
     await service.save(sample_state)
 
     loaded = await service.load(sample_state.processing_run_id)
@@ -48,7 +48,7 @@ async def test_save_state(db_session: AsyncSession, sample_state: PipelineGraphS
 @pytest.mark.asyncio
 async def test_load_nonexistent_state(db_session: AsyncSession):
     """Loading nonexistent state returns None."""
-    service = StatePersistenceService(db_session)
+    service = DirectStatePersistence(db_session)
     loaded = await service.load(str(uuid.uuid4()))
     assert loaded is None
 
@@ -56,7 +56,7 @@ async def test_load_nonexistent_state(db_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_save_state_idempotent(db_session: AsyncSession, sample_state: PipelineGraphState):
     """Saving state multiple times updates the record (checkpoint semantics)."""
-    service = StatePersistenceService(db_session)
+    service = DirectStatePersistence(db_session)
     await service.save(sample_state)
 
     sample_state.phase_2_status = PhaseStatusDetail(
@@ -85,7 +85,7 @@ async def test_save_preserves_structured_errors(
         ),
     )
 
-    service = StatePersistenceService(db_session)
+    service = DirectStatePersistence(db_session)
     await service.save(sample_state)
 
     loaded = await service.load(sample_state.processing_run_id)

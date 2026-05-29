@@ -193,7 +193,7 @@ def build_service_with_fake_repository(monkeypatch: pytest.MonkeyPatch) -> api_m
 
     monkeypatch.setattr(api_module, "StandardizationRepository", FakeRepository)
     monkeypatch.setattr(api_module, "HybridTerminologyMatcher", lambda precise, sim: HybridTerminologyMatcher(precise, FakeSimilarityMatcher()))
-    return api_module.EntityStandardizationService(cfg=FakeConfig(), session=lookup)
+    return api_module.EntityStandardizationService(cfg=FakeConfig()), lookup
 
 
 @pytest.mark.asyncio
@@ -207,9 +207,10 @@ async def test_dual_result_standardization_pipeline_standardizes_gene_variant_di
         variant="rs80359550",
         phenotype="Breast carcinoma",
     )
-    service = build_service_with_fake_repository(monkeypatch)
+    service, lookup = build_service_with_fake_repository(monkeypatch)
 
     output = await service.run_dual_result(
+        lookup,
         result,
         source_document_id="source-1",
         processing_run_id="run-1",
@@ -283,9 +284,10 @@ async def test_dual_result_standardization_pipeline_reports_unmapped_and_ambiguo
 
     monkeypatch.setattr(api_module, "StandardizationRepository", _factory)
     monkeypatch.setattr(api_module, "HybridTerminologyMatcher", lambda precise, sim: HybridTerminologyMatcher(precise, FakeSimilarityMatcher()))
-    service = api_module.EntityStandardizationService(cfg=FakeConfig(), session=lookup)
+    service = api_module.EntityStandardizationService(cfg=FakeConfig())
 
     output = await service.run_dual_result(
+        lookup,
         result,
         source_document_id="source-2",
         processing_run_id="run-2",

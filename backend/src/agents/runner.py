@@ -9,7 +9,7 @@ from loguru import logger
 
 from src.agents.concurrency import PipelineSemaphore
 from src.agents.contracts import PipelineGraphState, PipelineStatus
-from src.agents.state_persistence import StatePersistenceService
+from src.agents.state_persistence import SessionBoundStatePersistence
 
 
 class PipelineRunner:
@@ -24,7 +24,7 @@ class PipelineRunner:
         self,
         orchestrator: Any,
         semaphore: PipelineSemaphore,
-        state_persistence: StatePersistenceService,
+        state_persistence: SessionBoundStatePersistence,
     ):
         self._orchestrator = orchestrator
         self._semaphore = semaphore
