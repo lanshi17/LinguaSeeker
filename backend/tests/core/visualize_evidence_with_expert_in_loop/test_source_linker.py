@@ -62,7 +62,7 @@ class TestSourceLinker:
 
     async def test_no_spans_returns_empty_bilingual(self, db_session: AsyncSession) -> None:
         """Evidence with no run items returns empty bilingual span."""
-        from src.dao.models import CanonicalEvidenceItem, SourceDocument
+        from src.dao.postgresql.models import CanonicalEvidenceItem, SourceDocument
 
         doc = SourceDocument(source_document_id=uuid.uuid4(), raw_metadata={})
         db_session.add(doc)
@@ -97,7 +97,7 @@ class TestSourceLinker:
         include_translated: bool = True,
     ) -> uuid.UUID:
         """Helper: create evidence with run items and source spans."""
-        from src.dao.models import (
+        from src.dao.postgresql.models import (
             CanonicalEvidenceItem,
             ProcessingRun,
             RunEvidenceItem,

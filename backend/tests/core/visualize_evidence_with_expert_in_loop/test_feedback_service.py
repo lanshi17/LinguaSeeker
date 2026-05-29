@@ -118,7 +118,7 @@ class TestFeedbackService:
         """Status-only change (no field deltas) still records an audit event."""
         from sqlalchemy import select
 
-        from src.dao.models import ReviewAuditEvent
+        from src.dao.postgresql.models import ReviewAuditEvent
 
         evidence_id = await self._create_test_evidence(db_session)
         service = FeedbackService(db_session)
@@ -167,7 +167,7 @@ class TestFeedbackService:
         """Helper: create test evidence card with provisional status."""
         from uuid import uuid4
 
-        from src.dao.models import CanonicalEvidenceItem, SourceDocument
+        from src.dao.postgresql.models import CanonicalEvidenceItem, SourceDocument
 
         doc = SourceDocument(source_document_id=uuid4(), raw_metadata={})
         session.add(doc)
