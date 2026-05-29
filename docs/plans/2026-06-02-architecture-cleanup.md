@@ -1,104 +1,103 @@
-# Backend Architecture Cleanup: api→agents→core→dao 分层强化
+# Backend Architecture Cleanup: Enforcing api→agents→core→dao Layering
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** 消除 API 层对 core 层的直接依赖，补齐 Phase 4 的 agents 层，统一会话工厂/引擎，合并冗余模块，清理变通代码。
+**Goal:** Eliminate direct API→core dependencies, add Phase 4 agents layer, unify session factory/engine, merge redundant modules, and remove workaround code.
 
-**Architecture:** 严格遵守 `api → agents → core → dao` 单向依赖。API 路由只做 HTTP 关注点（参数解析、状态码、响应模型），通过 agents 层的 factory/adapter 委托到 core 服务。Phase 1-3 保持 LangGraph pipeline 模式；Phase 4 使用 thin factory delegate 模式（不在 graph 内）。所有 services 的长生命周期依赖（cfg, LLM client）在 wiring 层注入，短生命周期依赖（AsyncSession）通过 factory 创建或方法参数传入。
+**Architecture:** Strict unidirectional `api → agents → core → dao` dependency. API routes handle only HTTP concerns (param parsing, status codes, response models) and delegate to core services via the agents layer's factory/adapters. Phases 1-3 retain the LangGraph pipeline pattern; Phase 4 uses a thin factory delegate pattern (not in the graph). Long-lived dependencies (cfg, LLM client) are injected at the wiring layer; short-lived dependencies (AsyncSession) are created via factory or passed as method parameters.
 
 **Tech Stack:** FastAPI + Pydantic + SQLAlchemy async + LangGraph
 
 ---
 
-## 设计决策速查
+## Design Decisions Quick Reference
 
-| 决策 | 结论 | 理由 |
+| Decision | Resolution | Rationale |
 |---|---|---|
-| 重构范围 | `backend/src/` + `backend/app/` | model-server 独立微服务，不动；前端不动；libs 不动 |
-| Phase 4 agents 模式 | thin factory delegate | Phase 4 是交互式 request-response，不适合 LangGraph node |
-| Phase 4 服务生命周期 | per-request，通过 factory 创建 | 服务构造函数需要 AsyncSession |
-| app/main.py DI | 抽取到 `src/api/wiring.py` | lifespan 只管生命周期事件 |
-| state_persistence | 合并为一个文件，两个 class | `DirectStatePersistence`(测试) + `SessionBoundStatePersistence`(生产) |
-| SessionBoundStandardizationService | 消除，改为方法参数传 session | 根本解法，不是包 wrapper |
-| DAO 边界 | 本次不动 (P2) | 纯物理位移，无解耦收益 |
-| 测试策略 | 可跟着改，覆盖率不降 | import 路径和 mock 目标会变 |
+| Scope | `backend/src/` + `backend/app/` | model-server is an independent microservice — untouched; frontend untouched; libs untouched |
+| Phase 4 agents pattern | thin factory delegate | Phase 4 is interactive request-response, not suited for LangGraph nodes |
+| Phase 4 service lifecycle | per-request, via factory | Service constructors require AsyncSession |
+| app/main.py DI | extract to `src/api/wiring.py` | lifespan should only manage lifecycle events |
+| state_persistence | merge into one file, two classes | `DirectStatePersistence` (tests) + `SessionBoundStatePersistence` (prod) |
+| SessionBoundStandardizationService | eliminate; pass session as method param | root-cause fix, not a wrapper |
+| DAO boundary | deferred (P2) | pure physical relocation, no decoupling benefit at this stage |
+| Test strategy | update alongside refactor, coverage must not drop | import paths and mock targets will change |
 
 ---
 
-## 现状问题清单
+## Current Problem Inventory
 
 ```
-A. API 层直接实例化 core 服务 ← P0
+A. API layer directly instantiates core services ← P0
    src/api/v1/evidence.py:29 → FeedbackService(session)
    src/api/v1/chat.py:43 → ChatService(session)
    src/api/v1/delta_audit.py:32 → DeltaAuditService()
    src/api/v1/source_link.py:27 → SourceLinker(session)
 
-B. Phase 4 没有 agents 层 ← P0
-   src/agents/ 只有 phase_1/2/3_adapter.py
+B. Phase 4 has no agents layer ← P0
+   src/agents/ only contains phase_1/2/3_adapter.py
 
-C. deps.py 和 main.py 各自创建独立 engine ← P0 (新增)
-   deps.py:15-21 → _get_session_factory() 懒加载创建 engine (实际 engine 创建在 line 19)
-   main.py:58-59 → lifespan 里 build_async_engine(cfg) + async_session_factory(engine)
-   结果: 两个连接池，两套事务隔离
+C. deps.py and main.py each create independent engines ← P0 (new)
+   deps.py:15-21 → _get_session_factory() lazy-inits engine (actual engine creation at line 19)
+   main.py:58-59 → lifespan calls build_async_engine(cfg) + async_session_factory(engine)
+   Result: two connection pools, two transaction isolation scopes
 
-D. EntityStandardizationService 构造函数绑 session ← P1
+D. EntityStandardizationService constructor binds session ← P1
    src/core/standardize_entities_and_align_knowledge/api.py:102
-   → def __init__(self, cfg, session) 迫使引入 SessionBoundStandardizationService wrapper
+   → def __init__(self, cfg, session) forces the SessionBoundStandardizationService wrapper
 
-E. state_persistence 两个文件做同一件事 ← P1
-   state_persistence.py → DirectStatePersistence(session) 测试用
-   state_persistence_factory.py → SessionBoundPersistence(session_factory) 生产用
+E. state_persistence — two files doing the same thing ← P1
+   state_persistence.py → DirectStatePersistence(session) for tests
+   state_persistence_factory.py → SessionBoundPersistence(session_factory) for prod
 
-F. app/main.py lifespan ~100 行 DI 逻辑 ← P1
-   应该抽到独立模块
+F. app/main.py lifespan ~100 lines of DI logic ← P1
+   should be extracted to a dedicated module
 
-G. DAO 边界模糊 ← P2 (本次不动)
-   标准化 repositories 在 core/ 而非 dao/
+G. DAO boundary blur ← P2 (deferred)
+   standardization repositories live in core/ instead of dao/
 
-H. 服务 facade 命名不统一 ← P2 (本次不动)
-   api.py / service.py / workflow.py 混用
+H. Service facade naming inconsistency ← P2 (deferred)
+   api.py / service.py / workflow.py used interchangeably
 
-I. delta_audit.py 直接 import DAO model ← P2 (本次不动，已记录)
+I. delta_audit.py directly imports DAO model ← P2 (deferred, documented)
    src/api/v1/delta_audit.py:19 → from src.dao.models import ReviewAuditEvent
-   用于 _to_response() 的 ORM→API 转换。不违反 api→dao 分层，
-   但和 contracts 模式不一致（应该用 contracts 类型而非暴露 ORM model）。
+   Used in _to_response() for ORM→API conversion. Does not violate api→dao layering,
+   but inconsistent with the contracts pattern (should use contract types, not raw ORM models).
 ```
 
 ---
 
-### Task 0: 准备 — 确认当前测试基线
+### Task 0: Preparation — establish current test baseline
 
-**目的:** 记录重构前的测试通过数，确保重构后不降。
+**Purpose:** Record the pre-refactor passing test count to ensure no regression.
 
-**Step 1: 运行全量后端测试**
+**Step 1: Run full backend test suite**
 
-Run:
 ```bash
 cd backend && python -m pytest tests/ -x --tb=short 2>&1 | tail -20
 ```
 
-**Step 2: 记录基线**
+**Step 2: Record baseline**
 
-将通过的测试总数记到 `progress.txt`：
+Write the passing test count to `progress.txt`:
 ```
 [2026-06-02] Architecture cleanup baseline: NNN tests passed [baseline]
 ```
 
 ---
 
-### Task 1: 统一会话工厂 — 消除 deps.py 和 main.py 的双 engine
+### Task 1: Unify session factory — eliminate dual engines in deps.py and main.py
 
 **Files:**
 - Modify: `backend/src/api/deps.py:1-28`
 - Modify: `backend/app/main.py:22-100`
 - Create: `backend/src/api/wiring.py`
 
-**Why first:** 这是后续所有改动的依赖 — Phase 4 factory 和 Phase 3 adapter 都需要同一个 session_factory。先统一工厂，再建上层。
+**Why first:** This is the dependency for all subsequent changes — both the Phase 4 factory and Phase 3 adapter need the same `session_factory`. Unify the factory first, then build on top.
 
 ---
 
-**Step 1: 创建 `src/api/wiring.py` — 提取 engine/session_factory 创建逻辑**
+**Step 1: Create `src/api/wiring.py` — extract engine/session_factory creation**
 
 ```python
 """Application dependency wiring — single source of truth for engine & session factory."""
@@ -133,9 +132,9 @@ async def dispose_engine() -> None:
 
 ---
 
-**Step 2: 改 `src/api/deps.py` — 委托给 wiring.py**
+**Step 2: Modify `src/api/deps.py` — delegate to wiring.py**
 
-将 `deps.py` 中的 `_engine`、`_session_factory`、`_get_session_factory` 和 `build_async_engine` import 全部删掉，改为从 wiring 导入：
+Remove `_engine`, `_session_factory`, `_get_session_factory`, and `build_async_engine` import from `deps.py`. Import from wiring instead:
 
 ```python
 """API dependencies."""
@@ -157,33 +156,33 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 ---
 
-**Step 3: 改 `app/main.py` lifespan — 使用 wiring 的 engine**
+**Step 3: Modify `app/main.py` lifespan — use wiring's engine**
 
-将 lifespan 中的：
+Replace in lifespan:
 ```python
 cfg = get_config()
 engine = build_async_engine(cfg)
 session_factory = async_session_factory(engine)
 ```
-替换为：
+with:
 ```python
 from src.api.wiring import get_session_factory, dispose_engine
 session_factory = get_session_factory()
 ```
 
-Teardown 中的 `await engine.dispose()` 替换为 `await dispose_engine()`。
+Replace teardown `await engine.dispose()` with `await dispose_engine()`.
 
 ---
 
-**Step 4: 运行测试验证**
+**Step 4: Verify with tests**
 
 ```bash
 cd backend && python -m pytest tests/ -x --tb=short 2>&1 | tail -5
 ```
 
-Expected: 测试数不变（和基线一致）。
+Expected: test count unchanged (matches baseline).
 
-**Step 5: 提交**
+**Step 5: Commit**
 
 ```bash
 git add backend/src/api/wiring.py backend/src/api/deps.py backend/app/main.py
@@ -192,16 +191,16 @@ git commit -m "refactor: unify session factory into wiring.py, eliminate dual en
 
 ---
 
-### Task 2: 创建 Phase 4 agents 层 factory
+### Task 2: Create Phase 4 agents-layer factory
 
 **Files:**
 - Create: `backend/src/agents/phase_4_factory.py`
 
-**目的:** API 层不再直接 `import` core 服务。所有 Phase 4 服务通过 factory 创建。
+**Purpose:** API routes must no longer `import` core services directly. All Phase 4 services are created through the factory.
 
 ---
 
-**Step 1: 创建 `src/agents/phase_4_factory.py`**
+**Step 1: Create `src/agents/phase_4_factory.py`**
 
 ```python
 """Phase 4 service factory — thin delegate between API and core services.
@@ -212,15 +211,17 @@ the agents-layer boundary so API routes never import core services directly.
 """
 from __future__ import annotations
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.visualize_evidence_with_expert_in_loop.chat_service import ChatService
-from src.core.visualize_evidence_with_expert_in_loop.delta_audit_service import DeltaAuditService
-from src.core.visualize_evidence_with_expert_in_loop.feedback_service import FeedbackService
+from src.core.visualize_evidence_with_expert_in_loop.delta_audit_service import (
+    DeltaAuditService,
+)
+from src.core.visualize_evidence_with_expert_in_loop.feedback_service import (
+    FeedbackService,
+)
 from src.core.visualize_evidence_with_expert_in_loop.source_linker import SourceLinker
 
 
@@ -252,7 +253,7 @@ class Phase4ServiceFactory:
 
 ---
 
-**Step 2: 运行测试验证模块可导入**
+**Step 2: Verify module is importable**
 
 ```bash
 cd backend && python -c "from src.agents.phase_4_factory import Phase4ServiceFactory; print('OK')"
@@ -260,7 +261,7 @@ cd backend && python -c "from src.agents.phase_4_factory import Phase4ServiceFac
 
 Expected: `OK`
 
-**Step 3: 提交**
+**Step 3: Commit**
 
 ```bash
 git add backend/src/agents/phase_4_factory.py
@@ -269,19 +270,19 @@ git commit -m "feat: add Phase4ServiceFactory as agents-layer boundary for Phase
 
 ---
 
-### Task 3: API 层改造 — Phase 4 路由通过 factory 委托
+### Task 3: Refactor API layer — Phase 4 routes delegate through factory
 
 **Files:**
 - Modify: `backend/src/api/v1/evidence.py`
 - Modify: `backend/src/api/v1/chat.py`
 - Modify: `backend/src/api/v1/delta_audit.py`
 - Modify: `backend/src/api/v1/source_link.py`
-- Modify: `backend/src/api/deps.py` (加 factory 依赖注入)
-- Modify: `backend/app/main.py` (创建 factory 并注入)
+- Modify: `backend/src/api/deps.py` (add factory dependency injection)
+- Modify: `backend/app/main.py` (create factory and inject)
 
 ---
 
-**Step 1: 在 `deps.py` 添加 `get_phase4_factory` 依赖**
+**Step 1: Add `get_phase4_factory` dependency to `deps.py`**
 
 ```python
 from src.agents.phase_4_factory import Phase4ServiceFactory
@@ -302,114 +303,123 @@ def get_phase4_factory() -> Phase4ServiceFactory:
 
 ---
 
-**Step 2: 改 `src/api/v1/evidence.py` — 用 factory 替代直接实例化**
+**Step 2: Modify `src/api/v1/evidence.py` — use factory instead of direct instantiation**
 
-Before:
+The full updated import block:
+
 ```python
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.api.deps import get_db_session, get_phase4_factory
+from src.core.visualize_evidence_with_expert_in_loop.contracts import (
+    EvidencePatchRequest,
+)
 from src.core.visualize_evidence_with_expert_in_loop.feedback_service import (
-    FeedbackService,
     PatchResult,
 )
-...
-service = FeedbackService(session)
 ```
 
-After:
+And the route body:
 ```python
-from src.api.deps import get_db_session, get_phase4_factory
-...
-factory = get_phase4_factory()
-service = factory.create_feedback_service(session)
+@router.patch("/{canonical_evidence_id}")
+async def patch_evidence(
+    canonical_evidence_id: UUID,
+    patch: EvidencePatchRequest,
+    session: AsyncSession = Depends(get_db_session),
+) -> PatchResult:
+    """Apply a patch to an evidence card and record audit event."""
+    factory = get_phase4_factory()
+    service = factory.create_feedback_service(session)
+    try:
+        return await service.patch_evidence(
+            canonical_evidence_id=canonical_evidence_id,
+            patch=patch,
+            reviewer_id=None,
+        )
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="Evidence not found")
 ```
 
-`PatchResult` 的 import 保留（它是 dataclass，不是服务）。
+Key change: `FeedbackService` is no longer imported; `PatchResult` (a dataclass) is retained.
 
 ---
 
-**Step 3: 改 `src/api/v1/chat.py` — 用 factory**
+**Step 3: Modify `src/api/v1/chat.py` — use factory**
 
-Before:
-```python
-from src.core.visualize_evidence_with_expert_in_loop.chat_service import (
-    ChatService,
-)
-...
-service = ChatService(session)
-```
-
-After:
 ```python
 from src.api.deps import get_db_session, get_phase4_factory
-...
+# ... other imports unchanged ...
+```
+
+Route body pattern:
+```python
 factory = get_phase4_factory()
 service = factory.create_chat_service(session)
 ```
 
+Remove `from src.core.visualize_evidence_with_expert_in_loop.chat_service import ChatService`.
+
 ---
 
-**Step 4: 改 `src/api/v1/delta_audit.py` — 用 factory**
+**Step 4: Modify `src/api/v1/delta_audit.py` — use factory**
 
-Before:
-```python
-from src.core.visualize_evidence_with_expert_in_loop.delta_audit_service import (
-    DeltaAuditService,
-)
-...
-service = DeltaAuditService()
-```
-
-After:
 ```python
 from src.api.deps import get_phase4_factory
-...
+# ... other imports unchanged ...
+```
+
+Route body:
+```python
 service = get_phase4_factory().delta_audit
 ```
 
+Remove `from src.core.visualize_evidence_with_expert_in_loop.delta_audit_service import DeltaAuditService`.
+
 ---
 
-**Step 5: 改 `src/api/v1/source_link.py` — 用 factory**
+**Step 5: Modify `src/api/v1/source_link.py` — use factory**
 
-Before:
-```python
-from src.core.visualize_evidence_with_expert_in_loop.source_linker import (
-    SourceLinker,
-)
-...
-linker = SourceLinker(session)
-```
-
-After:
 ```python
 from src.api.deps import get_db_session, get_phase4_factory
-...
+# ... other imports unchanged ...
+```
+
+Route body:
+```python
 factory = get_phase4_factory()
 linker = factory.create_source_linker(session)
 ```
 
+Remove `from src.core.visualize_evidence_with_expert_in_loop.source_linker import SourceLinker`.
+
 ---
 
-**Step 6: 在 `app/main.py` lifespan 创建并注入 factory**
+**Step 6: Create and inject factory in `app/main.py` lifespan**
 
 ```python
 from src.agents.phase_4_factory import Phase4ServiceFactory
 from src.api.deps import set_phase4_factory
 
-# 在 lifespan startup 中，set_pipeline_runner 附近：
+# In lifespan startup, near set_pipeline_runner:
 phase4_factory = Phase4ServiceFactory(cfg=cfg)
 set_phase4_factory(phase4_factory)
 ```
 
 ---
 
-**Step 7: 运行测试**
+**Step 7: Run tests**
 
 ```bash
 cd backend && python -m pytest tests/ -x --tb=short 2>&1 | tail -5
 ```
 
-Expected: 测试数较基线不变（只有 API 路由 import 路径变了，无行为变化）。
+Expected: test count unchanged vs baseline (only API route import paths changed; no behavioral change).
 
-**Step 8: 提交**
+**Step 8: Commit**
 
 ```bash
 git add backend/src/api/v1/evidence.py backend/src/api/v1/chat.py \
@@ -420,17 +430,18 @@ git commit -m "refactor: Phase 4 API routes delegate through Phase4ServiceFactor
 
 ---
 
-### Task 4: 重构 EntityStandardizationService — 消除 SessionBound wrapper
+### Task 4: Refactor EntityStandardizationService — eliminate SessionBound wrapper
 
 **Files:**
 - Modify: `backend/src/core/standardize_entities_and_align_knowledge/api.py`
 - Modify: `backend/src/agents/phase_3_adapter.py`
 - Delete: `backend/src/agents/session_bound_standardization.py`
 - Modify: `backend/app/main.py`
+- Modify: `backend/tests/agents/test_phase_3_adapter.py`
 
 ---
 
-**Step 1: 改 `EntityStandardizationService.__init__` — 去掉 session 参数**
+**Step 1: Modify `EntityStandardizationService.__init__` — remove session parameter**
 
 Before (`api.py:102`):
 ```python
@@ -447,7 +458,7 @@ def __init__(self, cfg: Any):
 
 ---
 
-**Step 2: 改 `run_dual_result` 签名 — session 作为方法参数**
+**Step 2: Modify `run_dual_result` signature — session as method parameter**
 
 Before:
 ```python
@@ -484,10 +495,10 @@ async def run_dual_result(
     return await StandardizationService(matcher, repository).run(input_data)
 ```
 
-注意：内部所有 `self._session` 引用改为局部变量 `session`。重点——`SimilarityTerminologyMatcher` 的构造也引用了 `self._session`，必须同步改：
+All internal `self._session` references must be replaced with the local `session` variable. **Critical:** `SimilarityTerminologyMatcher` construction also references `self._session` — must be updated in sync:
 
 ```python
-# api.py ~line 126 — PgvectorTerminologyRepository 也绑了 self._session
+# api.py ~line 126 — PgvectorTerminologyRepository also binds self._session
 similarity_matcher = SimilarityTerminologyMatcher(
     ...
     repository=PgvectorTerminologyRepository(session),  # ← self._session → session
@@ -495,11 +506,11 @@ similarity_matcher = SimilarityTerminologyMatcher(
 )
 ```
 
-完整变更：`StandardizationRepository(self._session)` → `StandardizationRepository(session)`，`PgvectorTerminologyRepository(self._session)` → `PgvectorTerminologyRepository(session)`。
+Full change set: `StandardizationRepository(self._session)` → `StandardizationRepository(session)`, `PgvectorTerminologyRepository(self._session)` → `PgvectorTerminologyRepository(session)`.
 
 ---
 
-**Step 3: 改 `Phase3Adapter` — 持有 service + session_factory，自己管理 session**
+**Step 3: Modify `Phase3Adapter` — hold service + session_factory, manage session itself**
 
 Before (`phase_3_adapter.py`):
 ```python
@@ -537,7 +548,7 @@ class Phase3Adapter:
 
 ---
 
-**Step 4: 删除 `session_bound_standardization.py`**
+**Step 4: Delete `session_bound_standardization.py`**
 
 ```bash
 rm backend/src/agents/session_bound_standardization.py
@@ -545,7 +556,7 @@ rm backend/src/agents/session_bound_standardization.py
 
 ---
 
-**Step 5: 改 `app/main.py` lifespan — Phase3Adapter 构造方式**
+**Step 5: Update `app/main.py` lifespan — Phase3Adapter construction**
 
 Before:
 ```python
@@ -569,18 +580,18 @@ phase_adapters = {
 
 ---
 
-**Step 6: 更新 `Phase3Adapter` 测试**
+**Step 6: Update `Phase3Adapter` tests**
 
-`tests/agents/test_phase_3_adapter.py` 实际从未 import `SessionBoundStandardizationService`，测试直接用 `MagicMock()` 构造 mock 对象。需要改的是：
+`tests/agents/test_phase_3_adapter.py` never actually imports `SessionBoundStandardizationService` — tests construct mock objects directly with `MagicMock()`. Changes needed:
 
-1. `Phase3Adapter` 签名变了（多了一个 `session_factory` 参数），构造时传入 `mock_session_factory = MagicMock()`
-2. `mock_standardization.run_dual_result` 签名变了（多了 `session` 作为第一个位置参数），更新 `AsyncMock` 的断言，确认调用时传入了 session
+1. `Phase3Adapter` constructor signature changed (added `session_factory` parameter) — pass `mock_session_factory = MagicMock()` at construction time.
+2. `mock_standardization.run_dual_result` signature changed (added `session` as first positional arg) — update `AsyncMock` assertions to confirm `session` was passed.
 
-改动量很小——本质上是加一个 mock 参数 + 调整一个方法签名的断言。
+The change is minimal: add one mock parameter + adjust one method signature assertion.
 
 ---
 
-**Step 7: 运行测试**
+**Step 7: Run tests**
 
 ```bash
 cd backend && python -m pytest tests/ -x --tb=short 2>&1 | tail -5
@@ -588,7 +599,7 @@ cd backend && python -m pytest tests/ -x --tb=short 2>&1 | tail -5
 
 ---
 
-**Step 8: 提交**
+**Step 8: Commit**
 
 ```bash
 git add backend/src/core/standardize_entities_and_align_knowledge/api.py \
@@ -601,22 +612,22 @@ git commit -m "refactor: pass session as method param to EntityStandardizationSe
 
 ---
 
-### Task 5: 合并 state_persistence 两个文件
+### Task 5: Merge state_persistence into one file
 
 **Files:**
-- Modify: `backend/src/agents/state_persistence.py` (合并两个 class 进来)
+- Modify: `backend/src/agents/state_persistence.py` (merge both classes)
 - Delete: `backend/src/agents/state_persistence_factory.py`
-- Modify: `backend/src/agents/orchestrator.py` (更新 import)
-- Modify: `backend/src/agents/runner.py` (更新 import)
-- Modify: `backend/app/main.py` (更新 import)
-- Modify: `backend/tests/agents/test_state_persistence.py` (更新 import)
-- Modify: `backend/tests/agents/test_state_persistence_layer.py` (更新 import)
+- Modify: `backend/src/agents/orchestrator.py` (update import)
+- Modify: `backend/src/agents/runner.py` (update import)
+- Modify: `backend/app/main.py` (update import)
+- Modify: `backend/tests/agents/test_state_persistence.py` (update import)
+- Modify: `backend/tests/agents/test_state_persistence_layer.py` (update import)
 
 ---
 
-**Step 1: 合并 — 在 `state_persistence.py` 中加 `SessionBoundStatePersistence`**
+**Step 1: Merge — add `SessionBoundStatePersistence` to `state_persistence.py`**
 
-保留原有 `StatePersistenceService`（重命名为 `DirectStatePersistence`），追加 `SessionBoundStatePersistence`：
+Rename the existing `StatePersistenceService` to `DirectStatePersistence`, append `SessionBoundStatePersistence`:
 
 ```python
 """State persistence layer for pipeline orchestrator.
@@ -705,30 +716,27 @@ class SessionBoundStatePersistence:
             if record is None:
                 return None
             return PipelineGraphState.model_validate(record.state_json)
-
-
-
 ```
 
 ---
 
-**Step 2: 更新所有 import — orchestrator, runner, main, tests**
+**Step 2: Update all imports — orchestrator, runner, main, tests**
 
-由于 `StatePersistenceService` alias 已删除，所有消费者改为导入具体类：
+Since `StatePersistenceService` alias is removed, all consumers import the concrete class:
 
-- `orchestrator.py`: 
-  - 删除 `from src.agents.state_persistence import StatePersistenceService`
-  - 改为 `from src.agents.state_persistence import SessionBoundStatePersistence`
-  - `__init__` 类型标注从 `StatePersistenceService` 改为 `SessionBoundStatePersistence`
-- `runner.py`: 
-  - 同上，类型标注改为 `SessionBoundStatePersistence`
+- `orchestrator.py`:
+  - Remove `from src.agents.state_persistence import StatePersistenceService`
+  - Replace with `from src.agents.state_persistence import SessionBoundStatePersistence`
+  - `__init__` type annotation: `StatePersistenceService` → `SessionBoundStatePersistence`
+- `runner.py`:
+  - Same: type annotation → `SessionBoundStatePersistence`
 - `app/main.py`: `from src.agents.state_persistence import SessionBoundStatePersistence`
 - `tests/agents/test_state_persistence.py`: `from src.agents.state_persistence import DirectStatePersistence`
-- `tests/agents/test_state_persistence_layer.py`: 同上
+- `tests/agents/test_state_persistence_layer.py`: same
 
 ---
 
-**Step 3: 删除 `state_persistence_factory.py`**
+**Step 3: Delete `state_persistence_factory.py`**
 
 ```bash
 rm backend/src/agents/state_persistence_factory.py
@@ -736,7 +744,7 @@ rm backend/src/agents/state_persistence_factory.py
 
 ---
 
-**Step 4: 运行测试**
+**Step 4: Run tests**
 
 ```bash
 cd backend && python -m pytest tests/agents/test_state_persistence*.py -x --tb=short
@@ -744,7 +752,7 @@ cd backend && python -m pytest tests/agents/test_state_persistence*.py -x --tb=s
 
 ---
 
-**Step 5: 提交**
+**Step 5: Commit**
 
 ```bash
 git add backend/src/agents/state_persistence.py \
@@ -759,15 +767,15 @@ git commit -m "refactor: merge state_persistence_factory into state_persistence 
 
 ---
 
-### Task 6: 抽取 app/main.py lifespan DI 到 wiring.py
+### Task 6: Extract app/main.py lifespan DI into wiring.py
 
 **Files:**
-- Modify: `backend/src/api/wiring.py` (追加 `wire_dependencies` 函数)
-- Modify: `backend/app/main.py` (lifespan 缩到 ~10 行)
+- Modify: `backend/src/api/wiring.py` (append `wire_dependencies` function)
+- Modify: `backend/app/main.py` (lifespan reduced to ~10 lines)
 
 ---
 
-**Step 1: 在 `wiring.py` 追加 `wire_dependencies(app)` 函数**
+**Step 1: Append `wire_dependencies(app)` to `wiring.py`**
 
 ```python
 def wire_dependencies(app) -> None:
@@ -864,7 +872,7 @@ def wire_dependencies(app) -> None:
 
 ---
 
-**Step 2: 精简 `app/main.py` lifespan**
+**Step 2: Slim down `app/main.py` lifespan**
 
 After:
 ```python
@@ -881,11 +889,11 @@ async def lifespan(app: FastAPI):
     logger.info("ACMG Lingua backend stopped")
 ```
 
-删除 lifespan 中所有被移走的 import。
+Delete all imports that were moved into `wire_dependencies()`.
 
 ---
 
-**Step 3: 运行测试**
+**Step 3: Run tests**
 
 ```bash
 cd backend && python -m pytest tests/ -x --tb=short 2>&1 | tail -5
@@ -893,7 +901,7 @@ cd backend && python -m pytest tests/ -x --tb=short 2>&1 | tail -5
 
 ---
 
-**Step 4: 提交**
+**Step 4: Commit**
 
 ```bash
 git add backend/src/api/wiring.py backend/app/main.py
@@ -902,38 +910,38 @@ git commit -m "refactor: extract DI composition from lifespan into wiring.wire_d
 
 ---
 
-### Task 7: 最终验证 + 文档
+### Task 7: Final verification + documentation
 
 **Files:**
 - Modify: `backend/progress.txt`
-- Create: `backend/lesson.md` (如不存在)
+- Create: `backend/lesson.md` (if not present)
 
 ---
 
-**Step 1: 运行全量测试确认**
+**Step 1: Run full test suite to confirm**
 
 ```bash
 cd backend && python -m pytest tests/ -v --tb=short 2>&1 | tail -10
 ```
 
-确认测试数 ≥ 基线。
+Confirm test count ≥ baseline.
 
 ---
 
-**Step 2: 验证依赖方向 — API 层不再直接 import core 服务类**
+**Step 2: Verify dependency direction — API layer no longer imports core service classes**
 
-contracts（Pydantic 模型/类型定义）不算服务——API 路由可以 import 它们。
-只检查服务类 import：
+Contracts (Pydantic models / type definitions) are NOT services — API routes may import them.
+Only check for service class imports:
 
 ```bash
 cd backend && grep -rn "from src.core.visualize_evidence.*import.*Service\|from src.core.visualize_evidence.*import.*Linker" src/api/ && echo "VIOLATION FOUND" || echo "CLEAN"
 ```
 
-Expected: `CLEAN` (contracts imports like `EvidencePatchRequest`, `ChatMessageResponse`, `DeltaEntry`, `BilingualSpan`, `TrackSpan` 是允许的)
+Expected: `CLEAN` (contracts imports like `EvidencePatchRequest`, `ChatMessageResponse`, `DeltaEntry`, `BilingualSpan`, `TrackSpan` are allowed).
 
 ---
 
-**Step 3: 更新 progress.txt**
+**Step 3: Update progress.txt**
 
 ```
 [2026-06-02] Architecture cleanup: unified session factory, Phase 4 factory, removed SessionBound wrapper, merged state_persistence, extracted wiring.py [completed]
@@ -941,7 +949,7 @@ Expected: `CLEAN` (contracts imports like `EvidencePatchRequest`, `ChatMessageRe
 
 ---
 
-**Step 4: 记录 lesson.md**
+**Step 4: Record lesson.md**
 
 ```markdown
 # Architecture Cleanup Lessons
@@ -957,14 +965,14 @@ API routes (`src/api/v1/`) directly instantiated core services, bypassing the `a
 4. Merged `state_persistence.py` and `state_persistence_factory.py` into one file with two classes.
 
 ## Prevention
-- New API routes MUST NOT import from `src/core/` directly.
+- New API routes MUST NOT import from `src/core/` service modules directly.
 - New service facades MUST NOT require `AsyncSession` in `__init__` — pass it as method parameter or use factory.
 - All DI assembly goes in `src/api/wiring.py`, not in `app/main.py` lifespan.
 ```
 
 ---
 
-**Step 5: 提交**
+**Step 5: Commit**
 
 ```bash
 git add backend/progress.txt backend/lesson.md
@@ -973,30 +981,30 @@ git commit -m "docs: record architecture cleanup completion and lessons learned"
 
 ---
 
-## 完成检查清单
+## Completion Checklist
 
-- [ ] `deps.py` 和 `main.py` 共享同一个 session_factory（Task 1）
-- [ ] `Phase4ServiceFactory` 存在且被 API 路由使用（Task 2 + 3）
-- [ ] `src/api/v1/*.py` 不含 core 服务类 import（contracts/类型 import 允许）（Task 3）
-- [ ] `EntityStandardizationService.__init__` 无 session 参数（Task 4）
-- [ ] `session_bound_standardization.py` 已删除（Task 4）
-- [ ] `state_persistence_factory.py` 已删除（Task 5）
-- [ ] `state_persistence.py` 包含 `DirectStatePersistence` + `SessionBoundStatePersistence`（Task 5）
-- [ ] `app/main.py` lifespan ≤ 15 行（Task 6）
-- [ ] `wiring.py` 的 `wire_dependencies()` 包含完整服务图（Task 6）
-- [ ] 全量测试通过，数量 ≥ 基线（Task 7）
-- [ ] progress.txt 和 lesson.md 已更新（Task 7）
+- [ ] `deps.py` and `main.py` share the same `session_factory` (Task 1)
+- [ ] `Phase4ServiceFactory` exists and is used by API routes (Tasks 2 + 3)
+- [ ] `src/api/v1/*.py` contains no core service class imports (contracts/type imports allowed) (Task 3)
+- [ ] `EntityStandardizationService.__init__` has no `session` parameter (Task 4)
+- [ ] `session_bound_standardization.py` is deleted (Task 4)
+- [ ] `state_persistence_factory.py` is deleted (Task 5)
+- [ ] `state_persistence.py` contains `DirectStatePersistence` + `SessionBoundStatePersistence` (Task 5)
+- [ ] `app/main.py` lifespan ≤ 15 lines (Task 6)
+- [ ] `wiring.py`'s `wire_dependencies()` contains the full service graph (Task 6)
+- [ ] Full test suite passes, count ≥ baseline (Task 7)
+- [ ] progress.txt and lesson.md updated (Task 7)
 
 ---
 
-## 不改的（明确排除）
+## Explicitly Excluded
 
-| 范围 | 理由 |
+| Scope | Rationale |
 |---|---|
-| `services/model-server/` | 独立微服务，隔离干净 |
-| `frontend/` | 本次只做后端 |
-| `backend/libs/` | Rust PyO3 扩展，无架构问题 |
-| DAO 边界（repository 迁移到 dao/） | P2，纯物理位移，和本次解耦独立 |
-| 服务 facade 命名统一 | P2，不影响分层 |
-| Phase 4 纳入 LangGraph | 设计决定：交互式审查不适合 pipeline graph |
-| `delta_audit.py:19` 直接 import DAO model | P2，不违反分层但和 contracts 模式不一致，改后仍然存在 |
+| `services/model-server/` | Independent microservice, cleanly isolated |
+| `frontend/` | Backend-only refactor |
+| `backend/libs/` | Rust PyO3 extensions, no architectural issues |
+| DAO boundary (repository migration to dao/) | P2, pure physical relocation, independent of this decoupling |
+| Service facade naming standardization | P2, does not affect layering |
+| Phase 4 in LangGraph | Design decision: interactive review is not suited for pipeline graph |
+| `delta_audit.py:19` direct DAO model import | P2, does not violate layering but inconsistent with contracts pattern; remains after refactor |
