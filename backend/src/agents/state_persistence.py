@@ -14,6 +14,11 @@ class StatePersistenceService:
     """Save and load PipelineGraphState to/from PostgreSQL.
 
     Called after each phase completes for crash recovery.
+
+    WARNING: This class holds a single session reference. In production, use
+    SessionBoundPersistence (state_persistence_factory.py) instead, which
+    creates a fresh session per operation to avoid stale-session bugs.
+    This class is intended for unit tests with short-lived sessions only.
     """
 
     def __init__(self, session: AsyncSession):

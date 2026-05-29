@@ -130,5 +130,6 @@ async def test_phase_3_adapter_skipped_when_zero_standardized(
             ):
                 result_state = await adapter.run(sample_state)
 
-    assert result_state.phase_3_status.status == PhaseStatus.SKIPPED
+    assert result_state.phase_3_status.status == PhaseStatus.COMPLETED
     assert result_state.skip_phase_3_reason == SkipPhase3Reason.NO_CANDIDATES
+    assert result_state.phase_3_status.summary["skip_reason"] == "no_candidates"

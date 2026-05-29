@@ -80,7 +80,10 @@ class ParseDocumentService:
         logger.info(f"Saved markdown to {md_path}")
 
         meta_path = output_path / "metadata.json"
-        files_io.File(str(meta_path)).write(json.dumps(result.metadata.model_dump(), indent=2))
+        combined_meta = result.metadata.model_dump()
+        combined_meta["pages"] = [p.model_dump() for p in result.pages]
+        combined_meta["content_blocks"] = result.content_blocks
+        files_io.File(str(meta_path)).write(json.dumps(combined_meta, indent=2))
         logger.info(f"Saved metadata to {meta_path}")
 
         images_dir: Path | None = None

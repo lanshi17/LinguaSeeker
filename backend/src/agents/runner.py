@@ -43,9 +43,7 @@ class PipelineRunner:
             async with self._semaphore:
                 logger.info("Pipeline execution started: run={}", run_id)
                 try:
-                    initial_state.started_at = datetime.now().isoformat()
                     result = await self._orchestrator.run(initial_state)
-                    result.completed_at = datetime.now().isoformat()
                     self._last_states[run_id] = result
                     logger.info("Pipeline execution completed: run={}", run_id)
                     return result

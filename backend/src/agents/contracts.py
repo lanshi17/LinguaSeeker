@@ -84,6 +84,40 @@ class PermanentPhaseError(PhaseError):
     pass
 
 
+def build_retryable_errors() -> tuple[type, ...]:
+    """Build the shared tuple of retryable error types.
+
+    Includes base transient errors plus optional project-specific ones
+    (httpx, openai, MinerU) that may not be installed.
+    """
+    errors: tuple[type, ...] = (ConnectionError, TimeoutError, OSError)
+
+    try:
+        import httpx
+
+        errors += (httpx.TimeoutException,)
+    except ImportError:
+        pass
+
+    try:
+        import openai
+
+        errors += (openai.APITimeoutError, openai.RateLimitError)
+    except ImportError:
+        pass
+
+    try:
+        from src.core.ingest_and_digitize_data.parse_document.exceptions import (
+            MinerUTimeoutError,
+        )
+
+        errors += (MinerUTimeoutError,)
+    except ImportError:
+        pass
+
+    return errors
+
+
 # ── Phase output models (typed, not bare dict) ─────────────────────────────
 
 
