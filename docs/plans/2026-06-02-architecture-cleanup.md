@@ -47,7 +47,7 @@ D. EntityStandardizationService constructor binds session ← P1
    → def __init__(self, cfg, session) forces the SessionBoundStandardizationService wrapper
 
 E. state_persistence — two files doing the same thing ← P1
-   state_persistence.py → DirectStatePersistence(session) for tests
+   state_persistence.py → StatePersistenceService(session) for tests (will be renamed to DirectStatePersistence)
    state_persistence_factory.py → SessionBoundPersistence(session_factory) for prod
 
 F. app/main.py lifespan ~100 lines of DI logic ← P1
@@ -93,12 +93,15 @@ Write the passing test count to `progress.txt`:
 - Modify: `backend/app/main.py:22-100`
 - Create: `backend/src/api/wiring.py`
 
+
+
 **Why first:** This is the dependency for all subsequent changes — both the Phase 4 factory and Phase 3 adapter need the same `session_factory`. Unify the factory first, then build on top.
+
+> **Note — circular import avoidance:** After Task 6, `wiring.py` will import from `deps.py` (`set_phase4_factory`). `deps.py` imports from `wiring.py` (`get_session_factory`). This circular reference is safe because the `deps.py` → `wiring.py` direction is evaluated first (Task 1), and the `wiring.py` → `deps.py` direction (Task 6) uses local imports inside `wire_dependencies()` which execute at call time, not module load time.
 
 ---
 
 **Step 1: Create `src/api/wiring.py` — extract engine/session_factory creation**
-
 ```python
 """Application dependency wiring — single source of truth for engine & session factory."""
 from __future__ import annotations
@@ -582,12 +585,19 @@ phase_adapters = {
 
 **Step 6: Update `Phase3Adapter` tests**
 
-`tests/agents/test_phase_3_adapter.py` never actually imports `SessionBoundStandardizationService` — tests construct mock objects directly with `MagicMock()`. Changes needed:
 
-1. `Phase3Adapter` constructor signature changed (added `session_factory` parameter) — pass `mock_session_factory = MagicMock()` at construction time.
-2. `mock_standardization.run_dual_result` signature changed (added `session` as first positional arg) — update `AsyncMock` assertions to confirm `session` was passed.
-
-The change is minimal: add one mock parameter + adjust one method signature assertion.
+1. `Phase3Adapter` constructor signature changed (added `session_factory` parameter) — create a mock session factory at construction time:
+   ```python
+   mock_session = AsyncMock()
+   mock_session_factory = MagicMock()
+   mock_session_factory.return_value.__aenter__.return_value = mock_session
+   adapter = Phase3Adapter(
+       standardization_service=mock_standardization,
+       session_factory=mock_session_factory,
+   )
+   ```
+   *(Note: `MagicMock()` alone does not support `async with`; the `__aenter__` mock is required.)*
+2. `mock_standardization.run_dual_result` signature changed (added `session` as first positional arg) — update `AsyncMock` call assertions to expect `mock_session` as first argument.
 
 ---
 
@@ -620,7 +630,6 @@ git commit -m "refactor: pass session as method param to EntityStandardizationSe
 - Modify: `backend/src/agents/orchestrator.py` (update import)
 - Modify: `backend/src/agents/runner.py` (update import)
 - Modify: `backend/app/main.py` (update import)
-- Modify: `backend/tests/agents/test_state_persistence.py` (update import)
 - Modify: `backend/tests/agents/test_state_persistence_layer.py` (update import)
 
 ---
@@ -644,7 +653,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.agents.contracts import PipelineGraphState
-from src.dao.models import PipelineRunState
+from src.dao.postgresql.models import PipelineRunState
 
 
 class DirectStatePersistence:
@@ -731,8 +740,7 @@ Since `StatePersistenceService` alias is removed, all consumers import the concr
 - `runner.py`:
   - Same: type annotation → `SessionBoundStatePersistence`
 - `app/main.py`: `from src.agents.state_persistence import SessionBoundStatePersistence`
-- `tests/agents/test_state_persistence.py`: `from src.agents.state_persistence import DirectStatePersistence`
-- `tests/agents/test_state_persistence_layer.py`: same
+- `tests/agents/test_state_persistence_layer.py`: `from src.agents.state_persistence import DirectStatePersistence`
 
 ---
 
@@ -759,7 +767,6 @@ git add backend/src/agents/state_persistence.py \
         backend/src/agents/orchestrator.py \
         backend/src/agents/runner.py \
         backend/app/main.py \
-        tests/agents/test_state_persistence.py \
         tests/agents/test_state_persistence_layer.py
 git rm backend/src/agents/state_persistence_factory.py
 git commit -m "refactor: merge state_persistence_factory into state_persistence as SessionBoundStatePersistence"
@@ -870,13 +877,25 @@ def wire_dependencies(app) -> None:
     set_phase4_factory(phase4_factory)
 ```
 
+> **Design note:** All imports inside `wire_dependencies()` are local (function-body) imports. This avoids the circular dependency `wiring.py → deps.py` vs `deps.py → wiring.py` at module load time. The function is only called from `lifespan` startup, by which point `deps.py` is already fully loaded.
+
 ---
 
-**Step 2: Slim down `app/main.py` lifespan**
 
-After:
+After (complete file):
+
 ```python
+"""FastAPI application entry point."""
+from __future__ import annotations
+
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from loguru import logger
+
+from src.api.v1.router import router as v1_router
 from src.api.wiring import wire_dependencies, dispose_engine
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -887,9 +906,25 @@ async def lifespan(app: FastAPI):
     yield
     await dispose_engine()
     logger.info("ACMG Lingua backend stopped")
+
+
+app = FastAPI(
+    title="ACMG Lingua",
+    description="Multi-Agent infrastructure platform for medical genetics literature automation",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+app.include_router(v1_router)
+
+
+@app.get("/health")
+async def health() -> dict[str, str]:
+    """Health check endpoint."""
+    return {"status": "ok"}
 ```
 
-Delete all imports that were moved into `wire_dependencies()`.
+Delete all imports that were moved into `wire_dependencies()` (the local imports inside the old lifespan function — `build_async_engine`, `async_session_factory`, all agent/core service imports, etc.).
 
 ---
 
