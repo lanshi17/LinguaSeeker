@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.agents.contracts import PipelineGraphState
-from src.dao.models import PipelineRunState
+from src.dao.postgresql.models import PipelineRunState
 
 
 class StatePersistenceService:

@@ -47,8 +47,8 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
 from src.core.visualize_evidence_with_expert_in_loop.delta_audit_service import DeltaAuditService
 from src.core.visualize_evidence_with_expert_in_loop.feedback_service import FeedbackService
 from src.core.visualize_evidence_with_expert_in_loop.source_linker import SourceLinker
-from src.dao.connection import async_session_factory, build_async_engine, get_async_session
-from src.dao.models import CanonicalEvidenceItem, ProcessingRun
+from src.dao.postgresql.connection import async_session_factory, build_async_engine, get_async_session
+from src.dao.postgresql.models import CanonicalEvidenceItem, ProcessingRun
 
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]

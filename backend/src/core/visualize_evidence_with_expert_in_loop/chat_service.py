@@ -11,7 +11,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     ChatMessageResponse,
     ChatSessionResponse,
 )
-from src.dao.models import (
+from src.dao.postgresql.models import (
     CanonicalEvidenceItem,
     ChatMessage,
     ChatSession,

@@ -16,7 +16,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
 from src.core.visualize_evidence_with_expert_in_loop.delta_audit_service import (
     DeltaAuditService,
 )
-from src.dao.models import ReviewAuditEvent
+from src.dao.postgresql.models import ReviewAuditEvent
 
 router = APIRouter()
 
