@@ -1,4 +1,4 @@
-# Pipeline Orchestrator Implementation Plan (v2 — Post-Audit)
+# Pipeline Orchestrator Implementation Plan (v4 — Audit-Complete)
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
@@ -8,17 +8,76 @@
 
 **Tech Stack:** LangGraph 1.2+, Pydantic 2.x, SQLAlchemy 2.x async, FastAPI, asyncio.Semaphore for concurrency control
 
-**Key corrections from v1 audit:**
-- Phase 4 removed from graph (Issue 1)
-- Upstream dependency validation for single-phase mode (Issue 2)
-- Classified error hierarchy: `RetryablePhaseError` / `PermanentPhaseError` (Issue 3)
-- State persisted to PostgreSQL after each phase (Issue 4)
-- Phase 2 adapter uses `EvidenceExtractionService.run_dual()` (Issue 5)
-- Structured `PhaseErrorDetail` model (Issue 6)
-- `PipelineRunner.get_last_state()` falls back to PostgreSQL (Issue 7)
-- Per-phase `PhaseStatusDetail` in status response (Issue 8)
-- Session-per-request pattern (Issue 9)
-- Typed output models: `Phase1Output`, `Phase2Output`, `Phase3Output` (Issue 10)
+---
+
+## v3 Change Log (from v2)
+
+| Issue ID | Category | Fix Applied |
+|----------|----------|-------------|
+| A2 | Structure | Added Task 0: create `backend/tests/agents/` directory and `__init__.py` |
+| B1 | Type mismatch | Task 1: Added note that `processing_run_id` and `source_document_id` are UUID strings (JSON-serialized), with explicit validation in persistence layer |
+| B2 | Field names | Task 4: Fixed `SavedFiles` field names: `md_path`, `metadata_path`, `output_dir`, `created_at`, `images_dir` |
+| B3 | Field names | Task 4: Fixed `MinerULocalBatchSaveResult` field names: `parse_result`, `saved_files` |
+| B4 | Field names | Task 4: Fixed adapter to read `.saved_files`, `.md_path`, `.metadata_path`, `.images_dir` |
+| B5 | Wrong type | Task 5: Test now mocks `EvidenceExtractionResult` (Pydantic), not `EvidenceExtractionState` (dataclass) |
+| B6 | Wrong method | Task 5: Adapter injects `EvidenceExtractionService` and calls `.run_dual()` |
+| B7 | Incomplete fields | Task 5: Adapter uses `build_dual_documents_from_output_dir()` instead of manual `TrackDocument` construction |
+| B8 | Call style | Task 6: Fixed `run_dual_result(dual_result, *, source_document_id=..., processing_run_id=...)` call style |
+| C2 | Wrong import | Task 11: Fixed lifespan to use `DocumentParseOrchestrator(remote, local)` instead of non-existent `MinerURemoteOrchestrator` |
+| D4 | Coarse flag | Task 6: Changed `skip_phase_3: bool` to `skip_phase_3_reason: SkipPhase3Reason | None` enum with `NOT_RELEVANT`, `NO_ENTITIES`, `NO_CANDIDATES` |
+| D5 | Wrong file | Task 5: Phase 2 adapter reads from `Phase1Output.md_path` (full markdown), not `metadata_path` (metadata only) |
+| F1 | Migration path | Task 2: Fixed alembic command to run from `backend/` (where `alembic.ini` lives) |
+
+### v4 Change Log (from v3)
+
+| Issue ID | Category | Fix Applied |
+|----------|----------|-------------|
+| N1 | API contract | Task 10: Added source-specific validation to `PipelineRunRequest` — `source_type=local` requires `content_base64`, `source_type=online` requires `query` or `identifiers` |
+| N2 | API contract | Task 10: Added `target_phase` range validation `Field(ge=1, le=3)` |
+| N3 | API contract | Task 10: Added duplicate run prevention — checks for existing in-progress run before starting |
+| N7 | Field names | Task 5+6: Phase 2 adapter now saves extraction result to `extraction_result_path`; Phase 3 reads from it instead of translation JSON |
+| N11 | Known limitation | Task 12: Documented that POST `/runs/{id}/retry` is not implemented in v1 |
+| N12 | Lifecycle | Task 9: `PipelineRunner.start()` persists initial PENDING state before acquiring semaphore |
+
+### v5 Change Log (from v4)
+
+| Issue ID | Category | Fix Applied |
+|----------|----------|-------------|
+| N12-indent | Syntax error | Task 9: Fixed broken indentation in `_run_pipeline()` — N12 persist lines were outside `async with self._semaphore:` block, causing IndentationError |
+| N3-dedup | Logic error | Task 1+9+10: Added `source_key` field to `PipelineGraphState`; API route sets it from request; runner compares against it instead of `source_document_id` (UUID) |
+
+---
+
+## Task 0: Project Setup
+
+**Purpose:** Create directory structure for orchestrator tests.
+
+**Files:**
+- Create: `backend/tests/agents/__init__.py`
+- Create: `backend/tests/agents/test_*.py` (empty placeholders)
+
+**Steps:**
+
+```bash
+mkdir -p backend/tests/agents
+touch backend/tests/agents/__init__.py
+touch backend/tests/agents/test_contracts.py
+touch backend/tests/agents/test_state_persistence.py
+touch backend/tests/agents/test_phase_1_adapter.py
+touch backend/tests/agents/test_phase_2_adapter.py
+touch backend/tests/agents/test_phase_3_adapter.py
+touch backend/tests/agents/test_orchestrator.py
+touch backend/tests/agents/test_concurrency.py
+touch backend/tests/agents/test_runner.py
+```
+
+**Verify:**
+```bash
+cd backend
+uv run pytest tests/agents/ -v
+```
+
+Expected: No tests collected (files are empty).
 
 ---
 
@@ -26,7 +85,7 @@
 
 **Files:**
 - Create: `backend/src/agents/contracts.py`
-- Test: `backend/tests/agents/test_contracts.py`
+- Create: `backend/tests/agents/test_contracts.py`
 
 **Step 1: Write the failing test**
 
@@ -46,6 +105,7 @@ from src.agents.contracts import (
     PhaseStatusDetail,
     RetryablePhaseError,
     PermanentPhaseError,
+    SkipPhase3Reason,
 )
 
 
@@ -119,13 +179,21 @@ def test_pipeline_status_enum():
     assert PipelineStatus.FAILED == "failed"
 
 
+def test_skip_phase_3_reason_enum():
+    """SkipPhase3Reason enum captures all skip conditions."""
+    assert SkipPhase3Reason.NOT_RELEVANT == "not_relevant"
+    assert SkipPhase3Reason.NO_ENTITIES == "no_entities"
+    assert SkipPhase3Reason.NO_CANDIDATES == "no_candidates"
+
+
 def test_phase1_output_typed():
     """Phase1Output is a typed model, not a bare dict."""
     output = Phase1Output(
         pdf_path="/tmp/test.pdf",
-        markdown_path="/tmp/test.md",
-        json_path="/tmp/test.json",
-        image_dir="/tmp/images",
+        md_path="/tmp/test.md",
+        metadata_path="/tmp/test.json",
+        output_dir="/tmp/output",
+        images_dir="/tmp/images",
     )
     assert output.pdf_path == "/tmp/test.pdf"
 
@@ -133,8 +201,10 @@ def test_phase1_output_typed():
 def test_phase2_output_typed():
     """Phase2Output is a typed model, not a bare dict."""
     output = Phase2Output(
-        translated_english="translated text",
-        extraction_path="/tmp/extraction.json",
+        output_dir="/tmp/phase2",
+        original_json_path="/tmp/original.json",
+        translated_json_path="/tmp/translated.json",
+        extraction_result_path="/tmp/extraction.json",
         source_language="zh",
     )
     assert output.source_language == "zh"
@@ -239,6 +309,14 @@ class PipelineStatus(str, Enum):
     FAILED = "failed"
 
 
+class SkipPhase3Reason(str, Enum):
+    """Reason for skipping Phase 3 (entity standardization)."""
+
+    NOT_RELEVANT = "not_relevant"  # Both tracks returned NOT_RELEVANT
+    NO_ENTITIES = "no_entities"  # Evidence exists but no extractable entities
+    NO_CANDIDATES = "no_candidates"  # Standardization produced zero candidates
+
+
 # ── Error hierarchy ──────────────────────────────────────────────────────────
 
 
@@ -278,17 +356,20 @@ class Phase1Output(BaseModel):
     """Typed output from Phase 1: acquisition + parsing."""
 
     pdf_path: str
-    markdown_path: str
-    json_path: str
-    image_dir: str
+    md_path: str
+    metadata_path: str
+    output_dir: str
+    images_dir: str | None = None
 
 
 class Phase2Output(BaseModel):
     """Typed output from Phase 2: translation + evidence extraction."""
 
-    translated_english: str
-    extraction_path: str
+    output_dir: str
+    original_json_path: str
+    translated_json_path: str
     source_language: str
+    extraction_result_path: str  # Path to DualEvidenceExtractionResult JSON
 
 
 class Phase3Output(BaseModel):
@@ -334,9 +415,14 @@ class PipelineGraphState(BaseModel):
     are NOT nested here — they remain in-memory within each adapter.
 
     Persisted to PostgreSQL after each phase completes for crash recovery.
+
+    Note on UUIDs: processing_run_id and source_document_id are stored as
+    UUID strings (e.g., "550e8400-e29b-41d4-a716-446655440000"). The DB
+    model uses UUID(as_uuid=True) and JSON serialization preserves the
+    string format for round-trip compatibility.
     """
 
-    # Run identity
+    # Run identity (UUID strings)
     processing_run_id: str
     source_document_id: str
 
@@ -344,6 +430,9 @@ class PipelineGraphState(BaseModel):
     mode: PipelineMode
     source_type: SourceType
     target_phase: int | None = None  # Only used when mode=PHASE
+
+    # Dedup key for duplicate-run prevention (N3 fix)
+    source_key: str | None = None  # filename for local, query for online
 
     # Overall pipeline status
     pipeline_status: PipelineStatus = PipelineStatus.PENDING
@@ -368,7 +457,7 @@ class PipelineGraphState(BaseModel):
     completed_at: str | None = None
 
     # Content-based routing flags
-    skip_phase_3: bool = False  # Set when evidence extraction finds nothing relevant
+    skip_phase_3_reason: SkipPhase3Reason | None = None
 ```
 
 **Step 4: Run test to verify it passes**
@@ -393,7 +482,7 @@ git commit -m "feat: add pipeline orchestrator contracts, error hierarchy, and t
 
 **Files:**
 - Modify: `backend/src/dao/models.py` (add PipelineRunState table)
-- Test: `backend/tests/dao/test_pipeline_state_model.py`
+- Create: `backend/tests/dao/test_pipeline_state_model.py`
 
 **Step 1: Write the failing test**
 
@@ -496,9 +585,9 @@ class PipelineRunState(Base):
 **Step 4: Create Alembic migration**
 
 ```bash
-cd backend
-uv run alembic revision --autogenerate -m "add pipeline_run_states table"
-uv run alembic upgrade head
+# Run from repo root (alembic.ini is at database/alembic.ini)
+uv run alembic -c database/alembic.ini revision --autogenerate -m "add pipeline_run_states table"
+uv run alembic -c database/alembic.ini upgrade head
 ```
 
 **Step 5: Run test to verify it passes**
@@ -514,7 +603,7 @@ Expected: PASS
 
 ```bash
 git add backend/src/dao/models.py backend/tests/dao/test_pipeline_state_model.py
-git add backend/alembic/versions/<migration_file>.py
+git add database/migrations/versions/<migration_file>.py
 git commit -m "feat: add PipelineRunState model for orchestrator state persistence"
 ```
 
@@ -524,7 +613,7 @@ git commit -m "feat: add PipelineRunState model for orchestrator state persisten
 
 **Files:**
 - Create: `backend/src/agents/state_persistence.py`
-- Test: `backend/tests/agents/test_state_persistence.py`
+- Create: `backend/tests/agents/test_state_persistence.py`
 
 **Step 1: Write the failing test**
 
@@ -709,15 +798,16 @@ git commit -m "feat: add state persistence layer with structured error round-tri
 
 **Files:**
 - Create: `backend/src/agents/phase_1_adapter.py`
-- Test: `backend/tests/agents/test_phase_1_adapter.py`
+- Create: `backend/tests/agents/test_phase_1_adapter.py`
 
 **Step 1: Write the failing test**
 
 ```python
 """Tests for Phase 1 adapter (acquisition + parsing)."""
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from datetime import datetime
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock
 from src.agents.contracts import (
     PipelineGraphState,
     PhaseStatus,
@@ -752,6 +842,7 @@ async def test_phase_1_adapter_success(sample_state: PipelineGraphState):
     )
     from src.core.ingest_and_digitize_data.parse_document.contracts import (
         MinerULocalBatchSaveResult,
+        MinerULocalBatchParseResult,
         SavedFiles,
     )
 
@@ -774,12 +865,14 @@ async def test_phase_1_adapter_success(sample_state: PipelineGraphState):
     mock_parse.parse_local_files_and_save = AsyncMock(
         return_value=MinerULocalBatchSaveResult(
             batch_id="batch-1",
-            results={},
-            saved={
-                "test": SavedFiles(
-                    markdown_path=Path("/tmp/test.md"),
-                    json_path=Path("/tmp/test.json"),
-                    image_dir=Path("/tmp/images"),
+            parse_result=MinerULocalBatchParseResult(results={}),
+            saved_files={
+                "test.pdf": SavedFiles(
+                    md_path=Path("/tmp/test.md"),
+                    metadata_path=Path("/tmp/test.json"),
+                    output_dir=Path("/tmp/output"),
+                    created_at=datetime.now(),
+                    images_dir=Path("/tmp/images"),
                 )
             },
         )
@@ -794,6 +887,7 @@ async def test_phase_1_adapter_success(sample_state: PipelineGraphState):
 
     assert result_state.phase_1_output is not None
     assert result_state.phase_1_output.pdf_path == "/tmp/test.pdf"
+    assert result_state.phase_1_output.md_path == "/tmp/test.md"
     assert isinstance(result_state.phase_1_output, Phase1Output)
 
 
@@ -1025,14 +1119,15 @@ class Phase1Adapter:
                 output_dir=output_dir,
             )
 
-            # Extract parsed output paths
-            first_file = list(parse_result.saved.values())[0]
+            # Extract parsed output paths (B4 fix: correct field names)
+            first_file = list(parse_result.saved_files.values())[0]
 
             state.phase_1_output = Phase1Output(
                 pdf_path=pdf_path,
-                markdown_path=str(first_file.markdown_path),
-                json_path=str(first_file.json_path),
-                image_dir=str(first_file.image_dir),
+                md_path=str(first_file.md_path),
+                metadata_path=str(first_file.metadata_path),
+                output_dir=str(first_file.output_dir),
+                images_dir=str(first_file.images_dir) if first_file.images_dir else None,
             )
 
             state.phase_1_status = PhaseStatusDetail(
@@ -1094,7 +1189,7 @@ git commit -m "feat: add Phase 1 adapter with classified error handling"
 
 **Files:**
 - Create: `backend/src/agents/phase_2_adapter.py`
-- Test: `backend/tests/agents/test_phase_2_adapter.py`
+- Create: `backend/tests/agents/test_phase_2_adapter.py`
 
 **Step 1: Write the failing test**
 
@@ -1124,9 +1219,10 @@ def sample_state() -> PipelineGraphState:
         source_type=SourceType.LOCAL,
         phase_1_output=Phase1Output(
             pdf_path="/tmp/test.pdf",
-            markdown_path="/tmp/test.md",
-            json_path="/tmp/test.json",
-            image_dir="/tmp/images",
+            md_path="/tmp/test.md",
+            metadata_path="/tmp/test.json",
+            output_dir="/tmp/output",
+            images_dir="/tmp/images",
         ),
     )
 
@@ -1136,13 +1232,16 @@ async def test_phase_2_adapter_success(sample_state: PipelineGraphState):
     """Phase 2 adapter successfully translates and extracts evidence."""
     from src.core.cross_lingual_process_and_extract_evidence.contracts import (
         TranslationResult,
+        CrossLingualOutput,
     )
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
         DualEvidenceExtractionResult,
+        DualTrackDocuments,
         EvidenceExtractionResult,
         EvidenceExtractionStatus,
         Track,
         DocumentEvidenceMap,
+        TrackDocument,
     )
 
     mock_translation = MagicMock()
@@ -1157,6 +1256,19 @@ async def test_phase_2_adapter_success(sample_state: PipelineGraphState):
             segments=[],
         )
     )
+    mock_translation.save = MagicMock(
+        return_value=CrossLingualOutput(
+            formatted_original="Original text",
+            translated_english="Translated text",
+            source_language="zh",
+            terminology_map={},
+            translation_warnings=[],
+            output_dir="/tmp/phase2/output",
+            original_json_path="/tmp/phase2/output/original.json",
+            translated_json_path="/tmp/phase2/output/translated.json",
+            image_paths=[],
+        )
+    )
 
     mock_extraction_service = MagicMock()
     mock_extraction_service.run_dual = AsyncMock(
@@ -1185,9 +1297,25 @@ async def test_phase_2_adapter_success(sample_state: PipelineGraphState):
     with patch(
         "src.agents.phase_2_adapter.EvidenceExtractionService.build_dual_documents_from_output_dir"
     ) as mock_build:
-        mock_build.return_value = MagicMock()
+        mock_build.return_value = DualTrackDocuments(
+            document_id="doc-456",
+            original=TrackDocument(
+                document_id="doc-456",
+                track=Track.ORIGINAL,
+                formatted_text="original",
+                page_spans=[],
+            ),
+            translated=TrackDocument(
+                document_id="doc-456",
+                track=Track.TRANSLATED,
+                formatted_text="translated",
+                page_spans=[],
+            ),
+        )
 
-        result_state = await adapter.run(sample_state)
+        with patch("builtins.open", MagicMock()):
+            with patch("json.load", return_value={"pages": [], "content_blocks": []}):
+                result_state = await adapter.run(sample_state)
 
     assert result_state.phase_2_output is not None
     assert result_state.phase_2_output.source_language == "zh"
@@ -1195,19 +1323,23 @@ async def test_phase_2_adapter_success(sample_state: PipelineGraphState):
 
 
 @pytest.mark.asyncio
-async def test_phase_2_adapter_sets_skip_phase_3_when_not_relevant(
+async def test_phase_2_adapter_sets_skip_when_not_relevant(
     sample_state: PipelineGraphState,
 ):
-    """Phase 2 adapter sets skip_phase_3 when both tracks are NOT_RELEVANT."""
+    """Phase 2 adapter sets skip_phase_3_reason when both tracks are NOT_RELEVANT."""
     from src.core.cross_lingual_process_and_extract_evidence.contracts import (
         TranslationResult,
+        CrossLingualOutput,
     )
     from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
         DualEvidenceExtractionResult,
+        DualTrackDocuments,
         EvidenceExtractionResult,
         EvidenceExtractionStatus,
         Track,
+        TrackDocument,
     )
+    from src.agents.contracts import SkipPhase3Reason
 
     mock_translation = MagicMock()
     mock_translation.run = AsyncMock(
@@ -1221,6 +1353,19 @@ async def test_phase_2_adapter_sets_skip_phase_3_when_not_relevant(
             segments=[],
         )
     )
+    mock_translation.save = MagicMock(
+        return_value=CrossLingualOutput(
+            formatted_original="Original",
+            translated_english="Translated",
+            source_language="en",
+            terminology_map={},
+            translation_warnings=[],
+            output_dir="/tmp/phase2/output",
+            original_json_path="/tmp/phase2/output/original.json",
+            translated_json_path="/tmp/phase2/output/translated.json",
+            image_paths=[],
+        )
+    )
 
     mock_extraction_service = MagicMock()
     mock_extraction_service.run_dual = AsyncMock(
@@ -1247,10 +1392,27 @@ async def test_phase_2_adapter_sets_skip_phase_3_when_not_relevant(
     with patch(
         "src.agents.phase_2_adapter.EvidenceExtractionService.build_dual_documents_from_output_dir"
     ) as mock_build:
-        mock_build.return_value = MagicMock()
-        result_state = await adapter.run(sample_state)
+        mock_build.return_value = DualTrackDocuments(
+            document_id="doc-456",
+            original=TrackDocument(
+                document_id="doc-456",
+                track=Track.ORIGINAL,
+                formatted_text="original",
+                page_spans=[],
+            ),
+            translated=TrackDocument(
+                document_id="doc-456",
+                track=Track.TRANSLATED,
+                formatted_text="translated",
+                page_spans=[],
+            ),
+        )
 
-    assert result_state.skip_phase_3 is True
+        with patch("builtins.open", MagicMock()):
+            with patch("json.load", return_value={"pages": [], "content_blocks": []}):
+                result_state = await adapter.run(sample_state)
+
+    assert result_state.skip_phase_3_reason == SkipPhase3Reason.NOT_RELEVANT
 
 
 @pytest.mark.asyncio
@@ -1290,8 +1452,9 @@ Expected: FAIL with "ModuleNotFoundError: No module named 'src.agents.phase_2_ad
 ```python
 """Phase 2 adapter: translation and dual-track evidence extraction.
 
-Uses EvidenceExtractionService.run_dual() (not the internal workflow directly).
-Uses build_dual_documents_from_output_dir() for correct document construction.
+Uses TranslationService.run() + .save() for translation.
+Uses EvidenceExtractionService.build_dual_documents_from_output_dir() + .run_dual()
+for dual-track evidence extraction.
 """
 from __future__ import annotations
 
@@ -1309,17 +1472,18 @@ from src.agents.contracts import (
     PipelineGraphState,
     PermanentPhaseError,
     RetryablePhaseError,
+    SkipPhase3Reason,
+)
+
+# Import the service at module level for patching in tests
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
+    EvidenceExtractionService,
 )
 
 if TYPE_CHECKING:
     from src.core.cross_lingual_process_and_extract_evidence.workflow import (
         TranslationService,
     )
-
-# Import the service at module level for patching in tests
-from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
-    EvidenceExtractionService,
-)
 
 # Transient errors that should be retried
 _RETRYABLE_ERRORS: tuple = (
@@ -1346,8 +1510,12 @@ except ImportError:
 class Phase2Adapter:
     """Thin adapter wrapping TranslationService + EvidenceExtractionService.
 
-    Uses EvidenceExtractionService.run_dual() for dual-track execution.
-    Uses build_dual_documents_from_output_dir() for document construction.
+    Flow:
+    1. Read parsed content from Phase 1 output_dir
+    2. Call TranslationService.run() → TranslationResult
+    3. Call TranslationService.save() → CrossLingualOutput
+    4. Call build_dual_documents_from_output_dir() → DualTrackDocuments
+    5. Call EvidenceExtractionService.run_dual() → DualEvidenceExtractionResult
     """
 
     def __init__(
@@ -1362,7 +1530,7 @@ class Phase2Adapter:
         """Execute Phase 2: translate and extract dual-track evidence.
 
         Returns updated state with phase_2_output set on success.
-        Sets skip_phase_3=True if both tracks are NOT_RELEVANT.
+        Sets skip_phase_3_reason if both tracks are NOT_RELEVANT.
         Raises RetryablePhaseError or PermanentPhaseError on failure.
         """
         logger.info("Phase 2 started: run={}", state.processing_run_id)
@@ -1380,9 +1548,9 @@ class Phase2Adapter:
                     phase=2,
                 )
 
-            json_path = state.phase_1_output.json_path
-
-            with open(json_path, "r") as f:
+            # Read from Phase 1 metadata (contains pages and content_blocks)
+            metadata_path = state.phase_1_output.metadata_path
+            with open(metadata_path, "r") as f:
                 parse_data = json.load(f)
 
             pages = parse_data.get("pages", [])
@@ -1394,44 +1562,20 @@ class Phase2Adapter:
                 content_blocks=content_blocks,
             )
 
-            # Save translation output for build_dual_documents_from_output_dir
+            # Save translation output (creates original.json and translated.json)
             output_dir = f"data/pipeline/{state.processing_run_id}/phase_2"
             Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-            original_path = Path(output_dir) / "original.json"
-            translated_path = Path(output_dir) / "translated.json"
-
-            original_path.write_text(
-                json.dumps(
-                    {
-                        "metadata": {
-                            "doc_id": state.source_document_id,
-                            "source_language": translation_result.source_language,
-                        },
-                        "blocks": content_blocks,
-                    },
-                    ensure_ascii=False,
-                ),
-                encoding="utf-8",
-            )
-
-            translated_path.write_text(
-                json.dumps(
-                    {
-                        "metadata": {
-                            "doc_id": state.source_document_id,
-                            "source_language": "en",
-                        },
-                        "blocks": content_blocks,
-                    },
-                    ensure_ascii=False,
-                ),
-                encoding="utf-8",
+            cross_lingual_output = self._translation.save(
+                result=translation_result,
+                output_dir=output_dir,
+                doc_id=state.source_document_id,
             )
 
             # Build dual documents using the service's static method
+            # This reads from cross_lingual_output.output_dir
             dual_documents = EvidenceExtractionService.build_dual_documents_from_output_dir(
-                output_dir
+                cross_lingual_output.output_dir
             )
 
             # Run dual-track extraction via the service facade
@@ -1450,18 +1594,20 @@ class Phase2Adapter:
             )
 
             if both_not_relevant:
-                logger.info("Document not relevant, setting skip_phase_3=True")
-                state.skip_phase_3 = True
+                logger.info("Document not relevant, setting skip_phase_3_reason")
+                state.skip_phase_3_reason = SkipPhase3Reason.NOT_RELEVANT
 
-            # Save extraction results
-            extraction_path = f"{output_dir}/extraction_result.json"
-            with open(extraction_path, "w") as f:
+            # Save extraction result for Phase 3 (N7 fix)
+            extraction_result_path = f"{output_dir}/extraction_result.json"
+            with open(extraction_result_path, "w") as f:
                 json.dump(dual_result.model_dump(mode="json"), f)
 
             state.phase_2_output = Phase2Output(
-                translated_english=translation_result.translated_english,
-                extraction_path=extraction_path,
+                output_dir=cross_lingual_output.output_dir,
+                original_json_path=cross_lingual_output.original_json_path,
+                translated_json_path=cross_lingual_output.translated_json_path,
                 source_language=translation_result.source_language,
+                extraction_result_path=extraction_result_path,
             )
 
             state.phase_2_status = PhaseStatusDetail(
@@ -1481,9 +1627,9 @@ class Phase2Adapter:
             )
 
             logger.info(
-                "Phase 2 completed: run={}, skip_phase_3={}",
+                "Phase 2 completed: run={}, skip_phase_3_reason={}",
                 state.processing_run_id,
-                state.skip_phase_3,
+                state.skip_phase_3_reason,
             )
             return state
 
@@ -1525,14 +1671,14 @@ git commit -m "feat: add Phase 2 adapter using EvidenceExtractionService.run_dua
 
 **Files:**
 - Create: `backend/src/agents/phase_3_adapter.py`
-- Test: `backend/tests/agents/test_phase_3_adapter.py`
+- Create: `backend/tests/agents/test_phase_3_adapter.py`
 
 **Step 1: Write the failing test**
 
 ```python
 """Tests for Phase 3 adapter (entity standardization)."""
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from src.agents.contracts import (
     PipelineGraphState,
     PhaseStatus,
@@ -1541,6 +1687,7 @@ from src.agents.contracts import (
     Phase2Output,
     Phase3Output,
     PermanentPhaseError,
+    SkipPhase3Reason,
 )
 from src.agents.phase_3_adapter import Phase3Adapter
 
@@ -1553,9 +1700,11 @@ def sample_state() -> PipelineGraphState:
         mode=PipelineMode.FULL,
         source_type=SourceType.LOCAL,
         phase_2_output=Phase2Output(
-            translated_english="translated",
-            extraction_path="/tmp/extraction.json",
-            source_language="zh",
+            output_dir="/tmp/phase2/output",
+            original_json_path="/tmp/phase2/output/original.json",
+            translated_json_path="/tmp/phase2/output/translated.json",
+            extraction_result_path="/tmp/extraction.json",
+        source_language="zh",
         ),
     )
 
@@ -1563,9 +1712,6 @@ def sample_state() -> PipelineGraphState:
 @pytest.mark.asyncio
 async def test_phase_3_adapter_success(sample_state: PipelineGraphState):
     """Phase 3 adapter successfully standardizes entities."""
-    import json
-    from unittest.mock import mock_open
-
     from src.core.standardize_entities_and_align_knowledge.contracts import (
         StandardizationResult,
     )
@@ -1585,12 +1731,13 @@ async def test_phase_3_adapter_success(sample_state: PipelineGraphState):
 
     adapter = Phase3Adapter(standardization_service=mock_standardization)
 
-    with patch("builtins.open", mock_open(read_data="{}")):
-        with patch(
-            "src.agents.phase_3_adapter.DualEvidenceExtractionResult.model_validate",
-            return_value=MagicMock(),
-        ):
-            result_state = await adapter.run(sample_state)
+    with patch("builtins.open", MagicMock()):
+        with patch("json.load", return_value={}):
+            with patch(
+                "src.agents.phase_3_adapter.DualEvidenceExtractionResult.model_validate",
+                return_value=MagicMock(),
+            ):
+                result_state = await adapter.run(sample_state)
 
     assert result_state.phase_3_output is not None
     assert result_state.phase_3_output.match_count == 10
@@ -1598,9 +1745,9 @@ async def test_phase_3_adapter_success(sample_state: PipelineGraphState):
 
 
 @pytest.mark.asyncio
-async def test_phase_3_adapter_skipped(sample_state: PipelineGraphState):
-    """Phase 3 adapter skips when skip_phase_3 is True."""
-    sample_state.skip_phase_3 = True
+async def test_phase_3_adapter_skipped_not_relevant(sample_state: PipelineGraphState):
+    """Phase 3 adapter skips when skip_phase_3_reason is NOT_RELEVANT."""
+    sample_state.skip_phase_3_reason = SkipPhase3Reason.NOT_RELEVANT
 
     mock_standardization = MagicMock()
     mock_standardization.run_dual_result = AsyncMock()
@@ -1610,7 +1757,59 @@ async def test_phase_3_adapter_skipped(sample_state: PipelineGraphState):
     result_state = await adapter.run(sample_state)
 
     assert result_state.phase_3_status.status == PhaseStatus.SKIPPED
+    assert result_state.phase_3_status.summary == {"reason": "not_relevant"}
     mock_standardization.run_dual_result.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_phase_3_adapter_skipped_no_entities(sample_state: PipelineGraphState):
+    """Phase 3 adapter skips when skip_phase_3_reason is NO_ENTITIES."""
+    sample_state.skip_phase_3_reason = SkipPhase3Reason.NO_ENTITIES
+
+    mock_standardization = MagicMock()
+
+    adapter = Phase3Adapter(standardization_service=mock_standardization)
+
+    result_state = await adapter.run(sample_state)
+
+    assert result_state.phase_3_status.status == PhaseStatus.SKIPPED
+    assert result_state.phase_3_status.summary == {"reason": "no_entities"}
+
+
+@pytest.mark.asyncio
+async def test_phase_3_adapter_skipped_when_zero_standardized(
+    sample_state: PipelineGraphState,
+):
+    """Phase 3 adapter sets skip reason when standardized_count == 0."""
+    from src.core.standardize_entities_and_align_knowledge.contracts import (
+        StandardizationResult,
+    )
+
+    mock_standardization = MagicMock()
+    mock_standardization.run_dual_result = AsyncMock(
+        return_value=StandardizationResult(
+            document_id="doc-456",
+            match_count=0,
+            standardized_count=0,
+            ambiguous_count=0,
+            unmapped_count=0,
+            normalized_entity_ids=(),
+            matches=(),
+        )
+    )
+
+    adapter = Phase3Adapter(standardization_service=mock_standardization)
+
+    with patch("builtins.open", MagicMock()):
+        with patch("json.load", return_value={}):
+            with patch(
+                "src.agents.phase_3_adapter.DualEvidenceExtractionResult.model_validate",
+                return_value=MagicMock(),
+            ):
+                result_state = await adapter.run(sample_state)
+
+    assert result_state.phase_3_status.status == PhaseStatus.SKIPPED
+    assert result_state.skip_phase_3_reason == SkipPhase3Reason.NO_CANDIDATES
 ```
 
 **Step 2: Run test to verify it fails**
@@ -1628,6 +1827,7 @@ Expected: FAIL with "ModuleNotFoundError: No module named 'src.agents.phase_3_ad
 """Phase 3 adapter: entity standardization and knowledge alignment.
 
 Raises classified errors for orchestrator-level retry decisions.
+Sets skip_phase_3_reason when standardized_count == 0.
 """
 from __future__ import annotations
 
@@ -1644,6 +1844,7 @@ from src.agents.contracts import (
     PipelineGraphState,
     PermanentPhaseError,
     RetryablePhaseError,
+    SkipPhase3Reason,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     DualEvidenceExtractionResult,
@@ -1682,19 +1883,22 @@ class Phase3Adapter:
         """Execute Phase 3: standardize entities.
 
         Returns updated state with phase_3_output set on success.
-        Returns state with SKIPPED status if skip_phase_3 is True.
+        Returns state with SKIPPED status if skip_phase_3_reason is set.
+        Sets skip_phase_3_reason=NO_CANDIDATES if standardized_count == 0.
         Raises RetryablePhaseError or PermanentPhaseError on failure.
         """
         logger.info("Phase 3 started: run={}", state.processing_run_id)
 
-        # Skip if Phase 2 marked document as not relevant
-        if state.skip_phase_3:
-            logger.info("Phase 3 skipped: document not relevant")
+        # Skip if Phase 2 set a skip reason
+        if state.skip_phase_3_reason is not None:
+            logger.info(
+                "Phase 3 skipped: reason={}", state.skip_phase_3_reason.value
+            )
             state.phase_3_status = PhaseStatusDetail(
                 status=PhaseStatus.SKIPPED,
                 started_at=datetime.now().isoformat(),
                 completed_at=datetime.now().isoformat(),
-                summary={"reason": "document_not_relevant"},
+                summary={"reason": state.skip_phase_3_reason.value},
             )
             return state
 
@@ -1711,16 +1915,16 @@ class Phase3Adapter:
                     phase=3,
                 )
 
-            extraction_path = state.phase_2_output.extraction_path
-
+            # Read the original extraction JSON
+            extraction_path = state.phase_2_output.extraction_result_path
             with open(extraction_path, "r") as f:
                 extraction_data = json.load(f)
 
             dual_result = DualEvidenceExtractionResult.model_validate(extraction_data)
 
-            # Run standardization
+            # Run standardization (B8 fix: positional arg for result)
             standardization_result = await self._standardization.run_dual_result(
-                result=dual_result,
+                dual_result,
                 source_document_id=state.source_document_id,
                 processing_run_id=state.processing_run_id,
             )
@@ -1731,6 +1935,21 @@ class Phase3Adapter:
                 ambiguous_count=standardization_result.ambiguous_count,
                 unmapped_count=standardization_result.unmapped_count,
             )
+
+            # D4 fix: Set skip reason if no candidates were standardized
+            if standardization_result.standardized_count == 0:
+                state.skip_phase_3_reason = SkipPhase3Reason.NO_CANDIDATES
+                state.phase_3_status = PhaseStatusDetail(
+                    status=PhaseStatus.SKIPPED,
+                    started_at=state.phase_3_status.started_at,
+                    completed_at=datetime.now().isoformat(),
+                    summary={"reason": "no_candidates"},
+                )
+                logger.info(
+                    "Phase 3 completed but no candidates: run={}",
+                    state.processing_run_id,
+                )
+                return state
 
             state.phase_3_status = PhaseStatusDetail(
                 status=PhaseStatus.COMPLETED,
@@ -1784,7 +2003,7 @@ Expected: PASS
 
 ```bash
 git add backend/src/agents/phase_3_adapter.py backend/tests/agents/test_phase_3_adapter.py
-git commit -m "feat: add Phase 3 adapter with classified error handling"
+git commit -m "feat: add Phase 3 adapter with skip_phase_3_reason support"
 ```
 
 ---
@@ -1793,14 +2012,14 @@ git commit -m "feat: add Phase 3 adapter with classified error handling"
 
 **Files:**
 - Create: `backend/src/agents/orchestrator.py`
-- Test: `backend/tests/agents/test_orchestrator.py`
+- Create: `backend/tests/agents/test_orchestrator.py`
 
 **Step 1: Write the failing test**
 
 ```python
 """Tests for main orchestrator graph."""
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from src.agents.contracts import (
     PipelineGraphState,
     PhaseStatus,
@@ -1809,6 +2028,7 @@ from src.agents.contracts import (
     PipelineStatus,
     PhaseStatusDetail,
     Phase1Output,
+    SkipPhase3Reason,
     RetryablePhaseError,
     PermanentPhaseError,
 )
@@ -1849,21 +2069,19 @@ async def test_orchestrator_runs_all_phases(
     sample_state, mock_adapters, mock_persistence, mock_retry_executor
 ):
     """Orchestrator runs all 3 phases in sequence."""
-    # Each adapter returns state with COMPLETED status
     state_after_1 = sample_state.model_copy(deep=True)
     state_after_1.phase_1_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
     state_after_1.phase_1_output = Phase1Output(
         pdf_path="/tmp/test.pdf",
-        markdown_path="/tmp/test.md",
-        json_path="/tmp/test.json",
-        image_dir="/tmp/images",
+        md_path="/tmp/test.md",
+        metadata_path="/tmp/test.json",
+        output_dir="/tmp/output",
     )
 
     mock_adapters["phase_1"].run.return_value = state_after_1
     mock_adapters["phase_2"].run.return_value = state_after_1
     mock_adapters["phase_3"].run.return_value = state_after_1
 
-    # Retry executor passes through
     mock_retry_executor.execute_with_retry.side_effect = lambda op, state, phase_name: op(state)
 
     orchestrator = PipelineOrchestrator(
@@ -1884,19 +2102,19 @@ async def test_orchestrator_runs_all_phases(
 async def test_orchestrator_skips_phase_3_when_not_relevant(
     sample_state, mock_adapters, mock_persistence, mock_retry_executor
 ):
-    """Orchestrator skips Phase 3 when skip_phase_3 flag is set by Phase 2."""
+    """Orchestrator skips Phase 3 when skip_phase_3_reason is set by Phase 2."""
     state_after_1 = sample_state.model_copy(deep=True)
     state_after_1.phase_1_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
     state_after_1.phase_1_output = Phase1Output(
         pdf_path="/tmp/test.pdf",
-        markdown_path="/tmp/test.md",
-        json_path="/tmp/test.json",
-        image_dir="/tmp/images",
+        md_path="/tmp/test.md",
+        metadata_path="/tmp/test.json",
+        output_dir="/tmp/output",
     )
 
     state_after_2 = state_after_1.model_copy(deep=True)
     state_after_2.phase_2_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
-    state_after_2.skip_phase_3 = True
+    state_after_2.skip_phase_3_reason = SkipPhase3Reason.NOT_RELEVANT
 
     state_after_3 = state_after_2.model_copy(deep=True)
     state_after_3.phase_3_status = PhaseStatusDetail(status=PhaseStatus.SKIPPED)
@@ -1940,7 +2158,6 @@ async def test_orchestrator_stops_on_permanent_failure(
 
     assert result_state.phase_1_status.status == PhaseStatus.FAILED
     assert result_state.pipeline_status == PipelineStatus.FAILED
-    # Subsequent phases should not run
     mock_adapters["phase_2"].run.assert_not_called()
     mock_adapters["phase_3"].run.assert_not_called()
 
@@ -1956,7 +2173,6 @@ async def test_orchestrator_validates_upstream_for_phase_mode(
         mode=PipelineMode.PHASE,
         source_type=SourceType.LOCAL,
         target_phase=3,
-        # Phase 1 and 2 haven't completed
         phase_1_status=PhaseStatusDetail(status=PhaseStatus.PENDING),
         phase_2_status=PhaseStatusDetail(status=PhaseStatus.PENDING),
     )
@@ -1984,9 +2200,9 @@ async def test_orchestrator_persists_state_after_each_phase(
     state_after_1.phase_1_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
     state_after_1.phase_1_output = Phase1Output(
         pdf_path="/tmp/test.pdf",
-        markdown_path="/tmp/test.md",
-        json_path="/tmp/test.json",
-        image_dir="/tmp/images",
+        md_path="/tmp/test.md",
+        metadata_path="/tmp/test.json",
+        output_dir="/tmp/output",
     )
 
     mock_adapters["phase_1"].run.return_value = state_after_1
@@ -2003,8 +2219,7 @@ async def test_orchestrator_persists_state_after_each_phase(
 
     await orchestrator.run(sample_state)
 
-    # save() should be called after each phase
-    assert mock_persistence.save.call_count == 3
+    assert mock_persistence.save.call_count >= 3
 ```
 
 **Step 2: Run test to verify it fails**
@@ -2061,7 +2276,7 @@ REQUIRED_UPSTREAM: dict[int, list[int]] = {
 class PipelineOrchestrator:
     """LangGraph-based orchestrator coordinating 3 phases of evidence processing.
 
-    Flow: Phase 1 → Phase 2 → (skip Phase 3 if not relevant) → AWAITING_REVIEW
+    Flow: Phase 1 -> Phase 2 -> (skip Phase 3 if not relevant) -> AWAITING_REVIEW
     Phase 4 operates independently via its own HTTP API.
     """
 
@@ -2203,15 +2418,12 @@ class PipelineOrchestrator:
         """Build the LangGraph state machine with 3 phase nodes."""
         graph = StateGraph(PipelineGraphState)
 
-        # Add nodes
         graph.add_node("phase_1", self._node_phase_1)
         graph.add_node("phase_2", self._node_phase_2)
         graph.add_node("phase_3", self._node_phase_3)
 
-        # Set entry point
         graph.set_entry_point("phase_1")
 
-        # Add conditional edges
         graph.add_conditional_edges(
             "phase_1",
             self._route_after_phase_1,
@@ -2331,7 +2543,7 @@ git commit -m "feat: add main pipeline orchestrator with 3-phase graph, upstream
 
 **Files:**
 - Create: `backend/src/agents/concurrency.py`
-- Test: `backend/tests/agents/test_concurrency.py`
+- Create: `backend/tests/agents/test_concurrency.py`
 
 **Step 1: Write the failing test**
 
@@ -2339,7 +2551,7 @@ git commit -m "feat: add main pipeline orchestrator with 3-phase graph, upstream
 """Tests for concurrency control and retry logic."""
 import pytest
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 from src.agents.concurrency import PipelineSemaphore, RetryablePhaseExecutor
 from src.agents.contracts import RetryablePhaseError, PermanentPhaseError
 
@@ -2349,23 +2561,23 @@ async def test_semaphore_limits_concurrency():
     """Semaphore limits concurrent pipeline executions."""
     sem = PipelineSemaphore(max_concurrent=2)
 
-    concurrent_count = 0
-    max_concurrent = 0
+    max_observed = 0
+    current = 0
 
     async def slow_task():
-        nonlocal concurrent_count, max_concurrent
+        nonlocal current, max_observed
         async with sem:
-            concurrent_count += 1
-            max_concurrent = max(max_concurrent, concurrent_count)
+            current += 1
+            max_observed = max(max_observed, current)
             await asyncio.sleep(0.05)
-            concurrent_count -= 1
+            current -= 1
             return "done"
 
     tasks = [asyncio.create_task(slow_task()) for _ in range(4)]
     results = await asyncio.gather(*tasks)
 
     assert all(r == "done" for r in results)
-    assert max_concurrent <= 2
+    assert max_observed <= 2
 
 
 @pytest.mark.asyncio
@@ -2540,7 +2752,7 @@ git commit -m "feat: add concurrency control and classified retry logic"
 
 **Files:**
 - Create: `backend/src/agents/runner.py`
-- Test: `backend/tests/agents/test_runner.py`
+- Create: `backend/tests/agents/test_runner.py`
 
 **Step 1: Write the failing test**
 
@@ -2623,7 +2835,6 @@ async def test_runner_captures_errors(
     await task
 
     assert task.done()
-    # Error should be captured in last state
     final_state = runner.get_last_state_cached("run-123")
     assert final_state is not None
     assert final_state.error_message is not None
@@ -2722,6 +2933,9 @@ class PipelineRunner:
         run_id = initial_state.processing_run_id
 
         async def _run_pipeline():
+            # N12 fix: Persist initial PENDING state before acquiring semaphore
+            await self._persistence.save(initial_state)
+            self._last_states[run_id] = initial_state
             async with self._semaphore:
                 logger.info("Pipeline execution started: run={}", run_id)
                 try:
@@ -2776,6 +2990,18 @@ class PipelineRunner:
         """Check if a pipeline run is currently active."""
         task = self._active_tasks.get(processing_run_id)
         return task is not None and not task.done()
+
+    def is_running_for_source(self, source_key: str) -> bool:
+        """Check if any active run is processing this source key (N3 fix).
+
+        Compares against state.source_key (filename or query), not
+        source_document_id (UUID), so the API route can dedup by
+        user-visible identifiers.
+        """
+        for run_id, state in self._last_states.items():
+            if state.source_key == source_key and self.is_running(run_id):
+                return True
+        return False
 ```
 
 **Step 4: Run test to verify it passes**
@@ -2801,7 +3027,7 @@ git commit -m "feat: add background pipeline runner with DB fallback for crash r
 **Files:**
 - Create: `backend/src/api/v1/pipeline.py`
 - Modify: `backend/src/api/v1/router.py` (include pipeline routes)
-- Test: `backend/tests/api/test_pipeline_api.py`
+- Create: `backend/tests/api/test_pipeline_api.py`
 
 **Step 1: Write the failing test**
 
@@ -2817,6 +3043,7 @@ from src.agents.contracts import (
     SourceType,
     PipelineStatus,
     PhaseStatusDetail,
+    SkipPhase3Reason,
 )
 
 
@@ -2884,6 +3111,38 @@ async def test_get_pipeline_status(async_client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_get_pipeline_status_shows_skip_reason(async_client: AsyncClient):
+    """Status response includes skip_phase_3_reason when set."""
+    mock_state = PipelineGraphState(
+        processing_run_id="run-123",
+        source_document_id="doc-456",
+        mode=PipelineMode.FULL,
+        source_type=SourceType.LOCAL,
+        pipeline_status=PipelineStatus.AWAITING_REVIEW,
+        phase_1_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
+        phase_2_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
+        phase_3_status=PhaseStatusDetail(
+            status=PhaseStatus.SKIPPED,
+            summary={"reason": "not_relevant"},
+        ),
+        skip_phase_3_reason=SkipPhase3Reason.NOT_RELEVANT,
+    )
+
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        mock_runner = MagicMock()
+        mock_runner.get_last_state = AsyncMock(return_value=mock_state)
+        mock_get_runner.return_value = mock_runner
+
+        response = await async_client.get("/api/v1/pipeline/runs/run-123/status")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["skip_phase_3_reason"] == "not_relevant"
+        assert data["phases"]["phase_3"]["status"] == "skipped"
+        assert data["phases"]["phase_3"]["summary"]["reason"] == "not_relevant"
+
+
+@pytest.mark.asyncio
 async def test_get_pipeline_status_not_found(async_client: AsyncClient):
     """GET /api/v1/pipeline/runs/{id}/status returns 404 for unknown run."""
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
@@ -2913,6 +3172,85 @@ async def test_post_pipeline_run_phase_mode_validation(async_client: AsyncClient
         )
 
         assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_post_pipeline_run_local_requires_content(async_client: AsyncClient):
+    """POST with source_type=local requires content_base64 or filename (N1 fix)."""
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        mock_runner = MagicMock()
+        mock_get_runner.return_value = mock_runner
+
+        response = await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "mode": "full",
+                # Missing content_base64 and filename
+            },
+        )
+
+        assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_post_pipeline_run_online_requires_query_or_identifiers(async_client: AsyncClient):
+    """POST with source_type=online requires query or identifiers (N1 fix)."""
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        mock_runner = MagicMock()
+        mock_get_runner.return_value = mock_runner
+
+        response = await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "online",
+                "mode": "full",
+                # Missing query and identifiers
+            },
+        )
+
+        assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_post_pipeline_run_target_phase_range_validation(async_client: AsyncClient):
+    """POST with target_phase outside 1-3 range is rejected (N2 fix)."""
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        mock_runner = MagicMock()
+        mock_get_runner.return_value = mock_runner
+
+        response = await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "content_base64": "dGVzdA==",
+                "mode": "phase",
+                "target_phase": 5,  # Invalid: out of range
+            },
+        )
+
+        assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_post_pipeline_run_duplicate_prevention(async_client: AsyncClient):
+    """POST with same source_document_id while run is in-progress returns 409 (N3 fix)."""
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        mock_runner = MagicMock()
+        mock_runner.is_running_for_source = MagicMock(return_value=True)
+        mock_get_runner.return_value = mock_runner
+
+        response = await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "filename": "test.pdf",
+                "content_base64": "dGVzdA==",
+                "mode": "full",
+            },
+        )
+
+        assert response.status_code == 409
 ```
 
 **Step 2: Run test to verify it fails**
@@ -2960,7 +3298,7 @@ class PipelineRunRequest(BaseModel):
 
     source_type: Literal["local", "online"]
     mode: Literal["full", "phase"] = "full"
-    target_phase: int | None = None
+    target_phase: int | None = Field(default=None, ge=1, le=3)  # N2: range validation
 
     # Local upload fields
     filename: str | None = None
@@ -2971,10 +3309,24 @@ class PipelineRunRequest(BaseModel):
     identifiers: list[str] | None = None
 
     @model_validator(mode="after")
-    def validate_phase_mode(self) -> "PipelineRunRequest":
-        """Phase mode requires target_phase."""
+    def validate_request(self) -> "PipelineRunRequest":
+        """Validate phase mode and source-specific requirements (N1 fix)."""
+        # Phase mode requires target_phase
         if self.mode == "phase" and self.target_phase is None:
             raise ValueError("target_phase is required when mode is 'phase'")
+
+        # Source-specific validation
+        if self.source_type == "local":
+            if not self.content_base64 and not self.filename:
+                raise ValueError(
+                    "source_type='local' requires content_base64 or filename"
+                )
+        elif self.source_type == "online":
+            if not self.query and not self.identifiers:
+                raise ValueError(
+                    "source_type='online' requires query or identifiers"
+                )
+
         return self
 
 
@@ -3005,6 +3357,7 @@ class PipelineStatusResponse(BaseModel):
     source_document_id: str
     pipeline_status: str
     current_phase: str | None = None
+    skip_phase_3_reason: str | None = None
     phases: dict[str, PhaseStatusResponse]
     error_message: str | None = None
     error_phase: int | None = None
@@ -3076,8 +3429,17 @@ async def start_pipeline_run(request: PipelineRunRequest):
     """Start a new pipeline run.
 
     Returns immediately with processing_run_id. Poll status_url for progress.
+    N3 fix: Checks for duplicate in-progress runs before starting.
     """
     runner = get_pipeline_runner()
+
+    # N3: Duplicate run prevention — check if same source is already being processed
+    source_key = request.filename or (request.query or "")
+    if source_key and runner.is_running_for_source(source_key):
+        raise HTTPException(
+            status_code=409,
+            detail=f"A pipeline run is already in progress for this source: {source_key}",
+        )
 
     processing_run_id = str(uuid.uuid4())
     source_document_id = str(uuid.uuid4())
@@ -3088,6 +3450,7 @@ async def start_pipeline_run(request: PipelineRunRequest):
         mode=PipelineMode(request.mode),
         source_type=SourceType(request.source_type),
         target_phase=request.target_phase,
+        source_key=source_key or None,
         created_at=datetime.now().isoformat(),
     )
 
@@ -3135,6 +3498,7 @@ async def get_pipeline_status(processing_run_id: str):
         source_document_id=state.source_document_id,
         pipeline_status=state.pipeline_status.value,
         current_phase=_determine_current_phase(state),
+        skip_phase_3_reason=state.skip_phase_3_reason.value if state.skip_phase_3_reason else None,
         phases=phases,
         error_message=state.error_message,
         error_phase=state.error_phase,
@@ -3180,7 +3544,7 @@ Expected: PASS
 
 ```bash
 git add backend/src/api/v1/pipeline.py backend/src/api/v1/router.py backend/tests/api/test_pipeline_api.py
-git commit -m "feat: add pipeline API with per-phase status details"
+git commit -m "feat: add pipeline API with per-phase status details and skip_phase_3_reason"
 ```
 
 ---
@@ -3189,7 +3553,8 @@ git commit -m "feat: add pipeline API with per-phase status details"
 
 **Files:**
 - Modify: `backend/app/main.py` (initialize orchestrator in lifespan)
-- Test: `backend/tests/agents/test_app_lifespan.py`
+- Create: `backend/src/agents/state_persistence_factory.py`
+- Create: `backend/tests/agents/test_app_lifespan.py`
 
 **Step 1: Write the failing test**
 
@@ -3226,7 +3591,66 @@ uv run pytest tests/agents/test_app_lifespan.py -v
 
 Expected: FAIL with "RuntimeError: Pipeline runner not initialized"
 
-**Step 3: Write minimal implementation**
+**Step 3: Create SessionBoundPersistence**
+
+Create `backend/src/agents/state_persistence_factory.py`:
+
+```python
+"""Session-bound state persistence using session-per-request pattern."""
+from __future__ import annotations
+
+from typing import Optional
+from uuid import UUID
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from src.agents.contracts import PipelineGraphState
+from src.dao.models import PipelineRunState
+
+
+class SessionBoundPersistence:
+    """StatePersistenceService that creates a fresh session per operation.
+
+    Avoids holding session references across requests (C1 fix: session lifecycle).
+    """
+
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]):
+        self._session_factory = session_factory
+
+    async def save(self, state: PipelineGraphState) -> None:
+        """Save or update pipeline state with a fresh session."""
+        async with self._session_factory() as session:
+            existing = await session.get(
+                PipelineRunState, UUID(state.processing_run_id)
+            )
+
+            state_json = state.model_dump(mode="json")
+
+            if existing:
+                existing.state_json = state_json
+            else:
+                new_record = PipelineRunState(
+                    processing_run_id=UUID(state.processing_run_id),
+                    source_document_id=UUID(state.source_document_id),
+                    state_json=state_json,
+                )
+                session.add(new_record)
+
+            await session.commit()
+
+    async def load(self, processing_run_id: str) -> Optional[PipelineGraphState]:
+        """Load pipeline state with a fresh session."""
+        async with self._session_factory() as session:
+            record = await session.get(
+                PipelineRunState, UUID(processing_run_id)
+            )
+            if record is None:
+                return None
+
+            return PipelineGraphState.model_validate(record.state_json)
+```
+
+**Step 4: Write minimal implementation in lifespan**
 
 Modify `backend/app/main.py` lifespan:
 
@@ -3259,14 +3683,22 @@ async def lifespan(app: FastAPI):
     from src.agents.phase_1_adapter import Phase1Adapter
     from src.agents.phase_2_adapter import Phase2Adapter
     from src.agents.phase_3_adapter import Phase3Adapter
+    from src.agents.state_persistence_factory import SessionBoundPersistence
     from src.core.ingest_and_digitize_data.document_acquisition.service import (
         DocumentAcquisitionService,
     )
     from src.core.ingest_and_digitize_data.parse_document.service import (
         ParseDocumentService,
     )
+    # C2 fix: Use DocumentParseOrchestrator with remote + local parsers
     from src.core.ingest_and_digitize_data.parse_document.orchestrator import (
-        MinerURemoteOrchestrator,
+        DocumentParseOrchestrator,
+    )
+    from src.core.ingest_and_digitize_data.parse_document.remote.parser import (
+        MinerURemoteParser,
+    )
+    from src.core.ingest_and_digitize_data.parse_document.local.parser import (
+        MinerULocalParser,
     )
     from src.core.cross_lingual_process_and_extract_evidence.workflow import (
         TranslationService,
@@ -3283,21 +3715,33 @@ async def lifespan(app: FastAPI):
     engine = build_async_engine(cfg)
     session_factory = async_session_factory(engine)
 
-    # Build phase adapters with long-lived services (no session dependencies)
+    # Build phase adapters with long-lived services
+    # C2 fix: DocumentParseOrchestrator wraps remote (cloud) and local (model-server) parsers
     acquisition_service = DocumentAcquisitionService()
-    parse_service = ParseDocumentService(MinerURemoteOrchestrator())
+    remote_parser = MinerURemoteParser(api_token=cfg.mineru_api_token)
+    local_parser = MinerULocalParser()
+    parse_orchestrator = DocumentParseOrchestrator(
+        remote=remote_parser,
+        local=local_parser,
+    )
+    parse_service = ParseDocumentService(parse_orchestrator)
     translation_service = TranslationService(cfg=cfg)
     extraction_service = EvidenceExtractionService(cfg=cfg)
-    standardization_service = EntityStandardizationService(cfg=cfg)
 
-    # State persistence uses session-per-request pattern:
-    # We create a session factory wrapper that adapters can use
-    from src.agents.state_persistence import StatePersistenceService
-
-    # For the orchestrator's persistence, we create a session on demand
-    from src.agents.state_persistence_factory import SessionBoundPersistence
-
+    # Session-bound persistence for orchestrator and runner
     session_persistence = SessionBoundPersistence(session_factory=session_factory)
+
+    # EntityStandardizationService needs a session — use session-per-request
+    # The service is called from Phase 3 adapter, which runs in a background task
+    # We create a wrapper that provides a fresh session per call
+    from src.agents.session_bound_standardization import (
+        SessionBoundStandardizationService,
+    )
+
+    standardization_service = SessionBoundStandardizationService(
+        cfg=cfg,
+        session_factory=session_factory,
+    )
 
     phase_adapters = {
         "phase_1": Phase1Adapter(acquisition_service, parse_service),
@@ -3339,66 +3783,61 @@ app = FastAPI(
 app.include_router(v1_router)
 ```
 
-**Step 4: Create SessionBoundPersistence**
+**Step 5: Create SessionBoundStandardizationService wrapper**
 
-Create `backend/src/agents/state_persistence_factory.py`:
+Create `backend/src/agents/session_bound_standardization.py`:
 
 ```python
-"""Session-bound state persistence using session-per-request pattern."""
+"""Session-bound wrapper for EntityStandardizationService.
+
+EntityStandardizationService requires a session in its constructor.
+This wrapper creates a fresh session per call to run_dual_result(),
+avoiding the closed-session problem (C1 fix).
+"""
 from __future__ import annotations
 
-from typing import Optional
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from src.agents.contracts import PipelineGraphState
-from src.dao.models import PipelineRunState
+if TYPE_CHECKING:
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+        DualEvidenceExtractionResult,
+    )
+    from src.core.standardize_entities_and_align_knowledge.contracts import (
+        StandardizationResult,
+    )
 
 
-class SessionBoundPersistence:
-    """StatePersistenceService that creates a fresh session per operation.
+class SessionBoundStandardizationService:
+    """Wrapper that provides session-per-request for EntityStandardizationService."""
 
-    Avoids holding session references across requests (Issue 9 fix).
-    """
-
-    def __init__(self, session_factory: async_sessionmaker[AsyncSession]):
+    def __init__(self, cfg, session_factory: async_sessionmaker[AsyncSession]):
+        self._cfg = cfg
         self._session_factory = session_factory
 
-    async def save(self, state: PipelineGraphState) -> None:
-        """Save or update pipeline state with a fresh session."""
+    async def run_dual_result(
+        self,
+        result: DualEvidenceExtractionResult,
+        *,
+        source_document_id: str,
+        processing_run_id: str,
+    ) -> StandardizationResult:
+        """Run standardization with a fresh session."""
+        from src.core.standardize_entities_and_align_knowledge.api import (
+            EntityStandardizationService,
+        )
+
         async with self._session_factory() as session:
-            existing = await session.get(
-                PipelineRunState, UUID(state.processing_run_id)
+            service = EntityStandardizationService(cfg=self._cfg, session=session)
+            return await service.run_dual_result(
+                result,
+                source_document_id=source_document_id,
+                processing_run_id=processing_run_id,
             )
-
-            state_json = state.model_dump(mode="json")
-
-            if existing:
-                existing.state_json = state_json
-            else:
-                new_record = PipelineRunState(
-                    processing_run_id=UUID(state.processing_run_id),
-                    source_document_id=UUID(state.source_document_id),
-                    state_json=state_json,
-                )
-                session.add(new_record)
-
-            await session.commit()
-
-    async def load(self, processing_run_id: str) -> Optional[PipelineGraphState]:
-        """Load pipeline state with a fresh session."""
-        async with self._session_factory() as session:
-            record = await session.get(
-                PipelineRunState, UUID(processing_run_id)
-            )
-            if record is None:
-                return None
-
-            return PipelineGraphState.model_validate(record.state_json)
 ```
 
-**Step 5: Run test to verify it passes**
+**Step 6: Run test to verify it passes**
 
 ```bash
 cd backend
@@ -3407,10 +3846,10 @@ uv run pytest tests/agents/test_app_lifespan.py -v
 
 Expected: PASS
 
-**Step 6: Commit**
+**Step 7: Commit**
 
 ```bash
-git add backend/app/main.py backend/src/agents/state_persistence_factory.py backend/tests/agents/test_app_lifespan.py
+git add backend/app/main.py backend/src/agents/state_persistence_factory.py backend/src/agents/session_bound_standardization.py backend/tests/agents/test_app_lifespan.py
 git commit -m "feat: initialize pipeline orchestrator in app lifespan with session-per-request"
 ```
 
@@ -3428,7 +3867,7 @@ git commit -m "feat: initialize pipeline orchestrator in app lifespan with sessi
 ```python
 """Integration test for full pipeline orchestrator."""
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from src.agents.contracts import (
     PipelineGraphState,
     PipelineMode,
@@ -3437,6 +3876,7 @@ from src.agents.contracts import (
     PipelineStatus,
     PhaseStatusDetail,
     Phase1Output,
+    SkipPhase3Reason,
 )
 from src.agents.orchestrator import PipelineOrchestrator
 from src.agents.concurrency import RetryablePhaseExecutor
@@ -3501,7 +3941,6 @@ async def test_upstream_validation_rejects_missing_prerequisites():
 
     assert result.pipeline_status == PipelineStatus.FAILED
     assert "upstream" in result.error_message.lower()
-    # No adapters should have been called
     mock_adapters["phase_3"].run.assert_not_called()
 
 
@@ -3519,9 +3958,9 @@ async def test_persistence_called_after_each_phase():
     state_after_1.phase_1_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
     state_after_1.phase_1_output = Phase1Output(
         pdf_path="/tmp/test.pdf",
-        markdown_path="/tmp/test.md",
-        json_path="/tmp/test.json",
-        image_dir="/tmp/images",
+        md_path="/tmp/test.md",
+        metadata_path="/tmp/test.json",
+        output_dir="/tmp/output",
     )
 
     mock_adapters = {
@@ -3542,6 +3981,55 @@ async def test_persistence_called_after_each_phase():
 
     # save() called after each phase + final AWAITING_REVIEW save
     assert mock_persistence.save.call_count >= 3
+
+
+@pytest.mark.asyncio
+async def test_skip_phase_3_reason_flows_through():
+    """skip_phase_3_reason set by Phase 2 flows to Phase 3 adapter."""
+    state = PipelineGraphState(
+        processing_run_id="test-run",
+        source_document_id="test-doc",
+        mode=PipelineMode.FULL,
+        source_type=SourceType.LOCAL,
+    )
+
+    state_after_1 = state.model_copy(deep=True)
+    state_after_1.phase_1_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
+    state_after_1.phase_1_output = Phase1Output(
+        pdf_path="/tmp/test.pdf",
+        md_path="/tmp/test.md",
+        metadata_path="/tmp/test.json",
+        output_dir="/tmp/output",
+    )
+
+    state_after_2 = state_after_1.model_copy(deep=True)
+    state_after_2.phase_2_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
+    state_after_2.skip_phase_3_reason = SkipPhase3Reason.NOT_RELEVANT
+
+    state_after_3 = state_after_2.model_copy(deep=True)
+    state_after_3.phase_3_status = PhaseStatusDetail(
+        status=PhaseStatus.SKIPPED,
+        summary={"reason": "not_relevant"},
+    )
+
+    mock_adapters = {
+        "phase_1": MagicMock(run=AsyncMock(return_value=state_after_1)),
+        "phase_2": MagicMock(run=AsyncMock(return_value=state_after_2)),
+        "phase_3": MagicMock(run=AsyncMock(return_value=state_after_3)),
+    }
+    mock_persistence = MagicMock(save=AsyncMock())
+    retry_executor = RetryablePhaseExecutor(max_retries=0, backoff_base=0.01)
+
+    orchestrator = PipelineOrchestrator(
+        phase_adapters=mock_adapters,
+        state_persistence=mock_persistence,
+        retry_executor=retry_executor,
+    )
+
+    result = await orchestrator.run(state)
+
+    assert result.skip_phase_3_reason == SkipPhase3Reason.NOT_RELEVANT
+    assert result.phase_3_status.status == PhaseStatus.SKIPPED
 ```
 
 **Step 2: Run test**
@@ -3558,32 +4046,38 @@ Expected: PASS
 Append to `progress.txt`:
 
 ```
-[2026-05-29] Pipeline Orchestrator Implementation (v2 — Post-Audit) — 1 main agent + 3 phase adapters (LangGraph) [COMPLETED]
+[2026-05-29] Pipeline Orchestrator Implementation (v3 — Final) — 1 main agent + 3 phase adapters (LangGraph) [COMPLETED]
   - contracts.py: PipelineGraphState (Pydantic), PhaseStatus/PhaseStatusDetail, PipelineMode, SourceType,
     PipelineStatus, Phase1Output/Phase2Output/Phase3Output, PhaseErrorDetail,
-    RetryablePhaseError/PermanentPhaseError
+    RetryablePhaseError/PermanentPhaseError, SkipPhase3Reason enum
   - state_persistence.py: Save/load state to PostgreSQL at phase boundaries
-  - state_persistence_factory.py: Session-per-request pattern (Issue 9 fix)
-  - phase_1_adapter.py: Acquisition + Parsing (raises classified errors)
-  - phase_2_adapter.py: Translation + EvidenceExtractionService.run_dual()
-  - phase_3_adapter.py: Entity Standardization (raises classified errors)
+  - state_persistence_factory.py: Session-per-request pattern (C1 fix)
+  - session_bound_standardization.py: Session-per-request for EntityStandardizationService
+  - phase_1_adapter.py: Acquisition + Parsing (raises classified errors, correct field names)
+  - phase_2_adapter.py: Translation + EvidenceExtractionService.run_dual() + build_dual_documents_from_output_dir()
+  - phase_3_adapter.py: Entity Standardization (raises classified errors, skip_phase_3_reason support)
   - orchestrator.py: LangGraph StateGraph with 3 phase nodes + upstream validation + persistence
   - runner.py: Background execution with asyncio.Semaphore(2) + DB fallback
   - concurrency.py: Retry logic with RetryablePhaseError/PermanentPhaseError
-  - pipeline.py: POST /api/v1/pipeline/run + GET /api/v1/pipeline/runs/{id}/status (per-phase details)
-  - App lifespan initialization with session-per-request
+  - pipeline.py: POST /api/v1/pipeline/run + GET /api/v1/pipeline/runs/{id}/status (per-phase details + skip_phase_3_reason)
+  - App lifespan initialization with DocumentParseOrchestrator (C2 fix)
 
-  Alignment audit fixes applied:
-  - Issue 1: Phase 4 removed from graph (3 phases only, AWAITING_REVIEW set after Phase 3)
-  - Issue 2: Upstream dependency validation for mode=PHASE
-  - Issue 3: Classified error hierarchy (RetryablePhaseError, PermanentPhaseError)
-  - Issue 4: State persisted to PostgreSQL after each phase
-  - Issue 5: Phase 2 uses EvidenceExtractionService.run_dual()
-  - Issue 6: Structured PhaseErrorDetail model
-  - Issue 7: PipelineRunner.get_last_state() falls back to PostgreSQL
-  - Issue 8: Per-phase PhaseStatusDetail in API response
-  - Issue 9: Session-per-request via SessionBoundPersistence
-  - Issue 10: Typed output models (Phase1Output, Phase2Output, Phase3Output)
+  All 23 audit issues fixed:
+  - A2: tests/agents/ directory created
+  - B1: UUID consistency noted (str in contracts, UUID in DB)
+  - B2-B4: SavedFiles/MinerULocalBatchSaveResult field names corrected
+  - B5-B7: Phase 2 uses EvidenceExtractionService.run_dual() + build_dual_documents_from_output_dir()
+  - B8: run_dual_result positional arg style
+  - C1: Session-per-request via SessionBoundPersistence
+  - C2: DocumentParseOrchestrator(remote, local) instead of MinerURemoteOrchestrator
+  - C3-C5: pipeline_status field, DB fallback, persistence between phases
+  - C6: Phase 4 not a graph node (3 phases only)
+  - C7-C8: skip_phase_3_reason enum, upstream validation
+  - D1-D5: pipeline_status, upstream validation, persistence, skip reasons, correct file paths
+  - E1-E4: Error classification, transient errors, per-phase details, typed outputs
+  - F1: Alembic migration path corrected
+  - G1-G4: Hardcoded paths noted, correct serialization, correct types, integration test
+  - H1-H2: Concurrency test tracks max_observed, get_last_state is async
 ```
 
 **Step 4: Add lesson.md entry**
@@ -3591,50 +4085,65 @@ Append to `progress.txt`:
 Append to `lesson.md`:
 
 ```markdown
-## 2026-05-29: Pipeline Orchestrator v2 — Post-Audit Corrections
+## 2026-05-29: Pipeline Orchestrator v3 — Code-Level Correctness Audit
 
-**Problem**: Initial plan had 10 architectural violations caught by alignment audit.
+**Problem**: Second review caught 23 implementation detail issues that would cause test failures or runtime crashes.
 
 **Key corrections**:
-1. Phase 4 is NOT a pipeline phase — it's a persistent review state via its own HTTP API. The orchestrator graph has only 3 nodes.
-2. Adapters must RAISE classified errors, not swallow them. The orchestrator catches and decides retry vs stop.
-3. State must be persisted after EACH phase, not just at the end. Crash recovery depends on this.
-4. The service layer exists for a reason — adapters should call `EvidenceExtractionService.run_dual()`, not the internal workflow.
-5. Session-per-request pattern prevents holding closed session references in long-lived services.
+1. Field names must match actual dataclass definitions — SavedFiles uses `md_path`, `metadata_path`, `output_dir`, not `markdown_path`, `json_path`, `image_dir`.
+2. Service facades exist for a reason — use `EvidenceExtractionService.run_dual()`, not the internal workflow directly.
+3. Session lifecycle matters — services holding session references across requests will crash when the session closes. Use session-per-request pattern.
+4. Skip conditions need granularity — boolean `skip_phase_3` is too coarse; use enum `SkipPhase3Reason` to capture NOT_RELEVANT, NO_ENTITIES, NO_CANDIDATES.
+5. Phase 2 reads from Phase 1's output directory structure — use `output_dir` (contains full parse), not `metadata_path` (metadata only).
 
-**Prevention**: When designing orchestrator nodes, always ask: "Is this a pipeline phase, or a persistent state?" If the answer is persistent state, it doesn't belong in the graph.
+**Prevention**: When writing adapters, always verify field names against actual dataclass/model definitions using `rg "class.*"`. Mock tests must use the correct types (Pydantic vs dataclass).
+
+**Prevention**: When wiring services in lifespan, check if they hold session references. If yes, wrap with session-per-request pattern.
 ```
 
 **Step 5: Commit**
 
 ```bash
 git add backend/tests/agents/test_integration.py progress.txt lesson.md
-git commit -m "docs: add integration tests and update progress for pipeline orchestrator v2"
+git commit -m "docs: add integration tests and update progress for pipeline orchestrator v3"
 ```
 
 ---
 
-## Summary (v2)
+## Summary (v5 — Dedup + Indent Fix)
 
-This plan implements a LangGraph-based pipeline orchestrator with **10 audit fixes applied**:
+This plan implements a LangGraph-based pipeline orchestrator with **all 31 audit issues fixed** (23 from v3 + 6 from fourth pass + 2 from fifth pass):
 
 | Component | Description |
 |---|---|
 | **1 main agent** | `PipelineOrchestrator` — 3-phase LangGraph StateGraph |
-| **3 phase adapters** | Thin wrappers calling existing services (raises classified errors) |
+| **3 phase adapters** | Thin wrappers calling existing services (raises classified errors, correct field names) |
 | **Shared big state** | `PipelineGraphState` — orchestration metadata only (Pydantic) |
 | **Structured errors** | `RetryablePhaseError` / `PermanentPhaseError` hierarchy |
-| **Typed outputs** | `Phase1Output`, `Phase2Output`, `Phase3Output` (no bare dicts) |
+| **Typed outputs** | `Phase1Output`, `Phase2Output` (with `extraction_result_path`), `Phase3Output` |
 | **Per-phase details** | `PhaseStatusDetail` with timing, error, summary |
+| **Skip reasons** | `SkipPhase3Reason` enum (NOT_RELEVANT, NO_ENTITIES, NO_CANDIDATES) |
 | **Deterministic routing** | Boolean logic on structured state fields |
 | **Upstream validation** | mode=PHASE checks prerequisites before execution |
-| **Crash recovery** | PostgreSQL persistence after each phase + DB fallback in runner |
+| **Crash recovery** | PostgreSQL persistence after each phase + DB fallback in runner + initial state persisted |
 | **Concurrency control** | `asyncio.Semaphore(2)` |
-| **Session lifecycle** | Session-per-request via `SessionBoundPersistence` |
+| **Session lifecycle** | Session-per-request via `SessionBoundPersistence` and `SessionBoundStandardizationService` |
 | **Phase 4 external** | Not a graph node; pipeline sets `AWAITING_REVIEW` and stops |
-| **Async API** | POST to start (202), GET to poll status with per-phase details |
+| **Async API** | POST to start (202), GET to poll status with per-phase details + skip_phase_3_reason |
+| **Request validation** | Source-specific validation (local requires content, online requires query/identifiers) |
+| **Range validation** | `target_phase` constrained to 1-3 via `Field(ge=1, le=3)` |
+| **Duplicate prevention** | Checks `source_key` (filename/query) against existing in-progress runs (409 Conflict) |
+| **Extraction handoff** | Phase 2 saves `DualEvidenceExtractionResult` JSON; Phase 3 reads from `extraction_result_path` |
+| **Document parsing** | `DocumentParseOrchestrator(remote, local)` with MinerU cloud + model-server fallback |
 
-Total: 12 tasks, ~30 files created/modified, comprehensive test coverage.
+Total: 13 tasks (0-12), ~35 files created/modified, comprehensive test coverage.
 
-**Architecture principle**: The orchestrator coordinates; the phases execute. Business logic stays in `src/core/<phase>/`, never in `src/agents/`. Adapters raise; orchestrator catches.
+### Known Limitations (v1)
+
+- **N11: No retry endpoint** — Failed runs cannot be retried via API. Users must create a new run with the same parameters. A `POST /api/v1/pipeline/runs/{id}/retry` endpoint should be added in v2.
+- **Duplicate prevention is filename-based** — The dedup key uses `filename` for local uploads and `query` for online. Content-hash-based dedup would be more robust but is deferred to v2.
+
+**Architecture principle**: The orchestrator coordinates; the phases execute. Business logic stays in `src/core/<phase>/`, never in `src/agents/`. Adapters raise; orchestrator catches. Field names match actual dataclass definitions. Sessions are short-lived. State is persisted at every boundary (initial, per-phase, final).
+
+---
 
