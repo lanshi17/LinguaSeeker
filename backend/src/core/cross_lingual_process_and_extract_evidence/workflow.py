@@ -12,7 +12,7 @@ from .contracts import CrossLingualOutput, PipelineState, TranslationResult
 from .persistence import DocumentPersistenceService
 from .cross_lingual.format.formatter import MarkdownFormatter
 from .cross_lingual.translate.language_detector import detect_language
-from .middleware import traced_node
+from src.utils.observability import traced_node
 from .router import LanguageRouter
 from .cross_lingual.translate.translator import MultiStageTranslator, TranslationError
 
