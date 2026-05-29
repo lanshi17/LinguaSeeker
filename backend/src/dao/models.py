@@ -525,3 +525,39 @@ class ChatMessage(Base):
         nullable=False,
         server_default=func.now(),
     )
+
+
+class PipelineRunState(Base):
+    """Checkpoint persistence for pipeline orchestrator state.
+
+    Stores the full PipelineGraphState as JSONB after each phase completes.
+    Enables crash recovery by reloading state from the last checkpoint.
+    """
+
+    __tablename__ = "pipeline_run_states"
+    __table_args__ = (
+        Index("ix_pipeline_run_states_source_document_id", "source_document_id"),
+    )
+
+    processing_run_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    source_document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("source_documents.source_document_id"),
+        nullable=False,
+    )
+    state_json: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )

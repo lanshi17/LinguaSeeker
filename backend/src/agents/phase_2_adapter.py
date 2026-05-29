@@ -1,0 +1,202 @@
+"""Phase 2 adapter: translation and dual-track evidence extraction.
+
+Uses TranslationService.run() + .save() for translation.
+Uses EvidenceExtractionService.build_dual_documents_from_output_dir() + .run_dual()
+for dual-track evidence extraction.
+"""
+from __future__ import annotations
+
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from loguru import logger
+
+from src.agents.contracts import (
+    Phase2Output,
+    PhaseStatus,
+    PhaseStatusDetail,
+    PipelineGraphState,
+    PermanentPhaseError,
+    RetryablePhaseError,
+    SkipPhase3Reason,
+)
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
+    EvidenceExtractionService,
+)
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    EvidenceExtractionStatus,
+)
+
+if TYPE_CHECKING:
+    from src.core.cross_lingual_process_and_extract_evidence.workflow import (
+        TranslationService,
+    )
+
+# Transient errors that should be retried
+_RETRYABLE_ERRORS: tuple[type, ...] = (
+    ConnectionError,
+    TimeoutError,
+    OSError,
+)
+
+try:
+    import httpx
+
+    _RETRYABLE_ERRORS += (httpx.TimeoutException,)
+except ImportError:
+    pass
+
+try:
+    import openai
+
+    _RETRYABLE_ERRORS += (openai.APITimeoutError, openai.RateLimitError)
+except ImportError:
+    pass
+
+try:
+    from src.core.ingest_and_digitize_data.parse_document.exceptions import (
+        MinerUTimeoutError,
+    )
+
+    _RETRYABLE_ERRORS += (MinerUTimeoutError,)
+except ImportError:
+    pass
+
+
+class Phase2Adapter:
+    """Thin adapter wrapping TranslationService + EvidenceExtractionService.
+
+    Flow:
+    1. Read parsed content from Phase 1 output_dir
+    2. Call TranslationService.run() -> TranslationResult
+    3. Call TranslationService.save() -> CrossLingualOutput
+    4. Call build_dual_documents_from_output_dir() -> DualTrackDocuments
+    5. Call EvidenceExtractionService.run_dual() -> DualEvidenceExtractionResult
+    """
+
+    def __init__(
+        self,
+        translation_service: TranslationService,
+        extraction_service: EvidenceExtractionService,
+    ):
+        self._translation = translation_service
+        self._extraction = extraction_service
+
+    async def run(self, state: PipelineGraphState) -> PipelineGraphState:
+        """Execute Phase 2: translate and extract dual-track evidence.
+
+        Returns updated state with phase_2_output set on success.
+        Sets skip_phase_3_reason if both tracks are NOT_RELEVANT.
+        Raises RetryablePhaseError or PermanentPhaseError on failure.
+        """
+        logger.info("Phase 2 started: run={}", state.processing_run_id)
+
+        state.phase_2_status = PhaseStatusDetail(
+            status=PhaseStatus.RUNNING,
+            started_at=datetime.now().isoformat(),
+        )
+
+        try:
+            # Load parsed document from Phase 1 output
+            if state.phase_1_output is None:
+                raise PermanentPhaseError(
+                    "Phase 1 output not found in state",
+                    phase=2,
+                )
+
+            # Read from Phase 1 metadata (contains pages and content_blocks)
+            metadata_path = state.phase_1_output.metadata_path
+            with open(metadata_path, "r") as f:
+                parse_data = json.load(f)
+
+            pages = parse_data.get("pages", [])
+            content_blocks = parse_data.get("content_blocks", [])
+
+            # Run translation
+            translation_result = await self._translation.run(
+                pages=pages,
+                content_blocks=content_blocks,
+            )
+
+            # Save translation output (creates original.json and translated.json)
+            output_dir = f"data/pipeline/{state.processing_run_id}/phase_2"
+            Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+            cross_lingual_output = self._translation.save(
+                result=translation_result,
+                output_dir=output_dir,
+                doc_id=state.source_document_id,
+            )
+
+            # Build dual documents using the service's static method
+            # This reads from cross_lingual_output.output_dir
+            dual_documents = EvidenceExtractionService.build_dual_documents_from_output_dir(
+                cross_lingual_output.output_dir
+            )
+
+            # Run dual-track extraction via the service facade
+            dual_result = await self._extraction.run_dual(dual_documents)
+
+            # Check if document is relevant
+            both_not_relevant = (
+                dual_result.original_result.status
+                == EvidenceExtractionStatus.NOT_RELEVANT
+                and dual_result.translated_result.status
+                == EvidenceExtractionStatus.NOT_RELEVANT
+            )
+
+            if both_not_relevant:
+                logger.info("Document not relevant, setting skip_phase_3_reason")
+                state.skip_phase_3_reason = SkipPhase3Reason.NOT_RELEVANT
+
+            # Save extraction result for Phase 3 (N7 fix)
+            extraction_result_path = f"{output_dir}/extraction_result.json"
+            with open(extraction_result_path, "w") as f:
+                json.dump(dual_result.model_dump(mode="json"), f)
+
+            state.phase_2_output = Phase2Output(
+                output_dir=cross_lingual_output.output_dir,
+                original_json_path=cross_lingual_output.original_json_path,
+                translated_json_path=cross_lingual_output.translated_json_path,
+                source_language=translation_result.source_language,
+                extraction_result_path=extraction_result_path,
+            )
+
+            state.phase_2_status = PhaseStatusDetail(
+                status=PhaseStatus.COMPLETED,
+                started_at=state.phase_2_status.started_at,
+                completed_at=datetime.now().isoformat(),
+                duration_seconds=(
+                    datetime.now() - datetime.fromisoformat(state.phase_2_status.started_at)
+                ).total_seconds()
+                if state.phase_2_status.started_at
+                else None,
+                summary={
+                    "relevant": not both_not_relevant,
+                    "source_language": translation_result.source_language,
+                },
+            )
+
+            logger.info(
+                "Phase 2 completed: run={}, skip_phase_3_reason={}",
+                state.processing_run_id,
+                state.skip_phase_3_reason,
+            )
+            return state
+
+        except _RETRYABLE_ERRORS as e:
+            raise RetryablePhaseError(
+                f"Phase 2 transient error: {e}",
+                phase=2,
+            ) from e
+
+        except (PermanentPhaseError, RetryablePhaseError):
+            raise  # Already classified, pass through
+
+        except Exception as e:
+            raise PermanentPhaseError(
+                f"Phase 2 unexpected error: {e}",
+                phase=2,
+            ) from e
