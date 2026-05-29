@@ -28,7 +28,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # ── Metadata target ─────────────────────────────────────────────────────
-from src.dao.models import Base  # noqa: E402
+from src.dao.postgresql.models import Base  # noqa: E402
 
 target_metadata = Base.metadata
 
