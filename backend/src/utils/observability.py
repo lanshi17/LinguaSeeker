@@ -9,20 +9,7 @@ from loguru import logger
 
 
 def traced_node(name: str) -> Callable:
-    """Decorator that adds LangSmith tracing + loguru logging to a pipeline node.
-
-    Usage:
-        @traced_node("my_node")
-        def my_node(state: State) -> State:
-            # node logic
-            return state
-
-    Args:
-        name: Node name for tracing and logging.
-
-    Returns:
-        Decorated function with tracing and logging.
-    """
+    """Decorator that adds LangSmith tracing + loguru logging to a pipeline node."""
     def decorator(fn: Callable) -> Callable:
         @traceable(name=name, run_type="chain")
         @functools.wraps(fn)
