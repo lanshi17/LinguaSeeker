@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import aiofiles
 from loguru import logger
 
 from src.agents.contracts import (
@@ -76,11 +77,19 @@ class Phase1Adapter:
         )
 
         try:
+            # Read uploaded file bytes if available
+            content_bytes: bytes | None = None
+            upload_filename: str | None = None
+            if state.upload_file_path:
+                upload_filename = Path(state.upload_file_path).name
+                async with aiofiles.open(state.upload_file_path, "rb") as f:
+                    content_bytes = await f.read()
+
             # Build acquisition request from state
             request = DocumentAcquisitionRequest(
                 source=AcquisitionSource(state.source_type.value),
-                filename=Path(state.upload_file_path).name if state.upload_file_path else None,
-                content=state.upload_file_path,  # file path for gateway to read
+                filename=upload_filename,
+                content=content_bytes,
                 upload_dir=None,
             )
 

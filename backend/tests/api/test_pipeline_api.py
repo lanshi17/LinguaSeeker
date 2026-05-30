@@ -22,15 +22,21 @@ async def test_pipeline_run_injects_content_to_state(async_client):
         mock_runner.is_running_for_source = MagicMock(return_value=False)
         mock_get_runner.return_value = mock_runner
 
-        await async_client.post(
-            "/api/v1/pipeline/run",
-            json={
-                "source_type": "local",
-                "filename": "test.pdf",
-                "content_base64": "dGVzdA==",  # "test"
-                "mode": "full",
-            },
-        )
+        # Patch aiofiles.open to avoid writing real files to disk
+        mock_file = AsyncMock()
+        mock_file.__aenter__ = AsyncMock(return_value=mock_file)
+        mock_file.__aexit__ = AsyncMock(return_value=False)
+        mock_file.write = AsyncMock()
+        with patch("src.api.v1.pipeline.aiofiles.open", return_value=mock_file):
+            await async_client.post(
+                "/api/v1/pipeline/run",
+                json={
+                    "source_type": "local",
+                    "filename": "test.pdf",
+                    "content_base64": "dGVzdA==",  # "test"
+                    "mode": "full",
+                },
+            )
 
         # Verify start() was called with state containing upload_file_path
         call_args = mock_runner.start.call_args

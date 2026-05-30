@@ -108,9 +108,10 @@ class Phase2Adapter:
             )
 
             # Build dual documents using the service's static method
-            # This reads from cross_lingual_output.output_dir
-            dual_documents = EvidenceExtractionService.build_dual_documents_from_output_dir(
-                cross_lingual_output.output_dir
+            # This reads from cross_lingual_output.output_dir (sync Path.read_text)
+            dual_documents = await asyncio.to_thread(
+                EvidenceExtractionService.build_dual_documents_from_output_dir,
+                cross_lingual_output.output_dir,
             )
 
             # Run dual-track extraction via the service facade
