@@ -11,6 +11,7 @@
 | UI Components | shadcn/ui (Radix UI) | Drawer, Dialog, Accordion, Command, Tabs, Badge, Spinner |
 | Chat/Streaming | Vercel AI SDK 4.x | `useChat` hook, SSE streaming, `streamUI` for inline evidence cards |
 | Markdown Render | react-markdown + remark-gfm | Workspace MD view with custom `data-anchor-id` paragraph components |
+| Syntax Highlight | shiki 1.x | SQL/ddl/dml 代码块语法高亮，单例模式，github-dark 主题 |
 | Client State | Zustand 4.5 | `chatStore`, `workspaceStore`, `taskBoardStore` |
 | Server State | React Query 5.50 | Caching, invalidation |
 | HTTP | Axios 1.7 | Calls `/api/v1/*` through Next.js proxy |
@@ -394,6 +395,60 @@ Not an independent navigation tab. Entered via "查看工作台" button from tas
 - On card click → `scrollIntoView({ behavior: 'smooth' })` to target anchor.
 - Breathing-light highlight: background color fades in/out over ~1.5s, then auto-clears.
 - 60fps smooth scrolling.
+- 自定义 `code` 组件委托给 `CodeBlock`（见下文），实现 SQL 代码块的语法高亮和复制功能。
+
+#### Code Block 组件 (`components/ui/code-block.tsx`)
+
+通用代码块渲染组件，作为 `react-markdown` 的 `code` 组件覆盖，同时支持独立使用。
+
+**SQL 语言检测（`lib/utils/sql-language.ts`）：**
+
+从 markdown 围栏代码块的 `className`（如 `language-sql`）提取语言标签，匹配以下集合时触发 SQL 渲染路径：
+
+```
+SQL_LANGUAGE_TAGS = { sql, ddl, dml, mysql, postgresql, plsql, tsql }
+```
+
+- `sql` / `ddl` / `dml`：主要匹配目标
+- `mysql` / `postgresql` / `plsql` / `tsql`：常见 SQL 方言，向前兼容
+
+**渲染逻辑：**
+
+| 场景 | 渲染方式 |
+|---|---|
+| 语言标签匹配 SQL 集合 | Shiki 语法高亮 + 语言标签栏 + 中文复制按钮 |
+| 其他语言或无语言标签 | 普通 `<pre><code>` 样式 |
+
+**Shiki 集成：**
+
+- 使用 `shiki` 1.x 的 `createHighlighter` 单例模式，仅加载 `sql` 语言和 `github-dark` 主题
+- 异步初始化（WASM 加载），首次渲染显示纯文本，高亮就绪后切换
+- 组件结构：
+
+```
+┌─────────────────────────────────────────┐
+│  sql                          [复制]     │  ← 语言标签栏（深色背景）
+├─────────────────────────────────────────┤
+│  SELECT * FROM evidence                 │  ← Shiki 高亮代码
+│  WHERE gene = 'BRCA1'                   │
+│    AND year >= 2022                     │
+└─────────────────────────────────────────┘
+```
+
+**组件接口：**
+
+```typescript
+// components/ui/code-block.tsx
+interface CodeBlockProps {
+  className?: string;    // react-markdown 传入 "language-xxx"
+  children?: React.ReactNode;
+}
+
+// lib/utils/sql-language.ts
+function isSqlLanguage(lang: string | undefined): boolean;
+```
+
+**共享机制：** 通过 `lib/utils/markdown-components.tsx` 的 `createMarkdownComponents()` 工厂函数，所有使用 `react-markdown` 的上下文（工作台文档视图、AI 助手消息、知识库查询结果）共享同一套代码块组件。
 
 #### Evidence Card List (`workspace/evidence-card-list.tsx`)
 
@@ -476,6 +531,42 @@ Supports HGVS notation, gene symbol, PMID. Real-time autocomplete for known vari
 ```
 
 System uses Text-to-SQL (calls Claude API from backend). Generated SQL shown in `<code>` block for user review before execution. Full transparency.
+
+**SQL 展示组件（`knowledge-base/sql-display.tsx`）：**
+
+NL-to-SQL 结果使用 `SqlDisplay` 组件渲染，内部复用 `CodeBlock`：
+
+```typescript
+interface SqlDisplayProps {
+  sql: string;       // 后端返回的 SQL 字符串
+  title?: string;    // 可选标题，如 "生成的 SQL"
+}
+```
+
+- 自动触发 Shiki SQL 语法高亮（通过 `className="language-sql"`）
+- 右上角显示中文复制按钮（"复制" / "已复制"）
+- 带可选标题栏的卡片式布局
+
+**中文复制按钮设计（`components/ui/copy-button.tsx`）：**
+
+- 默认状态显示 "复制"，点击后切换为 "已复制 ✓"，2 秒后恢复
+- 使用 `navigator.clipboard.writeText()` API，降级方案为 `document.execCommand('copy')`
+- 定位在代码块右上角（`absolute top-2 right-2`），半透明深色背景
+- 无障碍：`aria-label="复制代码"`
+- 所有 SQL 类代码块（ddl/dml/sql 及方言标签）均显示复制按钮
+
+```
+┌─────────────────────────────────────────────────┐
+│  生成的 SQL                                      │  ← 可选标题
+├─────────────────────────────────────────────────┤
+│  sql                                [复制]       │  ← 语言标签 + 复制按钮
+├─────────────────────────────────────────────────┤
+│  SELECT * FROM evidence                          │  ← Shiki 高亮
+│  WHERE gene = 'BRCA1'                            │
+│    AND dimension = 'functional'                  │
+│    AND conclusion = 'loss_of_function'           │
+└─────────────────────────────────────────────────┘
+```
 
 #### Advanced Filters (Collapsible Panel)
 
