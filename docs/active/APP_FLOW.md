@@ -306,7 +306,8 @@ User opens Knowledge Base tab
   │     Input NL description → POST /api/v1/kb/nl-to-sql
   │       → Backend calls Claude API for Text-to-SQL
   │       → Returns SQL string + result set
-  │       → User reviews SQL in <code> block (transparency)
+  │       → SqlDisplay 组件渲染 SQL（Shiki 语法高亮 + 中文"复制"按钮）
+  │       → User reviews SQL in code block (transparency)
   │       → Results rendered in evidence matrix
   │
   └── Advanced filters (collapsible):

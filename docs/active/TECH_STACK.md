@@ -11,6 +11,7 @@
 | UI Components | shadcn/ui (Radix UI) | latest | Headless primitives: Drawer, Dialog, Accordion, Command (HPO autocomplete), Tabs |
 | Chat/Streaming | Vercel AI SDK | 4.x | `useChat` hook, SSE streaming, `streamUI` for inline evidence cards |
 | Markdown Render | react-markdown + remark-gfm | 9.x / 4.x | Workspace MD view with custom anchor components |
+| Syntax Highlight | shiki | 1.x | SQL/ddl/dml 代码块语法高亮 (TextMate grammars, github-dark 主题) |
 | State | Zustand | 4.5 | `chatStore` (messages, editing card ID), `workspaceStore` (highlight anchor, reviewed cards), `taskBoardStore` (filters, selection) |
 | Server State | React Query + Axios | 5.50 / 1.7 | Server state caching + HTTP client |
 | Backend | FastAPI | 0.111+ | Async API, auth, tasks, orchestration |
