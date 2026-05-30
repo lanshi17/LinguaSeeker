@@ -7,7 +7,7 @@
 **Architecture:** Extract shared observability primitives into `backend/src/utils/` (logging config, exceptions, middleware). The main `app/main.py` wires them at startup, matching the model server's existing patterns.
 
 **Deferred:**
-- The model server's `services/model-server/app/utils/logger.py` duplicates `_InterceptHandler` and loguru configuration. Refactoring it to import from `src.utils.logger` is deferred — the model server is a standalone microservice with its own dependency tree, and sharing `src.utils` requires restructuring its Python path.
+- The model server's `services/model-server/app/utils/logger.py` duplicates `_InterceptHandler` and loguru configuration. Refactoring it to import from `src.utils.logger` is deferred — the model server is a standalone microservice with its own dependency tree, and sharing `src.utils` requires restructuring its Python path. **Behavioral difference:** the model server configures sinks at import time; this plan configures them inside `setup_logging()` (called at startup). The plan's approach is more testable and explicit. The follow-up should migrate the model server to the same pattern.
 - The model server uses `request_monitor_middleware_factory()` (factory pattern) while this plan introduces `add_request_monitoring(app)` (direct registration). Unifying the API is deferred to the same follow-up.
 
 **Tech Stack:** Python 3.12+, FastAPI, loguru, pydantic, Starlette middleware
@@ -162,9 +162,10 @@ def setup_logging(*, environment: str = "development", debug: bool = False) -> N
     )
 
     # File sink — DEBUG+, daily rotation, 14-day retention
+    # Naming follows AGENTS.md rule 7: YYYY-MM-DD_HHmmss.log
     _logger.add(
-        LOG_DIR / "backend_{time:YYYY-MM-DD}.log",
-        rotation="00:00",
+        LOG_DIR / "{time:YYYY-MM-DD_HHmmss}.log",
+        rotation="1 day",
         retention="14 days",
         compression="gz",
         level="DEBUG",
@@ -482,7 +483,11 @@ git commit -m "feat(backend): add centralized exception hierarchy
 
 - ACMGException base with message + stable code
 - Concrete: NotFound, Validation, Database, LLM, Translation, Parsing, Service
-- error_code_from_exception helper for API error responses"
+- error_code_from_exception helper for API error responses
+
+Note: PhaseError (agents/contracts.py) will need to inherit from ACMGException
+in the exception migration follow-up so the global handler maps it to HTTP 500
+with code PHASE_ERROR. Currently it bypasses the ACMGException handler."
 ```
 
 ---
@@ -502,41 +507,61 @@ Create `backend/tests/utils/test_middleware.py`:
 from __future__ import annotations
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
+import pytest_asyncio
+from httpx import ASGITransport, AsyncClient
+from starlette.applications import Starlette
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from starlette.routing import Route
 
 from src.utils.middleware import add_request_monitoring
 
 
-@pytest.fixture()
-def client():
-    app = FastAPI()
+async def _ok(request: Request) -> JSONResponse:
+    return JSONResponse({"ok": True})
+
+
+async def _error(request: Request) -> JSONResponse:
+    raise RuntimeError("boom")
+
+
+@pytest_asyncio.fixture
+async def client():
+    app = Starlette(routes=[Route("/test", _ok), Route("/error", _error)])
     add_request_monitoring(app)
-
-    @app.get("/test")
-    async def test_route():
-        return {"ok": True}
-
-    @app.get("/error")
-    async def error_route():
-        raise RuntimeError("boom")
-
-    return TestClient(app, raise_server_exceptions=False)
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as c:
+        yield c
 
 
-def test_successful_request_logs_timing(client, capsys):
-    resp = client.get("/test")
+@pytest.mark.asyncio
+async def test_successful_request_returns_200(client: AsyncClient):
+    resp = await client.get("/test")
     assert resp.status_code == 200
 
 
-def test_error_request_returns_500(client):
-    resp = client.get("/error")
+@pytest.mark.asyncio
+async def test_error_request_returns_500(client: AsyncClient):
+    resp = await client.get("/error")
     assert resp.status_code == 500
 
 
-def test_middleware_preserves_response_body(client):
-    resp = client.get("/test")
+@pytest.mark.asyncio
+async def test_middleware_preserves_response_body(client: AsyncClient):
+    resp = await client.get("/test")
     assert resp.json() == {"ok": True}
+
+
+@pytest.mark.asyncio
+async def test_middleware_adds_request_id_header(client: AsyncClient):
+    resp = await client.get("/test")
+    assert "x-request-id" in resp.headers
+
+
+@pytest.mark.asyncio
+async def test_middleware_preserves_client_request_id(client: AsyncClient):
+    resp = await client.get("/test", headers={"X-Request-ID": "my-id-42"})
+    assert resp.headers["x-request-id"] == "my-id-42"
 ```
 
 ### Step 2: Run test to verify it fails
@@ -556,6 +581,7 @@ Create `backend/src/utils/middleware.py`:
 from __future__ import annotations
 
 import time
+from uuid import uuid4
 
 from fastapi import FastAPI
 from loguru import logger
@@ -566,6 +592,10 @@ from starlette.responses import Response
 
 class RequestMonitorMiddleware(BaseHTTPMiddleware):
     """Log every request with method, path, status code, and duration.
+
+    Generates or extracts a ``request_id`` (from ``X-Request-ID`` header),
+    stores it on ``request.state``, adds it to the response header, and
+    includes it in every log line for distributed tracing.
 
     Logs timing even when the route handler raises an unhandled exception.
 
@@ -578,6 +608,9 @@ class RequestMonitorMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
+        request_id = request.headers.get("x-request-id") or str(uuid4())
+        request.state.request_id = request_id
+
         start = time.perf_counter()
         status = 500
         try:
@@ -590,11 +623,12 @@ class RequestMonitorMiddleware(BaseHTTPMiddleware):
         finally:
             elapsed_ms = (time.perf_counter() - start) * 1000
             logger.info(
-                "{method} {path} -> {status} ({elapsed:.1f}ms)",
+                "{method} {path} -> {status} ({elapsed:.1f}ms) [rid={request_id}]",
                 method=request.method,
                 path=request.url.path,
                 status=status,
                 elapsed=elapsed_ms,
+                request_id=request_id,
             )
 
 
@@ -704,6 +738,7 @@ that all critical infrastructure is reachable before accepting requests.
 """
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from typing import TypedDict
 
 from loguru import logger
@@ -718,6 +753,21 @@ class HealthStatus(TypedDict):
     redis: bool
 
 
+# ── Service check registry ───────────────────────────────────────────────
+# Add new checks here; they are auto-discovered by check_all_connections().
+
+_CHECK_REGISTRY: dict[str, Callable[[], Awaitable[bool]]] = {}
+
+
+def _register(name: str) -> Callable:
+    """Decorator to register a health check function by service name."""
+    def decorator(fn: Callable[[], Awaitable[bool]]) -> Callable:
+        _CHECK_REGISTRY[name] = fn
+        return fn
+    return decorator
+
+
+@_register("postgres")
 async def _check_postgres() -> bool:
     """Ping PostgreSQL with a lightweight query.
 
@@ -741,6 +791,7 @@ async def _check_postgres() -> bool:
         return False
 
 
+@_register("redis")
 async def _check_redis() -> bool:
     """Ping Redis."""
     try:
@@ -761,13 +812,24 @@ async def _check_redis() -> bool:
         return False
 
 
-async def check_all_connections() -> HealthStatus:
-    """Check all critical infrastructure connections.
+async def check_all_connections(
+    services: list[str] | None = None,
+) -> HealthStatus:
+    """Check infrastructure connections.
 
-    Returns a typed mapping of service name to connectivity status.
+    Args:
+        services: Service names to check (defaults to all registered).
+
+    Returns:
+        Typed mapping of service name to connectivity status.
     """
-    postgres_ok, redis_ok = await _check_postgres(), await _check_redis()
-    return HealthStatus(postgres=postgres_ok, redis=redis_ok)
+    to_check = services or list(_CHECK_REGISTRY.keys())
+    results: dict[str, bool] = {}
+    for name in to_check:
+        check_fn = _CHECK_REGISTRY.get(name)
+        if check_fn is not None:
+            results[name] = await check_fn()
+    return HealthStatus(**results)
 ```
 
 ### Step 5: Run test to verify it passes
@@ -831,34 +893,53 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+import pytest_asyncio
+from httpx import ASGITransport, AsyncClient
 
 
-@pytest.fixture()
-def client():
-    # Mock health checks to avoid real postgres/redis connections during tests
+@pytest_asyncio.fixture
+async def error_client():
+    """Async HTTP client with health checks mocked to avoid real connections."""
     with patch(
         "src.utils.health.check_all_connections",
         new_callable=AsyncMock,
         return_value={"postgres": True, "redis": True},
     ):
         from app.main import app
-        yield TestClient(app, raise_server_exceptions=False)
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            yield client
 
 
-def test_health_endpoint(client):
-    resp = client.get("/health")
+@pytest.mark.asyncio
+async def test_health_endpoint(error_client: AsyncClient):
+    resp = await error_client.get("/health")
     assert resp.status_code == 200
     assert resp.json()["status"] == "ok"
 
 
-def test_unknown_route_returns_structured_404(client):
-    resp = client.get("/api/v1/does-not-exist")
+@pytest.mark.asyncio
+async def test_unknown_route_returns_structured_404(error_client: AsyncClient):
+    resp = await error_client.get("/api/v1/does-not-exist")
     assert resp.status_code == 404
     body = resp.json()
     assert "error" in body
     assert body["error"]["code"] == "NOT_FOUND"
     assert "request_id" in body
+
+
+@pytest.mark.asyncio
+async def test_request_id_in_response_header(error_client: AsyncClient):
+    """X-Request-ID header should be present on all responses."""
+    resp = await error_client.get("/health")
+    assert "x-request-id" in resp.headers
+
+
+@pytest.mark.asyncio
+async def test_custom_request_id_preserved(error_client: AsyncClient):
+    """Client-supplied X-Request-ID should be echoed back."""
+    resp = await error_client.get("/health", headers={"X-Request-ID": "test-123"})
+    assert resp.headers.get("x-request-id") == "test-123"
 ```
 
 ### Step 2: Run test to verify it fails
@@ -901,6 +982,7 @@ _CODE_TO_STATUS: dict[str, int] = {
     "SERVICE_ERROR": 503,
     "TRANSLATION_ERROR": 502,
     "PARSING_ERROR": 500,
+    "PHASE_ERROR": 500,
     "INTERNAL_ERROR": 500,
 }
 
@@ -908,14 +990,14 @@ _CODE_TO_STATUS: dict[str, int] = {
 def _error_response(
     *, code: str, message: str, request_id: str, status: int, errors: list | None = None,
 ) -> JSONResponse:
-    """Build a structured error response envelope."""
+    """Build a structured error response envelope with X-Request-ID header."""
     body: dict = {
         "error": {"code": code, "message": message},
         "request_id": request_id,
     }
     if errors is not None:
         body["error"]["details"] = errors
-    return JSONResponse(status_code=status, content=body)
+    return JSONResponse(status_code=status, content=body, headers={"X-Request-ID": request_id})
 
 
 @asynccontextmanager
@@ -957,7 +1039,9 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # ── Middleware (reverse order: CORS outermost, then request monitor) ──
+    # ── Middleware (applied in reverse registration order) ──
+    # Request monitor is outermost (logs all requests including CORS preflight).
+    # CORS adds headers after route handling — this is correct.
     _app.add_middleware(
         CORSMiddleware,
         allow_origins=cfg.cors_origins_list,
@@ -979,20 +1063,21 @@ def create_app() -> FastAPI:
     # ── Global error handlers ──────────────────────────────────────────
     @_app.exception_handler(ACMGException)
     async def handle_acmg_exception(request: Request, exc: ACMGException) -> JSONResponse:
-        request_id = request.headers.get("x-request-id") or str(uuid4())
+        # request_id set by RequestMonitorMiddleware; fall back for unmonitored paths
+        request_id = getattr(request.state, "request_id", str(uuid4()))
         status = _CODE_TO_STATUS.get(exc.code, 500)
         return _error_response(code=exc.code, message=exc.message, request_id=request_id, status=status)
 
     @_app.exception_handler(StarletteHTTPException)
     async def handle_http_exception(request: Request, exc: StarletteHTTPException) -> JSONResponse:
-        request_id = request.headers.get("x-request-id") or str(uuid4())
+        request_id = getattr(request.state, "request_id", str(uuid4()))
         code = error_code_from_exception(exc, status_code=exc.status_code)
         message = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
         return _error_response(code=code, message=message, request_id=request_id, status=exc.status_code)
 
     @_app.exception_handler(RequestValidationError)
     async def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
-        request_id = request.headers.get("x-request-id") or str(uuid4())
+        request_id = getattr(request.state, "request_id", str(uuid4()))
         return _error_response(
             code="VALIDATION_ERROR",
             message="Invalid request payload",
@@ -1218,38 +1303,51 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+import pytest_asyncio
+from httpx import ASGITransport, AsyncClient
 
 
-@pytest.fixture()
-def app():
-    """Import the app with mocked health checks (triggers lifespan setup)."""
+@pytest_asyncio.fixture
+async def integration_client():
+    """Async HTTP client with health checks mocked for integration tests."""
     with patch(
         "src.utils.health.check_all_connections",
         new_callable=AsyncMock,
         return_value={"postgres": True, "redis": True},
     ):
-        from app.main import app as _app
-        yield _app
+        from app.main import app
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            yield client
 
 
-def test_app_starts_and_health_returns_ok(app):
+@pytest.mark.asyncio
+async def test_app_starts_and_health_returns_ok(integration_client: AsyncClient):
     """The app should start up and respond to /health."""
-    client = TestClient(app)
-    resp = client.get("/health")
+    resp = await integration_client.get("/health")
     assert resp.status_code == 200
     assert resp.json() == {"status": "ok"}
 
 
-def test_structured_error_on_unknown_route(app):
+@pytest.mark.asyncio
+async def test_structured_error_on_unknown_route(integration_client: AsyncClient):
     """Unknown routes should return structured error envelope."""
-    client = TestClient(app)
-    resp = client.get("/api/v1/definitely-not-real")
+    resp = await integration_client.get("/api/v1/definitely-not-real")
     assert resp.status_code == 404
     body = resp.json()
     assert "error" in body
     assert body["error"]["code"] == "NOT_FOUND"
     assert "request_id" in body
+
+
+@pytest.mark.asyncio
+async def test_request_id_on_all_responses(integration_client: AsyncClient):
+    """X-Request-ID should appear on both success and error responses."""
+    success = await integration_client.get("/health")
+    assert "x-request-id" in success.headers
+
+    error = await integration_client.get("/api/v1/nonexistent")
+    assert "x-request-id" in error.headers
 ```
 
 ### Step 2: Run integration test
