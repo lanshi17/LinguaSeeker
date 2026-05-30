@@ -16,7 +16,6 @@ from src.agents.contracts import (
     PhaseStatusDetail,
     PipelineGraphState,
     PipelineMode,
-    PipelineStatus,
     SourceType,
 )
 

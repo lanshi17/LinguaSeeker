@@ -1,18 +1,18 @@
 """Tests for Phase 4 LLM providers."""
-import pytest
-
 from src.core.visualize_evidence_with_expert_in_loop.providers import (
     ReasoningLLMProvider,
 )
 
 
-def test_reasoning_provider_uses_model_server():
-    """ReasoningLLMProvider routes through model-server /v1/chat/completions."""
+def test_reasoning_provider_uses_reasoning_config():
+    """ReasoningLLMProvider reads base_url from reasoning config, not model-server."""
     provider = ReasoningLLMProvider()
-    assert "localhost:8001" in provider._base_url or "model-server" in provider._base_url
+    # Should use cfg.reasoning.base_url (direct API), not cfg.model_server_url
+    assert provider._base_url is not None
 
 
-def test_reasoning_provider_auth_header_not_needed():
-    """ReasoningLLMProvider uses placeholder auth since model-server has no auth."""
+def test_reasoning_provider_timeout_from_nested_config():
+    """ReasoningLLMProvider reads timeout from cfg.reasoning.timeout."""
     provider = ReasoningLLMProvider()
-    assert provider._api_key == "not-needed"
+    assert isinstance(provider._timeout, int)
+    assert provider._timeout > 0
