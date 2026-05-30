@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import aiofiles
 from loguru import logger
 
 from src.agents.contracts import (
@@ -82,8 +83,9 @@ class Phase2Adapter:
 
             # Read from Phase 1 metadata (contains pages and content_blocks)
             metadata_path = state.phase_1_output.metadata_path
-            with open(metadata_path, "r") as f:
-                parse_data = json.load(f)
+            async with aiofiles.open(metadata_path, "r") as f:
+                content = await f.read()
+                parse_data = json.loads(content)
 
             pages = parse_data.get("pages", [])
             content_blocks = parse_data.get("content_blocks", [])
@@ -128,8 +130,8 @@ class Phase2Adapter:
 
             # Save extraction result for Phase 3 (N7 fix)
             extraction_result_path = f"{output_dir}/extraction_result.json"
-            with open(extraction_result_path, "w") as f:
-                json.dump(dual_result.model_dump(mode="json"), f)
+            async with aiofiles.open(extraction_result_path, "w") as f:
+                await f.write(json.dumps(dual_result.model_dump(mode="json")))
 
             state.phase_2_output = Phase2Output(
                 output_dir=cross_lingual_output.output_dir,
