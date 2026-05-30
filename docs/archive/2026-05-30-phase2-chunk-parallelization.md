@@ -1,14 +1,16 @@
-# Phase 2 Chunk-Level Parallelization Implementation Plan
+# Phase 2 Chunk-Level Parallelization — COMPLETED
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **Status:** ✅ All tasks implemented and tested (2026-05-30). Archive this document.
 
 **Goal:** Parallelize LLM chunk calls within each evidence extraction stage to reduce Phase 2 processing time by ~70-80% (combined with the already-completed dual-track `run_dual()` parallelization).
 
-**Architecture:** Bottom-up async conversion: provider → stages → workflow → api. Each LLM stage currently loops over document chunks sequentially; we convert to `asyncio.gather` so all chunks within a stage execute concurrently. The LangGraph workflow switches from sync `invoke` (in thread pool) to native async `ainvoke`. No structural changes to the extraction pipeline topology.
+**Architecture:** Bottom-up async conversion: provider → stages → workflow → api. Each LLM stage currently loops over document chunks sequentially; we convert to `asyncio.gather` so all chunks within a stage execute concurrently. The LangGraph workflow uses a **separate `_async_graph`** (async LLM nodes + sync compute nodes) alongside the original sync `_graph`, so `run()` and `run_async()` are both safe.
 
 **Tech Stack:** Python asyncio, LangChain async API (`ainvoke`), LangGraph async (`ainvoke`), pytest-asyncio
 
-**Baseline:** The dual-track parallelization in `run_dual()` is already done (Task 0, completed). This plan covers Tasks 1-5 for chunk-level parallelization.
+**Concurrency control:** Each stage uses `asyncio.Semaphore(5)` to cap concurrent LLM calls. `asyncio.gather(return_exceptions=True)` ensures single-chunk failures are logged and skipped rather than aborting the stage.
+
+**Test results:** 137 passed, 2 skipped across the extraction test suite.
 
 ---
 
