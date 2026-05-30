@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
 
     from src.api.wiring import wire_dependencies, dispose_engine
 
-    wire_dependencies(app)
+    wire_dependencies()
     logger.info("Pipeline orchestrator initialized")
 
     yield

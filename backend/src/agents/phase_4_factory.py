@@ -6,7 +6,7 @@ the agents-layer boundary so API routes never import core services directly.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +19,9 @@ from src.core.visualize_evidence_with_expert_in_loop.feedback_service import (
 )
 from src.core.visualize_evidence_with_expert_in_loop.source_linker import SourceLinker
 
+if TYPE_CHECKING:
+    from src.core.config import Settings
+
 
 class Phase4ServiceFactory:
     """Creates Phase 4 services with per-request sessions.
@@ -27,7 +30,9 @@ class Phase4ServiceFactory:
     Short-lived dependencies (AsyncSession) are passed per-method-call.
     """
 
-    def __init__(self, cfg: Any):
+    def __init__(self, cfg: Settings):
+        # Reserved: current Phase 4 services only need session, but future
+        # services (e.g. ChatService with LLM config) will need cfg.
         self._cfg = cfg
         # DeltaAuditService is stateless — create once
         self._delta_audit = DeltaAuditService()

@@ -28,7 +28,7 @@ async def dispose_engine() -> None:
         _session_factory = None
 
 
-def wire_dependencies(app) -> None:
+def wire_dependencies() -> None:
     """Assemble and inject all application dependencies.
 
     Called once from lifespan startup.  Creates the full service graph:
