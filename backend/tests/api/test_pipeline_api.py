@@ -181,20 +181,30 @@ async def test_post_pipeline_run_phase_mode_validation(async_client: AsyncClient
 
 @pytest.mark.asyncio
 async def test_post_pipeline_run_local_requires_content(async_client: AsyncClient):
-    """POST with source_type=local requires content_base64 or filename (N1 fix)."""
+    """POST with source_type=local requires content_base64 (N1 fix)."""
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
         mock_runner = MagicMock()
         mock_get_runner.return_value = mock_runner
 
+        # Missing content_base64 entirely
         response = await async_client.post(
             "/api/v1/pipeline/run",
             json={
                 "source_type": "local",
                 "mode": "full",
-                # Missing content_base64 and filename
             },
         )
+        assert response.status_code == 422
 
+        # filename-only without content_base64 also rejected
+        response = await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "filename": "test.pdf",
+                "mode": "full",
+            },
+        )
         assert response.status_code == 422
 
 

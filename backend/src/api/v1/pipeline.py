@@ -49,9 +49,9 @@ class PipelineRunRequest(BaseModel):
 
         # Source-specific validation
         if self.source_type == "local":
-            if not self.content_base64 and not self.filename:
+            if not self.content_base64:
                 raise ValueError(
-                    "source_type='local' requires content_base64 or filename"
+                    "source_type='local' requires content_base64 (filename is optional)"
                 )
         elif self.source_type == "online":
             if not self.query and not self.identifiers:
