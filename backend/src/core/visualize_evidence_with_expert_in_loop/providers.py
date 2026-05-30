@@ -10,13 +10,18 @@ from src.core.config import get_config
 
 
 class ReasoningLLMProvider:
-    """Wrapper for REASONING_LLM_MODEL (high-accuracy reasoning)."""
+    """Wrapper for REASONING_LLM_MODEL via model-server.
+
+    Routes all requests through model-server's OpenAI-compatible
+    /v1/chat/completions endpoint for unified monitoring and rate limiting.
+    Requires model-server to be running (hard dependency).
+    """
 
     def __init__(self) -> None:
         cfg = get_config()
-        self._api_key = cfg.reasoning.api_key
+        self._api_key = "not-needed"  # model-server doesn't require auth
         self._model = cfg.reasoning.model
-        self._base_url = cfg.reasoning.base_url
+        self._base_url = cfg.model_server_url  # default "http://localhost:8001"
         self._timeout = cfg.reasoning.timeout
 
     async def generate(
