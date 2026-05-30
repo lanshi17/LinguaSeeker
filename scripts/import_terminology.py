@@ -29,41 +29,18 @@ def _configure_logger() -> None:
 
 
 async def _generate_embeddings() -> None:
-    """Generate pgvector embeddings for all terminology entries."""
-    from src.core.standardize_entities_and_align_knowledge.contracts import EntityType
-    from src.core.standardize_entities_and_align_knowledge.embedding_service import (
-        TerminologyEmbeddingService,
+    """Generate pgvector embeddings for all imported terminology entries.
+
+    Delegates to the Phase 3 public facade (build_terminology_embeddings),
+    which uses TerminologyEmbeddingIndexer with ModelServerEmbeddingProvider.
+    """
+    from src.core.standardize_entities_and_align_knowledge.api import (
+        build_terminology_embeddings,
     )
-    from src.core.standardize_entities_and_align_knowledge.providers import EmbeddingProvider
-    from src.dao.postgresql.connection import async_session_factory, build_async_engine
 
     cfg = get_config()
-    if not cfg.pgvector_enabled:
-        logger.warning("pgvector is disabled in config; skipping embedding generation")
-        return
-
-    provider = EmbeddingProvider(
-        base_url=cfg.embedding.base_url,
-        model=cfg.embedding.model,
-        batch_size=cfg.embedding.batch_size,
-    )
-
-    engine = build_async_engine(cfg)
-    session_factory = async_session_factory(engine)
-
-    async with session_factory() as session:
-        repo = VectorRepository(session)
-        svc = TerminologyEmbeddingService(
-            session=session,
-            repository=repo,
-            provider=provider,
-            model_version=cfg.embedding.model or "default",
-        )
-        for entity_type in EntityType:
-            count = await svc.generate_and_store(entity_type)
-            logger.info("Generated %d embeddings for %s", count, entity_type.value)
-
-    await engine.dispose()
+    count = await build_terminology_embeddings(cfg=cfg)
+    logger.info("Generated %d embeddings across all entity types", count)
 
 
 async def main() -> None:
