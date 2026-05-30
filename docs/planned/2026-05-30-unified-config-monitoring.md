@@ -4,7 +4,11 @@
 
 **Goal:** Unify the backend's configuration management and monitoring infrastructure — structured logging, centralized exceptions, request monitoring middleware, dependency health checks, and CORS — so both the main app and model server share consistent observability patterns.
 
-**Architecture:** Extract shared observability primitives into `backend/src/utils/` (logging config, exceptions, middleware). The main `app/main.py` wires them at startup, matching the model server's existing patterns. The model server's `logger.py` is refactored to import shared code where overlap exists.
+**Architecture:** Extract shared observability primitives into `backend/src/utils/` (logging config, exceptions, middleware). The main `app/main.py` wires them at startup, matching the model server's existing patterns.
+
+**Deferred:**
+- The model server's `services/model-server/app/utils/logger.py` duplicates `_InterceptHandler` and loguru configuration. Refactoring it to import from `src.utils.logger` is deferred — the model server is a standalone microservice with its own dependency tree, and sharing `src.utils` requires restructuring its Python path.
+- The model server uses `request_monitor_middleware_factory()` (factory pattern) while this plan introduces `add_request_monitoring(app)` (direct registration). Unifying the API is deferred to the same follow-up.
 
 **Tech Stack:** Python 3.12+, FastAPI, loguru, pydantic, Starlette middleware
 
@@ -53,17 +57,23 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from loguru import logger as _logger
+
+
+@pytest.fixture(autouse=True)
+def _isolate_loguru():
+    """Save and restore loguru handler state around each test."""
+    _logger.remove()
+    yield
+    _logger.remove()  # leave clean state after each test
 
 
 def test_setup_logging_installs_stderr_sink():
     """setup_logging() should configure loguru with at least one stderr sink."""
     from src.utils.logger import setup_logging
 
-    # setup_logging should not raise
     setup_logging()
-
-    # After setup, loguru should have at least one handler
     assert len(_logger._core.handlers) >= 1
 
 
@@ -74,18 +84,23 @@ def test_setup_logging_intercepts_stdlib():
     setup_logging()
 
     root = logging.getLogger()
-    # The root logger should have our InterceptHandler
     assert any(isinstance(h, logging.Handler) for h in root.handlers)
 
 
 def test_log_dir_created(tmp_path: Path):
-    """setup_logging() should create the logs directory."""
+    """setup_logging() should create the logs directory and add a file sink."""
     from src.utils.logger import setup_logging
 
     test_dir = tmp_path / "test_logs"
     with patch("src.utils.logger.LOG_DIR", test_dir):
         setup_logging()
         assert test_dir.exists()
+        # Verify at least one file sink was registered
+        file_sinks = [
+            h for h in _logger._core.handlers.values()
+            if hasattr(h, "_sink") and getattr(h._sink, "_path", None) is not None
+        ]
+        assert len(file_sinks) >= 1, "Expected at least one file sink after setup_logging()"
 ```
 
 ### Step 2: Run test to verify it fails
@@ -553,6 +568,13 @@ class RequestMonitorMiddleware(BaseHTTPMiddleware):
     """Log every request with method, path, status code, and duration.
 
     Logs timing even when the route handler raises an unhandled exception.
+
+    Known limitation: ``BaseHTTPMiddleware`` buffers the full response body
+    in memory, which breaks SSE / chunked streaming and large downloads.
+    If streaming endpoints are added, rewrite this as raw ASGI middleware::
+
+        class RequestMonitorMiddleware:
+            async def __call__(self, scope, receive, send): ...
     """
 
     async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
@@ -620,20 +642,20 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from src.utils.health import check_all_connections
+from src.utils.health import HealthStatus, check_all_connections
 
 
 @pytest.mark.asyncio
-async def test_check_all_returns_dict():
-    """check_all_connections returns a dict with known keys."""
+async def test_check_all_returns_health_status():
+    """check_all_connections returns a HealthStatus with known keys."""
     with (
         patch("src.utils.health._check_postgres", new_callable=AsyncMock, return_value=True),
         patch("src.utils.health._check_redis", new_callable=AsyncMock, return_value=True),
     ):
         result = await check_all_connections()
         assert isinstance(result, dict)
-        assert "postgres" in result
-        assert "redis" in result
+        assert result["postgres"] is True
+        assert result["redis"] is True
 
 
 @pytest.mark.asyncio
@@ -682,9 +704,18 @@ that all critical infrastructure is reachable before accepting requests.
 """
 from __future__ import annotations
 
+from typing import TypedDict
+
 from loguru import logger
 
 from src.core.config import get_config
+
+
+class HealthStatus(TypedDict):
+    """Per-service connectivity status."""
+
+    postgres: bool
+    redis: bool
 
 
 async def _check_postgres() -> bool:
@@ -730,16 +761,13 @@ async def _check_redis() -> bool:
         return False
 
 
-async def check_all_connections() -> dict[str, bool]:
+async def check_all_connections() -> HealthStatus:
     """Check all critical infrastructure connections.
 
-    Returns a mapping of service name to connectivity status.
+    Returns a typed mapping of service name to connectivity status.
     """
     postgres_ok, redis_ok = await _check_postgres(), await _check_redis()
-    return {
-        "postgres": postgres_ok,
-        "redis": redis_ok,
-    }
+    return HealthStatus(postgres=postgres_ok, redis=redis_ok)
 ```
 
 ### Step 5: Run test to verify it passes
