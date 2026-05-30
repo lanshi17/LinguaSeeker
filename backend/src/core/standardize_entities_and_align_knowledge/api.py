@@ -44,7 +44,7 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.provider
 from src.core.standardize_entities_and_align_knowledge.similarity_match.repositories import (
     PgvectorTerminologyRepository,
 )
-from src.dao.postgresql.connection import async_session_factory, build_async_engine, get_async_session
+from src.dao.postgresql import async_session_factory, build_async_engine, get_async_session
 
 if TYPE_CHECKING:
     from src.core.config import Settings
