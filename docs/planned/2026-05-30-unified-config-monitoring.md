@@ -31,7 +31,14 @@
 - `src/core/standardize_entities_and_align_knowledge/similarity_match/core.py`
 - `src/agents/contracts.py`
 
-**Scattered exception migration:** Out of scope for this plan. The four existing exception files above will coexist with the new centralized hierarchy. A future plan should migrate them to inherit from `ACMGException`.
+**Scattered exception migration:** Out of scope for this plan. The four existing exception files above will coexist with the new centralized hierarchy. The new exceptions (LLMException, TranslationException, etc.) are **not used by any existing code** until the migration is complete — they are forward-looking contracts for the global error handlers. A follow-up PR **must** migrate existing exceptions to inherit from `ACMGException`:
+
+- `ParseDocumentError` → `ACMGException(code="PARSING_ERROR")`
+- `TranslationError` → `ACMGException(code="TRANSLATION_ERROR")`
+- `PhaseError` → `ACMGException(code="PHASE_ERROR")`
+- `SemanticMatchServiceError` → `ACMGException(code="SERVICE_ERROR")`
+
+Until then, feature-specific exceptions fall through to the generic `StarletteHTTPException` handler (returning 500 with `INTERNAL_ERROR` code), which is correct but less specific.
 
 **Dead code:**
 - `src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/web/base.py:175` imports `from src.config import get_settings, resolve_llm_triplet` — module does not exist.
@@ -195,6 +202,8 @@ class _InterceptHandler(logging.Handler):
             level = _logger.level(record.levelname).name
         except ValueError:
             level = record.levelno
+        # depth=6 skips: emit → handle → callHandlers → _log → log → user_code
+        # If log messages show wrong file/line, adjust this value.
         _logger.opt(depth=6, exception=record.exc_info).log(level, record.getMessage())
 ```
 
@@ -545,9 +554,18 @@ async def client():
 
 
 @pytest.mark.asyncio
-async def test_successful_request_returns_200(client: AsyncClient):
-    resp = await client.get("/test")
-    assert resp.status_code == 200
+async def test_successful_request_logs_timing(client: AsyncClient):
+    """Middleware should log method, path, status, and timing."""
+    from loguru import logger as loguru_logger
+
+    messages: list[str] = []
+    sink_id = loguru_logger.add(lambda msg: messages.append(str(msg)), level="INFO")
+    try:
+        resp = await client.get("/test")
+        assert resp.status_code == 200
+        assert any("GET /test" in msg and "200" in msg for msg in messages)
+    finally:
+        loguru_logger.remove(sink_id)
 
 
 @pytest.mark.asyncio
@@ -682,7 +700,8 @@ Create `backend/tests/utils/test_health.py`:
 """Tests for startup health checks."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from contextlib import asynccontextmanager
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -691,10 +710,21 @@ from src.utils.health import HealthStatus, check_all_connections
 
 @pytest.mark.asyncio
 async def test_check_all_returns_health_status():
-    """check_all_connections returns a HealthStatus with known keys."""
+    """check_all_connections returns a HealthStatus when services are up."""
+    mock_conn = AsyncMock()
+    mock_conn.execute = AsyncMock()
+
+    @asynccontextmanager
+    async def _mock_connect():
+        yield mock_conn
+
+    mock_engine = MagicMock()
+    mock_engine.connect = _mock_connect
+
     with (
-        patch("src.utils.health._check_postgres", new_callable=AsyncMock, return_value=True),
-        patch("src.utils.health._check_redis", new_callable=AsyncMock, return_value=True),
+        patch("src.api.wiring.get_engine", return_value=mock_engine),
+        patch("redis.asyncio.Redis.ping", new_callable=AsyncMock, return_value=True),
+        patch("redis.asyncio.Redis.aclose", new_callable=AsyncMock),
     ):
         result = await check_all_connections()
         assert isinstance(result, dict)
@@ -703,11 +733,20 @@ async def test_check_all_returns_health_status():
 
 
 @pytest.mark.asyncio
-async def test_check_all_reports_failures():
-    """Failed checks should be reported as False."""
+async def test_check_all_reports_postgres_failure():
+    """PostgreSQL failure should be reported as False."""
+    @asynccontextmanager
+    async def _mock_connect():
+        raise ConnectionError("refused")
+        yield  # pragma: no cover
+
+    mock_engine = MagicMock()
+    mock_engine.connect = _mock_connect
+
     with (
-        patch("src.utils.health._check_postgres", new_callable=AsyncMock, return_value=False),
-        patch("src.utils.health._check_redis", new_callable=AsyncMock, return_value=True),
+        patch("src.api.wiring.get_engine", return_value=mock_engine),
+        patch("redis.asyncio.Redis.ping", new_callable=AsyncMock, return_value=True),
+        patch("redis.asyncio.Redis.aclose", new_callable=AsyncMock),
     ):
         result = await check_all_connections()
         assert result["postgres"] is False
@@ -1091,10 +1130,12 @@ def create_app() -> FastAPI:
     # ── Middleware (applied in reverse registration order) ──
     # Request monitor is outermost (logs all requests including CORS preflight).
     # CORS adds headers after route handling — this is correct.
+    allow_all = cfg.cors_origins_list == ["*"]
     _app.add_middleware(
         CORSMiddleware,
         allow_origins=cfg.cors_origins_list,
-        allow_credentials=True,
+        # Browsers reject Access-Control-Allow-Origin: * with credentials=true
+        allow_credentials=not allow_all,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -1348,7 +1389,11 @@ git commit -m "fix(backend): remove dead import and update utils README
 ### Step 1: Write the integration test
 
 ```python
-"""Integration test: full app startup and health check."""
+"""Integration test: full app startup, lifespan, and health check.
+
+Focuses on startup lifecycle — error handler behavior is covered in
+test_error_handlers.py (Task 5).
+"""
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
@@ -1380,26 +1425,15 @@ async def integration_client():
 
 @pytest.mark.asyncio
 async def test_app_starts_and_health_returns_ok(integration_client: AsyncClient):
-    """The app should start up and respond to /health."""
+    """The app should start up (lifespan runs) and respond to /health."""
     resp = await integration_client.get("/health")
     assert resp.status_code == 200
     assert resp.json() == {"status": "ok"}
 
 
 @pytest.mark.asyncio
-async def test_structured_error_on_unknown_route(integration_client: AsyncClient):
-    """Unknown routes should return structured error envelope."""
-    resp = await integration_client.get("/api/v1/definitely-not-real")
-    assert resp.status_code == 404
-    body = resp.json()
-    assert "error" in body
-    assert body["error"]["code"] == "NOT_FOUND"
-    assert "request_id" in body
-
-
-@pytest.mark.asyncio
 async def test_request_id_on_all_responses(integration_client: AsyncClient):
-    """X-Request-ID should appear on both success and error responses."""
+    """X-Request-ID header should appear on all responses (success and error)."""
     success = await integration_client.get("/health")
     assert "x-request-id" in success.headers
 
