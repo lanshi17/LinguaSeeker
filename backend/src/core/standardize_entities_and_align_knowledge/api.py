@@ -4,9 +4,10 @@ from __future__ import annotations
 import inspect
 import time
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     DualEvidenceExtractionResult,
@@ -44,6 +45,9 @@ from src.core.standardize_entities_and_align_knowledge.similarity_match.reposito
     PgvectorTerminologyRepository,
 )
 from src.dao.postgresql.connection import async_session_factory, build_async_engine, get_async_session
+
+if TYPE_CHECKING:
+    from src.core.config import Settings
 
 
 def serialize_matches(matches: tuple[EntityMatch, ...]) -> list[dict[str, Any]]:
@@ -99,12 +103,12 @@ def build_summary_metadata(
 class EntityStandardizationService:
     """Facade that wires the adapter, matcher, and orchestration service."""
 
-    def __init__(self, cfg: Any):
+    def __init__(self, cfg: Settings):
         self._cfg = cfg
 
     async def run_dual_result(
         self,
-        session: Any,
+        session: AsyncSession,
         result: DualEvidenceExtractionResult,
         *,
         source_document_id: str,
