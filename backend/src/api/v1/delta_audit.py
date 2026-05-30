@@ -1,6 +1,7 @@
 """Delta audit query routes."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -13,7 +14,9 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     ReviewStatus,
     TargetType,
 )
-from src.dao.postgresql.models import ReviewAuditEvent
+
+if TYPE_CHECKING:
+    from src.dao.postgresql.models import ReviewAuditEvent
 
 router = APIRouter()
 
