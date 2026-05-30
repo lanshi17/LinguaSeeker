@@ -283,10 +283,14 @@ class MultiStageTranslator(BaseTranslator):
 
         all_terms = await asyncio.gather(
             *[_extract_one(idx, seg) for idx, seg in enumerate(segments, start=1)],
+            return_exceptions=True,
         )
 
+        # Filter out failed segments (logged in _extract_one)
+        successful_terms = [t for t in all_terms if isinstance(t, str)]
+
         # Merge: deduplicate by keeping unique source:target pairs
-        merged = "\n".join(all_terms)
+        merged = "\n".join(successful_terms)
         seen: set[str] = set()
         unique_lines: list[str] = []
         for line in merged.splitlines():
@@ -401,8 +405,14 @@ class MultiStageTranslator(BaseTranslator):
 
         # Await all prefix translations in parallel
         if prefix_tasks:
-            results = await asyncio.gather(*[t for _, t in prefix_tasks])
+            results = await asyncio.gather(
+                *[t for _, t in prefix_tasks],
+                return_exceptions=True,
+            )
             for (idx, _), prefix_tr in zip(prefix_tasks, results):
+                if isinstance(prefix_tr, Exception):
+                    logger.warning("Prefix translation for block {} failed: {}", idx + 1, prefix_tr)
+                    continue
                 prefix_tr = strip_inline_artifacts(prefix_tr).strip()
                 part = translated_parts[idx]
                 translated_parts[idx] = f"{prefix_tr} {part}" if part else prefix_tr
@@ -537,8 +547,8 @@ class MultiStageTranslator(BaseTranslator):
 
         async def _translate_segment(idx: int, segment: str) -> str:
             # Provide neighboring context so the LLM can translate coherently
-            prev_ctx = segments[idx - 2][-self._CONTEXT_CHARS:] if idx >= 1 else ""
-            next_ctx = segments[idx][:self._CONTEXT_CHARS] if idx + 1 < total else ""
+            prev_ctx = segments[idx - 1][-self._CONTEXT_CHARS:] if idx >= 1 else ""
+            next_ctx = segments[idx + 1][:self._CONTEXT_CHARS] if idx + 1 < total else ""
             translated = await self._translate_one_segment(
                 segment, terminology, idx + 1, total,
                 prev_context=prev_ctx, next_context=next_ctx,
@@ -547,11 +557,21 @@ class MultiStageTranslator(BaseTranslator):
             logger.info("Translate segment {}/{} done", idx + 1, total)
             return translated
 
-        translated_parts = await asyncio.gather(
+        results = await asyncio.gather(
             *[_translate_segment(idx, seg) for idx, seg in enumerate(segments)],
+            return_exceptions=True,
         )
 
-        return "\n\n".join(translated_parts), segments, list(translated_parts)
+        # Replace failed segments with empty strings to maintain alignment
+        translated_parts: list[str] = []
+        for idx, result in enumerate(results):
+            if isinstance(result, str):
+                translated_parts.append(result)
+            else:
+                logger.error("Segment {}/{} translation failed: {}", idx + 1, total, result)
+                translated_parts.append("")
+
+        return "\n\n".join(translated_parts), segments, translated_parts
 
     async def _translate_one_segment(
         self,
@@ -778,7 +798,11 @@ class MultiStageTranslator(BaseTranslator):
             except (json.JSONDecodeError, KeyError, TypeError) as exc:
                 logger.warning("Auxiliary translation batch failed: {}", exc)
 
-        await asyncio.gather(*[_translate_batch(b) for b in batches])
+        await asyncio.gather(
+            *[_translate_batch(b) for b in batches],
+            return_exceptions=True,
+        )
+        # Errors are already logged inside _translate_batch
         return aux_translations
 
     async def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
