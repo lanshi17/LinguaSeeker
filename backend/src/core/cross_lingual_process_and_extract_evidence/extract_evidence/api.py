@@ -54,8 +54,10 @@ class EvidenceExtractionService:
         )
 
     async def run_dual(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:
-        original_result = await self.run(documents.original)
-        translated_result = await self.run(documents.translated)
+        original_result, translated_result = await asyncio.gather(
+            self.run(documents.original),
+            self.run(documents.translated),
+        )
         return DualEvidenceExtractionResult(
             document_id=documents.document_id,
             original_result=original_result,
