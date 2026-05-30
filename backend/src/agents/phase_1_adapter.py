@@ -5,6 +5,7 @@ Raises classified errors for orchestrator-level retry decisions.
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -78,8 +79,8 @@ class Phase1Adapter:
             # Build acquisition request from state
             request = DocumentAcquisitionRequest(
                 source=AcquisitionSource(state.source_type.value),
-                filename=None,  # Populated from API request params
-                content=None,
+                filename=Path(state.upload_file_path).name if state.upload_file_path else None,
+                content=state.upload_file_path,  # file path for gateway to read
                 upload_dir=None,
             )
 

@@ -4,8 +4,10 @@ from __future__ import annotations
 import base64
 import uuid
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Literal
 
+import aiofiles
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, model_validator
 
@@ -175,6 +177,17 @@ async def start_pipeline_run(request: PipelineRunRequest):
     processing_run_id = str(uuid.uuid4())
     source_document_id = str(uuid.uuid4())
 
+    # Decode base64 content and write to temp file if provided
+    upload_file_path = None
+    if request.content_base64:
+        content_bytes = base64.b64decode(request.content_base64)
+        if request.filename:
+            temp_dir = Path("data/pipeline/uploads")
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            upload_file_path = str(temp_dir / f"{processing_run_id}_{request.filename}")
+            async with aiofiles.open(upload_file_path, "wb") as f:
+                await f.write(content_bytes)
+
     initial_state = PipelineGraphState(
         processing_run_id=processing_run_id,
         source_document_id=source_document_id,
@@ -182,17 +195,14 @@ async def start_pipeline_run(request: PipelineRunRequest):
         source_type=SourceType(request.source_type),
         target_phase=request.target_phase,
         source_key=source_key or None,
+        upload_file_path=upload_file_path,
         created_at=datetime.now().isoformat(),
     )
 
-    # Decode base64 content if provided
-    content_bytes = None
-    if request.content_base64:
-        content_bytes = base64.b64decode(request.content_base64)
-
-    # TODO: Inject content into state or store for Phase 1 adapter to consume
-
     runner.start(initial_state)
+
+    # TODO: cleanup upload_file_path after pipeline completes (not here —
+    # runner.start() is async; file is still needed by Phase 1).
 
     return PipelineRunResponse(
         processing_run_id=processing_run_id,

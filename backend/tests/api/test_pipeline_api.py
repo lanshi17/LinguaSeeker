@@ -14,6 +14,32 @@ from src.agents.contracts import (
 
 
 @pytest.mark.asyncio
+async def test_pipeline_run_injects_content_to_state(async_client):
+    """POST /api/v1/pipeline/run injects base64 content into state via temp file."""
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        mock_runner = MagicMock()
+        mock_runner.start = MagicMock()
+        mock_runner.is_running_for_source = MagicMock(return_value=False)
+        mock_get_runner.return_value = mock_runner
+
+        await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "filename": "test.pdf",
+                "content_base64": "dGVzdA==",  # "test"
+                "mode": "full",
+            },
+        )
+
+        # Verify start() was called with state containing upload_file_path
+        call_args = mock_runner.start.call_args
+        initial_state = call_args[0][0]
+        assert initial_state.upload_file_path is not None
+        assert initial_state.upload_file_path.endswith("test.pdf")
+
+
+@pytest.mark.asyncio
 async def test_post_pipeline_run(async_client: AsyncClient):
     """POST /api/v1/pipeline/run accepts request and returns run ID."""
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
