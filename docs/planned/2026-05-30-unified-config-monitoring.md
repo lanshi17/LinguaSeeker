@@ -644,6 +644,7 @@ class RequestMonitorMiddleware(BaseHTTPMiddleware):
         try:
             response: Response = await call_next(request)
             status = response.status_code
+            response.headers["X-Request-ID"] = request_id
             return response
         except Exception:
             status = 500
