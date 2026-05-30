@@ -5,7 +5,6 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 from src.agents.contracts import (
     PipelineGraphState,
-    PhaseStatus,
     PipelineMode,
     SourceType,
     Phase1Output,
@@ -164,3 +163,85 @@ async def test_phase_1_adapter_raises_retryable_on_timeout(
 
     with pytest.raises(RetryablePhaseError, match="timed out"):
         await adapter.run(sample_state)
+
+
+@pytest.mark.asyncio
+async def test_phase_1_adapter_reads_upload_file_as_bytes(tmp_path):
+    """Phase 1 adapter reads upload_file_path as bytes, not path string."""
+    from src.core.ingest_and_digitize_data.document_acquisition.contracts import (
+        DocumentAcquisitionResult,
+        AcquisitionSource,
+    )
+    from src.core.ingest_and_digitize_data.document_acquisition.local_upload.contracts import (
+        LocalStoredFile,
+    )
+    from src.core.ingest_and_digitize_data.parse_document.contracts import (
+        MinerULocalBatchSaveResult,
+        MinerULocalBatchParseResult,
+        MinerUBatchStatus,
+        SavedFiles,
+    )
+
+    # Create a real temp file to be read by the adapter
+    upload_file = tmp_path / "test.pdf"
+    upload_file.write_bytes(b"%PDF-1.4 fake content")
+
+    state = PipelineGraphState(
+        processing_run_id="run-123",
+        source_document_id="doc-456",
+        mode=PipelineMode.FULL,
+        source_type=SourceType.LOCAL,
+        upload_file_path=str(upload_file),
+    )
+
+    captured_request = {}
+
+    async def capture_acquire(request):
+        captured_request["content"] = request.content
+        captured_request["filename"] = request.filename
+        return DocumentAcquisitionResult(
+            success=True,
+            source=AcquisitionSource.LOCAL,
+            stored_file=LocalStoredFile(
+                file_path="/tmp/stored.pdf",
+                sha256="abc",
+                original_filename="test.pdf",
+                size=1024,
+            ),
+        )
+
+    mock_acquisition = MagicMock()
+    mock_acquisition.acquire = AsyncMock(side_effect=capture_acquire)
+
+    mock_parse = MagicMock()
+    mock_parse.parse_local_files_and_save = AsyncMock(
+        return_value=MinerULocalBatchSaveResult(
+            batch_id="batch-1",
+            parse_result=MinerULocalBatchParseResult(
+                batch_id="batch-1",
+                status=MinerUBatchStatus(batch_id="batch-1"),
+                results={},
+            ),
+            saved_files={
+                "test.pdf": SavedFiles(
+                    md_path=Path("/tmp/test.md"),
+                    metadata_path=Path("/tmp/test.json"),
+                    output_dir=Path("/tmp/output"),
+                    created_at=datetime.now(),
+                )
+            },
+        )
+    )
+
+    adapter = Phase1Adapter(
+        acquisition_service=mock_acquisition,
+        parse_service=mock_parse,
+    )
+
+    result_state = await adapter.run(state)
+
+    # Verify the adapter read file bytes, not the path string
+    assert captured_request["content"] == b"%PDF-1.4 fake content"
+    assert captured_request["filename"] == "test.pdf"
+    assert isinstance(captured_request["content"], bytes)
+    assert result_state.phase_1_output is not None

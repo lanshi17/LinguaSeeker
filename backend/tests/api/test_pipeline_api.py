@@ -54,15 +54,21 @@ async def test_post_pipeline_run(async_client: AsyncClient):
         mock_runner.is_running_for_source = MagicMock(return_value=False)
         mock_get_runner.return_value = mock_runner
 
-        response = await async_client.post(
-            "/api/v1/pipeline/run",
-            json={
-                "source_type": "local",
-                "filename": "test.pdf",
-                "content_base64": "dGVzdA==",
-                "mode": "full",
-            },
-        )
+        # Mock aiofiles.open to avoid writing real files
+        mock_file = AsyncMock()
+        mock_file.__aenter__ = AsyncMock(return_value=mock_file)
+        mock_file.__aexit__ = AsyncMock(return_value=False)
+        mock_file.write = AsyncMock()
+        with patch("src.api.v1.pipeline.aiofiles.open", return_value=mock_file):
+            response = await async_client.post(
+                "/api/v1/pipeline/run",
+                json={
+                    "source_type": "local",
+                    "filename": "test.pdf",
+                    "content_base64": "dGVzdA==",
+                    "mode": "full",
+                },
+            )
 
         assert response.status_code == 202
         data = response.json()

@@ -9,6 +9,7 @@ import json
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+import aiofiles
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -87,8 +88,8 @@ class Phase3Adapter:
 
             # Read the original extraction JSON
             extraction_path = state.phase_2_output.extraction_result_path
-            with open(extraction_path, "r") as f:
-                extraction_data = json.load(f)
+            async with aiofiles.open(extraction_path, "r") as f:
+                extraction_data = json.loads(await f.read())
 
             dual_result = DualEvidenceExtractionResult.model_validate(extraction_data)
 

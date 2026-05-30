@@ -1,4 +1,6 @@
 """Tests for Phase 3 adapter (entity standardization)."""
+import json
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from src.agents.contracts import (
@@ -8,14 +10,15 @@ from src.agents.contracts import (
     SourceType,
     Phase2Output,
     Phase3Output,
-    PermanentPhaseError,
     SkipPhase3Reason,
 )
 from src.agents.phase_3_adapter import Phase3Adapter
 
 
 @pytest.fixture
-def sample_state() -> PipelineGraphState:
+def sample_state(tmp_path) -> PipelineGraphState:
+    extraction_file = tmp_path / "extraction.json"
+    extraction_file.write_text(json.dumps({}))
     return PipelineGraphState(
         processing_run_id="run-123",
         source_document_id="doc-456",
@@ -25,7 +28,7 @@ def sample_state() -> PipelineGraphState:
             output_dir="/tmp/phase2/output",
             original_json_path="/tmp/phase2/output/original.json",
             translated_json_path="/tmp/phase2/output/translated.json",
-            extraction_result_path="/tmp/extraction.json",
+            extraction_result_path=str(extraction_file),
             source_language="zh",
         ),
     )
@@ -60,13 +63,11 @@ async def test_phase_3_adapter_success(sample_state: PipelineGraphState):
         session_factory=mock_session_factory,
     )
 
-    with patch("builtins.open", MagicMock()):
-        with patch("json.load", return_value={}):
-            with patch(
-                "src.agents.phase_3_adapter.DualEvidenceExtractionResult.model_validate",
-                return_value=MagicMock(),
-            ):
-                result_state = await adapter.run(sample_state)
+    with patch(
+        "src.agents.phase_3_adapter.DualEvidenceExtractionResult.model_validate",
+        return_value=MagicMock(),
+    ):
+        result_state = await adapter.run(sample_state)
 
     assert result_state.phase_3_output is not None
     assert result_state.phase_3_output.match_count == 10
@@ -144,13 +145,11 @@ async def test_phase_3_adapter_skipped_when_zero_standardized(
         session_factory=mock_session_factory,
     )
 
-    with patch("builtins.open", MagicMock()):
-        with patch("json.load", return_value={}):
-            with patch(
-                "src.agents.phase_3_adapter.DualEvidenceExtractionResult.model_validate",
-                return_value=MagicMock(),
-            ):
-                result_state = await adapter.run(sample_state)
+    with patch(
+        "src.agents.phase_3_adapter.DualEvidenceExtractionResult.model_validate",
+        return_value=MagicMock(),
+    ):
+        result_state = await adapter.run(sample_state)
 
     assert result_state.phase_3_status.status == PhaseStatus.COMPLETED
     assert result_state.skip_phase_3_reason == SkipPhase3Reason.NO_CANDIDATES

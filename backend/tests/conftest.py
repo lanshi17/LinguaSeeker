@@ -6,7 +6,9 @@ Integration tests use PostgreSQL test DB (requires DB setup).
 from __future__ import annotations
 
 import asyncio
+import shutil
 from collections.abc import AsyncGenerator
+from pathlib import Path
 
 import pytest
 import pytest_asyncio
@@ -63,6 +65,15 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _cleanup_test_artifacts():
+    """Remove data/pipeline/ artifacts created by tests after the session."""
+    yield
+    artifact_dir = Path("data/pipeline")
+    if artifact_dir.exists():
+        shutil.rmtree(artifact_dir, ignore_errors=True)
 
 
 @pytest_asyncio.fixture
