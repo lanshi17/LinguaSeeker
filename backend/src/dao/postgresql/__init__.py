@@ -38,7 +38,6 @@ if TYPE_CHECKING:
         User,
     )
     from src.dao.postgresql.search_index_repo import SearchIndexRepository, frontend_search_index
-    from src.dao.postgresql.vector_repo import VectorRepository
 
 
 __all__ = [
@@ -62,7 +61,6 @@ __all__ = [
     "TerminologyEntry",
     "TerminologyRelationship",
     "User",
-    "VectorRepository",
     "async_session_factory",
     "build_async_engine",
     "build_asyncpg_connect_args",
@@ -97,7 +95,6 @@ _LAZY_IMPORTS: dict[str, str] = {
     "User": "src.dao.postgresql.models",
     "SearchIndexRepository": "src.dao.postgresql.search_index_repo",
     "frontend_search_index": "src.dao.postgresql.search_index_repo",
-    "VectorRepository": "src.dao.postgresql.vector_repo",
 }
 
 
