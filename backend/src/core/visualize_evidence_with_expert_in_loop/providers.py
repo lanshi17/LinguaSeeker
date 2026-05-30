@@ -17,7 +17,7 @@ class ReasoningLLMProvider:
         self._api_key = cfg.reasoning.api_key
         self._model = cfg.reasoning.model
         self._base_url = cfg.reasoning.base_url
-        self._timeout = cfg.reasoning_llm_timeout or 60
+        self._timeout = cfg.reasoning.timeout
 
     async def generate(
         self,

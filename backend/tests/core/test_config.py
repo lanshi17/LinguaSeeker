@@ -51,3 +51,27 @@ def test_settings_default_env_files_include_repo_and_backend_locations() -> None
 
     assert isinstance(env_files, tuple)
     assert str(backend_root / ".env.local") in env_files
+
+
+def test_reasoning_config_has_timeout() -> None:
+    """ReasoningConfig includes timeout field with default 60."""
+    from src.core.config import ReasoningConfig
+
+    cfg = ReasoningConfig()
+    assert cfg.timeout == 60
+
+
+def test_reasoning_config_timeout_from_settings() -> None:
+    """Settings propagates reasoning_llm_timeout to ReasoningConfig.timeout."""
+    import os
+
+    original = os.environ.get("REASONING_LLM_TIMEOUT")
+    try:
+        os.environ["REASONING_LLM_TIMEOUT"] = "120"
+        settings = Settings(_env_file=None)
+        assert settings.reasoning.timeout == 120
+    finally:
+        if original is None:
+            os.environ.pop("REASONING_LLM_TIMEOUT", None)
+        else:
+            os.environ["REASONING_LLM_TIMEOUT"] = original
