@@ -91,6 +91,10 @@ class Phase1Adapter:
                 filename=upload_filename,
                 content=content_bytes,
                 upload_dir=None,
+                # Online acquisition fields
+                action=state.action,
+                query=state.query,
+                identifiers=state.identifiers,
             )
 
             # Acquire document

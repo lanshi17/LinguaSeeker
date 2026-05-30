@@ -230,3 +230,8 @@ class PipelineGraphState(BaseModel):
 
     # Upload content (base64 decoded to temp file)
     upload_file_path: str | None = None
+
+    # Online acquisition fields (passed through to Phase1Adapter)
+    query: str | None = None
+    identifiers: list[str] | None = None
+    action: str | None = None

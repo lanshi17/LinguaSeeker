@@ -180,12 +180,20 @@ async def start_pipeline_run(request: PipelineRunRequest):
     upload_file_path = None
     if request.content_base64:
         content_bytes = base64.b64decode(request.content_base64)
-        if request.filename:
-            temp_dir = Path("data/pipeline/uploads")
-            temp_dir.mkdir(parents=True, exist_ok=True)
-            upload_file_path = str(temp_dir / f"{processing_run_id}_{request.filename}")
-            async with aiofiles.open(upload_file_path, "wb") as f:
-                await f.write(content_bytes)
+        fname = request.filename or f"{processing_run_id}.bin"
+        temp_dir = Path("data/pipeline/uploads")
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        upload_file_path = str(temp_dir / f"{processing_run_id}_{fname}")
+        async with aiofiles.open(upload_file_path, "wb") as f:
+            await f.write(content_bytes)
+
+    # Determine online acquisition action
+    online_action = None
+    if request.source_type == "online":
+        if request.identifiers:
+            online_action = "fetch"
+        else:
+            online_action = "search"
 
     initial_state = PipelineGraphState(
         processing_run_id=processing_run_id,
@@ -195,6 +203,9 @@ async def start_pipeline_run(request: PipelineRunRequest):
         target_phase=request.target_phase,
         source_key=source_key or None,
         upload_file_path=upload_file_path,
+        query=request.query,
+        identifiers=request.identifiers,
+        action=online_action,
         created_at=datetime.now().isoformat(),
     )
 
