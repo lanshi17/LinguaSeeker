@@ -1,6 +1,6 @@
 """Tests for MultiStageTranslator segmentation in the 3-stage pipeline."""
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import MultiStageTranslator
 from src.core.cross_lingual_process_and_extract_evidence.contracts import FormattedDocument
@@ -28,45 +28,65 @@ def mock_translator():
     with patch("src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.providers.ChatOpenAI"):
         translator = MultiStageTranslator(ctx=ctx)
 
-    # Mock invoke_with_retry at module level to return simple responses
-    mock_invoke = MagicMock(
-        side_effect=lambda llm, prompt, stage, system_prompt="": f"result_for_{stage}",
-    )
-    patcher = patch(
+    # Mock invoke_with_retry at module level to return simple async responses
+    async def _async_invoke(llm, prompt, stage, system_prompt=""):
+        return f"result_for_{stage}"
+
+    mock_invoke = AsyncMock(side_effect=_async_invoke)
+
+    # Mock invoke_json_with_retry to return valid JSON (used by _translate_one_segment)
+    async def _async_json_invoke(llm, prompt, stage, system_prompt=""):
+        return f'{{"translation": "result_for_{stage}"}}'
+
+    mock_json_invoke = AsyncMock(side_effect=_async_json_invoke)
+
+    patcher_invoke = patch(
         "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry",
         mock_invoke,
     )
-    patcher.start()
+    patcher_json = patch(
+        "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry",
+        mock_json_invoke,
+    )
+    patcher_invoke.start()
+    patcher_json.start()
     translator._mock_invoke = mock_invoke
+    translator._mock_json_invoke = mock_json_invoke
     return translator
 
 
-def test_extract_terminology_segments_large_document(mock_translator, large_document):
+@pytest.mark.asyncio
+async def test_extract_terminology_segments_large_document(mock_translator, large_document):
     """extract_terminology should segment and make multiple LLM calls for large docs."""
-    result = mock_translator.extract_terminology(large_document)
+    result = await mock_translator.extract_terminology(large_document)
     assert result is not None
     assert mock_translator._mock_invoke.call_count > 1
 
 
-def test_translate_segments_segments_large_document(mock_translator, large_document):
+@pytest.mark.asyncio
+async def test_translate_segments_segments_large_document(mock_translator, large_document):
     """translate_segments should segment large docs and translate each segment."""
-    result, segments, translated_parts = mock_translator.translate_segments(large_document, "术语:terminology")
+    result, segments, translated_parts = await mock_translator.translate_segments(large_document, "术语:terminology")
     assert result is not None
     assert len(segments) > 1
     assert len(translated_parts) > 1
-    assert mock_translator._mock_invoke.call_count > 1
+    # Segments use invoke_json_with_retry (JSON mode) for first attempt
+    total_calls = mock_translator._mock_invoke.call_count + mock_translator._mock_json_invoke.call_count
+    assert total_calls > 1
 
 
-def test_run_pipeline_with_large_document(mock_translator, large_document):
+@pytest.mark.asyncio
+async def test_run_pipeline_with_large_document(mock_translator, large_document):
     """Full pipeline should complete without token limit errors."""
     terminology_map, structure_plan, draft, translated, segments, translated_parts, warnings = (
-        mock_translator.run_pipeline(large_document)
+        await mock_translator.run_pipeline(large_document)
     )
     assert terminology_map is not None
     assert translated is not None
 
 
-def test_translate_segments_truncates_large_terminology(mock_translator):
+@pytest.mark.asyncio
+async def test_translate_segments_truncates_large_terminology(mock_translator):
     """translate_segments should truncate oversized terminology."""
     small_doc = FormattedDocument(
         formatted_markdown="这是一段短文本。",
@@ -75,6 +95,6 @@ def test_translate_segments_truncates_large_terminology(mock_translator):
     # Simulate very large terminology (merged from many segments)
     huge_terminology = "基因:gene\n蛋白质:protein\n" * 500  # ~10000 tokens
 
-    result, segments, translated_parts = mock_translator.translate_segments(small_doc, huge_terminology)
+    result, segments, translated_parts = await mock_translator.translate_segments(small_doc, huge_terminology)
     assert result is not None
     assert mock_translator._mock_invoke.call_count >= 1

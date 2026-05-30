@@ -15,7 +15,7 @@ class BaseTranslator(ABC):
     """
 
     @abstractmethod
-    def run_pipeline(self, formatted: FormattedDocument) -> Tuple[Dict[str, str], str, str, str, List[str], List[str]]:
+    async def run_pipeline(self, formatted: FormattedDocument) -> Tuple[Dict[str, str], str, str, str, List[str], List[str]]:
         """Run the full translation pipeline.
 
         Returns (terminology_map, _reserved, _reserved, translated, source_segments, warnings).
@@ -24,6 +24,6 @@ class BaseTranslator(ABC):
         ...
 
     @abstractmethod
-    def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
+    async def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
         """Run the full pipeline and return a ``TranslationResult``."""
         ...

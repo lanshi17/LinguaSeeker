@@ -1,6 +1,9 @@
 """Special evidence pass — functional, case-control, authority, contradiction evidence."""
 from __future__ import annotations
 
+import asyncio
+
+from loguru import logger
 from pydantic import ValidationError
 
 from ..chunking import (
@@ -13,6 +16,8 @@ from ..core import RawSourceNormalizer, SpecialEvidenceValidator
 from ..prompts import get_special_evidence_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 from ...cross_lingual.format.segmenter import estimate_tokens
+
+_DEFAULT_CHUNK_CONCURRENCY = 5
 
 
 class SpecialEvidenceStage:
@@ -86,6 +91,60 @@ class SpecialEvidenceStage:
                 except ValidationError:
                     continue
         return parsed
+
+    async def run_async(
+        self,
+        document: TrackDocument,
+        current_items: list[EvidenceItem],
+    ) -> list[SpecialEvidenceRecord]:
+        """Async version — runs chunk LLM calls concurrently with semaphore."""
+        summary = self._summarize_items(current_items)
+        overhead = estimate_tokens(get_special_evidence_prompt(
+            document_id=document.document_id,
+            track=document.track,
+            text="",
+            current_items_summary=summary,
+        ))
+        chunks = build_block_prompt_chunks(
+            document,
+            input_budget_tokens=self._input_budget_tokens,
+            prompt_overhead_tokens=overhead,
+        )
+        sem = asyncio.Semaphore(_DEFAULT_CHUNK_CONCURRENCY)
+
+        async def _extract_chunk(chunk):  # noqa: ANN001
+            chunk_summary = summary
+            if chunk.total > 1:
+                chunk_summary = f"{summary}\nCurrent document chunk: {chunk.index}/{chunk.total}"
+            prompt = get_special_evidence_prompt(
+                document_id=document.document_id,
+                track=document.track,
+                text=chunk.text,
+                current_items_summary=chunk_summary,
+            )
+            async with sem:
+                return await self._provider.ainvoke_structured(
+                    prompt=prompt,
+                    output_schema=SpecialEvidenceResponse,
+                    tier=EvidenceModelTier.STRONG,
+                    stage="special_evidence" if chunk.total == 1 else f"special_evidence/{chunk.index}",
+                    response_method="json_mode",
+                )
+
+        results = await asyncio.gather(
+            *[_extract_chunk(c) for c in chunks],
+            return_exceptions=True,
+        )
+        all_records: list[SpecialEvidenceRecord] = []
+        for i, result in enumerate(results):
+            if isinstance(result, BaseException):
+                logger.error("special_evidence chunk {}/{} failed: {}", i + 1, len(chunks), result)
+                continue
+            parsed = self._parse_records(result)
+            parsed = self._raw_source_normalizer.normalize_special_records(parsed)
+            all_records.extend(parsed)
+        merged = merge_special_evidence_records(all_records)
+        return self._validator.filter_records(merged, current_items, document)
 
     @staticmethod
     def _summarize_items(items: list[EvidenceItem]) -> str:

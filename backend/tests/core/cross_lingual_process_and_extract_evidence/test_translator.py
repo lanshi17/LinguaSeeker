@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -114,34 +114,37 @@ def test_parse_terminology_skips_blank_lines():
 # ── _invoke_with_retry tests ─────────────────────────────────────────
 
 
-def test_invoke_with_retry_success(mock_ctx):
+@pytest.mark.asyncio
+async def test_invoke_with_retry_success(mock_ctx):
     t = MultiStageTranslator(ctx=mock_ctx)
     mock_response = MagicMock()
     mock_response.content = "success"
-    with patch("langchain_openai.ChatOpenAI.invoke", return_value=mock_response):
-        result = invoke_with_retry(t._llm, "test prompt", "test")
+    with patch("langchain_openai.ChatOpenAI.ainvoke", new_callable=AsyncMock, return_value=mock_response):
+        result = await invoke_with_retry(t._llm, "test prompt", "test")
         assert result == "success"
 
 
-def test_invoke_with_retry_transient_then_success(mock_ctx):
+@pytest.mark.asyncio
+async def test_invoke_with_retry_transient_then_success(mock_ctx):
     import httpx
 
     t = MultiStageTranslator(ctx=mock_ctx)
     mock_response = MagicMock()
     mock_response.content = "success"
-    with patch("langchain_openai.ChatOpenAI.invoke", side_effect=[
+    with patch("langchain_openai.ChatOpenAI.ainvoke", new_callable=AsyncMock, side_effect=[
         httpx.ConnectError("connection failed"),
         mock_response,
     ]):
-        result = invoke_with_retry(t._llm, "test prompt", "test")
+        result = await invoke_with_retry(t._llm, "test prompt", "test")
         assert result == "success"
 
 
-def test_invoke_with_retry_non_transient_no_retry(mock_ctx):
+@pytest.mark.asyncio
+async def test_invoke_with_retry_non_transient_no_retry(mock_ctx):
     t = MultiStageTranslator(ctx=mock_ctx)
-    with patch("langchain_openai.ChatOpenAI.invoke", side_effect=ValueError("bad input")):
+    with patch("langchain_openai.ChatOpenAI.ainvoke", new_callable=AsyncMock, side_effect=ValueError("bad input")):
         with pytest.raises(ValueError, match="bad input"):
-            invoke_with_retry(t._llm, "test prompt", "test")
+            await invoke_with_retry(t._llm, "test prompt", "test")
 
 
 # ── _build_translated_blocks tests ────────────────────────────────────

@@ -41,7 +41,7 @@ class EvidenceExtractionService:
         self._workflow = EvidenceExtractionWorkflow(provider=self._provider)
 
     async def run(self, document: TrackDocument) -> EvidenceExtractionResult:
-        state = await self._workflow.run(document)
+        state = await self._workflow.run_async(document)
         return EvidenceExtractionResult(
             status=state.status,
             document_id=document.document_id,

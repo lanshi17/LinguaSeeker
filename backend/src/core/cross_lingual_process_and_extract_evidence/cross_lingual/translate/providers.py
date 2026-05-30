@@ -1,7 +1,7 @@
 """LLM client factory and retry logic for translation pipeline."""
 from __future__ import annotations
 
-import time
+import asyncio
 from typing import Any
 
 import httpx
@@ -21,6 +21,20 @@ _TRANSIENT_EXCEPTIONS = (
     httpx.TimeoutException,
     httpx.ConnectError,
 )
+
+# Global semaphore to limit concurrent LLM API calls across the translation
+# pipeline.  Prevents thundering-herd on the upstream LLM provider and avoids
+# triggering 429 rate-limits when many segments run in parallel.
+_LLM_CONCURRENCY: int = 5
+_llm_semaphore: asyncio.Semaphore | None = None
+
+
+def get_llm_semaphore(concurrency: int = _LLM_CONCURRENCY) -> asyncio.Semaphore:
+    """Return (and lazily create) the module-level LLM semaphore."""
+    global _llm_semaphore
+    if _llm_semaphore is None:
+        _llm_semaphore = asyncio.Semaphore(concurrency)
+    return _llm_semaphore
 
 
 def create_llm(
@@ -81,7 +95,7 @@ def _to_text(content: Any) -> str:
     return str(content).strip()
 
 
-def invoke_with_retry(
+async def invoke_with_retry(
     llm: ChatOpenAI,
     prompt: str,
     stage: str,
@@ -102,11 +116,13 @@ def invoke_with_retry(
     else:
         content = prompt
     messages = [HumanMessage(content=content)]
+    sem = get_llm_semaphore()
 
     last_exc: Exception | None = None
     for attempt in range(1, _MAX_RETRIES + 1):
         try:
-            response = llm.invoke(messages)
+            async with sem:
+                response = await llm.ainvoke(messages)
             return _to_text(response.content)
         except _TRANSIENT_EXCEPTIONS as exc:
             last_exc = exc
@@ -116,11 +132,11 @@ def invoke_with_retry(
                 stage, attempt, _MAX_RETRIES, exc, delay,
             )
             if attempt < _MAX_RETRIES:
-                time.sleep(delay)
+                await asyncio.sleep(delay)
     raise RuntimeError(f"Stage {stage} failed after {_MAX_RETRIES} attempts") from last_exc
 
 
-def invoke_json_with_retry(
+async def invoke_json_with_retry(
     llm: ChatOpenAI,
     prompt: str,
     stage: str,
@@ -140,11 +156,13 @@ def invoke_json_with_retry(
     else:
         content = prompt
     messages = [HumanMessage(content=content)]
+    sem = get_llm_semaphore()
 
     last_exc: Exception | None = None
     for attempt in range(1, _MAX_RETRIES + 1):
         try:
-            response = llm.invoke(messages)
+            async with sem:
+                response = await llm.ainvoke(messages)
             return _to_text(response.content)
         except _TRANSIENT_EXCEPTIONS as exc:
             last_exc = exc
@@ -154,5 +172,5 @@ def invoke_json_with_retry(
                 stage, attempt, _MAX_RETRIES, exc, delay,
             )
             if attempt < _MAX_RETRIES:
-                time.sleep(delay)
+                await asyncio.sleep(delay)
     raise RuntimeError(f"JSON stage {stage} failed after {_MAX_RETRIES} attempts") from last_exc

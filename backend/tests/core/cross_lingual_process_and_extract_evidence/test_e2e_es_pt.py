@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -399,45 +399,52 @@ class TestPipelineIntegration:
         resp.content = text
         return resp
 
-    def test_unchanged_es_triggers_error(self):
+    @pytest.mark.asyncio
+    async def test_unchanged_es_triggers_error(self):
         """When LLM returns Spanish text unchanged, TranslationError must be raised."""
         source = "Experiencia de cuidadores familiares de mujeres con cáncer de mama: una revisión integradora"
         # _invoke_with_retry returns str directly; simulate LLM returning unchanged text
         with patch(
             'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry',
+            new_callable=AsyncMock,
             return_value=source,
         ), patch(
             'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry',
+            new_callable=AsyncMock,
             return_value='{"terms": []}',
         ):
             translator = MultiStageTranslator(ctx=self._mock_ctx())
             doc = _make_doc(source, lang="es")
             with pytest.raises((TranslationError, ValueError)):
-                translator.run_pipeline(doc)
+                await translator.run_pipeline(doc)
 
-    def test_unchanged_pt_triggers_error(self):
+    @pytest.mark.asyncio
+    async def test_unchanged_pt_triggers_error(self):
         """When LLM returns Portuguese text unchanged, TranslationError must be raised."""
         source = "Câncer de Mama X Diagnóstico"
         with patch(
             'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry',
+            new_callable=AsyncMock,
             return_value=source,
         ), patch(
             'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry',
+            new_callable=AsyncMock,
             return_value='{"terms": []}',
         ):
             translator = MultiStageTranslator(ctx=self._mock_ctx())
             doc = _make_doc(source, lang="pt")
             with pytest.raises((TranslationError, ValueError)):
-                translator.run_pipeline(doc)
+                await translator.run_pipeline(doc)
 
-    def test_valid_translation_succeeds(self):
+    @pytest.mark.asyncio
+    async def test_valid_translation_succeeds(self):
         """A proper translation must complete without error."""
         source = "Experiencia de cuidadores familiares de mujeres con cáncer de mama"
         translated = "Experience of family caregivers of women with breast cancer"
         terminology = "cáncer: cancer\nmama: breast"
 
         call_count = 0
-        def mock_invoke(llm, prompt, stage, system_prompt=""):
+        async def mock_invoke(llm, prompt, stage, system_prompt=""):
             nonlocal call_count
             call_count += 1
             if "system_prompt_gen" in stage:
@@ -448,13 +455,15 @@ class TestPipelineIntegration:
 
         with patch(
             'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_with_retry',
+            new_callable=AsyncMock,
             side_effect=mock_invoke,
         ), patch(
             'src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.invoke_json_with_retry',
+            new_callable=AsyncMock,
             return_value=f'{{"translation": "{translated}"}}',
         ):
             translator = MultiStageTranslator(ctx=self._mock_ctx())
             doc = _make_doc(source, lang="es")
             # Should not raise
-            result = translator.run_pipeline(doc)
+            result = await translator.run_pipeline(doc)
             assert result is not None
