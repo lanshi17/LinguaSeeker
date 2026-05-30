@@ -10,7 +10,6 @@ from src.agents.contracts import (
     PhaseStatusDetail,
     Phase1Output,
     SkipPhase3Reason,
-    RetryablePhaseError,
     PermanentPhaseError,
 )
 from src.agents.orchestrator import PipelineOrchestrator

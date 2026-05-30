@@ -1,5 +1,4 @@
 """Tests for pipeline orchestrator contracts."""
-import pytest
 from src.agents.contracts import (
     PipelineGraphState,
     PhaseStatus,
