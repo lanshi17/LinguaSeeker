@@ -37,6 +37,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-05-09 | [Frontend Guidelines](active/FRONTEND_GUIDELINES.md) | active — v2.0 four-tab layout + components |
 | 2026-05-09 | [Backend Structure](active/BACKEND_STRUCTURE.md) | active — v2.0 chat/kb/hpo/delta APIs |
 | 2026-05-09 | [Implementation Plan](active/IMPLEMENTATION_PLAN.md) | active — v2.0 frontend UI tasks |
+| 2026-05-13 | [Phase Workflow Overview](active/phase_workflow_overview.md) | active — four-phase pipeline reference |
 
 ## Planned Work
 
@@ -52,6 +53,9 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-06-02 | [architecture cleanup: api→agents→core→dao layering](archive/plans/2026-06-02-architecture-cleanup.md) | completed — unified session factory, Phase4ServiceFactory |
+| 2026-05-29 | [DAO submodule restructure](archive/plans/2026-05-29-dao-submodule-restructure.md) | completed — postgresql/redis/neo4j/minio sub-packages |
+| 2026-05-29 | [utils extraction](archive/plans/2026-05-29-utils-extraction.md) | completed — sanitize_filename, strip_json_fences, traced_node |
 | 2026-05-29 | [pipeline orchestrator](archive/plans/2026-05-29-pipeline-orchestrator.md) | completed — LangGraph 3-phase orchestrator |
 | 2026-05-28 | [Phase 4 visualization expert loop](archive/plans/2026-05-28-phase4-visualization-expert-loop.md) | completed — Phase 4 P0 |
 | 2026-05-26 | [extract evidence long document chunking](archive/plans/2026-05-26-extract-evidence-long-document-chunking.md) | completed |
