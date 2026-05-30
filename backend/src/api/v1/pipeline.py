@@ -199,10 +199,17 @@ async def start_pipeline_run(request: PipelineRunRequest):
         created_at=datetime.now().isoformat(),
     )
 
-    runner.start(initial_state)
+    task = runner.start(initial_state)
 
-    # TODO: cleanup upload_file_path after pipeline completes (not here —
-    # runner.start() is async; file is still needed by Phase 1).
+    # Clean up temp file after pipeline completes (success or failure)
+    if upload_file_path:
+        def _cleanup_temp_file(t: object) -> None:
+            try:
+                Path(upload_file_path).unlink(missing_ok=True)
+            except OSError:
+                pass
+
+        task.add_done_callback(_cleanup_temp_file)
 
     return PipelineRunResponse(
         processing_run_id=processing_run_id,

@@ -36,7 +36,6 @@ async def _generate_embeddings() -> None:
     )
     from src.core.standardize_entities_and_align_knowledge.providers import EmbeddingProvider
     from src.dao.postgresql.connection import async_session_factory, build_async_engine
-    from src.dao.postgresql.vector_repo import VectorRepository
 
     cfg = get_config()
     if not cfg.pgvector_enabled:
