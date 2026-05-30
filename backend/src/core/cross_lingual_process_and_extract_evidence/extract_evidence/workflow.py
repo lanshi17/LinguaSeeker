@@ -44,6 +44,7 @@ class EvidenceExtractionWorkflow:
         self._quality_gate = QualityGateStage()
         self._chain_builder = EvidenceChainBuilder()
         self._graph = self._build_graph()
+        self._async_graph = self._build_async_graph()
 
     def _node_relevance_scan(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         emap = self._relevance_scan.run(state.document)
@@ -59,6 +60,23 @@ class EvidenceExtractionWorkflow:
 
     def _node_special_evidence(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         records = self._special_evidence.run(state.document, state.evidence_items)
+        state.special_evidence = records
+        return state
+
+    async def _async_node_relevance_scan(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        emap = await self._relevance_scan.run_async(state.document)
+        state.evidence_map = emap
+        if not emap.relevant:
+            state.status = EvidenceExtractionStatus.NOT_RELEVANT
+        return state
+
+    async def _async_node_catalog_extraction(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        items = await self._catalog_extraction.run_async(state.document, state.evidence_map)
+        state.evidence_items = items
+        return state
+
+    async def _async_node_special_evidence(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        records = await self._special_evidence.run_async(state.document, state.evidence_items)
         state.special_evidence = records
         return state
 
@@ -130,6 +148,35 @@ class EvidenceExtractionWorkflow:
 
         return graph.compile()
 
+    def _build_async_graph(self) -> Any:
+        """Build a graph variant with async LLM nodes for concurrent chunk execution."""
+        graph = StateGraph(EvidenceExtractionState)
+
+        graph.add_node("relevance_scan", self._async_node_relevance_scan)
+        graph.add_node("catalog_extraction", self._async_node_catalog_extraction)
+        graph.add_node("special_evidence", self._async_node_special_evidence)
+        graph.add_node("group_assignment", self._node_group_assignment)
+        graph.add_node("source_grounding", self._node_source_grounding)
+        graph.add_node("chain_assembly", self._node_chain_assembly)
+        graph.add_node("quality_gate", self._node_quality_gate)
+        graph.add_node("not_relevant", self._node_not_relevant)
+
+        graph.set_entry_point("relevance_scan")
+        graph.add_conditional_edges(
+            "relevance_scan",
+            lambda s: "not_relevant" if s.status == EvidenceExtractionStatus.NOT_RELEVANT else "catalog_extraction",
+            {"not_relevant": "not_relevant", "catalog_extraction": "catalog_extraction"},
+        )
+        graph.add_edge("catalog_extraction", "special_evidence")
+        graph.add_edge("special_evidence", "group_assignment")
+        graph.add_edge("group_assignment", "source_grounding")
+        graph.add_edge("source_grounding", "chain_assembly")
+        graph.add_edge("chain_assembly", "quality_gate")
+        graph.add_edge("quality_gate", END)
+        graph.add_edge("not_relevant", END)
+
+        return graph.compile()
+
     async def run(self, document: TrackDocument) -> EvidenceExtractionState:
         import asyncio
 
@@ -143,4 +190,12 @@ class EvidenceExtractionWorkflow:
         if isinstance(final_state, dict):
             final_state = EvidenceExtractionState(**final_state)
 
+        return final_state
+
+    async def run_async(self, document: TrackDocument) -> EvidenceExtractionState:
+        """Async execution — uses async graph with concurrent chunk LLM calls."""
+        initial_state = EvidenceExtractionState(document=document)
+        final_state = await self._async_graph.ainvoke(initial_state)
+        if isinstance(final_state, dict):
+            final_state = EvidenceExtractionState(**final_state)
         return final_state

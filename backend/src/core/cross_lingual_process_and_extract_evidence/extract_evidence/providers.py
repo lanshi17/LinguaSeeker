@@ -98,6 +98,91 @@ class LangChainEvidenceProvider:
                 logger.warning("Stage {} structured output failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
         raise RuntimeError(f"Stage {stage} failed structured output") from last_exc
 
+    async def ainvoke_structured(
+        self,
+        prompt: str,
+        output_schema: type[SchemaT],
+        tier: EvidenceModelTier,
+        stage: str,
+        response_method: Literal["json_schema", "json_mode"] = "json_schema",
+    ) -> SchemaT:
+        """Async version of invoke_structured — uses ainvoke for concurrency."""
+        llm = self._client_for_tier(tier)
+        if not _is_pydantic_model_schema(output_schema):
+            return await self._ainvoke_json_text(llm, prompt, output_schema)
+        structured = llm.with_structured_output(output_schema, method=response_method)
+        last_exc: Exception | None = None
+        for attempt in range(1, self._ctx.max_retries + 1):
+            try:
+                return await structured.ainvoke([HumanMessage(content=prompt)])
+            except self._TRANSIENT_EXCEPTIONS as exc:
+                last_exc = exc
+                logger.warning("Stage {} transient failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
+            except Exception as exc:
+                last_exc = exc
+                if self._is_unsupported_response_format(exc):
+                    logger.warning(
+                        "Stage {} model does not support {} response_format; falling back to JSON text",
+                        stage,
+                        response_method,
+                    )
+                    return await self._ainvoke_json_text(llm, prompt, output_schema)
+                if attempt >= self._ctx.max_retries:
+                    break
+                logger.warning("Stage {} structured output failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
+        raise RuntimeError(f"Stage {stage} failed structured output") from last_exc
+
+    async def _ainvoke_json_text(
+        self,
+        llm: ChatOpenAI,
+        prompt: str,
+        output_schema: type[SchemaT],
+    ) -> SchemaT:
+        """Async fallback: request plain JSON text and parse locally."""
+        adapter = TypeAdapter(output_schema)
+        schema = adapter.json_schema()
+        fallback_prompt = (
+            f"{prompt}\n\n"
+            "Return only valid JSON matching this JSON Schema. "
+            "Do not wrap it in Markdown code fences.\n"
+            f"{json.dumps(schema, ensure_ascii=False)}"
+        )
+        message = await llm.ainvoke([HumanMessage(content=fallback_prompt)])
+        content = message.content
+        if not isinstance(content, str):
+            raise RuntimeError("Fallback JSON response content is not text")
+        json_text = strip_json_fences(content)
+        try:
+            return adapter.validate_python(json.loads(json_text))
+        except (ValidationError, ValueError, json.JSONDecodeError):
+            import re
+
+            try:
+                repaired_candidate = re.sub(r"\\(?![\"\\/bfnrtu])", r"\\\\", json_text)
+                return adapter.validate_python(json.loads(repaired_candidate))
+            except Exception:
+                repaired = await self._arepair_json_with_llm(llm, json_text, schema)
+                return adapter.validate_python(json.loads(repaired))
+
+    async def _arepair_json_with_llm(
+        self,
+        llm: ChatOpenAI,
+        invalid_json: str,
+        schema: dict[str, Any],
+    ) -> str:
+        """Async JSON repair via LLM."""
+        repair_prompt = (
+            "Repair the following invalid JSON so it exactly matches the JSON Schema. "
+            "Return only valid JSON. Do not add Markdown fences or explanation.\n\n"
+            f"JSON Schema:\n{json.dumps(schema, ensure_ascii=False)}\n\n"
+            f"Invalid JSON:\n{invalid_json}"
+        )
+        message = await llm.ainvoke([HumanMessage(content=repair_prompt)])
+        content = message.content
+        if not isinstance(content, str):
+            raise RuntimeError("JSON repair response content is not text")
+        return strip_json_fences(content)
+
     @staticmethod
     def _is_unsupported_response_format(exc: Exception) -> bool:
         text = str(exc).lower()

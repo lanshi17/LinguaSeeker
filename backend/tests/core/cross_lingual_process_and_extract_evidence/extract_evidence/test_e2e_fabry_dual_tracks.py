@@ -95,6 +95,17 @@ class FabryFixtureProvider:
             return []
         raise AssertionError(f"unexpected stage: {stage}")
 
+    async def ainvoke_structured(
+        self,
+        prompt: str,
+        output_schema: type[Any],
+        tier: Any,
+        stage: str,
+        response_method: str = "json_schema",
+    ) -> Any:
+        """Async mirror — delegates to sync invoke_structured."""
+        return self.invoke_structured(prompt, output_schema, tier, stage, response_method)
+
     @staticmethod
     def _track_from_prompt(prompt: str) -> Track:
         if "Track: original" in prompt:
@@ -147,11 +158,14 @@ async def test_fabry_output_fixture_runs_original_and_translated_tracks_independ
     assert documents.original.formatted_text != documents.translated.formatted_text
     assert [span.page for span in documents.original.page_spans] == [1, 2, 3, 4]
     assert [span.page for span in documents.translated.page_spans] == [1, 2, 3, 4]
-    assert provider.calls == [
+    # Tracks run in parallel, so call order is non-deterministic.
+    # Verify all 6 stage calls happened across both tracks.
+    expected_calls = {
         ("relevance_scan", Track.ORIGINAL),
         ("catalog_extraction", Track.ORIGINAL),
         ("special_evidence", Track.ORIGINAL),
         ("relevance_scan", Track.TRANSLATED),
         ("catalog_extraction", Track.TRANSLATED),
         ("special_evidence", Track.TRANSLATED),
-    ]
+    }
+    assert set(provider.calls) == expected_calls

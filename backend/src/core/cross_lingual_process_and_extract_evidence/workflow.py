@@ -1,7 +1,6 @@
 """Pure orchestrator — graph wiring + public service API. Zero business logic."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any, Dict, List
 
 from langgraph.graph import END, StateGraph
@@ -68,9 +67,9 @@ class TranslationService:
         return state
 
     @traced_node("translate")
-    def _node_translate(self, state: PipelineState) -> PipelineState:
+    async def _node_translate(self, state: PipelineState) -> PipelineState:
         try:
-            result = self._translator.translate_to_result(state.formatted)
+            result = await self._translator.translate_to_result(state.formatted)
         except TranslationError:
             raise  # Let critical failures propagate — do not persist garbage
         state.translation_result = result
@@ -128,13 +127,7 @@ class TranslationService:
         initial_state = PipelineState(pages=pages, content_blocks=content_blocks or [])
         graph = self._graph
 
-        try:
-            loop = asyncio.get_running_loop()
-            final_state = await loop.run_in_executor(
-                None, graph.invoke, initial_state
-            )
-        except RuntimeError:
-            final_state = graph.invoke(initial_state)
+        final_state = await graph.ainvoke(initial_state)
 
         if isinstance(final_state, dict):
             final_state = PipelineState(**final_state)

@@ -1,6 +1,7 @@
 """Translation engine for biomedical documents."""
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 from typing import Any, Dict, List, Tuple
@@ -235,7 +236,7 @@ class MultiStageTranslator(BaseTranslator):
 
         return "\n".join(clean).strip()
 
-    def _generate_system_prompt(self, formatted: FormattedDocument) -> str:
+    async def _generate_system_prompt(self, formatted: FormattedDocument) -> str:
         """Use an LLM to generate an optimal translation system prompt.
 
         Analyzes the document sample and produces a tailored system message
@@ -246,7 +247,7 @@ class MultiStageTranslator(BaseTranslator):
         meta_prompt = get_system_prompt_generation_prompt(sample, source_lang)
 
         logger.info("Generating dynamic system prompt for lang={}", source_lang)
-        system_prompt = invoke_with_retry(self._llm,meta_prompt, "system_prompt_gen")
+        system_prompt = await invoke_with_retry(self._llm, meta_prompt, "system_prompt_gen")
 
         # Validate: generated prompt should be reasonable length
         if len(system_prompt) < 50:
@@ -262,24 +263,27 @@ class MultiStageTranslator(BaseTranslator):
 
     # ── Pipeline stages ──────────────────────────────────────────────────
 
-    def extract_terminology(self, formatted: FormattedDocument) -> str:
+    async def extract_terminology(self, formatted: FormattedDocument) -> str:
         logger.info("Stage: terminology")
         text = formatted.formatted_markdown
         overhead = estimate_tokens(get_terminology_prompt(""))
         segments = segment_text(text, max_tokens=6000, prompt_overhead_tokens=overhead)
 
         if len(segments) <= 1:
-            raw = invoke_with_retry(self._llm,
-                get_terminology_prompt(text), "terminology",
+            raw = await invoke_with_retry(
+                self._llm, get_terminology_prompt(text), "terminology",
             )
             return self._clean_terminology(raw)
 
-        all_terms: list[str] = []
-        for idx, segment in enumerate(segments, start=1):
+        async def _extract_one(idx: int, segment: str) -> str:
             prompt = get_terminology_prompt(segment)
-            terms = invoke_with_retry(self._llm,prompt, f"terminology/{idx}")
-            all_terms.append(terms)
+            terms = await invoke_with_retry(self._llm, prompt, f"terminology/{idx}")
             logger.info("Terminology segment {}/{} done", idx, len(segments))
+            return terms
+
+        all_terms = await asyncio.gather(
+            *[_extract_one(idx, seg) for idx, seg in enumerate(segments, start=1)],
+        )
 
         # Merge: deduplicate by keeping unique source:target pairs
         merged = "\n".join(all_terms)
@@ -292,7 +296,7 @@ class MultiStageTranslator(BaseTranslator):
                 unique_lines.append(line.strip())
         return self._clean_terminology("\n".join(unique_lines))
 
-    def _extract_terminology_json_pairs(self, text: str) -> list[str]:
+    async def _extract_terminology_json_pairs(self, text: str) -> list[str]:
         """Extract terminology via JSON mode for more reliable parsing.
 
         Returns a list of ``source: target`` strings.
@@ -306,7 +310,7 @@ class MultiStageTranslator(BaseTranslator):
             f"Text:\n{text[:6000]}"
         )
         try:
-            raw = invoke_json_with_retry(self._json_llm,prompt, "terminology_json")
+            raw = await invoke_json_with_retry(self._json_llm, prompt, "terminology_json")
             data = json.loads(raw)
             terms = data.get("terms", [])
             if isinstance(terms, list):
@@ -324,7 +328,7 @@ class MultiStageTranslator(BaseTranslator):
 
     # ── Full-document translation ─────────────────────────────────────────
 
-    def _translate_blocks(
+    async def _translate_blocks(
         self,
         formatted: FormattedDocument,
         terminology: str,
@@ -340,7 +344,7 @@ class MultiStageTranslator(BaseTranslator):
         Returns:
             Tuple of (joined_translated_text, source_block_texts, translated_block_texts).
         """
-        system_prompt = self._generate_system_prompt(formatted)
+        system_prompt = await self._generate_system_prompt(formatted)
         self._text_block_indices = [i for i, _ in non_empty]
 
         # Save original source texts before prefix stripping
@@ -361,7 +365,7 @@ class MultiStageTranslator(BaseTranslator):
 
         # Single LLM call for the entire document
         prompt = get_full_document_translate_prompt(marked_source, terminology)
-        translated = invoke_with_retry(self._llm,prompt, "translate/full", system_prompt)
+        translated = await invoke_with_retry(self._llm, prompt, "translate/full", system_prompt)
 
         # Strip prompt artifacts
         translated = strip_prompt_echo(translated)
@@ -376,7 +380,8 @@ class MultiStageTranslator(BaseTranslator):
         # Fix [REDACTED] incorrectly inserted inside English words
         translated_parts = [fix_word_boundary_redacted(p) for p in translated_parts]
 
-        # Re-add stripped prefixes and restore English-only blocks
+        # Collect CJK prefix translations for parallel execution
+        prefix_tasks: list[tuple[int, asyncio.Task[str]]] = []
         for idx, prefix in enumerate(stripped_prefixes):
             seq = idx + 1  # 1-based sequence number
             if seq in english_overrides:
@@ -384,18 +389,23 @@ class MultiStageTranslator(BaseTranslator):
                 translated_parts[idx] = english_overrides[seq]
                 logger.debug("Preserved English block {}: {}...", seq, english_overrides[seq][:60])
             elif prefix and idx < len(translated_parts):
-                part = translated_parts[idx]
                 if _CJK_RE.search(prefix):
-                    prefix_tr = invoke_with_retry(self._llm,
+                    task = asyncio.create_task(invoke_with_retry(
+                        self._llm,
                         f"Translate this label to English (short, 2-5 words): {prefix}",
                         f"translate/prefix/{idx + 1}",
-                    )
-                    prefix_tr = strip_inline_artifacts(prefix_tr).strip()
-                    translated_parts[idx] = (
-                        f"{prefix_tr} {part}" if part else prefix_tr
-                    )
+                    ))
+                    prefix_tasks.append((idx, task))
                 else:
-                    translated_parts[idx] = f"{prefix}{part}"
+                    translated_parts[idx] = f"{prefix}{translated_parts[idx]}"
+
+        # Await all prefix translations in parallel
+        if prefix_tasks:
+            results = await asyncio.gather(*[t for _, t in prefix_tasks])
+            for (idx, _), prefix_tr in zip(prefix_tasks, results):
+                prefix_tr = strip_inline_artifacts(prefix_tr).strip()
+                part = translated_parts[idx]
+                translated_parts[idx] = f"{prefix_tr} {part}" if part else prefix_tr
 
         # Split merged keyword blocks back into individual translations
         translated_parts = split_merged_keywords(translated_parts, merge_map)
@@ -409,7 +419,7 @@ class MultiStageTranslator(BaseTranslator):
 
     # ── Self-review ──────────────────────────────────────────────────────
 
-    def _self_review(
+    async def _self_review(
         self,
         source_text: str,
         translated_text: str,
@@ -425,7 +435,7 @@ class MultiStageTranslator(BaseTranslator):
         logger.info("Running self-review ({} source chars)", len(source_text))
 
         try:
-            reviewed = invoke_with_retry(self._llm,prompt, "self_review", system_prompt)
+            reviewed = await invoke_with_retry(self._llm, prompt, "self_review", system_prompt)
         except RuntimeError as exc:
             logger.warning("Self-review failed: {}, keeping original", exc)
             return translated_text
@@ -455,7 +465,7 @@ class MultiStageTranslator(BaseTranslator):
         )
         return reviewed
 
-    def translate_segments(
+    async def translate_segments(
         self, formatted: FormattedDocument, terminology: str,
         blocks: List[ContentBlock] | None = None,
     ) -> Tuple[str, List[str], List[str]]:
@@ -463,6 +473,7 @@ class MultiStageTranslator(BaseTranslator):
 
         Each segment gets one translation attempt. If validation fails,
         the segment is retried up to ``_MAX_SEGMENT_RETRIES`` times.
+        Segments are translated in parallel (bounded by LLM semaphore).
 
         Args:
             formatted: The formatted document.
@@ -484,14 +495,14 @@ class MultiStageTranslator(BaseTranslator):
                          if b.text.strip() and (b.type in ("text", "title") or
                                                 (b.type == "footer" and _DOI_RE.search(b.text)))]
             if non_empty:
-                return self._translate_blocks(
+                return await self._translate_blocks(
                     formatted, terminology, non_empty,
                 )
 
         text = formatted.formatted_markdown
 
         # Generate a dynamic system prompt tailored to this document
-        system_prompt = self._generate_system_prompt(formatted)
+        system_prompt = await self._generate_system_prompt(formatted)
 
         # Calculate total overhead: system prompt + base template + context
         sys_tokens = estimate_tokens(system_prompt)
@@ -522,22 +533,27 @@ class MultiStageTranslator(BaseTranslator):
 
         segments = segment_text(text, max_tokens=max(2000, max_segment_tokens), prompt_overhead_tokens=overhead)
 
-        translated_parts: list[str] = []
-        for idx, segment in enumerate(segments, start=1):
+        total = len(segments)
+
+        async def _translate_segment(idx: int, segment: str) -> str:
             # Provide neighboring context so the LLM can translate coherently
-            prev_ctx = segments[idx - 2][-self._CONTEXT_CHARS:] if idx >= 2 else ""
-            next_ctx = segments[idx][:self._CONTEXT_CHARS] if idx < len(segments) else ""
-            translated = self._translate_one_segment(
-                segment, terminology, idx, len(segments),
+            prev_ctx = segments[idx - 2][-self._CONTEXT_CHARS:] if idx >= 1 else ""
+            next_ctx = segments[idx][:self._CONTEXT_CHARS] if idx + 1 < total else ""
+            translated = await self._translate_one_segment(
+                segment, terminology, idx + 1, total,
                 prev_context=prev_ctx, next_context=next_ctx,
                 system_prompt=system_prompt,
             )
-            translated_parts.append(translated)
-            logger.info("Translate segment {}/{} done", idx, len(segments))
+            logger.info("Translate segment {}/{} done", idx + 1, total)
+            return translated
 
-        return "\n\n".join(translated_parts), segments, translated_parts
+        translated_parts = await asyncio.gather(
+            *[_translate_segment(idx, seg) for idx, seg in enumerate(segments)],
+        )
 
-    def _translate_one_segment(
+        return "\n\n".join(translated_parts), segments, list(translated_parts)
+
+    async def _translate_one_segment(
         self,
         source_segment: str,
         terminology: str,
@@ -563,7 +579,7 @@ class MultiStageTranslator(BaseTranslator):
                     f"Output ONLY the English translation. "
                     f"Do NOT keep any Chinese characters.\n\n{source_segment}"
                 )
-                translated = invoke_with_retry(self._llm,retry_prompt, stage, system_prompt)
+                translated = await invoke_with_retry(self._llm, retry_prompt, stage, system_prompt)
             elif attempt == 1:
                 # First attempt: use JSON mode to prevent prompt echo
                 json_prompt = (
@@ -571,16 +587,16 @@ class MultiStageTranslator(BaseTranslator):
                     "Return a JSON object with key \"translation\" containing the translated text."
                 )
                 try:
-                    raw = invoke_json_with_retry(self._json_llm,json_prompt, stage, system_prompt)
+                    raw = await invoke_json_with_retry(self._json_llm, json_prompt, stage, system_prompt)
                     data = json.loads(raw)
                     translated = data.get("translation", "")
                     if not translated:
                         raise ValueError("empty translation field")
                 except (json.JSONDecodeError, KeyError, ValueError):
                     # Fallback to non-JSON mode
-                    translated = invoke_with_retry(self._llm,prompt, stage, system_prompt)
+                    translated = await invoke_with_retry(self._llm, prompt, stage, system_prompt)
             else:
-                translated = invoke_with_retry(self._llm,prompt, stage, system_prompt)
+                translated = await invoke_with_retry(self._llm, prompt, stage, system_prompt)
 
             # Strip prompt artifacts echoed back by the LLM
             translated = strip_prompt_artifacts(translated)
@@ -619,17 +635,17 @@ class MultiStageTranslator(BaseTranslator):
 
     # ── Full pipeline ────────────────────────────────────────────────────
 
-    def run_pipeline(
+    async def run_pipeline(
         self, formatted: FormattedDocument, blocks: List[ContentBlock] | None = None,
     ) -> Tuple[Dict[str, str], str, str, str, List[str], List[str], List[str]]:
         # ── Stage 1: Translate (terminology + full-document translation) ──
-        terminology = self.extract_terminology(formatted)
-        translated, source_segments, translated_parts = self.translate_segments(
+        terminology = await self.extract_terminology(formatted)
+        translated, source_segments, translated_parts = await self.translate_segments(
             formatted, terminology, blocks=blocks,
         )
 
         # ── Stage 2: Self-review (LLM quality check and correction) ──────
-        translated = self._self_review(
+        translated = await self._self_review(
             formatted.formatted_markdown, translated,
         )
 
@@ -695,7 +711,7 @@ class MultiStageTranslator(BaseTranslator):
         # Return structure_plan="" for backward compatibility with BaseTranslator
         return terminology_map, "", "", translated, source_segments, translated_parts, warnings
 
-    def _translate_auxiliary_blocks(
+    async def _translate_auxiliary_blocks(
         self,
         blocks: list[ContentBlock],
         system_prompt: str = "",
@@ -703,6 +719,7 @@ class MultiStageTranslator(BaseTranslator):
         """Translate auxiliary fields (table_body, captions, footnotes) for non-text blocks.
 
         Returns a dict mapping block index to translated auxiliary fields.
+        Batches are translated in parallel.
         """
         aux_translations: dict[int, dict[str, Any]] = {}
         # Collect all translatable auxiliary text
@@ -726,13 +743,16 @@ class MultiStageTranslator(BaseTranslator):
         if not to_translate:
             return aux_translations
 
-        # Batch translate in groups of 10
+        # Build batches of 10
         batch_size = 10
+        batches: list[list[tuple[int, str, str]]] = []
         for batch_start in range(0, len(to_translate), batch_size):
-            batch = to_translate[batch_start:batch_start + batch_size]
+            batches.append(to_translate[batch_start:batch_start + batch_size])
+
+        async def _translate_batch(batch: list[tuple[int, str, str]]) -> None:
             items_json = [
                 {"index": idx, "field": field, "text": text}
-                for idx, (block_idx, field, text) in enumerate(batch)
+                for idx, (_block_idx, field, text) in enumerate(batch)
             ]
             prompt = (
                 "Translate each item from Chinese to English. "
@@ -742,7 +762,7 @@ class MultiStageTranslator(BaseTranslator):
                 f"Items:\n{json.dumps(items_json, ensure_ascii=False)}"
             )
             try:
-                raw = invoke_json_with_retry(self._json_llm,prompt, "aux_translate", system_prompt)
+                raw = await invoke_json_with_retry(self._json_llm, prompt, "aux_translate", system_prompt)
                 data = json.loads(raw)
                 translations = data.get("translations", [])
                 for item in translations:
@@ -758,12 +778,13 @@ class MultiStageTranslator(BaseTranslator):
             except (json.JSONDecodeError, KeyError, TypeError) as exc:
                 logger.warning("Auxiliary translation batch failed: {}", exc)
 
+        await asyncio.gather(*[_translate_batch(b) for b in batches])
         return aux_translations
 
-    def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
+    async def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
         blocks = formatted.original_blocks or []
         terminology_map, _structure_plan, _draft, translated, source_segments, translated_parts, warnings = (
-            self.run_pipeline(formatted, blocks=blocks if blocks else None)
+            await self.run_pipeline(formatted, blocks=blocks if blocks else None)
         )
         tr_segments: list[TranslationSegment] = []
         # Compute translated segment offsets by tracking cumulative position
@@ -783,7 +804,7 @@ class MultiStageTranslator(BaseTranslator):
             translated_offset += len(tr_text) + 2  # +2 for "\n\n" joiner
 
         # Translate auxiliary fields (captions, footnotes) for non-text blocks
-        aux_translations = self._translate_auxiliary_blocks(blocks)
+        aux_translations = await self._translate_auxiliary_blocks(blocks)
 
         # Build translated blocks: split translated text on block delimiter
         translated_blocks = build_translated_blocks(

@@ -1,6 +1,10 @@
 """Catalog extraction stage — structured field extraction using the 10-category catalog."""
 from __future__ import annotations
 
+import asyncio
+
+from loguru import logger
+
 from ..catalog import EVIDENCE_FIELD_SPECS
 from ..chunking import (
     DEFAULT_INPUT_BUDGET_TOKENS,
@@ -12,6 +16,8 @@ from ..core import RawSourceNormalizer
 from ..prompts import get_catalog_extraction_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 from ...cross_lingual.format.segmenter import estimate_tokens
+
+_DEFAULT_CHUNK_CONCURRENCY = 5
 
 
 class CatalogExtractionStage:
@@ -62,6 +68,59 @@ class CatalogExtractionStage:
             )
             if isinstance(items, list):
                 extracted.extend(self._raw_source_normalizer.normalize_items(items))
+        return merge_sparse_evidence_items(extracted)
+
+    async def run_async(
+        self,
+        document: TrackDocument,
+        evidence_map: DocumentEvidenceMap,
+    ) -> list[EvidenceItem]:
+        """Async version — runs chunk LLM calls concurrently with semaphore."""
+        summary = self._summarize_map(evidence_map)
+        overhead = estimate_tokens(get_catalog_extraction_prompt(
+            document_id=document.document_id,
+            track=document.track,
+            text="",
+            catalog=EVIDENCE_FIELD_SPECS,
+            evidence_map_summary=summary,
+        ))
+        chunks = build_block_prompt_chunks(
+            document,
+            input_budget_tokens=self._input_budget_tokens,
+            prompt_overhead_tokens=overhead,
+        )
+        sem = asyncio.Semaphore(_DEFAULT_CHUNK_CONCURRENCY)
+
+        async def _extract_chunk(chunk):  # noqa: ANN001
+            chunk_summary = summary
+            if chunk.total > 1:
+                chunk_summary = f"{summary}\nCurrent document chunk: {chunk.index}/{chunk.total}"
+            prompt = get_catalog_extraction_prompt(
+                document_id=document.document_id,
+                track=document.track,
+                text=chunk.text,
+                catalog=EVIDENCE_FIELD_SPECS,
+                evidence_map_summary=chunk_summary,
+            )
+            async with sem:
+                return await self._provider.ainvoke_structured(
+                    prompt=prompt,
+                    output_schema=list[EvidenceItem],
+                    tier=EvidenceModelTier.STRONG,
+                    stage="catalog_extraction" if chunk.total == 1 else f"catalog_extraction/{chunk.index}",
+                )
+
+        results = await asyncio.gather(
+            *[_extract_chunk(c) for c in chunks],
+            return_exceptions=True,
+        )
+        extracted: list[EvidenceItem] = []
+        for i, result in enumerate(results):
+            if isinstance(result, BaseException):
+                logger.error("catalog_extraction chunk {}/{} failed: {}", i + 1, len(chunks), result)
+                continue
+            if isinstance(result, list):
+                extracted.extend(self._raw_source_normalizer.normalize_items(result))
         return merge_sparse_evidence_items(extracted)
 
     @staticmethod
