@@ -6,7 +6,7 @@ Project documentation is organized by lifecycle status.
 docs/
 ├── README.md
 ├── active/           # In-progress implementation plans and working notes
-├── plans/            # Planned work that has not started
+├── planned/          # Planned work that has not started
 ├── codereview/       # Active code reviews (empty when all reviews are resolved)
 ├── archive/
 │   ├── plans/        # Completed or superseded plans
@@ -18,7 +18,7 @@ Each `backend/` module also has its own `README.md` developer guide (43 total). 
 
 ## Classification Rules
 
-- `plans/`: planned work that has not started.
+- `planned/`: planned work that has not started.
 - `active/`: in-progress implementation plans and working notes.
 - `codereview/`: active code review reports and review follow-ups.
 - `archive/plans/`: completed or superseded plans.
@@ -45,7 +45,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status |
 |---|---|---|
-| 2026-05-30 | [Backend Optimization Plan](plans/2026-05-30-backend-optimization.md) | planned — 8 tasks from code review |
+| 2026-05-30 | [Unified Config & Monitoring](planned/2026-05-30-unified-config-monitoring.md) | planned — 8 tasks: logging, exceptions, middleware, health checks |
 
 ## Active Code Reviews
 
@@ -57,6 +57,8 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-05-30 | [Phase 2 chunk-level parallelization](archive/plans/2026-05-30-phase2-chunk-parallelization.md) | completed — async provider + stages + workflow |
+| 2026-05-30 | [Backend optimization (code review)](archive/plans/2026-05-30-backend-optimization.md) | completed — 8 tasks from code review |
 | 2026-06-02 | [architecture cleanup: api→agents→core→dao layering](archive/plans/2026-06-02-architecture-cleanup.md) | completed — unified session factory, Phase4ServiceFactory |
 | 2026-05-29 | [DAO submodule restructure](archive/plans/2026-05-29-dao-submodule-restructure.md) | completed — postgresql/redis/neo4j/minio sub-packages |
 | 2026-05-29 | [utils extraction](archive/plans/2026-05-29-utils-extraction.md) | completed — sanitize_filename, strip_json_fences, traced_node |
