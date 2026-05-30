@@ -6,7 +6,7 @@ Project documentation is organized by lifecycle status.
 docs/
 ├── README.md
 ├── active/           # In-progress implementation plans and working notes
-├── planned/          # Planned work that has not started
+├── plans/            # Planned work that has not started
 ├── codereview/       # Active code reviews (empty when all reviews are resolved)
 ├── archive/
 │   ├── plans/        # Completed or superseded plans
@@ -14,9 +14,11 @@ docs/
 └── templates/        # Reusable documentation templates
 ```
 
+Each `backend/` module also has its own `README.md` developer guide (43 total). See **Module README Index** below.
+
 ## Classification Rules
 
-- `planned/`: planned work that has not started.
+- `plans/`: planned work that has not started.
 - `active/`: in-progress implementation plans and working notes.
 - `codereview/`: active code review reports and review follow-ups.
 - `archive/plans/`: completed or superseded plans.
@@ -117,3 +119,62 @@ No active code reviews.
 | 2026-05-08 | [files-io](archive/codereview/files-io-2026-05-08.md) | approved |
 | 2026-05-08 | [rust-io facade review v2](archive/codereview/code_review_rust_io_facade_v2.md) | archived |
 | 2026-05-08 | [rust-io facade review](archive/codereview/code_review_rust_io_facade.md) | archived |
+
+## Module README Index
+
+Every `backend/` module and sub-module has a developer-facing `README.md` with architecture diagrams, public API tables, usage patterns, and testing instructions. Use these as the primary reference when working on a specific module.
+
+### backend/app/
+- [app](../backend/app/README.md) — FastAPI application entry point, lifespan, router mounting
+
+### backend/src/ — Python Business Logic
+- [src](../backend/src/README.md) — Package map, architecture, key entry points
+- [agents](../backend/src/agents/README.md) — Pipeline orchestrator (LangGraph), phase adapters, runner, state persistence
+- [api](../backend/src/api/README.md) — HTTP boundary, dependency injection, wiring
+- [api/v1](../backend/src/api/v1/README.md) — REST endpoint definitions (pipeline, evidence, chat, audit, source-link)
+- [core](../backend/src/core/README.md) — Vertical feature slices, config reference
+- [utils](../backend/src/utils/README.md) — Shared utilities (text, observability, rust_io)
+
+### backend/src/core/ — Phase Feature Slices
+- [Phase 1: ingest_and_digitize_data](../backend/src/core/ingest_and_digitize_data/README.md) — Document acquisition + parsing facade
+  - [document_acquisition](../backend/src/core/ingest_and_digitize_data/document_acquisition/README.md) — Unified acquisition facade, multi-provider search
+  - [local_upload](../backend/src/core/ingest_and_digitize_data/document_acquisition/local_upload/README.md) — File upload with SHA-256 dedup
+  - [online_acquisition](../backend/src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/README.md) — 14 API + 7 web provider fallback chains
+  - [web scrapers](../backend/src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/web/README.md) — Browser-based scrapers for regional publishers
+  - [parse_document](../backend/src/core/ingest_and_digitize_data/parse_document/README.md) — MinerU PDF parsing (remote + local)
+  - [parse common](../backend/src/core/ingest_and_digitize_data/parse_document/common/README.md) — Shared converters and parsers
+  - [parse local](../backend/src/core/ingest_and_digitize_data/parse_document/local/README.md) — Local VLM parser via model-server
+  - [parse remote](../backend/src/core/ingest_and_digitize_data/parse_document/remote/README.md) — Remote MinerU cloud API parser
+- [Phase 2: cross_lingual_process_and_extract_evidence](../backend/src/core/cross_lingual_process_and_extract_evidence/README.md) — Translation + evidence extraction
+  - [cross_lingual](../backend/src/core/cross_lingual_process_and_extract_evidence/cross_lingual/README.md) — Format + translate sub-packages
+  - [translate](../backend/src/core/cross_lingual_process_and_extract_evidence/cross_lingual/translate/README.md) — 3-stage LLM translation engine
+  - [translate/prompts](../backend/src/core/cross_lingual_process_and_extract_evidence/cross_lingual/translate/prompts/README.md) — Prompt templates
+  - [translate/validator](../backend/src/core/cross_lingual_process_and_extract_evidence/cross_lingual/translate/validator/README.md) — Validation and normalization
+  - [extract_evidence](../backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/README.md) — 7-stage LangGraph extraction, 138-field catalog
+  - [extract_evidence/stages](../backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/stages/README.md) — Individual pipeline stage classes
+- [Phase 3: standardize_entities_and_align_knowledge](../backend/src/core/standardize_entities_and_align_knowledge/README.md) — Entity standardization
+  - [precise_match](../backend/src/core/standardize_entities_and_align_knowledge/precise_match/README.md) — Deterministic terminology matching
+  - [similarity_match](../backend/src/core/standardize_entities_and_align_knowledge/similarity_match/README.md) — Semantic matching with pgvector
+- [Phase 4: visualize_evidence_with_expert_in_loop](../backend/src/core/visualize_evidence_with_expert_in_loop/README.md) — Expert review, chat, audit
+
+### backend/src/dao/ — Persistence Layer
+- [dao](../backend/src/dao/README.md) — Persistence boundary overview
+- [postgresql](../backend/src/dao/postgresql/README.md) — SQLAlchemy ORM, connection, repos
+- [redis](../backend/src/dao/redis/README.md) — Async cache with transactional invalidation
+- [minio](../backend/src/dao/minio/README.md) — Object storage (placeholder)
+- [neo4j](../backend/src/dao/neo4j/README.md) — Graph database (placeholder)
+
+### backend/libs/ — Rust Native Extensions
+- [libs](../backend/libs/README.md) — Crate map, architecture, full API reference
+- [rust-io](../backend/libs/rust-io/README.md) — PyO3 facade crate
+- [net-io](../backend/libs/net-io/README.md) — HTTP I/O, MinerU API, web scraping
+- [files-io](../backend/libs/files-io/README.md) — File I/O, S3, archives, SHA-256 dedup
+
+### backend/services/
+- [model-server](../backend/services/model-server/README.md) — Embedding, Rerank, VLM inference (vllm)
+
+### backend/ops/ — Operations
+- [scripts](../backend/scripts/README.md) — E2E test scripts and embedding builder
+- [benchmark](../backend/benchmark/README.md) — Literature acquisition benchmarks
+- [alembic](../backend/alembic/README.md) — Database migrations
+- [tests](../backend/tests/README.md) — Test suite strategy and coverage
