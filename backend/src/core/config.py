@@ -75,6 +75,7 @@ class ReasoningConfig(BaseModel):
     model: str = ""
     reasoning_effort: str = "high"
     base_url: str = ""
+    timeout: int = 60
 
 
 class EmbeddingConfig(BaseModel):
@@ -459,6 +460,7 @@ class Settings(BaseSettings):
             model=reasoning_model,
             reasoning_effort=reasoning_effort,
             base_url=reasoning_base_url,
+            timeout=self.reasoning_llm_timeout or 60,
         )
         self.embedding = EmbeddingConfig(
             base_url=self.embedding_base_url,
