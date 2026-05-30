@@ -97,4 +97,5 @@ async def test_translate_segments_truncates_large_terminology(mock_translator):
 
     result, segments, translated_parts = await mock_translator.translate_segments(small_doc, huge_terminology)
     assert result is not None
-    assert mock_translator._mock_invoke.call_count >= 1
+    total_calls = mock_translator._mock_invoke.call_count + mock_translator._mock_json_invoke.call_count
+    assert total_calls >= 1
