@@ -27,6 +27,8 @@
 - `src/core/standardize_entities_and_align_knowledge/similarity_match/core.py`
 - `src/agents/contracts.py`
 
+**Scattered exception migration:** Out of scope for this plan. The four existing exception files above will coexist with the new centralized hierarchy. A future plan should migrate them to inherit from `ACMGException`.
+
 **Dead code:**
 - `src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/web/base.py:175` imports `from src.config import get_settings, resolve_llm_triplet` — module does not exist.
 
@@ -80,9 +82,10 @@ def test_log_dir_created(tmp_path: Path):
     """setup_logging() should create the logs directory."""
     from src.utils.logger import setup_logging
 
-    with patch("src.utils.logger.LOG_DIR", tmp_path / "test_logs"):
+    test_dir = tmp_path / "test_logs"
+    with patch("src.utils.logger.LOG_DIR", test_dir):
         setup_logging()
-        assert (tmp_path / "test_logs").exists()
+        assert test_dir.exists()
 ```
 
 ### Step 2: Run test to verify it fails
@@ -110,7 +113,6 @@ from loguru import logger as _logger
 # ── Defaults ─────────────────────────────────────────────────────────────
 
 LOG_DIR = Path(__file__).resolve().parent.parent.parent / "logs"
-LOG_DIR.mkdir(exist_ok=True)
 
 # ── Public API ───────────────────────────────────────────────────────────
 
@@ -125,6 +127,7 @@ def setup_logging(*, environment: str = "development", debug: bool = False) -> N
 
     Call once during application startup (lifespan).
     """
+    LOG_DIR.mkdir(exist_ok=True)
     _logger.remove()
 
     # Stderr sink — colored, INFO+ in production, DEBUG in development
@@ -660,13 +663,17 @@ from src.core.config import get_config
 
 
 async def _check_postgres() -> bool:
-    """Ping PostgreSQL with a lightweight query."""
+    """Ping PostgreSQL with a lightweight query.
+
+    Note: Creates a disposable engine separate from the app's main engine.
+    Intentional — this runs once at startup before wiring completes.
+    """
     try:
         from sqlalchemy import text
 
         from src.dao.postgresql.connection import build_async_engine
 
-        engine = build_async_engine(get_config())
+        engine = build_async_engine()  # uses get_config() internally
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         await engine.dispose()
@@ -764,14 +771,21 @@ Create `backend/tests/api/test_error_handlers.py`:
 """Tests for global error handlers."""
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 from fastapi.testclient import TestClient
 
 
 @pytest.fixture()
 def client():
-    from app.main import app
-    return TestClient(app, raise_server_exceptions=False)
+    # Mock health checks to avoid real postgres/redis connections during tests
+    with patch(
+        "src.utils.health.check_all_connections",
+        return_value={"postgres": True, "redis": True},
+    ):
+        from app.main import app
+        yield TestClient(app, raise_server_exceptions=False)
 
 
 def test_health_endpoint(client):
@@ -1067,17 +1081,18 @@ git commit -m "feat(backend): generalize traced_node to support async functions
 
 ### Step 1: Fix dead import in `web/base.py`
 
-Read line ~170-185 of `web/base.py`, then replace the dead `from src.config import ...` block with the correct import path or remove it if unused:
+Read lines 170-190 of `web/base.py` to identify the full try/except block (import at ~175, usage at ~176-188), then remove the entire block — both the import and the code that references the imported names:
 
 ```python
-# Before (broken):
+# Before (broken — lines ~175-188):
 try:
     from src.config import get_settings, resolve_llm_triplet
+    # ... lines 176-188 that use get_settings/resolve_llm_triplet ...
 except (ImportError, Exception):
     pass
 
-# After (remove the entire try/except block — the import target doesn't exist
-# and the code that uses it is unreachable)
+# After: remove the entire try/except block (lines ~175-188)
+# The import target doesn't exist and all code inside is unreachable
 ```
 
 ### Step 2: Update `backend/src/utils/README.md`
@@ -1130,15 +1145,21 @@ git commit -m "fix(backend): remove dead import and update utils README
 """Integration test: full app startup and health check."""
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 from fastapi.testclient import TestClient
 
 
 @pytest.fixture()
 def app():
-    """Import the app (triggers lifespan setup)."""
-    from app.main import app as _app
-    return _app
+    """Import the app with mocked health checks (triggers lifespan setup)."""
+    with patch(
+        "src.utils.health.check_all_connections",
+        return_value={"postgres": True, "redis": True},
+    ):
+        from app.main import app as _app
+        yield _app
 
 
 def test_app_starts_and_health_returns_ok(app):
