@@ -550,20 +550,30 @@ from starlette.responses import Response
 
 
 class RequestMonitorMiddleware(BaseHTTPMiddleware):
-    """Log every request with method, path, status code, and duration."""
+    """Log every request with method, path, status code, and duration.
+
+    Logs timing even when the route handler raises an unhandled exception.
+    """
 
     async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
         start = time.perf_counter()
-        response: Response = await call_next(request)
-        elapsed_ms = (time.perf_counter() - start) * 1000
-        logger.info(
-            "{method} {path} -> {status} ({elapsed:.1f}ms)",
-            method=request.method,
-            path=request.url.path,
-            status=response.status_code,
-            elapsed=elapsed_ms,
-        )
-        return response
+        status = 500
+        try:
+            response: Response = await call_next(request)
+            status = response.status_code
+            return response
+        except Exception:
+            status = 500
+            raise
+        finally:
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            logger.info(
+                "{method} {path} -> {status} ({elapsed:.1f}ms)",
+                method=request.method,
+                path=request.url.path,
+                status=status,
+                elapsed=elapsed_ms,
+            )
 
 
 def add_request_monitoring(app: FastAPI) -> None:
@@ -595,6 +605,7 @@ git commit -m "feat(backend): add request monitoring middleware
 
 **Files:**
 - Create: `backend/src/utils/health.py`
+- Modify: `backend/src/api/wiring.py` (add `get_engine()` accessor)
 - Create: `backend/tests/utils/test_health.py`
 
 ### Step 1: Write the failing test
@@ -605,7 +616,7 @@ Create `backend/tests/utils/test_health.py`:
 """Tests for startup health checks."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -616,8 +627,8 @@ from src.utils.health import check_all_connections
 async def test_check_all_returns_dict():
     """check_all_connections returns a dict with known keys."""
     with (
-        patch("src.utils.health._check_postgres", return_value=True),
-        patch("src.utils.health._check_redis", return_value=True),
+        patch("src.utils.health._check_postgres", new_callable=AsyncMock, return_value=True),
+        patch("src.utils.health._check_redis", new_callable=AsyncMock, return_value=True),
     ):
         result = await check_all_connections()
         assert isinstance(result, dict)
@@ -629,8 +640,8 @@ async def test_check_all_returns_dict():
 async def test_check_all_reports_failures():
     """Failed checks should be reported as False."""
     with (
-        patch("src.utils.health._check_postgres", return_value=False),
-        patch("src.utils.health._check_redis", return_value=True),
+        patch("src.utils.health._check_postgres", new_callable=AsyncMock, return_value=False),
+        patch("src.utils.health._check_redis", new_callable=AsyncMock, return_value=True),
     ):
         result = await check_all_connections()
         assert result["postgres"] is False
@@ -645,7 +656,21 @@ cd backend && uv run pytest tests/utils/test_health.py -v
 
 Expected: FAIL — `ModuleNotFoundError: No module named 'src.utils.health'`
 
-### Step 3: Write minimal implementation
+### Step 3: Add `get_engine()` accessor to `wiring.py`
+
+Add this function to `backend/src/api/wiring.py` (after `get_session_factory`):
+
+```python
+def get_engine() -> AsyncEngine | None:
+    """Return the singleton engine (or None if not yet initialized).
+
+    Used by health checks to verify DB connectivity without creating
+    a second engine.
+    """
+    return _engine
+```
+
+### Step 4: Write minimal implementation
 
 Create `backend/src/utils/health.py`:
 
@@ -665,18 +690,20 @@ from src.core.config import get_config
 async def _check_postgres() -> bool:
     """Ping PostgreSQL with a lightweight query.
 
-    Note: Creates a disposable engine separate from the app's main engine.
-    Intentional — this runs once at startup before wiring completes.
+    Reuses the engine already created by wire_dependencies() via
+    src.api.wiring.get_engine(). Falls back to False if wiring hasn't run yet.
     """
     try:
         from sqlalchemy import text
 
-        from src.dao.postgresql.connection import build_async_engine
+        from src.api.wiring import get_engine
 
-        engine = build_async_engine()  # uses get_config() internally
+        engine = get_engine()
+        if engine is None:
+            logger.warning("PostgreSQL health check skipped: engine not initialized")
+            return False
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
-        await engine.dispose()
         return True
     except Exception as exc:
         logger.warning("PostgreSQL health check failed: {}", exc)
@@ -715,7 +742,7 @@ async def check_all_connections() -> dict[str, bool]:
     }
 ```
 
-### Step 4: Run test to verify it passes
+### Step 5: Run test to verify it passes
 
 ```bash
 cd backend && uv run pytest tests/utils/test_health.py -v
@@ -723,13 +750,15 @@ cd backend && uv run pytest tests/utils/test_health.py -v
 
 Expected: PASS (2 tests)
 
-### Step 5: Commit
+### Step 6: Commit
 
 ```bash
-git add backend/src/utils/health.py backend/tests/utils/test_health.py
+git add backend/src/utils/health.py backend/src/api/wiring.py backend/tests/utils/test_health.py
 git commit -m "feat(backend): add startup dependency health checks
 
 - Async PostgreSQL and Redis connectivity checks
+- Reuse wiring engine instead of creating a second one
+- get_engine() accessor in wiring.py
 - check_all_connections returns per-service status dict"
 ```
 
@@ -771,7 +800,7 @@ Create `backend/tests/api/test_error_handlers.py`:
 """Tests for global error handlers."""
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -782,6 +811,7 @@ def client():
     # Mock health checks to avoid real postgres/redis connections during tests
     with patch(
         "src.utils.health.check_all_connections",
+        new_callable=AsyncMock,
         return_value={"postgres": True, "redis": True},
     ):
         from app.main import app
@@ -834,6 +864,18 @@ from src.utils.exceptions import ACMGException, error_code_from_exception
 from src.utils.logger import get_logger, setup_logging
 from src.utils.middleware import add_request_monitoring
 
+# Stable mapping from ACMGException error codes to HTTP status codes
+_CODE_TO_STATUS: dict[str, int] = {
+    "NOT_FOUND": 404,
+    "VALIDATION_ERROR": 422,
+    "DATABASE_ERROR": 500,
+    "LLM_ERROR": 502,
+    "SERVICE_ERROR": 503,
+    "TRANSLATION_ERROR": 502,
+    "PARSING_ERROR": 500,
+    "INTERNAL_ERROR": 500,
+}
+
 
 def _error_response(
     *, code: str, message: str, request_id: str, status: int, errors: list | None = None,
@@ -876,68 +918,65 @@ async def lifespan(app: FastAPI):
     logger.info("ACMG Lingua backend stopped")
 
 
-cfg = get_config()
+def create_app() -> FastAPI:
+    """Build and configure the FastAPI application."""
+    cfg = get_config()
 
-app = FastAPI(
-    title="ACMG Lingua Backend",
-    description="Multi-Agent infrastructure for medical genetics literature automation",
-    version="0.1.0",
-    lifespan=lifespan,
-)
-
-# ── Middleware ────────────────────────────────────────────────────────────
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cfg.cors_origins_list,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-add_request_monitoring(app)
-
-# ── Routes ───────────────────────────────────────────────────────────────
-
-app.include_router(v1_router)
-
-
-# ── Health (outside v1 router for liveness probes) ──────────────────────
-
-
-@app.get("/health")
-async def health() -> dict[str, str]:
-    """Health check endpoint."""
-    return {"status": "ok"}
-
-
-# ── Global error handlers ────────────────────────────────────────────────
-
-
-@app.exception_handler(ACMGException)
-async def handle_acmg_exception(request: Request, exc: ACMGException) -> JSONResponse:
-    request_id = request.headers.get("x-request-id") or str(uuid4())
-    status = 404 if exc.code == "NOT_FOUND" else 400
-    return _error_response(code=exc.code, message=exc.message, request_id=request_id, status=status)
-
-
-@app.exception_handler(StarletteHTTPException)
-async def handle_http_exception(request: Request, exc: StarletteHTTPException) -> JSONResponse:
-    request_id = request.headers.get("x-request-id") or str(uuid4())
-    code = error_code_from_exception(exc, status_code=exc.status_code)
-    message = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
-    return _error_response(code=code, message=message, request_id=request_id, status=exc.status_code)
-
-
-@app.exception_handler(RequestValidationError)
-async def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
-    request_id = request.headers.get("x-request-id") or str(uuid4())
-    return _error_response(
-        code="VALIDATION_ERROR",
-        message="Invalid request payload",
-        request_id=request_id,
-        status=422,
-        errors=exc.errors(),
+    _app = FastAPI(
+        title="ACMG Lingua Backend",
+        description="Multi-Agent infrastructure for medical genetics literature automation",
+        version="0.1.0",
+        lifespan=lifespan,
     )
+
+    # ── Middleware (reverse order: CORS outermost, then request monitor) ──
+    _app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cfg.cors_origins_list,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    add_request_monitoring(_app)
+
+    # ── Routes ───────────────────────────────────────────────────────────
+    _app.include_router(v1_router)
+
+    # ── Health (outside v1 router for liveness probes) ──────────────────
+    @_app.get("/health")
+    async def health() -> dict[str, str]:
+        """Health check endpoint."""
+        return {"status": "ok"}
+
+    # ── Global error handlers ──────────────────────────────────────────
+    @_app.exception_handler(ACMGException)
+    async def handle_acmg_exception(request: Request, exc: ACMGException) -> JSONResponse:
+        request_id = request.headers.get("x-request-id") or str(uuid4())
+        status = _CODE_TO_STATUS.get(exc.code, 500)
+        return _error_response(code=exc.code, message=exc.message, request_id=request_id, status=status)
+
+    @_app.exception_handler(StarletteHTTPException)
+    async def handle_http_exception(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+        request_id = request.headers.get("x-request-id") or str(uuid4())
+        code = error_code_from_exception(exc, status_code=exc.status_code)
+        message = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
+        return _error_response(code=code, message=message, request_id=request_id, status=exc.status_code)
+
+    @_app.exception_handler(RequestValidationError)
+    async def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+        request_id = request.headers.get("x-request-id") or str(uuid4())
+        return _error_response(
+            code="VALIDATION_ERROR",
+            message="Invalid request payload",
+            request_id=request_id,
+            status=422,
+            errors=exc.errors(),
+        )
+
+    return _app
+
+
+app = create_app()
 ```
 
 ### Step 4: Run tests to verify they pass
@@ -963,7 +1002,9 @@ git add backend/app/main.py backend/tests/api/test_error_handlers.py
 git commit -m "feat(backend): add global error handlers and CORS middleware
 
 - ACMGException, HTTPException, validation error handlers
+- _CODE_TO_STATUS mapping for correct HTTP semantics
 - Structured error response envelope with request_id
+- create_app() factory pattern (no module-level config loading)
 - CORS middleware from config
 - Startup health checks for postgres + redis"
 ```
@@ -981,15 +1022,16 @@ git commit -m "feat(backend): add global error handlers and CORS middleware
 Add to `backend/tests/utils/test_observability.py`:
 
 ```python
-import asyncio
+import pytest
 
-def test_traced_node_with_async_function():
+@pytest.mark.asyncio
+async def test_traced_node_with_async_function():
     """traced_node should work with async functions."""
     @traced_node("async_test")
     async def async_fn(x: int) -> int:
         return x * 2
 
-    result = asyncio.get_event_loop().run_until_complete(async_fn(5))
+    result = await async_fn(5)
     assert result == 10
 ```
 
@@ -1145,7 +1187,7 @@ git commit -m "fix(backend): remove dead import and update utils README
 """Integration test: full app startup and health check."""
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -1156,6 +1198,7 @@ def app():
     """Import the app with mocked health checks (triggers lifespan setup)."""
     with patch(
         "src.utils.health.check_all_connections",
+        new_callable=AsyncMock,
         return_value={"postgres": True, "redis": True},
     ):
         from app.main import app as _app
