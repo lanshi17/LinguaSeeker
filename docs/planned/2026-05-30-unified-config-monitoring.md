@@ -70,11 +70,18 @@ def _isolate_loguru():
 
 
 def test_setup_logging_installs_stderr_sink():
-    """setup_logging() should configure loguru with at least one stderr sink."""
+    """setup_logging() should configure loguru with a stderr sink."""
+    import sys
     from src.utils.logger import setup_logging
 
     setup_logging()
-    assert len(_logger._core.handlers) >= 1
+    handlers = _logger._core.handlers
+    # Verify at least one handler writes to stderr
+    stderr_sinks = [
+        h for h in handlers.values()
+        if hasattr(h, "_sink") and getattr(h._sink, "_stream", None) is sys.stderr
+    ]
+    assert len(stderr_sinks) >= 1, "Expected at least one stderr handler"
 
 
 def test_setup_logging_intercepts_stdlib():
@@ -123,16 +130,17 @@ import logging
 import sys
 from pathlib import Path
 
-from loguru import logger as _logger
+from loguru import Logger, logger as _logger
 
 # ── Defaults ─────────────────────────────────────────────────────────────
 
-LOG_DIR = Path(__file__).resolve().parent.parent.parent / "logs"
+# backend/src/utils/logger.py → up 4 levels → project root
+LOG_DIR = Path(__file__).resolve().parent.parent.parent.parent / "logs"
 
 # ── Public API ───────────────────────────────────────────────────────────
 
 
-def get_logger() -> type[_logger]:
+def get_logger() -> Logger:
     """Return the loguru logger instance."""
     return _logger
 
@@ -140,7 +148,9 @@ def get_logger() -> type[_logger]:
 def setup_logging(*, environment: str = "development", debug: bool = False) -> None:
     """Configure loguru sinks and intercept stdlib logging.
 
-    Call once during application startup (lifespan).
+    Call once during application startup (lifespan). Both parameters are
+    keyword-only with defaults so that callers that don't pass them (e.g.
+    the model server's ``setup_logging()``) remain backward-compatible.
     """
     LOG_DIR.mkdir(exist_ok=True)
     _logger.remove()
@@ -858,6 +868,7 @@ git commit -m "feat(backend): add startup dependency health checks
 
 **Files:**
 - Modify: `backend/app/main.py:1-42`
+- Modify: `backend/tests/api/conftest.py` (migrate to `create_app()` with config mock)
 - Modify: `backend/tests/utils/test_exceptions.py` (extend)
 
 ### Step 1: Write the failing test for error responses
@@ -899,13 +910,19 @@ from httpx import ASGITransport, AsyncClient
 
 @pytest_asyncio.fixture
 async def error_client():
-    """Async HTTP client with health checks mocked to avoid real connections."""
-    with patch(
-        "src.utils.health.check_all_connections",
-        new_callable=AsyncMock,
-        return_value={"postgres": True, "redis": True},
+    """Async HTTP client with config and health checks mocked."""
+    with (
+        patch("src.core.config.get_config") as mock_cfg,
+        patch(
+            "src.utils.health.check_all_connections",
+            new_callable=AsyncMock,
+            return_value={"postgres": True, "redis": True},
+        ),
     ):
-        from app.main import app
+        from src.core.config import Settings
+        mock_cfg.return_value = Settings()
+        from app.main import create_app
+        app = create_app()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             yield client
@@ -950,7 +967,31 @@ cd backend && uv run pytest tests/api/test_error_handlers.py -v
 
 Expected: FAIL — response body does not match structured error format.
 
-### Step 3: Implement global error handlers and CORS in `app/main.py`
+### Step 3: Migrate existing `tests/api/conftest.py` to `create_app()` pattern
+
+The existing conftest uses `from app.main import app` at module level. Since `create_app()` calls `get_config()`, the conftest must mock config before calling the factory. Replace:
+
+```python
+# OLD (tests/api/conftest.py):
+from app.main import app
+# ...fixture uses app directly
+
+# NEW (tests/api/conftest.py):
+@pytest_asyncio.fixture
+async def async_client():
+    with patch("src.core.config.get_config") as mock_cfg:
+        from src.core.config import Settings
+        mock_cfg.return_value = Settings()
+        from app.main import create_app
+        app = create_app()
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            yield client
+```
+
+This ensures test collection doesn't fail when env vars are missing.
+
+### Step 4: Implement global error handlers and CORS in `app/main.py`
 
 Replace `backend/app/main.py`:
 
@@ -1015,12 +1056,15 @@ async def lifespan(app: FastAPI):
     logger.info("Pipeline orchestrator initialized")
 
     # Startup health checks (non-blocking — warn but don't crash)
-    checks = await check_all_connections()
-    failed = [name for name, ok in checks.items() if not ok]
-    if failed:
-        logger.warning("Startup connectivity check failed: {}", ", ".join(failed))
-    else:
-        logger.info("Startup connectivity check passed")
+    try:
+        checks = await check_all_connections()
+        failed = [name for name, ok in checks.items() if not ok]
+        if failed:
+            logger.warning("Startup connectivity check failed: {}", ", ".join(failed))
+        else:
+            logger.info("Startup connectivity check passed")
+    except Exception as exc:
+        logger.error("Health check system failed: {}", exc)
 
     yield
 
@@ -1029,7 +1073,12 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
-    """Build and configure the FastAPI application."""
+    """Build and configure the FastAPI application.
+
+    Exported as a factory (not called at module level) so that test
+    collection does not trigger get_config() — tests mock config before
+    calling create_app() inside a fixture.
+    """
     cfg = get_config()
 
     _app = FastAPI(
@@ -1063,7 +1112,6 @@ def create_app() -> FastAPI:
     # ── Global error handlers ──────────────────────────────────────────
     @_app.exception_handler(ACMGException)
     async def handle_acmg_exception(request: Request, exc: ACMGException) -> JSONResponse:
-        # request_id set by RequestMonitorMiddleware; fall back for unmonitored paths
         request_id = getattr(request.state, "request_id", str(uuid4()))
         status = _CODE_TO_STATUS.get(exc.code, 500)
         return _error_response(code=exc.code, message=exc.message, request_id=request_id, status=status)
@@ -1089,18 +1137,20 @@ def create_app() -> FastAPI:
     return _app
 
 
-app = create_app()
+# NOTE: do NOT call create_app() at module level.
+# Tests import create_app and call it inside a fixture after mocking config.
+# Production uses create_app() in the ASGI entrypoint (uvicorn app.main:create_app).
 ```
 
-### Step 4: Run tests to verify they pass
+### Step 5: Run tests to verify they pass
 
 ```bash
-cd backend && uv run pytest tests/api/test_error_handlers.py tests/utils/ -v
+cd backend && uv run pytest tests/api/test_error_handlers.py tests/api/test_pipeline_api.py tests/utils/ -v
 ```
 
-Expected: PASS
+Expected: PASS — new error handler tests pass AND existing pipeline API tests pass.
 
-### Step 5: Run full test suite
+### Step 6: Run full test suite
 
 ```bash
 cd backend && uv run pytest tests/ -v --timeout=30
@@ -1108,16 +1158,17 @@ cd backend && uv run pytest tests/ -v --timeout=30
 
 Expected: All tests pass.
 
-### Step 6: Commit
+### Step 7: Commit
 
 ```bash
-git add backend/app/main.py backend/tests/api/test_error_handlers.py
+git add backend/app/main.py backend/tests/api/conftest.py backend/tests/api/test_error_handlers.py
 git commit -m "feat(backend): add global error handlers and CORS middleware
 
 - ACMGException, HTTPException, validation error handlers
 - _CODE_TO_STATUS mapping for correct HTTP semantics
 - Structured error response envelope with request_id
-- create_app() factory pattern (no module-level config loading)
+- create_app() factory (not called at module level to protect test collection)
+- Migrated tests/api/conftest.py to create_app() with config mock
 - CORS middleware from config
 - Startup health checks for postgres + redis"
 ```
@@ -1309,13 +1360,19 @@ from httpx import ASGITransport, AsyncClient
 
 @pytest_asyncio.fixture
 async def integration_client():
-    """Async HTTP client with health checks mocked for integration tests."""
-    with patch(
-        "src.utils.health.check_all_connections",
-        new_callable=AsyncMock,
-        return_value={"postgres": True, "redis": True},
+    """Async HTTP client with config and health checks mocked."""
+    with (
+        patch("src.core.config.get_config") as mock_cfg,
+        patch(
+            "src.utils.health.check_all_connections",
+            new_callable=AsyncMock,
+            return_value={"postgres": True, "redis": True},
+        ),
     ):
-        from app.main import app
+        from src.core.config import Settings
+        mock_cfg.return_value = Settings()
+        from app.main import create_app
+        app = create_app()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             yield client
@@ -1389,8 +1446,10 @@ uv run ruff check
 # Full test suite
 uv run pytest tests/ -v --timeout=30
 
-# Verify app starts (manual)
-uv run uvicorn app.main:app --reload
+# Verify app starts (manual — use factory syntax for create_app())
+uv run uvicorn app.main:create_app --factory --reload
+# Note: use factory syntax since create_app() is no longer called at module level
+uv run uvicorn app.main:create_app --factory --reload
 # Then: curl http://localhost:8000/health
 # Then: curl http://localhost:8000/api/v1/nonexistent
 ```
