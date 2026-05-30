@@ -41,7 +41,9 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Planned Work
 
-No planned work at this time.
+| date | title | status |
+|---|---|---|
+| 2026-05-30 | [Backend Optimization Plan](plans/2026-05-30-backend-optimization.md) | planned — 8 tasks from code review |
 
 ## Active Code Reviews
 
