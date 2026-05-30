@@ -221,6 +221,10 @@ class ChatService:
     def _detect_intent(self, message: str) -> str:
         """Detect user intent: question, correction, or note.
 
+        Priority: question > correction > note.
+        Ambiguous messages (e.g. "change X to Y?") default to question
+        as the less destructive intent.
+
         Returns:
             "question" | "correction" | "note"
         """
