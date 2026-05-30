@@ -227,3 +227,6 @@ class PipelineGraphState(BaseModel):
 
     # Content-based routing flags
     skip_phase_3_reason: SkipPhase3Reason | None = None
+
+    # Upload content (base64 decoded to temp file)
+    upload_file_path: str | None = None
