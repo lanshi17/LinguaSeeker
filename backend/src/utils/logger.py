@@ -12,6 +12,8 @@ from loguru import logger as _logger
 # backend/src/utils/logger.py → up 4 levels → project root
 LOG_DIR = Path(__file__).resolve().parent.parent.parent.parent / "logs"
 
+_configured: bool = False
+
 # ── Public API ───────────────────────────────────────────────────────────
 
 
@@ -26,9 +28,17 @@ def setup_logging(*, environment: str = "development", debug: bool = False) -> N
     Call once during application startup (lifespan). Both parameters are
     keyword-only with defaults so that callers that don't pass them (e.g.
     the model server's ``setup_logging()``) remain backward-compatible.
+
+    Idempotent: subsequent calls are no-ops. Tests bypass this by calling
+    ``_logger.remove()`` directly via the ``_isolate_loguru`` fixture.
     """
+    global _configured
+    if _configured:
+        return
+
     LOG_DIR.mkdir(exist_ok=True)
     _logger.remove()
+    _configured = True
 
     # Stderr sink — colored, INFO+ in production, DEBUG in development
     stderr_level = "DEBUG" if debug or environment == "development" else "INFO"

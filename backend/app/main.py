@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from src.api.v1.router import router as v1_router
 from src.core.config import get_config
 from src.utils.logger import get_logger, setup_logging
+from src.utils.middleware import add_request_monitoring
 
 
 @asynccontextmanager
@@ -36,6 +37,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+add_request_monitoring(app)
 app.include_router(v1_router)
 
 
