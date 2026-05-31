@@ -19,6 +19,15 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
     return _session_factory
 
 
+def get_engine() -> AsyncEngine | None:
+    """Return the singleton engine (or None if not yet initialized).
+
+    Used by health checks to verify DB connectivity without creating
+    a second engine.
+    """
+    return _engine
+
+
 async def dispose_engine() -> None:
     """Teardown the engine (called from lifespan shutdown)."""
     global _engine, _session_factory
