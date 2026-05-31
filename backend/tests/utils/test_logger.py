@@ -13,7 +13,10 @@ from loguru import logger as _logger
 @pytest.fixture(autouse=True)
 def _isolate_loguru():
     """Save and restore loguru handler state around each test."""
+    import src.utils.logger as _mod
+
     _logger.remove()
+    _mod._configured = False  # reset idempotency guard
     yield
     _logger.remove()  # leave clean state after each test
 
