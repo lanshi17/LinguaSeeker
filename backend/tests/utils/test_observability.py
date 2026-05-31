@@ -52,3 +52,16 @@ class TestTracedNode:
 
         result = my_node({"value": 3}, multiplier=2)
         assert result == {"result": 6}
+
+    @pytest.mark.asyncio
+    async def test_traced_node_with_async_function(self):
+        """traced_node should properly await async functions and log correctly."""
+        @traced_node("async_test")
+        async def async_fn(x: int) -> int:
+            return x * 2
+
+        with patch("src.utils.observability.logger") as mock_logger:
+            result = await async_fn(5)
+            assert result == 10
+            mock_logger.info.assert_any_call("Node [{}] start", "async_test")
+            mock_logger.info.assert_any_call("Node [{}] done", "async_test")
