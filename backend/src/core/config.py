@@ -234,6 +234,7 @@ class Settings(BaseSettings):
     cors_origins: str = "*"
     environment: str = "development"
     debug: bool = False
+    api_key: str = ""  # X-API-Key for write route auth; empty = disabled
     api_host: str = "localhost"
     api_port: int = 8000
 

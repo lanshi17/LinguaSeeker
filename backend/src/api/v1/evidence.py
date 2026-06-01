@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.api.auth import require_api_key
 from src.api.deps import get_db_session, get_phase4_factory
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     EvidencePatchRequest,
@@ -23,6 +24,7 @@ async def patch_evidence(
     canonical_evidence_id: UUID,
     patch: EvidencePatchRequest,
     session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
 ) -> PatchResult:
     """Apply a patch to an evidence card and record audit event."""
     factory = get_phase4_factory()
