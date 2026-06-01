@@ -32,7 +32,7 @@ class AppendMessageRequest(BaseModel):
     entity_id: UUID | None = None
 
 
-@router.post("/sessions")
+@router.post("/sessions", response_model=ChatSessionResponse)
 async def create_session(
     req: CreateSessionRequest,
     session: AsyncSession = Depends(get_db_session),
@@ -47,7 +47,7 @@ async def create_session(
     )
 
 
-@router.get("/sessions/{processing_run_id}")
+@router.get("/sessions/{processing_run_id}", response_model=list[ChatSessionResponse])
 async def list_sessions(
     processing_run_id: UUID,
     session: AsyncSession = Depends(get_db_session),
@@ -58,7 +58,7 @@ async def list_sessions(
     return await service.list_sessions(processing_run_id=processing_run_id)
 
 
-@router.get("/sessions/{session_id}/messages")
+@router.get("/sessions/{session_id}/messages", response_model=list[ChatMessageResponse])
 async def list_messages(
     session_id: UUID,
     limit: int = 100,
@@ -70,7 +70,7 @@ async def list_messages(
     return await service.list_messages(session_id=session_id, limit=limit)
 
 
-@router.post("/sessions/{session_id}/messages")
+@router.post("/sessions/{session_id}/messages", response_model=ChatMessageResponse)
 async def append_message(
     session_id: UUID,
     req: AppendMessageRequest,

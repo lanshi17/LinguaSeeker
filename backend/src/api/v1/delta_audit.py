@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("/", response_model=list[ReviewAuditEventResponse])
 async def list_audit_events(
     canonical_evidence_id: UUID | None = None,
     reviewer_id: UUID | None = None,

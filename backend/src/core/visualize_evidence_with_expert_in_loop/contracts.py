@@ -162,6 +162,16 @@ class ChatMessageResponse(BaseModel):
     created_at: datetime
 
 
+class PatchResultResponse(BaseModel):
+    """API response for PATCH /evidence."""
+
+    canonical_evidence_id: UUID
+    old_status: ReviewStatus
+    new_status: ReviewStatus
+    deltas: int
+    field_deltas: list[DeltaEntry]
+
+
 class EvidencePatchRequest(BaseModel):
     """Request body for PATCH /api/v1/evidence/{id}."""
 
