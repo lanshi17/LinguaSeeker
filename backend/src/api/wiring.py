@@ -85,8 +85,18 @@ def wire_dependencies() -> None:
     # ── Phase 1-3 services (long-lived, no session in constructor) ──
 
     acquisition_service = DocumentAcquisitionService()
-    remote_parser = MinerURemoteParser(api_token=cfg.mineru_api_token)
-    local_parser = MinerULocalParser()
+    pd_cfg = cfg.parse_document
+    remote_parser = MinerURemoteParser(
+        api_token=pd_cfg.mineru_remote_api_token or cfg.mineru_api_token,
+        poll_interval=pd_cfg.mineru_remote_poll_interval,
+        max_poll_attempts=pd_cfg.mineru_remote_max_poll_attempts,
+    )
+    local_parser = MinerULocalParser(
+        model_server_url=pd_cfg.mineru_local_model_server_url,
+        model_id=pd_cfg.mineru_local_model_id,
+        timeout=pd_cfg.mineru_local_timeout,
+        dpi=pd_cfg.mineru_local_dpi,
+    )
     parse_orchestrator = DocumentParseOrchestrator(remote=remote_parser, local=local_parser)
     parse_service = ParseDocumentService(parse_orchestrator)
     translation_service = TranslationService(cfg=cfg)
