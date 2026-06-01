@@ -6,17 +6,22 @@
 
 ```
 benchmark/
-└── literature_acquisition/
-    ├── README.md          # Detailed benchmark methodology and results
-    ├── log/               # Benchmark execution logs
-    └── downloads/         # Downloaded test papers organized by language
-        ├── en/            # English papers
-        ├── ja/            # Japanese papers
-        ├── ko/            # Korean papers
-        ├── es/            # Spanish papers
-        ├── pt/            # Portuguese papers
-        ├── ru/            # Russian papers
-        └── zh/            # Chinese papers
+├── literature_acquisition/
+│   ├── README.md          # Detailed benchmark methodology and results
+│   ├── log/               # Benchmark execution logs
+│   └── downloads/         # Downloaded test papers organized by language
+│       ├── en/            # English papers
+│       ├── ja/            # Japanese papers
+│       ├── ko/            # Korean papers
+│       ├── es/            # Spanish papers
+│       ├── pt/            # Portuguese papers
+│       ├── ru/            # Russian papers
+│       └── zh/            # Chinese papers
+└── pipeline/
+    ├── README.md          # Pipeline benchmark methodology and CLI usage
+    ├── manifest.json      # Selected PDFs for benchmark (1 case_report per language)
+    ├── benchmark.py       # Benchmark runner (HTTP client)
+    └── reports/           # Timestamped JSON reports (tracked in git)
 ```
 
 Each language directory contains papers categorized by literature type:
@@ -40,6 +45,7 @@ ls benchmark/literature_acquisition/log/
 ## Sub-module Reference
 
 - **[literature_acquisition/](./literature_acquisition/README.md)** — Literature acquisition benchmark methodology, provider coverage, and evaluation metrics
+- **[pipeline/](./pipeline/README.md)** — Full pipeline benchmark (Phases 1–3) via HTTP API, measuring per-phase timing and reliability across 7 languages
 
 ## Notes
 

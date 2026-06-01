@@ -896,3 +896,27 @@ API routes (`src/api/v1/`) directly instantiated core services, bypassing the `a
 - New API routes MUST NOT import from `src/core/` service modules directly.
 - New service facades MUST NOT require `AsyncSession` in `__init__` — pass it as method parameter or use factory.
 - All DI assembly goes in `src/api/wiring.py`, not in `app/main.py` lifespan.
+
+## 2026-06-01 Pipeline Benchmark — 3 Bugs Found & Fixed
+
+### Bug 1: ForeignKeyViolationError on pipeline state persistence
+- **Problem**: `pipeline_run_states` has FK to `source_documents.source_document_id`, but pipeline endpoint creates new UUID without inserting parent row.
+- **Root cause**: `state_persistence.py` INSERT into `pipeline_run_states` fails because `source_documents` row doesn't exist.
+- **Fix**: Upsert `SourceDocument` before saving `PipelineRunState` in both `DirectStatePersistence` and `SessionBoundStatePersistence`.
+- **File**: `backend/src/agents/state_persistence.py`
+
+### Bug 2: State not persisted before semaphore acquisition
+- **Problem**: When multiple pipeline runs are submitted concurrently, only runs that acquire the semaphore have their state persisted. Others return 404 on status poll.
+- **Root cause**: `_persistence.save()` was inside `async with self._semaphore:` despite comment saying it should be before.
+- **Fix**: Move `_persistence.save(initial_state)` and `_remember_state()` before the semaphore block.
+- **File**: `backend/src/agents/runner.py`
+
+### Bug 3: SOCKS5 proxy breaks MinerU TLS handshake
+- **Problem**: `ALL_PROXY=socks5://127.0.0.1:7890` causes TLS handshake failure to `cdn-mineru.openxlab.org.cn`.
+- **Root cause**: httpx/httpcore auto-detects SOCKS5 proxy from env. `no_proxy` does not work with SOCKS5.
+- **Fix**: Clear proxy env vars (`ALL_PROXY`, `all_proxy`, `HTTPS_PROXY`, etc.) in `app/main.py` lifespan startup.
+- **File**: `backend/app/main.py`
+
+### Remaining Issue: LLM API 404
+- `https://api.xiaomimimo.com/chat/completions` returns 404 for non-English PDFs needing translation.
+- This is a configuration issue, not a code bug.
