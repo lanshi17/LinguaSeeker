@@ -75,3 +75,6 @@ database/terminology_database/*
 data/pipeline/*
 benchmark/pipeline/reports/*
 backend/data/pipeline/run-123/*
+.qwen/*
+.claude/*
+
