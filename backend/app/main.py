@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from contextlib import asynccontextmanager
 from typing import Any
 from uuid import uuid4
@@ -41,6 +42,13 @@ def _error_response(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize and teardown application resources."""
+    # Bypass system-wide SOCKS5/HTTP proxy for all outbound connections.
+    # httpx and reqwest (Rust) pick up ALL_PROXY from the environment, which
+    # breaks TLS handshakes to MinerU CDN and other services.  Clearing these
+    # vars ensures direct connections — the intended production behaviour.
+    for var in ("ALL_PROXY", "all_proxy", "HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy"):
+        os.environ.pop(var, None)
+
     cfg = get_config()
     setup_logging(environment=cfg.environment, debug=cfg.debug)
     logger = get_logger()
