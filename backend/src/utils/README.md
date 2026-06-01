@@ -160,7 +160,7 @@ uv run pytest tests/utils/test_text.py -v
 uv run pytest tests/utils/test_observability.py -v
 ```
 
-18 tests total: 7 for `sanitize_filename`, 6 for `strip_json_fences`, 5 for `traced_node`.
+30 tests total: 7 for `sanitize_filename`, 6 for `strip_json_fences`, 6 for `traced_node` (+1 async), 3 for `logger`, 15 for `exceptions`, 5 for `middleware`, 2 for `health`.
 
 ## Dependencies
 
