@@ -15,7 +15,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
 router = APIRouter()
 
 
-@router.get("/{canonical_evidence_id}/bilingual")
+@router.get("/{canonical_evidence_id}/bilingual", response_model=BilingualSpan)
 async def get_bilingual_span(
     canonical_evidence_id: UUID,
     session: AsyncSession = Depends(get_db_session),
@@ -28,7 +28,7 @@ async def get_bilingual_span(
     )
 
 
-@router.get("/{canonical_evidence_id}/{track}")
+@router.get("/{canonical_evidence_id}/{track}", response_model=TrackSpan | None)
 async def get_track_span(
     canonical_evidence_id: UUID,
     track: str,
