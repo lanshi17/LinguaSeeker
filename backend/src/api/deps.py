@@ -25,7 +25,15 @@ def get_phase4_factory() -> Phase4ServiceFactory:
 
 
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
-    """Dependency: yield an async database session."""
+    """Dependency: yield an async database session.
+
+    Commits on successful handler exit; rolls back on exception.
+    """
     factory = get_session_factory()
     async with factory() as session:
-        yield session
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
