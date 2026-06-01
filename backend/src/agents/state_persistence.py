@@ -14,7 +14,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.agents.contracts import PipelineGraphState
-from src.dao.postgresql.models import PipelineRunState
+from src.dao.postgresql.models import PipelineRunState, SourceDocument
 
 
 class DirectStatePersistence:
@@ -27,6 +27,13 @@ class DirectStatePersistence:
         self._session = session
 
     async def save(self, state: PipelineGraphState) -> None:
+        # Ensure source_document exists (FK requirement for pipeline_run_states)
+        sd_id = UUID(state.source_document_id)
+        existing_sd = await self._session.get(SourceDocument, sd_id)
+        if not existing_sd:
+            self._session.add(SourceDocument(source_document_id=sd_id))
+            await self._session.flush()
+
         existing = await self._session.get(
             PipelineRunState, UUID(state.processing_run_id)
         )
@@ -63,6 +70,15 @@ class SessionBoundStatePersistence:
 
     async def save(self, state: PipelineGraphState) -> None:
         async with self._session_factory() as session:
+            # Ensure source_document exists (FK requirement for pipeline_run_states)
+            sd_id = UUID(state.source_document_id)
+            sd_upsert = (
+                pg_insert(SourceDocument)
+                .values(source_document_id=sd_id)
+                .on_conflict_do_nothing(index_elements=["source_document_id"])
+            )
+            await session.execute(sd_upsert)
+
             state_json = state.model_dump(mode="json")
             stmt = (
                 pg_insert(PipelineRunState)
