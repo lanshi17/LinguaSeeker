@@ -48,6 +48,7 @@ class PipelineRunner:
 
         async def _run_pipeline():
             # N12 fix: Persist initial PENDING state before acquiring semaphore
+            # so status endpoint can find the run even while queued.
             await self._persistence.save(initial_state)
             self._remember_state(run_id, initial_state)
             async with self._semaphore:
