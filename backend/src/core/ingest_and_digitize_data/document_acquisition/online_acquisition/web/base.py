@@ -165,29 +165,10 @@ def build_js_helpers() -> str:
 
 
 def resolve_llm_config() -> Tuple[str, Optional[str]]:
-    """Resolve LLM provider and API key with hierarchical fallback.
+    """Resolve LLM provider and API key from environment variables.
 
-    Checks project config first, then env vars.
     Returns (provider, api_key).
     """
-    # Try project config first
-    try:
-        from src.config import get_settings, resolve_llm_triplet
-        settings = get_settings()
-        triplet = resolve_llm_triplet(settings, "retrieval")
-        if triplet.api_key:
-            provider = "deepseek"
-            if "openai" in triplet.base_url.lower():
-                provider = "openai"
-            elif "anthropic" in triplet.base_url.lower():
-                provider = "anthropic"
-            elif "dashscope" in triplet.base_url.lower():
-                provider = "dashscope"
-            return provider, triplet.api_key
-    except (ImportError, Exception):
-        pass
-
-    # Fallback to env vars
     provider = os.getenv("CRAWL4AI_LLM_PROVIDER", "deepseek")
     api_key = os.getenv("CRAWL4AI_LLM_API_KEY") or os.getenv("DEEPSEEK_API_KEY")
     return provider, api_key
