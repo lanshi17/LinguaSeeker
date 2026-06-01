@@ -114,7 +114,13 @@ async def stream_reply(
     session: AsyncSession = Depends(get_db_session),
     _api_key: str | None = Depends(require_api_key),
 ) -> StreamingResponse:
-    """Stream AI reply as SSE events with 15-second keepalive heartbeat."""
+    """Stream AI reply as SSE events with 15-second keepalive heartbeat.
+
+    Note: if the client disconnects mid-stream, the generator is closed
+    before the assistant reply is appended. The user message (flushed by
+    append_message) commits during dependency cleanup, but the assistant
+    reply is lost. This is a known FastAPI StreamingResponse limitation.
+    """
     factory = get_phase4_factory()
     service = factory.create_chat_service(session)
 

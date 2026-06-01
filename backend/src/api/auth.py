@@ -1,6 +1,8 @@
 """API key authentication dependency."""
 from __future__ import annotations
 
+import hmac
+
 from fastapi import HTTPException, Security
 from fastapi.security import APIKeyHeader
 
@@ -24,7 +26,7 @@ async def require_api_key(
     if api_key is None:
         raise HTTPException(status_code=401, detail="Missing X-API-Key header")
 
-    if api_key != cfg.api_key:
+    if not hmac.compare_digest(api_key, cfg.api_key):
         raise HTTPException(status_code=401, detail="Invalid API key")
 
     return api_key

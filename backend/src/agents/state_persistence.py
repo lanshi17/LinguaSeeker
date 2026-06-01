@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Optional
 from uuid import UUID
 
+from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -72,7 +73,10 @@ class SessionBoundStatePersistence:
                 )
                 .on_conflict_do_update(
                     index_elements=["processing_run_id"],
-                    set_={"state_json": state_json},
+                    set_={
+                        "state_json": state_json,
+                        "updated_at": func.now(),
+                    },
                 )
             )
             await session.execute(stmt)

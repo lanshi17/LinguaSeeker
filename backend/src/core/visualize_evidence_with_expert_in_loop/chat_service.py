@@ -5,6 +5,8 @@ import re
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from loguru import logger
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -310,6 +312,11 @@ class ChatService:
 
         provider = self._reasoning_provider
         if provider is None:
+            logger.warning(
+                "ChatService called without injected provider — "
+                "creating fallback (leaked httpx client). "
+                "Fix: inject via Phase4ServiceFactory.create_chat_service()"
+            )
             from src.core.visualize_evidence_with_expert_in_loop.providers import (
                 ReasoningLLMProvider,
             )
@@ -364,6 +371,11 @@ class ChatService:
 
         provider = self._reasoning_provider
         if provider is None:
+            logger.warning(
+                "ChatService.stream_reply called without injected provider — "
+                "creating fallback (leaked httpx client). "
+                "Fix: inject via Phase4ServiceFactory.create_chat_service()"
+            )
             from src.core.visualize_evidence_with_expert_in_loop.providers import (
                 ReasoningLLMProvider,
             )

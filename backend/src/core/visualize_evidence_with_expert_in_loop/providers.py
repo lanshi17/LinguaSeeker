@@ -27,7 +27,11 @@ class ReasoningLLMProvider:
         self._client: httpx.AsyncClient | None = None
 
     def _get_client(self) -> httpx.AsyncClient:
-        """Return the cached httpx client, creating it if needed."""
+        """Return the cached httpx client, creating it if needed.
+
+        Safe without a lock: asyncio is single-threaded, so the
+        check-then-assign cannot be preempted between coroutines.
+        """
         if self._client is None or self._client.is_closed:
             self._client = httpx.AsyncClient(timeout=self._timeout)
         return self._client

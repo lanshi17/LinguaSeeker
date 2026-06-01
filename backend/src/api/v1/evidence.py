@@ -28,6 +28,9 @@ async def patch_evidence(
     factory = get_phase4_factory()
     service = factory.create_feedback_service(session)
     try:
+        # TODO: resolve _api_key to a reviewer UUID via a token→user mapping.
+        # Currently reviewer_id stays None because API key is a string,
+        # not a UUID, and no identity table exists yet.
         result = await service.patch_evidence(
             canonical_evidence_id=canonical_evidence_id,
             patch=patch,
