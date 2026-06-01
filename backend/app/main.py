@@ -9,6 +9,7 @@ from uuid import uuid4
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 
@@ -72,6 +73,12 @@ async def lifespan(app: FastAPI):
     logger.info("ACMG Lingua backend stopped")
 
 
+class HealthResponse(BaseModel):
+    """Health check response."""
+
+    status: str
+
+
 def create_app() -> FastAPI:
     """Build and configure the FastAPI application.
 
@@ -107,10 +114,10 @@ def create_app() -> FastAPI:
     _app.include_router(v1_router)
 
     # ── Health (outside v1 router for liveness probes) ──────────────────
-    @_app.get("/health")
-    async def health() -> dict[str, str]:
+    @_app.get("/health", response_model=HealthResponse)
+    async def health() -> HealthResponse:
         """Health check endpoint."""
-        return {"status": "ok"}
+        return HealthResponse(status="ok")
 
     # ── Global error handlers ──────────────────────────────────────────
     @_app.exception_handler(ACMGException)
