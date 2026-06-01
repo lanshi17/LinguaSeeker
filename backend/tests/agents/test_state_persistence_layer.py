@@ -1,5 +1,6 @@
 """Tests for pipeline state persistence layer."""
 import uuid
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,10 +9,11 @@ from src.agents.contracts import (
     PhaseStatus,
     PipelineMode,
     SourceType,
+    PipelineStatus,
     PhaseStatusDetail,
     PhaseErrorDetail,
 )
-from src.agents.state_persistence import DirectStatePersistence
+from src.agents.state_persistence import DirectStatePersistence, SessionBoundStatePersistence
 
 
 @pytest.fixture
@@ -92,3 +94,34 @@ async def test_save_preserves_structured_errors(
     assert loaded.phase_1_status.error is not None
     assert loaded.phase_1_status.error.retryable is True
     assert loaded.phase_1_status.error.attempt == 2
+
+
+@pytest.mark.asyncio
+async def test_session_bound_save_uses_upsert():
+    """SessionBoundStatePersistence.save() should use INSERT ON CONFLICT
+    rather than SELECT then conditional INSERT/UPDATE to avoid race conditions."""
+    mock_session = AsyncMock()
+    mock_session.execute = AsyncMock()
+    mock_session.commit = AsyncMock()
+
+    mock_factory = MagicMock()
+    mock_factory.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_factory.return_value.__aexit__ = AsyncMock(return_value=False)
+
+    persistence = SessionBoundStatePersistence(mock_factory)
+
+    state = PipelineGraphState(
+        processing_run_id=str(uuid.uuid4()),
+        source_document_id=str(uuid.uuid4()),
+        mode=PipelineMode.FULL,
+        source_type=SourceType.LOCAL,
+        pipeline_status=PipelineStatus.RUNNING,
+    )
+
+    await persistence.save(state)
+
+    # Verify execute was called (INSERT ... ON CONFLICT) rather than
+    # session.get + session.add pattern
+    mock_session.execute.assert_awaited()
+    mock_session.get.assert_not_awaited()
+    mock_session.add.assert_not_called()
