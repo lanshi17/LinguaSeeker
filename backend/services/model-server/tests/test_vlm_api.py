@@ -58,8 +58,8 @@ def test_vlm_extract_with_image():
     })
     assert resp.status_code == 200
     mineru_client.two_step_extract.assert_called_once()
-    assert svc._client is None
-    assert svc.ready is False
+    assert svc._client is not None
+    assert svc.ready is True
 
 
 def test_vlm_multi_image_returns_400():

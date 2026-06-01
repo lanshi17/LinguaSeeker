@@ -113,8 +113,8 @@ def chat_completions(req: VLMExtractRequest):
     except Exception as exc:
         logger.error("VLM inference failed: {exc}", exc=exc)
         raise HTTPException(status_code=500, detail=f"VLM inference failed: {exc}") from exc
-    finally:
-        _service.unload()
+    # Model stays loaded — unload() was removed intentionally.
+    # Unload is called only at process shutdown (main.py lifespan).
 
     return VLMExtractResponse(
         id=result.id,
