@@ -64,6 +64,10 @@ async def lifespan(app: FastAPI):
 
     yield
 
+    from src.api.deps import get_phase4_factory
+
+    phase4_factory = get_phase4_factory()
+    await phase4_factory.close()
     await dispose_engine()
     logger.info("ACMG Lingua backend stopped")
 

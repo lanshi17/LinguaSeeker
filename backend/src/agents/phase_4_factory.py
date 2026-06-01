@@ -17,6 +17,9 @@ from src.core.visualize_evidence_with_expert_in_loop.delta_audit_service import 
 from src.core.visualize_evidence_with_expert_in_loop.feedback_service import (
     FeedbackService,
 )
+from src.core.visualize_evidence_with_expert_in_loop.providers import (
+    ReasoningLLMProvider,
+)
 from src.core.visualize_evidence_with_expert_in_loop.source_linker import SourceLinker
 
 if TYPE_CHECKING:
@@ -26,22 +29,24 @@ if TYPE_CHECKING:
 class Phase4ServiceFactory:
     """Creates Phase 4 services with per-request sessions.
 
-    Long-lived dependencies (cfg) are injected at construction time.
+    Long-lived dependencies (cfg, providers) are injected at construction time.
     Short-lived dependencies (AsyncSession) are passed per-method-call.
     """
 
     def __init__(self, cfg: Settings):
-        # Reserved: current Phase 4 services only need session, but future
-        # services (e.g. ChatService with LLM config) will need cfg.
         self._cfg = cfg
-        # DeltaAuditService is stateless — create once
         self._delta_audit = DeltaAuditService()
+        self._reasoning_provider = ReasoningLLMProvider()
+
+    @property
+    def reasoning_provider(self) -> ReasoningLLMProvider:
+        return self._reasoning_provider
 
     def create_feedback_service(self, session: AsyncSession) -> FeedbackService:
         return FeedbackService(session)
 
     def create_chat_service(self, session: AsyncSession) -> ChatService:
-        return ChatService(session)
+        return ChatService(session=session, reasoning_provider=self._reasoning_provider)
 
     def create_source_linker(self, session: AsyncSession) -> SourceLinker:
         return SourceLinker(session)
@@ -49,3 +54,7 @@ class Phase4ServiceFactory:
     @property
     def delta_audit(self) -> DeltaAuditService:
         return self._delta_audit
+
+    async def close(self) -> None:
+        """Close long-lived resources (httpx client)."""
+        await self._reasoning_provider.close()
