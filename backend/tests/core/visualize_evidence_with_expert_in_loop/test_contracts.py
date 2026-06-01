@@ -8,7 +8,9 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     DeltaEntry,
     EvidenceCardPayload,
     ReviewStatus,
+    SourceSpanDict,
     TargetType,
+    TrackSpan,
 )
 
 
@@ -103,3 +105,25 @@ class TestDeltaEntry:
                 old_value="x",
                 new_value="y",
             )
+
+
+class TestSourceSpanDict:
+    """SourceSpanDict replaces bare dict on TrackSpan.source_span."""
+
+    def test_track_span_source_span_is_typed(self) -> None:
+        """TrackSpan.source_span should use SourceSpanDict, not bare dict."""
+        import inspect
+        sig = inspect.signature(TrackSpan)
+        source_span_type = sig.parameters["source_span"].annotation
+        assert source_span_type is not dict
+
+    def test_source_span_dict_fields(self) -> None:
+        """SourceSpanDict should accept known source span keys."""
+        span = SourceSpanDict(
+            text_snippet="some text",
+            start_offset=0,
+            end_offset=10,
+            page=1,
+        )
+        assert span["text_snippet"] == "some text"
+        assert span["page"] == 1
