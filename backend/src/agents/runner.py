@@ -68,7 +68,12 @@ class PipelineRunner:
                         }
                     )
                     self._remember_state(run_id, error_state)
-                    await self._persistence.save(error_state)
+                    try:
+                        await self._persistence.save(error_state)
+                    except Exception:
+                        logger.exception(
+                            "Failed to persist error state for run={}", run_id
+                        )
                     return error_state
 
         task = asyncio.create_task(_run_pipeline())
