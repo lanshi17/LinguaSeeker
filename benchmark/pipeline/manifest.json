@@ -1,0 +1,49 @@
+{
+  "description": "Pipeline benchmark manifest — 1 case_report per language",
+  "pdf_root": "../literature_acquisition/downloads",
+  "selection_strategy": "median_file_size_per_language",
+  "pdfs": [
+    {
+      "lang": "en",
+      "literature_type": "case_report",
+      "file": "en/case_report/en_pmc7075944_covid19.pdf",
+      "size_bytes": 1940781
+    },
+    {
+      "lang": "es",
+      "literature_type": "case_report",
+      "file": "es/case_report/es_case_report.pdf",
+      "size_bytes": 289580
+    },
+    {
+      "lang": "ja",
+      "literature_type": "case_report",
+      "file": "ja/case_report/ja_case_report.pdf",
+      "size_bytes": 6323452
+    },
+    {
+      "lang": "ko",
+      "literature_type": "case_report",
+      "file": "ko/case_report/ko_case_report.pdf",
+      "size_bytes": 967464
+    },
+    {
+      "lang": "pt",
+      "literature_type": "case_report",
+      "file": "pt/case_report/pt_case_report.pdf",
+      "size_bytes": 296989
+    },
+    {
+      "lang": "ru",
+      "literature_type": "case_report",
+      "file": "ru/case_report/ru_3_0.pdf",
+      "size_bytes": 107502
+    },
+    {
+      "lang": "zh",
+      "literature_type": "case_report",
+      "file": "zh/case_report/GLA基因c.92C_A突变法布雷病家系1例.pdf",
+      "size_bytes": 1444046
+    }
+  ]
+}
