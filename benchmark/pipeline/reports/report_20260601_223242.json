@@ -1,0 +1,310 @@
+{
+  "benchmark_run_id": "2780f215-7eea-4693-9966-b60815883514",
+  "timestamp": "2026-06-01T14:32:42.509606+00:00",
+  "config": {
+    "concurrency": 2,
+    "total_pdfs": 7,
+    "base_url": "http://localhost:8000",
+    "poll_interval_s": 5.0,
+    "resume": false,
+    "limit": null
+  },
+  "summary": {
+    "total": 7,
+    "passed": 3,
+    "failed": 4,
+    "skipped": 0,
+    "total_duration_s": 1809.59,
+    "avg_duration_s": 549.55
+  },
+  "by_language": {
+    "en": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "avg_duration_s": 175.32
+    },
+    "es": {
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "avg_duration_s": 235.43
+    },
+    "ja": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "avg_duration_s": 335.6
+    },
+    "ko": {
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "avg_duration_s": 140.25
+    },
+    "pt": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "avg_duration_s": 616.06
+    },
+    "ru": {
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "avg_duration_s": 535.94
+    },
+    "zh": {
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "avg_duration_s": 1808.24
+    }
+  },
+  "by_phase": {
+    "phase_1": {
+      "avg_duration_s": 8.24,
+      "failures": 0
+    },
+    "phase_2": {
+      "avg_duration_s": 194.54,
+      "failures": 2
+    },
+    "phase_3": {
+      "avg_duration_s": 0.0,
+      "failures": 0
+    }
+  },
+  "results": [
+    {
+      "file": "en/case_report/en_pmc7075944_covid19.pdf",
+      "lang": "en",
+      "literature_type": "case_report",
+      "size_bytes": 1940781,
+      "status": "passed",
+      "processing_run_id": "ac9dcae6-2d0f-4a80-9161-64a68abd45a8",
+      "total_duration_s": 175.32,
+      "started_at": "2026-06-01T14:02:34.268823+00:00",
+      "completed_at": "2026-06-01T14:05:29.590635+00:00",
+      "phases": {
+        "phase_1": {
+          "status": "completed",
+          "duration_seconds": 10.549837,
+          "error": null,
+          "summary": null
+        },
+        "phase_2": {
+          "status": "completed",
+          "duration_seconds": 161.755177,
+          "error": null,
+          "summary": {
+            "relevant": false,
+            "source_language": "en"
+          }
+        },
+        "phase_3": {
+          "status": "skipped",
+          "duration_seconds": null,
+          "error": null,
+          "summary": {
+            "reason": "not_relevant"
+          }
+        }
+      },
+      "error": null
+    },
+    {
+      "file": "es/case_report/es_case_report.pdf",
+      "lang": "es",
+      "literature_type": "case_report",
+      "size_bytes": 289580,
+      "status": "failed",
+      "processing_run_id": "99c9ac28-c524-4871-a2e0-d45e9ba6eaa0",
+      "total_duration_s": 235.43,
+      "started_at": "2026-06-01T14:02:34.270117+00:00",
+      "completed_at": "2026-06-01T14:06:29.695651+00:00",
+      "phases": {
+        "phase_1": {
+          "status": "completed",
+          "duration_seconds": 4.176134,
+          "error": null,
+          "summary": null
+        },
+        "phase_2": {
+          "status": "failed",
+          "duration_seconds": null,
+          "error": {
+            "message": "Phase 2 unexpected error: translation_validation_failed: unchanged",
+            "retryable": false,
+            "attempt": 0,
+            "max_retries": 0
+          },
+          "summary": null
+        },
+        "phase_3": {
+          "status": "pending",
+          "duration_seconds": null,
+          "error": null,
+          "summary": null
+        }
+      },
+      "error": "Phase 2 unexpected error: translation_validation_failed: unchanged"
+    },
+    {
+      "file": "ja/case_report/ja_case_report.pdf",
+      "lang": "ja",
+      "literature_type": "case_report",
+      "size_bytes": 6323452,
+      "status": "passed",
+      "processing_run_id": "09280fd8-b7f3-473d-a79c-5240c64ba563",
+      "total_duration_s": 335.6,
+      "started_at": "2026-06-01T14:02:34.270287+00:00",
+      "completed_at": "2026-06-01T14:08:09.869632+00:00",
+      "phases": {
+        "phase_1": {
+          "status": "completed",
+          "duration_seconds": 17.480883,
+          "error": null,
+          "summary": null
+        },
+        "phase_2": {
+          "status": "completed",
+          "duration_seconds": 143.492023,
+          "error": null,
+          "summary": {
+            "relevant": false,
+            "source_language": "ja"
+          }
+        },
+        "phase_3": {
+          "status": "skipped",
+          "duration_seconds": null,
+          "error": null,
+          "summary": {
+            "reason": "not_relevant"
+          }
+        }
+      },
+      "error": null
+    },
+    {
+      "file": "ko/case_report/ko_case_report.pdf",
+      "lang": "ko",
+      "literature_type": "case_report",
+      "size_bytes": 967464,
+      "status": "failed",
+      "processing_run_id": "2403e48f-a19a-45b7-aaa9-4f6150f2e22d",
+      "total_duration_s": 140.25,
+      "started_at": "2026-06-01T14:02:34.270401+00:00",
+      "completed_at": null,
+      "phases": {},
+      "error": "RemoteProtocolError: Server disconnected without sending a response."
+    },
+    {
+      "file": "pt/case_report/pt_case_report.pdf",
+      "lang": "pt",
+      "literature_type": "case_report",
+      "size_bytes": 296989,
+      "status": "passed",
+      "processing_run_id": "93b426e6-3035-4fcb-afd0-b4f5a30afc6d",
+      "total_duration_s": 616.06,
+      "started_at": "2026-06-01T14:02:34.270506+00:00",
+      "completed_at": "2026-06-01T14:12:50.333800+00:00",
+      "phases": {
+        "phase_1": {
+          "status": "completed",
+          "duration_seconds": 3.947167,
+          "error": null,
+          "summary": null
+        },
+        "phase_2": {
+          "status": "completed",
+          "duration_seconds": 278.367987,
+          "error": null,
+          "summary": {
+            "relevant": false,
+            "source_language": "pt"
+          }
+        },
+        "phase_3": {
+          "status": "skipped",
+          "duration_seconds": null,
+          "error": null,
+          "summary": {
+            "reason": "not_relevant"
+          }
+        }
+      },
+      "error": null
+    },
+    {
+      "file": "ru/case_report/ru_3_0.pdf",
+      "lang": "ru",
+      "literature_type": "case_report",
+      "size_bytes": 107502,
+      "status": "failed",
+      "processing_run_id": "1c6656e6-8db2-458e-8523-9f6b36c1e55a",
+      "total_duration_s": 535.94,
+      "started_at": "2026-06-01T14:02:34.270619+00:00",
+      "completed_at": "2026-06-01T14:11:30.207672+00:00",
+      "phases": {
+        "phase_1": {
+          "status": "completed",
+          "duration_seconds": 5.058173,
+          "error": null,
+          "summary": null
+        },
+        "phase_2": {
+          "status": "failed",
+          "duration_seconds": null,
+          "error": {
+            "message": "Phase 2 unexpected error: translation_validation_failed: unchanged",
+            "retryable": false,
+            "attempt": 0,
+            "max_retries": 0
+          },
+          "summary": null
+        },
+        "phase_3": {
+          "status": "pending",
+          "duration_seconds": null,
+          "error": null,
+          "summary": null
+        }
+      },
+      "error": "Phase 2 unexpected error: translation_validation_failed: unchanged"
+    },
+    {
+      "file": "zh/case_report/GLA基因c.92C_A突变法布雷病家系1例.pdf",
+      "lang": "zh",
+      "literature_type": "case_report",
+      "size_bytes": 1444046,
+      "status": "failed",
+      "processing_run_id": "6518de03-e051-48f2-81d9-fc33e78450a1",
+      "total_duration_s": 1808.24,
+      "started_at": "2026-06-01T14:02:34.270724+00:00",
+      "completed_at": "2026-06-01T14:32:42.509214+00:00",
+      "phases": {
+        "phase_1": {
+          "status": "pending",
+          "duration_seconds": null,
+          "error": null,
+          "summary": null
+        },
+        "phase_2": {
+          "status": "pending",
+          "duration_seconds": null,
+          "error": null,
+          "summary": null
+        },
+        "phase_3": {
+          "status": "pending",
+          "duration_seconds": null,
+          "error": null,
+          "summary": null
+        }
+      },
+      "error": "Benchmark poll timed out"
+    }
+  ]
+}
