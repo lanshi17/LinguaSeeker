@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Optional
 from uuid import UUID
 
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.agents.contracts import PipelineGraphState
@@ -61,19 +62,20 @@ class SessionBoundStatePersistence:
 
     async def save(self, state: PipelineGraphState) -> None:
         async with self._session_factory() as session:
-            existing = await session.get(
-                PipelineRunState, UUID(state.processing_run_id)
-            )
             state_json = state.model_dump(mode="json")
-            if existing:
-                existing.state_json = state_json
-            else:
-                new_record = PipelineRunState(
+            stmt = (
+                pg_insert(PipelineRunState)
+                .values(
                     processing_run_id=UUID(state.processing_run_id),
                     source_document_id=UUID(state.source_document_id),
                     state_json=state_json,
                 )
-                session.add(new_record)
+                .on_conflict_do_update(
+                    index_elements=["processing_run_id"],
+                    set_={"state_json": state_json},
+                )
+            )
+            await session.execute(stmt)
             await session.commit()
 
     async def load(self, processing_run_id: str) -> Optional[PipelineGraphState]:
