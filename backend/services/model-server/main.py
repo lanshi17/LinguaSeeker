@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 # ── Ensure app is importable ─────────────────────────────────────────────
@@ -60,7 +61,15 @@ health.register_services({
 
 # ── Assemble FastAPI app ─────────────────────────────────────────────────
 
-app = FastAPI(title="ACMG-Lingua Model Server", version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    # Free GPU memory on shutdown
+    if _vlm_svc is not None:
+        _vlm_svc.unload()
+
+
+app = FastAPI(title="ACMG-Lingua Model Server", version="1.0.0", lifespan=lifespan)
 app.add_middleware(request_monitor_middleware_factory())
 
 app.include_router(embedding.router)
