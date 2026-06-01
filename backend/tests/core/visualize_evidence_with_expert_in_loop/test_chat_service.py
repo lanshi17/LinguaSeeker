@@ -11,6 +11,14 @@ from src.core.visualize_evidence_with_expert_in_loop.chat_service import (
 )
 
 
+def test_detect_intent_uses_module_level_compiled_patterns():
+    """Regex patterns should be compiled at module level, not per call."""
+    import src.core.visualize_evidence_with_expert_in_loop.chat_service as mod
+    assert hasattr(mod, "_QUESTION_PATTERNS")
+    assert hasattr(mod, "_CORRECTION_PATTERNS")
+    assert all(hasattr(p, "search") for p in mod._QUESTION_PATTERNS)
+
+
 @pytest.mark.asyncio
 class TestChatService:
     """ChatService manages sessions and messages."""

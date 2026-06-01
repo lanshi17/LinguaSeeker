@@ -26,6 +26,31 @@ if TYPE_CHECKING:
         ReasoningLLMProvider,
     )
 
+# Pre-compiled regex patterns for _detect_intent (avoid per-call compilation)
+_QUESTION_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(p)
+    for p in [
+        r"\?",
+        r"\bwhat\b",
+        r"\bwhy\b",
+        r"\bhow\b",
+        r"\bwhich\b",
+        r"\b什么\b",
+        r"\b为什么\b",
+        r"\b如何\b",
+    ]
+]
+_CORRECTION_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(p)
+    for p in [
+        r"\bchange\b.*\bto\b",
+        r"\bupdate\b.*\bto\b",
+        r"\bcorrect\b.*\bto\b",
+        r"\b修改\b.*\b为\b",
+        r"\b改为\b",
+    ]
+]
+
 
 class ChatService:
     """Manage chat sessions and messages for evidence review."""
@@ -243,27 +268,10 @@ class ChatService:
 
         # Check question patterns first to avoid false positives on
         # messages like "What should I change?" which contain "change"
-        question_patterns = [
-            r"\?",
-            r"\bwhat\b",
-            r"\bwhy\b",
-            r"\bhow\b",
-            r"\bwhich\b",
-            r"\b什么\b",
-            r"\b为什么\b",
-            r"\b如何\b",
-        ]
-        if any(re.search(p, msg_lower) for p in question_patterns):
+        if any(p.search(msg_lower) for p in _QUESTION_PATTERNS):
             return "question"
 
-        correction_patterns = [
-            r"\bchange\b.*\bto\b",
-            r"\bupdate\b.*\bto\b",
-            r"\bcorrect\b.*\bto\b",
-            r"\b修改\b.*\b为\b",
-            r"\b改为\b",
-        ]
-        if any(re.search(p, msg_lower) for p in correction_patterns):
+        if any(p.search(msg_lower) for p in _CORRECTION_PATTERNS):
             return "correction"
 
         return "note"
