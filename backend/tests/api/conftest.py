@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, patch
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
+from src.utils.health import HealthResult
+
 
 @pytest_asyncio.fixture
 async def async_client():
@@ -15,7 +17,7 @@ async def async_client():
         patch(
             "src.utils.health.check_all_connections",
             new_callable=AsyncMock,
-            return_value={"postgres": True, "redis": True},
+            return_value=HealthResult(postgres=True, redis=True),
         ),
     ):
         from src.core.config import Settings

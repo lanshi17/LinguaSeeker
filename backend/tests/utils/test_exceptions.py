@@ -1,8 +1,6 @@
 """Tests for the centralized exception hierarchy."""
 from __future__ import annotations
 
-import pytest
-
 from src.utils.exceptions import (
     ACMGException,
     DatabaseException,
@@ -13,6 +11,7 @@ from src.utils.exceptions import (
     TranslationException,
     ValidationException,
     error_code_from_exception,
+    status_code_from_error_code,
 )
 
 
@@ -73,3 +72,19 @@ class TestErrorCodeFromException:
         assert error_code_from_exception(Exception(), status_code=404) == "NOT_FOUND"
         assert error_code_from_exception(Exception(), status_code=422) == "VALIDATION_ERROR"
         assert error_code_from_exception(Exception(), status_code=500) == "INTERNAL_ERROR"
+
+
+class TestStatusCodeFromErrorCode:
+    def test_domain_codes_map_to_http_status(self):
+        assert status_code_from_error_code("NOT_FOUND") == 404
+        assert status_code_from_error_code("VALIDATION_ERROR") == 422
+        assert status_code_from_error_code("SERVICE_ERROR") == 503
+        assert status_code_from_error_code("LLM_ERROR") == 502
+
+    def test_unknown_code_defaults_to_500(self):
+        assert status_code_from_error_code("UNKNOWN_CODE") == 500
+
+    def test_service_error_and_service_unavailable_both_map_to_503(self):
+        """SERVICE_ERROR (domain) and SERVICE_UNAVAILABLE (HTTP) should both be 503."""
+        assert status_code_from_error_code("SERVICE_ERROR") == 503
+        assert status_code_from_error_code("SERVICE_UNAVAILABLE") == 503

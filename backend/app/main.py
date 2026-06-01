@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 from contextlib import asynccontextmanager
+from typing import Any
 from uuid import uuid4
 
 from fastapi import FastAPI, Request
@@ -13,29 +14,21 @@ from starlette.middleware.cors import CORSMiddleware
 
 from src.api.v1.router import router as v1_router
 from src.core.config import get_config
-from src.utils.exceptions import ACMGException, error_code_from_exception
+from src.utils.exceptions import ACMGException, error_code_from_exception, status_code_from_error_code
 from src.utils.logger import get_logger, setup_logging
 from src.utils.middleware import add_request_monitoring
 
-# Stable mapping from ACMGException error codes to HTTP status codes
-_CODE_TO_STATUS: dict[str, int] = {
-    "NOT_FOUND": 404,
-    "VALIDATION_ERROR": 422,
-    "DATABASE_ERROR": 500,
-    "LLM_ERROR": 502,
-    "SERVICE_ERROR": 503,
-    "TRANSLATION_ERROR": 502,
-    "PARSING_ERROR": 500,
-    "PHASE_ERROR": 500,
-    "INTERNAL_ERROR": 500,
-}
-
 
 def _error_response(
-    *, code: str, message: str, request_id: str, status: int, errors: list | None = None,
+    *,
+    code: str,
+    message: str,
+    request_id: str,
+    status: int,
+    errors: list[dict[str, Any]] | None = None,
 ) -> JSONResponse:
     """Build a structured error response envelope with X-Request-ID header."""
-    body: dict = {
+    body: dict[str, Any] = {
         "error": {"code": code, "message": message},
         "request_id": request_id,
     }
@@ -61,7 +54,7 @@ async def lifespan(app: FastAPI):
     # Startup health checks (non-blocking — warn but don't crash)
     try:
         checks = await check_all_connections()
-        failed = [name for name, ok in checks.items() if not ok]
+        failed = checks.failed_services()
         if failed:
             logger.warning("Startup connectivity check failed: {}", ", ".join(failed))
         else:
@@ -78,9 +71,10 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     """Build and configure the FastAPI application.
 
-    Exported as a factory (not called at module level) so that test
-    collection does not trigger get_config() — tests mock config before
-    calling create_app() inside a fixture.
+    Exported as a factory so that test collection does not trigger
+    ``get_config()`` — tests mock config before calling ``create_app()``
+    inside a fixture.  For deployment, use the ``app`` alias below or
+    ``uvicorn app.main:create_app --factory``.
     """
     cfg = get_config()
 
@@ -118,7 +112,7 @@ def create_app() -> FastAPI:
     @_app.exception_handler(ACMGException)
     async def handle_acmg_exception(request: Request, exc: ACMGException) -> JSONResponse:
         request_id = getattr(request.state, "request_id", str(uuid4()))
-        status = _CODE_TO_STATUS.get(exc.code, 500)
+        status = status_code_from_error_code(exc.code)
         return _error_response(code=exc.code, message=exc.message, request_id=request_id, status=status)
 
     @_app.exception_handler(StarletteHTTPException)
@@ -145,6 +139,6 @@ def create_app() -> FastAPI:
     return _app
 
 
-# NOTE: do NOT call create_app() at module level.
-# Tests import create_app and call it inside a fixture after mocking config.
-# Production uses create_app() in the ASGI entrypoint (uvicorn app.main:create_app).
+# Backward-compatible alias for uvicorn app.main:app and existing launch scripts.
+# Prefer ``create_app()`` for programmatic use (tests, custom entrypoints).
+app: FastAPI = create_app()
