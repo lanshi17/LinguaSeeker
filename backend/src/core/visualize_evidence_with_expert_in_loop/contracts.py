@@ -3,10 +3,25 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import ClassVar, Literal
+from typing import ClassVar, Literal, TypedDict
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+class SourceSpanDict(TypedDict, total=False):
+    """Structured source span stored in JSONB.
+
+    This is a partial contract — the extraction pipeline may write
+    additional keys (e.g. block_type, confidence, source_url).
+    total=False allows extra keys at runtime; this TypedDict documents
+    the known queryable fields used by the API layer.
+    """
+
+    text_snippet: str
+    start_offset: int
+    end_offset: int
+    page: int | None
 
 
 class ReviewStatus(str, Enum):
@@ -109,7 +124,7 @@ class TrackSpan(BaseModel):
     """Single-track source span with highlight context."""
 
     track: Literal["original", "translated"]
-    source_span: dict  # Raw source_span JSONB
+    source_span: SourceSpanDict
     block_text: str
     highlight_start: int
     highlight_end: int
