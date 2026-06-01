@@ -49,7 +49,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status |
 |---|---|---|
-| 2026-06-01 | [Backend review fixes](plans/2026-06-01-backend-review-fixes.md) | active — fixing critical/major review issues |
 | 2026-06-01 | [Backend security & architecture fixes](plans/2026-06-01-backend-security-architecture-fixes.md) | active — security & architecture fixes |
 | 2026-06-01 | [Pipeline benchmark](plans/2026-06-01-pipeline-benchmark.md) | active — benchmark full pipeline Phases 1–3 |
 
@@ -78,6 +77,7 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-06-01 | [Backend review fixes](archive/plans/2026-06-01-backend-review-fixes.md) | completed — 16 tasks: session commit, auth, upsert, SSE, types, FK, tests |
 | 2026-05-30 | [Phase 2 chunk-level parallelization](archive/plans/2026-05-30-phase2-chunk-parallelization.md) | completed — async provider + stages + workflow |
 | 2026-05-30 | [Backend optimization (code review)](archive/plans/2026-05-30-backend-optimization.md) | completed — 8 tasks from code review |
 | 2026-06-02 | [architecture cleanup: api→agents→core→dao layering](archive/plans/2026-06-02-architecture-cleanup.md) | completed — unified session factory, Phase4ServiceFactory |
