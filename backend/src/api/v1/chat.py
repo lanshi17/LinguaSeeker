@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.api.auth import require_api_key
 from src.api.deps import get_db_session, get_phase4_factory
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     ChatMessageResponse,
@@ -35,6 +36,7 @@ class AppendMessageRequest(BaseModel):
 async def create_session(
     req: CreateSessionRequest,
     session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
 ) -> ChatSessionResponse:
     """Create a new chat session."""
     factory = get_phase4_factory()
@@ -73,6 +75,7 @@ async def append_message(
     session_id: UUID,
     req: AppendMessageRequest,
     session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
 ) -> ChatMessageResponse:
     """Append a message to a chat session."""
     factory = get_phase4_factory()
@@ -109,6 +112,7 @@ async def stream_reply(
     user_message: str,
     evidence_id: UUID | None = None,
     session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
 ) -> StreamingResponse:
     """Stream AI reply as SSE events with 15-second keepalive heartbeat."""
     factory = get_phase4_factory()
