@@ -104,7 +104,7 @@ class DownloadRecord:
 class DownloadStats:
     config_file: str = ""
     disease: str = ""
-    target_per_lang: int = 0
+    target_per_lang: Any = 0  # int or dict[str, int]
     total_attempted: int = 0
     total_downloaded: int = 0
     by_lang: Dict[str, int] = field(default_factory=dict)
@@ -200,6 +200,10 @@ async def _process_language(
         query = queries[query_idx]
         query_idx += 1
 
+        # search_multilingual may try 3-7 providers sequentially;
+        # use a longer timeout than individual downloads.
+        search_timeout = max(timeout_s * 3, 180)
+
         async with sem:
             try:
                 candidates = await asyncio.wait_for(
@@ -209,7 +213,7 @@ async def _process_language(
                         language=lang_code,
                         candidate_limit=candidate_limit,
                     ),
-                    timeout=timeout_s,
+                    timeout=search_timeout,
                 )
             except asyncio.TimeoutError:
                 logger.warning(f"[{lang_code}] search_multilingual timed out for: {query}")
@@ -252,6 +256,16 @@ async def _process_language(
             )
             lt = classify_item(item)
             lit_type = lt.value if lt else "unclassified"
+
+            # Fallback: if unclassified but title mentions disease keywords,
+            # treat as a likely clinical report (many case reports don't
+            # literally say "case report" in the title).
+            _disease_keywords = re.compile(
+                r"Rett|MECP2|CDKL5|FOXG1|レット|레트|синдром\s+Ретта",
+                re.IGNORECASE,
+            )
+            if lit_type == "unclassified" and _disease_keywords.search(title):
+                lit_type = "case_report"
 
             # Filter by requested literature types
             if literature_types and lit_type not in literature_types:
@@ -321,7 +335,7 @@ async def _process_language(
 async def run(config: Dict[str, Any], lang_filter: Optional[str], dry_run: bool) -> DownloadStats:
     """Main orchestration: iterate languages, search, download, classify."""
     disease = config["disease"]
-    target_per_lang = config.get("target_per_lang", 5)
+    target_per_lang_raw = config.get("target_per_lang", 5)
     candidate_limit = config.get("candidate_limit", 10)
     literature_types = config.get("literature_types", [])
     timeout_s = config.get("timeout_s", 60)
@@ -330,6 +344,12 @@ async def run(config: Dict[str, Any], lang_filter: Optional[str], dry_run: bool)
     if not download_root.is_absolute():
         download_root = MODULE_DIR / download_root
     download_root.mkdir(parents=True, exist_ok=True)
+
+    # target_per_lang can be a uniform int or a per-language dict
+    def _resolve_target(code: str) -> int:
+        if isinstance(target_per_lang_raw, dict):
+            return int(target_per_lang_raw.get(code, 5))
+        return int(target_per_lang_raw)
 
     lang_map = config.get("languages", {})
     if lang_filter:
@@ -341,7 +361,7 @@ async def run(config: Dict[str, Any], lang_filter: Optional[str], dry_run: bool)
     stats = DownloadStats(
         config_file=str(CONFIG_PATH),
         disease=disease,
-        target_per_lang=target_per_lang,
+        target_per_lang=target_per_lang_raw,
     )
     start = time.monotonic()
     sem = asyncio.Semaphore(concurrency)
@@ -350,7 +370,7 @@ async def run(config: Dict[str, Any], lang_filter: Optional[str], dry_run: bool)
     logger.info(f"  Rett/MECP2 Multilingual Case Report Download")
     logger.info(f"  Disease: {disease}")
     logger.info(f"  Languages: {len(lang_map)} ({', '.join(lang_map)})")
-    logger.info(f"  Target per lang: {target_per_lang}")
+    logger.info(f"  Target per lang: {target_per_lang_raw}")
     logger.info(f"  Literature types: {literature_types or 'all'}")
     logger.info(f"  Download dir: {download_root}")
     logger.info(f"  Dry run: {dry_run}")
@@ -358,13 +378,14 @@ async def run(config: Dict[str, Any], lang_filter: Optional[str], dry_run: bool)
 
     for lang_code, lang_cfg in lang_map.items():
         lang_name = lang_cfg.get("name", lang_code)
-        logger.info(f"\n── {lang_name} ({lang_code}) ──")
+        lang_target = _resolve_target(lang_code)
+        logger.info(f"\n── {lang_name} ({lang_code}) target={lang_target} ──")
 
         records = await _process_language(
             lang_code=lang_code,
             lang_cfg=lang_cfg,
             disease=disease,
-            target=target_per_lang,
+            target=lang_target,
             candidate_limit=candidate_limit,
             download_dir=download_root,
             literature_types=literature_types,
@@ -377,7 +398,7 @@ async def run(config: Dict[str, Any], lang_filter: Optional[str], dry_run: bool)
         ok_count = sum(1 for r in records if r.success)
         logger.info(
             f"[{lang_code}] {ok_count}/{len(records)} downloaded "
-            f"(target: {target_per_lang})"
+            f"(target: {lang_target})"
         )
 
     # Aggregate stats

@@ -335,12 +335,53 @@ async def run_benchmark(
     }
 
     t0 = time.time()
+    # Collect (entry, run_info_or_error) pairs — submit phase
+    submitted: list[tuple[dict[str, Any], dict[str, str] | Exception | None]] = []
     async with httpx.AsyncClient() as client:
-        tasks = [
-            _process_or_skip(client, base_url, entry, semaphore, skipped_files)
-            for entry in pdfs
-        ]
-        results = await asyncio.gather(*tasks)
+        for entry in pdfs:
+            if entry["file"] in skipped_files:
+                submitted.append((entry, None))
+                continue
+            pdf_path = DOWNLOADS_DIR / entry["file"]
+            try:
+                logger.info("[{}] Submitting {}", entry["lang"], entry["file"])
+                info = await submit_run(client, base_url, pdf_path, Path(entry["file"]).name)
+                submitted.append((entry, info))
+                logger.info("[{}] Accepted {}", entry["lang"], info["processing_run_id"][:8])
+            except Exception as e:
+                logger.error("[{}] Submit failed: {}", entry["lang"], e)
+                submitted.append((entry, e))
+
+    # Brief pause so queued runs persist their initial PENDING state
+    await asyncio.sleep(1.0)
+
+    # Poll phase — all submitted runs in parallel
+    results: list[PdfResult] = []
+    async with httpx.AsyncClient() as client:
+        poll_tasks = []
+        for entry, info in submitted:
+            if info is None:
+                # Skipped
+                pdf_path = DOWNLOADS_DIR / entry["file"]
+                results.append(PdfResult(
+                    file=entry["file"], lang=entry["lang"],
+                    literature_type=entry["literature_type"],
+                    size_bytes=entry.get("size_bytes", pdf_path.stat().st_size),
+                    status="skipped",
+                ))
+            elif isinstance(info, Exception):
+                # Submit failed
+                results.append(PdfResult(
+                    file=entry["file"], lang=entry["lang"],
+                    literature_type=entry["literature_type"],
+                    size_bytes=entry.get("size_bytes", 0),
+                    status="failed", error=str(info),
+                ))
+            else:
+                poll_tasks.append(_poll_and_finalize(client, base_url, entry, info))
+        if poll_tasks:
+            polled = await asyncio.gather(*poll_tasks)
+            results.extend(polled)
     elapsed = time.time() - t0
 
     report = generate_report(list(results), config, elapsed)
@@ -361,26 +402,58 @@ async def run_benchmark(
     logger.info("Report: {}", report_path)
 
 
-async def _process_or_skip(
+async def _poll_and_finalize(
     client: httpx.AsyncClient,
     base_url: str,
     entry: dict[str, Any],
-    semaphore: asyncio.Semaphore,
-    skipped_files: set[str],
+    run_info: dict[str, str],
 ) -> PdfResult:
-    """Skip if already passed in previous run, otherwise process normally."""
-    if entry["file"] in skipped_files:
-        pdf_path = DOWNLOADS_DIR / entry["file"]
-        result = PdfResult(
-            file=entry["file"],
-            lang=entry["lang"],
-            literature_type=entry["literature_type"],
-            size_bytes=entry.get("size_bytes", pdf_path.stat().st_size),
-            status="skipped",
-        )
-        logger.info("[{}] Skipping (already passed): {}", entry["lang"], entry["file"])
-        return result
-    return await process_one_pdf(client, base_url, entry, semaphore)
+    """Poll a submitted run to completion and return PdfResult."""
+    pdf_path = DOWNLOADS_DIR / entry["file"]
+    result = PdfResult(
+        file=entry["file"],
+        lang=entry["lang"],
+        literature_type=entry["literature_type"],
+        size_bytes=entry.get("size_bytes", pdf_path.stat().st_size),
+        processing_run_id=run_info["processing_run_id"],
+        started_at=datetime.now(timezone.utc).isoformat(),
+    )
+
+    t0 = time.time()
+    try:
+        logger.info("[{}] Polling {} ...", entry["lang"], run_info["processing_run_id"][:8])
+        status_data = await poll_status(client, base_url, run_info["status_url"])
+        result.completed_at = datetime.now(timezone.utc).isoformat()
+        result.total_duration_s = round(time.time() - t0, 2)
+
+        pipeline_status = status_data.get("pipeline_status", "unknown")
+        if pipeline_status in ("awaiting_review", "completed"):
+            result.status = "passed"
+        else:
+            result.status = "failed"
+            result.error = status_data.get("error_message", f"Terminal status: {pipeline_status}")
+
+        for phase_name in ("phase_1", "phase_2", "phase_3"):
+            phase_data = status_data.get("phases", {}).get(phase_name, {})
+            result.phases[phase_name] = PhaseResult(
+                status=phase_data.get("status", "pending"),
+                duration_seconds=phase_data.get("duration_seconds"),
+                error=phase_data.get("error"),
+                summary=phase_data.get("summary"),
+            )
+
+    except Exception as e:
+        result.status = "failed"
+        result.error = f"{type(e).__name__}: {e}"
+        result.total_duration_s = round(time.time() - t0, 2)
+        logger.error("[{}] Poll error: {}", entry["lang"], result.error)
+
+    logger.info(
+        "[{}] {} | {:.1f}s | {}",
+        entry["lang"], result.status.upper(),
+        result.total_duration_s or 0, entry["file"],
+    )
+    return result
 
 
 def _load_most_recent_report() -> dict[str, Any] | None:
