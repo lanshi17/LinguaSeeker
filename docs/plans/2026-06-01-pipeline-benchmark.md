@@ -16,7 +16,7 @@
 - **PDFs:** 7 case reports — 1 per language (en, es, ja, ko, pt, ru, zh), selected by median file size
 - **Concurrency:** 2 (matches pipeline semaphore max)
 - **Phase 4:** Not tested (pipeline stops at `AWAITING_REVIEW` — this is the expected terminal state)
-- **Services required:** PostgreSQL, Redis, MinerU Cloud API, LLM, model-server. Neo4j/MinIO are placeholders (not called).
+- **Services required:** PostgreSQL + pgvector, MinerU Cloud API, LLM, model-server. Neo4j/MinIO/Redis are not called by pipeline code.
 - **Error handling:** Record error, continue to next PDF
 - **Incremental rerun:** Skip PDFs already in a previous report (by `processing_run_id`)
 - **Output:** JSON report at `benchmark/pipeline/reports/report_{timestamp}.json`
@@ -709,12 +709,11 @@ git commit -m "docs: add pipeline benchmark to benchmark README and update progr
 |---------|-------------|------------|
 | FastAPI server running | All HTTP calls | `--base-url` flag |
 | PostgreSQL + pgvector | Phase 1 state persistence, Phase 3 terminology | `POSTGRES_*` |
-| Redis | Caching layer | `REDIS_*` |
 | MinerU Cloud API | Phase 1 PDF parsing | `MINERU_*` |
 | LLM (OpenAI-compatible) | Phase 2 translation + extraction | `LLM_*` |
 | Model Server (local) | Phase 3 embedding + reranking | `EMBEDDING_*`, `RERANK_*` |
 
-**Not required:** Neo4j, MinIO (both are placeholders in current code).
+**Not required:** Neo4j, MinIO (both are placeholders in current code), Redis (CacheRepository is implemented but not wired into any pipeline code).
 
 ## Cost Estimate
 
