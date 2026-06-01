@@ -1,0 +1,170 @@
+{
+  "_description": "Rett syndrome / MECP2-related disorders — multilingual case report PDF acquisition config",
+
+  "disease": "Rett syndrome MECP2",
+  "target_per_lang": 5,
+  "candidate_limit": 10,
+  "download_dir": "downloads/rett",
+  "literature_types": ["case_report"],
+  "timeout_s": 60,
+  "concurrency": 3,
+
+  "languages": {
+    "zh": {
+      "name": "Chinese",
+      "queries": [
+        "Rett综合征 病例报告",
+        "MECP2 基因突变 病例报告",
+        "Rett综合征 临床分析",
+        "MECP2 突变 儿童 病例",
+        "Rett综合征 MECP2 基因诊断",
+        "Rett样综合征 病例",
+        "MECP2 重复综合征 病例报告",
+        "Rett综合征 康复治疗 病例"
+      ]
+    },
+    "en": {
+      "name": "English",
+      "queries": [
+        "Rett syndrome case report",
+        "MECP2 mutation case report",
+        "Rett syndrome clinical case",
+        "MECP2-related disorder case report",
+        "atypical Rett syndrome case",
+        "MECP2 duplication syndrome case report",
+        "Rett syndrome novel mutation case",
+        "CDKL5 deficiency disorder case report"
+      ]
+    },
+    "ja": {
+      "name": "Japanese",
+      "queries": [
+        "レット症候群 症例報告",
+        "MECP2 遺伝子変異 症例",
+        "レット症候群 臨床像",
+        "MECP2 変異 女児 症例",
+        "非定型レット症候群 症例報告",
+        "MECP2 重複症候群 症例",
+        "レット症候群 新規変異 症例",
+        "レット症候群 遺伝子診断 症例"
+      ]
+    },
+    "ko": {
+      "name": "Korean",
+      "queries": [
+        "레트 증후군 증례 보고",
+        "MECP2 유전자 변이 증례",
+        "레트 증후군 임상 증례",
+        "MECP2 돌연변이 환자 증례",
+        "비정형 레트 증후군 증례",
+        "MECP2 중복 증후군 증례 보고",
+        "레트 증후군 유전 진단 증례",
+        "레트 증후군 소아 증례"
+      ]
+    },
+    "tr": {
+      "name": "Turkish",
+      "queries": [
+        "Rett sendromu olgu sunumu",
+        "MECP2 mutasyonu vaka raporu",
+        "Rett sendromu klinik olgu",
+        "MECP2 gen mutasyonu olgu",
+        "atipik Rett sendromu vaka",
+        "MECP2 duplikasyon sendromu olgu",
+        "Rett sendromu yeni mutasyon olgu",
+        "Rett sendromu genetik tani olgu"
+      ]
+    },
+    "ar": {
+      "name": "Arabic",
+      "queries": [
+        "متلازمة ريت تقرير حالة",
+        "طفرة MECP2 تقرير حالة",
+        "متلازمة ريت حالة سريرية",
+        "MECP2 طفرة جينية حالة",
+        "متلازمة ريت غير النمطية حالة",
+        "MECP2 متلازمة التضاعف تقرير حالة",
+        "متلازمة ريت طفرة جديدة حالة",
+        "متلازمة ريت تشخيص جيني حالة"
+      ]
+    },
+    "ru": {
+      "name": "Russian",
+      "queries": [
+        "синдром Ретта клинический случай",
+        "мутация MECP2 клинический случай",
+        "синдром Ретта описание случая",
+        "MECP2 мутация гена случай",
+        "атипичный синдром Ретта случай",
+        "MECP2 синдром дупликации случай",
+        "синдром Ретта новая мутация случай",
+        "синдром Ретта генетическая диагностика случай"
+      ]
+    },
+    "de": {
+      "name": "German",
+      "queries": [
+        "Rett-Syndrom Fallbericht",
+        "MECP2-Mutation Fallbericht",
+        "Rett-Syndrom klinischer Fall",
+        "MECP2 Genmutation Fall",
+        "atypisches Rett-Syndrom Fall",
+        "MECP2-Duplikationssyndrom Fallbericht",
+        "Rett-Syndrom neue Mutation Fall",
+        "Rett-Syndrom genetische Diagnostik Fall"
+      ]
+    },
+    "fr": {
+      "name": "French",
+      "queries": [
+        "syndrome de Rett rapport de cas",
+        "mutation MECP2 rapport de cas",
+        "syndrome de Rett cas clinique",
+        "mutation du gène MECP2 cas",
+        "syndrome de Rett atypique cas",
+        "syndrome de duplication MECP2 cas",
+        "syndrome de Rett nouvelle mutation cas",
+        "syndrome de Rett diagnostic génétique cas"
+      ]
+    },
+    "it": {
+      "name": "Italian",
+      "queries": [
+        "sindrome di Rett case report",
+        "mutazione MECP2 caso clinico",
+        "sindrome di Rett caso clinico",
+        "mutazione gene MECP2 caso",
+        "sindrome di Rett atipica caso",
+        "sindrome da duplicazione MECP2 caso",
+        "sindrome di Rett nuova mutazione caso",
+        "sindrome di Rett diagnosi genetica caso"
+      ]
+    },
+    "pt": {
+      "name": "Portuguese",
+      "queries": [
+        "síndrome de Rett relato de caso",
+        "mutação MECP2 relato de caso",
+        "síndrome de Rett caso clínico",
+        "mutação do gene MECP2 caso",
+        "síndrome de Rett atípica caso",
+        "síndrome de duplicação MECP2 caso",
+        "síndrome de Rett nova mutação caso",
+        "síndrome de Rett diagnóstico genético caso"
+      ]
+    },
+    "es": {
+      "name": "Spanish",
+      "queries": [
+        "síndrome de Rett reporte de caso",
+        "mutación MECP2 caso clínico",
+        "síndrome de Rett caso clínico",
+        "mutación del gen MECP2 caso",
+        "síndrome de Rett atípico caso",
+        "síndrome de duplicación MECP2 caso",
+        "síndrome de Rett nueva mutación caso",
+        "síndrome de Rett diagnóstico genético caso"
+      ]
+    }
+  }
+}
