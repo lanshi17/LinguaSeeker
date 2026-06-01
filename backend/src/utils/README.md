@@ -27,8 +27,12 @@ def extract(state: PipelineState) -> PipelineState:
 ```
 src/utils/
 ├── __init__.py        # empty package marker
-├── text.py            # sanitize_filename, strip_json_fences
+├── logger.py          # loguru config (stderr + file sinks, stdlib interception)
+├── exceptions.py      # centralized exception hierarchy with stable error codes
+├── middleware.py       # request monitoring middleware (timing + logging)
+├── health.py          # startup dependency health checks (PostgreSQL, Redis)
 ├── observability.py   # traced_node decorator (LangSmith + loguru)
+├── text.py            # sanitize_filename, strip_json_fences
 └── rust_io.py         # lazy imports for PyO3 native extensions
 ```
 
