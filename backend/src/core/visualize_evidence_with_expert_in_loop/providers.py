@@ -24,6 +24,19 @@ class ReasoningLLMProvider:
         self._model = cfg.reasoning.model
         self._base_url = cfg.reasoning.base_url
         self._timeout = cfg.reasoning.timeout
+        self._client: httpx.AsyncClient | None = None
+
+    def _get_client(self) -> httpx.AsyncClient:
+        """Return the cached httpx client, creating it if needed."""
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(timeout=self._timeout)
+        return self._client
+
+    async def close(self) -> None:
+        """Close the underlying httpx client."""
+        if self._client is not None and not self._client.is_closed:
+            await self._client.aclose()
+            self._client = None
 
     async def generate(
         self,
@@ -49,22 +62,22 @@ class ReasoningLLMProvider:
             {"role": "user", "content": user_message},
         ]
 
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            response = await client.post(
-                f"{self._base_url}/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self._api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": self._model,
-                    "messages": messages,
-                    "temperature": 0.3,
-                },
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data["choices"][0]["message"]["content"]
+        client = self._get_client()
+        response = await client.post(
+            f"{self._base_url}/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self._api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": self._model,
+                "messages": messages,
+                "temperature": 0.3,
+            },
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data["choices"][0]["message"]["content"]
 
     async def stream(
         self,
@@ -85,32 +98,32 @@ class ReasoningLLMProvider:
             {"role": "user", "content": user_message},
         ]
 
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            async with client.stream(
-                "POST",
-                f"{self._base_url}/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self._api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": self._model,
-                    "messages": messages,
-                    "temperature": 0.3,
-                    "stream": True,
-                },
-            ) as response:
-                response.raise_for_status()
-                async for line in response.aiter_lines():
-                    if line.startswith("data: "):
-                        data_str = line[6:]
-                        if data_str.strip() == "[DONE]":
-                            break
-                        try:
-                            data = json.loads(data_str)
-                            delta = data["choices"][0].get("delta", {})
-                            content = delta.get("content", "")
-                            if content:
-                                yield content
-                        except (json.JSONDecodeError, KeyError, IndexError):
-                            continue
+        client = self._get_client()
+        async with client.stream(
+            "POST",
+            f"{self._base_url}/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self._api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": self._model,
+                "messages": messages,
+                "temperature": 0.3,
+                "stream": True,
+            },
+        ) as response:
+            response.raise_for_status()
+            async for line in response.aiter_lines():
+                if line.startswith("data: "):
+                    data_str = line[6:]
+                    if data_str.strip() == "[DONE]":
+                        break
+                    try:
+                        data = json.loads(data_str)
+                        delta = data["choices"][0].get("delta", {})
+                        content = delta.get("content", "")
+                        if content:
+                            yield content
+                    except (json.JSONDecodeError, KeyError, IndexError):
+                        continue

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -20,12 +21,22 @@ from src.dao.postgresql.models import (
     RunEvidenceItem,
 )
 
+if TYPE_CHECKING:
+    from src.core.visualize_evidence_with_expert_in_loop.providers import (
+        ReasoningLLMProvider,
+    )
+
 
 class ChatService:
     """Manage chat sessions and messages for evidence review."""
 
-    def __init__(self, session: AsyncSession):
+    def __init__(
+        self,
+        session: AsyncSession,
+        reasoning_provider: ReasoningLLMProvider | None = None,
+    ):
         self._session = session
+        self._reasoning_provider = reasoning_provider
 
     async def create_session(
         self,
@@ -269,10 +280,6 @@ class ChatService:
         Returns:
             Reply text for questions/corrections, None for notes.
         """
-        from src.core.visualize_evidence_with_expert_in_loop.providers import (
-            ReasoningLLMProvider,
-        )
-
         intent = self._detect_intent(user_message)
 
         if intent == "note":
@@ -293,7 +300,13 @@ class ChatService:
             "specific fields from the evidence card."
         )
 
-        provider = ReasoningLLMProvider()
+        provider = self._reasoning_provider
+        if provider is None:
+            from src.core.visualize_evidence_with_expert_in_loop.providers import (
+                ReasoningLLMProvider,
+            )
+            provider = ReasoningLLMProvider()
+
         reply = await provider.generate(
             system_prompt=system_prompt,
             user_message=user_message,
@@ -316,10 +329,6 @@ class ChatService:
             {"type": "done"} on completion
             {"type": "error", "message": "..."} on failure
         """
-        from src.core.visualize_evidence_with_expert_in_loop.providers import (
-            ReasoningLLMProvider,
-        )
-
         intent = self._detect_intent(user_message)
 
         if intent == "note":
@@ -345,7 +354,13 @@ class ChatService:
             "specific fields from the evidence card."
         )
 
-        provider = ReasoningLLMProvider()
+        provider = self._reasoning_provider
+        if provider is None:
+            from src.core.visualize_evidence_with_expert_in_loop.providers import (
+                ReasoningLLMProvider,
+            )
+            provider = ReasoningLLMProvider()
+
         buffered: list[str] = []
         try:
             async for chunk in provider.stream(
