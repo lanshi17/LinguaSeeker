@@ -514,10 +514,12 @@ class ChatMessage(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     evidence_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
+        ForeignKey("canonical_evidence_items.canonical_evidence_id"),
         nullable=True,
     )
     entity_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
+        ForeignKey("normalized_entities.entity_id"),
         nullable=True,
     )
     created_at: Mapped[datetime] = mapped_column(
