@@ -28,6 +28,12 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """Dependency: yield an async database session.
 
     Commits on successful handler exit; rolls back on exception.
+
+    Tradeoff: commit runs after the response is sent (FastAPI dependency
+    cleanup). If commit fails (e.g. deferred constraint violation), the
+    client already received 200 OK but data was rolled back. This is a
+    known FastAPI limitation — the alternative (commit inside the handler)
+    forces every route to manage transactions explicitly.
     """
     factory = get_session_factory()
     async with factory() as session:

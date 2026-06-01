@@ -67,10 +67,14 @@ async def lifespan(app: FastAPI):
 
     from src.api.deps import get_phase4_factory
 
-    phase4_factory = get_phase4_factory()
-    await phase4_factory.close()
-    await dispose_engine()
-    logger.info("ACMG Lingua backend stopped")
+    try:
+        phase4_factory = get_phase4_factory()
+        await phase4_factory.close()
+    except Exception:
+        logger.warning("Phase4ServiceFactory close failed during shutdown")
+    finally:
+        await dispose_engine()
+        logger.info("ACMG Lingua backend stopped")
 
 
 class HealthResponse(BaseModel):
