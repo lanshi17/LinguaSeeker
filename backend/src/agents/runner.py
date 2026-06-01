@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import OrderedDict
 from datetime import datetime
 from typing import Any
 
@@ -20,6 +21,8 @@ class PipelineRunner:
     for crash recovery scenarios.
     """
 
+    _MAX_CACHED_STATES = 100
+
     def __init__(
         self,
         orchestrator: Any,
@@ -30,7 +33,14 @@ class PipelineRunner:
         self._semaphore = semaphore
         self._persistence = state_persistence
         self._active_tasks: dict[str, asyncio.Task] = {}
-        self._last_states: dict[str, PipelineGraphState] = {}
+        self._last_states: OrderedDict[str, PipelineGraphState] = OrderedDict()
+
+    def _remember_state(self, run_id: str, state: PipelineGraphState) -> None:
+        """Store a state in the cache, evicting the oldest if over limit."""
+        self._last_states[run_id] = state
+        self._last_states.move_to_end(run_id)
+        while len(self._last_states) > self._MAX_CACHED_STATES:
+            self._last_states.popitem(last=False)
 
     def start(self, initial_state: PipelineGraphState) -> asyncio.Task:
         """Start a pipeline run as a background task."""
@@ -39,12 +49,12 @@ class PipelineRunner:
         async def _run_pipeline():
             # N12 fix: Persist initial PENDING state before acquiring semaphore
             await self._persistence.save(initial_state)
-            self._last_states[run_id] = initial_state
+            self._remember_state(run_id, initial_state)
             async with self._semaphore:
                 logger.info("Pipeline execution started: run={}", run_id)
                 try:
                     result = await self._orchestrator.run(initial_state)
-                    self._last_states[run_id] = result
+                    self._remember_state(run_id, result)
                     logger.info("Pipeline execution completed: run={}", run_id)
                     return result
                 except Exception as e:
@@ -57,7 +67,7 @@ class PipelineRunner:
                             "completed_at": datetime.now().isoformat(),
                         }
                     )
-                    self._last_states[run_id] = error_state
+                    self._remember_state(run_id, error_state)
                     return error_state
 
         task = asyncio.create_task(_run_pipeline())

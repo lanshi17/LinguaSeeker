@@ -10,6 +10,34 @@ from src.agents.contracts import (
 from src.agents.runner import PipelineRunner
 
 
+def test_runner_evicts_oldest_states_beyond_limit():
+    """Runner should evict oldest cached states when exceeding max size.
+
+    Tests through _remember_state() helper which is called by start(),
+    not by directly manipulating _last_states (which bypasses eviction).
+    """
+    runner = PipelineRunner(
+        orchestrator=MagicMock(),
+        semaphore=MagicMock(),
+        state_persistence=MagicMock(),
+    )
+
+    # Use _remember_state helper to go through eviction path
+    for i in range(105):
+        state = PipelineGraphState(
+            processing_run_id=f"run-{i}",
+            source_document_id=f"doc-{i}",
+            mode=PipelineMode.FULL,
+            source_type=SourceType.LOCAL,
+            pipeline_status=PipelineStatus.COMPLETED,
+        )
+        runner._remember_state(f"run-{i}", state)
+
+    assert len(runner._last_states) <= 100
+    assert "run-104" in runner._last_states  # newest kept
+    assert "run-0" not in runner._last_states  # oldest evicted
+
+
 @pytest.fixture
 def mock_orchestrator():
     return MagicMock(run=AsyncMock())
