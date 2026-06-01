@@ -5,9 +5,11 @@ Project documentation is organized by lifecycle status.
 ```text
 docs/
 ├── README.md
-├── active/           # In-progress implementation plans and working notes
+├── active/           # Living reference documents (PRD, tech stack, guidelines)
+├── plans/            # Active date-stamped implementation plans
 ├── planned/          # Planned work that has not started
 ├── codereview/       # Active code reviews (empty when all reviews are resolved)
+├── diagrams/         # Mermaid flowcharts (phase1–phase4)
 ├── archive/
 │   ├── plans/        # Completed or superseded plans
 │   └── codereview/   # Completed code reviews
@@ -18,9 +20,11 @@ Each `backend/` module also has its own `README.md` developer guide (43 total). 
 
 ## Classification Rules
 
-- `planned/`: planned work that has not started.
-- `active/`: in-progress implementation plans and working notes.
+- `active/`: living reference documents — PRD, tech stack, frontend/backend guidelines, workflow overviews. Not date-stamped; updated as the project evolves.
+- `plans/`: active date-stamped implementation plans (`YYYY-MM-DD-<topic>.md`). Moved to `archive/plans/` upon completion.
+- `planned/`: planned work that has not started yet.
 - `codereview/`: active code review reports and review follow-ups.
+- `diagrams/`: Mermaid flowcharts (`.mmd`) for the four pipeline phases.
 - `archive/plans/`: completed or superseded plans.
 - `archive/codereview/`: completed code reviews whose findings are resolved or no longer active.
 - `templates/`: reusable documentation templates.
@@ -29,7 +33,7 @@ Each `backend/` module also has its own `README.md` developer guide (43 total). 
 
 Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
-## Active Plans
+## Active Reference Documents
 
 | date | title | status/PR |
 |---|---|---|
@@ -41,6 +45,14 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-05-09 | [Implementation Plan](active/IMPLEMENTATION_PLAN.md) | active — v2.0 frontend UI tasks |
 | 2026-05-13 | [Phase Workflow Overview](active/phase_workflow_overview.md) | active — four-phase pipeline reference |
 
+## Active Implementation Plans
+
+| date | title | status |
+|---|---|---|
+| 2026-06-01 | [Backend review fixes](plans/2026-06-01-backend-review-fixes.md) | active — fixing critical/major review issues |
+| 2026-06-01 | [Backend security & architecture fixes](plans/2026-06-01-backend-security-architecture-fixes.md) | active — security & architecture fixes |
+| 2026-06-01 | [Pipeline benchmark](plans/2026-06-01-pipeline-benchmark.md) | active — benchmark full pipeline Phases 1–3 |
+
 ## Planned Work
 
 | date | title | status |
@@ -50,6 +62,15 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 ## Active Code Reviews
 
 No active code reviews.
+
+## Diagrams
+
+| file | content |
+|---|---|
+| [phase1.mmd](diagrams/phase1.mmd) | Phase 1: literature acquisition → parsing |
+| [phase2.mmd](diagrams/phase2.mmd) | Phase 2: translation → dual evidence extraction |
+| [phase3.mmd](diagrams/phase3.mmd) | Phase 3: entity standardization → knowledge alignment |
+| [phase4.mmd](diagrams/phase4.mmd) | Phase 4: evidence visualization → expert feedback |
 
 ## Archive Index
 

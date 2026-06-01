@@ -13,8 +13,8 @@
 ## Task 1: Add API key authentication to pipeline routes
 
 **Files:**
-- Modify: `backend/src/api/v1/pipeline.py:160-165` (start_pipeline_run)
-- Modify: `backend/src/api/v1/pipeline.py:233-238` (get_pipeline_status)
+- Modify: `backend/src/api/v1/pipeline.py:159` (start_pipeline_run signature)
+- Modify: `backend/src/api/v1/pipeline.py:232` (get_pipeline_status signature)
 - Create: `backend/tests/api/test_pipeline_auth.py`
 
 **Step 1: Write the failing test**
@@ -86,7 +86,7 @@ Update `backend/src/api/v1/pipeline.py`:
 from src.api.auth import require_api_key
 from fastapi import Depends
 
-# Update start_pipeline_run signature (line ~160)
+# Update start_pipeline_run signature (line 159)
 @router.post("/run", response_model=PipelineRunResponse, status_code=202)
 async def start_pipeline_run(
     request: PipelineRunRequest,
@@ -94,7 +94,7 @@ async def start_pipeline_run(
 ):
     ...
 
-# Update get_pipeline_status signature (line ~233)
+# Update get_pipeline_status signature (line 232)
 @router.get("/runs/{processing_run_id}/status", response_model=PipelineStatusResponse)
 async def get_pipeline_status(
     processing_run_id: str,
@@ -329,12 +329,14 @@ the filename part."
 
 **Files:**
 - Add: `backend/pyproject.toml` (slowapi dependency)
-- Modify: `backend/src/api/deps.py` (rate limiter factory)
+- Create: `backend/src/api/rate_limit.py` (rate limiter singleton)
 - Modify: `backend/app/main.py:95-100` (register middleware)
-- Modify: `backend/src/api/v1/pipeline.py:160` (add rate limit)
+- Modify: `backend/src/api/v1/pipeline.py:159-195` (add rate limit, fix parameter names)
 - Modify: `backend/src/api/v1/evidence.py:20` (add rate limit)
 - Modify: `backend/src/api/v1/chat.py:35,73` (add rate limit to write routes)
 - Create: `backend/tests/api/test_rate_limiting.py`
+
+**Note:** evidence.py and chat.py write routes already have `Depends(require_api_key)`. This task only adds rate limiting.
 
 **Step 1: Add slowapi to dependencies**
 
@@ -409,16 +411,16 @@ Expected: FAIL — no rate limiting, all requests return 202.
 
 **Step 4: Write minimal implementation**
 
-Update `backend/src/api/deps.py`:
+Create `backend/src/api/rate_limit.py`:
 
 ```python
-"""API dependencies."""
+"""API rate limiting singleton."""
 from __future__ import annotations
 
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-# Global rate limiter (initialized in main.py)
+# Global rate limiter (initialized here, registered in main.py)
 limiter = Limiter(key_func=get_remote_address)
 ```
 
@@ -427,57 +429,142 @@ Update `backend/app/main.py:95-100` (after middleware registration):
 ```python
     from slowapi import _rate_limit_exceeded_handler
     from slowapi.errors import RateLimitExceeded
-    from src.api.deps import limiter
+    from src.api.rate_limit import limiter
 
     # Register rate limiter
     _app.state.limiter = limiter
     _app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 ```
 
-Update `backend/src/api/v1/pipeline.py:160`:
+Update `backend/src/api/v1/pipeline.py:159-195`:
 
 ```python
-from src.api.deps import limiter
+from src.api.rate_limit import limiter
+from starlette.requests import Request
+
+# ... other imports ...
 
 @router.post("/run", response_model=PipelineRunResponse, status_code=202)
 @limiter.limit("10/minute")
 async def start_pipeline_run(
-    request: PipelineRunRequest,
+    request: Request,  # Required by slowapi - must be first parameter
+    body: PipelineRunRequest,  # Renamed from 'request' to avoid conflict
     _api_key: str | None = Depends(require_api_key),
 ):
-    ...
+    """Start a new pipeline run.
+
+    Returns immediately with processing_run_id. Poll status_url for progress.
+    N3 fix: Checks for duplicate in-progress runs before starting.
+    """
+    runner = get_pipeline_runner()
+
+    # N3: Duplicate run prevention — check if same source is already being processed
+    source_key = body.filename or (body.query or "")
+    if source_key and runner.is_running_for_source(source_key):
+        raise HTTPException(
+            status_code=409,
+            detail=f"A pipeline run is already in progress for this source: {source_key}",
+        )
+
+    processing_run_id = str(uuid.uuid4())
+    source_document_id = str(uuid.uuid4())
+
+    # Decode base64 content and write to temp file if provided
+    upload_file_path = None
+    if body.content_base64:
+        content_bytes = base64.b64decode(body.content_base64)
+        fname = body.filename or f"{processing_run_id}.bin"
+        temp_dir = Path("data/pipeline/uploads")
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        upload_file_path = str(temp_dir / f"{processing_run_id}_{fname}")
+        async with aiofiles.open(upload_file_path, "wb") as f:
+            await f.write(content_bytes)
+
+    # Determine online acquisition action
+    online_action = None
+    if body.source_type == "online":
+        if body.identifiers:
+            online_action = "fetch"
+        else:
+            online_action = "search"
+
+    initial_state = PipelineGraphState(
+        processing_run_id=processing_run_id,
+        source_document_id=source_document_id,
+        mode=PipelineMode(body.mode),
+        source_type=SourceType(body.source_type),
+        target_phase=body.target_phase,
+        source_key=source_key or None,
+        upload_file_path=upload_file_path,
+        query=body.query,
+        identifiers=body.identifiers,
+        action=online_action,
+        created_at=datetime.now().isoformat(),
+    )
+
+    task = runner.start(initial_state)
+
+    # Clean up temp file after pipeline completes (success or failure)
+    if upload_file_path:
+        def _cleanup_temp_file(t: object) -> None:
+            try:
+                Path(upload_file_path).unlink(missing_ok=True)
+            except OSError:
+                pass
+
+        task.add_done_callback(_cleanup_temp_file)
+
+    return PipelineRunResponse(
+        processing_run_id=processing_run_id,
+        source_document_id=source_document_id,
+        status="accepted",
+        status_url=f"/api/v1/pipeline/runs/{processing_run_id}/status",
+    )
 ```
 
 Update `backend/src/api/v1/evidence.py:20`:
 
 ```python
-from src.api.deps import limiter
+from src.api.rate_limit import limiter
+from starlette.requests import Request
 
 @router.patch("/{canonical_evidence_id}", response_model=PatchResultResponse)
 @limiter.limit("30/minute")
 async def patch_evidence(
-    ...
-):
+    request: Request,  # Required by slowapi
+    canonical_evidence_id: UUID,
+    patch: EvidencePatchRequest,
+    session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
+) -> PatchResultResponse:
     ...
 ```
 
 Update `backend/src/api/v1/chat.py:35,73`:
 
 ```python
-from src.api.deps import limiter
+from src.api.rate_limit import limiter
+from starlette.requests import Request
 
 @router.post("/sessions", response_model=ChatSessionResponse)
 @limiter.limit("30/minute")
 async def create_session(
-    ...
-):
+    request: Request,  # Required by slowapi
+    req: CreateSessionRequest,
+    session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
+) -> ChatSessionResponse:
     ...
 
 @router.post("/sessions/{session_id}/messages", response_model=ChatMessageResponse)
 @limiter.limit("60/minute")
 async def append_message(
-    ...
-):
+    request: Request,  # Required by slowapi
+    session_id: UUID,
+    req: AppendMessageRequest,
+    session: AsyncSession = Depends(get_db_session),
+    _api_key: str | None = Depends(require_api_key),
+) -> ChatMessageResponse:
     ...
 ```
 
@@ -489,7 +576,7 @@ Expected: PASS
 **Step 6: Commit**
 
 ```bash
-git add backend/pyproject.toml backend/uv.lock backend/src/api/deps.py backend/app/main.py backend/src/api/v1/pipeline.py backend/src/api/v1/evidence.py backend/src/api/v1/chat.py backend/tests/api/test_rate_limiting.py
+git add backend/pyproject.toml backend/uv.lock backend/src/api/rate_limit.py backend/app/main.py backend/src/api/v1/pipeline.py backend/src/api/v1/evidence.py backend/src/api/v1/chat.py backend/tests/api/test_rate_limiting.py
 git commit -m "feat(backend): add API rate limiting to write routes
 
 POST /pipeline/run: 10/minute (CPU/GPU intensive)
@@ -497,7 +584,10 @@ PATCH /evidence: 30/minute
 POST /chat/sessions, /messages: 30-60/minute
 
 Prevents abuse and resource exhaustion. Uses slowapi with per-IP
-tracking. Returns 429 Too Many Requests when limit exceeded."
+tracking. Returns 429 Too Many Requests when limit exceeded.
+
+Note: slowapi requires request: Request as first parameter, so
+Pydantic body parameters were renamed (request -> body) where needed."
 ```
 
 ---
@@ -552,25 +642,46 @@ git commit -m "chore(backend): remove duplicate docstring in config.py"
 """Tests for error response type safety."""
 from __future__ import annotations
 
+import ast
 import inspect
 
 
 def test_error_response_uses_typed_dict():
-    """_error_response should use TypedDict, not bare dict."""
+    """_error_response should use TypedDict for body and error fields."""
     from app.main import _error_response
 
-    sig = inspect.signature(_error_response)
-    # Check that the function signature doesn't use bare dict
-    for param in sig.parameters.values():
-        if param.annotation is not inspect.Parameter.empty:
-            assert param.annotation is not dict, \
-                f"Parameter {param.name} should not use bare dict"
+    # Get function source and parse AST
+    source = inspect.getsource(_error_response)
+    tree = ast.parse(source)
+
+    # Find the function definition
+    func_def = tree.body[0]
+    assert isinstance(func_def, ast.FunctionDef)
+
+    # Check that function body uses TypedDict types
+    found_error_detail_typed = False
+    found_body_typed = False
+
+    for node in ast.walk(func_def):
+        if isinstance(node, ast.AnnAssign):
+            # Check for: error_detail: ErrorDetail = ...
+            if isinstance(node.target, ast.Name):
+                if node.target.id == "error_detail" and isinstance(node.annotation, ast.Name):
+                    if node.annotation.id == "ErrorDetail":
+                        found_error_detail_typed = True
+                # Check for: body: ErrorResponseBody = ...
+                if node.target.id == "body" and isinstance(node.annotation, ast.Name):
+                    if node.annotation.id == "ErrorResponseBody":
+                        found_body_typed = True
+
+    assert found_error_detail_typed, "error_detail should be typed as ErrorDetail"
+    assert found_body_typed, "body should be typed as ErrorResponseBody"
 ```
 
 **Step 2: Run test to verify it fails**
 
 Run: `cd backend && uv run pytest tests/api/test_error_response_type.py -v`
-Expected: FAIL — function uses `dict[str, Any]` in signature.
+Expected: FAIL — current code uses `dict[str, Any]` instead of TypedDict.
 
 **Step 3: Write minimal implementation**
 
@@ -682,4 +793,3 @@ The following Medium issues from the review are deferred to a separate plan:
 - M4: Error state persistence (requires integration testing with database failure)
 - M5: Provider startup timing (requires config validation framework)
 - M6: Chinese pattern readability (code style, not security)
-

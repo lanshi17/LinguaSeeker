@@ -72,3 +72,5 @@ backend/output/*
 database/terminology_database/*
 .reasonix/*
 .claude/*
+data/pipeline/*
+benchmark/pipeline/reports/*
