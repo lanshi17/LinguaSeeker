@@ -5,12 +5,19 @@ language-routed regional search, then downloads PDFs and filters for
 case_report literature type.
 
 Usage (run from project root):
+    # Default: keyword pre-filter, then download
     uv run --directory backend python ../benchmark/literature_acquisition/rett_download.py
-    uv run --directory backend python ../benchmark/literature_acquisition/rett_download.py --lang zh
+
+    # Single language test
     uv run --directory backend python ../benchmark/literature_acquisition/rett_download.py --lang en --dry-run
+
+    # LLM verification mode: download all → LLM checks each PDF for case report + variant
+    uv run --directory backend python ../benchmark/literature_acquisition/rett_download.py --llm-verify
+
+    # Override target count
     uv run --directory backend python ../benchmark/literature_acquisition/rett_download.py --target 10
 
-    # To skip literature type filtering (download all candidates):
+    # To skip literature type filtering entirely:
     # Set "literature_types": [] in rett_config.json
 """
 
@@ -36,8 +43,10 @@ if str(_BACKEND_SRC) not in sys.path:
     sys.path.insert(0, str(_BACKEND_SRC.parent))  # insert backend/
 
 import httpx
+import fitz
 from loguru import logger
 
+from src.core.config import get_config
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
     OnlineAcquisitionItem,
 )
@@ -84,6 +93,18 @@ def setup_logging(log_dir: Path = LOG_DIR, level: str = "INFO") -> None:
 # ═══════════════════════════════════════════════════════════════════════════
 
 @dataclass
+class LLMVerification:
+    """Result of LLM-based case report verification."""
+    is_case_report: bool = False
+    confidence: str = "low"  # high / medium / low
+    reasoning: str = ""
+    has_variant_report: bool = False
+    variant_details: str = ""
+    model: str = ""
+    error: str = ""
+
+
+@dataclass
 class DownloadRecord:
     lang: str
     query: str
@@ -98,6 +119,7 @@ class DownloadRecord:
     source_url: str = ""
     error: str = ""
     elapsed_ms: int = 0
+    llm_verification: dict | None = None  # LLMVerification as dict after verification pass
 
 
 @dataclass
@@ -189,8 +211,14 @@ async def _process_language(
     timeout_s: int,
     dry_run: bool,
     sem: asyncio.Semaphore,
+    *,
+    skip_filter: bool = False,
 ) -> List[DownloadRecord]:
-    """Search + download for one language. Returns list of records."""
+    """Search + download for one language. Returns list of records.
+
+    When skip_filter=True (--llm-verify mode), all candidates are downloaded
+    regardless of literature_type; LLM verification runs later.
+    """
     records: List[DownloadRecord] = []
     queries = list(lang_cfg.get("queries", []))
     downloaded = 0
@@ -267,8 +295,8 @@ async def _process_language(
             if lit_type == "unclassified" and _disease_keywords.search(title):
                 lit_type = "case_report"
 
-            # Filter by requested literature types
-            if literature_types and lit_type not in literature_types:
+            # Filter by requested literature types (skip when LLM will verify later)
+            if not skip_filter and literature_types and lit_type not in literature_types:
                 logger.debug(
                     f"[{lang_code}] candidate {cand_idx}: type={lit_type}, "
                     f"not in {literature_types}, skipping"
@@ -332,8 +360,19 @@ async def _process_language(
     return records
 
 
-async def run(config: Dict[str, Any], lang_filter: Optional[str], dry_run: bool) -> DownloadStats:
-    """Main orchestration: iterate languages, search, download, classify."""
+async def run(
+    config: Dict[str, Any],
+    lang_filter: Optional[str],
+    dry_run: bool,
+    *,
+    llm_verify: bool = False,
+    llm_model: str = "",
+) -> DownloadStats:
+    """Main orchestration: iterate languages, search, download, classify.
+
+    When llm_verify=True: downloads all candidates (no keyword filter),
+    then runs LLM verification on each PDF to identify true case reports.
+    """
     disease = config["disease"]
     target_per_lang_raw = config.get("target_per_lang", 5)
     candidate_limit = config.get("candidate_limit", 10)
@@ -374,6 +413,7 @@ async def run(config: Dict[str, Any], lang_filter: Optional[str], dry_run: bool)
     logger.info(f"  Literature types: {literature_types or 'all'}")
     logger.info(f"  Download dir: {download_root}")
     logger.info(f"  Dry run: {dry_run}")
+    logger.info(f"  LLM verify: {llm_verify}")
     logger.info("=" * 60)
 
     for lang_code, lang_cfg in lang_map.items():
@@ -392,6 +432,7 @@ async def run(config: Dict[str, Any], lang_filter: Optional[str], dry_run: bool)
             timeout_s=timeout_s,
             dry_run=dry_run,
             sem=sem,
+            skip_filter=llm_verify,
         )
         stats.records.extend(records)
 
@@ -399,6 +440,17 @@ async def run(config: Dict[str, Any], lang_filter: Optional[str], dry_run: bool)
         logger.info(
             f"[{lang_code}] {ok_count}/{len(records)} downloaded "
             f"(target: {lang_target})"
+        )
+
+    # ── LLM verification pass (post-download) ────────────────────────────
+    if llm_verify and not dry_run:
+        logger.info(f"\n{'=' * 60}")
+        logger.info(f"  LLM VERIFICATION PASS")
+        logger.info(f"{'=' * 60}")
+        stats.records = await _run_llm_verification_pass(
+            stats.records,
+            timeout_sec=timeout_s,
+            model=llm_model,
         )
 
     # Aggregate stats
@@ -434,6 +486,211 @@ async def run(config: Dict[str, Any], lang_filter: Optional[str], dry_run: bool)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# LLM verification (--llm-verify mode)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _extract_pdf_text_for_llm(pdf_path: Path, max_pages: int = 3, max_chars: int = 8000) -> str:
+    """Extract plain text from the first pages of a PDF for LLM classification."""
+    try:
+        doc = fitz.open(str(pdf_path))
+    except Exception:
+        return ""
+
+    chunks: list[str] = []
+    try:
+        for i in range(min(max_pages, len(doc))):
+            txt = str(doc[i].get_text("text") or "")
+            txt = re.sub(r"\s+", " ", txt).strip()
+            if txt:
+                chunks.append(txt)
+            if sum(len(c) for c in chunks) >= max_chars:
+                break
+    finally:
+        doc.close()
+
+    return "\n".join(chunks)[:max_chars]
+
+
+def _verify_case_report_via_llm(
+    *,
+    title: str,
+    lang: str,
+    pdf_text: str,
+    timeout_sec: int = 60,
+    model_override: str = "",
+) -> LLMVerification:
+    """Use LLM to verify if a PDF is a case report reporting genetic variants.
+
+    Returns LLMVerification with reasoning for auditability.
+    """
+    cfg = get_config()
+    model = model_override or (cfg.llm.model or "").strip()
+    base_url = (cfg.llm.base_url or "").strip().rstrip("/")
+    api_key = (cfg.llm.api_key or "").strip()
+
+    if not model:
+        return LLMVerification(error="missing_llm_model")
+    if not base_url:
+        return LLMVerification(error="missing_llm_base_url")
+
+    system_prompt = (
+        "You are a medical literature triage assistant specialized in "
+        "Rett syndrome and MECP2-related disorders. Given a paper title "
+        "and PDF excerpt, answer three questions. "
+        "Return strict JSON only with keys: is_case_report (bool), "
+        "confidence (high/medium/low), reasoning (1-2 sentences), "
+        "has_variant_report (bool), variant_details (string or empty).\n\n"
+        "Criteria for is_case_report=true:\n"
+        "- Describes one or more specific patients/clinicians' observations\n"
+        "- Reports clinical features, genetic findings, or treatment outcomes\n"
+        "- Is NOT a review, meta-analysis, guideline, or methods-only paper\n\n"
+        "Criteria for has_variant_report=true:\n"
+        "- Mentions specific genetic variants (e.g. c.502C>T, p.Arg168Ter, "
+        "exon deletion, duplication, frameshift, missense)\n"
+        "- If yes, list the variant(s) in variant_details"
+    )
+    user_prompt = (
+        f"language={lang}\n"
+        f"title={title or 'N/A'}\n\n"
+        "PDF excerpt (first pages):\n"
+        f"{pdf_text[:8000]}"
+    )
+
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
+    payload: dict[str, Any] = {
+        "model": model,
+        "temperature": 0,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        "response_format": {"type": "json_object"},
+    }
+
+    # Build endpoint: avoid double /v1 if base_url already includes it
+    api_url = base_url.rstrip("/")
+    if not api_url.endswith("/v1"):
+        api_url = f"{api_url}/v1"
+    api_url = f"{api_url}/chat/completions"
+
+    try:
+        with httpx.Client(timeout=timeout_sec, follow_redirects=True) as client:
+            resp = client.post(api_url, headers=headers, json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+        content = (
+            ((data.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+        ).strip()
+    except Exception as exc:
+        return LLMVerification(error=f"llm_request_failed:{exc}")
+
+    # Parse JSON response
+    try:
+        parsed = json.loads(content)
+    except json.JSONDecodeError:
+        # Try to extract JSON object from text
+        match = re.search(r"\{[\s\S]*\}", content)
+        if match:
+            try:
+                parsed = json.loads(match.group(0))
+            except json.JSONDecodeError:
+                return LLMVerification(error="llm_invalid_json")
+        else:
+            return LLMVerification(error="llm_invalid_json")
+
+    confidence = str(parsed.get("confidence", "low")).strip().lower()
+    if confidence not in {"high", "medium", "low"}:
+        confidence = "low"
+
+    return LLMVerification(
+        is_case_report=bool(parsed.get("is_case_report", False)),
+        confidence=confidence,
+        reasoning=str(parsed.get("reasoning", ""))[:500],
+        has_variant_report=bool(parsed.get("has_variant_report", False)),
+        variant_details=str(parsed.get("variant_details", ""))[:300],
+        model=model,
+    )
+
+
+async def _run_llm_verification_pass(
+    records: list[DownloadRecord],
+    timeout_sec: int = 60,
+    model: str = "",
+) -> list[DownloadRecord]:
+    """Run LLM verification on all successfully downloaded PDFs.
+
+    Modifies records in-place: sets llm_verification for each PDF.
+    Only records with is_case_report=true + confidence=high remain as success=True.
+    Failed verifications and non-case-reports are marked success=False.
+    """
+    candidates = [r for r in records if r.success and r.file_path]
+    if not candidates:
+        logger.info("LLM verify: no downloaded PDFs to check")
+        return records
+
+    logger.info(f"LLM verify: {len(candidates)} PDFs to check")
+    verified = 0
+    passed = 0
+
+    for r in candidates:
+        pdf_path = Path(r.file_path)
+        if not pdf_path.exists():
+            r.llm_verification = asdict(LLMVerification(error="file_not_found"))
+            r.success = False
+            r.error = "llm_verify:file_not_found"
+            continue
+
+        text = _extract_pdf_text_for_llm(pdf_path)
+        if not text:
+            r.llm_verification = asdict(LLMVerification(error="pdf_text_empty"))
+            r.success = False
+            r.error = "llm_verify:pdf_text_empty"
+            continue
+
+        result = _verify_case_report_via_llm(
+            title=r.title,
+            lang=r.lang,
+            pdf_text=text,
+            timeout_sec=timeout_sec,
+            model_override=model,
+        )
+        r.llm_verification = asdict(result)
+        verified += 1
+
+        if result.error:
+            logger.warning(
+                f"[{r.lang}] LLM verify error for {r.title[:50]}: {result.error}"
+            )
+            r.success = False
+            r.error = f"llm_verify:{result.error}"
+        elif result.is_case_report and result.confidence == "high":
+            logger.info(
+                f"[{r.lang}] ✓ LLM verified: {r.title[:60]} "
+                f"(variant={'yes' if result.has_variant_report else 'no'})"
+            )
+            passed += 1
+            # Update literature_type based on LLM
+            r.literature_type = "case_report"
+        else:
+            logger.info(
+                f"[{r.lang}] ✗ LLM rejected (confidence={result.confidence}, "
+                f"is_case_report={result.is_case_report}): {r.title[:60]}"
+            )
+            r.success = False
+            r.error = (
+                f"llm_verify:rejected "
+                f"(is_case_report={result.is_case_report}, "
+                f"confidence={result.confidence})"
+            )
+
+    logger.info(f"LLM verify done: {verified} checked, {passed} passed")
+    return records
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # CLI
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -458,6 +715,16 @@ def main() -> None:
         help="Search only — do not download PDFs",
     )
     parser.add_argument(
+        "--llm-verify", action="store_true",
+        help="Download all candidates, then use LLM to verify each PDF "
+             "is a genuine case report with variant details. Skips keyword "
+             "pre-filter; only high-confidence case reports are kept.",
+    )
+    parser.add_argument(
+        "--llm-model", type=str, default="",
+        help="Override LLM model for verification (default: from .env config)",
+    )
+    parser.add_argument(
         "--log-level", type=str, default="INFO",
         help="Log level (default: INFO)",
     )
@@ -477,7 +744,13 @@ def main() -> None:
     if args.target is not None:
         config["target_per_lang"] = args.target
 
-    asyncio.run(run(config, lang_filter=args.lang, dry_run=args.dry_run))
+    asyncio.run(run(
+        config,
+        lang_filter=args.lang,
+        dry_run=args.dry_run,
+        llm_verify=args.llm_verify,
+        llm_model=args.llm_model,
+    ))
 
 
 if __name__ == "__main__":

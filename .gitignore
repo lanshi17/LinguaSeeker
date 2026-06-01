@@ -74,3 +74,4 @@ database/terminology_database/*
 .claude/*
 data/pipeline/*
 benchmark/pipeline/reports/*
+backend/data/pipeline/run-123/*
