@@ -5,10 +5,11 @@ import time
 from uuid import uuid4
 
 from fastapi import FastAPI
-from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
+
+from src.utils.logger import get_logger
 
 
 class RequestMonitorMiddleware(BaseHTTPMiddleware):
@@ -44,7 +45,7 @@ class RequestMonitorMiddleware(BaseHTTPMiddleware):
             raise
         finally:
             elapsed_ms = (time.perf_counter() - start) * 1000
-            logger.info(
+            get_logger().info(
                 "{method} {path} -> {status} ({elapsed:.1f}ms) [rid={request_id}]",
                 method=request.method,
                 path=request.url.path,
