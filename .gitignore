@@ -53,6 +53,11 @@ htmlcov/
 # Old version reference symlinks
 .old_version
 
+# Database config (may contain credentials)
+database/config/.env
+database/config/.env.*
+!database/config/.env.example
+
 # Misc
 *.bak
 *.tmp
