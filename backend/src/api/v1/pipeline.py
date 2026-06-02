@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import uuid
 from datetime import datetime
 from pathlib import Path, PurePosixPath
@@ -194,7 +195,10 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
                 detail=f"File too large. Maximum size: {get_config().mineru.max_file_size_mb}MB",
             )
 
-        content_bytes = base64.b64decode(body.content_base64)
+        try:
+            content_bytes = base64.b64decode(body.content_base64, validate=True)
+        except binascii.Error as exc:
+            raise HTTPException(status_code=422, detail=f"Invalid base64 content: {exc}") from exc
         # Sanitize filename: strip directory components to prevent path traversal
         raw_fname = body.filename or f"{processing_run_id}.bin"
         fname = PurePosixPath(raw_fname).name
