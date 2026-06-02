@@ -54,9 +54,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Planned Work
 
-| date | title | status |
-|---|---|---|
-| 2026-05-30 | [Unified Config & Monitoring](planned/2026-05-30-unified-config-monitoring.md) | planned — 8 tasks: logging, exceptions, middleware, health checks |
+No planned work.
 
 ## Active Code Reviews
 
@@ -81,6 +79,7 @@ No active code reviews.
 | 2026-06-02 | [Phase 3 benchmark coverage — relevance scan fix (archived — superseded by config fix)](archive/plans/2026-06-02-phase3-benchmark-coverage.md) | completed — plan based on incorrect RCA; real fix was config fallback |
 | 2026-06-01 | [Backend review fixes](archive/plans/2026-06-01-backend-review-fixes.md) | completed — 16 tasks: session commit, auth, upsert, SSE, types, FK, tests |
 | 2026-05-30 | [Phase 2 chunk-level parallelization](archive/plans/2026-05-30-phase2-chunk-parallelization.md) | completed — async provider + stages + workflow |
+| 2026-05-30 | [Unified Config & Monitoring](archive/plans/2026-05-30-unified-config-monitoring.md) | completed — logging, exceptions, middleware, health checks, error handlers, CORS |
 | 2026-05-30 | [Backend optimization (code review)](archive/plans/2026-05-30-backend-optimization.md) | completed — 8 tasks from code review |
 | 2026-06-02 | [architecture cleanup: api→agents→core→dao layering](archive/plans/2026-06-02-architecture-cleanup.md) | completed — unified session factory, Phase4ServiceFactory |
 | 2026-05-29 | [DAO submodule restructure](archive/plans/2026-05-29-dao-submodule-restructure.md) | completed — postgresql/redis/neo4j/minio sub-packages |
