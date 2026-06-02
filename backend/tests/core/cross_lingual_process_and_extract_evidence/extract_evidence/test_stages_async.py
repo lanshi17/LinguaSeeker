@@ -163,3 +163,22 @@ async def test_stage_async_survives_chunk_failure() -> None:
     # Should still return a merged result from the successful chunk
     assert result.relevant is True
     assert call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_relevance_scan_raises_when_all_chunks_fail() -> None:
+    """When every chunk fails, run_async must raise instead of silently returning relevant=False."""
+    mock_provider = MagicMock()
+    mock_provider.ainvoke_structured = AsyncMock(side_effect=RuntimeError("Missing credentials"))
+
+    stage = RelevanceScanStage(provider=mock_provider)
+
+    with patch(
+        "src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.evidence_map.build_text_prompt_chunks",
+        return_value=[
+            MagicMock(index=1, total=2, text="chunk1"),
+            MagicMock(index=2, total=2, text="chunk2"),
+        ],
+    ):
+        with pytest.raises(RuntimeError, match="Relevance scan failed for all 2 chunks"):
+            await stage.run_async(_make_document())
