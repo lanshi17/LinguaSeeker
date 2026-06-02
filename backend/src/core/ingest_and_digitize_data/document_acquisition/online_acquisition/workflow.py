@@ -225,8 +225,16 @@ def _merge_and_dedupe(
 
     for link in firecrawl_links:
         url = link.url.strip()
+        doi = (link.doi or "").strip().lower()
+
+        # Check DOI dedup against API items
+        if doi and doi in seen_dois:
+            continue
         if url in seen_urls:
             continue
+
+        if doi:
+            seen_dois.add(doi)
         seen_urls.add(url)
 
         merged.append({
@@ -339,7 +347,17 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
     Phase 3: LLM content gate on downloaded PDFs.
     """
     # --- Validate request ---
-    request = OnlineAcquisitionRequest(**payload)
+    try:
+        request = OnlineAcquisitionRequest(**payload)
+    except Exception as exc:
+        route = OnlineAcquisitionRouteInfo(prefer="auto", used="none", reason="invalid_request")
+        return OnlineAcquisitionResponse(
+            success=False,
+            items=[],
+            warnings=[f"invalid_request: {exc}"],
+            route=route,
+            candidate_links=[],
+        ).model_dump()
     query = _build_query(request)
     identifiers = _extract_identifiers([request.query or ""] + request.identifiers)
     language = _resolve_language(request, identifiers)
