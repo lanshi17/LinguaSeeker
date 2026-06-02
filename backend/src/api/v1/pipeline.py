@@ -9,9 +9,12 @@ from typing import Any, Literal
 
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException
+from starlette.requests import Request
 from pydantic import BaseModel, Field, model_validator
 
 from src.api.auth import require_api_key
+
+from src.api.rate_limit import limiter
 
 from src.agents.contracts import (
     PhaseStatus,
@@ -159,7 +162,8 @@ def _phase_detail_to_response(detail: PhaseStatusDetail) -> PhaseStatusResponse:
 
 
 @router.post("/run", response_model=PipelineRunResponse, status_code=202)
-async def start_pipeline_run(request: PipelineRunRequest, _api_key: str | None = Depends(require_api_key)):
+@limiter.limit("10/minute")
+async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_key: str | None = Depends(require_api_key)):
     """Start a new pipeline run.
 
     Returns immediately with processing_run_id. Poll status_url for progress.
@@ -168,7 +172,7 @@ async def start_pipeline_run(request: PipelineRunRequest, _api_key: str | None =
     runner = get_pipeline_runner()
 
     # N3: Duplicate run prevention — check if same source is already being processed
-    source_key = request.filename or (request.query or "")
+    source_key = body.filename or (body.query or "")
     if source_key and runner.is_running_for_source(source_key):
         raise HTTPException(
             status_code=409,
@@ -180,9 +184,9 @@ async def start_pipeline_run(request: PipelineRunRequest, _api_key: str | None =
 
     # Decode base64 content and write to temp file if provided
     upload_file_path = None
-    if request.content_base64:
-        content_bytes = base64.b64decode(request.content_base64)
-        fname = request.filename or f"{processing_run_id}.bin"
+    if body.content_base64:
+        content_bytes = base64.b64decode(body.content_base64)
+        fname = body.filename or f"{processing_run_id}.bin"
         temp_dir = Path("data/pipeline/uploads")
         temp_dir.mkdir(parents=True, exist_ok=True)
         upload_file_path = str(temp_dir / f"{processing_run_id}_{fname}")
@@ -191,8 +195,8 @@ async def start_pipeline_run(request: PipelineRunRequest, _api_key: str | None =
 
     # Determine online acquisition action
     online_action = None
-    if request.source_type == "online":
-        if request.identifiers:
+    if body.source_type == "online":
+        if body.identifiers:
             online_action = "fetch"
         else:
             online_action = "search"
@@ -200,13 +204,13 @@ async def start_pipeline_run(request: PipelineRunRequest, _api_key: str | None =
     initial_state = PipelineGraphState(
         processing_run_id=processing_run_id,
         source_document_id=source_document_id,
-        mode=PipelineMode(request.mode),
-        source_type=SourceType(request.source_type),
-        target_phase=request.target_phase,
+        mode=PipelineMode(body.mode),
+        source_type=SourceType(body.source_type),
+        target_phase=body.target_phase,
         source_key=source_key or None,
         upload_file_path=upload_file_path,
-        query=request.query,
-        identifiers=request.identifiers,
+        query=body.query,
+        identifiers=body.identifiers,
         action=online_action,
         created_at=datetime.now().isoformat(),
     )

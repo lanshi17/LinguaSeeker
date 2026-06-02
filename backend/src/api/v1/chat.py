@@ -6,6 +6,9 @@ from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from starlette.requests import Request
+
+from src.api.rate_limit import limiter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,8 +36,10 @@ class AppendMessageRequest(BaseModel):
 
 
 @router.post("/sessions", response_model=ChatSessionResponse)
+@limiter.limit("30/minute")
 async def create_session(
-    req: CreateSessionRequest,
+    request: Request,
+    body: CreateSessionRequest,
     session: AsyncSession = Depends(get_db_session),
     _api_key: str | None = Depends(require_api_key),
 ) -> ChatSessionResponse:
@@ -42,8 +47,8 @@ async def create_session(
     factory = get_phase4_factory()
     service = factory.create_chat_service(session)
     return await service.create_session(
-        processing_run_id=req.processing_run_id,
-        user_id=req.user_id,
+        processing_run_id=body.processing_run_id,
+        user_id=body.user_id,
     )
 
 
@@ -71,9 +76,11 @@ async def list_messages(
 
 
 @router.post("/sessions/{session_id}/messages", response_model=ChatMessageResponse)
+@limiter.limit("60/minute")
 async def append_message(
+    request: Request,
     session_id: UUID,
-    req: AppendMessageRequest,
+    body: AppendMessageRequest,
     session: AsyncSession = Depends(get_db_session),
     _api_key: str | None = Depends(require_api_key),
 ) -> ChatMessageResponse:
@@ -82,25 +89,25 @@ async def append_message(
     service = factory.create_chat_service(session)
     msg = await service.append_message(
         session_id=session_id,
-        role=req.role,
-        content=req.content,
-        evidence_id=req.evidence_id,
-        entity_id=req.entity_id,
+        role=body.role,
+        content=body.content,
+        evidence_id=body.evidence_id,
+        entity_id=body.entity_id,
     )
 
-    if req.role == "user":
+    if body.role == "user":
         reply = await service.generate_reply(
             session_id=session_id,
-            user_message=req.content,
-            evidence_id=req.evidence_id,
+            user_message=body.content,
+            evidence_id=body.evidence_id,
         )
         if reply:
             await service.append_message(
                 session_id=session_id,
                 role="assistant",
                 content=reply,
-                evidence_id=req.evidence_id,
-                entity_id=req.entity_id,
+                evidence_id=body.evidence_id,
+                entity_id=body.entity_id,
             )
 
     return msg
