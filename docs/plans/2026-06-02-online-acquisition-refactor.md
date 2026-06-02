@@ -9,7 +9,7 @@
 
 **Architecture:** Three-phase pipeline — (1) parallel link acquisition from API providers + Firecrawl web search, basic dedup; (2) download by candidate type: DOI/PMID → API OA resolution → download, direct URL → HTTP download; (3) LLM content gate on downloaded PDFs. Rust handles HTTP I/O, Python handles orchestration and business logic.
 
-**Tech Stack:** Python (asyncio, Pydantic, firecrawl-py), Rust (PyO3, reqwest, tokio), existing net-io crate.
+**Tech Stack:** Python (asyncio, Pydantic, firecrawl-py, loguru), Rust (PyO3, reqwest, tokio), existing net-io crate.
 
 ---
 
@@ -29,13 +29,13 @@
 | File | Change |
 |---|---|
 | `backend/libs/net-io/src/client.rs` | Add `get_bytes()` method |
-| `backend/libs/net-io/src/py.rs` | Add `download_file()` PyO3 binding |
+| `backend/libs/net-io/src/py.rs` | Add `download_file()` PyO3 binding (returns Python dict) |
 | `backend/src/core/config.py` | Add `WebSearchConfig` |
-| `backend/src/core/.../online_acquisition/contracts.py` | Deprecate WebProvider, update request/response |
+| `backend/src/core/.../online_acquisition/contracts.py` | Deprecate WebProvider, add `candidate_links` to response, add `DownloadResult` dataclass |
 | `backend/src/core/.../online_acquisition/workflow.py` | Rewrite: 3-phase pipeline |
-| `backend/src/core/.../online_acquisition/gateway.py` | Split: search-only + resolve_oa_url + download_file |
-| `backend/src/core/.../online_acquisition/search_service.py` | Remove LANG_PROVIDER_MATRIX web entries, simplify |
-| `backend/src/core/.../online_acquisition/web_providers.py` | Deprecate (keep for backward compat) |
+| `backend/src/core/.../online_acquisition/gateway.py` | Split: search-only + resolve_oa_url + download_file_from_url |
+| `backend/src/core/.../online_acquisition/search_service.py` | Remove LANG_PROVIDER_MATRIX web entries + remove web handling from `search_parallel` |
+| `backend/src/core/.../online_acquisition/web_providers.py` | Deprecate per-function (not module-level) |
 | `backend/src/core/.../online_acquisition/__init__.py` | Update exports |
 | `backend/src/core/.../online_acquisition/normalizers.py` | Add `normalize_firecrawl` |
 | `backend/tests/.../test_online_acquisition_gateway.py` | Update for new gateway API |
@@ -55,7 +55,7 @@
 ## Task 1: Add `WebSearchConfig` to config.py
 
 **Files:**
-- Modify: `backend/src/core/config.py:185-192` (after LiteratureConfig)
+- Modify: `backend/src/core/config.py` — after `LiteratureConfig` class (line 192), flat fields after line 368 (after `jstage_proxy`), nested field after line 411 (after `smtp`), `_build_nested` after line 552 (after `smtp` block)
 - Test: manual — verify config loads from .env
 
 **Step 1: Add WebSearchConfig class after LiteratureConfig**
@@ -74,10 +74,11 @@ class WebSearchConfig(BaseModel):
 
 **Step 2: Add flat env var fields to Settings**
 
-In the `Settings` class, after the existing `LITERATURE_*` fields (around line 350), add:
+In the `Settings` class, after `jstage_proxy: str = ""` (line 368), add:
 
 ```python
-    # --- Web Search (Firecrawl-compatible) ---
+    # ── Web Search flat fields (WEB_SEARCH_*) ───────────────────────────
+
     WEB_SEARCH_API_KEY: str = ""
     WEB_SEARCH_BASE_URL: str = "https://api.firecrawl.dev"
     WEB_SEARCH_TIMEOUT: int = 30
@@ -86,7 +87,7 @@ In the `Settings` class, after the existing `LITERATURE_*` fields (around line 3
 
 **Step 3: Add nested field to Settings**
 
-After the `literature` nested field (around line 405), add:
+After `smtp: SMTPConfig` (line 411), add:
 
 ```python
     web_search: WebSearchConfig = Field(default_factory=WebSearchConfig, exclude=True)
@@ -94,14 +95,14 @@ After the `literature` nested field (around line 405), add:
 
 **Step 4: Wire up in `_build_nested` validator**
 
-In the `_build_nested` method (around line 530), add:
+In the `_build_nested` method, after the `self.smtp = SMTPConfig(...)` block (after line 552, before `return self`), add:
 
 ```python
-        data["web_search"] = WebSearchConfig(
-            api_key=data.get("WEB_SEARCH_API_KEY", ""),
-            base_url=data.get("WEB_SEARCH_BASE_URL", "https://api.firecrawl.dev") or "https://api.firecrawl.dev",
-            timeout=int(data.get("WEB_SEARCH_TIMEOUT", 30) or 30),
-            max_results=int(data.get("WEB_SEARCH_MAX_RESULTS", 10) or 10),
+        self.web_search = WebSearchConfig(
+            api_key=self.WEB_SEARCH_API_KEY,
+            base_url=self.WEB_SEARCH_BASE_URL or "https://api.firecrawl.dev",
+            timeout=self.WEB_SEARCH_TIMEOUT or 30,
+            max_results=self.WEB_SEARCH_MAX_RESULTS or 10,
         )
 ```
 
@@ -324,8 +325,8 @@ class TestFirecrawlAdapter:
         assert adapter.max_results == 5
 
     @pytest.mark.asyncio
-    async def test_search_returns_links(self):
-        """search() calls Firecrawl.search and returns SearchLink list."""
+    async def test_search_returns_links_from_dict(self):
+        """search() handles dict response (direct API calls)."""
         adapter = FirecrawlAdapter(api_key="fc-test-key")
 
         mock_search_result = {
@@ -341,6 +342,31 @@ class TestFirecrawlAdapter:
 
         assert result.provider == "firecrawl"
         assert len(result.links) == 2
+        assert result.links[0].url == "https://journal.com/article/1"
+
+    @pytest.mark.asyncio
+    async def test_search_handles_pydantic_response(self):
+        """search() handles Pydantic model response from SDK."""
+        from pydantic import BaseModel
+        from typing import List as ListType
+
+        class WebResult(BaseModel):
+            url: str
+            title: str = ""
+
+        class SearchResponse(BaseModel):
+            web: ListType[WebResult] = []
+
+        adapter = FirecrawlAdapter(api_key="fc-test-key")
+        mock_response = SearchResponse(web=[
+            WebResult(url="https://journal.com/article/1", title="Paper One"),
+        ])
+
+        with patch.object(adapter, "_client", new_callable=MagicMock) as mock_client:
+            mock_client.search = AsyncMock(return_value=mock_response)
+            result = await adapter.search("test query")
+
+        assert len(result.links) == 1
         assert result.links[0].url == "https://journal.com/article/1"
 
     @pytest.mark.asyncio
@@ -399,13 +425,12 @@ Expected: FAIL — module not found.
 
 from __future__ import annotations
 
-import logging
 import re
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
+
+from loguru import logger
 
 from .adapter import SearchLink, WebSearchAdapter, WebSearchResult
-
-logger = logging.getLogger(__name__)
 
 # Regex patterns for extracting PDF links from scraped markdown/HTML
 _PDF_URL_PATTERN = re.compile(
@@ -420,6 +445,17 @@ _HREF_PDF_PATTERN = re.compile(
     r'href=["\']?(https?://[^\s"\'<>"\']+\.pdf[^\s"\'<>"\']*)',
     re.IGNORECASE,
 )
+
+
+def _to_dict(result: Any) -> Dict[str, Any]:
+    """Convert SDK response to dict — handles both dict and Pydantic model returns."""
+    if isinstance(result, dict):
+        return result
+    if hasattr(result, "model_dump"):
+        return result.model_dump()
+    if hasattr(result, "dict"):
+        return result.dict()
+    return {}
 
 
 class FirecrawlAdapter(WebSearchAdapter):
@@ -446,22 +482,28 @@ class FirecrawlAdapter(WebSearchAdapter):
         return self._client
 
     async def search(self, query: str, *, language: Optional[str] = None) -> WebSearchResult:
-        """Search via Firecrawl and scrape each result for PDF links."""
+        """Search via Firecrawl and return candidate links."""
         warnings: list[str] = []
         all_links: list[SearchLink] = []
 
         try:
             client = self._get_client()
-            result = await client.search(query, limit=self.max_results)
+            raw_result = await client.search(query, limit=self.max_results)
+            result = _to_dict(raw_result)
 
-            web_results = result.get("web", []) if isinstance(result, dict) else []
+            web_results = result.get("web", [])
             for item in web_results:
-                url = item.get("url", "")
-                title = item.get("title", "")
-                if not url:
+                if isinstance(item, dict):
+                    url = item.get("url", "")
+                    title = item.get("title", "")
+                elif hasattr(item, "url"):
+                    url = getattr(item, "url", "")
+                    title = getattr(item, "title", "")
+                else:
                     continue
 
-                # Add the search result URL itself as a candidate
+                if not url:
+                    continue
                 all_links.append(SearchLink(url=url, source="firecrawl-search", title=title or None))
 
         except Exception as exc:
@@ -481,9 +523,10 @@ class FirecrawlAdapter(WebSearchAdapter):
         links: list[SearchLink] = []
         try:
             client = self._get_client()
-            result = await client.scrape(url, formats=["markdown"])
+            raw_result = await client.scrape(url, formats=["markdown"])
+            result = _to_dict(raw_result)
 
-            markdown = result.get("markdown", "") if isinstance(result, dict) else ""
+            markdown = result.get("markdown", "")
             if not markdown:
                 return links
 
@@ -512,7 +555,7 @@ class FirecrawlAdapter(WebSearchAdapter):
                     links.append(SearchLink(url=pdf_url, source="firecrawl-scrape"))
 
         except Exception as exc:
-            logger.warning("firecrawl scrape failed for %s: %s", url, exc)
+            logger.warning("firecrawl scrape failed for {}: {}", url, exc)
 
         return links
 ```
@@ -577,22 +620,24 @@ In `backend/libs/net-io/src/client.rs`, after `get_text()` (line 100), add:
 In `backend/libs/net-io/src/py.rs`, add a new function after `scrape_web` (around line 130):
 
 ```rust
-/// Download a file from a URL. Returns dict with `bytes`, `final_url`, `status_code`.
+/// Download a file from a URL. Returns Python dict {"bytes": <bytes>, "final_url": <str>, "status_code": <int>}.
 #[pyfunction]
 #[pyo3(signature = (url, timeout_ms=None, max_retries=None, proxy=None))]
 fn download_file<'py>(
+    py: Python<'py>,
     url: String,
     timeout_ms: Option<u64>,
     max_retries: Option<u32>,
     proxy: Option<String>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    pyo3_async_runtimes::tokio::future_into_py(async move {
+    pyo3_async_runtimes::tokio::future_into_py(py, async move {
         let client = HttpClient::new(timeout_ms, max_retries, proxy)
             .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
         let (bytes, final_url, status_code) = client
             .get_bytes(&url)
             .await
             .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+        // Return dict — serde_json::Value auto-converts to Python dict via PyO3
         Ok(serde_json::json!({
             "bytes": bytes,
             "final_url": final_url,
@@ -601,6 +646,8 @@ fn download_file<'py>(
     })
 }
 ```
+
+**Key design note:** `serde_json::json!` returns `serde_json::Value`, which PyO3 auto-converts to Python types (`dict`, `bytes`, `str`, `int`). The Python side receives a plain dict `{"bytes": b"...", "final_url": "...", "status_code": 200}` — no Pydantic model needed at the boundary.
 
 **Step 3: Register `download_file` in PyModule**
 
@@ -618,14 +665,14 @@ cd backend && python -c "
 import asyncio
 from src.utils.rust_io import net_io
 async def test():
-    # Test with a known PDF URL
     result = await net_io.download_file('https://arxiv.org/pdf/2301.00001v1')
+    print(type(result))  # <class 'dict'>
     print(f'status={result[\"status_code\"]}, bytes_len={len(result[\"bytes\"])}')
 asyncio.run(test())
 "
 ```
 
-Expected: status=200 (or 302 redirect handled), bytes starting with `%PDF`.
+Expected: `<class 'dict'>`, status=200, bytes starting with `%PDF`.
 
 **Step 5: Commit**
 
@@ -641,9 +688,26 @@ git commit -m "feat(rust-io): add get_bytes() and download_file() for direct PDF
 **Files:**
 - Modify: `backend/src/core/.../online_acquisition/gateway.py`
 
-**Step 1: Add `download_file_from_url()` function**
+**Step 1: Add `DownloadResult` dataclass to contracts.py (Rule 22)**
 
-After `_download_pdf_from_candidates` (line 125), add a new function that downloads a single URL directly:
+In `backend/src/core/.../online_acquisition/contracts.py`, after `OnlineAcquisitionGatewayResult` (line 167), add:
+
+```python
+@dataclass
+class DownloadResult:
+    """Result of downloading a single file."""
+
+    file_path: Optional[str] = None
+    source: str = ""
+    doi: Optional[str] = None
+    pmcid: Optional[str] = None
+    url: Optional[str] = None
+    warnings: List[str] = field(default_factory=list)
+```
+
+**Step 2: Add `download_file_from_url()` function to gateway.py**
+
+After `_download_pdf_from_candidates` (line 125), add a new function that downloads a single URL. This function **preserves the HTML→PDF redirect handling** from the existing `_download_pdf_from_candidates`:
 
 ```python
 async def download_file_from_url(
@@ -651,7 +715,11 @@ async def download_file_from_url(
     download_path: str,
     filename_stem: str,
 ) -> Tuple[Optional[str], Optional[str], List[str]]:
-    """Download a file from a direct URL. Validates %PDF magic bytes.
+    """Download a file from a direct URL. Handles HTML→PDF redirect.
+
+    If the URL returns PDF bytes (magic ``%PDF``), saves directly.
+    If the URL returns HTML, extracts PDF links from the page and retries
+    each candidate (preserves existing _download_pdf_from_candidates behavior).
 
     Args:
         url: Direct download URL.
@@ -662,45 +730,82 @@ async def download_file_from_url(
         (file_path, final_url, warnings) tuple.
     """
     warnings: List[str] = []
-    try:
+    target = Path(download_path) / f"{sanitize_filename(filename_stem)}.pdf"
+    target.parent.mkdir(parents=True, exist_ok=True)
+
+    # Build candidate queue: start with the given URL
+    queue: List[str] = [url]
+    visited: set[str] = set()
+
+    while queue:
+        current_url = queue.pop(0)
+        if current_url in visited:
+            continue
+        visited.add(current_url)
+
+        # Try Rust download first (faster, has retry)
         if net_io is not None:
-            result = await net_io.download_file(url, timeout_ms=30_000)
-            status = result.get("status_code", 0)
-            file_bytes = result.get("bytes", b"")
-            final_url = result.get("final_url", url)
+            try:
+                result = await net_io.download_file(current_url, timeout_ms=30_000)
+                status = result.get("status_code", 0)
+                file_bytes: bytes = result.get("bytes", b"")
+                final_url: str = result.get("final_url", current_url)
 
-            if status < 200 or status >= 400:
-                warnings.append(f"download_http_{status}")
-                return None, final_url, warnings
+                if status >= 400:
+                    warnings.append(f"download_http_{status}:{current_url}")
+                    continue
 
-            if not file_bytes or not file_bytes[:4] == b"%PDF":
-                warnings.append("not_pdf_content")
-                return None, final_url, warnings
+                if file_bytes and file_bytes[:4] == b"%PDF":
+                    target.write_bytes(file_bytes)
+                    return str(target), final_url, warnings
 
-            Path(download_path).mkdir(parents=True, exist_ok=True)
-            file_path = str(Path(download_path) / f"{sanitize_filename(filename_stem)}.pdf")
-            Path(file_path).write_bytes(file_bytes)
-            return file_path, final_url, warnings
-        else:
-            # Fallback: httpx
-            async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
-                resp = await client.get(url)
-                if resp.status_code >= 400:
-                    warnings.append(f"download_http_{resp.status_code}")
-                    return None, str(resp.url), warnings
-                if not resp.content[:4] == b"%PDF":
-                    warnings.append("not_pdf_content")
-                    return None, str(resp.url), warnings
-                Path(download_path).mkdir(parents=True, exist_ok=True)
-                file_path = str(Path(download_path) / f"{sanitize_filename(filename_stem)}.pdf")
-                Path(file_path).write_bytes(resp.content)
-                return file_path, str(resp.url), warnings
-    except Exception as exc:
-        warnings.append(f"download_error: {exc}")
-        return None, url, warnings
+                # Non-PDF content — might be HTML with PDF link
+                if file_bytes and (b"<html" in file_bytes[:2048].lower()):
+                    extra_links = _extract_pdf_links_from_html(
+                        file_bytes.decode("utf-8", errors="replace"), final_url or current_url
+                    )
+                    for link in extra_links:
+                        if link not in visited:
+                            queue.append(link)
+                    continue
+
+                warnings.append(f"non_pdf_content:{current_url}")
+                continue
+
+            except Exception as exc:
+                warnings.append(f"rust_download_error:{current_url}:{exc}")
+                # Fall through to httpx fallback
+
+        # Fallback: httpx (handles HTML→PDF redirect same as existing code)
+        try:
+            async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+                resp = await client.get(current_url)
+                resp.raise_for_status()
+
+                content = resp.content or b""
+                content_type = str(resp.headers.get("content-type") or "").lower()
+                final_url = str(resp.url)
+
+                if content.startswith(b"%PDF"):
+                    target.write_bytes(content)
+                    return str(target), final_url, warnings
+
+                if "html" in content_type or b"<html" in content[:2048].lower():
+                    extra_links = _extract_pdf_links_from_html(resp.text or "", final_url or current_url)
+                    for link in extra_links:
+                        if link not in visited:
+                            queue.append(link)
+                    continue
+
+                warnings.append(f"non_pdf_content_type:{content_type or 'unknown'}:{current_url}")
+
+        except Exception as exc:
+            warnings.append(f"download_error:{current_url}:{exc}")
+
+    return None, None, warnings
 ```
 
-**Step 2: Add `resolve_oa_url()` function**
+**Step 3: Add `resolve_oa_url()` function**
 
 After the new `download_file_from_url`, add:
 
@@ -742,18 +847,18 @@ def resolve_oa_url(result: OnlineAcquisitionGatewayResult) -> Optional[str]:
     return None
 ```
 
-**Step 3: Keep existing `search_provider()` unchanged**
+**Step 4: Keep existing `search_provider()` unchanged**
 
 The existing `search_provider()` (line 264) stays as-is — it calls `call_provider_with_retry` with `action="search"`.
 
-**Step 4: Deprecate `download_from_provider()`**
+**Step 5: Deprecate `download_from_provider()` with per-function warning**
 
-Add a deprecation warning to `download_from_provider()` (line 285):
+Add a deprecation warning to `download_from_provider()` (line 285) — **not** module-level:
 
 ```python
 import warnings as _warnings
 
-def download_from_provider(...):
+async def download_from_provider(...):
     _warnings.warn(
         "download_from_provider is deprecated; use search_provider + resolve_oa_url + download_file_from_url",
         DeprecationWarning,
@@ -762,10 +867,10 @@ def download_from_provider(...):
     # ... existing implementation unchanged ...
 ```
 
-**Step 5: Commit**
+**Step 6: Commit**
 
 ```bash
-git add backend/src/core/.../online_acquisition/gateway.py
+git add backend/src/core/.../online_acquisition/gateway.py backend/src/core/.../online_acquisition/contracts.py
 git commit -m "refactor(gateway): split into search-only + resolve_oa_url + download_file_from_url"
 ```
 
@@ -825,17 +930,20 @@ Add deprecation comments to `WebProvider` (line 16), `web_provider` (line 39), a
 
 **Step 2: Add `candidate_links` field to OnlineAcquisitionResponse**
 
-In `OnlineAcquisitionResponse` (line 111), add a new field:
+In `OnlineAcquisitionResponse` (line 111), add a new field after `raw` (line 119):
 
 ```python
-    candidate_links: List[Dict[str, Any]] = Field(default_factory=list, description="All candidate download links before download")
+    candidate_links: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="All candidate download links discovered before download phase",
+    )
 ```
 
 **Step 3: Commit**
 
 ```bash
 git add backend/src/core/.../online_acquisition/contracts.py
-git commit -m "refactor(contracts): deprecate WebProvider, add candidate_links to response"
+git commit -m "refactor(contracts): deprecate WebProvider, add candidate_links to response, add DownloadResult"
 ```
 
 ---
@@ -860,12 +968,14 @@ Phase 3 (Gate): LLM classification on downloaded PDF content.
 """
 
 import asyncio
-import logging
 import os
 import re
 from typing import Any, Dict, List, Optional
 
+from loguru import logger
+
 from .contracts import (
+    DownloadResult,
     OnlineAcquisitionGatewayResult,
     OnlineAcquisitionItem,
     OnlineAcquisitionRequest,
@@ -884,8 +994,6 @@ from .literature_type_classifier import LiteratureType, classify_item
 from .normalizers import normalize_items
 from .provider_health import get_health_tracker
 from .web_search import SearchLink
-
-logger = logging.getLogger(__name__)
 ```
 
 **Step 2: Keep helper functions**
@@ -934,7 +1042,7 @@ async def _acquire_links_api(
 
     async def _search_one(provider: str) -> Optional[OnlineAcquisitionGatewayResult]:
         try:
-            return search_provider(
+            return await search_provider(
                 provider=provider,
                 query=query,
                 identifiers=id_params,
@@ -943,15 +1051,17 @@ async def _acquire_links_api(
                 params={},
             )
         except Exception as exc:
-            logger.debug("api search %s failed: %s", provider, exc)
+            logger.debug("api search {} failed: {}", provider, exc)
             return None
 
-    # Parallel search across all providers
-    results = await asyncio.gather(*[_search_one(p) for p in providers])
+    # Parallel search across all providers — return_exceptions prevents one failure from crashing all
+    results = await asyncio.gather(*[_search_one(p) for p in providers], return_exceptions=True)
 
     # Collect all raw items with provider tag
     all_items: List[Dict[str, Any]] = []
     for result in results:
+        if isinstance(result, Exception):
+            continue
         if result and result.success:
             for item in result.items:
                 if isinstance(item, dict):
@@ -988,11 +1098,11 @@ async def _acquire_links_firecrawl(
     result = await adapter.search(query, language=language)
     if result.warnings:
         for w in result.warnings:
-            logger.warning("firecrawl: %s", w)
+            logger.warning("firecrawl: {}", w)
 
-    # Scrape each result page for PDF links
+    # Scrape each result page for PDF links — limit to first 5 to control cost
     all_links = list(result.links)
-    scrape_tasks = [adapter.scrape_links(link.url) for link in result.links[:5]]  # limit scrape concurrency
+    scrape_tasks = [adapter.scrape_links(link.url) for link in result.links[:5]]
     scrape_results = await asyncio.gather(*scrape_tasks, return_exceptions=True)
     for sr in scrape_results:
         if isinstance(sr, list):
@@ -1066,20 +1176,19 @@ def _merge_and_dedupe(
 async def _download_candidates(
     candidates: List[Dict[str, Any]],
     download_path: str,
-) -> List[Dict[str, Any]]:
+) -> List[DownloadResult]:
     """Phase 2: Download files from candidate links.
 
     Routing:
     - DOI present → call unpaywall to resolve OA URL → download
-    - PMID present → call pmc to get pmcid → construct PMC PDF URL → download
-    - Direct PDF URL → HTTP GET download
-    - Other URL → skip (link acquisition already handled)
+    - PMCID present → construct PMC PDF URL → download
+    - Direct URL → HTTP download (with HTML→PDF redirect handling)
     """
-    downloads: List[Dict[str, Any]] = []
-
-    async def _download_one(candidate: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def _download_one(candidate: Dict[str, Any]) -> Optional[DownloadResult]:
         doi = candidate.get("doi") or candidate.get("DOI")
-        pmid = candidate.get("pmid") or candidate.get("identifiers", {}).get("pmid") if isinstance(candidate.get("identifiers"), dict) else None
+        pmid = candidate.get("pmid")
+        if not pmid and isinstance(candidate.get("identifiers"), dict):
+            pmid = candidate["identifiers"].get("pmid")
         pmcid = candidate.get("pmcid")
         url = candidate.get("url") or candidate.get("URL")
         title = candidate.get("title", "untitled")
@@ -1089,7 +1198,7 @@ async def _download_candidates(
         if doi:
             try:
                 id_params = {"doi": doi}
-                result = search_provider(
+                result = await search_provider(
                     provider="unpaywall",
                     query="",
                     identifiers=id_params,
@@ -1103,15 +1212,15 @@ async def _download_candidates(
                         oa_url, download_path, filename_stem
                     )
                     if file_path:
-                        return {
-                            "file_path": file_path,
-                            "source": "unpaywall",
-                            "doi": doi,
-                            "url": final_url,
-                            "warnings": warns,
-                        }
+                        return DownloadResult(
+                            file_path=file_path,
+                            source="unpaywall",
+                            doi=doi,
+                            url=final_url,
+                            warnings=warns,
+                        )
             except Exception as exc:
-                logger.debug("unpaywall download failed for %s: %s", doi, exc)
+                logger.debug("unpaywall download failed for {}: {}", doi, exc)
 
         # Route 2: PMCID → PMC direct PDF URL
         if pmcid:
@@ -1120,35 +1229,32 @@ async def _download_candidates(
                 pdf_url, download_path, filename_stem
             )
             if file_path:
-                return {
-                    "file_path": file_path,
-                    "source": "pmc",
-                    "pmcid": pmcid,
-                    "url": final_url,
-                    "warnings": warns,
-                }
+                return DownloadResult(
+                    file_path=file_path,
+                    source="pmc",
+                    pmcid=pmcid,
+                    url=final_url,
+                    warnings=warns,
+                )
 
-        # Route 3: Direct URL (looks like PDF or is a known download URL)
+        # Route 3: Direct URL download
         if url:
             file_path, final_url, warns = await download_file_from_url(
                 url, download_path, filename_stem
             )
             if file_path:
-                return {
-                    "file_path": file_path,
-                    "source": candidate.get("_source_provider", "direct"),
-                    "url": final_url,
-                    "warnings": warns,
-                }
+                return DownloadResult(
+                    file_path=file_path,
+                    source=candidate.get("_source_provider", "direct"),
+                    url=final_url,
+                    warnings=warns,
+                )
 
         return None
 
-    # Download all candidates (parallel, no retry per user request)
-    results = await asyncio.gather(*[_download_one(c) for c in candidates])
-    downloads = [r for r in results if r is not None]
-
-    # Hash dedup (if hash utils available)
-    # Note: existing hash dedup from upload flow can be applied downstream
+    # Download all candidates in parallel — return_exceptions prevents one failure from crashing all
+    results = await asyncio.gather(*[_download_one(c) for c in candidates], return_exceptions=True)
+    downloads = [r for r in results if isinstance(r, DownloadResult)]
 
     return downloads
 ```
@@ -1187,11 +1293,19 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
     # === Phase 1: Link Acquisition (parallel) ===
     id_params = _build_gateway_identifiers(identifiers)
 
-    # Run API + Firecrawl in parallel
-    api_task = _acquire_links_api(query=query, identifiers=ident_params, limit=request.limit)
+    # Run API + Firecrawl in parallel — return_exceptions prevents Firecrawl failure from crashing
+    api_task = _acquire_links_api(query=query, identifiers=id_params, limit=request.limit)
     firecrawl_task = _acquire_links_firecrawl(query=query, language=language)
 
-    api_items, firecrawl_links = await asyncio.gather(api_task, firecrawl_task)
+    api_items, firecrawl_links = await asyncio.gather(api_task, firecrawl_task, return_exceptions=True)
+
+    # Handle individual failures gracefully
+    if isinstance(api_items, Exception):
+        logger.warning("api acquisition failed: {}", api_items)
+        api_items = []
+    if isinstance(firecrawl_links, Exception):
+        logger.warning("firecrawl acquisition failed: {}", firecrawl_links)
+        firecrawl_links = []
 
     # Merge and deduplicate
     candidates = _merge_and_dedupe(api_items, firecrawl_links)
@@ -1232,6 +1346,9 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
                 typed_items.append(ni)
         normalized_items = typed_items
 
+    # Sanitize candidates for response (remove internal keys)
+    clean_candidates = [{k: v for k, v in c.items() if not k.startswith("_")} for c in candidates]
+
     # === Search-only mode: return metadata ===
     if request.action == "search":
         return OnlineAcquisitionResponse(
@@ -1240,14 +1357,27 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
             downloads=[],
             warnings=warnings,
             route=route,
-            candidate_links=[{k: v for k, v in c.items() if not k.startswith("_")} for c in candidates],
+            candidate_links=clean_candidates,
         ).model_dump()
 
     # === Phase 2: Download ===
-    downloads = await _download_candidates(candidates, download_path)
+    download_results = await _download_candidates(candidates, download_path)
 
-    if not downloads:
+    if not download_results:
         warnings.append("FULLTEXT_UNAVAILABLE: no files downloaded")
+
+    # Convert DownloadResult to dicts for response serialization
+    downloads = [
+        {
+            "file_path": dr.file_path,
+            "source": dr.source,
+            "doi": dr.doi,
+            "pmcid": dr.pmcid,
+            "url": dr.url,
+            "warnings": dr.warnings,
+        }
+        for dr in download_results
+    ]
 
     # === Phase 3: LLM Content Gate ===
     # Classification on downloaded PDF content (if needed)
@@ -1255,12 +1385,12 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
     # can be added as a future enhancement.
 
     return OnlineAcquisitionResponse(
-        success=bool(downloads),
+        success=bool(download_results),
         items=normalized_items,
         downloads=downloads,
         warnings=warnings,
         route=route,
-        candidate_links=[{k: v for k, v in c.items() if not k.startswith("_")} for c in candidates],
+        candidate_links=clean_candidates,
     ).model_dump()
 ```
 
@@ -1269,6 +1399,7 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
 In `backend/src/core/.../online_acquisition/__init__.py`, add:
 - `from .web_search import SearchLink, WebSearchAdapter, WebSearchResult`
 - `from .gateway import download_file_from_url, resolve_oa_url`
+- `from .contracts import DownloadResult`
 
 **Step 9: Commit**
 
@@ -1346,33 +1477,58 @@ LANG_PROVIDER_MATRIX: Dict[str, List[ProviderPlanItem]] = {
 
 In `search_multilingual` (line 222), remove the branch that handles `route == "web"` (lines ~250-260). All providers in the matrix are now API-only.
 
-**Step 3: Commit**
+**Step 3: Update `search_parallel` to remove web provider handling**
+
+In `search_parallel` (lines 302-315), remove the `else` branch that imports and calls `call_web_provider`. Replace with an API-only path:
+
+```python
+    async def _search_one(item: ProviderPlanItem) -> List[Dict[str, Any]]:
+        async with sem:
+            result = await search_provider(
+                provider=item["provider"],
+                query=query,
+                limit=candidate_limit,
+            )
+            items = normalize_items(result.provider, result.items) if result.success else []
+            return [_normalize_candidate(i.model_dump(), item) for i in items]
+```
+
+Also replace `import logging` + `logging.getLogger(__name__).warning(...)` (lines 323-325) with `from loguru import logger` + `logger.warning(...)`.
+
+**Step 4: Commit**
 
 ```bash
 git add backend/src/core/.../online_acquisition/search_service.py
-git commit -m "refactor(search-service): remove web provider routing from LANG_PROVIDER_MATRIX"
+git commit -m "refactor(search-service): remove web provider routing from LANG_PROVIDER_MATRIX and search_parallel"
 ```
 
 ---
 
-## Task 10: Deprecate web_providers.py
+## Task 10: Deprecate web_providers.py (per-function, not module-level)
 
 **Files:**
 - Modify: `backend/src/core/.../online_acquisition/web_providers.py`
 
-**Step 1: Add module-level deprecation warning**
+**Step 1: Add per-function deprecation warnings**
 
-At the top of `web_providers.py` (after imports), add:
+Add `import warnings as _warnings` at the top. Then add deprecation warning to `call_web_provider` (line 66):
 
 ```python
-import warnings
+async def call_web_provider(...) -> OnlineAcquisitionGatewayResult:
+    """Unified entry point for web providers.
 
-warnings.warn(
-    "web_providers is deprecated; use web_search.firecrawl_adapter.FirecrawlAdapter instead",
-    DeprecationWarning,
-    stacklevel=2,
-)
+    .. deprecated::
+        Use ``web_search.firecrawl_adapter.FirecrawlAdapter`` instead.
+    """
+    _warnings.warn(
+        "call_web_provider is deprecated; use FirecrawlAdapter from web_search module",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    # ... existing implementation unchanged ...
 ```
+
+**Note:** Do **not** add a module-level `warnings.warn()` — that fires on every import including when other modules import types from contracts.py that happen to transitively import this module.
 
 **Step 2: Keep all existing code unchanged**
 
@@ -1382,7 +1538,7 @@ Do not delete any code — existing callers may still depend on it.
 
 ```bash
 git add backend/src/core/.../online_acquisition/web_providers.py
-git commit -m "refactor(web-providers): deprecate in favor of Firecrawl adapter"
+git commit -m "refactor(web-providers): add per-function deprecation warning"
 ```
 
 ---
@@ -1400,7 +1556,7 @@ git commit -m "refactor(web-providers): deprecate in favor of Firecrawl adapter"
 """Tests for the download phase of the refactored workflow."""
 
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
 
 
 class TestResolveOaUrl:
@@ -1473,13 +1629,13 @@ class TestDownloadFileFromUrl:
                 "final_url": "https://example.com/paper.pdf",
                 "status_code": 200,
             })
-            file_path, final_url, warnings = await download_file_from_url(
+            file_path, final_url, warns = await download_file_from_url(
                 "https://example.com/paper.pdf", str(tmp_path), "test_paper"
             )
 
         assert file_path is not None
         assert file_path.endswith(".pdf")
-        assert warnings == []
+        assert warns == []
 
     @pytest.mark.asyncio
     async def test_download_rejects_non_pdf(self, tmp_path):
@@ -1491,12 +1647,47 @@ class TestDownloadFileFromUrl:
                 "final_url": "https://example.com/page.html",
                 "status_code": 200,
             })
-            file_path, final_url, warnings = await download_file_from_url(
+            file_path, final_url, warns = await download_file_from_url(
                 "https://example.com/page.html", str(tmp_path), "test_paper"
             )
 
         assert file_path is None
-        assert "not_pdf_content" in warnings
+        assert any("non_pdf" in w for w in warns)
+
+    @pytest.mark.asyncio
+    async def test_download_extracts_pdf_from_html(self, tmp_path):
+        """When URL returns HTML with a PDF link, it should follow and download."""
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway import download_file_from_url
+
+        call_count = 0
+
+        async def mock_download(url, timeout_ms=30000):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                # First call: return HTML with PDF link
+                return {
+                    "bytes": b'<html><a href="https://example.com/paper.pdf">Download</a></html>',
+                    "final_url": "https://example.com/article",
+                    "status_code": 200,
+                }
+            else:
+                # Second call: return actual PDF
+                return {
+                    "bytes": b"%PDF-1.4 real content",
+                    "final_url": url,
+                    "status_code": 200,
+                }
+
+        with patch("src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway.net_io") as mock_net:
+            mock_net.download_file = AsyncMock(side_effect=mock_download)
+            file_path, final_url, warns = await download_file_from_url(
+                "https://example.com/article", str(tmp_path), "test_paper"
+            )
+
+        assert file_path is not None
+        assert file_path.endswith(".pdf")
+        assert call_count == 2
 ```
 
 **Step 2: Write workflow integration tests**
@@ -1540,6 +1731,62 @@ class TestMergeAndDedupe:
 
         merged = _merge_and_dedupe(api_items, firecrawl_links)
         assert len(merged) == 2
+
+    def test_empty_inputs(self):
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _merge_and_dedupe
+
+        merged = _merge_and_dedupe([], [])
+        assert merged == []
+
+
+class TestAcquireLinksApi:
+    @pytest.mark.asyncio
+    async def test_parallel_search_returns_items(self):
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _acquire_links_api
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
+            OnlineAcquisitionGatewayResult,
+        )
+
+        mock_result = OnlineAcquisitionGatewayResult(
+            provider="crossref",
+            success=True,
+            items=[{"title": "Test Paper", "doi": "10.1234/test"}],
+            warnings=[],
+            raw=None,
+            meta=None,
+            source_trace=[],
+        )
+
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
+            new_callable=AsyncMock,
+            return_value=mock_result,
+        ):
+            items = await _acquire_links_api(
+                query="test",
+                identifiers={"doi": "10.1234/test"},
+                limit=10,
+            )
+
+        assert len(items) > 0
+        assert items[0].get("_source_provider") == "crossref"
+
+    @pytest.mark.asyncio
+    async def test_provider_failure_does_not_crash(self):
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _acquire_links_api
+
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
+            new_callable=AsyncMock,
+            side_effect=Exception("provider down"),
+        ):
+            items = await _acquire_links_api(
+                query="test",
+                identifiers={},
+                limit=10,
+            )
+
+        assert items == []
 ```
 
 **Step 3: Run all tests**
@@ -1616,14 +1863,36 @@ git commit -m "docs: update progress and lessons for online acquisition refactor
 | 2 | WebSearch Adapter interface | None | Small |
 | 3 | Firecrawl Adapter | Task 2 | Medium |
 | 4 | Rust get_bytes + download_file | None | Medium |
-| 5 | Refactor gateway.py | Task 4 | Medium |
+| 5 | Refactor gateway.py + DownloadResult dataclass | Task 4 | Medium |
 | 6 | Add normalize_firecrawl | None | Small |
-| 7 | Update contracts.py | None | Small |
+| 7 | Update contracts.py (candidate_links) | None | Small |
 | 8 | Rewrite workflow.py | Tasks 2,3,5,6,7 | Large |
-| 9 | Update search_service.py | None | Small |
-| 10 | Deprecate web_providers.py | None | Trivial |
+| 9 | Update search_service.py (matrix + search_parallel) | None | Small |
+| 10 | Deprecate web_providers.py (per-function) | None | Trivial |
 | 11 | Integration tests | Tasks 2-8 | Medium |
 | 12 | Fix regressions | Task 11 | Variable |
 | 13 | Documentation | Task 12 | Small |
 
 Tasks 1, 2, 4, 6, 7, 9, 10 can be done in parallel (no dependencies on each other).
+
+---
+
+## Review Fix Log
+
+All 13 issues from the plan review have been addressed:
+
+| # | Issue | Fix |
+|---|---|---|
+| 1 | Missing function definitions | All 6 functions now have complete implementations |
+| 2 | Truncated code blocks | All code blocks complete (Rust PyO3, workflow rewrite) |
+| 3 | Rust/Python interface mismatch | PyO3 binding returns dict via `serde_json::json!`; test mock expects dict ✓ |
+| 4 | `candidate_links` field missing | Added to `OnlineAcquisitionResponse` in Task 7 |
+| 5 | `search_provider` missing `await` | Added `await` in both `_acquire_links_api._search_one` and `_download_candidates._download_one` |
+| 6 | HTML redirect handling lost | `download_file_from_url` now uses queue-based approach ported from `_download_pdf_from_candidates`; test covers HTML→PDF |
+| 7 | `search_parallel` not updated | Task 9 Step 3 now removes web provider handling from `search_parallel` |
+| 8 | Firecrawl SDK Pydantic response | Added `_to_dict()` helper that handles both dict and Pydantic model returns; test covers Pydantic case |
+| 9 | Line number inaccuracies | Corrected: flat fields after line 368, nested field after line 411, `_build_nested` after line 552 |
+| 10 | Module-level deprecation | Changed to per-function `warnings.warn()` in `call_web_provider` |
+| 11 | stdlib logging | All new code uses `loguru.logger` per project convention |
+| 12 | Bare dict return | Created `DownloadResult` dataclass (Rule 22); `_download_candidates` returns `List[DownloadResult]` |
+| 13 | Missing `return_exceptions=True` | Added to all `asyncio.gather` calls in workflow (phase 1 + phase 2 + firecrawl scrape) |

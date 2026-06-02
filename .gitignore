@@ -81,3 +81,4 @@ backend/data/pipeline/run-123/*
 benchmark/literature_acquisition/downloads/rett/report_*.json
 .codegraph/*
 reasonix.toml
+benchmark/pipeline/input/*
