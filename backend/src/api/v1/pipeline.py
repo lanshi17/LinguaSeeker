@@ -8,8 +8,10 @@ from pathlib import Path
 from typing import Any, Literal
 
 import aiofiles
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, model_validator
+
+from src.api.auth import require_api_key
 
 from src.agents.contracts import (
     PhaseStatus,
@@ -157,7 +159,7 @@ def _phase_detail_to_response(detail: PhaseStatusDetail) -> PhaseStatusResponse:
 
 
 @router.post("/run", response_model=PipelineRunResponse, status_code=202)
-async def start_pipeline_run(request: PipelineRunRequest):
+async def start_pipeline_run(request: PipelineRunRequest, _api_key: str | None = Depends(require_api_key)):
     """Start a new pipeline run.
 
     Returns immediately with processing_run_id. Poll status_url for progress.
@@ -230,7 +232,7 @@ async def start_pipeline_run(request: PipelineRunRequest):
 
 
 @router.get("/runs/{processing_run_id}/status", response_model=PipelineStatusResponse)
-async def get_pipeline_status(processing_run_id: str):
+async def get_pipeline_status(processing_run_id: str, _api_key: str | None = Depends(require_api_key)):
     """Get the current status of a pipeline run.
 
     Checks in-memory cache first, then falls back to PostgreSQL.
