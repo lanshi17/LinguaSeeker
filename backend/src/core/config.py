@@ -191,6 +191,15 @@ class LiteratureConfig(BaseModel):
     jstage_proxy: str = ""
 
 
+class WebSearchConfig(BaseModel):
+    """Web search provider configuration (adapter-based, currently Firecrawl)."""
+
+    api_key: str = ""
+    base_url: str = "https://api.firecrawl.dev"
+    timeout: int = 30
+    max_results: int = 10
+
+
 class SMTPConfig(BaseModel):
     """SMTP email."""
 
@@ -367,6 +376,13 @@ class Settings(BaseSettings):
     unpaywall_email: str = ""
     jstage_proxy: str = ""
 
+    # ── Web Search flat fields (WEB_SEARCH_*) ───────────────────────────
+
+    WEB_SEARCH_API_KEY: str = ""
+    WEB_SEARCH_BASE_URL: str = "https://api.firecrawl.dev"
+    WEB_SEARCH_TIMEOUT: int = 30
+    WEB_SEARCH_MAX_RESULTS: int = 10
+
     # ── SMTP flat fields (SMTP_*) ────────────────────────────────────────
 
     smtp_host: str = ""
@@ -409,6 +425,7 @@ class Settings(BaseSettings):
     task: TaskConfig = Field(default_factory=TaskConfig, exclude=True)
     literature: LiteratureConfig = Field(default_factory=LiteratureConfig, exclude=True)
     smtp: SMTPConfig = Field(default_factory=SMTPConfig, exclude=True)
+    web_search: WebSearchConfig = Field(default_factory=WebSearchConfig, exclude=True)
 
     # ── Build nested models from flat fields ─────────────────────────────
 
@@ -549,6 +566,12 @@ class Settings(BaseSettings):
             user=self.smtp_user,
             password=self.smtp_password,
             from_email=self.smtp_from_email,
+        )
+        self.web_search = WebSearchConfig(
+            api_key=self.WEB_SEARCH_API_KEY,
+            base_url=self.WEB_SEARCH_BASE_URL or "https://api.firecrawl.dev",
+            timeout=self.WEB_SEARCH_TIMEOUT or 30,
+            max_results=self.WEB_SEARCH_MAX_RESULTS or 10,
         )
         return self
 
