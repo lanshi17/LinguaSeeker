@@ -1035,3 +1035,44 @@ Phase 2 失败导致 Phase 3 未能执行（pipeline error），因此该结论�
 - `return_exceptions=True` 的 gather 必须检查空结果 + 错误列表
 - 管道输出路径应使用绝对路径或相对于项目根目录的稳定路径，避免 CWD 漂移
 
+
+## 2026-06-02 后端安全修复三轮审查经验
+
+### 问题
+安全修复计划（6 任务）完成后，经过三轮代码审查发现 11 个问题（3 blocking, 5 important, 3 minor）。
+
+### 第一轮发现
+- Stream endpoint (GET /chat/sessions/{id}/stream) 缺少限流
+- 请求体先读入内存再检查大小（内存 DoS）
+- base64.b64decode 宽松模式（静默忽略非法输入）
+- slowapi 使用内存存储（多 worker 限流状态分散）
+
+### 第二轮发现
+- BaseHTTPMiddleware 缓冲 SSE 响应（破坏流式传输）
+- Windows 路径遍历未防护（PurePosixPath 仅处理 `/`）
+- 分块传输编码绕过 Content-Length 检查
+- rate_limit.py 导入时调用 get_config()
+
+### 第三轮发现
+- 分块传输超限后传空 body 给 app（应直接返回 413）
+- 测试未真正验证分块编码路径
+- slowapi 私有属性访问无版本约束注释
+
+### 根因
+1. 中间件选型不当：BaseHTTPMiddleware 缓冲所有响应
+2. 安全边界考虑不周：仅检查 Content-Length，未考虑 chunked 编码
+3. 平台差异遗漏：仅处理 Unix 路径分隔符
+4. 测试覆盖不充分：测试名暗示验证的行为实际未被测试
+
+### 解决方案
+1. 改用原始 ASGI 中间件（不缓冲响应）
+2. 包装 receive 累计实际字节数 + 包装 send 抑制重复响应
+3. raw_fname.replace("\\", "/") 标准化
+4. 用 raw ASGI scope + body-reading handler 测试 chunked 场景
+
+### 预防措施
+- 涉及 SSE/流式响应的中间件必须用原始 ASGI，不用 BaseHTTPMiddleware
+- 安全检查必须覆盖所有传输编码（Content-Length + chunked）
+- 路径处理必须同时考虑 Unix (/) 和 Windows (\\) 分隔符
+- 测试必须验证其名称暗示的行为，不能仅靠间接验证
+- 使用 slowapi 等库的私有属性时添加版本约束注释和 smoke test
