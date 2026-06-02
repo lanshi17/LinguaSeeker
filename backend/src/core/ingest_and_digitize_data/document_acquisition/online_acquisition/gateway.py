@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import re
+import warnings as _warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urljoin
 
 import httpx
 import time as _time
+from loguru import logger
 
 from .provider_health import get_health_tracker
 
@@ -122,6 +124,139 @@ async def _download_pdf_from_candidates(
             warnings.append(f"non_pdf_content_type:{content_type or 'unknown'}")
 
     return None, None, warnings
+
+
+async def download_file_from_url(
+    url: str,
+    download_path: str,
+    filename_stem: str,
+) -> Tuple[Optional[str], Optional[str], List[str]]:
+    """Download a file from a direct URL. Handles HTML→PDF redirect.
+
+    If the URL returns PDF bytes (magic ``%PDF``), saves directly.
+    If the URL returns HTML, extracts PDF links from the page and retries
+    each candidate (preserves existing _download_pdf_from_candidates behavior).
+
+    Args:
+        url: Direct download URL.
+        download_path: Directory to save the file.
+        filename_stem: Base filename (without extension).
+
+    Returns:
+        (file_path, final_url, warnings) tuple.
+    """
+    warnings: List[str] = []
+    target = Path(download_path) / f"{sanitize_filename(filename_stem)}.pdf"
+    target.parent.mkdir(parents=True, exist_ok=True)
+
+    # Build candidate queue: start with the given URL
+    queue: List[str] = [url]
+    visited: set[str] = set()
+
+    while queue:
+        current_url = queue.pop(0)
+        if current_url in visited:
+            continue
+        visited.add(current_url)
+
+        # Try Rust download first (faster, has built-in retry)
+        if net_io is not None:
+            try:
+                result = await net_io.download_file(current_url, timeout_ms=30_000)
+                status = result.get("status_code", 0)
+                file_bytes: bytes = result.get("bytes", b"")
+                final_url: str = result.get("final_url", current_url)
+
+                if status >= 400:
+                    warnings.append(f"download_http_{status}:{current_url}")
+                    continue
+
+                if file_bytes and file_bytes[:4] == b"%PDF":
+                    target.write_bytes(file_bytes)
+                    return str(target), final_url, warnings
+
+                # Non-PDF content — might be HTML with PDF link
+                if file_bytes and (b"<html" in file_bytes[:2048].lower()):
+                    extra_links = _extract_pdf_links_from_html(
+                        file_bytes.decode("utf-8", errors="replace"), final_url or current_url
+                    )
+                    for link in extra_links:
+                        if link not in visited:
+                            queue.append(link)
+                    continue
+
+                warnings.append(f"non_pdf_content:{current_url}")
+                continue
+
+            except Exception as exc:
+                logger.debug("rust download_file failed for {}: {}", current_url, exc)
+                warnings.append(f"rust_download_error:{current_url}:{exc}")
+                # Fall through to httpx fallback
+
+        # Fallback: httpx (handles HTML→PDF redirect same as existing code)
+        try:
+            async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+                resp = await client.get(current_url)
+                resp.raise_for_status()
+
+                content = resp.content or b""
+                content_type = str(resp.headers.get("content-type") or "").lower()
+                final_url = str(resp.url)
+
+                if content.startswith(b"%PDF"):
+                    target.write_bytes(content)
+                    return str(target), final_url, warnings
+
+                if "html" in content_type or b"<html" in content[:2048].lower():
+                    extra_links = _extract_pdf_links_from_html(resp.text or "", final_url or current_url)
+                    for link in extra_links:
+                        if link not in visited:
+                            queue.append(link)
+                    continue
+
+                warnings.append(f"non_pdf_content_type:{content_type or 'unknown'}:{current_url}")
+
+        except Exception as exc:
+            warnings.append(f"download_error:{current_url}:{exc}")
+
+    return None, None, warnings
+
+
+def resolve_oa_url(result: OnlineAcquisitionGatewayResult) -> Optional[str]:
+    """Extract OA download URL from a gateway result.
+
+    Inspects result.downloads for pdf_url entries (returned by unpaywall, doaj, etc.)
+    and result.items for embedded download links (e.g., europepmc fullTextUrlList).
+    """
+    # Check downloads first (unpaywall, doaj, jstage pattern)
+    for dl in result.downloads:
+        if isinstance(dl, dict):
+            dl_url = dl.get("pdf_url") or dl.get("url")
+            if dl_url:
+                return dl_url
+
+    # Check items for embedded URLs (europepmc fullTextUrlList, crossref link)
+    for item in result.items:
+        if not isinstance(item, dict):
+            continue
+        # EuropePMC fullTextUrlList
+        ftl = item.get("fullTextUrlList")
+        if isinstance(ftl, dict):
+            for ft in ftl.get("fullTextUrl", []):
+                if isinstance(ft, dict) and ft.get("documentStyle") == "pdf":
+                    return ft.get("url")
+        # Crossref link array
+        links = item.get("link")
+        if isinstance(links, list):
+            for link in links:
+                if isinstance(link, dict) and link.get("content-type") == "application/pdf":
+                    return link.get("URL")
+        # PMC pmcid → construct URL
+        pmcid = item.get("pmcid")
+        if isinstance(pmcid, str) and pmcid.startswith("PMC"):
+            return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/pdf/"
+
+    return None
 
 
 def _build_fetch_params(request: OnlineAcquisitionGatewayRequest) -> Dict[str, Any]:
@@ -294,7 +429,16 @@ async def download_from_provider(
     detail_link: Optional[str] = None,
     params: Optional[Dict[str, Any]] = None,
 ) -> OnlineAcquisitionGatewayResult:
-    """Download from a provider. Handles candidate URL retrieval + actual PDF download."""
+    """Download from a provider. Handles candidate URL retrieval + actual PDF download.
+
+    .. deprecated::
+        Use ``search_provider`` + ``resolve_oa_url`` + ``download_file_from_url`` instead.
+    """
+    _warnings.warn(
+        "download_from_provider is deprecated; use search_provider + resolve_oa_url + download_file_from_url",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     request = OnlineAcquisitionGatewayRequest(
         provider=provider,
         action="download",

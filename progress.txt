@@ -177,5 +177,4 @@
   - Infra failures: (4) PT/ZH temp file path race (Phase 1→2), (5) RU translation unchanged
   - Phase 3 no_candidates: 3 passes all show 0 matches — expected for simple case reports; needs Fabry E2E to confirm
   - Docs archived: docs/plans/2026-06-02-phase3-benchmark-coverage.md → docs/archive/plans/
-[2026-06-02] [Pipeline benchmark: add input dir scanner + PG evidence metrics + enhanced report] [in_progress]
-[2026-06-02] [Updated and archived unified backend config & monitoring documentation] [completed]
+[2026-06-02] [Online acquisition refactor: separate link acquisition from download, Firecrawl adapter] [IN_PROGRESS]
