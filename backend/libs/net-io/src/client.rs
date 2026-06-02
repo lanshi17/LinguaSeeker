@@ -99,6 +99,32 @@ impl HttpClient {
         Ok(text)
     }
 
+    /// GET raw bytes with retry. Returns (bytes, final_url, status_code).
+    pub async fn get_bytes(&self, url: &str) -> Result<(Vec<u8>, String, u16), GatewayError> {
+        let mut last_err = None;
+        for attempt in 1..=self.max_retries {
+            match self.inner.get(url).send().await {
+                Ok(resp) => {
+                    let status = resp.status().as_u16();
+                    let final_url = resp.url().to_string();
+                    if resp.status().is_success() {
+                        let bytes = resp.bytes().await
+                            .map_err(|e| GatewayError::Other(format!("bytes read failed: {e}")))?;
+                        return Ok((bytes.to_vec(), final_url, status));
+                    }
+                    last_err = Some(GatewayError::Other(format!("HTTP {status}")));
+                }
+                Err(e) => {
+                    last_err = Some(GatewayError::Http(e));
+                }
+            }
+            if attempt < self.max_retries {
+                tokio::time::sleep(retry_backoff(attempt)).await;
+            }
+        }
+        Err(last_err.unwrap_or_else(|| GatewayError::Other("unknown error".into())))
+    }
+
     /// POST JSON with optional Authorization header.
     pub async fn post_json(
         &self,

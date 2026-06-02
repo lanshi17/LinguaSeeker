@@ -639,6 +639,26 @@ def normalize_web_generic(item: Dict[str, Any]) -> OnlineAcquisitionItem:
     )
 
 
+def normalize_firecrawl(item: Dict[str, Any]) -> OnlineAcquisitionItem:
+    """Normalize a Firecrawl search result into an OnlineAcquisitionItem."""
+    return OnlineAcquisitionItem(
+        source="firecrawl",
+        title=_clean_text(item.get("title")),
+        authors=[],
+        journal=None,
+        year=None,
+        doi=_clean_text(item.get("doi")),
+        url=_clean_text(item.get("url")),
+        links=[u for u in [item.get("url")] if u],
+        language=None,
+        publisher=None,
+        issn=[],
+        identifiers={},
+        keywords=[],
+        literature_type=None,
+    )
+
+
 # --- Normalizer registry ---
 
 NORMALIZER_MAP: Dict[str, Callable[[Dict[str, Any]], OnlineAcquisitionItem]] = {
@@ -652,6 +672,7 @@ NORMALIZER_MAP: Dict[str, Callable[[Dict[str, Any]], OnlineAcquisitionItem]] = {
     "pubscholar": normalize_web_generic,
     "cyberleninka": normalize_web_generic,
     "hans_publishers": normalize_web_generic,
+    "firecrawl": normalize_firecrawl,
 }
 
 
