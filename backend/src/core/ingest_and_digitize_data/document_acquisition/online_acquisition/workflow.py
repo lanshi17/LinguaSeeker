@@ -1,12 +1,21 @@
-"""Top-level literature workflow — orchestrates providers with fallback chains."""
+"""Online acquisition workflow — three-phase pipeline.
+
+Phase 1 (Link Acquisition): Parallel search from API providers + Firecrawl.
+Phase 2 (Download): Route candidates by type — DOI → OA API, PMCID → PMC, direct URL → HTTP.
+Phase 3 (Gate): LLM classification on downloaded PDF content.
+"""
 
 from __future__ import annotations
 
+import asyncio
 import os
 import re
 from typing import Any, Dict, List, Optional
 
+from loguru import logger
+
 from .contracts import (
+    DownloadResult,
     OnlineAcquisitionGatewayResult,
     OnlineAcquisitionItem,
     OnlineAcquisitionRequest,
@@ -14,21 +23,34 @@ from .contracts import (
     OnlineAcquisitionRouteInfo,
     OnlineAcquisitionSourceTraceEntry,
 )
-from .doi_fallback import doi_fallback_download, probe_doi_landing_page
-from .gateway import _normalize_doi, download_from_provider, search_provider
+from .doi_fallback import probe_doi_landing_page
+from .gateway import (
+    _normalize_doi,
+    download_file_from_url,
+    resolve_oa_url,
+    search_provider,
+)
 from .literature_type_classifier import LiteratureType, classify_item
 from .normalizers import normalize_items
-from .web_providers import call_web_provider
+from .provider_health import get_health_tracker
+from .web_search import SearchLink
 
 DOI_PATTERN = re.compile(r"\b10\.\d{4,9}/[^\s\"<>]+", re.IGNORECASE)
 PMCID_PATTERN = re.compile(r"\bPMC\d+\b", re.IGNORECASE)
 PMID_PATTERN = re.compile(r"PMID[:\s]*([0-9]{5,9})", re.IGNORECASE)
 
-API_PROVIDER_CHAIN: Dict[str, List[str]] = {
+# API providers to search in parallel (order matters for result priority)
+_API_SEARCH_PROVIDERS = [
+    "crossref", "unpaywall", "openalex", "europepmc", "pmc",
+    "doaj", "jstage", "arxiv", "biorxiv", "medrxiv",
+    "scielo", "base", "core", "openaire", "cinii",
+]
+
+# Identifier-specific provider overrides
+_ID_PROVIDER_MAP: Dict[str, List[str]] = {
     "doi": ["crossref", "unpaywall", "openalex", "europepmc"],
-    "pmid": ["pmc"],
+    "pmid": ["pmc", "europepmc"],
     "pmcid": ["pmc"],
-    "default": ["crossref", "unpaywall", "openalex", "europepmc"],
 }
 
 
@@ -54,27 +76,6 @@ def _extract_identifiers(texts: List[str]) -> Dict[str, Optional[str]]:
     return info
 
 
-def _select_initial_provider(
-    request: OnlineAcquisitionRequest,
-    identifiers: Dict[str, Optional[str]],
-) -> str:
-    if request.api_provider:
-        return request.api_provider
-    if identifiers.get("pmcid") or identifiers.get("pmid"):
-        return "pmc"
-    if identifiers.get("doi"):
-        return "crossref" if request.action == "search" else "unpaywall"
-    return "crossref"
-
-
-def _build_provider_chain(identifiers: Dict[str, Optional[str]]) -> List[str]:
-    if identifiers.get("doi"):
-        return list(API_PROVIDER_CHAIN["doi"])
-    if identifiers.get("pmcid") or identifiers.get("pmid"):
-        return list(API_PROVIDER_CHAIN["pmid"])
-    return list(API_PROVIDER_CHAIN["default"])
-
-
 def _build_query(request: OnlineAcquisitionRequest) -> str:
     if request.query:
         return request.query.strip()
@@ -90,330 +91,366 @@ def _resolve_language(request: OnlineAcquisitionRequest, identifiers: Dict[str, 
     lang = (request.language or "").strip().lower()
     if lang and lang != "auto":
         return lang
-    # Auto-detect from DOI domain
     doi = identifiers.get("doi")
     if doi:
-        # Chinese journal DOIs
         if doi.startswith("10.3760/") or doi.startswith("10.3969/"):
             return "zh"
     return None
 
 
-def _aggregate_traces(results: List[OnlineAcquisitionGatewayResult]) -> List[OnlineAcquisitionSourceTraceEntry]:
-    """Collect source_trace from multiple provider results."""
-    traces: List[OnlineAcquisitionSourceTraceEntry] = []
-    for result in results:
-        traces.extend(result.source_trace)
-    return traces
+# ── Phase 1: Link Acquisition ───────────────────────────────────────────
 
 
-async def _try_doi_fallback(
-    identifiers: Dict[str, Optional[str]],
-    request: OnlineAcquisitionRequest,
-    warnings: List[str],
-) -> Optional[Dict[str, Any]]:
-    doi = identifiers.get("doi")
-    if not doi or request.action != "download":
-        return None
-    fallback = await doi_fallback_download(
-        doi,
-        download_path=request.download_path,
-        email=os.getenv("UNPAYWALL_EMAIL"),
-    )
-    warnings.extend(fallback.get("warnings") or [])
-    if fallback.get("success"):
-        return fallback
-    return None
-
-
-def _apply_literature_type_filter(
-    items: List[OnlineAcquisitionItem],
-    literature_types: List[str],
-) -> List[OnlineAcquisitionItem]:
-    """Tag items with literature_type and filter if types specified."""
-    if not literature_types:
-        for item in items:
-            item.literature_type = classify_item(item)
-        return items
-
-    type_set = {LiteratureType(t) for t in literature_types}
-    filtered: List[OnlineAcquisitionItem] = []
-    for item in items:
-        lt = classify_item(item)
-        item.literature_type = lt
-        if lt in type_set:
-            filtered.append(item)
-    return filtered
-
-
-async def _handle_search(
-    request: OnlineAcquisitionRequest,
-    identifiers: Dict[str, Optional[str]],
+async def _acquire_links_api(
+    *,
     query: str,
-    route: OnlineAcquisitionRouteInfo,
-    warnings: List[str],
-) -> Dict[str, Any]:
-    """Handle search action with provider chain fallback."""
-    all_results: List[OnlineAcquisitionGatewayResult] = []
-
-    if request.api_provider:
-        route.api_provider = request.api_provider
-        result = await search_provider(
-            provider=request.api_provider,
-            query=query,
-            identifiers=_build_gateway_identifiers(identifiers),
-            limit=request.limit,
-            raw=request.raw,
-            params=request.api_params,
-        )
-        all_results.append(result)
-        items = normalize_items(result.provider, result.items) if result.success else []
-        items = _apply_literature_type_filter(items, request.literature_types)
-        warnings.extend(result.warnings)
-        route.used = "api"
-        route.reason = f"api_provider:{request.api_provider}"
-        return OnlineAcquisitionResponse(
-            success=bool(items),
-            items=items,
-            warnings=warnings,
-            route=route,
-            raw={"source_trace": [t.__dict__ for t in _aggregate_traces(all_results)]} if request.raw else None,
-        ).model_dump()
-
-    provider_chain = _build_provider_chain(identifiers)
-    initial = _select_initial_provider(request, identifiers)
-    if initial not in provider_chain:
-        provider_chain = [initial] + provider_chain
-
-    route.api_provider = initial
-    for provider in provider_chain:
-        result = await search_provider(
-            provider=provider,
-            query=query,
-            identifiers=_build_gateway_identifiers(identifiers),
-            limit=request.limit,
-            raw=request.raw,
-            params=request.api_params,
-        )
-        all_results.append(result)
-        items = normalize_items(result.provider, result.items) if result.success else []
-        items = _apply_literature_type_filter(items, request.literature_types)
-        warnings.extend(result.warnings)
-        if items:
-            route.used = "api"
-            route.reason = f"api_provider:{provider}"
-            return OnlineAcquisitionResponse(
-                success=True,
-                items=items,
-                warnings=warnings,
-                route=route,
-                raw={"source_trace": [t.__dict__ for t in _aggregate_traces(all_results)]} if request.raw else None,
-            ).model_dump()
-
-    # DOI fallback for search — when API providers fail, try DOI landing page
+    identifiers: Dict[str, Optional[str]],
+    limit: int = 20,
+) -> List[Dict[str, Any]]:
+    """Phase 1a: Search API providers in parallel, return raw items with metadata."""
     doi = identifiers.get("doi")
+    pmid = identifiers.get("pmid")
+    pmcid = identifiers.get("pmcid")
+
     if doi:
-        fallback = await probe_doi_landing_page(doi, email=os.getenv("UNPAYWALL_EMAIL"))
-        warnings.extend(fallback.get("warnings") or [])
-        if fallback.get("success") and fallback.get("resolved_url"):
-            route.fallback_used = True
-            route.reason = "doi_fallback:landing_probe"
-            item = OnlineAcquisitionItem(
-                source="doi_fallback",
-                title=None,
-                authors=[],
-                journal=None,
-                year=None,
-                doi=doi,
-                url=fallback["resolved_url"],
-                links=[fallback["resolved_url"]],
+        providers = _ID_PROVIDER_MAP["doi"]
+    elif pmid or pmcid:
+        providers = _ID_PROVIDER_MAP.get("pmid" if pmid else "pmcid", ["pmc"])
+    else:
+        providers = _API_SEARCH_PROVIDERS
+
+    id_params = {k: v for k, v in identifiers.items() if v}
+
+    async def _search_one(provider: str) -> Optional[OnlineAcquisitionGatewayResult]:
+        try:
+            return await search_provider(
+                provider=provider,
+                query=query,
+                identifiers=id_params,
+                limit=limit,
+                raw=False,
+                params={},
             )
-            return OnlineAcquisitionResponse(
-                success=True,
-                items=[item],
-                warnings=warnings,
-                route=route,
-                raw={"source_trace": [t.__dict__ for t in _aggregate_traces(all_results)]} if request.raw else None,
-            ).model_dump()
+        except Exception as exc:
+            logger.debug("api search {} failed: {}", provider, exc)
+            return None
 
-    route.reason = "api_no_items"
-    warnings.append("FETCH_NO_RESULT")
-    return OnlineAcquisitionResponse(
-        success=False,
-        items=[],
-        warnings=warnings,
-        route=route,
-        raw={"source_trace": [t.__dict__ for t in _aggregate_traces(all_results)]} if request.raw else None,
-    ).model_dump()
+    results = await asyncio.gather(*[_search_one(p) for p in providers], return_exceptions=True)
+
+    all_items: List[Dict[str, Any]] = []
+    for result in results:
+        if isinstance(result, Exception):
+            continue
+        if result and result.success:
+            for item in result.items:
+                if isinstance(item, dict):
+                    item["_source_provider"] = result.provider
+                    all_items.append(item)
+
+    return all_items
 
 
-async def _handle_download(
-    request: OnlineAcquisitionRequest,
-    identifiers: Dict[str, Optional[str]],
+async def _acquire_links_firecrawl(
+    *,
     query: str,
-    route: OnlineAcquisitionRouteInfo,
-    warnings: List[str],
-) -> Dict[str, Any]:
-    """Handle download action with provider chain fallback + DOI fallback + web fallback."""
-    all_results: List[OnlineAcquisitionGatewayResult] = []
+    language: Optional[str] = None,
+) -> List[SearchLink]:
+    """Phase 1b: Search via Firecrawl adapter."""
+    from .web_search.firecrawl_adapter import FirecrawlAdapter
 
-    if request.api_provider:
-        route.api_provider = request.api_provider
-        result = await download_from_provider(
-            provider=request.api_provider,
-            query=query,
-            identifiers=_build_gateway_identifiers(identifiers),
-            limit=request.limit,
-            raw=request.raw,
-            download_path=request.download_path,
-            selected_index=request.selected_index,
-            selected_title=request.selected_title,
-            detail_link=request.detail_link,
-            params=request.api_params,
-        )
-        all_results.append(result)
-        warnings.extend(result.warnings)
-        if result.success and result.downloads:
-            route.used = "api"
-            route.reason = f"api_provider:{request.api_provider}"
-            return OnlineAcquisitionResponse(
-                success=True,
-                downloads=result.downloads,
-                warnings=warnings,
-                route=route,
-                raw={"source_trace": [t.__dict__ for t in _aggregate_traces(all_results)]} if request.raw else None,
-            ).model_dump()
+    from src.core.config import get_config
+    cfg = get_config()
+    if not cfg.web_search.api_key:
+        logger.info("web search skipped: no WEB_SEARCH_API_KEY configured")
+        return []
 
-    provider_chain = _build_provider_chain(identifiers)
-    initial = _select_initial_provider(request, identifiers)
-    if initial not in provider_chain:
-        provider_chain = [initial] + provider_chain
+    adapter = FirecrawlAdapter(
+        api_key=cfg.web_search.api_key,
+        base_url=cfg.web_search.base_url,
+        timeout=cfg.web_search.timeout,
+        max_results=cfg.web_search.max_results,
+    )
 
-    route.api_provider = initial
-    for provider in provider_chain:
-        result = await download_from_provider(
-            provider=provider,
-            query=query,
-            identifiers=_build_gateway_identifiers(identifiers),
-            limit=request.limit,
-            raw=request.raw,
-            download_path=request.download_path,
-            selected_index=request.selected_index,
-            selected_title=request.selected_title,
-            detail_link=request.detail_link,
-            params=request.api_params,
-        )
-        all_results.append(result)
-        warnings.extend(result.warnings)
-        if result.success and result.downloads:
-            route.used = "api"
-            route.reason = f"api_provider:{provider}"
-            return OnlineAcquisitionResponse(
-                success=True,
-                downloads=result.downloads,
-                warnings=warnings,
-                route=route,
-                raw={"source_trace": [t.__dict__ for t in _aggregate_traces(all_results)]} if request.raw else None,
-            ).model_dump()
+    result = await adapter.search(query, language=language)
+    if result.warnings:
+        for w in result.warnings:
+            logger.warning("firecrawl: {}", w)
 
-    # DOI fallback
-    doi_result = await _try_doi_fallback(identifiers, request, warnings)
-    if doi_result:
-        route.fallback_used = True
-        route.reason = "doi_fallback:landing_probe"
-        download_entry: Dict[str, Any] = {}
-        if doi_result.get("pdf_url"):
-            download_entry["pdf_url"] = doi_result["pdf_url"]
-        if doi_result.get("file_path"):
-            download_entry["file_path"] = doi_result["file_path"]
-        if doi_result.get("resolved_url"):
-            download_entry["resolved_url"] = doi_result["resolved_url"]
-        return OnlineAcquisitionResponse(
-            success=True,
-            downloads=[download_entry] if download_entry else [],
-            warnings=warnings,
-            route=route,
-            raw={"source_trace": [t.__dict__ for t in _aggregate_traces(all_results)]} if request.raw else None,
-        ).model_dump()
+    all_links = list(result.links)
+    scrape_tasks = [adapter.scrape_links(link.url) for link in result.links[:5]]
+    scrape_results = await asyncio.gather(*scrape_tasks, return_exceptions=True)
+    for sr in scrape_results:
+        if isinstance(sr, list):
+            all_links.extend(sr)
 
-    # Web fallback
-    if request.prefer in ("auto", "web"):
-        web_provider = request.web_provider or "pubscholar"
-        web_result = await call_web_provider(
-            provider=web_provider,
-            action="download",
-            query=query,
-            limit=request.limit,
-            download_path=request.download_path,
-            selected_index=request.selected_index,
-            selected_title=request.selected_title,
-            detail_link=request.detail_link,
-            params=request.web_params,
-        )
-        all_results.append(web_result)
-        warnings.extend(web_result.warnings)
-        if web_result.success and web_result.downloads:
-            route.used = "web"
-            route.web_provider = web_provider
-            route.reason = f"web_provider:{web_provider}"
-            route.fallback_used = True
-            return OnlineAcquisitionResponse(
-                success=True,
-                downloads=web_result.downloads,
-                warnings=warnings,
-                route=route,
-                raw={"source_trace": [t.__dict__ for t in _aggregate_traces(all_results)]} if request.raw else None,
-            ).model_dump()
+    return all_links
 
-    route.reason = "api_download_failed"
-    warnings.append("FULLTEXT_UNAVAILABLE")
-    return OnlineAcquisitionResponse(
-        success=False,
-        downloads=[],
-        warnings=warnings,
-        route=route,
-        raw={"source_trace": [t.__dict__ for t in _aggregate_traces(all_results)]} if request.raw else None,
-    ).model_dump()
+
+def _merge_and_dedupe(
+    api_items: List[Dict[str, Any]],
+    firecrawl_links: List[SearchLink],
+) -> List[Dict[str, Any]]:
+    """Merge API items and Firecrawl links, deduplicate by DOI/URL/title."""
+    seen_dois: set[str] = set()
+    seen_urls: set[str] = set()
+    seen_titles: set[str] = set()
+    merged: List[Dict[str, Any]] = []
+
+    def _norm_title(t: Optional[str]) -> str:
+        if not t:
+            return ""
+        return re.sub(r"[^\w\s]", "", t.lower()).strip()
+
+    for item in api_items:
+        doi = (item.get("doi") or item.get("DOI") or "").strip().lower()
+        url = (item.get("url") or item.get("URL") or item.get("link") or "").strip()
+        title = _norm_title(item.get("title") or item.get("article_title"))
+
+        if doi and doi in seen_dois:
+            continue
+        if url and url in seen_urls:
+            continue
+        if title and title in seen_titles:
+            continue
+
+        if doi:
+            seen_dois.add(doi)
+        if url:
+            seen_urls.add(url)
+        if title:
+            seen_titles.add(title)
+
+        item["_candidate_type"] = "api"
+        merged.append(item)
+
+    for link in firecrawl_links:
+        url = link.url.strip()
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+
+        merged.append({
+            "url": url,
+            "title": link.title or "",
+            "doi": link.doi or "",
+            "_source_provider": link.source or "firecrawl",
+            "_candidate_type": "firecrawl",
+        })
+
+    return merged
+
+
+# ── Phase 2: Download ───────────────────────────────────────────────────
+
+
+async def _download_candidates(
+    candidates: List[Dict[str, Any]],
+    download_path: str,
+) -> List[DownloadResult]:
+    """Phase 2: Download files from candidate links.
+
+    Routing:
+    - DOI → unpaywall OA resolution → download
+    - PMCID → PMC PDF URL → download
+    - Direct URL → HTTP download (with HTML→PDF redirect handling)
+    """
+    async def _download_one(candidate: Dict[str, Any]) -> Optional[DownloadResult]:
+        doi = candidate.get("doi") or candidate.get("DOI")
+        pmid = candidate.get("pmid")
+        if not pmid and isinstance(candidate.get("identifiers"), dict):
+            pmid = candidate["identifiers"].get("pmid")
+        pmcid = candidate.get("pmcid")
+        url = candidate.get("url") or candidate.get("URL")
+        title = candidate.get("title", "untitled")
+        filename_stem = re.sub(r"[^\w\-]", "_", title)[:80] if title else "untitled"
+
+        # Route 1: DOI → unpaywall OA resolution
+        if doi:
+            try:
+                id_params = {"doi": doi}
+                result = await search_provider(
+                    provider="unpaywall",
+                    query="",
+                    identifiers=id_params,
+                    limit=1,
+                    raw=False,
+                    params={},
+                )
+                oa_url = resolve_oa_url(result)
+                if oa_url:
+                    file_path, final_url, warns = await download_file_from_url(
+                        oa_url, download_path, filename_stem
+                    )
+                    if file_path:
+                        return DownloadResult(
+                            file_path=file_path,
+                            source="unpaywall",
+                            doi=doi,
+                            url=final_url,
+                            warnings=warns,
+                        )
+            except Exception as exc:
+                logger.debug("unpaywall download failed for {}: {}", doi, exc)
+
+        # Route 2: PMCID → PMC direct PDF URL
+        if pmcid:
+            pdf_url = f"https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/pdf/"
+            file_path, final_url, warns = await download_file_from_url(
+                pdf_url, download_path, filename_stem
+            )
+            if file_path:
+                return DownloadResult(
+                    file_path=file_path,
+                    source="pmc",
+                    pmcid=pmcid,
+                    url=final_url,
+                    warnings=warns,
+                )
+
+        # Route 3: Direct URL download
+        if url:
+            file_path, final_url, warns = await download_file_from_url(
+                url, download_path, filename_stem
+            )
+            if file_path:
+                return DownloadResult(
+                    file_path=file_path,
+                    source=candidate.get("_source_provider", "direct"),
+                    url=final_url,
+                    warnings=warns,
+                )
+
+        return None
+
+    results = await asyncio.gather(*[_download_one(c) for c in candidates], return_exceptions=True)
+    downloads = [r for r in results if isinstance(r, DownloadResult)]
+
+    return downloads
+
+
+# ── Main Entry Point ────────────────────────────────────────────────────
 
 
 async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Unified literature workflow — search or download with fallback chains."""
-    try:
-        request = OnlineAcquisitionRequest.model_validate(payload)
-    except Exception as exc:
-        route = OnlineAcquisitionRouteInfo(prefer="auto", used="none", reason="invalid_request")
-        response = OnlineAcquisitionResponse(
-            success=False,
-            items=[],
-            warnings=[f"invalid_request: {exc}"],
-            route=route,
-        )
-        return response.model_dump()
+    """Main entry point — three-phase online acquisition pipeline.
 
-    if request.prefer == "web" and not request.web_provider:
-        return OnlineAcquisitionResponse(
-            success=False,
-            items=[],
-            warnings=["prefer=web requires web_provider to be specified"],
-            route=OnlineAcquisitionRouteInfo(prefer="web", used="none", reason="missing_web_provider"),
-        ).model_dump()
-
+    Phase 1: Parallel link acquisition (API providers + Firecrawl).
+    Phase 2: Download by candidate type (DOI→OA, PMCID→PMC, URL→direct).
+    Phase 3: LLM content gate on downloaded PDFs.
+    """
+    # --- Validate request ---
+    request = OnlineAcquisitionRequest(**payload)
     query = _build_query(request)
     identifiers = _extract_identifiers([request.query or ""] + request.identifiers)
-
-    # Resolve language-specific download path
-    lang = _resolve_language(request, identifiers)
-    if lang and request.action == "download":
-        request.download_path = f"{request.download_path.rstrip('/')}/{lang}"
+    language = _resolve_language(request, identifiers)
 
     route = OnlineAcquisitionRouteInfo(
         prefer=request.prefer,
-        used="none",
-        reason=None,
+        api_provider=request.api_provider,
+        web_provider=request.web_provider,
+        used="api",
+        reason="parallel_acquisition",
         fallback_used=False,
     )
     warnings: List[str] = []
+    traces: List[OnlineAcquisitionSourceTraceEntry] = []
 
+    download_path = request.download_path
+    if language:
+        download_path = os.path.join(download_path, language)
+
+    # === Phase 1: Link Acquisition (parallel) ===
+    id_params = _build_gateway_identifiers(identifiers)
+
+    api_task = _acquire_links_api(query=query, identifiers=id_params, limit=request.limit)
+    firecrawl_task = _acquire_links_firecrawl(query=query, language=language)
+
+    api_items, firecrawl_links = await asyncio.gather(api_task, firecrawl_task, return_exceptions=True)
+
+    if isinstance(api_items, Exception):
+        logger.warning("api acquisition failed: {}", api_items)
+        api_items = []
+    if isinstance(firecrawl_links, Exception):
+        logger.warning("firecrawl acquisition failed: {}", firecrawl_links)
+        firecrawl_links = []
+
+    candidates = _merge_and_dedupe(api_items, firecrawl_links)
+
+    if not candidates:
+        warnings.append("FETCH_NO_RESULT: no candidates from any source")
+        return OnlineAcquisitionResponse(
+            success=False,
+            items=[],
+            downloads=[],
+            warnings=warnings,
+            route=route,
+            candidate_links=[],
+        ).model_dump()
+
+    # Normalize API items
+    normalized_items: List[OnlineAcquisitionItem] = []
+    for item in candidates:
+        provider = item.get("_source_provider", "unknown")
+        try:
+            normalized = normalize_items(provider, [item])
+            normalized_items.extend(normalized)
+        except Exception:
+            try:
+                normalized = normalize_items("firecrawl", [item])
+                normalized_items.extend(normalized)
+            except Exception:
+                pass
+
+    # Apply literature type filter
+    if request.literature_types:
+        typed_items = []
+        for ni in normalized_items:
+            lt = classify_item(ni)
+            ni.literature_type = lt.value if lt else None
+            if lt and lt.value in request.literature_types:
+                typed_items.append(ni)
+        normalized_items = typed_items
+
+    clean_candidates = [{k: v for k, v in c.items() if not k.startswith("_")} for c in candidates]
+
+    # === Search-only mode ===
     if request.action == "search":
-        return await _handle_search(request, identifiers, query, route, warnings)
-    return await _handle_download(request, identifiers, query, route, warnings)
+        return OnlineAcquisitionResponse(
+            success=bool(normalized_items),
+            items=normalized_items,
+            downloads=[],
+            warnings=warnings,
+            route=route,
+            candidate_links=clean_candidates,
+        ).model_dump()
+
+    # === Phase 2: Download ===
+    download_results = await _download_candidates(candidates, download_path)
+
+    if not download_results:
+        warnings.append("FULLTEXT_UNAVAILABLE: no files downloaded")
+
+    downloads = [
+        {
+            "file_path": dr.file_path,
+            "source": dr.source,
+            "doi": dr.doi,
+            "pmcid": dr.pmcid,
+            "url": dr.url,
+            "warnings": dr.warnings,
+        }
+        for dr in download_results
+    ]
+
+    # === Phase 3: LLM Content Gate ===
+    # Currently keyword-based on title/journal; PDF content classification
+    # can be added as a future enhancement.
+
+    return OnlineAcquisitionResponse(
+        success=bool(download_results),
+        items=normalized_items,
+        downloads=downloads,
+        warnings=warnings,
+        route=route,
+        candidate_links=clean_candidates,
+    ).model_dump()

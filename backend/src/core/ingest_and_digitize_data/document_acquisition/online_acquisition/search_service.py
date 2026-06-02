@@ -23,9 +23,6 @@ class ProviderPlanItem(TypedDict):
 
 LANG_PROVIDER_MATRIX: Dict[str, List[ProviderPlanItem]] = {
     "zh": [
-        {"route": "web", "provider": "pubscholar"},
-        {"route": "web", "provider": "chinaxiv"},
-        {"route": "web", "provider": "hans_publishers"},
         {"route": "api", "provider": "crossref"},
         {"route": "api", "provider": "unpaywall"},
         {"route": "api", "provider": "doaj"},
@@ -40,20 +37,17 @@ LANG_PROVIDER_MATRIX: Dict[str, List[ProviderPlanItem]] = {
         {"route": "api", "provider": "pmc"},
     ],
     "ko": [
-        {"route": "web", "provider": "koreascience"},
         {"route": "api", "provider": "crossref"},
         {"route": "api", "provider": "unpaywall"},
         {"route": "api", "provider": "doaj"},
     ],
     "es": [
         {"route": "api", "provider": "scielo"},
-        {"route": "web", "provider": "redalyc"},
         {"route": "api", "provider": "crossref"},
         {"route": "api", "provider": "unpaywall"},
     ],
     "pt": [
         {"route": "api", "provider": "scielo"},
-        {"route": "web", "provider": "redalyc"},
         {"route": "api", "provider": "crossref"},
         {"route": "api", "provider": "unpaywall"},
     ],
@@ -241,30 +235,16 @@ async def search_multilingual(
     preferred_provider = plan[0]["provider"] if plan else None
 
     for plan_item in plan:
-        if plan_item["route"] == "api":
-            result = await search_provider(
-                provider=plan_item["provider"],
-                query=query,
-                limit=candidate_limit,
+        result = await search_provider(
+            provider=plan_item["provider"],
+            query=query,
+            limit=candidate_limit,
+        )
+        items = normalize_items(result.provider, result.items) if result.success else []
+        for item in items:
+            collected.append(
+                _normalize_candidate(item.model_dump(), plan_item)
             )
-            items = normalize_items(result.provider, result.items) if result.success else []
-            for item in items:
-                collected.append(
-                    _normalize_candidate(item.model_dump(), plan_item)
-                )
-        else:
-            # Web provider — delegate to web_providers
-            from .web_providers import call_web_provider
-
-            web_result = await call_web_provider(
-                provider=plan_item["provider"],
-                action="search",
-                query=query,
-                limit=candidate_limit,
-            )
-            for item in web_result.items:
-                if item.get("title"):
-                    collected.append(_normalize_candidate(item, plan_item))
 
         collected = dedupe_candidates(collected)
         collected = rank_candidates(
@@ -291,28 +271,13 @@ async def search_parallel(
 
     async def _search_one(item: ProviderPlanItem) -> List[Dict[str, Any]]:
         async with sem:
-            if item["route"] == "api":
-                result = await search_provider(
-                    provider=item["provider"],
-                    query=query,
-                    limit=candidate_limit,
-                )
-                items = normalize_items(result.provider, result.items) if result.success else []
-                return [_normalize_candidate(i.model_dump(), item) for i in items]
-            else:
-                from .web_providers import call_web_provider
-
-                web_result = await call_web_provider(
-                    provider=item["provider"],
-                    action="search",
-                    query=query,
-                    limit=candidate_limit,
-                )
-                return [
-                    _normalize_candidate(i, item)
-                    for i in web_result.items
-                    if i.get("title")
-                ]
+            result = await search_provider(
+                provider=item["provider"],
+                query=query,
+                limit=candidate_limit,
+            )
+            items = normalize_items(result.provider, result.items) if result.success else []
+            return [_normalize_candidate(i.model_dump(), item) for i in items]
 
     tasks = [_search_one(item) for item in plan]
     results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -320,10 +285,8 @@ async def search_parallel(
     collected: List[Dict[str, Any]] = []
     for i, result in enumerate(results):
         if isinstance(result, Exception):
-            import logging
-            logging.getLogger(__name__).warning(
-                "Provider %s search failed: %s", plan[i]["provider"], result
-            )
+            from loguru import logger as _logger
+            _logger.warning("Provider {} search failed: {}", plan[i]["provider"], result)
             continue
         collected.extend(result)
 
