@@ -1076,3 +1076,31 @@ Phase 2 失败导致 Phase 3 未能执行（pipeline error），因此该结论�
 - 路径处理必须同时考虑 Unix (/) 和 Windows (\\) 分隔符
 - 测试必须验证其名称暗示的行为，不能仅靠间接验证
 - 使用 slowapi 等库的私有属性时添加版本约束注释和 smoke test
+
+## [2026-06-02] 在线获取模块重构：链接获取与下载分离
+
+### 问题描述
+原在线获取模块将链接获取和文件下载耦合在同一 API provider 调用链中，7 个 web provider 各自实现搜索+下载逻辑，难以维护和扩展。
+
+### 排查过程
+1. 分析现有代码结构：workflow.py 的 fallback chain、gateway.py 的 download_from_provider、search_service.py 的 LANG_PROVIDER_MATRIX
+2. 识别各 provider 的 URL 提取模式差异（unpaywall inline、DOAJ/JStage explicit、crossref/europepmc embedded）
+3. 确认 Rust PyO3 边界的类型转换机制（serde_json::json! → Python dict）
+
+### 根因分析
+- 架构上搜索和下载是同一函数的两个阶段，无法独立扩展
+- web provider 每个需要独立维护搜索+下载逻辑
+- 链接获取阶段的筛选逻辑与下载阶段耦合
+
+### 解决方案
+1. 三阶段流水线：链接获取（并行 API + Firecrawl）→ 下载（类型路由）→ LLM 门控
+2. 适配器模式：WebSearchAdapter ABC + FirecrawlAdapter 实现，便于替换搜索后端
+3. Rust download_file PyO3 绑定返回 dict（serde_json::json! 自动转换）
+4. download_file_from_url 保留 HTML→PDF 重定向处理（queue-based approach）
+5. 所有 asyncio.gather 使用 return_exceptions=True 防止单点失败
+
+### 预防措施
+- PyO3 返回类型：使用 serde_json::json! 返回 dict，不要返回 tuple（Python 侧难以类型安全地解构）
+- Firecrawl SDK 响应可能是 Pydantic model 或 dict，使用 _to_dict() 统一处理
+- 现有测试中引用已删除函数的情况需要在重构时一并更新
+- web_providers.py 的废弃警告使用 per-function 而非 module-level，避免影响其他模块的 import
