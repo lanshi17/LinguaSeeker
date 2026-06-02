@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import os
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, TypedDict
 from uuid import uuid4
 
 from fastapi import FastAPI, Request
@@ -21,6 +21,19 @@ from src.utils.logger import get_logger, setup_logging
 from src.utils.middleware import add_request_monitoring
 
 
+class ErrorDetail(TypedDict, total=False):
+    """Error detail structure."""
+    code: str
+    message: str
+    details: list[dict[str, Any]]
+
+
+class ErrorResponseBody(TypedDict):
+    """Error response envelope."""
+    error: ErrorDetail
+    request_id: str
+
+
 def _error_response(
     *,
     code: str,
@@ -30,12 +43,17 @@ def _error_response(
     errors: list[dict[str, Any]] | None = None,
 ) -> JSONResponse:
     """Build a structured error response envelope with X-Request-ID header."""
-    body: dict[str, Any] = {
-        "error": {"code": code, "message": message},
-        "request_id": request_id,
+    error_detail: ErrorDetail = {
+        "code": code,
+        "message": message,
     }
     if errors is not None:
-        body["error"]["details"] = errors
+        error_detail["details"] = errors
+
+    body: ErrorResponseBody = {
+        "error": error_detail,
+        "request_id": request_id,
+    }
     return JSONResponse(status_code=status, content=body, headers={"X-Request-ID": request_id})
 
 
