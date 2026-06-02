@@ -13,9 +13,18 @@ import httpx
 @dataclass
 class OnlineAcquisitionPubMedCandidate:
     pmid: str
-    title: str
-    journal: str
-    pub_date: str
+    pmcid: str = ""
+    doi: str = ""
+    title: str = ""
+    journal: str = ""
+    pub_date: str = ""
+
+    @property
+    def pmc_pdf_url(self) -> str:
+        """Direct PMC PDF URL if PMCID is available."""
+        if self.pmcid:
+            return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{self.pmcid}/pdf/"
+        return ""
 
 
 @dataclass
@@ -89,9 +98,21 @@ class OnlineAcquisitionPubMedService:
             row = records.get(pmid, {})
             if not row:
                 continue
+            # Extract PMCID and DOI from articleids
+            pmcid = ""
+            doi = ""
+            for aid in row.get("articleids", []) or []:
+                idtype = str(aid.get("idtype", "")).lower()
+                value = str(aid.get("value", "")).strip()
+                if idtype == "pmc" and not pmcid:
+                    pmcid = value
+                elif idtype == "doi" and not doi:
+                    doi = value
             candidates.append(
                 OnlineAcquisitionPubMedCandidate(
                     pmid=pmid,
+                    pmcid=pmcid,
+                    doi=doi,
                     title=str(row.get("title") or "").strip(),
                     journal=str(
                         row.get("fulljournalname") or row.get("source") or ""

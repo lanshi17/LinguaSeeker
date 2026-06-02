@@ -145,6 +145,11 @@ def _build_fetch_params(request: OnlineAcquisitionGatewayRequest) -> Dict[str, A
                 v = _normalize_doi(v)
             identifiers[k] = v
         params["identifiers"] = identifiers
+    # Pass through extra provider params (year_range, is_oa, etc.)
+    if request.params:
+        for k, v in request.params.items():
+            if k not in params:
+                params[k] = v
     return {k: v for k, v in params.items() if v is not None}
 
 
