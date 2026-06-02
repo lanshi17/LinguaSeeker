@@ -97,25 +97,24 @@ def get_evidence_map_prompt(
 Document ID: {document_id}
 Track: {track.value}
 
-TASK: Determine if this document contains GDV/ACMG-relevant evidence. If relevant, identify:
-- Disease terms mentioned
-- Gene symbols mentioned
-- Variant identifiers mentioned
-- Case/proband references
-- Authority or database references (ClinVar, expert panels)
-- Any contradictions or exclusions noted
-- Structural hints (tables, figures, supplementary material)
+TASK: Scan this document for biomedical/genetic content and list all relevant terms you find.
 
-RELEVANCE CRITERIA — set "relevant" to true if the document mentions ANY of:
-- Disease or phenotype names (e.g. Fabry disease, cancer, cardiomyopathy)
-- Gene symbols (e.g. GLA, BRCA1, TP53)
-- Genetic variants (e.g. p.R227X, c.680C>T, rs12345)
-- Patient cases, probands, or family studies
-- Diagnostic or clinical findings related to genetic conditions
+DEFAULT: Set "relevant" to TRUE. Most biomedical case reports, studies, and clinical documents contain relevant evidence.
 
-Set "relevant" to false ONLY for documents that are purely methodological, editorial, administrative, or completely unrelated to biomedical/genetic evidence.
+Set "relevant" to FALSE ONLY if the document is:
+- A purely methodological paper (e.g. statistical methods, software tools)
+- An editorial, letter, or comment with no patient data
+- Completely unrelated to medicine, genetics, or biology
 
-Do not score or classify ACMG/GDV evidence. Only scan for relevance and structure.
+If you find ANY of the following, you MUST set "relevant" to TRUE and list them:
+- Disease names, diagnoses, or phenotypes (in any language)
+- Gene symbols or names
+- Genetic variants, mutations, or HGVS notation
+- Patient cases, probands, family pedigrees
+- Lab results, biomarkers, clinical findings
+- Drug treatments or therapeutic interventions
+
+CRITICAL: Do NOT return empty lists if the document contains biomedical content. List every term you find.
 
 JSON OUTPUT:
 Return only a single valid json object. Do not wrap it in markdown code fences or add commentary.

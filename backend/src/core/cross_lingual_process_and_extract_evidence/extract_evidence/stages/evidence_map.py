@@ -45,9 +45,9 @@ class RelevanceScanStage:
             maps.append(self._provider.invoke_structured(
                 prompt=prompt,
                 output_schema=DocumentEvidenceMap,
-                tier=EvidenceModelTier.STANDARD,
+                tier=EvidenceModelTier.FAST,
                 stage="relevance_scan" if chunk.total == 1 else f"relevance_scan/{chunk.index}",
-                response_method="json_schema",
+                response_method="json_mode",
             ))
         return merge_evidence_maps(maps)
 
@@ -76,9 +76,9 @@ class RelevanceScanStage:
                 return await self._provider.ainvoke_structured(
                     prompt=prompt,
                     output_schema=DocumentEvidenceMap,
-                    tier=EvidenceModelTier.STANDARD,
+                    tier=EvidenceModelTier.FAST,
                     stage="relevance_scan" if chunk.total == 1 else f"relevance_scan/{chunk.index}",
-                    response_method="json_schema",
+                    response_method="json_mode",
                 )
 
         results = await asyncio.gather(
