@@ -11,9 +11,23 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.prompt
 )
 
 
-def test_evidence_map_prompt_mentions_no_scoring():
+def test_evidence_map_prompt_defaults_to_relevant_before_task():
+    """DEFAULT instruction must appear before TASK so FAST models see it first."""
     prompt = get_evidence_map_prompt(document_id="doc-1", track=Track.ORIGINAL, text="BRCA1")
-    assert "Do not score" in prompt
+    default_pos = prompt.index("DEFAULT")
+    task_pos = prompt.index("TASK")
+    assert default_pos < task_pos, "DEFAULT must appear before TASK in the prompt"
+
+
+def test_evidence_map_prompt_has_uncertainty_safety_net():
+    """Prompt must include an explicit 'if unsure, set TRUE' safety net."""
+    prompt = get_evidence_map_prompt(document_id="doc-1", track=Track.ORIGINAL, text="BRCA1")
+    assert "unsure" in prompt.lower()
+    assert "true" in prompt.lower()
+
+
+def test_evidence_map_prompt_contains_document_id():
+    prompt = get_evidence_map_prompt(document_id="doc-1", track=Track.ORIGINAL, text="BRCA1")
     assert "doc-1" in prompt
 
 
@@ -21,8 +35,8 @@ def test_evidence_map_prompt_requests_json_object():
     prompt = get_evidence_map_prompt(document_id="doc-1", track=Track.ORIGINAL, text="BRCA1")
 
     assert "json" in prompt.lower()
-    assert '"relevant": false' in prompt.lower()
-    assert '"gene_terms": []' in prompt
+    assert '"relevant": true' in prompt.lower()
+    assert '"gene_terms"' in prompt
 
 
 def test_catalog_prompt_includes_catalog_field_ids():
