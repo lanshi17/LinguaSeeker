@@ -4,7 +4,7 @@ from __future__ import annotations
 import base64
 import uuid
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Literal
 
 import aiofiles
@@ -13,8 +13,8 @@ from starlette.requests import Request
 from pydantic import BaseModel, Field, model_validator
 
 from src.api.auth import require_api_key
-
 from src.api.rate_limit import limiter
+from src.core.config import get_config
 
 from src.agents.contracts import (
     PhaseStatus,
@@ -23,6 +23,7 @@ from src.agents.contracts import (
     PipelineMode,
     SourceType,
 )
+from src.core.config import get_config
 
 router = APIRouter()
 
@@ -185,8 +186,19 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
     # Decode base64 content and write to temp file if provided
     upload_file_path = None
     if body.content_base64:
+        # Enforce file size limit
+        max_size_bytes = get_config().mineru.max_file_size_mb * 1024 * 1024
+        estimated_size = len(body.content_base64) * 3 // 4
+        if estimated_size > max_size_bytes:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum size: {get_config().mineru.max_file_size_mb}MB",
+            )
+
         content_bytes = base64.b64decode(body.content_base64)
-        fname = body.filename or f"{processing_run_id}.bin"
+        # Sanitize filename: strip directory components to prevent path traversal
+        raw_fname = body.filename or f"{processing_run_id}.bin"
+        fname = PurePosixPath(raw_fname).name
         temp_dir = Path("data/pipeline/uploads")
         temp_dir.mkdir(parents=True, exist_ok=True)
         upload_file_path = str(temp_dir / f"{processing_run_id}_{fname}")
