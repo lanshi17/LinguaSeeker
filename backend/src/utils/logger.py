@@ -56,14 +56,14 @@ def setup_logging(*, environment: str = "development", debug: bool = False) -> N
         diagnose=debug,
     )
 
-    # File sink — WARNING+, daily rotation, 14-day retention
+    # File sink — INFO+, daily rotation, 14-day retention
     # Naming follows AGENTS.md rule 7: YYYY-MM-DD_HHmmss.log
     _logger.add(
         LOG_DIR / "{time:YYYY-MM-DD_HHmmss}.log",
         rotation="1 day",
         retention="14 days",
         compression="gz",
-        level="WARNING",
+        level="INFO",
         format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level:<8} | {name}:{function}:{line} | {message}",
         enqueue=True,
     )

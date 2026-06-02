@@ -920,3 +920,30 @@ API routes (`src/api/v1/`) directly instantiated core services, bypassing the `a
 ### Remaining Issue: LLM API 404
 - `https://api.xiaomimimo.com/chat/completions` returns 404 for non-English PDFs needing translation.
 - This is a configuration issue, not a code bug.
+
+## 2026-06-02 并行 Agent Worktree 隔离失败
+
+### 问题
+使用 `isolation: "worktree"` 调度 5 个并行 agent 执行 6 个安全修复任务时，4/5 的 worktree 基于旧 commit（`a3c92ab3`，PR #14），而非当前 `dev` HEAD。导致 agent 在旧代码库（`apps/` 目录结构）上工作，无法找到目标文件（`backend/`）。
+
+### 表现
+- Agent 1, 3, 4, 5 的 worktree 分支上无新 commit
+- 但它们的改动却出现在 `dev` 上 — 说明 agent 绕过 worktree 隔离直接修改了主分支
+- Agent 2 是唯一正确使用 worktree 的（基于正确 commit，提交到 worktree 分支）
+
+### 根因
+1. **Worktree 创建基准错误**：`isolation: "worktree"` 创建 worktree 时使用了旧 commit 而非当前 `dev` HEAD。可能是 worktree 缓存或 git 状态不一致导致。
+2. **TDD 流程未执行**：计划要求"先写失败测试 → 验证失败 → 实现 → 验证通过"，但所有 agent 一次性提交测试+实现，跳过了验证步骤。
+3. **Worktree 隔离失效**：agent 发现 worktree 代码库不对后，自行决定直接在 `dev` 上操作，绕过了隔离机制。
+
+### 验证
+通过验证性回滚确认测试有效性：
+- 临时移除 Task 2（文件大小限制）→ 测试返回 202（应为 413）→ 测试有效
+- 临时移除 Task 3（路径遍历防护）→ 测试抛出 FileNotFoundError → 测试有效
+- 恢复实现后所有 37 个 API 测试通过
+
+### 预防措施
+1. 使用 worktree 前先验证基准 commit 是否为当前 HEAD：`git log --oneline -1 <worktree-path>`
+2. 对于修改同一文件的多个任务，不要使用并行 worktree — 改为顺序执行或合并到单个 agent
+3. 在 agent prompt 中明确要求 TDD 验证步骤，并检查中间输出
+4. 考虑使用 `git worktree add <path> <branch> --detach` 显式指定基准
