@@ -11,14 +11,14 @@ if TYPE_CHECKING:
 
 
 _EVIDENCE_MAP_JSON_EXAMPLE = {
-    "relevant": False,
-    "disease_terms": [],
-    "gene_terms": [],
-    "variant_terms": [],
-    "case_references": [],
-    "authority_references": [],
+    "relevant": True,
+    "disease_terms": ["Fabry disease", "renal failure"],
+    "gene_terms": ["GLA"],
+    "variant_terms": ["p.R227X", "c.680C>T"],
+    "case_references": ["proband", "family members"],
+    "authority_references": ["ClinVar"],
     "contradictions": [],
-    "structure_hints": [],
+    "structure_hints": ["Table 1: clinical features"],
 }
 
 
