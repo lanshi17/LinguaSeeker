@@ -1,17 +1,22 @@
-"""Pipeline benchmark: submits case-report PDFs via HTTP API and measures performance.
+"""Pipeline benchmark: submits PDFs via HTTP API and measures performance.
+
+Collects PG evidence metrics (run_evidence_items, canonical_evidence_items,
+evidence_entity_bindings) as the primary quality indicator.
 
 Usage:
     cd backend
-    uv run python -m benchmark.pipeline.benchmark
 
-    # Custom base URL
-    uv run python -m benchmark.pipeline.benchmark --base-url http://localhost:8000
+    # Scan input/ directory (default), run 1 PDF
+    uv run python -m benchmark.pipeline.benchmark --limit 1
 
-    # Dry run (show manifest only)
+    # Filter by language
+    uv run python -m benchmark.pipeline.benchmark --lang en
+
+    # Use manifest.json instead of input/ directory
+    uv run python -m benchmark.pipeline.benchmark --source manifest
+
+    # Dry run (show PDF list without running)
     uv run python -m benchmark.pipeline.benchmark --dry-run
-
-    # Process only first 2 PDFs
-    uv run python -m benchmark.pipeline.benchmark --limit 2
 
     # Resume: skip PDFs that already passed in the most recent report
     uv run python -m benchmark.pipeline.benchmark --resume
@@ -33,10 +38,14 @@ from typing import Any
 import httpx
 from loguru import logger
 
+from benchmark.pipeline.evidence_metrics import query_evidence_metrics
+from src.dao.postgresql.connection import async_session_factory, build_async_engine
+
 MODULE_DIR = Path(__file__).resolve().parent
 MANIFEST_PATH = MODULE_DIR / "manifest.json"
 REPORTS_DIR = MODULE_DIR / "reports"
 DOWNLOADS_DIR = (MODULE_DIR.parent / "literature_acquisition" / "downloads").resolve()
+INPUT_DIR = MODULE_DIR / "input"
 
 POLL_INTERVAL_S = 5.0
 MAX_POLL_ATTEMPTS = 360  # 30 min at 5s intervals
@@ -64,6 +73,7 @@ class PdfResult:
     error: str | None = None
     started_at: str | None = None
     completed_at: str | None = None
+    evidence_metrics: dict[str, Any] | None = None
 
 
 def load_manifest() -> list[dict[str, Any]]:
@@ -74,6 +84,36 @@ def load_manifest() -> list[dict[str, Any]]:
         pdf_path = DOWNLOADS_DIR / entry["file"]
         if not pdf_path.exists():
             raise FileNotFoundError(f"PDF not found: {pdf_path}")
+    return pdfs
+
+
+def scan_input_dir(lang_filter: str | None = None) -> list[dict[str, Any]]:
+    """Discover PDFs from benchmark/pipeline/input/{lang}/{literature_type}/*.pdf.
+
+    Returns entries compatible with load_manifest() format.
+    """
+    if not INPUT_DIR.exists():
+        raise FileNotFoundError(f"Input directory not found: {INPUT_DIR}")
+
+    pdfs: list[dict[str, Any]] = []
+    for lang_dir in sorted(INPUT_DIR.iterdir()):
+        if not lang_dir.is_dir():
+            continue
+        lang = lang_dir.name
+        if lang_filter and lang != lang_filter:
+            continue
+        for type_dir in sorted(lang_dir.iterdir()):
+            if not type_dir.is_dir():
+                continue
+            literature_type = type_dir.name
+            for pdf_path in sorted(type_dir.glob("*.pdf")):
+                rel_path = f"{lang}/{literature_type}/{pdf_path.name}"
+                pdfs.append({
+                    "lang": lang,
+                    "literature_type": literature_type,
+                    "file": rel_path,
+                    "size_bytes": pdf_path.stat().st_size,
+                })
     return pdfs
 
 
@@ -135,9 +175,10 @@ async def process_one_pdf(
     base_url: str,
     entry: dict[str, Any],
     semaphore: asyncio.Semaphore,
+    pdf_root: Path = DOWNLOADS_DIR,
 ) -> PdfResult:
     """Submit one PDF, poll to completion, return result."""
-    pdf_path = DOWNLOADS_DIR / entry["file"]
+    pdf_path = pdf_root / entry["file"]
     result = PdfResult(
         file=entry["file"],
         lang=entry["lang"],
@@ -206,8 +247,8 @@ def generate_report(  # noqa: dict-return — benchmark report is JSON-serialize
         summary: {total, passed, failed, skipped, total_duration_s, avg_duration_s}
         by_language: {lang: {passed, failed, skipped, avg_duration_s}}
         by_phase: {phase_N: {avg_duration_s, failures}}
-        results: [{file, lang, literature_type, size_bytes, status, processing_run_id,
-                    total_duration_s, started_at, completed_at, phases, error}]
+        by_evidence: {total_run_evidence, avg_evidence_per_pdf, avg_confidence, field_coverage}
+        results: [{file, lang, ..., evidence_metrics}]
     """
     passed = [r for r in results if r.status == "passed"]
     failed = [r for r in results if r.status == "failed"]
@@ -245,6 +286,24 @@ def generate_report(  # noqa: dict-return — benchmark report is JSON-serialize
             "failures": failures,
         }
 
+    # By evidence — aggregate PG evidence metrics from passed runs
+    results_with_metrics = [r for r in passed if r.evidence_metrics is not None]
+    total_run_evidence = sum(r.evidence_metrics["run_evidence_count"] for r in results_with_metrics)
+    total_canonical = sum(r.evidence_metrics["canonical_evidence_count"] for r in results_with_metrics)
+    total_bindings = sum(r.evidence_metrics["entity_binding_count"] for r in results_with_metrics)
+    confidences = [r.evidence_metrics["avg_confidence"] for r in results_with_metrics if r.evidence_metrics["avg_confidence"] is not None]
+    avg_confidence = round(sum(confidences) / len(confidences), 4) if confidences else None
+    total_fields = sum(r.evidence_metrics["field_coverage"] for r in results_with_metrics)
+    by_evidence = {
+        "total_run_evidence": total_run_evidence,
+        "total_canonical_evidence": total_canonical,
+        "total_entity_bindings": total_bindings,
+        "avg_evidence_per_pdf": round(total_run_evidence / len(results_with_metrics), 1) if results_with_metrics else 0,
+        "avg_confidence": avg_confidence,
+        "total_field_coverage": total_fields,
+        "pdfs_with_evidence": len(results_with_metrics),
+    }
+
     return {
         "benchmark_run_id": str(uuid.uuid4()),
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -259,6 +318,7 @@ def generate_report(  # noqa: dict-return — benchmark report is JSON-serialize
         },
         "by_language": by_lang,
         "by_phase": by_phase,
+        "by_evidence": by_evidence,
         "results": [
             {
                 "file": r.file,
@@ -280,6 +340,7 @@ def generate_report(  # noqa: dict-return — benchmark report is JSON-serialize
                     for name, p in r.phases.items()
                 },
                 "error": r.error,
+                "evidence_metrics": r.evidence_metrics,
             }
             for r in results
         ],
@@ -292,13 +353,20 @@ async def run_benchmark(
     dry_run: bool,
     resume: bool = False,
     limit: int | None = None,
+    source: str = "input",
+    lang: str | None = None,
 ) -> None:
     """Main benchmark orchestrator."""
     logger.remove()
     logger.add(sys.stderr, level="INFO", format="{time:HH:mm:ss} | {level:<7} | {message}")
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    pdfs = load_manifest()
+    if source == "input":
+        pdfs = scan_input_dir(lang_filter=lang)
+        pdf_root = INPUT_DIR
+    else:
+        pdfs = load_manifest()
+        pdf_root = DOWNLOADS_DIR
 
     # --resume: skip PDFs that already passed in the most recent report
     skipped_files: set[str] = set()
@@ -315,7 +383,7 @@ async def run_benchmark(
     # --limit: only process first N PDFs
     if limit is not None:
         pdfs = pdfs[:limit]
-    logger.info("Manifest: {} PDFs from {} (limit={})", len(pdfs), DOWNLOADS_DIR, limit)
+    logger.info("Manifest: {} PDFs from {} (limit={})", len(pdfs), pdf_root, limit)
 
     if dry_run:
         for entry in pdfs:
@@ -332,6 +400,8 @@ async def run_benchmark(
         "poll_interval_s": POLL_INTERVAL_S,
         "resume": resume,
         "limit": limit,
+        "source": source,
+        "lang": lang,
     }
 
     t0 = time.time()
@@ -342,7 +412,7 @@ async def run_benchmark(
             if entry["file"] in skipped_files:
                 submitted.append((entry, None))
                 continue
-            pdf_path = DOWNLOADS_DIR / entry["file"]
+            pdf_path = pdf_root / entry["file"]
             try:
                 logger.info("[{}] Submitting {}", entry["lang"], entry["file"])
                 info = await submit_run(client, base_url, pdf_path, Path(entry["file"]).name)
@@ -362,7 +432,7 @@ async def run_benchmark(
         for entry, info in submitted:
             if info is None:
                 # Skipped
-                pdf_path = DOWNLOADS_DIR / entry["file"]
+                pdf_path = pdf_root / entry["file"]
                 results.append(PdfResult(
                     file=entry["file"], lang=entry["lang"],
                     literature_type=entry["literature_type"],
@@ -378,11 +448,41 @@ async def run_benchmark(
                     status="failed", error=str(info),
                 ))
             else:
-                poll_tasks.append(_poll_and_finalize(client, base_url, entry, info))
+                poll_tasks.append(_poll_and_finalize(client, base_url, entry, info, pdf_root=pdf_root))
         if poll_tasks:
             polled = await asyncio.gather(*poll_tasks)
             results.extend(polled)
     elapsed = time.time() - t0
+
+    # Evidence metrics collection — query PG for passed runs
+    passed_results = [r for r in results if r.status == "passed" and r.processing_run_id]
+    if passed_results:
+        logger.info("Collecting evidence metrics for {} passed runs...", len(passed_results))
+        try:
+            engine = build_async_engine()
+            sf = async_session_factory(engine)
+            for r in passed_results:
+                try:
+                    metrics = await query_evidence_metrics(sf, r.processing_run_id)
+                    r.evidence_metrics = {
+                        "run_evidence_count": metrics.run_evidence_count,
+                        "canonical_evidence_count": metrics.canonical_evidence_count,
+                        "entity_binding_count": metrics.entity_binding_count,
+                        "avg_confidence": round(metrics.avg_confidence, 4) if metrics.avg_confidence is not None else None,
+                        "field_coverage": metrics.field_coverage,
+                        "track_breakdown": {
+                            k: {"count": v.count, "avg_confidence": round(v.avg_confidence, 4) if v.avg_confidence is not None else None, "distinct_fields": v.distinct_fields}
+                            for k, v in metrics.track_breakdown.items()
+                        },
+                        "status_breakdown": metrics.status_breakdown,
+                    }
+                    logger.info("  [{}] evidence={}, fields={}, bindings={}",
+                                r.lang, metrics.run_evidence_count, metrics.field_coverage, metrics.entity_binding_count)
+                except Exception as e:
+                    logger.warning("  [{}] Evidence metrics query failed: {}", r.lang, e)
+            await engine.dispose()
+        except Exception as e:
+            logger.warning("PG connection for evidence metrics failed: {}", e)
 
     report = generate_report(list(results), config, elapsed)
 
@@ -399,6 +499,13 @@ async def run_benchmark(
     for lang, data in report["by_language"].items():
         logger.info("  {}: {} passed, {} failed, {} skipped, avg {:.1f}s",
                     lang, data["passed"], data["failed"], data.get("skipped", 0), data["avg_duration_s"])
+    ev = report["by_evidence"]
+    if ev["pdfs_with_evidence"] > 0:
+        logger.info("=== Evidence Metrics ===")
+        logger.info("  Total run evidence: {} | Canonical: {} | Entity bindings: {}",
+                    ev["total_run_evidence"], ev["total_canonical_evidence"], ev["total_entity_bindings"])
+        logger.info("  Avg evidence/PDF: {} | Avg confidence: {} | Field coverage: {}",
+                    ev["avg_evidence_per_pdf"], ev["avg_confidence"], ev["total_field_coverage"])
     logger.info("Report: {}", report_path)
 
 
@@ -407,9 +514,10 @@ async def _poll_and_finalize(
     base_url: str,
     entry: dict[str, Any],
     run_info: dict[str, str],
+    pdf_root: Path = DOWNLOADS_DIR,
 ) -> PdfResult:
     """Poll a submitted run to completion and return PdfResult."""
-    pdf_path = DOWNLOADS_DIR / entry["file"]
+    pdf_path = pdf_root / entry["file"]
     result = PdfResult(
         file=entry["file"],
         lang=entry["lang"],
@@ -471,6 +579,10 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Show manifest without running")
     parser.add_argument("--resume", action="store_true", help="Skip PDFs that already passed in the most recent report")
     parser.add_argument("--limit", type=int, default=None, help="Only process first N PDFs")
+    parser.add_argument("--source", choices=["input", "manifest"], default="input",
+                        help="PDF source: 'input' scans benchmark/pipeline/input/, 'manifest' uses manifest.json")
+    parser.add_argument("--lang", type=str, default=None,
+                        help="Filter to single language (e.g. en, zh, ja)")
     args = parser.parse_args()
 
     asyncio.run(run_benchmark(
@@ -479,6 +591,8 @@ def main() -> None:
         dry_run=args.dry_run,
         resume=args.resume,
         limit=args.limit,
+        source=args.source,
+        lang=args.lang,
     ))
 
 
