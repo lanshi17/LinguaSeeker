@@ -26,6 +26,15 @@ def test_evidence_map_prompt_has_uncertainty_safety_net():
     assert "true" in prompt.lower()
 
 
+def test_evidence_map_prompt_lists_not_relevant_categories():
+    """Prompt must enumerate the three NOT_RELEVANT categories."""
+    prompt = get_evidence_map_prompt(document_id="doc-1", track=Track.ORIGINAL, text="BRCA1")
+    lower = prompt.lower()
+    assert "methodological" in lower or "statistical methods" in lower
+    assert "editorial" in lower or "letter" in lower or "comment" in lower
+    assert "unrelated" in lower
+
+
 def test_evidence_map_prompt_contains_document_id():
     prompt = get_evidence_map_prompt(document_id="doc-1", track=Track.ORIGINAL, text="BRCA1")
     assert "doc-1" in prompt
