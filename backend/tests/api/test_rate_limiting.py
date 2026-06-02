@@ -13,10 +13,7 @@ from src.utils.health import HealthResult
 async def test_pipeline_run_rate_limited():
     """POST /api/v1/pipeline/run should return 429 after exceeding 10/minute."""
     from src.core.config import Settings
-    from src.api.rate_limit import limiter
-
-    # Clear any rate limit state from previous tests
-    limiter._storage.reset()
+    from src.api import rate_limit
 
     mock_settings = Settings(api_key="")
 
@@ -40,8 +37,13 @@ async def test_pipeline_run_rate_limited():
         from app.main import create_app
 
         app = create_app()
+
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
+            # Reset storage right before sending requests to avoid state
+            # leaking from earlier tests that hit the same endpoint/limiter.
+            rate_limit.limiter._storage.reset()
+
             responses = []
             for _ in range(11):
                 mock_file = AsyncMock()
@@ -67,9 +69,7 @@ async def test_pipeline_run_rate_limited():
 async def test_stream_endpoint_rate_limited():
     """GET /api/v1/chat/sessions/{id}/stream should return 429 after exceeding 10/minute."""
     from src.core.config import Settings
-    from src.api.rate_limit import limiter
-
-    limiter._storage.reset()
+    from src.api import rate_limit
 
     mock_settings = Settings(api_key="")
 
@@ -88,8 +88,11 @@ async def test_stream_endpoint_rate_limited():
         from app.main import create_app
 
         app = create_app()
+
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
+            rate_limit.limiter._storage.reset()
+
             responses = []
             for _ in range(11):
                 resp = await client.get(
@@ -98,6 +101,5 @@ async def test_stream_endpoint_rate_limited():
                 )
                 responses.append(resp.status_code)
 
-            # First 10 should not be 429 (may be 500/404/etc due to mocks)
             rate_limited = [r for r in responses if r == 429]
             assert len(rate_limited) >= 1, "11th request should be rate limited"

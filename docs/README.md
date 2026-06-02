@@ -77,6 +77,7 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-06-02 | [Phase 3 benchmark coverage — relevance scan fix (archived — superseded by config fix)](archive/plans/2026-06-02-phase3-benchmark-coverage.md) | completed — plan based on incorrect RCA; real fix was config fallback |
 | 2026-06-01 | [Backend review fixes](archive/plans/2026-06-01-backend-review-fixes.md) | completed — 16 tasks: session commit, auth, upsert, SSE, types, FK, tests |
 | 2026-05-30 | [Phase 2 chunk-level parallelization](archive/plans/2026-05-30-phase2-chunk-parallelization.md) | completed — async provider + stages + workflow |
 | 2026-05-30 | [Backend optimization (code review)](archive/plans/2026-05-30-backend-optimization.md) | completed — 8 tasks from code review |

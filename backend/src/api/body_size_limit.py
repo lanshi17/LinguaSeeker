@@ -2,40 +2,76 @@
 
 Rejects requests whose Content-Length exceeds a configured maximum
 before the body is read into memory, preventing memory-DoS from
-oversized uploads.
+oversized uploads.  Also wraps the ASGI ``receive`` callable to track
+actual received bytes, catching chunked transfers that have no
+Content-Length header.
+
+Uses a raw ASGI middleware (not BaseHTTPMiddleware) so that streaming
+responses such as SSE are not buffered.
 """
 from __future__ import annotations
 
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 
-class BodySizeLimitMiddleware(BaseHTTPMiddleware):
-    """Reject requests with Content-Length exceeding max_bytes.
+class BodySizeLimitMiddleware:
+    """Reject HTTP requests whose body exceeds *max_bytes*.
 
-    This runs before ASGI body parsing, so large payloads are rejected
-    at the TCP level without allocating memory for the full body.
+    Checks ``Content-Length`` first (fast reject).  For chunked requests
+    that lack the header, wraps ``receive`` to accumulate actual bytes
+    and abort once the limit is exceeded.
     """
 
-    def __init__(self, app, max_bytes: int = 100 * 1024 * 1024) -> None:  # noqa: ANN001
-        super().__init__(app)
+    def __init__(self, app: ASGIApp, max_bytes: int = 100 * 1024 * 1024) -> None:
+        self.app = app
         self.max_bytes = max_bytes
 
-    async def dispatch(self, request: Request, call_next):  # noqa: ANN001
-        content_length = request.headers.get("content-length")
-        if content_length is not None:
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        headers = dict(scope.get("headers", []))
+        content_length = headers.get(b"content-length")
+        if content_length:
             try:
-                size = int(content_length)
+                size = int(content_length.decode())
             except ValueError:
-                return JSONResponse(
-                    status_code=400,
-                    content={"detail": "Invalid Content-Length header"},
-                )
+                await self._send_error(send, 400, b'{"detail":"Invalid Content-Length header"}')
+                return
             if size > self.max_bytes:
                 max_mb = self.max_bytes // (1024 * 1024)
-                return JSONResponse(
-                    status_code=413,
-                    content={"detail": f"Request body too large. Maximum size: {max_mb}MB"},
-                )
-        return await call_next(request)
+                body = f'{{"detail":"Request body too large. Maximum size: {max_mb}MB"}}'.encode()
+                await self._send_error(send, 413, body)
+                return
+
+        # Wrap receive to track actual bytes for chunked transfers
+        total_received = 0
+
+        async def wrapped_receive() -> dict:
+            nonlocal total_received
+            message = await receive()
+
+            if message["type"] == "http.request":
+                chunk = message.get("body", b"")
+                total_received += len(chunk)
+                if total_received > self.max_bytes:
+                    # Stop receiving and let the handler see an empty body;
+                    # the connection will be closed by the server.
+                    return {"type": "http.request", "body": b"", "more_body": False}
+
+            return message
+
+        await self.app(scope, wrapped_receive, send)
+
+    @staticmethod
+    async def _send_error(send: Send, status: int, body: bytes) -> None:
+        await send({
+            "type": "http.response.start",
+            "status": status,
+            "headers": [[b"content-type", b"application/json"]],
+        })
+        await send({
+            "type": "http.response.body",
+            "body": body,
+        })
