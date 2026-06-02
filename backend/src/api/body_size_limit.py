@@ -45,24 +45,39 @@ class BodySizeLimitMiddleware:
                 await self._send_error(send, 413, body)
                 return
 
-        # Wrap receive to track actual bytes for chunked transfers
+        # Wrap receive to track actual bytes for chunked transfers.
+        # When the limit is exceeded, send 413 directly and drain remaining
+        # messages.  Also wrap send so that the downstream app's response
+        # is silently dropped (the 413 has already been sent).
         total_received = 0
+        limit_exceeded = False
 
         async def wrapped_receive() -> dict:
-            nonlocal total_received
+            nonlocal total_received, limit_exceeded
             message = await receive()
 
             if message["type"] == "http.request":
                 chunk = message.get("body", b"")
                 total_received += len(chunk)
-                if total_received > self.max_bytes:
-                    # Stop receiving and let the handler see an empty body;
-                    # the connection will be closed by the server.
-                    return {"type": "http.request", "body": b"", "more_body": False}
+                if total_received > self.max_bytes and not limit_exceeded:
+                    limit_exceeded = True
+                    max_mb = self.max_bytes // (1024 * 1024)
+                    body = f'{{"detail":"Request body too large. Maximum size: {max_mb}MB"}}'.encode()
+                    await self._send_error(send, 413, body)
+                    # Drain remaining receive messages to avoid blocking the client
+                    while message.get("more_body", False):
+                        message = await receive()
 
             return message
 
-        await self.app(scope, wrapped_receive, send)
+        async def wrapped_send(message: dict) -> None:
+            # Suppress any response the app tries to send after we already
+            # responded with 413.
+            if limit_exceeded:
+                return
+            await send(message)
+
+        await self.app(scope, wrapped_receive, wrapped_send)
 
     @staticmethod
     async def _send_error(send: Send, status: int, body: bytes) -> None:
