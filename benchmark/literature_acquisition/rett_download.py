@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import re
 import sys
@@ -55,6 +56,9 @@ from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.l
 )
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.search_service import (
     search_multilingual,
+)
+from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.pubmed_service import (
+    get_pubmed_service,
 )
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -149,6 +153,30 @@ def _now_ts() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%S")
 
 
+def _normalize_record(raw: dict) -> dict:
+    """Normalize old-format records (from benchmark.py or older runs)
+    to the current DownloadRecord field names."""
+    out = dict(raw)
+    # Map old field name 'method' → 'source'
+    if "method" in out and "source" not in out:
+        out["source"] = out.pop("method")
+    # Fill required fields that may be missing in old format
+    out.setdefault("query", "")
+    out.setdefault("source", "unknown")
+    out.setdefault("provider", out.get("source", "unknown"))
+    out.setdefault("success", bool(out.get("success", False)))
+    out.setdefault("lang", out.get("lang", "unknown"))
+    out.setdefault("literature_type", out.get("literature_type", "unclassified"))
+    out.setdefault("title", out.get("title", ""))
+    out.setdefault("doi", out.get("doi", ""))
+    out.setdefault("file_path", out.get("file_path", ""))
+    out.setdefault("file_size", int(out.get("file_size", 0)))
+    out.setdefault("source_url", out.get("source_url", ""))
+    out.setdefault("error", out.get("error", ""))
+    out.setdefault("elapsed_ms", int(out.get("elapsed_ms", 0)))
+    return out
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # PDF download (reused from benchmark.py)
 # ═══════════════════════════════════════════════════════════════════════════
@@ -197,6 +225,105 @@ async def _download_from_url(url: str, dest: Path, timeout: int = 30) -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# SHA256 dedup registry (shared across all languages)
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Maps sha256 hex → (lang_code, file_path) of the first occurrence
+_HASH_REGISTRY: dict[str, tuple[str, str]] = {}
+_HASH_LOCK = asyncio.Lock()
+
+
+async def _check_dedup(file_path: str, lang_code: str) -> bool:
+    """Check SHA256 dedup. Returns True if file is new (kept), False if duplicate.
+
+    When a duplicate is detected, the file is deleted and the hash is recorded
+    as already-seen. Thread-safe via asyncio.Lock.
+    """
+    p = Path(file_path)
+    if not p.exists():
+        return False
+    sha = hashlib.sha256(p.read_bytes()).hexdigest()
+    async with _HASH_LOCK:
+        if sha in _HASH_REGISTRY:
+            first_lang, first_path = _HASH_REGISTRY[sha]
+            logger.info(
+                f"[{lang_code}] 🔄 duplicate of [{first_lang}] {Path(first_path).name[:40]} — skipped"
+            )
+            p.unlink(missing_ok=True)
+            return False
+        _HASH_REGISTRY[sha] = (lang_code, file_path)
+        return True
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PubMed search (additional data source)
+# ═══════════════════════════════════════════════════════════════════════════
+
+async def _search_pubmed(
+    query: str,
+    disease: str,
+    lang_code: str,
+    limit: int = 10,
+) -> list[dict[str, Any]]:
+    """Search PubMed directly for clinically-relevant results.
+
+    Uses MeSH-based precision queries when the target is a known disease.
+    Returns candidates in the same format as search_multilingual().
+    """
+    svc = get_pubmed_service()
+
+    # Build a PubMed-optimized query with MeSH terms and filters
+    # Prefer "case reports"[Publication Type] for precision
+    pubmed_query = (
+        f'("{disease}"[MeSH Terms] OR "{disease}"[All Fields]) '
+        f"AND ({query})"
+    )
+    # Also try a broader query with case report filter
+    alt_query = (
+        f'("{disease}"[MeSH Terms] OR "{disease}"[All Fields]) '
+        f'AND ("case reports"[Publication Type] OR case report*[Title/Abstract])'
+    )
+
+    candidates: list[dict[str, Any]] = []
+    seen_pmids: set[str] = set()
+
+    for q in (pubmed_query, alt_query):
+        try:
+            results = await asyncio.wait_for(
+                svc.search_candidates(q, candidate_limit=min(limit, 15)),
+                timeout=15,
+            )
+        except Exception as exc:
+            logger.debug(f"[{lang_code}] PubMed search failed for '{q[:60]}': {exc}")
+            continue
+
+        for r in results:
+            if r.pmid in seen_pmids:
+                continue
+            seen_pmids.add(r.pmid)
+
+            # Build candidate dict in same format as search_multilingual output
+            cand: dict[str, Any] = {
+                "title": r.title,
+                "doi": "",  # PubMed search doesn't return DOI in basic mode
+                "url": f"https://pubmed.ncbi.nlm.nih.gov/{r.pmid}/",
+                "provider": "pubmed",
+                "route": "api",
+                "journal": r.journal,
+                "year": r.pub_date[:4] if r.pub_date else "",
+                "identifiers": {"pmid": r.pmid},
+                "detail_link": f"https://pubmed.ncbi.nlm.nih.gov/{r.pmid}/",
+                "language": lang_code,
+            }
+            candidates.append(cand)
+
+        if len(candidates) >= limit:
+            break
+
+    return candidates[:limit]
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Core logic
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -213,16 +340,21 @@ async def _process_language(
     sem: asyncio.Semaphore,
     *,
     skip_filter: bool = False,
+    skip_dois: set[str] | None = None,
 ) -> List[DownloadRecord]:
     """Search + download for one language. Returns list of records.
 
     When skip_filter=True (--llm-verify mode), all candidates are downloaded
     regardless of literature_type; LLM verification runs later.
+
+    skip_dois: DOIs already attempted in a previous run — skip these
+    candidates so incremental re-runs find new papers.
     """
     records: List[DownloadRecord] = []
     queries = list(lang_cfg.get("queries", []))
     downloaded = 0
     query_idx = 0
+    _skip = skip_dois or set()
 
     while downloaded < target and query_idx < len(queries):
         query = queries[query_idx]
@@ -233,8 +365,9 @@ async def _process_language(
         search_timeout = max(timeout_s * 3, 180)
 
         async with sem:
-            try:
-                candidates = await asyncio.wait_for(
+            # Run search_multilingual + PubMed in parallel
+            search_task = asyncio.create_task(
+                asyncio.wait_for(
                     search_multilingual(
                         target=query,
                         disease=disease,
@@ -243,12 +376,37 @@ async def _process_language(
                     ),
                     timeout=search_timeout,
                 )
-            except asyncio.TimeoutError:
-                logger.warning(f"[{lang_code}] search_multilingual timed out for: {query}")
-                continue
-            except Exception as exc:
-                logger.warning(f"[{lang_code}] search_multilingual failed for '{query}': {exc}")
-                continue
+            )
+            pubmed_task = asyncio.create_task(
+                _search_pubmed(
+                    query=query,
+                    disease=disease,
+                    lang_code=lang_code,
+                    limit=candidate_limit,
+                )
+            )
+
+            candidates: list[dict[str, Any]] = []
+            for task, label in ((search_task, "search_multilingual"), (pubmed_task, "pubmed")):
+                try:
+                    results = await task
+                    candidates.extend(results)
+                except asyncio.TimeoutError:
+                    logger.warning(f"[{lang_code}] {label} timed out for: {query}")
+                except Exception as exc:
+                    logger.warning(f"[{lang_code}] {label} failed for '{query}': {exc}")
+
+            # Dedupe by title (case-folded, first 80 chars)
+            seen_titles: set[str] = set()
+            deduped: list[dict[str, Any]] = []
+            for c in candidates:
+                t = (c.get("title") or "").strip().casefold()[:80]
+                if t and t in seen_titles:
+                    continue
+                if t:
+                    seen_titles.add(t)
+                deduped.append(c)
+            candidates = deduped
 
         if not candidates:
             logger.debug(f"[{lang_code}] no candidates for: {query}")
@@ -274,6 +432,11 @@ async def _process_language(
 
             if not url:
                 logger.debug(f"[{lang_code}] candidate {cand_idx}: no URL, skipping")
+                continue
+
+            # Skip DOIs already attempted in a previous run
+            if doi and doi in _skip:
+                logger.debug(f"[{lang_code}] candidate {cand_idx}: DOI already attempted, skipping")
                 continue
 
             # Classify literature type
@@ -331,6 +494,17 @@ async def _process_language(
             elapsed = int((time.monotonic() - t0) * 1000)
 
             if ok:
+                # SHA256 dedup: skip if same file already downloaded
+                if not await _check_dedup(str(dest), lang_code):
+                    records.append(DownloadRecord(
+                        lang=lang_code, query=query,
+                        literature_type=lit_type, title=title, doi=doi,
+                        source=source, provider=cand.get("provider", ""),
+                        success=False, source_url=url,
+                        error="sha256_duplicate", elapsed_ms=elapsed,
+                    ))
+                    continue
+
                 file_size = dest.stat().st_size
                 logger.info(
                     f"[{lang_code}] ✓ {downloaded+1}/{target} "
@@ -367,12 +541,46 @@ async def run(
     *,
     llm_verify: bool = False,
     llm_model: str = "",
+    resume_report: Optional[Path] = None,
 ) -> DownloadStats:
     """Main orchestration: iterate languages, search, download, classify.
 
     When llm_verify=True: downloads all candidates (no keyword filter),
     then runs LLM verification on each PDF to identify true case reports.
+
+    When resume_report is set: reads previous report, only re-runs
+    languages that haven't met their targets, and merges records.
     """
+    # ── Resume mode: load previous report, compute deficit ──────────────
+    prev_records: list[DownloadRecord] = []
+    prev_downloaded: dict[str, int] = {}
+    prev_dois: set[str] = set()
+    if resume_report is not None:
+        if not resume_report.exists():
+            logger.error(f"Resume report not found: {resume_report}")
+            sys.exit(1)
+        with open(resume_report, encoding="utf-8") as f:
+            prev = json.load(f)
+        prev_records_raw = prev.get("records", [])
+        for r in prev_records_raw:
+            # Normalize old-format records (benchmark.py or older runs)
+            nr = _normalize_record(r)
+            rec = DownloadRecord(**{k: nr[k] for k in DownloadRecord.__dataclass_fields__ if k in nr})
+            # Restore llm_verification if present (may be dict or null)
+            if r.get("llm_verification"):
+                rec.llm_verification = r["llm_verification"]
+            prev_records.append(rec)
+            if rec.success:
+                prev_downloaded[rec.lang] = prev_downloaded.get(rec.lang, 0) + 1
+            # Track all previously attempted DOIs for skip
+            if rec.doi:
+                prev_dois.add(rec.doi)
+        logger.info(
+            f"Resume: loaded {len(prev_records)} previous records, "
+            f"already downloaded: {prev_downloaded}, "
+            f"skipping {len(prev_dois)} previously-attempted DOIs"
+        )
+
     disease = config["disease"]
     target_per_lang_raw = config.get("target_per_lang", 5)
     candidate_limit = config.get("candidate_limit", 10)
@@ -397,6 +605,35 @@ async def run(
             sys.exit(1)
         lang_map = {lang_filter: lang_map[lang_filter]}
 
+    # ── Resume: compute remaining targets, skip completed ──────────────
+    remaining_targets: dict[str, int] = {}
+    for code in list(lang_map.keys()):
+        orig = _resolve_target(code)
+        done = prev_downloaded.get(code, 0)
+        rem = max(0, orig - done)
+        remaining_targets[code] = rem
+        if resume_report is not None and rem == 0:
+            logger.info(f"[{code}] already at target ({done}/{orig}), skipping")
+            del lang_map[code]
+
+    if resume_report is not None and not lang_map:
+        logger.info("All languages at target — nothing to do.")
+        # Build empty stats from previous report and return
+        stats = DownloadStats(
+            config_file=str(CONFIG_PATH),
+            disease=disease,
+            target_per_lang=target_per_lang_raw,
+            records=list(prev_records),
+        )
+        for r in prev_records:
+            stats.total_attempted += 1
+            if r.success:
+                stats.total_downloaded += 1
+                stats.by_lang[r.lang] = stats.by_lang.get(r.lang, 0) + 1
+                stats.by_type[r.literature_type] = stats.by_type.get(r.literature_type, 0) + 1
+                stats.by_source[r.source] = stats.by_source.get(r.source, 0) + 1
+        return stats
+
     stats = DownloadStats(
         config_file=str(CONFIG_PATH),
         disease=disease,
@@ -418,8 +655,15 @@ async def run(
 
     for lang_code, lang_cfg in lang_map.items():
         lang_name = lang_cfg.get("name", lang_code)
-        lang_target = _resolve_target(lang_code)
-        logger.info(f"\n── {lang_name} ({lang_code}) target={lang_target} ──")
+        lang_target = remaining_targets.get(lang_code, _resolve_target(lang_code))
+        prev_done = prev_downloaded.get(lang_code, 0)
+        if resume_report is not None:
+            logger.info(
+                f"\n── {lang_name} ({lang_code}) "
+                f"target={_resolve_target(lang_code)} done={prev_done} remaining={lang_target} ──"
+            )
+        else:
+            logger.info(f"\n── {lang_name} ({lang_code}) target={lang_target} ──")
 
         records = await _process_language(
             lang_code=lang_code,
@@ -433,6 +677,7 @@ async def run(
             dry_run=dry_run,
             sem=sem,
             skip_filter=llm_verify,
+            skip_dois=prev_dois if resume_report is not None else None,
         )
         stats.records.extend(records)
 
@@ -453,7 +698,21 @@ async def run(
             model=llm_model,
         )
 
-    # Aggregate stats
+    # ── Merge previous records from resume ────────────────────────────
+    if resume_report is not None and prev_records:
+        # Avoid double-counting: merge new records, keep old ones
+        stats.records = list(prev_records) + stats.records
+        logger.info(
+            f"Resume merge: {len(prev_records)} old + "
+            f"{len(stats.records) - len(prev_records)} new records"
+        )
+
+    # Aggregate stats (recompute from scratch after merge)
+    stats.total_attempted = 0
+    stats.total_downloaded = 0
+    stats.by_lang = {}
+    stats.by_type = {}
+    stats.by_source = {}
     for r in stats.records:
         stats.total_attempted += 1
         if r.success:
@@ -725,6 +984,11 @@ def main() -> None:
         help="Override LLM model for verification (default: from .env config)",
     )
     parser.add_argument(
+        "--resume", type=Path, default=None, metavar="REPORT.json",
+        help="Incremental re-run: read previous report, only re-run "
+             "languages that haven't met their targets, merge results.",
+    )
+    parser.add_argument(
         "--log-level", type=str, default="INFO",
         help="Log level (default: INFO)",
     )
@@ -750,6 +1014,7 @@ def main() -> None:
         dry_run=args.dry_run,
         llm_verify=args.llm_verify,
         llm_model=args.llm_model,
+        resume_report=args.resume,
     ))
 
 
