@@ -16,6 +16,7 @@ fn net_io(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(fetch_one, m)?)?;
     m.add_function(wrap_pyfunction!(fetch_multi, m)?)?;
     m.add_function(wrap_pyfunction!(scrape_web, m)?)?;
+    m.add_function(wrap_pyfunction!(download_file, m)?)?;
     m.add_function(wrap_pyfunction!(scrape_html, m)?)?;
     m.add_function(wrap_pyfunction!(extract_pdf_links, m)?)?;
     m.add_function(wrap_pyfunction!(mineru_create_task, m)?)?;
@@ -160,6 +161,35 @@ pub fn extract_pdf_links<'py>(
 ) -> PyResult<Bound<'py, PyAny>> {
     let links = crate::scraper::extract_pdf_links(html, base_url);
     pythonize::pythonize(py, &links).map_err(PyErr::from)
+}
+
+/// Download a file from a URL. Returns Python dict {"bytes": <bytes>, "final_url": <str>, "status_code": <int>}.
+#[pyfunction]
+#[pyo3(signature = (url, timeout_ms=None, max_retries=None, proxy=None))]
+pub fn download_file<'py>(
+    py: Python<'py>,
+    url: String,
+    timeout_ms: Option<u64>,
+    max_retries: Option<u32>,
+    proxy: Option<String>,
+) -> PyResult<Bound<'py, PyAny>> {
+    pyo3_async_runtimes::tokio::future_into_py(py, async move {
+        let client = HttpClient::new(timeout_ms, max_retries, proxy.as_deref())
+            .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
+        let (bytes, final_url, status_code) = client
+            .get_bytes(&url)
+            .await
+            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+        Python::attach(|py| {
+            pythonize::pythonize(py, &serde_json::json!({
+                "bytes": bytes,
+                "final_url": final_url,
+                "status_code": status_code,
+            }))
+            .map(|obj| obj.unbind())
+            .map_err(PyErr::from)
+        })
+    })
 }
 
 fn py_err(e: PyErr) -> GatewayError {

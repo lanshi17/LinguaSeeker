@@ -13,6 +13,7 @@ ApiProvider = Literal[
     "crossref", "unpaywall", "openalex", "europepmc", "pmc", "jstage", "doaj",
     "scielo", "base", "core", "openaire", "arxiv", "biorxiv", "medrxiv", "cinii"
 ]
+# Deprecated: WebProvider kept for backward compat; new code uses web_search.FirecrawlAdapter
 WebProvider = Literal["pubscholar", "cyberleninka", "hans_publishers", "chinaxiv", "koreascience", "redalyc", "la_referencia"]
 PreferStrategy = Literal["auto", "api", "web"]
 ActionStrategy = Literal["search", "download"]
@@ -117,6 +118,10 @@ class OnlineAcquisitionResponse(BaseModel):
     warnings: List[str] = Field(default_factory=list)
     route: OnlineAcquisitionRouteInfo
     raw: Optional[Any] = None
+    candidate_links: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="All candidate download links discovered before download phase",
+    )
 
 
 # --- Gateway contracts (internal) ---
@@ -164,3 +169,15 @@ class OnlineAcquisitionGatewayResult:
     raw: Any = None
     meta: Any = None
     source_trace: List[OnlineAcquisitionSourceTraceEntry] = field(default_factory=list)
+
+
+@dataclass
+class DownloadResult:
+    """Result of downloading a single file."""
+
+    file_path: Optional[str] = None
+    source: str = ""
+    doi: Optional[str] = None
+    pmcid: Optional[str] = None
+    url: Optional[str] = None
+    warnings: List[str] = field(default_factory=list)
