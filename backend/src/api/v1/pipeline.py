@@ -23,7 +23,6 @@ from src.agents.contracts import (
     PipelineMode,
     SourceType,
 )
-from src.core.config import get_config
 
 router = APIRouter()
 
