@@ -93,11 +93,17 @@ class RelevanceScanStage:
             return_exceptions=True,
         )
         maps: list[DocumentEvidenceMap] = []
+        errors: list[BaseException] = []
         for i, result in enumerate(results):
             if isinstance(result, BaseException):
                 logger.error("relevance_scan chunk {}/{} failed: {}", i + 1, len(chunks), result)
+                errors.append(result)
                 continue
             maps.append(result)
+        if not maps and errors:
+            raise RuntimeError(
+                f"Relevance scan failed for all {len(chunks)} chunks: {errors[0]}"
+            )
         merged = merge_evidence_maps(maps)
         logger.debug(
             "Relevance scan: doc_id={}, track={}, relevant={}, disease={}, gene={}, variant={}",

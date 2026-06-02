@@ -487,14 +487,14 @@ class Settings(BaseSettings):
             mineru_local_dpi=self.mineru_local_dpi,
         )
         self.evidence_extraction = EvidenceExtractionConfig(
-            api_key=self.evidence_extraction_api_key,
-            base_url=self.evidence_extraction_base_url,
-            fast_model=self.evidence_extraction_fast_model,
-            standard_model=self.evidence_extraction_standard_model,
-            strong_model=self.evidence_extraction_strong_model,
-            temperature=self.evidence_extraction_temperature,
-            timeout=self.evidence_extraction_timeout,
-            max_retries=self.evidence_extraction_max_retries,
+            api_key=self.evidence_extraction_api_key or self.llm.api_key,
+            base_url=self.evidence_extraction_base_url or self.llm.base_url,
+            fast_model=self.evidence_extraction_fast_model or self.llm.model,
+            standard_model=self.evidence_extraction_standard_model or self.llm.model,
+            strong_model=self.evidence_extraction_strong_model or self.llm.model,
+            temperature=self.evidence_extraction_temperature or self.llm.temperature,
+            timeout=self.evidence_extraction_timeout or self.llm.timeout,
+            max_retries=self.evidence_extraction_max_retries or self.llm.max_retries,
         )
         self.redis = RedisConfig(
             host=self.redis_host,
