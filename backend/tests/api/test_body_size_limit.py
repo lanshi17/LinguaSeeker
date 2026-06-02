@@ -1,7 +1,7 @@
 """Tests for request body size limit middleware."""
 from __future__ import annotations
 
-import pytest
+from starlette.applications import Starlette
 from starlette.testclient import TestClient
 
 from fastapi import FastAPI
@@ -62,25 +62,62 @@ def test_body_size_limit_allows_normal_requests():
 
 
 def test_body_size_limit_handles_chunked_encoding():
-    """Chunked requests exceeding the limit should be rejected by receive wrapper."""
-    app = FastAPI()
-    app.add_middleware(BodySizeLimitMiddleware, max_bytes=64)  # 64 bytes limit
+    """Chunked requests without Content-Length should be rejected by receive wrapper.
 
-    received_size = 0
+    Simulates a chunked transfer by sending two http.request messages
+    without a Content-Length header in the ASGI scope.  The handler
+    must read the body for the receive wrapper to be invoked.
+    """
+    import asyncio
 
-    @app.post("/test")
-    async def handler(request_body: bytes = b""):
-        return {"ok": True, "size": len(request_body)}
+    from starlette.requests import Request
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route
 
-    client = TestClient(app, raise_server_exceptions=False)
-    # Send a body that exceeds 64 bytes via chunked encoding
-    # (TestClient doesn't truly chunk, but the receive wrapper tracks bytes)
-    resp = client.post(
-        "/test",
-        content=b"x" * 128,  # 128 bytes — exceeds 64 byte limit
-    )
-    # With Content-Length set, the header check catches this
-    assert resp.status_code == 413
+    async def handler(request: Request):
+        body = await request.body()
+        return JSONResponse({"ok": True, "size": len(body)})
+
+    starlette_app = Starlette(routes=[Route("/test", handler, methods=["POST"])])
+    middleware = BodySizeLimitMiddleware(starlette_app, max_bytes=64)
+
+    # Simulate a chunked request: two chunks totaling 128 bytes, no Content-Length
+    chunk1 = b"x" * 50
+    chunk2 = b"y" * 78  # Total: 128 > 64
+
+    messages = [
+        {"type": "http.request", "body": chunk1, "more_body": True},
+        {"type": "http.request", "body": chunk2, "more_body": False},
+    ]
+    call_count = 0
+
+    async def mock_receive() -> dict:
+        nonlocal call_count
+        msg = messages[min(call_count, len(messages) - 1)]
+        call_count += 1
+        return msg
+
+    scope = {
+        "type": "http",
+        "method": "POST",
+        "path": "/test",
+        "query_string": b"",
+        "headers": [],  # No Content-Length header
+    }
+    response_started = []
+
+    async def mock_send(message: dict) -> None:
+        response_started.append(message)
+
+    async def run():
+        await middleware(scope, mock_receive, mock_send)
+
+    asyncio.run(run())
+
+    # Middleware should have sent a 413 response (not the app's 200)
+    assert len(response_started) >= 1
+    assert response_started[0]["type"] == "http.response.start"
+    assert response_started[0]["status"] == 413
 
 
 def test_body_size_limit_does_not_buffer_responses():

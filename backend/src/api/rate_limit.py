@@ -35,6 +35,9 @@ def init_limiter() -> Limiter:
     ``_storage`` and ``_limiter`` (the internal RateLimiter that holds
     a direct reference to the storage object).
     """
+    # NOTE: _storage, _limiter, _strategy are slowapi internals.
+    # Tested with slowapi 0.1.x. If upgrading slowapi, verify these
+    # attributes still exist (smoke test: test_rate_limiting.py).
     from slowapi.extension import STRATEGIES
 
     strategy = limiter._strategy or "fixed-window"  # noqa: SLF001
