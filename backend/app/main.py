@@ -18,10 +18,8 @@ from src.api.v1.router import router as v1_router
 from src.core.config import get_config
 from src.utils.exceptions import ACMGException, error_code_from_exception, status_code_from_error_code
 from src.utils.logger import get_logger, setup_logging
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 
-from src.api.rate_limit import limiter
+from src.api.rate_limit import init_limiter
 from src.utils.middleware import add_request_monitoring
 
 
@@ -149,7 +147,11 @@ def create_app() -> FastAPI:
     _app.add_middleware(BodySizeLimitMiddleware, max_bytes=cfg.mineru.max_file_size_mb * 1024 * 1024)
 
     # ── Rate limiting ───────────────────────────────────────────────────
-    _app.state.limiter = limiter
+    from slowapi import _rate_limit_exceeded_handler
+    from slowapi.errors import RateLimitExceeded
+
+    configured_limiter = init_limiter()
+    _app.state.limiter = configured_limiter
     _app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     # ── Routes ───────────────────────────────────────────────────────────

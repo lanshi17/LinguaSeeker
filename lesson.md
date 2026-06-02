@@ -947,3 +947,91 @@ API routes (`src/api/v1/`) directly instantiated core services, bypassing the `a
 2. 对于修改同一文件的多个任务，不要使用并行 worktree — 改为顺序执行或合并到单个 agent
 3. 在 agent prompt 中明确要求 TDD 验证步骤，并检查中间输出
 4. 考虑使用 `git worktree add <path> <branch> --detach` 显式指定基准
+
+## [2026-06-02] Phase 3 从未执行 — 根因是配置缺失而非模型问题
+
+### 问题描述
+Benchmark pipeline 中 Phase 3 (entity standardization) 在所有 10 份报告中均显示 `status=skipped, reason=not_relevant`。
+
+### 排查过程
+1. 初始诊断：Phase 2 relevance scan 返回 `relevant=False`，怀疑 FAST 模型不遵从 prompt
+2. 尝试 prompt 强化（移动 DEFAULT 到顶部 + safety net）→ 无效
+3. 升级到 STANDARD tier → 发现 "Missing credentials" 错误
+4. **关键发现**：FAST tier 也有同样的 "Missing credentials" 错误！LLM 从未实际运行
+
+### 根因分析
+**配置缺失**：`EVIDENCE_EXTRACTION_*` 环境变量未配置。`evidence_extraction_api_key` 为空字符串，导致 ChatOpenAI 初始化时无法认证。
+
+**静默失败链**：
+1. LLM 调用抛出 "Missing credentials" 异常
+2. `run_async()` 的 `return_exceptions=True` 捕获异常并记录 ERROR 日志
+3. `maps` 列表为空（所有 chunk 失败）
+4. `merge_evidence_maps([])` 静默返回 `DocumentEvidenceMap(relevant=False)`
+5. 工作流将 `relevant=False` 解读为 NOT_RELEVANT → Phase 3 被跳过
+
+### 解决方案
+1. **config.py**：`evidence_extraction` 配置添加 fallback 到 `llm` 配置（与 `reasoning` 等模块一致）
+2. **evidence_map.py**：当所有 chunk 失败时抛出 `RuntimeError` 而非静默返回 `relevant=False`
+3. **prompts.py**：DEFAULT 指令移到 TASK 之前 + 不确定时默认 TRUE 的 safety net
+
+### 预防措施
+- 新增 LLM 配置域时，必须添加 fallback 到通用 LLM 配置
+- `merge_evidence_maps([])` 不应静默返回默认值 — 应由调用方处理空列表情况
+- 环境变量缺失应在启动时检测并警告，而非运行时静默失败
+
+## [2026-06-02] Phase 3 修复代码审查 — 发现 3 个测试缺口 + 2 个持续管道故障
+
+### 审查范围
+对已完成的 Phase 3 benchmark coverage 修复（config fallback + RuntimeError + prompt 强化）
+进行代码审查，验证修复有效性并识别剩余问题。
+
+### 审查发现
+
+#### 1. 修复代码正确，但测试覆盖不完整（3 个缺口）
+
+| # | 缺口 | 文件 | 说明 |
+|---|------|------|------|
+| 1 | `evidence_extraction` 配置 fallback 无测试 | `test_config.py` | `config.py` lines 489-497 的 `or self.llm.*` fallback 无任何测试覆盖 |
+| 2 | NOT_RELEVANT 分类 prompt 断言无测试 | `test_prompts.py` | prompt 已包含 "methodological"、"editorial" 等类别定义，但无对应测试 |
+| 3 | all-chunks-fail RuntimeError 无测试 | `test_stages_async.py` | `test_stage_async_survives_chunk_failure` 只测试了部分失败（1/2 chunks），未覆盖全部失败场景 |
+
+#### 2. 基准测试仍存在 2 个独立故障
+
+最新报告（`report_20260602_172642.json`）显示 7 个测试用例：3 passed、4 failed。
+
+**故障 A: PT (pt) + ZH 临时文件路径竞态**
+- 错误：`Phase 2 transient error: No such file or directory: 'data/pipeline/.../phase_1/tmp.../metadata.json'`
+- 路径中的 `tmp...` 来源于文件采集服务的 tempfile 名
+- Phase 1 adapter 使用相对路径 `data/pipeline/{run_id}/phase_1/` 作为输出目录
+- `parse_local_files_and_save` 以上传文件 stem 创建子目录 → 系统临时文件 stem 被用作持久化目录名
+- 可能根因：CWD 敏感的相对路径，或 MinerU batch zip 中 `file_name` 字段在不同语言下的解析差异
+- 需要运行时调试确认：服务器 CWD 是否与预期一致
+
+**故障 B: RU (ru) 翻译原文未变**
+- 错误：`Phase 2 unexpected error: translation_validation_failed: unchanged`
+- 翻译 pipeline 对俄语输入输出了与输入相同的文本
+- `_RETRYABLE_ERRORS` 不包含该错误 → 标记为不可重试的 `PermanentPhaseError`
+- 需要检查翻译 pipeline 的俄语语言检测和翻译回退逻辑
+
+#### 3. Phase 3 `no_candidates` 行为正常
+
+3 个通过的用例均显示 `match_count=0, skip_reason=no_candidates`：
+- en: 0 matches (COVID-19 case report, no HGVS variants)
+- es: 0 matches
+- ko: 0 matches
+
+这些是简单的病例报告，可能确实不包含 HGVS 格式的变异表述。对于已知含 `c.92C>A` 的 Fabry 中文病例报告，
+Phase 2 失败导致 Phase 3 未能执行（pipeline error），因此该结论需在 Fabry E2E 中验证。
+
+### 建议的修复优先级
+1. **低**：补充 3 个缺失的测试（config fallback + prompt categories + all-chunks-fail）
+2. **中**：Fix PT/ZH temp file path — 将 Phase 1 output_dir 改为绝对路径或确保 CWD 一致
+3. **低**：Fix RU translation — 对 `translation_validation_failed: unchanged` 添加 retryable 分类
+4. **信息**：在 Fabry 病例上验证 Phase 3 匹配 — 确认 `no_candidates` 确实是预期行为
+
+### 预防措施
+- 新增 LLM 配置域后必须在 `test_config.py` 中写 fallback 测试
+- prompt 的所有负例/正例分类约束必须有对应测试
+- `return_exceptions=True` 的 gather 必须检查空结果 + 错误列表
+- 管道输出路径应使用绝对路径或相对于项目根目录的稳定路径，避免 CWD 漂移
+

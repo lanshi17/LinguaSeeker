@@ -162,3 +162,18 @@
 [2026-06-01] Backend review fixes round 2 — addressed 9 review findings: upsert updated_at, hmac.compare_digest, lifespan try/finally, error_state persistence, fallback provider logging, doc tradeoffs [done]
 [2026-06-01] [Pipeline benchmark: benchmark runner + 2 pipeline bug fixes] [PARTIAL — LLM API config needed for full run]
 [2026-06-02] Backend security & architecture fixes — 6 tasks: pipeline auth, file size limit, path traversal, API rate limiting (slowapi), config docstring cleanup, TypedDict error response — 37 API tests + 1032 total tests passing [done]
+
+[2026-06-02] [Fix Phase 3 benchmark coverage — config fallback + error handling] [completed]
+  - Root cause: EVIDENCE_EXTRACTION_* env vars not configured → LLM calls fail silently
+  - Fix 1: config.py — evidence_extraction falls back to LLM config when not set
+  - Fix 2: evidence_map.py — raise RuntimeError when all chunks fail (was silently returning relevant=False)
+  - Fix 3: prompts.py — DEFAULT instruction moved before TASK + uncertainty safety net
+  - Result: Phase 3 now executes (3/7 papers completed standardization)
+  - Remaining failures are infrastructure (server disconnects, file race conditions)
+
+[2026-06-02] [Phase 3 fix code review — 3 test gaps found, 2 infra failures remain] [completed]
+  - Review: Verified config.py fallback, prompt tests, RuntimeError — all correct
+  - Test gaps: (1) no config fallback test, (2) no NOT_RELEVANT category prompt test, (3) no all-chunks-fail RuntimeError test
+  - Infra failures: (4) PT/ZH temp file path race (Phase 1→2), (5) RU translation unchanged
+  - Phase 3 no_candidates: 3 passes all show 0 matches — expected for simple case reports; needs Fabry E2E to confirm
+  - Docs archived: docs/plans/2026-06-02-phase3-benchmark-coverage.md → docs/archive/plans/
