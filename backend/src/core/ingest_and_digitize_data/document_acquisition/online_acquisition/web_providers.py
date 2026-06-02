@@ -1,7 +1,12 @@
-"""Web provider dispatcher — routes to pubscholar/cyberleninka/hans_publishers."""
+"""Web provider dispatcher — routes to pubscholar/cyberleninka/hans_publishers.
+
+.. deprecated::
+    This module is deprecated. Use ``web_search.firecrawl_adapter.FirecrawlAdapter`` instead.
+"""
 
 from __future__ import annotations
 
+import warnings as _warnings
 from typing import Any, Dict, Literal
 
 from .contracts import OnlineAcquisitionGatewayResult, OnlineAcquisitionSourceTraceEntry
@@ -74,7 +79,16 @@ async def call_web_provider(
     detail_link: str | None = None,
     params: Dict[str, Any] | None = None,
 ) -> OnlineAcquisitionGatewayResult:
-    """Unified entry point for web providers."""
+    """Unified entry point for web providers.
+
+    .. deprecated::
+        Use ``web_search.firecrawl_adapter.FirecrawlAdapter`` instead.
+    """
+    _warnings.warn(
+        "call_web_provider is deprecated; use FirecrawlAdapter from web_search module",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     extra = params or {}
 
     if provider == "pubscholar":
