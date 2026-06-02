@@ -1,7 +1,7 @@
 """Integration tests for the refactored three-phase workflow."""
 
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
 
 
 class TestMergeAndDedupe:
@@ -52,6 +52,39 @@ class TestMergeAndDedupe:
 
         merged = _merge_and_dedupe(api_items, [])
         assert len(merged) == 1
+
+    def test_dedup_with_list_title(self):
+        """Crossref returns title as a list — must not crash."""
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _merge_and_dedupe
+
+        api_items = [
+            {"doi": "10.1111/a", "title": ["BRCA1 Case Report"], "_source_provider": "crossref"},
+            {"doi": "10.1111/b", "title": "BRCA1 case report", "_source_provider": "unpaywall"},
+        ]
+
+        merged = _merge_and_dedupe(api_items, [])
+        assert len(merged) == 1
+
+    def test_dedup_with_list_url(self):
+        """Some providers return URL as a list."""
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _merge_and_dedupe
+
+        api_items = [
+            {"url": ["https://example.com/paper.pdf"], "_source_provider": "crossref"},
+            {"url": "https://example.com/paper.pdf", "_source_provider": "unpaywall"},
+        ]
+
+        merged = _merge_and_dedupe(api_items, [])
+        assert len(merged) == 1
+
+    def test_coerce_str_extracts_from_list(self):
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _coerce_str
+
+        assert _coerce_str(["hello", "world"]) == "hello"
+        assert _coerce_str("direct") == "direct"
+        assert _coerce_str(None) == ""
+        assert _coerce_str([]) == ""
+        assert _coerce_str({"value": "nested"}) == "nested"
 
 
 class TestAcquireLinksApi:
@@ -109,7 +142,7 @@ class TestDownloadCandidates:
     async def test_download_doi_route(self, tmp_path):
         from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _download_candidates
         from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
-            DownloadResult, OnlineAcquisitionGatewayResult,
+            OnlineAcquisitionGatewayResult,
         )
 
         candidates = [{"doi": "10.1234/test", "title": "Test Paper", "_source_provider": "crossref"}]

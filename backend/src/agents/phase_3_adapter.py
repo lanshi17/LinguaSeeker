@@ -101,6 +101,7 @@ class Phase3Adapter:
                     source_document_id=state.source_document_id,
                     processing_run_id=state.processing_run_id,
                 )
+                await session.commit()
 
             state.phase_3_output = Phase3Output(
                 match_count=standardization_result.match_count,
