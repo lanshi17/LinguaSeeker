@@ -22,18 +22,15 @@ from .contracts import (
     OnlineAcquisitionRequest,
     OnlineAcquisitionResponse,
     OnlineAcquisitionRouteInfo,
-    OnlineAcquisitionSourceTraceEntry,
 )
-from .doi_fallback import probe_doi_landing_page
 from .gateway import (
     _normalize_doi,
     download_file_from_url,
     resolve_oa_url,
     search_provider,
 )
-from .literature_type_classifier import LiteratureType, classify_item
+from .literature_type_classifier import classify_item
 from .normalizers import normalize_items
-from .provider_health import get_health_tracker
 from .web_search import SearchLink
 
 DOI_PATTERN = re.compile(r"\b10\.\d{4,9}/[^\s\"<>]+", re.IGNORECASE)
@@ -187,6 +184,25 @@ async def _acquire_links_firecrawl(
     return all_links
 
 
+def _coerce_str(value: Any) -> str:
+    """Extract first usable string from str | list | tuple | None.
+
+    Crossref returns title as a list of strings; some providers return
+    nested dicts.  This normalises all shapes to a plain string.
+    """
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (list, tuple)):
+        for item in value:
+            s = _coerce_str(item)
+            if s:
+                return s
+        return ""
+    if isinstance(value, dict):
+        return _coerce_str(value.get("value") or value.get("title") or next(iter(value.values()), ""))
+    return ""
+
+
 def _merge_and_dedupe(
     api_items: List[Dict[str, Any]],
     firecrawl_links: List[SearchLink],
@@ -197,14 +213,15 @@ def _merge_and_dedupe(
     seen_titles: set[str] = set()
     merged: List[Dict[str, Any]] = []
 
-    def _norm_title(t: Optional[str]) -> str:
+    def _norm_title(raw: Any) -> str:
+        t = _coerce_str(raw)
         if not t:
             return ""
         return re.sub(r"[^\w\s]", "", t.lower()).strip()
 
     for item in api_items:
-        doi = (item.get("doi") or item.get("DOI") or "").strip().lower()
-        url = (item.get("url") or item.get("URL") or item.get("link") or "").strip()
+        doi = _coerce_str(item.get("doi") or item.get("DOI")).strip().lower()
+        url = _coerce_str(item.get("url") or item.get("URL") or item.get("link")).strip()
         title = _norm_title(item.get("title") or item.get("article_title"))
 
         if doi and doi in seen_dois:
@@ -374,7 +391,6 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
         fallback_used=False,
     )
     warnings: List[str] = []
-    traces: List[OnlineAcquisitionSourceTraceEntry] = []
 
     download_path = request.download_path
     if language:
