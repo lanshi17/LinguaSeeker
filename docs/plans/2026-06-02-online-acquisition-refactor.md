@@ -1,5 +1,8 @@
 # Online Acquisition Refactor: Separate Link Acquisition from Download
 
+**Status:** planned
+**Created:** 2026-06-02
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Refactor the online acquisition module to cleanly separate link acquisition (search + Firecrawl) from file download (API OA resolution + direct HTTP), replacing 7 web providers with a single Firecrawl adapter using the adapter pattern.
