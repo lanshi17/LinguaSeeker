@@ -12,13 +12,6 @@ flat fields by a ``model_validator``.
     cfg.llm.api_key                 # preferred: nested access
     cfg.postgresql.host             # nested domain
     cfg.llm_api_key                 # also available as flat field
-
-    from src.core.config import get_config
-
-    cfg = get_config()              # singleton
-    cfg.llm.api_key                 # preferred: nested access
-    cfg.postgresql.host             # nested domain
-    cfg.llm_api_key                 # also available as flat field
 """
 
 from __future__ import annotations
