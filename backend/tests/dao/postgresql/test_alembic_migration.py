@@ -204,8 +204,8 @@ def test_head_revision_points_to_pgvector_embeddings() -> None:
     head = script.get_revision("head")
 
     assert head is not None
-    assert head.revision == "4ce26825046c"
-    assert head.down_revision == "review_chat_20260528"
+    assert head.revision == "547f7e3f71e3"
+    assert head.down_revision == "4ce26825046c"
 
 
 def test_terminology_relationships_migration_defines_unique_identity_constraint(monkeypatch) -> None:

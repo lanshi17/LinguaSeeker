@@ -78,3 +78,4 @@ backend/data/pipeline/run-123/*
 .qwen/*
 .claude/*
 
+benchmark/literature_acquisition/downloads/rett/report_*.json
