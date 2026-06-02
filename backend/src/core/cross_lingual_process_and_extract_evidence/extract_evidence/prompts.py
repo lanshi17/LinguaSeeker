@@ -92,14 +92,14 @@ def get_evidence_map_prompt(
     track: Track,
     text: str,
 ) -> str:
-    return f"""You are analyzing a biomedical document for evidence extraction.
+    return f"""DEFAULT: Set "relevant" to TRUE. Most biomedical case reports, studies, and clinical documents contain relevant evidence. When in doubt, set relevant to TRUE.
+
+You are analyzing a biomedical document for evidence extraction.
 
 Document ID: {document_id}
 Track: {track.value}
 
 TASK: Scan this document for biomedical/genetic content and list all relevant terms you find.
-
-DEFAULT: Set "relevant" to TRUE. Most biomedical case reports, studies, and clinical documents contain relevant evidence.
 
 Set "relevant" to FALSE ONLY if the document is:
 - A purely methodological paper (e.g. statistical methods, software tools)
@@ -115,6 +115,8 @@ If you find ANY of the following, you MUST set "relevant" to TRUE and list them:
 - Drug treatments or therapeutic interventions
 
 CRITICAL: Do NOT return empty lists if the document contains biomedical content. List every term you find.
+
+If you are unsure whether the document is relevant, set relevant to TRUE.
 
 JSON OUTPUT:
 Return only a single valid json object. Do not wrap it in markdown code fences or add commentary.
