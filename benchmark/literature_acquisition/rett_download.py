@@ -303,15 +303,19 @@ async def _search_pubmed(
             seen_pmids.add(r.pmid)
 
             # Build candidate dict in same format as search_multilingual output
+            # Prefer PMC direct PDF URL when PMCID is available
+            identifiers: dict[str, str] = {"pmid": r.pmid}
+            if r.pmcid:
+                identifiers["pmcid"] = r.pmcid
             cand: dict[str, Any] = {
                 "title": r.title,
-                "doi": "",  # PubMed search doesn't return DOI in basic mode
-                "url": f"https://pubmed.ncbi.nlm.nih.gov/{r.pmid}/",
+                "doi": r.doi,
+                "url": r.pmc_pdf_url or f"https://pubmed.ncbi.nlm.nih.gov/{r.pmid}/",
                 "provider": "pubmed",
                 "route": "api",
                 "journal": r.journal,
                 "year": r.pub_date[:4] if r.pub_date else "",
-                "identifiers": {"pmid": r.pmid},
+                "identifiers": identifiers,
                 "detail_link": f"https://pubmed.ncbi.nlm.nih.gov/{r.pmid}/",
                 "language": lang_code,
             }
@@ -429,8 +433,28 @@ async def _process_language(
                 or (cand.get("identifiers") or {}).get("url")
                 or ""
             )
+            # Build fallback PDF URLs for PMC/PubMed to increase hit rate
+            _alt_urls: list[str] = []
+            pmcid = (cand.get("identifiers") or {}).get("pmcid") or ""
+            pmid = (cand.get("identifiers") or {}).get("pmid") or ""
 
-            if not url:
+            # PMC landing page → direct PDF URL
+            _pmc_match = re.search(r"PMC(\d+)", url + pmcid + pmid)
+            if _pmc_match:
+                _alt_urls.append(
+                    f"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{_pmc_match.group(1)}/pdf/"
+                )
+
+            # PubMed landing page → try PMC pdf pattern with PMID
+            if pmid and not _pmc_match:
+                _alt_urls.append(
+                    f"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{pmid}/pdf/"
+                )
+
+            # Build ordered URL list: direct PDF variants first, original last
+            _urls = _alt_urls + ([url] if url and url not in _alt_urls else [])
+
+            if not _urls:
                 logger.debug(f"[{lang_code}] candidate {cand_idx}: no URL, skipping")
                 continue
 
@@ -481,17 +505,27 @@ async def _process_language(
                     lang=lang_code, query=query,
                     literature_type=lit_type, title=title, doi=doi,
                     source=source, provider=cand.get("provider", ""),
-                    success=True, source_url=url,
+                    success=True, source_url=_urls[0] if _urls else "",
                 ))
                 downloaded += 1
                 continue
 
-            # Download PDF
+            # Download PDF — try each URL variant until one succeeds
             fname = f"{_sanitize(lang_code)}_{_sanitize(title or 'untitled')[:60]}_{cand_idx}.pdf"
             dest = download_dir / lang_code / fname
-            t0 = time.monotonic()
-            ok = await _download_from_url(url, dest, timeout=timeout_s)
-            elapsed = int((time.monotonic() - t0) * 1000)
+            ok = False
+            used_url = ""
+            elapsed = 0
+            for try_url in _urls:
+                t0 = time.monotonic()
+                ok = await _download_from_url(try_url, dest, timeout=timeout_s)
+                elapsed = int((time.monotonic() - t0) * 1000)
+                if ok:
+                    used_url = try_url
+                    break
+                # Remove failed partial download before retry with next URL
+                if dest.exists():
+                    dest.unlink(missing_ok=True)
 
             if ok:
                 # SHA256 dedup: skip if same file already downloaded
@@ -500,7 +534,7 @@ async def _process_language(
                         lang=lang_code, query=query,
                         literature_type=lit_type, title=title, doi=doi,
                         source=source, provider=cand.get("provider", ""),
-                        success=False, source_url=url,
+                        success=False, source_url=used_url,
                         error="sha256_duplicate", elapsed_ms=elapsed,
                     ))
                     continue
@@ -515,7 +549,7 @@ async def _process_language(
                     literature_type=lit_type, title=title, doi=doi,
                     source=source, provider=cand.get("provider", ""),
                     success=True, file_path=str(dest),
-                    file_size=file_size, source_url=url,
+                    file_size=file_size, source_url=used_url,
                     elapsed_ms=elapsed,
                 ))
                 downloaded += 1
@@ -527,7 +561,7 @@ async def _process_language(
                     lang=lang_code, query=query,
                     literature_type=lit_type, title=title, doi=doi,
                     source=source, provider=cand.get("provider", ""),
-                    success=False, source_url=url,
+                    success=False, source_url=_urls[0] if _urls else "",
                     error="download_failed", elapsed_ms=elapsed,
                 ))
 
