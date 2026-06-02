@@ -49,7 +49,14 @@ class RelevanceScanStage:
                 stage="relevance_scan" if chunk.total == 1 else f"relevance_scan/{chunk.index}",
                 response_method="json_mode",
             ))
-        return merge_evidence_maps(maps)
+        merged = merge_evidence_maps(maps)
+        logger.debug(
+            "Relevance scan: doc_id={}, track={}, relevant={}, disease={}, gene={}, variant={}",
+            document.document_id, document.track.value,
+            merged.relevant,
+            len(merged.disease_terms), len(merged.gene_terms), len(merged.variant_terms),
+        )
+        return merged
 
     async def run_async(self, document: TrackDocument) -> DocumentEvidenceMap:
         """Async version — runs chunk LLM calls concurrently with semaphore."""
@@ -91,4 +98,11 @@ class RelevanceScanStage:
                 logger.error("relevance_scan chunk {}/{} failed: {}", i + 1, len(chunks), result)
                 continue
             maps.append(result)
-        return merge_evidence_maps(maps)
+        merged = merge_evidence_maps(maps)
+        logger.debug(
+            "Relevance scan: doc_id={}, track={}, relevant={}, disease={}, gene={}, variant={}",
+            document.document_id, document.track.value,
+            merged.relevant,
+            len(merged.disease_terms), len(merged.gene_terms), len(merged.variant_terms),
+        )
+        return merged
