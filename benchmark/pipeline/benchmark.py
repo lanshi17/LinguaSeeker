@@ -153,7 +153,7 @@ async def poll_status(
     """Poll pipeline status until terminal state. Returns final status dict."""
     last_status = ""
     for attempt in range(MAX_POLL_ATTEMPTS):
-        resp = await client.get(f"{base_url}{status_url}", timeout=10.0)
+        resp = await client.get(f"{base_url}{status_url}", timeout=30.0)
         resp.raise_for_status()
         data = resp.json()
 

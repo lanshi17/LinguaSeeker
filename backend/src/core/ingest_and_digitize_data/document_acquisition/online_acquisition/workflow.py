@@ -8,6 +8,7 @@ Phase 3 (Gate): LLM classification on downloaded PDF content.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import os
 import re
 from typing import Any, Dict, List, Optional
@@ -270,7 +271,9 @@ async def _download_candidates(
         pmcid = candidate.get("pmcid")
         url = candidate.get("url") or candidate.get("URL")
         title = candidate.get("title", "untitled")
-        filename_stem = re.sub(r"[^\w\-]", "_", title)[:80] if title else "untitled"
+        url_for_hash = url or doi or pmcid or title or "unknown"
+        url_hash = hashlib.md5(url_for_hash.encode()).hexdigest()[:8]
+        filename_stem = f"{re.sub(r'[^\\w\\-]', '_', title)[:70]}_{url_hash}" if title else f"untitled_{url_hash}"
 
         # Route 1: DOI → unpaywall OA resolution
         if doi:

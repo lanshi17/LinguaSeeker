@@ -24,6 +24,7 @@ fn rust_io(m: &Bound<'_, PyModule>) -> PyResult<()> {
     net.add_function(wrap_pyfunction!(net_io::py::scrape_web, &net)?)?;
     net.add_function(wrap_pyfunction!(net_io::py::scrape_html, &net)?)?;
     net.add_function(wrap_pyfunction!(net_io::py::extract_pdf_links, &net)?)?;
+    net.add_function(wrap_pyfunction!(net_io::py::download_file, &net)?)?;
     net.add_function(wrap_pyfunction!(net_io::py::mineru_create_task, &net)?)?;
     net.add_function(wrap_pyfunction!(net_io::py::mineru_get_result, &net)?)?;
     net.add_function(wrap_pyfunction!(net_io::py::mineru_batch_submit, &net)?)?;

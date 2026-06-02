@@ -181,13 +181,11 @@ pub fn download_file<'py>(
             .await
             .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
         Python::attach(|py| {
-            pythonize::pythonize(py, &serde_json::json!({
-                "bytes": bytes,
-                "final_url": final_url,
-                "status_code": status_code,
-            }))
-            .map(|obj| obj.unbind())
-            .map_err(PyErr::from)
+            let dict = pyo3::types::PyDict::new(py);
+            dict.set_item("bytes", pyo3::types::PyBytes::new(py, &bytes))?;
+            dict.set_item("final_url", final_url)?;
+            dict.set_item("status_code", status_code)?;
+            Ok(dict.into_any().unbind())
         })
     })
 }
