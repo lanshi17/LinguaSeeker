@@ -61,3 +61,43 @@ async def test_pipeline_run_rate_limited():
 
             assert responses[:10] == [202] * 10
             assert responses[10] == 429
+
+
+@pytest.mark.asyncio
+async def test_stream_endpoint_rate_limited():
+    """GET /api/v1/chat/sessions/{id}/stream should return 429 after exceeding 10/minute."""
+    from src.core.config import Settings
+    from src.api.rate_limit import limiter
+
+    limiter._storage.reset()
+
+    mock_settings = Settings(api_key="")
+
+    with (
+        patch("src.core.config.get_config") as mock_cfg,
+        patch("src.api.auth.get_config", mock_cfg),
+        patch(
+            "src.utils.health.check_all_connections",
+            new_callable=AsyncMock,
+            return_value=HealthResult(postgres=True, redis=True),
+        ),
+        patch("src.api.v1.chat.get_phase4_factory"),
+    ):
+        mock_cfg.return_value = mock_settings
+
+        from app.main import create_app
+
+        app = create_app()
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            responses = []
+            for _ in range(11):
+                resp = await client.get(
+                    "/api/v1/chat/sessions/00000000-0000-0000-0000-000000000000/stream",
+                    params={"user_message": "test"},
+                )
+                responses.append(resp.status_code)
+
+            # First 10 should not be 429 (may be 500/404/etc due to mocks)
+            rate_limited = [r for r in responses if r == 429]
+            assert len(rate_limited) >= 1, "11th request should be rate limited"

@@ -144,6 +144,10 @@ def create_app() -> FastAPI:
     )
     add_request_monitoring(_app)
 
+    # ── Body size limit (before ASGI reads body into memory) ──────────
+    from src.api.body_size_limit import BodySizeLimitMiddleware
+    _app.add_middleware(BodySizeLimitMiddleware, max_bytes=cfg.mineru.max_file_size_mb * 1024 * 1024)
+
     # ── Rate limiting ───────────────────────────────────────────────────
     _app.state.limiter = limiter
     _app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

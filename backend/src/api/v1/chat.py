@@ -114,7 +114,9 @@ async def append_message(
 
 
 @router.get("/sessions/{session_id}/stream")
+@limiter.limit("10/minute")
 async def stream_reply(
+    request: Request,
     session_id: UUID,
     user_message: str,
     evidence_id: UUID | None = None,

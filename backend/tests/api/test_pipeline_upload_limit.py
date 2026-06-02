@@ -43,4 +43,40 @@ async def test_upload_rejects_oversized_files():
                 headers={"X-API-Key": "test-secret"},
             )
             assert resp.status_code == 413
-            assert "File too large" in resp.json()["error"]["message"]
+            # Response may come from body-size middleware ("detail") or handler ("error.message")
+            body = resp.json()
+            detail = body.get("detail") or body.get("error", {}).get("message", "")
+            assert "too large" in detail.lower() or "file too large" in detail.lower()
+
+
+@pytest.mark.asyncio
+async def test_upload_rejects_invalid_base64():
+    """POST /api/v1/pipeline/run should reject invalid base64 content with 422."""
+    with patch("src.core.config.get_config") as mock_cfg, \
+         patch("src.api.auth.get_config", mock_cfg), \
+         patch("src.utils.health.check_all_connections", new_callable=AsyncMock,
+               return_value=AsyncMock(failed_services=AsyncMock(return_value=[]))), \
+         patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        from src.core.config import Settings
+        mock_cfg.return_value = Settings(api_key="test-secret")
+
+        mock_runner = MagicMock()
+        mock_runner.is_running_for_source = MagicMock(return_value=False)
+        mock_get_runner.return_value = mock_runner
+
+        from app.main import create_app
+        app = create_app()
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post(
+                "/api/v1/pipeline/run",
+                json={
+                    "source_type": "local",
+                    "mode": "full",
+                    "content_base64": "not-valid-base64!!!",
+                    "filename": "test.pdf",
+                },
+                headers={"X-API-Key": "test-secret"},
+            )
+            assert resp.status_code == 422
+            assert "Invalid base64" in resp.json()["error"]["message"]
