@@ -1,5 +1,9 @@
 # Pipeline Benchmark Implementation Plan
 
+**Status:** in-progress
+**Created:** 2026-06-01
+**Note:** Benchmark runner implemented, 2 pipeline bugs fixed. LLM API config needed for full run.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Benchmark the full backend pipeline (Phases 1–3) by POSTing real case-report PDFs through the HTTP API as if they were frontend uploads, measuring per-phase timing, success rates, and reliability across 7 languages.

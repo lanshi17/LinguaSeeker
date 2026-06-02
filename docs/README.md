@@ -49,8 +49,8 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status |
 |---|---|---|
-| 2026-06-01 | [Backend security & architecture fixes](plans/2026-06-01-backend-security-architecture-fixes.md) | active — security & architecture fixes |
-| 2026-06-01 | [Pipeline benchmark](plans/2026-06-01-pipeline-benchmark.md) | active — benchmark full pipeline Phases 1–3 |
+| 2026-06-01 | [Pipeline benchmark](plans/2026-06-01-pipeline-benchmark.md) | in-progress — benchmark runner done, LLM config needed |
+| 2026-06-02 | [Online acquisition refactor](plans/2026-06-02-online-acquisition-refactor.md) | planned — separate link acquisition from download |
 
 ## Planned Work
 
@@ -77,6 +77,7 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-06-02 | [Backend security & architecture fixes](archive/plans/2026-06-01-backend-security-architecture-fixes.md) | completed — 6 tasks + 3 review passes: auth, file limits, path traversal, rate limiting, TypedDict |
 | 2026-06-02 | [Phase 3 benchmark coverage — relevance scan fix (archived — superseded by config fix)](archive/plans/2026-06-02-phase3-benchmark-coverage.md) | completed — plan based on incorrect RCA; real fix was config fallback |
 | 2026-06-01 | [Backend review fixes](archive/plans/2026-06-01-backend-review-fixes.md) | completed — 16 tasks: session commit, auth, upsert, SSE, types, FK, tests |
 | 2026-05-30 | [Phase 2 chunk-level parallelization](archive/plans/2026-05-30-phase2-chunk-parallelization.md) | completed — async provider + stages + workflow |
