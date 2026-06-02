@@ -4,6 +4,9 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
+from starlette.requests import Request
+
+from src.api.rate_limit import limiter
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,9 +21,11 @@ router = APIRouter()
 
 
 @router.patch("/{canonical_evidence_id}", response_model=PatchResultResponse)
+@limiter.limit("30/minute")
 async def patch_evidence(
+    request: Request,
     canonical_evidence_id: UUID,
-    patch: EvidencePatchRequest,
+    body: EvidencePatchRequest,
     session: AsyncSession = Depends(get_db_session),
     _api_key: str | None = Depends(require_api_key),
 ) -> PatchResultResponse:
@@ -33,7 +38,7 @@ async def patch_evidence(
         # not a UUID, and no identity table exists yet.
         result = await service.patch_evidence(
             canonical_evidence_id=canonical_evidence_id,
-            patch=patch,
+            patch=body,
             reviewer_id=None,
         )
         return PatchResultResponse(
