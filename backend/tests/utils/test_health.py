@@ -22,10 +22,12 @@ async def test_check_all_returns_health_result():
     mock_engine = MagicMock()
     mock_engine.connect = _mock_connect
 
+    mock_redis = AsyncMock()
+    mock_redis.ping.return_value = True
+
     with (
         patch("src.api.wiring.get_engine", return_value=mock_engine),
-        patch("redis.asyncio.Redis.ping", new_callable=AsyncMock, return_value=True),
-        patch("redis.asyncio.Redis.aclose", new_callable=AsyncMock),
+        patch("src.api.wiring.get_redis_client", return_value=mock_redis),
     ):
         result = await check_all_connections()
         assert isinstance(result, HealthResult)
@@ -33,6 +35,24 @@ async def test_check_all_returns_health_result():
         assert result.redis is True
         assert result.all_ok() is True
         assert result.failed_services() == []
+
+
+@pytest.mark.asyncio
+async def test_check_redis_uses_wiring_singleton() -> None:
+    """Health check reuses the wiring Redis singleton, not a throwaway client."""
+    from unittest.mock import AsyncMock, patch
+
+    mock_client = AsyncMock()
+    mock_client.ping.return_value = True
+
+    with patch("src.api.wiring.get_redis_client", return_value=mock_client):
+        from src.utils.health import _check_redis
+        result = await _check_redis()
+
+    assert result is True
+    mock_client.ping.assert_awaited_once()
+    # Must NOT close the singleton client
+    mock_client.aclose.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -46,10 +66,12 @@ async def test_check_all_reports_postgres_failure():
     mock_engine = MagicMock()
     mock_engine.connect = _mock_connect
 
+    mock_redis = AsyncMock()
+    mock_redis.ping.return_value = True
+
     with (
         patch("src.api.wiring.get_engine", return_value=mock_engine),
-        patch("redis.asyncio.Redis.ping", new_callable=AsyncMock, return_value=True),
-        patch("redis.asyncio.Redis.aclose", new_callable=AsyncMock),
+        patch("src.api.wiring.get_redis_client", return_value=mock_redis),
     ):
         result = await check_all_connections()
         assert result.postgres is False

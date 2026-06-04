@@ -8,7 +8,6 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from src.core.config import get_config
 from src.utils.logger import get_logger
 
 
@@ -73,23 +72,17 @@ async def _check_postgres() -> bool:
 
 @_register("redis")
 async def _check_redis() -> bool:
-    """Ping Redis."""
+    """Ping Redis using the wiring singleton client."""
     logger = get_logger()
     try:
-        import redis.asyncio as aioredis
+        from src.api.wiring import get_redis_client
 
-        cfg = get_config()
-        client = aioredis.Redis(
-            host=cfg.redis.host,
-            port=cfg.redis.port,
-            password=cfg.redis.password or None,
-            db=cfg.redis.db,
-        )
-        try:
-            pong = await client.ping()
-            return bool(pong)
-        finally:
-            await client.aclose()
+        client = get_redis_client()
+        if client is None:
+            logger.warning("Redis health check skipped: client not initialized")
+            return False
+        pong = await client.ping()
+        return bool(pong)
     except Exception as exc:
         logger.warning("Redis health check failed: {}", exc)
         return False
