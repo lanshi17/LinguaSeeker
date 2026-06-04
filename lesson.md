@@ -1150,3 +1150,22 @@ Phase 2 失败导致 Phase 3 未能执行（pipeline error），因此该结论�
 **预防措施**：
 - ASGI lifespan 测试不要依赖 httpx transport，直接用 lifespan context
 - 需要被 mock 的函数不要用 `from X import f`，用模块属性访问
+
+## 2026-06-04: 新增 wire_dependencies 步骤需同步更新 _patch_wire_deps mock 列表
+
+**问题描述**：在 `wire_dependencies()` 中添加 `_redis_client = build_redis_client(cfg)` 后，`test_wiring_config.py` 的 2 个现有测试失败：`ValueError: "max_connections" must be a positive integer`。
+
+**排查过程**：
+1. `build_redis_client(cfg)` 中 `cfg` 是 `MagicMock`，`cfg.redis.max_connections` 返回 `MagicMock`（非 int）
+2. `redis.asyncio.ConnectionPool` 要求 `max_connections` 为正整数
+
+**根因分析**：
+- `test_wiring_config.py` 的 `_patch_wire_deps` mock 列表未包含 `build_redis_client`
+- 每次在 `wire_dependencies()` 中新增步骤，都需检查其 mock 列表是否完整
+
+**解决方案**：
+- 在 `_patch_wire_deps` 中添加 `"src.api.wiring.build_redis_client"` 到 patch 列表
+
+**预防措施**：
+- 修改 `wire_dependencies()` 后，运行 `test_wiring_config.py` 确认无回归
+- 新增依赖注入步骤时，同步更新测试 mock 列表
