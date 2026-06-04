@@ -56,7 +56,7 @@
 
 **验证**：运行 `--limit 1 --source input --lang en`，检查报告 JSON 中包含 `evidence_metrics` 字段。
 
-### 任务 4: 端到端集成验证 ✅（部分）
+### 任务 4: 端到端集成验证 ✅
 
 **目标**：用 1 篇 PDF 跑完整 E2E 流程，验证全链路。
 
