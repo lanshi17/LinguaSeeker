@@ -48,17 +48,19 @@ def init_limiter() -> Limiter:
         cfg = get_config()
         import redis as redis_lib
 
+        pwd = cfg.redis.password or None
         client = redis_lib.Redis(
             host=cfg.redis.host,
             port=cfg.redis.port,
             db=cfg.redis.db,
-            password=cfg.redis.password,
+            password=pwd,
             socket_connect_timeout=1,
         )
         client.ping()
         client.close()
 
-        redis_url = f"redis://:{cfg.redis.password}@{cfg.redis.host}:{cfg.redis.port}/{cfg.redis.db}"
+        auth = f":{pwd}@" if pwd else ""
+        redis_url = f"redis://{auth}{cfg.redis.host}:{cfg.redis.port}/{cfg.redis.db}"
         from limits.storage import RedisStorage
 
         storage = RedisStorage(redis_url)
