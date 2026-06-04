@@ -1,0 +1,173 @@
+# ACMG Lingua — Copier Template Configuration (Monorepo Root)
+# ============================================================
+# Run:  copier copy . /path/to/new-project
+
+# ── Monorepo template variables ────────────────────────────────────────
+
+project_name:
+  type: str
+  help: Monorepo / project name (hyphenated, e.g. my-app)
+  default: acmg-lingua
+
+project_slug:
+  type: str
+  help: Repository directory name (defaults to project_name)
+  default: "{{ project_name }}"
+
+description:
+  type: str
+  help: Short project description
+  default: Variant classification and evidence interpretation platform
+
+backend_package:
+  type: str
+  help: Backend Python package name (hyphenated)
+  default: "{{ project_slug }}-backend"
+
+frontend_package:
+  type: str
+  help: Frontend npm package name (hyphenated)
+  default: "{{ project_slug }}-frontend"
+
+project_version:
+  type: str
+  help: Initial version for all packages
+  default: "0.1.0"
+
+python_version:
+  type: str
+  help: Minimum Python version
+  default: "3.12"
+  choices:
+    - "3.11"
+    - "3.12"
+    - "3.13"
+
+app_name:
+  type: str
+  help: Application display name (used in logs, UI titles, config.py defaults)
+  default: ACMG-Lingua
+
+app_version:
+  type: str
+  help: Application version identifier
+  default: "3.0.0"
+
+postgres_db:
+  type: str
+  help: Default PostgreSQL database name (docker-compose + config.py)
+  default: acmg_lingua
+
+postgres_schema:
+  type: str
+  help: Default PostgreSQL schema name
+  default: acmg_app
+
+author_name:
+  type: str
+  help: Author or organization name
+  default: ""
+
+author_email:
+  type: str
+  help: Author email address
+  default: ""
+
+use_local_pypi:
+  type: bool
+  help: Configure a local PyPI mirror (devpi) in pyproject.toml for faster installs?
+  default: false
+
+# ── Template processing ─────────────────────────────────────────────────
+
+# Only files ending with .jinja are rendered as Jinja2 templates;
+# all other files are copied verbatim.
+_templates_suffix: .jinja
+
+# Files / directories excluded from the generated project.
+# Patterns are relative to the template root (monorepo root).
+_exclude:
+  # ── Python artifacts ─────────────────────────────────────────────
+  - "**/__pycache__"
+  - "**/*.pyc"
+  - "**/*.pyo"
+  - "**/*.egg-info"
+  - "**/.venv"
+  - "**/.mypy_cache"
+  - "**/.ruff_cache"
+  - "**/.pytest_cache"
+
+  # ── Node / Next.js artifacts ─────────────────────────────────────
+  - "node_modules"
+  - ".next"
+  - "out"
+  - "dist"
+  - "build"
+  - ".pnp"
+  - ".pnp.js"
+
+  # ── Rust artifacts ───────────────────────────────────────────────
+  - "backend/libs/rust-io/target"
+  - "backend/libs/rust-io/Cargo.lock"
+  - "backend/libs/files-io/target"
+  - "backend/libs/files-io/Cargo.lock"
+  - "backend/libs/net-io/target"
+  - "backend/libs/net-io/Cargo.lock"
+
+  # ── Sensitive / local config ─────────────────────────────────────
+  - ".env"
+  - ".env.local"
+  - ".env.*.local"
+  - "**/.env"
+  - "**/.env.local"
+
+  # ── Runtime directories ──────────────────────────────────────────
+  - "logs"
+  - "backend/downloads"
+  - "backend/output"
+  - "data"
+  - ".worktrees"
+
+  # ── IDE / tool caches ────────────────────────────────────────────
+  - ".claude"
+  - ".reasonix"
+  - ".codegraph"
+  - ".cache_ggshield"
+  - ".vscode"
+  - ".idea"
+  - "*.swp"
+  - "*.swo"
+  - "*~"
+  - ".DS_Store"
+  - "Thumbs.db"
+
+  # ── Lock files (regenerated per project) ─────────────────────────
+  - "backend/uv.lock"
+  - "frontend/package-lock.json"
+
+  # ── Misc ─────────────────────────────────────────────────────────
+  - "*.log"
+  - "command.log"
+  - ".old_version"
+  - "progress.txt"
+  - "lesson.md"
+  - "e2e_output"
+
+  # ── Un-templated originals (replaced by .jinja versions) ─────────
+  - "README.md"
+  - "backend/pyproject.toml"
+  - "backend/.env.example"
+  - "backend/src/core/config.py"
+  - "frontend/package.json"
+  - "docker-compose.yml"
+
+  # ── Copier's own artifacts ───────────────────────────────────────
+  - ".copier-answers.yml"
+  - "backend/copier.yaml"
+
+# ── Post-generation tasks ───────────────────────────────────────────────
+# All commands run in the destination directory (the newly generated project).
+_tasks:
+  - command: git init
+  - command: cd backend && uv pip install -e ".[dev]"
+  - command: cd frontend && nvm use && npm install

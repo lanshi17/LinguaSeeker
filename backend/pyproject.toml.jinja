@@ -1,8 +1,13 @@
 [project]
-name = "acmg-lingua-backend"
-version = "0.1.0"
-description = "ACMG Lingua backend service"
-requires-python = ">=3.12"
+name = "{{ backend_package }}"
+version = "{{ project_version }}"
+description = "{{ description }}"
+requires-python = ">={{ python_version }}"
+{% if author_name or author_email %}
+authors = [
+    { name = "{{ author_name }}", email = "{{ author_email }}" },
+]
+{% endif %}
 dependencies = [
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.30.0",
@@ -51,23 +56,23 @@ model-server = [
     "numpy>=1.26.0",
 ]
 
+{% if use_local_pypi %}
 [tool.uv]
-# 设置默认源（优先级最高）
 index-url = "http://127.0.0.1:3141/root/pypi/+simple/"
 
-# 配置所有镜像源（按优先级排序）
 [[tool.uv.index]]
 name = "local"
 url = "http://127.0.0.1:3141/root/pypi/+simple/"
-default = true  # 默认源，必须设置一个
+default = true
 
 [[tool.uv.index]]
-name = "tuna"  # 清华源（国内最快）
+name = "tuna"
 url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
 
 [[tool.uv.index]]
 name = "aliyun"
 url = "https://mirrors.aliyun.com/pypi/simple/"
+{% endif %}
 
 [tool.uv.sources]
 rust-io = { path = "libs/rust-io", editable = true }
@@ -79,7 +84,7 @@ markers = [
 
 [tool.ruff]
 line-length = 120
-target-version = "py312"
+target-version = "py{{ python_version | replace('.', '') }}"
 
 [build-system]
 requires = ["hatchling"]
