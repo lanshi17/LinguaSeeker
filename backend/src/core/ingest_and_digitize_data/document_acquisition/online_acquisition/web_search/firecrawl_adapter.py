@@ -1,4 +1,8 @@
-"""Firecrawl-based web search adapter."""
+"""Firecrawl-based web search adapter.
+
+Uses Firecrawl's search API for link discovery and JSON-mode scrape for
+structured metadata extraction (title, DOI, PDF URLs).
+"""
 
 from __future__ import annotations
 
@@ -9,7 +13,7 @@ from loguru import logger
 
 from .adapter import SearchLink, WebSearchAdapter, WebSearchResult
 
-# Regex patterns for extracting PDF links from scraped markdown/HTML
+# Fallback regex patterns for extracting PDF links from markdown/HTML
 _PDF_URL_PATTERN = re.compile(
     r'https?://[^\s"\'<>]+\.pdf(?:[^\s"\'<>]*)',
     re.IGNORECASE,
@@ -23,6 +27,36 @@ _HREF_PDF_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+# JSON schema for structured extraction from article pages
+_SCRAPE_SCHEMA: Dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "title": {
+            "type": ["string", "null"],
+            "description": "Full article title. Return null if not found.",
+        },
+        "doi": {
+            "type": ["string", "null"],
+            "description": "DOI identifier (e.g. '10.1234/abcd'). Return null if not found.",
+        },
+        "pdf_url": {
+            "type": ["string", "null"],
+            "description": (
+                "Direct PDF download URL. Look for links ending in .pdf, "
+                "download buttons, or 'full text' links. Return null if not found."
+            ),
+        },
+        "other_links": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": (
+                "Other potential fulltext/PDF download URLs on the page "
+                "(e.g. alternate mirrors, supplementary PDFs)."
+            ),
+        },
+    },
+}
+
 
 def _to_dict(result: Any) -> Dict[str, Any]:
     """Convert SDK response to dict — handles both dict and Pydantic model returns."""
@@ -35,8 +69,42 @@ def _to_dict(result: Any) -> Dict[str, Any]:
     return {}
 
 
+def _extract_pdf_links_from_markdown(markdown: str) -> List[str]:
+    """Fallback: extract PDF URLs from raw markdown via regex."""
+    seen: set[str] = set()
+    links: List[str] = []
+
+    for match in _PDF_LINK_PATTERN.finditer(markdown):
+        url = match.group(2)
+        if url not in seen:
+            seen.add(url)
+            links.append(url)
+
+    for match in _HREF_PDF_PATTERN.finditer(markdown):
+        url = match.group(1)
+        if url not in seen:
+            seen.add(url)
+            links.append(url)
+
+    for match in _PDF_URL_PATTERN.finditer(markdown):
+        url = match.group(0)
+        if url not in seen:
+            seen.add(url)
+            links.append(url)
+
+    return links
+
+
+def _doi_to_url(doi: str) -> str:
+    """Convert a DOI to its canonical URL."""
+    doi = doi.strip()
+    if doi.startswith("http"):
+        return doi
+    return f"https://doi.org/{doi}"
+
+
 class FirecrawlAdapter(WebSearchAdapter):
-    """Web search adapter using Firecrawl's search + scrape APIs.
+    """Web search adapter using Firecrawl's search + JSON-mode scrape.
 
     Environment:
         ``WEB_SEARCH_API_KEY`` — Firecrawl API key (``fc-...``).
@@ -96,8 +164,59 @@ class FirecrawlAdapter(WebSearchAdapter):
         )
 
     async def scrape_links(self, url: str) -> List[SearchLink]:
-        """Scrape a page for PDF download links using Firecrawl."""
+        """Scrape a page for article metadata and PDF links using JSON mode.
+
+        First attempts structured extraction via Firecrawl's JSON mode to get
+        title, DOI, and PDF URL. Falls back to markdown + regex extraction if
+        JSON mode fails or returns no useful links.
+        """
         links: list[SearchLink] = []
+
+        # ── Try JSON mode first ──
+        try:
+            client = self._get_client()
+            raw_result = await client.scrape(url, formats=[{
+                "type": "json",
+                "schema": _SCRAPE_SCHEMA,
+                "prompt": (
+                    "Extract the article title, DOI, and direct PDF download URL "
+                    "from this academic/journal page. Also list any other fulltext "
+                    "or PDF links found on the page."
+                ),
+            }])
+            result = _to_dict(raw_result)
+
+            json_data = result.get("json") or {}
+            if not json_data and isinstance(result.get("data"), dict):
+                json_data = result["data"].get("json") or {}
+
+            if json_data:
+                title = json_data.get("title") or None
+                doi = json_data.get("doi") or None
+                pdf_url = json_data.get("pdf_url") or None
+                other_links = json_data.get("other_links") or []
+
+                # Primary PDF link
+                if pdf_url:
+                    links.append(SearchLink(url=pdf_url, source="firecrawl-json", title=title, doi=doi))
+
+                # Additional links
+                for extra_url in other_links:
+                    if extra_url and extra_url != pdf_url:
+                        links.append(SearchLink(url=extra_url, source="firecrawl-json", title=title, doi=doi))
+
+                # If we got a DOI but no PDF URL, add DOI landing page as fallback
+                if doi and not pdf_url and not links:
+                    links.append(SearchLink(url=_doi_to_url(doi), source="firecrawl-json-doi", title=title, doi=doi))
+
+                if links:
+                    logger.debug("firecrawl json scrape: {} links from {}", len(links), url)
+                    return links
+
+        except Exception as exc:
+            logger.debug("firecrawl json scrape failed for {}, falling back to markdown: {}", url, exc)
+
+        # ── Fallback: markdown + regex ──
         try:
             client = self._get_client()
             raw_result = await client.scrape(url, formats=["markdown"])
@@ -107,29 +226,11 @@ class FirecrawlAdapter(WebSearchAdapter):
             if not markdown:
                 return links
 
-            # Extract PDF URLs from markdown content
-            seen: set[str] = set()
+            for pdf_url in _extract_pdf_links_from_markdown(markdown):
+                links.append(SearchLink(url=pdf_url, source="firecrawl-scrape"))
 
-            # Match markdown links to PDFs
-            for match in _PDF_LINK_PATTERN.finditer(markdown):
-                pdf_url = match.group(2)
-                if pdf_url not in seen:
-                    seen.add(pdf_url)
-                    links.append(SearchLink(url=pdf_url, source="firecrawl-scrape"))
-
-            # Match href attributes to PDFs
-            for match in _HREF_PDF_PATTERN.finditer(markdown):
-                pdf_url = match.group(1)
-                if pdf_url not in seen:
-                    seen.add(pdf_url)
-                    links.append(SearchLink(url=pdf_url, source="firecrawl-scrape"))
-
-            # Fallback: bare PDF URLs
-            for match in _PDF_URL_PATTERN.finditer(markdown):
-                pdf_url = match.group(0)
-                if pdf_url not in seen:
-                    seen.add(pdf_url)
-                    links.append(SearchLink(url=pdf_url, source="firecrawl-scrape"))
+            if links:
+                logger.debug("firecrawl markdown fallback: {} links from {}", len(links), url)
 
         except Exception as exc:
             logger.warning("firecrawl scrape failed for {}: {}", url, exc)
