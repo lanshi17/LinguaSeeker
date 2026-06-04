@@ -188,3 +188,6 @@
 [2026-06-04] Redis connection manager — centralized async client singleton with connection.py builder, wiring.py lifecycle, lifespan teardown, health check refactor, __init__.py exports, README docs [done]
 [2026-06-04] [Benchmark refactor: delegate to online_acquisition_workflow, include Firecrawl] [DONE]
 [2026-06-04] [Rett download: JSON config support + firecrawl-py dependency] [DONE]
+[2026-06-04] Pipeline benchmark smoke test with real infra [done]
+[2026-06-04] Fix: TranslationConfigContext timeout field for LLM calls [done]
+[2026-06-04] Fix: Benchmark poll_status 404 retry logic [done]

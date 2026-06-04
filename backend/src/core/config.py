@@ -143,9 +143,14 @@ class EvidenceExtractionConfig(BaseModel):
 
     api_key: str = ""
     base_url: str = ""
+    reasoning_api_key: str = ""
+    reasoning_base_url: str = ""
     fast_model: str = ""
     standard_model: str = ""
     strong_model: str = ""
+    fast_effort: str = ""
+    standard_effort: str = ""
+    strong_effort: str = "high"
     temperature: float = 0.0
     timeout: int = 60
     max_retries: int = 3
@@ -422,9 +427,14 @@ class Settings(BaseSettings):
 
     evidence_extraction_api_key: str = ""
     evidence_extraction_base_url: str = ""
+    evidence_extraction_reasoning_api_key: str = ""
+    evidence_extraction_reasoning_base_url: str = ""
     evidence_extraction_fast_model: str = ""
     evidence_extraction_standard_model: str = ""
     evidence_extraction_strong_model: str = ""
+    evidence_extraction_fast_effort: str = ""
+    evidence_extraction_standard_effort: str = ""
+    evidence_extraction_strong_effort: str = "high"
     evidence_extraction_temperature: float = 0.0
     evidence_extraction_timeout: int = 60
     evidence_extraction_max_retries: int = 3
@@ -529,9 +539,14 @@ class Settings(BaseSettings):
         self.evidence_extraction = EvidenceExtractionConfig(
             api_key=self.evidence_extraction_api_key or self.llm.api_key,
             base_url=self.evidence_extraction_base_url or self.llm.base_url,
+            reasoning_api_key=self.evidence_extraction_reasoning_api_key or self.reasoning.api_key,
+            reasoning_base_url=self.evidence_extraction_reasoning_base_url or self.reasoning.base_url,
             fast_model=self.evidence_extraction_fast_model or self.llm.model,
-            standard_model=self.evidence_extraction_standard_model or self.llm.model,
-            strong_model=self.evidence_extraction_strong_model or self.llm.model,
+            standard_model=self.evidence_extraction_standard_model or self.reasoning.model,
+            strong_model=self.evidence_extraction_strong_model or self.reasoning.model,
+            fast_effort=self.evidence_extraction_fast_effort,
+            standard_effort=self.evidence_extraction_standard_effort,
+            strong_effort=self.evidence_extraction_strong_effort,
             temperature=self.evidence_extraction_temperature or self.llm.temperature,
             timeout=self.evidence_extraction_timeout or self.llm.timeout,
             max_retries=self.evidence_extraction_max_retries or self.llm.max_retries,

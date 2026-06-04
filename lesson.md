@@ -1169,3 +1169,35 @@ Phase 2 失败导致 Phase 3 未能执行（pipeline error），因此该结论�
 **预防措施**：
 - 修改 `wire_dependencies()` 后，运行 `test_wiring_config.py` 确认无回归
 - 新增依赖注入步骤时，同步更新测试 mock 列表
+
+---
+
+## 2026-06-04 Pipeline Benchmark 真实测试复盘
+
+### 问题描述
+运行 pipeline benchmark 真实测试时发现 3 个问题：
+1. Benchmark 提交 PDF 后立即轮询状态返回 HTTP 404
+2. Phase 2 LLM formatting 无限挂死，pipeline 卡住
+3. uvicorn `--reload` 反复重启后端，杀死正在运行的 pipeline
+
+### 排查过程
+1. **404 问题**：benchmark 的 `poll_status` 在 POST 返回后立即 GET 状态，但后端异步创建 run 记录，首次轮询时记录尚未入库
+2. **挂死问题**：`TranslationConfigContext` 不含 `timeout` 字段，`formatter.py` 和 `translate/providers.py` 创建 `ChatOpenAI` 时未传 `timeout`，导致 LLM 调用无超时限制
+3. **重启问题**：uvicorn `--reload` 默认监控整个 `backend/` 目录，pipeline 往 `data/pipeline/` 写文件触发重启死循环
+
+### 根因分析
+- **404**：后端 API 返回 run_id 和 status_url 是同步的，但 run 记录写入 DB 是异步的，存在时序差
+- **超时缺失**：evidence extraction 和 reasoning LLM 正确设置了 timeout，但 translation/formatting 的 LLM 遗漏了
+- **reload 范围过大**：`data/`、`__pycache__`、`*.pyc` 都在监控范围内
+
+### 解决方案
+1. `benchmark/pipeline/benchmark.py`：`poll_status` 对 404 响应做最多 15 次重试（2s 间隔）
+2. `config_context.py`：`TranslationConfigContext` 添加 `timeout: int = 60`
+3. `translate/providers.py`：`create_llm` / `create_json_llm` 添加 `timeout` 参数并传给 `ChatOpenAI`
+4. `workflow.py`：formatter LLM 创建时传入 `timeout`
+5. 后端启动加 `--reload-exclude "data/*" --reload-exclude "__pycache__" --reload-exclude "*.pyc"`
+
+### 预防措施
+- 新增 LLM 客户端创建点时，必须检查是否传入 `timeout`
+- uvicorn `--reload` 必须排除运行时写入目录
+- Benchmark 测试前先用 1 篇 PDF 做冒烟验证

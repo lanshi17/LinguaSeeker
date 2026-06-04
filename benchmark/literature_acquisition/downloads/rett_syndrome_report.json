@@ -1,0 +1,1685 @@
+{
+  "total_queries": 72,
+  "total_candidates": 381,
+  "total_downloaded": 111,
+  "by_source": {
+    "unpaywall": 60,
+    "core": 13,
+    "firecrawl-search": 22,
+    "arxiv": 7,
+    "firecrawl-scrape": 4,
+    "crossref": 5
+  },
+  "elapsed_sec": 1237725.6,
+  "records": [
+    {
+      "query": "Rett综合征 病例报告",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 基因突变 病例报告",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "Rett综合征 MECP2 基因诊断",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 突变 儿童 临床分析",
+      "source": "unpaywall",
+      "title": "[A large family of Nascimento form of syndromic X-linked intellectual developmental disorder caused by large segment deletion of the &lt;i&gt;UBE2A&lt;/i&gt; gene: a case report and literature review].",
+      "doi": "10.37155/2661-4766-0401-7",
+      "url": "http://ojs.omniscient.sg/index.php/lcyxqy/article/download/7067/6112",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/____________________9b0037fa.pdf",
+      "file_size": 314875,
+      "error": ""
+    },
+    {
+      "query": "MECP2 突变 儿童 临床分析",
+      "source": "unpaywall",
+      "title": "[A large family of Nascimento form of syndromic X-linked intellectual developmental disorder caused by large segment deletion of the &lt;i&gt;UBE2A&lt;/i&gt; gene: a case report and literature review].",
+      "doi": "10.37155/2661-4766-0603-36",
+      "url": "http://ojs.omniscient.sg/index.php/lcyxqy/article/download/38235/37163",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/_______________________________fe7c1904.pdf",
+      "file_size": 264754,
+      "error": ""
+    },
+    {
+      "query": "MECP2 突变 儿童 临床分析",
+      "source": "unpaywall",
+      "title": "[A large family of Nascimento form of syndromic X-linked intellectual developmental disorder caused by large segment deletion of the &lt;i&gt;UBE2A&lt;/i&gt; gene: a case report and literature review].",
+      "doi": "10.37155/2661-4766-0305-11",
+      "url": "http://ojs.omniscient.sg/index.php/lcyxqy/article/download/3736/2793",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/_________________70549ee9.pdf",
+      "file_size": 313632,
+      "error": ""
+    },
+    {
+      "query": "MECP2 突变 儿童 临床分析",
+      "source": "unpaywall",
+      "title": "[A large family of Nascimento form of syndromic X-linked intellectual developmental disorder caused by large segment deletion of the &lt;i&gt;UBE2A&lt;/i&gt; gene: a case report and literature review].",
+      "doi": "10.37155/2661-4766-0706-21",
+      "url": "http://ojs.omniscient.sg/index.php/lcyxqy/article/download/68370/66938",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/________________________________8f35f59e.pdf",
+      "file_size": 297403,
+      "error": ""
+    },
+    {
+      "query": "MECP2 突变 儿童 临床分析",
+      "source": "unpaywall",
+      "title": "[A large family of Nascimento form of syndromic X-linked intellectual developmental disorder caused by large segment deletion of the &lt;i&gt;UBE2A&lt;/i&gt; gene: a case report and literature review].",
+      "doi": "10.37155/2661-4766-0604-24",
+      "url": "http://ojs.omniscient.sg/index.php/lcyxqy/article/download/42346/41266",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/______________________05c70cd4.pdf",
+      "file_size": 238829,
+      "error": ""
+    },
+    {
+      "query": "MECP2 突变 儿童 临床分析",
+      "source": "unpaywall",
+      "title": "[A large family of Nascimento form of syndromic X-linked intellectual developmental disorder caused by large segment deletion of the &lt;i&gt;UBE2A&lt;/i&gt; gene: a case report and literature review].",
+      "doi": "10.37155/2661-4766-0403-12",
+      "url": "http://ojs.omniscient.sg/index.php/lcyxqy/article/download/9758/8812",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/____________________1883b651.pdf",
+      "file_size": 297386,
+      "error": ""
+    },
+    {
+      "query": "Rett样综合征 基因检测 病例",
+      "source": "core",
+      "title": "1例c.598A&gt;T突变X连锁高IgM综合征合并耶氏肺孢子菌肺炎患儿的诊断与异基因骨髓移植病例报告",
+      "doi": "",
+      "url": "https://fileserver-az.core.ac.uk/download/84993210.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/________________w______________________________________________________a8f1eb85.pdf",
+      "file_size": 693662,
+      "error": ""
+    },
+    {
+      "query": "Rett样综合征 基因检测 病例",
+      "source": "core",
+      "title": "1例c.598A&gt;T突变X连锁高IgM综合征合并耶氏肺孢子菌肺炎患儿的诊断与异基因骨髓移植病例报告",
+      "doi": "",
+      "url": "https://fileserver-az.core.ac.uk/download/657160781.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/___________________________________ea8fdea8.pdf",
+      "file_size": 1229777,
+      "error": ""
+    },
+    {
+      "query": "Rett样综合征 基因检测 病例",
+      "source": "core",
+      "title": "1例c.598A&gt;T突变X连锁高IgM综合征合并耶氏肺孢子菌肺炎患儿的诊断与异基因骨髓移植病例报告",
+      "doi": "",
+      "url": "https://fileserver-az.core.ac.uk/download/657159981.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/__________________________________75befd20.pdf",
+      "file_size": 266239,
+      "error": ""
+    },
+    {
+      "query": "Rett样综合征 基因检测 病例",
+      "source": "core",
+      "title": "1例c.598A&gt;T突变X连锁高IgM综合征合并耶氏肺孢子菌肺炎患儿的诊断与异基因骨髓移植病例报告",
+      "doi": "",
+      "url": "https://fileserver-az.core.ac.uk/download/41448962.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/_________________25dc9bbe.pdf",
+      "file_size": 268497,
+      "error": ""
+    },
+    {
+      "query": "Rett样综合征 基因检测 病例",
+      "source": "core",
+      "title": "1例c.598A&gt;T突变X连锁高IgM综合征合并耶氏肺孢子菌肺炎患儿的诊断与异基因骨髓移植病例报告",
+      "doi": "",
+      "url": "https://fileserver-az.core.ac.uk/download/323948549.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/_______________________________________________________________________c35bb2b7.pdf",
+      "file_size": 593533,
+      "error": ""
+    },
+    {
+      "query": "Rett样综合征 基因检测 病例",
+      "source": "core",
+      "title": "1例c.598A&gt;T突变X连锁高IgM综合征合并耶氏肺孢子菌肺炎患儿的诊断与异基因骨髓移植病例报告",
+      "doi": "",
+      "url": "https://fileserver-az.core.ac.uk/download/41357385.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/__________________________________6cdb13a0.pdf",
+      "file_size": 402434,
+      "error": ""
+    },
+    {
+      "query": "Rett样综合征 基因检测 病例",
+      "source": "core",
+      "title": "1例c.598A&gt;T突变X连锁高IgM综合征合并耶氏肺孢子菌肺炎患儿的诊断与异基因骨髓移植病例报告",
+      "doi": "",
+      "url": "https://fileserver-az.core.ac.uk/download/629153778.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/_______________________________________________________________________9192ba40.pdf",
+      "file_size": 2186853,
+      "error": ""
+    },
+    {
+      "query": "Rett样综合征 基因检测 病例",
+      "source": "core",
+      "title": "1例c.598A&gt;T突变X连锁高IgM综合征合并耶氏肺孢子菌肺炎患儿的诊断与异基因骨髓移植病例报告",
+      "doi": "",
+      "url": "https://fileserver-az.core.ac.uk/download/41443269.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/______________2d4d11e1.pdf",
+      "file_size": 234021,
+      "error": ""
+    },
+    {
+      "query": "Rett样综合征 基因检测 病例",
+      "source": "core",
+      "title": "1例c.598A&gt;T突变X连锁高IgM综合征合并耶氏肺孢子菌肺炎患儿的诊断与异基因骨髓移植病例报告",
+      "doi": "",
+      "url": "https://fileserver-az.core.ac.uk/download/323958288.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/____________9f11f2e4.pdf",
+      "file_size": 1866225,
+      "error": ""
+    },
+    {
+      "query": "Rett样综合征 基因检测 病例",
+      "source": "firecrawl-search",
+      "title": "1例c.598A&gt;T突变X连锁高IgM综合征合并耶氏肺孢子菌肺炎患儿的诊断与异基因骨髓移植病例报告",
+      "doi": "",
+      "url": "https://ts-cms.jundaodsj.com/file/163722756780301.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/_____________________d4adf89c.pdf",
+      "file_size": 4686848,
+      "error": ""
+    },
+    {
+      "query": "Rett样综合征 基因检测 病例",
+      "source": "firecrawl-search",
+      "title": "1例c.598A&gt;T突变X连锁高IgM综合征合并耶氏肺孢子菌肺炎患儿的诊断与异基因骨髓移植病例报告",
+      "doi": "",
+      "url": "https://epaper.ntuh.gov.tw/health/202411/PDF/%E8%AA%8D%E8%AD%98%E6%B2%89%E9%BB%98%E7%9A%84%E6%90%93%E6%89%8B%E5%A4%A9%E4%BD%BF-%E9%9B%B7%E7%89%B9%E6%B0%8F%E7%97%87.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/_________-____________________fa559ca1.pdf",
+      "file_size": 470924,
+      "error": ""
+    },
+    {
+      "query": "Rett样综合征 基因检测 病例",
+      "source": "firecrawl-search",
+      "title": "1例c.598A&gt;T突变X连锁高IgM综合征合并耶氏肺孢子菌肺炎患儿的诊断与异基因骨髓移植病例报告",
+      "doi": "",
+      "url": "https://journal.dmu.edu.cn/data/article/dlykdxxb/preview/pdf/6-4-hanjie.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/__________________-__________07495761.pdf",
+      "file_size": 877734,
+      "error": ""
+    },
+    {
+      "query": "非典型Rett综合征 MECP2 病例",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "Rett syndrome MECP2 case report",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 mutation novel case report",
+      "source": "unpaywall",
+      "title": "Acute myeloid leukemia associated with a novel GATA2 mutation: a case report and the importance to identify GATA2 haplodeficiency",
+      "doi": "https://doi.org/10.1007/s100380070032",
+      "url": "https://www.nature.com/articles/jhg200049.pdf?error=cookies_not_supported&code=aefadf88-fcfc-47be-ae60-8937a2ba1be2",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/___________________________________________________________w___________a1a66f9d.pdf",
+      "file_size": 171367,
+      "error": ""
+    },
+    {
+      "query": "MECP2 mutation novel case report",
+      "source": "unpaywall",
+      "title": "A novel heterozygous pathogenic variation in the &lt;i&gt;MECP2&lt;/i&gt; gene causing typical Rett syndrome: a case report.",
+      "doi": "10.21037/tp-2025-647",
+      "url": "https://cdn.amegroups.cn/static/public/TP-2025-647-Supplementary.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_______________________________________________________________________91a8d2a8.pdf",
+      "file_size": 56354,
+      "error": ""
+    },
+    {
+      "query": "MECP2 mutation novel case report",
+      "source": "unpaywall",
+      "title": "Acute myeloid leukemia associated with a novel GATA2 mutation: a case report and the importance to identify GATA2 haplodeficiency",
+      "doi": "10.3389/fped.2026.1786453",
+      "url": "https://www.frontiersin.org/journals/pediatrics/articles/10.3389/fped.2026.1786453/pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_________________________-_____________________________________________5cc8cc29.pdf",
+      "file_size": 721509,
+      "error": ""
+    },
+    {
+      "query": "MECP2 mutation novel case report",
+      "source": "unpaywall",
+      "title": "Acute myeloid leukemia associated with a novel GATA2 mutation: a case report and the importance to identify GATA2 haplodeficiency",
+      "doi": "10.3389/fnins.2026.1843049",
+      "url": "https://public-pages-files-2025.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2026.1843049/pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_______________________________________________________________________e3e582e9.pdf",
+      "file_size": 114556,
+      "error": ""
+    },
+    {
+      "query": "MECP2 mutation novel case report",
+      "source": "unpaywall",
+      "title": "Acute myeloid leukemia associated with a novel GATA2 mutation: a case report and the importance to identify GATA2 haplodeficiency",
+      "doi": "10.21037/tp-2025-aw-750",
+      "url": "https://cdn.amegroups.cn/static/public/TP-2025-AW-750-Supplementary.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/___________________________________________________________-___________0e419125.pdf",
+      "file_size": 149780,
+      "error": ""
+    },
+    {
+      "query": "MECP2 mutation novel case report",
+      "source": "firecrawl-search",
+      "title": "Acute myeloid leukemia associated with a novel GATA2 mutation: a case report and the importance to identify GATA2 haplodeficiency",
+      "doi": "",
+      "url": "https://cdn.amegroups.cn/static/public/TP-2025-647-Supplementary.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/________________________________________________________________37729eba.pdf",
+      "file_size": 56354,
+      "error": ""
+    },
+    {
+      "query": "MECP2 mutation novel case report",
+      "source": "firecrawl-search",
+      "title": "Acute myeloid leukemia associated with a novel GATA2 mutation: a case report and the importance to identify GATA2 haplodeficiency",
+      "doi": "",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK1497/pdf/Bookshelf_NBK1497.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/________________-__________w___-________________-_____873db7cc.pdf",
+      "file_size": 587505,
+      "error": ""
+    },
+    {
+      "query": "MECP2 mutation novel case report",
+      "source": "firecrawl-search",
+      "title": "Acute myeloid leukemia associated with a novel GATA2 mutation: a case report and the importance to identify GATA2 haplodeficiency",
+      "doi": "",
+      "url": "https://link.springer.com/content/pdf/10.1186/s12920-023-01616-6.pdf?error=cookies_not_supported&code=6b22e016-2da5-4c96-b760-fb4c8db8758f",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_______________________________________________________________74645706.pdf",
+      "file_size": 919043,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome clinical case MECP2 variant",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2-related disorder case report",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "atypical Rett syndrome MECP2 case",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 duplication syndrome case report",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "Rett syndrome de novo mutation case",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "https://doi.org/10.15557/an.2024.0010",
+      "url": "https://www.neurologia.com.pl/artykul.php?a=1298",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_________________________________________________________6416febc.pdf",
+      "file_size": 164160,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "https://doi.org/10.1186/s13023-017-0716-z",
+      "url": "https://link.springer.com/content/pdf/10.1186/s13023-017-0716-z.pdf?error=cookies_not_supported&code=01dfaca4-6d85-4e78-aa4e-befe0c5eae9d",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_____________________________________________________________w_________8b0538be.pdf",
+      "file_size": 700465,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "https://doi.org/10.3389/fncel.2014.00172",
+      "url": "https://www.frontiersin.org/journals/cellular-neuroscience/articles/10.3389/fncel.2014.00172/pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_________________w_____________________________________________________132386e0.pdf",
+      "file_size": 1313638,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "10.9758/cpn.24.1233",
+      "url": "https://www.cpn.or.kr/journal/download_pdf.php?doi=10.9758/cpn.24.1233",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/____________________________________w__________________-_______________5c08ba41.pdf",
+      "file_size": 168964,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "10.3389/fcell.2024.1413248",
+      "url": "https://www.frontiersin.org/journals/cell-and-developmental-biology/articles/10.3389/fcell.2024.1413248/pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/___________________________________________6a3c7993.pdf",
+      "file_size": 2680393,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "10.1186/s12903-024-04296-5",
+      "url": "https://link.springer.com/content/pdf/10.1186/s12903-024-04296-5.pdf?error=cookies_not_supported&code=1059cf06-01f7-448f-b0cc-c9d3bd8e6fb2",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_______________________________-___________________________________w___b5e3cb61.pdf",
+      "file_size": 1026888,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "10.1007/s11910-025-01413-x",
+      "url": "https://link.springer.com/content/pdf/10.1007/s11910-025-01413-x.pdf?error=cookies_not_supported&code=5a2c0bd0-c4a6-441d-853a-3a7ebcd326b1",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_______________________________________________________-_______________9e4183e4.pdf",
+      "file_size": 1004678,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "10.3389/fcell.2023.1274040",
+      "url": "https://www.frontiersin.org/journals/cell-and-developmental-biology/articles/10.3389/fcell.2023.1274040/pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_______________________________________fe3ef6ea.pdf",
+      "file_size": 2109329,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "10.1177/26330040241308285",
+      "url": "https://curesyngap1.org/wp-content/themes/srf/assets/files/SRF-501c3-Ruling.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/__________________________________________________-____________________aeef5425.pdf",
+      "file_size": 948508,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "10.1186/s13023-025-03818-w",
+      "url": "https://link.springer.com/content/pdf/10.1186/s13023-025-03818-w.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_________________________________________________________________w_____6be0d903.pdf",
+      "file_size": 2312627,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "arxiv",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "",
+      "url": "https://arxiv.org/pdf/2407.13492v3",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/________________________w_____________________________________-________a29115a0.pdf",
+      "file_size": 11013952,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "arxiv",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "",
+      "url": "https://arxiv.org/pdf/2109.14574v1",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/______-_______________________068fa9e1.pdf",
+      "file_size": 289074,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "10.1016/j.aim.2016.03.010",
+      "url": "https://arxiv.org/pdf/1409.4455",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/________________w_____________-________________________w____________1592dbc5.pdf",
+      "file_size": 469033,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "arxiv",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "",
+      "url": "https://arxiv.org/pdf/2403.19107v1",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_____________________________________w______________________________w__4f4bc2d9.pdf",
+      "file_size": 709985,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "10.2140/pjm.2019.299.339",
+      "url": "https://arxiv.org/pdf/1608.01663",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/____w_____________-___________________________________________d135d2e1.pdf",
+      "file_size": 597038,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "arxiv",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "",
+      "url": "https://arxiv.org/pdf/1011.2728v3",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_____________________________________________________________324fb240.pdf",
+      "file_size": 518896,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "arxiv",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "",
+      "url": "https://arxiv.org/pdf/2405.09532v1",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/___________-___________________________________________________________324b551e.pdf",
+      "file_size": 216995,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "10.2168/LMCS-12(2:2)2016",
+      "url": "https://lmcs.episciences.org/1634/pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/___-_______________________________________________________________b9d07633.pdf",
+      "file_size": 373402,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "arxiv",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "",
+      "url": "https://arxiv.org/pdf/2003.08201v1",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/____________________-__________________________________________________d72cea16.pdf",
+      "file_size": 411129,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "arxiv",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "",
+      "url": "https://arxiv.org/pdf/2511.10402v1",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_______________________________________________________________________1b099d97.pdf",
+      "file_size": 483134,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "10.1101/19000174",
+      "url": "https://www.medrxiv.org/content/medrxiv/early/2019/06/25/19000174.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_______________________________________________________________________24e7dc5e.pdf",
+      "file_size": 1019517,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "unpaywall",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "10.1101/19000653",
+      "url": "https://www.medrxiv.org/content/medrxiv/early/2020/01/03/19000653.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/__________________________________-____________________________________85f10303.pdf",
+      "file_size": 1525479,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "firecrawl-search",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "",
+      "url": "https://dnatesting.uchicago.edu/sites/default/files/01%20NGS%20Rett%20Angelman_0.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/___________________________________-__________________________f47b884b.pdf",
+      "file_size": 169332,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "firecrawl-search",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "",
+      "url": "https://www.aapd.org/globalassets/media/publications/archives/buccino-11-02.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_______________________________________________________________________be8db184.pdf",
+      "file_size": 1411623,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "firecrawl-search",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "",
+      "url": "https://knightdxlabs.ohsu.edu/docs/default-source/requisition-forms/q11-req-005-molecular-genetics-requisition.pdf?Status=Master&sfvrsn=9bd5180a_83",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/_____-_________________________-________________________________d69cdda5.pdf",
+      "file_size": 263376,
+      "error": ""
+    },
+    {
+      "query": "Rett syndrome misdiagnosed Angelman case",
+      "source": "firecrawl-search",
+      "title": "Autism Spectrum Disorder in a Child with Megalencephaly-capillary Malformation-polymicrogyria Syndrome: A Case Report.",
+      "doi": "",
+      "url": "https://www.labcorp.com/content/dam/genetics/CD/Invitae%20-%20Invitae%20Rett%20and%20Angelman%20Syndromes%20and%20Related%20Disorders%20Panel%20-%20Clinical%20Description%20.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/______________________________________________________________________30cabcb2.pdf",
+      "file_size": 90162,
+      "error": ""
+    },
+    {
+      "query": "レット症候群 症例報告",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 遺伝子変異 症例",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "レット症候群 臨床像 MECP2",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 変異 女児 症例報告",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "非定型レット症候群 MECP2 症例",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 重複症候群 症例",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "レット症候群 新規変異 症例",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "レット症候群 遺伝子解析 日本人 症例",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "레트 증후군 증례 보고",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 유전자 변이 증례",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "레트 증후군 MECP2 임상 증례",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 돌연변이 소아 증례 보고",
+      "source": "unpaywall",
+      "title": "손목터널증후군에서 동반된 정중신경 회귀운동분지의 신경병증: 증례 보고",
+      "doi": "10.18214/jkaem.2019.21.1.17",
+      "url": "https://www.e-jend.org/upload/pdf/Kanem021-01-04.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ko/_______________________________________97efba94.pdf",
+      "file_size": 1201682,
+      "error": ""
+    },
+    {
+      "query": "MECP2 돌연변이 소아 증례 보고",
+      "source": "unpaywall",
+      "title": "Case report of functional medicine: functional hypoglycemia with continuous glucose monitoring and adrenal fatigue",
+      "doi": "10.56786/phwr.2023.16.16.2",
+      "url": "https://www.phwr.org/journal/download_pdf.php?doi=10.56786/PHWR.2023.16.16.2",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ko/__________________________7d5e816e.pdf",
+      "file_size": 1028147,
+      "error": ""
+    },
+    {
+      "query": "MECP2 돌연변이 소아 증례 보고",
+      "source": "unpaywall",
+      "title": "초기 척추관절병증과 혼동되었던 체간 근육의 위약을 동반한 근지대형 근디스트로피, 2A형: 증례 보고",
+      "doi": "10.18214/jkaem.2019.21.1.7",
+      "url": "https://www.e-jend.org/upload/pdf/Kanem021-01-02.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ko/________________________________________________________06991a14.pdf",
+      "file_size": 1793673,
+      "error": ""
+    },
+    {
+      "query": "MECP2 돌연변이 소아 증례 보고",
+      "source": "firecrawl-search",
+      "title": "Case report of functional medicine: functional hypoglycemia with continuous glucose monitoring and adrenal fatigue",
+      "doi": "",
+      "url": "https://www.e-cep.org/upload/pdf/2002450418-20080135205535.PDF",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ko/______________________________________58d5b1c8.pdf",
+      "file_size": 306562,
+      "error": ""
+    },
+    {
+      "query": "MECP2 돌연변이 소아 증례 보고",
+      "source": "firecrawl-search",
+      "title": "Case report of functional medicine: functional hypoglycemia with continuous glucose monitoring and adrenal fatigue",
+      "doi": "",
+      "url": "https://www.kci.go.kr/kciportal/resources/kci_data_filed.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ko/________________________________-_____645a6c1f.pdf",
+      "file_size": 707184,
+      "error": ""
+    },
+    {
+      "query": "MECP2 돌연변이 소아 증례 보고",
+      "source": "firecrawl-search",
+      "title": "Case report of functional medicine: functional hypoglycemia with continuous glucose monitoring and adrenal fatigue",
+      "doi": "",
+      "url": "https://www.e-cep.org/upload/pdf/2002451010-20090151225151.PDF",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ko/________________________________________3b10acf0.pdf",
+      "file_size": 2467806,
+      "error": ""
+    },
+    {
+      "query": "MECP2 돌연변이 소아 증례 보고",
+      "source": "firecrawl-search",
+      "title": "Case report of functional medicine: functional hypoglycemia with continuous glucose monitoring and adrenal fatigue",
+      "doi": "",
+      "url": "https://www.kci.go.kr/kciportal/resources/kci_data_filed.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ko/____________________________-___________00104d12.pdf",
+      "file_size": 707184,
+      "error": ""
+    },
+    {
+      "query": "MECP2 돌연변이 소아 증례 보고",
+      "source": "firecrawl-scrape",
+      "title": "Case report of functional medicine: functional hypoglycemia with continuous glucose monitoring and adrenal fatigue",
+      "doi": "",
+      "url": "https://www.kci.go.kr/kciportal/resources/kci_data_filed.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ko/_________051a75e3.pdf",
+      "file_size": 707184,
+      "error": ""
+    },
+    {
+      "query": "비정형 레트 증후군 MECP2 증례",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "레트 증후군 신규 변이 증례",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "Rett sendromu MECP2 olgu sunumu",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 mutasyonu olgu raporu",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "Rett sendromu klinik olgu MECP2",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 gen mutasyonu yeni olgu",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "atipik Rett sendromu MECP2 vaka",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "Rett sendromu de novo mutasyon olgu",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 duplikasyon sendromu olgu",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "Rett sendromu genetik tani olgu sunumu",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "Rett-Syndrom MECP2 Fallbericht",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2-Mutation Fallbericht",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "Rett-Syndrom klinischer Fall MECP2",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 Genmutation neuer Fall",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "atypisches Rett-Syndrom MECP2 Fall",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "Rett-Syndrom de-novo-Mutation Fallbericht",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "syndrome de Rett MECP2 rapport de cas",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "mutation MECP2 nouveau cas clinique",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "10.7554/elife.02676.010",
+      "url": "https://elifesciences.org/download/aHR0cHM6Ly9jZG4uZWxpZmVzY2llbmNlcy5vcmcvYXJ0aWNsZXMvMDI2NzYvZWxpZmUtMDI2NzYtdjIucGRmP2Nhbm9uaWNhbFVyaT1odHRwczovL2VsaWZlc2NpZW5jZXMub3JnL2FydGljbGVzLzAyNjc2/elife-02676-v2.pdf?_hash=QzIVoc3OXWPFUrOiWpBvk%2BE0ukYSAUbYXuzS67WZG6E%3D",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/_____________________-__________________________w______________________26652007.pdf",
+      "file_size": 3474049,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "crossref",
+      "title": "",
+      "doi": "",
+      "url": "https://reactome.org/ContentService/exporter/document/event/R-HSA-9005891.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/___________________________________________12352f1c.pdf",
+      "file_size": 3584039,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "https://doi.org/10.1007/s00335-017-9711-x",
+      "url": "https://link.springer.com/content/pdf/10.1007/s00335-017-9711-x.pdf?error=cookies_not_supported&code=eea470a3-aeec-452b-9aeb-4f6d94b0f1c4",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/_________________-_______________________________________w___________dde73a4b.pdf",
+      "file_size": 660806,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "10.1186/s12610-020-00117-1",
+      "url": "https://link.springer.com/content/pdf/10.1186/s12610-020-00117-1.pdf?error=cookies_not_supported&code=973ba0fe-578d-4563-865e-7c392222f175",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/_______________________________________________________________________8a5b3f29.pdf",
+      "file_size": 535240,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "10.1101/19000174",
+      "url": "https://www.medrxiv.org/content/medrxiv/early/2019/06/25/19000174.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/_______________________________________________________________________24e7dc5e.pdf",
+      "file_size": 1019517,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "10.1101/19000653",
+      "url": "https://www.medrxiv.org/content/medrxiv/early/2020/01/03/19000653.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/__________________________________-____________________________________85f10303.pdf",
+      "file_size": 1525479,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "10.1101/19000562",
+      "url": "https://www.medrxiv.org/content/medrxiv/early/2019/08/05/19000562.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/_______________________________________________________________________8311646a.pdf",
+      "file_size": 88045,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "10.1101/19000356",
+      "url": "https://www.medrxiv.org/content/medrxiv/early/2019/06/25/19000356.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/________________________-_________________________w____________________ba4aead2.pdf",
+      "file_size": 2101680,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "10.1101/19000257",
+      "url": "https://www.medrxiv.org/content/medrxiv/early/2019/10/10/19000257.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/_______________________________________________________________________28712a33.pdf",
+      "file_size": 209255,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "10.1101/19001024",
+      "url": "https://www.medrxiv.org/content/medrxiv/early/2019/07/15/19001024.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/_______________________________________________________________________d3964749.pdf",
+      "file_size": 406918,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "10.1101/19001123",
+      "url": "https://www.medrxiv.org/content/medrxiv/early/2019/06/28/19001123.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/___________________________________________________77d1bca5.pdf",
+      "file_size": 417188,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "10.1101/19001115",
+      "url": "https://www.medrxiv.org/content/medrxiv/early/2019/06/28/19001115.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/______________________________________________________________________6ed2c48c.pdf",
+      "file_size": 1187824,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "10.1101/19000844",
+      "url": "https://www.medrxiv.org/content/medrxiv/early/2019/06/28/19000844.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/_______________________________________________________________________c7451d54.pdf",
+      "file_size": 754835,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "10.1101/19000281",
+      "url": "https://www.medrxiv.org/content/medrxiv/early/2019/11/05/19000281.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/_______________________________________________________________________6ef80a5c.pdf",
+      "file_size": 4063370,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "unpaywall",
+      "title": "",
+      "doi": "10.1101/19000927",
+      "url": "https://www.medrxiv.org/content/medrxiv/early/2019/07/03/19000927.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/_______________________________________-______w________________________7daad70a.pdf",
+      "file_size": 343715,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett cas clinique MECP2",
+      "source": "firecrawl-scrape",
+      "title": "",
+      "doi": "",
+      "url": "https://dbmhresource.org/uploads/2/2/5/7/22571778/closing_the_gap_lariviere_eye_gaze_december_2014_1.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/_________7616605b.pdf",
+      "file_size": 1048576,
+      "error": ""
+    },
+    {
+      "query": "syndrome de Rett atypique MECP2 cas",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 mutation de novo cas",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "syndrome de Rett diagnostic génétique cas",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "síndrome de Rett MECP2 reporte de caso",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "mutación MECP2 caso clínico",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "síndrome de Rett caso clínico MECP2",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "síndrome de Rett atípico MECP2 caso",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 mutación de novo caso",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "síndrome de Rett diagnóstico genético caso",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "síndrome de Rett MECP2 relato de caso",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "mutação MECP2 caso clínico",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "síndrome de Rett caso clínico MECP2",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "síndrome de Rett atípica MECP2 caso",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 mutação de novo caso",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "синдром Ретта клинический случай MECP2",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "мутация MECP2 описание случая",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "unpaywall",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "10.14341/conf12-13.06.21-108",
+      "url": "https://www.rae-org.ru/sites/default/files/all/TEZIS/2021/12-13.06.2021/108.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/____________________________________11c275f8.pdf",
+      "file_size": 87213,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "unpaywall",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "10.14341/conf12-13.06.21-128",
+      "url": "https://www.rae-org.ru/sites/default/files/all/TEZIS/2021/12-13.06.2021/128.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/__________-_____________________________ab34fce0.pdf",
+      "file_size": 87068,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "unpaywall",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "10.14341/eo112024-77",
+      "url": "https://www.endocrincentr.ru/sites/default/files/all/EVENTS_2024/29-30.11_konferenciya_po_onkoendokrinologicheskim_aspektam_lecheniya_i_diagnostiki_nejroendokrinnyh_opuholej/theses/77.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_______-____________________________1e79786c.pdf",
+      "file_size": 334866,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "unpaywall",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "10.17513/spno.29765",
+      "url": "https://s.science-education.ru/pdf/2020/2/29765.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_______________________________________________________________________4fed9d70.pdf",
+      "file_size": 8912149,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "unpaywall",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "10.47390/med-pro/v3i9y2025/n01",
+      "url": "https://medicineproblems.uz/index.php/journal/article/download/109/88",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_____________________________________-_____________a5458716.pdf",
+      "file_size": 1018733,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "crossref",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "",
+      "url": "http://pharmkaz.kz/wp-content/uploads/2021/12/3.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/______________________-_____________________________fa05c7f3.pdf",
+      "file_size": 795756,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "unpaywall",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "10.14341/orf032024-094",
+      "url": "https://www.endocrincentr.ru/sites/default/files/all/EVENTS_2024/4_konferenciya_po_orfannym_i_detskim_endokrinnym_zabolevaniyam/theses/094.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/__________-___________________________ee1e7baf.pdf",
+      "file_size": 209630,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "unpaywall",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "10.14341/orf032024-129",
+      "url": "https://www.endocrincentr.ru/sites/default/files/all/EVENTS_2024/4_konferenciya_po_orfannym_i_detskim_endokrinnym_zabolevaniyam/theses/129.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_________________________________-______2d905956.pdf",
+      "file_size": 182595,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "crossref",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "",
+      "url": "https://naukaru.ru/support/User_Guide_v_2_0.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/______________________________________82469d3b.pdf",
+      "file_size": 2384189,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "core",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "",
+      "url": "https://fileserver-az.core.ac.uk/download/84148418.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_______________________________________________________________________604fdc7a.pdf",
+      "file_size": 1388267,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "unpaywall",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "10.1371/journal.pone.0104834",
+      "url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0104834&type=printable",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_______________________________________________________________________e47eeb68.pdf",
+      "file_size": 686624,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "unpaywall",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "10.1371/journal.pone.0212553",
+      "url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0212553&type=printable",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_______________________________________________________________________158e1086.pdf",
+      "file_size": 3439180,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "unpaywall",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "10.1523/jneurosci.1306-07.2007",
+      "url": "https://www.jneurosci.org/content/jneuro/27/23/6163.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/___________________________________________-___-_______________________7bc04a23.pdf",
+      "file_size": 981954,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "unpaywall",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "10.1371/journal.pone.0068851",
+      "url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0068851&type=printable",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_______________________________________________________________________9b4cbb3d.pdf",
+      "file_size": 806595,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "core",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "",
+      "url": "https://oasis.library.unlv.edu/cgi/viewcontent.cgi?article=1189&amp;context=psychology_fac_articles",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_______________________________________________________________________1cf799f2.pdf",
+      "file_size": 1228939,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "firecrawl-search",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "",
+      "url": "https://umedp.ru/upload/iblock/25f/Toropina.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_____________________________________________________-__________598db72b.pdf",
+      "file_size": 259791,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "firecrawl-search",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "",
+      "url": "https://www.pedpharma.ru/jour/article/download/2603/1687",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/________________________________________655011ee.pdf",
+      "file_size": 122835,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "firecrawl-search",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "",
+      "url": "https://ryazan.semeynaya.ru/upload/instruction_lk.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/__________________________________________c1483fea.pdf",
+      "file_size": 5909491,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "firecrawl-search",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "",
+      "url": "https://genomed.ru/wp-content/uploads/postanovlenie-736.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/________________________________________e7e4d03e.pdf",
+      "file_size": 175457,
+      "error": ""
+    },
+    {
+      "query": "синдром Ретта MECP2 клинический разбор",
+      "source": "firecrawl-scrape",
+      "title": "CLINICAL CASE: DIFFICULTIES IN THE SELECTION OF WEST SYNDROME THERAPY WITH A CONCOMITANT DIAGNOSIS OF DOWN SYNDROME",
+      "doi": "",
+      "url": "https://umedp.ru/upload/iblock/25f/Toropina.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_________221f5f8f.pdf",
+      "file_size": 259791,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "unpaywall",
+      "title": "клинический случай",
+      "doi": "10.14341/orf032024-124",
+      "url": "https://www.endocrincentr.ru/sites/default/files/all/EVENTS_2024/4_konferenciya_po_orfannym_i_detskim_endokrinnym_zabolevaniyam/theses/124.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_________________________________________________________________-_____418da8fa.pdf",
+      "file_size": 185086,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "crossref",
+      "title": "клинический случай",
+      "doi": "",
+      "url": "http://pharmkaz.kz/wp-content/uploads/2026/04/%D0%A1%D0%BE%D0%B4%D0%B5%D1%80%D0%B6%D0%B0%D0%BD%D0%B8%D0%B5.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/______________________________________________-_________________-______080b65ed.pdf",
+      "file_size": 242121,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "unpaywall",
+      "title": "клинический случай",
+      "doi": "10.14341/mgsppe-2023-12",
+      "url": "https://www.endocrincentr.ru/sites/default/files/all/EVENTS_2023/28-29.03_konferenciya_po_orfannym_zabolevaniyam_i_detskim_endokrinnym_zabolevaniyam/theses/12.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_______________________________________________________________________baf9e40a.pdf",
+      "file_size": 294091,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "crossref",
+      "title": "клинический случай",
+      "doi": "",
+      "url": "https://tb-bulletin.ru/wp-content/uploads/2019/06/issn.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_________________________________________29933c36.pdf",
+      "file_size": 929297,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "core",
+      "title": "клинический случай",
+      "doi": "",
+      "url": "https://fileserver-az.core.ac.uk/download/84148418.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_______________________________________________________________________604fdc7a.pdf",
+      "file_size": 1388267,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "unpaywall",
+      "title": "клинический случай",
+      "doi": "10.1371/journal.pone.0104834",
+      "url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0104834&type=printable",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_______________________________________________________________________e47eeb68.pdf",
+      "file_size": 686624,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "unpaywall",
+      "title": "клинический случай",
+      "doi": "10.1371/journal.pone.0212553",
+      "url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0212553&type=printable",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_______________________________________________________________________158e1086.pdf",
+      "file_size": 3439180,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "unpaywall",
+      "title": "клинический случай",
+      "doi": "10.1523/jneurosci.1306-07.2007",
+      "url": "https://www.jneurosci.org/content/jneuro/27/23/6163.full.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/___________________________________________-___-_______________________7bc04a23.pdf",
+      "file_size": 981954,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "unpaywall",
+      "title": "клинический случай",
+      "doi": "10.1371/journal.pone.0068851",
+      "url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0068851&type=printable",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_______________________________________________________________________9b4cbb3d.pdf",
+      "file_size": 806595,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "core",
+      "title": "клинический случай",
+      "doi": "",
+      "url": "https://oasis.library.unlv.edu/cgi/viewcontent.cgi?article=1189&amp;context=psychology_fac_articles",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_______________________________________________________________________1cf799f2.pdf",
+      "file_size": 1228939,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "firecrawl-search",
+      "title": "клинический случай",
+      "doi": "",
+      "url": "https://umedp.ru/upload/iblock/25f/Toropina.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_____________________________________________________-__________598db72b.pdf",
+      "file_size": 259791,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "firecrawl-search",
+      "title": "клинический случай",
+      "doi": "",
+      "url": "https://ryazan.semeynaya.ru/upload/instruction_lk.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/__________________________________________c1483fea.pdf",
+      "file_size": 5909491,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "firecrawl-search",
+      "title": "клинический случай",
+      "doi": "",
+      "url": "https://s.fundamental-research.ru/pdf/2014/11-2/35521.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/________________________4e9472a9.pdf",
+      "file_size": 331017,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "firecrawl-search",
+      "title": "клинический случай",
+      "doi": "",
+      "url": "https://www.pedpharma.ru/jour/article/download/2603/1687",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/________________________________________655011ee.pdf",
+      "file_size": 122835,
+      "error": ""
+    },
+    {
+      "query": "MECP2 мутация ген клинический случай",
+      "source": "firecrawl-scrape",
+      "title": "клинический случай",
+      "doi": "",
+      "url": "https://umedp.ru/upload/iblock/25f/Toropina.pdf",
+      "success": true,
+      "file_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/_________221f5f8f.pdf",
+      "file_size": 259791,
+      "error": ""
+    },
+    {
+      "query": "sindrome di Rett MECP2 case report",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "mutazione MECP2 caso clinico",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "sindrome di Rett caso clinico MECP2",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "sindrome di Rett atipica MECP2 caso",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "MECP2 mutazione de novo caso",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "متلازمة ريت MECP2 تقرير حالة",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "طفرة MECP2 حالة سريرية",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "متلازمة ريت حالة سريرية MECP2",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    },
+    {
+      "query": "متلازمة ريت غير النمطية MECP2 حالة",
+      "success": false,
+      "error": "workflow_timeout",
+      "candidates": [],
+      "downloads": []
+    }
+  ]
+}
