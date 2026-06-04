@@ -358,3 +358,32 @@ async def test_phase2_adapter_reads_metadata_async(tmp_path, monkeypatch):
 
     assert result.phase_2_output is not None
     assert len(call_log) >= 1, "Expected aiofiles.open to be called"
+
+
+@pytest.mark.asyncio
+async def test_phase_2_adapter_raises_retryable_on_catalog_extraction_error(
+    sample_state: PipelineGraphState,
+):
+    """CatalogExtractionError is classified as retryable, not permanent.
+
+    This is intentional: LLM API timeouts (the primary cause) are transient
+    and should be retried by the orchestrator.
+    """
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import (
+        CatalogExtractionError,
+    )
+
+    mock_translation = MagicMock()
+    mock_translation.run = AsyncMock(
+        side_effect=CatalogExtractionError("All 2 extraction chunks failed, last error: timeout")
+    )
+
+    mock_extraction_service = MagicMock()
+
+    adapter = Phase2Adapter(
+        translation_service=mock_translation,
+        extraction_service=mock_extraction_service,
+    )
+
+    with pytest.raises(RetryablePhaseError, match="Phase 2 transient error"):
+        await adapter.run(sample_state)

@@ -54,8 +54,10 @@ async def test_phase_3_adapter_success(sample_state: PipelineGraphState):
         )
     )
 
+    mock_session = MagicMock()
+    mock_session.commit = AsyncMock()
     mock_session_factory = MagicMock()
-    mock_session_factory.return_value.__aenter__ = AsyncMock(return_value=MagicMock())
+    mock_session_factory.return_value.__aenter__ = AsyncMock(return_value=mock_session)
     mock_session_factory.return_value.__aexit__ = AsyncMock(return_value=False)
 
     adapter = Phase3Adapter(
@@ -69,6 +71,7 @@ async def test_phase_3_adapter_success(sample_state: PipelineGraphState):
     ):
         result_state = await adapter.run(sample_state)
 
+    mock_session.commit.assert_awaited_once()
     assert result_state.phase_3_output is not None
     assert result_state.phase_3_output.match_count == 10
     assert isinstance(result_state.phase_3_output, Phase3Output)
@@ -136,8 +139,10 @@ async def test_phase_3_adapter_skipped_when_zero_standardized(
         )
     )
 
+    mock_session = MagicMock()
+    mock_session.commit = AsyncMock()
     mock_session_factory = MagicMock()
-    mock_session_factory.return_value.__aenter__ = AsyncMock(return_value=MagicMock())
+    mock_session_factory.return_value.__aenter__ = AsyncMock(return_value=mock_session)
     mock_session_factory.return_value.__aexit__ = AsyncMock(return_value=False)
 
     adapter = Phase3Adapter(
@@ -151,6 +156,7 @@ async def test_phase_3_adapter_skipped_when_zero_standardized(
     ):
         result_state = await adapter.run(sample_state)
 
+    mock_session.commit.assert_awaited_once()
     assert result_state.phase_3_status.status == PhaseStatus.COMPLETED
     assert result_state.skip_phase_3_reason == SkipPhase3Reason.NO_CANDIDATES
     assert result_state.phase_3_status.summary["skip_reason"] == "no_candidates"

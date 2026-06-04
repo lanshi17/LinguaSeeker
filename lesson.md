@@ -1129,3 +1129,24 @@ Phase 2 失败导致 Phase 3 未能执行（pipeline error），因此该结论�
 **预防措施**：
 - `return_exceptions=True` 不能和静默 `continue` 组合使用 — 必须有失败率判断和升级机制
 - SQLAlchemy async session 默认不 auto-commit，业务代码需显式 commit
+
+## 2026-06-04: ASGITransport 不触发 lifespan + from X import f 不受 patch 影响
+
+**问题描述**：`test_lifespan_disposes_redis_on_shutdown` 失败，`dispose_engine` 未被调用。
+
+**排查过程**：
+1. `ASGITransport(app=app)` + `AsyncClient(transport=...)` 不触发 ASGI lifespan 事件
+2. 直接调用 `app.router.lifespan_context(app)` 可正确触发
+3. `from src.api.wiring import dispose_engine` 创建本地绑定，`patch("src.api.wiring.dispose_engine")` 不影响已绑定的引用
+
+**根因分析**：
+- httpx `ASGITransport` 不自动处理 lifespan（需显式调用或使用 `app` 参数）
+- `from X import f` 拷贝引用，`patch("X.f")` 替换模块属性不影响已拷贝的引用
+
+**解决方案**：
+- 测试改用 `app.router.lifespan_context(app)` 直接触发 lifespan
+- lifespan 中使用 `import src.api.wiring as _wiring` + `_wiring.dispose_engine()` 保持属性查找
+
+**预防措施**：
+- ASGI lifespan 测试不要依赖 httpx transport，直接用 lifespan context
+- 需要被 mock 的函数不要用 `from X import f`，用模块属性访问

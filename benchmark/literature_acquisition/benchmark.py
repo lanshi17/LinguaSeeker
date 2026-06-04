@@ -19,7 +19,6 @@ from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, cast
-from urllib.parse import urljoin
 
 import httpx
 import fitz
@@ -29,6 +28,13 @@ from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.c
 )
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.literature_type_classifier import (
     classify_item,
+)
+from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.search_service import (
+    build_provider_plan,
+    search_parallel,
+)
+from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway import (
+    download_file_from_url,
 )
 from src.core.config import get_config
 
@@ -218,95 +224,46 @@ def _sanitize(name: str) -> str:
     return re.sub(r"[\\/:*?\"<>|\s]+", "_", name)[:80]
 
 # ═══════════════════════════════════════════════════════════════════
-# Download mode
+# Download mode — uses online_acquisition module (search + gateway)
 # ═══════════════════════════════════════════════════════════════════
 
-async def _download_from_url(url: str, dest: Path, timeout: int = 30) -> bool:
-    """Download PDF from URL, scan HTML for PDF links if needed."""
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        logger.debug(f"Fetching URL: {url}")
-        async with httpx.AsyncClient(
-            timeout=timeout, follow_redirects=True, verify=False,
-            headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124.0 ACMG-Lingua/1.0"},
-        ) as client:
-            r = await client.get(url)
-            if r.content[:4] == b"%PDF":
-                dest.write_bytes(r.content)
-                logger.info(f"Wrote PDF: {dest} ({len(r.content)} bytes)")
-                return True
-            if b"<html" in r.content[:2048].lower():
-                # Try .pdf links, /bitstream/ paths (DSpace), and download handlers
-                pdf_links = re.findall(
-                    r'href=["\']([^"\']*(?:\.pdf|/bitstream/|download.*?pdf)[^"\']*)["\']',
-                    r.text, re.IGNORECASE,
-                )
-                seen: set[str] = set()
-                for link in pdf_links[:3]:
-                    abs_url = urljoin(str(r.url), link)
-                    if abs_url in seen:
-                        continue
-                    seen.add(abs_url)
-                    try:
-                        r2 = await client.get(abs_url)
-                        if r2.content[:4] == b"%PDF":
-                            dest.write_bytes(r2.content)
-                            logger.info(f"Wrote PDF: {dest} ({len(r2.content)} bytes) via {abs_url}")
-                            return True
-                    except Exception:
-                        logger.debug(f"Failed to get nested PDF link {abs_url}")
-                        continue
-    except Exception:
-        logger.exception(f"Exception while downloading URL: {url}")
-        pass
-    return False
+# Skip known non-article aggregator domains in candidate URLs
+_SKIP_DOMAINS = ("dbpia", "kiss", "kmbase", "ndsl")
 
 
-async def _try_openalex_oa_inner(
-    lang_code: str, query: str, dest_dir: Path, fname_prefix: str,
+async def _download_candidate(
+    cand: Dict[str, Any], lang_code: str, dest_dir: Path, fname: str,
 ) -> Optional[DownloadRecord]:
-    """Search OpenAlex for OA articles, try downloading the first match."""
-    url = (
-        f"https://api.openalex.org/works?search={query}"
-        f"&filter=language:{lang_code},is_oa:true&per_page=5&mailto=bench@acmg-lingua"
-    )
-    async with httpx.AsyncClient(timeout=10) as client:
-        r = await client.get(url)
-        data = r.json()
-    for i, w in enumerate(data.get("results", [])):
-        oa_url = (w.get("open_access") or {}).get("oa_url", "")
-        if not oa_url or any(s in oa_url for s in ["dbpia", "kiss", "kmbase", "ndsl"]):
-            continue
-        title = w.get("title", "")
-        doi = w.get("doi", "")
-        dest = dest_dir / f"{_sanitize(fname_prefix)}_{i}.pdf"
-        t0 = time.monotonic()
-        ok = await _download_from_url(oa_url, dest)
+    """Try downloading a single candidate via the module's gateway."""
+    title = cand.get("title", "")
+    doi = cand.get("doi") or ""
+    source = cand.get("provider", "unknown")
+    url = cand.get("url") or cand.get("detail_link") or ""
+
+    if not url or any(s in url for s in _SKIP_DOMAINS):
+        return None
+
+    download_dir = str(dest_dir)
+    stem = _sanitize(fname)
+    t0 = time.monotonic()
+    try:
+        result_path, final_url, warns = await download_file_from_url(url, download_dir, stem)
         elapsed = int((time.monotonic() - t0) * 1000)
-        if ok:
-            cls = classify_item(OnlineAcquisitionItem(source="openalex", title=title, doi=doi))
+        if result_path:
+            dest = Path(result_path)
+            cls = classify_item(OnlineAcquisitionItem(source=source, title=title, doi=doi))
             lit_type = cls.value if cls else "unclassified"
             return DownloadRecord(
                 lang=lang_code, literature_type=lit_type,
                 title=title, doi=doi,
-                method="openalex_oa", success=True,
+                method=source, success=True,
                 file_path=str(dest), file_size=dest.stat().st_size,
-                source_url=oa_url, elapsed_ms=elapsed,
+                source_url=final_url or url, elapsed_ms=elapsed,
             )
+    except Exception as exc:
+        elapsed = int((time.monotonic() - t0) * 1000)
+        logger.debug(f"Download failed for '{title[:40]}': {exc}")
     return None
-
-
-async def _try_openalex_oa(
-    lang_code: str, query: str, dest_dir: Path, fname_prefix: str,
-) -> Optional[DownloadRecord]:
-    """Search OpenAlex with overall timeout per query."""
-    try:
-        return await asyncio.wait_for(
-            _try_openalex_oa_inner(lang_code, query, dest_dir, fname_prefix),
-            timeout=45,
-        )
-    except (asyncio.TimeoutError, Exception):
-        return None
 
 
 async def cmd_download(lang_filter: Optional[str] = None) -> None:
@@ -320,21 +277,48 @@ async def cmd_download(lang_filter: Optional[str] = None) -> None:
     target_per_lang = 20
 
     logger.info("Starting download benchmark")
-    logger.info(f"Downloading via OpenAlex OA (target {target_per_lang} per lang)")
+    logger.info(f"Downloading via multi-provider search + gateway (target {target_per_lang} per lang)")
     logger.info(f"Languages: {', '.join(all_langs)}")
 
     for lang in all_langs:
         cfg = LANG_SEARCHES[lang]
+        lang_code = cfg["code"]
         downloaded = 0
         query_idx = 0
+        plan = build_provider_plan(language=lang_code)
+        logger.info(f"[{lang}] provider plan: {[p['provider'] for p in plan]}")
 
         while downloaded < target_per_lang and query_idx < len(cfg["queries"]):
             query = cfg["queries"][query_idx]
             query_idx += 1
             dest_dir = DOWNLOAD_ROOT / lang
-            fname = f"{lang}_{downloaded}"
 
-            record = await _try_openalex_oa(cfg["code"], query, dest_dir, fname)
+            # Search across multiple providers in parallel
+            try:
+                candidates = await asyncio.wait_for(
+                    search_parallel(query=query, plan=plan, candidate_limit=5),
+                    timeout=45,
+                )
+            except (asyncio.TimeoutError, Exception) as exc:
+                logger.debug(f"[{lang}] search failed for '{query}': {exc}")
+                stats.total_attempted += 1
+                continue
+
+            if not candidates:
+                stats.total_attempted += 1
+                logger.debug(f"[{lang}] no candidates for: {query}")
+                continue
+
+            # Try downloading candidates until one succeeds
+            record = None
+            for ci, cand in enumerate(candidates):
+                if downloaded >= target_per_lang:
+                    break
+                fname = f"{lang}_{downloaded}_{ci}"
+                record = await _download_candidate(cand, lang_code, dest_dir, fname)
+                if record:
+                    break
+
             if record:
                 stats.records.append(record)
                 stats.total_attempted += 1
@@ -343,11 +327,11 @@ async def cmd_download(lang_filter: Optional[str] = None) -> None:
                 stats.by_type[record.literature_type] = stats.by_type.get(record.literature_type, 0) + 1
                 stats.by_method[record.method] = stats.by_method.get(record.method, 0) + 1
                 downloaded += 1
-                msg = f"[{lang}] {downloaded}/{target_per_lang} OK {record.file_size // 1024}KB [{record.literature_type}]"
+                msg = f"[{lang}] {downloaded}/{target_per_lang} OK {record.file_size // 1024}KB [{record.literature_type}] via {record.method}"
                 logger.info(msg)
             else:
                 stats.total_attempted += 1
-                logger.debug(f"No result for query '{query}' in {lang}")
+                logger.debug(f"[{lang}] all candidates failed for: {query}")
 
     stats.elapsed_sec = round(time.monotonic() - start, 1)
 

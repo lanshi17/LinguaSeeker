@@ -25,7 +25,8 @@ def _make_client_with_mock_vlm():
 
 
 def _make_test_image_b64() -> str:
-    import base64, io
+    import base64
+    import io
     from PIL import Image
     buf = io.BytesIO()
     Image.new("RGB", (10, 10), color="white").save(buf, format="PNG")

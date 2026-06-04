@@ -14,7 +14,7 @@ def test_health_endpoint_returns_basemodel():
             # With `from __future__ import annotations`, inspect.signature
             # returns a string. Use the known class directly.
             assert issubclass(HealthResponse, BaseModel), (
-                f"HealthResponse should be BaseModel subclass"
+                "HealthResponse should be BaseModel subclass"
             )
             assert hasattr(HealthResponse, "model_fields"), "Should be a Pydantic model"
             assert "status" in HealthResponse.model_fields, "Must have 'status' field"
