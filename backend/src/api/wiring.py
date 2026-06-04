@@ -3,11 +3,15 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from redis.asyncio import Redis as AsyncRedis
+
 from src.core.config import get_config
 from src.dao.postgresql.connection import async_session_factory, build_async_engine
+from src.dao.redis.connection import build_redis_client
 
 _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
+_redis_client: AsyncRedis | None = None
 
 
 def get_session_factory() -> async_sessionmaker[AsyncSession]:
@@ -35,6 +39,19 @@ async def dispose_engine() -> None:
         await _engine.dispose()
         _engine = None
         _session_factory = None
+
+
+def get_redis_client() -> AsyncRedis | None:
+    """Return the singleton async Redis client (or None if not yet initialized)."""
+    return _redis_client
+
+
+async def dispose_redis() -> None:
+    """Teardown the Redis client (called from lifespan shutdown)."""
+    global _redis_client
+    if _redis_client is not None:
+        await _redis_client.aclose()
+        _redis_client = None
 
 
 def wire_dependencies() -> None:
@@ -80,6 +97,11 @@ def wire_dependencies() -> None:
     )
 
     cfg = get_config()
+
+    # ── Redis client singleton ───────────────────────────────────────
+    global _redis_client
+    _redis_client = build_redis_client(cfg)
+
     session_factory = get_session_factory()
 
     # ── Phase 1-3 services (long-lived, no session in constructor) ──

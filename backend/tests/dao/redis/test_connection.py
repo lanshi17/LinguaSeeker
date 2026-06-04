@@ -1,7 +1,9 @@
 """Tests for Redis connection helpers."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 def test_build_redis_client_passes_config_params() -> None:
     """build_redis_client forwards all config values to redis.asyncio.Redis."""
@@ -96,3 +98,25 @@ def test_build_redis_client_uses_settings_param() -> None:
 
     _, kwargs = mock_cls.call_args
     assert kwargs["host"] == "custom-host"
+
+
+def test_get_redis_client_returns_none_before_init() -> None:
+    """get_redis_client returns None before wire_dependencies runs."""
+    import src.api.wiring as wiring
+
+    # Force-reset the module singleton
+    wiring._redis_client = None
+    assert wiring.get_redis_client() is None
+
+
+@pytest.mark.asyncio
+async def test_dispose_redis_closes_client() -> None:
+    """dispose_redis closes the client and resets the singleton."""
+    import src.api.wiring as wiring
+
+    mock_client = AsyncMock()
+    wiring._redis_client = mock_client
+
+    await wiring.dispose_redis()
+    mock_client.aclose.assert_awaited_once()
+    assert wiring._redis_client is None
