@@ -103,8 +103,14 @@ async def lifespan(app: FastAPI):
     except Exception:
         logger.warning("Phase4ServiceFactory close failed during shutdown")
     finally:
-        await _wiring.dispose_redis()
-        await _wiring.dispose_engine()
+        try:
+            await _wiring.dispose_redis()
+        except Exception:
+            logger.warning("Redis disposal failed during shutdown")
+        try:
+            await _wiring.dispose_engine()
+        except Exception:
+            logger.warning("PostgreSQL engine disposal failed during shutdown")
         logger.info("ACMG Lingua backend stopped")
 
 
