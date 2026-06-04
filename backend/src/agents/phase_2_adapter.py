@@ -31,13 +31,16 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api im
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     EvidenceExtractionStatus,
 )
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.catalog_extraction import (
+    CatalogExtractionError,
+)
 
 if TYPE_CHECKING:
     from src.core.cross_lingual_process_and_extract_evidence.workflow import (
         TranslationService,
     )
 
-_RETRYABLE_ERRORS = build_retryable_errors()
+_RETRYABLE_ERRORS = build_retryable_errors() + (CatalogExtractionError,)
 
 
 class Phase2Adapter:

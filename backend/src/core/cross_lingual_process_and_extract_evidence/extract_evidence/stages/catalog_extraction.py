@@ -20,6 +20,10 @@ from ...cross_lingual.format.segmenter import estimate_tokens
 _DEFAULT_CHUNK_CONCURRENCY = 5
 
 
+class CatalogExtractionError(Exception):
+    """Raised when all catalog extraction chunks fail."""
+
+
 class CatalogExtractionStage:
     def __init__(
         self,
@@ -115,12 +119,29 @@ class CatalogExtractionStage:
             return_exceptions=True,
         )
         extracted: list[EvidenceItem] = []
+        failed_chunks: list[int] = []
+        last_error: BaseException | None = None
         for i, result in enumerate(results):
             if isinstance(result, BaseException):
                 logger.error("catalog_extraction chunk {}/{} failed: {}", i + 1, len(chunks), result)
-                continue
-            if isinstance(result, list):
+                failed_chunks.append(i)
+                last_error = result
+            elif isinstance(result, list):
                 extracted.extend(self._raw_source_normalizer.normalize_items(result))
+
+        # Escalate based on failure rate
+        if chunks:
+            failure_rate = len(failed_chunks) / len(chunks)
+            if failure_rate == 1.0:
+                raise CatalogExtractionError(
+                    f"All {len(chunks)} extraction chunks failed, last error: {last_error}"
+                ) from last_error
+            if failure_rate > 0.5:
+                logger.warning(
+                    "catalog_extraction: {}/{} chunks failed, result is partial",
+                    len(failed_chunks), len(chunks),
+                )
+
         return merge_sparse_evidence_items(extracted)
 
     @staticmethod

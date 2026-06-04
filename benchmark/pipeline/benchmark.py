@@ -392,7 +392,6 @@ async def run_benchmark(
             print(f"  {entry['lang']:2s} | {size_kb:7.0f} KB | {entry['file']}{skip_marker}")
         return
 
-    semaphore = asyncio.Semaphore(concurrency)
     config = {
         "concurrency": concurrency,
         "total_pdfs": len(pdfs),
@@ -404,55 +403,33 @@ async def run_benchmark(
         "lang": lang,
     }
 
+    # Build work list — skip already-passed PDFs
+    work: list[dict[str, Any]] = [e for e in pdfs if e["file"] not in skipped_files]
+    skipped_results: list[PdfResult] = [
+        PdfResult(
+            file=e["file"], lang=e["lang"],
+            literature_type=e["literature_type"],
+            size_bytes=pdf_root.joinpath(e["file"]).stat().st_size
+            if pdf_root.joinpath(e["file"]).exists() else e.get("size_bytes", 0),
+            status="skipped",
+        )
+        for e in pdfs if e["file"] in skipped_files
+    ]
+    if skipped_results:
+        logger.info("Skipping {} already-passed PDFs", len(skipped_results))
+
+    semaphore = asyncio.Semaphore(concurrency)
     t0 = time.time()
-    # Collect (entry, run_info_or_error) pairs — submit phase
-    submitted: list[tuple[dict[str, Any], dict[str, str] | Exception | None]] = []
-    async with httpx.AsyncClient() as client:
-        for entry in pdfs:
-            if entry["file"] in skipped_files:
-                submitted.append((entry, None))
-                continue
-            pdf_path = pdf_root / entry["file"]
-            try:
-                logger.info("[{}] Submitting {}", entry["lang"], entry["file"])
-                info = await submit_run(client, base_url, pdf_path, Path(entry["file"]).name)
-                submitted.append((entry, info))
-                logger.info("[{}] Accepted {}", entry["lang"], info["processing_run_id"][:8])
-            except Exception as e:
-                logger.error("[{}] Submit failed: {}", entry["lang"], e)
-                submitted.append((entry, e))
 
-    # Brief pause so queued runs persist their initial PENDING state
-    await asyncio.sleep(1.0)
-
-    # Poll phase — all submitted runs in parallel
-    results: list[PdfResult] = []
     async with httpx.AsyncClient() as client:
-        poll_tasks = []
-        for entry, info in submitted:
-            if info is None:
-                # Skipped
-                pdf_path = pdf_root / entry["file"]
-                results.append(PdfResult(
-                    file=entry["file"], lang=entry["lang"],
-                    literature_type=entry["literature_type"],
-                    size_bytes=entry.get("size_bytes", pdf_path.stat().st_size),
-                    status="skipped",
-                ))
-            elif isinstance(info, Exception):
-                # Submit failed
-                results.append(PdfResult(
-                    file=entry["file"], lang=entry["lang"],
-                    literature_type=entry["literature_type"],
-                    size_bytes=entry.get("size_bytes", 0),
-                    status="failed", error=str(info),
-                ))
-            else:
-                poll_tasks.append(_poll_and_finalize(client, base_url, entry, info, pdf_root=pdf_root))
-        if poll_tasks:
-            polled = await asyncio.gather(*poll_tasks)
-            results.extend(polled)
+        tasks = [
+            process_one_pdf(client, base_url, entry, semaphore, pdf_root=pdf_root)
+            for entry in work
+        ]
+        processed = await asyncio.gather(*tasks)
     elapsed = time.time() - t0
+
+    results = list(processed) + skipped_results
 
     # Evidence metrics collection — query PG for passed runs
     passed_results = [r for r in results if r.status == "passed" and r.processing_run_id]
@@ -509,61 +486,6 @@ async def run_benchmark(
     logger.info("Report: {}", report_path)
 
 
-async def _poll_and_finalize(
-    client: httpx.AsyncClient,
-    base_url: str,
-    entry: dict[str, Any],
-    run_info: dict[str, str],
-    pdf_root: Path = DOWNLOADS_DIR,
-) -> PdfResult:
-    """Poll a submitted run to completion and return PdfResult."""
-    pdf_path = pdf_root / entry["file"]
-    result = PdfResult(
-        file=entry["file"],
-        lang=entry["lang"],
-        literature_type=entry["literature_type"],
-        size_bytes=entry.get("size_bytes", pdf_path.stat().st_size),
-        processing_run_id=run_info["processing_run_id"],
-        started_at=datetime.now(timezone.utc).isoformat(),
-    )
-
-    t0 = time.time()
-    try:
-        logger.info("[{}] Polling {} ...", entry["lang"], run_info["processing_run_id"][:8])
-        status_data = await poll_status(client, base_url, run_info["status_url"])
-        result.completed_at = datetime.now(timezone.utc).isoformat()
-        result.total_duration_s = round(time.time() - t0, 2)
-
-        pipeline_status = status_data.get("pipeline_status", "unknown")
-        if pipeline_status in ("awaiting_review", "completed"):
-            result.status = "passed"
-        else:
-            result.status = "failed"
-            result.error = status_data.get("error_message", f"Terminal status: {pipeline_status}")
-
-        for phase_name in ("phase_1", "phase_2", "phase_3"):
-            phase_data = status_data.get("phases", {}).get(phase_name, {})
-            result.phases[phase_name] = PhaseResult(
-                status=phase_data.get("status", "pending"),
-                duration_seconds=phase_data.get("duration_seconds"),
-                error=phase_data.get("error"),
-                summary=phase_data.get("summary"),
-            )
-
-    except Exception as e:
-        result.status = "failed"
-        result.error = f"{type(e).__name__}: {e}"
-        result.total_duration_s = round(time.time() - t0, 2)
-        logger.error("[{}] Poll error: {}", entry["lang"], result.error)
-
-    logger.info(
-        "[{}] {} | {:.1f}s | {}",
-        entry["lang"], result.status.upper(),
-        result.total_duration_s or 0, entry["file"],
-    )
-    return result
-
-
 def _load_most_recent_report() -> dict[str, Any] | None:
     """Load the most recent report file, or None if no reports exist."""
     reports = sorted(REPORTS_DIR.glob("report_*.json"), reverse=True)
@@ -575,7 +497,8 @@ def _load_most_recent_report() -> dict[str, Any] | None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Pipeline benchmark runner")
     parser.add_argument("--base-url", default="http://localhost:8000", help="Backend API base URL")
-    parser.add_argument("--concurrency", type=int, default=2, help="Max concurrent pipeline runs")
+    parser.add_argument("--concurrency", type=int, default=2, help="Max concurrent pipeline runs",
+                        choices=range(1, 11), metavar="{1..10}")
     parser.add_argument("--dry-run", action="store_true", help="Show manifest without running")
     parser.add_argument("--resume", action="store_true", help="Skip PDFs that already passed in the most recent report")
     parser.add_argument("--limit", type=int, default=None, help="Only process first N PDFs")

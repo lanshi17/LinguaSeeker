@@ -123,7 +123,6 @@ def test_body_size_limit_handles_chunked_encoding():
 def test_body_size_limit_does_not_buffer_responses():
     """Raw ASGI middleware should not buffer streaming responses."""
     from starlette.responses import StreamingResponse
-    import asyncio
 
     app = FastAPI()
     app.add_middleware(BodySizeLimitMiddleware, max_bytes=1024)

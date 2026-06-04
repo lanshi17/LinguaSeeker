@@ -114,7 +114,7 @@ async def test_request_state_request_id_accessible_in_error_handlers():
     The middleware sets scope["state"]["request_id"] which Starlette's
     Request.state wraps via _State attribute delegation.
     """
-    from fastapi import FastAPI, Request
+    from fastapi import FastAPI
     from fastapi.responses import JSONResponse
     from httpx import ASGITransport, AsyncClient
     from src.utils.middleware import add_request_monitoring
