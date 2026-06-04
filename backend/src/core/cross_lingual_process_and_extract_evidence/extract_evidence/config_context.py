@@ -11,9 +11,14 @@ class EvidenceExtractionConfigContext:
 
     api_key: str
     base_url: str
+    reasoning_api_key: str
+    reasoning_base_url: str
     fast_model: str
     standard_model: str
     strong_model: str
+    fast_effort: str = ""
+    standard_effort: str = ""
+    strong_effort: str = "high"
     temperature: float = 0.0
     timeout: int = 60
     max_retries: int = 3
@@ -24,9 +29,14 @@ class EvidenceExtractionConfigContext:
         return cls(
             api_key=evidence_cfg.api_key,
             base_url=evidence_cfg.base_url,
+            reasoning_api_key=evidence_cfg.reasoning_api_key,
+            reasoning_base_url=evidence_cfg.reasoning_base_url,
             fast_model=evidence_cfg.fast_model,
             standard_model=evidence_cfg.standard_model,
             strong_model=evidence_cfg.strong_model,
+            fast_effort=evidence_cfg.fast_effort,
+            standard_effort=evidence_cfg.standard_effort,
+            strong_effort=evidence_cfg.strong_effort,
             temperature=evidence_cfg.temperature,
             timeout=evidence_cfg.timeout,
             max_retries=evidence_cfg.max_retries,

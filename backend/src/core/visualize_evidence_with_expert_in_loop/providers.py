@@ -24,6 +24,7 @@ class ReasoningLLMProvider:
         self._model = cfg.reasoning.model
         self._base_url = cfg.reasoning.base_url
         self._timeout = cfg.reasoning.timeout
+        self._reasoning_effort = cfg.reasoning.reasoning_effort
         self._client: httpx.AsyncClient | None = None
 
     def _get_client(self) -> httpx.AsyncClient:
@@ -66,6 +67,14 @@ class ReasoningLLMProvider:
             {"role": "user", "content": user_message},
         ]
 
+        payload: dict[str, object] = {
+            "model": self._model,
+            "messages": messages,
+            "temperature": 0.3,
+        }
+        if self._reasoning_effort:
+            payload["reasoning_effort"] = self._reasoning_effort
+
         client = self._get_client()
         response = await client.post(
             f"{self._base_url}/v1/chat/completions",
@@ -73,11 +82,7 @@ class ReasoningLLMProvider:
                 "Authorization": f"Bearer {self._api_key}",
                 "Content-Type": "application/json",
             },
-            json={
-                "model": self._model,
-                "messages": messages,
-                "temperature": 0.3,
-            },
+            json=payload,
         )
         response.raise_for_status()
         data = response.json()
@@ -102,6 +107,15 @@ class ReasoningLLMProvider:
             {"role": "user", "content": user_message},
         ]
 
+        payload: dict[str, object] = {
+            "model": self._model,
+            "messages": messages,
+            "temperature": 0.3,
+            "stream": True,
+        }
+        if self._reasoning_effort:
+            payload["reasoning_effort"] = self._reasoning_effort
+
         client = self._get_client()
         async with client.stream(
             "POST",
@@ -110,12 +124,7 @@ class ReasoningLLMProvider:
                 "Authorization": f"Bearer {self._api_key}",
                 "Content-Type": "application/json",
             },
-            json={
-                "model": self._model,
-                "messages": messages,
-                "temperature": 0.3,
-                "stream": True,
-            },
+            json=payload,
         ) as response:
             response.raise_for_status()
             async for line in response.aiter_lines():

@@ -45,6 +45,7 @@ class LangChainEvidenceProvider:
     def __init__(self, ctx: EvidenceExtractionConfigContext):
         self._ctx = ctx
         self._secret = SecretStr(ctx.api_key)
+        self._reasoning_secret = SecretStr(ctx.reasoning_api_key)
         self._clients: dict[EvidenceModelTier, ChatOpenAI] = {}
 
     def _model_for_tier(self, tier: EvidenceModelTier) -> str:
@@ -54,14 +55,34 @@ class LangChainEvidenceProvider:
             return self._ctx.standard_model
         return self._ctx.strong_model
 
+    def _effort_for_tier(self, tier: EvidenceModelTier) -> str:
+        if tier == EvidenceModelTier.FAST:
+            return self._ctx.fast_effort
+        if tier == EvidenceModelTier.STANDARD:
+            return self._ctx.standard_effort
+        return self._ctx.strong_effort
+
     def _client_for_tier(self, tier: EvidenceModelTier) -> ChatOpenAI:
         if tier not in self._clients:
+            if tier == EvidenceModelTier.FAST:
+                api_key = self._secret
+                base_url = self._ctx.base_url
+            else:
+                api_key = self._reasoning_secret
+                base_url = self._ctx.reasoning_base_url
+
+            model_kwargs: dict[str, Any] = {}
+            effort = self._effort_for_tier(tier)
+            if effort:
+                model_kwargs["reasoning_effort"] = effort
+
             self._clients[tier] = ChatOpenAI(
                 model=self._model_for_tier(tier),
-                api_key=self._secret,
-                base_url=self._ctx.base_url,
+                api_key=api_key,
+                base_url=base_url,
                 temperature=self._ctx.temperature,
                 timeout=self._ctx.timeout,
+                model_kwargs=model_kwargs or None,
             )
         return self._clients[tier]
 
