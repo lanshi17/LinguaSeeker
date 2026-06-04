@@ -176,6 +176,50 @@ class TestDownloadCandidates:
         assert results[0].doi == "10.1234/test"
 
     @pytest.mark.asyncio
+    async def test_download_doi_with_list_title(self, tmp_path):
+        """Crossref returns title as list — download must still trigger."""
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _download_candidates
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
+            OnlineAcquisitionGatewayResult,
+        )
+
+        candidates = [{"doi": "10.1234/test", "title": ["Paper Title"], "_source_provider": "crossref"}]
+
+        mock_unpaywall = OnlineAcquisitionGatewayResult(
+            provider="unpaywall",
+            success=True,
+            items=[],
+            downloads=[{"pdf_url": "https://example.com/paper.pdf"}],
+            warnings=[],
+            raw=None,
+            meta=None,
+            source_trace=[],
+        )
+
+        search_called = False
+
+        async def mock_search(**kwargs):
+            nonlocal search_called
+            search_called = True
+            return mock_unpaywall
+
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.search_provider",
+            new_callable=AsyncMock,
+            side_effect=mock_search,
+        ), patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+            new_callable=AsyncMock,
+            return_value=(str(tmp_path / "paper.pdf"), "https://example.com/paper.pdf", []),
+        ):
+            (tmp_path / "paper.pdf").write_bytes(b"%PDF-1.4 fake")
+            results = await _download_candidates(candidates, str(tmp_path))
+
+        assert search_called, "search_provider must be called even with list-shaped title"
+        assert len(results) == 1
+        assert results[0].source == "unpaywall"
+
+    @pytest.mark.asyncio
     async def test_download_empty_candidates(self, tmp_path):
         from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _download_candidates
 

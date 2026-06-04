@@ -93,6 +93,16 @@ class Phase3Adapter:
 
             dual_result = DualEvidenceExtractionResult.model_validate(extraction_data)
 
+            # Debug: log extraction result shape
+            orig_chains = len(dual_result.original_result.evidence_chains)
+            trans_chains = len(dual_result.translated_result.evidence_chains)
+            orig_items = len(dual_result.original_result.evidence_items)
+            trans_items = len(dual_result.translated_result.evidence_items)
+            logger.info(
+                "Phase 3 extraction loaded: orig_chains={}, trans_chains={}, orig_items={}, trans_items={}",
+                orig_chains, trans_chains, orig_items, trans_items,
+            )
+
             # Run standardization with a fresh session
             async with self._session_factory() as session:
                 standardization_result = await self._standardization.run_dual_result(

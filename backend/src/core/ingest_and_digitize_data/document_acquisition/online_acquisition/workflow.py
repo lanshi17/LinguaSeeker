@@ -281,16 +281,16 @@ async def _download_candidates(
     - Direct URL → HTTP download (with HTML→PDF redirect handling)
     """
     async def _download_one(candidate: Dict[str, Any]) -> Optional[DownloadResult]:
-        doi = candidate.get("doi") or candidate.get("DOI")
-        pmid = candidate.get("pmid")
+        doi = _coerce_str(candidate.get("doi") or candidate.get("DOI")).strip() or None
+        pmid = _coerce_str(candidate.get("pmid")).strip() or None
         if not pmid and isinstance(candidate.get("identifiers"), dict):
-            pmid = candidate["identifiers"].get("pmid")
-        pmcid = candidate.get("pmcid")
-        url = candidate.get("url") or candidate.get("URL")
-        title = candidate.get("title", "untitled")
+            pmid = _coerce_str(candidate["identifiers"].get("pmid")).strip() or None
+        pmcid = _coerce_str(candidate.get("pmcid")).strip() or None
+        url = _coerce_str(candidate.get("url") or candidate.get("URL")).strip() or None
+        title = _coerce_str(candidate.get("title")) or "untitled"
         url_for_hash = url or doi or pmcid or title or "unknown"
         url_hash = hashlib.md5(url_for_hash.encode()).hexdigest()[:8]
-        filename_stem = f"{re.sub(r'[^\\w\\-]', '_', title)[:70]}_{url_hash}" if title else f"untitled_{url_hash}"
+        filename_stem = f"{re.sub(r'[^\\w\\-]', '_', title)[:70]}_{url_hash}"
 
         # Route 1: DOI → unpaywall OA resolution
         if doi:
