@@ -23,18 +23,8 @@ from typing import Any, Dict, List, Optional, cast
 import httpx
 import fitz
 
-from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
-    OnlineAcquisitionItem,
-)
-from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.literature_type_classifier import (
-    classify_item,
-)
-from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.search_service import (
-    build_provider_plan,
-    search_parallel,
-)
-from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway import (
-    download_file_from_url,
+from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
+    online_acquisition_workflow,
 )
 from src.core.config import get_config
 
@@ -227,45 +217,6 @@ def _sanitize(name: str) -> str:
 # Download mode — uses online_acquisition module (search + gateway)
 # ═══════════════════════════════════════════════════════════════════
 
-# Skip known non-article aggregator domains in candidate URLs
-_SKIP_DOMAINS = ("dbpia", "kiss", "kmbase", "ndsl")
-
-
-async def _download_candidate(
-    cand: Dict[str, Any], lang_code: str, dest_dir: Path, fname: str,
-) -> Optional[DownloadRecord]:
-    """Try downloading a single candidate via the module's gateway."""
-    title = cand.get("title", "")
-    doi = cand.get("doi") or ""
-    source = cand.get("provider", "unknown")
-    url = cand.get("url") or cand.get("detail_link") or ""
-
-    if not url or any(s in url for s in _SKIP_DOMAINS):
-        return None
-
-    download_dir = str(dest_dir)
-    stem = _sanitize(fname)
-    t0 = time.monotonic()
-    try:
-        result_path, final_url, warns = await download_file_from_url(url, download_dir, stem)
-        elapsed = int((time.monotonic() - t0) * 1000)
-        if result_path:
-            dest = Path(result_path)
-            cls = classify_item(OnlineAcquisitionItem(source=source, title=title, doi=doi))
-            lit_type = cls.value if cls else "unclassified"
-            return DownloadRecord(
-                lang=lang_code, literature_type=lit_type,
-                title=title, doi=doi,
-                method=source, success=True,
-                file_path=str(dest), file_size=dest.stat().st_size,
-                source_url=final_url or url, elapsed_ms=elapsed,
-            )
-    except Exception as exc:
-        elapsed = int((time.monotonic() - t0) * 1000)
-        logger.debug(f"Download failed for '{title[:40]}': {exc}")
-    return None
-
-
 async def cmd_download(lang_filter: Optional[str] = None) -> None:
     setup_logging()
     stats = BenchmarkStats()
@@ -277,7 +228,7 @@ async def cmd_download(lang_filter: Optional[str] = None) -> None:
     target_per_lang = 20
 
     logger.info("Starting download benchmark")
-    logger.info(f"Downloading via multi-provider search + gateway (target {target_per_lang} per lang)")
+    logger.info(f"Downloading via online_acquisition_workflow (API + Firecrawl, target {target_per_lang} per lang)")
     logger.info(f"Languages: {', '.join(all_langs)}")
 
     for lang in all_langs:
@@ -285,53 +236,89 @@ async def cmd_download(lang_filter: Optional[str] = None) -> None:
         lang_code = cfg["code"]
         downloaded = 0
         query_idx = 0
-        plan = build_provider_plan(language=lang_code)
-        logger.info(f"[{lang}] provider plan: {[p['provider'] for p in plan]}")
+        dest_dir = DOWNLOAD_ROOT / lang
+        dest_dir.mkdir(parents=True, exist_ok=True)
 
         while downloaded < target_per_lang and query_idx < len(cfg["queries"]):
             query = cfg["queries"][query_idx]
             query_idx += 1
-            dest_dir = DOWNLOAD_ROOT / lang
 
-            # Search across multiple providers in parallel
+            payload: Dict[str, Any] = {
+                "action": "download",
+                "query": query,
+                "limit": 5,
+                "language": lang_code,
+                "download_path": str(dest_dir),
+            }
+
+            stats.total_attempted += 1
+
             try:
-                candidates = await asyncio.wait_for(
-                    search_parallel(query=query, plan=plan, candidate_limit=5),
-                    timeout=45,
+                result = await asyncio.wait_for(
+                    online_acquisition_workflow(payload),
+                    timeout=90,
                 )
             except (asyncio.TimeoutError, Exception) as exc:
-                logger.debug(f"[{lang}] search failed for '{query}': {exc}")
-                stats.total_attempted += 1
+                logger.debug(f"[{lang}] workflow failed for '{query}': {exc}")
                 continue
 
-            if not candidates:
-                stats.total_attempted += 1
-                logger.debug(f"[{lang}] no candidates for: {query}")
+            if not result.get("success"):
+                logger.debug(f"[{lang}] no results for: {query}")
                 continue
 
-            # Try downloading candidates until one succeeds
-            record = None
-            for ci, cand in enumerate(candidates):
+            downloads = result.get("downloads", [])
+            items = result.get("items", [])
+            route_info = result.get("route", {})
+
+            for dl in downloads:
                 if downloaded >= target_per_lang:
                     break
-                fname = f"{lang}_{downloaded}_{ci}"
-                record = await _download_candidate(cand, lang_code, dest_dir, fname)
-                if record:
-                    break
+                file_path = dl.get("file_path") or ""
+                if not file_path or not Path(file_path).exists():
+                    continue
 
-            if record:
+                dest = Path(file_path)
+                title = ""
+                doi = ""
+                for item in items:
+                    item_doi = (item.get("doi") or "").strip()
+                    if item_doi and item_doi == (dl.get("doi") or "").strip():
+                        title = item.get("title") or ""
+                        doi = item_doi
+                        break
+                if not title and items:
+                    title = items[0].get("title") or ""
+                if not doi:
+                    doi = dl.get("doi") or ""
+
+                source = dl.get("source", route_info.get("used", "workflow"))
+                lit_type = "unclassified"
+                for item in items:
+                    lt = item.get("literature_type")
+                    if lt:
+                        lit_type = lt
+                        break
+
+                record = DownloadRecord(
+                    lang=lang_code, literature_type=lit_type,
+                    title=title, doi=doi,
+                    method=source, success=True,
+                    file_path=str(dest), file_size=dest.stat().st_size,
+                    source_url=dl.get("url") or "", elapsed_ms=0,
+                )
                 stats.records.append(record)
-                stats.total_attempted += 1
                 stats.total_downloaded += 1
                 stats.by_lang[lang] = stats.by_lang.get(lang, 0) + 1
-                stats.by_type[record.literature_type] = stats.by_type.get(record.literature_type, 0) + 1
-                stats.by_method[record.method] = stats.by_method.get(record.method, 0) + 1
+                stats.by_type[lit_type] = stats.by_type.get(lit_type, 0) + 1
+                stats.by_method[source] = stats.by_method.get(source, 0) + 1
                 downloaded += 1
-                msg = f"[{lang}] {downloaded}/{target_per_lang} OK {record.file_size // 1024}KB [{record.literature_type}] via {record.method}"
-                logger.info(msg)
-            else:
-                stats.total_attempted += 1
-                logger.debug(f"[{lang}] all candidates failed for: {query}")
+                logger.info(
+                    f"[{lang}] {downloaded}/{target_per_lang} OK "
+                    f"{record.file_size // 1024}KB [{lit_type}] via {source}"
+                )
+
+            if not downloads:
+                logger.debug(f"[{lang}] workflow returned no downloads for: {query}")
 
     stats.elapsed_sec = round(time.monotonic() - start, 1)
 
