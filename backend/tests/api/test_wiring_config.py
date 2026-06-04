@@ -32,6 +32,7 @@ def _patch_wire_deps(stack: ExitStack):
         "src.api.v1.pipeline.set_pipeline_runner",
         "src.api.deps.set_phase4_factory",
         "src.api.wiring.get_session_factory",
+        "src.api.wiring.build_redis_client",
     ]:
         stack.enter_context(patch(mod_path))
 
