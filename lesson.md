@@ -1104,3 +1104,28 @@ Phase 2 失败导致 Phase 3 未能执行（pipeline error），因此该结论�
 - Firecrawl SDK 响应可能是 Pydantic model 或 dict，使用 _to_dict() 统一处理
 - 现有测试中引用已删除函数的情况需要在重构时一并更新
 - web_providers.py 的废弃警告使用 per-function 而非 module-level，避免影响其他模块的 import
+
+## 2026-06-04: catalog_extraction 静默吞掉异常 + Phase 3 未 commit
+
+**问题描述**：benchmark pipeline 跑过后 PG 中 evidence=0，Phase 3 报告 "no candidates"。
+
+**排查过程**：
+1. 检查 PG `run_evidence_items` — 0 条记录
+2. 检查 Phase 3 adapter — `standardized_count=0`，`skip_reason=no_candidates`
+3. 检查 `DualResultAdapter` — 需要 `evidence_chains` 作为 candidates 来源
+4. 检查 backend logs — `catalog_extraction chunk 1/1 failed: Request timed out.`
+5. 检查 `catalog_extraction.py:113-124` — `asyncio.gather(return_exceptions=True)` + `continue` 静默跳过
+
+**根因分析**：
+- **问题 1 (基础设施)**：`api.xiaomimimo.com` LLM API 超时 300s
+- **问题 2 (设计缺陷)**：`return_exceptions=True` + `continue` 把基础设施错误降级为数据问题，Phase 2 以 "成功" 状态结束但实际提取为空
+- **问题 3 (代码 bug)**：Phase 3 adapter 使用 `async with session_factory() as session:` 但未调用 `session.commit()`，导致即使有证据也不会持久化
+
+**解决方案**：
+1. `catalog_extraction.py`：全量失败时抛 `CatalogExtractionError`，部分失败记录 warning
+2. `phase_3_adapter.py`：添加 `await session.commit()`
+3. LLM API 超时问题需在基础设施层解决（中转 API 稳定性）
+
+**预防措施**：
+- `return_exceptions=True` 不能和静默 `continue` 组合使用 — 必须有失败率判断和升级机制
+- SQLAlchemy async session 默认不 auto-commit，业务代码需显式 commit

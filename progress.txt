@@ -179,3 +179,9 @@
   - Docs archived: docs/plans/2026-06-02-phase3-benchmark-coverage.md → docs/archive/plans/
 [2026-06-02] [Online acquisition refactor: separate link acquisition from download, Firecrawl adapter] [DONE]
 [2026-06-02] [Pipeline benchmark E2E: pipeline runs successfully, metrics query verified, but benchmark PDFs produce 0 evidence items] [partial]
+[2026-06-04] [Benchmark: update literature_acquisition to use online_acquisition module (search_parallel, download_file_from_url)] [DONE]
+[2026-06-04] [Fix: catalog_extraction 全量失败时抛 CatalogExtractionError 而非静默吞掉; Phase 3 adapter 添加 session.commit()] [done]
+[2026-06-04] [Benchmark rett_download: remove --llm-verify (LLM verification now in online_acquisition module)] [DONE]
+[2026-06-04] [Review fixes: Phase 3 adapter tests AsyncMock, remove unused semaphore, CatalogExtractionError→retryable, 3 new tests, canonical_evidence per-run] [done]
+[2026-06-04] [Review fixes v2: restore --concurrency via process_one_pdf+semaphore; add CatalogExtractionError→RetryablePhaseError test] [done]
+[2026-06-04] [fix: guard lifespan disposal calls with try/except for exception safety — Redis/PG disposal now independent, LIFO order verified, 5 tests passing] [done]

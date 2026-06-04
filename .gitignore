@@ -82,3 +82,6 @@ benchmark/literature_acquisition/downloads/rett/report_*.json
 .codegraph/*
 reasonix.toml
 benchmark/pipeline/input/*
+
+# Copier
+.copier-answers.yml
