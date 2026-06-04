@@ -1,4 +1,4 @@
-"""Model server configuration — reads env vars / .env files."""
+"""Model server configuration — reads config-dev.yaml and env vars."""
 
 from __future__ import annotations
 
@@ -10,17 +10,35 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _SERVICE_ROOT = Path(__file__).resolve().parents[1]
 _BACKEND_ROOT = Path(__file__).resolve().parents[3]
+# ── YAML config loader (shared with backend) ────────────────────────────
+
+def _load_yaml_config() -> None:
+    """Load backend/config-dev.yaml, set as env vars (env vars take precedence)."""
+    try:
+        import yaml
+    except ImportError:
+        return
+
+    config_path = _BACKEND_ROOT / "config-dev.yaml"
+    if not config_path.exists():
+        return
+
+    with open(config_path) as f:
+        data = yaml.safe_load(f) or {}
+
+    for key, value in data.items():
+        env_key = str(key).upper()
+        if env_key not in os.environ:
+            os.environ[env_key] = str(value)
+
+
+_load_yaml_config()
+
+
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=(
-            _BACKEND_ROOT / ".env",
-            _BACKEND_ROOT / ".env.local",
-            _SERVICE_ROOT / ".env",
-            _SERVICE_ROOT / ".env.local",
-        ),
-        env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
     )

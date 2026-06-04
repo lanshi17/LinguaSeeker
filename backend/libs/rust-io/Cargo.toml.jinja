@@ -1,0 +1,15 @@
+[package]
+name = "rust-io"
+version = "{{ project_version }}"
+edition = "2024"
+description = "High-performance I/O module for ACMG Lingua"
+
+[lib]
+name = "rust_io"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { version = "0.28.2", features = ["extension-module"] }
+pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
+files-io = { path = "../files-io" }
+net-io = { path = "../net-io" }

@@ -44,13 +44,12 @@ def test_embedding_dimension_must_match_pgvector() -> None:
             os.environ["EMBEDDING_DIMENSION"] = original
 
 
-def test_settings_default_env_files_include_repo_and_backend_locations() -> None:
-    """Default env-file search paths are absolute and independent of cwd."""
-    backend_root = Path(__file__).resolve().parents[2]
+def test_settings_no_env_files() -> None:
+    """Settings no longer uses env_file; config comes from config-dev.yaml."""
     env_files = Settings.model_config.get("env_file")
 
-    assert isinstance(env_files, tuple)
-    assert str(backend_root / ".env.local") in env_files
+    # env_file should not be configured — YAML is the source of truth
+    assert env_files is None
 
 
 def test_reasoning_config_has_timeout() -> None:

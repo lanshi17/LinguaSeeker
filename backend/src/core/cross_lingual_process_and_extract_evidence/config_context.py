@@ -17,6 +17,7 @@ class TranslationConfigContext:
     api_key: str
     base_url: str
     temperature: float = 0.0
+    timeout: int = 60
 
     @classmethod
     def from_config(cls, cfg: Any) -> TranslationConfigContext:
@@ -26,4 +27,5 @@ class TranslationConfigContext:
             api_key=cfg.llm.api_key,
             base_url=cfg.llm.base_url,
             temperature=getattr(cfg.llm, "temperature", 0.0),
+            timeout=cfg.llm.timeout,
         )

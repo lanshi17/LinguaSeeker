@@ -145,6 +145,10 @@ async def submit_run(
     }
 
 
+INITIAL_RETRY_INTERVAL_S = 2.0
+MAX_INITIAL_404_RETRIES = 15  # 30s total for async run registration
+
+
 async def poll_status(
     client: httpx.AsyncClient,
     base_url: str,
@@ -152,10 +156,23 @@ async def poll_status(
 ) -> dict[str, Any]:
     """Poll pipeline status until terminal state. Returns final status dict."""
     last_status = ""
+    initial_404_count = 0
     for attempt in range(MAX_POLL_ATTEMPTS):
         resp = await client.get(f"{base_url}{status_url}", timeout=30.0)
+
+        # Handle 404 during initial run registration (async race condition)
+        if resp.status_code == 404:
+            initial_404_count += 1
+            if initial_404_count > MAX_INITIAL_404_RETRIES:
+                resp.raise_for_status()
+            await asyncio.sleep(INITIAL_RETRY_INTERVAL_S)
+            continue
+
         resp.raise_for_status()
         data = resp.json()
+
+        # Reset 404 counter once we get a valid response
+        initial_404_count = 0
 
         pipeline_status = data.get("pipeline_status", "")
         if pipeline_status != last_status:

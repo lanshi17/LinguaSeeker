@@ -40,6 +40,7 @@ class TranslationService:
             api_key=SecretStr(self._ctx.api_key),
             base_url=self._ctx.base_url,
             temperature=self._ctx.temperature,
+            timeout=self._ctx.timeout,
         )
         self._formatter = MarkdownFormatter(llm=formatter_llm)
         self._translator = MultiStageTranslator(ctx=self._ctx)
