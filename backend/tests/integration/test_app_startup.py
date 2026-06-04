@@ -82,3 +82,65 @@ async def test_lifespan_disposes_redis_on_shutdown() -> None:
 
     mock_dispose_pg.assert_awaited_once()
     mock_dispose_redis.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_lifespan_disposal_order_is_lifo() -> None:
+    """Shutdown should dispose Redis before PG engine (LIFO order)."""
+    from fastapi import FastAPI
+
+    call_order: list[str] = []
+
+    with (
+        patch("src.api.wiring.wire_dependencies"),
+        patch("src.api.wiring.dispose_engine", new_callable=AsyncMock) as mock_dispose_pg,
+        patch("src.api.wiring.dispose_redis", new_callable=AsyncMock) as mock_dispose_redis,
+        patch(
+            "src.utils.health.check_all_connections",
+            new_callable=AsyncMock,
+            return_value=HealthResult(postgres=True, redis=True),
+        ),
+        patch("src.core.config.get_config") as mock_cfg,
+    ):
+        mock_dispose_redis.side_effect = lambda: call_order.append("redis")
+        mock_dispose_pg.side_effect = lambda: call_order.append("pg")
+
+        from src.core.config import Settings
+        mock_cfg.return_value = Settings()
+
+        from app.main import lifespan
+
+        async with lifespan(FastAPI()):
+            pass
+
+    assert call_order == ["redis", "pg"]
+
+
+@pytest.mark.asyncio
+async def test_lifespan_disposal_exception_safety() -> None:
+    """If Redis disposal fails, PG engine disposal should still run."""
+    from fastapi import FastAPI
+
+    with (
+        patch("src.api.wiring.wire_dependencies"),
+        patch("src.api.wiring.dispose_engine", new_callable=AsyncMock) as mock_dispose_pg,
+        patch("src.api.wiring.dispose_redis", new_callable=AsyncMock) as mock_dispose_redis,
+        patch(
+            "src.utils.health.check_all_connections",
+            new_callable=AsyncMock,
+            return_value=HealthResult(postgres=True, redis=True),
+        ),
+        patch("src.core.config.get_config") as mock_cfg,
+    ):
+        mock_dispose_redis.side_effect = RuntimeError("redis boom")
+
+        from src.core.config import Settings
+        mock_cfg.return_value = Settings()
+
+        from app.main import lifespan
+
+        async with lifespan(FastAPI()):
+            pass
+
+    mock_dispose_redis.assert_awaited_once()
+    mock_dispose_pg.assert_awaited_once()
