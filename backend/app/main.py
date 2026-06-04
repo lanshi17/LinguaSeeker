@@ -74,7 +74,9 @@ async def lifespan(app: FastAPI):
     logger = get_logger()
     logger.info("Starting ACMG Lingua backend (env={})", cfg.environment)
 
-    from src.api.wiring import wire_dependencies, dispose_engine
+    import src.api.wiring as _wiring
+
+    wire_dependencies = _wiring.wire_dependencies
     from src.utils.health import check_all_connections
 
     wire_dependencies()
@@ -101,7 +103,8 @@ async def lifespan(app: FastAPI):
     except Exception:
         logger.warning("Phase4ServiceFactory close failed during shutdown")
     finally:
-        await dispose_engine()
+        await _wiring.dispose_redis()
+        await _wiring.dispose_engine()
         logger.info("ACMG Lingua backend stopped")
 
 
