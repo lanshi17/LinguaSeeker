@@ -141,7 +141,8 @@ class TestFirecrawlAdapter:
         assert "firecrawl" in result.warnings[0].lower()
 
     @pytest.mark.asyncio
-    async def test_scrape_links_extracts_pdf_urls(self):
+    async def test_scrape_links_json_mode_extracts_metadata(self):
+        """JSON mode returns structured title, DOI, and PDF URL."""
         from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.web_search.firecrawl_adapter import (
             FirecrawlAdapter,
         )
@@ -149,12 +150,91 @@ class TestFirecrawlAdapter:
         adapter = FirecrawlAdapter(api_key="fc-test-key")
 
         mock_scrape_result = {
-            "markdown": '[Download PDF](https://journal.com/paper.pdf)\n<a href="https://journal.com/full.pdf">Full text</a>',
+            "json": {
+                "title": "BRCA1 Mutation in Breast Cancer",
+                "doi": "10.1234/example",
+                "pdf_url": "https://journal.com/paper.pdf",
+                "other_links": ["https://journal.com/supplementary.pdf"],
+            },
             "metadata": {"source_url": "https://journal.com/article/1"},
         }
 
         with patch.object(adapter, "_client", new_callable=MagicMock) as mock_client:
             mock_client.scrape = AsyncMock(return_value=mock_scrape_result)
+            links = await adapter.scrape_links("https://journal.com/article/1")
+
+        assert len(links) == 2
+        assert links[0].url == "https://journal.com/paper.pdf"
+        assert links[0].doi == "10.1234/example"
+        assert links[0].title == "BRCA1 Mutation in Breast Cancer"
+        assert links[0].source == "firecrawl-json"
+        assert links[1].url == "https://journal.com/supplementary.pdf"
+
+    @pytest.mark.asyncio
+    async def test_scrape_links_json_doi_only(self):
+        """JSON mode with DOI but no PDF URL falls back to DOI landing page."""
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.web_search.firecrawl_adapter import (
+            FirecrawlAdapter,
+        )
+
+        adapter = FirecrawlAdapter(api_key="fc-test-key")
+
+        mock_scrape_result = {
+            "json": {
+                "title": "Some Paper",
+                "doi": "10.5678/no-pdf",
+                "pdf_url": None,
+                "other_links": [],
+            },
+        }
+
+        with patch.object(adapter, "_client", new_callable=MagicMock) as mock_client:
+            mock_client.scrape = AsyncMock(return_value=mock_scrape_result)
+            links = await adapter.scrape_links("https://journal.com/article/2")
+
+        assert len(links) == 1
+        assert links[0].url == "https://doi.org/10.5678/no-pdf"
+        assert links[0].doi == "10.5678/no-pdf"
+        assert links[0].source == "firecrawl-json-doi"
+
+    @pytest.mark.asyncio
+    async def test_scrape_links_falls_back_to_markdown(self):
+        """Falls back to markdown+regex when JSON mode returns empty."""
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.web_search.firecrawl_adapter import (
+            FirecrawlAdapter,
+        )
+
+        adapter = FirecrawlAdapter(api_key="fc-test-key")
+
+        json_result = {"json": {}, "metadata": {}}
+        markdown_result = {
+            "markdown": '[Download PDF](https://journal.com/paper.pdf)\n<a href="https://journal.com/full.pdf">Full text</a>',
+            "metadata": {"source_url": "https://journal.com/article/1"},
+        }
+
+        with patch.object(adapter, "_client", new_callable=MagicMock) as mock_client:
+            mock_client.scrape = AsyncMock(side_effect=[json_result, markdown_result])
+            links = await adapter.scrape_links("https://journal.com/article/1")
+
+        assert len(links) >= 1
+        assert any(".pdf" in link.url for link in links)
+
+    @pytest.mark.asyncio
+    async def test_scrape_links_falls_back_on_json_error(self):
+        """Falls back to markdown when JSON mode raises an exception."""
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.web_search.firecrawl_adapter import (
+            FirecrawlAdapter,
+        )
+
+        adapter = FirecrawlAdapter(api_key="fc-test-key")
+
+        markdown_result = {
+            "markdown": '[PDF](https://journal.com/paper.pdf)',
+            "metadata": {},
+        }
+
+        with patch.object(adapter, "_client", new_callable=MagicMock) as mock_client:
+            mock_client.scrape = AsyncMock(side_effect=[Exception("JSON mode not available"), markdown_result])
             links = await adapter.scrape_links("https://journal.com/article/1")
 
         assert len(links) >= 1
