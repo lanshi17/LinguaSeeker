@@ -72,7 +72,7 @@ async def lifespan(app: FastAPI):
     cfg = get_config()
     setup_logging(environment=cfg.environment, debug=cfg.debug)
     logger = get_logger()
-    logger.info("Starting ACMG-Lingua backend (env={})", cfg.environment)
+    logger.info("Starting {{ app_name }} backend (env={})", cfg.environment)
 
     import src.api.wiring as _wiring
 
@@ -111,7 +111,7 @@ async def lifespan(app: FastAPI):
             await _wiring.dispose_engine()
         except Exception:
             logger.warning("PostgreSQL engine disposal failed during shutdown")
-        logger.info("ACMG-Lingua backend stopped")
+        logger.info("{{ app_name }} backend stopped")
 
 
 class HealthResponse(BaseModel):
@@ -131,9 +131,9 @@ def create_app() -> FastAPI:
     cfg = get_config()
 
     _app = FastAPI(
-        title="ACMG-Lingua Backend",
-        description="Variant classification and evidence interpretation platform",
-        version="0.1.0",
+        title="{{ app_name }} Backend",
+        description="{{ description }}",
+        version="{{ project_version }}",
         lifespan=lifespan,
     )
 

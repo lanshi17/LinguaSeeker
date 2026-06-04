@@ -186,3 +186,5 @@
 [2026-06-04] [Review fixes v2: restore --concurrency via process_one_pdf+semaphore; add CatalogExtractionError→RetryablePhaseError test] [done]
 [2026-06-04] [fix: guard lifespan disposal calls with try/except for exception safety — Redis/PG disposal now independent, LIFO order verified, 5 tests passing] [done]
 [2026-06-04] Redis connection manager — centralized async client singleton with connection.py builder, wiring.py lifecycle, lifespan teardown, health check refactor, __init__.py exports, README docs [done]
+[2026-06-04] [Benchmark refactor: delegate to online_acquisition_workflow, include Firecrawl] [DONE]
+[2026-06-04] [Rett download: JSON config support + firecrawl-py dependency] [DONE]

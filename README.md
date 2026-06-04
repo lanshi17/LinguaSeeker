@@ -1,6 +1,6 @@
-# ACMG Lingua
+# ACMG-Lingua
 
-ACMG variant classification and interpretation platform.
+Variant classification and evidence interpretation platform
 
 ## Tech Stack
 
@@ -8,9 +8,10 @@ ACMG variant classification and interpretation platform.
 |-------|-----------|
 | Frontend | Next.js 15, React 18, TypeScript, Tailwind CSS, Zustand, React Query |
 | Backend | Python 3.12+, FastAPI, SQLAlchemy, Alembic, Celery |
-| Native I/O | Rust (PyO3 extension via `backend/libs/rust-io/`) |
+| Native I/O | Rust (PyO3 extension via `backend/libs/`) |
 | Database | PostgreSQL 16, Redis 8.0 |
 | Infra | Docker Compose |
+
 
 ## Project Structure
 
@@ -19,7 +20,7 @@ ACMG variant classification and interpretation platform.
 ├── backend/            # FastAPI application
 │   ├── app/            # Application core (api, models, schemas, services, tasks, utils)
 │   ├── alembic/        # Database migrations
-│   ├── libs/rust-io/   # PyO3 native extension
+│   ├── libs/           # PyO3 native extensions (rust-io, files-io, net-io)
 │   └── tests/          # Backend tests (pytest)
 ├── frontend/           # Next.js application
 │   ├── app/            # App Router pages
@@ -46,7 +47,7 @@ ACMG variant classification and interpretation platform.
 - Docker & Docker Compose
 - Node.js 18+ (managed via `nvm`)
 - Python 3.12+ (managed via `uv`)
-- Rust toolchain (for native I/O library)
+- Rust toolchain (for native I/O libraries)
 
 ### Run with Docker
 
@@ -66,7 +67,7 @@ docker compose up
 ```bash
 cd backend
 uv pip install -e ".[dev]"
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 
 **Frontend:**
@@ -78,7 +79,7 @@ npm install
 npm run dev
 ```
 
-**Rust native library:**
+**Rust native libraries:**
 
 ```bash
 cd backend/libs/rust-io
@@ -90,9 +91,9 @@ cargo bench
 
 | Command | Description |
 |---------|-------------|
-| `cd backend && ruff check` | Lint backend (Google Python Style) |
-| `cd backend && pytest` | Run all backend tests |
-| `cd backend && pytest tests/path/to/test.py::test_name` | Run a single test |
+| `cd backend && uv run ruff check` | Lint backend (Google Python Style) |
+| `cd backend && uv run pytest` | Run all backend tests |
+| `cd backend && uv run pytest tests/path/to/test.py::test_name` | Run a single test |
 | `cd frontend && npm run lint` | Lint frontend code |
 | `cd frontend && npm run type-check` | TypeScript type check |
 | `cd backend/libs/rust-io && cargo test` | Run Rust tests |

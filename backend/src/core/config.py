@@ -1,10 +1,8 @@
 """Configuration management middleware.
 
-All settings are loaded from ``.env.local`` / ``.env`` / environment variables
-via pydantic-settings. Preferred env prefixes are ``FAST_LLM_*`` and
-``REASONING_LLM_*``. Legacy ``LLM_*`` / ``REASONING_LLM_*`` variables remain
-supported as fallbacks. Nested domain models are constructed from the resolved
-flat fields by a ``model_validator``.
+Settings are loaded from ``config-dev.yaml`` first, then overridden by
+environment variables. Nested domain models are constructed from flat fields
+by a ``model_validator``.
 
     from src.core.config import get_config
 
@@ -29,12 +27,39 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 PGVECTOR_DIMENSION: int = 1024
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 REPO_ROOT = BACKEND_ROOT.parent
-DEFAULT_ENV_FILES = (
-    str(REPO_ROOT / ".env"),
-    str(REPO_ROOT / ".env.local"),
-    str(BACKEND_ROOT / ".env"),
-    str(BACKEND_ROOT / ".env.local"),
-)
+# ── YAML config loader ──────────────────────────────────────────────────
+
+def _load_yaml_config() -> None:
+    """Load config-dev.yaml and set as env vars (env vars take precedence).
+    
+    If config-dev.yaml exists in backend/, load it and convert all keys to
+    uppercase. Set as environment variables only if not already set, allowing
+    env vars to override YAML values.
+    """
+    import os
+    try:
+        import yaml
+    except ImportError:
+        return  # pyyaml not available, skip YAML loading
+    
+    config_path = BACKEND_ROOT / "config-dev.yaml"
+    if not config_path.exists():
+        return
+    
+    with open(config_path) as f:
+        data = yaml.safe_load(f) or {}
+    
+    for key, value in data.items():
+        env_key = str(key).upper()
+        # Only set if not already in environment (preserve env var precedence)
+        if env_key not in os.environ:
+            os.environ[env_key] = str(value)
+
+
+# Load YAML config on module import (before Settings instantiation)
+_load_yaml_config()
+
+
 
 
 # ── Nested domain models ────────────────────────────────────────────────
@@ -141,7 +166,7 @@ class PostgreSQLConfig(BaseModel):
 
     host: str = "127.0.0.1"
     port: int = 5432
-    db: str = "acmg_ps3"
+    db: str = "acmg_lingua"
     schema_: str = "acmg_app"
     user: str = ""
     password: str = ""
@@ -214,7 +239,7 @@ class SMTPConfig(BaseModel):
 
 
 class Settings(BaseSettings):
-    """Root configuration.  Loaded once from env / ``.env`` files.
+    """Root configuration.  Loaded once from config-dev.yaml and env vars.
 
     Flat ``llm_*`` / ``mt_*`` / … fields are populated automatically by
     pydantic-settings.  The nested domain models (``self.llm``, ``self.mt``, …)
@@ -222,8 +247,6 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=DEFAULT_ENV_FILES,
-        env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
     )
@@ -335,7 +358,7 @@ class Settings(BaseSettings):
 
     postgres_host: str = "127.0.0.1"
     postgres_port: int = 5432
-    postgres_db: str = "acmg_ps3"
+    postgres_db: str = "acmg_lingua"
     postgres_schema: str = "acmg_app"
     postgres_user: str = ""
     postgres_password: str = ""

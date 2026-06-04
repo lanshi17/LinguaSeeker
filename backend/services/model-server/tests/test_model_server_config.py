@@ -40,17 +40,10 @@ def test_vlm_config_empty_by_default(monkeypatch):
     assert cfg.vlm_model_id == ""
 
 
-def test_env_files_are_resolved_from_project_roots():
-    from pathlib import Path
-
+def test_no_env_files_configured():
+    """Settings no longer uses env_file; config comes from config-dev.yaml."""
     from app.config import Settings
 
-    env_files = tuple(Path(path) for path in Settings.model_config["env_file"])
-    backend_root = Path(__file__).resolve().parents[3]
-    service_root = Path(__file__).resolve().parents[1]
-
-    assert all(path.is_absolute() for path in env_files)
-    assert backend_root / ".env.local" in env_files
-    assert backend_root / ".env" in env_files
-    assert service_root / ".env.local" in env_files
-    assert service_root / ".env" in env_files
+    env_file = Settings.model_config.get("env_file")
+    # env_file should not be configured — YAML is the source of truth
+    assert env_file is None

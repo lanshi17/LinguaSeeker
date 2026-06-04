@@ -114,12 +114,6 @@ _exclude:
   - "backend/libs/net-io/target"
   - "backend/libs/net-io/Cargo.lock"
 
-  # ── Sensitive / local config ─────────────────────────────────────
-  - ".env"
-  - ".env.local"
-  - ".env.*.local"
-  - "**/.env"
-  - "**/.env.local"
 
   # ── Runtime directories ──────────────────────────────────────────
   - "logs"
@@ -155,11 +149,24 @@ _exclude:
 
   # ── Un-templated originals (replaced by .jinja versions) ─────────
   - "README.md"
+  - ".env.example"
+  - "docker-compose.yml"
+  - "backend/config-dev.yaml"
   - "backend/pyproject.toml"
   - "backend/.env.example"
+  - "backend/app/main.py"
+  - "backend/services/model-server/main.py"
   - "backend/src/core/config.py"
+  - "backend/src/utils/exceptions.py"
+  - "backend/libs/rust-io/Cargo.toml"
+  - "backend/libs/rust-io/pyproject.toml"
+  - "backend/libs/files-io/Cargo.toml"
+  - "backend/libs/net-io/Cargo.toml"
+  - "database/alembic.ini"
+  - "database/migrations/env.py"
+  - "database/config/.env.example"
   - "frontend/package.json"
-  - "docker-compose.yml"
+  - "frontend/.nvmrc"
 
   # ── Copier's own artifacts ───────────────────────────────────────
   - ".copier-answers.yml"

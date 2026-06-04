@@ -22,12 +22,6 @@ venv/
 target/
 Cargo.lock
 
-# Environment
-.env
-.env.local
-.env.development
-.env.production
-.env.*.local
 
 # IDE
 .vscode/
@@ -54,8 +48,7 @@ htmlcov/
 .old_version
 
 # Database config (may contain credentials)
-database/config/.env
-database/config/.env.*
+database/config/database/config/.env.*
 !database/config/.env.example
 
 # Misc
@@ -85,3 +78,9 @@ benchmark/pipeline/input/*
 
 # Copier
 .copier-answers.yml
+
+# Local dev config (may contain credentials)
+backend/config-dev.yaml
+copier_defaults.yaml
+database/config/.env.neo4j
+benchmark/literature_acquisition/downloads/*.jsonl

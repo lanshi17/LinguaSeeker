@@ -23,7 +23,7 @@ from src.dao.postgresql.models import Base
 SQLITE_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 # PostgreSQL test DB for integration tests (requires running PostgreSQL)
-POSTGRESQL_TEST_URL = "postgresql+asyncpg://postgres:test_password@localhost:5432/acmg_ps3_test"
+POSTGRESQL_TEST_URL = "postgresql+asyncpg://postgres:test_password@localhost:5432/acmg_lingua_test"
 
 
 @pytest.fixture(scope="session")
@@ -80,7 +80,7 @@ def _cleanup_test_artifacts():
 async def postgresql_db_session() -> AsyncGenerator[AsyncSession, None]:
     """Create a session against the PostgreSQL test database.
 
-    Requires: createdb acmg_ps3_test && alembic upgrade head
+    Requires: createdb acmg_lingua_test && alembic upgrade head
     """
     engine = create_async_engine(POSTGRESQL_TEST_URL, echo=False)
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
