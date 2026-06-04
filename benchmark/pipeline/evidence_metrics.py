@@ -15,9 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.dao.postgresql.models import (
-    CanonicalEvidenceItem,
     EvidenceEntityBinding,
-    ProcessingRun,
     RunEvidenceItem,
 )
 
@@ -47,15 +45,12 @@ class EvidenceMetrics:
 async def query_evidence_metrics(
     session_factory: async_sessionmaker[AsyncSession],
     processing_run_id: str | uuid.UUID,
-    source_document_id: str | uuid.UUID | None = None,
 ) -> EvidenceMetrics:
     """Query PG for evidence metrics after a pipeline run.
 
     Args:
         session_factory: Async session factory (same pattern as Phase 3 adapter).
         processing_run_id: The run to measure.
-        source_document_id: If known, used for canonical_evidence query. Falls back
-            to looking it up from the processing_run record.
 
     Returns:
         EvidenceMetrics with aggregated counts and breakdowns.
@@ -63,15 +58,6 @@ async def query_evidence_metrics(
     run_id = uuid.UUID(str(processing_run_id)) if isinstance(processing_run_id, str) else processing_run_id
 
     async with session_factory() as session:
-        # Resolve source_document_id if not provided
-        doc_id = source_document_id
-        if doc_id is None:
-            stmt = select(ProcessingRun.source_document_id).where(
-                ProcessingRun.processing_run_id == run_id
-            )
-            result = await session.execute(stmt)
-            row = result.scalar_one_or_none()
-            doc_id = uuid.UUID(str(row)) if row is not None else None
 
         # ── run_evidence_items ──
         stmt = (
@@ -125,14 +111,15 @@ async def query_evidence_metrics(
         rows = (await session.execute(stmt)).all()
         status_breakdown: dict[str, int] = {r.status: r.cnt for r in rows}
 
-        # ── canonical_evidence_items ──
-        canonical_count = 0
-        if doc_id is not None:
-            stmt = (
-                select(func.count(CanonicalEvidenceItem.canonical_evidence_id))
-                .where(CanonicalEvidenceItem.source_document_id == doc_id)
+        # ── canonical_evidence_items (distinct canonical IDs linked to this run) ──
+        stmt = (
+            select(func.count(func.distinct(RunEvidenceItem.canonical_evidence_id)))
+            .where(
+                RunEvidenceItem.processing_run_id == run_id,
+                RunEvidenceItem.canonical_evidence_id.isnot(None),
             )
-            canonical_count = (await session.execute(stmt)).scalar_one() or 0
+        )
+        canonical_count: int = (await session.execute(stmt)).scalar_one() or 0
 
         # ── evidence_entity_bindings (join through run_evidence_items) ──
         stmt = (
