@@ -1,7 +1,10 @@
 """Rett syndrome literature acquisition benchmark.
 
 Usage:
-    uv run python benchmark/literature_acquisition/rett_download.py [--dry-run] [--query-file FILE]
+    uv run python benchmark/literature_acquisition/rett_download.py download [--config rett_config.json] [--dry-run]
+    uv run python benchmark/literature_acquisition/rett_download.py download [--query-file queries.txt] [--dry-run]
+    uv run python benchmark/literature_acquisition/rett_download.py analyze [report.json]
+    uv run python benchmark/literature_acquisition/rett_download.py seed-queries [--force]
 
 All acquisition logic delegates to online_acquisition_workflow (API + Firecrawl).
 """
@@ -11,15 +14,12 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import re
 import sys
 import time
-from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import httpx
 from loguru import logger
 
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
@@ -27,6 +27,7 @@ from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.w
 )
 
 MODULE_DIR = Path(__file__).resolve().parent
+CONFIG_FILE = MODULE_DIR / "rett_config.json"
 QUERY_FILE = MODULE_DIR / "rett_syndrome_queries.txt"
 OUTPUT_FILE = MODULE_DIR / "downloads" / "rett_syndrome_candidates.jsonl"
 REPORT_FILE = MODULE_DIR / "downloads" / "rett_syndrome_report.json"
@@ -73,6 +74,74 @@ def load_queries(path: Path) -> List[str]:
 def save_queries(path: Path, queries: List[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(queries) + "\n", encoding="utf-8")
+
+
+@dataclass
+class ConfigQuery:
+    """A single query entry parsed from the JSON config."""
+    text: str
+    lang_code: str
+    lang_name: str
+
+
+@dataclass
+class ConfigData:
+    """Parsed config: flattened queries + search parameters."""
+    queries: List[ConfigQuery]
+    max_results: int
+    concurrency: int
+    download_dir: str
+    literature_types: List[str]
+    task_name: str
+    target_per_lang: Dict[str, int]
+
+
+def load_config(path: Path) -> ConfigData:
+    """Load rett_config.json — flatten per-language queries into a single list.
+
+    Config structure::
+
+        {
+          "candidate_limit": 10,
+          "download_dir": "downloads/rett",
+          "literature_types": ["case_report"],
+          "concurrency": 3,
+          "target_per_lang": { "zh": 10, "en": 10, ... },
+          "languages": {
+            "zh": { "name": "Chinese", "queries": ["...", ...] },
+            "en": { "name": "English", "queries": ["...", ...] },
+            ...
+          }
+        }
+    """
+    with open(path, encoding="utf-8") as f:
+        raw = json.load(f)
+
+    max_results = raw.get("candidate_limit", 10)
+    concurrency = raw.get("concurrency", 3)
+    download_dir = raw.get("download_dir", "downloads/rett")
+    literature_types = raw.get("literature_types", ["case_report"])
+    target_per_lang = raw.get("target_per_lang", {})
+    task_name = raw.get("disease", "rett_syndrome_acquisition")
+
+    flat: List[ConfigQuery] = []
+    languages_section = raw.get("languages", {})
+    for lang_code, lang_cfg in languages_section.items():
+        lang_name = lang_cfg.get("name", lang_code)
+        for text in lang_cfg.get("queries", []):
+            text = text.strip()
+            if text:
+                flat.append(ConfigQuery(text=text, lang_code=lang_code, lang_name=lang_name))
+
+    return ConfigData(
+        queries=flat,
+        max_results=max_results,
+        concurrency=concurrency,
+        download_dir=download_dir,
+        literature_types=literature_types,
+        task_name=task_name,
+        target_per_lang=target_per_lang,
+    )
 
 
 DEFAULT_SEED_QUERIES = [
@@ -125,15 +194,21 @@ async def _run_one_query(
     download_path: str,
     *,
     dry_run: bool,
+    limit: int = 10,
+    language: str = "auto",
+    literature_types: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """Run a single query through the module's workflow."""
     action = "search" if dry_run else "download"
     payload: Dict[str, Any] = {
         "action": action,
         "query": query,
-        "limit": 10,
+        "limit": limit,
+        "language": language,
         "download_path": download_path,
     }
+    if literature_types:
+        payload["literature_types"] = literature_types
 
     try:
         result = await asyncio.wait_for(
@@ -155,6 +230,7 @@ async def cmd_download(
     *,
     dry_run: bool = False,
     download_dir: Optional[str] = None,
+    config: Optional[ConfigData] = None,
 ) -> None:
     stats = DownloadStats()
     stats.total_queries = len(queries)
@@ -164,18 +240,33 @@ async def cmd_download(
     else:
         logger.info("Download mode enabled.")
 
-    out_dir = Path(download_dir) if download_dir else MODULE_DIR / "downloads" / "rett_syndrome"
+    out_dir = Path(download_dir) if download_dir else (
+        MODULE_DIR / config.download_dir if config else MODULE_DIR / "downloads" / "rett_syndrome"
+    )
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    limit = config.max_results if config else 10
+    literature_types = config.literature_types if config else []
+
+    # Build (query_text, lang_code, lang_name) list
+    if config:
+        entries = [(cq.text, cq.lang_code, cq.lang_name) for cq in config.queries]
+    else:
+        entries = [(q, "auto", "auto") for q in queries]
+
     logger.info("Starting Rett syndrome literature benchmark")
-    logger.info(f"Queries: {len(queries)}, Download dir: {out_dir}")
+    logger.info(f"Queries: {len(entries)}, limit: {limit}, Download dir: {out_dir}")
 
     with open(OUTPUT_FILE, "a", encoding="utf-8") as out_f:
-        for i, query in enumerate(queries, 1):
-            logger.info(f"[{i}/{len(queries)}] query: {query}")
+        for i, (query, lang_code, lang_name) in enumerate(entries, 1):
+            logger.info(f"[{i}/{len(entries)}] [{lang_name}] query: {query}")
             stats.total_queries = i
 
-            entry = await _run_one_query(query, str(out_dir), dry_run=dry_run)
+            entry = await _run_one_query(
+                query, str(out_dir), dry_run=dry_run,
+                limit=limit, language=lang_code,
+                literature_types=literature_types,
+            )
 
             # Collect candidates (from search-only or full workflow)
             candidates = entry.get("candidate_links", [])
@@ -342,8 +433,10 @@ def main() -> None:
     p_dl = sub.add_parser("download", help="Run literature download benchmark")
     p_dl.add_argument("--dry-run", action="store_true",
                       help="Search only, do not download files")
-    p_dl.add_argument("--query-file", type=str, default=str(QUERY_FILE),
-                      help="Path to query file (one query per line)")
+    p_dl.add_argument("--config", type=str, default=None,
+                      help="Path to JSON config file (e.g. rett_config.json)")
+    p_dl.add_argument("--query-file", type=str, default=None,
+                      help="Path to plain text query file (one query per line)")
     p_dl.add_argument("--download-dir", type=str, default=None,
                       help="Override download directory")
 
@@ -357,15 +450,44 @@ def main() -> None:
     if args.cmd == "seed-queries":
         cmd_seed_queries(args.force)
     elif args.cmd == "download":
-        qfile = Path(args.query_file)
-        if not qfile.exists():
-            logger.info("Query file not found. Generating seed queries...")
-            cmd_seed_queries(force=False)
-        queries = load_queries(qfile)
+        cfg_data: Optional[ConfigData] = None
+        queries: List[str] = []
+
+        if args.config:
+            cfg_path = Path(args.config)
+            if not cfg_path.exists():
+                logger.error(f"Config file not found: {cfg_path}")
+                sys.exit(1)
+            cfg_data = load_config(cfg_path)
+            queries = [cq.text for cq in cfg_data.queries]
+            logger.info(f"Loaded {len(queries)} queries from config: {cfg_path}")
+        elif args.query_file:
+            qfile = Path(args.query_file)
+            if not qfile.exists():
+                logger.info("Query file not found. Generating seed queries...")
+                cmd_seed_queries(force=False)
+            queries = load_queries(qfile)
+        else:
+            # Default: try config first, then query file
+            if CONFIG_FILE.exists():
+                cfg_data = load_config(CONFIG_FILE)
+                queries = [cq.text for cq in cfg_data.queries]
+                logger.info(f"Loaded {len(queries)} queries from default config: {CONFIG_FILE}")
+            else:
+                if not QUERY_FILE.exists():
+                    cmd_seed_queries(force=False)
+                queries = load_queries(QUERY_FILE)
+
         if not queries:
-            logger.error(f"No queries found in {qfile}")
+            logger.error("No queries found")
             sys.exit(1)
-        asyncio.run(cmd_download(queries, dry_run=args.dry_run, download_dir=args.download_dir))
+
+        asyncio.run(cmd_download(
+            queries,
+            dry_run=args.dry_run,
+            download_dir=args.download_dir,
+            config=cfg_data,
+        ))
     elif args.cmd == "analyze":
         cmd_analyze(Path(args.path) if args.path else None, llm_classify=args.llm_classify)
 
