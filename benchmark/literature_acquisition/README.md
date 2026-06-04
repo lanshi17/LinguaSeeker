@@ -1,66 +1,125 @@
 # Benchmark: literature_acquisition
 
 Overview
-- This directory contains benchmarking utilities for the literature acquisition component. It includes sample downloads, runner scripts, and generated reports used to evaluate coverage and performance across languages, document types, and provider methods.
+- Benchmarking utilities for the literature acquisition component. Evaluates coverage and performance across languages, document types, and provider methods.
+- Both `benchmark.py` and `rett_download.py` use the project's **online acquisition module** (`backend/src/core/.../online_acquisition/`) for multi-provider search and PDF download.
 
-Prerequisites
-- Python environment (use the repository's recommended `uv` manager when available).
-- Network access is required for online downloads when using remote providers.
+## Architecture
 
-Quick start
-1. From the repository root, run the benchmark via the project wrapper:
+```
+benchmark.py / rett_download.py
+    │
+    ├── search_parallel / search_multilingual  (search_service.py)
+    │       └── search_provider → net_io.fetch_one  (gateway.py → Rust)
+    │
+    └── download_file_from_url  (gateway.py)
+            ├── net_io.download_file  (Rust, 30s timeout)
+            └── httpx.AsyncClient  (fallback, 60s)
+```
+
+- **Search**: Multi-provider parallel search with language-based routing (`LANG_PROVIDER_MATRIX`), provider health tracking, and deduplication.
+- **Download**: Dual-tier download — Rust `net_io` first (fast, built-in retry), `httpx` fallback. Handles HTML→PDF redirect, `%PDF` magic-byte validation.
+- **Classification**: Keyword-based literature type classifier (7 languages: en, zh, ja, ko, es, pt, ru).
+
+## Prerequisites
+
+- Python environment managed by `uv` (see project CLAUDE.md).
+- Network access for online downloads.
+- Rust extensions built (`maturin develop --release` in `backend/libs/net-io/`).
+- Environment variables in `backend/.env.local` for LLM (optional, used by domain classification and LLM verification).
+
+## Quick start
+
+### General cancer/genomics benchmark (`benchmark.py`)
+
+Multi-provider search + download across 7 languages (zh, ja, ko, es, pt, ru, en), 20 queries each, targeting 20 files per language.
 
 ```bash
 cd backend
-uv run python -m benchmark.literature_acquisition.benchmark
+uv run python ../benchmark/literature_acquisition/benchmark.py download
+uv run python ../benchmark/literature_acquisition/benchmark.py download --lang zh
+uv run python ../benchmark/literature_acquisition/benchmark.py analyze
+uv run python ../benchmark/literature_acquisition/benchmark.py analyze --llm-classify
 ```
 
-2. For quick debugging you can run directly:
+### Rett syndrome / MECP2 case reports (`rett_download.py`)
+
+Disease-specific multilingual search (12 languages) using `search_multilingual` + PubMed, with SHA256 cross-language dedup and optional LLM verification.
 
 ```bash
 cd backend
-python -m benchmark.literature_acquisition.benchmark
+
+# Default run
+uv run python ../benchmark/literature_acquisition/rett_download.py
+
+# Single language, dry run
+uv run python ../benchmark/literature_acquisition/rett_download.py --lang en --dry-run
+
+# Resume from previous report
+uv run python ../benchmark/literature_acquisition/rett_download.py --resume downloads/rett/report_*.json
 ```
 
-After the run, downloaded PDFs and a `report.json` file will be written under `benchmark/literature_acquisition/downloads/`.
+## Files
 
-Main files
-- `benchmark/literature_acquisition/benchmark.py` — benchmark runner (entry point).
-- `benchmark/literature_acquisition/downloads/report.json` — example output report containing aggregated statistics and per-file records.
-- `benchmark/literature_acquisition/downloads/` — storage for downloaded PDFs and the `report.json` produced by the runner.
+| File | Description |
+|---|---|
+| `benchmark.py` | General cancer/genomics benchmark runner (download + analyze) |
+| `rett_download.py` | Rett/MECP2 specialized multilingual case report downloader |
+| `rett_config.json` | Configuration for rett_download (disease, languages, queries, targets) |
+| `downloads/` | Downloaded PDFs and report JSON files |
+| `log/` | Rotating log files |
 
-`report.json` field reference
-- `total_attempted`: number of attempted downloads.
-- `total_downloaded`: number of successful downloads.
-- `by_lang`: map of language code → successful downloads.
-- `by_type`: map of literature type (e.g. `case_report`, `functional`, `sequencing`, `unclassified`) → counts.
-- `by_method`: map of provider/method → counts (e.g. `openalex_oa`).
-- `elapsed_sec`: total elapsed time for the benchmark run in seconds.
-- `records`: array of per-download records. Typical fields per record:
-  - `lang` (string)
-  - `literature_type` (string)
-  - `file_path` (string, relative to repo)
-  - `file_size` (integer, bytes)
-  - `success` (boolean)
-  - `elapsed_ms` (integer)
-  - `source_url` (string)
+## report.json field reference
 
-Common operations
-- Show a quick summary with `jq`:
+### benchmark.py report
+
+- `total_attempted`: number of attempted downloads
+- `total_downloaded`: number of successful downloads
+- `by_lang`: map of language code → successful downloads
+- `by_type`: map of literature type (`case_report`, `functional`, `sequencing`, `unclassified`) → counts
+- `by_method`: map of provider method → counts (e.g. `crossref`, `pmc`, `openalex`)
+- `elapsed_sec`: total elapsed time (seconds)
+- `records`: array of per-download records
+
+### rett_download.py report
+
+- `config_file`: path to config JSON
+- `disease`: disease name
+- `target_per_lang`: per-language target count
+- `by_source`: map of provider source → counts
+- `records[].query`: search query used
+- `records[].source`: provider that found the result
+
+## Common operations
 
 ```bash
-cat backend/benchmark/literature_acquisition/downloads/report.json | jq '.total_downloaded, .by_lang'
+# Quick summary
+cat downloads/report.json | jq '.total_downloaded, .by_lang, .by_method'
+
+# Largest PDFs
+find downloads/ -type f -name "*.pdf" -printf '%s %p\n' | sort -nr | head -20
+
+# Rett: check latest report
+ls -lt downloads/rett/report_*.json | head -1
+cat downloads/rett/report_*.json | jq 'sort_by(-.total_downloaded) | .[0] | {total_downloaded, by_lang, by_source}'
 ```
 
-- Find the largest downloaded PDFs:
+## Provider coverage
 
-```bash
-find backend/benchmark/literature_acquisition/downloads -type f -name "*.pdf" -printf '%s %p\n' | sort -nr | head -n 20
-```
+`benchmark.py` uses `search_parallel` which searches providers from `LANG_PROVIDER_MATRIX`:
 
-Notes and extensions
-- To change provider, concurrency, timeouts or other runtime settings, edit `benchmark.py` and follow the in-file configuration comments.
-- For reproducible results, run the benchmark on a stable network and consistent hardware.
-- Consider adding a CI workflow if you want scheduled or automated benchmark runs; I can help scaffold a GitHub Actions job that runs the benchmark and stores `report.json` as an artifact.
+| Language | Providers |
+|---|---|
+| zh | crossref, unpaywall, doaj, pmc |
+| ja | jstage, cinii, crossref, unpaywall, doaj, pmc |
+| ko | crossref, unpaywall, doaj |
+| es, pt | scielo, crossref, unpaywall |
+| en | pmc, crossref, arxiv, biorxiv, medrxiv, openaire, base, core, unpaywall, doaj |
 
-If you would like a bilingual README (EN + ZH), an English-only CI workflow, or automatic report summarization, tell me which option you prefer and I will add it.
+`rett_download.py` uses `search_multilingual` (sequential, stops early at target) + PubMed (parallel).
+
+## Notes
+
+- Both scripts use `ProviderHealthTracker` to deprioritize unhealthy providers automatically.
+- `download_file_from_url` validates PDFs via `%PDF` magic bytes and handles HTML→PDF redirect.
+- For reproducible results, run on a stable network and consistent hardware.

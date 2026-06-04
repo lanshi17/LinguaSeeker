@@ -11,9 +11,6 @@ Usage (run from project root):
     # Single language test
     uv run --directory backend python ../benchmark/literature_acquisition/rett_download.py --lang en --dry-run
 
-    # LLM verification mode: download all → LLM checks each PDF for case report + variant
-    uv run --directory backend python ../benchmark/literature_acquisition/rett_download.py --llm-verify
-
     # Override target count
     uv run --directory backend python ../benchmark/literature_acquisition/rett_download.py --target 10
 
@@ -34,7 +31,6 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from urllib.parse import urljoin
 
 # Ensure backend/src is importable when run from project root.
 # The uv-managed venv already has all deps; we just need the source path.
@@ -43,11 +39,7 @@ _BACKEND_SRC = _PROJECT_ROOT / "backend" / "src"
 if str(_BACKEND_SRC) not in sys.path:
     sys.path.insert(0, str(_BACKEND_SRC.parent))  # insert backend/
 
-import httpx
-import fitz
 from loguru import logger
-
-from src.core.config import get_config
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.contracts import (
     OnlineAcquisitionItem,
 )
@@ -56,6 +48,9 @@ from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.l
 )
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.search_service import (
     search_multilingual,
+)
+from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.gateway import (
+    download_file_from_url,
 )
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.pubmed_service import (
     get_pubmed_service,
@@ -97,18 +92,6 @@ def setup_logging(log_dir: Path = LOG_DIR, level: str = "INFO") -> None:
 # ═══════════════════════════════════════════════════════════════════════════
 
 @dataclass
-class LLMVerification:
-    """Result of LLM-based case report verification."""
-    is_case_report: bool = False
-    confidence: str = "low"  # high / medium / low
-    reasoning: str = ""
-    has_variant_report: bool = False
-    variant_details: str = ""
-    model: str = ""
-    error: str = ""
-
-
-@dataclass
 class DownloadRecord:
     lang: str
     query: str
@@ -123,7 +106,6 @@ class DownloadRecord:
     source_url: str = ""
     error: str = ""
     elapsed_ms: int = 0
-    llm_verification: dict | None = None  # LLMVerification as dict after verification pass
 
 
 @dataclass
@@ -175,53 +157,6 @@ def _normalize_record(raw: dict) -> dict:
     out.setdefault("error", out.get("error", ""))
     out.setdefault("elapsed_ms", int(out.get("elapsed_ms", 0)))
     return out
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# PDF download (reused from benchmark.py)
-# ═══════════════════════════════════════════════════════════════════════════
-
-async def _download_from_url(url: str, dest: Path, timeout: int = 30) -> bool:
-    """Download PDF from URL; scan HTML for PDF links if direct hit misses."""
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        async with httpx.AsyncClient(
-            timeout=timeout, follow_redirects=True, verify=False,
-            headers={
-                "User-Agent": (
-                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                    "Chrome/124.0 ACMG-Lingua/1.0"
-                ),
-            },
-        ) as client:
-            r = await client.get(url)
-            if r.content[:4] == b"%PDF":
-                dest.write_bytes(r.content)
-                logger.debug(f"Wrote PDF: {dest} ({len(r.content)} bytes)")
-                return True
-            if b"<html" in r.content[:2048].lower():
-                pdf_links = re.findall(
-                    r'href=["\']([^"\']*(?:\.pdf|/bitstream/|download.*?pdf)[^"\']*)["\']',
-                    r.text, re.IGNORECASE,
-                )
-                seen: set[str] = set()
-                for link in pdf_links[:3]:
-                    abs_url = urljoin(str(r.url), link)
-                    if abs_url in seen:
-                        continue
-                    seen.add(abs_url)
-                    try:
-                        r2 = await client.get(abs_url)
-                        if r2.content[:4] == b"%PDF":
-                            dest.write_bytes(r2.content)
-                            logger.debug(f"Wrote PDF: {dest} ({len(r2.content)} bytes) via {abs_url}")
-                            return True
-                    except Exception:
-                        logger.debug(f"Failed nested PDF link: {abs_url}")
-                        continue
-    except Exception:
-        logger.debug(f"Download exception for URL: {url}")
-    return False
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -343,13 +278,9 @@ async def _process_language(
     dry_run: bool,
     sem: asyncio.Semaphore,
     *,
-    skip_filter: bool = False,
     skip_dois: set[str] | None = None,
 ) -> List[DownloadRecord]:
     """Search + download for one language. Returns list of records.
-
-    When skip_filter=True (--llm-verify mode), all candidates are downloaded
-    regardless of literature_type; LLM verification runs later.
 
     skip_dois: DOIs already attempted in a previous run — skip these
     candidates so incremental re-runs find new papers.
@@ -482,8 +413,8 @@ async def _process_language(
             if lit_type == "unclassified" and _disease_keywords.search(title):
                 lit_type = "case_report"
 
-            # Filter by requested literature types (skip when LLM will verify later)
-            if not skip_filter and literature_types and lit_type not in literature_types:
+            # Filter by requested literature types
+            if literature_types and lit_type not in literature_types:
                 logger.debug(
                     f"[{lang_code}] candidate {cand_idx}: type={lit_type}, "
                     f"not in {literature_types}, skipping"
@@ -510,26 +441,32 @@ async def _process_language(
                 downloaded += 1
                 continue
 
-            # Download PDF — try each URL variant until one succeeds
-            fname = f"{_sanitize(lang_code)}_{_sanitize(title or 'untitled')[:60]}_{cand_idx}.pdf"
-            dest = download_dir / lang_code / fname
+            # Download PDF — try each URL variant via gateway (Rust + httpx dual-tier)
+            fname_stem = f"{_sanitize(lang_code)}_{_sanitize(title or 'untitled')[:60]}_{cand_idx}"
+            download_dir_str = str(download_dir / lang_code)
             ok = False
             used_url = ""
             elapsed = 0
+            dest_path: Optional[str] = None
             for try_url in _urls:
                 t0 = time.monotonic()
-                ok = await _download_from_url(try_url, dest, timeout=timeout_s)
-                elapsed = int((time.monotonic() - t0) * 1000)
-                if ok:
-                    used_url = try_url
-                    break
-                # Remove failed partial download before retry with next URL
-                if dest.exists():
-                    dest.unlink(missing_ok=True)
+                try:
+                    result_path, final_url, warns = await download_file_from_url(
+                        try_url, download_dir_str, fname_stem,
+                    )
+                    elapsed = int((time.monotonic() - t0) * 1000)
+                    if result_path:
+                        ok = True
+                        used_url = final_url or try_url
+                        dest_path = result_path
+                        break
+                except Exception:
+                    elapsed = int((time.monotonic() - t0) * 1000)
+                    logger.debug(f"[{lang_code}] download exception for {try_url}")
 
-            if ok:
+            if ok and dest_path:
                 # SHA256 dedup: skip if same file already downloaded
-                if not await _check_dedup(str(dest), lang_code):
+                if not await _check_dedup(dest_path, lang_code):
                     records.append(DownloadRecord(
                         lang=lang_code, query=query,
                         literature_type=lit_type, title=title, doi=doi,
@@ -539,6 +476,7 @@ async def _process_language(
                     ))
                     continue
 
+                dest = Path(dest_path)
                 file_size = dest.stat().st_size
                 logger.info(
                     f"[{lang_code}] ✓ {downloaded+1}/{target} "
@@ -548,7 +486,7 @@ async def _process_language(
                     lang=lang_code, query=query,
                     literature_type=lit_type, title=title, doi=doi,
                     source=source, provider=cand.get("provider", ""),
-                    success=True, file_path=str(dest),
+                    success=True, file_path=dest_path,
                     file_size=file_size, source_url=used_url,
                     elapsed_ms=elapsed,
                 ))
@@ -573,14 +511,9 @@ async def run(
     lang_filter: Optional[str],
     dry_run: bool,
     *,
-    llm_verify: bool = False,
-    llm_model: str = "",
     resume_report: Optional[Path] = None,
 ) -> DownloadStats:
     """Main orchestration: iterate languages, search, download, classify.
-
-    When llm_verify=True: downloads all candidates (no keyword filter),
-    then runs LLM verification on each PDF to identify true case reports.
 
     When resume_report is set: reads previous report, only re-runs
     languages that haven't met their targets, and merges records.
@@ -600,9 +533,6 @@ async def run(
             # Normalize old-format records (benchmark.py or older runs)
             nr = _normalize_record(r)
             rec = DownloadRecord(**{k: nr[k] for k in DownloadRecord.__dataclass_fields__ if k in nr})
-            # Restore llm_verification if present (may be dict or null)
-            if r.get("llm_verification"):
-                rec.llm_verification = r["llm_verification"]
             prev_records.append(rec)
             if rec.success:
                 prev_downloaded[rec.lang] = prev_downloaded.get(rec.lang, 0) + 1
@@ -684,7 +614,6 @@ async def run(
     logger.info(f"  Literature types: {literature_types or 'all'}")
     logger.info(f"  Download dir: {download_root}")
     logger.info(f"  Dry run: {dry_run}")
-    logger.info(f"  LLM verify: {llm_verify}")
     logger.info("=" * 60)
 
     for lang_code, lang_cfg in lang_map.items():
@@ -710,7 +639,6 @@ async def run(
             timeout_s=timeout_s,
             dry_run=dry_run,
             sem=sem,
-            skip_filter=llm_verify,
             skip_dois=prev_dois if resume_report is not None else None,
         )
         stats.records.extend(records)
@@ -719,17 +647,6 @@ async def run(
         logger.info(
             f"[{lang_code}] {ok_count}/{len(records)} downloaded "
             f"(target: {lang_target})"
-        )
-
-    # ── LLM verification pass (post-download) ────────────────────────────
-    if llm_verify and not dry_run:
-        logger.info(f"\n{'=' * 60}")
-        logger.info(f"  LLM VERIFICATION PASS")
-        logger.info(f"{'=' * 60}")
-        stats.records = await _run_llm_verification_pass(
-            stats.records,
-            timeout_sec=timeout_s,
-            model=llm_model,
         )
 
     # ── Merge previous records from resume ────────────────────────────
@@ -779,211 +696,6 @@ async def run(
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# LLM verification (--llm-verify mode)
-# ═══════════════════════════════════════════════════════════════════════════
-
-def _extract_pdf_text_for_llm(pdf_path: Path, max_pages: int = 3, max_chars: int = 8000) -> str:
-    """Extract plain text from the first pages of a PDF for LLM classification."""
-    try:
-        doc = fitz.open(str(pdf_path))
-    except Exception:
-        return ""
-
-    chunks: list[str] = []
-    try:
-        for i in range(min(max_pages, len(doc))):
-            txt = str(doc[i].get_text("text") or "")
-            txt = re.sub(r"\s+", " ", txt).strip()
-            if txt:
-                chunks.append(txt)
-            if sum(len(c) for c in chunks) >= max_chars:
-                break
-    finally:
-        doc.close()
-
-    return "\n".join(chunks)[:max_chars]
-
-
-def _verify_case_report_via_llm(
-    *,
-    title: str,
-    lang: str,
-    pdf_text: str,
-    timeout_sec: int = 60,
-    model_override: str = "",
-) -> LLMVerification:
-    """Use LLM to verify if a PDF is a case report reporting genetic variants.
-
-    Returns LLMVerification with reasoning for auditability.
-    """
-    cfg = get_config()
-    model = model_override or (cfg.llm.model or "").strip()
-    base_url = (cfg.llm.base_url or "").strip().rstrip("/")
-    api_key = (cfg.llm.api_key or "").strip()
-
-    if not model:
-        return LLMVerification(error="missing_llm_model")
-    if not base_url:
-        return LLMVerification(error="missing_llm_base_url")
-
-    system_prompt = (
-        "You are a medical literature triage assistant specialized in "
-        "Rett syndrome and MECP2-related disorders. Given a paper title "
-        "and PDF excerpt, answer three questions. "
-        "Return strict JSON only with keys: is_case_report (bool), "
-        "confidence (high/medium/low), reasoning (1-2 sentences), "
-        "has_variant_report (bool), variant_details (string or empty).\n\n"
-        "Criteria for is_case_report=true:\n"
-        "- Describes one or more specific patients/clinicians' observations\n"
-        "- Reports clinical features, genetic findings, or treatment outcomes\n"
-        "- Is NOT a review, meta-analysis, guideline, or methods-only paper\n\n"
-        "Criteria for has_variant_report=true:\n"
-        "- Mentions specific genetic variants (e.g. c.502C>T, p.Arg168Ter, "
-        "exon deletion, duplication, frameshift, missense)\n"
-        "- If yes, list the variant(s) in variant_details"
-    )
-    user_prompt = (
-        f"language={lang}\n"
-        f"title={title or 'N/A'}\n\n"
-        "PDF excerpt (first pages):\n"
-        f"{pdf_text[:8000]}"
-    )
-
-    headers = {"Content-Type": "application/json"}
-    if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
-
-    payload: dict[str, Any] = {
-        "model": model,
-        "temperature": 0,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-        "response_format": {"type": "json_object"},
-    }
-
-    # Build endpoint: avoid double /v1 if base_url already includes it
-    api_url = base_url.rstrip("/")
-    if not api_url.endswith("/v1"):
-        api_url = f"{api_url}/v1"
-    api_url = f"{api_url}/chat/completions"
-
-    try:
-        with httpx.Client(timeout=timeout_sec, follow_redirects=True) as client:
-            resp = client.post(api_url, headers=headers, json=payload)
-            resp.raise_for_status()
-            data = resp.json()
-        content = (
-            ((data.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
-        ).strip()
-    except Exception as exc:
-        return LLMVerification(error=f"llm_request_failed:{exc}")
-
-    # Parse JSON response
-    try:
-        parsed = json.loads(content)
-    except json.JSONDecodeError:
-        # Try to extract JSON object from text
-        match = re.search(r"\{[\s\S]*\}", content)
-        if match:
-            try:
-                parsed = json.loads(match.group(0))
-            except json.JSONDecodeError:
-                return LLMVerification(error="llm_invalid_json")
-        else:
-            return LLMVerification(error="llm_invalid_json")
-
-    confidence = str(parsed.get("confidence", "low")).strip().lower()
-    if confidence not in {"high", "medium", "low"}:
-        confidence = "low"
-
-    return LLMVerification(
-        is_case_report=bool(parsed.get("is_case_report", False)),
-        confidence=confidence,
-        reasoning=str(parsed.get("reasoning", ""))[:500],
-        has_variant_report=bool(parsed.get("has_variant_report", False)),
-        variant_details=str(parsed.get("variant_details", ""))[:300],
-        model=model,
-    )
-
-
-async def _run_llm_verification_pass(
-    records: list[DownloadRecord],
-    timeout_sec: int = 60,
-    model: str = "",
-) -> list[DownloadRecord]:
-    """Run LLM verification on all successfully downloaded PDFs.
-
-    Modifies records in-place: sets llm_verification for each PDF.
-    Only records with is_case_report=true + confidence=high remain as success=True.
-    Failed verifications and non-case-reports are marked success=False.
-    """
-    candidates = [r for r in records if r.success and r.file_path]
-    if not candidates:
-        logger.info("LLM verify: no downloaded PDFs to check")
-        return records
-
-    logger.info(f"LLM verify: {len(candidates)} PDFs to check")
-    verified = 0
-    passed = 0
-
-    for r in candidates:
-        pdf_path = Path(r.file_path)
-        if not pdf_path.exists():
-            r.llm_verification = asdict(LLMVerification(error="file_not_found"))
-            r.success = False
-            r.error = "llm_verify:file_not_found"
-            continue
-
-        text = _extract_pdf_text_for_llm(pdf_path)
-        if not text:
-            r.llm_verification = asdict(LLMVerification(error="pdf_text_empty"))
-            r.success = False
-            r.error = "llm_verify:pdf_text_empty"
-            continue
-
-        result = _verify_case_report_via_llm(
-            title=r.title,
-            lang=r.lang,
-            pdf_text=text,
-            timeout_sec=timeout_sec,
-            model_override=model,
-        )
-        r.llm_verification = asdict(result)
-        verified += 1
-
-        if result.error:
-            logger.warning(
-                f"[{r.lang}] LLM verify error for {r.title[:50]}: {result.error}"
-            )
-            r.success = False
-            r.error = f"llm_verify:{result.error}"
-        elif result.is_case_report and result.confidence == "high":
-            logger.info(
-                f"[{r.lang}] ✓ LLM verified: {r.title[:60]} "
-                f"(variant={'yes' if result.has_variant_report else 'no'})"
-            )
-            passed += 1
-            # Update literature_type based on LLM
-            r.literature_type = "case_report"
-        else:
-            logger.info(
-                f"[{r.lang}] ✗ LLM rejected (confidence={result.confidence}, "
-                f"is_case_report={result.is_case_report}): {r.title[:60]}"
-            )
-            r.success = False
-            r.error = (
-                f"llm_verify:rejected "
-                f"(is_case_report={result.is_case_report}, "
-                f"confidence={result.confidence})"
-            )
-
-    logger.info(f"LLM verify done: {verified} checked, {passed} passed")
-    return records
-
-
-# ═══════════════════════════════════════════════════════════════════════════
 # CLI
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -1006,16 +718,6 @@ def main() -> None:
     parser.add_argument(
         "--dry-run", action="store_true",
         help="Search only — do not download PDFs",
-    )
-    parser.add_argument(
-        "--llm-verify", action="store_true",
-        help="Download all candidates, then use LLM to verify each PDF "
-             "is a genuine case report with variant details. Skips keyword "
-             "pre-filter; only high-confidence case reports are kept.",
-    )
-    parser.add_argument(
-        "--llm-model", type=str, default="",
-        help="Override LLM model for verification (default: from .env config)",
     )
     parser.add_argument(
         "--resume", type=Path, default=None, metavar="REPORT.json",
@@ -1046,8 +748,6 @@ def main() -> None:
         config,
         lang_filter=args.lang,
         dry_run=args.dry_run,
-        llm_verify=args.llm_verify,
-        llm_model=args.llm_model,
         resume_report=args.resume,
     ))
 
