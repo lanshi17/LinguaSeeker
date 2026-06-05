@@ -87,6 +87,8 @@ def test_evidence_extraction_falls_back_to_llm_config() -> None:
         "EVIDENCE_EXTRACTION_FAST_MODEL", "EVIDENCE_EXTRACTION_STANDARD_MODEL",
         "EVIDENCE_EXTRACTION_STRONG_MODEL",
         "FAST_LLM_API_KEY", "FAST_LLM_BASE_URL", "FAST_LLM_MODEL",
+        "REASONING_LLM_API_KEY", "REASONING_LLM_BASE_URL", "REASONING_LLM_MODEL",
+        "REASONING_LLM_REASONING_EFFORT",
     ]
     for k in keys:
         saved[k] = os.environ.pop(k, None)
@@ -119,6 +121,8 @@ def test_evidence_extraction_explicit_overrides_fallback() -> None:
         "EVIDENCE_EXTRACTION_FAST_MODEL", "EVIDENCE_EXTRACTION_STANDARD_MODEL",
         "EVIDENCE_EXTRACTION_STRONG_MODEL",
         "FAST_LLM_API_KEY", "FAST_LLM_BASE_URL", "FAST_LLM_MODEL",
+        "REASONING_LLM_API_KEY", "REASONING_LLM_BASE_URL", "REASONING_LLM_MODEL",
+        "REASONING_LLM_REASONING_EFFORT",
     ]
     for k in keys:
         saved[k] = os.environ.pop(k, None)

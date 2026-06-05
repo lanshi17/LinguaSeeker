@@ -6,10 +6,9 @@
 # ============================================================================
 
 # ── Application ───────────────────────────────────────────────────────────
-app:
-  environment: "development"
-  debug: true
-  cors_origins: "*"
+environment: "development"
+debug: true
+cors_origins: "*"
 
 # ── LLM Endpoints (Development) ──────────────────────────────────────────
 fast_llm:
@@ -59,9 +58,8 @@ network:
   no_proxy: ""
 
 # ── Literature Acquisition ────────────────────────────────────────────────
-literature:
-  jstage_proxy: "http://127.0.0.1:7890"
+jstage_proxy: "http://127.0.0.1:7890"
 
 # ── Model Server GPU Settings (Development) ─────────────────────────────
-model_server:
-  vlm_model_id: ""
+# Kept at top level for model-server compatibility
+vlm_model_id: ""
