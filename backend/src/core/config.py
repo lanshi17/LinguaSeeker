@@ -1,6 +1,6 @@
 """Configuration management middleware.
 
-Settings are loaded from ``config-dev.yaml`` first, then overridden by
+Settings are loaded from layered YAML config first, then overridden by
 environment variables. Nested domain models are constructed from flat fields
 by a ``model_validator``.
 
@@ -306,7 +306,6 @@ class LiteratureConfig(BaseModel):
     pubmed_api_key: str = ""
     pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
     unpaywall_email: str = ""
-    jstage_proxy: str = ""
 
 
 class WebSearchConfig(BaseModel):
@@ -373,7 +372,7 @@ class SMTPConfig(BaseModel):
 
 
 class Settings(BaseSettings):
-    """Root configuration.  Loaded once from config-dev.yaml and env vars.
+    """Root configuration.  Loaded once from layered YAML config and env vars.
 
     Flat ``llm_*`` / ``mt_*`` / … fields are populated automatically by
     pydantic-settings.  The nested domain models (``self.llm``, ``self.mt``, …)
@@ -531,7 +530,6 @@ class Settings(BaseSettings):
     pubmed_api_key: str = ""
     pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
     unpaywall_email: str = ""
-    jstage_proxy: str = ""
 
     # ── Web Search flat fields (WEB_SEARCH_*) ───────────────────────────
 
@@ -731,7 +729,6 @@ class Settings(BaseSettings):
             pubmed_api_key=self.pubmed_api_key,
             pubmed_base_url=self.pubmed_base_url,
             unpaywall_email=self.unpaywall_email,
-            jstage_proxy=self.jstage_proxy,
         )
         self.smtp = SMTPConfig(
             host=self.smtp_host,

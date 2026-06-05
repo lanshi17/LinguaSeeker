@@ -57,9 +57,3 @@ network:
   proxy: "http://127.0.0.1:7890"
   no_proxy: ""
 
-# ── Literature Acquisition ────────────────────────────────────────────────
-jstage_proxy: "http://127.0.0.1:7890"
-
-# ── Model Server GPU Settings (Development) ─────────────────────────────
-# Kept at top level for model-server compatibility
-vlm_model_id: ""

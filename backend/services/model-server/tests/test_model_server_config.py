@@ -4,8 +4,8 @@ def test_vlm_config_defaults(monkeypatch):
     from app.config import Settings, get_config
     get_config.cache_clear()
 
-    cfg = Settings(_env_file=None, vlm_model_id="opendatalab/MinerU2.5-Pro-2604-1.2B")
-    assert cfg.vlm_model_id == "opendatalab/MinerU2.5-Pro-2604-1.2B"
+    cfg = Settings(_env_file=None)
+    assert cfg.doc_parse_model_id == ""
     assert cfg.vlm_image_analysis is False
     assert cfg.vllm_gpu_memory_utilization == 0.9
     # Layered config defaults from config/defaults/main.yaml
@@ -13,6 +13,14 @@ def test_vlm_config_defaults(monkeypatch):
     assert cfg.embedding_max_model_len == 4096
     assert cfg.rerank_gpu_memory_utilization == 0.2
     assert cfg.vlm_gpu_memory_utilization == 0.5
+
+
+def test_doc_parse_model_id_can_be_set(monkeypatch):
+    from app.config import Settings, get_config
+    get_config.cache_clear()
+
+    cfg = Settings(_env_file=None, doc_parse_model_id="opendatalab/MinerU2.5-Pro-2604-1.2B")
+    assert cfg.doc_parse_model_id == "opendatalab/MinerU2.5-Pro-2604-1.2B"
 
 
 def test_model_server_allows_per_model_gpu_memory_overrides(monkeypatch):
@@ -28,15 +36,6 @@ def test_model_server_allows_per_model_gpu_memory_overrides(monkeypatch):
     assert cfg.embedding_max_model_len == 4096
     assert cfg.rerank_gpu_memory_utilization == 0.2
     assert cfg.vlm_gpu_memory_utilization == 0.5
-
-
-def test_vlm_config_empty_by_default(monkeypatch):
-    monkeypatch.delenv("VLM_MODEL_ID", raising=False)
-    from app.config import Settings, get_config
-    get_config.cache_clear()
-
-    cfg = Settings(_env_file=None)
-    assert cfg.vlm_model_id == ""
 
 
 def test_no_env_files_configured():

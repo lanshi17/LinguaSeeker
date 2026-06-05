@@ -22,7 +22,7 @@ def test_main_wires_per_model_gpu_memory_utilization(monkeypatch):
         embedding_max_model_len=4096,
         rerank_model_id="rerank-model",
         rerank_gpu_memory_utilization=0.2,
-        vlm_model_id="vlm-model",
+        doc_parse_model_id="vlm-model",
         vlm_gpu_memory_utilization=0.5,
         vlm_image_analysis=False,
         host="0.0.0.0",

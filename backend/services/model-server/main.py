@@ -41,10 +41,10 @@ _rerank_svc = RerankService(
     gpu_memory_utilization=cfg.rerank_gpu_memory_utilization,
 )
 _vlm_svc = VLMService(
-    model_id=cfg.vlm_model_id,
+    model_id=cfg.doc_parse_model_id,
     gpu_memory_utilization=cfg.vlm_gpu_memory_utilization,
     image_analysis=cfg.vlm_image_analysis,
-) if cfg.vlm_model_id else None
+) if cfg.doc_parse_model_id else None
 
 # Wire services into API routes
 embedding.bind(_embedding_svc)
@@ -91,5 +91,5 @@ if __name__ == "__main__":
     logger.info("Starting model server on {host}:{port}", host=args.host, port=args.port)
     logger.info("  Embedding : {id}", id=cfg.embedding_model_id)
     logger.info("  Rerank    : {id}", id=cfg.rerank_model_id)
-    logger.info("  VLM       : {id}", id=cfg.vlm_model_id or "(not configured)")
+    logger.info("  VLM       : {id}", id=cfg.doc_parse_model_id or "(not configured)")
     uvicorn.run(app, host=args.host, port=args.port, log_level=cfg.log_level)
