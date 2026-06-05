@@ -43,15 +43,17 @@ rerank_score_threshold: {{ rerank.score_threshold }}
 
 # ── MinerU document parsing ─────────────────────────────────────────────
 mineru_max_file_size_mb: {{ mineru.max_file_size_mb }}
+mineru_api_token: {{ mineru_api_token | default('') }}
+mineru_api_token_backup: {{ mineru_api_token_backup | default('') }}
 
 # ── Parse Document ──────────────────────────────────────────────────────
-mineru_remote_api_token: {{ parse_document.remote_api_token | default('') }}
-mineru_remote_poll_interval: {{ parse_document.remote_poll_interval }}
-mineru_remote_max_poll_attempts: {{ parse_document.remote_max_poll_attempts }}
-mineru_local_model_server_url: {{ parse_document.local_model_server_url }}
-mineru_local_model_id: {{ parse_document.local_model_id }}
-mineru_local_timeout: {{ parse_document.local_timeout }}
-mineru_local_dpi: {{ parse_document.local_dpi }}
+mineru_remote_api_token: {{ mineru_remote_api_token | default('') }}
+mineru_remote_poll_interval: {{ mineru_remote_poll_interval }}
+mineru_remote_max_poll_attempts: {{ mineru_remote_max_poll_attempts }}
+mineru_local_model_server_url: {{ mineru_local_model_server_url }}
+mineru_local_model_id: {{ mineru_local_model_id }}
+mineru_local_timeout: {{ mineru_local_timeout }}
+mineru_local_dpi: {{ mineru_local_dpi }}
 
 # ── Model Server ────────────────────────────────────────────────────────
 model_server_url: http://{{ api_host if api_host != '0.0.0.0' else 'localhost' }}:{{ model_server_port | default(8001) }}
