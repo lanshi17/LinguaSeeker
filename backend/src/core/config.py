@@ -164,6 +164,7 @@ class LLMConfig(BaseModel):
     api_key: str = ""
     base_url: str = ""
     model: str = ""
+    max_tokens: int = 8192
     timeout: int = 60
 
 
@@ -174,6 +175,7 @@ class ReasoningConfig(BaseModel):
     model: str = ""
     reasoning_effort: str = "high"
     base_url: str = ""
+    max_tokens: int = 8192
     timeout: int = 60
 
 
@@ -226,6 +228,7 @@ class EvidenceExtractionConfig(BaseModel):
     standard_effort: str = ""
     strong_effort: str = "high"
     temperature: float = 0.0
+    max_tokens: int = 8192
     timeout: int = 60
     max_retries: int = 3
 
@@ -332,7 +335,7 @@ class Settings(BaseSettings):
     fast_llm_base_url: str = ""
     fast_llm_model: str = ""
     fast_llm_temperature: float | None = None
-    fast_llm_max_tokens: int = 0
+    fast_llm_max_tokens: int = 8192
     fast_llm_timeout: int = 0
     fast_llm_max_retries: int = 0
 
@@ -344,7 +347,7 @@ class Settings(BaseSettings):
     reasoning_llm_reasoning_effort: str = ""
     reasoning_llm_base_url: str = ""
     reasoning_llm_temperature: float | None = None
-    reasoning_llm_max_tokens: int = 0
+    reasoning_llm_max_tokens: int = 8192
     reasoning_llm_timeout: int = 0
     reasoning_llm_max_retries: int = 0
 
@@ -428,6 +431,7 @@ class Settings(BaseSettings):
     evidence_extraction_standard_effort: str = ""
     evidence_extraction_strong_effort: str = "high"
     evidence_extraction_temperature: float = 0.0
+    evidence_extraction_max_tokens: int = 8192
     evidence_extraction_timeout: int = 300
     evidence_extraction_max_retries: int = 2
 
@@ -463,6 +467,7 @@ class Settings(BaseSettings):
             api_key=self.fast_llm_api_key,
             base_url=self.fast_llm_base_url,
             model=self.fast_llm_model,
+            max_tokens=self.fast_llm_max_tokens,
             timeout=self.fast_llm_timeout,
         )
         self.reasoning = ReasoningConfig(
@@ -470,6 +475,7 @@ class Settings(BaseSettings):
             model=self.reasoning_llm_model,
             reasoning_effort=self.reasoning_llm_reasoning_effort,
             base_url=self.reasoning_llm_base_url,
+            max_tokens=self.reasoning_llm_max_tokens,
             timeout=self.reasoning_llm_timeout,
         )
         self.embedding = EmbeddingConfig(
@@ -507,6 +513,7 @@ class Settings(BaseSettings):
             standard_effort=self.evidence_extraction_standard_effort,
             strong_effort=self.evidence_extraction_strong_effort,
             temperature=self.evidence_extraction_temperature,
+            max_tokens=self.evidence_extraction_max_tokens,
             timeout=self.evidence_extraction_timeout,
             max_retries=self.evidence_extraction_max_retries,
         )

@@ -17,6 +17,7 @@ class TranslationConfigContext:
     api_key: str
     base_url: str
     temperature: float = 0.0
+    max_tokens: int = 8192
     timeout: int = 60
 
     @classmethod
@@ -27,5 +28,6 @@ class TranslationConfigContext:
             api_key=cfg.llm.api_key,
             base_url=cfg.llm.base_url,
             temperature=getattr(cfg.llm, "temperature", 0.0),
+            max_tokens=getattr(cfg.llm, "max_tokens", 8192),
             timeout=cfg.llm.timeout,
         )

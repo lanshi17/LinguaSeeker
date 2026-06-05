@@ -24,12 +24,14 @@ debug: false
 fast_llm:
   model: "mimo-v2.5"
   timeout: 60
+  max_tokens: 8192
 
 # ── Reasoning LLM ─────────────────────────────────────────────────────────
 reasoning_llm:
   model: "mimo-v2.5-pro"
   reasoning_effort: "high"
   timeout: 300
+  max_tokens: 8192
 
 # ── Embedding Model ───────────────────────────────────────────────────────
 embedding:
@@ -47,6 +49,7 @@ rerank:
 evidence_extraction:
   timeout: 300
   max_retries: 2
+  max_tokens: 8192
 
 # ── MinerU Document Parsing ──────────────────────────────────────────────
 # All fields flatten to MINERU_* env vars

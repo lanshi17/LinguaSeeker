@@ -1259,3 +1259,65 @@ Phase 2 失败导致 Phase 3 未能执行（pipeline error），因此该结论�
 - Python `or` 对空 dict/空 list/空字符串返回 falsy 值，不能用 `x or None` 做"有值才传"的逻辑
 - LangChain `ChatOpenAI` 的 `model_kwargs` 不能传 `None`，只能传 `dict` 或不传
 - 排查 LLM 调用错误时，先检查客户端初始化而非 LLM 响应
+
+## 2026-06-05: Model Server 单元测试不能依赖真实 vllm 安装
+
+**问题描述**：运行 `uv run pytest services/model-server/tests -v` 时，Model Server 测试 24 个中 16 个失败，失败集中在 `patch("app.domain.embedding.vllm.LLM")`、`patch("app.domain.vlm.MinerUClient")` 等 mock 路径解析。
+
+**排查过程**：
+1. 复现测试失败，确认不是业务断言失败，而是导入阶段失败。
+2. 检查 `services/model-server/app/domain/*.py`，发现 `embedding.py`、`rerank.py`、`vlm.py` 在模块顶层直接导入 `vllm` / `mineru_vl_utils`。
+3. 当前 `uv run pytest` 的基础环境没有安装 `backend[model-server]` 额外依赖中的 `vllm`，导致测试在 patch 前无法完成模块导入。
+
+**根因分析**：
+- Model Server 单元测试设计为 mock `vllm.LLM`，不需要真实 GPU 推理栈。
+- 但被测模块在 import 阶段已经要求真实 `vllm` 存在，mock 还没机会生效。
+
+**解决方案**：
+- 在 `services/model-server/tests/conftest.py` 中安装 CPU-only 可选依赖占位模块。
+- 占位模块只提供被测试 patch 的符号；若测试未 patch 就实际使用，会抛出清晰错误。
+
+**预防措施**：
+- GPU/大模型推理依赖的单元测试必须在测试启动阶段提供 mock/stub，或将真实依赖延迟到 `_load()` 等运行阶段导入。
+- 验证 Model Server 测试时使用基础命令 `uv run pytest services/model-server/tests -v`，确保不隐式依赖本机 GPU 环境。
+
+## 2026-06-06: 大文档 catalog_extraction 超时优化
+
+**问题描述**：31 页 COVID-19 文档在 catalog_extraction 阶段超时失败（180s timeout），所有 chunk 全部失败。
+
+**排查过程**：
+1. 分析 chunking 逻辑：16K token budget → 31 页文档产生 1-3 个大 chunk
+2. 分析模型配置：STRONG tier 使用 mimo-v2.5-pro + reasoning_effort=xhigh
+3. 分析 timeout：evidence extraction 180s，reasoning model 300s，两者独立
+4. 根因：16K token 大 chunk + xhigh reasoning effort + 180s timeout = 必然超时
+
+**根因分析**：
+- STRONG tier 使用 reasoning model（mimo-v2.5-pro）+ xhigh effort
+- 16K token chunk 包含 120 个字段的 catalog 评估 + 大量文档文本
+- Reasoning model 在 xhigh effort 下需要大量内部推理时间
+- 180s timeout 不足以完成如此复杂的任务
+
+**解决方案**：
+1. **STRONG tier chunk size**: 16K → 8K tokens（更小但更快的 LLM 调用）
+2. **Evidence extraction timeout**: 180s → 300s
+3. **Max retries**: 3 → 2（避免无意义重试，每次 300s）
+4. **Reasoning effort**: xhigh → high（减少内部推理时间）
+
+**效果对比**：
+| 指标 | 优化前 | 优化后 | 变化 |
+|------|--------|--------|------|
+| 平均耗时 | 1633s | 1003s | -38% |
+| Evidence 总数 | 68 | 99 | +46% |
+| Field coverage | 50 | 63 | +26% |
+| Entity bindings | 375 | 742 | +98% |
+
+**关键收益**：
+- 31 页 COVID-19 文档从超时失败 → 1304s 通过，提取 60 evidence items
+- 所有通过的 PDF 提取了更多 evidence（46% 增加）
+- Entity bindings 翻倍（98% 增加）
+
+**预防措施**：
+- Reasoning model 的 chunk size 应比非-reasoning model 小（8K vs 16K）
+- 大文档处理需要平衡 chunk size 和 timeout：小 chunk = 更多调用但每个更快
+- Reasoning effort 应根据任务复杂度选择，xhigh 对结构化提取过度
+- 测试大文档（>20 页）应作为 benchmark 的标准用例
