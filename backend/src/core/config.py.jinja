@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -225,6 +225,47 @@ class WebSearchConfig(BaseModel):
     max_results: int = 10
 
 
+# Domains that bypass the proxy and connect directly.
+# "cn" matches all *.cn and *.com.cn / *.ac.cn / *.edu.cn / etc.
+_DEFAULT_NO_PROXY = (
+    "cn,"
+    "ncbi.nlm.nih.gov,"
+    "nlm.nih.gov,"
+    "unpaywall.org,"
+    "localhost,"
+    "127.0.0.1"
+)
+
+
+class NetworkConfig(BaseModel):
+    """Outbound HTTP proxy with per-domain bypass.
+
+    ``proxy`` is the proxy URL for international sites (e.g.
+    ``http://127.0.0.1:7890`` or ``socks5://127.0.0.1:7891``).
+
+    ``no_proxy`` is a comma-separated list of domain suffixes that should
+    bypass the proxy and connect directly (mainland China sites).
+    """
+
+    proxy: str = ""
+    no_proxy: str = _DEFAULT_NO_PROXY
+
+    def resolve_proxy_for_url(self, url: str) -> str | None:
+        """Return the proxy URL to use for *url*, or ``None`` for direct."""
+        if not self.proxy:
+            return None
+        hostname = urlparse(url).hostname or ""
+        if not hostname:
+            return None
+        for domain in self.no_proxy.split(","):
+            domain = domain.strip().lower()
+            if not domain:
+                continue
+            if hostname == domain or hostname.endswith("." + domain):
+                return None
+        return self.proxy
+
+
 class SMTPConfig(BaseModel):
     """SMTP email."""
 
@@ -414,6 +455,11 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from_email: str = ""
 
+    # ── Network / proxy flat fields (NETWORK_*) ─────────────────────────
+
+    network_proxy: str = ""
+    network_no_proxy: str = _DEFAULT_NO_PROXY
+
     # ── Cross-lingual output ─────────────────────────────────────────────
 
     cross_lingual_output_dir: str = "data/cross_lingual_output"
@@ -449,6 +495,7 @@ class Settings(BaseSettings):
     literature: LiteratureConfig = Field(default_factory=LiteratureConfig, exclude=True)
     smtp: SMTPConfig = Field(default_factory=SMTPConfig, exclude=True)
     web_search: WebSearchConfig = Field(default_factory=WebSearchConfig, exclude=True)
+    network: NetworkConfig = Field(default_factory=NetworkConfig, exclude=True)
 
     # ── Build nested models from flat fields ─────────────────────────────
 
@@ -595,6 +642,10 @@ class Settings(BaseSettings):
             base_url=self.WEB_SEARCH_BASE_URL or "https://api.firecrawl.dev",
             timeout=self.WEB_SEARCH_TIMEOUT or 30,
             max_results=self.WEB_SEARCH_MAX_RESULTS or 10,
+        )
+        self.network = NetworkConfig(
+            proxy=self.network_proxy,
+            no_proxy=self.network_no_proxy or _DEFAULT_NO_PROXY,
         )
         return self
 

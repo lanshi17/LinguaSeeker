@@ -1,0 +1,7 @@
+# Secrets - never commit these files
+*.yaml
+*.yml
+
+# Keep example and README files
+!*.example
+!README.md

@@ -173,14 +173,11 @@ class LangChainEvidenceProvider:
             "Do not wrap it in Markdown code fences.\n"
             f"{json.dumps(schema, ensure_ascii=False)}"
         )
-        logger.debug("_ainvoke_json_text: calling LLM for fallback JSON")
         message = await llm.ainvoke([HumanMessage(content=fallback_prompt)])
         content = message.content
         if not isinstance(content, str):
-            logger.error("_ainvoke_json_text: LLM returned non-string content: {}", type(content))
             raise RuntimeError("Fallback JSON response content is not text")
         json_text = strip_json_fences(content)
-        logger.debug("_ainvoke_json_text: got response, len={}", len(json_text))
         try:
             return adapter.validate_python(json.loads(json_text))
         except (ValidationError, ValueError, json.JSONDecodeError):

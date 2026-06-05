@@ -1238,3 +1238,24 @@ Phase 2 失败导致 Phase 3 未能执行（pipeline error），因此该结论�
 - 新增 LLM 客户端创建点时，必须检查是否传入 `timeout`
 - uvicorn `--reload` 必须排除运行时写入目录
 - Benchmark 测试前先用 1 篇 PDF 做冒烟验证
+
+## 2026-06-05: model_kwargs or None 导致 ChatOpenAI 初始化 TypeError
+
+**问题描述**：`evidence_map` relevance_scan 阶段报 `TypeError: argument of type 'NoneType' is not iterable`，所有 chunk 全部失败。
+
+**排查过程**：
+1. 初始怀疑 `structured.ainvoke()` 返回 None → 添加 None guard → 无效
+2. 怀疑 `with_structured_output(method="json_mode")` 解析失败 → 添加 TypeError fallback → 无效
+3. 添加 full traceback logging → 发现错误在 `_client_for_tier()` 的 `ChatOpenAI()` 初始化
+4. Traceback 指向 `langchain_core/utils/utils.py:235: if field_name in extra_kwargs`，`extra_kwargs` 为 None
+
+**根因**：`providers.py` line 85: `model_kwargs=model_kwargs or None`。当 `model_kwargs={}` 时，`{} or None` 求值为 `None`（空 dict 是 falsy）。`ChatOpenAI(model_kwargs=None)` 导致 `_build_model_kwargs` 收到 `extra_kwargs=None`，`if field_name in None` 报 TypeError。
+
+**修复**：改为 `**({"model_kwargs": model_kwargs} if model_kwargs else {})`，空 dict 时不传 `model_kwargs` 参数。
+
+**同时修复**：evidence extraction timeout 从 60s 增加到 180s（REASONING_LLM 需要更长时间完成 catalog_extraction）。
+
+**预防措施**：
+- Python `or` 对空 dict/空 list/空字符串返回 falsy 值，不能用 `x or None` 做"有值才传"的逻辑
+- LangChain `ChatOpenAI` 的 `model_kwargs` 不能传 `None`，只能传 `dict` 或不传
+- 排查 LLM 调用错误时，先检查客户端初始化而非 LLM 响应

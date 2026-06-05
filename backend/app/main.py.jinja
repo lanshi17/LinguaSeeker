@@ -62,10 +62,10 @@ def _error_response(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize and teardown application resources."""
-    # Bypass system-wide SOCKS5/HTTP proxy for all outbound connections.
-    # httpx and reqwest (Rust) pick up ALL_PROXY from the environment, which
-    # breaks TLS handshakes to MinerU CDN and other services.  Clearing these
-    # vars ensures direct connections — the intended production behaviour.
+    # Bypass system-wide SOCKS5/HTTP proxy env vars.  httpx and reqwest pick
+    # these up automatically, which breaks TLS handshakes to MinerU CDN and
+    # other services.  Our application-level proxy routing (NetworkConfig)
+    # handles selective proxying instead.
     for var in ("ALL_PROXY", "all_proxy", "HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy"):
         os.environ.pop(var, None)
 
@@ -73,6 +73,11 @@ async def lifespan(app: FastAPI):
     setup_logging(environment=cfg.environment, debug=cfg.debug)
     logger = get_logger()
     logger.info("Starting {{ app_name }} backend (env={})", cfg.environment)
+
+    if cfg.network.proxy:
+        logger.info("Network proxy enabled: {} (bypass: {} domains)", cfg.network.proxy, len(cfg.network.no_proxy.split(",")))
+    else:
+        logger.info("Network proxy disabled — all connections are direct")
 
     import src.api.wiring as _wiring
 

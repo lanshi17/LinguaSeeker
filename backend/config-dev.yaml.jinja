@@ -1,4 +1,12 @@
-# Local development configuration for ACMG-Lingua backend.
+{# ============================================================================
+   Copier Template: config-dev.yaml (Legacy Format)
+   ============================================================================
+   This template generates the legacy flat config-dev.yaml format.
+   For new deployments, prefer the layered config/ directory structure.
+   
+   Variables: {{ app_name }}, {{ app_version }}, {{ postgres_db }}, {{ postgres_schema }}
+   ============================================================================ #}
+# Local development configuration for {{ app_name }} backend.
 # =========================================================
 # This file is loaded by config.py BEFORE pydantic-settings reads env vars.
 # YAML values become the baseline; env vars / .env.local override them.
@@ -131,6 +139,10 @@ smtp_port: 465
 smtp_user: your-smtp-user
 smtp_password: your-smtp-password
 smtp_from_email: your-email@example.com
+
+# ── Network / Proxy ────────────────────────────────────────────────────
+network_proxy: http://127.0.0.1:7890
+network_no_proxy: ""
 
 # ── Web Search (Firecrawl) ──────────────────────────────────────────────
 WEB_SEARCH_API_KEY: your-web-search-api-key

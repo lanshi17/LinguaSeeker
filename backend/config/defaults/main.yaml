@@ -1,0 +1,131 @@
+# ============================================================================
+# ACMG-Lingua Backend — Default Configuration Variables
+# ============================================================================
+# Base structural defaults for all environments. Safe to commit.
+# Override in environments/<env>.yaml and vault/<env>.yaml
+#
+# Loading order (lowest to highest priority):
+#   1. defaults/main.yaml          (this file)
+#   2. environments/<env>.yaml     (environment-specific structural config)
+#   3. vault/<env>.yaml            (secrets: API keys, passwords)
+#   4. Environment variables       (highest priority, override all)
+# ============================================================================
+
+# ── Application ───────────────────────────────────────────────────────────
+app:
+  name: "ACMG-Lingua"
+  version: "3.0.0"
+  api_prefix: "/api/v1"
+  cors_origins: "*"
+  environment: "development"
+  debug: false
+  api_host: "localhost"
+  api_port: 8000
+
+# ── Fast LLM (OpenAI-compatible) ──────────────────────────────────────────
+# High-throughput model for translation, formatting, simple extraction
+fast_llm:
+  model: "mimo-v2.5"
+  temperature: 0
+  max_tokens: 8192
+  timeout: 180
+  max_retries: 3
+
+# ── Multimodal LLM (disabled by default) ─────────────────────────────────
+multimodal_llm:
+  enabled: false
+  model: "mimo-v2.5"
+
+# ── Reasoning LLM ─────────────────────────────────────────────────────────
+# Strong reasoning model for quality gates, complex evidence extraction
+reasoning_llm:
+  model: "mimo-v2.5-pro"
+  reasoning_effort: "xhigh"
+  temperature: 0.0
+  max_tokens: 8192
+  timeout: 300
+  max_retries: 3
+
+# ── Embedding Model ───────────────────────────────────────────────────────
+embedding:
+  model: "Qwen/Qwen3-Embedding-0.6B"
+  dimension: 1024
+  batch_size: 10
+
+# ── Rerank Model ──────────────────────────────────────────────────────────
+rerank:
+  model: "bge-reranker-v2-m3"
+  top_k: 10
+  score_threshold: 0.7
+
+# ── MinerU Document Parsing ──────────────────────────────────────────────
+mineru:
+  version: "vlm"
+  download_dir: "/tmp/mineru_downloads"
+  timeout: 300
+  max_file_size_mb: 100
+  remote_poll_interval: 2.0
+  remote_max_poll_attempts: 150
+  local_model_id: "opendatalab/MinerU2.5-Pro-2604-1.2B"
+  local_timeout: 120.0
+  local_dpi: 200
+
+# ── Database Connections ──────────────────────────────────────────────────
+postgres:
+  port: 5432
+  pool_size: 20
+  max_overflow: 30
+  pgvector_enabled: true
+
+redis:
+  host: "localhost"
+  port: 6379
+  db: 0
+  max_connections: 20
+
+neo4j:
+  port: 7687
+  database: "neo4j"
+  max_connection_lifetime: 3600
+  max_connection_pool_size: 50
+
+# ── Object Storage ────────────────────────────────────────────────────────
+minio:
+  endpoint: "localhost:9000"
+  api: "s3v4"
+  path: "auto"
+  bucket_name: "acmg-bucket"
+  secure: false
+
+# ── Task Execution ────────────────────────────────────────────────────────
+task:
+  max_reasoning_iterations: 3
+  timeout_seconds: 3600
+
+# ── Literature Acquisition ────────────────────────────────────────────────
+literature:
+  pubmed_base_url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+
+# ── SMTP Email ────────────────────────────────────────────────────────────
+smtp:
+  host: "smtp.exmail.qq.com"
+  port: 465
+
+# ── Network / Proxy ──────────────────────────────────────────────────────
+network:
+  proxy: ""
+  no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
+
+# ── Web Search ────────────────────────────────────────────────────────────
+web_search:
+  base_url: "https://api.firecrawl.dev"
+  timeout: 30
+  max_results: 10
+
+# ── Model Server ──────────────────────────────────────────────────────────
+model_server:
+  port: 8001
+  embedding_gpu_memory_utilization: 0.35
+  embedding_max_model_len: 4096
+  rerank_gpu_memory_utilization: 0.20
+  vlm_gpu_memory_utilization: 0.50

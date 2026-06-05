@@ -152,6 +152,8 @@ _exclude:
   - ".env.example"
   - "docker-compose.yml"
   - "backend/config-dev.yaml"
+  - "backend/config/vault/*.yaml"
+  - "backend/config/vault/*.yml"
   - "backend/pyproject.toml"
   - "backend/.env.example"
   - "backend/app/main.py"

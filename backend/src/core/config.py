@@ -29,39 +29,6 @@ BACKEND_ROOT = Path(__file__).resolve().parents[2]
 REPO_ROOT = BACKEND_ROOT.parent
 # ── YAML config loader ──────────────────────────────────────────────────
 
-def _load_yaml_config() -> None:
-    """Load config-dev.yaml and set as env vars (env vars take precedence).
-    
-    If config-dev.yaml exists in backend/, load it and convert all keys to
-    uppercase. Set as environment variables only if not already set, allowing
-    env vars to override YAML values.
-    """
-    import os
-    try:
-        import yaml
-    except ImportError:
-        return  # pyyaml not available, skip YAML loading
-    
-    config_path = BACKEND_ROOT / "config-dev.yaml"
-    if not config_path.exists():
-        return
-    
-    with open(config_path) as f:
-        data = yaml.safe_load(f) or {}
-    
-    for key, value in data.items():
-        env_key = str(key).upper()
-        # Only set if not already in environment (preserve env var precedence)
-        if env_key not in os.environ:
-            os.environ[env_key] = str(value)
-
-
-# Load YAML config on module import (before Settings instantiation)
-_load_yaml_config()
-
-
-
-
 # ── Nested domain models ────────────────────────────────────────────────
 
 
@@ -527,7 +494,7 @@ class Settings(BaseSettings):
         fast_max_retries = self.fast_llm_max_retries or self.llm_max_retries
 
         reasoning_api_key = self.reasoning_llm_api_key or self.reasoning_api_key
-        reasoning_model = self.reasoning_llm_model or self.reasoning_model
+        reasoning_model = self.reasoning_llm_model or self.reasoning_model or fast_model
         reasoning_effort = self.reasoning_llm_reasoning_effort or self.reasoning_effort
         reasoning_base_url = self.reasoning_llm_base_url or self.reasoning_base_url
 
@@ -589,8 +556,8 @@ class Settings(BaseSettings):
             reasoning_api_key=self.evidence_extraction_reasoning_api_key or self.reasoning.api_key,
             reasoning_base_url=self.evidence_extraction_reasoning_base_url or self.reasoning.base_url,
             fast_model=self.evidence_extraction_fast_model or self.llm.model,
-            standard_model=self.evidence_extraction_standard_model or self.reasoning.model,
-            strong_model=self.evidence_extraction_strong_model or self.reasoning.model,
+            standard_model=self.evidence_extraction_standard_model or self.reasoning.model or self.llm.model,
+            strong_model=self.evidence_extraction_strong_model or self.reasoning.model or self.llm.model,
             fast_effort=self.evidence_extraction_fast_effort,
             standard_effort=self.evidence_extraction_standard_effort,
             strong_effort=self.evidence_extraction_strong_effort,

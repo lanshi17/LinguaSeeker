@@ -86,3 +86,9 @@ database/config/.env.neo4j
 benchmark/literature_acquisition/downloads/*.jsonl
 **/*/.env
 backend/data/*
+
+# Layered configuration secrets
+backend/config/vault/*.yaml
+backend/config/vault/*.yml
+!backend/config/vault/*.example
+!backend/config/vault/README.md

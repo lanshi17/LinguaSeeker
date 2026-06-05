@@ -1,0 +1,59 @@
+# ============================================================================
+# Development Secrets — Example Template
+# ============================================================================
+# Copy this file to development.yaml and fill in your actual secrets.
+# This file is git-ignored and must NEVER be committed.
+#
+# Usage:
+#   cp backend/config/vault/development.yaml.example backend/config/vault/development.yaml
+#   # Edit development.yaml with your actual API keys and passwords
+# ============================================================================
+
+# ── LLM API Keys ──────────────────────────────────────────────────────────
+fast_llm:
+  api_key: "your-fast-llm-api-key"
+
+multimodal_llm:
+  api_key: "your-multimodal-llm-api-key"
+
+reasoning_llm:
+  api_key: "your-reasoning-llm-api-key"
+
+# ── MinerU API Tokens ────────────────────────────────────────────────────
+mineru:
+  api_token: "your-mineru-api-token"
+  api_token_backup: "your-mineru-backup-api-token"
+  remote_api_token: ""
+
+# ── Database Credentials ─────────────────────────────────────────────────
+postgres:
+  user: "your-postgres-user"
+  password: "your-postgres-password"
+
+redis:
+  password: ""
+
+neo4j:
+  password: "your-neo4j-password"
+
+# ── Object Storage Credentials ───────────────────────────────────────────
+minio:
+  access_key: "your-minio-access-key"
+  secret_key: "your-minio-secret-key"
+  root_user: "your-minio-root-user"
+  root_password: "your-minio-root-password"
+
+# ── Literature Acquisition ────────────────────────────────────────────────
+literature:
+  pubmed_api_key: "your-pubmed-api-key"
+  unpaywall_email: "your-email@example.com"
+
+# ── SMTP Email ────────────────────────────────────────────────────────────
+smtp:
+  user: "your-smtp-user"
+  password: "your-smtp-password"
+  from_email: "your-email@example.com"
+
+# ── Web Search ────────────────────────────────────────────────────────────
+web_search:
+  api_key: "your-web-search-api-key"
