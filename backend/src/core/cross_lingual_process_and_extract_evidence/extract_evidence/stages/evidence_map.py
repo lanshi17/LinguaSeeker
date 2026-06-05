@@ -79,14 +79,23 @@ class RelevanceScanStage:
                 track=document.track,
                 text=f"{chunk_note}{chunk.text}",
             )
-            async with sem:
-                return await self._provider.ainvoke_structured(
-                    prompt=prompt,
-                    output_schema=DocumentEvidenceMap,
-                    tier=EvidenceModelTier.FAST,
-                    stage="relevance_scan" if chunk.total == 1 else f"relevance_scan/{chunk.index}",
-                    response_method="json_mode",
-                )
+            stage_name = "relevance_scan" if chunk.total == 1 else f"relevance_scan/{chunk.index}"
+            try:
+                async with sem:
+                    result = await self._provider.ainvoke_structured(
+                        prompt=prompt,
+                        output_schema=DocumentEvidenceMap,
+                        tier=EvidenceModelTier.FAST,
+                        stage=stage_name,
+                        response_method="json_mode",
+                    )
+                    if result is None:
+                        raise RuntimeError(f"Stage {stage_name} returned None")
+                    return result
+            except Exception:
+                import traceback
+                logger.error("relevance_scan chunk {}/{} full traceback:\n{}", chunk.index, chunk.total, traceback.format_exc())
+                raise
 
         results = await asyncio.gather(
             *[_extract_chunk(c) for c in chunks],

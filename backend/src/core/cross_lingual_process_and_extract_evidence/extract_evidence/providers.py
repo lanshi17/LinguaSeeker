@@ -82,7 +82,7 @@ class LangChainEvidenceProvider:
                 base_url=base_url,
                 temperature=self._ctx.temperature,
                 timeout=self._ctx.timeout,
-                model_kwargs=model_kwargs or None,
+                **({"model_kwargs": model_kwargs} if model_kwargs else {}),
             )
         return self._clients[tier]
 
@@ -135,17 +135,22 @@ class LangChainEvidenceProvider:
         last_exc: Exception | None = None
         for attempt in range(1, self._ctx.max_retries + 1):
             try:
-                return await structured.ainvoke([HumanMessage(content=prompt)])
+                result = await structured.ainvoke([HumanMessage(content=prompt)])
+                if result is None:
+                    logger.warning("Stage {} structured.ainvoke returned None, falling back to JSON text", stage)
+                    return await self._ainvoke_json_text(llm, prompt, output_schema)
+                return result
             except self._TRANSIENT_EXCEPTIONS as exc:
                 last_exc = exc
                 logger.warning("Stage {} transient failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
             except Exception as exc:
                 last_exc = exc
-                if self._is_unsupported_response_format(exc):
+                if self._is_unsupported_response_format(exc) or isinstance(exc, TypeError):
                     logger.warning(
-                        "Stage {} model does not support {} response_format; falling back to JSON text",
+                        "Stage {} structured output error ({}), falling back to JSON text: {}",
                         stage,
-                        response_method,
+                        type(exc).__name__,
+                        exc,
                     )
                     return await self._ainvoke_json_text(llm, prompt, output_schema)
                 if attempt >= self._ctx.max_retries:
@@ -168,11 +173,14 @@ class LangChainEvidenceProvider:
             "Do not wrap it in Markdown code fences.\n"
             f"{json.dumps(schema, ensure_ascii=False)}"
         )
+        logger.debug("_ainvoke_json_text: calling LLM for fallback JSON")
         message = await llm.ainvoke([HumanMessage(content=fallback_prompt)])
         content = message.content
         if not isinstance(content, str):
+            logger.error("_ainvoke_json_text: LLM returned non-string content: {}", type(content))
             raise RuntimeError("Fallback JSON response content is not text")
         json_text = strip_json_fences(content)
+        logger.debug("_ainvoke_json_text: got response, len={}", len(json_text))
         try:
             return adapter.validate_python(json.loads(json_text))
         except (ValidationError, ValueError, json.JSONDecodeError):
