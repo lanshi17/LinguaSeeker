@@ -11,6 +11,8 @@ from urllib.parse import urljoin
 import httpx
 from selectolax.parser import HTMLParser
 
+from src.core.config import get_config
+from src.utils.llm_params import resolve_max_tokens
 from src.utils.rust_io import net_io
 from src.utils.text import sanitize_filename
 
@@ -209,7 +211,7 @@ async def crawl4ai_search(
         schema=schema,
         extraction_type="schema",
         instruction=instruction,
-        extra_args={"temperature": 0, "top_p": 0.9, "max_tokens": 2000},
+        extra_args={"temperature": 0, "top_p": 0.9, "max_tokens": resolve_max_tokens(get_config().llm.max_tokens, percentage=0.25)},
     )
 
     browser_config = BrowserConfig(headless=True, java_script_enabled=True)

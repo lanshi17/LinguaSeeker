@@ -449,6 +449,26 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
                 typed_items.append(ni)
         normalized_items = typed_items
 
+        # Also filter download candidates to match the type filter,
+        # so we don't download PDFs that wouldn't pass the type check.
+        allowed_dois = {
+            (ni.doi or "").strip().lower()
+            for ni in normalized_items if ni.doi
+        }
+        allowed_titles = {
+            (ni.title or "").strip().lower()[:80]
+            for ni in normalized_items if ni.title
+        }
+        if allowed_dois or allowed_titles:
+            filtered_candidates = []
+            for c in candidates:
+                c_doi = (c.get("doi") or "").strip().lower()
+                c_title = (c.get("title") or "").strip().lower()[:80]
+                if (c_doi and c_doi in allowed_dois) or (c_title and c_title in allowed_titles):
+                    filtered_candidates.append(c)
+            if filtered_candidates:
+                candidates = filtered_candidates
+
     clean_candidates = [{k: v for k, v in c.items() if not k.startswith("_")} for c in candidates]
 
     # === Search-only mode ===
@@ -486,6 +506,7 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
             query=query,
             downloads=downloads,
             delete_files=True,
+            literature_types=request.literature_types or None,
         )
         # Keep only relevant downloads (and those with errors — conservative)
         relevant_paths = {

@@ -21,13 +21,14 @@ import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import fitz
 from loguru import logger
 from openai import AsyncOpenAI
 
 from src.core.config import get_config
+from src.utils.llm_params import resolve_max_tokens
 
 # ── Prompt templates ──────────────────────────────────────────────────────
 
@@ -50,6 +51,29 @@ A document is NOT RELEVANT if:
 Reply with ONLY JSON (no markdown fences):
 {"relevant": true/false, "reason": "brief explanation in English"}"""
 
+_SYSTEM_PROMPT_TYPED = """You are a medical literature relevance and document-type classifier.
+
+Given a search query/topic and an excerpt from a downloaded PDF, determine:
+1. Whether the document is genuinely relevant to the query topic.
+2. What type of document it is.
+
+Document types:
+- "case_report": Individual patient case report, case series, clinical observation of one or a few patients.
+- "sequencing": Sequencing study (NGS, WGS, WES, gene panel) focused on methodology or cohort analysis.
+- "functional": Functional/mechanistic study (in vitro, in vivo, animal models, assays).
+- "review": Review article, meta-analysis, systematic review, narrative review, overview.
+- "thesis": PhD/master/bachelor thesis, dissertation, graduation project.
+- "other": Editorial, letter, guideline, consensus, conference abstract, organizational document, product info.
+
+A document is RELEVANT if its primary subject matches the query topic and it contains \
+substantive discussion or data about the topic.
+
+A document is NOT RELEVANT if it only mentions the topic in passing, is primarily about \
+a different disease, or is a general reference/editorial/organizational document.
+
+Reply with ONLY JSON (no markdown fences):
+{"relevant": true/false, "doc_type": "case_report|sequencing|functional|review|thesis|other", "reason": "brief explanation"}"""
+
 _USER_PROMPT = """Search query/topic: {query}
 
 Document language: {lang}
@@ -60,6 +84,17 @@ PDF excerpt (first {max_pages} pages):
 ---
 
 Is this document relevant to the search query?"""
+
+_USER_PROMPT_TYPED = """Search query/topic: {query}
+
+Document language: {lang}
+Document title: {title}
+PDF excerpt (first {max_pages} pages):
+---
+{text}
+---
+
+Is this document relevant? What is its document type?"""
 
 
 # ── Config defaults ───────────────────────────────────────────────────────
@@ -77,6 +112,7 @@ class RelevanceJudgment:
     """Result of relevance check for a single PDF."""
     file_path: str
     relevant: bool = False
+    doc_type: str = ""
     reason: str = ""
     error: str = ""
 
@@ -119,8 +155,8 @@ def _extract_text(
     return "\n".join(chunks)[:max_chars]
 
 
-def _parse_response(raw: str) -> Tuple[bool, str]:
-    """Parse LLM JSON response into (relevant, reason)."""
+def _parse_response(raw: str) -> Tuple[bool, str, str]:
+    """Parse LLM JSON response into (relevant, doc_type, reason)."""
     text = raw.strip()
     # Strip markdown fences
     if text.startswith("```"):
@@ -129,9 +165,13 @@ def _parse_response(raw: str) -> Tuple[bool, str]:
         text = "\n".join(lines).strip()
     try:
         obj = json.loads(text)
-        return bool(obj.get("relevant", False)), str(obj.get("reason", ""))
+        return (
+            bool(obj.get("relevant", False)),
+            str(obj.get("doc_type", "")),
+            str(obj.get("reason", "")),
+        )
     except json.JSONDecodeError:
-        return False, "json_parse_error"
+        return False, "", "json_parse_error"
 
 
 # ── Core ──────────────────────────────────────────────────────────────────
@@ -144,6 +184,8 @@ async def _check_one(
     download: Dict[str, Any],
     max_pages: int,
     max_chars: int,
+    max_tokens: int,
+    literature_types: Optional[List[str]] = None,
 ) -> RelevanceJudgment:
     """Check a single downloaded PDF for relevance to the query."""
     file_path = download.get("file_path") or ""
@@ -157,7 +199,10 @@ async def _check_one(
     if not text or len(text.strip()) < 30:
         return RelevanceJudgment(file_path=file_path, error="empty_text")
 
-    user_msg = _USER_PROMPT.format(
+    use_typed = bool(literature_types)
+    system_prompt = _SYSTEM_PROMPT_TYPED if use_typed else _SYSTEM_PROMPT
+    user_msg_tpl = _USER_PROMPT_TYPED if use_typed else _USER_PROMPT
+    user_msg = user_msg_tpl.format(
         query=query,
         lang=lang,
         title=title,
@@ -170,17 +215,28 @@ async def _check_one(
             resp = await client.chat.completions.create(
                 model=model,
                 messages=[
-                    {"role": "system", "content": _SYSTEM_PROMPT},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_msg},
                 ],
                 temperature=0.0,
-                max_tokens=_DEFAULT_MAX_TOKENS,
+                max_tokens=max_tokens,
             )
             raw = (resp.choices[0].message.content or "").strip()
-            relevant, reason = _parse_response(raw)
+            relevant, doc_type, reason = _parse_response(raw)
+
+            # If literature_types is set, reject docs whose type doesn't match
+            if use_typed and doc_type and doc_type not in literature_types:
+                return RelevanceJudgment(
+                    file_path=file_path,
+                    relevant=False,
+                    doc_type=doc_type,
+                    reason=f"doc_type_mismatch: {doc_type} not in {literature_types}",
+                )
+
             return RelevanceJudgment(
                 file_path=file_path,
                 relevant=relevant,
+                doc_type=doc_type,
                 reason=reason,
             )
         except Exception as exc:
@@ -198,6 +254,7 @@ async def run_relevance_gate(
     concurrency: int = _DEFAULT_CONCURRENCY,
     max_pages: int = _DEFAULT_MAX_PAGES,
     max_chars: int = _DEFAULT_MAX_CHARS,
+    literature_types: Optional[List[str]] = None,
 ) -> RelevanceGateResult:
     """Run LLM relevance gate on downloaded PDFs.
 
@@ -208,6 +265,8 @@ async def run_relevance_gate(
         concurrency: Max parallel LLM calls.
         max_pages: Pages to extract per PDF.
         max_chars: Max chars per PDF excerpt.
+        literature_types: If set, also classify document type and reject
+            PDFs whose type is not in this list (e.g. ["case_report"]).
 
     Returns:
         RelevanceGateResult with filtered download list and statistics.
@@ -227,13 +286,16 @@ async def run_relevance_gate(
             relevant=len(downloads),
         )
 
+    max_tokens = resolve_max_tokens(cfg.llm.max_tokens, percentage=0.5)
     client = AsyncOpenAI(base_url=base_url, api_key=api_key)
     sem = asyncio.Semaphore(concurrency)
 
     logger.info(f"relevance_gate: checking {len(downloads)} downloads against query: {query[:80]}")
+    if literature_types:
+        logger.info(f"relevance_gate: document type filter active: {literature_types}")
 
     tasks = [
-        _check_one(client, sem, model, query, dl, max_pages, max_chars)
+        _check_one(client, sem, model, query, dl, max_pages, max_chars, max_tokens, literature_types)
         for dl in downloads
     ]
 

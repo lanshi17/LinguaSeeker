@@ -545,10 +545,11 @@ async def cmd_cleanup(
     ]
 
     gate_result: RelevanceGateResult = await run_relevance_gate(
-        query="Rett syndrome MECP2 mutation CDKL5 FOXG1",
+        query="Rett syndrome MECP2 mutation CDKL5 FOXG1 case report",
         downloads=downloads,
         delete_files=not dry_run,
         concurrency=concurrency,
+        literature_types=["case_report"],
     )
 
     # Build per-language summary
@@ -556,6 +557,7 @@ async def cmd_cleanup(
     for lang, _ in all_pdfs:
         by_lang.setdefault(lang, {"relevant": 0, "irrelevant": 0, "errors": 0})
 
+    doc_type_counts: Dict[str, int] = {}
     for j in gate_result.judgments:
         # Recover lang from file path: .../downloads/rett/{lang}/file.pdf
         lang = Path(j.file_path).parent.name
@@ -567,6 +569,8 @@ async def cmd_cleanup(
             by_lang[lang]["relevant"] += 1
         else:
             by_lang[lang]["irrelevant"] += 1
+        if j.doc_type:
+            doc_type_counts[j.doc_type] = doc_type_counts.get(j.doc_type, 0) + 1
 
     # Save report
     report_path = base / f"cleanup_report_{int(time.time())}.json"
@@ -578,6 +582,7 @@ async def cmd_cleanup(
             "errors": gate_result.errors,
             "deleted": len(gate_result.removed_paths) if not dry_run else 0,
             "by_lang": by_lang,
+            "by_doc_type": doc_type_counts,
         },
         "removed_paths": gate_result.removed_paths,
     }
@@ -597,6 +602,12 @@ async def cmd_cleanup(
     print("-" * 60)
     print(f"{'TOTAL':<10} {gate_result.total:>6} {gate_result.relevant:>10} "
           f"{gate_result.irrelevant:>12} {gate_result.errors:>8}")
+    if doc_type_counts:
+        print(f"\n{'─' * 60}")
+        print("DOCUMENT TYPE DISTRIBUTION")
+        print(f"{'─' * 60}")
+        for dt, cnt in sorted(doc_type_counts.items(), key=lambda x: -x[1]):
+            print(f"  {dt:<18} {cnt:>4}")
     if dry_run:
         print(f"\nWould delete: {gate_result.irrelevant} (dry run)")
     else:

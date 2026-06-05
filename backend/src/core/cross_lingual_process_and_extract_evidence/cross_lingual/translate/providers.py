@@ -42,6 +42,7 @@ def create_llm(
     api_key: str,
     base_url: str,
     temperature: float = 0.0,
+    max_tokens: int = 8192,
     timeout: int = 60,
 ) -> ChatOpenAI:
     """Create a standard ChatOpenAI instance."""
@@ -50,6 +51,7 @@ def create_llm(
         api_key=SecretStr(api_key),
         base_url=base_url,
         temperature=temperature,
+        max_tokens=max_tokens,
         timeout=timeout,
     )
 
@@ -59,6 +61,7 @@ def create_json_llm(
     api_key: str,
     base_url: str,
     temperature: float = 0.0,
+    max_tokens: int = 8192,
     timeout: int = 60,
 ) -> ChatOpenAI:
     """Create a ChatOpenAI instance with JSON response format."""
@@ -67,6 +70,7 @@ def create_json_llm(
         api_key=SecretStr(api_key),
         base_url=base_url,
         temperature=temperature,
+        max_tokens=max_tokens,
         timeout=timeout,
         model_kwargs={"response_format": {"type": "json_object"}},
     )

@@ -39,6 +39,7 @@ class TranslationService:
             model=self._ctx.model,
             api_key=SecretStr(self._ctx.api_key),
             base_url=self._ctx.base_url,
+            max_tokens=self._ctx.max_tokens,
             temperature=self._ctx.temperature,
             timeout=self._ctx.timeout,
         )
