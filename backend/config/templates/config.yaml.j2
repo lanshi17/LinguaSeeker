@@ -17,88 +17,96 @@ environment: {{ environment }}
 debug: {{ debug | lower }}
 
 # ── Fast LLM (OpenAI-compatible) ────────────────────────────────────────
-fast_llm_api_key: {{ fast_llm.api_key | default('') }}
-fast_llm_base_url: {{ fast_llm.base_url | default('') }}
-fast_llm_model: {{ fast_llm.model }}
-fast_llm_timeout: {{ fast_llm.timeout }}
+fast_llm:
+  api_key: {{ fast_llm.api_key | default('') }}
+  base_url: {{ fast_llm.base_url | default('') }}
+  model: {{ fast_llm.model }}
+  timeout: {{ fast_llm.timeout }}
 
 # ── Reasoning LLM ───────────────────────────────────────────────────────
-reasoning_llm_api_key: {{ reasoning_llm.api_key | default('') }}
-reasoning_llm_model: {{ reasoning_llm.model }}
-reasoning_llm_reasoning_effort: {{ reasoning_llm.reasoning_effort }}
-reasoning_llm_base_url: {{ reasoning_llm.base_url | default('') }}
-reasoning_llm_timeout: {{ reasoning_llm.timeout }}
+reasoning_llm:
+  api_key: {{ reasoning_llm.api_key | default('') }}
+  model: {{ reasoning_llm.model }}
+  reasoning_effort: {{ reasoning_llm.reasoning_effort }}
+  base_url: {{ reasoning_llm.base_url | default('') }}
+  timeout: {{ reasoning_llm.timeout }}
 
 # ── Embedding (local model-server) ──────────────────────────────────────
-embedding_base_url: {{ embedding.base_url | default('') }}
-embedding_model: {{ embedding.model }}
-embedding_dimension: {{ embedding.dimension }}
-embedding_batch_size: {{ embedding.batch_size }}
+embedding:
+  base_url: {{ embedding.base_url | default('') }}
+  model: {{ embedding.model }}
+  dimension: {{ embedding.dimension }}
+  batch_size: {{ embedding.batch_size }}
 
 # ── Rerank (local model-server) ─────────────────────────────────────────
-rerank_base_url: {{ rerank.base_url | default('') }}
-rerank_model: {{ rerank.model }}
-rerank_top_k: {{ rerank.top_k }}
-rerank_score_threshold: {{ rerank.score_threshold }}
+rerank:
+  base_url: {{ rerank.base_url | default('') }}
+  model: {{ rerank.model }}
+  top_k: {{ rerank.top_k }}
+  score_threshold: {{ rerank.score_threshold }}
 
 # ── MinerU document parsing ─────────────────────────────────────────────
-mineru_max_file_size_mb: {{ mineru.max_file_size_mb }}
-mineru_api_token: {{ mineru_api_token | default('') }}
-mineru_api_token_backup: {{ mineru_api_token_backup | default('') }}
-
-# ── Parse Document ──────────────────────────────────────────────────────
-mineru_remote_api_token: {{ mineru_remote_api_token | default('') }}
-mineru_remote_poll_interval: {{ mineru_remote_poll_interval }}
-mineru_remote_max_poll_attempts: {{ mineru_remote_max_poll_attempts }}
-mineru_local_model_server_url: {{ mineru_local_model_server_url }}
-mineru_local_model_id: {{ mineru_local_model_id }}
-mineru_local_timeout: {{ mineru_local_timeout }}
-mineru_local_dpi: {{ mineru_local_dpi }}
+mineru:
+  max_file_size_mb: {{ mineru.max_file_size_mb }}
+  api_token: {{ mineru.api_token | default('') }}
+  api_token_backup: {{ mineru.api_token_backup | default('') }}
+  remote_api_token: {{ mineru.remote_api_token | default('') }}
+  remote_poll_interval: {{ mineru.remote_poll_interval }}
+  remote_max_poll_attempts: {{ mineru.remote_max_poll_attempts }}
+  local_model_server_url: {{ mineru.local_model_server_url }}
+  local_model_id: {{ mineru.local_model_id }}
+  local_timeout: {{ mineru.local_timeout }}
+  local_dpi: {{ mineru.local_dpi }}
 
 # ── Model Server ────────────────────────────────────────────────────────
 model_server_url: http://{{ api_host if api_host != '0.0.0.0' else 'localhost' }}:{{ model_server_port | default(8001) }}
 
 # ── Redis ───────────────────────────────────────────────────────────────
-redis_host: {{ redis.host }}
-redis_port: {{ redis.port }}
-redis_password: "{{ redis.password | default('') }}"
-redis_db: {{ redis.db }}
-redis_max_connections: {{ redis.max_connections }}
+redis:
+  host: {{ redis.host }}
+  port: {{ redis.port }}
+  password: "{{ redis.password | default('') }}"
+  db: {{ redis.db }}
+  max_connections: {{ redis.max_connections }}
 
 # ── PostgreSQL ──────────────────────────────────────────────────────────
-postgres_host: {{ postgres.host | default('127.0.0.1') }}
-postgres_port: {{ postgres.port }}
-postgres_db: {{ postgres.db | default('acmg_lingua') }}
-postgres_schema: {{ postgres.schema | default('acmg_app') }}
-postgres_user: {{ postgres.user | default('') }}
-postgres_password: {{ postgres.password | default('') }}
-postgres_pool_size: {{ postgres.pool_size }}
-postgres_max_overflow: {{ postgres.max_overflow }}
+postgres:
+  host: {{ postgres.host | default('127.0.0.1') }}
+  port: {{ postgres.port }}
+  db: {{ postgres.db | default('acmg_lingua') }}
+  schema: {{ postgres.schema | default('acmg_app') }}
+  user: {{ postgres.user | default('') }}
+  password: {{ postgres.password | default('') }}
+  pool_size: {{ postgres.pool_size }}
+  max_overflow: {{ postgres.max_overflow }}
 
 # ── Web Search ──────────────────────────────────────────────────────────
-WEB_SEARCH_API_KEY: {{ web_search.api_key | default('') }}
-WEB_SEARCH_BASE_URL: {{ web_search.base_url }}
-WEB_SEARCH_TIMEOUT: {{ web_search.timeout }}
-WEB_SEARCH_MAX_RESULTS: {{ web_search.max_results }}
+web_search:
+  api_key: {{ web_search.api_key | default('') }}
+  base_url: {{ web_search.base_url }}
+  timeout: {{ web_search.timeout }}
+  max_results: {{ web_search.max_results }}
 
 # ── Network / Proxy ────────────────────────────────────────────────────
-network_proxy: {{ network.proxy | default('') }}
-network_no_proxy: "{{ network.no_proxy | default('') }}"
+network:
+  proxy: {{ network.proxy | default('') }}
+  no_proxy: "{{ network.no_proxy | default('') }}"
 
 # ── Evidence Extraction ────────────────────────────────────────────────
-evidence_extraction_api_key: {{ evidence_extraction.api_key | default('') }}
-evidence_extraction_base_url: {{ evidence_extraction.base_url | default('') }}
-evidence_extraction_reasoning_api_key: {{ evidence_extraction.reasoning_api_key | default('') }}
-evidence_extraction_reasoning_base_url: {{ evidence_extraction.reasoning_base_url | default('') }}
-evidence_extraction_fast_model: {{ evidence_extraction.fast_model | default('') }}
-evidence_extraction_standard_model: {{ evidence_extraction.standard_model | default('') }}
-evidence_extraction_strong_model: {{ evidence_extraction.strong_model | default('') }}
-evidence_extraction_fast_effort: {{ evidence_extraction.fast_effort | default('') }}
-evidence_extraction_standard_effort: {{ evidence_extraction.standard_effort | default('') }}
-evidence_extraction_strong_effort: {{ evidence_extraction.strong_effort | default('high') }}
-evidence_extraction_temperature: {{ evidence_extraction.temperature }}
-evidence_extraction_timeout: {{ evidence_extraction.timeout }}
-evidence_extraction_max_retries: {{ evidence_extraction.max_retries }}
+evidence_extraction:
+  api_key: {{ evidence_extraction.api_key | default('') }}
+  base_url: {{ evidence_extraction.base_url | default('') }}
+  reasoning_api_key: {{ evidence_extraction.reasoning_api_key | default('') }}
+  reasoning_base_url: {{ evidence_extraction.reasoning_base_url | default('') }}
+  fast_model: {{ evidence_extraction.fast_model | default('') }}
+  standard_model: {{ evidence_extraction.standard_model | default('') }}
+  strong_model: {{ evidence_extraction.strong_model | default('') }}
+  fast_effort: {{ evidence_extraction.fast_effort | default('') }}
+  standard_effort: {{ evidence_extraction.standard_effort | default('') }}
+  strong_effort: {{ evidence_extraction.strong_effort | default('high') }}
+  temperature: {{ evidence_extraction.temperature }}
+  timeout: {{ evidence_extraction.timeout }}
+  max_retries: {{ evidence_extraction.max_retries }}
 
 # ── Model Server GPU settings ──────────────────────────────────────────
 vlm_model_id: "{{ vlm_model_id | default('') }}"

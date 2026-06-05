@@ -13,9 +13,11 @@ reasoning_llm:
   api_key: "your-reasoning-api-key"
 
 # ── MinerU API Tokens ────────────────────────────────────────────────────
-mineru_api_token: "your-mineru-api-token"
-mineru_api_token_backup: ""
-mineru_remote_api_token: "your-mineru-remote-api-token"
+# Flattens to MINERU_API_TOKEN, MINERU_API_TOKEN_BACKUP, MINERU_REMOTE_API_TOKEN
+mineru:
+  api_token: "your-mineru-api-token"
+  api_token_backup: ""
+  remote_api_token: "your-mineru-remote-api-token"
 
 # ── Database Credentials ─────────────────────────────────────────────────
 postgres:
