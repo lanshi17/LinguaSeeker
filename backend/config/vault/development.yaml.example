@@ -12,9 +12,10 @@ fast_llm:
 reasoning_llm:
   api_key: "your-reasoning-api-key"
 
-# ── Parse Document ────────────────────────────────────────────────────────
-parse_document:
-  remote_api_token: "your-mineru-api-token"
+# ── MinerU API Tokens ────────────────────────────────────────────────────
+mineru_api_token: "your-mineru-api-token"
+mineru_api_token_backup: ""
+mineru_remote_api_token: "your-mineru-remote-api-token"
 
 # ── Database Credentials ─────────────────────────────────────────────────
 postgres:
