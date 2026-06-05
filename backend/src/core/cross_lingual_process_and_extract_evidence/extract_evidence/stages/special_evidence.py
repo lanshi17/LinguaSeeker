@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from ..chunking import (
     DEFAULT_INPUT_BUDGET_TOKENS,
+    STRONG_TIER_INPUT_BUDGET_TOKENS,
     build_block_prompt_chunks,
     merge_special_evidence_records,
 )
@@ -24,7 +25,7 @@ class SpecialEvidenceStage:
     def __init__(
         self,
         provider: LangChainEvidenceProvider,
-        input_budget_tokens: int = DEFAULT_INPUT_BUDGET_TOKENS,
+        input_budget_tokens: int = STRONG_TIER_INPUT_BUDGET_TOKENS,
     ):
         self._provider = provider
         self._input_budget_tokens = input_budget_tokens
