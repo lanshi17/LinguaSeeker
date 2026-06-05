@@ -12,11 +12,10 @@
 #
 # Field naming convention:
 #   - Nested fields (e.g. fast_llm.model) flatten to FAST_LLM_MODEL
-#   - Top-level fields (e.g. api_host) flatten to API_HOST
+#   - Top-level fields (e.g. cors_origins) flatten to CORS_ORIGINS
 # ============================================================================
 
 # ── Application ───────────────────────────────────────────────────────────
-# Only keep fields that are actually used in code
 cors_origins: "*"
 environment: "development"
 debug: false
@@ -45,17 +44,15 @@ rerank:
   score_threshold: 0.7
 
 # ── MinerU Document Parsing ──────────────────────────────────────────────
+# All fields flatten to MINERU_* env vars
 mineru:
   max_file_size_mb: 100
-
-# ── Parse Document Configuration ─────────────────────────────────────────
-# These flatten to MINERU_REMOTE_* and MINERU_LOCAL_* env vars
-mineru_remote_poll_interval: 2.0
-mineru_remote_max_poll_attempts: 150
-mineru_local_model_server_url: "http://localhost:8001"
-mineru_local_model_id: "opendatalab/MinerU2.5-Pro-2604-1.2B"
-mineru_local_timeout: 120.0
-mineru_local_dpi: 200
+  remote_poll_interval: 2.0
+  remote_max_poll_attempts: 150
+  local_model_server_url: "http://localhost:8001"
+  local_model_id: "opendatalab/MinerU2.5-Pro-2604-1.2B"
+  local_timeout: 120.0
+  local_dpi: 200
 
 # ── Database Connections ──────────────────────────────────────────────────
 postgres:
