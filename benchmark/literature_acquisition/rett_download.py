@@ -5,6 +5,8 @@ Usage:
     uv run python benchmark/literature_acquisition/rett_download.py download [--query-file queries.txt] [--dry-run]
     uv run python benchmark/literature_acquisition/rett_download.py analyze [report.json]
     uv run python benchmark/literature_acquisition/rett_download.py seed-queries [--force]
+    uv run python benchmark/literature_acquisition/rett_download.py cleanup [--download-dir DIR] [--dry-run]
+    uv run python benchmark/literature_acquisition/rett_download.py rename [--download-dir DIR] [--dry-run]
 
 All acquisition logic delegates to online_acquisition_workflow (API + Firecrawl).
 """
@@ -13,14 +15,26 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
+import os
+import re
 import sys
 import time
+import unicodedata
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
+import fitz
 from loguru import logger
+from openai import AsyncOpenAI
+
+from src.core.config import get_config
+from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.relevance_gate import (
+    RelevanceGateResult,
+    run_relevance_gate,
+)
 
 from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import (
     online_acquisition_workflow,
@@ -420,6 +434,331 @@ def cmd_analyze(report_path: Optional[Path] = None, llm_classify: bool = False) 
 
 
 # ═══════════════════════════════════════════════════════════════════
+# Cleanup — LLM-based relevance filtering
+# ═══════════════════════════════════════════════════════════════════
+
+_TITLE_SYSTEM = """Extract a concise, descriptive title from this PDF for file renaming.
+
+Rules:
+1. If the document has a clear paper/article title, return it.
+2. Return the title in ENGLISH. Translate if necessary.
+3. Keep it short (max 80 chars), suitable for a filename.
+4. Use only ASCII letters, numbers, spaces, hyphens.
+5. Always include Rett/MECP2 context if relevant.
+
+Reply with ONLY the title text, nothing else. No quotes, no JSON."""
+
+_TITLE_USER = """Language: {lang}
+Filename: {filename}
+Content (first {max_pages} pages):
+---
+{text}
+---
+
+Extract a short English title for this document."""
+
+
+def _extract_text(pdf_path: Path, max_pages: int = 3, max_chars: int = 3000) -> str:
+    """Extract plain text from the first pages of a PDF."""
+    try:
+        doc = fitz.open(str(pdf_path))
+        texts = []
+        for i, page in enumerate(doc):
+            if i >= max_pages:
+                break
+            texts.append(page.get_text())
+        doc.close()
+        return "\n".join(texts)[:max_chars]
+    except Exception:
+        return ""
+
+
+def _file_hash(pdf_path: Path) -> str:
+    """Short hex hash of full file content."""
+    return hashlib.sha256(pdf_path.read_bytes()).hexdigest()[:8]
+
+
+def _sanitize_title(title: str) -> str:
+    """Convert title to filesystem-safe ASCII string."""
+    title = unicodedata.normalize("NFKD", title)
+    title = re.sub(r"[^a-zA-Z0-9 \-]", "", title)
+    title = re.sub(r"\s+", "_", title.strip())
+    title = re.sub(r"[_\-]{2,}", "_", title)
+    title = title[:100].rstrip("_-")
+    return title
+
+
+async def _llm_call(
+    client: AsyncOpenAI,
+    sem: asyncio.Semaphore,
+    model: str,
+    system: str,
+    user: str,
+) -> str:
+    """Single LLM chat completion with semaphore guard."""
+    async with sem:
+        resp = await client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            temperature=0.0,
+            max_tokens=4096,
+        )
+        return (resp.choices[0].message.content or "").strip()
+
+
+async def cmd_cleanup(
+    download_dir: Optional[str] = None,
+    *,
+    dry_run: bool = False,
+    concurrency: int = 8,
+) -> None:
+    """Check PDF relevance to Rett Syndrome via LLM, remove irrelevant ones.
+
+    Delegates to the core relevance_gate module.
+    """
+    setup_logging()
+    base = Path(download_dir) if download_dir else MODULE_DIR / "downloads" / "rett"
+    if not base.exists():
+        logger.error(f"Directory not found: {base}")
+        sys.exit(1)
+
+    # Collect all PDFs into download-dict format for the core gate
+    all_pdfs: List[tuple[str, Path]] = []
+    for lang_dir in sorted(base.iterdir()):
+        if not lang_dir.is_dir():
+            continue
+        for pdf in sorted(lang_dir.glob("*.pdf")):
+            all_pdfs.append((lang_dir.name, pdf))
+
+    lang_count = len(set(l for l, _ in all_pdfs))
+    logger.info(f"Found {len(all_pdfs)} PDFs across {lang_count} languages")
+    if dry_run:
+        logger.info("DRY RUN — no files will be deleted")
+
+    # Build download dicts expected by the core relevance gate
+    downloads = [
+        {"file_path": str(p), "lang": lang, "title": p.stem}
+        for lang, p in all_pdfs
+    ]
+
+    gate_result: RelevanceGateResult = await run_relevance_gate(
+        query="Rett syndrome MECP2 mutation CDKL5 FOXG1",
+        downloads=downloads,
+        delete_files=not dry_run,
+        concurrency=concurrency,
+    )
+
+    # Build per-language summary
+    by_lang: Dict[str, Dict[str, int]] = {}
+    for lang, _ in all_pdfs:
+        by_lang.setdefault(lang, {"relevant": 0, "irrelevant": 0, "errors": 0})
+
+    for j in gate_result.judgments:
+        # Recover lang from file path: .../downloads/rett/{lang}/file.pdf
+        lang = Path(j.file_path).parent.name
+        if lang not in by_lang:
+            by_lang[lang] = {"relevant": 0, "irrelevant": 0, "errors": 0}
+        if j.error:
+            by_lang[lang]["errors"] += 1
+        elif j.relevant:
+            by_lang[lang]["relevant"] += 1
+        else:
+            by_lang[lang]["irrelevant"] += 1
+
+    # Save report
+    report_path = base / f"cleanup_report_{int(time.time())}.json"
+    report = {
+        "stats": {
+            "total": gate_result.total,
+            "relevant": gate_result.relevant,
+            "irrelevant": gate_result.irrelevant,
+            "errors": gate_result.errors,
+            "deleted": len(gate_result.removed_paths) if not dry_run else 0,
+            "by_lang": by_lang,
+        },
+        "removed_paths": gate_result.removed_paths,
+    }
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2))
+    logger.info(f"Report: {report_path}")
+
+    # Summary
+    print(f"\n{'=' * 60}")
+    print("CLEANUP SUMMARY")
+    print(f"{'=' * 60}")
+    print(f"{'Language':<10} {'Total':>6} {'Relevant':>10} {'Irrelevant':>12} {'Errors':>8}")
+    print("-" * 60)
+    for lang in sorted(by_lang):
+        d = by_lang[lang]
+        t = d["relevant"] + d["irrelevant"] + d["errors"]
+        print(f"{lang:<10} {t:>6} {d['relevant']:>10} {d['irrelevant']:>12} {d['errors']:>8}")
+    print("-" * 60)
+    print(f"{'TOTAL':<10} {gate_result.total:>6} {gate_result.relevant:>10} "
+          f"{gate_result.irrelevant:>12} {gate_result.errors:>8}")
+    if dry_run:
+        print(f"\nWould delete: {gate_result.irrelevant} (dry run)")
+    else:
+        print(f"\nDeleted: {len(gate_result.removed_paths)}")
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Rename — LLM-based title extraction
+# ═══════════════════════════════════════════════════════════════════
+
+@dataclass
+class RenameEntry:
+    lang: str
+    old_name: str
+    new_name: str
+    old_path: str
+    new_path: str
+    error: str = ""
+
+
+async def cmd_rename(
+    download_dir: Optional[str] = None,
+    *,
+    dry_run: bool = False,
+    concurrency: int = 8,
+) -> None:
+    """Rename PDFs using LLM-extracted English titles."""
+    setup_logging()
+    base = Path(download_dir) if download_dir else MODULE_DIR / "downloads" / "rett"
+    if not base.exists():
+        logger.error(f"Directory not found: {base}")
+        sys.exit(1)
+
+    cfg = get_config()
+    client = AsyncOpenAI(base_url=cfg.llm.base_url, api_key=cfg.llm.api_key)
+    model = cfg.llm.model
+    logger.info(f"LLM: {cfg.llm.base_url} / {model}")
+
+    # Collect all PDFs
+    all_pdfs: List[tuple[str, Path]] = []
+    for lang_dir in sorted(base.iterdir()):
+        if not lang_dir.is_dir():
+            continue
+        for pdf in sorted(lang_dir.glob("*.pdf")):
+            all_pdfs.append((lang_dir.name, pdf))
+
+    logger.info(f"Found {len(all_pdfs)} PDFs to rename")
+    if dry_run:
+        logger.info("DRY RUN — no files will be renamed")
+
+    sem = asyncio.Semaphore(concurrency)
+    used_names: Set[str] = set()
+    entries: List[RenameEntry] = []
+
+    async def _rename_one(lang: str, pdf_path: Path) -> RenameEntry:
+        entry = RenameEntry(
+            lang=lang, old_name=pdf_path.name,
+            new_name="", old_path=str(pdf_path), new_path="",
+        )
+        try:
+            # Try metadata title first
+            meta_title = ""
+            try:
+                doc = fitz.open(str(pdf_path))
+                meta_title = ((doc.metadata or {}).get("title") or "").strip()
+                doc.close()
+            except Exception:
+                pass
+
+            if meta_title and len(meta_title) > 10 and meta_title.count("_") <= len(meta_title) * 0.5:
+                raw_title = meta_title
+            else:
+                text = await asyncio.to_thread(_extract_text, pdf_path, 2, 1500)
+                if not text or len(text.strip()) < 30:
+                    raw_title = f"document_{_file_hash(pdf_path)}"
+                else:
+                    raw_title = await _llm_call(
+                        client, sem, model, _TITLE_SYSTEM,
+                        _TITLE_USER.format(lang=lang, filename=pdf_path.name, max_pages=2, text=text),
+                    )
+
+            # Strip quotes
+            raw_title = raw_title.strip().strip('"').strip("'")
+            sanitized = _sanitize_title(raw_title)
+            if len(sanitized) < 5:
+                sanitized = f"document_{_file_hash(pdf_path)}"
+
+            new_name = f"{lang}_{sanitized}.pdf"
+            if new_name in used_names:
+                new_name = f"{lang}_{sanitized}_{_file_hash(pdf_path)}.pdf"
+
+            used_names.add(new_name)
+            entry.new_name = new_name
+            entry.new_path = str(pdf_path.parent / new_name)
+        except Exception as e:
+            entry.error = str(e)[:200]
+        return entry
+
+    tasks = [_rename_one(lang, p) for lang, p in all_pdfs]
+
+    for i, coro in enumerate(asyncio.as_completed(tasks), 1):
+        entry = await coro
+        entries.append(entry)
+        if entry.error:
+            logger.info(f"[{i:>3}/{len(all_pdfs)}] {entry.lang}/{entry.old_name[:40]:<40s} ? ERR: {entry.error[:50]}")
+        else:
+            logger.info(f"[{i:>3}/{len(all_pdfs)}] {entry.lang}/{entry.old_name[:40]:<40s} → {entry.new_name[:60]}")
+
+    # Apply renames
+    renamed = 0
+    errors = 0
+    for e in entries:
+        if e.error or not e.new_name:
+            errors += 1
+            continue
+        if e.old_name == e.new_name:
+            continue
+        try:
+            if not dry_run:
+                if Path(e.new_path).exists() and e.old_path != e.new_path:
+                    logger.warning(f"SKIP overwrite: {e.new_path}")
+                    errors += 1
+                    continue
+                os.rename(e.old_path, e.new_path)
+            renamed += 1
+        except Exception as exc:
+            logger.warning(f"Rename failed: {e.old_path} → {e.new_path}: {exc}")
+            errors += 1
+
+    # Save report
+    report_path = base / f"rename_report_{int(time.time())}.json"
+    report = {
+        "total": len(all_pdfs),
+        "renamed": renamed,
+        "errors": errors,
+        "changes": [
+            {"lang": e.lang, "old": e.old_name, "new": e.new_name}
+            for e in entries if not e.error and e.old_name != e.new_name
+        ],
+    }
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2))
+    logger.info(f"Report: {report_path}")
+
+    print(f"\n{'=' * 60}")
+    print(f"Renamed: {renamed}  Errors: {errors}  Unchanged: {len(all_pdfs) - renamed - errors}")
+
+    lang_stats: Dict[str, Dict[str, int]] = {}
+    for e in entries:
+        lang_stats.setdefault(e.lang, {"renamed": 0, "errors": 0})
+        if e.error:
+            lang_stats[e.lang]["errors"] += 1
+        elif e.old_name != e.new_name:
+            lang_stats[e.lang]["renamed"] += 1
+
+    print(f"\n{'Language':<10} {'Renamed':>8} {'Errors':>8}")
+    print("-" * 30)
+    for lang in sorted(lang_stats):
+        d = lang_stats[lang]
+        print(f"{lang:<10} {d['renamed']:>8} {d['errors']:>8}")
+
+
+# ═══════════════════════════════════════════════════════════════════
 # CLI
 # ═══════════════════════════════════════════════════════════════════
 
@@ -444,6 +783,16 @@ def main() -> None:
     p_an.add_argument("path", nargs="?", help="Path to report JSON (default: rett_syndrome_report.json)")
     p_an.add_argument("--llm-classify", action="store_true",
                       help="Classify medical domain via LLM (delegates to benchmark.py)")
+
+    p_clean = sub.add_parser("cleanup", help="LLM-based relevance check, remove irrelevant PDFs")
+    p_clean.add_argument("--download-dir", type=str, default=None, help="PDF directory (default: downloads/rett)")
+    p_clean.add_argument("--dry-run", action="store_true", help="Preview only, do not delete")
+    p_clean.add_argument("--concurrency", type=int, default=8, help="Parallel LLM calls")
+
+    p_ren = sub.add_parser("rename", help="Rename PDFs with LLM-extracted English titles")
+    p_ren.add_argument("--download-dir", type=str, default=None, help="PDF directory (default: downloads/rett)")
+    p_ren.add_argument("--dry-run", action="store_true", help="Preview only, do not rename")
+    p_ren.add_argument("--concurrency", type=int, default=8, help="Parallel LLM calls")
 
     args = parser.parse_args()
 
@@ -490,6 +839,18 @@ def main() -> None:
         ))
     elif args.cmd == "analyze":
         cmd_analyze(Path(args.path) if args.path else None, llm_classify=args.llm_classify)
+    elif args.cmd == "cleanup":
+        asyncio.run(cmd_cleanup(
+            download_dir=args.download_dir,
+            dry_run=args.dry_run,
+            concurrency=args.concurrency,
+        ))
+    elif args.cmd == "rename":
+        asyncio.run(cmd_rename(
+            download_dir=args.download_dir,
+            dry_run=args.dry_run,
+            concurrency=args.concurrency,
+        ))
 
 
 if __name__ == "__main__":

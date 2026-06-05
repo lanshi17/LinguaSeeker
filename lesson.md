@@ -1,5 +1,42 @@
 # Lesson Log
 
+## 2026-06-05: 推理模型 max_tokens 不足导致空响应
+
+**Problem**: 使用 mimo-v2.5（推理模型）调用 LLM 时，设置 `max_tokens=200` 返回空 content。567 个 PDF 全部判断失败。
+
+**Root cause**: 推理模型会先生成 reasoning_content（内部推理链），再生成 content。200 token 不够完成推理+输出，导致 `finish_reason: length` 且 content 为空字符串。
+
+**Fix**: 将 max_tokens 增大到 4096，为推理链和输出留足空间。
+
+**Prevention**: 使用推理模型时，max_tokens 应设为 4096 或更高。首次调用新模型时，先做单次测试确认返回正常。
+
+## 2026-06-05: PDF 批量重命名时哈希冲突导致文件覆盖丢失
+
+**Problem**: 批量重命名 222 个 PDF 时，2 个文件因标题相同且前 4096 字节哈希相同被覆盖（en 1 个, ja 1 个）。
+
+**Root cause**: `file_hash()` 只读取文件前 4096 字节计算 SHA256，两个不同 PDF 的前缀内容相同导致哈希一致，加上 LLM 提取的标题也相同，生成了完全相同的新文件名。`os.rename()` 会静默覆盖目标文件。
+
+**Fix**:
+1. `file_hash()` 改为读取完整文件内容计算哈希
+2. 重命名前检查目标文件是否已存在，存在则跳过并报错
+3. 功能已集成到 `rett_download.py` 的 `cleanup` 和 `rename` 子命令
+
+**Prevention**: 批量文件操作必须有防覆盖机制。哈希应基于完整文件内容。重命名前先 dry-run 检查重复项。
+
+## 2026-06-05: 在线获取 Phase 3 内容关卡缺失导致下载不相关文献
+
+**Problem**: `online_acquisition_workflow` 的 Phase 3（LLM 内容关卡）是空占位符，下载的 PDF 没有经过内容相关性验证，导致 Rett 综合征 benchmark 中 61% (345/567) 的 PDF 与主题无关。
+
+**Root cause**: workflow.py Phase 3 注释写着 *"can be added as a future enhancement"*，实际未实现。搜索返回的候选基于关键词匹配，API 结果中混有大量不相关文献。
+
+**Fix**:
+1. 新建 `relevance_gate.py` 核心模块，提供可复用的 LLM 相关性检查
+2. workflow.py Phase 3 调用 `run_relevance_gate()`，下载后自动过滤不相关文件
+3. `OnlineAcquisitionRequest` 新增 `relevance_gate: bool = True` 开关
+4. benchmark `cmd_cleanup` 重构为核心模块委托
+
+**Prevention**: 涉及外部数据获取的 pipeline 必须有内容验证环节，不能仅依赖关键词匹配。LLM 内容关卡应在 download action 中默认启用。
+
 ## 2026-05-12: maturin develop not overwriting .so file
 
 **Problem**: After `cargo clean` + `maturin develop --release`, the installed `.so` in the venv was stale — only 4 of 8 MinerU functions were available in Python.

@@ -47,6 +47,12 @@ class OnlineAcquisitionRequest(BaseModel):
     selected_title: Optional[str] = None
     detail_link: Optional[str] = None
 
+    # Phase 3 relevance gate
+    relevance_gate: bool = Field(
+        default=True,
+        description="Enable LLM-based relevance filtering after download.",
+    )
+
     @model_validator(mode="before")
     @classmethod
     def _normalize_input(cls, values: Any) -> Any:
