@@ -1,82 +1,94 @@
-# Core
+# Configuration Management
 
-> Vertical feature slices for the ACMG Lingua backend. Each sub-package owns a complete business loop for one pipeline phase — from orchestrator-facing API through pure business logic to LLM/DB/external service providers.
+ACMG Lingua uses a layered configuration system with Pydantic Settings.
 
-## Package Map
+## Configuration Sources (Priority Order)
 
-```
-src/core/
-├── config.py                                    # Singleton Settings (pydantic-settings)
-├── ingest_and_digitize_data/                    # Phase 1: document acquisition + parsing
-├── cross_lingual_process_and_extract_evidence/  # Phase 2: translation + evidence extraction
-├── standardize_entities_and_align_knowledge/    # Phase 3: entity standardization
-└── visualize_evidence_with_expert_in_loop/      # Phase 4: expert review + feedback
-```
+1. **Environment Variables** (highest priority)
+2. **config/vault/{env}.yaml** (secrets, git-ignored)
+3. **config/environments/{env}.yaml** (environment-specific)
+4. **config/defaults/main.yaml** (base defaults)
 
-## Architecture
+## Environment Selection
 
-Each feature slice follows the vertical slice pattern:
+Set `ENVIRONMENT` to choose which config files to load:
+- `development` (default)
+- `testing`
+- `production`
 
-```
-core/<feature>/
-├── api.py           # Orchestrator-facing entry point (service class)
-├── core.py          # Pure business logic (no I/O)
-├── providers.py     # LLM/DB/external service wrappers
-├── contracts.py     # Typed data contracts (Pydantic BaseModel / dataclass)
-└── README.md        # Developer guide
-```
-
-**Design rules:**
-- Orchestrator adapters call `api.py` only — never import `core.py` or `providers.py` directly.
-- `core.py` is pure: no network, no filesystem, no LLM calls. Testable with mocks.
-- `providers.py` wraps all external I/O. Retries and error handling live here.
-- `contracts.py` defines the typed boundary between slices. No bare `dict` returns.
-
-## Quick Start
+## Accessing Configuration
 
 ```python
 from src.core.config import get_config
 
 cfg = get_config()
 
-# Access nested config domains
-cfg.llm.api_key                 # LLM credentials
-cfg.postgresql.host             # DB host
-cfg.evidence_extraction.model   # Evidence extraction model
+# Nested models (preferred)
+cfg.llm.model                    # "mimo-v2.5"
+cfg.reasoning.model              # "mimo-v2.5-pro"
+cfg.embedding.model              # "Qwen/Qwen3-Embedding-0.6B"
+cfg.mineru.api_token             # MinerU API token
+cfg.postgresql.host              # "127.0.0.1"
+
+# Direct fields
+cfg.debug                        # True/False
+cfg.environment                  # "development"
 ```
 
-## Phase Overview
+## Available Nested Models
 
-| Phase | Package | Entry Point | Description |
-|-------|---------|-------------|-------------|
-| 1 | `ingest_and_digitize_data/` | `DocumentAcquisitionService`, `ParseDocumentService` | Acquire PDFs (local upload or online search), parse via MinerU |
-| 2 | `cross_lingual_process_and_extract_evidence/` | `TranslationService`, `EvidenceExtractionService` | Translate non-English docs, extract dual-track evidence |
-| 3 | `standardize_entities_and_align_knowledge/` | `EntityStandardizationService` | Standardize entities against terminology DBs (HGNC, HPO, OMIM) |
-| 4 | `visualize_evidence_with_expert_in_loop/` | `FeedbackService`, `ChatService`, `SourceLinker` | Expert review, feedback, conversational Q&A, audit trail |
+| Model | Description | Example |
+|-------|-------------|---------|
+| `llm` | Fast LLM (default model) | `cfg.llm.model` |
+| `reasoning` | Reasoning LLM | `cfg.reasoning.model` |
+| `embedding` | Embedding model | `cfg.embedding.model` |
+| `rerank` | Rerank model | `cfg.rerank.model` |
+| `mineru` | MinerU document parsing | `cfg.mineru.api_token` |
+| `parse_document` | Document parsing settings | `cfg.parse_document.mineru_remote_poll_interval` |
+| `evidence_extraction` | Evidence extraction | `cfg.evidence_extraction.model` |
+| `redis` | Redis connection | `cfg.redis.host` |
+| `postgresql` | PostgreSQL connection | `cfg.postgresql.host` |
+| `web_search` | Web search API | `cfg.web_search.api_key` |
+| `network` | Network/proxy settings | `cfg.network.proxy` |
 
-## Configuration
+## Environment Variable Mapping
 
-All config is loaded from `.env.local` / `.env` via `src.core.config.Settings`. Nested domain models (`cfg.llm`, `cfg.postgresql`, etc.) are built from flat env vars by a `model_validator`.
+YAML fields map to environment variables:
+- `llm.model` → `LLM_MODEL`
+- `mineru.api_token` → `MINERU_API_TOKEN`
+- `postgresql.host` → `POSTGRESQL_HOST`
 
-| Env Prefix | Domain Model | Description |
-|------------|-------------|-------------|
-| `FAST_LLM_*` / `LLM_*` | `cfg.llm` | Default LLM (OpenAI-compatible) |
-| `REASONING_LLM_*` | `cfg.reasoning` | High-accuracy reasoning model |
-| `MULTIMODAL_LLM_*` | `cfg.multimodal_llm` | Vision/multimodal model |
-| `EVIDENCE_EXTRACTION_*` | `cfg.evidence_extraction` | Evidence extraction models (fast/standard/strong) |
-| `EMBEDDING_*` | `cfg.embedding` | Embedding model |
-| `RERANK_*` | `cfg.rerank` | Rerank model |
-| `POSTGRES_*` | `cfg.postgresql` | PostgreSQL connection |
-| `REDIS_*` | `cfg.redis` | Redis connection |
-| `NEO4J_*` | `cfg.neo4j` | Neo4j connection |
-| `MINIO_*` | `cfg.minio` | MinIO object storage |
-| `MINERU_*` | `cfg.mineru` | MinerU document parsing service |
+## Adding New Configuration
 
-## Testing
+1. Add field to appropriate nested model in `src/core/config.py`
+2. Add default value in `config/defaults/main.yaml`
+3. Add environment-specific values in `config/environments/{env}.yaml`
+4. Add secrets in `config/vault/{env}.yaml` (git-ignored)
+5. Update `_build_nested()` validator if needed
 
-```bash
-cd backend
-uv run pytest tests/core/ -v
-```
+## Removed Models (v3.0.0)
 
-Each feature slice has its own test directory under `backend/tests/core/<feature>/`.
+The following models were removed in v3.0.0 as they were unused:
+- `multimodal_llm` - No code used this
+- `neo4j` - Graph database not implemented
+- `minio` - Object storage not implemented
+- `task` - Task queue not implemented
+- `literature` - Literature search not implemented
+- `smtp` - Email sending not implemented
+
+## Simplified MinerU API Token
+
+Previously required three separate tokens:
+- `mineru_api_token`
+- `mineru_api_token_backup`
+- `mineru_remote_api_token`
+
+Now only `mineru.api_token` is needed for all use cases (remote and local deployment).
+
+## Legacy Fallbacks Removed
+
+The following legacy environment variable fallbacks were removed:
+- `LLM_*` → Use `FAST_LLM_*` instead
+- `REASONING_*` → Use `REASONING_LLM_*` instead
+
+All configuration should use the new naming convention.
