@@ -25,6 +25,8 @@ def ctx() -> EvidenceExtractionConfigContext:
     return EvidenceExtractionConfigContext(
         api_key="test-key",
         base_url="http://test",
+        reasoning_api_key="test-reasoning-key",
+        reasoning_base_url="http://test-reasoning",
         fast_model="fast-model",
         standard_model="std-model",
         strong_model="strong-model",

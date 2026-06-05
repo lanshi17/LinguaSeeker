@@ -159,19 +159,7 @@ class LLMConfig(BaseModel):
     api_key: str = ""
     base_url: str = ""
     model: str = ""
-    temperature: float = 0.0
-    max_tokens: int = 2000
     timeout: int = 60
-    max_retries: int = 3
-
-
-class MultimodalLLMConfig(BaseModel):
-    """Multimodal LLM (text + vision)."""
-
-    enabled: bool = False
-    api_key: str = ""
-    base_url: str = ""
-    model: str = ""
 
 
 class ReasoningConfig(BaseModel):
@@ -205,12 +193,6 @@ class RerankConfig(BaseModel):
 class MinerUConfig(BaseModel):
     """MinerU document parsing service."""
 
-    api_url: str = ""
-    api_token: str = ""
-    api_token_backup: str = ""
-    version: str = "vlm"
-    download_dir: str = "/tmp/mineru_downloads"
-    timeout: int = 300
     max_file_size_mb: int = 100
 
 
@@ -265,47 +247,6 @@ class PostgreSQLConfig(BaseModel):
     password: str = ""
     pool_size: int = 20
     max_overflow: int = 30
-    pgvector_enabled: bool = True
-
-
-class Neo4jConfig(BaseModel):
-    """Neo4j graph database."""
-
-    uri: str = "bolt://localhost:7687"
-    user: str = "neo4j"
-    password: str = ""
-    database: str = "neo4j"
-    max_connection_lifetime: int = 3600
-    max_connection_pool_size: int = 50
-
-
-class MinIOConfig(BaseModel):
-    """MinIO object storage."""
-
-    endpoint: str = "localhost:9000"
-    access_key: str = ""
-    secret_key: str = ""
-    api: str = "s3v4"
-    path: str = "auto"
-    bucket_name: str = "acmg-bucket"
-    secure: bool = False
-    root_user: str = ""
-    root_password: str = ""
-
-
-class TaskConfig(BaseModel):
-    """Task execution limits."""
-
-    max_reasoning_iterations: int = 3
-    task_timeout_seconds: int = 3600
-
-
-class LiteratureConfig(BaseModel):
-    """Literature retrieval."""
-
-    pubmed_api_key: str = ""
-    pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
-    unpaywall_email: str = ""
 
 
 class WebSearchConfig(BaseModel):
@@ -358,16 +299,6 @@ class NetworkConfig(BaseModel):
         return self.proxy
 
 
-class SMTPConfig(BaseModel):
-    """SMTP email."""
-
-    host: str = ""
-    port: int = 465
-    user: str = ""
-    password: str = ""
-    from_email: str = ""
-
-
 # ── Root settings ────────────────────────────────────────────────────────
 
 
@@ -386,25 +317,10 @@ class Settings(BaseSettings):
 
     # ── Top-level app config ─────────────────────────────────────────────
 
-    app_name: str = "ACMG-Lingua"
-    app_version: str = "3.0.0"
-    api_prefix: str = "/api/v1"
     cors_origins: str = "*"
     environment: str = "development"
     debug: bool = False
     api_key: str = ""  # X-API-Key for write route auth; empty = disabled
-    api_host: str = "localhost"
-    api_port: int = 8000
-
-    # ── Legacy LLM flat fields (LLM_*) ──────────────────────────────────
-
-    llm_api_key: str = ""
-    llm_base_url: str = ""
-    llm_model: str = ""
-    llm_temperature: float = 0.0
-    llm_max_tokens: int = 2000
-    llm_timeout: int = 60
-    llm_max_retries: int = 3
 
     # ── Preferred fast LLM flat fields (FAST_LLM_*) ────────────────────
 
@@ -416,19 +332,6 @@ class Settings(BaseSettings):
     fast_llm_timeout: int = 0
     fast_llm_max_retries: int = 0
 
-    # ── Multimodal LLM flat fields (MULTIMODAL_LLM_*) ────────────────────
-
-    multimodal_llm_enabled: bool = False
-    multimodal_llm_api_key: str = ""
-    multimodal_llm_base_url: str = ""
-    multimodal_llm_model: str = ""
-
-    # ── Legacy reasoning flat fields (previously ARBITRATION_*) ────────
-
-    reasoning_api_key: str = ""
-    reasoning_model: str = ""
-    reasoning_effort: str = "high"
-    reasoning_base_url: str = ""
 
     # ── Preferred reasoning LLM flat fields (REASONING_LLM_*) ──────────
 
@@ -499,37 +402,6 @@ class Settings(BaseSettings):
     postgres_max_overflow: int = 30
     pgvector_enabled: bool = True
 
-    # ── Neo4j flat fields (NEO4J_*) ──────────────────────────────────────
-
-    neo4j_uri: str = "bolt://localhost:7687"
-    neo4j_user: str = "neo4j"
-    neo4j_password: str = ""
-    neo4j_database: str = "neo4j"
-    neo4j_max_connection_lifetime: int = 3600
-    neo4j_max_connection_pool_size: int = 50
-
-    # ── MinIO flat fields (MINIO_*) ──────────────────────────────────────
-
-    minio_endpoint: str = "localhost:9000"
-    minio_access_key: str = ""
-    minio_secret_key: str = ""
-    minio_api: str = "s3v4"
-    minio_path: str = "auto"
-    minio_bucket_name: str = "acmg-bucket"
-    minio_secure: bool = False
-    minio_root_user: str = ""
-    minio_root_password: str = ""
-
-    # ── Task flat fields ─────────────────────────────────────────────────
-
-    max_reasoning_iterations: int = 3
-    task_timeout_seconds: int = 3600
-
-    # ── Literature flat fields ───────────────────────────────────────────
-
-    pubmed_api_key: str = ""
-    pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
-    unpaywall_email: str = ""
 
     # ── Web Search flat fields (WEB_SEARCH_*) ───────────────────────────
 
@@ -538,22 +410,12 @@ class Settings(BaseSettings):
     WEB_SEARCH_TIMEOUT: int = 30
     WEB_SEARCH_MAX_RESULTS: int = 10
 
-    # ── SMTP flat fields (SMTP_*) ────────────────────────────────────────
-
-    smtp_host: str = ""
-    smtp_port: int = 465
-    smtp_user: str = ""
-    smtp_password: str = ""
-    smtp_from_email: str = ""
 
     # ── Network / proxy flat fields (NETWORK_*) ─────────────────────────
 
     network_proxy: str = ""
     network_no_proxy: str = _DEFAULT_NO_PROXY
 
-    # ── Cross-lingual output ─────────────────────────────────────────────
-
-    cross_lingual_output_dir: str = "data/cross_lingual_output"
 
     # ── Evidence Extraction flat fields (EVIDENCE_EXTRACTION_*) ──────────
 
@@ -574,7 +436,6 @@ class Settings(BaseSettings):
     # ── Nested domain models (populated by validator) ────────────────────
 
     llm: LLMConfig = Field(default_factory=LLMConfig, exclude=True)
-    multimodal_llm: MultimodalLLMConfig = Field(default_factory=MultimodalLLMConfig, exclude=True)
     reasoning: ReasoningConfig = Field(default_factory=ReasoningConfig, exclude=True)
     embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig, exclude=True)
     rerank: RerankConfig = Field(default_factory=RerankConfig, exclude=True)
@@ -585,11 +446,6 @@ class Settings(BaseSettings):
     )
     redis: RedisConfig = Field(default_factory=RedisConfig, exclude=True)
     postgresql: PostgreSQLConfig = Field(default_factory=PostgreSQLConfig, exclude=True)
-    neo4j: Neo4jConfig = Field(default_factory=Neo4jConfig, exclude=True)
-    minio: MinIOConfig = Field(default_factory=MinIOConfig, exclude=True)
-    task: TaskConfig = Field(default_factory=TaskConfig, exclude=True)
-    literature: LiteratureConfig = Field(default_factory=LiteratureConfig, exclude=True)
-    smtp: SMTPConfig = Field(default_factory=SMTPConfig, exclude=True)
     web_search: WebSearchConfig = Field(default_factory=WebSearchConfig, exclude=True)
     network: NetworkConfig = Field(default_factory=NetworkConfig, exclude=True)
 
@@ -604,40 +460,19 @@ class Settings(BaseSettings):
                 f"pgvector column dimension {PGVECTOR_DIMENSION}. "
                 f"Set EMBEDDING_DIMENSION={PGVECTOR_DIMENSION} or update the migration."
             )
-        fast_api_key = self.fast_llm_api_key or self.llm_api_key
-        fast_base_url = self.fast_llm_base_url or self.llm_base_url
-        fast_model = self.fast_llm_model or self.llm_model
-        fast_temperature = self.fast_llm_temperature if self.fast_llm_temperature is not None else self.llm_temperature
-        fast_max_tokens = self.fast_llm_max_tokens or self.llm_max_tokens
-        fast_timeout = self.fast_llm_timeout or self.llm_timeout
-        fast_max_retries = self.fast_llm_max_retries or self.llm_max_retries
-
-        reasoning_api_key = self.reasoning_llm_api_key or self.reasoning_api_key
-        reasoning_model = self.reasoning_llm_model or self.reasoning_model or fast_model
-        reasoning_effort = self.reasoning_llm_reasoning_effort or self.reasoning_effort
-        reasoning_base_url = self.reasoning_llm_base_url or self.reasoning_base_url
-
+        
         self.llm = LLMConfig(
-            api_key=fast_api_key,
-            base_url=fast_base_url,
-            model=fast_model,
-            temperature=fast_temperature,
-            max_tokens=fast_max_tokens,
-            timeout=fast_timeout,
-            max_retries=fast_max_retries,
-        )
-        self.multimodal_llm = MultimodalLLMConfig(
-            enabled=self.multimodal_llm_enabled,
-            api_key=self.multimodal_llm_api_key,
-            base_url=self.multimodal_llm_base_url,
-            model=self.multimodal_llm_model,
+            api_key=self.fast_llm_api_key,
+            base_url=self.fast_llm_base_url,
+            model=self.fast_llm_model,
+            timeout=self.fast_llm_timeout,
         )
         self.reasoning = ReasoningConfig(
-            api_key=reasoning_api_key,
-            model=reasoning_model,
-            reasoning_effort=reasoning_effort,
-            base_url=reasoning_base_url,
-            timeout=self.reasoning_llm_timeout or 60,
+            api_key=self.reasoning_llm_api_key,
+            model=self.reasoning_llm_model,
+            reasoning_effort=self.reasoning_llm_reasoning_effort,
+            base_url=self.reasoning_llm_base_url,
+            timeout=self.reasoning_llm_timeout,
         )
         self.embedding = EmbeddingConfig(
             base_url=self.embedding_base_url,
@@ -652,12 +487,6 @@ class Settings(BaseSettings):
             score_threshold=self.rerank_score_threshold,
         )
         self.mineru = MinerUConfig(
-            api_url=self.mineru_api_url,
-            api_token=self.mineru_api_token,
-            api_token_backup=self.mineru_api_token_backup,
-            version=self.mineru_version,
-            download_dir=self.mineru_download_dir,
-            timeout=self.mineru_timeout,
             max_file_size_mb=self.mineru_max_file_size_mb,
         )
         self.parse_document = ParseDocumentConfig(
@@ -680,9 +509,9 @@ class Settings(BaseSettings):
             fast_effort=self.evidence_extraction_fast_effort,
             standard_effort=self.evidence_extraction_standard_effort,
             strong_effort=self.evidence_extraction_strong_effort,
-            temperature=self.evidence_extraction_temperature or self.llm.temperature,
-            timeout=self.evidence_extraction_timeout or self.llm.timeout,
-            max_retries=self.evidence_extraction_max_retries or self.llm.max_retries,
+            temperature=self.evidence_extraction_temperature,
+            timeout=self.evidence_extraction_timeout,
+            max_retries=self.evidence_extraction_max_retries,
         )
         self.redis = RedisConfig(
             host=self.redis_host,
@@ -700,52 +529,16 @@ class Settings(BaseSettings):
             password=self.postgres_password,
             pool_size=self.postgres_pool_size,
             max_overflow=self.postgres_max_overflow,
-            pgvector_enabled=self.pgvector_enabled,
-        )
-        self.neo4j = Neo4jConfig(
-            uri=self.neo4j_uri,
-            user=self.neo4j_user,
-            password=self.neo4j_password,
-            database=self.neo4j_database,
-            max_connection_lifetime=self.neo4j_max_connection_lifetime,
-            max_connection_pool_size=self.neo4j_max_connection_pool_size,
-        )
-        self.minio = MinIOConfig(
-            endpoint=self.minio_endpoint,
-            access_key=self.minio_access_key,
-            secret_key=self.minio_secret_key,
-            api=self.minio_api,
-            path=self.minio_path,
-            bucket_name=self.minio_bucket_name,
-            secure=self.minio_secure,
-            root_user=self.minio_root_user,
-            root_password=self.minio_root_password,
-        )
-        self.task = TaskConfig(
-            max_reasoning_iterations=self.max_reasoning_iterations,
-            task_timeout_seconds=self.task_timeout_seconds,
-        )
-        self.literature = LiteratureConfig(
-            pubmed_api_key=self.pubmed_api_key,
-            pubmed_base_url=self.pubmed_base_url,
-            unpaywall_email=self.unpaywall_email,
-        )
-        self.smtp = SMTPConfig(
-            host=self.smtp_host,
-            port=self.smtp_port,
-            user=self.smtp_user,
-            password=self.smtp_password,
-            from_email=self.smtp_from_email,
         )
         self.web_search = WebSearchConfig(
             api_key=self.WEB_SEARCH_API_KEY,
-            base_url=self.WEB_SEARCH_BASE_URL or "https://api.firecrawl.dev",
-            timeout=self.WEB_SEARCH_TIMEOUT or 30,
-            max_results=self.WEB_SEARCH_MAX_RESULTS or 10,
+            base_url=self.WEB_SEARCH_BASE_URL,
+            timeout=self.WEB_SEARCH_TIMEOUT,
+            max_results=self.WEB_SEARCH_MAX_RESULTS,
         )
         self.network = NetworkConfig(
             proxy=self.network_proxy,
-            no_proxy=self.network_no_proxy or _DEFAULT_NO_PROXY,
+            no_proxy=self.network_no_proxy,
         )
         return self
 

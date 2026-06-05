@@ -14,10 +14,6 @@ cors_origins: "https://your-domain.com"
 fast_llm:
   base_url: "https://api.production-llm.com/v1"
 
-multimodal_llm:
-  enabled: false
-  base_url: "https://api.production-llm.com/v1"
-
 reasoning_llm:
   base_url: "https://api.production-llm.com/v1"
 
@@ -28,10 +24,6 @@ embedding:
 rerank:
   base_url: "http://model-server:8001/v1"
 
-mineru:
-  api_url: "https://mineru.net/api/v4"
-  local_model_server_url: "http://model-server:8001"
-
 # ── Database Connections (Production) ────────────────────────────────────
 postgres:
   host: "postgres-server"
@@ -40,22 +32,8 @@ postgres:
 
 redis:
   host: "redis-server"
-  password: ""
-
-neo4j:
-  uri: "bolt://neo4j-server:7687"
-  user: "neo4j"
-  database: "neo4j"
-
-# ── Object Storage (Production) ──────────────────────────────────────────
-minio:
-  endpoint: "minio-server:9000"
-  secure: true
 
 # ── Network / Proxy ──────────────────────────────────────────────────────
 network:
   proxy: ""
   no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
-
-# ── Literature Acquisition ────────────────────────────────────────────────
-jstage_proxy: ""

@@ -9,17 +9,12 @@
 fast_llm:
   api_key: "your-fast-llm-api-key"
 
-multimodal_llm:
-  api_key: "your-multimodal-llm-api-key"
-
 reasoning_llm:
   api_key: "your-reasoning-api-key"
 
-# ── MinerU API Tokens ────────────────────────────────────────────────────
-mineru:
-  api_token: "your-mineru-api-token"
-  api_token_backup: ""
-  remote_api_token: ""
+# ── Parse Document ────────────────────────────────────────────────────────
+parse_document:
+  remote_api_token: "your-mineru-api-token"
 
 # ── Database Credentials ─────────────────────────────────────────────────
 postgres:
@@ -28,26 +23,6 @@ postgres:
 
 redis:
   password: ""
-
-neo4j:
-  password: "your-neo4j-password"
-
-# ── Object Storage Credentials ───────────────────────────────────────────
-minio:
-  access_key: "your-minio-access-key"
-  secret_key: "your-minio-secret-key"
-  root_user: "your-minio-root-user"
-  root_password: "your-minio-root-password"
-
-# ── Literature Acquisition ────────────────────────────────────────────────
-pubmed_api_key: "your-pubmed-api-key"
-unpaywall_email: "[redacted-email]"
-
-# ── SMTP Email ────────────────────────────────────────────────────────────
-smtp:
-  user: "your-smtp-user"
-  password: "your-smtp-password"
-  from_email: "[redacted-email]"
 
 # ── Web Search ────────────────────────────────────────────────────────────
 web_search:
