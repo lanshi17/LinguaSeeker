@@ -7,9 +7,14 @@ by a ``model_validator``.
     from src.core.config import get_config
 
     cfg = get_config()              # singleton
-    cfg.llm.api_key                 # preferred: nested access
-    cfg.postgresql.host             # nested domain
-    cfg.llm_api_key                 # also available as flat field
+    cfg.llm.api_key                 # nested access (preferred)
+    cfg.llm.model                   # "mimo-v2.5"
+    cfg.reasoning.model             # "mimo-v2.5-pro"
+    cfg.mineru.api_token            # MinerU API token
+    cfg.postgresql.host             # PostgreSQL host
+
+All configuration uses nested domain models. Flat fields are internal
+implementation details populated by Pydantic Settings from YAML/env vars.
 """
 
 from __future__ import annotations
