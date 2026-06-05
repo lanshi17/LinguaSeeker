@@ -49,8 +49,6 @@ rerank:
 mineru:
   max_file_size_mb: {{ mineru.max_file_size_mb }}
   api_token: {{ mineru.api_token | default('') }}
-  api_token_backup: {{ mineru.api_token_backup | default('') }}
-  remote_api_token: {{ mineru.remote_api_token | default('') }}
   remote_poll_interval: {{ mineru.remote_poll_interval }}
   remote_max_poll_attempts: {{ mineru.remote_max_poll_attempts }}
   local_model_server_url: {{ mineru.local_model_server_url }}

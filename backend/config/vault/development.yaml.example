@@ -16,7 +16,6 @@ reasoning_llm:
 # Flattens to MINERU_API_TOKEN, MINERU_API_TOKEN_BACKUP, MINERU_REMOTE_API_TOKEN
 mineru:
   api_token: "your-mineru-api-token"
-  api_token_backup: ""
   remote_api_token: "your-mineru-remote-api-token"
 
 # ── Database Credentials ─────────────────────────────────────────────────

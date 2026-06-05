@@ -36,7 +36,7 @@ redis:
 # ── Network / Proxy ──────────────────────────────────────────────────────
 network:
   proxy: "http://127.0.0.1:7890"
-  no_proxy: ""
+  no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
 
 # ── Model Server GPU Settings (Development) ─────────────────────────────
 # Kept at top level for model-server compatibility

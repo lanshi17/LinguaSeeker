@@ -199,7 +199,6 @@ class MinerUConfig(BaseModel):
 class ParseDocumentConfig(BaseModel):
     """Parse document module configuration."""
 
-    mineru_remote_api_token: str = ""
     mineru_remote_poll_interval: float = 2.0
     mineru_remote_max_poll_attempts: int = 150
     mineru_local_model_server_url: str = "http://localhost:8001"
@@ -360,17 +359,11 @@ class Settings(BaseSettings):
 
     # ── MinerU flat fields (MINERU_*) ────────────────────────────────────
 
-    mineru_api_url: str = ""
     mineru_api_token: str = ""
-    mineru_api_token_backup: str = ""
-    mineru_version: str = "vlm"
-    mineru_download_dir: str = "/tmp/mineru_downloads"
-    mineru_timeout: int = 300
     mineru_max_file_size_mb: int = 100
 
     # ── Parse Document flat fields (MINERU_REMOTE_* / MINERU_LOCAL_*) ───
 
-    mineru_remote_api_token: str = ""
     mineru_remote_poll_interval: float = 2.0
     mineru_remote_max_poll_attempts: int = 150
     mineru_local_model_server_url: str = "http://localhost:8001"
@@ -490,7 +483,7 @@ class Settings(BaseSettings):
             max_file_size_mb=self.mineru_max_file_size_mb,
         )
         self.parse_document = ParseDocumentConfig(
-            mineru_remote_api_token=self.mineru_remote_api_token,
+            mineru_remote_api_token=self.mineru_api_token,
             mineru_remote_poll_interval=self.mineru_remote_poll_interval,
             mineru_remote_max_poll_attempts=self.mineru_remote_max_poll_attempts,
             mineru_local_model_server_url=self.mineru_local_model_server_url,
