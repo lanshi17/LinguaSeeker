@@ -28,7 +28,7 @@ fast_llm:
 # ── Reasoning LLM ─────────────────────────────────────────────────────────
 reasoning_llm:
   model: "mimo-v2.5-pro"
-  reasoning_effort: "xhigh"
+  reasoning_effort: "high"
   timeout: 300
 
 # ── Embedding Model ───────────────────────────────────────────────────────
@@ -42,6 +42,11 @@ rerank:
   model: "bge-reranker-v2-m3"
   top_k: 10
   score_threshold: 0.7
+
+# ── Evidence Extraction ──────────────────────────────────────────────────
+evidence_extraction:
+  timeout: 300
+  max_retries: 2
 
 # ── MinerU Document Parsing ──────────────────────────────────────────────
 # All fields flatten to MINERU_* env vars

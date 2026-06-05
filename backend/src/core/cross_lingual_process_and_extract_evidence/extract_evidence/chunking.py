@@ -15,6 +15,7 @@ from .prompts import block_readable_text, format_block_prompt_entry
 from ..cross_lingual.format.segmenter import estimate_tokens, segment_text
 
 DEFAULT_INPUT_BUDGET_TOKENS = 16_000
+STRONG_TIER_INPUT_BUDGET_TOKENS = 8_000
 _DEFAULT_SEAM_CONTEXT_CHARS = 150
 _SAFETY_MARGIN_TOKENS = 20
 

@@ -195,3 +195,4 @@
 [2026-06-04] Fix: Benchmark poll_status 404 retry logic [done]
 [2026-06-05] feat(network): add smart proxy routing (.cn direct, international via proxy) and improve Rust HTTP client (Chrome UA, browser headers, connect_timeout, 3 retries, graceful transport errors) [completed]
 [2026-06-05] Pipeline benchmark 真实测试: model_kwargs bug 修复 + timeout 增加 + smoke test 通过 [DONE]
+[2026-06-05] Pipeline benchmark smoke test: 2/3 passed, 68 evidence items, 0.945 avg confidence [DONE]

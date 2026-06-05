@@ -428,8 +428,8 @@ class Settings(BaseSettings):
     evidence_extraction_standard_effort: str = ""
     evidence_extraction_strong_effort: str = "high"
     evidence_extraction_temperature: float = 0.0
-    evidence_extraction_timeout: int = 180
-    evidence_extraction_max_retries: int = 3
+    evidence_extraction_timeout: int = 300
+    evidence_extraction_max_retries: int = 2
 
     # ── Nested domain models (populated by validator) ────────────────────
 
