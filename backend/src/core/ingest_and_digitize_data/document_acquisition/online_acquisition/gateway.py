@@ -15,6 +15,7 @@ from loguru import logger
 
 from .provider_health import get_health_tracker
 
+from src.core.config import get_config
 from src.utils.rust_io import net_io
 from src.utils.text import sanitize_filename
 
@@ -137,6 +138,9 @@ async def download_file_from_url(
     If the URL returns HTML, extracts PDF links from the page and retries
     each candidate (preserves existing _download_pdf_from_candidates behavior).
 
+    Proxy routing: international sites go through the configured proxy;
+    mainland China sites connect directly (see ``NetworkConfig``).
+
     Args:
         url: Direct download URL.
         download_path: Directory to save the file.
@@ -148,6 +152,7 @@ async def download_file_from_url(
     warnings: List[str] = []
     target = Path(download_path) / f"{sanitize_filename(filename_stem)}.pdf"
     target.parent.mkdir(parents=True, exist_ok=True)
+    proxy_resolver = get_config().network.resolve_proxy_for_url
 
     # Build candidate queue: start with the given URL
     queue: List[str] = [url]
@@ -158,16 +163,17 @@ async def download_file_from_url(
         if current_url in visited:
             continue
         visited.add(current_url)
+        proxy = proxy_resolver(current_url)
 
         # Try Rust download first (faster, has built-in retry)
         if net_io is not None:
             try:
-                result = await net_io.download_file(current_url, timeout_ms=30_000)
+                result = await net_io.download_file(current_url, timeout_ms=30_000, proxy=proxy)
                 status = result.get("status_code", 0)
                 file_bytes: bytes = result.get("bytes", b"")
                 final_url: str = result.get("final_url", current_url)
 
-                if status >= 400:
+                if status == 0 or status >= 400:
                     warnings.append(f"download_http_{status}:{current_url}")
                     continue
 
@@ -195,7 +201,9 @@ async def download_file_from_url(
 
         # Fallback: httpx (handles HTML→PDF redirect same as existing code)
         try:
-            async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            async with httpx.AsyncClient(
+                proxy=proxy, timeout=60, follow_redirects=True
+            ) as client:
                 resp = await client.get(current_url)
                 resp.raise_for_status()
 
@@ -343,11 +351,14 @@ async def call_provider(request: OnlineAcquisitionGatewayRequest) -> OnlineAcqui
         )
 
     params = _build_fetch_params(request)
+    # Provider APIs are mostly international — use the configured proxy.
+    proxy = get_config().network.proxy or None
     try:
         raw_result = await net_io.fetch_one(
             provider=request.provider,
             action=request.action,
             params=params,
+            proxy=proxy,
         )
         elapsed = (_time.monotonic() - start) * 1000
         success = bool(raw_result.get("success"))
