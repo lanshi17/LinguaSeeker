@@ -12,39 +12,22 @@
 # Regenerate with: uv run python scripts/render_config.py --env {{ environment }}
 
 # ── App ──────────────────────────────────────────────────────────────────
-app_name: {{ app.name }}
-app_version: "{{ app.version }}"
-api_prefix: {{ api_prefix }}
 cors_origins: "{{ cors_origins }}"
 environment: {{ environment }}
 debug: {{ debug | lower }}
-api_host: {{ api_host }}
-api_port: {{ api_port }}
 
 # ── Fast LLM (OpenAI-compatible) ────────────────────────────────────────
 fast_llm_api_key: {{ fast_llm.api_key | default('') }}
 fast_llm_base_url: {{ fast_llm.base_url | default('') }}
 fast_llm_model: {{ fast_llm.model }}
-fast_llm_temperature: {{ fast_llm.temperature }}
-fast_llm_max_tokens: {{ fast_llm.max_tokens }}
 fast_llm_timeout: {{ fast_llm.timeout }}
-fast_llm_max_retries: {{ fast_llm.max_retries }}
-
-# ── Multimodal LLM ──────────────────────────────────────────────────────
-multimodal_llm_enabled: {{ multimodal_llm.enabled | lower }}
-multimodal_llm_api_key: {{ multimodal_llm.api_key | default('') }}
-multimodal_llm_base_url: {{ multimodal_llm.base_url | default('') }}
-multimodal_llm_model: {{ multimodal_llm.model }}
 
 # ── Reasoning LLM ───────────────────────────────────────────────────────
 reasoning_llm_api_key: {{ reasoning_llm.api_key | default('') }}
 reasoning_llm_model: {{ reasoning_llm.model }}
 reasoning_llm_reasoning_effort: {{ reasoning_llm.reasoning_effort }}
 reasoning_llm_base_url: {{ reasoning_llm.base_url | default('') }}
-reasoning_llm_temperature: {{ reasoning_llm.temperature }}
-reasoning_llm_max_tokens: {{ reasoning_llm.max_tokens }}
 reasoning_llm_timeout: {{ reasoning_llm.timeout }}
-reasoning_llm_max_retries: {{ reasoning_llm.max_retries }}
 
 # ── Embedding (local model-server) ──────────────────────────────────────
 embedding_base_url: {{ embedding.base_url | default('') }}
@@ -59,22 +42,16 @@ rerank_top_k: {{ rerank.top_k }}
 rerank_score_threshold: {{ rerank.score_threshold }}
 
 # ── MinerU document parsing ─────────────────────────────────────────────
-mineru_api_url: {{ mineru.api_url | default('') }}
-mineru_api_token: {{ mineru.api_token | default('') }}
-mineru_api_token_backup: {{ mineru.api_token_backup | default('') }}
-mineru_version: {{ mineru.version }}
-mineru_download_dir: {{ mineru.download_dir }}
-mineru_timeout: {{ mineru.timeout }}
 mineru_max_file_size_mb: {{ mineru.max_file_size_mb }}
 
-# ── Parse Document (MinerU local/remote) ────────────────────────────────
-mineru_remote_api_token: {{ mineru.remote_api_token | default('') }}
-mineru_remote_poll_interval: {{ mineru.remote_poll_interval }}
-mineru_remote_max_poll_attempts: {{ mineru.remote_max_poll_attempts }}
-mineru_local_model_server_url: {{ mineru.local_model_server_url | default('http://localhost:8001') }}
-mineru_local_model_id: {{ mineru.local_model_id }}
-mineru_local_timeout: {{ mineru.local_timeout }}
-mineru_local_dpi: {{ mineru.local_dpi }}
+# ── Parse Document ──────────────────────────────────────────────────────
+mineru_remote_api_token: {{ parse_document.remote_api_token | default('') }}
+mineru_remote_poll_interval: {{ parse_document.remote_poll_interval }}
+mineru_remote_max_poll_attempts: {{ parse_document.remote_max_poll_attempts }}
+mineru_local_model_server_url: {{ parse_document.local_model_server_url }}
+mineru_local_model_id: {{ parse_document.local_model_id }}
+mineru_local_timeout: {{ parse_document.local_timeout }}
+mineru_local_dpi: {{ parse_document.local_dpi }}
 
 # ── Model Server ────────────────────────────────────────────────────────
 model_server_url: http://{{ api_host if api_host != '0.0.0.0' else 'localhost' }}:{{ model_server_port | default(8001) }}
@@ -95,53 +72,16 @@ postgres_user: {{ postgres.user | default('') }}
 postgres_password: {{ postgres.password | default('') }}
 postgres_pool_size: {{ postgres.pool_size }}
 postgres_max_overflow: {{ postgres.max_overflow }}
-pgvector_enabled: {{ pgvector_enabled | lower }}
-
-# ── Neo4j ───────────────────────────────────────────────────────────────
-neo4j_uri: {{ neo4j.uri | default('bolt://localhost:7687') }}
-neo4j_user: {{ neo4j.user | default('neo4j') }}
-neo4j_password: {{ neo4j.password | default('') }}
-neo4j_database: {{ neo4j.database }}
-neo4j_port: {{ neo4j.port }}
-neo4j_max_connection_lifetime: {{ neo4j.max_connection_lifetime }}
-neo4j_max_connection_pool_size: {{ neo4j.max_connection_pool_size }}
-
-# ── MinIO ───────────────────────────────────────────────────────────────
-minio_endpoint: {{ minio.endpoint }}
-minio_access_key: {{ minio.access_key | default('') }}
-minio_secret_key: {{ minio.secret_key | default('') }}
-minio_api: {{ minio.api }}
-minio_path: {{ minio.path }}
-minio_bucket_name: {{ minio.bucket_name }}
-minio_secure: {{ minio.secure | lower }}
-minio_root_user: {{ minio.root_user | default('') }}
-minio_root_password: {{ minio.root_password | default('') }}
-
-# ── Task execution ──────────────────────────────────────────────────────
-max_reasoning_iterations: {{ max_reasoning_iterations }}
-task_timeout_seconds: {{ task_timeout_seconds }}
-
-# ── Literature acquisition ──────────────────────────────────────────────
-pubmed_api_key: {{ pubmed_api_key | default('') }}
-pubmed_base_url: {{ pubmed_base_url }}
-unpaywall_email: {{ unpaywall_email | default('') }}
-
-# ── SMTP ────────────────────────────────────────────────────────────────
-smtp_host: {{ smtp.host }}
-smtp_port: {{ smtp.port }}
-smtp_user: {{ smtp.user | default('') }}
-smtp_password: {{ smtp.password | default('') }}
-smtp_from_email: {{ smtp.from_email | default('') }}
-
-# ── Network / Proxy ────────────────────────────────────────────────────
-network_proxy: {{ network.proxy | default('') }}
-network_no_proxy: "{{ network.no_proxy | default('') }}"
 
 # ── Web Search ──────────────────────────────────────────────────────────
 WEB_SEARCH_API_KEY: {{ web_search.api_key | default('') }}
 WEB_SEARCH_BASE_URL: {{ web_search.base_url }}
 WEB_SEARCH_TIMEOUT: {{ web_search.timeout }}
 WEB_SEARCH_MAX_RESULTS: {{ web_search.max_results }}
+
+# ── Network / Proxy ────────────────────────────────────────────────────
+network_proxy: {{ network.proxy | default('') }}
+network_no_proxy: "{{ network.no_proxy | default('') }}"
 
 # ── Evidence Extraction ────────────────────────────────────────────────
 evidence_extraction_api_key: {{ evidence_extraction.api_key | default('') }}
@@ -159,7 +99,7 @@ evidence_extraction_timeout: {{ evidence_extraction.timeout }}
 evidence_extraction_max_retries: {{ evidence_extraction.max_retries }}
 
 # ── Model Server GPU settings ──────────────────────────────────────────
-doc_parse_model_id: "{{ doc_parse_model_id | default('') }}"
+vlm_model_id: "{{ vlm_model_id | default('') }}"
 embedding_gpu_memory_utilization: {{ embedding_gpu_memory_utilization | default(0.35) }}
 embedding_max_model_len: {{ embedding_max_model_len | default(4096) }}
 rerank_gpu_memory_utilization: {{ rerank_gpu_memory_utilization | default(0.2) }}

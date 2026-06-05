@@ -19,6 +19,8 @@ def test_provider_uses_strong_model_for_strong_tier():
     ctx = EvidenceExtractionConfigContext(
         api_key="key",
         base_url="http://localhost:8001/v1",
+        reasoning_api_key="reasoning-key",
+        reasoning_base_url="http://localhost:8001/v1",
         fast_model="fast",
         standard_model="standard",
         strong_model="strong",
@@ -44,10 +46,11 @@ def test_provider_uses_strong_model_for_strong_tier():
     assert result.answer == "ok"
     chat_cls.assert_called_with(
         model="strong",
-        api_key=provider._secret,
+        api_key=provider._reasoning_secret,
         base_url="http://localhost:8001/v1",
         temperature=0.0,
         timeout=60,
+        model_kwargs={"reasoning_effort": "high"},
     )
 
 
@@ -55,6 +58,8 @@ def test_provider_uses_json_mode_when_requested():
     ctx = EvidenceExtractionConfigContext(
         api_key="key",
         base_url="http://localhost:8001/v1",
+        reasoning_api_key="reasoning-key",
+        reasoning_base_url="http://localhost:8001/v1",
         fast_model="fast",
         standard_model="standard",
         strong_model="strong",
@@ -86,6 +91,8 @@ def test_provider_falls_back_to_plain_json_when_response_format_is_unsupported()
     ctx = EvidenceExtractionConfigContext(
         api_key="key",
         base_url="http://localhost:8001/v1",
+        reasoning_api_key="reasoning-key",
+        reasoning_base_url="http://localhost:8001/v1",
         fast_model="fast",
         standard_model="standard",
         strong_model="strong",
@@ -120,6 +127,8 @@ def test_provider_fallback_validates_list_schema():
     ctx = EvidenceExtractionConfigContext(
         api_key="key",
         base_url="http://localhost:8001/v1",
+        reasoning_api_key="reasoning-key",
+        reasoning_base_url="http://localhost:8001/v1",
         fast_model="fast",
         standard_model="standard",
         strong_model="strong",
@@ -151,6 +160,8 @@ def test_provider_fallback_repairs_invalid_json_backslash_escapes():
     ctx = EvidenceExtractionConfigContext(
         api_key="key",
         base_url="http://localhost:8001/v1",
+        reasoning_api_key="reasoning-key",
+        reasoning_base_url="http://localhost:8001/v1",
         fast_model="fast",
         standard_model="standard",
         strong_model="strong",
@@ -183,6 +194,8 @@ def test_provider_fallback_reasks_llm_to_repair_invalid_json():
     ctx = EvidenceExtractionConfigContext(
         api_key="key",
         base_url="http://localhost:8001/v1",
+        reasoning_api_key="reasoning-key",
+        reasoning_base_url="http://localhost:8001/v1",
         fast_model="fast",
         standard_model="standard",
         strong_model="strong",

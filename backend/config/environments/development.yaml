@@ -14,10 +14,6 @@ cors_origins: "*"
 fast_llm:
   base_url: "https://api.xiaomimimo.com/v1"
 
-multimodal_llm:
-  enabled: false
-  base_url: "https://api.xiaomimimo.com/v1"
-
 reasoning_llm:
   base_url: "https://api.xiaomimimo.com/v1"
 
@@ -28,10 +24,6 @@ embedding:
 rerank:
   base_url: "http://localhost:8001/v1"
 
-mineru:
-  api_url: "https://mineru.net/api/v4"
-  local_model_server_url: "http://localhost:8001"
-
 # ── Database Connections (Local) ─────────────────────────────────────────
 postgres:
   host: "127.0.0.1"
@@ -40,20 +32,12 @@ postgres:
 
 redis:
   host: "localhost"
-  password: ""
-
-neo4j:
-  uri: "bolt://localhost:7687"
-  user: "neo4j"
-  database: "neo4j"
-
-# ── Object Storage (Local) ───────────────────────────────────────────────
-minio:
-  endpoint: "localhost:9000"
-  secure: false
 
 # ── Network / Proxy ──────────────────────────────────────────────────────
 network:
   proxy: "http://127.0.0.1:7890"
   no_proxy: ""
 
+# ── Model Server GPU Settings (Development) ─────────────────────────────
+# Kept at top level for model-server compatibility
+vlm_model_id: ""

@@ -149,13 +149,11 @@ _exclude:
 
   # ── Un-templated originals (replaced by .jinja versions) ─────────
   - "README.md"
-  - ".env.example"
   - "docker-compose.yml"
   - "backend/config-dev.yaml"
   - "backend/config/vault/*.yaml"
   - "backend/config/vault/*.yml"
   - "backend/pyproject.toml"
-  - "backend/.env.example"
   - "backend/app/main.py"
   - "backend/services/model-server/main.py"
   - "backend/src/core/config.py"
@@ -166,7 +164,6 @@ _exclude:
   - "backend/libs/net-io/Cargo.toml"
   - "database/alembic.ini"
   - "database/migrations/env.py"
-  - "database/config/.env.example"
   - "frontend/package.json"
   - "frontend/.nvmrc"
 
