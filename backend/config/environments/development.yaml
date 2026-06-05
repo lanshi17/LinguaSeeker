@@ -1,0 +1,67 @@
+# ============================================================================
+# Development Environment Configuration
+# ============================================================================
+# Structural overrides for local development. Safe to commit.
+# Secrets go in vault/development.yaml (git-ignored)
+# ============================================================================
+
+# ── Application ───────────────────────────────────────────────────────────
+app:
+  environment: "development"
+  debug: true
+  cors_origins: "*"
+
+# ── LLM Endpoints (Development) ──────────────────────────────────────────
+fast_llm:
+  base_url: "https://api.xiaomimimo.com/v1"
+
+multimodal_llm:
+  enabled: false
+  base_url: "https://api.xiaomimimo.com/v1"
+
+reasoning_llm:
+  base_url: "https://api.xiaomimimo.com/v1"
+
+# ── Model Server (Local) ─────────────────────────────────────────────────
+embedding:
+  base_url: "http://localhost:8001/v1"
+
+rerank:
+  base_url: "http://localhost:8001/v1"
+
+mineru:
+  api_url: "https://mineru.net/api/v4"
+  local_model_server_url: "http://localhost:8001"
+
+# ── Database Connections (Local) ─────────────────────────────────────────
+postgres:
+  host: "127.0.0.1"
+  db: "lingua_db"
+  schema: "lingua"
+
+redis:
+  host: "localhost"
+  password: ""
+
+neo4j:
+  uri: "bolt://localhost:7687"
+  user: "neo4j"
+  database: "neo4j"
+
+# ── Object Storage (Local) ───────────────────────────────────────────────
+minio:
+  endpoint: "localhost:9000"
+  secure: false
+
+# ── Network / Proxy ──────────────────────────────────────────────────────
+network:
+  proxy: "http://127.0.0.1:7890"
+  no_proxy: ""
+
+# ── Literature Acquisition ────────────────────────────────────────────────
+literature:
+  jstage_proxy: "http://127.0.0.1:7890"
+
+# ── Model Server GPU Settings (Development) ─────────────────────────────
+model_server:
+  vlm_model_id: ""

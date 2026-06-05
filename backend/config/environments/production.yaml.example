@@ -1,0 +1,82 @@
+# ============================================================================
+# Production Environment Configuration — Example Template
+# ============================================================================
+# Copy this file to production.yaml and customize for your production setup.
+# Secrets go in vault/production.yaml (git-ignored)
+# ============================================================================
+
+# ── Application ───────────────────────────────────────────────────────────
+app:
+  environment: "production"
+  debug: false
+  cors_origins: "https://your-domain.com"
+  api_host: "0.0.0.0"
+  api_port: 8000
+
+# ── LLM Endpoints (Production) ───────────────────────────────────────────
+# Use production API endpoints with higher rate limits
+fast_llm:
+  base_url: "https://api.production-llm.com/v1"
+
+multimodal_llm:
+  enabled: true
+  base_url: "https://api.production-llm.com/v1"
+
+reasoning_llm:
+  base_url: "https://api.production-llm.com/v1"
+  reasoning_effort: "high"
+
+# ── Model Server (Production — may be remote) ───────────────────────────
+embedding:
+  base_url: "http://model-server:8001/v1"
+
+rerank:
+  base_url: "http://model-server:8001/v1"
+
+mineru:
+  api_url: "https://mineru.net/api/v4"
+  local_model_server_url: "http://model-server:8001"
+
+# ── Database Connections (Production) ────────────────────────────────────
+postgres:
+  host: "postgres-primary"
+  db: "acmg_prod"
+  schema: "acmg_app"
+  pool_size: 50
+  max_overflow: 100
+
+redis:
+  host: "redis-cluster"
+  port: 6379
+  db: 0
+  max_connections: 100
+
+neo4j:
+  uri: "bolt://neo4j-cluster:7687"
+  user: "neo4j"
+  database: "acmg_graph"
+  max_connection_pool_size: 200
+
+# ── Object Storage (Production — S3 or MinIO cluster) ───────────────────
+minio:
+  endpoint: "minio-cluster:9000"
+  bucket_name: "acmg-prod-bucket"
+  secure: true
+
+# ── Network / Proxy ──────────────────────────────────────────────────────
+# Production typically doesn't need proxy
+network:
+  proxy: ""
+  no_proxy: ""
+
+# ── Literature Acquisition ────────────────────────────────────────────────
+literature:
+  jstage_proxy: ""
+
+# ── Model Server GPU Settings (Production — higher utilization) ─────────
+model_server:
+  vlm_model_id: "opendatalab/MinerU2.5-Pro-2604-1.2B"
+  embedding_gpu_memory_utilization: 0.9
+  embedding_max_model_len: 8192
+  rerank_gpu_memory_utilization: 0.8
+  vlm_gpu_memory_utilization: 0.9

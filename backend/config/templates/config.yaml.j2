@@ -1,0 +1,151 @@
+{# ============================================================================
+   Rendered Configuration Template
+   ============================================================================
+   This Jinja2 template merges layered variables (defaults → environment →
+   vault) into the flat key format expected by backend/src/core/config.py.
+   
+   Render via: scripts/render_config.py or the config loader in config.py
+   Output:     backend/config-dev.yaml (git-ignored) or stdout
+   ============================================================================ #}
+# Auto-generated configuration — DO NOT EDIT MANUALLY
+# Generated from: defaults/main.yaml + environments/{{ environment }}.yaml + vault/{{ environment }}.yaml
+# Regenerate with: uv run python scripts/render_config.py --env {{ environment }}
+
+# ── App ──────────────────────────────────────────────────────────────────
+app_name: {{ app.name }}
+app_version: "{{ app.version }}"
+api_prefix: {{ app.api_prefix }}
+cors_origins: "{{ app.cors_origins }}"
+environment: {{ app.environment }}
+debug: {{ app.debug | lower }}
+api_host: {{ app.api_host }}
+api_port: {{ app.api_port }}
+
+# ── Fast LLM (OpenAI-compatible) ────────────────────────────────────────
+fast_llm_api_key: {{ fast_llm.api_key }}
+fast_llm_base_url: {{ fast_llm.base_url }}
+fast_llm_model: {{ fast_llm.model }}
+fast_llm_temperature: {{ fast_llm.temperature }}
+fast_llm_max_tokens: {{ fast_llm.max_tokens }}
+fast_llm_timeout: {{ fast_llm.timeout }}
+fast_llm_max_retries: {{ fast_llm.max_retries }}
+
+# ── Multimodal LLM ──────────────────────────────────────────────────────
+multimodal_llm_enabled: {{ multimodal_llm.enabled | lower }}
+multimodal_llm_api_key: {{ multimodal_llm.api_key }}
+multimodal_llm_base_url: {{ multimodal_llm.base_url }}
+multimodal_llm_model: {{ multimodal_llm.model }}
+
+# ── Reasoning LLM ───────────────────────────────────────────────────────
+reasoning_llm_api_key: {{ reasoning_llm.api_key }}
+reasoning_llm_model: {{ reasoning_llm.model }}
+reasoning_llm_reasoning_effort: {{ reasoning_llm.reasoning_effort }}
+reasoning_llm_base_url: {{ reasoning_llm.base_url }}
+reasoning_llm_temperature: {{ reasoning_llm.temperature }}
+reasoning_llm_max_tokens: {{ reasoning_llm.max_tokens }}
+reasoning_llm_timeout: {{ reasoning_llm.timeout }}
+reasoning_llm_max_retries: {{ reasoning_llm.max_retries }}
+
+# ── Embedding (local model-server) ──────────────────────────────────────
+embedding_base_url: {{ embedding.base_url }}
+embedding_model: {{ embedding.model }}
+embedding_dimension: {{ embedding.dimension }}
+embedding_batch_size: {{ embedding.batch_size }}
+
+# ── Rerank (local model-server) ─────────────────────────────────────────
+rerank_base_url: {{ rerank.base_url }}
+rerank_model: {{ rerank.model }}
+rerank_top_k: {{ rerank.top_k }}
+rerank_score_threshold: {{ rerank.score_threshold }}
+
+# ── MinerU document parsing ─────────────────────────────────────────────
+mineru_api_url: {{ mineru.api_url }}
+mineru_api_token: {{ mineru.api_token }}
+mineru_api_token_backup: {{ mineru.api_token_backup }}
+mineru_version: {{ mineru.version }}
+mineru_download_dir: {{ mineru.download_dir }}
+mineru_timeout: {{ mineru.timeout }}
+mineru_max_file_size_mb: {{ mineru.max_file_size_mb }}
+
+# ── Parse Document (MinerU local/remote) ────────────────────────────────
+mineru_remote_api_token: "{{ mineru.remote_api_token }}"
+mineru_remote_poll_interval: {{ mineru.remote_poll_interval }}
+mineru_remote_max_poll_attempts: {{ mineru.remote_max_poll_attempts }}
+mineru_local_model_server_url: {{ mineru.local_model_server_url }}
+mineru_local_model_id: {{ mineru.local_model_id }}
+mineru_local_timeout: {{ mineru.local_timeout }}
+mineru_local_dpi: {{ mineru.local_dpi }}
+
+# ── Model Server ────────────────────────────────────────────────────────
+model_server_url: http://{{ app.api_host if app.api_host != '0.0.0.0' else 'localhost' }}:{{ model_server.port }}
+
+# ── Redis ───────────────────────────────────────────────────────────────
+redis_host: {{ redis.host }}
+redis_port: {{ redis.port }}
+redis_password: "{{ redis.password }}"
+redis_db: {{ redis.db }}
+redis_max_connections: {{ redis.max_connections }}
+
+# ── PostgreSQL ──────────────────────────────────────────────────────────
+postgres_host: {{ postgres.host }}
+postgres_port: {{ postgres.port }}
+postgres_db: {{ postgres.db }}
+postgres_schema: {{ postgres.schema }}
+postgres_user: {{ postgres.user }}
+postgres_password: {{ postgres.password }}
+postgres_pool_size: {{ postgres.pool_size }}
+postgres_max_overflow: {{ postgres.max_overflow }}
+pgvector_enabled: {{ postgres.pgvector_enabled | lower }}
+
+# ── Neo4j ───────────────────────────────────────────────────────────────
+neo4j_uri: {{ neo4j.uri }}
+neo4j_user: {{ neo4j.user }}
+neo4j_password: {{ neo4j.password }}
+neo4j_database: {{ neo4j.database }}
+neo4j_max_connection_lifetime: {{ neo4j.max_connection_lifetime }}
+neo4j_max_connection_pool_size: {{ neo4j.max_connection_pool_size }}
+
+# ── MinIO ───────────────────────────────────────────────────────────────
+minio_endpoint: {{ minio.endpoint }}
+minio_access_key: {{ minio.access_key }}
+minio_secret_key: {{ minio.secret_key }}
+minio_api: {{ minio.api }}
+minio_path: {{ minio.path }}
+minio_bucket_name: {{ minio.bucket_name }}
+minio_secure: {{ minio.secure | lower }}
+minio_root_user: {{ minio.root_user }}
+minio_root_password: {{ minio.root_password }}
+
+# ── Task execution ──────────────────────────────────────────────────────
+max_reasoning_iterations: {{ task.max_reasoning_iterations }}
+task_timeout_seconds: {{ task.timeout_seconds }}
+
+# ── Literature acquisition ──────────────────────────────────────────────
+pubmed_api_key: {{ literature.pubmed_api_key }}
+pubmed_base_url: {{ literature.pubmed_base_url }}
+unpaywall_email: {{ literature.unpaywall_email }}
+jstage_proxy: {{ literature.jstage_proxy }}
+
+# ── SMTP ────────────────────────────────────────────────────────────────
+smtp_host: {{ smtp.host }}
+smtp_port: {{ smtp.port }}
+smtp_user: {{ smtp.user }}
+smtp_password: {{ smtp.password }}
+smtp_from_email: {{ smtp.from_email }}
+
+# ── Network / Proxy ────────────────────────────────────────────────────
+network_proxy: {{ network.proxy }}
+network_no_proxy: "{{ network.no_proxy }}"
+
+# ── Web Search ──────────────────────────────────────────────────────────
+WEB_SEARCH_API_KEY: {{ web_search.api_key }}
+WEB_SEARCH_BASE_URL: {{ web_search.base_url }}
+WEB_SEARCH_TIMEOUT: {{ web_search.timeout }}
+WEB_SEARCH_MAX_RESULTS: {{ web_search.max_results }}
+
+# ── Model Server GPU settings ──────────────────────────────────────────
+vlm_model_id: "{{ model_server.vlm_model_id }}"
+embedding_gpu_memory_utilization: {{ model_server.embedding_gpu_memory_utilization }}
+embedding_max_model_len: {{ model_server.embedding_max_model_len }}
+rerank_gpu_memory_utilization: {{ model_server.rerank_gpu_memory_utilization }}
+vlm_gpu_memory_utilization: {{ model_server.vlm_gpu_memory_utilization }}
