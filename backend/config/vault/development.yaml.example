@@ -1,12 +1,8 @@
 # ============================================================================
-# Development Secrets — Example Template
+# Development Secrets Template
 # ============================================================================
-# Copy this file to development.yaml and fill in your actual secrets.
-# This file is git-ignored and must NEVER be committed.
-#
-# Usage:
-#   cp backend/config/vault/development.yaml.example backend/config/vault/development.yaml
-#   # Edit development.yaml with your actual API keys and passwords
+# Copy to development.yaml and fill in your actual credentials.
+# This file is git-ignored — NEVER commit real secrets.
 # ============================================================================
 
 # ── LLM API Keys ──────────────────────────────────────────────────────────
@@ -17,12 +13,12 @@ multimodal_llm:
   api_key: "your-multimodal-llm-api-key"
 
 reasoning_llm:
-  api_key: "your-reasoning-llm-api-key"
+  api_key: "your-reasoning-api-key"
 
 # ── MinerU API Tokens ────────────────────────────────────────────────────
 mineru:
   api_token: "your-mineru-api-token"
-  api_token_backup: "your-mineru-backup-api-token"
+  api_token_backup: ""
   remote_api_token: ""
 
 # ── Database Credentials ─────────────────────────────────────────────────
@@ -44,9 +40,8 @@ minio:
   root_password: "your-minio-root-password"
 
 # ── Literature Acquisition ────────────────────────────────────────────────
-literature:
-  pubmed_api_key: "your-pubmed-api-key"
-  unpaywall_email: "your-email@example.com"
+pubmed_api_key: "your-pubmed-api-key"
+unpaywall_email: "your-email@example.com"
 
 # ── SMTP Email ────────────────────────────────────────────────────────────
 smtp:

@@ -1,32 +1,27 @@
 # ============================================================================
-# Production Environment Configuration — Example Template
+# Production Environment Configuration
 # ============================================================================
-# Copy this file to production.yaml and customize for your production setup.
+# Copy to production.yaml and customize for your production deployment.
 # Secrets go in vault/production.yaml (git-ignored)
 # ============================================================================
 
 # ── Application ───────────────────────────────────────────────────────────
-app:
-  environment: "production"
-  debug: false
-  cors_origins: "https://your-domain.com"
-  api_host: "0.0.0.0"
-  api_port: 8000
+environment: "production"
+debug: false
+cors_origins: "https://your-domain.com"
 
-# ── LLM Endpoints (Production) ───────────────────────────────────────────
-# Use production API endpoints with higher rate limits
+# ── LLM Endpoints (Production) ──────────────────────────────────────────
 fast_llm:
   base_url: "https://api.production-llm.com/v1"
 
 multimodal_llm:
-  enabled: true
+  enabled: false
   base_url: "https://api.production-llm.com/v1"
 
 reasoning_llm:
   base_url: "https://api.production-llm.com/v1"
-  reasoning_effort: "high"
 
-# ── Model Server (Production — may be remote) ───────────────────────────
+# ── Model Server (Production) ────────────────────────────────────────────
 embedding:
   base_url: "http://model-server:8001/v1"
 
@@ -39,44 +34,28 @@ mineru:
 
 # ── Database Connections (Production) ────────────────────────────────────
 postgres:
-  host: "postgres-primary"
-  db: "acmg_prod"
+  host: "postgres-server"
+  db: "acmg_lingua"
   schema: "acmg_app"
-  pool_size: 50
-  max_overflow: 100
 
 redis:
-  host: "redis-cluster"
-  port: 6379
-  db: 0
-  max_connections: 100
+  host: "redis-server"
+  password: ""
 
 neo4j:
-  uri: "bolt://neo4j-cluster:7687"
+  uri: "bolt://neo4j-server:7687"
   user: "neo4j"
-  database: "acmg_graph"
-  max_connection_pool_size: 200
+  database: "neo4j"
 
-# ── Object Storage (Production — S3 or MinIO cluster) ───────────────────
+# ── Object Storage (Production) ──────────────────────────────────────────
 minio:
-  endpoint: "minio-cluster:9000"
-  bucket_name: "acmg-prod-bucket"
+  endpoint: "minio-server:9000"
   secure: true
 
 # ── Network / Proxy ──────────────────────────────────────────────────────
-# Production typically doesn't need proxy
 network:
   proxy: ""
-  no_proxy: ""
+  no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
 
 # ── Literature Acquisition ────────────────────────────────────────────────
-literature:
-  jstage_proxy: ""
-
-# ── Model Server GPU Settings (Production — higher utilization) ─────────
-model_server:
-  vlm_model_id: "opendatalab/MinerU2.5-Pro-2604-1.2B"
-  embedding_gpu_memory_utilization: 0.9
-  embedding_max_model_len: 8192
-  rerank_gpu_memory_utilization: 0.8
-  vlm_gpu_memory_utilization: 0.9
+jstage_proxy: ""

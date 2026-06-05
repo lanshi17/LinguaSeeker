@@ -9,21 +9,27 @@
 #   2. environments/<env>.yaml     (environment-specific structural config)
 #   3. vault/<env>.yaml            (secrets: API keys, passwords)
 #   4. Environment variables       (highest priority, override all)
+#
+# Field naming convention:
+#   - Nested fields (e.g. fast_llm.model) flatten to FAST_LLM_MODEL
+#   - Top-level fields (e.g. api_host) flatten to API_HOST
+#   - Match .env.example for all field names
 # ============================================================================
 
 # ── Application ───────────────────────────────────────────────────────────
+# APP_NAME, APP_VERSION are nested; rest are top-level
 app:
   name: "ACMG-Lingua"
   version: "3.0.0"
-  api_prefix: "/api/v1"
-  cors_origins: "*"
-  environment: "development"
-  debug: false
-  api_host: "localhost"
-  api_port: 8000
+
+api_prefix: "/api/v1"
+cors_origins: "*"
+environment: "development"
+debug: false
+api_host: "localhost"
+api_port: 8000
 
 # ── Fast LLM (OpenAI-compatible) ──────────────────────────────────────────
-# High-throughput model for translation, formatting, simple extraction
 fast_llm:
   model: "mimo-v2.5"
   temperature: 0
@@ -37,7 +43,6 @@ multimodal_llm:
   model: "mimo-v2.5"
 
 # ── Reasoning LLM ─────────────────────────────────────────────────────────
-# Strong reasoning model for quality gates, complex evidence extraction
 reasoning_llm:
   model: "mimo-v2.5-pro"
   reasoning_effort: "xhigh"
@@ -75,7 +80,8 @@ postgres:
   port: 5432
   pool_size: 20
   max_overflow: 30
-  pgvector_enabled: true
+
+pgvector_enabled: true
 
 redis:
   host: "localhost"
@@ -98,13 +104,11 @@ minio:
   secure: false
 
 # ── Task Execution ────────────────────────────────────────────────────────
-task:
-  max_reasoning_iterations: 3
-  timeout_seconds: 3600
+max_reasoning_iterations: 3
+task_timeout_seconds: 3600
 
 # ── Literature Acquisition ────────────────────────────────────────────────
-literature:
-  pubmed_base_url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+pubmed_base_url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 
 # ── SMTP Email ────────────────────────────────────────────────────────────
 smtp:
@@ -122,10 +126,26 @@ web_search:
   timeout: 30
   max_results: 10
 
-# ── Model Server ──────────────────────────────────────────────────────────
-model_server:
-  port: 8001
-  embedding_gpu_memory_utilization: 0.35
-  embedding_max_model_len: 4096
-  rerank_gpu_memory_utilization: 0.20
-  vlm_gpu_memory_utilization: 0.50
+# ── Evidence Extraction ──────────────────────────────────────────────────
+evidence_extraction:
+  api_key: ""
+  base_url: ""
+  reasoning_api_key: ""
+  reasoning_base_url: ""
+  fast_model: ""
+  standard_model: ""
+  strong_model: ""
+  fast_effort: ""
+  standard_effort: ""
+  strong_effort: "high"
+  temperature: 0.0
+  timeout: 180
+  max_retries: 3
+
+# ── Model Server GPU Settings ────────────────────────────────────────────
+# Kept at top level for model-server compatibility
+vlm_model_id: ""
+embedding_gpu_memory_utilization: 0.35
+embedding_max_model_len: 4096
+rerank_gpu_memory_utilization: 0.20
+vlm_gpu_memory_utilization: 0.50
