@@ -1,15 +1,37 @@
 use std::time::Duration;
 
 use crate::error::GatewayError;
-use reqwest::Client;
+use reqwest::{Client, header};
 
-const DEFAULT_TIMEOUT_MS: u64 = 30_000;
-const DEFAULT_MAX_RETRIES: u32 = 2;
+const DEFAULT_TIMEOUT_MS: u64 = 60_000;
+const DEFAULT_CONNECT_TIMEOUT_MS: u64 = 15_000;
+const DEFAULT_MAX_RETRIES: u32 = 3;
 const BACKOFF_BASE_MS: u64 = 1000;
 
 fn retry_backoff(attempt: u32) -> Duration {
     let shift = attempt.saturating_sub(1).min(20);
     Duration::from_millis(BACKOFF_BASE_MS * (1u64 << shift))
+}
+
+/// Build default headers that mimic a standard browser to avoid 403 from
+/// academic publishers and DOI resolvers.
+fn default_headers() -> header::HeaderMap {
+    let mut headers = header::HeaderMap::new();
+    headers.insert(
+        header::ACCEPT,
+        header::HeaderValue::from_static(
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        ),
+    );
+    headers.insert(
+        header::ACCEPT_LANGUAGE,
+        header::HeaderValue::from_static("en-US,en;q=0.9"),
+    );
+    headers.insert(
+        header::ACCEPT_ENCODING,
+        header::HeaderValue::from_static("gzip, deflate"),
+    );
+    headers
 }
 
 #[derive(Clone)]
@@ -25,9 +47,12 @@ impl HttpClient {
         proxy: Option<&str>,
     ) -> Result<Self, GatewayError> {
         let timeout = Duration::from_millis(timeout_ms.unwrap_or(DEFAULT_TIMEOUT_MS));
+        let connect_timeout = Duration::from_millis(DEFAULT_CONNECT_TIMEOUT_MS);
         let mut builder = Client::builder()
             .timeout(timeout)
-            .user_agent("acmg-lingua-io/0.1.0")
+            .connect_timeout(connect_timeout)
+            .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+            .default_headers(default_headers())
             .gzip(true)
             .redirect(reqwest::redirect::Policy::limited(10));
 
@@ -49,9 +74,12 @@ impl HttpClient {
         max_retries: Option<u32>,
     ) -> Result<Self, GatewayError> {
         let timeout = Duration::from_millis(timeout_ms.unwrap_or(DEFAULT_TIMEOUT_MS));
+        let connect_timeout = Duration::from_millis(DEFAULT_CONNECT_TIMEOUT_MS);
         let builder = Client::builder()
             .timeout(timeout)
-            .user_agent("acmg-lingua-io/0.1.0")
+            .connect_timeout(connect_timeout)
+            .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+            .default_headers(default_headers())
             .gzip(true)
             .redirect(reqwest::redirect::Policy::limited(10))
             .no_proxy();
@@ -100,29 +128,35 @@ impl HttpClient {
     }
 
     /// GET raw bytes with retry. Returns (bytes, final_url, status_code).
+    ///
+    /// On transport-level failures (DNS, connection, TLS) after all retries,
+    /// returns `(vec![], url, 0)` so callers can branch on status code
+    /// instead of catching exceptions.
     pub async fn get_bytes(&self, url: &str) -> Result<(Vec<u8>, String, u16), GatewayError> {
-        let mut last_err = None;
+        let mut last_status: u16 = 0;
         for attempt in 1..=self.max_retries {
-            match self.inner.get(url).send().await {
-                Ok(resp) => {
-                    let status = resp.status().as_u16();
-                    let final_url = resp.url().to_string();
-                    if resp.status().is_success() {
-                        let bytes = resp.bytes().await
-                            .map_err(|e| GatewayError::Other(format!("bytes read failed: {e}")))?;
-                        return Ok((bytes.to_vec(), final_url, status));
-                    }
-                    last_err = Some(GatewayError::Other(format!("HTTP {status}")));
+            if let Ok(resp) = self.inner.get(url).send().await {
+                let status = resp.status().as_u16();
+                let final_url = resp.url().to_string();
+                if resp.status().is_success() {
+                    let bytes = resp.bytes().await
+                        .map_err(|e| GatewayError::Other(format!("bytes read failed: {e}")))?;
+                    return Ok((bytes.to_vec(), final_url, status));
                 }
-                Err(e) => {
-                    last_err = Some(GatewayError::Http(e));
-                }
+                last_status = status;
             }
             if attempt < self.max_retries {
                 tokio::time::sleep(retry_backoff(attempt)).await;
             }
         }
-        Err(last_err.unwrap_or_else(|| GatewayError::Other("unknown error".into())))
+        if last_status > 0 {
+            // HTTP error status — return it so caller can branch on status code.
+            Ok((vec![], url.to_string(), last_status))
+        } else {
+            // Transport failure — return status 0 so caller sees non-success
+            // without exception handling.
+            Ok((vec![], url.to_string(), 0))
+        }
     }
 
     /// POST JSON with optional Authorization header.
