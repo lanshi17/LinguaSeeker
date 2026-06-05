@@ -46,7 +46,7 @@ def create_parse_service(config=None) -> ParseDocumentService:
         config = cfg.parse_document
 
     remote = MinerURemoteParser(
-        api_token=config.mineru_remote_api_token,
+        api_token=config.mineru_remote_api_token or "",
         poll_interval=config.mineru_remote_poll_interval,
         max_poll_attempts=config.mineru_remote_max_poll_attempts,
     )

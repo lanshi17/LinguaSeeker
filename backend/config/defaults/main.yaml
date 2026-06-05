@@ -80,22 +80,6 @@ network:
   proxy: ""
   no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0.0.1"
 
-# ── Evidence Extraction ──────────────────────────────────────────────────
-evidence_extraction:
-  api_key: ""
-  base_url: ""
-  reasoning_api_key: ""
-  reasoning_base_url: ""
-  fast_model: ""
-  standard_model: ""
-  strong_model: ""
-  fast_effort: ""
-  standard_effort: ""
-  strong_effort: "high"
-  temperature: 0.0
-  timeout: 180
-  max_retries: 3
-
 # ── Model Server GPU Settings ────────────────────────────────────────────
 # Kept at top level for model-server compatibility
 vlm_model_id: ""

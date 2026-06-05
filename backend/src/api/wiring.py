@@ -109,7 +109,7 @@ def wire_dependencies() -> None:
     acquisition_service = DocumentAcquisitionService()
     pd_cfg = cfg.parse_document
     remote_parser = MinerURemoteParser(
-        api_token=pd_cfg.mineru_remote_api_token or cfg.mineru_api_token,
+        api_token=cfg.mineru_api_token,
         poll_interval=pd_cfg.mineru_remote_poll_interval,
         max_poll_attempts=pd_cfg.mineru_remote_max_poll_attempts,
     )
