@@ -43,7 +43,6 @@ def test_remote_parser_receives_all_config():
     get_config.cache_clear()
 
     pd = ParseDocumentConfig(
-        mineru_remote_api_token="remote-token",
         mineru_remote_poll_interval=3.0,
         mineru_remote_max_poll_attempts=200,
         mineru_local_model_server_url="http://localhost:8002",
@@ -60,14 +59,14 @@ def test_remote_parser_receives_all_config():
 
         cfg = MagicMock()
         cfg.parse_document = pd
-        cfg.mineru_api_token = "fallback-token"
+        cfg.mineru_api_token = "test-token"
         mock_cfg.return_value = cfg
 
         from src.api.wiring import wire_dependencies
         wire_dependencies()
 
         _, kwargs = mock_remote.call_args
-        assert kwargs.get("api_token") == "remote-token"
+        assert kwargs.get("api_token") == "test-token"
         assert kwargs.get("poll_interval") == 3.0
         assert kwargs.get("max_poll_attempts") == 200
 
@@ -78,7 +77,6 @@ def test_local_parser_receives_all_config():
     get_config.cache_clear()
 
     pd = ParseDocumentConfig(
-        mineru_remote_api_token="",
         mineru_remote_poll_interval=2.0,
         mineru_remote_max_poll_attempts=150,
         mineru_local_model_server_url="http://localhost:8002",
@@ -95,7 +93,7 @@ def test_local_parser_receives_all_config():
 
         cfg = MagicMock()
         cfg.parse_document = pd
-        cfg.mineru_api_token = "fallback"
+        cfg.mineru_api_token = ""
         mock_cfg.return_value = cfg
 
         from src.api.wiring import wire_dependencies
