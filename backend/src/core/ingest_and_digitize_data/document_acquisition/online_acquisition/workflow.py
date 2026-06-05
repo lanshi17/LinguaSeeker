@@ -31,6 +31,7 @@ from .gateway import (
 )
 from .literature_type_classifier import classify_item
 from .normalizers import normalize_items
+from .relevance_gate import run_relevance_gate
 from .web_search import SearchLink
 
 DOI_PATTERN = re.compile(r"\b10\.\d{4,9}/[^\s\"<>]+", re.IGNORECASE)
@@ -480,8 +481,25 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
     ]
 
     # === Phase 3: LLM Content Gate ===
-    # Currently keyword-based on title/journal; PDF content classification
-    # can be added as a future enhancement.
+    if request.relevance_gate and downloads:
+        gate_result = await run_relevance_gate(
+            query=query,
+            downloads=downloads,
+            delete_files=True,
+        )
+        # Keep only relevant downloads (and those with errors — conservative)
+        relevant_paths = {
+            j.file_path for j in gate_result.judgments
+            if j.relevant or j.error
+        }
+        filtered = [d for d in downloads if d.get("file_path") in relevant_paths]
+        removed = gate_result.irrelevant
+        if removed:
+            warnings.append(
+                f"RELEVANCE_GATE: {removed}/{gate_result.total} downloads "
+                f"removed as irrelevant"
+            )
+            downloads = filtered
 
     return OnlineAcquisitionResponse(
         success=bool(download_results),
