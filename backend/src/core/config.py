@@ -483,7 +483,6 @@ class Settings(BaseSettings):
             max_file_size_mb=self.mineru_max_file_size_mb,
         )
         self.parse_document = ParseDocumentConfig(
-            mineru_remote_api_token=self.mineru_api_token,
             mineru_remote_poll_interval=self.mineru_remote_poll_interval,
             mineru_remote_max_poll_attempts=self.mineru_remote_max_poll_attempts,
             mineru_local_model_server_url=self.mineru_local_model_server_url,
