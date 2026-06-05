@@ -125,7 +125,6 @@ task_timeout_seconds: {{ task_timeout_seconds }}
 pubmed_api_key: {{ pubmed_api_key | default('') }}
 pubmed_base_url: {{ pubmed_base_url }}
 unpaywall_email: {{ unpaywall_email | default('') }}
-jstage_proxy: {{ jstage_proxy | default('') }}
 
 # ── SMTP ────────────────────────────────────────────────────────────────
 smtp_host: {{ smtp.host }}
@@ -160,7 +159,7 @@ evidence_extraction_timeout: {{ evidence_extraction.timeout }}
 evidence_extraction_max_retries: {{ evidence_extraction.max_retries }}
 
 # ── Model Server GPU settings ──────────────────────────────────────────
-vlm_model_id: "{{ vlm_model_id | default('') }}"
+doc_parse_model_id: "{{ doc_parse_model_id | default('') }}"
 embedding_gpu_memory_utilization: {{ embedding_gpu_memory_utilization | default(0.35) }}
 embedding_max_model_len: {{ embedding_max_model_len | default(4096) }}
 rerank_gpu_memory_utilization: {{ rerank_gpu_memory_utilization | default(0.2) }}

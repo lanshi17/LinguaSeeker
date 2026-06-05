@@ -143,8 +143,7 @@ evidence_extraction:
   max_retries: 3
 
 # ── Model Server GPU Settings ────────────────────────────────────────────
-# Kept at top level for model-server compatibility
-vlm_model_id: ""
+doc_parse_model_id: ""
 embedding_gpu_memory_utilization: 0.35
 embedding_max_model_len: 4096
 rerank_gpu_memory_utilization: 0.20

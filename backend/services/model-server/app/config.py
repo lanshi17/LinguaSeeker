@@ -1,4 +1,4 @@
-"""Model server configuration — reads config-dev.yaml and env vars."""
+"""Model server configuration — reads layered YAML config and env vars."""
 
 from __future__ import annotations
 
@@ -261,8 +261,8 @@ class Settings(BaseSettings):
     # LLM model (placeholder — for future local LLM)
     llm_model_id: str = ""
 
-    # VLM model (MinerU)
-    vlm_model_id: str = ""
+    # Document parsing model (MinerU)
+    doc_parse_model_id: str = ""
     vlm_image_analysis: bool = False
 
     # vllm shared settings
