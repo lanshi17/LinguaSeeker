@@ -33,6 +33,8 @@ def strip_json_fences(content: str) -> str:
     Returns:
         Cleaned JSON string without fences.
     """
+    if not content:
+        return ""
     text = content.strip()
     if text.startswith("```"):
         lines = text.splitlines()
