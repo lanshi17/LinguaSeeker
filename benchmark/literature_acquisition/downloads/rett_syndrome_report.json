@@ -2667,5 +2667,15 @@
       "candidates": [],
       "downloads": []
     }
-  ]
+  ],
+  "analysis_summary": {
+    "by_source": {
+      "arxiv": 53,
+      "core": 11,
+      "firecrawl-search": 26,
+      "firecrawl-json": 33,
+      "crossref": 16
+    },
+    "literature_type_distribution": {}
+  }
 }

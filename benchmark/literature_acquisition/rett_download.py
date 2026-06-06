@@ -83,9 +83,38 @@ class DownloadStats:
     total_queries: int = 0
     total_candidates: int = 0
     total_downloaded: int = 0
+    total_deduped: int = 0
     by_source: Dict[str, int] = field(default_factory=dict)
     elapsed_sec: float = 0.0
     records: List[Dict[str, Any]] = field(default_factory=list)
+
+
+class DedupTracker:
+    """Track downloaded files by DOI and content hash to avoid duplicates."""
+
+    def __init__(self) -> None:
+        self._seen_dois: Set[str] = set()
+        self._seen_hashes: Set[str] = set()
+
+    def is_duplicate(self, doi: str, file_path: Path) -> bool:
+        """Return True if this file (by DOI or content hash) was already seen."""
+        norm_doi = doi.strip().lower()
+        if norm_doi and norm_doi in self._seen_dois:
+            return True
+        if file_path.exists():
+            h = hashlib.sha256(file_path.read_bytes()).hexdigest()
+            if h in self._seen_hashes:
+                return True
+        return False
+
+    def record(self, doi: str, file_path: Path) -> None:
+        """Register a file as seen."""
+        norm_doi = doi.strip().lower()
+        if norm_doi:
+            self._seen_dois.add(norm_doi)
+        if file_path.exists():
+            h = hashlib.sha256(file_path.read_bytes()).hexdigest()
+            self._seen_hashes.add(h)
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -268,6 +297,7 @@ async def cmd_download(
 ) -> None:
     stats = DownloadStats()
     stats.total_queries = len(queries)
+    dedup = DedupTracker()
 
     if dry_run:
         logger.info("Dry-run mode enabled. Candidates will not be downloaded.")
@@ -348,6 +378,17 @@ async def cmd_download(
 
                     source = dl.get("source", route_info.get("used", "workflow"))
 
+                    # Dedup: skip files already downloaded (same DOI or content)
+                    if dedup.is_duplicate(doi, dest):
+                        stats.total_deduped += 1
+                        logger.info(f"  Dedup: skipping {doi or dest.name}")
+                        try:
+                            dest.unlink()
+                        except OSError:
+                            pass
+                        continue
+                    dedup.record(doi, dest)
+
                     rec = DownloadRecord(
                         query=query, source=source, title=title, doi=doi,
                         url=dl.get("url") or "", success=True,
@@ -368,7 +409,7 @@ async def cmd_download(
     with open(REPORT_FILE, "w", encoding="utf-8") as rf:
         json.dump(asdict(stats), rf, indent=2, ensure_ascii=False)
     logger.info(f"Report: {REPORT_FILE}")
-    logger.info(f"Candidates: {stats.total_candidates}, Downloaded: {stats.total_downloaded}")
+    logger.info(f"Candidates: {stats.total_candidates}, Downloaded: {stats.total_downloaded}, Deduped: {stats.total_deduped}")
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -535,9 +576,10 @@ async def cmd_cleanup(
     dry_run: bool = False,
     concurrency: int = 8,
 ) -> None:
-    """Check PDF relevance to Rett Syndrome via LLM, remove irrelevant ones.
+    """Deduplicate PDFs by content hash, then check relevance via LLM.
 
-    Delegates to the core relevance_gate module.
+    Dedup runs first to avoid wasting LLM calls on identical files.
+    Relevance checking delegates to the core relevance_gate module.
     """
     setup_logging()
     base = Path(download_dir) if download_dir else MODULE_DIR / "downloads" / "rett"
@@ -557,6 +599,27 @@ async def cmd_cleanup(
     logger.info(f"Found {len(all_pdfs)} PDFs across {lang_count} languages")
     if dry_run:
         logger.info("DRY RUN — no files will be deleted")
+
+    # Dedup by content hash before LLM gate — keep first occurrence
+    seen_hashes: Dict[str, Path] = {}
+    dedup_removed: List[str] = []
+    unique_pdfs: List[tuple[str, Path]] = []
+    for lang, pdf in all_pdfs:
+        h = hashlib.sha256(pdf.read_bytes()).hexdigest()
+        if h in seen_hashes:
+            dedup_removed.append(str(pdf))
+            if not dry_run:
+                pdf.unlink()
+                logger.info(f"  Dedup: removed {lang}/{pdf.name} (dup of {seen_hashes[h].name})")
+            else:
+                logger.info(f"  Dedup: would remove {lang}/{pdf.name} (dup of {seen_hashes[h].name})")
+        else:
+            seen_hashes[h] = pdf
+            unique_pdfs.append((lang, pdf))
+
+    if dedup_removed:
+        logger.info(f"Dedup: removed {len(dedup_removed)} duplicate files, {len(unique_pdfs)} unique remaining")
+    all_pdfs = unique_pdfs
 
     # Build download dicts expected by the core relevance gate
     downloads = [
@@ -600,10 +663,12 @@ async def cmd_cleanup(
             "irrelevant": gate_result.irrelevant,
             "errors": gate_result.errors,
             "deleted": len(gate_result.removed_paths) if not dry_run else 0,
+            "dedup_removed": len(dedup_removed),
             "by_lang": by_lang,
             "by_doc_type": doc_type_counts,
         },
         "removed_paths": gate_result.removed_paths,
+        "dedup_removed_paths": dedup_removed,
     }
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2))
     logger.info(f"Report: {report_path}")
@@ -627,10 +692,12 @@ async def cmd_cleanup(
         print(f"{'─' * 60}")
         for dt, cnt in sorted(doc_type_counts.items(), key=lambda x: -x[1]):
             print(f"  {dt:<18} {cnt:>4}")
+    if dedup_removed:
+        print(f"\nDedup removed: {len(dedup_removed)}")
     if dry_run:
-        print(f"\nWould delete: {gate_result.irrelevant} (dry run)")
+        print(f"Would delete: {gate_result.irrelevant} (dry run)")
     else:
-        print(f"\nDeleted: {len(gate_result.removed_paths)}")
+        print(f"Deleted: {len(gate_result.removed_paths)}")
 
 
 # ═══════════════════════════════════════════════════════════════════

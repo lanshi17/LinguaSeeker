@@ -1,0 +1,97 @@
+{
+  "total": 89,
+  "renamed": 18,
+  "errors": 0,
+  "changes": [
+    {
+      "lang": "fr",
+      "old": "________________-__________w___-________________-_____873db7cc.pdf",
+      "new": "fr_MECP2_Disorders.pdf"
+    },
+    {
+      "lang": "de",
+      "old": "de_De_novo_deletion_in_MECP2_in_a_monozygotic_twin_pair_a_case_report.pdf",
+      "new": "de_De_novo_deletion_in_MECP2_in_monozygotic_twin_pair_with_Rett_syndrome.pdf"
+    },
+    {
+      "lang": "ru",
+      "old": "ru_Rett_Syndrome_Clinical_Case.pdf",
+      "new": "ru_Rett_Syndrome_a_clinical_case.pdf"
+    },
+    {
+      "lang": "ru",
+      "old": "ru_Clinical_case_of_a_school-age_patient_with_Rett_syndrome_and_MECP2_deletion.pdf",
+      "new": "ru_Clinical_Case_of_School-Age_Patient_with_Rett_Syndrome_and_MECP2_Deletion.pdf"
+    },
+    {
+      "lang": "de",
+      "old": "de_MECP2_Pathogenic_Variations_in_Rett_Syndrome_Case_Report.pdf",
+      "new": "de_MECP2_Pathogenic_Variations_in_Rett_Syndrome_A_Case_Report.pdf"
+    },
+    {
+      "lang": "es",
+      "old": "es_Rett_Syndrome_Rare_Case_Report.pdf",
+      "new": "es_RETT_SYNDROME_RARE_CASE_REPORT.pdf"
+    },
+    {
+      "lang": "zh",
+      "old": "zh_Case_Report_of_Rett_Syndrome.pdf",
+      "new": "zh_A_Case_of_Rett_Syndrome.pdf"
+    },
+    {
+      "lang": "zh",
+      "old": "zh_A_case_report_of_Rett_syndrome_1e66d21b.pdf",
+      "new": "zh_A_case_report_of_Rett_syndrome.pdf"
+    },
+    {
+      "lang": "fr",
+      "old": "fr_Clinical_Characteristics_of_Rett_Syndrome_with_MeCP2_Mutation.pdf",
+      "new": "fr_Clinical_characteristics_of_Rett_Syndrome.pdf"
+    },
+    {
+      "lang": "ja",
+      "old": "ja_Pinpointing_brainstem_mechanisms_responsible_for_autonomic_dysfunction_in_Rett_syndrome.pdf",
+      "new": "ja_Brainstem_Mechanisms_in_Rett_Syndrome_Autonomic_Dysfunction.pdf"
+    },
+    {
+      "lang": "en",
+      "old": "en_Genetic_Approach_Rett_Syndrome_Case_with_MECP2_p-R270X_Mutation.pdf",
+      "new": "en_Genetic_Approach_to_Rett_Syndrome_with_MECP2_p-R270X_Mutation.pdf"
+    },
+    {
+      "lang": "zh",
+      "old": "zh_Rett_Syndrome_Case_Report_with_Novel_MECP2_Mutation.pdf",
+      "new": "zh_Rett_Syndrome_Case_with_Novel_MECP2_Mutation.pdf"
+    },
+    {
+      "lang": "en",
+      "old": "en_De_novo_FOXG1_mutation_and_molecular_analysis_in_Chinese_Rett_syndrome.pdf",
+      "new": "en_document_f369459c.pdf"
+    },
+    {
+      "lang": "fr",
+      "old": "fr_MECP2_Mutation_Catalog_RSRT_and_Coriell_Institute_Collections.pdf",
+      "new": "fr_MECP2_Mutation_Catalog_from_RSRT_and_Coriell_Institute_Collections.pdf"
+    },
+    {
+      "lang": "en",
+      "old": "en_Downstream_targets_of_MeCP2_and_their_abnormal_expression_in_Rett_syndrome_frontal_cortex.pdf",
+      "new": "en_document_fb532c5c.pdf"
+    },
+    {
+      "lang": "en",
+      "old": "en_MECP2_frameshift_mutations_in_Rett_syndrome_families.pdf",
+      "new": "en_MECP2_Frameshift_Mutations_in_Rett_Syndrome_Families.pdf"
+    },
+    {
+      "lang": "zh",
+      "old": "zh_Clinical_phenotype_and_genetic_analysis_of_a_child_with_Rett_syndrome_caused_by_MECP2_gene_variants.pdf",
+      "new": "zh_document_10eacc93.pdf"
+    },
+    {
+      "lang": "en",
+      "old": "en_MECP2-Related_Severe_Neonatal_Encephalopathy_in_Female_Neonate.pdf",
+      "new": "en_MECP2_Gene-Related_Severe_Neonatal_Encephalopathy_Case_in_Female_Neon.pdf"
+    }
+  ]
+}

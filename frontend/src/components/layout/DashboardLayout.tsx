@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
+import { ConnectionStatus } from "./ConnectionStatus";
 import { useAppStore } from "@/stores/appStore";
 import { cn } from "@/lib/utils/cn";
 
@@ -18,7 +19,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex h-14 items-center border-b border-gray-200 bg-white px-6">
+        <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-6">
           <button
             onClick={toggleSidebar}
             className="cursor-pointer rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
@@ -32,6 +33,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               />
             </svg>
           </button>
+
+          <ConnectionStatus />
         </header>
 
         {/* Main content */}

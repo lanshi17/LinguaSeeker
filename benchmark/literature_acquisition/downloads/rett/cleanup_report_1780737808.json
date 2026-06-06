@@ -1,0 +1,117 @@
+{
+  "stats": {
+    "total": 98,
+    "relevant": 88,
+    "irrelevant": 8,
+    "errors": 2,
+    "deleted": 8,
+    "dedup_removed": 37,
+    "by_lang": {
+      "de": {
+        "relevant": 8,
+        "irrelevant": 1,
+        "errors": 0
+      },
+      "en": {
+        "relevant": 25,
+        "irrelevant": 1,
+        "errors": 0
+      },
+      "es": {
+        "relevant": 4,
+        "irrelevant": 0,
+        "errors": 0
+      },
+      "fr": {
+        "relevant": 14,
+        "irrelevant": 3,
+        "errors": 0
+      },
+      "it": {
+        "relevant": 1,
+        "irrelevant": 0,
+        "errors": 0
+      },
+      "ja": {
+        "relevant": 13,
+        "irrelevant": 1,
+        "errors": 1
+      },
+      "ko": {
+        "relevant": 2,
+        "irrelevant": 0,
+        "errors": 0
+      },
+      "pt": {
+        "relevant": 1,
+        "irrelevant": 0,
+        "errors": 0
+      },
+      "ru": {
+        "relevant": 3,
+        "irrelevant": 0,
+        "errors": 0
+      },
+      "tr": {
+        "relevant": 7,
+        "irrelevant": 0,
+        "errors": 0
+      },
+      "zh": {
+        "relevant": 10,
+        "irrelevant": 2,
+        "errors": 1
+      }
+    },
+    "by_doc_type": {}
+  },
+  "removed_paths": [
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Distal_Xq_duplication_and_functional_Xq_disomy.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_Stereotypies_and_Motor_Disorders_in_Rett_Syndrome.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_vol36.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_document_5e91c414.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_MECP2_Gene_Analysis_in_Rett_Syndrome_and_Other_MECP2-Related_Disorders.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_GUIDE_Transition_to_Adulthood.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_MECP2Related_Disorders.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_Analysis_of_Clinical_Features_in_22_Cases_of_Children_with_Rett_Syndrome.pdf"
+  ],
+  "dedup_removed_paths": [
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_15238900393129_129_b7f7f80a.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_Genetic_Aspects_of_Rett_Syndrome_216cae36.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_Rett-causing_mutations_in_MeCP2_domains_for_function_and_duplication_toxicity.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_Rett_mutations_reveal_MeCP2_domains_critical_for_function_and_toxicity.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/________________86fc31fc.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/____________________________________________________d550425e.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/_________w_____________86fc31fc.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_MECP2_Disorders.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_MECP2_Disorders_95514378.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_MECP2_Gene_Analysis_in_Rett_Syndrome_and_Other_MECP2-Related_Disorders.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_MECP2_Mutation_Catalog_for_iPSC_and_Fibroblasts_in_Rett_Syndrome.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_MECP2_Mutation_Catalog_from_RSRT_Collections.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_MECP2_Mutation_Collections_at_Coriell_and_Infinity_BiologiX.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_RSRT_MECP2_Mutation_Collection.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_RSRT_MECP2_Mutation_Collections.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_RSRT_MECP2_Mutation_Collections_for_iPSC_and_Fibroblasts.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_RSRT_MECP2_Mutation_Sample_Collections.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_RSRT_MECP2_iPSC_and_Fibroblast_Collections_with_Mutations.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_RSRT_MECP2_iPSC_and_Fibroblast_Mutation_Collections.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_Reactome_Loss_of_function_of_MECP2_in_Rett_syndrome_R-HSA-9005891.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_Unraveling_MECP2_structural_variants_in_previously_elusive_Rett_syndrome_cases_through_IGV_interpret_9e1ee587.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_document_d18e02de.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_Clinical_Research_Group_on_Rett_Syndrome_and_Associated_Disorders.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_Clinical_Research_Group_on_Rett_Syndrome_and_Its_Related_Disorders.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_Clinical_Research_Group_on_Rett_Syndrome_and_Related_Disorders.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_MECP2_Disorders.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_MECP2_Disorders_95514378.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_Microsoft_Word_20220513scidocx_4e57ec42.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_Neul10-RTTdiagnosticcriteria-finalauthorMS.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_Rett_Syndrome_A_Place_for_Angels.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_Rett_Syndrome_Clinical_Symptoms_and_Associated_Genes_MECP2_CDKL5_FOXG1.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/tr/tr_Case_Report_of_Rett_Syndrome_with_MECP2_Gene_Mutation.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/tr/tr_Critical_MeCP2_domains_for_Rett_and_duplication_syndrome_toxicity.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/tr/tr_MECP2_Mutations_in_Rett_Syndrome_A_Case_Report.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/tr/tr_MeCP2_domains_critical_for_function_and_toxicity_in_Rett_and_duplication_syndrome.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/tr/tr_Reactome_Loss_of_function_of_MECP2_in_Rett_syndrome_R-HSA-9005891.pdf",
+    "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_A_case_report_of_Rett_syndrome_da9d44ec.pdf"
+  ]
+}
