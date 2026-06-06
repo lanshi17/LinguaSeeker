@@ -1,13 +1,27 @@
+import { apiClient } from "@/lib/api/client";
 import type {
   EvidenceSearchQuery,
   EvidenceSearchResponse,
 } from "../types/evidenceSearch";
 
-// Backend GET /evidence/search not yet implemented — stubbed for frontend development.
-// Replace with real apiClient.get call once the backend route exists.
-
+/**
+ * Search evidence cards via the backend search index.
+ * When called with empty query, returns all results (default list).
+ */
 export async function searchEvidence(
-  _query: EvidenceSearchQuery,
+  query: EvidenceSearchQuery,
 ): Promise<EvidenceSearchResponse> {
-  return { items: [], total: 0 };
+  // Filter out empty string values so they don't override defaults.
+  const params: Record<string, string | number> = {};
+  if (query.gene) params.gene = query.gene;
+  if (query.variant) params.variant = query.variant;
+  if (query.disease) params.disease = query.disease;
+  if (query.pmid) params.pmid = query.pmid;
+  if (query.limit) params.limit = query.limit;
+
+  const { data } = await apiClient.get<EvidenceSearchResponse>(
+    "/evidence/search",
+    { params },
+  );
+  return data;
 }
