@@ -228,7 +228,6 @@ class EvidenceExtractionConfig(BaseModel):
     standard_effort: str = ""
     strong_effort: str = "high"
     temperature: float = 0.0
-    max_tokens: int = 8192
     timeout: int = 60
     max_retries: int = 3
 
