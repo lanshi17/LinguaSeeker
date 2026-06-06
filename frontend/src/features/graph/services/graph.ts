@@ -1,21 +1,18 @@
-import { apiClient } from "@/lib/api/client";
 import type { GraphSearchRequest, EvidenceSearchResponse } from "../types/graph";
 
+// Backend endpoints not yet implemented — stubbed to keep the UI functional.
+// Replace with real apiClient calls once the backend routes exist.
+
 export async function searchEvidenceGraph(
-  body: GraphSearchRequest,
+  _body: GraphSearchRequest,
 ): Promise<EvidenceSearchResponse> {
-  const { data } = await apiClient.post<EvidenceSearchResponse>(
-    "/evidence/search",
-    body,
-  );
-  return data;
+  return { nodes: [], edges: [], evidence_records: [] };
 }
 
 export async function getGraphStats(): Promise<Record<string, unknown>> {
-  const { data } = await apiClient.get("/evidence/graph/stats");
-  return data;
+  return {};
 }
 
-export async function resyncDocument(documentId: string): Promise<void> {
-  await apiClient.post(`/evidence/sync/document/${documentId}`);
+export async function resyncDocument(_documentId: string): Promise<void> {
+  // no-op
 }
