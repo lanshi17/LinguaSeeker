@@ -75,6 +75,7 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-06-06 | [Backend config single source](archive/plans/2026-06-06-backend-config-single-source.md) | completed — backend/config-only loader shared by backend and model-server |
 | 2026-06-02 | [Backend security & architecture fixes](archive/plans/2026-06-01-backend-security-architecture-fixes.md) | completed — 6 tasks + 3 review passes: auth, file limits, path traversal, rate limiting, TypedDict |
 | 2026-06-02 | [Phase 3 benchmark coverage — relevance scan fix (archived — superseded by config fix)](archive/plans/2026-06-02-phase3-benchmark-coverage.md) | completed — plan based on incorrect RCA; real fix was config fallback |
 | 2026-06-01 | [Backend review fixes](archive/plans/2026-06-01-backend-review-fixes.md) | completed — 16 tasks: session commit, auth, upsert, SSE, types, FK, tests |

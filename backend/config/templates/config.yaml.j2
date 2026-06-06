@@ -1,11 +1,12 @@
 {# ============================================================================
    Rendered Configuration Template
    ============================================================================
-   Merges layered variables (defaults -> environment -> vault) into the flat
-   key format expected by backend/src/core/config.py.
-   
-   Render via: scripts/render_config.py or the config loader in config.py
-   Output:     backend/config-dev.yaml (git-ignored) or stdout
+   Merges layered variables (defaults -> environment -> vault) into the nested
+   YAML shape used by backend/config. This is a debugging/export template only;
+   runtime loading reads backend/config directly.
+
+   Render via: scripts/render_config.py
+   Output:     stdout or an explicit debugging path
    ============================================================================ #}
 # Auto-generated configuration — DO NOT EDIT MANUALLY
 # Generated from: defaults/main.yaml + environments/{{ environment }}.yaml + vault/{{ environment }}.yaml
