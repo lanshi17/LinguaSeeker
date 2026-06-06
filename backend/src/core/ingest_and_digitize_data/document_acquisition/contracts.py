@@ -45,7 +45,6 @@ class DocumentAcquisitionRequest:
     download_path: str = "./downloads"
     language: Optional[str] = "auto"
     prefer: str = "auto"
-    web_provider: Optional[str] = None
     api_provider: Optional[str] = None
     use_cache: bool = True
     max_retries: int = 3

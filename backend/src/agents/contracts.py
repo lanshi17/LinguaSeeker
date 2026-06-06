@@ -216,7 +216,7 @@ class PipelineGraphState(BaseModel):
     phase_2_output: Phase2Output | None = None
     phase_3_output: Phase3Output | None = None
 
-    # Error tracking (legacy flat fields for quick access)
+    # Error tracking
     error_message: str | None = None
     error_phase: int | None = None
 

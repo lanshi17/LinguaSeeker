@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import re
-import warnings as _warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urljoin
@@ -426,58 +425,3 @@ async def search_provider(
         params=params or {},
     )
     return await call_provider_with_retry(request)
-
-
-async def download_from_provider(
-    provider: str,
-    query: Optional[str] = None,
-    identifiers: Optional[Dict[str, Optional[str]]] = None,
-    limit: int = 20,
-    raw: bool = False,
-    download_path: str = "./downloads",
-    selected_index: int = 0,
-    selected_title: Optional[str] = None,
-    detail_link: Optional[str] = None,
-    params: Optional[Dict[str, Any]] = None,
-) -> OnlineAcquisitionGatewayResult:
-    """Download from a provider. Handles candidate URL retrieval + actual PDF download.
-
-    .. deprecated::
-        Use ``search_provider`` + ``resolve_oa_url`` + ``download_file_from_url`` instead.
-    """
-    _warnings.warn(
-        "download_from_provider is deprecated; use search_provider + resolve_oa_url + download_file_from_url",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    request = OnlineAcquisitionGatewayRequest(
-        provider=provider,
-        action="download",
-        query=query,
-        identifiers=identifiers or {},
-        limit=limit,
-        raw=raw,
-        params=params or {},
-        download_path=download_path,
-        selected_index=selected_index,
-        selected_title=selected_title,
-        detail_link=detail_link,
-    )
-    result = await call_provider_with_retry(request)
-
-    # If net-io returned PDF candidate URLs, try to actually download them
-    if result.success and result.downloads:
-        pdf_candidates = [
-            d.get("pdf_url") for d in result.downloads if d.get("pdf_url")
-        ]
-        if pdf_candidates:
-            filename_stem = selected_title or query or "paper"
-            file_path, pdf_url, dl_warnings = await _download_pdf_from_candidates(
-                pdf_candidates, download_path, filename_stem
-            )
-            result.warnings.extend(dl_warnings)
-            if file_path:
-                # Replace downloads with actual file info
-                result.downloads = [{"file_path": file_path, "pdf_url": pdf_url}]
-
-    return result

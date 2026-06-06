@@ -27,8 +27,6 @@ class HealthResult:
         return [name for name, ok in self.__dict__.items() if not ok]
 
 
-# Keep the old name as an alias for backward compatibility during migration
-HealthStatus = HealthResult
 
 
 # ── Service check registry ───────────────────────────────────────────────

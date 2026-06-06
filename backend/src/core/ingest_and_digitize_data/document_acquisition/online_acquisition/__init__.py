@@ -15,13 +15,11 @@ from .contracts import (
 from .doi_fallback import doi_fallback_download, probe_doi_landing_page
 from .gateway import (
     call_provider,
-    download_from_provider,
     search_provider,
 )
 from .normalizers import normalize_items
 from .pubmed_service import OnlineAcquisitionPubMedArticle, OnlineAcquisitionPubMedCandidate, OnlineAcquisitionPubMedService, get_pubmed_service
 from .search_service import build_provider_plan, search_multilingual
-from .web_providers import call_web_provider
 from .workflow import online_acquisition_workflow
 
 __all__ = [
@@ -36,7 +34,6 @@ __all__ = [
     # Gateway
     "call_provider",
     "search_provider",
-    "download_from_provider",
     # DOI fallback
     "probe_doi_landing_page",
     "doi_fallback_download",
@@ -46,7 +43,6 @@ __all__ = [
     "OnlineAcquisitionPubMedArticle",
     "get_pubmed_service",
     # Web providers
-    "call_web_provider",
     # Search
     "build_provider_plan",
     "search_multilingual",

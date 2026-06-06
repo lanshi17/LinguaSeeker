@@ -35,25 +35,16 @@ REPO_ROOT = BACKEND_ROOT.parent
 # ── YAML config loader ──────────────────────────────────────────────────
 
 def _load_yaml_config() -> None:
-    """Load configuration from layered YAML files or legacy config-dev.yaml.
+    """Load configuration from layered YAML files.
     
-    New layered loading (preferred):
+    Loading order:
       1. config/defaults/main.yaml          (base structural defaults)
       2. config/environments/<env>.yaml     (environment-specific overrides)
       3. config/vault/<env>.yaml            (secrets, git-ignored)
     
-    Legacy fallback:
-      - config-dev.yaml (if config/ directory doesn't exist)
-    
     Environment variables take precedence over all YAML values.
     """
-    # Check for new layered config structure
-    config_dir = BACKEND_ROOT / "config"
-    if config_dir.exists() and (config_dir / "defaults" / "main.yaml").exists():
-        _load_layered_yaml_config()
-    else:
-        # Legacy fallback: load config-dev.yaml
-        _load_legacy_yaml_config()
+    _load_layered_yaml_config()
 
 
 def _load_layered_yaml_config() -> None:
@@ -94,27 +85,6 @@ def _load_layered_yaml_config() -> None:
     
     # Flatten nested structure and set as env vars
     _flatten_and_set_env(merged)
-
-
-def _load_legacy_yaml_config() -> None:
-    """Legacy fallback: load from config-dev.yaml."""
-    import os
-    try:
-        import yaml
-    except ImportError:
-        return
-    
-    config_path = BACKEND_ROOT / "config-dev.yaml"
-    if not config_path.exists():
-        return
-    
-    with open(config_path) as f:
-        data = yaml.safe_load(f) or {}
-    
-    for key, value in data.items():
-        env_key = str(key).upper()
-        if env_key not in os.environ:
-            os.environ[env_key] = str(value)
 
 
 def _deep_merge(base: dict, override: dict) -> dict:
