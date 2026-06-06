@@ -1,0 +1,47 @@
+{
+  "entry_id": "clingen_027",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ef3edc91-d4fd-4704-895e-c08f45f88fe7-2024-06-18T160000.000Z",
+  "gene_symbol": "ADRA2B",
+  "hgnc_id": "HGNC:282",
+  "disease_label": "epilepsy",
+  "mondo_id": "MONDO:0005027",
+  "moi": "AD",
+  "classification": "Refuted",
+  "gcep": "Epilepsy Gene Curation Expert Panel",
+  "classification_date": "2024-06-18T16:00:00.000Z",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "ADRA2B"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "epilepsy"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "refuted"
+    }
+  ],
+  "expected_entities": {
+    "gene": {
+      "text": "ADRA2B",
+      "hgnc_id": "HGNC:282"
+    },
+    "disease": {
+      "text": "epilepsy",
+      "mondo_id": "MONDO:0005027"
+    }
+  },
+  "expected_standardization": {
+    "gene": "HGNC:282",
+    "disease": "MONDO:0005027"
+  },
+  "source_pmid": "41982212",
+  "source_pmc": "PMC13075117",
+  "source_pdf_url": "https://europepmc.org/article/PMC/13075117?pdf=render",
+  "notes": "",
+  "source_title": "Genetics of epilepsy.",
+  "source_journal": "",
+  "source_year": "2026"
+}

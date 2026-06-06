@@ -1,0 +1,47 @@
+{
+  "entry_id": "clingen_019",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5cd5e1c8-5047-4ea1-9045-cb5bf978613b-2025-04-09T190000.000Z",
+  "gene_symbol": "UNC93B1",
+  "hgnc_id": "HGNC:13481",
+  "disease_label": "systemic lupus erythematosus",
+  "mondo_id": "MONDO:0007915",
+  "moi": "SD",
+  "classification": "Moderate",
+  "gcep": "Monogenic Systemic and Incomplete Lupus Erythematosus Gene Curation Expert Panel",
+  "classification_date": "2025-04-09T19:00:00.000Z",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "UNC93B1"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "systemic lupus erythematosus"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative"
+    }
+  ],
+  "expected_entities": {
+    "gene": {
+      "text": "UNC93B1",
+      "hgnc_id": "HGNC:13481"
+    },
+    "disease": {
+      "text": "systemic lupus erythematosus",
+      "mondo_id": "MONDO:0007915"
+    }
+  },
+  "expected_standardization": {
+    "gene": "HGNC:13481",
+    "disease": "MONDO:0007915"
+  },
+  "source_pmid": "41743833",
+  "source_pmc": "PMC12931374",
+  "source_pdf_url": "https://europepmc.org/article/PMC/12931374?pdf=render",
+  "notes": "",
+  "source_title": "Identification of a novel TLR7 gain-of-function variant that underlies systemic lupus erythematosus.",
+  "source_journal": "",
+  "source_year": "2026"
+}

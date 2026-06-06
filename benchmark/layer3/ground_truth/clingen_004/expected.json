@@ -1,0 +1,47 @@
+{
+  "entry_id": "clingen_004",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_009134d7-b79c-4a90-9bae-c1f302439258-2022-11-23T170000.000Z",
+  "gene_symbol": "ABCB4",
+  "hgnc_id": "HGNC:45",
+  "disease_label": "progressive familial intrahepatic cholestasis type 3",
+  "mondo_id": "MONDO:0011214",
+  "moi": "AR",
+  "classification": "Definitive",
+  "gcep": "General Gene Curation Expert Panel",
+  "classification_date": "2022-11-23T17:00:00.000Z",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "ABCB4"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "progressive familial intrahepatic cholestasis type 3"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative"
+    }
+  ],
+  "expected_entities": {
+    "gene": {
+      "text": "ABCB4",
+      "hgnc_id": "HGNC:45"
+    },
+    "disease": {
+      "text": "progressive familial intrahepatic cholestasis type 3",
+      "mondo_id": "MONDO:0011214"
+    }
+  },
+  "expected_standardization": {
+    "gene": "HGNC:45",
+    "disease": "MONDO:0011214"
+  },
+  "source_pmid": "41962761",
+  "source_pmc": "PMC13194600",
+  "source_pdf_url": "https://europepmc.org/article/PMC/13194600?pdf=render",
+  "notes": "",
+  "source_title": "Bile Acid Detergency as Determinant of Liver Pathology in a Humanized Mouse Model of Progressive Familial Intrahepatic Cholestasis Type 3.",
+  "source_journal": "",
+  "source_year": "2026"
+}

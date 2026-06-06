@@ -1,0 +1,47 @@
+{
+  "entry_id": "clingen_001",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_583e237c-18f6-4427-a04f-82ea0f020daf-2022-04-18T160000.000Z",
+  "gene_symbol": "AARS2",
+  "hgnc_id": "HGNC:21022",
+  "disease_label": "mitochondrial disease",
+  "mondo_id": "MONDO:0044970",
+  "moi": "AR",
+  "classification": "Definitive",
+  "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+  "classification_date": "2022-04-18T16:00:00.000Z",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "AARS2"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "mitochondrial disease"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative"
+    }
+  ],
+  "expected_entities": {
+    "gene": {
+      "text": "AARS2",
+      "hgnc_id": "HGNC:21022"
+    },
+    "disease": {
+      "text": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970"
+    }
+  },
+  "expected_standardization": {
+    "gene": "HGNC:21022",
+    "disease": "MONDO:0044970"
+  },
+  "source_pmid": "40688999",
+  "source_pmc": "PMC12274783",
+  "source_pdf_url": "https://europepmc.org/article/PMC/12274783?pdf=render",
+  "notes": "",
+  "source_title": "Expanding the Phenotype: A Case Report of a Novel Alanyl-tRNA Synthetase 2 (AARS2) Homozygous Mutation in a 17-Month-Old Child.",
+  "source_journal": "",
+  "source_year": "2025"
+}

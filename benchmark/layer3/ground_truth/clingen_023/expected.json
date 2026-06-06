@@ -1,0 +1,47 @@
+{
+  "entry_id": "clingen_023",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bde7edf1-ccfa-443e-a917-cf3d2dd9cba6-2023-12-12T180000.000Z",
+  "gene_symbol": "CFAP410",
+  "hgnc_id": "HGNC:1260",
+  "disease_label": "amyotrophic lateral sclerosis",
+  "mondo_id": "MONDO:0004976",
+  "moi": "SD",
+  "classification": "Limited",
+  "gcep": "Amyotrophic Lateral Sclerosis Spectrum Disorders Gene Curation Expert Panel",
+  "classification_date": "2023-12-12T18:00:00.000Z",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "CFAP410"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "amyotrophic lateral sclerosis"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "uncertain"
+    }
+  ],
+  "expected_entities": {
+    "gene": {
+      "text": "CFAP410",
+      "hgnc_id": "HGNC:1260"
+    },
+    "disease": {
+      "text": "amyotrophic lateral sclerosis",
+      "mondo_id": "MONDO:0004976"
+    }
+  },
+  "expected_standardization": {
+    "gene": "HGNC:1260",
+    "disease": "MONDO:0004976"
+  },
+  "source_pmid": "41917433",
+  "source_pmc": "PMC13083253",
+  "source_pdf_url": "https://europepmc.org/article/PMC/13083253?pdf=render",
+  "notes": "",
+  "source_title": "Large-scale exome analyses reveal new rare variant contributions in amyotrophic lateral sclerosis.",
+  "source_journal": "",
+  "source_year": "2026"
+}
