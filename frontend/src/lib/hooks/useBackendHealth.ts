@@ -14,9 +14,9 @@ interface BackendHealth {
 /**
  * Poll the backend health endpoint (GET /health) every 30 seconds.
  *
- * The health endpoint lives at the root (not /api/v1), so we use
- * a raw axios call instead of the apiClient.  A short 5s timeout
- * ensures a fast "disconnected" flip when the backend goes down.
+ * Goes through the Next.js proxy (next.config.ts rewrites /health
+ * to the backend).  A short 5s timeout ensures a fast "disconnected"
+ * flip when the backend goes down.
  */
 export function useBackendHealth(): BackendHealth {
   const { data } = useQuery({
@@ -25,7 +25,7 @@ export function useBackendHealth(): BackendHealth {
       const start = Date.now();
       try {
         const response = await axios.get<{ status: string }>(
-          "http://localhost:8000/health",
+          "/health",
           { timeout: 5_000 },
         );
         const latencyMs = Date.now() - start;
