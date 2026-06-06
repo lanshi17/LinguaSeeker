@@ -1,0 +1,47 @@
+{
+  "entry_id": "clingen_021",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5a2db59f-5293-4e5d-ae34-5a38d8c6ebdf-2023-02-14T170000.000Z",
+  "gene_symbol": "LGALSL",
+  "hgnc_id": "HGNC:25012",
+  "disease_label": "amyotrophic lateral sclerosis",
+  "mondo_id": "MONDO:0004976",
+  "moi": "UD",
+  "classification": "Limited",
+  "gcep": "Amyotrophic Lateral Sclerosis Spectrum Disorders Gene Curation Expert Panel",
+  "classification_date": "2023-02-14T17:00:00.000Z",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "LGALSL"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "amyotrophic lateral sclerosis"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "uncertain"
+    }
+  ],
+  "expected_entities": {
+    "gene": {
+      "text": "LGALSL",
+      "hgnc_id": "HGNC:25012"
+    },
+    "disease": {
+      "text": "amyotrophic lateral sclerosis",
+      "mondo_id": "MONDO:0004976"
+    }
+  },
+  "expected_standardization": {
+    "gene": "HGNC:25012",
+    "disease": "MONDO:0004976"
+  },
+  "source_pmid": "39730482",
+  "source_pmc": "PMC11680926",
+  "source_pdf_url": "https://europepmc.org/article/PMC/11680926?pdf=render",
+  "notes": "",
+  "source_title": "Genetic epidemiology of amyotrophic lateral sclerosis in Cyprus: a population-based study.",
+  "source_journal": "",
+  "source_year": "2024"
+}

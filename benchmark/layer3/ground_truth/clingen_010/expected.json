@@ -1,0 +1,47 @@
+{
+  "entry_id": "clingen_010",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b3519527-9a80-4f0e-9ea6-c4244eb2ee33-2022-11-02T190000.000Z",
+  "gene_symbol": "AP1G1",
+  "hgnc_id": "HGNC:555",
+  "disease_label": "complex neurodevelopmental disorder",
+  "mondo_id": "MONDO:0100038",
+  "moi": "AD",
+  "classification": "Strong",
+  "gcep": "Intellectual Disability and Autism Gene Curation Expert Panel",
+  "classification_date": "2022-11-02T19:00:00.000Z",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "AP1G1"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "complex neurodevelopmental disorder"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative"
+    }
+  ],
+  "expected_entities": {
+    "gene": {
+      "text": "AP1G1",
+      "hgnc_id": "HGNC:555"
+    },
+    "disease": {
+      "text": "complex neurodevelopmental disorder",
+      "mondo_id": "MONDO:0100038"
+    }
+  },
+  "expected_standardization": {
+    "gene": "HGNC:555",
+    "disease": "MONDO:0100038"
+  },
+  "source_pmid": "41226632",
+  "source_pmc": "PMC12610428",
+  "source_pdf_url": "https://europepmc.org/article/PMC/12610428?pdf=render",
+  "notes": "",
+  "source_title": "Usmani-Riazuddin Syndrome: Functional Characterization of a Novel c.196G&gt;A Variant in the &lt;i&gt;AP1G1&lt;/i&gt; Gene and Phenotypic Insights Using Zebrafish as a Vertebrate Model.",
+  "source_journal": "",
+  "source_year": "2025"
+}

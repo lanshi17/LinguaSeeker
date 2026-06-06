@@ -1,0 +1,47 @@
+{
+  "entry_id": "clingen_015",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3ac07ab9-8580-4fbf-b599-35dd25f3025d-2023-12-18T010000.000Z",
+  "gene_symbol": "MT-TI",
+  "hgnc_id": "HGNC:7488",
+  "disease_label": "hypertrophic cardiomyopathy",
+  "mondo_id": "MONDO:0005045",
+  "moi": "MT",
+  "classification": "Moderate",
+  "gcep": "Hereditary Cardiovascular Disease Gene Curation Expert Panel",
+  "classification_date": "2023-12-18T01:00:00.000Z",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MT-TI"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "hypertrophic cardiomyopathy"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative"
+    }
+  ],
+  "expected_entities": {
+    "gene": {
+      "text": "MT-TI",
+      "hgnc_id": "HGNC:7488"
+    },
+    "disease": {
+      "text": "hypertrophic cardiomyopathy",
+      "mondo_id": "MONDO:0005045"
+    }
+  },
+  "expected_standardization": {
+    "gene": "HGNC:7488",
+    "disease": "MONDO:0005045"
+  },
+  "source_pmid": "41893039",
+  "source_pmc": "PMC13028266",
+  "source_pdf_url": "https://europepmc.org/article/PMC/13028266?pdf=render",
+  "notes": "",
+  "source_title": "Leveraging Large and Diverse Biobanks to Evaluate Gene-Disease Associations in Hypertrophic Cardiomyopathy.",
+  "source_journal": "",
+  "source_year": "2026"
+}

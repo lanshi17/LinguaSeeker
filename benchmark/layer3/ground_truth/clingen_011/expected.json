@@ -1,0 +1,47 @@
+{
+  "entry_id": "clingen_011",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_934ff2db-b242-49d8-968f-08f8eb7b1310-2024-03-19T160000.000Z",
+  "gene_symbol": "H4C5",
+  "hgnc_id": "HGNC:4790",
+  "disease_label": "Tessadori-Van Haaften neurodevelopmental syndrome 3",
+  "mondo_id": "MONDO:0030993",
+  "moi": "AD",
+  "classification": "Strong",
+  "gcep": "Syndromic Disorders Gene Curation Expert Panel",
+  "classification_date": "2024-03-19T16:00:00.000Z",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "H4C5"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Tessadori-Van Haaften neurodevelopmental syndrome 3"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative"
+    }
+  ],
+  "expected_entities": {
+    "gene": {
+      "text": "H4C5",
+      "hgnc_id": "HGNC:4790"
+    },
+    "disease": {
+      "text": "Tessadori-Van Haaften neurodevelopmental syndrome 3",
+      "mondo_id": "MONDO:0030993"
+    }
+  },
+  "expected_standardization": {
+    "gene": "HGNC:4790",
+    "disease": "MONDO:0030993"
+  },
+  "source_pmid": "40301961",
+  "source_pmc": "PMC12042324",
+  "source_pdf_url": "https://europepmc.org/article/PMC/12042324?pdf=render",
+  "notes": "",
+  "source_title": "Molecular and clinical aspects of histone-related disorders.",
+  "source_journal": "",
+  "source_year": "2025"
+}

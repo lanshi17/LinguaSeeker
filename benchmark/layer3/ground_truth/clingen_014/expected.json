@@ -1,0 +1,47 @@
+{
+  "entry_id": "clingen_014",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_58b289b7-f842-4a32-a1fa-2777455fbd27-2022-04-08T074229.379Z",
+  "gene_symbol": "PCGF2",
+  "hgnc_id": "HGNC:12929",
+  "disease_label": "turnpenny-fry syndrome",
+  "mondo_id": "MONDO:0032707",
+  "moi": "AD",
+  "classification": "Strong",
+  "gcep": "Syndromic Disorders Gene Curation Expert Panel",
+  "classification_date": "2022-04-08T07:42:29.379Z",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "PCGF2"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "turnpenny-fry syndrome"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative"
+    }
+  ],
+  "expected_entities": {
+    "gene": {
+      "text": "PCGF2",
+      "hgnc_id": "HGNC:12929"
+    },
+    "disease": {
+      "text": "turnpenny-fry syndrome",
+      "mondo_id": "MONDO:0032707"
+    }
+  },
+  "expected_standardization": {
+    "gene": "HGNC:12929",
+    "disease": "MONDO:0032707"
+  },
+  "source_pmid": "40502890",
+  "source_pmc": "PMC12151918",
+  "source_pdf_url": "https://europepmc.org/article/PMC/12151918?pdf=render",
+  "notes": "",
+  "source_title": "Epilepsy in Turnpenny-Fry Syndrome: A Case Report.",
+  "source_journal": "",
+  "source_year": "2025"
+}

@@ -1,0 +1,47 @@
+{
+  "entry_id": "clingen_026",
+  "clingen_report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e9555886-a248-4bd4-b3dc-50ff503d6e7a-2023-10-17T170000.000Z",
+  "gene_symbol": "SRPX2",
+  "hgnc_id": "HGNC:30668",
+  "disease_label": "epilepsy",
+  "mondo_id": "MONDO:0005027",
+  "moi": "XL",
+  "classification": "Refuted",
+  "gcep": "Epilepsy Gene Curation Expert Panel",
+  "classification_date": "2023-10-17T17:00:00.000Z",
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "SRPX2"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "epilepsy"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "refuted"
+    }
+  ],
+  "expected_entities": {
+    "gene": {
+      "text": "SRPX2",
+      "hgnc_id": "HGNC:30668"
+    },
+    "disease": {
+      "text": "epilepsy",
+      "mondo_id": "MONDO:0005027"
+    }
+  },
+  "expected_standardization": {
+    "gene": "HGNC:30668",
+    "disease": "MONDO:0005027"
+  },
+  "source_pmid": "41774607",
+  "source_pmc": "PMC13144662",
+  "source_pdf_url": "https://europepmc.org/article/PMC/13144662?pdf=render",
+  "notes": "",
+  "source_title": "Old Lesions and New Targets: sEEG-Identified Onsets in Traditionally Inoperable Epilepsy Lesions and Associated Surgical Outcomes.",
+  "source_journal": "",
+  "source_year": "2026"
+}
