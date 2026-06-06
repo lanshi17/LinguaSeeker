@@ -1,7 +1,8 @@
 # Online Acquisition Refactor: Separate Link Acquisition from Download
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-06-02
+**Completed:** 2026-06-02
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 

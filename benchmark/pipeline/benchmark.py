@@ -311,6 +311,30 @@ def generate_report(  # noqa: dict-return — benchmark report is JSON-serialize
     confidences = [r.evidence_metrics["avg_confidence"] for r in results_with_metrics if r.evidence_metrics["avg_confidence"] is not None]
     avg_confidence = round(sum(confidences) / len(confidences), 4) if confidences else None
     total_fields = sum(r.evidence_metrics["field_coverage"] for r in results_with_metrics)
+    # Layer 2: quality aggregation
+    found_rates = [r.evidence_metrics["found_rate"] for r in results_with_metrics if "found_rate" in r.evidence_metrics]
+    avg_found_rate = round(sum(found_rates) / len(found_rates), 4) if found_rates else 0.0
+
+    grounding_rates = [
+        r.evidence_metrics["source_grounding"]["grounding_rate"]
+        for r in results_with_metrics
+        if "source_grounding" in r.evidence_metrics
+    ]
+    avg_grounding_rate = round(sum(grounding_rates) / len(grounding_rates), 4) if grounding_rates else 0.0
+
+    # Aggregate key field found across all PDFs
+    key_field_counts: dict[str, int] = {}
+    for r in results_with_metrics:
+        kf = r.evidence_metrics.get("key_field_found", {})
+        for field_id, found in kf.items():
+            if found:
+                key_field_counts[field_id] = key_field_counts.get(field_id, 0) + 1
+    n_metrics = len(results_with_metrics)
+    key_field_rates = {
+        f: round(key_field_counts.get(f, 0) / n_metrics, 4) if n_metrics > 0 else 0.0
+        for f in key_field_counts
+    } if key_field_counts else {}
+
     by_evidence = {
         "total_run_evidence": total_run_evidence,
         "total_canonical_evidence": total_canonical,
@@ -319,6 +343,10 @@ def generate_report(  # noqa: dict-return — benchmark report is JSON-serialize
         "avg_confidence": avg_confidence,
         "total_field_coverage": total_fields,
         "pdfs_with_evidence": len(results_with_metrics),
+        # Layer 2: quality metrics
+        "avg_found_rate": avg_found_rate,
+        "avg_grounding_rate": avg_grounding_rate,
+        "key_field_rates": key_field_rates,
     }
 
     return {
@@ -469,9 +497,26 @@ async def run_benchmark(
                             for k, v in metrics.track_breakdown.items()
                         },
                         "status_breakdown": metrics.status_breakdown,
+                        # Layer 2: quality metrics
+                        "found_rate": metrics.found_rate,
+                        "source_grounding": {
+                            "grounding_rate": metrics.source_grounding.grounding_rate,
+                            "exact": metrics.source_grounding.exact_count,
+                            "corrected": metrics.source_grounding.corrected_count,
+                            "ambiguous": metrics.source_grounding.ambiguous_count,
+                            "no_source": metrics.source_grounding.no_source_count,
+                        },
+                        "category_coverage": [
+                            {"category": c.category, "total": c.total_fields, "found": c.found_fields,
+                             "found_count": c.found_count, "not_found_count": c.not_found_count}
+                            for c in metrics.category_coverage
+                        ],
+                        "key_field_found": metrics.key_field_found,
                     }
-                    logger.info("  [{}] evidence={}, fields={}, bindings={}",
-                                r.lang, metrics.run_evidence_count, metrics.field_coverage, metrics.entity_binding_count)
+                    logger.info("  [{}] evidence={}, found_rate={:.0%}, grounding={:.0%}, fields={}, bindings={}",
+                                r.lang, metrics.run_evidence_count, metrics.found_rate,
+                                metrics.source_grounding.grounding_rate,
+                                metrics.field_coverage, metrics.entity_binding_count)
                 except Exception as e:
                     logger.warning("  [{}] Evidence metrics query failed: {}", r.lang, e)
             await engine.dispose()
@@ -500,6 +545,24 @@ async def run_benchmark(
                     ev["total_run_evidence"], ev["total_canonical_evidence"], ev["total_entity_bindings"])
         logger.info("  Avg evidence/PDF: {} | Avg confidence: {} | Field coverage: {}",
                     ev["avg_evidence_per_pdf"], ev["avg_confidence"], ev["total_field_coverage"])
+        logger.info("=== Quality Metrics ===")
+        logger.info("  Avg found rate: {:.1%} | Avg grounding rate: {:.1%}",
+                    ev.get("avg_found_rate", 0), ev.get("avg_grounding_rate", 0))
+        kf = ev.get("key_field_rates", {})
+        if kf:
+            for field_id, rate in sorted(kf.items()):
+                logger.info("  Key field {}: {:.0%}", field_id, rate)
+        # Per-PDF category coverage summary
+        for r in report["results"]:
+            if r.get("status") != "passed" or not r.get("evidence_metrics"):
+                continue
+            cats = r["evidence_metrics"].get("category_coverage", [])
+            if cats:
+                cat_summary = " | ".join(
+                    f"{c['category'].split('.')[0]}:{c['found']}/{c['total']}"
+                    for c in cats if c["found"] > 0
+                )
+                logger.info("  [{}] categories: {}", r["lang"], cat_summary or "none")
     logger.info("Report: {}", report_path)
 
 

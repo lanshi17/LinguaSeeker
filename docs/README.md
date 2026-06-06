@@ -49,8 +49,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status |
 |---|---|---|
-| 2026-06-01 | [Pipeline benchmark](plans/2026-06-01-pipeline-benchmark.md) | in-progress — benchmark runner done, LLM config needed |
-| 2026-06-02 | [Online acquisition refactor](plans/2026-06-02-online-acquisition-refactor.md) | planned — separate link acquisition from download |
 
 ## Planned Work
 
@@ -76,6 +74,9 @@ No active code reviews.
 | date | title | status/PR |
 |---|---|---|
 | 2026-06-06 | [Backend config single source](archive/plans/2026-06-06-backend-config-single-source.md) | completed — backend/config-only loader shared by backend and model-server |
+| 2026-06-04 | [Redis connection manager](archive/plans/2026-06-04-redis-connection-manager.md) | completed — centralized async Redis client singleton |
+| 2026-06-02 | [Online acquisition refactor](archive/plans/2026-06-02-online-acquisition-refactor.md) | completed — three-phase pipeline: link acquisition, download, LLM gate |
+| 2026-06-01 | [Pipeline benchmark](archive/plans/2026-06-01-pipeline-benchmark.md) | completed — E2E benchmark with PG evidence metrics |
 | 2026-06-02 | [Backend security & architecture fixes](archive/plans/2026-06-01-backend-security-architecture-fixes.md) | completed — 6 tasks + 3 review passes: auth, file limits, path traversal, rate limiting, TypedDict |
 | 2026-06-02 | [Phase 3 benchmark coverage — relevance scan fix (archived — superseded by config fix)](archive/plans/2026-06-02-phase3-benchmark-coverage.md) | completed — plan based on incorrect RCA; real fix was config fallback |
 | 2026-06-01 | [Backend review fixes](archive/plans/2026-06-01-backend-review-fixes.md) | completed — 16 tasks: session commit, auth, upsert, SSE, types, FK, tests |
@@ -126,6 +127,7 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-06-04 | [Redis connection manager plan review](archive/codereview/2026-06-04-redis-connection-manager.md) | resolved — plan approved after 2 blocking + 3 important fixes |
 | 2026-05-12 | [cross-lingual module v2 round 3 — approved](archive/codereview/2026-05-12-feat-cross-lingual-module-v2-r3.md) | approved — 58/58 tests |
 | 2026-05-12 | [cross-lingual module v2](archive/codereview/2026-05-12-feat-cross-lingual-module-v2.md) | resolved |
 | 2026-05-12 | [cross-lingual module v1](archive/codereview/2026-05-12-feat-cross-lingual-module-v1.md) | resolved |
