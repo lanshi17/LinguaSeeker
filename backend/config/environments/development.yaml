@@ -12,10 +12,10 @@ cors_origins: "*"
 
 # ── LLM Endpoints (Development) ──────────────────────────────────────────
 fast_llm:
-  base_url: "https://api.xiaomimimo.com/v1"
+  base_url: "https://token-plan-cn.xiaomimimo.com/v1"
 
 reasoning_llm:
-  base_url: "https://api.xiaomimimo.com/v1"
+  base_url: "https://token-plan-cn.xiaomimimo.com/v1"
 
 # ── Model Server (Local) ─────────────────────────────────────────────────
 embedding:
