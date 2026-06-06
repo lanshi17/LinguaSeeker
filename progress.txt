@@ -211,3 +211,4 @@
 [2026-06-06] Sync backend/AGENTS.md deployment rule with repository-root deploy/ansible Ansible layout [done]
 [2026-06-06] Frontend layered config (Ansible architecture) — .env defaults, .env.development/.env.production overrides, typed config module (appConfig, apiConfig, featureFlags), API client and health check consume config instead of process.env directly [done]
 [2026-06-06] Layer 3 evaluation: ClinGen-based P=40% R=67% F1=50%, gene_symbol 100%, baseline established [DONE]
+[2026-06-06] Wired all 10 stub pages to feature components — chat, chat/[sessionId], evidence/[evidenceId], graph, requests/[requestId], requests/[requestId]/export, tasks/agent-create, tasks/new, tasks/literature/candidates. Created 6 client View wrappers (ChatView, EvidenceReviewView, GraphExplorerView, TaskCreateView, TaskUploadView, LiteratureSelectorView). 0 stub pages remaining. [done]

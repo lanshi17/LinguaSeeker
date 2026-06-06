@@ -1,3 +1,4 @@
+import { EvidenceReviewView } from "@/features/evidence";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 interface EvidencePageProps {
@@ -10,9 +11,7 @@ export default async function EvidencePage({ params }: EvidencePageProps) {
   return (
     <div className="space-y-6">
       <PageHeader title="Evidence Review" description={evidenceId} />
-      <p className="text-sm text-gray-500">
-        EvidenceCard, EvidencePatchForm, and BilingualSpanView will be rendered here.
-      </p>
+      <EvidenceReviewView evidenceId={evidenceId} />
     </div>
   );
 }

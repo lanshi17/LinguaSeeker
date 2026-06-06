@@ -1,3 +1,4 @@
+export { GraphExplorerView } from "./components/GraphExplorerView";
 export { GraphSearchForm } from "./components/GraphSearchForm";
 export { GraphNodeList } from "./components/GraphNodeList";
 export { GraphEdgeView } from "./components/GraphEdgeView";

@@ -1,3 +1,4 @@
+export { ChatView } from "./components/ChatView";
 export { ChatSessionList } from "./components/ChatSessionList";
 export { ChatMessageList } from "./components/ChatMessageList";
 export { ChatMessageBubble } from "./components/ChatMessageBubble";

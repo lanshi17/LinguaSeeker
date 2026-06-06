@@ -1,3 +1,4 @@
+import { GraphExplorerView } from "@/features/graph";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function GraphPage() {
@@ -7,9 +8,7 @@ export default function GraphPage() {
         title="Knowledge Graph Explorer"
         description="Search the evidence knowledge graph by gene, variant, protein change, or disease."
       />
-      <p className="text-sm text-gray-500">
-        GraphSearchForm, GraphNodeList, GraphEdgeView, and GraphStatsPanel will be rendered here.
-      </p>
+      <GraphExplorerView />
     </div>
   );
 }

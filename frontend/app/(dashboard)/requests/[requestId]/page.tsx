@@ -1,3 +1,4 @@
+import { PipelineStatusView } from "@/features/pipeline";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 interface RequestMonitorPageProps {
@@ -15,9 +16,7 @@ export default async function RequestMonitorPage({
         title="Request Monitor"
         description={`Request ID: ${requestId}`}
       />
-      <p className="text-sm text-gray-500">
-        Pipeline status and per-paper monitoring will be rendered here.
-      </p>
+      <PipelineStatusView runId={requestId} />
     </div>
   );
 }
