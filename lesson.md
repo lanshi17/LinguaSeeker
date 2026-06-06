@@ -1335,3 +1335,37 @@ Phase 2 失败导致 Phase 3 未能执行（pipeline error），因此该结论�
 **解决方案**：删除 `from pathlib import Path`。
 
 **预防措施**：修改测试文件时，同步运行聚焦 Ruff；对已触碰文件里的陈旧 import 及时清理。
+
+## 2026-06-07: Layer 3 ClinGen-based Pipeline Evaluation
+
+**问题描述**：需要建立自动化评估框架衡量 pipeline 证据提取准确性。
+
+**实现方案**：
+1. 从 ClinGen Gene-Disease Validity CSV 选取 30 条代表性评审（Definitive/Strong/Moderate/Limited/Refuted/Disputed）
+2. 通过 EuropePMC API 查询 PMC 全文 ID
+3. 通过 NCBI efetch API 获取 JATS XML 全文
+4. 转换为 PDF 提交 pipeline
+5. 对比提取结果与 ClinGen ground truth
+
+**技术难点**：
+- PMC PDF 直接下载受限（HTTP 404/405），改用 NCBI efetch XML API
+- EuropePMC HTML 是 SPA（需 JavaScript），无法直接提取文本
+- fpdf2 不支持 Unicode，需 latin-1 编码处理
+- LLM API 响应慢导致评估耗时数小时
+
+**基线结果（3 条 Definitive entries）**：
+- Gene symbol 提取准确率：100%
+- Disease name 匹配率：低（ClinGen 标准名 vs 文献原始描述）
+- Overall P=40% R=67% F1=50%
+
+**产出文件**：
+- `benchmark/layer3/select_entries.py` — ClinGen 选取脚本
+- `benchmark/layer3/fetch_literature.py` — EuropePMC 查询
+- `benchmark/layer3/download_pdfs.py` — NCBI efetch 全文获取
+- `benchmark/layer3/evaluate.py` — 评估脚本（P/R/F1）
+- `benchmark/layer3/ground_truth/` — 30 条 ground truth 数据
+
+**预防措施**：
+- PMC 全文获取应优先使用 NCBI efetch API（返回 XML），而非直接下载 PDF
+- fpdf2 需要 latin-1 编码，Unicode 字符需预处理
+- 评估脚本应支持断点续评（避免超时后重新开始）

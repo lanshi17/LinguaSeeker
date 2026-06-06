@@ -1,11 +1,12 @@
-import { apiClient } from "@/lib/api/client";
 import type { LoginRequest, LoginResponse, RegisterRequest } from "../types/auth";
 
-export async function login(body: LoginRequest): Promise<LoginResponse> {
-  const { data } = await apiClient.post<LoginResponse>("/auth/login", body);
-  return data;
+// Backend auth routes not yet implemented — stubbed for frontend development.
+// Replace with real apiClient calls once POST /auth/login and /auth/register exist.
+
+export async function login(_body: LoginRequest): Promise<LoginResponse> {
+  return { access_token: "dev-stub-token", token_type: "bearer" };
 }
 
-export async function register(body: RegisterRequest): Promise<void> {
-  await apiClient.post("/auth/register", body);
+export async function register(_body: RegisterRequest): Promise<void> {
+  // no-op
 }
