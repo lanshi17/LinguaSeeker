@@ -38,7 +38,7 @@ export function PhaseTimeline({ steps }: PhaseTimelineProps) {
             <span className="mt-2 text-xs font-medium text-gray-600">
               {step.label}
             </span>
-            {step.duration !== undefined && (
+            {step.duration != null && (
               <span className="mt-0.5 text-xs text-gray-400">
                 {step.duration.toFixed(1)}s
               </span>

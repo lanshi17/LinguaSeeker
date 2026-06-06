@@ -60,9 +60,11 @@ export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
 
       {/* Per-phase detail cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        {data.phases.map((phase) => (
-          <PhaseDetailCard key={phase.phase_id} phase={phase} />
-        ))}
+        {timelineSteps.map((step) => {
+          const phase = data.phases[step.phaseId];
+          if (!phase) return null;
+          return <PhaseDetailCard key={step.phaseId} phaseId={step.phaseId} phase={phase} />;
+        })}
       </div>
     </div>
   );

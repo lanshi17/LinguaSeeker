@@ -17,33 +17,40 @@ export interface PipelineRunRequest {
 /** POST /pipeline/run response body. */
 export interface PipelineRunResponse {
   processing_run_id: string;
+  source_document_id: string;
+  status: string;
   status_url: string;
 }
 
-/** Per-phase status detail. */
+/** Per-phase status detail (matches backend PhaseStatusResponse). */
 export interface PhaseStatus {
-  phase_id: PhaseId;
   status: ProcessingStatus;
-  started_at?: string;
-  completed_at?: string;
-  duration_seconds?: number;
-  error?: string;
-  summary?: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+  duration_seconds?: number | null;
+  error?: Record<string, unknown> | null;
+  summary?: Record<string, unknown> | null;
 }
 
 /** GET /pipeline/runs/{id}/status response body. */
 export interface PipelineStatusResponse {
   processing_run_id: string;
+  source_document_id: string;
   pipeline_status: ProcessingStatus;
-  phases: PhaseStatus[];
-  created_at: string;
-  updated_at: string;
+  current_phase?: string | null;
+  skip_phase_3_reason?: string | null;
+  /** Dict keyed by phase_id ("phase_1", "phase_2", "phase_3"). */
+  phases: Record<string, PhaseStatus>;
+  error_message?: string | null;
+  error_phase?: number | null;
+  started_at?: string | null;
+  completed_at?: string | null;
 }
 
 /** Projected step for the PhaseTimeline component. */
 export interface PhaseTimelineStep {
-  phaseId: PhaseId;
+  phaseId: string;
   label: string;
   status: ProcessingStatus;
-  duration?: number;
+  duration?: number | null;
 }
