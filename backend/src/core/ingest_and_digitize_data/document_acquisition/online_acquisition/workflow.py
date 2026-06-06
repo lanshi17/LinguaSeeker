@@ -386,7 +386,6 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
     route = OnlineAcquisitionRouteInfo(
         prefer=request.prefer,
         api_provider=request.api_provider,
-        web_provider=request.web_provider,
         used="api",
         reason="parallel_acquisition",
         fallback_used=False,

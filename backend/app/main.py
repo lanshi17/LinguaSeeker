@@ -208,6 +208,6 @@ def create_app() -> FastAPI:
     return _app
 
 
-# Backward-compatible alias for uvicorn app.main:app and existing launch scripts.
-# Prefer ``create_app()`` for programmatic use (tests, custom entrypoints).
+# Module-level app instance for uvicorn app.main:app entry point.
+# Use ``create_app()`` for programmatic use (tests, custom entrypoints).
 app: FastAPI = create_app()

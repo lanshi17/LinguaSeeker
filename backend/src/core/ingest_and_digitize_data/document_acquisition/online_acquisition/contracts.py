@@ -13,8 +13,6 @@ ApiProvider = Literal[
     "crossref", "unpaywall", "openalex", "europepmc", "pmc", "jstage", "doaj",
     "scielo", "base", "core", "openaire", "arxiv", "biorxiv", "medrxiv", "cinii"
 ]
-# Deprecated: WebProvider kept for backward compat; new code uses web_search.FirecrawlAdapter
-WebProvider = Literal["pubscholar", "cyberleninka", "hans_publishers", "chinaxiv", "koreascience", "redalyc", "la_referencia"]
 PreferStrategy = Literal["auto", "api", "web"]
 ActionStrategy = Literal["search", "download"]
 
@@ -37,10 +35,8 @@ class OnlineAcquisitionRequest(BaseModel):
     literature_types: List[LiteratureTypeFilter] = Field(default_factory=list)
 
     api_provider: Optional[ApiProvider] = None
-    web_provider: Optional[WebProvider] = None
 
     api_params: Dict[str, Any] = Field(default_factory=dict)
-    web_params: Dict[str, Any] = Field(default_factory=dict)
 
     download_path: str = "./downloads"
     selected_index: int = 0
@@ -106,8 +102,6 @@ class OnlineAcquisitionRouteInfo(BaseModel):
     """Routing decision summary."""
 
     prefer: PreferStrategy
-    api_provider: Optional[str] = None
-    web_provider: Optional[str] = None
     used: Optional[Literal["api", "web", "none"]] = None
     reason: Optional[str] = None
     fallback_used: bool = False

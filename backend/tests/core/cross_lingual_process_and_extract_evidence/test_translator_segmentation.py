@@ -78,7 +78,7 @@ async def test_translate_segments_segments_large_document(mock_translator, large
 @pytest.mark.asyncio
 async def test_run_pipeline_with_large_document(mock_translator, large_document):
     """Full pipeline should complete without token limit errors."""
-    terminology_map, structure_plan, draft, translated, segments, translated_parts, warnings = (
+    terminology_map, translated, segments, translated_parts, warnings = (
         await mock_translator.run_pipeline(large_document)
     )
     assert terminology_map is not None

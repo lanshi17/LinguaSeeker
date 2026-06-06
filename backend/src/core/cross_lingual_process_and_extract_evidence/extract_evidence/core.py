@@ -460,9 +460,6 @@ class SourceGrounder:
                 "assigned_clingen_modules": [],
             })
 
-        legacy_source = item.source is not None and item.raw_source is None
-        if legacy_source and self._is_exact_match(document, source) and not document.blocks:
-            return item
 
         grounded_source = self._ground_source(document, source)
         if grounded_source is None:
@@ -495,8 +492,6 @@ class SourceGrounder:
                 "assigned_clingen_modules": [],
             })
 
-        if legacy_source and item.raw_source is None and grounded_source.source_precision == SourcePrecision.EXACT:
-            return item.model_copy(update={"source": grounded_source})
         return item.model_copy(update={"source": grounded_source, "raw_source": source})
 
     def _ground_source(self, document: TrackDocument, source: SourceLocation) -> SourceLocation | None:

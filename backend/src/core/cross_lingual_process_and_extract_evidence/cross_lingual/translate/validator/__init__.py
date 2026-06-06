@@ -1,6 +1,6 @@
 """Translation quality validation and post-processing.
 
-Re-exports all functions for backward compatibility.
+Re-exports all validation functions.
 """
 from .artifacts import (
     _is_terminology_echo,

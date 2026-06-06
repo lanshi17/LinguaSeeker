@@ -142,7 +142,6 @@ class DocumentAcquisitionService:
             "download_path": request.download_path,
             "language": request.language,
             "prefer": request.prefer,
-            "web_provider": request.web_provider,
             "api_provider": request.api_provider,
         }
 

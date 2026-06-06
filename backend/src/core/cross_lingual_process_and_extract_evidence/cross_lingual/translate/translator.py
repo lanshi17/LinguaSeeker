@@ -728,8 +728,7 @@ class MultiStageTranslator(BaseTranslator):
                 logger.warning("Image reference warning: {}", exc)
 
         terminology_map = self._parse_terminology(terminology, formatted.source_language or "unknown")
-        # Return structure_plan="" for backward compatibility with BaseTranslator
-        return terminology_map, "", "", translated, source_segments, translated_parts, warnings
+        return terminology_map, translated, source_segments, translated_parts, warnings
 
     async def _translate_auxiliary_blocks(
         self,
@@ -807,7 +806,7 @@ class MultiStageTranslator(BaseTranslator):
 
     async def translate_to_result(self, formatted: FormattedDocument) -> TranslationResult:
         blocks = formatted.original_blocks or []
-        terminology_map, _structure_plan, _draft, translated, source_segments, translated_parts, warnings = (
+        terminology_map, translated, source_segments, translated_parts, warnings = (
             await self.run_pipeline(formatted, blocks=blocks if blocks else None)
         )
         tr_segments: list[TranslationSegment] = []
