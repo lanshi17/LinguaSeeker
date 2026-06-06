@@ -1,3 +1,5 @@
+export { TaskCreateView } from "./components/TaskCreateView";
+export { TaskUploadView } from "./components/TaskUploadView";
 export { TaskForm } from "./components/TaskForm";
 export { ClarificationChat } from "./components/ClarificationChat";
 export { TaskConfirmPanel } from "./components/TaskConfirmPanel";

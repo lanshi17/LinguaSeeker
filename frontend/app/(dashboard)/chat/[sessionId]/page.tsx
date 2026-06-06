@@ -1,3 +1,4 @@
+import { ChatView } from "@/features/chat";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 interface ChatSessionPageProps {
@@ -12,9 +13,7 @@ export default async function ChatSessionPage({
   return (
     <div className="space-y-6">
       <PageHeader title="Chat" description={`Session: ${sessionId}`} />
-      <p className="text-sm text-gray-500">
-        ChatMessageList and ChatComposer will be rendered here.
-      </p>
+      <ChatView sessionId={sessionId} />
     </div>
   );
 }

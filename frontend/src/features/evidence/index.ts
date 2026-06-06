@@ -1,3 +1,4 @@
+export { EvidenceReviewView } from "./components/EvidenceReviewView";
 export { EvidenceCard } from "./components/EvidenceCard";
 export { EvidencePatchForm } from "./components/EvidencePatchForm";
 export { EvidenceStatusBadge } from "./components/EvidenceStatusBadge";

@@ -1,3 +1,4 @@
+import { LiteratureSelectorView } from "@/features/literature";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function LiteratureCandidatesPage() {
@@ -5,11 +6,9 @@ export default function LiteratureCandidatesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Literature Candidates"
-        description="Select papers from the search results for processing."
+        description="Search and select papers for evidence extraction."
       />
-      <p className="text-sm text-gray-500">
-        LiteratureCandidateList and SelectionToolbar will be rendered here.
-      </p>
+      <LiteratureSelectorView />
     </div>
   );
 }

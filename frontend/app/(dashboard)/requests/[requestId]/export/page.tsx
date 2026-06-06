@@ -1,3 +1,4 @@
+import { DocumentViewer } from "@/features/document-viewer";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 interface ExportPageProps {
@@ -13,9 +14,7 @@ export default async function ExportPage({ params }: ExportPageProps) {
         title="Export"
         description={`Export results for request ${requestId}`}
       />
-      <p className="text-sm text-gray-500">
-        Print-ready bilingual export view will be rendered here.
-      </p>
+      <DocumentViewer documentId={requestId} />
     </div>
   );
 }

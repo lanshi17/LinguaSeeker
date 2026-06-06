@@ -1,3 +1,4 @@
+export { LiteratureSelectorView } from "./components/LiteratureSelectorView";
 export { LiteratureCandidateList } from "./components/LiteratureCandidateList";
 export { CandidateCard } from "./components/CandidateCard";
 export { SelectionToolbar } from "./components/SelectionToolbar";
