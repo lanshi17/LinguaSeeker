@@ -1,5 +1,9 @@
 # Pipeline Benchmark 增强计划
 
+**Status:** completed
+**Created:** 2026-06-01
+**Completed:** 2026-06-04
+
 ## 任务背景
 
 现有 `benchmark/pipeline/benchmark.py` 已实现 HTTP 提交 + 轮询 + 报告生成，但存在两个不足：
