@@ -15,10 +15,8 @@ interface UseChatStreamOptions {
  * SSE streaming hook for real-time AI chat replies.
  *
  * Connects to GET /chat/sessions/{id}/stream and emits events
- * via callbacks. Callbacks are stored in refs so the connect
- * callback identity is stable across renders — prevents the
- * infinite reconnect loop that would occur if connect depended
- * on freshly-created callback references.
+ * via callbacks. Callbacks are stored in refs so the effect
+ * doesn't re-run when the parent re-creates them.
  */
 export function useChatStream({
   sessionId,
@@ -30,13 +28,22 @@ export function useChatStream({
   const eventSourceRef = useRef<EventSource | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
-  // Store callbacks in refs so connect doesn't re-create on every render.
+  // Sync refs via effect — avoids writing during render.
   const onTokenRef = useRef(onToken);
-  onTokenRef.current = onToken;
   const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
   const onErrorRef = useRef(onError);
-  onErrorRef.current = onError;
+
+  useEffect(() => {
+    onTokenRef.current = onToken;
+  }, [onToken]);
+
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
+
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
 
   const disconnect = useCallback(() => {
     if (eventSourceRef.current) {
@@ -46,8 +53,14 @@ export function useChatStream({
     setIsConnected(false);
   }, []);
 
-  const connect = useCallback(() => {
-    disconnect();
+  // Manage the EventSource lifecycle in a single effect.
+  useEffect(() => {
+    if (!enabled || !sessionId) return;
+
+    // Close any existing connection before opening a new one.
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
 
     const url = streamUrl(sessionId);
     const es = new EventSource(url);
@@ -61,27 +74,31 @@ export function useChatStream({
 
     es.addEventListener("done", () => {
       onDoneRef.current?.();
-      disconnect();
+      es.close();
+      eventSourceRef.current = null;
+      setIsConnected(false);
     });
 
     es.addEventListener("error", (e) => {
       const eventData = (e as MessageEvent).data;
       onErrorRef.current?.(eventData ?? "Stream error");
-      disconnect();
+      es.close();
+      eventSourceRef.current = null;
+      setIsConnected(false);
     });
 
     es.onerror = () => {
+      es.close();
+      eventSourceRef.current = null;
       setIsConnected(false);
-      disconnect();
     };
-  }, [sessionId, disconnect]);
 
-  useEffect(() => {
-    if (enabled && sessionId) {
-      connect();
-    }
-    return disconnect;
-  }, [enabled, sessionId, connect, disconnect]);
+    return () => {
+      es.close();
+      eventSourceRef.current = null;
+      setIsConnected(false);
+    };
+  }, [enabled, sessionId, disconnect]);
 
-  return { isConnected, connect, disconnect };
+  return { isConnected, disconnect };
 }

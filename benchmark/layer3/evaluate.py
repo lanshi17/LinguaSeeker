@@ -38,6 +38,22 @@ TERMINAL_STATUSES = {"awaiting_review", "completed", "failed"}
 
 # ── PDF generation ─────────────────────────────────────────────────────
 
+def _sanitize_for_pdf(text: str) -> str:
+    """Remove characters that can't be encoded in latin-1."""
+    # Replace common Unicode chars with ASCII equivalents
+    replacements = {
+        "–": "-", "—": "-", "‘": "'", "’": "'",
+        "“": '"', "”": '"', "…": "...", "°": "deg",
+        "µ": "u", "×": "x", "±": "+/-", "≤": "<=",
+        "≥": ">=", "α": "alpha", "β": "beta", "γ": "gamma",
+        "→": "->", "←": "<-",
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    # Encode to latin-1, replacing unknown chars
+    return text.encode("latin-1", errors="replace").decode("latin-1")
+
+
 def markdown_to_pdf_bytes(md_text: str, title: str = "") -> bytes:
     """Convert markdown text to PDF bytes using fpdf2."""
     from fpdf import FPDF
@@ -45,37 +61,40 @@ def markdown_to_pdf_bytes(md_text: str, title: str = "") -> bytes:
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
-
-    # Add font that supports basic Latin
     pdf.set_font("Helvetica", size=10)
 
     if title:
         pdf.set_font("Helvetica", "B", 14)
-        pdf.multi_cell(0, 8, title.encode("latin-1", errors="replace").decode("latin-1"))
+        pdf.multi_cell(0, 8, _sanitize_for_pdf(title[:200]))
         pdf.ln(5)
         pdf.set_font("Helvetica", size=10)
 
-    # Split text into lines and write
     lines = md_text.split("\n")
     for line in lines:
         line = line.strip()
         if not line:
             pdf.ln(3)
             continue
-        # Handle headers
-        if line.startswith("# "):
-            pdf.set_font("Helvetica", "B", 12)
-            text = line[2:].encode("latin-1", errors="replace").decode("latin-1")
-            pdf.multi_cell(0, 7, text)
-            pdf.set_font("Helvetica", size=10)
-        elif line.startswith("## "):
-            pdf.set_font("Helvetica", "B", 11)
-            text = line[3:].encode("latin-1", errors="replace").decode("latin-1")
-            pdf.multi_cell(0, 6, text)
-            pdf.set_font("Helvetica", size=10)
-        else:
-            text = line.encode("latin-1", errors="replace").decode("latin-1")
-            pdf.multi_cell(0, 5, text)
+        # Truncate very long lines
+        if len(line) > 2000:
+            line = line[:2000] + "..."
+        text = _sanitize_for_pdf(line)
+        if not text.strip():
+            continue
+        try:
+            if line.startswith("## "):
+                pdf.set_font("Helvetica", "B", 11)
+                pdf.multi_cell(0, 6, text[3:] if len(text) > 3 else text)
+                pdf.set_font("Helvetica", size=10)
+            elif line.startswith("# "):
+                pdf.set_font("Helvetica", "B", 12)
+                pdf.multi_cell(0, 7, text[2:] if len(text) > 2 else text)
+                pdf.set_font("Helvetica", size=10)
+            else:
+                pdf.multi_cell(0, 5, text)
+        except Exception:
+            # Skip problematic lines
+            continue
 
     return bytes(pdf.output())
 
