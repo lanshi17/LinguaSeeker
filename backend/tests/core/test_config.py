@@ -1,5 +1,4 @@
 """Tests for model server config in Settings."""
-from pathlib import Path
 
 from src.core.config import Settings
 
@@ -45,7 +44,7 @@ def test_embedding_dimension_must_match_pgvector() -> None:
 
 
 def test_settings_no_env_files() -> None:
-    """Settings no longer uses env_file; config comes from config-dev.yaml."""
+    """Settings no longer uses env_file; config comes from backend/config."""
     env_files = Settings.model_config.get("env_file")
 
     # env_file should not be configured — YAML is the source of truth

@@ -94,7 +94,10 @@ class Phase2Adapter:
             pages = parse_data.get("pages", [])
             content_blocks = parse_data.get("content_blocks", [])
 
-            output_dir = f"data/pipeline/{state.processing_run_id}/phase_2"
+            # Use absolute path to survive CWD changes
+            from pathlib import Path as _Path
+            _backend_root = _Path(__file__).resolve().parent.parent.parent
+            output_dir = str(_backend_root / "data" / "pipeline" / state.processing_run_id / "phase_2")
             Path(output_dir).mkdir(parents=True, exist_ok=True)
 
             # On retry, check if translation output already exists on disk

@@ -220,6 +220,11 @@ async def _run_one_query(
         "limit": limit,
         "language": language,
         "download_path": download_path,
+        # Disable LLM relevance gate — metadata classifier + candidate
+        # filtering already provide sufficient type/quality control.
+        # The gate was rejecting valid case reports because the LLM
+        # considered them not specific enough to the search query.
+        "relevance_gate": False,
     }
     if literature_types:
         payload["literature_types"] = literature_types

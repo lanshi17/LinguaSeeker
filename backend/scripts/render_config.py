@@ -2,12 +2,13 @@
 """Render configuration from layered YAML files.
 
 Loads defaults/main.yaml, environments/<env>.yaml, and vault/<env>.yaml,
-merges them (with later files overriding earlier ones), and renders the
-Jinja2 template to produce the flat config-dev.yaml format.
+merges them (with later files overriding earlier ones), and renders the Jinja2
+template for debugging or inspection. Runtime configuration is still loaded
+directly from backend/config/.
 
 Usage:
     uv run python scripts/render_config.py --env development
-    uv run python scripts/render_config.py --env production --output config-dev.yaml
+    uv run python scripts/render_config.py --env production --output /tmp/acmg-lingua-config.yaml
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import Any, TypeAlias
 
 try:
     import yaml
@@ -31,11 +33,12 @@ except ImportError:
 
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_ROOT = BACKEND_ROOT / "config"
+ConfigData: TypeAlias = dict[str, Any]
 
 
-def deep_merge(base: dict, override: dict) -> dict:
+def deep_merge(base: ConfigData, override: ConfigData) -> ConfigData:
     """Recursively merge override dict into base dict.
-    
+
     Nested dicts are merged; all other values are replaced.
     """
     result = base.copy()
@@ -47,9 +50,9 @@ def deep_merge(base: dict, override: dict) -> dict:
     return result
 
 
-def load_layered_config(environment: str) -> dict:
+def load_layered_config(environment: str) -> ConfigData:
     """Load and merge configuration from layered YAML files.
-    
+
     Loading order (lowest to highest priority):
       1. defaults/main.yaml
       2. environments/<environment>.yaml
@@ -87,7 +90,7 @@ def load_layered_config(environment: str) -> dict:
     return merged
 
 
-def render_config_template(config_data: dict, environment: str) -> str:
+def render_config_template(config_data: ConfigData, environment: str) -> str:
     """Render the Jinja2 config template with merged configuration data."""
     template_dir = CONFIG_ROOT / "templates"
     env = Environment(

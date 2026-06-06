@@ -105,9 +105,9 @@
 
 ### 16. 环境变量与密钥管理
 
-- 所有敏感配置（数据库密码、API Key、Token 等）必须通过环境变量或 `config-dev.yaml` 文件注入。
+- 所有敏感配置（数据库密码、API Key、Token 等）必须通过环境变量或 `backend/config/vault/<env>.yaml` 文件注入。
 - **禁止**将任何密钥、凭证硬编码到源代码或提交到版本控制。
-- `config-dev.yaml` 文件已在 `.gitignore` 中排除。
+- `backend/config/vault/*.yaml` 文件已在 `.gitignore` 中排除。
 
 ### 17. 提交信息规范
 
@@ -230,7 +230,7 @@
 | **多模态任务** | `MULTIMODAL_LLM_MODEL` | 图片识别、图表提取、PDF 视觉信息解析等需要多模态能力的场景 |
 
 - 代码中必须根据实际场景选择对应的模型配置变量，**禁止混用**。
-- 各模型的具体型号和参数在 `config-dev.yaml` 中配置，通过 `src/core/config.py` 统一加载。
+- 各模型的具体型号和参数在 `backend/config/` 中配置，通过 `src/core/config.py` 统一加载。
 
 ### 24. 文件删除操作
 
@@ -279,7 +279,7 @@ src/
 
 Feature slices should expose orchestrator-facing node adapters (`api.py` when useful), keep pure business behavior in `core.py`, wrap LLM/DB/Rust/external-service calls in `providers.py`, and define typed contracts in `contracts.py` or `schema.py`. Workflow code wires nodes and edges only; it must not embed extraction, translation, standardization, feedback, or report-generation business rules.
 
-Configuration: `src/core/config.py` loads from `config-dev.yaml` first, then overridden by environment variables. Nested domain models (`cfg.llm`, `cfg.postgresql`, etc.) are built from flat fields by a `model_validator`. Access via `from src.core.config import get_config`.
+Configuration: `src/core/config.py` loads layered YAML from `backend/config/defaults`, `backend/config/environments`, and `backend/config/vault`, then lets environment variables override those values. Nested domain models (`cfg.llm`, `cfg.postgresql`, etc.) are built from flat fields by a `model_validator`. Access via `from src.core.config import get_config`.
 
 #### Rust Native Extensions (`backend/libs/`)
 
@@ -295,7 +295,7 @@ All three expose async Python functions via `pyo3_async_runtimes::tokio::future_
 
 #### Model Server (`backend/services/model-server/`)
 
-Standalone FastAPI microservice (port 8001) for local model inference: Embedding, Rerank, LLM chat. OpenAI-compatible API. Models lazy-loaded on first request. Shares `config-dev.yaml` with backend.
+Standalone FastAPI microservice (port 8001) for local model inference: Embedding, Rerank, LLM chat. OpenAI-compatible API. Models lazy-loaded on first request. Shares the `backend/config/` layered configuration source with the backend.
 
 #### Frontend (`frontend/`)
 
@@ -428,7 +428,7 @@ The literature acquisition gateway supports multiple providers (Crossref, OpenAl
 
 #### Configuration
 
-All config via `config-dev.yaml` or environment variables. Key config domains: `LLM_*`, `MT_*` (translation), `VLM_*` (vision), `REASONING_LLM_*`, `EMBEDDING_*`, `RERANK_*`, `MINERU_*`, `POSTGRES_*`, `REDIS_*`, `NEO4J_*`, `MINIO_*`, `SMTP_*`.
+All config data lives in `backend/config/` or explicit environment variables. Key config domains: `FAST_LLM_*`, `REASONING_LLM_*`, `EMBEDDING_*`, `RERANK_*`, `MINERU_*`, `POSTGRES_*`, `REDIS_*`, `WEB_SEARCH_*`, `NETWORK_*`.
 
 #### Testing
 

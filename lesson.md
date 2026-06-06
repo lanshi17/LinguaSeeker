@@ -1321,3 +1321,17 @@ Phase 2 失败导致 Phase 3 未能执行（pipeline error），因此该结论�
 - 大文档处理需要平衡 chunk size 和 timeout：小 chunk = 更多调用但每个更快
 - Reasoning effort 应根据任务复杂度选择，xhigh 对结构化提取过度
 - 测试大文档（>20 页）应作为 benchmark 的标准用例
+
+## 2026-06-06: 配置清理时聚焦 Ruff 暴露陈旧导入
+
+**问题描述**：运行聚焦 Ruff 检查时，`backend/tests/core/test_config.py` 报 `F401 pathlib.Path imported but unused`。
+
+**排查过程**：
+1. 读取 Ruff 输出，确认唯一失败点是未使用导入。
+2. 检查本次改动，确认该文件只更新了配置来源注释，但既然文件已被触碰，应保持 lint clean。
+
+**根因分析**：`Path` 是此前遗留的未使用导入；本次聚焦检查覆盖了该文件后暴露出来。
+
+**解决方案**：删除 `from pathlib import Path`。
+
+**预防措施**：修改测试文件时，同步运行聚焦 Ruff；对已触碰文件里的陈旧 import 及时清理。

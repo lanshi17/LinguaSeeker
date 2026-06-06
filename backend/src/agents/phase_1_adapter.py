@@ -117,8 +117,10 @@ class Phase1Adapter:
                     phase=1,
                 )
 
-            # Parse document
-            output_dir = f"data/pipeline/{state.processing_run_id}/phase_1"
+            # Parse document — use absolute path to survive CWD changes
+            from pathlib import Path as _Path
+            _backend_root = _Path(__file__).resolve().parent.parent.parent
+            output_dir = str(_backend_root / "data" / "pipeline" / state.processing_run_id / "phase_1")
             parse_result = await self._parse.parse_local_files_and_save(
                 file_paths=[pdf_path],
                 output_dir=output_dir,

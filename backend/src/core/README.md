@@ -1,13 +1,14 @@
 # Configuration Management
 
-ACMG Lingua uses a layered configuration system with Pydantic Settings.
+ACMG Lingua uses `backend/config/` as the only file-based configuration source. `config_loader.py`
+loads layered YAML into environment variables, and `config.py` exposes typed Pydantic Settings.
 
 ## Configuration Sources (Priority Order)
 
 1. **Environment Variables** (highest priority)
-2. **config/vault/{env}.yaml** (secrets, git-ignored)
-3. **config/environments/{env}.yaml** (environment-specific)
-4. **config/defaults/main.yaml** (base defaults)
+2. **backend/config/vault/{env}.yaml** (secrets, git-ignored)
+3. **backend/config/environments/{env}.yaml** (environment-specific)
+4. **backend/config/defaults/main.yaml** (base defaults)
 
 ## Environment Selection
 
@@ -54,9 +55,31 @@ cfg.environment                  # "development"
 ## Environment Variable Mapping
 
 YAML fields map to environment variables:
-- `llm.model` → `LLM_MODEL`
+- `fast_llm.model` → `FAST_LLM_MODEL`
 - `mineru.api_token` → `MINERU_API_TOKEN`
-- `postgresql.host` → `POSTGRESQL_HOST`
+- `postgres.host` → `POSTGRES_HOST`
+
+## Shared Loader API
+
+`src.core.config_loader` is the shared file-loading boundary used by the backend and
+`services/model-server`.
+
+| Function | Signature | Description |
+|---|---|---|
+| `load_backend_config_into_env` | `(backend_root: Path, environ: MutableMapping[str, str] \| None = None) -> None` | Load `backend/config/defaults/main.yaml`, `backend/config/environments/<ENVIRONMENT>.yaml`, and `backend/config/vault/<ENVIRONMENT>.yaml`, flatten nested keys, and set missing environment variables. |
+
+Data flow:
+
+```text
+backend/config/*.yaml
+  -> src.core.config_loader.load_backend_config_into_env()
+  -> uppercase env vars
+  -> src.core.config.Settings
+  -> nested cfg.llm / cfg.postgresql / cfg.network / ...
+```
+
+Environment variables are never overwritten. This keeps CI/CD secrets and local shell overrides at
+the highest priority.
 
 ## Adding New Configuration
 
@@ -65,6 +88,15 @@ YAML fields map to environment variables:
 3. Add environment-specific values in `config/environments/{env}.yaml`
 4. Add secrets in `config/vault/{env}.yaml` (git-ignored)
 5. Update `_build_nested()` validator if needed
+6. Add or update tests in `backend/tests/core/test_config_loader.py` or `backend/tests/core/test_config.py`
+
+## Testing
+
+```bash
+cd backend
+uv run pytest tests/core/test_config_loader.py tests/core/test_config.py services/model-server/tests/test_model_server_config.py -q
+uv run ruff check src/core/config.py src/core/config_loader.py tests/core/test_config_loader.py
+```
 
 ## Removed Models (v3.0.0)
 

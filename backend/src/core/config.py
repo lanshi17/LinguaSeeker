@@ -25,6 +25,7 @@ from urllib.parse import quote, urlparse
 
 from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from src.core.config_loader import load_backend_config_into_env
 
 
 # ── Constants ───────────────────────────────────────────────────────────
@@ -32,97 +33,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 PGVECTOR_DIMENSION: int = 1024
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 REPO_ROOT = BACKEND_ROOT.parent
-# ── YAML config loader ──────────────────────────────────────────────────
-
-def _load_yaml_config() -> None:
-    """Load configuration from layered YAML files.
-    
-    Loading order:
-      1. config/defaults/main.yaml          (base structural defaults)
-      2. config/environments/<env>.yaml     (environment-specific overrides)
-      3. config/vault/<env>.yaml            (secrets, git-ignored)
-    
-    Environment variables take precedence over all YAML values.
-    """
-    _load_layered_yaml_config()
-
-
-def _load_layered_yaml_config() -> None:
-    """Load from layered config/ directory structure."""
-    import os
-    try:
-        import yaml
-    except ImportError:
-        return
-    
-    config_dir = BACKEND_ROOT / "config"
-    
-    # Determine environment (default to 'development')
-    environment = os.environ.get("ENVIRONMENT", "development")
-    
-    merged = {}
-    
-    # Layer 1: defaults/main.yaml
-    defaults_path = config_dir / "defaults" / "main.yaml"
-    if defaults_path.exists():
-        with open(defaults_path) as f:
-            defaults = yaml.safe_load(f) or {}
-        merged = _deep_merge(merged, defaults)
-    
-    # Layer 2: environments/<env>.yaml
-    env_path = config_dir / "environments" / f"{environment}.yaml"
-    if env_path.exists():
-        with open(env_path) as f:
-            env_config = yaml.safe_load(f) or {}
-        merged = _deep_merge(merged, env_config)
-    
-    # Layer 3: vault/<env>.yaml (secrets)
-    vault_path = config_dir / "vault" / f"{environment}.yaml"
-    if vault_path.exists():
-        with open(vault_path) as f:
-            vault_secrets = yaml.safe_load(f) or {}
-        merged = _deep_merge(merged, vault_secrets)
-    
-    # Flatten nested structure and set as env vars
-    _flatten_and_set_env(merged)
-
-
-def _deep_merge(base: dict, override: dict) -> dict:
-    """Recursively merge override dict into base dict."""
-    result = base.copy()
-    for key, value in override.items():
-        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-            result[key] = _deep_merge(result[key], value)
-        else:
-            result[key] = value
-    return result
-
-
-def _flatten_and_set_env(data: dict, prefix: str = "") -> None:
-    """Flatten nested dict and set as uppercase env vars.
-    
-    Example:
-      {"app": {"name": "ACMG-Lingua", "port": 8000}}
-      → APP_NAME="ACMG-Lingua", APP_PORT="8000"
-    """
-    import os
-    
-    for key, value in data.items():
-        # Build the flat key name
-        flat_key = f"{prefix}_{key}" if prefix else key
-        
-        if isinstance(value, dict):
-            # Recurse into nested dicts
-            _flatten_and_set_env(value, flat_key)
-        else:
-            # Set as uppercase env var if not already set
-            env_key = flat_key.upper()
-            if env_key not in os.environ:
-                os.environ[env_key] = str(value)
 
 
 # Load YAML config on module import (before Settings instantiation)
-_load_yaml_config()
+load_backend_config_into_env(BACKEND_ROOT)
 
 
 # ── Nested domain models ────────────────────────────────────────────────

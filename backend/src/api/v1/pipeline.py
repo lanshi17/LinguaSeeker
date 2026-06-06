@@ -203,7 +203,7 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         # Normalize backslashes (Windows) before PurePosixPath extraction
         raw_fname = body.filename or f"{processing_run_id}.bin"
         fname = PurePosixPath(raw_fname.replace("\\", "/")).name
-        temp_dir = Path("data/pipeline/uploads")
+        temp_dir = Path(__file__).resolve().parent.parent.parent.parent / "data" / "pipeline" / "uploads"
         temp_dir.mkdir(parents=True, exist_ok=True)
         upload_file_path = str(temp_dir / f"{processing_run_id}_{fname}")
         async with aiofiles.open(upload_file_path, "wb") as f:

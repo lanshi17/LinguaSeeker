@@ -18,7 +18,7 @@ backend/config/
 │   ├── production.yaml        # Prod secrets (git-ignored, NEVER commit)
 │   └── *.yaml.example         # Example secret templates (safe to commit)
 ├── templates/
-│   └── config.yaml.j2         # Jinja2 template for rendering flat config
+│   └── config.yaml.j2         # Optional Jinja2 template for debugging exports
 └── README.md                  # This file
 ```
 
@@ -33,8 +33,8 @@ backend/config/
 
 ### Data vs. Logic Separation
 - **Data**: YAML files contain configuration values (hosts, models, ports, credentials)
-- **Logic**: Python code in `src/core/config.py` handles loading, merging, and validation
-- **Templates**: Jinja2 templates in `templates/` render layered data into flat format
+- **Logic**: Python code in `src/core/config_loader.py` handles loading and merging; `src/core/config.py` handles typed validation
+- **Templates**: Jinja2 templates in `templates/` render layered data for debugging only
 
 ### Variable vs. Template Separation
 - **Variables**: Structured nested YAML (`app.name`, `fast_llm.model`, `postgres.host`)
@@ -50,7 +50,7 @@ backend/config/
 ### 1. Development Setup
 
 ```bash
-# The config loader automatically uses the layered structure if config/ exists
+# The config loader reads backend/config as the only file-based config source
 # Default environment is 'development'
 uv run uvicorn app.main:app --reload
 
@@ -79,17 +79,19 @@ uv run uvicorn app.main:app
 - `config/environments/production.yaml`
 - `config/vault/production.yaml` (if exists, for secrets)
 
-### 3. Render Configuration (Optional)
+### 3. Render Configuration (Optional Debugging)
 
-For debugging or generating a flat `config-dev.yaml` file:
+For debugging or inspecting the merged layered values:
 
 ```bash
 # Render to stdout
 uv run python scripts/render_config.py --env development
 
-# Render to file
-uv run python scripts/render_config.py --env production --output config-dev.yaml
+# Render to a temporary file
+uv run python scripts/render_config.py --env production --output /tmp/acmg-lingua-config.yaml
 ```
+
+Rendered files are not read by the runtime loader. Runtime configuration remains `backend/config/` plus explicit environment variables.
 
 ## Adding New Configuration Variables
 
@@ -135,24 +137,10 @@ class Settings(BaseSettings):
     new_service_api_key: str = ""
 ```
 
-The `_flatten_and_set_env()` function automatically converts:
+The shared loader automatically converts:
 - `new_service.host` → `NEW_SERVICE_HOST`
 - `new_service.port` → `NEW_SERVICE_PORT`
 - `new_service.api_key` → `NEW_SERVICE_API_KEY`
-
-## Migration from Legacy config-dev.yaml
-
-The config loader supports **backward compatibility**:
-
-1. If `config/defaults/main.yaml` exists → uses layered loading
-2. If `config/` doesn't exist → falls back to `config-dev.yaml`
-
-### Migration Steps
-
-1. **Copy secrets** from `config-dev.yaml` to `config/vault/development.yaml`
-2. **Copy structural config** to `config/environments/development.yaml`
-3. **Verify** the application loads correctly
-4. **Remove** `config-dev.yaml` (or keep as backup)
 
 ## Security Best Practices
 
@@ -193,20 +181,10 @@ uv run python -c "from src.core.config import get_config; print(get_config().pos
 # Should print: override-host
 ```
 
-## Comparison: Layered vs. Legacy
-
-| Aspect | Layered (New) | Legacy (config-dev.yaml) |
-|--------|---------------|--------------------------|
-| **Structure** | Nested YAML by domain | Flat key-value pairs |
-| **Secrets** | Isolated in `vault/` | Mixed with structural config |
-| **Environments** | Separate override files | Single file per environment |
-| **Commit Safety** | Defaults/environments safe | Must git-ignore entire file |
-| **Extensibility** | Add to appropriate layer | Edit single monolithic file |
-| **Rendering** | Optional flat output | Direct flat format |
-
 ## References
 
-- **Config Loader**: `backend/src/core/config.py` (`_load_yaml_config()`)
+- **Config Loader**: `backend/src/core/config_loader.py` (`load_backend_config_into_env()`)
+- **Typed Settings**: `backend/src/core/config.py` (`Settings`, `get_config()`)
 - **Render Script**: `backend/scripts/render_config.py`
 - **Ansible Inspiration**: [Ansible Best Practices — Directory Layout](https://docs.ansible.com/ansible/latest/tips_tricks/sample_setup.html)
 - **Project Standards**: `AGENTS.md` § 16 (Environment Variables & Secrets Management)
