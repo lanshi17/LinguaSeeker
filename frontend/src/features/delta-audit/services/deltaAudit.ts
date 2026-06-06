@@ -10,7 +10,7 @@ export async function listAuditEvents(
   filters?: AuditFilters,
 ): Promise<ReviewAuditEventResponse[]> {
   const { data } = await apiClient.get<ReviewAuditEventResponse[]>(
-    "/delta-audit/",
+    "/delta-audit",
     { params: filters },
   );
   return data;

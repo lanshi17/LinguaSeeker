@@ -1,11 +1,14 @@
+// ─── Components ───
 export { ChatView } from "./components/ChatView";
-export { ChatSessionList } from "./components/ChatSessionList";
-export { ChatMessageList } from "./components/ChatMessageList";
-export { ChatMessageBubble } from "./components/ChatMessageBubble";
-export { ChatComposer } from "./components/ChatComposer";
+
+// ─── Hooks ───
 export { useChatSessions } from "./hooks/useChatSessions";
 export { useChatMessages } from "./hooks/useChatMessages";
-export { useChatStream } from "./hooks/useChatStream";
+
+// ─── Providers ───
+export { createAcmgChatProvider } from "./providers/acmgChatProvider";
+
+// ─── Types ───
 export type {
   ChatSessionResponse,
   ChatMessageResponse,

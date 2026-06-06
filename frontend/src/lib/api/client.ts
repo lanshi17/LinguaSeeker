@@ -9,15 +9,23 @@
 
 import axios from "axios";
 import type { InternalAxiosRequestConfig, AxiosResponse } from "axios";
-import { apiConfig } from "@/lib/config";
 import { normalizeError } from "./error";
 
 /** Guard against concurrent 401s each triggering a navigation. */
 let isRedirectingToLogin = false;
 
+/**
+ * Relative URL — all requests go through the Next.js proxy
+ * (next.config.ts rewrites /api/v1/* → backend).
+ * Hardcoded here instead of reading from config to avoid
+ * Turbopack module-caching issues with NEXT_PUBLIC_* inlining.
+ */
+const BASE_URL = "/api/v1";
+const TIMEOUT = 30_000;
+
 export const apiClient = axios.create({
-  baseURL: apiConfig.baseUrl,
-  timeout: apiConfig.timeout,
+  baseURL: BASE_URL,
+  timeout: TIMEOUT,
   headers: {
     "Content-Type": "application/json",
   },
