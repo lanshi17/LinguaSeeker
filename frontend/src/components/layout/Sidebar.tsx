@@ -4,11 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Workflow,
-  ClipboardList,
-  ShieldCheck,
+  Search,
   MessageSquare,
-  Network,
-  Settings,
 } from "lucide-react";
 import { useAppStore } from "@/stores/appStore";
 import { cn } from "@/lib/utils/cn";
@@ -22,11 +19,8 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Pipeline", href: "/pipeline", icon: Workflow },
-  { label: "Tasks", href: "/tasks/agent-create", icon: ClipboardList },
-  { label: "Evidence", href: "/evidence/audit", icon: ShieldCheck },
-  { label: "Chat", href: "/chat", icon: MessageSquare },
-  { label: "Graph", href: "/graph", icon: Network },
-  { label: "Settings", href: "/settings", icon: Settings },
+  { label: "Evidence", href: "/evidence", icon: Search },
+  { label: "AI Chat", href: "/chat", icon: MessageSquare },
 ];
 
 export function Sidebar() {
