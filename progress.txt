@@ -202,3 +202,4 @@
 [2026-06-06] Parallel catalog groups: 3/3 passed, avg 547s (-66%), all PDFs including 31-page COVID [DONE]
 [2026-06-06] Unified backend configuration source under backend/config with shared loader for backend and model-server [done]
 [2026-06-06] Final benchmark: 3/3 passed, 178 evidence, 0.939 confidence, 116 field coverage, 1229 bindings [DONE]
+[2026-06-06] Frontend business feature architecture — restructured scaffold into 10 feature modules (auth, pipeline, task-flow, literature, evidence, delta-audit, source-link, chat, document-viewer, graph) with thin page shells, shared UI/layout components, stores, and lib infrastructure. 109 TypeScript files, type-check clean, lint clean. [done]
