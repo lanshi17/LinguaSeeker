@@ -4,7 +4,6 @@ export interface EvidenceSearchQuery {
   variant?: string;
   disease?: string;
   pmid?: string;
-  doi?: string;
   limit?: number;
 }
 

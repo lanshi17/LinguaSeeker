@@ -1,59 +1,63 @@
 "use client";
 
-import { useState } from "react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import type { EvidenceSearchQuery } from "../types/evidenceSearch";
 
 interface EvidenceSearchFormProps {
-  onSearch: (query: EvidenceSearchQuery) => void;
+  filters: EvidenceSearchQuery;
+  onUpdateFilter: (key: keyof EvidenceSearchQuery, value: string) => void;
+  onSearch: () => void;
+  onClear: () => void;
   isSearching?: boolean;
 }
 
 export function EvidenceSearchForm({
+  filters,
+  onUpdateFilter,
   onSearch,
+  onClear,
   isSearching,
 }: EvidenceSearchFormProps) {
-  const [form, setForm] = useState<EvidenceSearchQuery>({});
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSearch(form);
+    onSearch();
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-3 md:grid-cols-2">
-      <Input
-        label="Gene"
-        placeholder="e.g., BRCA1"
-        value={form.gene ?? ""}
-        onChange={(e) => setForm({ ...form, gene: e.target.value || undefined })}
-      />
-      <Input
-        label="Variant"
-        placeholder="e.g., c.5266dupC"
-        value={form.variant ?? ""}
-        onChange={(e) =>
-          setForm({ ...form, variant: e.target.value || undefined })
-        }
-      />
-      <Input
-        label="Disease"
-        placeholder="e.g., Breast cancer"
-        value={form.disease ?? ""}
-        onChange={(e) =>
-          setForm({ ...form, disease: e.target.value || undefined })
-        }
-      />
-      <Input
-        label="PMID"
-        placeholder="e.g., 12345678"
-        value={form.pmid ?? ""}
-        onChange={(e) => setForm({ ...form, pmid: e.target.value || undefined })}
-      />
-      <div className="md:col-span-2">
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="grid gap-3 md:grid-cols-4">
+        <Input
+          label="Gene"
+          placeholder="e.g., BRCA1"
+          value={filters.gene ?? ""}
+          onChange={(e) => onUpdateFilter("gene", e.target.value)}
+        />
+        <Input
+          label="Variant"
+          placeholder="e.g., c.5266dupC"
+          value={filters.variant ?? ""}
+          onChange={(e) => onUpdateFilter("variant", e.target.value)}
+        />
+        <Input
+          label="Disease"
+          placeholder="e.g., Breast cancer"
+          value={filters.disease ?? ""}
+          onChange={(e) => onUpdateFilter("disease", e.target.value)}
+        />
+        <Input
+          label="PMID"
+          placeholder="e.g., 12345678"
+          value={filters.pmid ?? ""}
+          onChange={(e) => onUpdateFilter("pmid", e.target.value)}
+        />
+      </div>
+      <div className="flex items-center gap-2">
         <Button type="submit" loading={isSearching}>
-          Search Evidence
+          Search
+        </Button>
+        <Button type="button" variant="ghost" onClick={onClear}>
+          Clear
         </Button>
       </div>
     </form>

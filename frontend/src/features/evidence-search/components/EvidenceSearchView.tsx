@@ -1,49 +1,60 @@
 "use client";
 
-import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { EvidenceSearchForm } from "./EvidenceSearchForm";
 import { EvidenceResultsTable } from "./EvidenceResultsTable";
 import { useEvidenceSearch } from "../hooks/useEvidenceSearch";
-import { useToastStore } from "@/stores/toastStore";
-import type { EvidenceSearchQuery } from "../types/evidenceSearch";
 
-/** Client wrapper for the evidence search page. */
+/**
+ * Evidence search page — traditional database query pattern.
+ *
+ * Auto-loads all evidence on mount. User filters via form fields.
+ * Results sorted by PMID (literature ID).
+ */
 export function EvidenceSearchView() {
-  const searchMutation = useEvidenceSearch();
-  const addToast = useToastStore((s) => s.addToast);
-  const [hasSearched, setHasSearched] = useState(false);
-
-  function handleSearch(query: EvidenceSearchQuery) {
-    setHasSearched(true);
-    searchMutation.mutate(query, {
-      onError: () =>
-        addToast({ level: "error", title: "Evidence search failed" }),
-    });
-  }
+  const {
+    results,
+    total,
+    isLoading,
+    isFetching,
+    error,
+    filters,
+    updateFilter,
+    applyFilters,
+    clearFilters,
+  } = useEvidenceSearch();
 
   return (
     <div className="space-y-6">
       <ErrorBoundary>
         <Card>
           <EvidenceSearchForm
-            onSearch={handleSearch}
-            isSearching={searchMutation.isPending}
+            filters={filters}
+            onUpdateFilter={updateFilter}
+            onSearch={applyFilters}
+            onClear={clearFilters}
+            isSearching={isFetching}
           />
         </Card>
       </ErrorBoundary>
 
-      {hasSearched && (
-        <ErrorBoundary>
-          <Card>
-            <EvidenceResultsTable
-              results={searchMutation.data?.items ?? []}
-              total={searchMutation.data?.total}
-            />
+      <ErrorBoundary>
+        {error ? (
+          <Card className="py-10 text-center">
+            <p className="text-sm text-red-600">
+              Failed to load evidence. The backend search endpoint may not be
+              available yet.
+            </p>
           </Card>
-        </ErrorBoundary>
-      )}
+        ) : (
+          <EvidenceResultsTable
+            results={results}
+            total={total}
+            isLoading={isLoading}
+          />
+        )}
+      </ErrorBoundary>
     </div>
   );
 }
