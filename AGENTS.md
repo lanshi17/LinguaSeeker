@@ -90,9 +90,11 @@
   - **中大型任务**：新建 Git Worktree 隔离开发。
 - 任务完成后自动合并到主分支并删除工作树分支。
 
-### 14. 部署目录
+### 14. 部署与配置目录
 
-- 部署项目的容器/编排文件统一放入 **`deploy/`**。
+- 部署项目的容器、主机环境、服务编排文件统一放入 **`deploy/`**。
+- 当前已有配置目录保持原职责：`backend/config/` 仅放应用运行配置，`database/config/` 仅放数据库服务/迁移相关配置，`scripts/` 仅放项目级命令脚本。
+- 新增部署、运维、环境初始化或服务编排配置时，必须创建并使用 **`deploy/ansible/`**，禁止将 Ansible 角色、清单、变量或 playbook 分散到 `backend/config/`、`database/config/` 或 `scripts/`。
 
 ---
 
@@ -240,9 +242,18 @@
 
 ### 25. 配置管理 — 采用 Ansible 架构配置文件
 
-- 部署、运维、环境初始化、服务编排相关配置必须优先采用 **Ansible 架构配置文件** 组织。
-- Ansible 相关文件统一放入 **`deploy/ansible/`**，按 `inventories/`、`group_vars/`、`host_vars/`、`playbooks/`、`roles/` 等标准结构拆分。
-- 禁止将环境初始化、主机配置、服务编排配置散落在业务代码目录或临时脚本中；确需脚本辅助时，脚本放入 `scripts/`，并由 Ansible playbook 调用或记录调用关系。
+- 本仓库采用 **Ansible 架构配置文件** 管理部署、运维、环境初始化和服务编排。
+- Ansible 入口目录固定为 **`deploy/ansible/`**。首次新增相关配置时创建该目录，而不是复用 `backend/config/`、`database/config/` 或 `scripts/` 承载部署编排。
+- 推荐目录结构：
+  - `deploy/ansible/ansible.cfg`
+  - `deploy/ansible/inventories/<env>/hosts.yml`
+  - `deploy/ansible/inventories/<env>/group_vars/`
+  - `deploy/ansible/inventories/<env>/host_vars/`
+  - `deploy/ansible/playbooks/`
+  - `deploy/ansible/roles/`
+  - `deploy/ansible/templates/`
+- 敏感变量不得写入 Ansible 普通变量文件；必须通过环境变量、Ansible Vault，或现有 `backend/config/vault/<env>.yaml` 注入，并确保不提交明文密钥。
+- 需要脚本辅助时，脚本仍放入 `scripts/`，但必须由 Ansible playbook 调用或在 playbook/README 中记录调用关系。
 
 ---
 

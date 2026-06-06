@@ -30,7 +30,7 @@ Modern tools only. System-level installs are prohibited.
 | Tests | `tests/` (Rust: `libs/rust-io/tests/`) |
 | Scripts | `scripts/` |
 | Database | `database/` (migrations: `migrations/`, seeds: `seeds/`) |
-| Deployment | `deploy/` |
+| Deployment | repository root `deploy/`; Ansible orchestration under `deploy/ansible/` |
 | Logs | `logs/` (timestamped, e.g. `2026-05-04_143000.log`) |
 
 
@@ -59,6 +59,7 @@ New modules should prefer **Orchestrated Vertical Slice Architecture**:
 
 - Secrets (passwords, API keys, tokens) must be injected via env vars or `.env`. **No hardcoding.**
 - `.env` must be excluded in `.gitignore`.
+- Deployment, operations, environment initialization, and service orchestration config must use the repository-root `deploy/ansible/` layout. Do not place Ansible inventories, roles, variables, or playbooks under `backend/config/`, `database/config/`, or `scripts/`.
 
 ### 1.6 Logging & Testing
 
