@@ -19,7 +19,8 @@ def test_provider_uses_strong_model_for_strong_tier():
     ctx = EvidenceExtractionConfigContext(
         api_key="key",
         base_url="http://localhost:8001/v1",
-        max_tokens=8192,
+        fast_max_tokens=8192,
+        reasoning_max_tokens=8192,
         reasoning_api_key="reasoning-key",
         reasoning_base_url="http://localhost:8001/v1",
         fast_model="fast",
@@ -60,7 +61,8 @@ def test_provider_uses_json_mode_when_requested():
     ctx = EvidenceExtractionConfigContext(
         api_key="key",
         base_url="http://localhost:8001/v1",
-        max_tokens=8192,
+        fast_max_tokens=8192,
+        reasoning_max_tokens=8192,
         reasoning_api_key="reasoning-key",
         reasoning_base_url="http://localhost:8001/v1",
         fast_model="fast",
@@ -94,7 +96,8 @@ def test_provider_falls_back_to_plain_json_when_response_format_is_unsupported()
     ctx = EvidenceExtractionConfigContext(
         api_key="key",
         base_url="http://localhost:8001/v1",
-        max_tokens=8192,
+        fast_max_tokens=8192,
+        reasoning_max_tokens=8192,
         reasoning_api_key="reasoning-key",
         reasoning_base_url="http://localhost:8001/v1",
         fast_model="fast",
@@ -131,7 +134,8 @@ def test_provider_fallback_validates_list_schema():
     ctx = EvidenceExtractionConfigContext(
         api_key="key",
         base_url="http://localhost:8001/v1",
-        max_tokens=8192,
+        fast_max_tokens=8192,
+        reasoning_max_tokens=8192,
         reasoning_api_key="reasoning-key",
         reasoning_base_url="http://localhost:8001/v1",
         fast_model="fast",
@@ -165,7 +169,8 @@ def test_provider_fallback_repairs_invalid_json_backslash_escapes():
     ctx = EvidenceExtractionConfigContext(
         api_key="key",
         base_url="http://localhost:8001/v1",
-        max_tokens=8192,
+        fast_max_tokens=8192,
+        reasoning_max_tokens=8192,
         reasoning_api_key="reasoning-key",
         reasoning_base_url="http://localhost:8001/v1",
         fast_model="fast",
@@ -200,7 +205,8 @@ def test_provider_fallback_reasks_llm_to_repair_invalid_json():
     ctx = EvidenceExtractionConfigContext(
         api_key="key",
         base_url="http://localhost:8001/v1",
-        max_tokens=8192,
+        fast_max_tokens=8192,
+        reasoning_max_tokens=8192,
         reasoning_api_key="reasoning-key",
         reasoning_base_url="http://localhost:8001/v1",
         fast_model="fast",

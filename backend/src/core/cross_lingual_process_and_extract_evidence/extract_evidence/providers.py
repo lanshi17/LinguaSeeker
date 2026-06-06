@@ -76,11 +76,14 @@ class LangChainEvidenceProvider:
             if effort:
                 model_kwargs["reasoning_effort"] = effort
 
+            # Use fast_max_tokens for FAST tier, reasoning_max_tokens for STANDARD/STRONG
+            max_tokens = self._ctx.fast_max_tokens if tier == EvidenceModelTier.FAST else self._ctx.reasoning_max_tokens
+
             self._clients[tier] = ChatOpenAI(
                 model=self._model_for_tier(tier),
                 api_key=api_key,
                 base_url=base_url,
-                max_tokens=self._ctx.max_tokens,
+                max_tokens=max_tokens,
                 temperature=self._ctx.temperature,
                 timeout=self._ctx.timeout,
                 **({"model_kwargs": model_kwargs} if model_kwargs else {}),

@@ -25,6 +25,7 @@ class ReasoningLLMProvider:
         self._base_url = cfg.reasoning.base_url
         self._timeout = cfg.reasoning.timeout
         self._reasoning_effort = cfg.reasoning.reasoning_effort
+        self._max_tokens = cfg.reasoning.max_tokens
         self._client: httpx.AsyncClient | None = None
 
     def _get_client(self) -> httpx.AsyncClient:
@@ -74,6 +75,7 @@ class ReasoningLLMProvider:
         }
         if self._reasoning_effort:
             payload["reasoning_effort"] = self._reasoning_effort
+        payload["max_tokens"] = self._max_tokens
 
         client = self._get_client()
         response = await client.post(
@@ -115,6 +117,7 @@ class ReasoningLLMProvider:
         }
         if self._reasoning_effort:
             payload["reasoning_effort"] = self._reasoning_effort
+        payload["max_tokens"] = self._max_tokens
 
         client = self._get_client()
         async with client.stream(

@@ -431,7 +431,6 @@ class Settings(BaseSettings):
     evidence_extraction_standard_effort: str = ""
     evidence_extraction_strong_effort: str = "high"
     evidence_extraction_temperature: float = 0.0
-    evidence_extraction_max_tokens: int = 8192
     evidence_extraction_timeout: int = 300
     evidence_extraction_max_retries: int = 2
 
@@ -513,7 +512,6 @@ class Settings(BaseSettings):
             standard_effort=self.evidence_extraction_standard_effort,
             strong_effort=self.evidence_extraction_strong_effort,
             temperature=self.evidence_extraction_temperature,
-            max_tokens=self.evidence_extraction_max_tokens,
             timeout=self.evidence_extraction_timeout,
             max_retries=self.evidence_extraction_max_retries,
         )

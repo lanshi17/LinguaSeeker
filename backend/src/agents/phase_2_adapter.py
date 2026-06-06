@@ -25,6 +25,7 @@ from src.agents.contracts import (
     SkipPhase3Reason,
     build_retryable_errors,
 )
+from src.core.cross_lingual_process_and_extract_evidence.contracts import CrossLingualOutput
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
     EvidenceExtractionService,
 )
@@ -93,22 +94,49 @@ class Phase2Adapter:
             pages = parse_data.get("pages", [])
             content_blocks = parse_data.get("content_blocks", [])
 
-            # Run translation
-            translation_result = await self._translation.run(
-                pages=pages,
-                content_blocks=content_blocks,
-            )
-
-            # Save translation output (creates original.json and translated.json)
             output_dir = f"data/pipeline/{state.processing_run_id}/phase_2"
             Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-            cross_lingual_output = await asyncio.to_thread(
-                self._translation.save,
-                result=translation_result,
-                output_dir=output_dir,
-                doc_id=state.source_document_id,
-            )
+            # On retry, check if translation output already exists on disk
+            doc_output_dir = Path(output_dir) / state.source_document_id
+            existing_original = doc_output_dir / "original.json"
+            existing_metadata = doc_output_dir / "metadata.json"
+            cross_lingual_output = None
+            translation_result = None
+
+            if existing_original.exists() and existing_metadata.exists():
+                logger.info("Phase 2 retry: translation output already exists, skipping translation")
+                # Read source_language from persisted metadata
+                async with aiofiles.open(existing_metadata, "r") as mf:
+                    meta_content = await mf.read()
+                    meta_data = json.loads(meta_content)
+                source_lang = meta_data.get("source_language", "unknown")
+                cross_lingual_output = CrossLingualOutput(
+                    formatted_original="",
+                    translated_english="",
+                    source_language=source_lang,
+                    terminology_map=meta_data.get("terminology_map", {}),
+                    translation_warnings=meta_data.get("translation_warnings", []),
+                    output_dir=str(doc_output_dir),
+                    original_json_path=str(existing_original),
+                    translated_json_path=str(doc_output_dir / "translated.json"),
+                    image_paths=[],
+                )
+
+            if cross_lingual_output is None:
+                # Run translation
+                translation_result = await self._translation.run(
+                    pages=pages,
+                    content_blocks=content_blocks,
+                )
+
+                # Save translation output (creates original.json and translated.json)
+                cross_lingual_output = await asyncio.to_thread(
+                    self._translation.save,
+                    result=translation_result,
+                    output_dir=output_dir,
+                    doc_id=state.source_document_id,
+                )
 
             # Build dual documents using the service's static method
             # This reads from cross_lingual_output.output_dir (sync Path.read_text)
@@ -141,7 +169,7 @@ class Phase2Adapter:
                 output_dir=cross_lingual_output.output_dir,
                 original_json_path=cross_lingual_output.original_json_path,
                 translated_json_path=cross_lingual_output.translated_json_path,
-                source_language=translation_result.source_language,
+                source_language=cross_lingual_output.source_language,
                 extraction_result_path=extraction_result_path,
             )
 
@@ -156,7 +184,7 @@ class Phase2Adapter:
                 else None,
                 summary={
                     "relevant": not both_not_relevant,
-                    "source_language": translation_result.source_language,
+                    "source_language": cross_lingual_output.source_language,
                 },
             )
 

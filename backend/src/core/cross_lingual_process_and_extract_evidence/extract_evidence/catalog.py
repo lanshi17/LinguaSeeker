@@ -182,3 +182,18 @@ _FIELD_BY_ID = {spec.field_id: spec for spec in EVIDENCE_FIELD_SPECS}
 
 def get_field_spec(field_id: str) -> EvidenceFieldSpec:
     return _FIELD_BY_ID[field_id]
+
+
+# ── Catalog groups for parallel extraction ─────────────────────────────
+# Split 138 fields into 2 balanced groups to reduce per-call output tokens
+# and enable concurrent STRONG-tier LLM calls.
+_CATALOG_GROUP_CATEGORIES = {
+    "high_signal": ("A", "B", "D", "E", "J"),   # 63 fields: variant, case, population, prediction, authority
+    "supporting":  ("C", "F", "G", "H", "I"),    # 75 fields: segregation, functional, case-control, contradiction, gene
+}
+
+CATALOG_GROUPS: dict[str, tuple[EvidenceFieldSpec, ...]] = {}
+for _group_name, _cat_ids in _CATALOG_GROUP_CATEGORIES.items():
+    CATALOG_GROUPS[_group_name] = tuple(
+        spec for spec in EVIDENCE_FIELD_SPECS if spec.category_id in _cat_ids
+    )
