@@ -1,0 +1,21 @@
+# ─── Layered config: only commit .env, .env.development, .env.production ───
+# Layer 3 & 4 (local overrides + secrets) are always ignored.
+.env.local
+.env.*.local
+
+# Negate root .gitignore's **/*/.env so the committed layers are tracked.
+!.env
+!.env.development
+!.env.production
+!.env.example
+
+# ─── Next.js ───
+.next/
+out/
+
+# ─── Node ───
+node_modules/
+
+# ─── Build ───
+*.tsbuildinfo
+next-env.d.ts

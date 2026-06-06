@@ -238,6 +238,12 @@
 - **禁止**使用 `shred`、`unlink`、`find -delete`、`find -exec rm`、`perl -e unlink` 等替代方式删除文件。
 - 使用 `rm` 删除目录时必须显式确认路径，禁止对项目根目录或关键配置目录执行 `rm -rf`。
 
+### 25. 配置管理 — 采用 Ansible 架构配置文件
+
+- 部署、运维、环境初始化、服务编排相关配置必须优先采用 **Ansible 架构配置文件** 组织。
+- Ansible 相关文件统一放入 **`deploy/ansible/`**，按 `inventories/`、`group_vars/`、`host_vars/`、`playbooks/`、`roles/` 等标准结构拆分。
+- 禁止将环境初始化、主机配置、服务编排配置散落在业务代码目录或临时脚本中；确需脚本辅助时，脚本放入 `scripts/`，并由 Ansible playbook 调用或记录调用关系。
+
 ---
 
 ## 三、违反处理
