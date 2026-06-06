@@ -19,8 +19,7 @@ class EvidenceExtractionConfigContext:
     fast_effort: str = ""
     standard_effort: str = ""
     strong_effort: str = "high"
-    fast_max_tokens: int = 8192
-    reasoning_max_tokens: int = 8192
+    max_tokens: int = 8192
     temperature: float = 0.0
     timeout: int = 60
     max_retries: int = 3
@@ -39,8 +38,7 @@ class EvidenceExtractionConfigContext:
             fast_effort=evidence_cfg.fast_effort,
             standard_effort=evidence_cfg.standard_effort,
             strong_effort=evidence_cfg.strong_effort,
-            fast_max_tokens=cfg.llm.max_tokens,
-            reasoning_max_tokens=cfg.reasoning.max_tokens,
+            max_tokens=cfg.reasoning.max_tokens,
             temperature=evidence_cfg.temperature,
             timeout=evidence_cfg.timeout,
             max_retries=evidence_cfg.max_retries,
