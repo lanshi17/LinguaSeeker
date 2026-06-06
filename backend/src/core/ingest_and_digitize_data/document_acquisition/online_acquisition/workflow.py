@@ -506,7 +506,6 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
             query=query,
             downloads=downloads,
             delete_files=True,
-            literature_types=request.literature_types or None,
         )
         # Keep only relevant downloads (and those with errors — conservative)
         relevant_paths = {

@@ -1,18 +1,22 @@
-"""Catalog extraction stage — structured field extraction using the 10-category catalog."""
+"""Catalog extraction stage — structured field extraction using the 10-category catalog.
+
+Uses parallel catalog groups to reduce per-call output tokens: the 138-field
+catalog is split into 2 balanced groups (~63 and ~75 fields) that are extracted
+concurrently per chunk, cutting output token demand roughly in half.
+"""
 from __future__ import annotations
 
 import asyncio
 
 from loguru import logger
 
-from ..catalog import EVIDENCE_FIELD_SPECS
+from ..catalog import CATALOG_GROUPS, EVIDENCE_FIELD_SPECS
 from ..chunking import (
-    DEFAULT_INPUT_BUDGET_TOKENS,
     STRONG_TIER_INPUT_BUDGET_TOKENS,
     build_block_prompt_chunks,
     merge_sparse_evidence_items,
 )
-from ..contracts import DocumentEvidenceMap, EvidenceItem, TrackDocument
+from ..contracts import DocumentEvidenceMap, EvidenceItem, Track, TrackDocument
 from ..core import RawSourceNormalizer
 from ..prompts import get_catalog_extraction_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
@@ -34,6 +38,19 @@ class CatalogExtractionStage:
         self._provider = provider
         self._input_budget_tokens = input_budget_tokens
         self._raw_source_normalizer = RawSourceNormalizer()
+        # Use catalog groups for parallel extraction; fall back to full catalog
+        self._catalog_groups: dict[str, tuple] = dict(CATALOG_GROUPS) if CATALOG_GROUPS else {"full": EVIDENCE_FIELD_SPECS}
+
+    def _max_group_overhead(self, summary: str) -> int:
+        """Estimate the maximum prompt overhead across all catalog groups."""
+        max_overhead = 0
+        for catalog in self._catalog_groups.values():
+            overhead = estimate_tokens(get_catalog_extraction_prompt(
+                document_id="", track=Track.ORIGINAL, text="",
+                catalog=catalog, evidence_map_summary=summary,
+            ))
+            max_overhead = max(max_overhead, overhead)
+        return max_overhead
 
     def run(
         self,
@@ -41,13 +58,7 @@ class CatalogExtractionStage:
         evidence_map: DocumentEvidenceMap,
     ) -> list[EvidenceItem]:
         summary = self._summarize_map(evidence_map)
-        overhead = estimate_tokens(get_catalog_extraction_prompt(
-            document_id=document.document_id,
-            track=document.track,
-            text="",
-            catalog=EVIDENCE_FIELD_SPECS,
-            evidence_map_summary=summary,
-        ))
+        overhead = self._max_group_overhead(summary)
         chunks = build_block_prompt_chunks(
             document,
             input_budget_tokens=self._input_budget_tokens,
@@ -55,24 +66,24 @@ class CatalogExtractionStage:
         )
         extracted: list[EvidenceItem] = []
         for chunk in chunks:
-            chunk_summary = summary
-            if chunk.total > 1:
-                chunk_summary = f"{summary}\nCurrent document chunk: {chunk.index}/{chunk.total}"
-            prompt = get_catalog_extraction_prompt(
-                document_id=document.document_id,
-                track=document.track,
-                text=chunk.text,
-                catalog=EVIDENCE_FIELD_SPECS,
-                evidence_map_summary=chunk_summary,
-            )
-            items = self._provider.invoke_structured(
-                prompt=prompt,
-                output_schema=list[EvidenceItem],
-                tier=EvidenceModelTier.STRONG,
-                stage="catalog_extraction" if chunk.total == 1 else f"catalog_extraction/{chunk.index}",
-            )
-            if isinstance(items, list):
-                extracted.extend(self._raw_source_normalizer.normalize_items(items))
+            chunk_summary = self._chunk_summary(summary, chunk)
+            for group_name, catalog in self._catalog_groups.items():
+                prompt = get_catalog_extraction_prompt(
+                    document_id=document.document_id,
+                    track=document.track,
+                    text=chunk.text,
+                    catalog=catalog,
+                    evidence_map_summary=chunk_summary,
+                )
+                stage = self._stage_name(chunk, group_name)
+                items = self._provider.invoke_structured(
+                    prompt=prompt,
+                    output_schema=list[EvidenceItem],
+                    tier=EvidenceModelTier.STRONG,
+                    stage=stage,
+                )
+                if isinstance(items, list):
+                    extracted.extend(self._raw_source_normalizer.normalize_items(items))
         return merge_sparse_evidence_items(extracted)
 
     async def run_async(
@@ -80,70 +91,86 @@ class CatalogExtractionStage:
         document: TrackDocument,
         evidence_map: DocumentEvidenceMap,
     ) -> list[EvidenceItem]:
-        """Async version — runs chunk LLM calls concurrently with semaphore."""
+        """Async version — runs chunk × group LLM calls concurrently."""
         summary = self._summarize_map(evidence_map)
-        overhead = estimate_tokens(get_catalog_extraction_prompt(
-            document_id=document.document_id,
-            track=document.track,
-            text="",
-            catalog=EVIDENCE_FIELD_SPECS,
-            evidence_map_summary=summary,
-        ))
+        overhead = self._max_group_overhead(summary)
         chunks = build_block_prompt_chunks(
             document,
             input_budget_tokens=self._input_budget_tokens,
             prompt_overhead_tokens=overhead,
         )
         sem = asyncio.Semaphore(_DEFAULT_CHUNK_CONCURRENCY)
+        num_tasks = len(chunks) * len(self._catalog_groups)
 
-        async def _extract_chunk(chunk):  # noqa: ANN001
-            chunk_summary = summary
-            if chunk.total > 1:
-                chunk_summary = f"{summary}\nCurrent document chunk: {chunk.index}/{chunk.total}"
+        async def _extract_group(chunk, group_name: str, catalog: tuple):  # noqa: ANN001
+            chunk_summary = self._chunk_summary(summary, chunk)
             prompt = get_catalog_extraction_prompt(
                 document_id=document.document_id,
                 track=document.track,
                 text=chunk.text,
-                catalog=EVIDENCE_FIELD_SPECS,
+                catalog=catalog,
                 evidence_map_summary=chunk_summary,
             )
+            stage = self._stage_name(chunk, group_name)
             async with sem:
                 return await self._provider.ainvoke_structured(
                     prompt=prompt,
                     output_schema=list[EvidenceItem],
                     tier=EvidenceModelTier.STRONG,
-                    stage="catalog_extraction" if chunk.total == 1 else f"catalog_extraction/{chunk.index}",
+                    stage=stage,
                 )
 
-        results = await asyncio.gather(
-            *[_extract_chunk(c) for c in chunks],
-            return_exceptions=True,
+        # Build all tasks: chunk × group
+        tasks = [
+            _extract_group(chunk, group_name, catalog)
+            for chunk in chunks
+            for group_name, catalog in self._catalog_groups.items()
+        ]
+        logger.info(
+            "catalog_extraction: {} chunks × {} groups = {} tasks",
+            len(chunks), len(self._catalog_groups), num_tasks,
         )
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
         extracted: list[EvidenceItem] = []
-        failed_chunks: list[int] = []
+        failed = 0
         last_error: BaseException | None = None
         for i, result in enumerate(results):
             if isinstance(result, BaseException):
-                logger.error("catalog_extraction chunk {}/{} failed: {}", i + 1, len(chunks), result)
-                failed_chunks.append(i)
+                logger.error("catalog_extraction task {}/{} failed: {}", i + 1, num_tasks, result)
+                failed += 1
                 last_error = result
             elif isinstance(result, list):
                 extracted.extend(self._raw_source_normalizer.normalize_items(result))
 
         # Escalate based on failure rate
-        if chunks:
-            failure_rate = len(failed_chunks) / len(chunks)
+        if num_tasks:
+            failure_rate = failed / num_tasks
             if failure_rate == 1.0:
                 raise CatalogExtractionError(
-                    f"All {len(chunks)} extraction chunks failed, last error: {last_error}"
+                    f"All {num_tasks} extraction tasks failed, last error: {last_error}"
                 ) from last_error
             if failure_rate > 0.5:
                 logger.warning(
-                    "catalog_extraction: {}/{} chunks failed, result is partial",
-                    len(failed_chunks), len(chunks),
+                    "catalog_extraction: {}/{} tasks failed, result is partial",
+                    failed, num_tasks,
                 )
 
         return merge_sparse_evidence_items(extracted)
+
+    @staticmethod
+    def _chunk_summary(summary: str, chunk: object) -> str:  # noqa: ANN001
+        if chunk.total > 1:
+            return f"{summary}\nCurrent document chunk: {chunk.index}/{chunk.total}"
+        return summary
+
+    @staticmethod
+    def _stage_name(chunk: object, group_name: str) -> str:  # noqa: ANN001
+        base = f"catalog_extraction/{group_name}"
+        if chunk.total > 1:
+            base = f"catalog_extraction/{group_name}/{chunk.index}"
+        return base
 
     @staticmethod
     def _summarize_map(emap: DocumentEvidenceMap) -> str:

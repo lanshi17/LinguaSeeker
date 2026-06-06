@@ -545,11 +545,10 @@ async def cmd_cleanup(
     ]
 
     gate_result: RelevanceGateResult = await run_relevance_gate(
-        query="Rett syndrome MECP2 mutation CDKL5 FOXG1 case report",
+        query="Rett syndrome MECP2 mutation CDKL5 FOXG1",
         downloads=downloads,
         delete_files=not dry_run,
         concurrency=concurrency,
-        literature_types=["case_report"],
     )
 
     # Build per-language summary
