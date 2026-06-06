@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { apiConfig } from "@/lib/config";
 
 type HealthStatus = "connected" | "disconnected" | "checking";
 
@@ -12,11 +13,11 @@ interface BackendHealth {
 }
 
 /**
- * Poll the backend health endpoint (GET /health) every 30 seconds.
+ * Poll the backend health endpoint at a configurable interval.
  *
- * Goes through the Next.js proxy (next.config.ts rewrites /health
- * to the backend).  A short 5s timeout ensures a fast "disconnected"
- * flip when the backend goes down.
+ * Endpoint and polling interval come from the layered .env config
+ * (NEXT_PUBLIC_HEALTH_ENDPOINT, NEXT_PUBLIC_HEALTH_POLL_INTERVAL).
+ * Requests go through the Next.js proxy.
  */
 export function useBackendHealth(): BackendHealth {
   const { data } = useQuery({
@@ -25,7 +26,7 @@ export function useBackendHealth(): BackendHealth {
       const start = Date.now();
       try {
         const response = await axios.get<{ status: string }>(
-          "/health",
+          apiConfig.healthEndpoint,
           { timeout: 5_000 },
         );
         const latencyMs = Date.now() - start;
@@ -42,9 +43,9 @@ export function useBackendHealth(): BackendHealth {
         };
       }
     },
-    refetchInterval: 30_000,
+    refetchInterval: apiConfig.healthPollInterval,
     retry: false,
-    staleTime: 25_000,
+    staleTime: Math.max(apiConfig.healthPollInterval - 5_000, 10_000),
   });
 
   if (!data) {

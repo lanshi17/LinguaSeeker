@@ -1,7 +1,7 @@
 /**
  * Shared Axios instance used by every feature service layer.
  *
- * - Base URL defaults to /api/v1 (proxied by next.config.ts rewrites).
+ * Configuration comes from @/lib/config (layered .env files).
  * - Request interceptor injects the auth token from localStorage.
  * - Response interceptor normalizes errors into ApiError and redirects
  *   to /login on 401 (with a guard to prevent duplicate navigations).
@@ -9,16 +9,15 @@
 
 import axios from "axios";
 import type { InternalAxiosRequestConfig, AxiosResponse } from "axios";
+import { apiConfig } from "@/lib/config";
 import { normalizeError } from "./error";
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api/v1";
 
 /** Guard against concurrent 401s each triggering a navigation. */
 let isRedirectingToLogin = false;
 
 export const apiClient = axios.create({
-  baseURL: BASE_URL,
-  timeout: 30_000,
+  baseURL: apiConfig.baseUrl,
+  timeout: apiConfig.timeout,
   headers: {
     "Content-Type": "application/json",
   },
