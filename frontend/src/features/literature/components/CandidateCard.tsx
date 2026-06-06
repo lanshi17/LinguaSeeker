@@ -29,7 +29,11 @@ export function CandidateCard({
         <input
           type="checkbox"
           checked={selected}
-          onChange={onToggle}
+          onChange={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+          onClick={(e) => e.stopPropagation()}
           disabled={disabled}
           className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600"
         />

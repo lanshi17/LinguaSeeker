@@ -3,7 +3,6 @@ import { EvidenceStatusBadge } from "./EvidenceStatusBadge";
 import type { ReviewStatus } from "../types/evidence";
 
 interface EvidenceCardProps {
-  evidenceId: string;
   status: ReviewStatus;
   data?: Record<string, unknown>;
   onEdit?: () => void;

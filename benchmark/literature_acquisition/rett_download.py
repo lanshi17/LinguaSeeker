@@ -50,6 +50,21 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 logger.add(str(LOG_DIR / "rett_download.log"), rotation="5 MB", retention=3, encoding="utf-8")
 
 
+def setup_logging(log_dir: Path = LOG_DIR, level: str = "INFO") -> None:
+    """Configure loguru: console + rotating file, suppress noisy libraries."""
+    logger.remove()
+    logger.add(sys.stderr, level=level, format="{time:YYYY-MM-DD HH:mm:ss} {level: <8} {message}")
+    logger.add(
+        str(log_dir / "rett_download.log"),
+        rotation="5 MB", retention=3, encoding="utf-8", level=level,
+        format="{time:YYYY-MM-DD HH:mm:ss} {level: <8} {message}",
+    )
+    import logging as _pylogging
+    _pylogging.getLogger("httpx").setLevel(_pylogging.WARNING)
+    _pylogging.getLogger("urllib3").setLevel(_pylogging.WARNING)
+    _pylogging.getLogger("openai").setLevel(_pylogging.WARNING)
+
+
 @dataclass
 class DownloadRecord:
     query: str

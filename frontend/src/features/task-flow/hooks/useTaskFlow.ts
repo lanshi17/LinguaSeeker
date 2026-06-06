@@ -38,9 +38,12 @@ export function useTaskFlow() {
 
   const respondMutation = useMutation({
     mutationFn: (answer: string) => {
+      if (!store.sessionId) {
+        throw new Error("No active session — call startClarification first.");
+      }
       store.addMessage({ role: "user", content: answer });
       return interactionRespond({
-        session_id: store.sessionId!,
+        session_id: store.sessionId,
         answer,
       });
     },
@@ -60,7 +63,12 @@ export function useTaskFlow() {
   });
 
   const confirmMutation = useMutation({
-    mutationFn: () => confirmTaskForm(store.sessionId!),
+    mutationFn: () => {
+      if (!store.sessionId) {
+        throw new Error("No active session — call startClarification first.");
+      }
+      return confirmTaskForm(store.sessionId);
+    },
     onSuccess: () => {
       store.setConfirmed(true);
     },

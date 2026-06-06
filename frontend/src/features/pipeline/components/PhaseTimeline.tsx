@@ -17,7 +17,6 @@ const statusStyles: Record<string, string> = {
 
 const connectorStyles: Record<string, string> = {
   completed: "bg-green-400",
-  running: "bg-blue-400",
   default: "bg-gray-200",
 };
 

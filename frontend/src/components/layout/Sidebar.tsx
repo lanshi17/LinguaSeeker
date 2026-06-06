@@ -2,22 +2,31 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  Workflow,
+  ClipboardList,
+  ShieldCheck,
+  MessageSquare,
+  Network,
+  Settings,
+} from "lucide-react";
 import { useAppStore } from "@/stores/appStore";
 import { cn } from "@/lib/utils/cn";
+import type { ComponentType } from "react";
 
 interface NavItem {
   label: string;
   href: string;
-  icon: string;
+  icon: ComponentType<{ className?: string }>;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Pipeline", href: "/pipeline", icon: "⟶" },
-  { label: "Tasks", href: "/tasks/agent-create", icon: "✦" },
-  { label: "Evidence", href: "/evidence/audit", icon: "◈" },
-  { label: "Chat", href: "/chat", icon: "◉" },
-  { label: "Graph", href: "/graph", icon: "◇" },
-  { label: "Settings", href: "/settings", icon: "⚙" },
+  { label: "Pipeline", href: "/pipeline", icon: Workflow },
+  { label: "Tasks", href: "/tasks/agent-create", icon: ClipboardList },
+  { label: "Evidence", href: "/evidence/audit", icon: ShieldCheck },
+  { label: "Chat", href: "/chat", icon: MessageSquare },
+  { label: "Graph", href: "/graph", icon: Network },
+  { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {
@@ -48,6 +57,7 @@ export function Sidebar() {
         {NAV_ITEMS.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
+          const Icon = item.icon;
 
           return (
             <Link
@@ -62,7 +72,7 @@ export function Sidebar() {
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
               )}
             >
-              <span className="text-base">{item.icon}</span>
+              <Icon className="h-5 w-5 shrink-0" />
               {!collapsed && <span>{item.label}</span>}
             </Link>
           );
