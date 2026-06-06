@@ -33,12 +33,11 @@ export function DocumentViewer({ documentId }: DocumentViewerProps) {
     );
   }
 
-  const segments = ((evidence?.segments ?? []) as Array<{ source?: string; target?: string }>).map(
-    (s) => ({
-      source: s.source ?? "",
-      target: s.target ?? "",
-    }),
-  );
+  // Segments are already typed as DocumentSegment[] in the payload.
+  const segments = (evidence?.segments ?? []).map((s) => ({
+    source: s.source ?? "",
+    target: s.target ?? "",
+  }));
 
   return (
     <div>

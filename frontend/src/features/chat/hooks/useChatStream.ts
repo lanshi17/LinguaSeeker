@@ -15,7 +15,10 @@ interface UseChatStreamOptions {
  * SSE streaming hook for real-time AI chat replies.
  *
  * Connects to GET /chat/sessions/{id}/stream and emits events
- * via callbacks. Reconnects on transient failures with backoff.
+ * via callbacks. Callbacks are stored in refs so the connect
+ * callback identity is stable across renders — prevents the
+ * infinite reconnect loop that would occur if connect depended
+ * on freshly-created callback references.
  */
 export function useChatStream({
   sessionId,
@@ -26,6 +29,14 @@ export function useChatStream({
 }: UseChatStreamOptions) {
   const eventSourceRef = useRef<EventSource | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+
+  // Store callbacks in refs so connect doesn't re-create on every render.
+  const onTokenRef = useRef(onToken);
+  onTokenRef.current = onToken;
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
 
   const disconnect = useCallback(() => {
     if (eventSourceRef.current) {
@@ -45,26 +56,25 @@ export function useChatStream({
     es.onopen = () => setIsConnected(true);
 
     es.addEventListener("token", (e) => {
-      onToken?.(e.data);
+      onTokenRef.current?.(e.data);
     });
 
     es.addEventListener("done", () => {
-      onDone?.();
+      onDoneRef.current?.();
       disconnect();
     });
 
     es.addEventListener("error", (e) => {
       const eventData = (e as MessageEvent).data;
-      onError?.(eventData ?? "Stream error");
+      onErrorRef.current?.(eventData ?? "Stream error");
       disconnect();
     });
 
     es.onerror = () => {
       setIsConnected(false);
-      // EventSource auto-reconnects by default; close on persistent error.
       disconnect();
     };
-  }, [sessionId, onToken, onDone, onError, disconnect]);
+  }, [sessionId, disconnect]);
 
   useEffect(() => {
     if (enabled && sessionId) {

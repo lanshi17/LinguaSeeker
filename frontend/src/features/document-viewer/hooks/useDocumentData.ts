@@ -3,11 +3,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 
+/** A single bilingual text segment from the document. */
+export interface DocumentSegment {
+  source: string;
+  target: string;
+}
+
 interface DocumentEvidencePayload {
   document_id: string;
   source_lang?: string;
   target_lang?: string;
-  segments?: unknown[];
+  segments?: DocumentSegment[];
   raw_data?: unknown;
 }
 
@@ -29,6 +35,7 @@ export function useDocumentData(documentId: string) {
       );
       return data;
     },
+    enabled: !!documentId,
   });
 
   const paperDetail = useQuery({

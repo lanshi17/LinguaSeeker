@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useCallback, type ReactNode } from "react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface ModalProps {
@@ -11,24 +12,66 @@ interface ModalProps {
   className?: string;
 }
 
+/**
+ * Accessible modal dialog.
+ *
+ * - role="dialog" + aria-modal="true" for screen readers.
+ * - Focus trap: Tab cycles within the modal; Shift+Tab wraps around.
+ * - Escape key closes.
+ * - Click on overlay closes.
+ */
 export function Modal({ open, onClose, title, children, className }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap: keep Tab cycling within the modal.
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (e.key !== "Tab" || !dialogRef.current) return;
+
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    [onClose],
+  );
 
   useEffect(() => {
     if (!open) return;
 
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-
     document.addEventListener("keydown", handleKeyDown);
     document.body.style.overflow = "hidden";
+
+    // Auto-focus the dialog on open.
+    dialogRef.current?.focus();
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [open, handleKeyDown]);
 
   if (!open) return null;
 
@@ -41,8 +84,13 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
         className={cn(
-          "relative w-full max-w-lg rounded-lg bg-white p-6 shadow-xl",
+          "relative w-full max-w-lg rounded-lg bg-white p-6 shadow-xl outline-none",
           className,
         )}
       >
@@ -54,13 +102,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
               className="cursor-pointer rounded-md p-1 text-gray-400 hover:text-gray-600"
               aria-label="Close"
             >
-              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <X className="h-5 w-5" />
             </button>
           </div>
         )}
