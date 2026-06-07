@@ -12,7 +12,7 @@ import {
 import { useXChat, useXConversations } from "@ant-design/x-sdk";
 import { RobotOutlined, UserOutlined } from "@ant-design/icons";
 import { Avatar, message as antdMessage } from "antd";
-import { createAcmgChatProvider } from "../providers/acmgChatProvider";
+import { createAcmgChatProvider, sendChatMessage } from "../providers/acmgChatProvider";
 import { useChatSessions } from "../hooks/useChatSessions";
 import {
   PipelineStartForm,
@@ -122,6 +122,23 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     provider: getProvider(activeConversationKey ?? ""),
     conversationKey: activeConversationKey,
   });
+
+  // ── Send message: POST to persist, then stream AI reply ──
+  const handleSendMessage = useCallback(
+    async (content: string) => {
+      if (!activeConversationKey) return;
+      setActiveForm(null);
+      try {
+        // Step 1: Persist user message via POST
+        await sendChatMessage(activeConversationKey, content);
+        // Step 2: Trigger SSE stream for AI reply
+        onRequest({ messages: [{ role: "user", content }] });
+      } catch {
+        antdMessage.error("Failed to send message");
+      }
+    },
+    [activeConversationKey, onRequest],
+  );
 
   // ── Embedded form state ──
   const [activeForm, setActiveForm] = useState<string | null>(null);
@@ -249,33 +266,22 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     if (key === "start-pipeline" || key === "upload-pdf") {
       // Show embedded form instead of sending a text message
       setActiveForm(key);
-      // Add a user message explaining what they want
-      onRequest({
-        messages: [
-          {
-            role: "user",
-            content:
-              key === "start-pipeline"
-                ? "I want to start an evidence extraction pipeline."
-                : "I want to upload a PDF for evidence extraction.",
-          },
-        ],
-      });
+      const content =
+        key === "start-pipeline"
+          ? "I want to start an evidence extraction pipeline."
+          : "I want to upload a PDF for evidence extraction.";
+      handleSendMessage(content);
       return;
     }
 
     if (key === "search-evidence") {
-      // Navigate to evidence search page
       window.location.href = "/evidence";
       return;
     }
 
-    // Default: send as text message
     const prompt = PROMPT_ITEMS.find((p) => p.key === key);
     if (prompt) {
-      onRequest({
-        messages: [{ role: "user", content: prompt.description }],
-      });
+      handleSendMessage(prompt.description);
     }
   }
 
@@ -347,12 +353,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
             style={{ padding: 16 }}
             loading={isRequesting}
             onCancel={abort}
-            onSubmit={(val) => {
-              setActiveForm(null);
-              onRequest({
-                messages: [{ role: "user", content: val }],
-              });
-            }}
+            onSubmit={handleSendMessage}
             placeholder="Ask the ACMG Agent..."
           />
         </div>
@@ -415,11 +416,10 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
           style={{ padding: 16 }}
           loading={isRequesting}
           onCancel={abort}
-          onSubmit={(val) =>
-            onRequest({
-              messages: [{ role: "user", content: val }],
-            })
-          }
+          onSubmit={async (val) => {
+            await sendChatMessage(sessionId, val);
+            onRequest({ messages: [{ role: "user", content: val }] });
+          }}
           placeholder="Ask the ACMG Agent..."
         />
       </div>

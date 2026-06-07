@@ -1,7 +1,7 @@
 """Evidence search service."""
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
@@ -10,12 +10,14 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
 )
 from src.dao.postgresql.models import (
     CanonicalEvidenceItem,
+    ProcessingRun,
+    SourceDocument,
     SourceDocumentIdentifier,
 )
 
 
 class SearchService:
-    """Search evidence cards with filtering."""
+    """Search evidence cards with filtering using multi-table JOINs."""
 
     def __init__(self, session: AsyncSession):
         self._session = session
@@ -30,9 +32,40 @@ class SearchService:
         doi: str | None = None,
         limit: int = 100,
     ) -> EvidenceSearchResponse:
-        """Search evidence with optional filters."""
-        conditions = []
+        """Search evidence with optional filters using JOIN queries."""
+        # Build base query with JOINs
+        # canonical_evidence_items -> source_documents -> source_document_identifiers
+        #                          -> processing_runs (for run metadata)
+        stmt = (
+            select(
+                CanonicalEvidenceItem.canonical_evidence_id,
+                CanonicalEvidenceItem.source_document_id,
+                CanonicalEvidenceItem.field_id,
+                CanonicalEvidenceItem.review_status,
+                CanonicalEvidenceItem.current_best_confidence,
+                CanonicalEvidenceItem.active_payload,
+                SourceDocumentIdentifier.identifier_type,
+                SourceDocumentIdentifier.identifier_value,
+                ProcessingRun.run_status,
+                ProcessingRun.created_at,
+            )
+            .join(
+                SourceDocument,
+                CanonicalEvidenceItem.source_document_id == SourceDocument.source_document_id,
+            )
+            .outerjoin(
+                SourceDocumentIdentifier,
+                CanonicalEvidenceItem.source_document_id == SourceDocumentIdentifier.source_document_id,
+            )
+            .outerjoin(
+                ProcessingRun,
+                SourceDocument.latest_processing_run_id == ProcessingRun.processing_run_id,
+            )
+        )
 
+        # Build WHERE conditions
+        conditions = []
+        
         if gene:
             conditions.append(
                 CanonicalEvidenceItem.active_payload["gene"].astext.ilike(f"%{gene}%")
@@ -45,54 +78,65 @@ class SearchService:
             conditions.append(
                 CanonicalEvidenceItem.active_payload["disease"].astext.ilike(f"%{disease}%")
             )
+        if pmid:
+            conditions.append(
+                and_(
+                    SourceDocumentIdentifier.identifier_type == "pmid",
+                    SourceDocumentIdentifier.identifier_value.ilike(f"%{pmid}%"),
+                )
+            )
+        if doi:
+            conditions.append(
+                and_(
+                    SourceDocumentIdentifier.identifier_type == "doi",
+                    SourceDocumentIdentifier.identifier_value.ilike(f"%{doi}%"),
+                )
+            )
 
-        stmt = (
-            select(CanonicalEvidenceItem)
-            .order_by(CanonicalEvidenceItem.field_id)
-            .limit(limit)
-        )
         if conditions:
-            from sqlalchemy import and_
             stmt = stmt.where(and_(*conditions))
 
+        stmt = stmt.order_by(CanonicalEvidenceItem.field_id).limit(limit)
+
+        # Execute query
         result = await self._session.execute(stmt)
-        items = result.scalars().all()
+        rows = result.all()
 
-        # Batch-load identifiers for all matched documents
-        doc_ids = {item.source_document_id for item in items}
-        ident_map: dict[str, dict[str, str]] = {}
-        if doc_ids:
-            ident_stmt = select(SourceDocumentIdentifier).where(
-                SourceDocumentIdentifier.source_document_id.in_(doc_ids)
-            )
-            ident_result = await self._session.execute(ident_stmt)
-            for ident in ident_result.scalars():
-                ident_map.setdefault(str(ident.source_document_id), {})
-                ident_map[str(ident.source_document_id)][ident.identifier_type] = ident.identifier_value
+        # Group rows by canonical_evidence_id (one evidence can have multiple identifiers)
+        evidence_map: dict[str, dict] = {}
+        for row in rows:
+            evidence_id = str(row.canonical_evidence_id)
+            if evidence_id not in evidence_map:
+                evidence_map[evidence_id] = {
+                    "canonical_evidence_id": row.canonical_evidence_id,
+                    "source_document_id": row.source_document_id,
+                    "field_id": row.field_id,
+                    "review_status": row.review_status,
+                    "current_best_confidence": row.current_best_confidence,
+                    "active_payload": row.active_payload or {},
+                    "identifiers": {},
+                    "run_status": row.run_status,
+                    "created_at": row.created_at,
+                }
+            
+            # Collect identifiers
+            if row.identifier_type and row.identifier_value:
+                evidence_map[evidence_id]["identifiers"][row.identifier_type] = row.identifier_value
 
-        # Filter by PMID/DOI if specified
-        filtered = []
-        for item in items:
-            doc_ident = ident_map.get(str(item.source_document_id), {})
-            if pmid and pmid not in doc_ident.get("pmid", ""):
-                continue
-            if doi and doi.lower() not in doc_ident.get("doi", "").lower():
-                continue
-            filtered.append((item, doc_ident))
-
+        # Build results
         results = []
-        for item, doc_ident in filtered:
-            payload = item.active_payload or {}
+        for data in evidence_map.values():
+            payload = data["active_payload"]
             results.append(
                 EvidenceSearchResult(
-                    canonical_evidence_id=item.canonical_evidence_id,
-                    pmid=doc_ident.get("pmid"),
-                    doi=doc_ident.get("doi"),
+                    canonical_evidence_id=data["canonical_evidence_id"],
+                    pmid=data["identifiers"].get("pmid"),
+                    doi=data["identifiers"].get("doi"),
                     gene_ids=[payload["gene"]] if payload.get("gene") else [],
                     variant_ids=[payload["variant"]] if payload.get("variant") else [],
-                    field_id=item.field_id,
-                    review_status=item.review_status,
-                    current_best_confidence=float(item.current_best_confidence) if item.current_best_confidence else None,
+                    field_id=data["field_id"],
+                    review_status=data["review_status"],
+                    current_best_confidence=float(data["current_best_confidence"]) if data["current_best_confidence"] else None,
                     active_payload=payload,
                 )
             )
