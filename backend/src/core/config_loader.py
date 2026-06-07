@@ -68,7 +68,7 @@ def _flatten_and_set_env(data: ConfigData, environ: MutableMapping[str, str], pr
         env_key = flat_key.upper()
         if env_key not in environ:
             if isinstance(value, list):
-                # Join lists with commas for pydantic-settings list fields
-                environ[env_key] = ",".join(str(v) for v in value)
+                import json as _json
+                environ[env_key] = _json.dumps(value)
             else:
                 environ[env_key] = str(value)

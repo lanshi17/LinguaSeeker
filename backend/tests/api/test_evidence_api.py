@@ -55,3 +55,55 @@ async def test_patch_evidence_404_for_unknown(async_client: AsyncClient):
             json={"fields": {"gene": "BRCA1"}},
         )
         assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_get_evidence_group_detail(async_client: AsyncClient):
+    """GET /api/v1/evidence/groups/{group_id} returns grouped evidence detail."""
+    from src.core.visualize_evidence_with_expert_in_loop.contracts import (
+        EvidenceFieldDistribution,
+        EvidenceGroupDetailResponse,
+    )
+
+    source_document_id = uuid4()
+    group_id = "gene=['BRCA1']|variant=['c.68_69delAG']"
+    mock_response = EvidenceGroupDetailResponse(
+        group_id=group_id,
+        source_document_id=source_document_id,
+        gene="BRCA1",
+        variant="c.68_69delAG",
+        disease="Hereditary breast and ovarian cancer",
+        classification="Pathogenic",
+        item_count=0,
+        avg_confidence=None,
+        distribution=EvidenceFieldDistribution(),
+        items=[],
+        traces=[],
+    )
+
+    with patch("src.api.v1.evidence.SearchService") as mock_service_cls:
+        mock_service = MagicMock()
+        mock_service.get_group_detail = AsyncMock(return_value=mock_response)
+        mock_service_cls.return_value = mock_service
+
+        response = await async_client.get(f"/api/v1/evidence/groups/{group_id}")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["group_id"] == group_id
+    assert data["gene"] == "BRCA1"
+
+
+@pytest.mark.asyncio
+async def test_get_evidence_group_detail_returns_404(async_client: AsyncClient):
+    """GET /api/v1/evidence/groups/{group_id} returns 404 when group is missing."""
+    from sqlalchemy.exc import NoResultFound
+
+    with patch("src.api.v1.evidence.SearchService") as mock_service_cls:
+        mock_service = MagicMock()
+        mock_service.get_group_detail = AsyncMock(side_effect=NoResultFound())
+        mock_service_cls.return_value = mock_service
+
+        response = await async_client.get("/api/v1/evidence/groups/missing-group")
+
+    assert response.status_code == 404

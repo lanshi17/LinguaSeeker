@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api/client";
 import type {
+  EvidenceGroupDetailResponse,
   EvidenceSearchQuery,
   EvidenceSearchResponse,
 } from "../types/evidenceSearch";
@@ -19,6 +20,15 @@ export async function searchEvidence(
   const { data } = await apiClient.get<EvidenceSearchResponse>(
     "/evidence/search",
     { params },
+  );
+  return data;
+}
+
+export async function getEvidenceGroupDetail(
+  groupId: string,
+): Promise<EvidenceGroupDetailResponse> {
+  const { data } = await apiClient.get<EvidenceGroupDetailResponse>(
+    `/evidence/groups/${encodeURIComponent(groupId)}`,
   );
   return data;
 }

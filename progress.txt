@@ -236,3 +236,4 @@
 - Updated EvidenceSearchResult contract to include group_id, source_document_id, field_count, avg_confidence
 - Updated frontend types, hook, service, and table to match pivoted response structure
 - Table now shows pagination controls with page X of Y navigation
+[2026-06-07] [Frontend chat SSE route mismatch fixed] [Completed]

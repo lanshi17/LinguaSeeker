@@ -1410,3 +1410,28 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 **预防措施**：
 - YAML 的 list 字段在 flatten 时需转为逗号分隔字符串
 - 适配器必须暴露与原客户端完全相同的接口
+
+## 2026-06-07: Frontend Chat SSE `/chat/sessions/stream` 405
+
+**问题描述**：聊天页面请求 `POST /api/v1/chat/sessions/stream`，后端返回 405。后端实际路由是 `GET /api/v1/chat/sessions/{session_id}/stream`。
+
+**排查过程**：
+- 对照浏览器错误、前端 `acmgChatProvider.ts`、`ChatView.tsx` 与后端 `chat.py` 路由。
+- 发现 `FullChatView` 在无 active session 时用空字符串构造 provider，导致 URL 折叠为 `/chat/sessions/stream`。
+- 继续检查 `@ant-design/x-sdk` 的 `XRequest` 实现，确认其默认强制使用 `POST`，即使配置的是 stream URL。
+- 同时发现后端返回字段为 `chat_session_id`，前端类型和组件使用 `session_id`，会让新建会话后 active key 为空。
+
+**根因分析**：
+- 前端会话响应契约未适配后端字段名，导致 session id 丢失。
+- 前端在没有 session id 时仍创建 SSE provider。
+- Ant Design XRequest 默认 POST，与后端 SSE GET 契约不一致。
+
+**解决方案**：
+- 在 chat service 层把后端 `chat_session_id` 归一化为前端 `session_id`。
+- `ChatView` 仅在存在 `activeConversationKey` 时创建 provider。
+- `AcmgChatProvider` 使用自定义 `fetch` 发起 GET，并把最新用户消息写入 `user_message` query 参数。
+
+**预防措施**：
+- 前后端 API 字段名不一致时必须在 service 边界显式归一化，避免组件直接依赖后端 raw schema。
+- 第三方请求 SDK 的默认 method 必须验证，尤其是 SSE/streaming 场景。
+- 对需要 path 参数的 provider，不允许使用空字符串作为临时 id。

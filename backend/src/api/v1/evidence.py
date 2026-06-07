@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.api.auth import require_api_key
 from src.api.deps import get_db_session, get_phase4_factory
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
+    EvidenceGroupDetailResponse,
     EvidencePatchRequest,
     EvidenceSearchResponse,
     PatchResultResponse,
@@ -20,6 +21,19 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
 from src.core.visualize_evidence_with_expert_in_loop.search_service import SearchService
 
 router = APIRouter()
+
+
+@router.get("/groups/{group_id}", response_model=EvidenceGroupDetailResponse)
+async def get_evidence_group_detail(
+    group_id: str,
+    session: AsyncSession = Depends(get_db_session),
+) -> EvidenceGroupDetailResponse:
+    """Return grouped evidence detail with distribution and traceability."""
+    service = SearchService(session)
+    try:
+        return await service.get_group_detail(group_id=group_id)
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="Evidence group not found")
 
 
 @router.patch("/{canonical_evidence_id}", response_model=PatchResultResponse)

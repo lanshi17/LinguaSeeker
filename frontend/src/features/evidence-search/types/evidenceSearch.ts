@@ -34,3 +34,55 @@ export interface EvidenceSearchResponse {
   page: number;
   page_size: number;
 }
+
+export interface EvidenceFieldDistribution {
+  by_category: Record<string, number>;
+  by_field: Record<string, number>;
+  by_status: Record<string, number>;
+  by_track: Record<string, number>;
+}
+
+export interface EvidenceGroupItem {
+  canonical_evidence_id: string;
+  field_id: string;
+  field_name?: string | null;
+  category?: string | null;
+  value?: string | null;
+  review_status: string;
+  confidence?: number | null;
+  track?: string | null;
+  page?: number | null;
+}
+
+export interface EvidenceChainHighlight {
+  text: string;
+  highlight_start: number;
+  highlight_end: number;
+  page?: number | null;
+  source_span: Record<string, unknown>;
+}
+
+export interface EvidenceTrackTrace {
+  canonical_evidence_id: string;
+  field_id: string;
+  field_name?: string | null;
+  original?: EvidenceChainHighlight | null;
+  translated?: EvidenceChainHighlight | null;
+  alignment_confidence?: number | null;
+}
+
+export interface EvidenceGroupDetailResponse {
+  group_id: string;
+  source_document_id: string;
+  pmid?: string | null;
+  doi?: string | null;
+  gene?: string | null;
+  variant?: string | null;
+  disease?: string | null;
+  classification?: string | null;
+  item_count: number;
+  avg_confidence?: number | null;
+  distribution: EvidenceFieldDistribution;
+  items: EvidenceGroupItem[];
+  traces: EvidenceTrackTrace[];
+}

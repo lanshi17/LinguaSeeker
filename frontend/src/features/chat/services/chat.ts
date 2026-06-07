@@ -1,23 +1,36 @@
 import { apiClient } from "@/lib/api/client";
-import type { ChatSessionResponse, ChatMessageResponse } from "../types/chat";
+import type {
+  BackendChatSessionResponse,
+  ChatSessionResponse,
+  ChatMessageResponse,
+} from "../types/chat";
+
+function normalizeSession(session: BackendChatSessionResponse): ChatSessionResponse {
+  return {
+    session_id: session.chat_session_id,
+    processing_run_id: session.processing_run_id,
+    created_at: session.created_at,
+    message_count: session.message_count,
+  };
+}
 
 export async function createSession(
   processingRunId: string,
 ): Promise<ChatSessionResponse> {
-  const { data } = await apiClient.post<ChatSessionResponse>(
+  const { data } = await apiClient.post<BackendChatSessionResponse>(
     "/chat/sessions",
     { processing_run_id: processingRunId },
   );
-  return data;
+  return normalizeSession(data);
 }
 
 export async function listSessions(
   processingRunId: string,
 ): Promise<ChatSessionResponse[]> {
-  const { data } = await apiClient.get<ChatSessionResponse[]>(
+  const { data } = await apiClient.get<BackendChatSessionResponse[]>(
     `/chat/sessions/${processingRunId}`,
   );
-  return data;
+  return data.map(normalizeSession);
 }
 
 export async function listMessages(
