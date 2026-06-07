@@ -121,26 +121,25 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   const { messages, onRequest, isRequesting, abort } = useXChat({
     provider: getProvider(activeConversationKey ?? ""),
     conversationKey: activeConversationKey,
+    // Parse backend's JSON SSE format: {"type":"text","content":"..."} → "..."
+    parser: (msg) => {
+      if (msg.role !== "assistant" || !msg.content) return msg;
+      try {
+        const parsed = JSON.parse(msg.content);
+        if (parsed.type === "text" && parsed.content) {
+          return { ...msg, content: parsed.content };
+        }
+        if (parsed.type === "error") {
+          return { ...msg, content: `[Error] ${parsed.message}` };
+        }
+      } catch {
+        // Not JSON — use as-is
+      }
+      return msg;
+    },
   });
 
-  // ── Send message: POST to persist, then stream AI reply ──
-  const handleSendMessage = useCallback(
-    async (content: string) => {
-      if (!activeConversationKey) return;
-      setActiveForm(null);
-      try {
-        // Step 1: Persist user message via POST
-        await sendChatMessage(activeConversationKey, content);
-        // Step 2: Trigger SSE stream for AI reply
-        onRequest({ messages: [{ role: "user", content }] });
-      } catch {
-        antdMessage.error("Failed to send message");
-      }
-    },
-    [activeConversationKey, onRequest],
-  );
-
-  // ── Embedded form state ──
+  // ── Embedded form state (declared before callbacks that use it) ──
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [pipelineStatus, setPipelineStatus] = useState<{
     runId: string;

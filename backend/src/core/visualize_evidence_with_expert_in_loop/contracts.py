@@ -198,18 +198,23 @@ class EvidencePatchRequest(BaseModel):
         return self
 
 
-class EvidenceSearchResult(BaseModel):
-    """A single evidence search result row."""
 
-    canonical_evidence_id: UUID
+
+class EvidenceSearchResult(BaseModel):
+    """A single evidence search result row (pivoted from field-level extractions)."""
+
+    group_id: str
+    source_document_id: UUID
     pmid: str | None = None
     doi: str | None = None
-    gene_ids: list[str] = Field(default_factory=list)
-    variant_ids: list[str] = Field(default_factory=list)
-    field_id: str
-    review_status: str
-    current_best_confidence: float | None = None
-    active_payload: dict = Field(default_factory=dict)  # noqa: dict-return
+    gene: str | None = None
+    variant: str | None = None
+    disease: str | None = None
+    classification: str | None = None
+    field_count: int = 0
+    avg_confidence: float | None = None
+    review_status: str = "provisional"
+    canonical_evidence_id: UUID | None = None
 
 
 class EvidenceSearchResponse(BaseModel):
@@ -217,4 +222,5 @@ class EvidenceSearchResponse(BaseModel):
 
     items: list[EvidenceSearchResult]
     total: int
-
+    page: int = 1
+    page_size: int = 50

@@ -21,7 +21,6 @@
 import { AbstractChatProvider, XRequest } from "@ant-design/x-sdk";
 import type { SSEOutput } from "@ant-design/x-sdk";
 import type {
-  ChatProviderConfig,
   TransformMessage,
 } from "@ant-design/x-sdk/es/chat-providers/AbstractChatProvider";
 import { apiClient } from "@/lib/api/client";
@@ -30,33 +29,6 @@ import { apiClient } from "@/lib/api/client";
 interface ChatMessage {
   role: string;
   content: string;
-}
-
-/**
- * Parse backend SSE chunks into the format @ant-design/x expects.
- *
- * Backend sends: `data: {"type": "text", "content": "token"}\n\n`
- * @ant-design/x expects: `{ data: string }` where data is the content.
- *
- * This transform extracts the `content` from JSON, making it
- * directly consumable by Bubble's streaming text renderer.
- */
-function transformBackendSSE(chunk: SSEOutput): SSEOutput {
-  try {
-    const parsed = JSON.parse(chunk.data);
-    if (parsed.type === "text" && parsed.content) {
-      return { data: parsed.content };
-    }
-    if (parsed.type === "done") {
-      return { data: "" };
-    }
-    if (parsed.type === "error") {
-      return { data: `[Error: ${parsed.message}]` };
-    }
-  } catch {
-    // Not JSON — pass through as-is (e.g., keepalive comment)
-  }
-  return chunk;
 }
 
 /**
@@ -79,8 +51,8 @@ class AcmgChatProvider extends AbstractChatProvider<ChatMessage, unknown, SSEOut
     const request = XRequest<unknown, SSEOutput>(baseURL, {
       manual: true,
       // Use default SSE parser — backend sends standard `data:` lines.
-      // Transform the parsed JSON to extract content tokens.
-      transformStream: () => transformBackendSSE,
+      // The parser extracts {data: "..."} from each SSE line.
+      // JSON parsing of the data content happens in useXChat's parser.
     });
 
     super({ request });
