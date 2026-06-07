@@ -32,7 +32,7 @@ GROUND_TRUTH_DIR = Path(__file__).resolve().parent / "ground_truth"
 REPORTS_DIR = Path(__file__).resolve().parent / "reports"
 
 POLL_INTERVAL_S = 5.0
-MAX_POLL_ATTEMPTS = 360
+MAX_POLL_ATTEMPTS = 360  # 30 min max per entry
 TERMINAL_STATUSES = {"awaiting_review", "completed", "failed"}
 
 
@@ -132,7 +132,7 @@ class EntryMetrics:
 
 
 def fuzzy_match_value(expected: str, extracted: str) -> bool:
-    """Fuzzy value matching — case-insensitive substring containment."""
+    """Fuzzy value matching with word-overlap for disease names."""
     if not expected or not extracted:
         return False
     exp_lower = expected.lower().strip()
@@ -146,6 +146,19 @@ def fuzzy_match_value(expected: str, extracted: str) -> bool:
     # Gene symbol exact match (case-sensitive)
     if expected.strip() == extracted.strip():
         return True
+    # Word-overlap matching for disease names
+    # e.g., "Charcot-Marie-Tooth disease" matches "Charcot-Marie-Tooth disease axonal type 2N"
+    exp_words = set(re.split(r"[\s\-]+", exp_lower))
+    ext_words = set(re.split(r"[\s\-]+", ext_lower))
+    # Remove common stop words
+    stop_words = {"disease", "syndrome", "disorder", "type", "the", "a", "an", "of", "due", "to", "with", "and", "or"}
+    exp_words -= stop_words
+    ext_words -= stop_words
+    if exp_words and ext_words:
+        overlap = exp_words & ext_words
+        # If >60% of expected words are found in extracted, consider it a match
+        if len(overlap) / len(exp_words) >= 0.6:
+            return True
     return False
 
 

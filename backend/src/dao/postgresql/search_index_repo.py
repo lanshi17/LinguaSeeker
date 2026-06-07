@@ -19,6 +19,7 @@ from sqlalchemy import (
     String,
     Table,
     Text,
+    cast,
     or_,
     select,
     text,
@@ -80,6 +81,9 @@ class SearchIndexRepository:
     async def search(
         self,
         *,
+        gene: str | None = None,
+        variant: str | None = None,
+        disease: str | None = None,
         gene_ids: list[str] | None = None,
         variant_ids: list[str] | None = None,
         doi: str | None = None,
@@ -92,9 +96,31 @@ class SearchIndexRepository:
         Search result rows are read-model projections with a flexible shape
         mirroring ``frontend_search_index`` columns.
 
-        Returns an empty list when no filters are supplied.
+        When no filters are supplied, returns all rows (default list view).
         """
         conditions: list = []
+
+        if gene:
+            # Text search on active_payload->>'gene' (case-insensitive).
+            conditions.append(
+                cast(
+                    frontend_search_index.c.active_payload["gene"], Text
+                ).ilike(f"%{gene}%")
+            )
+
+        if variant:
+            conditions.append(
+                cast(
+                    frontend_search_index.c.active_payload["variant"], Text
+                ).ilike(f"%{variant}%")
+            )
+
+        if disease:
+            conditions.append(
+                cast(
+                    frontend_search_index.c.active_payload["disease"], Text
+                ).ilike(f"%{disease}%")
+            )
 
         if gene_ids:
             # gene_ids is a JSONB array; use ?| overlap operator.
@@ -116,14 +142,11 @@ class SearchIndexRepository:
         if field_id is not None:
             conditions.append(frontend_search_index.c.field_id == field_id)
 
-        if not conditions:
-            return []
-
-        query = (
-            select(frontend_search_index)
-            .where(or_(*conditions))
-            .limit(limit)
-        )
+        # When no filters are supplied, return all rows (default list view).
+        stmt = select(frontend_search_index)
+        if conditions:
+            stmt = stmt.where(or_(*conditions))
+        query = stmt.order_by(frontend_search_index.c.pmid).limit(limit)
 
         result = await self._session.execute(query)
         rows = result.mappings().all()

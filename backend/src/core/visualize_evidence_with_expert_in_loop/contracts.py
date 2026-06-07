@@ -196,3 +196,24 @@ class EvidencePatchRequest(BaseModel):
         if not self.fields and self.new_status is None:
             raise ValueError("Provide at least one of 'fields' or 'new_status'")
         return self
+
+
+class EvidenceSearchResult(BaseModel):
+    """A single evidence search result row."""
+
+    canonical_evidence_id: UUID
+    pmid: str | None = None
+    doi: str | None = None
+    gene_ids: list[str] = Field(default_factory=list)
+    variant_ids: list[str] = Field(default_factory=list)
+    field_id: str
+    review_status: str
+    current_best_confidence: float | None = None
+    active_payload: dict = Field(default_factory=dict)  # noqa: dict-return
+
+
+class EvidenceSearchResponse(BaseModel):
+    """Response for GET /api/v1/evidence/search."""
+
+    items: list[EvidenceSearchResult]
+    total: int

@@ -164,6 +164,9 @@ RULES:
 14. The snippet must be a verbatim continuous substring of the source text.
 15. Copy punctuation exactly as it appears in the source text.
 16. Do not calculate character offsets. Leave start_offset and end_offset absent or at defaults.
+17. For A.gene_disease_relationship, the value MUST be one of: "causative", "associated", "susceptibility", "uncertain", "disputed", "refuted", "no_relationship". Do NOT return sentences or descriptions.
+18. For B.disease_diagnosis, extract ONLY the primary disease name relevant to the target gene (e.g., "Fabry disease", "Charcot-Marie-Tooth disease"). Do NOT extract lists of unrelated diseases, background comorbidities, or general medical history.
+19. For B.disease_diagnosis, if the document mentions multiple diseases, extract ONLY the one most directly linked to the gene being curated. Ignore incidental mentions of other conditions.
 
 DOCUMENT BLOCKS:
 {text}
