@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,10 +8,30 @@
   :root {
     --background: 255 255 255;
     --foreground: 15 23 42;
+    /* Medical teal design system */
+    color-scheme: light;
   }
 
   body {
-    @apply bg-white text-gray-900 antialiased;
+    @apply bg-white font-sans text-gray-900 antialiased;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  /* Accessible focus ring — 3px, visible, high contrast */
+  *:focus-visible {
+    @apply rounded outline-2 outline-offset-2 outline-primary-600;
+  }
+
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
