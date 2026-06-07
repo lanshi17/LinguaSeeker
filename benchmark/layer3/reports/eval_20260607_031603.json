@@ -1,0 +1,290 @@
+{
+  "evaluation_id": "eval_clingen_fdd7275e",
+  "timestamp": "2026-06-07T03:16:03",
+  "config": {
+    "base_url": "http://localhost:8000",
+    "concurrency": 1,
+    "limit": 10
+  },
+  "total_entries": 10,
+  "total_duration_s": 12267.51,
+  "aggregates": {
+    "overall": {
+      "true_positives": 14,
+      "false_positives": 4,
+      "false_negatives": 0,
+      "precision": 0.7778,
+      "recall": 1.0,
+      "f1": 0.875
+    },
+    "by_field": {
+      "A.gene_symbol": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "B.disease_diagnosis": {
+        "precision": 0.8333,
+        "recall": 1.0,
+        "f1": 0.9091
+      },
+      "A.gene_disease_relationship": {
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.6667
+      }
+    },
+    "by_classification": {
+      "Definitive": {
+        "count": 10,
+        "precision": 0.7778,
+        "recall": 1.0,
+        "f1": 0.875
+      }
+    }
+  },
+  "per_entry": [
+    {
+      "entry_id": "clingen_000",
+      "gene_symbol": "AARS1",
+      "classification": "Definitive",
+      "pipeline_status": "awaiting_review",
+      "duration_s": 675.93,
+      "evidence_count": 47,
+      "found_rate": 0.7234,
+      "grounding_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "AARS1",
+          "matched": true,
+          "extracted": "{'value': 'AARS1'}",
+          "match_type": "fuzzy"
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Charcot-Marie-Tooth disease axonal type 2N",
+          "matched": false,
+          "extracted": "{'value': 'Anti-NF155 autoimmune nodopathy'}",
+          "match_type": "wrong_value"
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": false,
+          "extracted": "{'value': 'which has been associated with Charcot-Marie-Tooth disease, axonal type 2N'}",
+          "match_type": "wrong_value"
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_001",
+      "gene_symbol": "AARS2",
+      "classification": "Definitive",
+      "pipeline_status": "timeout",
+      "duration_s": 1802.79,
+      "evidence_count": 0,
+      "found_rate": 0.0,
+      "grounding_rate": 0.0,
+      "field_matches": []
+    },
+    {
+      "entry_id": "clingen_002",
+      "gene_symbol": "ABCA3",
+      "classification": "Definitive",
+      "pipeline_status": "awaiting_review",
+      "duration_s": 1121.52,
+      "evidence_count": 25,
+      "found_rate": 1.0,
+      "grounding_rate": 0.92,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCA3",
+          "matched": true,
+          "extracted": "{'value': 'ABCA3'}",
+          "match_type": "fuzzy"
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "interstitial lung disease due to ABCA3 deficiency",
+          "matched": true,
+          "extracted": "{'value': 'Interstitial lung disease due to ABCA3 deficiency'}",
+          "match_type": "fuzzy"
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": false,
+          "extracted": "{'value': 'Interstitial lung disease due to ABCA3 deficiency'}",
+          "match_type": "wrong_value"
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_003",
+      "gene_symbol": "ABCA4",
+      "classification": "Definitive",
+      "pipeline_status": "timeout",
+      "duration_s": 1803.44,
+      "evidence_count": 0,
+      "found_rate": 0.0,
+      "grounding_rate": 0.0,
+      "field_matches": []
+    },
+    {
+      "entry_id": "clingen_004",
+      "gene_symbol": "ABCB4",
+      "classification": "Definitive",
+      "pipeline_status": "awaiting_review",
+      "duration_s": 1246.7,
+      "evidence_count": 62,
+      "found_rate": 0.8387,
+      "grounding_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCB4",
+          "matched": true,
+          "extracted": "{'value': ['ABCB4']}",
+          "match_type": "fuzzy"
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "progressive familial intrahepatic cholestasis type 3",
+          "matched": true,
+          "extracted": "{'value': ['Progressive familial intrahepatic cholestasis type 3 (PFIC3)', 'Cholestasis', 'Liver fibrosis', 'Cirrhosis', 'Portal hypertension', 'Cholangiopathy', 'Biliary fibrosis', 'Sclerosing cholangitis']}",
+          "match_type": "fuzzy"
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": false,
+          "extracted": "{'value': 'ABCB4 gene mutations cause Progressive familial intrahepatic cholestasis type 3 (PFIC3)'}",
+          "match_type": "wrong_value"
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_005",
+      "gene_symbol": "ABCC8",
+      "classification": "Definitive",
+      "pipeline_status": "timeout",
+      "duration_s": 1805.23,
+      "evidence_count": 0,
+      "found_rate": 0.0,
+      "grounding_rate": 0.0,
+      "field_matches": []
+    },
+    {
+      "entry_id": "clingen_006",
+      "gene_symbol": "ABCD1",
+      "classification": "Definitive",
+      "pipeline_status": "awaiting_review",
+      "duration_s": 375.51,
+      "evidence_count": 62,
+      "found_rate": 0.871,
+      "grounding_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCD1",
+          "matched": true,
+          "extracted": "{'value': 'ABCD1'}",
+          "match_type": "fuzzy"
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "adrenoleukodystrophy",
+          "matched": true,
+          "extracted": "{'value': 'X-linked adrenoleukodystrophy'}",
+          "match_type": "fuzzy"
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "{'value': 'causative'}",
+          "match_type": "fuzzy"
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_007",
+      "gene_symbol": "ABCG5",
+      "classification": "Definitive",
+      "pipeline_status": "timeout",
+      "duration_s": 1802.91,
+      "evidence_count": 0,
+      "found_rate": 0.0,
+      "grounding_rate": 0.0,
+      "field_matches": []
+    },
+    {
+      "entry_id": "clingen_008",
+      "gene_symbol": "ABCG8",
+      "classification": "Definitive",
+      "pipeline_status": "awaiting_review",
+      "duration_s": 310.41,
+      "evidence_count": 28,
+      "found_rate": 0.9286,
+      "grounding_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCG8",
+          "matched": true,
+          "extracted": "{'value': 'ABCG8'}",
+          "match_type": "fuzzy"
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "sitosterolemia",
+          "matched": true,
+          "extracted": "{'value': 'sitosterolemia'}",
+          "match_type": "fuzzy"
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "{'value': 'causative'}",
+          "match_type": "fuzzy"
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_009",
+      "gene_symbol": "ABHD12",
+      "classification": "Definitive",
+      "pipeline_status": "awaiting_review",
+      "duration_s": 1321.95,
+      "evidence_count": 123,
+      "found_rate": 0.7317,
+      "grounding_rate": 0.9778,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABHD12",
+          "matched": true,
+          "extracted": "{'value': 'ABHD12'}",
+          "match_type": "fuzzy"
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "PHARC syndrome",
+          "matched": true,
+          "extracted": "{'value': 'PHARC syndrome'}",
+          "match_type": "fuzzy"
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "{'value': 'causative'}",
+          "match_type": "fuzzy"
+        }
+      ]
+    }
+  ]
+}
