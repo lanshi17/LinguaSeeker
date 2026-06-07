@@ -225,3 +225,18 @@
 - Verified all 32 backend module READMEs are present and comprehensive
 - Confirmed existing guides are current with recent code changes (config system, agents, dao layers)
 - All Python package directories now have developer-facing module guides
+
+[2026-06-07] [Dashboard Aggregation View] [Completed]
+- Created backend dashboard service: src/core/visualize_evidence_with_expert_in_loop/dashboard_service.py
+- Added API contracts: DashboardSummaryResponse, EvidenceByStatusResponse, ProcessingRunSummary
+- Created API endpoint: GET /api/v1/dashboard/summary
+- Registered route in src/api/v1/router.py
+- Created frontend feature: src/features/dashboard/
+  - types/dashboard.ts (TypeScript interfaces)
+  - services/dashboard.ts (API client)
+  - hooks/useDashboard.ts (React Query hook with 30s auto-refresh)
+  - components/DashboardStats.tsx (stats cards, status breakdown, recent runs)
+- Created dashboard page: app/(dashboard)/dashboard/page.tsx
+- Added Dashboard nav item to Sidebar
+- Updated root page to redirect to /dashboard
+- All TypeScript types pass validation

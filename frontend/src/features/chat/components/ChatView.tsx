@@ -131,6 +131,35 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     phases?: Record<string, { status: string; duration_seconds?: number | null }>;
   } | null>(null);
 
+  // ── Poll pipeline status ──
+  const pollPipelineStatus = useCallback(async (runId: string) => {
+    const poll = async () => {
+      try {
+        const { data } = await apiClient.get<{
+          pipeline_status: string;
+          phases: Record<
+            string,
+            { status: string; duration_seconds?: number | null }
+          >;
+        }>(`/pipeline/runs/${runId}/status`);
+        setPipelineStatus({
+          runId,
+          status: data.pipeline_status,
+          phases: data.phases,
+        });
+        if (
+          data.pipeline_status !== "completed" &&
+          data.pipeline_status !== "failed"
+        ) {
+          setTimeout(poll, 2000);
+        }
+      } catch {
+        // Ignore polling errors
+      }
+    };
+    setTimeout(poll, 1000);
+  }, []);
+
   // ── Pipeline form submit ──
   const handlePipelineSubmit = useCallback(
     async (data: PipelineFormData) => {
@@ -165,12 +194,13 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         antdMessage.error("Failed to start pipeline");
       }
     },
-    [onRequest],
+    [onRequest, pollPipelineStatus],
   );
 
   // ── Build bubble items with contentRender for embedded forms ──
   const bubbleItems = useMemo(() => {
-    const items = messages.map(({ id, message, status }) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const items: any[] = messages.map(({ id, message, status }) => ({
       key: id,
       role: message.role,
       content: message.content,
@@ -247,84 +277,6 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         messages: [{ role: "user", content: prompt.description }],
       });
     }
-  }
-
-  // ── Pipeline form submit ──
-  async function handlePipelineSubmit(data: PipelineFormData) {
-    setActiveForm(null);
-
-    try {
-      const body: Record<string, unknown> = {
-        source_type: data.sourceType,
-        mode: "full",
-      };
-
-      if (data.sourceType === "online" && data.query) {
-        body.query = data.query;
-      } else if (data.sourceType === "local" && data.file) {
-        // Read file as base64
-        const base64 = await readFileAsBase64(data.file);
-        body.file_content = base64;
-        body.filename = data.file.name;
-      }
-
-      const response = await apiClient.post<{
-        processing_run_id: string;
-        status: string;
-      }>("/pipeline/run", body);
-
-      const runId = response.data.processing_run_id;
-      setPipelineStatus({ runId, status: response.data.status });
-
-      // Add assistant message
-      onRequest({
-        messages: [
-          {
-            role: "assistant" as const,
-            content: `Pipeline started! Run ID: ${runId.slice(0, 8)}...`,
-          },
-        ],
-      });
-
-      // Start polling status
-      pollPipelineStatus(runId);
-    } catch {
-      antdMessage.error("Failed to start pipeline");
-      setActiveForm(null);
-    }
-  }
-
-  // ── Poll pipeline status ──
-  async function pollPipelineStatus(runId: string) {
-    const poll = async () => {
-      try {
-        const { data } = await apiClient.get<{
-          pipeline_status: string;
-          phases: Record<
-            string,
-            { status: string; duration_seconds?: number | null }
-          >;
-        }>(`/pipeline/runs/${runId}/status`);
-
-        setPipelineStatus({
-          runId,
-          status: data.pipeline_status,
-          phases: data.phases,
-        });
-
-        // Continue polling if not terminal
-        if (
-          data.pipeline_status !== "completed" &&
-          data.pipeline_status !== "failed"
-        ) {
-          setTimeout(poll, 2000);
-        }
-      } catch {
-        // Ignore polling errors
-      }
-    };
-
-    setTimeout(poll, 1000);
   }
 
   // ── Create session ──
