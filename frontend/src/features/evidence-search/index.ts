@@ -6,5 +6,4 @@ export type {
   EvidenceSearchQuery,
   EvidenceSearchResult,
   EvidenceSearchResponse,
-  EvidencePayload,
 } from "./types/evidenceSearch";

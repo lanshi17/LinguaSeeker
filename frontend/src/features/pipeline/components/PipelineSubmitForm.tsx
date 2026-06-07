@@ -31,7 +31,7 @@ export function PipelineSubmitForm() {
     if (sourceType === "online") {
       body.query = query;
     } else if (fileContent) {
-      body.file_content = fileContent;
+      body.content_base64 = fileContent;
       body.filename = filename;
     }
 
