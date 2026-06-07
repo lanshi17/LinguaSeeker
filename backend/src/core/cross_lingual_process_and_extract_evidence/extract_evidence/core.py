@@ -172,6 +172,60 @@ class RawSourceNormalizer:
         return normalized
 
 
+class FieldValueNormalizer:
+    """Enforces enum/format constraints on specific evidence field values."""
+
+    # Fields with strict enum constraints
+    _ENUM_FIELDS: dict[str, tuple[str, ...]] = {
+        "A.gene_disease_relationship": (
+            "causative", "associated", "susceptibility",
+            "uncertain", "disputed", "refuted", "no_relationship",
+        ),
+    }
+
+    @classmethod
+    def normalize_items(cls, items: list[EvidenceItem]) -> list[EvidenceItem]:
+        """Normalize field values to their constrained formats."""
+        normalized: list[EvidenceItem] = []
+        for item in items:
+            if item.status != EvidenceStatus.FOUND:
+                normalized.append(item)
+                continue
+            enum_values = cls._ENUM_FIELDS.get(item.field_id)
+            if enum_values and item.value is not None:
+                normalized.append(cls._normalize_enum(item, enum_values))
+            else:
+                normalized.append(item)
+        return normalized
+
+    @classmethod
+    def _normalize_enum(cls, item: EvidenceItem, valid_values: tuple[str, ...]) -> EvidenceItem:
+        """Normalize a field value to the best matching enum value."""
+        raw = str(item.value).strip().lower()
+        # Exact match
+        if raw in valid_values:
+            return item
+        # Substring match — find the valid value contained in the raw text
+        for v in valid_values:
+            if v in raw:
+                return item.model_copy(update={"value": v})
+        # Keyword match — look for key words
+        keyword_map = {
+            "causative": ("cause", "causative", "pathogenic", "responsible"),
+            "associated": ("associated", "association", "linked", "related"),
+            "susceptibility": ("susceptibility", "susceptible", "risk", "predispos"),
+            "uncertain": ("uncertain", "unclear", "possible", "potential"),
+            "disputed": ("disputed", "controversial", "conflicting"),
+            "refuted": ("refuted", "refute", "no evidence", "not supported"),
+            "no_relationship": ("no relationship", "no known", "not related"),
+        }
+        for v, keywords in keyword_map.items():
+            if any(kw in raw for kw in keywords):
+                return item.model_copy(update={"value": v})
+        # Default: keep original but log
+        return item
+
+
 class GroupAssigner:
     """Assigns deterministic variant-centered group ids to evidence."""
 

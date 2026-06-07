@@ -216,3 +216,12 @@
 [2026-06-06] Frontend MVP — simplified to 3 modules: Pipeline (workflow status), Evidence Search (gene/variant/disease query), AI Chat (@ant-design/x). Deleted 6 unused feature modules (task-flow, literature, delta-audit, source-link, document-viewer, graph). Sidebar simplified to 3 nav items. [done]
 [2026-06-07] Prompt improvements: gene_disease_relationship enum + disease_diagnosis focus rules → ABCA3 entry 3/3 F1=100% [DONE]
 [2026-06-07] Layer 3 eval 10 entries: P=77.8% R=100% F1=87.5%, gene_symbol 100%, disease 83%, relationship 50% [DONE]
+[2026-06-07] Frontend module guides: 9 README.md files generated — features/auth, features/pipeline, features/evidence-search, features/chat, components/ui, components/layout, lib, stores, app. Each covers architecture, public API, usage patterns, extension guide, dependencies, and testing. [done]
+[2026-06-07] FieldValueNormalizer enum constraint + prompt rules 17-19 implemented, LLM API timeout is blocking factor [DONE]
+[2026-06-06] Frontend MVP simplified to 2 modules: AI Chat (pipeline-guided) + Evidence Search. Pipeline module removed — users start pipelines through chat agent conversation. Sidebar: AI Chat, Evidence. Root redirects to /chat. [done]
+
+[2026-06-07] [Module Guide Generation] [Completed]
+- Generated missing README for backend/src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/web_search/
+- Verified all 32 backend module READMEs are present and comprehensive
+- Confirmed existing guides are current with recent code changes (config system, agents, dao layers)
+- All Python package directories now have developer-facing module guides

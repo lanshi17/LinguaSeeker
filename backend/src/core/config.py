@@ -46,21 +46,47 @@ class LLMConfig(BaseModel):
     """Generic LLM (OpenAI-compatible)."""
 
     api_key: str = ""
+    api_keys: list[str] = Field(default_factory=list)
     base_url: str = ""
     model: str = ""
     max_tokens: int = 8192
     timeout: int = 60
+
+    @property
+    def all_api_keys(self) -> list[str]:
+        """Return all available API keys (deduplicated, preserving order)."""
+        seen: set[str] = set()
+        keys: list[str] = []
+        for k in [*self.api_keys, self.api_key]:
+            k = k.strip()
+            if k and k not in seen:
+                seen.add(k)
+                keys.append(k)
+        return keys
 
 
 class ReasoningConfig(BaseModel):
     """Expert reasoning agent (stronger reasoning model)."""
 
     api_key: str = ""
+    api_keys: list[str] = Field(default_factory=list)
     model: str = ""
     reasoning_effort: str = "high"
     base_url: str = ""
     max_tokens: int = 8192
     timeout: int = 60
+
+    @property
+    def all_api_keys(self) -> list[str]:
+        """Return all available API keys (deduplicated, preserving order)."""
+        seen: set[str] = set()
+        keys: list[str] = []
+        for k in [*self.api_keys, self.api_key]:
+            k = k.strip()
+            if k and k not in seen:
+                seen.add(k)
+                keys.append(k)
+        return keys
 
 
 class EmbeddingConfig(BaseModel):
@@ -96,24 +122,6 @@ class ParseDocumentConfig(BaseModel):
     mineru_local_model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B"
     mineru_local_timeout: float = 120.0
     mineru_local_dpi: int = 200
-
-
-class EvidenceExtractionConfig(BaseModel):
-    """Evidence extraction LLM settings."""
-
-    api_key: str = ""
-    base_url: str = ""
-    reasoning_api_key: str = ""
-    reasoning_base_url: str = ""
-    fast_model: str = ""
-    standard_model: str = ""
-    strong_model: str = ""
-    fast_effort: str = ""
-    standard_effort: str = ""
-    strong_effort: str = "high"
-    temperature: float = 0.0
-    timeout: int = 60
-    max_retries: int = 3
 
 
 class RedisConfig(BaseModel):
@@ -215,6 +223,7 @@ class Settings(BaseSettings):
     # ── Preferred fast LLM flat fields (FAST_LLM_*) ────────────────────
 
     fast_llm_api_key: str = ""
+    fast_llm_api_keys: list[str] = Field(default_factory=list)
     fast_llm_base_url: str = ""
     fast_llm_model: str = ""
     fast_llm_temperature: float | None = None
@@ -226,6 +235,7 @@ class Settings(BaseSettings):
     # ── Preferred reasoning LLM flat fields (REASONING_LLM_*) ──────────
 
     reasoning_llm_api_key: str = ""
+    reasoning_llm_api_keys: list[str] = Field(default_factory=list)
     reasoning_llm_model: str = ""
     reasoning_llm_reasoning_effort: str = ""
     reasoning_llm_base_url: str = ""
@@ -301,22 +311,6 @@ class Settings(BaseSettings):
     network_no_proxy: str = _DEFAULT_NO_PROXY
 
 
-    # ── Evidence Extraction flat fields (EVIDENCE_EXTRACTION_*) ──────────
-
-    evidence_extraction_api_key: str = ""
-    evidence_extraction_base_url: str = ""
-    evidence_extraction_reasoning_api_key: str = ""
-    evidence_extraction_reasoning_base_url: str = ""
-    evidence_extraction_fast_model: str = ""
-    evidence_extraction_standard_model: str = ""
-    evidence_extraction_strong_model: str = ""
-    evidence_extraction_fast_effort: str = ""
-    evidence_extraction_standard_effort: str = ""
-    evidence_extraction_strong_effort: str = "high"
-    evidence_extraction_temperature: float = 0.0
-    evidence_extraction_timeout: int = 300
-    evidence_extraction_max_retries: int = 2
-
     # ── Nested domain models (populated by validator) ────────────────────
 
     llm: LLMConfig = Field(default_factory=LLMConfig, exclude=True)
@@ -325,9 +319,6 @@ class Settings(BaseSettings):
     rerank: RerankConfig = Field(default_factory=RerankConfig, exclude=True)
     mineru: MinerUConfig = Field(default_factory=MinerUConfig, exclude=True)
     parse_document: ParseDocumentConfig = Field(default_factory=ParseDocumentConfig, exclude=True)
-    evidence_extraction: EvidenceExtractionConfig = Field(
-        default_factory=EvidenceExtractionConfig, exclude=True,
-    )
     redis: RedisConfig = Field(default_factory=RedisConfig, exclude=True)
     postgresql: PostgreSQLConfig = Field(default_factory=PostgreSQLConfig, exclude=True)
     web_search: WebSearchConfig = Field(default_factory=WebSearchConfig, exclude=True)
@@ -347,6 +338,7 @@ class Settings(BaseSettings):
         
         self.llm = LLMConfig(
             api_key=self.fast_llm_api_key,
+            api_keys=self.fast_llm_api_keys,
             base_url=self.fast_llm_base_url,
             model=self.fast_llm_model,
             max_tokens=self.fast_llm_max_tokens,
@@ -354,6 +346,7 @@ class Settings(BaseSettings):
         )
         self.reasoning = ReasoningConfig(
             api_key=self.reasoning_llm_api_key,
+            api_keys=self.reasoning_llm_api_keys,
             model=self.reasoning_llm_model,
             reasoning_effort=self.reasoning_llm_reasoning_effort,
             base_url=self.reasoning_llm_base_url,
@@ -382,21 +375,6 @@ class Settings(BaseSettings):
             mineru_local_model_id=self.mineru_local_model_id,
             mineru_local_timeout=self.mineru_local_timeout,
             mineru_local_dpi=self.mineru_local_dpi,
-        )
-        self.evidence_extraction = EvidenceExtractionConfig(
-            api_key=self.evidence_extraction_api_key or self.llm.api_key,
-            base_url=self.evidence_extraction_base_url or self.llm.base_url,
-            reasoning_api_key=self.evidence_extraction_reasoning_api_key or self.reasoning.api_key,
-            reasoning_base_url=self.evidence_extraction_reasoning_base_url or self.reasoning.base_url,
-            fast_model=self.evidence_extraction_fast_model or self.llm.model,
-            standard_model=self.evidence_extraction_standard_model or self.reasoning.model or self.llm.model,
-            strong_model=self.evidence_extraction_strong_model or self.reasoning.model or self.llm.model,
-            fast_effort=self.evidence_extraction_fast_effort,
-            standard_effort=self.evidence_extraction_standard_effort,
-            strong_effort=self.evidence_extraction_strong_effort,
-            temperature=self.evidence_extraction_temperature,
-            timeout=self.evidence_extraction_timeout,
-            max_retries=self.evidence_extraction_max_retries,
         )
         self.redis = RedisConfig(
             host=self.redis_host,

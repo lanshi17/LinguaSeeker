@@ -91,22 +91,6 @@ network:
   proxy: {{ network.proxy | default('') }}
   no_proxy: "{{ network.no_proxy | default('') }}"
 
-# ── Evidence Extraction ────────────────────────────────────────────────
-evidence_extraction:
-  api_key: {{ evidence_extraction.api_key | default('') }}
-  base_url: {{ evidence_extraction.base_url | default('') }}
-  reasoning_api_key: {{ evidence_extraction.reasoning_api_key | default('') }}
-  reasoning_base_url: {{ evidence_extraction.reasoning_base_url | default('') }}
-  fast_model: {{ evidence_extraction.fast_model | default('') }}
-  standard_model: {{ evidence_extraction.standard_model | default('') }}
-  strong_model: {{ evidence_extraction.strong_model | default('') }}
-  fast_effort: {{ evidence_extraction.fast_effort | default('') }}
-  standard_effort: {{ evidence_extraction.standard_effort | default('') }}
-  strong_effort: {{ evidence_extraction.strong_effort | default('high') }}
-  temperature: {{ evidence_extraction.temperature }}
-  timeout: {{ evidence_extraction.timeout }}
-  max_retries: {{ evidence_extraction.max_retries }}
-
 # ── Model Server GPU settings ──────────────────────────────────────────
 vlm_model_id: "{{ vlm_model_id | default('') }}"
 embedding_gpu_memory_utilization: {{ embedding_gpu_memory_utilization | default(0.35) }}

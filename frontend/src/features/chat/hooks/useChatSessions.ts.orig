@@ -9,7 +9,6 @@ export function useChatSessions(processingRunId: string) {
   const sessions = useQuery({
     queryKey: ["chat", "sessions", processingRunId],
     queryFn: () => listSessions(processingRunId),
-    enabled: !!processingRunId,
   });
 
   const create = useMutation({

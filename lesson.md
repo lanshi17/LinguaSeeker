@@ -1369,3 +1369,44 @@ Phase 2 失败导致 Phase 3 未能执行（pipeline error），因此该结论�
 - PMC 全文获取应优先使用 NCBI efetch API（返回 XML），而非直接下载 PDF
 - fpdf2 需要 latin-1 编码，Unicode 字符需预处理
 - 评估脚本应支持断点续评（避免超时后重新开始）
+
+## 2026-06-07: LLM API Key Pool — 适配器模式实现
+
+**问题描述**：单 API key 在高并发场景下容易触发限流（429），需要支持多 key 轮询。
+
+**实现方案**：适配器模式 + round-robin 轮询 + 认证错误自动切换
+
+**架构设计**：
+```
+config/vault/development.yaml
+  fast_llm:
+    api_keys: [key1, key2, key3]
+       ↓
+config.py: LLMConfig.all_api_keys → 去重合并
+       ↓
+config_context.py: TranslationConfigContext.api_keys / EvidenceExtractionConfigContext.api_keys
+       ↓
+llm_adapter.py: create_llm_client() → LLMPoolAdapter
+       ↓
+LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
+```
+
+**改动文件**：
+- `src/utils/llm_adapter.py` — 新建：LLMPoolAdapter + create_llm_client 工厂
+- `src/core/config.py` — LLMConfig/ReasoningConfig 添加 api_keys 字段 + all_api_keys 属性
+- `src/core/config_loader.py` — YAML list → 逗号分隔 env var
+- `config_context.py` — TranslationConfigContext/EvidenceExtractionConfigContext 添加 api_keys
+- `extract_evidence/providers.py` — _client_for_tier 改用 create_llm_client
+- `cross_lingual/translate/providers.py` — create_llm/create_json_llm 改用 adapter
+- `workflow.py` — formatter LLM 改用 adapter
+- `cross_lingual/translate/translator.py` — 传递 api_keys
+
+**关键设计**：
+1. `LLMPoolAdapter` 暴露与 `ChatOpenAI` 相同的接口（.invoke/.ainvoke/.with_structured_output）
+2. `_StructuredOutputWrapper` 包装 with_structured_output 以支持 key 轮询
+3. `_is_auth_error()` 检测 401/403 错误触发 failover
+4. 向后兼容：单 key 配置仍然工作
+
+**预防措施**：
+- YAML 的 list 字段在 flatten 时需转为逗号分隔字符串
+- 适配器必须暴露与原客户端完全相同的接口

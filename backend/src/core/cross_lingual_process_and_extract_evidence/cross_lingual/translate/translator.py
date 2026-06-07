@@ -103,8 +103,8 @@ class MultiStageTranslator(BaseTranslator):
 
     def __init__(self, ctx: TranslationConfigContext):
         self._ctx = ctx
-        self._llm = create_llm(ctx.model, ctx.api_key, ctx.base_url, ctx.temperature, ctx.max_tokens, ctx.timeout)
-        self._json_llm = create_json_llm(ctx.model, ctx.api_key, ctx.base_url, ctx.temperature, ctx.max_tokens, ctx.timeout)
+        self._llm = create_llm(ctx.model, ctx.api_key, ctx.base_url, ctx.temperature, ctx.max_tokens, ctx.timeout, api_keys=ctx.api_keys)
+        self._json_llm = create_json_llm(ctx.model, ctx.api_key, ctx.base_url, ctx.temperature, ctx.max_tokens, ctx.timeout, api_keys=ctx.api_keys)
 
     @staticmethod
     def _parse_terminology(raw: str, source_language: str = "unknown") -> Dict[str, str]:

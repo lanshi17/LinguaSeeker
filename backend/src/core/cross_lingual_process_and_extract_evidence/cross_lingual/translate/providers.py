@@ -7,9 +7,9 @@ from typing import Any
 import httpx
 import openai
 from langchain_core.messages import HumanMessage
-from langchain_openai import ChatOpenAI
 from loguru import logger
-from pydantic import SecretStr
+
+from src.utils.llm_adapter import LLMPoolAdapter, create_llm_client
 
 _MAX_RETRIES: int = 3
 _BACKOFF_BASE: float = 30.0  # seconds
@@ -44,12 +44,14 @@ def create_llm(
     temperature: float = 0.0,
     max_tokens: int = 8192,
     timeout: int = 60,
-) -> ChatOpenAI:
-    """Create a standard ChatOpenAI instance."""
-    return ChatOpenAI(
+    api_keys: list[str] | None = None,
+) -> LLMPoolAdapter:
+    """Create an LLM client adapter with optional key pool."""
+    return create_llm_client(
         model=model,
-        api_key=SecretStr(api_key),
         base_url=base_url,
+        api_key=api_key,
+        api_keys=api_keys,
         temperature=temperature,
         max_tokens=max_tokens,
         timeout=timeout,
@@ -63,12 +65,14 @@ def create_json_llm(
     temperature: float = 0.0,
     max_tokens: int = 8192,
     timeout: int = 60,
-) -> ChatOpenAI:
-    """Create a ChatOpenAI instance with JSON response format."""
-    return ChatOpenAI(
+    api_keys: list[str] | None = None,
+) -> LLMPoolAdapter:
+    """Create an LLM client adapter with JSON response format and optional key pool."""
+    return create_llm_client(
         model=model,
-        api_key=SecretStr(api_key),
         base_url=base_url,
+        api_key=api_key,
+        api_keys=api_keys,
         temperature=temperature,
         max_tokens=max_tokens,
         timeout=timeout,
@@ -104,7 +108,7 @@ def _to_text(content: Any) -> str:
 
 
 async def invoke_with_retry(
-    llm: ChatOpenAI,
+    llm: LLMPoolAdapter,
     prompt: str,
     stage: str,
     system_prompt: str = "",
@@ -145,7 +149,7 @@ async def invoke_with_retry(
 
 
 async def invoke_json_with_retry(
-    llm: ChatOpenAI,
+    llm: LLMPoolAdapter,
     prompt: str,
     stage: str,
     system_prompt: str = "",
