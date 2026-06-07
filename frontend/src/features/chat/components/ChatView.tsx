@@ -131,17 +131,52 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     phases?: Record<string, { status: string; duration_seconds?: number | null }>;
   } | null>(null);
 
+  // ── Pipeline form submit ──
+  const handlePipelineSubmit = useCallback(
+    async (data: PipelineFormData) => {
+      setActiveForm(null);
+      try {
+        const body: Record<string, unknown> = {
+          source_type: data.sourceType,
+          mode: "full",
+        };
+        if (data.sourceType === "online" && data.query) {
+          body.query = data.query;
+        } else if (data.sourceType === "local" && data.file) {
+          body.file_content = await readFileAsBase64(data.file);
+          body.filename = data.file.name;
+        }
+        const response = await apiClient.post<{
+          processing_run_id: string;
+          status: string;
+        }>("/pipeline/run", body);
+        const runId = response.data.processing_run_id;
+        setPipelineStatus({ runId, status: response.data.status });
+        onRequest({
+          messages: [
+            {
+              role: "assistant" as const,
+              content: `Pipeline started. Run ID: ${runId.slice(0, 8)}...`,
+            },
+          ],
+        });
+        pollPipelineStatus(runId);
+      } catch {
+        antdMessage.error("Failed to start pipeline");
+      }
+    },
+    [onRequest],
+  );
+
   // ── Build bubble items with contentRender for embedded forms ──
   const bubbleItems = useMemo(() => {
-    const items: Array<Record<string, unknown>> = messages.map(
-      ({ id, message, status }) => ({
-        key: id,
-        role: message.role,
-        content: message.content,
-        streaming: status === "loading" || status === "updating",
-        loading: status === "loading" && !message.content,
-      }),
-    );
+    const items = messages.map(({ id, message, status }) => ({
+      key: id,
+      role: message.role,
+      content: message.content,
+      streaming: status === "loading" || status === "updating",
+      loading: status === "loading" && !message.content,
+    }));
 
     // Append form bubble if active
     if (activeForm === "start-pipeline" || activeForm === "upload-pdf") {
@@ -149,7 +184,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         key: "__form__",
         role: "assistant",
         content: "",
-        variant: "borderless",
+        variant: "borderless" as const,
         contentRender: () => (
           <PipelineStartForm
             onSubmit={handlePipelineSubmit}
@@ -165,7 +200,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         key: "__status__",
         role: "assistant",
         content: "",
-        variant: "borderless",
+        variant: "borderless" as const,
         contentRender: () => (
           <PipelineStatusCard
             runId={pipelineStatus.runId}
@@ -177,7 +212,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     }
 
     return items;
-  }, [messages, activeForm, pipelineStatus, isRequesting]);
+  }, [messages, activeForm, pipelineStatus, isRequesting, handlePipelineSubmit]);
 
   // ── Prompt click handler ──
   function handlePromptClick(key: string) {
@@ -418,7 +453,7 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
             className="flex-1 overflow-auto"
             style={{ padding: 16 }}
             items={bubbleItems}
-            roles={roles}
+            role={roles}
             autoScroll
           />
         )}
