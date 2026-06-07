@@ -5,7 +5,7 @@ export interface PipelineRunRequest {
   source_type: "local" | "online";
   mode: "full" | "phase";
   /** Base64-encoded file content for local uploads. */
-  file_content?: string;
+  content_base64?: string;
   filename?: string;
   /** Online query string for literature search. */
   query?: string;

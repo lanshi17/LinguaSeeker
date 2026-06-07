@@ -147,6 +147,21 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     phases?: Record<string, { status: string; duration_seconds?: number | null }>;
   } | null>(null);
 
+  // ── Send message: POST to persist, then stream AI reply ──
+  const handleSendMessage = useCallback(
+    async (content: string) => {
+      if (!activeConversationKey) return;
+      setActiveForm(null);
+      try {
+        await sendChatMessage(activeConversationKey, content);
+        onRequest({ messages: [{ role: "user", content }] });
+      } catch {
+        antdMessage.error("Failed to send message");
+      }
+    },
+    [activeConversationKey, onRequest, setActiveForm],
+  );
+
   // ── Poll pipeline status ──
   const pollPipelineStatus = useCallback(async (runId: string) => {
     const poll = async () => {
@@ -188,7 +203,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         if (data.sourceType === "online" && data.query) {
           body.query = data.query;
         } else if (data.sourceType === "local" && data.file) {
-          body.file_content = await readFileAsBase64(data.file);
+          body.content_base64 = await readFileAsBase64(data.file);
           body.filename = data.file.name;
         }
         const response = await apiClient.post<{
@@ -210,7 +225,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         antdMessage.error("Failed to start pipeline");
       }
     },
-    [onRequest, pollPipelineStatus],
+    [onRequest, pollPipelineStatus, setActiveForm, setPipelineStatus],
   );
 
   // ── Build bubble items with contentRender for embedded forms ──

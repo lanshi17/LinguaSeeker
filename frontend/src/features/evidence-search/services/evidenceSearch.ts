@@ -4,13 +4,6 @@ import type {
   EvidenceSearchResponse,
 } from "../types/evidenceSearch";
 
-/**
- * Search evidence cards via the frontend search index.
- *
- * GET /api/v1/evidence/search
- * - No filters → returns all evidence (default list, ordered by PMID)
- * - With filters → returns matching evidence
- */
 export async function searchEvidence(
   query: EvidenceSearchQuery,
 ): Promise<EvidenceSearchResponse> {
@@ -19,7 +12,9 @@ export async function searchEvidence(
   if (query.variant) params.variant = query.variant;
   if (query.disease) params.disease = query.disease;
   if (query.pmid) params.pmid = query.pmid;
-  if (query.limit) params.limit = query.limit;
+  if (query.doi) params.doi = query.doi;
+  if (query.page) params.page = query.page;
+  if (query.page_size) params.page_size = query.page_size;
 
   const { data } = await apiClient.get<EvidenceSearchResponse>(
     "/evidence/search",

@@ -1,262 +1,170 @@
-# Phase 4: Evidence Visualization & Expert Feedback Loop
+# Visualize Evidence with Expert in Loop
 
-> P0 feature slice enabling clinical experts to review extracted evidence, provide corrections, and engage in AI-assisted dialogue.
+> Evidence search and expert review system with field-level data pivoting and pagination.
 
-## Quick Start
+## Overview
 
-```python
-from sqlalchemy.ext.asyncio import AsyncSession
-from src.core.visualize_evidence_with_expert_in_loop.feedback_service import FeedbackService
-from src.core.visualize_evidence_with_expert_in_loop.contracts import EvidencePatchRequest, ReviewStatus
-
-# Patch an evidence card
-service = FeedbackService(session)
-patch = EvidencePatchRequest(
-    fields={"phenotype": "Fabry disease", "classification": "Pathogenic"},
-    change_reason="Bilingual correction",
-)
-result = await service.patch_evidence(
-    canonical_evidence_id=evidence_id,
-    patch=patch,
-)
-print(result.new_status)  # ReviewStatus.CORRECTED
-```
+This module provides evidence search, review, and feedback functionality. The key feature is **field-level pivoting** - the database stores evidence as individual field extractions (e.g., `A.gene_symbol`, `B.disease_diagnosis`), but the search API pivots them into summary rows grouped by `group_id`.
 
 ## Architecture
 
 ```
-                     API Layer (src/api/v1/)
-                     ┌─────────────────────────────┐
-                     │ evidence.py  │  chat.py      │
-                     │ delta_audit  │  source_link  │
-                     └──────────┬───────────────────┘
-                                │
-                     ┌──────────▼───────────────────┐
-                     │   Service Layer (this module) │
-                     ├───────────────────────────────┤
-                     │  feedback_service.py          │
-                     │  delta_audit_service.py       │
-                     │  chat_service.py              │
-                     │  source_linker.py             │
-                     ├───────────────────────────────┤
-                     │  contracts.py   providers.py  │
-                     └──────────┬───────────────────┘
-                                │
-                     ┌──────────▼───────────────────┐
-                     │  DAO Layer (src/dao/models.py) │
-                     │  review_audit_events          │
-                     │  chat_sessions                │
-                     │  chat_messages                │
-                     └──────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    SearchService                             │
+│                                                              │
+│  1. Query canonical_evidence_items (field-level rows)       │
+│  2. Group by group_id (from active_payload JSONB)           │
+│  3. Pivot fields into summary columns:                      │
+│     - A.gene_symbol → gene                                  │
+│     - A.variant_hgvs_* → variant                            │
+│     - B.disease_diagnosis → disease                         │
+│     - J.authority_classification → classification           │
+│  4. Batch-load identifiers (PMID/DOI) from separate table   │
+│  5. Apply pagination (page/page_size)                       │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**Data flow:**
-1. Expert patches evidence card → `FeedbackService` computes deltas → `DeltaAuditService` records audit event
-2. Expert asks question → `ChatService` detects intent → `ReasoningLLMProvider` streams reply
-3. Expert traces source → `SourceLinker` retrieves bilingual spans via `canonical_evidence_id` anchor
+## Database Schema
 
-## Public API
+Evidence is stored at field-level granularity:
 
-### contracts.py
-
-| Type | Kind | Description |
-|------|------|-------------|
-| `ReviewStatus` | `str, Enum` | State machine: `provisional → approved \| corrected \| rejected` |
-| `TargetType` | `str, Enum` | Feedback targets: `evidence_item`, `entity`, `missed_evidence` (+ 6 declared) |
-| `EvidenceCardPayload` | `BaseModel` | Fixed-schema card with `DIFF_FIELDS: ClassVar` for delta diff |
-| `DeltaEntry` | `BaseModel` | Single field change; validates `field` against `DIFF_FIELDS` |
-| `EvidencePatchRequest` | `BaseModel` | PATCH body with `fields`, `change_reason`, `new_status` |
-| `BilingualSpan` | `BaseModel` | Cross-track traceability result with `original_track` + `translated_track` |
-| `ChatSessionResponse` | `BaseModel` | Session response with `message_count` |
-| `ChatMessageResponse` | `BaseModel` | Message response with `role`, `content`, optional `evidence_id` |
-
-### FeedbackService
-
-```python
-service = FeedbackService(session: AsyncSession)
-```
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `patch_evidence` | `(*, canonical_evidence_id, patch, reviewer_id=None) → PatchResult` | Apply patch, compute deltas, auto-transition to CORRECTED if fields changed |
-
-### DeltaAuditService
-
-```python
-service = DeltaAuditService()
-```
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `compute_deltas` | `(old: EvidenceCardPayload, new: EvidenceCardPayload) → list[DeltaEntry]` | **Static.** Returns empty list if payloads are identical (zero-noise). |
-| `record_audit_event` | `(session, *, canonical_evidence_id, ...) → ReviewAuditEvent` | Persist audit event with JSONB field_deltas |
-| `list_audit_events` | `(session, *, canonical_evidence_id=None, limit=100) → list` | Query audit events with optional filters |
-
-### ChatService
-
-```python
-service = ChatService(session: AsyncSession)
-```
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `create_session` | `(*, processing_run_id, user_id=None) → ChatSessionResponse` | Create session bound to a processing run |
-| `append_message` | `(*, session_id, role, content, ...) → ChatMessageResponse` | Append message to session |
-| `list_messages` | `(*, session_id, limit=100) → list[ChatMessageResponse]` | Chronological message listing |
-| `list_sessions` | `(*, processing_run_id) → list[ChatSessionResponse]` | All sessions for a run, with message counts |
-| `generate_reply` | `(*, session_id, user_message, evidence_id=None) → str \| None` | AI reply for questions; `None` for notes |
-| `stream_reply` | `(*, session_id, user_message, evidence_id=None) → AsyncIterator[dict]` | SSE events: `{type: text\|done\|error}` |
-
-### SourceLinker
-
-```python
-linker = SourceLinker(session: AsyncSession)
-```
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `get_track_span` | `(*, canonical_evidence_id, track) → TrackSpan \| None` | Single-track span from `source_span` JSONB |
-| `get_bilingual_span` | `(*, canonical_evidence_id) → BilingualSpan` | Both tracks; `alignment_confidence=1.0` if both present |
-
-### ReasoningLLMProvider
-
-```python
-provider = ReasoningLLMProvider()
-```
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `generate` | `(*, system_prompt, user_message, context="") → str` | Single-shot completion via OpenAI-compatible API |
-| `stream` | `(*, system_prompt, user_message, context="") → AsyncIterator[str]` | SSE streaming; parses `data: [DONE]` terminator |
-
-## Internal Design
-
-### Intent Detection
-
-`ChatService._detect_intent` uses regex patterns to classify messages:
-
-- **Correction** — `change ... to`, `update ... to`, `改为`, `修改...为`
-- **Question** — `?`, `what`, `why`, `how`, `什么`, `为什么`
-- **Note** — everything else (no AI reply generated)
-
-### Delta Diff
-
-`DeltaAuditService.compute_deltas` iterates `EvidenceCardPayload.DIFF_FIELDS` (12 fields) and compares old vs new values. Lists (e.g. `references`) are compared as wholes, not element-wise. Returns empty list when payloads are identical — no audit event is created for no-op patches.
-
-### Field Injection Prevention
-
-`DeltaEntry.validate_field` and `EvidencePatchRequest.validate_fields` reject any field name not in `EvidenceCardPayload.DIFF_FIELDS`. This prevents arbitrary attribute access on Pydantic models.
-
-### Review Status State Machine
-
-```
-provisional ──→ approved
-provisional ──→ corrected ──→ approved
-provisional ──→ rejected
-```
-
-Explicit `new_status` in a patch overrides the auto-transition to CORRECTED.
-
-## Usage Patterns
-
-### Patch evidence and review audit trail
-
-```python
-from src.core.visualize_evidence_with_expert_in_loop.feedback_service import FeedbackService
-from src.core.visualize_evidence_with_expert_in_loop.contracts import EvidencePatchRequest
-from src.core.visualize_evidence_with_expert_in_loop.delta_audit_service import DeltaAuditService
-
-service = FeedbackService(session)
-patch = EvidencePatchRequest(
-    fields={"phenotype": "Fabry 病", "gene": "GLA"},
-    change_reason="Bilingual correction",
+```sql
+canonical_evidence_items (
+  canonical_evidence_id UUID,
+  source_document_id UUID,
+  field_id VARCHAR,           -- e.g., 'A.gene_symbol', 'B.disease_diagnosis'
+  active_payload JSONB,       -- contains 'group_id', 'value', 'confidence'
+  review_status VARCHAR,
+  current_best_confidence DECIMAL
 )
-result = await service.patch_evidence(canonical_evidence_id=eid, patch=patch)
-
-# Query audit history
-audit = DeltaAuditService()
-events = await audit.list_audit_events(session, canonical_evidence_id=eid)
 ```
 
-### Chat with AI-assisted evidence review
+Each row represents one field extraction. A complete evidence group (e.g., one case study) contains multiple rows sharing the same `group_id`.
 
-```python
-from src.core.visualize_evidence_with_expert_in_loop.chat_service import ChatService
+## Search API
 
-service = ChatService(session)
-session_resp = await service.create_session(processing_run_id=run_id)
+### Endpoint
 
-# User asks a question → AI generates reply
-await service.append_message(
-    session_id=session_resp.chat_session_id,
-    role="user", content="What gene is implicated?",
-    evidence_id=evidence_id,
-)
-reply = await service.generate_reply(
-    session_id=session_resp.chat_session_id,
-    user_message="What gene is implicated?",
-    evidence_id=evidence_id,
-)
-
-# User adds a note → no AI reply
-reply = await service.generate_reply(
-    session_id=session_resp.chat_session_id,
-    user_message="Need to verify this later",
-)
-assert reply is None
+```
+GET /api/v1/evidence/search
 ```
 
-### Bilingual source traceability
+### Parameters
 
-```python
-from src.core.visualize_evidence_with_expert_in_loop.source_linker import SourceLinker
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `gene` | string | Partial match on `A.gene_symbol` field values |
+| `variant` | string | Partial match on `A.variant_hgvs_*` field values |
+| `disease` | string | Partial match on `B.disease_diagnosis` field values |
+| `pmid` | string | Exact match on PMID from `source_document_identifiers` |
+| `doi` | string | Partial match on DOI from `source_document_identifiers` |
+| `page` | int | Page number (1-indexed, default: 1) |
+| `page_size` | int | Items per page (default: 50, max: 200) |
 
-linker = SourceLinker(session)
-span = await linker.get_bilingual_span(canonical_evidence_id=evidence_id)
-# span.original_track.block_text → "Patient diagnosed with Fabry disease..."
-# span.translated_track.block_text → "患者30岁时被诊断为法布雷病。"
+### Response
+
+```json
+{
+  "items": [
+    {
+      "group_id": "gene=['BRCA1']|variant=['c.68_69del']|...",
+      "source_document_id": "uuid",
+      "pmid": "12345678",
+      "doi": "10.1234/example",
+      "gene": "BRCA1, BRCA2",
+      "variant": "c.68_69delAG (p.Glu23Valfs)",
+      "disease": "Hereditary breast and ovarian cancer syndrome",
+      "classification": "Pathogenic",
+      "field_count": 45,
+      "avg_confidence": 0.92,
+      "review_status": "provisional",
+      "canonical_evidence_id": "uuid"
+    }
+  ],
+  "total": 150,
+  "page": 1,
+  "page_size": 50
+}
 ```
 
-### SSE streaming (API layer)
+## Field Mapping
+
+The pivot logic maps field IDs to summary columns:
+
+| Summary Column | Field ID Prefixes |
+|----------------|-------------------|
+| `gene` | `A.gene_symbol`, `A.gene_aliases` |
+| `variant` | `A.variant_hgvs_c`, `A.variant_hgvs_p`, `A.variant_hgvs_g`, `A.variant_legacy_name` |
+| `disease` | `B.disease_diagnosis`, `B.clinical_diagnosis`, `B.hpo_terms` |
+| `classification` | `J.authority_classification`, `J.clinvar_assertion` |
+
+## Usage Example
 
 ```python
-# In API route handler:
-async def event_generator():
-    async for event in service.stream_reply(
-        session_id=session_id,
-        user_message="Explain the evidence strength",
-        evidence_id=evidence_id,
-    ):
-        yield f"data: {json.dumps(event)}\n\n"
+from src.api.deps import get_db_session
+from src.core.visualize_evidence_with_expert_in_loop.search_service import SearchService
 
-return StreamingResponse(event_generator(), media_type="text/event-stream")
+async with get_db_session() as session:
+    service = SearchService(session)
+    
+    # Search for BRCA1-related evidence
+    results = await service.search_evidence(
+        gene="BRCA1",
+        page=1,
+        page_size=50,
+    )
+    
+    for item in results.items:
+        print(f"Gene: {item.gene}")
+        print(f"Disease: {item.disease}")
+        print(f"Confidence: {item.avg_confidence:.2%}")
+        print(f"Fields extracted: {item.field_count}")
+```
+
+## Frontend Integration
+
+The frontend evidence search module consumes this API:
+
+```typescript
+// useEvidenceSearch hook manages pagination state
+const { results, total, page, pageSize, setPage } = useEvidenceSearch();
+
+// Table displays pivoted summary rows
+<EvidenceResultsTable
+  results={results}
+  total={total}
+  page={page}
+  pageSize={pageSize}
+  onPageChange={setPage}
+/>
 ```
 
 ## Testing
 
 ```bash
 cd backend
-uv run pytest tests/core/visualize_evidence_with_expert_in_loop/ -v
+uv run pytest tests/core/visualize_evidence_with_expert_in_loop/ -v -k search
 ```
 
-Tests use SQLite in-memory via the `db_session` fixture (JSONB swapped to JSON for compatibility). LLM calls are mocked via `unittest.mock.patch`.
+## Related Modules
 
-| Test file | Covers | Tests |
-|-----------|--------|-------|
-| `test_contracts.py` | Pydantic models, enums, field validation | 9 |
-| `test_delta_audit.py` | `compute_deltas` pure logic | 6 |
-| `test_feedback_service.py` | `patch_evidence` with DB | 5 |
-| `test_source_linker.py` | `get_track_span`, `get_bilingual_span` | 4 |
-| `test_chat_service.py` | Session/message CRUD | 5 |
-| `test_chat_ai.py` | Context building, intent detection, AI reply | 6 |
-| `test_chat_sse.py` | SSE streaming, error handling | 3 |
+- **Phase 3 (Standardize Entities)**: Produces the field-level evidence stored in `canonical_evidence_items`
+- **Phase 4 (Expert Review)**: Uses `review_status` and `current_best_confidence` for expert feedback workflow
+- **DAO Layer**: `CanonicalEvidenceItem`, `SourceDocumentIdentifier` models
+
+## Performance Notes
+
+- Field-level pivoting happens in application layer (not SQL) to maintain flexibility
+- Batch-loads identifiers in a single query to avoid N+1 problem
+- Pagination is applied after grouping to ensure consistent page sizes
+- Filters on gene/variant/disease trigger a two-query pattern:
+  1. Find matching `group_id`s
+  2. Fetch all fields for those groups
 
 ## Dependencies
 
 | Dependency | Purpose |
 |------------|---------|
-| `pydantic` v2 | Typed contracts with `field_validator` |
-| `sqlalchemy` 2.0 async | ORM + `AsyncSession` |
-| `httpx` | LLM HTTP client (sync + streaming) |
-| `loguru` | Structured logging |
-| `fastapi` | API routes (upstream consumer) |
+| `sqlalchemy[asyncio]` | Async database queries |
+| `pydantic` | Response validation |
+| `fastapi` | API routing |

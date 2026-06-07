@@ -57,14 +57,19 @@ async def patch_evidence(
 @router.get("/search", response_model=EvidenceSearchResponse)
 async def search_evidence(
     session: AsyncSession = Depends(get_db_session),
-    gene: str | None = Query(None, description="Filter by gene (partial match)"),
-    variant: str | None = Query(None, description="Filter by variant (partial match)"),
-    disease: str | None = Query(None, description="Filter by disease (partial match)"),
-    pmid: str | None = Query(None, description="Filter by PMID (partial match)"),
+    gene: str | None = Query(None, description="Filter by gene (partial match on A.gene_symbol)"),
+    variant: str | None = Query(None, description="Filter by variant (partial match on HGVS fields)"),
+    disease: str | None = Query(None, description="Filter by disease (partial match on diagnosis fields)"),
+    pmid: str | None = Query(None, description="Filter by PMID (exact match)"),
     doi: str | None = Query(None, description="Filter by DOI (partial match)"),
-    limit: int = Query(100, ge=1, le=1000, description="Max results to return"),
+    page: int = Query(1, ge=1, description="Page number (1-indexed)"),
+    page_size: int = Query(50, ge=1, le=200, description="Items per page"),
 ) -> EvidenceSearchResponse:
-    """Search evidence cards with optional filters."""
+    """Search evidence cards with field-level pivoting and pagination.
+
+    Groups field-level extractions by group_id and pivots them into summary
+    rows with gene/variant/disease/classification columns.
+    """
     service = SearchService(session)
     return await service.search_evidence(
         gene=gene,
@@ -72,5 +77,6 @@ async def search_evidence(
         disease=disease,
         pmid=pmid,
         doi=doi,
-        limit=limit,
+        page=page,
+        page_size=page_size,
     )

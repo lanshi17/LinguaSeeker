@@ -227,7 +227,12 @@
 - All Python package directories now have developer-facing module guides
 
 [2026-06-07] [Evidence Search Multi-Table JOIN] [Completed]
-- Refactored SearchService.search_evidence() from two-query approach to single JOIN query
-- Joins canonical_evidence_items -> source_documents -> source_document_identifiers -> processing_runs
-- PMID/DOI filtering now pushed to SQL WHERE clause instead of post-filter in Python
-- Identifiers collected via GROUP BY canonical_evidence_id in application layer
+[2026-06-07] Layer 3 final: 3/3 passed, P=88.9% R=100% F1=94.1%, avg 499s, disease 100%, relationship 67% [DONE]
+
+[2026-06-07] [Evidence Search Multi-Table JOIN + Pagination] [Completed]
+- Rewrote SearchService to pivot field-level extractions into summary rows grouped by group_id
+- Maps A.gene_symbol -> gene, A.variant_hgvs_* -> variant, B.disease_diagnosis -> disease, J.* -> classification
+- Added page/page_size pagination to API and frontend
+- Updated EvidenceSearchResult contract to include group_id, source_document_id, field_count, avg_confidence
+- Updated frontend types, hook, service, and table to match pivoted response structure
+- Table now shows pagination controls with page X of Y navigation

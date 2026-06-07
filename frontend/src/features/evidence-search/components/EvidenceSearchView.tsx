@@ -6,16 +6,12 @@ import { EvidenceSearchForm } from "./EvidenceSearchForm";
 import { EvidenceResultsTable } from "./EvidenceResultsTable";
 import { useEvidenceSearch } from "../hooks/useEvidenceSearch";
 
-/**
- * Evidence search page — traditional database query pattern.
- *
- * Auto-loads all evidence on mount. User filters via form fields.
- * Results sorted by PMID (literature ID).
- */
 export function EvidenceSearchView() {
   const {
     results,
     total,
+    page,
+    pageSize,
     isLoading,
     isFetching,
     error,
@@ -23,6 +19,7 @@ export function EvidenceSearchView() {
     updateFilter,
     applyFilters,
     clearFilters,
+    setPage,
   } = useEvidenceSearch();
 
   return (
@@ -43,15 +40,17 @@ export function EvidenceSearchView() {
         {error ? (
           <Card className="py-10 text-center">
             <p className="text-sm text-red-600">
-              Failed to load evidence. The backend search endpoint may not be
-              available yet.
+              Failed to load evidence: {error.message}
             </p>
           </Card>
         ) : (
           <EvidenceResultsTable
             results={results}
             total={total}
+            page={page}
+            pageSize={pageSize}
             isLoading={isLoading}
+            onPageChange={setPage}
           />
         )}
       </ErrorBoundary>
