@@ -5,13 +5,15 @@ import type {
 } from "../types/evidenceSearch";
 
 /**
- * Search evidence cards via the backend search index.
- * When called with empty query, returns all results (default list).
+ * Search evidence cards via the frontend search index.
+ *
+ * GET /api/v1/evidence/search
+ * - No filters → returns all evidence (default list, ordered by PMID)
+ * - With filters → returns matching evidence
  */
 export async function searchEvidence(
   query: EvidenceSearchQuery,
 ): Promise<EvidenceSearchResponse> {
-  // Filter out empty string values so they don't override defaults.
   const params: Record<string, string | number> = {};
   if (query.gene) params.gene = query.gene;
   if (query.variant) params.variant = query.variant;
