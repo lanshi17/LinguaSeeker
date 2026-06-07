@@ -6,7 +6,7 @@ export { useChatSessions } from "./hooks/useChatSessions";
 export { useChatMessages } from "./hooks/useChatMessages";
 
 // ─── Providers ───
-export { createAcmgChatProvider } from "./providers/acmgChatProvider";
+export { createAcmgChatProvider, sendChatMessage } from "./providers/acmgChatProvider";
 
 // ─── Types ───
 export type {

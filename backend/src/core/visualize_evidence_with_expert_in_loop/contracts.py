@@ -218,35 +218,3 @@ class EvidenceSearchResponse(BaseModel):
     items: list[EvidenceSearchResult]
     total: int
 
-
-# ── Dashboard aggregation contracts ─────────────────────────────────────────
-
-
-class EvidenceByStatusResponse(BaseModel):
-    """Count of evidence items grouped by review status."""
-
-    provisional: int = 0
-    approved: int = 0
-    corrected: int = 0
-    rejected: int = 0
-
-
-class ProcessingRunSummary(BaseModel):
-    """Lightweight processing run info for dashboard display."""
-
-    processing_run_id: str
-    source_document_id: str
-    run_status: str
-    created_at: str | None = None
-    completed_at: str | None = None
-
-
-class DashboardSummaryResponse(BaseModel):
-    """Aggregated dashboard metrics for frontend overview."""
-
-    total_documents: int
-    total_processing_runs: int
-    total_evidence_items: int
-    evidence_by_status: EvidenceByStatusResponse
-    avg_confidence: float | None = None
-    recent_runs: list[ProcessingRunSummary]

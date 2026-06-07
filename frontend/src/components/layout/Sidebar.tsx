@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Search,
-  LayoutDashboard,
   MessageSquare,
 } from "lucide-react";
 import { useAppStore } from "@/stores/appStore";
@@ -18,7 +17,6 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/", icon: LayoutDashboard },
   { label: "AI Chat", href: "/chat", icon: MessageSquare },
   { label: "Evidence", href: "/evidence", icon: Search },
 ];
