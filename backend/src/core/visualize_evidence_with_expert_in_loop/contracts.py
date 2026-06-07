@@ -224,3 +224,65 @@ class EvidenceSearchResponse(BaseModel):
     total: int
     page: int = 1
     page_size: int = 50
+
+
+class EvidenceFieldDistribution(BaseModel):
+    """Distribution counts for one grouped evidence row."""
+
+    by_category: dict[str, int] = Field(default_factory=dict)
+    by_field: dict[str, int] = Field(default_factory=dict)
+    by_status: dict[str, int] = Field(default_factory=dict)
+    by_track: dict[str, int] = Field(default_factory=dict)
+
+
+class EvidenceGroupItem(BaseModel):
+    """One field-level evidence item in a grouped evidence detail view."""
+
+    canonical_evidence_id: UUID
+    field_id: str
+    field_name: str | None = None
+    category: str | None = None
+    value: str | None = None
+    review_status: str
+    confidence: float | None = None
+    track: str | None = None
+    page: int | None = None
+
+
+class EvidenceChainHighlight(BaseModel):
+    """Highlightable source text for an evidence item on one track."""
+
+    text: str
+    highlight_start: int
+    highlight_end: int
+    page: int | None = None
+    source_span: SourceSpanDict = Field(default_factory=dict)
+
+
+class EvidenceTrackTrace(BaseModel):
+    """Original/translated trace pair for one evidence item."""
+
+    canonical_evidence_id: UUID
+    field_id: str
+    field_name: str | None = None
+    original: EvidenceChainHighlight | None = None
+    translated: EvidenceChainHighlight | None = None
+    alignment_confidence: float | None = None
+
+
+class EvidenceGroupDetailResponse(BaseModel):
+    """Detail payload for one grouped evidence row."""
+
+    group_id: str
+    source_document_id: UUID
+    pmid: str | None = None
+    doi: str | None = None
+    gene: str | None = None
+    variant: str | None = None
+    disease: str | None = None
+    classification: str | None = None
+    item_count: int
+    avg_confidence: float | None = None
+    distribution: EvidenceFieldDistribution
+    items: list[EvidenceGroupItem]
+    traces: list[EvidenceTrackTrace]

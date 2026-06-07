@@ -9,6 +9,14 @@ export interface ChatSessionResponse {
   message_count: number;
 }
 
+/** Raw backend chat session response. */
+export interface BackendChatSessionResponse {
+  chat_session_id: string;
+  processing_run_id: string;
+  created_at: string;
+  message_count: number;
+}
+
 /** GET /chat/sessions/{id}/messages response item. */
 export interface ChatMessageResponse {
   message_id: string;

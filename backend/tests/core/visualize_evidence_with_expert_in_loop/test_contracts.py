@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import pytest
 from pydantic import ValidationError
+from uuid import uuid4
 
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     DeltaEntry,
@@ -127,3 +128,69 @@ class TestSourceSpanDict:
         )
         assert span["text_snippet"] == "some text"
         assert span["page"] == 1
+
+
+def test_evidence_group_detail_contract_accepts_traceability_payload():
+    """Evidence group detail response should carry distribution and trace spans."""
+    from src.core.visualize_evidence_with_expert_in_loop.contracts import (
+        EvidenceChainHighlight,
+        EvidenceFieldDistribution,
+        EvidenceGroupDetailResponse,
+        EvidenceGroupItem,
+        EvidenceTrackTrace,
+    )
+
+    evidence_id = uuid4()
+    source_document_id = uuid4()
+
+    detail = EvidenceGroupDetailResponse(
+        group_id="gene=['BRCA1']|variant=['c.68_69delAG']",
+        source_document_id=source_document_id,
+        pmid="12345678",
+        doi="10.1000/example",
+        gene="BRCA1",
+        variant="c.68_69delAG",
+        disease="Hereditary breast and ovarian cancer",
+        classification="Pathogenic",
+        item_count=1,
+        avg_confidence=0.95,
+        distribution=EvidenceFieldDistribution(
+            by_category={"A": 1},
+            by_field={"A.gene_symbol": 1},
+            by_status={"provisional": 1},
+            by_track={"original": 1},
+        ),
+        items=[
+            EvidenceGroupItem(
+                canonical_evidence_id=evidence_id,
+                field_id="A.gene_symbol",
+                field_name="Gene symbol",
+                category="A",
+                value="BRCA1",
+                review_status="provisional",
+                confidence=0.95,
+                track="original",
+            )
+        ],
+        traces=[
+            EvidenceTrackTrace(
+                canonical_evidence_id=evidence_id,
+                field_id="A.gene_symbol",
+                field_name="Gene symbol",
+                original=EvidenceChainHighlight(
+                    text="BRCA1 was detected.",
+                    highlight_start=0,
+                    highlight_end=5,
+                    page=1,
+                    source_span={"text_snippet": "BRCA1 was detected."},
+                ),
+                translated=None,
+                alignment_confidence=None,
+            )
+        ],
+    )
+
+    dumped = detail.model_dump()
+    assert dumped["group_id"].startswith("gene=")
+    assert dumped["distribution"]["by_category"] == {"A": 1}
+    assert dumped["traces"][0]["original"]["highlight_start"] == 0

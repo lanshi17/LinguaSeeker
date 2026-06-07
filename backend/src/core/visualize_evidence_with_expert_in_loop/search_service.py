@@ -3,15 +3,22 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, select
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
+    EvidenceChainHighlight,
+    EvidenceFieldDistribution,
+    EvidenceGroupDetailResponse,
+    EvidenceGroupItem,
     EvidenceSearchResponse,
     EvidenceSearchResult,
+    EvidenceTrackTrace,
 )
 from src.dao.postgresql.models import (
     CanonicalEvidenceItem,
+    RunEvidenceItem,
     SourceDocumentIdentifier,
 )
 
@@ -34,6 +41,38 @@ def _coerce_str(value: Any) -> str | None:
     if isinstance(value, list):
         return ", ".join(str(v) for v in value)
     return str(value)
+
+
+def _category_from_field_id(field_id: str) -> str | None:
+    """Infer the evidence category prefix from a field id."""
+    if not field_id:
+        return None
+    if "." not in field_id:
+        return field_id
+    return field_id.split(".", 1)[0]
+
+
+def _build_highlight(source_span: dict[str, object]) -> EvidenceChainHighlight | None:  # noqa: dict-return
+    """Build a clamped highlight payload from a stored source span."""
+    if not source_span:
+        return None
+
+    text = str(source_span.get("text_snippet") or "")
+    text_len = len(text)
+    start = int(source_span.get("start_offset") or 0)
+    raw_end = source_span.get("end_offset")
+    end = int(raw_end) if raw_end is not None else text_len
+    if end < start:
+        end = text_len
+
+    page = source_span.get("page")
+    return EvidenceChainHighlight(
+        text=text,
+        highlight_start=max(start, 0),
+        highlight_end=min(max(end, 0), text_len) if text else max(end, 0),
+        page=page if isinstance(page, int) else None,
+        source_span=source_span,
+    )
 
 
 class SearchService:
@@ -216,4 +255,138 @@ class SearchService:
             total=total,
             page=page,
             page_size=page_size,
+        )
+
+    async def get_group_detail(self, *, group_id: str) -> EvidenceGroupDetailResponse:
+        """Return detail payload for one grouped evidence row."""
+        stmt = (
+            select(
+                CanonicalEvidenceItem.canonical_evidence_id,
+                CanonicalEvidenceItem.source_document_id,
+                CanonicalEvidenceItem.field_id,
+                CanonicalEvidenceItem.review_status,
+                CanonicalEvidenceItem.current_best_confidence,
+                CanonicalEvidenceItem.active_payload,
+            )
+            .where(CanonicalEvidenceItem.active_payload["group_id"].astext == group_id)
+            .order_by(CanonicalEvidenceItem.field_id)
+        )
+        result = await self._session.execute(stmt)
+        rows = result.all()
+        if not rows:
+            raise NoResultFound()
+
+        source_document_id = rows[0].source_document_id
+        canonical_ids = [row.canonical_evidence_id for row in rows]
+
+        ident_stmt = select(SourceDocumentIdentifier).where(
+            SourceDocumentIdentifier.source_document_id == source_document_id
+        )
+        ident_result = await self._session.execute(ident_stmt)
+        identifiers = {
+            ident.identifier_type: ident.identifier_value
+            for ident in ident_result.scalars().all()
+        }
+
+        trace_stmt = select(RunEvidenceItem).where(
+            RunEvidenceItem.canonical_evidence_id.in_(canonical_ids)
+        )
+        trace_result = await self._session.execute(trace_stmt)
+        run_items = trace_result.scalars().all()
+
+        trace_by_evidence: dict[object, dict[str, RunEvidenceItem]] = {}
+        for item in run_items:
+            trace_by_evidence.setdefault(item.canonical_evidence_id, {})[item.track] = item
+
+        distribution = EvidenceFieldDistribution()
+        detail_items: list[EvidenceGroupItem] = []
+        traces: list[EvidenceTrackTrace] = []
+        confidences: list[float] = []
+        gene = variant = disease = classification = None
+
+        for row in rows:
+            payload = row.active_payload or {}
+            value = _coerce_str(payload.get("value"))
+            field_id = row.field_id
+            field_name = payload.get("field_name")
+            category = payload.get("category") or _category_from_field_id(field_id)
+            track = payload.get("track")
+            confidence = (
+                float(row.current_best_confidence)
+                if row.current_best_confidence is not None
+                else None
+            )
+            if confidence is not None:
+                confidences.append(confidence)
+
+            if category:
+                category_key = str(category)
+                distribution.by_category[category_key] = distribution.by_category.get(category_key, 0) + 1
+            distribution.by_field[field_id] = distribution.by_field.get(field_id, 0) + 1
+            distribution.by_status[row.review_status] = distribution.by_status.get(row.review_status, 0) + 1
+            if track:
+                track_key = str(track)
+                distribution.by_track[track_key] = distribution.by_track.get(track_key, 0) + 1
+
+            if field_id in _GENE_FIELDS and not gene:
+                gene = value
+            elif field_id in _VARIANT_FIELDS and not variant:
+                variant = value
+            elif field_id in _DISEASE_FIELDS and not disease:
+                disease = value
+            elif field_id in _CLASSIFICATION_FIELDS and not classification:
+                classification = value
+
+            source_payload = payload.get("source")
+            page = source_payload.get("page") if isinstance(source_payload, dict) else None
+            detail_items.append(
+                EvidenceGroupItem(
+                    canonical_evidence_id=row.canonical_evidence_id,
+                    field_id=field_id,
+                    field_name=str(field_name) if field_name else None,
+                    category=str(category) if category else None,
+                    value=value,
+                    review_status=row.review_status,
+                    confidence=confidence,
+                    track=str(track) if track else None,
+                    page=page if isinstance(page, int) else None,
+                )
+            )
+
+            traces_for_item = trace_by_evidence.get(row.canonical_evidence_id, {})
+            original = (
+                _build_highlight(traces_for_item["original"].source_span)
+                if "original" in traces_for_item
+                else None
+            )
+            translated = (
+                _build_highlight(traces_for_item["translated"].source_span)
+                if "translated" in traces_for_item
+                else None
+            )
+            traces.append(
+                EvidenceTrackTrace(
+                    canonical_evidence_id=row.canonical_evidence_id,
+                    field_id=field_id,
+                    field_name=str(field_name) if field_name else None,
+                    original=original,
+                    translated=translated,
+                    alignment_confidence=1.0 if original and translated else None,
+                )
+            )
+
+        return EvidenceGroupDetailResponse(
+            group_id=group_id,
+            source_document_id=source_document_id,
+            pmid=identifiers.get("pmid"),
+            doi=identifiers.get("doi"),
+            gene=gene,
+            variant=variant,
+            disease=disease,
+            classification=classification,
+            item_count=len(detail_items),
+            avg_confidence=(sum(confidences) / len(confidences)) if confidences else None,
+            distribution=distribution,
+            items=detail_items,
+            traces=traces,
         )

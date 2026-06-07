@@ -31,6 +31,10 @@ interface ChatMessage {
   content: string;
 }
 
+interface ChatRequestParams {
+  messages?: ChatMessage[];
+}
+
 /**
  * Custom provider that binds to the ACMG Lingua backend's chat agent.
  *
@@ -50,9 +54,22 @@ class AcmgChatProvider extends AbstractChatProvider<ChatMessage, unknown, SSEOut
 
     const request = XRequest<unknown, SSEOutput>(baseURL, {
       manual: true,
-      // Use default SSE parser — backend sends standard `data:` lines.
-      // The parser extracts {data: "..."} from each SSE line.
-      // JSON parsing of the data content happens in useXChat's parser.
+      fetch: (url, options) => {
+        const params = options.params as ChatRequestParams;
+        const latestMessage = params.messages?.at(-1)?.content;
+        if (!latestMessage) {
+          throw new Error("Cannot stream chat reply without a user message.");
+        }
+
+        const streamUrl = new URL(url.toString(), window.location.origin);
+        streamUrl.searchParams.set("user_message", latestMessage);
+
+        return fetch(streamUrl, {
+          method: "GET",
+          headers: options.headers,
+          signal: options.signal,
+        });
+      },
     });
 
     super({ request });
@@ -65,18 +82,15 @@ class AcmgChatProvider extends AbstractChatProvider<ChatMessage, unknown, SSEOut
    * Return empty params since the stream endpoint uses query params
    * set by the XRequest configuration.
    */
-  transformParams(): unknown {
-    return {};
+  transformParams(requestParams: ChatRequestParams): ChatRequestParams {
+    return requestParams;
   }
 
   /**
    * Create the local user message for display in the chat bubble.
    */
-  transformLocalMessage(): ChatMessage {
-    // The user message content is managed by useXChat internally.
-    // This is called to create a display message — we return a placeholder
-    // since the actual content comes from the useXChat request params.
-    return { role: "user", content: "" };
+  transformLocalMessage(requestParams: ChatRequestParams): ChatMessage {
+    return requestParams.messages?.at(-1) ?? { role: "user", content: "" };
   }
 
   /**

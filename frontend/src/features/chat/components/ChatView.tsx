@@ -118,8 +118,12 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     defaultActiveConversationKey: sessions[0]?.session_id,
   });
 
+  const activeProvider = activeConversationKey
+    ? getProvider(activeConversationKey)
+    : undefined;
+
   const { messages, onRequest, isRequesting, abort } = useXChat({
-    provider: getProvider(activeConversationKey ?? ""),
+    provider: activeProvider,
     conversationKey: activeConversationKey,
     // Parse backend's JSON SSE format: {"type":"text","content":"..."} → "..."
     parser: (msg) => {
