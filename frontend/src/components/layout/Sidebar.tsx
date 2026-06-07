@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Workflow,
   Search,
   MessageSquare,
 } from "lucide-react";
@@ -18,9 +17,8 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Pipeline", href: "/pipeline", icon: Workflow },
-  { label: "Evidence", href: "/evidence", icon: Search },
   { label: "AI Chat", href: "/chat", icon: MessageSquare },
+  { label: "Evidence", href: "/evidence", icon: Search },
 ];
 
 export function Sidebar() {

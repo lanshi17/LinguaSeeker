@@ -33,12 +33,11 @@ class TranslationService:
     def __init__(self, cfg: Any):
         self._ctx = TranslationConfigContext.from_config(cfg)
         # Create LLM for formatter (redaction detection + OCR repair)
-        from langchain_openai import ChatOpenAI
-        from pydantic import SecretStr
-        formatter_llm = ChatOpenAI(
+        from src.utils.llm_adapter import create_llm_client
+        formatter_llm = create_llm_client(
             model=self._ctx.model,
-            api_key=SecretStr(self._ctx.api_key),
             base_url=self._ctx.base_url,
+            api_keys=self._ctx.api_keys,
             max_tokens=self._ctx.max_tokens,
             temperature=self._ctx.temperature,
             timeout=self._ctx.timeout,

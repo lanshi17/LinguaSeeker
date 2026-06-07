@@ -75,72 +75,33 @@ def test_reasoning_config_timeout_from_settings() -> None:
             os.environ["REASONING_LLM_TIMEOUT"] = original
 
 
-def test_evidence_extraction_falls_back_to_llm_config() -> None:
-    """When EVIDENCE_EXTRACTION_* vars are unset, evidence_extraction uses LLM config."""
-    import os
+def test_evidence_extraction_config_context_reads_from_llm_and_reasoning() -> None:
+    """EvidenceExtractionConfigContext reads FAST from llm and STRONG from reasoning."""
+    from unittest.mock import MagicMock
 
-    # Save originals
-    saved = {}
-    keys = [
-        "EVIDENCE_EXTRACTION_API_KEY", "EVIDENCE_EXTRACTION_BASE_URL",
-        "EVIDENCE_EXTRACTION_FAST_MODEL", "EVIDENCE_EXTRACTION_STANDARD_MODEL",
-        "EVIDENCE_EXTRACTION_STRONG_MODEL",
-        "FAST_LLM_API_KEY", "FAST_LLM_BASE_URL", "FAST_LLM_MODEL",
-        "REASONING_LLM_API_KEY", "REASONING_LLM_BASE_URL", "REASONING_LLM_MODEL",
-        "REASONING_LLM_REASONING_EFFORT",
-    ]
-    for k in keys:
-        saved[k] = os.environ.pop(k, None)
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.config_context import (
+        EvidenceExtractionConfigContext,
+    )
 
-    try:
-        os.environ["FAST_LLM_API_KEY"] = "test-key-123"
-        os.environ["FAST_LLM_BASE_URL"] = "https://test.example.com/v1"
-        os.environ["FAST_LLM_MODEL"] = "test-model"
-        settings = Settings(_env_file=None)
-        assert settings.evidence_extraction.api_key == "test-key-123"
-        assert settings.evidence_extraction.base_url == "https://test.example.com/v1"
-        assert settings.evidence_extraction.fast_model == "test-model"
-        assert settings.evidence_extraction.standard_model == "test-model"
-        assert settings.evidence_extraction.strong_model == "test-model"
-    finally:
-        for k, v in saved.items():
-            if v is not None:
-                os.environ[k] = v
-            else:
-                os.environ.pop(k, None)
+    cfg = MagicMock()
+    cfg.llm.api_key = "fast-key"
+    cfg.llm.base_url = "https://fast.example.com/v1"
+    cfg.llm.model = "fast-model"
+    cfg.llm.timeout = 60
+    cfg.reasoning.api_key = "reasoning-key"
+    cfg.reasoning.base_url = "https://reasoning.example.com/v1"
+    cfg.reasoning.model = "reasoning-model"
+    cfg.reasoning.reasoning_effort = "high"
+    cfg.reasoning.max_tokens = 4096
+    cfg.reasoning.timeout = 180
 
-
-def test_evidence_extraction_explicit_overrides_fallback() -> None:
-    """Explicit EVIDENCE_EXTRACTION_* vars take precedence over LLM fallback."""
-    import os
-
-    saved = {}
-    keys = [
-        "EVIDENCE_EXTRACTION_API_KEY", "EVIDENCE_EXTRACTION_BASE_URL",
-        "EVIDENCE_EXTRACTION_FAST_MODEL", "EVIDENCE_EXTRACTION_STANDARD_MODEL",
-        "EVIDENCE_EXTRACTION_STRONG_MODEL",
-        "FAST_LLM_API_KEY", "FAST_LLM_BASE_URL", "FAST_LLM_MODEL",
-        "REASONING_LLM_API_KEY", "REASONING_LLM_BASE_URL", "REASONING_LLM_MODEL",
-        "REASONING_LLM_REASONING_EFFORT",
-    ]
-    for k in keys:
-        saved[k] = os.environ.pop(k, None)
-
-    try:
-        os.environ["FAST_LLM_API_KEY"] = "fallback-key"
-        os.environ["FAST_LLM_BASE_URL"] = "https://fallback.example.com/v1"
-        os.environ["FAST_LLM_MODEL"] = "fallback-model"
-        os.environ["EVIDENCE_EXTRACTION_API_KEY"] = "explicit-key"
-        os.environ["EVIDENCE_EXTRACTION_FAST_MODEL"] = "explicit-fast"
-        settings = Settings(_env_file=None)
-        assert settings.evidence_extraction.api_key == "explicit-key"
-        assert settings.evidence_extraction.fast_model == "explicit-fast"
-        # Fields without explicit override fall back
-        assert settings.evidence_extraction.base_url == "https://fallback.example.com/v1"
-        assert settings.evidence_extraction.standard_model == "fallback-model"
-    finally:
-        for k, v in saved.items():
-            if v is not None:
-                os.environ[k] = v
-            else:
-                os.environ.pop(k, None)
+    ctx = EvidenceExtractionConfigContext.from_config(cfg)
+    assert ctx.api_key == "fast-key"
+    assert ctx.base_url == "https://fast.example.com/v1"
+    assert ctx.fast_model == "fast-model"
+    assert ctx.reasoning_api_key == "reasoning-key"
+    assert ctx.reasoning_base_url == "https://reasoning.example.com/v1"
+    assert ctx.strong_model == "reasoning-model"
+    assert ctx.standard_model == "reasoning-model"
+    assert ctx.timeout == 180
+    assert ctx.strong_effort == "high"

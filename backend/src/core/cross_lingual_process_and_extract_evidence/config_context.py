@@ -1,7 +1,7 @@
 """Typed configuration context — single injection point for all LLM settings."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 
@@ -15,7 +15,8 @@ class TranslationConfigContext:
 
     model: str
     api_key: str
-    base_url: str
+    api_keys: list[str] = field(default_factory=list)
+    base_url: str = ""
     temperature: float = 0.0
     max_tokens: int = 8192
     timeout: int = 60
@@ -23,11 +24,13 @@ class TranslationConfigContext:
     @classmethod
     def from_config(cls, cfg: Any) -> TranslationConfigContext:
         """Build from the global config object (``cfg.llm``)."""
+        llm = cfg.llm
         return cls(
-            model=cfg.llm.model,
-            api_key=cfg.llm.api_key,
-            base_url=cfg.llm.base_url,
-            temperature=getattr(cfg.llm, "temperature", 0.0),
-            max_tokens=getattr(cfg.llm, "max_tokens", 8192),
-            timeout=cfg.llm.timeout,
+            model=llm.model,
+            api_key=llm.api_key,
+            api_keys=llm.all_api_keys,
+            base_url=llm.base_url,
+            temperature=getattr(llm, "temperature", 0.0),
+            max_tokens=getattr(llm, "max_tokens", 8192),
+            timeout=llm.timeout,
         )

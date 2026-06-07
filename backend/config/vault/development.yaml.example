@@ -6,6 +6,16 @@
 # ============================================================================
 
 # ── LLM API Keys ──────────────────────────────────────────────────────────
+# Single key (backward compatible):
+#   fast_llm:
+#     api_key: "your-fast-llm-api-key"
+#
+# Key pool (high concurrency — round-robin rotation with failover):
+#   fast_llm:
+#     api_keys:
+#       - "key-1"
+#       - "key-2"
+#       - "key-3"
 fast_llm:
   api_key: "your-fast-llm-api-key"
 

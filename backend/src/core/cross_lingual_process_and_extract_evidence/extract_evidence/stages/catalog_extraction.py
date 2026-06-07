@@ -17,7 +17,7 @@ from ..chunking import (
     merge_sparse_evidence_items,
 )
 from ..contracts import DocumentEvidenceMap, EvidenceItem, Track, TrackDocument
-from ..core import RawSourceNormalizer
+from ..core import FieldValueNormalizer, RawSourceNormalizer
 from ..prompts import get_catalog_extraction_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
 from ...cross_lingual.format.segmenter import estimate_tokens
@@ -83,7 +83,8 @@ class CatalogExtractionStage:
                     stage=stage,
                 )
                 if isinstance(items, list):
-                    extracted.extend(self._raw_source_normalizer.normalize_items(items))
+                    normalized = self._raw_source_normalizer.normalize_items(items)
+                    extracted.extend(FieldValueNormalizer.normalize_items(normalized))
         return merge_sparse_evidence_items(extracted)
 
     async def run_async(
@@ -142,7 +143,8 @@ class CatalogExtractionStage:
                 failed += 1
                 last_error = result
             elif isinstance(result, list):
-                extracted.extend(self._raw_source_normalizer.normalize_items(result))
+                normalized = self._raw_source_normalizer.normalize_items(result)
+                extracted.extend(FieldValueNormalizer.normalize_items(normalized))
 
         # Escalate based on failure rate
         if num_tasks:

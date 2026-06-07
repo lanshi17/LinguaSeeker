@@ -20,14 +20,16 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workfl
 @pytest.fixture
 def mock_config():
     cfg = MagicMock()
-    cfg.evidence_extraction.api_key = "key"
-    cfg.evidence_extraction.base_url = "http://localhost:8001/v1"
-    cfg.evidence_extraction.fast_model = "fast"
-    cfg.evidence_extraction.standard_model = "standard"
-    cfg.evidence_extraction.strong_model = "strong"
-    cfg.evidence_extraction.temperature = 0.0
-    cfg.evidence_extraction.timeout = 60
-    cfg.evidence_extraction.max_retries = 3
+    cfg.llm.api_key = "key"
+    cfg.llm.base_url = "http://localhost:8001/v1"
+    cfg.llm.model = "fast"
+    cfg.llm.timeout = 60
+    cfg.reasoning.api_key = "key"
+    cfg.reasoning.base_url = "http://localhost:8001/v1"
+    cfg.reasoning.model = "strong"
+    cfg.reasoning.reasoning_effort = "high"
+    cfg.reasoning.max_tokens = 8192
+    cfg.reasoning.timeout = 180
     return cfg
 
 
