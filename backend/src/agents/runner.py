@@ -59,15 +59,19 @@ class PipelineRunner:
                     self.remember_state(run_id, result)
                     logger.info("Pipeline execution completed: run={}", run_id)
                     return result
-                except BaseException as e:
+                except (Exception, asyncio.CancelledError) as e:
                     is_cancel = isinstance(e, asyncio.CancelledError)
                     log_fn = logger.warning if is_cancel else logger.exception
                     log_fn("Pipeline {}cancelled: run={}", "cancel " if is_cancel else "failed ", run_id)
+                    # Derive the current phase from the last-notified state so the
+                    # error report reflects which phase was actually interrupted.
+                    last_state = self._last_states.get(run_id)
+                    current_phase = last_state.error_phase if last_state else 0
                     error_state = initial_state.model_copy(
                         update={
                             "pipeline_status": PipelineStatus.FAILED,
                             "error_message": f"Pipeline {'cancelled' if is_cancel else 'failed'}: {e}",
-                            "error_phase": 0,
+                            "error_phase": current_phase,
                             "completed_at": datetime.now().isoformat(),
                         }
                     )
