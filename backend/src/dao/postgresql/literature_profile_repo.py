@@ -6,6 +6,7 @@ per-document aggregated view of ``canonical_evidence_items`` grouped into
 """
 from __future__ import annotations
 
+import json
 import uuid
 from collections import OrderedDict
 from typing import Any
@@ -39,6 +40,15 @@ _REVIEW_SEVERITY: dict[str, int] = {
     "corrected": 2,
     "rejected": 3,
 }
+
+
+def _coerce_str(val: Any) -> str:
+    """Normalize a payload value to string for consistent JSONB storage."""
+    if val is None:
+        return ""
+    if isinstance(val, (list, dict)):
+        return json.dumps(val, ensure_ascii=False)
+    return str(val)
 
 
 # ── Repository ───────────────────────────────────────────────────────────────
@@ -114,7 +124,7 @@ class LiteratureProfileRepository:
                 "field_id": payload.get("field_id", row.get("field_id", "")),
                 "field_name": payload.get("field_name", ""),
                 "category": payload.get("category", ""),
-                "value": payload.get("value", ""),
+                "value": _coerce_str(payload.get("value")),
                 "confidence": payload.get("confidence", row.get("current_best_confidence")),
                 "status": payload.get("status", ""),
                 "track": payload.get("track", ""),
@@ -125,22 +135,22 @@ class LiteratureProfileRepository:
             summary = grp["summary"]
 
             if summary["gene"] is None and field_id in _GENE_FIELDS:
-                val = payload.get("value")
+                val = _coerce_str(payload.get("value"))
                 if val:
                     summary["gene"] = val
 
             if summary["variant"] is None and field_id in _VARIANT_FIELDS:
-                val = payload.get("value")
+                val = _coerce_str(payload.get("value"))
                 if val:
                     summary["variant"] = val
 
             if summary["disease"] is None and field_id in _DISEASE_FIELDS:
-                val = payload.get("value")
+                val = _coerce_str(payload.get("value"))
                 if val:
                     summary["disease"] = val
 
             if summary["classification"] is None and field_id in _CLASSIFICATION_FIELDS:
-                val = payload.get("value")
+                val = _coerce_str(payload.get("value"))
                 if val:
                     summary["classification"] = val
 
@@ -206,6 +216,7 @@ class LiteratureProfileRepository:
         authors = raw_meta.get("authors", [])
         journal = raw_meta.get("journal")
         publication_year = raw_meta.get("publication_year")
+        latest_run_id = source_doc.latest_processing_run_id if source_doc is not None else None
 
         # 3. Canonical evidence items.
         cei_result = await self._session.execute(
@@ -275,6 +286,7 @@ class LiteratureProfileRepository:
             total_evidence_fields=total_fields,
             found_count=found_count,
             not_found_count=not_found_count,
+            latest_processing_run_id=latest_run_id,
         )
         stmt = stmt.on_conflict_do_update(
             index_elements=[LiteratureProfile.source_document_id],
@@ -291,6 +303,7 @@ class LiteratureProfileRepository:
                 "total_evidence_fields": stmt.excluded.total_evidence_fields,
                 "found_count": stmt.excluded.found_count,
                 "not_found_count": stmt.excluded.not_found_count,
+                "latest_processing_run_id": stmt.excluded.latest_processing_run_id,
             },
         )
         await self._session.execute(stmt)
@@ -300,7 +313,7 @@ class LiteratureProfileRepository:
 
     async def get_by_document(
         self, source_document_id: uuid.UUID
-    ) -> dict | None:  # noqa: dict-return — read-model projection row
+    ) -> dict | None:
         """Return the literature profile as a dict, or None if not found."""
         result = await self._session.execute(
             select(LiteratureProfile).where(
@@ -341,7 +354,7 @@ class LiteratureProfileRepository:
         doi: str | None = None,
         page: int = 1,
         page_size: int = 50,
-    ) -> tuple[list[dict], int]:  # noqa: dict-return — read-model projection rows
+    ) -> tuple[list[dict], int]:
         """Search literature profiles with optional filters.
 
         All filter conditions are OR-combined. Returns ``(items, total_count)``.
@@ -391,11 +404,15 @@ class LiteratureProfileRepository:
 
         items: list[dict] = []
         for row in rows:
-            # Extract top-level summary from first evidence group.
-            first_group_summary: dict = {}
             eg = row.evidence_groups or []
-            if eg:
-                first_group_summary = eg[0].get("summary", {})
+            merged: dict[str, str | None] = {
+                "gene": None, "variant": None, "disease": None, "classification": None,
+            }
+            for group in eg:
+                s = group.get("summary", {})
+                for key in merged:
+                    if merged[key] is None and s.get(key):
+                        merged[key] = s[key]
 
             items.append({
                 "literature_profile_id": str(row.literature_profile_id),
@@ -412,10 +429,10 @@ class LiteratureProfileRepository:
                 "total_evidence_fields": row.total_evidence_fields,
                 "found_count": row.found_count,
                 "evidence_group_count": len(eg),
-                "gene": first_group_summary.get("gene"),
-                "variant": first_group_summary.get("variant"),
-                "disease": first_group_summary.get("disease"),
-                "classification": first_group_summary.get("classification"),
+                "gene": merged["gene"],
+                "variant": merged["variant"],
+                "disease": merged["disease"],
+                "classification": merged["classification"],
             })
 
         return items, total_count

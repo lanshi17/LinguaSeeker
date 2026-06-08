@@ -939,20 +939,25 @@ class StandardizationRepository:
                 "entity_id": entity_ids_by_candidate_id.get(spec.candidate_id),
             }
             if existing is None:
-                self.session.add(
-                    CanonicalEvidenceItem(
-                        source_document_id=row.source_document_id,
-                        field_id=row.field_id,
-                        position_hash=row.position_hash,
-                        text_hash=row.text_hash,
-                        entity_scope_hash=row.entity_scope_hash,
-                        current_best_run_evidence_id=row.run_evidence_item_id,
-                        current_best_status=row.status,
-                        current_best_confidence=row.confidence,
-                        conflict_flag=False,
-                        active_payload=payload,
-                    ),
+                new_item = CanonicalEvidenceItem(
+                    source_document_id=row.source_document_id,
+                    field_id=row.field_id,
+                    position_hash=row.position_hash,
+                    text_hash=row.text_hash,
+                    entity_scope_hash=row.entity_scope_hash,
+                    current_best_run_evidence_id=row.run_evidence_item_id,
+                    current_best_status=row.status,
+                    current_best_confidence=row.confidence,
+                    conflict_flag=False,
+                    active_payload=payload,
                 )
+                self.session.add(new_item)
+                # Update lookup so subsequent rows with same identity
+                # in this batch go through the update path instead of
+                # triggering a duplicate-key IntegrityError.
+                existing_lookup[
+                    (row.source_document_id, row.field_id, row.position_hash, row.entity_scope_hash)
+                ] = new_item
                 continue
 
             incoming_priority = CANONICAL_STATUS_PRIORITY.get(row.status, -1)

@@ -193,8 +193,8 @@ def compare(extracted_items, ground_truth):
 | 3 | 下载 PMC 全文 (JATS XML → markdown) | `ground_truth/{id}/source.md` | ✅ done (30/30) |
 | 4 | 通过 pipeline 翻译生成多语言版本 | — | ⏭ deferred: pipeline Phase 2 内部已处理 cross-lingual，track consistency 指标已实现 |
 | 5 | 实现对比评估脚本 (含实体标准化+轨道一致性) | `benchmark/layer3/evaluate.py` | ✅ done |
-| 6 | 运行 pipeline 提取 | PG 数据 | 🔄 running (10-entry eval in background) |
-| 7 | 执行对比评估 | 评估报告 JSON | 🔄 running |
+| 6 | 运行 pipeline 提取 | PG 数据 | ✅ done (5 entries, 3 ✓ 2 ✗ MinerU timeout) |
+| 7 | 执行对比评估 | 评估报告 JSON | ✅ done (F1=94.1%, StdAcc=100%, TrackCons=86.8%) |
 | 8 | 生成可视化报告 | `benchmark/layer3/visualize.py` (HTML + 5 PNG) | ✅ done |
 
 ## 风险与缓解
