@@ -27,7 +27,7 @@ export function EvidenceSearchView() {
   return (
     <div className="space-y-6">
       <ErrorBoundary>
-        <Card>
+        <Card className="border-primary-100 bg-white shadow-sm">
           <EvidenceSearchForm
             filters={filters}
             onUpdateFilter={updateFilter}
@@ -54,7 +54,9 @@ export function EvidenceSearchView() {
             isLoading={isLoading}
             onPageChange={setPage}
             onRowClick={(item) => {
-              router.push(`/evidence/detail?groupId=${encodeURIComponent(item.group_id)}`);
+              router.push(
+                `/evidence/detail?groupId=${encodeURIComponent(item.representativeGroupId)}`,
+              );
             }}
           />
         )}

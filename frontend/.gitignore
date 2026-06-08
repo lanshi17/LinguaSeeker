@@ -17,5 +17,6 @@ out/
 node_modules/
 
 # ─── Build ───
+.test-build/
 *.tsbuildinfo
 next-env.d.ts

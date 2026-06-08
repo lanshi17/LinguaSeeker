@@ -1,203 +1,233 @@
 # Evidence Search Feature Module
 
-> Search and filter structured evidence cards extracted by the ACMG Lingua pipeline. Queries the `frontend_search_index` table via `GET /api/v1/evidence/search` with gene, variant, disease, and PMID filters.
+> Literature-level search and review UI for structured ACMG evidence. The module queries evidence groups, aggregates them into literature rows, and provides a two-step detail flow for bilingual source-span comparison.
 
 ## Quick Start
 
 ```typescript
 import { EvidenceSearchView } from "@/features/evidence-search";
 
-// Drop the full search UI into any page:
-<EvidenceSearchView />
+export default function EvidencePage() {
+  return <EvidenceSearchView />;
+}
+```
 
-// Or use the hook for custom UI:
+For custom data access:
+
+```typescript
 import { useEvidenceSearch } from "@/features/evidence-search";
 
-const { results, total, filters, updateFilter, applyFilters, clearFilters } = useEvidenceSearch();
+const {
+  results,
+  total,
+  filters,
+  updateFilter,
+  applyFilters,
+  clearFilters,
+  setPage,
+} = useEvidenceSearch();
 ```
 
 ## Architecture
 
-```
+```text
 features/evidence-search/
-├── types/evidenceSearch.ts           # EvidenceSearchQuery, EvidenceSearchResult, EvidencePayload, EvidenceSearchResponse
-├── services/evidenceSearch.ts        # searchEvidence() — GET /evidence/search with query params
-├── hooks/useEvidenceSearch.ts        # Stateful filter management + TanStack Query for auto-fetch
 ├── components/
-│   ├── EvidenceSearchForm.tsx        # 4-column filter grid (gene, variant, disease, PMID)
-│   ├── EvidenceResultsTable.tsx     # Tabular results with status badges and confidence %
-│   └── EvidenceSearchView.tsx      # Page-level orchestrator with ErrorBoundary isolation
-└── index.ts                          # Barrel exports
+│   ├── EvidenceSearchView.tsx       # Page-level feature orchestrator
+│   ├── EvidenceSearchForm.tsx       # Gene, variant, disease, PMID filters
+│   ├── EvidenceResultsTable.tsx     # Literature-row result table/cards
+│   ├── EvidenceDetailView.tsx       # Literature overview + compare mode
+│   └── EvidenceHighlightText.tsx    # Tone-aware source-span highlighting
+├── hooks/
+│   ├── useEvidenceSearch.ts         # Paginated search query state
+│   └── useEvidenceGroupDetail.ts    # Group detail query state
+├── services/evidenceSearch.ts       # API client calls
+├── types/evidenceSearch.ts          # API boundary types
+├── utils/literatureRows.ts          # Literature-row aggregation helpers
+└── index.ts                         # Public exports
 ```
 
-### Data Flow
+Data flow:
 
+```text
+/evidence page
+  -> useEvidenceSearch()
+  -> GET /api/v1/evidence/search
+  -> EvidenceResultsTable.buildLiteratureRows(results)
+  -> user opens representative group
+
+/evidence/detail?groupId=...
+  -> useEvidenceGroupDetail(groupId)
+  -> GET /api/v1/evidence/groups/detail?group_id=...
+  -> overview shows metadata, coverage, categories, evidence items
+  -> "Compare text" links to view=compare&evidenceId=...
+
+/evidence/detail?groupId=...&view=compare&evidenceId=...
+  -> same detail payload
+  -> selected evidence item drives original/translated highlights
 ```
-Component mounts
-  → useEvidenceSearch() initializes with empty filters {}
-    → useQuery fires GET /evidence/search (no params → all evidence)
-      → Returns { items: EvidenceSearchResult[], total: number }
-
-User types in filter fields
-  → updateFilter("gene", "BRCA1") updates local filter state
-    → User clicks "Search" → applyFilters() → query.refetch()
-      → New request with ?gene=BRCA1
-        → Table re-renders with filtered results
-
-User clicks "Clear"
-  → clearFilters() resets to {}
-    → TanStack Query refetches with no params → all evidence
-```
-
-### Auto-Load on Mount
-
-Unlike typical search UIs that start empty, `useEvidenceSearch` loads **all evidence** on mount (empty query = no filters). This gives users immediate visibility into the dataset, then they narrow via filters.
 
 ## Public API
 
-### `useEvidenceSearch()` Hook
+### `useEvidenceSearch()`
 
-Stateful search hook with filter management.
+Stateful search hook with pagination.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `results` | `EvidenceSearchResult[]` | Current page of evidence results |
-| `total` | `number` | Total matching results |
-| `isLoading` | `boolean` | Initial load in progress |
-| `isFetching` | `boolean` | Any fetch (initial or refetch) in progress |
+| `results` | `EvidenceSearchResult[]` | Current page of evidence group summaries |
+| `total` | `number` | Total matching evidence groups |
+| `page` | `number` | Current backend page |
+| `pageSize` | `number` | Current backend page size |
+| `isLoading` | `boolean` | Initial load state |
+| `isFetching` | `boolean` | Background refetch state |
 | `error` | `Error \| null` | Query error |
-| `filters` | `EvidenceSearchQuery` | Current filter values |
-| `updateFilter(key, value)` | `(key: keyof EvidenceSearchQuery, value: string) => void` | Update a single filter field |
-| `applyFilters()` | `() => void` | Trigger refetch with current filters |
-| `clearFilters()` | `() => void` | Reset all filters to `{}` |
+| `filters` | `EvidenceSearchQuery` | Current filter and pagination state |
+| `updateFilter` | `(key, value) => void` | Updates one filter and resets to page 1 |
+| `applyFilters` | `() => void` | Refetches with current filters |
+| `clearFilters` | `() => void` | Clears filters and resets pagination |
+| `setPage` | `(page: number) => void` | Updates backend page |
 
-### Types
+### `useEvidenceGroupDetail(groupId)`
 
-| Type | Description |
-|------|-------------|
-| `EvidenceSearchQuery` | `{ gene?, variant?, disease?, pmid?, limit? }` — query parameters |
-| `EvidenceSearchResult` | Single result row: `canonical_evidence_id`, `pmid`, `gene_ids`, `variant_ids`, `review_status`, `current_best_confidence`, `active_payload` |
-| `EvidencePayload` | Denormalized JSONB: `gene`, `variant`, `phenotype`, `disease`, `classification`, `evidence_strength`, `references`, etc. |
-| `EvidenceSearchResponse` | `{ items: EvidenceSearchResult[], total: number }` |
+Loads the detail payload used by both overview and bilingual comparison views.
 
-### Components
+| Property | Type | Description |
+|----------|------|-------------|
+| `detail` | `EvidenceGroupDetailResponse \| undefined` | Group metadata, items, distribution, and traces |
+| `isLoading` | `boolean` | Initial load state |
+| `isFetching` | `boolean` | Background refetch state |
+| `error` | `Error \| null` | Query error |
+| `refetch` | `() => void` | Manual refetch |
 
-| Component | Props | Description |
-|-----------|-------|-------------|
-| `<EvidenceSearchView />` | — | Full page: form + table, each wrapped in ErrorBoundary |
-| `<EvidenceSearchForm />` | `filters, onUpdateFilter, onSearch, onClear, isSearching?` | 4-column filter form |
-| `<EvidenceResultsTable />` | `results, total, isLoading?` | Results table with status badges |
+### Utility Helpers
+
+| Helper | Signature | Description |
+|--------|-----------|-------------|
+| `buildLiteratureRows` | `(results: EvidenceSearchResult[]) => LiteratureEvidenceRow[]` | Groups paged evidence results by `source_document_id` |
+| `findInitialEvidenceId` | `(detail, requestedEvidenceId?) => string \| null` | Selects a valid requested evidence id or first traceable item |
+| `buildBilingualCompareHref` | `(groupId, evidenceId?) => string` | Creates a stable compare-mode detail URL |
 
 ## Internal Design
 
-### Filter Semantics
+### Literature Rows
 
-All text filters are **case-insensitive partial matches** against the denormalized `active_payload` fields, except `pmid` which is an **exact match**. The backend handles the SQL `ILIKE` translation.
+The backend search API returns evidence group summaries, not a dedicated literature read model. `EvidenceResultsTable` keeps the API contract unchanged and uses `buildLiteratureRows()` to aggregate each page by `source_document_id`.
 
-### Review Status Badges
+Each `LiteratureEvidenceRow` contains:
 
-`EvidenceResultsTable` maps `review_status` to badge variants:
+| Field | Source |
+|-------|--------|
+| `documentId` | `source_document_id`, falling back to `group_id` |
+| `representativeGroupId` | First group on the current page for navigation |
+| `genes`, `variants`, `diseases`, `classifications` | Unique values in first-seen order |
+| `fieldCount` | Sum of evidence group `field_count` values |
+| `groupCount` | Number of groups represented by the row |
+| `avgConfidence` | Field-count-weighted average of non-null confidences |
+| `reviewStatus` | Single status, or `mixed` when multiple statuses appear |
 
-| Status | Badge |
-|--------|-------|
-| `provisional` | default (gray) |
-| `approved` | success (green) |
-| `corrected` | warning (yellow) |
-| `rejected` | error (red) |
+### Detail Flow
 
-### Confidence Display
+`EvidenceDetailView` supports two URL-controlled modes:
 
-`current_best_confidence` is a float `[0, 1]` and displayed as a percentage: `0.87` -> `87%`. Null values render as `—`.
+| Mode | URL | Purpose |
+|------|-----|---------|
+| Overview | `/evidence/detail?groupId=...` | Literature metadata, evidence coverage, category distribution, evidence item list |
+| Compare | `/evidence/detail?groupId=...&view=compare&evidenceId=...` | Original/translated source spans with active evidence highlighting |
 
-### ErrorBoundary Isolation
+The compare view does not fetch a second payload. It selects the requested evidence item from the group detail response and pairs it with the best trace by `canonical_evidence_id`, falling back to `field_id`.
 
-`EvidenceSearchView` wraps the form and results in separate `<ErrorBoundary>` components. A rendering crash in the results table won't take down the search form, and vice versa.
+### Highlight Tones
+
+`EvidenceHighlightText` accepts a semantic tone:
+
+| Tone | Typical fields |
+|------|----------------|
+| `gene` | Field ids containing `gene` |
+| `variant` | Field ids containing `variant` or `hgvs` |
+| `disease` | Field ids containing `disease` or `phenotype` |
+| `classification` | Field ids containing `classification`, `pathogenic`, or `acmg` |
+| `functional` | Catalog categories `F`, `G`, or `I` |
+| `neutral` | Fallback |
+
+The same tone is used for evidence category chips and `<mark>` source-span highlights so users can scan evidence classes consistently.
 
 ## Usage Patterns
 
-### Custom results rendering
+### Render literature rows in a custom component
 
 ```typescript
-const { results } = useEvidenceSearch();
+import { buildLiteratureRows, useEvidenceSearch } from "@/features/evidence-search";
 
-return (
-  <ul>
-    {results.map((r) => (
-      <li key={r.canonical_evidence_id}>
-        {r.active_payload.gene} — {r.active_payload.variant}
-      </li>
-    ))}
-  </ul>
-);
-```
+function LiteratureList() {
+  const { results } = useEvidenceSearch();
+  const rows = buildLiteratureRows(results);
 
-### Programmatic filtering
-
-```typescript
-const { updateFilter, applyFilters } = useEvidenceSearch();
-
-function handleGeneClick(gene: string) {
-  updateFilter("gene", gene);
-  applyFilters();
+  return (
+    <ul>
+      {rows.map((row) => (
+        <li key={row.documentId}>
+          PMID {row.pmid ?? "-"}: {row.genes.join(", ")}
+        </li>
+      ))}
+    </ul>
+  );
 }
 ```
 
-### Export results
+### Link directly to bilingual comparison
 
 ```typescript
-const { results } = useEvidenceSearch();
+import { buildBilingualCompareHref } from "@/features/evidence-search";
 
-function handleExport() {
-  const csv = results.map((r) => [
-    r.pmid,
-    r.active_payload.gene,
-    r.active_payload.variant,
-    r.active_payload.classification,
-  ].join(","));
-  // download CSV
-}
+const href = buildBilingualCompareHref(groupId, canonicalEvidenceId);
 ```
 
 ## Extension Guide
 
-### Adding new filter fields
+### Adding a search filter
 
-1. Add the field to `EvidenceSearchQuery` interface in `types/evidenceSearch.ts`
-2. Add a corresponding `<Input>` in `EvidenceSearchForm.tsx` (adjust the grid to `md:grid-cols-5` etc.)
-3. Update `searchEvidence()` in `services/evidenceSearch.ts` to pass the new param
-4. Backend: add the column/filter to `frontend_search_index` query
+1. Add the field to `EvidenceSearchQuery` in `types/evidenceSearch.ts`.
+2. Add an input in `EvidenceSearchForm.tsx`.
+3. Pass the query parameter in `services/evidenceSearch.ts`.
+4. Add backend filter support in `GET /api/v1/evidence/search`.
 
-### Adding sortable columns
+### Switching to a literature-profile API
 
-The table is currently static. To add sorting:
-1. Add `sortBy` and `sortOrder` to `EvidenceSearchQuery`
-2. Pass to the backend as query params
-3. Add click handlers on `<th>` elements in `EvidenceResultsTable`
+The UI is ready for a dedicated literature endpoint. Replace the page-level source in `useEvidenceSearch()` or add a new hook, then remove page-local aggregation from `EvidenceResultsTable`. Keep `representativeGroupId` or an equivalent detail target so users can still open evidence comparison.
+
+### Adding a new evidence class color
+
+1. Add a tone to `EvidenceHighlightTone`.
+2. Add the `<mark>` class in `EvidenceHighlightText.tsx`.
+3. Add matching chip classes in `EvidenceDetailView.tsx`.
+4. Update `evidenceTone()` to map the field or category.
 
 ## Performance Notes
 
-- **Default limit**: 50 results per request. Increase via `updateFilter("limit", "200")` if the backend supports pagination.
-- **No client-side caching beyond TanStack Query**: Results are refetched on filter change. The query key includes the full `filters` object, so each unique filter combination is cached separately.
-- **No virtualization**: The table renders all results at once. For datasets >500 rows, consider adding `react-window` or backend pagination.
-
-## Detail View
-
-The evidence list routes each row to `/evidence/detail?groupId=...`. The detail page calls `GET /api/v1/evidence/groups/detail?group_id=...` and renders summary metadata, evidence distribution, item list, and bilingual traceability highlights.
-
-The frontend remains inside the existing Evidence module. No Dashboard module is introduced.
+- Search uses backend pagination with a default page size of 50.
+- Literature aggregation is page-local and linear in `results.length`.
+- No virtualization is used; the UI is sized for the current page size.
+- Detail and compare modes share one TanStack Query cache entry per `groupId`.
 
 ## Dependencies
 
 | Dependency | Version | Purpose |
 |------------|---------|---------|
-| `@tanstack/react-query` | ^5.50.0 | `useQuery` for data fetching and caching |
-| `axios` | ^1.7.0 | HTTP client via `apiClient` |
+| `@tanstack/react-query` | `^5.50.0` | Query caching and refetch state |
+| `axios` | `^1.7.0` | API client via `apiClient` |
+| `lucide-react` | `^1.17.0` | Consistent UI icons |
+| `vitest` | `^4.1.8` | Frontend unit tests |
 
 ## Testing
 
-Tests live in `frontend/tests/features/evidence-search/`.
+Focused tests live in `frontend/tests/evidence-search/`.
 
 ```bash
 cd frontend
-npm run test -- --testPathPattern=evidence
+nvm use
+npm test -- tests/evidence-search/literatureRows.test.ts
+npm run type-check
+npm run lint
+npm run build
 ```

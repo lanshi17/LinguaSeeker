@@ -3,11 +3,15 @@ import { EvidenceDetailView } from "@/features/evidence-search";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 interface EvidenceDetailPageProps {
-  searchParams: Promise<{ groupId?: string }>;
+  searchParams: Promise<{
+    evidenceId?: string;
+    groupId?: string;
+    view?: string;
+  }>;
 }
 
 export default async function EvidenceDetailPage({ searchParams }: EvidenceDetailPageProps) {
-  const { groupId } = await searchParams;
+  const { evidenceId, groupId, view } = await searchParams;
 
   if (!groupId) {
     redirect("/evidence");
@@ -16,10 +20,18 @@ export default async function EvidenceDetailPage({ searchParams }: EvidenceDetai
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Evidence Detail"
-        description="Review evidence distribution and bilingual traceability for this group."
+        title={view === "compare" ? "Bilingual Evidence" : "Literature Detail"}
+        description={
+          view === "compare"
+            ? "Compare original and translated evidence spans with field-level highlights."
+            : "Review literature metadata, evidence distribution, and extracted fields."
+        }
       />
-      <EvidenceDetailView groupId={groupId} />
+      <EvidenceDetailView
+        groupId={groupId}
+        initialEvidenceId={evidenceId}
+        initialView={view === "compare" ? "compare" : "overview"}
+      />
     </div>
   );
 }

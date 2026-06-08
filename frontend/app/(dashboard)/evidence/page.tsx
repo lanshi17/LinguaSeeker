@@ -5,8 +5,8 @@ export default function EvidencePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Evidence Search"
-        description="Search evidence cards by gene, variant, disease, or PMID."
+        title="Literature Evidence"
+        description="Search literature-level evidence by gene, variant, disease, or PMID."
       />
       <EvidenceSearchView />
     </div>
