@@ -1,3 +1,4 @@
+[2026-06-08] Graceful shutdown for pipeline runner: added shutdown() method to PipelineRunner that waits for active tasks before DB disposal; lifespan calls it with 90s timeout; created scripts/start_backend_dev.sh with --reload-exclude patterns and --timeout-graceful-shutdown 120 [done]
 [2026-06-08] Database schema review & optimization: added 12 indexes (JSONB expression, GIN, composite), fixed N+1 query in upsert_canonical_evidence, added lazy="raise" to all ORM relationships, fixed 12 review findings (recover_orphaned_runs WHERE+error_phase+tz+LSP, runner None-guard, pipeline_run_states JSONB idx, lock_timeout, tuple_() chunking, dropped 4 redundant indexes, removed dup log, added test coverage) [done]
 [2026-06-06] Generated module guide README.md for benchmark/literature_acquisition — architecture, CLI reference, config format, report fields, internal design [done]
 [2026-06-05] Rett benchmark PDF cleanup: LLM-based relevance check (567→222 PDFs) + auto-rename with English titles [done]
@@ -249,3 +250,5 @@
 - Added startup recovery: lifespan scans DB for orphaned PENDING/RUNNING runs, marks FAILED
 - Added runtime guard: get_last_state detects no-task RUNNING from DB, marks FAILED on-the-fly
 - Added frontend polling safety net: 30-min timeout, cancelled as terminal, error count limit
+
+[2026-06-08] Layer 3 evaluation enhancements: added entity standardization accuracy (queries evidence_entity_bindings + normalized_entities for HGNC/MONDO match), cross-lingual track consistency (original vs translated fuzzy match), MOI breakdown metrics, per-entity-type accuracy. Created visualize.py with 5 charts (radar summary, field F1 bars, classification heatmap, MOI comparison, entity std accuracy) and HTML report with embedded charts. Ruff clean. [done]
