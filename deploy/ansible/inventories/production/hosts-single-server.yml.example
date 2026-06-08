@@ -1,0 +1,39 @@
+# ============================================================================
+# ACMG-Lingua — Single-Server Inventory Example
+# ============================================================================
+# All services on one machine. Copy to hosts.yml to use:
+#   cp hosts-single-server.yml.example hosts.yml
+# ============================================================================
+
+all:
+  children:
+    web:
+      hosts:
+        acmg-01:
+          ansible_host: "YOUR_SERVER_IP"       # Replace
+          ansible_port: 22
+    app:
+      hosts:
+        acmg-01:                               # Same host
+          ansible_host: "YOUR_SERVER_IP"
+          ansible_port: 22
+    db:
+      hosts:
+        acmg-01:                               # Same host
+          ansible_host: "YOUR_SERVER_IP"
+          ansible_port: 22
+
+  vars:
+    ansible_user: deploy
+    ansible_python_interpreter: /usr/bin/python3
+    project_root: /opt/acmg-lingua
+    backend_root: "{{ project_root }}/backend"
+    frontend_root: "{{ project_root }}/frontend"
+    deploy_env: production
+
+    # Single-server: all services bind to localhost
+    postgres_host: "127.0.0.1"
+    redis_host: "127.0.0.1"
+    embedding_base_url: "http://127.0.0.1:8001/v1"
+    rerank_base_url: "http://127.0.0.1:8001/v1"
+    mineru_local_model_server_url: "http://127.0.0.1:8001"

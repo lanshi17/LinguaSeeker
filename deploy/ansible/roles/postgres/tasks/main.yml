@@ -1,0 +1,74 @@
+# ── PostgreSQL 16 via Docker ───────────────────────────────────────────────
+
+- name: Install Docker
+  apt:
+    name:
+      - docker.io
+      - docker-compose-plugin
+    state: present
+
+- name: Ensure Docker is running
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Deploy PostgreSQL docker-compose
+  template:
+    src: docker-compose.postgres.yml.j2
+    dest: "{{ project_root }}/docker-compose.postgres.yml"
+    owner: deploy
+    group: deploy
+    mode: "0600"
+  notify: Restart PostgreSQL
+
+- name: Deploy PostgreSQL init script
+  template:
+    src: init-db.sql.j2
+    dest: "{{ project_root }}/scripts/init-db.sql"
+    owner: deploy
+    group: deploy
+    mode: "0644"
+
+- name: Start PostgreSQL
+  community.docker.docker_compose_v2:
+    project_src: "{{ project_root }}"
+    files:
+      - docker-compose.postgres.yml
+    state: present
+    pull: always
+
+- name: Wait for PostgreSQL to be ready
+  command: >
+    docker exec acmg-postgres pg_isready
+    -U {{ postgres_user }}
+    -d {{ postgres_db }}
+  register: pg_ready
+  retries: 15
+  delay: 3
+  until: pg_ready.rc == 0
+  changed_when: false
+
+# ── Automated Backup ──────────────────────────────────────────────────────
+
+- name: Create backup directory
+  file:
+    path: /opt/acmg-lingua-data/postgres-backups
+    state: directory
+    owner: deploy
+    group: deploy
+    mode: "0700"
+
+- name: Deploy database backup script
+  template:
+    src: backup-postgres.sh.j2
+    dest: /usr/local/bin/backup-acmg-postgres
+    mode: "0750"
+
+- name: Schedule daily database backup (03:00)
+  cron:
+    name: "acmg-lingua postgres backup"
+    hour: 3
+    minute: 0
+    job: "/usr/local/bin/backup-acmg-postgres"
+    user: deploy

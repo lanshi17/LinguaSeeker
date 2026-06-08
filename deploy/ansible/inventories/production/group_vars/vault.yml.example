@@ -1,0 +1,28 @@
+# ============================================================================
+# Production Vault — Secrets (DO NOT commit the real vault.yml)
+# ============================================================================
+# Copy to vault.yml and encrypt with:
+#   ansible-vault encrypt inventories/production/group_vars/vault.yml
+#
+# Edit with:
+#   ansible-vault edit inventories/production/group_vars/vault.yml
+# ============================================================================
+
+# ── LLM API Keys ─────────────────────────────────────────────────────────
+vault_fast_llm_api_key: "sk-xxxxxxxxxxxxxxxxxxxxxxxx"
+vault_reasoning_llm_api_key: "sk-xxxxxxxxxxxxxxxxxxxxxxxx"
+
+# ── MinerU ────────────────────────────────────────────────────────────────
+vault_mineru_api_token: "xxxxxxxxxxxxxxxxxxxxxxxx"
+
+# ── Web Search ────────────────────────────────────────────────────────────
+vault_web_search_api_key: "fc-xxxxxxxxxxxxxxxxxxxxxxxx"
+
+# ── PostgreSQL ────────────────────────────────────────────────────────────
+vault_postgres_password: "change-me-to-a-strong-password"
+
+# ── Redis ─────────────────────────────────────────────────────────────────
+vault_redis_password: "change-me-to-a-strong-password"
+
+# ── SSH / Deploy ──────────────────────────────────────────────────────────
+vault_deploy_ssh_private_key: ""   # Optional: inline private key for CI/CD

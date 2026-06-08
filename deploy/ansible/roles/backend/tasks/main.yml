@@ -1,0 +1,67 @@
+# ── Backend (FastAPI via uv + systemd) ────────────────────────────────────
+
+- name: Install uv
+  shell: curl -LsSf https://astral.sh/uv/install.sh | sh
+  args:
+    creates: /home/deploy/.local/bin/uv
+
+- name: Sync backend source code
+  synchronize:
+    src: "{{ playbook_dir }}/../../backend/"
+    dest: "{{ backend_root }}/"
+    delete: yes
+    rsync_opts:
+      - "--exclude=.venv"
+      - "--exclude=__pycache__"
+      - "--exclude=.old_version"
+      - "--exclude=*.pyc"
+      - "--exclude=logs/"
+  notify: Restart backend
+
+- name: Deploy production environment config
+  template:
+    src: production.yaml.j2
+    dest: "{{ backend_root }}/config/environments/production.yaml"
+    owner: deploy
+    group: deploy
+    mode: "0600"
+
+- name: Deploy vault config
+  template:
+    src: vault-production.yaml.j2
+    dest: "{{ backend_root }}/config/vault/production.yaml"
+    owner: deploy
+    group: deploy
+    mode: "0600"
+
+- name: Install Python dependencies
+  command: uv sync --no-dev
+  args:
+    chdir: "{{ backend_root }}"
+  environment:
+    UV_CACHE_DIR: "{{ project_root }}/.cache/uv"
+  notify: Restart backend
+
+- name: Run database migrations
+  command: uv run alembic upgrade head
+  args:
+    chdir: "{{ backend_root }}"
+  environment:
+    ENVIRONMENT: production
+  register: migration_result
+  changed_when: "'Running upgrade' in migration_result.stdout"
+
+- name: Deploy backend systemd service
+  template:
+    src: acmg-backend.service.j2
+    dest: /etc/systemd/system/acmg-backend.service
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart backend
+
+- name: Ensure backend is running
+  systemd:
+    name: acmg-backend
+    state: started
+    enabled: yes

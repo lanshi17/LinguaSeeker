@@ -1,0 +1,5 @@
+# Vault password
+.vault_pass
+
+# Ansible temp
+*.retry

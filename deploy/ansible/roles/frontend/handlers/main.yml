@@ -1,0 +1,8 @@
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Restart frontend
+  systemd:
+    name: acmg-frontend
+    state: restarted
