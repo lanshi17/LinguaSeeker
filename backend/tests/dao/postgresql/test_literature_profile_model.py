@@ -25,6 +25,7 @@ def test_literature_profile_has_required_columns() -> None:
         "publication_year",
         "evidence_groups",
         "review_status",
+        "review_notes",
         "overall_confidence",
         "total_evidence_fields",
         "found_count",
