@@ -108,6 +108,18 @@ async def lifespan(app: FastAPI):
 
     yield
 
+    # Graceful shutdown: wait for in-flight pipeline tasks to complete so
+    # they can persist their state to PostgreSQL before the engine is disposed.
+    # This prevents orphaned PENDING/RUNNING rows when uvicorn --reload or
+    # SIGTERM interrupts a long-running LLM call.
+    try:
+        runner = get_pipeline_runner()
+        # Timeout must exceed the LLM request timeout (default 60s) to avoid
+        # cancelling requests that would have succeeded.
+        await runner.shutdown(timeout=90.0)
+    except Exception as exc:
+        logger.debug("Pipeline runner shutdown skipped: {}", exc)
+
     from src.api.deps import get_phase4_factory
 
     try:

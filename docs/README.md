@@ -57,7 +57,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status |
 |---|---|---|
-| 2026-06-06 | [ClinGen-based Layer 3 Pipeline Evaluation](planned/2026-06-06-clingen-layer3-evaluation.md) | planned |
+| 2026-06-06 | [ClinGen-based Layer 3 Pipeline Evaluation](plans/2026-06-06-clingen-layer3-evaluation.md) | in-progress — infrastructure built, running evaluation |
 | 2026-06-06 | [Frontend Layered Configuration](planned/2026-06-06-frontend-layered-config.md) | planned |
 
 ## Active Code Reviews

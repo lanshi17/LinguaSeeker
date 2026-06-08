@@ -24,9 +24,11 @@ from pathlib import Path
 import httpx
 import yaml
 from loguru import logger
+from sqlalchemy import select
 
 from benchmark.pipeline.evidence_metrics import query_evidence_metrics
 from src.dao.postgresql.connection import async_session_factory, build_async_engine
+from src.dao.postgresql.models import EvidenceEntityBinding, NormalizedEntity, RunEvidenceItem
 
 GROUND_TRUTH_DIR = Path(__file__).resolve().parent / "ground_truth"
 REPORTS_DIR = Path(__file__).resolve().parent / "reports"
@@ -126,6 +128,8 @@ class EntryMetrics:
     duration_s: float = 0.0
     field_matches: list[FieldMatch] = field(default_factory=list)
     entity_matches: dict[str, bool] = field(default_factory=dict)
+    standardization_accuracy: float = 0.0
+    track_consistency: float = 0.0
     evidence_count: int = 0
     found_rate: float = 0.0
     grounding_rate: float = 0.0
@@ -223,6 +227,96 @@ def compare_evidence(
     return matches
 
 
+async def compare_entity_standardization(
+    session,
+    run_id: str,
+    expected_standardization: dict[str, str],
+) -> dict[str, dict]:
+    """Compare entity standardization against expected external IDs.
+
+    Queries evidence_entity_bindings + normalized_entities to check
+    whether the pipeline resolved gene/disease to the correct HGNC/MONDO IDs.
+    """
+    stmt = (
+        select(
+            EvidenceEntityBinding.entity_type,
+            NormalizedEntity.external_id,
+            NormalizedEntity.standardization_status,
+            NormalizedEntity.display_name,
+        )
+        .join(NormalizedEntity, EvidenceEntityBinding.entity_id == NormalizedEntity.entity_id)
+        .where(EvidenceEntityBinding.run_evidence_item_id.in_(
+            select(RunEvidenceItem.run_evidence_item_id)
+            .where(RunEvidenceItem.processing_run_id == uuid.UUID(run_id))
+        ))
+        .distinct()
+    )
+    rows = (await session.execute(stmt)).all()
+
+    results: dict[str, dict] = {}
+    for entity_type, expected_id in expected_standardization.items():
+        matching = [r for r in rows if r.entity_type == entity_type]
+        matched = any(r.external_id == expected_id for r in matching)
+        best = next((r for r in matching if r.external_id == expected_id), None)
+        results[entity_type] = {
+            "matched": matched,
+            "expected_id": expected_id,
+            "actual_id": best.external_id if best else (matching[0].external_id if matching else None),
+            "status": best.standardization_status if best else (matching[0].standardization_status if matching else "not_found"),
+        }
+    return results
+
+
+async def compare_track_consistency(
+    session,
+    run_id: str,
+) -> dict:
+    """Compare original vs translated track field values for consistency."""
+    stmt = (
+        select(
+            RunEvidenceItem.field_id,
+            RunEvidenceItem.track,
+            RunEvidenceItem.value,
+            RunEvidenceItem.status,
+        )
+        .where(
+            RunEvidenceItem.processing_run_id == uuid.UUID(run_id),
+            RunEvidenceItem.status == "found",
+        )
+    )
+    rows = (await session.execute(stmt)).all()
+
+    by_field: dict[str, dict[str, str]] = {}
+    for r in rows:
+        if r.field_id not in by_field:
+            by_field[r.field_id] = {}
+        if r.track not in by_field[r.field_id]:
+            by_field[r.field_id][r.track] = str(r.value)
+
+    compared = []
+    matched = 0
+    total = 0
+    for fid, tracks in by_field.items():
+        if "original" in tracks and "translated" in tracks:
+            is_match = fuzzy_match_value(tracks["original"], tracks["translated"])
+            compared.append({
+                "field_id": fid,
+                "original": tracks["original"],
+                "translated": tracks["translated"],
+                "match": is_match,
+            })
+            total += 1
+            if is_match:
+                matched += 1
+
+    return {
+        "items": compared,
+        "consistency": matched / total if total > 0 else 0.0,
+        "total_compared": total,
+        "matched": matched,
+    }
+
+
 # ── Pipeline interaction ───────────────────────────────────────────────
 
 async def submit_and_poll(
@@ -245,7 +339,6 @@ async def submit_and_poll(
     )
     resp.raise_for_status()
     data = resp.json()
-    run_id = data["processing_run_id"]
     status_url = data["status_url"]
 
     # Poll
@@ -329,8 +422,6 @@ async def evaluate_one(
                     metrics.grounding_rate = ev_metrics.source_grounding.grounding_rate
 
                     # Get detailed evidence items for comparison
-                    from sqlalchemy import select
-                    from src.dao.postgresql.models import RunEvidenceItem
                     async with sf() as session:
                         stmt = select(
                             RunEvidenceItem.field_id,
@@ -349,6 +440,21 @@ async def evaluate_one(
                         entry.get("expected_evidence", []),
                         extracted_items,
                     )
+
+                    # Entity standardization comparison
+                    async with sf() as session:
+                        metrics.entity_matches = await compare_entity_standardization(
+                            session, run_id, entry.get("expected_standardization", {}),
+                        )
+                        entity_total = len(metrics.entity_matches)
+                        entity_matched = sum(1 for v in metrics.entity_matches.values() if v.get("matched"))
+                        metrics.standardization_accuracy = (
+                            entity_matched / entity_total if entity_total > 0 else 0.0
+                        )
+
+                        # Track consistency (original vs translated)
+                        track_result = await compare_track_consistency(session, run_id)
+                        metrics.track_consistency = track_result.get("consistency", 0.0)
 
                 except Exception as e:
                     logger.warning("[{}] Evidence query failed: {}", entry_id, e)
@@ -412,6 +518,57 @@ def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
             "f1": round(cls_f1, 4),
         }
 
+    # Entity standardization accuracy
+    std_values = [m.standardization_accuracy for m in all_metrics if m.entity_matches]
+    entity_standardization_accuracy = (
+        sum(std_values) / len(std_values) if std_values else 0.0
+    )
+
+    # Per-entity-type accuracy
+    by_entity_type: dict[str, dict] = {}
+    for m in all_metrics:
+        for etype, ematch in m.entity_matches.items():
+            if etype not in by_entity_type:
+                by_entity_type[etype] = {"matched": 0, "total": 0}
+            by_entity_type[etype]["total"] += 1
+            if ematch.get("matched"):
+                by_entity_type[etype]["matched"] += 1
+    entity_accuracy_by_type = {
+        etype: round(v["matched"] / v["total"], 4) if v["total"] > 0 else 0.0
+        for etype, v in by_entity_type.items()
+    }
+
+    # Track consistency (original vs translated)
+    tc_values = [m.track_consistency for m in all_metrics if m.track_consistency > 0]
+    cross_lingual_consistency = (
+        sum(tc_values) / len(tc_values) if tc_values else 0.0
+    )
+
+    # By MOI breakdown
+    by_moi: dict[str, list] = {}
+    for m in all_metrics:
+        moi = m.moi
+        by_moi.setdefault(moi, []).append(m)
+
+    moi_metrics = {}
+    for moi, metrics_list in by_moi.items():
+        moi_tp = sum(1 for m in metrics_list for f in m.field_matches if f.matched)
+        moi_fp = sum(1 for m in metrics_list for f in m.field_matches if f.match_type == "wrong_value")
+        moi_fn = sum(1 for m in metrics_list for f in m.field_matches if f.match_type in ("missing", "none"))
+        moi_p = moi_tp / (moi_tp + moi_fp) if (moi_tp + moi_fp) > 0 else 0
+        moi_r = moi_tp / (moi_tp + moi_fn) if (moi_tp + moi_fn) > 0 else 0
+        moi_f1 = 2 * moi_p * moi_r / (moi_p + moi_r) if (moi_p + moi_r) > 0 else 0
+        std_vals = [m.standardization_accuracy for m in metrics_list if m.entity_matches]
+        tc_vals = [m.track_consistency for m in metrics_list if m.track_consistency > 0]
+        moi_metrics[moi] = {
+            "count": len(metrics_list),
+            "precision": round(moi_p, 4),
+            "recall": round(moi_r, 4),
+            "f1": round(moi_f1, 4),
+            "standardization_accuracy": round(sum(std_vals) / len(std_vals), 4) if std_vals else 0.0,
+            "track_consistency": round(sum(tc_vals) / len(tc_vals), 4) if tc_vals else 0.0,
+        }
+
     return {
         "overall": {
             "true_positives": tp,
@@ -420,9 +577,13 @@ def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
             "precision": round(precision, 4),
             "recall": round(recall, 4),
             "f1": round(f1, 4),
+            "entity_standardization_accuracy": round(entity_standardization_accuracy, 4),
+            "cross_lingual_consistency": round(cross_lingual_consistency, 4),
         },
         "by_field": field_f1,
         "by_classification": cls_metrics,
+        "by_moi": moi_metrics,
+        "by_entity_type": entity_accuracy_by_type,
     }
 
 
@@ -458,8 +619,11 @@ async def run_evaluation(base_url: str, concurrency: int, limit: int | None = No
             status_icon = "✓" if m.pipeline_status in ("awaiting_review", "completed") else "✗"
             tp = sum(1 for f in m.field_matches if f.matched)
             total = len(m.field_matches)
-            logger.info("[{}] {} | {} | {}/{} fields matched | {:.0f}s",
-                        m.entry_id, status_icon, m.pipeline_status, tp, total, m.duration_s)
+            entity_str = f"std={m.standardization_accuracy:.0%}" if m.entity_matches else "std=-"
+            track_str = f"tc={m.track_consistency:.0%}" if m.track_consistency > 0 else "tc=-"
+            logger.info("[{}] {} | {} | {}/{} fields | {} {} | {:.0f}s",
+                        m.entry_id, status_icon, m.pipeline_status, tp, total,
+                        entity_str, track_str, m.duration_s)
 
     elapsed = time.time() - t0
 
@@ -479,17 +643,21 @@ async def run_evaluation(base_url: str, concurrency: int, limit: int | None = No
                 "entry_id": m.entry_id,
                 "gene_symbol": m.gene_symbol,
                 "classification": m.classification,
+                "moi": m.moi,
                 "pipeline_status": m.pipeline_status,
                 "duration_s": m.duration_s,
                 "evidence_count": m.evidence_count,
                 "found_rate": m.found_rate,
                 "grounding_rate": m.grounding_rate,
+                "standardization_accuracy": m.standardization_accuracy,
+                "track_consistency": m.track_consistency,
                 "field_matches": [
                     {"field_id": f.field_id, "expected": f.expected_value,
                      "matched": f.matched, "extracted": f.extracted_value,
                      "match_type": f.match_type}
                     for f in m.field_matches
                 ],
+                "entity_matches": m.entity_matches,
             }
             for m in all_metrics
         ],
@@ -506,8 +674,13 @@ async def run_evaluation(base_url: str, concurrency: int, limit: int | None = No
     logger.info("  Entries: {} | Duration: {:.0f}s", len(entries), elapsed)
     logger.info("  Field P/R/F1: {:.1%} / {:.1%} / {:.1%}", o["precision"], o["recall"], o["f1"])
     logger.info("  TP={} FP={} FN={}", o["true_positives"], o["false_positives"], o["false_negatives"])
+    logger.info("  Entity Standardization Accuracy: {:.1%}", o["entity_standardization_accuracy"])
+    logger.info("  Cross-lingual Consistency: {:.1%}", o["cross_lingual_consistency"])
     for cls, m in aggregates["by_classification"].items():
         logger.info("  {}: P={:.1%} R={:.1%} F1={:.1%} (n={})", cls, m["precision"], m["recall"], m["f1"], m["count"])
+    for moi, m in aggregates.get("by_moi", {}).items():
+        logger.info("  MOI={}: F1={:.1%} StdAcc={:.1%} TrackCons={:.1%} (n={})",
+                     moi, m["f1"], m["standardization_accuracy"], m["track_consistency"], m["count"])
     logger.info("Report: {}", report_path)
 
     await engine.dispose()
