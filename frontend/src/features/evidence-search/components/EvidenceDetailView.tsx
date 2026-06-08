@@ -37,6 +37,7 @@ export function EvidenceDetailView({ groupId }: EvidenceDetailViewProps) {
       if (selectedItem) {
         return (
           detail.traces.find((trace) => trace.field_id === selectedItem.field_id) ??
+          detail.traces[0] ??
           null
         );
       }

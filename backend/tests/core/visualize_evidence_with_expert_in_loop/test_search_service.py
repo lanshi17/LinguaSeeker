@@ -150,3 +150,108 @@ def test_build_highlight_clamps_invalid_offsets():
     assert highlight is not None
     assert highlight.highlight_end == len("BRCA1 was detected.")
     assert highlight.page == 3
+
+
+def test_build_highlight_value_fallback_for_document_global_offsets():
+    """_build_highlight falls back to value-based search when offsets exceed snippet."""
+    highlight = _build_highlight(
+        {"text_snippet": "BRCA1 was detected in the proband.", "start_offset": 500, "end_offset": 505},
+        value="BRCA1",
+    )
+    assert highlight is not None
+    assert highlight.highlight_start == 0
+    assert highlight.highlight_end == 5
+
+
+def test_build_highlight_value_fallback_requires_min_length():
+    """_build_highlight skips value fallback for short values (< 3 chars)."""
+    highlight = _build_highlight(
+        {"text_snippet": "A was detected.", "start_offset": 500, "end_offset": 501},
+        value="A",
+    )
+    # Short value should NOT be used as substring fallback — offsets go to (0, 0)
+    assert highlight is not None
+    assert highlight.highlight_start == 0
+    assert highlight.highlight_end == 0
+
+
+def test_build_highlight_returns_none_for_empty_text():
+    """_build_highlight returns None when text_snippet is empty."""
+    assert _build_highlight({"text_snippet": ""}) is None
+    assert _build_highlight({"text_snippet": None}) is None
+
+
+@pytest.mark.asyncio
+async def test_get_group_detail_skips_field_ids_without_standard_tracks():
+    """Field IDs with only non-standard tracks should be skipped in traces."""
+    source_document_id = uuid4()
+    ev_id = uuid4()
+    group_id = "gene=['BRCA1']"
+
+    rows = [
+        SimpleNamespace(
+            canonical_evidence_id=ev_id,
+            source_document_id=source_document_id,
+            field_id="A.gene_symbol",
+            review_status="provisional",
+            current_best_confidence=Decimal("0.9"),
+            active_payload={
+                "group_id": group_id,
+                "field_name": "Gene symbol",
+                "category": "A",
+                "value": "BRCA1",
+                "track": "review",
+                "source": {"text_snippet": "BRCA1 gene.", "start_offset": 0, "end_offset": 5},
+            },
+        ),
+    ]
+    identifiers: list = []
+
+    service = SearchService(_FakeSession([
+        _FakeResult(rows=rows),
+        _FakeResult(scalars=identifiers),
+    ]))
+
+    detail = await service.get_group_detail(group_id=group_id)
+
+    # The 'review' track row should be in items but NOT produce a trace
+    assert len(detail.items) == 1
+    assert len(detail.traces) == 0
+
+
+@pytest.mark.asyncio
+async def test_get_group_detail_single_track_field_produces_partial_trace():
+    """A field ID with only an 'original' row should produce a trace with translated=None."""
+    source_document_id = uuid4()
+    ev_id = uuid4()
+    group_id = "gene=['BRCA1']"
+
+    rows = [
+        SimpleNamespace(
+            canonical_evidence_id=ev_id,
+            source_document_id=source_document_id,
+            field_id="A.gene_symbol",
+            review_status="provisional",
+            current_best_confidence=Decimal("0.9"),
+            active_payload={
+                "group_id": group_id,
+                "field_name": "Gene symbol",
+                "category": "A",
+                "value": "BRCA1",
+                "track": "original",
+                "source": {"text_snippet": "BRCA1 gene.", "start_offset": 0, "end_offset": 5},
+            },
+        ),
+    ]
+    identifiers: list = []
+
+    service = SearchService(_FakeSession([
+        _FakeResult(rows=rows),
+        _FakeResult(scalars=identifiers),
+    ]))
+
+    detail = await service.get_group_detail(group_id=group_id)
+
+    assert len(detail.traces) == 1
+    assert detail.traces[0].original is not None
+    assert detail.traces[0].translated is None

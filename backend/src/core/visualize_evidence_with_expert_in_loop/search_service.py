@@ -80,7 +80,9 @@ def _build_highlight(
     # Clamp offsets to snippet bounds. When start exceeds text length
     # the offsets are document-global; fall back to locating value in snippet.
     if start >= text_len:
-        if value and value in text:
+        # Require a minimum value length to avoid false-positive substring
+        # matches on short strings like single amino acids or nucleotides.
+        if value and len(value) >= 3 and value in text:
             start = text.index(value)
             end = start + len(value)
         else:
@@ -397,6 +399,22 @@ class SearchService:
                             row.canonical_evidence_id,
                         )
                     translated_row = row
+                else:
+                    logger.warning(
+                        "Non-standard track value {!r} for field_id={}, "
+                        "canonical_evidence_id={} — skipping in trace pairing",
+                        track,
+                        field_id,
+                        row.canonical_evidence_id,
+                    )
+
+            ref_row = original_row or translated_row
+            if ref_row is None:
+                logger.warning(
+                    "No original/translated track found for field_id={} — skipping trace",
+                    field_id,
+                )
+                continue
 
             original_source = (
                 original_row.active_payload.get("source")
@@ -415,10 +433,9 @@ class SearchService:
                 if translated_row and translated_row.active_payload else None
             )
 
-            original = _build_highlight(original_source, original_value) if original_source else None
-            translated = _build_highlight(translated_source, translated_value) if translated_source else None
+            original = _build_highlight(original_source, original_value) if original_source is not None else None
+            translated = _build_highlight(translated_source, translated_value) if translated_source is not None else None
 
-            ref_row = original_row or translated_row
             canonical_id = ref_row.canonical_evidence_id
             field_name = ref_row.active_payload.get("field_name") if ref_row.active_payload else None
 
