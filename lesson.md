@@ -1447,3 +1447,23 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 - 前后端 API 字段名不一致时必须在 service 边界显式归一化，避免组件直接依赖后端 raw schema。
 - 第三方请求 SDK 的默认 method 必须验证，尤其是 SSE/streaming 场景。
 - 对需要 path 参数的 provider，不允许使用空字符串作为临时 id。
+
+## 2026-06-08: Literature Profile Read Model Review Catches
+
+**问题描述：** 新增 literature_profiles API 端点时，出现两个遗漏。
+
+**排查过程：**
+1. `LiteratureProfileDetailResponse` 定义了 `review_notes` 字段，但路由处理器构造响应时漏传了该字段，导致数据静默丢失（字段有 None 默认值）。
+2. `EvidenceGroupSummary.summary` 使用裸 `dict` 类型，违反项目 rule 22 类型安全规范。
+
+**根因分析：**
+1. Pydantic 模型字段有默认值时，漏传不会报错，容易被忽略。
+2. 快速实现时未逐条对照 rule 22 检查所有新添加的类型标注。
+
+**解决方案：**
+1. 补传 `review_notes=profile.get("review_notes")`。
+2. 新增 `EvidenceGroupSummaryDict(TypedDict)` 替代裸 `dict`，`authors: list` 改为 `list[str]`。
+
+**预防措施：**
+- 路由处理器构造 Pydantic response 时，必须逐一对照模型字段列表，确保每个字段都有显式赋值。
+- 新增 Pydantic 模型后，立即用 `grep -n "dict\|list" contracts.py` 检查是否有裸类型违反 rule 22。
