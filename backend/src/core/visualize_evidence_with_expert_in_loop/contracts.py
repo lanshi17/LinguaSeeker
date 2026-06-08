@@ -286,3 +286,77 @@ class EvidenceGroupDetailResponse(BaseModel):
     distribution: EvidenceFieldDistribution
     items: list[EvidenceGroupItem]
     traces: list[EvidenceTrackTrace]
+
+
+class LiteratureProfileSummary(BaseModel):
+    """Summary row for literature search results."""
+
+    literature_profile_id: UUID
+    source_document_id: UUID
+    pmid: str | None = None
+    doi: str | None = None
+    title: str | None = None
+    journal: str | None = None
+    publication_year: int | None = None
+    review_status: str = "provisional"
+    overall_confidence: float | None = None
+    total_evidence_fields: int = 0
+    found_count: int = 0
+    evidence_group_count: int = 0
+    gene: str | None = None
+    variant: str | None = None
+    disease: str | None = None
+    classification: str | None = None
+
+
+class LiteratureSearchResponse(BaseModel):
+    """Response for GET /api/v1/literature/search."""
+
+    items: list[LiteratureProfileSummary]
+    total: int
+    page: int = 1
+    page_size: int = 50
+
+
+class EvidenceFieldItem(BaseModel):
+    """One evidence field within a group."""
+
+    canonical_evidence_id: UUID
+    field_id: str
+    field_name: str | None = None
+    category: str | None = None
+    value: str | None = None
+    confidence: float | None = None
+    status: str | None = None
+    track: str | None = None
+
+
+class EvidenceGroupSummary(BaseModel):
+    """Summary of an evidence group within a literature profile."""
+
+    group_id: str
+    summary: dict = Field(default_factory=dict)
+    avg_confidence: float | None = None
+    field_count: int = 0
+    review_status: str = "provisional"
+    fields: list[EvidenceFieldItem] = Field(default_factory=list)
+
+
+class LiteratureProfileDetailResponse(BaseModel):
+    """Response for GET /api/v1/literature/{id}/detail."""
+
+    literature_profile_id: UUID
+    source_document_id: UUID
+    pmid: str | None = None
+    doi: str | None = None
+    title: str | None = None
+    authors: list = Field(default_factory=list)
+    journal: str | None = None
+    publication_year: int | None = None
+    evidence_groups: list[EvidenceGroupSummary] = Field(default_factory=list)
+    review_status: str = "provisional"
+    review_notes: str | None = None
+    overall_confidence: float | None = None
+    total_evidence_fields: int = 0
+    found_count: int = 0
+    not_found_count: int = 0
