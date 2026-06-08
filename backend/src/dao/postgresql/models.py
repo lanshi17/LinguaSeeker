@@ -90,6 +90,50 @@ class SourceDocumentIdentifier(Base, TimestampMixin):
     source_document: Mapped[SourceDocument] = relationship(back_populates="identifiers", lazy="raise")
 
 
+class LiteratureProfile(Base, TimestampMixin):
+    """Aggregated literature profile summarizing evidence extraction results."""
+
+    __tablename__ = "literature_profiles"
+    __table_args__ = (
+        Index("ix_literature_profiles_pmid", "pmid"),
+        Index("ix_literature_profiles_doi", "doi"),
+        Index(
+            "ix_literature_profiles_evidence_groups_gin",
+            "evidence_groups",
+            postgresql_using="gin",
+        ),
+        Index("ix_literature_profiles_review_status", "review_status"),
+    )
+
+    literature_profile_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    source_document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("source_documents.source_document_id"),
+        nullable=False,
+        unique=True,
+    )
+    pmid: Mapped[str | None] = mapped_column(Text, nullable=True)
+    doi: Mapped[str | None] = mapped_column(Text, nullable=True)
+    title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    authors: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
+    journal: Mapped[str | None] = mapped_column(Text, nullable=True)
+    publication_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    evidence_groups: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
+    review_status: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="provisional", server_default=text("'provisional'")
+    )
+    review_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    overall_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    total_evidence_fields: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
+    found_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
+    not_found_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
+    latest_processing_run_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+
+
 class User(Base, TimestampMixin):
     """Minimal auth user used for login and review ownership."""
 
