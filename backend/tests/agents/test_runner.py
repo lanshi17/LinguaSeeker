@@ -425,3 +425,87 @@ async def test_recover_orphaned_runs(sample_state, mock_orchestrator, mock_semap
     count = await runner.recover_orphaned_runs()
     assert count == 2
     mock_persistence.recover_orphaned_runs.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_shutdown_waits_for_active_tasks(sample_state, mock_semaphore, mock_persistence):
+    """shutdown() should wait for active tasks to complete."""
+    orch = MagicMock()
+    task_started = asyncio.Event()
+    release_task: asyncio.Future[None] = asyncio.get_running_loop().create_future()
+
+    async def _slow_run(_state: object) -> PipelineGraphState:
+        task_started.set()
+        await release_task
+        return sample_state.model_copy(update={"pipeline_status": PipelineStatus.COMPLETED})
+
+    orch.run = AsyncMock(side_effect=_slow_run)
+
+    runner = PipelineRunner(
+        orchestrator=orch,
+        semaphore=mock_semaphore,
+        state_persistence=mock_persistence,
+    )
+
+    runner.start(sample_state)
+    await task_started.wait()
+
+    # Release the task so shutdown can complete
+    release_task.set_result(None)
+    await runner.shutdown(timeout=5.0)
+
+    # Task should be done, no active tasks remain
+    assert not runner.is_running("run-123")
+
+
+@pytest.mark.asyncio
+async def test_shutdown_returns_immediately_when_no_active_tasks(
+    mock_orchestrator, mock_semaphore, mock_persistence
+):
+    """shutdown() should return immediately when no tasks are running."""
+    runner = PipelineRunner(
+        orchestrator=mock_orchestrator,
+        semaphore=mock_semaphore,
+        state_persistence=mock_persistence,
+    )
+
+    # Should not block or raise
+    await runner.shutdown(timeout=5.0)
+
+
+@pytest.mark.asyncio
+async def test_shutdown_times_out_on_long_running_tasks(
+    sample_state, mock_semaphore, mock_persistence
+):
+    """shutdown() should return after timeout even if tasks are still running."""
+    orch = MagicMock()
+    task_started = asyncio.Event()
+    hang_forever: asyncio.Future[None] = asyncio.get_running_loop().create_future()
+
+    async def _hang(_state: object) -> None:
+        task_started.set()
+        await hang_forever
+
+    orch.run = AsyncMock(side_effect=_hang)
+
+    runner = PipelineRunner(
+        orchestrator=orch,
+        semaphore=mock_semaphore,
+        state_persistence=mock_persistence,
+    )
+
+    task = runner.start(sample_state)
+    await task_started.wait()
+
+    # Shutdown with very short timeout — should return without blocking
+    await runner.shutdown(timeout=0.1)
+
+    # Task is still running (not cancelled by shutdown)
+    assert not task.done()
+
+    # Cleanup
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass

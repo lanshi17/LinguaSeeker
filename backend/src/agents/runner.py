@@ -156,6 +156,37 @@ class PipelineRunner:
         """Mark runs stuck in non-terminal states as FAILED after server restart."""
         return await self._persistence.recover_orphaned_runs()
 
+    async def shutdown(self, timeout: float = 60.0) -> None:
+        """Wait for active pipeline tasks to complete before server shutdown.
+
+        Called during FastAPI lifespan teardown so that in-flight LLM calls
+        can finish and persist their state to PostgreSQL before the DB engine
+        is disposed.  Without this, ``uvicorn --reload`` or SIGTERM cancels
+        the asyncio tasks immediately, leaving orphaned runs in the database.
+
+        Args:
+            timeout: Maximum seconds to wait per task.  Should be at least
+                as long as the LLM timeout (default 60s) to avoid cancelling
+                requests that would have succeeded.
+        """
+        active = {rid: t for rid, t in self._active_tasks.items() if not t.done()}
+        if not active:
+            return
+
+        logger.info("Graceful shutdown: waiting for {} active pipeline task(s) (timeout={}s)", len(active), timeout)
+        tasks = list(active.values())
+        done, pending = await asyncio.wait(tasks, timeout=timeout)
+
+        for rid, task in active.items():
+            if task in done:
+                exc = task.exception() if not task.cancelled() else None
+                if exc:
+                    logger.warning("Pipeline run {} finished with error during shutdown: {}", rid, exc)
+                else:
+                    logger.info("Pipeline run {} completed during shutdown", rid)
+            else:
+                logger.warning("Pipeline run {} still running after shutdown timeout — will be recovered on next start", rid)
+
     def is_running_for_source(self, source_key: str) -> bool:
         """Check if any active run is processing this source key (N3 fix).
 
