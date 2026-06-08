@@ -59,6 +59,9 @@ class FakeRepository:
     async def upsert_canonical_evidence(self, input_data, matches, entity_ids):
         self.canonical.append((input_data, matches, entity_ids))
 
+    async def refresh_literature_profile(self, source_document_id: str) -> None:
+        self.profile_refreshed = source_document_id
+
 
 @pytest.mark.asyncio
 async def test_standardization_service_matches_and_persists_candidates() -> None:

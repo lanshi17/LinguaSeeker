@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from hashlib import sha256
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy import select, text, tuple_
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -878,6 +878,13 @@ class StandardizationRepository:
                     ),
                 )
         await self.session.flush()
+
+    async def refresh_literature_profile(self, source_document_id: str) -> None:
+        """Refresh the literature_profiles read model for a document."""
+        from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
+
+        profile_repo = LiteratureProfileRepository(self.session)
+        await profile_repo.refresh_for_document(UUID(source_document_id))
 
     async def upsert_canonical_evidence(
         self,
