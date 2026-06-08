@@ -258,6 +258,8 @@ async def test_cancelled_task_persists_failed_state(
     assert final_state is not None
     assert final_state.pipeline_status == PipelineStatus.FAILED
     assert "cancelled" in (final_state.error_message or "").lower()
+    # Verify the error state was persisted (not just cached)
+    mock_persistence.save.assert_called()
 
 
 @pytest.mark.asyncio
@@ -296,6 +298,48 @@ async def test_cancelled_task_preserves_current_phase(
     final_state = runner.get_last_state_cached("run-123")
     assert final_state is not None
     assert final_state.error_phase == 2  # not 0
+    # Verify the error state was persisted (not just cached)
+    mock_persistence.save.assert_called()
+
+
+@pytest.mark.asyncio
+async def test_cancelled_task_defaults_phase_when_orchestrator_did_not_set(
+    sample_state, mock_semaphore, mock_persistence
+):
+    """When the orchestrator crashes before setting error_phase (stays None),
+    the runner must fall back to deriving it from per-phase statuses or 0."""
+    orch = MagicMock()
+    reached_orchestrator = asyncio.Event()
+    hang_forever: asyncio.Future[None] = asyncio.get_running_loop().create_future()
+
+    async def _hang(_state: object) -> None:
+        # Simulate early crash — orchestrator never sets error_phase.
+        # error_phase stays at its Pydantic default (None).
+        reached_orchestrator.set()
+        await hang_forever
+
+    orch.run = AsyncMock(side_effect=_hang)
+
+    runner = PipelineRunner(
+        orchestrator=orch,
+        semaphore=mock_semaphore,
+        state_persistence=mock_persistence,
+    )
+
+    task = runner.start(sample_state)
+    await reached_orchestrator.wait()
+    task.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    final_state = runner.get_last_state_cached("run-123")
+    assert final_state is not None
+    assert final_state.pipeline_status == PipelineStatus.FAILED
+    # Must be an int, never None (None would break the frontend)
+    assert isinstance(final_state.error_phase, int)
+    assert final_state.error_phase == 0  # no phase was running
+    mock_persistence.save.assert_called()
 
 
 @pytest.mark.asyncio

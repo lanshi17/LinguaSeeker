@@ -1,3 +1,4 @@
+[2026-06-08] Database schema review & optimization: added 12 indexes (JSONB expression, GIN, composite), fixed N+1 query in upsert_canonical_evidence, added lazy="raise" to all ORM relationships, fixed 12 review findings (recover_orphaned_runs WHERE+error_phase+tz+LSP, runner None-guard, pipeline_run_states JSONB idx, lock_timeout, tuple_() chunking, dropped 4 redundant indexes, removed dup log, added test coverage) [done]
 [2026-06-06] Generated module guide README.md for benchmark/literature_acquisition — architecture, CLI reference, config format, report fields, internal design [done]
 [2026-06-05] Rett benchmark PDF cleanup: LLM-based relevance check (567→222 PDFs) + auto-rename with English titles [done]
 [2026-06-05] Implemented Phase 3 relevance gate in online_acquisition_workflow — LLM content filtering after download, with relevance_gate.py core module [done]
@@ -243,3 +244,8 @@
 - Added group-level detail API with distribution and original/translated traceability
 - Added source highlight rendering for evidence-chain review
 [2026-06-08] [Fix pipeline: frontend error handling, backend 409 dedup, CancelledError, real-time status sync, polling termination] [DONE]
+[2026-06-08] [Fix orphaned pipeline runs after server restart] [DONE]
+- Root cause: server restart kills asyncio task, DB stuck in RUNNING, frontend polls forever
+- Added startup recovery: lifespan scans DB for orphaned PENDING/RUNNING runs, marks FAILED
+- Added runtime guard: get_last_state detects no-task RUNNING from DB, marks FAILED on-the-fly
+- Added frontend polling safety net: 30-min timeout, cancelled as terminal, error count limit
