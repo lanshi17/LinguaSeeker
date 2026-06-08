@@ -1,0 +1,80 @@
+# ── Common: base packages, firewall, deploy user ──────────────────────────
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Install base packages
+  apt:
+    name:
+      - curl
+      - wget
+      - git
+      - unzip
+      - htop
+      - jq
+      - ca-certificates
+      - gnupg
+      - lsb-release
+      - python3-pip
+      - python3-venv
+      - acl
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Ensure deploy user exists
+  user:
+    name: deploy
+    shell: /bin/bash
+    groups: sudo
+    append: yes
+    create_home: yes
+
+- name: Create project directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: deploy
+    group: deploy
+    mode: "0755"
+  loop:
+    - "{{ project_root }}"
+    - "{{ project_root }}/logs"
+    - /opt/acmg-lingua-data
+    - /opt/acmg-lingua-data/postgres
+    - /opt/acmg-lingua-data/redis
+    - /opt/acmg-lingua-data/model-cache
+
+- name: Set timezone to Asia/Shanghai
+  timezone:
+    name: Asia/Shanghai
+
+- name: Configure sysctl for production
+  sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: yes
+    reload: yes
+  loop:
+    - { key: "vm.swappiness", value: "10" }
+    - { key: "net.core.somaxconn", value: "65535" }
+    - { key: "net.ipv4.tcp_max_syn_backlog", value: "65535" }
+    - { key: "fs.file-max", value: "2097152" }
+
+- name: Deploy logrotate for application logs
+  copy:
+    content: |
+      {{ project_root }}/logs/*.log {
+          daily
+          rotate 30
+          compress
+          delaycompress
+          missingok
+          notifempty
+          copytruncate
+          su deploy deploy
+      }
+    dest: /etc/logrotate.d/acmg-lingua
+    mode: "0644"

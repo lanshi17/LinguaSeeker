@@ -1,0 +1,43 @@
+# ── Model Server (Embedding / Rerank / LLM via systemd) ──────────────────
+
+- name: Sync model-server source code
+  synchronize:
+    src: "{{ playbook_dir }}/../../backend/services/model-server/"
+    dest: "{{ project_root }}/model-server/"
+    delete: yes
+    rsync_opts:
+      - "--exclude=.venv"
+      - "--exclude=__pycache__"
+  notify: Restart model-server
+
+- name: Install model-server Python dependencies
+  command: uv sync --no-dev
+  args:
+    chdir: "{{ project_root }}/model-server"
+  environment:
+    UV_CACHE_DIR: "{{ project_root }}/.cache/uv"
+
+- name: Deploy model-server systemd service
+  template:
+    src: acmg-model-server.service.j2
+    dest: /etc/systemd/system/acmg-model-server.service
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart model-server
+
+- name: Ensure model-server is running
+  systemd:
+    name: acmg-model-server
+    state: started
+    enabled: yes
+
+- name: Wait for model-server to be ready
+  uri:
+    url: "http://localhost:{{ model_server_port }}/health"
+    method: GET
+  register: model_health
+  retries: 30
+  delay: 10
+  until: model_health.status == 200
+  failed_when: false

@@ -1,0 +1,6 @@
+- name: Restart Redis
+  community.docker.docker_compose_v2:
+    project_src: "{{ project_root }}"
+    files:
+      - docker-compose.redis.yml
+    state: restarted

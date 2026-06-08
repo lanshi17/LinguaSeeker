@@ -1,5 +1,17 @@
 # Lesson Log
 
+## 2026-06-08: Plan review caught unsafe highlight fallback and throwaway frontend steps
+
+**Problem**: The bilingual comparison implementation plan proposed an `_build_highlight` rewrite that would regress valid-start/oversized-end clamping and remove the short-value guard too broadly. The frontend plan also added inline JSX that a later task immediately deleted, and the component sketch omitted key null/zero-length rendering cases.
+
+**Investigation**: Checked the existing `test_build_highlight_clamps_invalid_offsets` fixture and the group-detail test rows. Confirmed that the original/translated rows in the existing fixture use different `field_id` values, so `traces[0].translated_value` would be `None`. Reviewed the frontend component sketch and verified the missing null guard, conditional chip issue, and lack of component tests.
+
+**Root cause**: The plan mixed desired behavior with incomplete code sketches and did not re-evaluate existing tests before claiming the test suite would pass.
+
+**Solution**: Revised the plan to preserve clamping, use explicit offset parsing, add bounded value-anchor matching, keep ambiguous single-letter values unhighlighted, add a paired-field backend test, build `BilingualComparison` directly, and add Vitest component tests for null, marked, and zero-length highlight states.
+
+**Prevention**: When writing implementation plans with code snippets, verify them against existing tests and fixtures before stating expected pass/fail counts. Avoid temporary implementation steps that are immediately deleted by later tasks.
+
 ## 2026-06-05: 推理模型 max_tokens 不足导致空响应
 
 **Problem**: 使用 mimo-v2.5（推理模型）调用 LLM 时，设置 `max_tokens=200` 返回空 content。567 个 PDF 全部判断失败。
