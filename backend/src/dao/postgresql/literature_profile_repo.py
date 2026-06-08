@@ -300,7 +300,7 @@ class LiteratureProfileRepository:
 
     async def get_by_document(
         self, source_document_id: uuid.UUID
-    ) -> dict | None:
+    ) -> dict | None:  # noqa: dict-return — read-model projection row
         """Return the literature profile as a dict, or None if not found."""
         result = await self._session.execute(
             select(LiteratureProfile).where(
@@ -341,7 +341,7 @@ class LiteratureProfileRepository:
         doi: str | None = None,
         page: int = 1,
         page_size: int = 50,
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[dict], int]:  # noqa: dict-return — read-model projection rows
         """Search literature profiles with optional filters.
 
         All filter conditions are OR-combined. Returns ``(items, total_count)``.
