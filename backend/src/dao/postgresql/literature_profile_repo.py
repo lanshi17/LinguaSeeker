@@ -8,10 +8,9 @@ from __future__ import annotations
 
 import uuid
 from collections import OrderedDict
-from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import Numeric, String, Text, cast, or_, select
+from sqlalchemy import Text, cast, func, or_, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from src.dao.postgresql.models import (
@@ -375,8 +374,6 @@ class LiteratureProfileRepository:
             base_stmt = base_stmt.where(or_(*conditions))
 
         # Count query.
-        from sqlalchemy import func
-
         count_stmt = select(func.count()).select_from(base_stmt.subquery())
         count_result = await self._session.execute(count_stmt)
         total_count = count_result.scalar_one()
