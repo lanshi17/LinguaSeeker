@@ -117,10 +117,10 @@ class LiteratureProfile(Base, TimestampMixin):
     pmid: Mapped[str | None] = mapped_column(Text, nullable=True)
     doi: Mapped[str | None] = mapped_column(Text, nullable=True)
     title: Mapped[str | None] = mapped_column(Text, nullable=True)
-    authors: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
+    authors: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'"))
     journal: Mapped[str | None] = mapped_column(Text, nullable=True)
     publication_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    evidence_groups: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
+    evidence_groups: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'"))
     review_status: Mapped[str] = mapped_column(
         String(32), nullable=False, default="provisional", server_default=text("'provisional'")
     )

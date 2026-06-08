@@ -188,8 +188,8 @@ def test_head_revision_points_to_terminology_schema() -> None:
     assert base.down_revision is None
 
 
-def test_head_revision_points_to_pgvector_embeddings() -> None:
-    """The Alembic head includes pgvector terminology embeddings."""
+def test_head_revision_points_to_literature_profiles() -> None:
+    """The Alembic head is the literature_profiles read-model table."""
     backend_str = str(BACKEND_DIR)
     if backend_str not in sys.path:
         sys.path.insert(0, backend_str)
@@ -204,8 +204,8 @@ def test_head_revision_points_to_pgvector_embeddings() -> None:
     head = script.get_revision("head")
 
     assert head is not None
-    assert head.revision == "6a8f3b1c2d4e"
-    assert head.down_revision == "547f7e3f71e3"
+    assert head.revision == "lit_profiles_20260608"
+    assert head.down_revision == "6a8f3b1c2d4e"
 
 
 def test_terminology_relationships_migration_defines_unique_identity_constraint(monkeypatch) -> None:
