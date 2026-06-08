@@ -123,6 +123,7 @@ class EntryMetrics:
     gene_symbol: str
     classification: str
     language: str
+    moi: str = ""
     run_id: str | None = None
     pipeline_status: str = "pending"
     duration_s: float = 0.0
@@ -396,12 +397,14 @@ async def evaluate_one(
     entry_id = entry["entry_id"]
     gene = entry["gene_symbol"]
     classification = entry.get("classification", "")
+    moi = entry.get("moi", "")
 
     metrics = EntryMetrics(
         entry_id=entry_id,
         gene_symbol=gene,
         classification=classification,
         language="en",
+        moi=moi,
     )
 
     # Check for source text
