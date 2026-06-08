@@ -5,10 +5,9 @@ Project documentation is organized by lifecycle status.
 ```text
 docs/
 ├── README.md
-├── active/           # Living reference documents (PRD, tech stack, guidelines)
-├── plans/            # Active date-stamped implementation plans
+├── active/           # In-progress plans & living reference documents
 ├── planned/          # Planned work that has not started
-├── codereview/       # Active code reviews (empty when all reviews are resolved)
+├── codereview/       # Active code reviews
 ├── diagrams/         # Mermaid flowcharts (phase1–phase4)
 ├── archive/
 │   ├── plans/        # Completed or superseded plans
@@ -20,23 +19,32 @@ Each `backend/` module also has its own `README.md` developer guide (43 total). 
 
 ## Classification Rules
 
-- `active/`: living reference documents — PRD, tech stack, frontend/backend guidelines, workflow overviews. Not date-stamped; updated as the project evolves.
-- `plans/`: active date-stamped implementation plans (`YYYY-MM-DD-<topic>.md`). Moved to `archive/plans/` upon completion.
-- `planned/`: planned work that has not started yet.
+- `active/`: in-progress implementation plans and living reference documents (PRD, tech stack, guidelines, workflow overviews). Date-stamped plans move here when work begins.
+- `planned/`: planned work that has not started yet (`YYYY-MM-DD-<topic>.md`).
 - `codereview/`: active code review reports and review follow-ups.
 - `diagrams/`: Mermaid flowcharts (`.mmd`) for the four pipeline phases.
 - `archive/plans/`: completed or superseded plans.
 - `archive/codereview/`: completed code reviews whose findings are resolved or no longer active.
 - `templates/`: reusable documentation templates.
 
+### When to Move Documents
+
+| Trigger | From | To |
+|---|---|---|
+| Work starts on a plan | `planned/` | `active/` |
+| Plan completed / merged | `active/` | `archive/plans/` |
+| Code review resolved | `codereview/` | `archive/codereview/` |
+| Plan superseded | `active/` or `planned/` | `archive/plans/` |
+
 ## Naming Convention
 
 Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
-## Active Reference Documents
+## Active Plans & References
 
-| date | title | status/PR |
+| date | title | status |
 |---|---|---|
+| 2026-06-08 | [Bilingual Comparison UX Improvement](active/2026-06-08-bilingual-comparison-ux.md) | in-progress |
 | 2026-05-09 | [PRD](active/PRD.md) | active — v2.0 tab-based UI + chat-driven extraction |
 | 2026-05-09 | [Application Flow](active/APP_FLOW.md) | active — v2.0 tab navigation + workspace flow |
 | 2026-05-09 | [Technology Stack](active/TECH_STACK.md) | active — v2.0 SSE, Vercel AI SDK, shadcn/ui |
@@ -45,18 +53,18 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-05-09 | [Implementation Plan](active/IMPLEMENTATION_PLAN.md) | active — v2.0 frontend UI tasks |
 | 2026-05-13 | [Phase Workflow Overview](active/phase_workflow_overview.md) | active — four-phase pipeline reference |
 
-## Active Implementation Plans
+## Planned Work
 
 | date | title | status |
 |---|---|---|
-
-## Planned Work
-
-No planned work.
+| 2026-06-06 | [ClinGen-based Layer 3 Pipeline Evaluation](planned/2026-06-06-clingen-layer3-evaluation.md) | planned |
+| 2026-06-06 | [Frontend Layered Configuration](planned/2026-06-06-frontend-layered-config.md) | planned |
 
 ## Active Code Reviews
 
-No active code reviews.
+| date | title | status |
+|---|---|---|
+| 2026-06-08 | [Database Schema Review & Optimization](codereview/2026-06-08-database-schema-review.md) | active |
 
 ## Diagrams
 
@@ -73,44 +81,49 @@ No active code reviews.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-06-08 | [Evidence Traceability Fix](archive/plans/2026-06-08-evidence-traceability-fix.md) | completed — source span display + offset fix |
+| 2026-06-07 | [Evidence Detail Traceability Highlights](archive/plans/2026-06-07-evidence-detail-traceability-highlights.md) | completed — evidence detail page with distribution, traceability, highlights |
+| 2026-06-06 | [Ant Design X AI Chat](archive/plans/2026-06-06-antd-x-ai-chat.md) | completed — @ant-design/x chat integration |
+| 2026-06-06 | [Frontend Feature Architecture](archive/plans/2026-06-06-frontend-feature-architecture.md) | completed — business feature module restructure |
+| 2026-06-06 | [Frontend MVP Three Modules](archive/plans/2026-06-06-frontend-mvp-three-modules.md) | completed — AI Chat, Pipeline, Evidence Query |
 | 2026-06-06 | [Backend config single source](archive/plans/2026-06-06-backend-config-single-source.md) | completed — backend/config-only loader shared by backend and model-server |
 | 2026-06-04 | [Redis connection manager](archive/plans/2026-06-04-redis-connection-manager.md) | completed — centralized async Redis client singleton |
 | 2026-06-02 | [Online acquisition refactor](archive/plans/2026-06-02-online-acquisition-refactor.md) | completed — three-phase pipeline: link acquisition, download, LLM gate |
-| 2026-06-01 | [Pipeline benchmark](archive/plans/2026-06-01-pipeline-benchmark.md) | completed — E2E benchmark with PG evidence metrics |
 | 2026-06-02 | [Backend security & architecture fixes](archive/plans/2026-06-01-backend-security-architecture-fixes.md) | completed — 6 tasks + 3 review passes: auth, file limits, path traversal, rate limiting, TypedDict |
-| 2026-06-02 | [Phase 3 benchmark coverage — relevance scan fix (archived — superseded by config fix)](archive/plans/2026-06-02-phase3-benchmark-coverage.md) | completed — plan based on incorrect RCA; real fix was config fallback |
+| 2026-06-02 | [Phase 3 benchmark coverage — relevance scan fix](archive/plans/2026-06-02-phase3-benchmark-coverage.md) | completed — plan based on incorrect RCA; real fix was config fallback |
+| 2026-06-02 | [architecture cleanup: api→agents→core→dao layering](archive/plans/2026-06-02-architecture-cleanup.md) | completed — unified session factory, Phase4ServiceFactory |
+| 2026-06-01 | [Pipeline benchmark](archive/plans/2026-06-01-pipeline-benchmark.md) | completed — E2E benchmark with PG evidence metrics |
 | 2026-06-01 | [Backend review fixes](archive/plans/2026-06-01-backend-review-fixes.md) | completed — 16 tasks: session commit, auth, upsert, SSE, types, FK, tests |
 | 2026-05-30 | [Phase 2 chunk-level parallelization](archive/plans/2026-05-30-phase2-chunk-parallelization.md) | completed — async provider + stages + workflow |
 | 2026-05-30 | [Unified Config & Monitoring](archive/plans/2026-05-30-unified-config-monitoring.md) | completed — logging, exceptions, middleware, health checks, error handlers, CORS |
 | 2026-05-30 | [Backend optimization (code review)](archive/plans/2026-05-30-backend-optimization.md) | completed — 8 tasks from code review |
-| 2026-06-02 | [architecture cleanup: api→agents→core→dao layering](archive/plans/2026-06-02-architecture-cleanup.md) | completed — unified session factory, Phase4ServiceFactory |
 | 2026-05-29 | [DAO submodule restructure](archive/plans/2026-05-29-dao-submodule-restructure.md) | completed — postgresql/redis/neo4j/minio sub-packages |
 | 2026-05-29 | [utils extraction](archive/plans/2026-05-29-utils-extraction.md) | completed — sanitize_filename, strip_json_fences, traced_node |
 | 2026-05-29 | [pipeline orchestrator](archive/plans/2026-05-29-pipeline-orchestrator.md) | completed — LangGraph 3-phase orchestrator |
 | 2026-05-28 | [Phase 4 visualization expert loop](archive/plans/2026-05-28-phase4-visualization-expert-loop.md) | completed — Phase 4 P0 |
 | 2026-05-26 | [extract evidence long document chunking](archive/plans/2026-05-26-extract-evidence-long-document-chunking.md) | completed |
+| 2026-05-26 | [standardize entities audit and match fixes](archive/plans/2026-05-26-standardize-entities-audit-and-match-fixes.md) | completed — audit output and match fixes |
 | 2026-05-25 | [standardization precise similarity match](archive/plans/2026-05-25-standardization-precise-similarity-match.md) | completed |
-| 2026-05-23 | [block-aware evidence extraction](archive/plans/2026-05-23-block-aware-evidence-extraction.md) | completed |
 | 2026-05-25 | [pgvector vector database](archive/plans/2026-05-25-pgvector-vector-database.md) | completed — Phase 3 vector search |
+| 2026-05-25 | [phase 3 entity standardization implementation](archive/plans/2026-05-25-phase-3-standardization.md) | completed — Phase 3 MVP |
+| 2026-05-25 | [phase 3 entity standardization design](archive/plans/2026-05-25-phase-3-standardization-design.md) | completed — Phase 3 MVP |
+| 2026-05-23 | [block-aware evidence extraction](archive/plans/2026-05-23-block-aware-evidence-extraction.md) | completed |
+| 2026-05-22 | [extract evidence quality gates](archive/plans/2026-05-22-extract-evidence-quality-gates.md) | completed — branch `fix/extract-evidence-quality-gates` |
 | 2026-05-21 | [cross-lingual refactor](archive/plans/2026-05-21-cross-lingual-refactor.md) | completed — 3-stage pipeline |
 | 2026-05-18 | [database implementation](archive/plans/2026-05-18-database-implementation-plan.md) | completed — branch `database-mvp` |
 | 2026-05-18 | [database design](archive/plans/2026-05-18-database-design.md) | completed — branch `database-mvp` |
-| 2026-05-25 | [phase 3 entity standardization implementation](archive/plans/2026-05-25-phase-3-standardization.md) | completed — Phase 3 MVP |
-| 2026-05-25 | [phase 3 entity standardization design](archive/plans/2026-05-25-phase-3-standardization-design.md) | completed — Phase 3 MVP |
-| 2026-05-26 | [standardize entities audit and match fixes](archive/plans/2026-05-26-standardize-entities-audit-and-match-fixes.md) | completed — audit output and match fixes |
-| 2026-05-22 | [extract evidence quality gates](archive/plans/2026-05-22-extract-evidence-quality-gates.md) | completed — branch `fix/extract-evidence-quality-gates` |
 | 2026-05-17 | [persistence JSON optimization](archive/plans/2026-05-17-persistence-json-optimization.md) | completed — 2026-05-19 |
 | 2026-05-16 | [evidence extraction output E2E](archive/plans/2026-05-16-evidence-extraction-output-e2e.md) | completed — 2026-05-19 |
-| 2026-05-12 | [parse document module refactor](archive/plans/2026-05-12-parse-document-refactor.md) | completed — 2026-05-13 |
 | 2026-05-15 | [fix translation quality](archive/plans/2026-05-15-fix-translation-quality.md) | completed — 2026-05-15 |
 | 2026-05-15 | [fix translation token limit](archive/plans/2026-05-15-fix-translation-token-limit.md) | completed — 2026-05-15 |
+| 2026-05-15 | [MinerU local batch upload](archive/plans/2026-05-15-mineru-local-batch-upload.md) | completed — 2026-05-15 |
 | 2026-05-14 | [evidence extraction implementation](archive/plans/2026-05-14-evidence-extraction.md) | completed — 2026-05-15 |
 | 2026-05-14 | [evidence extraction design](archive/plans/2026-05-14-evidence-extraction-design.md) | completed — 2026-05-15 |
 | 2026-05-14 | [cross-lingual persistence](archive/plans/2026-05-14-cross-lingual-persistence.md) | completed — 2026-05-14 |
-| 2026-05-15 | [MinerU local batch upload](archive/plans/2026-05-15-mineru-local-batch-upload.md) | completed — 2026-05-15 |
 | 2026-05-14 | [parse document image extraction](archive/plans/2026-05-14-parse-document-image-extraction.md) | completed — 2026-05-14 |
-| 2026-05-11 | [translation & formatting module](archive/plans/2026-05-11-translation-formatting-module.md) | implemented — branch `feat/cross-lingual-module-v2` |
 | 2026-05-12 | [MinerU2.5-Pro vllm local deployment](archive/plans/2026-05-12-mineru-vllm-local-deployment.md) | completed |
+| 2026-05-12 | [parse document module refactor](archive/plans/2026-05-12-parse-document-refactor.md) | completed — 2026-05-13 |
+| 2026-05-11 | [translation & formatting module](archive/plans/2026-05-11-translation-formatting-module.md) | implemented — branch `feat/cross-lingual-module-v2` |
 | 2026-05-11 | [net-io MinerU local upload](archive/plans/2026-05-11-net-io-mineru-local-upload.md) | completed |
 | 2026-05-11 | [parse-document integration test (MinerU + PaddleOCR)](archive/plans/2026-05-11-parse-document-integration-test.md) | completed |
 | 2026-05-11 | [MinerU VLM + vllm migration](archive/plans/2026-05-11-mineru-vlm-vllm-migration.md) | completed |
