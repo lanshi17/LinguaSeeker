@@ -73,6 +73,12 @@ async def test_get_group_detail_pivots_distribution_and_traces():
                 "category": "A",
                 "value": ["BRCA1"],
                 "track": "original",
+                "source": {
+                    "text_snippet": "BRCA1 was detected in the proband.",
+                    "start_offset": 0,
+                    "end_offset": 5,
+                    "page": 1,
+                },
             },
         ),
         SimpleNamespace(
@@ -87,6 +93,12 @@ async def test_get_group_detail_pivots_distribution_and_traces():
                 "category": "B",
                 "value": "Hereditary breast and ovarian cancer",
                 "track": "translated",
+                "source": {
+                    "text_snippet": "诊断为遗传性乳腺卵巢癌。",
+                    "start_offset": 3,
+                    "end_offset": 13,
+                    "page": 2,
+                },
             },
         ),
     ]
@@ -102,35 +114,10 @@ async def test_get_group_detail_pivots_distribution_and_traces():
             identifier_value="10.1000/example",
         ),
     ]
-    run_items = [
-        SimpleNamespace(
-            canonical_evidence_id=gene_evidence_id,
-            field_id="A.gene_symbol",
-            track="original",
-            source_span={
-                "text_snippet": "BRCA1 was detected in the proband.",
-                "start_offset": 0,
-                "end_offset": 5,
-                "page": 1,
-            },
-        ),
-        SimpleNamespace(
-            canonical_evidence_id=disease_evidence_id,
-            field_id="B.disease_diagnosis",
-            track="translated",
-            source_span={
-                "text_snippet": "诊断为遗传性乳腺卵巢癌。",
-                "start_offset": 3,
-                "end_offset": 13,
-                "page": 2,
-            },
-        ),
-    ]
 
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=identifiers),
-        _FakeResult(scalars=run_items),
     ]))
 
     detail = await service.get_group_detail(group_id=group_id)
