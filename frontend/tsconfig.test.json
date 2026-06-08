@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "incremental": false,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": false,
+    "outDir": ".test-build",
+    "target": "ES2022",
+    "types": ["node"]
+  },
+  "include": [
+    "tests/**/*.test.ts",
+    "src/features/evidence-search/**/*.ts"
+  ]
+}

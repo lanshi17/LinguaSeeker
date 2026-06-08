@@ -1,5 +1,6 @@
 "use client";
 
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import type { EvidenceSearchQuery } from "../types/evidenceSearch";
@@ -25,7 +26,28 @@ export function EvidenceSearchForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold text-gray-950">
+            Literature filters
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Filter evidence-bearing literature records.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button type="submit" loading={isSearching}>
+            <Search className="mr-2 h-4 w-4" />
+            Search
+          </Button>
+          <Button type="button" variant="ghost" onClick={onClear}>
+            <X className="mr-2 h-4 w-4" />
+            Clear
+          </Button>
+        </div>
+      </div>
+
       <div className="grid gap-3 md:grid-cols-4">
         <Input
           label="Gene"
@@ -51,14 +73,6 @@ export function EvidenceSearchForm({
           value={filters.pmid ?? ""}
           onChange={(e) => onUpdateFilter("pmid", e.target.value)}
         />
-      </div>
-      <div className="flex items-center gap-2">
-        <Button type="submit" loading={isSearching}>
-          Search
-        </Button>
-        <Button type="button" variant="ghost" onClick={onClear}>
-          Clear
-        </Button>
       </div>
     </form>
   );
