@@ -11,6 +11,7 @@ def test_unstructured_dict_return_annotations_are_justified() -> None:
     files = [
         REPO_ROOT / "backend" / "src" / "dao" / "redis" / "cache_repo.py",
         REPO_ROOT / "backend" / "src" / "dao" / "postgresql" / "search_index_repo.py",
+        REPO_ROOT / "backend" / "src" / "dao" / "postgresql" / "literature_profile_repo.py",
     ]
 
     for path in files:

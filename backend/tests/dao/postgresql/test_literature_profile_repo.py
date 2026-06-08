@@ -305,3 +305,169 @@ async def test_build_evidence_groups_fields_contain_required_keys() -> None:
     assert field["confidence"] == 0.95
     assert field["status"] == "found"
     assert field["track"] == "original"
+
+
+# ── get_by_document tests ────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_get_by_document_returns_profile_dict() -> None:
+    """get_by_document returns a dict with the expected keys when a row exists."""
+    from datetime import datetime
+
+    from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
+
+    profile_id = uuid4()
+    doc_id = uuid4()
+    now = datetime.now()
+
+    fake_row = MagicMock()
+    fake_row.literature_profile_id = profile_id
+    fake_row.source_document_id = doc_id
+    fake_row.pmid = "12345678"
+    fake_row.doi = "10.1234/test"
+    fake_row.title = "Test Title"
+    fake_row.authors = ["Author A"]
+    fake_row.journal = "Test Journal"
+    fake_row.publication_year = 2024
+    fake_row.evidence_groups = [{"group_id": "g1", "fields": []}]
+    fake_row.review_status = "provisional"
+    fake_row.review_notes = None
+    fake_row.overall_confidence = 0.95
+    fake_row.total_evidence_fields = 10
+    fake_row.found_count = 8
+    fake_row.not_found_count = 2
+    fake_row.created_at = now
+    fake_row.updated_at = now
+
+    session = _fake_session()
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = fake_row
+    session.execute.return_value = mock_result
+
+    repo = LiteratureProfileRepository(session)
+    result = await repo.get_by_document(doc_id)
+
+    assert result is not None
+    expected_keys = {
+        "literature_profile_id",
+        "source_document_id",
+        "pmid",
+        "doi",
+        "title",
+        "evidence_groups",
+        "review_status",
+        "overall_confidence",
+        "total_evidence_fields",
+        "found_count",
+        "not_found_count",
+    }
+    assert expected_keys.issubset(result.keys())
+    assert result["literature_profile_id"] == str(profile_id)
+    assert result["source_document_id"] == str(doc_id)
+    assert result["pmid"] == "12345678"
+    assert result["doi"] == "10.1234/test"
+    assert result["title"] == "Test Title"
+    assert result["overall_confidence"] == pytest.approx(0.95)
+    assert result["total_evidence_fields"] == 10
+    assert result["found_count"] == 8
+    assert result["not_found_count"] == 2
+
+
+@pytest.mark.asyncio
+async def test_get_by_document_returns_none_when_not_found() -> None:
+    """get_by_document returns None when no matching row exists."""
+    from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
+
+    session = _fake_session()
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+    session.execute.return_value = mock_result
+
+    repo = LiteratureProfileRepository(session)
+    result = await repo.get_by_document(uuid4())
+
+    assert result is None
+
+
+# ── search tests ─────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_search_returns_items_and_total() -> None:
+    """search returns (items, total_count) with expected dict keys."""
+    from datetime import datetime
+
+    from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
+
+    profile_id = uuid4()
+    doc_id = uuid4()
+    now = datetime.now()
+
+    fake_row = MagicMock()
+    fake_row.literature_profile_id = profile_id
+    fake_row.source_document_id = doc_id
+    fake_row.pmid = "12345678"
+    fake_row.doi = "10.1234/test"
+    fake_row.title = "Test Title"
+    fake_row.journal = "Test Journal"
+    fake_row.publication_year = 2024
+    fake_row.review_status = "provisional"
+    fake_row.overall_confidence = 0.90
+    fake_row.total_evidence_fields = 5
+    fake_row.found_count = 4
+    fake_row.evidence_groups = [
+        {
+            "group_id": "g1",
+            "summary": {
+                "gene": "BRCA1",
+                "variant": "c.5266dupC",
+                "disease": "Breast cancer",
+                "classification": "Pathogenic",
+            },
+            "fields": [],
+        }
+    ]
+
+    session = _fake_session()
+
+    # First execute call: count query
+    count_result = MagicMock()
+    count_result.scalar_one.return_value = 1
+
+    # Second execute call: data query
+    data_result = MagicMock()
+    data_result.scalars.return_value.all.return_value = [fake_row]
+
+    session.execute = AsyncMock(side_effect=[count_result, data_result])
+
+    repo = LiteratureProfileRepository(session)
+    items, total = await repo.search(page=1, page_size=50)
+
+    assert total == 1
+    assert len(items) == 1
+
+    item = items[0]
+    expected_keys = {
+        "literature_profile_id",
+        "source_document_id",
+        "pmid",
+        "doi",
+        "title",
+        "review_status",
+        "overall_confidence",
+        "total_evidence_fields",
+        "found_count",
+        "evidence_group_count",
+        "gene",
+        "variant",
+        "disease",
+        "classification",
+    }
+    assert expected_keys.issubset(item.keys())
+    assert item["literature_profile_id"] == str(profile_id)
+    assert item["gene"] == "BRCA1"
+    assert item["variant"] == "c.5266dupC"
+    assert item["disease"] == "Breast cancer"
+    assert item["classification"] == "Pathogenic"
+    assert item["evidence_group_count"] == 1
