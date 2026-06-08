@@ -37,6 +37,7 @@ import {
   buildBilingualCompareHref,
   findInitialEvidenceId,
 } from "../utils/literatureRows";
+import { BilingualComparison } from "./BilingualComparison";
 
 type DetailViewMode = "overview" | "compare";
 
