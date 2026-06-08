@@ -92,6 +92,7 @@ class FeedbackService:
                 field_deltas=field_deltas,
                 change_reason=patch.change_reason,
             )
+            await self._refresh_literature_profile(evidence.source_document_id)
 
         return PatchResult(
             canonical_evidence_id=canonical_evidence_id,
@@ -100,3 +101,15 @@ class FeedbackService:
             deltas=len(field_deltas),
             field_deltas=field_deltas,
         )
+
+    async def _refresh_literature_profile(self, source_document_id: UUID) -> None:
+        """Rebuild the literature profile for the given source document.
+
+        Lazy-imports LiteratureProfileRepository to avoid circular imports.
+        """
+        from src.dao.postgresql.literature_profile_repo import (
+            LiteratureProfileRepository,
+        )
+
+        repo = LiteratureProfileRepository(self._session)
+        await repo.refresh_for_document(source_document_id)
