@@ -37,6 +37,7 @@ if TYPE_CHECKING:
         TerminologyRelationship,
         User,
     )
+    from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
     from src.dao.postgresql.search_index_repo import SearchIndexRepository, frontend_search_index
 
 
@@ -48,6 +49,7 @@ __all__ = [
     "ChatSession",
     "EntityMergeEvent",
     "EvidenceEntityBinding",
+    "LiteratureProfileRepository",
     "NormalizedEntity",
     "PipelineRunState",
     "ProcessingRun",
@@ -80,6 +82,7 @@ _LAZY_IMPORTS: dict[str, str] = {
     "ChatMessage": "src.dao.postgresql.models",
     "ChatSession": "src.dao.postgresql.models",
     "EntityMergeEvent": "src.dao.postgresql.models",
+    "LiteratureProfileRepository": "src.dao.postgresql.literature_profile_repo",
     "EvidenceEntityBinding": "src.dao.postgresql.models",
     "NormalizedEntity": "src.dao.postgresql.models",
     "PipelineRunState": "src.dao.postgresql.models",
