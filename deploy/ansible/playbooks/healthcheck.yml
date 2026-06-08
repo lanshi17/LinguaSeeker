@@ -1,0 +1,94 @@
+# ============================================================================
+# ACMG-Lingua Health Check — Verify all services after deployment
+# ============================================================================
+# Usage:
+#   ansible-playbook playbooks/healthcheck.yml
+#   ansible-playbook playbooks/healthcheck.yml -e "wait_timeout=60"
+# ============================================================================
+
+- name: Post-deployment health check
+  hosts: all
+  gather_facts: no
+  vars:
+    wait_timeout: 30
+  tasks:
+    - name: Check systemd service status
+      systemd:
+        name: "{{ item }}"
+        state: started
+      loop: "{{ acmg_services[acmg_role] | default([]) }}"
+      vars:
+        acmg_role: >-
+          {{ 'db' if inventory_hostname in groups['db']
+             else 'app' if inventory_hostname in groups['app']
+             else 'web' }}
+        acmg_services:
+          db:
+            - docker
+          app:
+            - acmg-backend
+            - acmg-model-server
+          web:
+            - nginx
+            - acmg-frontend
+      failed_when: false
+
+- name: Verify database connectivity
+  hosts: db
+  gather_facts: no
+  tasks:
+    - name: PostgreSQL responds to pg_isready
+      command: docker exec acmg-postgres pg_isready -U {{ postgres_user }} -d {{ postgres_db }}
+      changed_when: false
+
+    - name: Redis responds to PING
+      command: docker exec acmg-redis redis-cli ping
+      changed_when: false
+      register: redis_ping
+      failed_when: redis_ping.stdout != "PONG"
+
+- name: Verify backend API
+  hosts: app
+  gather_facts: no
+  tasks:
+    - name: Backend /health returns 200
+      uri:
+        url: "http://127.0.0.1:{{ backend_port }}/api/v1/health"
+        method: GET
+        status_code: 200
+      retries: 5
+      delay: 5
+      register: backend_health
+      until: backend_health.status == 200
+
+    - name: Model server /health returns 200
+      uri:
+        url: "http://127.0.0.1:{{ model_server_port }}/health"
+        method: GET
+        status_code: 200
+      retries: 5
+      delay: 10
+      register: model_health
+      until: model_health.status == 200
+      failed_when: false
+
+- name: Verify frontend and TLS
+  hosts: web
+  gather_facts: no
+  tasks:
+    - name: Frontend HTTP responds
+      uri:
+        url: "http://127.0.0.1:{{ frontend_port }}/"
+        method: GET
+        status_code: 200
+      register: frontend_health
+      until: frontend_health.status == 200
+      retries: 3
+      delay: 3
+
+    - name: Nginx returns health check
+      uri:
+        url: "http://127.0.0.1/health"
+        method: GET
+        status_code: 200
+      changed_when: false

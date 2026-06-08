@@ -6,7 +6,10 @@
 
 **Architecture:** Keep changes inside the existing Phase 4 vertical slice (`core/visualize_evidence_with_expert_in_loop`) and the Evidence frontend module. Backend extends `EvidenceTrackTrace` with `original_value` / `translated_value` fields and tightens `_build_highlight` offset fallback. Frontend replaces the two-column Card layout in `EvidenceDetailView.tsx` with a single comparison panel that leads with the evidence value pair and renders both snippets inside a shared highlight card with a visible value anchor.
 
-**Tech Stack:** FastAPI, SQLAlchemy async, Pydantic, pytest; Next.js App Router, React 18, TypeScript, Tailwind, lucide-react.
+**Tech Stack:** FastAPI, SQLAlchemy async, Pydantic, pytest; Next.js App Router, React 18, TypeScript, Tailwind, lucide-react, Vitest + Testing Library for frontend component tests.
+
+**Status:** in-progress
+**Created:** 2026-06-08
 
 ---
 
@@ -15,7 +18,7 @@
 The evidence detail page at `/evidence/detail?groupId=...` renders original and translated source spans side-by-side, but the comparison is hard to use:
 
 1. **Highlight offset unreliability.** Stored `start_offset/end_offset` are document-global while `text_snippet` is a short excerpt. `_build_highlight` falls back to substring-searching `value` in `text_snippet`, which:
-   - Refuses values shorter than 3 characters (kills single-letter amino acids, nucleotides, HGVS tokens like `p.R123X`)
+   - Refuses every value shorter than 3 characters, even when the token is distinctive enough to match safely
    - Cannot locate translated values on the translated track when the value is stored as the original-language string
    - Silently falls back to `(0, 0)` — no visible highlight, no feedback
 
@@ -26,7 +29,7 @@ The evidence detail page at `/evidence/detail?groupId=...` renders original and 
 ## Success Criteria
 
 1. Every trace panel shows the original-side `value` and the translated-side `value` prominently above the snippets.
-2. `_build_highlight` locates a highlight whenever either (a) the value is present verbatim in the snippet, or (b) a case-normalized / punctuation-tolerant match exists. Offsets never exceed snippet bounds.
+2. `_build_highlight` locates a highlight whenever either (a) offsets fit or can be clamped inside the snippet, or (b) an unambiguous case-normalized token match exists. Pure one-letter alphabetic values remain unhighlighted by fallback to avoid false-positive article/nucleotide/amino-acid matches. Offsets never exceed snippet bounds.
 3. When highlight offsets are genuinely unknown, the UI displays the full snippet without a mark and a clear "highlight unavailable" indicator rather than an arbitrary highlight.
 4. Original and translated snippets share a single comparison panel with aligned visual structure, not two disconnected cards.
 5. All existing tests pass; new tests cover the offset fallback improvements and the new `original_value`/`translated_value` contract fields.
@@ -122,17 +125,75 @@ traces.append(
 )
 ```
 
-**Step 6: Update the existing group-detail test fixture to assert value anchors**
+**Step 6: Add a paired-field group-detail test for value anchors**
 
-In `backend/tests/core/visualize_evidence_with_expert_in_loop/test_search_service.py::test_get_group_detail_pivots_distribution_and_traces`, add assertions after the existing trace checks:
+Do not add `assert traces[0].translated_value is not None` to the existing `test_get_group_detail_pivots_distribution_and_traces` fixture. That fixture currently has `A.gene_symbol` on the original track and `B.disease_diagnosis` on the translated track, so grouping by `field_id` intentionally produces two partial traces.
+
+Append a targeted test to `backend/tests/core/visualize_evidence_with_expert_in_loop/test_search_service.py` with matching `field_id` values:
 
 ```python
-# New assertions — values exposed for bilingual anchor UI
-assert traces[0].original_value is not None
-assert traces[0].translated_value is not None
-```
+@pytest.mark.asyncio
+async def test_get_group_detail_includes_value_anchors_for_paired_field():
+    """Paired original/translated rows expose both value anchors on one trace."""
+    source_document_id = uuid4()
+    original_id = uuid4()
+    translated_id = uuid4()
+    group_id = "gene=['BRCA1']"
 
-If the fixture payloads do not already contain `"value": ...` keys, add them now so the assertions hold.
+    rows = [
+        SimpleNamespace(
+            canonical_evidence_id=original_id,
+            source_document_id=source_document_id,
+            field_id="A.gene_symbol",
+            review_status="provisional",
+            current_best_confidence=Decimal("0.9500"),
+            active_payload={
+                "group_id": group_id,
+                "field_name": "Gene symbol",
+                "category": "A",
+                "value": "BRCA1",
+                "track": "original",
+                "source": {
+                    "text_snippet": "BRCA1 was detected in the proband.",
+                    "start_offset": 0,
+                    "end_offset": 5,
+                    "page": 1,
+                },
+            },
+        ),
+        SimpleNamespace(
+            canonical_evidence_id=translated_id,
+            source_document_id=source_document_id,
+            field_id="A.gene_symbol",
+            review_status="provisional",
+            current_best_confidence=Decimal("0.9300"),
+            active_payload={
+                "group_id": group_id,
+                "field_name": "Gene symbol",
+                "category": "A",
+                "value": "BRCA1",
+                "track": "translated",
+                "source": {
+                    "text_snippet": "在先证者中检测到 BRCA1。",
+                    "start_offset": 7,
+                    "end_offset": 12,
+                    "page": 1,
+                },
+            },
+        ),
+    ]
+
+    service = SearchService(_FakeSession([
+        _FakeResult(rows=rows),
+        _FakeResult(scalars=[]),
+    ]))
+
+    detail = await service.get_group_detail(group_id=group_id)
+
+    trace = next(trace for trace in detail.traces if trace.field_id == "A.gene_symbol")
+    assert trace.original_value == "BRCA1"
+    assert trace.translated_value == "BRCA1"
+```
 
 **Step 7: Run all affected tests**
 
@@ -157,7 +218,7 @@ git commit -m "feat(evidence): expose original_value/translated_value on trace a
 - Modify: `backend/src/core/visualize_evidence_with_expert_in_loop/search_service.py`
 - Test: `backend/tests/core/visualize_evidence_with_expert_in_loop/test_search_service.py`
 
-**Step 1: Write three failing tests**
+**Step 1: Write focused highlight fallback tests**
 
 Append to `backend/tests/core/visualize_evidence_with_expert_in_loop/test_search_service.py`:
 
@@ -173,15 +234,26 @@ def test_build_highlight_value_fallback_is_case_insensitive():
     assert highlight.highlight_end == 5
 
 
-def test_build_highlight_value_fallback_allows_short_medical_tokens():
-    """Single/double-char medical tokens (e.g. HGVS 'p.R123X', amino acids) must match."""
+def test_build_highlight_value_fallback_allows_short_distinctive_tokens():
+    """Short tokens with digits/punctuation can be safe enough for value fallback."""
     highlight = _build_highlight(
-        {"text_snippet": "Variant p.R123X was observed.", "start_offset": 900, "end_offset": 907},
-        value="p.R123X",
+        {"text_snippet": "Variant V2 was observed.", "start_offset": 900, "end_offset": 902},
+        value="V2",
     )
     assert highlight is not None
     assert highlight.highlight_start == 8
-    assert highlight.highlight_end == 15
+    assert highlight.highlight_end == 10
+
+
+def test_build_highlight_value_fallback_ignores_ambiguous_single_letter_tokens():
+    """Pure single-letter values should not match common prose such as articles."""
+    highlight = _build_highlight(
+        {"text_snippet": "A variant was detected in BRCA1.", "start_offset": 900, "end_offset": 901},
+        value="A",
+    )
+    assert highlight is not None
+    assert highlight.highlight_start == 0
+    assert highlight.highlight_end == 0
 
 
 def test_build_highlight_value_fallback_marks_unknown_when_value_absent():
@@ -191,21 +263,60 @@ def test_build_highlight_value_fallback_marks_unknown_when_value_absent():
         value="BRCA1",
     )
     assert highlight is not None
-    assert highlight.highlight_start == highlight.highlight_end
+    assert highlight.highlight_start == highlight.highlight_end == 0
 ```
 
 **Step 2: Run to verify failure**
 
 Run: `cd backend && uv run pytest tests/core/visualize_evidence_with_expert_in_loop/test_search_service.py -v -k build_highlight`
-Expected: 2 FAIL (case-insensitive and short-token tests); unknown-value test may pass.
+Expected: 2 FAIL (`case_insensitive` and `short_distinctive_tokens`). Existing clamping behavior must still pass.
 
-**Step 3: Rewrite the fallback block in `_build_highlight`**
+**Step 3: Add bounded value-search helpers**
 
-In `backend/src/core/visualize_evidence_with_expert_in_loop/search_service.py`, replace the existing `_build_highlight` body with a tolerant implementation. Key changes:
+In `backend/src/core/visualize_evidence_with_expert_in_loop/search_service.py`, add `import re` near the top and add these helpers above `_build_highlight`:
 
-- Drop the `len(value) >= 3` gate. Even single-character medical tokens matter.
-- Use a case-folded search for the value against the snippet.
-- On failure, leave `highlight_start == highlight_end == 0` (no visible mark). This is already the current behavior; keep it but document it explicitly.
+```python
+_TOKEN_BOUNDARY = r"A-Za-z0-9_"
+
+
+def _parse_source_offset(raw: object, *, default: int, name: str) -> tuple[int, bool]:
+    """Parse a source offset and report whether the stored value was valid."""
+    if raw is None:
+        return default, True
+    try:
+        return int(raw), True
+    except (TypeError, ValueError):
+        logger.warning("Invalid source_span {}_offset={!r}; using value fallback", name, raw)
+        return default, False
+
+
+def _find_value_anchor(text: str, value: str | None) -> tuple[int, int] | None:
+    """Find a safe case-insensitive value anchor inside a snippet."""
+    if value is None:
+        return None
+
+    needle = value.strip()
+    if not needle:
+        return None
+
+    # Pure one/two-letter values are too ambiguous in prose. Keep them
+    # unhighlighted unless future source metadata gives a stronger anchor.
+    if len(needle) < 3 and needle.isalpha():
+        return None
+
+    pattern = re.compile(
+        rf"(?<![{_TOKEN_BOUNDARY}]){re.escape(needle)}(?![{_TOKEN_BOUNDARY}])",
+        re.IGNORECASE,
+    )
+    match = pattern.search(text)
+    if match is None:
+        return None
+    return match.start(), match.end()
+```
+
+**Step 4: Rewrite `_build_highlight` while preserving clamping**
+
+Replace the existing `_build_highlight` body with:
 
 ```python
 def _build_highlight(
@@ -215,9 +326,9 @@ def _build_highlight(
     """Build a clamped highlight payload from a stored source span.
 
     Source spans store document-global offsets while text_snippet is a short
-    excerpt. When offsets exceed the snippet bounds, locate ``value`` inside
-    the snippet using a case-insensitive substring search. When the value
-    cannot be located, start and end collapse to 0 (no visible highlight).
+    excerpt. When offsets are malformed or start beyond the snippet, locate
+    ``value`` inside the snippet using a safe token-boundary search. When the
+    value cannot be located, start and end collapse to 0 (no visible highlight).
     """
     if not source_span:
         return None
@@ -227,36 +338,30 @@ def _build_highlight(
         return None
 
     text_len = len(text)
-    start = int(source_span.get("start_offset") or 0)
-    raw_end = source_span.get("end_offset")
-    end = int(raw_end) if raw_end is not None else text_len
+    start, start_valid = _parse_source_offset(
+        source_span.get("start_offset"),
+        default=0,
+        name="start",
+    )
+    end, end_valid = _parse_source_offset(
+        source_span.get("end_offset"),
+        default=text_len,
+        name="end",
+    )
     if end < start:
         end = text_len
 
-    # Offsets fit inside the snippet: clamp to bounds.
-    if 0 <= start < text_len and start <= end <= text_len:
-        page = source_span.get("page")
-        return EvidenceChainHighlight(
-            text=text,
-            highlight_start=start,
-            highlight_end=end,
-            page=page if isinstance(page, int) else None,
-            source_span=source_span,
-        )
-
-    # Offsets are document-global or invalid: fall back to value search.
-    if value:
-        needle = value
-        haystack = text
-        # Case-insensitive fallback — medical identifiers cross case often.
-        idx = haystack.lower().find(needle.lower()) if needle else -1
-        if idx >= 0:
-            start = idx
-            end = idx + len(needle)
-        else:
-            start = end = 0
+    # Valid starts inside the snippet should keep current behavior: clamp the
+    # end to snippet bounds instead of falling through to value search.
+    if start_valid and end_valid and start < text_len:
+        start = max(start, 0)
+        end = min(max(end, start), text_len)
     else:
-        start = end = 0
+        anchor = _find_value_anchor(text, value)
+        if anchor is None:
+            start = end = 0
+        else:
+            start, end = anchor
 
     page = source_span.get("page")
     return EvidenceChainHighlight(
@@ -268,21 +373,21 @@ def _build_highlight(
     )
 ```
 
-**Step 4: Re-run highlight tests**
+**Step 5: Keep the ambiguous single-letter regression test**
+
+Rename the existing `test_build_highlight_value_fallback_requires_min_length` to `test_build_highlight_value_fallback_ignores_ambiguous_single_letter_tokens` if you do not add the new test above separately. The important assertion is that `value="A"` in prose still returns `(0, 0)`.
+
+**Step 6: Re-run highlight tests**
 
 Run: `cd backend && uv run pytest tests/core/visualize_evidence_with_expert_in_loop/test_search_service.py -v -k build_highlight`
-Expected: all 7 (4 existing + 3 new) PASS.
+Expected: all existing and new `build_highlight` tests PASS, including `test_build_highlight_clamps_invalid_offsets`.
 
-**Step 5: Update the existing short-value test expectation**
-
-`test_build_highlight_value_fallback_requires_min_length` previously asserted that single-character values are ignored. With the new behavior, single-char values that *do* appear in the snippet should still highlight. Adjust the test: the snippet `"A was detected."` contains `"A"` at position 0, so expect `highlight_start == 0, highlight_end == 1`. If the test was intentionally asserting "no match" to avoid false positives, rename it and change the snippet to one that does not contain the value.
-
-**Step 6: Full test pass**
+**Step 7: Full test pass**
 
 Run: `cd backend && uv run pytest tests/core/visualize_evidence_with_expert_in_loop/ -v`
 Expected: all PASS.
 
-**Step 7: Commit**
+**Step 8: Commit**
 
 ```bash
 git add backend/src/core/visualize_evidence_with_expert_in_loop/search_service.py \
@@ -292,14 +397,58 @@ git commit -m "fix(evidence): harden highlight offset fallback for cross-lingual
 
 ---
 
-### Task 3: Frontend — Surface value anchors in the trace panel
+### Task 3: Frontend — Build tested bilingual comparison components
 
 **Files:**
+- Modify: `frontend/package.json`
+- Modify: `frontend/package-lock.json`
+- Create: `frontend/vitest.config.ts`
 - Modify: `frontend/src/features/evidence-search/types/evidenceSearch.ts`
 - Modify: `frontend/src/features/evidence-search/components/EvidenceDetailView.tsx`
 - Modify: `frontend/src/features/evidence-search/components/EvidenceHighlightText.tsx`
+- Create: `frontend/src/features/evidence-search/components/BilingualComparison.tsx`
+- Create: `frontend/tests/evidence-search/EvidenceHighlightText.test.tsx`
+- Create: `frontend/tests/evidence-search/BilingualComparison.test.tsx`
 
-**Step 1: Extend the TypeScript trace type**
+**Step 1: Add the frontend test runner**
+
+Run:
+
+```bash
+cd frontend
+nvm use
+npm install --save-dev vitest @testing-library/react @testing-library/jest-dom jsdom
+```
+
+Modify `frontend/package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}
+```
+
+Create `frontend/vitest.config.ts`:
+
+```typescript
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    environment: "jsdom",
+    include: ["tests/**/*.test.{ts,tsx}"],
+  },
+});
+```
+
+**Step 2: Extend the TypeScript trace type**
 
 In `frontend/src/features/evidence-search/types/evidenceSearch.ts`, add two fields to `EvidenceTrackTrace`:
 
@@ -316,122 +465,190 @@ export interface EvidenceTrackTrace {
 }
 ```
 
-**Step 2: Run type-check to verify it compiles**
+**Step 3: Write failing component tests**
 
-Run: `cd frontend && nvm use && npm run type-check`
-Expected: PASS (no consumers yet reference the new fields).
-
-**Step 3: Add a comparison header inside `EvidenceDetailView`**
-
-In `frontend/src/features/evidence-search/components/EvidenceDetailView.tsx`, replace the existing traceability `<Card>` block (the one containing the "Original" / "Translated" two-column grid) with a new structure that leads with the value pair. Sketch:
+Create `frontend/tests/evidence-search/EvidenceHighlightText.test.tsx`:
 
 ```tsx
-<Card>
-  <div className="mb-4 flex items-center justify-between">
-    <div>
-      <h3 className="text-sm font-medium text-gray-900">Evidence Chain Traceability</h3>
-      <p className="mt-1 text-xs text-gray-500">{selectedTrace?.field_id ?? "No evidence selected"}</p>
-    </div>
-  </div>
+import "@testing-library/jest-dom/vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
-  {/* Value anchor — the review target */}
-  <div className="mb-4 grid gap-3 rounded-md bg-slate-50 p-3 xl:grid-cols-2">
-    <div>
-      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">Original value</p>
-      <p className="mt-1 font-mono text-sm text-slate-900">
-        {selectedTrace?.original_value ?? "—"}
-      </p>
-    </div>
-    <div>
-      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">Translated value</p>
-      <p className="mt-1 font-mono text-sm text-slate-900">
-        {selectedTrace?.translated_value ?? "—"}
-      </p>
-    </div>
-  </div>
+import { EvidenceHighlightText } from "../../src/features/evidence-search/components/EvidenceHighlightText";
 
-  <div className="grid gap-4 xl:grid-cols-2">
-    <section>
-      <h4 className="mb-2 text-xs font-medium uppercase text-gray-400">Original</h4>
+describe("EvidenceHighlightText", () => {
+  it("keeps the existing empty-state guard", () => {
+    render(<EvidenceHighlightText highlight={null} />);
+
+    expect(screen.getByText("No source span available.")).toBeInTheDocument();
+  });
+
+  it("renders a mark when the highlight range is non-empty", () => {
+    const { container } = render(
       <EvidenceHighlightText
-        highlight={selectedTrace?.original}
-        anchorValue={selectedTrace?.original_value ?? undefined}
-      />
-    </section>
-    <section>
-      <h4 className="mb-2 text-xs font-medium uppercase text-gray-400">Translated</h4>
+        highlight={{
+          text: "BRCA1 was detected.",
+          highlight_start: 0,
+          highlight_end: 5,
+          page: 3,
+          source_span: {},
+        }}
+        active
+      />,
+    );
+
+    const mark = container.querySelector("mark");
+    expect(mark).toHaveTextContent("BRCA1");
+    expect(screen.queryByText("highlight unavailable")).not.toBeInTheDocument();
+  });
+
+  it("shows highlight-unavailable feedback for zero-length ranges", () => {
+    const { container } = render(
       <EvidenceHighlightText
-        highlight={selectedTrace?.translated}
-        anchorValue={selectedTrace?.translated_value ?? undefined}
-      />
-    </section>
-  </div>
-</Card>
+        highlight={{
+          text: "The source text is available.",
+          highlight_start: 0,
+          highlight_end: 0,
+          page: null,
+          source_span: {},
+        }}
+      />,
+    );
+
+    expect(container.querySelector("mark")).not.toBeInTheDocument();
+    expect(screen.getByText("highlight unavailable")).toBeInTheDocument();
+    expect(screen.getByText("The source text is available.")).toBeInTheDocument();
+  });
+});
 ```
 
-**Step 4: Allow `EvidenceHighlightText` to render an "anchor unknown" hint**
-
-In `frontend/src/features/evidence-search/components/EvidenceHighlightText.tsx`, accept an optional `anchorValue` prop. When the highlight has `highlight_start === highlight_end` (no markable region) but `text` is non-empty, render a quiet notice line rather than silently showing an unmarked snippet:
+Create `frontend/tests/evidence-search/BilingualComparison.test.tsx`:
 
 ```tsx
+import "@testing-library/jest-dom/vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+
+import { BilingualComparison } from "../../src/features/evidence-search/components/BilingualComparison";
+
+describe("BilingualComparison", () => {
+  it("renders original and translated value anchors", () => {
+    render(
+      <BilingualComparison
+        trace={{
+          canonical_evidence_id: "evidence-1",
+          field_id: "A.gene_symbol",
+          field_name: "Gene symbol",
+          original_value: "BRCA1",
+          translated_value: "BRCA1",
+          original: {
+            text: "BRCA1 was detected.",
+            highlight_start: 0,
+            highlight_end: 5,
+            page: 1,
+            source_span: {},
+          },
+          translated: {
+            text: "检测到 BRCA1。",
+            highlight_start: 4,
+            highlight_end: 9,
+            page: 1,
+            source_span: {},
+          },
+          alignment_confidence: 1,
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Original value")).toBeInTheDocument();
+    expect(screen.getByText("Translated value")).toBeInTheDocument();
+    expect(screen.getAllByText("BRCA1").length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("renders an empty state when no trace is selected", () => {
+    render(<BilingualComparison trace={null} />);
+
+    expect(screen.getByText("No evidence selected.")).toBeInTheDocument();
+  });
+});
+```
+
+**Step 4: Run tests to verify they fail before component changes**
+
+Run: `cd frontend && nvm use && npm run test -- tests/evidence-search/EvidenceHighlightText.test.tsx tests/evidence-search/BilingualComparison.test.tsx`
+Expected:
+- `BilingualComparison` import fails because the component does not exist.
+- `EvidenceHighlightText` test fails because `highlight unavailable` is not rendered.
+
+**Step 5: Update `EvidenceHighlightText` with full null-safe rendering**
+
+Replace `frontend/src/features/evidence-search/components/EvidenceHighlightText.tsx` with:
+
+```tsx
+"use client";
+
+import type { EvidenceChainHighlight } from "../types/evidenceSearch";
+
 interface EvidenceHighlightTextProps {
   highlight?: EvidenceChainHighlight | null;
   active?: boolean;
   anchorValue?: string;
 }
 
-// Inside the body, after computing start/end:
-const hasMark = end > start;
+export function EvidenceHighlightText({
+  highlight,
+  active = false,
+}: EvidenceHighlightTextProps) {
+  if (!highlight || !highlight.text) {
+    return <p className="text-sm text-gray-400">No source span available.</p>;
+  }
 
-return (
-  <div className="rounded-md border border-gray-200 bg-white p-3 text-sm leading-6 text-gray-700">
-    <div className="mb-2 flex items-center justify-between text-xs text-gray-400">
-      <span>Page {highlight.page ?? "—"}</span>
-      {!hasMark && anchorValue && (
-        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-500">
-          highlight unavailable — value shown above
-        </span>
-      )}
+  const start = Math.max(0, Math.min(highlight.highlight_start, highlight.text.length));
+  const end = Math.max(start, Math.min(highlight.highlight_end, highlight.text.length));
+  const hasMark = end > start;
+  const before = highlight.text.slice(0, start);
+  const marked = highlight.text.slice(start, end);
+  const after = highlight.text.slice(end);
+
+  return (
+    <div className="rounded-md border border-gray-200 bg-white p-3 text-sm leading-6 text-gray-700">
+      <div className="mb-2 flex items-center justify-between gap-3 text-xs text-gray-400">
+        <span>Page {highlight.page ?? "—"}</span>
+        {!hasMark && (
+          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-500">
+            highlight unavailable
+          </span>
+        )}
+      </div>
+      <p className="whitespace-pre-wrap">
+        {before}
+        {hasMark ? (
+          <mark
+            className={
+              active
+                ? "rounded bg-amber-200 px-0.5 text-gray-950"
+                : "rounded bg-yellow-100 px-0.5 text-gray-900"
+            }
+          >
+            {marked}
+          </mark>
+        ) : null}
+        {!hasMark ? marked : null}
+        {after}
+      </p>
     </div>
-    <p className="whitespace-pre-wrap">
-      {before}
-      {hasMark && (
-        <mark className={active ? "rounded bg-amber-200 px-0.5 text-gray-950" : "rounded bg-yellow-100 px-0.5 text-gray-900"}>
-          {marked}
-        </mark>
-      )}
-      {!hasMark && marked}
-      {after}
-    </p>
-  </div>
-);
+  );
+}
 ```
 
-**Step 5: Run frontend checks**
+Notes:
+- Keep the existing null guard. Partial traces can have `original: null` or `translated: null`.
+- Render the unavailable chip whenever `highlight_start === highlight_end`, even when `anchorValue` is absent.
+- `anchorValue` stays in the public prop type because callers pass it, but the component does not need to read it for the current chip copy.
 
-Run: `cd frontend && nvm use && npm run type-check && npm run lint`
-Expected: both PASS.
+**Step 6: Create `BilingualComparison` directly**
 
-**Step 6: Commit**
-
-```bash
-git add frontend/src/features/evidence-search/types/evidenceSearch.ts \
-        frontend/src/features/evidence-search/components/EvidenceDetailView.tsx \
-        frontend/src/features/evidence-search/components/EvidenceHighlightText.tsx
-git commit -m "feat(evidence-ui): add bilingual value anchors and highlight-unavailable hint"
-```
-
----
-
-### Task 4: Frontend — Compact side-by-side comparison layout
-
-**Files:**
-- Modify: `frontend/src/features/evidence-search/components/EvidenceDetailView.tsx`
-- Create: `frontend/src/features/evidence-search/components/BilingualComparison.tsx`
-
-**Step 1: Extract a small reusable comparison component**
-
-Create `frontend/src/features/evidence-search/components/BilingualComparison.tsx`. It receives one `EvidenceTrackTrace` and renders the whole value-anchor + dual-snippet panel. Keep it small (<60 lines) — this is a structural extraction, not a new abstraction layer.
+Create `frontend/src/features/evidence-search/components/BilingualComparison.tsx`:
 
 ```tsx
 "use client";
@@ -490,38 +707,75 @@ export function BilingualComparison({ trace }: BilingualComparisonProps) {
 }
 ```
 
-**Step 2: Use it from `EvidenceDetailView`**
+**Step 7: Use `BilingualComparison` from `EvidenceDetailView`**
 
-In `EvidenceDetailView.tsx`, replace the inline traceability body with `<BilingualComparison trace={selectedTrace} />`. Remove the now-redundant header and grid code from the detail view.
+In `frontend/src/features/evidence-search/components/EvidenceDetailView.tsx`:
 
-**Step 3: Run frontend checks**
+1. Replace `import { EvidenceHighlightText } from "./EvidenceHighlightText";` with:
+
+```tsx
+import { BilingualComparison } from "./BilingualComparison";
+```
+
+2. Replace the existing traceability body:
+
+```tsx
+<div className="grid gap-4 xl:grid-cols-2">
+  ...
+</div>
+```
+
+with:
+
+```tsx
+<BilingualComparison trace={selectedTrace} />
+```
+
+Keep the existing `Card` header and selected `field_id` display.
+
+**Step 8: Run frontend component tests**
+
+Run: `cd frontend && nvm use && npm run test -- tests/evidence-search/EvidenceHighlightText.test.tsx tests/evidence-search/BilingualComparison.test.tsx`
+Expected: all PASS.
+
+**Step 9: Run frontend checks**
 
 Run: `cd frontend && nvm use && npm run type-check && npm run lint`
 Expected: both PASS.
 
-**Step 4: Commit**
+**Step 10: Commit**
 
 ```bash
-git add frontend/src/features/evidence-search/components/BilingualComparison.tsx \
-        frontend/src/features/evidence-search/components/EvidenceDetailView.tsx
-git commit -m "refactor(evidence-ui): extract BilingualComparison for trace panel"
+git add frontend/package.json frontend/package-lock.json frontend/vitest.config.ts \
+        frontend/src/features/evidence-search/types/evidenceSearch.ts \
+        frontend/src/features/evidence-search/components/EvidenceDetailView.tsx \
+        frontend/src/features/evidence-search/components/EvidenceHighlightText.tsx \
+        frontend/src/features/evidence-search/components/BilingualComparison.tsx \
+        frontend/tests/evidence-search/EvidenceHighlightText.test.tsx \
+        frontend/tests/evidence-search/BilingualComparison.test.tsx
+git commit -m "feat(evidence-ui): add tested bilingual comparison panel"
 ```
 
 ---
 
-### Task 5: Integration verification
+### Task 4: Integration verification
 
 **Step 1: Backend regression pass**
 
 Run: `cd backend && uv run pytest tests/ -v`
 Expected: all PASS.
 
-**Step 2: Frontend build pass**
+**Step 2: Frontend regression pass**
+
+Run: `cd frontend && nvm use && npm run test && npm run type-check && npm run lint`
+Expected: all PASS.
+
+**Step 3: Frontend build pass**
 
 Run: `cd frontend && nvm use && npm run build`
 Expected: clean build, no type or lint warnings.
 
-**Step 3: Manual smoke test**
+**Step 4: Manual smoke test**
 
 Start the stack (`docker compose up` or dev servers) and open an evidence detail page that has bilingual traces. Verify:
 
@@ -530,7 +784,7 @@ Start the stack (`docker compose up` or dev servers) and open an evidence detail
 - When the backend could not locate a highlight, a small "highlight unavailable" chip appears and the snippet is shown unmarked.
 - Switching between evidence items updates the value banner and both snippets together.
 
-**Step 4: Update progress and lesson logs**
+**Step 5: Update progress and lesson logs**
 
 Append to `progress.txt`:
 
@@ -540,7 +794,7 @@ Append to `progress.txt`:
 
 If any debugging detours happened, record them in `lesson.md` per project rules.
 
-**Step 5: Final commit (if any cleanup)**
+**Step 6: Final commit (if any cleanup)**
 
 ```bash
 git add -A
@@ -554,4 +808,3 @@ git commit -m "chore: sync bilingual comparison follow-ups"
 - **Sentence-level interleaving** — aligning original and translated sentences one-to-one for line-by-line reading. Requires sentence splitting on both tracks and a similarity matcher; defer until real usage shows the value-anchor approach is insufficient.
 - **PDF page preview pane** — showing the original PDF page with the evidence region boxed. Needs a PDF renderer and bbox grounding that is not yet reliable for all tracks.
 - **Term-glossary hover** — popping a bilingual term map on hover over medical tokens. Requires terminology persistence that lives in the translator module; separate feature.
-

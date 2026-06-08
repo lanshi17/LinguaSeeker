@@ -1,0 +1,8 @@
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Restart model-server
+  systemd:
+    name: acmg-model-server
+    state: restarted

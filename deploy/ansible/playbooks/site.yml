@@ -1,0 +1,40 @@
+# ============================================================================
+# ACMG-Lingua Production Deployment — Main Entry
+# ============================================================================
+# Usage:
+#   ansible-playbook playbooks/site.yml                          # Full deploy
+#   ansible-playbook playbooks/site.yml --tags backend           # Backend only
+#   ansible-playbook playbooks/site.yml --tags frontend          # Frontend only
+#   ansible-playbook playbooks/site.yml --tags infra             # Infra only (DB + Redis)
+#   ansible-playbook playbooks/site.yml --check --diff           # Dry run
+# ============================================================================
+
+- name: Provision infrastructure (PostgreSQL + Redis)
+  hosts: db
+  tags: [infra, db]
+  roles:
+    - common
+    - postgres
+    - redis
+
+- name: Deploy model server
+  hosts: app
+  tags: [infra, model-server]
+  roles:
+    - common
+    - model-server
+
+- name: Deploy backend
+  hosts: app
+  tags: [backend]
+  roles:
+    - common
+    - backend
+
+- name: Deploy frontend & reverse proxy
+  hosts: web
+  tags: [frontend, nginx]
+  roles:
+    - common
+    - frontend
+    - nginx

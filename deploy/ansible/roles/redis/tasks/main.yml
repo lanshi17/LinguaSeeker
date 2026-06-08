@@ -1,0 +1,26 @@
+# ── Redis 8.0 via Docker ──────────────────────────────────────────────────
+
+- name: Deploy Redis docker-compose
+  template:
+    src: docker-compose.redis.yml.j2
+    dest: "{{ project_root }}/docker-compose.redis.yml"
+    owner: deploy
+    group: deploy
+    mode: "0600"
+  notify: Restart Redis
+
+- name: Start Redis
+  community.docker.docker_compose_v2:
+    project_src: "{{ project_root }}"
+    files:
+      - docker-compose.redis.yml
+    state: present
+    pull: always
+
+- name: Wait for Redis to be ready
+  command: docker exec acmg-redis redis-cli ping
+  register: redis_ready
+  retries: 10
+  delay: 2
+  until: redis_ready.stdout == "PONG"
+  changed_when: false

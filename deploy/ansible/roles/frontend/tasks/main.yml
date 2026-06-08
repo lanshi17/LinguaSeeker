@@ -1,0 +1,62 @@
+# ── Frontend (Next.js via systemd) ────────────────────────────────────────
+
+- name: Install Node.js 18 via nvm (for deploy user)
+  shell: >
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+  args:
+    creates: /home/deploy/.nvm/nvm.sh
+
+- name: Install Node 18
+  shell: >
+    source /home/deploy/.nvm/nvm.sh && nvm install 18 && nvm alias default 18
+  args:
+    executable: /bin/bash
+  environment:
+    NVM_DIR: /home/deploy/.nvm
+
+- name: Sync frontend source code
+  synchronize:
+    src: "{{ playbook_dir }}/../../frontend/"
+    dest: "{{ frontend_root }}/"
+    delete: yes
+    rsync_opts:
+      - "--exclude=node_modules"
+      - "--exclude=.next"
+      - "--exclude=out"
+  notify: Restart frontend
+
+- name: Install frontend dependencies
+  shell: >
+    source /home/deploy/.nvm/nvm.sh && npm ci --production=false
+  args:
+    chdir: "{{ frontend_root }}"
+    executable: /bin/bash
+  environment:
+    NVM_DIR: /home/deploy/.nvm
+    NODE_ENV: "{{ frontend_node_env }}"
+
+- name: Build frontend
+  shell: >
+    source /home/deploy/.nvm/nvm.sh && npm run build
+  args:
+    chdir: "{{ frontend_root }}"
+    executable: /bin/bash
+  environment:
+    NVM_DIR: /home/deploy/.nvm
+    NODE_ENV: "{{ frontend_node_env }}"
+    NEXT_PUBLIC_API_URL: "https://{{ domain_name }}/api/v1"
+
+- name: Deploy frontend systemd service
+  template:
+    src: acmg-frontend.service.j2
+    dest: /etc/systemd/system/acmg-frontend.service
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart frontend
+
+- name: Ensure frontend is running
+  systemd:
+    name: acmg-frontend
+    state: started
+    enabled: yes

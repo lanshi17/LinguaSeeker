@@ -337,6 +337,21 @@ async def submit_and_poll(
         },
         timeout=60.0,
     )
+    if resp.status_code == 409:
+        # Stale in-memory dedup — retry with unique filename suffix
+        import time as _time
+        unique_name = filename.rsplit(".", 1)
+        unique_name = f"{unique_name[0]}_{int(_time.time())}.{unique_name[1]}" if len(unique_name) == 2 else f"{filename}_{int(_time.time())}"
+        resp = await client.post(
+            f"{base_url}/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "mode": "full",
+                "filename": unique_name,
+                "content_base64": content_b64,
+            },
+            timeout=60.0,
+        )
     resp.raise_for_status()
     data = resp.json()
     status_url = data["status_url"]
