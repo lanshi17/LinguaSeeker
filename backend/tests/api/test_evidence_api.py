@@ -86,7 +86,7 @@ async def test_get_evidence_group_detail(async_client: AsyncClient):
         mock_service.get_group_detail = AsyncMock(return_value=mock_response)
         mock_service_cls.return_value = mock_service
 
-        response = await async_client.get(f"/api/v1/evidence/groups/{group_id}")
+        response = await async_client.get("/api/v1/evidence/groups/detail", params={"group_id": group_id})
 
     assert response.status_code == 200
     data = response.json()
@@ -104,6 +104,6 @@ async def test_get_evidence_group_detail_returns_404(async_client: AsyncClient):
         mock_service.get_group_detail = AsyncMock(side_effect=NoResultFound())
         mock_service_cls.return_value = mock_service
 
-        response = await async_client.get("/api/v1/evidence/groups/missing-group")
+        response = await async_client.get("/api/v1/evidence/groups/detail", params={"group_id": "missing-group"})
 
     assert response.status_code == 404

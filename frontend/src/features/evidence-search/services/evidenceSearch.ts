@@ -28,7 +28,8 @@ export async function getEvidenceGroupDetail(
   groupId: string,
 ): Promise<EvidenceGroupDetailResponse> {
   const { data } = await apiClient.get<EvidenceGroupDetailResponse>(
-    `/evidence/groups/${encodeURIComponent(groupId)}`,
+    "/evidence/groups/detail",
+    { params: { group_id: groupId } },
   );
   return data;
 }

@@ -237,3 +237,8 @@
 - Updated frontend types, hook, service, and table to match pivoted response structure
 - Table now shows pagination controls with page X of Y navigation
 [2026-06-07] [Frontend chat SSE route mismatch fixed] [Completed]
+
+[2026-06-07] [Evidence detail traceability highlights] [Completed]
+- Added clickable evidence row detail route under existing Evidence module
+- Added group-level detail API with distribution and original/translated traceability
+- Added source highlight rendering for evidence-chain review

@@ -12,6 +12,7 @@ interface EvidenceResultsTableProps {
   pageSize: number;
   isLoading?: boolean;
   onPageChange?: (page: number) => void;
+  onRowClick?: (item: EvidenceSearchResult) => void;
 }
 
 const STATUS_VARIANT: Record<
@@ -31,6 +32,7 @@ export function EvidenceResultsTable({
   pageSize,
   isLoading,
   onPageChange,
+  onRowClick,
 }: EvidenceResultsTableProps) {
   const totalPages = Math.ceil(total / pageSize);
   const startItem = (page - 1) * pageSize + 1;
@@ -102,7 +104,16 @@ export function EvidenceResultsTable({
             {results.map((item) => (
               <tr
                 key={item.group_id}
-                className="cursor-pointer transition-colors hover:bg-gray-50"
+                role={onRowClick ? "link" : undefined}
+                tabIndex={onRowClick ? 0 : undefined}
+                onClick={() => onRowClick?.(item)}
+                onKeyDown={(e) => {
+                  if (onRowClick && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault();
+                    onRowClick(item);
+                  }
+                }}
+                className="cursor-pointer transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-inset"
               >
                 <td className="px-4 py-3 font-mono text-xs text-gray-500">
                   {item.pmid ?? "\u2014"}

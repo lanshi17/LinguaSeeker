@@ -23,9 +23,9 @@ from src.core.visualize_evidence_with_expert_in_loop.search_service import Searc
 router = APIRouter()
 
 
-@router.get("/groups/{group_id}", response_model=EvidenceGroupDetailResponse)
+@router.get("/groups/detail", response_model=EvidenceGroupDetailResponse)
 async def get_evidence_group_detail(
-    group_id: str,
+    group_id: str = Query(..., description="Evidence group identifier"),
     session: AsyncSession = Depends(get_db_session),
 ) -> EvidenceGroupDetailResponse:
     """Return grouped evidence detail with distribution and traceability."""

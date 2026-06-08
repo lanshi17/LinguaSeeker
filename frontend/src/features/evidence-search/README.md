@@ -180,6 +180,12 @@ The table is currently static. To add sorting:
 - **No client-side caching beyond TanStack Query**: Results are refetched on filter change. The query key includes the full `filters` object, so each unique filter combination is cached separately.
 - **No virtualization**: The table renders all results at once. For datasets >500 rows, consider adding `react-window` or backend pagination.
 
+## Detail View
+
+The evidence list routes each row to `/evidence/detail?groupId=...`. The detail page calls `GET /api/v1/evidence/groups/detail?group_id=...` and renders summary metadata, evidence distribution, item list, and bilingual traceability highlights.
+
+The frontend remains inside the existing Evidence module. No Dashboard module is introduced.
+
 ## Dependencies
 
 | Dependency | Version | Purpose |

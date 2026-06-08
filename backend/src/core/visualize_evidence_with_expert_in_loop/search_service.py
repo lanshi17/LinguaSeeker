@@ -52,7 +52,7 @@ def _category_from_field_id(field_id: str) -> str | None:
     return field_id.split(".", 1)[0]
 
 
-def _build_highlight(source_span: dict[str, object]) -> EvidenceChainHighlight | None:  # noqa: dict-return
+def _build_highlight(source_span: dict[str, object]) -> EvidenceChainHighlight | None:
     """Build a clamped highlight payload from a stored source span."""
     if not source_span:
         return None
