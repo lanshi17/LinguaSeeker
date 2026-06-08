@@ -331,11 +331,20 @@ class EvidenceFieldItem(BaseModel):
     track: str | None = None
 
 
+class EvidenceGroupSummaryDict(TypedDict, total=False):
+    """Summary fields extracted from an evidence group."""
+
+    gene: str | None
+    variant: str | None
+    disease: str | None
+    classification: str | None
+
+
 class EvidenceGroupSummary(BaseModel):
     """Summary of an evidence group within a literature profile."""
 
     group_id: str
-    summary: dict = Field(default_factory=dict)
+    summary: EvidenceGroupSummaryDict = Field(default_factory=dict)
     avg_confidence: float | None = None
     field_count: int = 0
     review_status: str = "provisional"
@@ -350,7 +359,7 @@ class LiteratureProfileDetailResponse(BaseModel):
     pmid: str | None = None
     doi: str | None = None
     title: str | None = None
-    authors: list = Field(default_factory=list)
+    authors: list[str] = Field(default_factory=list)
     journal: str | None = None
     publication_year: int | None = None
     evidence_groups: list[EvidenceGroupSummary] = Field(default_factory=list)
