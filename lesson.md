@@ -1483,3 +1483,19 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 **预防措施：**
 - 新增 JSONB 列的 `server_default` 时，只写 `text("'[]'")` 或 `text("'{}'")`，禁止加 `::jsonb` 后缀。
 - `grep -rn "::jsonb" src/dao/` 定期检查 ORM 层是否有遗漏（migration 文件不在此限，因 migration 仅在 PostgreSQL 上执行）。
+
+## 2026-06-08: Evidence Detail React Hooks Lint
+
+**问题描述：** 重构 evidence detail 双文对照页后，`npm run lint` 报 `react-hooks/set-state-in-effect`，指出组件在 `useEffect` 中同步调用 `setSelectedEvidenceId()`。
+
+**排查过程：**
+- 对照 ESLint 报错位置，确认 effect 只用于把 `detail + initialEvidenceId` 推导出的初始 evidence id 写入 state。
+- 检查组件数据流，发现该值不是外部系统同步结果，而是可由 props 和 query 数据直接派生。
+
+**根因分析：** 将派生状态落入 React state，导致初次渲染后立刻同步 setState，触发 React hooks 规则，并增加不必要的二次渲染。
+
+**解决方案：** 删除同步 effect，改为 `useMemo` 从 `detail`、`initialEvidenceId` 和用户手动选择的 `selectedOverrideId` 派生最终 `selectedEvidenceId`。只有用户在对照页切换证据项时才写入 state。
+
+**预防措施：**
+- URL 参数和查询结果可直接推导出的 UI 状态不要放入 effect 同步。
+- 需要“初始值 + 用户覆盖”的场景，优先使用派生值加 override state。
