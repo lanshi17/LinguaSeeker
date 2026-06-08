@@ -7,7 +7,11 @@ from uuid import uuid4
 
 import pytest
 
-from src.core.visualize_evidence_with_expert_in_loop.search_service import SearchService
+from src.core.visualize_evidence_with_expert_in_loop.search_service import (
+    SearchService,
+    _build_highlight,
+    _coerce_str,
+)
 
 
 class _FakeScalarResult:
@@ -140,3 +144,22 @@ async def test_get_group_detail_pivots_distribution_and_traces():
     assert detail.item_count == 2
     assert detail.traces[0].original is not None
     assert detail.traces[1].translated is not None
+
+
+def test_coerce_str_joins_list_values():
+    """_coerce_str joins list values with comma separator."""
+    assert _coerce_str(["BRCA1", "BRCA2"]) == "BRCA1, BRCA2"
+
+
+def test_build_highlight_clamps_invalid_offsets():
+    """_build_highlight clamps end_offset that exceeds text length."""
+    highlight = _build_highlight({
+        "text_snippet": "BRCA1 was detected.",
+        "start_offset": 0,
+        "end_offset": 200,
+        "page": 3,
+    })
+
+    assert highlight is not None
+    assert highlight.highlight_end == len("BRCA1 was detected.")
+    assert highlight.page == 3

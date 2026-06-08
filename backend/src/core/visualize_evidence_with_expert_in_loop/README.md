@@ -161,6 +161,16 @@ uv run pytest tests/core/visualize_evidence_with_expert_in_loop/ -v -k search
   1. Find matching `group_id`s
   2. Fetch all fields for those groups
 
+## Evidence Group Detail
+
+`GET /api/v1/evidence/groups/{group_id}` returns a group-level detail payload. It joins field-level rows by `active_payload.group_id`, pivots summary values, computes distribution counts, and attaches original/translated source highlights from `run_evidence_items.source_span`.
+
+The endpoint is used by the Evidence frontend detail page for:
+- evidence item distribution by category, field, status, and track
+- selectable field-level evidence items
+- original/translated traceability panes
+- highlighted source snippets
+
 ## Dependencies
 
 | Dependency | Purpose |

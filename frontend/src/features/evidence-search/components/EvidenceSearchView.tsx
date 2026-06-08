@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { EvidenceSearchForm } from "./EvidenceSearchForm";
@@ -7,6 +8,7 @@ import { EvidenceResultsTable } from "./EvidenceResultsTable";
 import { useEvidenceSearch } from "../hooks/useEvidenceSearch";
 
 export function EvidenceSearchView() {
+  const router = useRouter();
   const {
     results,
     total,
@@ -51,6 +53,9 @@ export function EvidenceSearchView() {
             pageSize={pageSize}
             isLoading={isLoading}
             onPageChange={setPage}
+            onRowClick={(item) => {
+              router.push(`/evidence/detail?groupId=${encodeURIComponent(item.group_id)}`);
+            }}
           />
         )}
       </ErrorBoundary>
