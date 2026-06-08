@@ -1,4 +1,6 @@
 """Tests for background pipeline runner."""
+import asyncio
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from src.agents.contracts import (
@@ -13,7 +15,7 @@ from src.agents.runner import PipelineRunner
 def test_runner_evicts_oldest_states_beyond_limit():
     """Runner should evict oldest cached states when exceeding max size.
 
-    Tests through _remember_state() helper which is called by start(),
+    Tests through remember_state() helper which is called by start(),
     not by directly manipulating _last_states (which bypasses eviction).
     """
     runner = PipelineRunner(
@@ -22,7 +24,7 @@ def test_runner_evicts_oldest_states_beyond_limit():
         state_persistence=MagicMock(),
     )
 
-    # Use _remember_state helper to go through eviction path
+    # Use remember_state helper to go through eviction path
     for i in range(105):
         state = PipelineGraphState(
             processing_run_id=f"run-{i}",
@@ -31,7 +33,7 @@ def test_runner_evicts_oldest_states_beyond_limit():
             source_type=SourceType.LOCAL,
             pipeline_status=PipelineStatus.COMPLETED,
         )
-        runner._remember_state(f"run-{i}", state)
+        runner.remember_state(f"run-{i}", state)
 
     assert len(runner._last_states) <= 100
     assert "run-104" in runner._last_states  # newest kept
@@ -147,3 +149,98 @@ async def test_runner_get_last_state_returns_none(
     result = await runner.get_last_state("nonexistent-run")
 
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_cleanup_identity_check_prevents_stale_task_removal(
+    sample_state, mock_orchestrator, mock_semaphore, mock_persistence
+):
+    """Old task cleanup must not remove a new task started with the same run_id."""
+    # First run: completes immediately
+    completed = sample_state.model_copy(deep=True)
+    completed.pipeline_status = PipelineStatus.COMPLETED
+    mock_orchestrator.run.return_value = completed
+
+    runner = PipelineRunner(
+        orchestrator=mock_orchestrator,
+        semaphore=mock_semaphore,
+        state_persistence=mock_persistence,
+    )
+
+    task1 = runner.start(sample_state)
+    await task1
+    assert task1.done()
+
+    # Second run with same run_id: still active
+    running_state = sample_state.model_copy(deep=True)
+    running_state.pipeline_status = PipelineStatus.RUNNING
+    mock_orchestrator.run.return_value = running_state
+
+    task2 = runner.start(sample_state)
+    # task1's cleanup already ran; task2 must still be tracked
+    assert runner._active_tasks.get("run-123") is task2
+    task2.cancel()
+    try:
+        await task2
+    except asyncio.CancelledError:
+        pass
+
+
+def test_is_running_for_source_ignores_terminal_states(sample_state):
+    """is_running_for_source must not match COMPLETED or FAILED states."""
+    runner = PipelineRunner(
+        orchestrator=MagicMock(),
+        semaphore=MagicMock(),
+        state_persistence=MagicMock(),
+    )
+
+    # Manually insert a completed state (task already cleaned up)
+    completed = sample_state.model_copy(deep=True)
+    completed.pipeline_status = PipelineStatus.COMPLETED
+    completed.source_key = "test-query"
+    runner.remember_state("run-done", completed)
+
+    # No active task → should return False
+    assert runner.is_running_for_source("test-query") is False
+
+    # FAILED state should also be ignored
+    failed = sample_state.model_copy(deep=True)
+    failed.pipeline_status = PipelineStatus.FAILED
+    failed.source_key = "test-query"
+    runner.remember_state("run-failed", failed)
+
+    assert runner.is_running_for_source("test-query") is False
+
+
+@pytest.mark.asyncio
+async def test_cancelled_task_persists_failed_state(
+    sample_state, mock_semaphore, mock_persistence
+):
+    """Cancelled pipeline must record FAILED state and persist it."""
+    orch = MagicMock()
+    reached_orchestrator = asyncio.Event()
+    hang_forever: asyncio.Future[None] = asyncio.get_running_loop().create_future()
+
+    async def _hang(_state: object) -> None:
+        reached_orchestrator.set()
+        await hang_forever
+
+    orch.run = AsyncMock(side_effect=_hang)
+
+    runner = PipelineRunner(
+        orchestrator=orch,
+        semaphore=mock_semaphore,
+        state_persistence=mock_persistence,
+    )
+
+    task = runner.start(sample_state)
+    await reached_orchestrator.wait()
+    task.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    final_state = runner.get_last_state_cached("run-123")
+    assert final_state is not None
+    assert final_state.pipeline_status == PipelineStatus.FAILED
+    assert "cancelled" in (final_state.error_message or "").lower()

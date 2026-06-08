@@ -10,6 +10,7 @@ Architecture:
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
@@ -54,6 +55,17 @@ class PipelineOrchestrator:
         self._persistence = state_persistence
         self._retry = retry_executor
         self._graph = self._build_graph()
+        # Optional callback invoked after each state persistence so the
+        # runner can keep its in-memory cache in sync during execution.
+        self.on_state_change: Callable[[str, PipelineGraphState], None] | None = None
+
+    def _notify(self, state: PipelineGraphState) -> None:
+        """Push latest state to runner's in-memory cache (if wired)."""
+        if self.on_state_change is not None:
+            try:
+                self.on_state_change(state.processing_run_id, state)
+            except Exception:
+                logger.exception("on_state_change callback failed for run={}", state.processing_run_id)
 
     async def _handle_phase_failure(
         self,
@@ -88,6 +100,7 @@ class PipelineOrchestrator:
         state.pipeline_status = PipelineStatus.FAILED
         state.completed_at = datetime.now().isoformat()
         await self._persistence.save(state)
+        self._notify(state)
         return state
 
     async def _execute_phase(
@@ -111,6 +124,7 @@ class PipelineOrchestrator:
                 phase_name=phase_name,
             )
             await self._persistence.save(result)
+            self._notify(result)
             return result
 
         except RetryablePhaseError as e:
@@ -217,6 +231,7 @@ class PipelineOrchestrator:
                 state.error_phase = target
                 state.completed_at = datetime.now().isoformat()
                 await self._persistence.save(state)
+                self._notify(state)
                 return state
 
         return None
@@ -253,6 +268,7 @@ class PipelineOrchestrator:
             final_state.pipeline_status = PipelineStatus.AWAITING_REVIEW
             final_state.completed_at = datetime.now().isoformat()
             await self._persistence.save(final_state)
+            self._notify(final_state)
 
         logger.info(
             "Pipeline orchestrator completed: run={}, pipeline_status={}",

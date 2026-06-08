@@ -223,3 +223,51 @@ async def test_orchestrator_persists_state_after_each_phase(
     await orchestrator.run(sample_state)
 
     assert mock_persistence.save.call_count >= 3
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_notifies_on_state_change(
+    sample_state, mock_adapters, mock_persistence, mock_retry_executor
+):
+    """on_state_change callback fires after each phase for real-time status updates."""
+    state_after_1 = sample_state.model_copy(deep=True)
+    state_after_1.phase_1_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
+    state_after_1.phase_1_output = Phase1Output(
+        pdf_path="/tmp/test.pdf",
+        md_path="/tmp/test.md",
+        metadata_path="/tmp/test.json",
+        output_dir="/tmp/output",
+    )
+
+    state_after_2 = state_after_1.model_copy(deep=True)
+    state_after_2.phase_2_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
+
+    state_after_3 = state_after_2.model_copy(deep=True)
+    state_after_3.phase_3_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
+
+    mock_adapters["phase_1"].run.return_value = state_after_1
+    mock_adapters["phase_2"].run.return_value = state_after_2
+    mock_adapters["phase_3"].run.return_value = state_after_3
+
+    async def _pass_through(**kw):
+        return await kw["operation"](kw["state"])
+
+    mock_retry_executor.execute_with_retry.side_effect = _pass_through
+
+    orchestrator = PipelineOrchestrator(
+        phase_adapters=mock_adapters,
+        state_persistence=mock_persistence,
+        retry_executor=mock_retry_executor,
+    )
+
+    notifications: list[str] = []
+    orchestrator.on_state_change = lambda _run_id, state: notifications.append(
+        state.pipeline_status.value
+    )
+
+    await orchestrator.run(sample_state)
+
+    # Should notify after each of the 3 phases + final AWAITING_REVIEW update
+    assert len(notifications) >= 3
+    # Final notification should be "awaiting_review"
+    assert notifications[-1] == "awaiting_review"

@@ -150,6 +150,10 @@ def wire_dependencies() -> None:
         semaphore=semaphore,
         state_persistence=persistence,
     )
+    # Let the orchestrator push intermediate state updates to the runner's
+    # in-memory cache so the status endpoint reflects phase progress in
+    # real time (not just after the entire pipeline completes).
+    orchestrator.on_state_change = runner.remember_state
 
     # ── Phase 4 factory ──
 

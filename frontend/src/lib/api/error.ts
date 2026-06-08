@@ -43,3 +43,18 @@ export function normalizeError(error: AxiosError<BackendErrorResponse>): ApiErro
 
   return new ApiError(status, `Request failed: ${backendMessage}`, backendMessage);
 }
+
+/**
+ * Extract a human-readable message from an unknown error value.
+ *
+ * Handles ApiError (duck-typed for bundler compatibility), plain Error
+ * objects, and string errors.  Returns `fallback` when nothing matches.
+ */
+export function extractErrorMessage(err: unknown, fallback = "An unexpected error occurred"): string {
+  if (err && typeof err === "object" && "backendMessage" in err) {
+    const msg = String((err as { backendMessage: unknown }).backendMessage);
+    if (msg) return msg;
+  }
+  if (err instanceof Error && err.message) return err.message;
+  return fallback;
+}

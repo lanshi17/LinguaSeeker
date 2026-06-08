@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { useToastStore } from "@/stores/toastStore";
+import { extractErrorMessage } from "@/lib/api/error";
 import type { PipelineRunRequest } from "../types/pipeline";
 
 export function PipelineSubmitForm() {
@@ -39,8 +40,9 @@ export function PipelineSubmitForm() {
       const result = await startRun(body);
       addToast({ level: "success", title: "Pipeline started" });
       router.push(`/pipeline/${result.processing_run_id}`);
-    } catch {
-      addToast({ level: "error", title: "Failed to start pipeline" });
+    } catch (err: unknown) {
+      console.error("[Pipeline] start failed:", err);
+      addToast({ level: "error", title: `Failed to start pipeline: ${extractErrorMessage(err)}` });
     }
   }
 
