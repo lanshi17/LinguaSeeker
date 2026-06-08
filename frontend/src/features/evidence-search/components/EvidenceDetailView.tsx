@@ -30,7 +30,18 @@ export function EvidenceDetailView({ groupId }: EvidenceDetailViewProps) {
 
   const selectedTrace = useMemo(() => {
     if (!detail) return null;
-    return detail.traces.find((trace) => trace.canonical_evidence_id === selectedEvidenceId) ?? detail.traces[0] ?? null;
+    if (selectedEvidenceId) {
+      const selectedItem = detail.items.find(
+        (item) => item.canonical_evidence_id === selectedEvidenceId,
+      );
+      if (selectedItem) {
+        return (
+          detail.traces.find((trace) => trace.field_id === selectedItem.field_id) ??
+          null
+        );
+      }
+    }
+    return detail.traces[0] ?? null;
   }, [detail, selectedEvidenceId]);
 
   if (isLoading) {
@@ -109,7 +120,7 @@ export function EvidenceDetailView({ groupId }: EvidenceDetailViewProps) {
             <h3 className="text-sm font-medium text-gray-900">Evidence Items</h3>
             <div className="mt-3 max-h-[520px] space-y-2 overflow-y-auto pr-1">
               {detail.items.map((item) => {
-                const active = item.canonical_evidence_id === (selectedTrace?.canonical_evidence_id ?? selectedEvidenceId);
+                const active = item.field_id === (selectedTrace?.field_id) && item.canonical_evidence_id === (selectedEvidenceId ?? selectedTrace?.canonical_evidence_id);
                 return (
                   <button
                     key={item.canonical_evidence_id}
