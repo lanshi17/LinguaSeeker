@@ -1467,3 +1467,19 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 **预防措施：**
 - 路由处理器构造 Pydantic response 时，必须逐一对照模型字段列表，确保每个字段都有显式赋值。
 - 新增 Pydantic 模型后，立即用 `grep -n "dict\|list" contracts.py` 检查是否有裸类型违反 rule 22。
+
+## 2026-06-08: SQLite/PostgreSQL JSONB DDL 兼容问题
+
+**问题描述：** SQLite 执行 PostgreSQL 特有的 `DEFAULT '[]'::jsonb` DDL 时报 `sqlite3.OperationalError: unrecognized token ":"`。
+
+**根因分析：** PostgreSQL 的 `::type` 类型转换语法在 SQLite 中无法识别。ORM 模型和 Table 定义中的 `server_default=text("'[]'::jsonb")` 在 SQLite `create_all()` 时会产生无效 DDL。
+
+**解决方案：** 将 `server_default=text("'[]'::jsonb")` 改为 `server_default=text("'[]'")`。PostgreSQL 在列类型为 JSONB 时会隐式完成类型转换，无需显式 `::jsonb` 转换。
+
+**影响范围：**
+- `backend/src/dao/postgresql/models.py` — ORM 模型（已由子代理修复）
+- `backend/src/dao/postgresql/search_index_repo.py` — frontend_search_index Table 定义（4 处修复）
+
+**预防措施：**
+- 新增 JSONB 列的 `server_default` 时，只写 `text("'[]'")` 或 `text("'{}'")`，禁止加 `::jsonb` 后缀。
+- `grep -rn "::jsonb" src/dao/` 定期检查 ORM 层是否有遗漏（migration 文件不在此限，因 migration 仅在 PostgreSQL 上执行）。
