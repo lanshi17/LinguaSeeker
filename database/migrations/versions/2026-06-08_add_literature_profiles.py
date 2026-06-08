@@ -7,10 +7,12 @@ Revision ID: lit_profiles_20260608
 Revises: 6a8f3b1c2d4e
 Create Date: 2026-06-08 16:00:00.000000+00:00
 """
+from __future__ import annotations
+
 from typing import Sequence, Union
 
-import sqlalchemy as sa
 from alembic import op
+import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision: str = "lit_profiles_20260608"
@@ -138,4 +140,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_index("ix_literature_profiles_review_status", table_name="literature_profiles")
+    op.drop_index("ix_literature_profiles_evidence_groups_gin", table_name="literature_profiles")
+    op.drop_index("ix_literature_profiles_doi", table_name="literature_profiles")
+    op.drop_index("ix_literature_profiles_pmid", table_name="literature_profiles")
     op.drop_table("literature_profiles")
