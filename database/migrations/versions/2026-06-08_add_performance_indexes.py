@@ -89,28 +89,34 @@ def upgrade() -> None:
     )
 
     # frontend_search_index: B-tree on pmid/doi, GIN on JSONB array columns
-    op.create_index(
-        "ix_frontend_search_index_pmid",
-        "frontend_search_index",
-        ["pmid"],
-    )
-    op.create_index(
-        "ix_frontend_search_index_doi",
-        "frontend_search_index",
-        ["doi"],
-    )
-    op.create_index(
-        "ix_frontend_search_index_gene_ids",
-        "frontend_search_index",
-        ["gene_ids"],
-        postgresql_using="gin",
-    )
-    op.create_index(
-        "ix_frontend_search_index_variant_ids",
-        "frontend_search_index",
-        ["variant_ids"],
-        postgresql_using="gin",
-    )
+    # Guard with existence check — table may not be created yet.
+    conn = op.get_bind()
+    result = conn.execute(
+        sa.text("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'frontend_search_index')")
+    ).scalar()
+    if result:
+        op.create_index(
+            "ix_frontend_search_index_pmid",
+            "frontend_search_index",
+            ["pmid"],
+        )
+        op.create_index(
+            "ix_frontend_search_index_doi",
+            "frontend_search_index",
+            ["doi"],
+        )
+        op.create_index(
+            "ix_frontend_search_index_gene_ids",
+            "frontend_search_index",
+            ["gene_ids"],
+            postgresql_using="gin",
+        )
+        op.create_index(
+            "ix_frontend_search_index_variant_ids",
+            "frontend_search_index",
+            ["variant_ids"],
+            postgresql_using="gin",
+        )
 
     # ── Drop redundant single-column indexes ───────────────────────────
     # These are fully covered by the new composite indexes above (leftmost prefix).
@@ -144,11 +150,16 @@ def downgrade() -> None:
         ["canonical_evidence_id"],
     )
 
-    # Drop new indexes (reverse order)
-    op.drop_index("ix_frontend_search_index_variant_ids", table_name="frontend_search_index")
-    op.drop_index("ix_frontend_search_index_gene_ids", table_name="frontend_search_index")
-    op.drop_index("ix_frontend_search_index_doi", table_name="frontend_search_index")
-    op.drop_index("ix_frontend_search_index_pmid", table_name="frontend_search_index")
+    # Drop new indexes (reverse order) — guarded by table existence
+    conn = op.get_bind()
+    result = conn.execute(
+        sa.text("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'frontend_search_index')")
+    ).scalar()
+    if result:
+        op.drop_index("ix_frontend_search_index_variant_ids", table_name="frontend_search_index")
+        op.drop_index("ix_frontend_search_index_gene_ids", table_name="frontend_search_index")
+        op.drop_index("ix_frontend_search_index_doi", table_name="frontend_search_index")
+        op.drop_index("ix_frontend_search_index_pmid", table_name="frontend_search_index")
     op.drop_index("ix_pipeline_run_states_pipeline_status", table_name="pipeline_run_states")
     op.drop_index("ix_review_audit_events_reviewer_created", table_name="review_audit_events")
     op.drop_index("ix_review_audit_events_canonical_created", table_name="review_audit_events")
