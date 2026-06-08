@@ -265,6 +265,8 @@ class EvidenceTrackTrace(BaseModel):
     canonical_evidence_id: UUID
     field_id: str
     field_name: str | None = None
+    original_value: str | None = None
+    translated_value: str | None = None
     original: EvidenceChainHighlight | None = None
     translated: EvidenceChainHighlight | None = None
     alignment_confidence: float | None = None

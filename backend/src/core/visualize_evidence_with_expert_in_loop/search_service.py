@@ -444,6 +444,8 @@ class SearchService:
                     canonical_evidence_id=canonical_id,
                     field_id=field_id,
                     field_name=str(field_name) if field_name else None,
+                    original_value=original_value,
+                    translated_value=translated_value,
                     original=original,
                     translated=translated,
                     alignment_confidence=1.0 if original and translated else None,

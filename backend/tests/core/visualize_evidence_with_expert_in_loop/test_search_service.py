@@ -133,6 +133,69 @@ async def test_get_group_detail_pivots_distribution_and_traces():
     assert detail.traces[1].translated is not None
 
 
+@pytest.mark.asyncio
+async def test_get_group_detail_includes_value_anchors_for_paired_field():
+    """Paired original/translated rows expose both value anchors on one trace."""
+    source_document_id = uuid4()
+    original_id = uuid4()
+    translated_id = uuid4()
+    group_id = "gene=['BRCA1']"
+
+    rows = [
+        SimpleNamespace(
+            canonical_evidence_id=original_id,
+            source_document_id=source_document_id,
+            field_id="A.gene_symbol",
+            review_status="provisional",
+            current_best_confidence=Decimal("0.9500"),
+            active_payload={
+                "group_id": group_id,
+                "field_name": "Gene symbol",
+                "category": "A",
+                "value": "BRCA1",
+                "track": "original",
+                "source": {
+                    "text_snippet": "BRCA1 was detected in the proband.",
+                    "start_offset": 0,
+                    "end_offset": 5,
+                    "page": 1,
+                },
+            },
+        ),
+        SimpleNamespace(
+            canonical_evidence_id=translated_id,
+            source_document_id=source_document_id,
+            field_id="A.gene_symbol",
+            review_status="provisional",
+            current_best_confidence=Decimal("0.9300"),
+            active_payload={
+                "group_id": group_id,
+                "field_name": "Gene symbol",
+                "category": "A",
+                "value": "BRCA1",
+                "track": "translated",
+                "source": {
+                    "text_snippet": "在先证者中检测到 BRCA1。",
+                    "start_offset": 7,
+                    "end_offset": 12,
+                    "page": 1,
+                },
+            },
+        ),
+    ]
+
+    service = SearchService(_FakeSession([
+        _FakeResult(rows=rows),
+        _FakeResult(scalars=[]),
+    ]))
+
+    detail = await service.get_group_detail(group_id=group_id)
+
+    trace = next(trace for trace in detail.traces if trace.field_id == "A.gene_symbol")
+    assert trace.original_value == "BRCA1"
+    assert trace.translated_value == "BRCA1"
+
+
 def test_coerce_str_joins_list_values():
     """_coerce_str joins list values with comma separator."""
     assert _coerce_str(["BRCA1", "BRCA2"]) == "BRCA1, BRCA2"

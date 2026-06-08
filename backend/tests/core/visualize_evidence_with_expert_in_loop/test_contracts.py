@@ -194,3 +194,31 @@ def test_evidence_group_detail_contract_accepts_traceability_payload():
     assert dumped["group_id"].startswith("gene=")
     assert dumped["distribution"]["by_category"] == {"A": 1}
     assert dumped["traces"][0]["original"]["highlight_start"] == 0
+
+
+def test_evidence_track_trace_carries_value_anchors():
+    """Evidence track traces expose original/translated extracted values."""
+    from src.core.visualize_evidence_with_expert_in_loop.contracts import (
+        EvidenceChainHighlight,
+        EvidenceTrackTrace,
+    )
+
+    trace = EvidenceTrackTrace(
+        canonical_evidence_id=uuid4(),
+        field_id="A.gene_symbol",
+        original_value="BRCA1",
+        translated_value="BRCA1",
+        original=EvidenceChainHighlight(
+            text="BRCA1 was detected in the proband.",
+            highlight_start=0,
+            highlight_end=5,
+        ),
+        translated=EvidenceChainHighlight(
+            text="在先证者中检测到 BRCA1。",
+            highlight_start=7,
+            highlight_end=12,
+        ),
+    )
+
+    assert trace.original_value == "BRCA1"
+    assert trace.translated_value == "BRCA1"
