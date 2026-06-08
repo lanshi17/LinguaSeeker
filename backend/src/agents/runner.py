@@ -3,14 +3,14 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from loguru import logger
 
 from src.agents.concurrency import PipelineSemaphore
 from src.agents.contracts import PipelineGraphState, PipelineStatus
-from src.agents.state_persistence import SessionBoundStatePersistence
+from src.agents.state_persistence import SessionBoundStatePersistence, _derive_error_phase
 
 
 class PipelineRunner:
@@ -66,13 +66,20 @@ class PipelineRunner:
                     # Derive the current phase from the last-notified state so the
                     # error report reflects which phase was actually interrupted.
                     last_state = self._last_states.get(run_id)
-                    current_phase = last_state.error_phase if last_state else 0
+                    if last_state is not None:
+                        current_phase = (
+                            last_state.error_phase
+                            if last_state.error_phase is not None
+                            else _derive_error_phase(last_state)
+                        )
+                    else:
+                        current_phase = 0
                     error_state = initial_state.model_copy(
                         update={
                             "pipeline_status": PipelineStatus.FAILED,
                             "error_message": f"Pipeline {'cancelled' if is_cancel else 'failed'}: {e}",
                             "error_phase": current_phase,
-                            "completed_at": datetime.now().isoformat(),
+                            "completed_at": datetime.now(timezone.utc).isoformat(),
                         }
                     )
                     self.remember_state(run_id, error_state)
@@ -129,8 +136,8 @@ class PipelineRunner:
             )
             state.pipeline_status = PipelineStatus.FAILED
             state.error_message = "Pipeline interrupted by server restart"
-            state.error_phase = 0
-            state.completed_at = datetime.now().isoformat()
+            state.error_phase = _derive_error_phase(state)
+            state.completed_at = datetime.now(timezone.utc).isoformat()
             self.remember_state(processing_run_id, state)
             try:
                 await self._persistence.save(state)

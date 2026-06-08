@@ -55,6 +55,10 @@ frontend_search_index = Table(
         "canonical_evidence_id",
         unique=True,
     ),
+    Index("ix_frontend_search_index_pmid", "pmid"),
+    Index("ix_frontend_search_index_doi", "doi"),
+    Index("ix_frontend_search_index_gene_ids", "gene_ids", postgresql_using="gin"),
+    Index("ix_frontend_search_index_variant_ids", "variant_ids", postgresql_using="gin"),
 )
 
 

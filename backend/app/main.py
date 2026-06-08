@@ -87,6 +87,14 @@ async def lifespan(app: FastAPI):
     wire_dependencies()
     logger.info("Pipeline orchestrator initialized")
 
+    # Recover pipeline runs interrupted by server restart
+    from src.api.v1.pipeline import get_pipeline_runner
+    try:
+        runner = get_pipeline_runner()
+        await runner.recover_orphaned_runs()
+    except Exception as exc:
+        logger.warning("Orphaned run recovery failed: {}", exc)
+
     # Startup health checks (non-blocking — warn but don't crash)
     try:
         checks = await check_all_connections()

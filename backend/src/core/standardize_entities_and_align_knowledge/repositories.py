@@ -8,7 +8,7 @@ from hashlib import sha256
 from typing import Any
 from uuid import uuid4
 
-from sqlalchemy import select, text
+from sqlalchemy import select, text, tuple_
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from src.core.standardize_entities_and_align_knowledge.contracts import (
@@ -889,16 +889,43 @@ class StandardizationRepository:
         entity_ids_by_candidate_id = {
             match.candidate.candidate_id: entity_id for match, entity_id in zip(matches, entity_ids, strict=False)
         }
+
+        # Batch-load existing canonical items to avoid N+1 SELECT.
+        # Chunked to stay under PostgreSQL's 65535 parameter limit
+        # (4 cols per tuple → max ~16K tuples; 5000 is a safe margin).
+        _BATCH_SIZE = 5000
+        eligible_rows = [
+            row for row, _ in self._run_item_rows
+            if row.status in CANONICAL_ELIGIBLE_STATUSES
+        ]
+        existing_lookup: dict[tuple, CanonicalEvidenceItem] = {}
+        if eligible_rows:
+            identity_tuples = [
+                (row.source_document_id, row.field_id, row.position_hash, row.entity_scope_hash)
+                for row in eligible_rows
+            ]
+            for start in range(0, len(identity_tuples), _BATCH_SIZE):
+                chunk = identity_tuples[start:start + _BATCH_SIZE]
+                batch_stmt = select(CanonicalEvidenceItem).where(
+                    tuple_(
+                        CanonicalEvidenceItem.source_document_id,
+                        CanonicalEvidenceItem.field_id,
+                        CanonicalEvidenceItem.position_hash,
+                        CanonicalEvidenceItem.entity_scope_hash,
+                    ).in_(chunk)
+                )
+                batch_result = await self.session.execute(batch_stmt)
+                for item in batch_result.scalars().all():
+                    existing_lookup[
+                        (item.source_document_id, item.field_id, item.position_hash, item.entity_scope_hash)
+                    ] = item
+
         for row, spec in self._run_item_rows:
             if row.status not in CANONICAL_ELIGIBLE_STATUSES:
                 continue
-            statement = select(CanonicalEvidenceItem).where(
-                CanonicalEvidenceItem.source_document_id == row.source_document_id,
-                CanonicalEvidenceItem.field_id == row.field_id,
-                CanonicalEvidenceItem.position_hash == row.position_hash,
-                CanonicalEvidenceItem.entity_scope_hash == row.entity_scope_hash,
+            existing = existing_lookup.get(
+                (row.source_document_id, row.field_id, row.position_hash, row.entity_scope_hash)
             )
-            existing = (await self.session.execute(statement)).scalars().first()
             payload = {
                 **row.raw_payload,
                 "track": row.track,

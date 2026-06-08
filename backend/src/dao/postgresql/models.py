@@ -61,6 +61,7 @@ class SourceDocument(Base, TimestampMixin):
     identifiers: Mapped[list[SourceDocumentIdentifier]] = relationship(
         back_populates="source_document",
         cascade="all, delete-orphan",
+        lazy="raise",
     )
 
 
@@ -86,7 +87,7 @@ class SourceDocumentIdentifier(Base, TimestampMixin):
     identifier_type: Mapped[str] = mapped_column(String(64), nullable=False)
     identifier_value: Mapped[str] = mapped_column(Text, nullable=False)
 
-    source_document: Mapped[SourceDocument] = relationship(back_populates="identifiers")
+    source_document: Mapped[SourceDocument] = relationship(back_populates="identifiers", lazy="raise")
 
 
 class User(Base, TimestampMixin):
@@ -283,6 +284,11 @@ class CanonicalEvidenceItem(Base, TimestampMixin):
         ),
         Index("ix_canonical_evidence_items_source_document_id", "source_document_id"),
         Index("ix_canonical_evidence_items_current_best_run_evidence_id", "current_best_run_evidence_id"),
+        Index(
+            "ix_canonical_evidence_items_group_id",
+            text("(active_payload ->> 'group_id')"),
+        ),
+        Index("ix_canonical_evidence_items_field_id", "field_id"),
     )
 
     canonical_evidence_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -315,6 +321,7 @@ class TerminologyEntry(Base, TimestampMixin):
         UniqueConstraint("source_db", "external_id", name="uq_terminology_entries_source_external_id"),
         Index("ix_terminology_entries_entity_type_normalized_name", "entity_type", "normalized_name"),
         Index("ix_terminology_entries_source_db", "source_db"),
+        Index("ix_terminology_entries_external_id", "external_id"),
     )
 
     entry_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -328,7 +335,7 @@ class TerminologyEntry(Base, TimestampMixin):
     version: Mapped[str] = mapped_column(String(128), nullable=False)
 
     embeddings: Mapped[list[TerminologyEmbedding]] = relationship(
-        back_populates="entry", cascade="all, delete-orphan"
+        back_populates="entry", cascade="all, delete-orphan", lazy="raise"
     )
 
 
@@ -425,7 +432,7 @@ class TerminologyEmbedding(Base, TimestampMixin):
     embedding_model: Mapped[str] = mapped_column(String(255), nullable=False)
     embedding: Mapped[list[float]] = mapped_column(Vector(1024), nullable=False)
 
-    entry: Mapped[TerminologyEntry] = relationship(back_populates="embeddings")
+    entry: Mapped[TerminologyEntry] = relationship(back_populates="embeddings", lazy="raise")
 
 
 # ── Phase 4: review_audit_events, chat_sessions, chat_messages ────────────────
@@ -436,8 +443,16 @@ class ReviewAuditEvent(Base):
 
     __tablename__ = "review_audit_events"
     __table_args__ = (
-        Index("ix_review_audit_events_canonical_evidence_id", "canonical_evidence_id"),
-        Index("ix_review_audit_events_reviewer_id", "reviewer_id"),
+        Index(
+            "ix_review_audit_events_canonical_created",
+            "canonical_evidence_id",
+            text("created_at DESC"),
+        ),
+        Index(
+            "ix_review_audit_events_reviewer_created",
+            "reviewer_id",
+            text("created_at DESC"),
+        ),
     )
 
     review_event_id: Mapped[uuid.UUID] = mapped_column(
@@ -472,7 +487,11 @@ class ChatSession(Base, TimestampMixin):
 
     __tablename__ = "chat_sessions"
     __table_args__ = (
-        Index("ix_chat_sessions_processing_run_id", "processing_run_id"),
+        Index(
+            "ix_chat_sessions_run_created",
+            "processing_run_id",
+            text("created_at DESC"),
+        ),
     )
 
     chat_session_id: Mapped[uuid.UUID] = mapped_column(
@@ -497,7 +516,7 @@ class ChatMessage(Base):
 
     __tablename__ = "chat_messages"
     __table_args__ = (
-        Index("ix_chat_messages_chat_session_id", "chat_session_id"),
+        Index("ix_chat_messages_session_created", "chat_session_id", "created_at"),
     )
 
     message_id: Mapped[uuid.UUID] = mapped_column(
@@ -539,6 +558,10 @@ class PipelineRunState(Base):
     __tablename__ = "pipeline_run_states"
     __table_args__ = (
         Index("ix_pipeline_run_states_source_document_id", "source_document_id"),
+        Index(
+            "ix_pipeline_run_states_pipeline_status",
+            text("(state_json ->> 'pipeline_status')"),
+        ),
     )
 
     processing_run_id: Mapped[uuid.UUID] = mapped_column(

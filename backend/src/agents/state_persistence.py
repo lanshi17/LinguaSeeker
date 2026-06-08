@@ -6,15 +6,30 @@ Two implementations:
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import func
+from loguru import logger
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from src.agents.contracts import PipelineGraphState
+from src.agents.contracts import PhaseStatus, PipelineGraphState, PipelineStatus
 from src.dao.postgresql.models import PipelineRunState, SourceDocument
+
+
+def _derive_error_phase(state: PipelineGraphState) -> int:
+    """Derive the phase number that was running when the pipeline was interrupted.
+
+    Inspects per-phase PhaseStatusDetail fields in order (phase 3 → 1).
+    Returns 0 when no phase shows RUNNING status.
+    """
+    for phase_num in (3, 2, 1):
+        detail = getattr(state, f"phase_{phase_num}_status", None)
+        if detail is not None and detail.status == PhaseStatus.RUNNING:
+            return phase_num
+    return 0
 
 
 class DirectStatePersistence:
@@ -56,6 +71,13 @@ class DirectStatePersistence:
         if record is None:
             return None
         return PipelineGraphState.model_validate(record.state_json)
+
+    async def recover_orphaned_runs(self) -> int:
+        """Not supported in unit-test persistence — raises on misuse."""
+        raise NotImplementedError(
+            "recover_orphaned_runs is not available in DirectStatePersistence; "
+            "use SessionBoundStatePersistence for crash recovery."
+        )
 
 
 class SessionBoundStatePersistence:
@@ -106,3 +128,32 @@ class SessionBoundStatePersistence:
             if record is None:
                 return None
             return PipelineGraphState.model_validate(record.state_json)
+
+    async def recover_orphaned_runs(self) -> int:
+        """Mark pipeline runs stuck in non-terminal states as FAILED after server restart."""
+        async with self._session_factory() as session:
+            # Only load runs in non-terminal states — avoids full table scan.
+            result = await session.execute(
+                select(PipelineRunState).where(
+                    PipelineRunState.state_json["pipeline_status"].astext.in_(
+                        ("pending", "running")
+                    )
+                )
+            )
+            records = result.scalars().all()
+
+            count = 0
+            for record in records:
+                state = PipelineGraphState.model_validate(record.state_json)
+                state.pipeline_status = PipelineStatus.FAILED
+                state.error_message = "Pipeline interrupted by server restart"
+                state.error_phase = _derive_error_phase(state)
+                state.completed_at = datetime.now(timezone.utc).isoformat()
+                record.state_json = state.model_dump(mode="json")
+                count += 1
+
+            if count:
+                await session.commit()
+                logger.warning("Recovered {} orphaned pipeline run(s) from server restart", count)
+
+            return count
