@@ -242,3 +242,4 @@
 - Added clickable evidence row detail route under existing Evidence module
 - Added group-level detail API with distribution and original/translated traceability
 - Added source highlight rendering for evidence-chain review
+[2026-06-08] [Fix pipeline: frontend error handling, backend 409 dedup, CancelledError, real-time status sync, polling termination] [DONE]

@@ -20,6 +20,7 @@ import {
 } from "./forms";
 import type { PipelineFormData } from "./forms";
 import { apiClient } from "@/lib/api/client";
+import { extractErrorMessage } from "@/lib/api/error";
 
 interface ChatViewProps {
   processingRunId?: string;
@@ -168,6 +169,11 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
   // ── Poll pipeline status ──
   const pollPipelineStatus = useCallback(async (runId: string) => {
+    const TERMINAL = new Set(["completed", "failed", "awaiting_review", "cancelled"]);
+    const MAX_POLL_MS = 30 * 60 * 1000; // 30 min safety cap
+    const startedAt = Date.now();
+    let consecutiveErrors = 0;
+
     const poll = async () => {
       try {
         const { data } = await apiClient.get<{
@@ -177,19 +183,20 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
             { status: string; duration_seconds?: number | null }
           >;
         }>(`/pipeline/runs/${runId}/status`);
+        consecutiveErrors = 0;
         setPipelineStatus({
           runId,
           status: data.pipeline_status,
           phases: data.phases,
         });
-        if (
-          data.pipeline_status !== "completed" &&
-          data.pipeline_status !== "failed"
-        ) {
+        if (!TERMINAL.has(data.pipeline_status) && Date.now() - startedAt < MAX_POLL_MS) {
           setTimeout(poll, 2000);
         }
       } catch {
-        // Ignore polling errors
+        consecutiveErrors++;
+        if (consecutiveErrors < 10 && Date.now() - startedAt < MAX_POLL_MS) {
+          setTimeout(poll, 2000);
+        }
       }
     };
     setTimeout(poll, 1000);
@@ -216,20 +223,25 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         }>("/pipeline/run", body);
         const runId = response.data.processing_run_id;
         setPipelineStatus({ runId, status: response.data.status });
-        onRequest({
-          messages: [
-            {
-              role: "assistant" as const,
-              content: `Pipeline started. Run ID: ${runId.slice(0, 8)}...`,
-            },
-          ],
-        });
+        // Only post to chat if a session is active; otherwise the
+        // pipeline status card alone is sufficient feedback.
+        if (activeProvider) {
+          onRequest({
+            messages: [
+              {
+                role: "assistant" as const,
+                content: `Pipeline started. Run ID: ${runId.slice(0, 8)}...`,
+              },
+            ],
+          });
+        }
         pollPipelineStatus(runId);
-      } catch {
-        antdMessage.error("Failed to start pipeline");
+      } catch (err: unknown) {
+        console.error("[Pipeline] start failed:", err);
+        antdMessage.error(`Failed to start pipeline: ${extractErrorMessage(err)}`);
       }
     },
-    [onRequest, pollPipelineStatus, setActiveForm, setPipelineStatus],
+    [activeProvider, onRequest, pollPipelineStatus, setActiveForm, setPipelineStatus],
   );
 
   // ── Build bubble items with contentRender for embedded forms ──

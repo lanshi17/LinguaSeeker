@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from loguru import logger
+
 from sqlalchemy import and_, select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +20,6 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
 )
 from src.dao.postgresql.models import (
     CanonicalEvidenceItem,
-    RunEvidenceItem,
     SourceDocumentIdentifier,
 )
 
@@ -52,12 +53,23 @@ def _category_from_field_id(field_id: str) -> str | None:
     return field_id.split(".", 1)[0]
 
 
-def _build_highlight(source_span: dict[str, object]) -> EvidenceChainHighlight | None:
-    """Build a clamped highlight payload from a stored source span."""
+def _build_highlight(
+    source_span: dict[str, object],
+    value: str | None = None,
+) -> EvidenceChainHighlight | None:
+    """Build a clamped highlight payload from a stored source span.
+
+    Source spans store document-global offsets, but text_snippet is a short
+    excerpt. When offsets fall outside the snippet bounds, fall back to
+    locating the evidence value within the snippet text.
+    """
     if not source_span:
         return None
 
     text = str(source_span.get("text_snippet") or "")
+    if not text:
+        return None
+
     text_len = len(text)
     start = int(source_span.get("start_offset") or 0)
     raw_end = source_span.get("end_offset")
@@ -65,11 +77,24 @@ def _build_highlight(source_span: dict[str, object]) -> EvidenceChainHighlight |
     if end < start:
         end = text_len
 
+    # Clamp offsets to snippet bounds. When start exceeds text length
+    # the offsets are document-global; fall back to locating value in snippet.
+    if start >= text_len:
+        if value and value in text:
+            start = text.index(value)
+            end = start + len(value)
+        else:
+            start = 0
+            end = 0
+    else:
+        start = max(start, 0)
+        end = min(max(end, start), text_len)
+
     page = source_span.get("page")
     return EvidenceChainHighlight(
         text=text,
         highlight_start=max(start, 0),
-        highlight_end=min(max(end, 0), text_len) if text else max(end, 0),
+        highlight_end=min(max(end, 0), text_len),
         page=page if isinstance(page, int) else None,
         source_span=source_span,
     )
@@ -277,7 +302,6 @@ class SearchService:
             raise NoResultFound()
 
         source_document_id = rows[0].source_document_id
-        canonical_ids = [row.canonical_evidence_id for row in rows]
 
         ident_stmt = select(SourceDocumentIdentifier).where(
             SourceDocumentIdentifier.source_document_id == source_document_id
@@ -288,19 +312,8 @@ class SearchService:
             for ident in ident_result.scalars().all()
         }
 
-        trace_stmt = select(RunEvidenceItem).where(
-            RunEvidenceItem.canonical_evidence_id.in_(canonical_ids)
-        )
-        trace_result = await self._session.execute(trace_stmt)
-        run_items = trace_result.scalars().all()
-
-        trace_by_evidence: dict[object, dict[str, RunEvidenceItem]] = {}
-        for item in run_items:
-            trace_by_evidence.setdefault(item.canonical_evidence_id, {})[item.track] = item
-
         distribution = EvidenceFieldDistribution()
         detail_items: list[EvidenceGroupItem] = []
-        traces: list[EvidenceTrackTrace] = []
         confidences: list[float] = []
         gene = variant = disease = classification = None
 
@@ -353,20 +366,65 @@ class SearchService:
                 )
             )
 
-            traces_for_item = trace_by_evidence.get(row.canonical_evidence_id, {})
-            original = (
-                _build_highlight(traces_for_item["original"].source_span)
-                if "original" in traces_for_item
-                else None
+
+        # Build traces by matching original/translated pairs per field_id
+        items_by_field: dict[str, list] = {}
+        for row in rows:
+            items_by_field.setdefault(row.field_id, []).append(row)
+
+        traces: list[EvidenceTrackTrace] = []
+        for field_id, field_rows in items_by_field.items():
+            original_row = None
+            translated_row = None
+            for row in field_rows:
+                payload = row.active_payload or {}
+                track = payload.get("track")
+                if track == "original":
+                    if original_row is not None:
+                        logger.warning(
+                            "Duplicate original track for field_id={}: "
+                            "overwriting with canonical_evidence_id={}",
+                            field_id,
+                            row.canonical_evidence_id,
+                        )
+                    original_row = row
+                elif track == "translated":
+                    if translated_row is not None:
+                        logger.warning(
+                            "Duplicate translated track for field_id={}: "
+                            "overwriting with canonical_evidence_id={}",
+                            field_id,
+                            row.canonical_evidence_id,
+                        )
+                    translated_row = row
+
+            original_source = (
+                original_row.active_payload.get("source")
+                if original_row and original_row.active_payload else {}
+            ) or {}
+            translated_source = (
+                translated_row.active_payload.get("source")
+                if translated_row and translated_row.active_payload else {}
+            ) or {}
+            original_value = (
+                _coerce_str(original_row.active_payload.get("value"))
+                if original_row and original_row.active_payload else None
             )
-            translated = (
-                _build_highlight(traces_for_item["translated"].source_span)
-                if "translated" in traces_for_item
-                else None
+            translated_value = (
+                _coerce_str(translated_row.active_payload.get("value"))
+                if translated_row and translated_row.active_payload else None
             )
+
+            original = _build_highlight(original_source, original_value) if original_source else None
+            translated = _build_highlight(translated_source, translated_value) if translated_source else None
+
+            ref_row = original_row or translated_row
+            canonical_id = ref_row.canonical_evidence_id
+            field_name = ref_row.active_payload.get("field_name") if ref_row.active_payload else None
+
             traces.append(
                 EvidenceTrackTrace(
-                    canonical_evidence_id=row.canonical_evidence_id,
+                    canonical_evidence_id=canonical_id,
                     field_id=field_id,
                     field_name=str(field_name) if field_name else None,
                     original=original,
