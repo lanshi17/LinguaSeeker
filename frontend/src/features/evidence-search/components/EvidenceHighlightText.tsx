@@ -39,7 +39,9 @@ function findAnchorRange(text: string, rawValue?: string | null) {
     if (value !== value.toUpperCase()) {
       return null;
     }
-    const match = new RegExp(`(^|[^A-Za-z0-9])(${escapedRegExp(value)})(?![A-Za-z0-9])`).exec(text);
+    const match = new RegExp(
+      `(^|[^A-Za-z0-9])(${escapedRegExp(value)})(?![A-Za-z0-9])`,
+    ).exec(text);
     if (!match) {
       return null;
     }
@@ -92,6 +94,14 @@ export function EvidenceHighlightText({
           </span>
         )}
         <span>Page {highlight.page ?? "\u2014"}</span>
+        {!hasMark && (
+          <span
+            data-testid="highlight-unavailable"
+            className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-500"
+          >
+            highlight unavailable
+          </span>
+        )}
       </div>
       <p className="whitespace-pre-wrap">
         {before}
@@ -108,6 +118,7 @@ export function EvidenceHighlightText({
             {marked}
           </mark>
         ) : null}
+        {!hasMark ? marked : null}
         {after}
       </p>
     </div>
