@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -38,6 +38,7 @@ _VARIANT_FIELDS = (
 )
 _DISEASE_FIELDS = ("B.disease_diagnosis", "B.clinical_diagnosis", "B.hpo_terms")
 _CLASSIFICATION_FIELDS = ("J.authority_classification", "J.clinvar_assertion")
+_TOKEN_BOUNDARY_CHARS = r"A-Za-z0-9_"
 
 
 def _coerce_str(value: Any) -> str | None:
@@ -58,15 +59,34 @@ def _category_from_field_id(field_id: str) -> str | None:
     return field_id.split(".", 1)[0]
 
 
-def _parse_source_offset(raw: object) -> int | None:
-    """Parse a stored source offset, preserving missing/invalid as None."""
+def _parse_source_offset(raw: object, *, default: int, name: str) -> tuple[int, bool]:
+    """Parse a stored source offset, with default + validity flag for fallback.
+
+    Returns (offset, valid). ``valid`` is False when the stored value was
+    missing or malformed; callers use that to decide between clamping and
+    value-anchor fallback.
+    """
     if raw is None:
-        return None
-    return int(raw)
+        return default, False
+    try:
+        return int(raw), True
+    except (TypeError, ValueError):
+        logger.warning(
+            "Invalid source_span {}_offset={!r}; using value fallback",
+            name,
+            raw,
+        )
+        return default, False
 
 
 def _find_value_anchor(text: str, value: str | None) -> tuple[int, int] | None:
-    """Find a safe value anchor in snippet text."""
+    """Find a safe case-insensitive value anchor in snippet text.
+
+    Single-letter values are too ambiguous in prose. Two-letter values are
+    only matched when uppercase (typical for gene symbols like ``BR``).
+    Three-or-more-letter values use a token-boundary regex with
+    case-insensitive matching to avoid matching inside longer words.
+    """
     if not value:
         return None
     candidate = value.strip()
@@ -77,15 +97,21 @@ def _find_value_anchor(text: str, value: str | None) -> tuple[int, int] | None:
     if len(candidate) == 2:
         if not candidate.isupper():
             return None
-        match = re.search(rf"(?<![A-Za-z0-9]){re.escape(candidate)}(?![A-Za-z0-9])", text)
+        match = re.search(
+            rf"(?<![{_TOKEN_BOUNDARY_CHARS}]){re.escape(candidate)}(?![{_TOKEN_BOUNDARY_CHARS}])",
+            text,
+        )
         if not match:
             return None
         return match.start(), match.end()
-
-    index = text.lower().find(candidate.lower())
-    if index < 0:
+    pattern = re.compile(
+        rf"(?<![{_TOKEN_BOUNDARY_CHARS}]){re.escape(candidate)}(?![{_TOKEN_BOUNDARY_CHARS}])",
+        re.IGNORECASE,
+    )
+    match = pattern.search(text)
+    if match is None:
         return None
-    return index, index + len(candidate)
+    return match.start(), match.end()
 
 
 def _build_highlight(
@@ -94,9 +120,10 @@ def _build_highlight(
 ) -> EvidenceChainHighlight | None:
     """Build a clamped highlight payload from a stored source span.
 
-    Source spans store document-global offsets, but text_snippet is a short
-    excerpt. When offsets fall outside the snippet bounds, fall back to
-    locating the evidence value within the snippet text.
+    Source spans store document-global offsets while text_snippet is a short
+    excerpt. When offsets are malformed or start beyond the snippet, locate
+    value inside the snippet using a safe token-boundary search. When the value
+    cannot be located, start and end collapse to 0 (no visible highlight).
     """
     if not source_span:
         return None
@@ -106,22 +133,30 @@ def _build_highlight(
         return None
 
     text_len = len(text)
-    start = _parse_source_offset(source_span.get("start_offset"))
-    end = _parse_source_offset(source_span.get("end_offset"))
+    start, start_valid = _parse_source_offset(
+        source_span.get("start_offset"),
+        default=0,
+        name="start",
+    )
+    end, end_valid = _parse_source_offset(
+        source_span.get("end_offset"),
+        default=text_len,
+        name="end",
+    )
+    if end < start:
+        end = text_len
 
-    # Clamp offsets to snippet bounds. When start exceeds text length
-    # the offsets are document-global; fall back to locating value in snippet.
-    if start is None or end is None or start >= text_len:
-        anchor = _find_value_anchor(text, value)
-        if anchor:
-            start, end = anchor
-        else:
-            start, end = 0, 0
-    else:
-        if end < start:
-            end = text_len
+    # Valid starts inside the snippet should keep current behavior: clamp the
+    # end to snippet bounds instead of falling through to value search.
+    if start_valid and end_valid and start < text_len:
         start = max(start, 0)
         end = min(max(end, start), text_len)
+    else:
+        anchor = _find_value_anchor(text, value)
+        if anchor is None:
+            start = end = 0
+        else:
+            start, end = anchor
 
     page = source_span.get("page")
     clean_source_span = {k: v for k, v in source_span.items() if v is not None}
