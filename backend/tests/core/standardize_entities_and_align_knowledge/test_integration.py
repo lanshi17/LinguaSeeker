@@ -54,6 +54,9 @@ class FakeRepository:
     async def upsert_canonical_evidence(self, input_data, matches, entity_ids):
         self.canonical.append((input_data, matches, entity_ids))
 
+    async def refresh_literature_profile(self, source_document_id: str) -> None:
+        pass
+
 
 class FakeSimilarityMatcher:
     """Similarity matcher stub that always returns unmapped for test isolation."""
