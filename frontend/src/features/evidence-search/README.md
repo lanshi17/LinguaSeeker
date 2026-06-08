@@ -38,3 +38,4 @@ const { results, filters, updateFilter, setPage } = useEvidenceSearch();
 | `buildEvidenceDocument(detail, track)` | Full-document reader with highlight ranges |
 | `buildBilingualCompareHref(groupId, evidenceId?)` | Compare-mode detail URL |
 | `evidenceToneForItem(item)` | Maps fields to highlight tones |
+| `BilingualComparison` | Original/translated value-anchored snippet panel; used in compare mode |
