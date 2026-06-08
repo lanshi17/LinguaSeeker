@@ -154,6 +154,7 @@ async def get_literature_detail(
             EvidenceGroupSummary(**eg) for eg in profile.get("evidence_groups", [])
         ],
         review_status=profile.get("review_status", "provisional"),
+        review_notes=profile.get("review_notes"),
         overall_confidence=profile.get("overall_confidence"),
         total_evidence_fields=profile.get("total_evidence_fields", 0),
         found_count=profile.get("found_count", 0),
