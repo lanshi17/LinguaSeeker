@@ -76,6 +76,72 @@ class AcmgEvidenceValueNormalizer:
                     )
                 ],
             )
+        if item.field_id == "C.de_novo_status":
+            return self._normalize_de_novo(item)
+        if item.field_id == "B.consanguinity":
+            return self._normalize_consanguinity(item)
+        if item.field_id == "C.obligate_carriers":
+            return self._normalize_obligate_carriers(item)
+        return item, []
+
+    def _with_value_issue(
+        self, item: EvidenceItem, normalized_value: object,
+    ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
+        return (
+            item.model_copy(update={"value": normalized_value}),
+            [
+                EvidenceNormalizationIssue(
+                    issue_type=EvidenceNormalizationIssueType.VALUE_NORMALIZED,
+                    severity=EvidenceNormalizationSeverity.INFO,
+                    field_id=item.field_id,
+                    message="Field value normalized to ACMG-ready representation.",
+                    original_value=item.value,
+                    normalized_value=normalized_value,
+                )
+            ],
+        )
+
+    def _normalize_de_novo(
+        self, item: EvidenceItem,
+    ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
+        text = str(item.value).strip().lower()
+        if item.value is False or text in {"0", "false", "not de novo", "not_de_novo", "inherited"}:
+            return self._with_value_issue(item, "not_de_novo")
+        if item.value is True or text in {"1", "true", "de novo", "denovo"}:
+            return self._with_value_issue(item, "de_novo")
+        if text in {"unknown", "not reported", "not_reported"}:
+            return self._with_value_issue(item, "unknown")
+        return item, []
+
+    def _normalize_consanguinity(
+        self, item: EvidenceItem,
+    ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
+        text = str(item.value).strip()
+        lower = text.lower()
+        if lower in {"present", "consanguineous", "true"}:
+            return self._with_value_issue(item, "present")
+        if lower in {"absent", "non-consanguineous", "false"}:
+            return self._with_value_issue(item, "absent")
+        if lower in {"unknown", "not reported", "not_reported", "not applicable", "n/a", "na"}:
+            return self._with_value_issue(item, "unknown")
+        if text:
+            return self._with_value_issue(item, f"present:{text}")
+        return item, []
+
+    def _normalize_obligate_carriers(
+        self, item: EvidenceItem,
+    ) -> tuple[EvidenceItem, list[EvidenceNormalizationIssue]]:
+        if item.value is True:
+            return self._with_value_issue(item, 2)
+        if item.value is False:
+            return self._with_value_issue(item, 0)
+        if isinstance(item.value, int):
+            return item, []
+        text = str(item.value).strip().lower()
+        if text in {"parents", "both parents"}:
+            return self._with_value_issue(item, 2)
+        if text.isdigit():
+            return self._with_value_issue(item, int(text))
         return item, []
 
     def _reject_item(self, item: EvidenceItem) -> EvidenceItem:
