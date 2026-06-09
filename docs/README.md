@@ -45,7 +45,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | date | title | status |
 |---|---|---|
 | 2026-06-06 | [ClinGen-based Layer 3 Pipeline Evaluation](active/2026-06-06-clingen-layer3-evaluation.md) | in-progress — infrastructure built, running evaluation |
-| 2026-06-08 | [Bilingual Comparison UX Improvement](active/2026-06-08-bilingual-comparison-ux.md) | in-progress |
 | 2026-05-09 | [PRD](active/PRD.md) | active — v2.0 tab-based UI + chat-driven extraction |
 | 2026-05-09 | [Application Flow](active/APP_FLOW.md) | active — v2.0 tab navigation + workspace flow |
 | 2026-05-09 | [Technology Stack](active/TECH_STACK.md) | active — v2.0 SSE, Vercel AI SDK, shadcn/ui |
@@ -62,9 +61,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Active Code Reviews
 
-| date | title | status |
-|---|---|---|
-| 2026-06-08 | [Database Schema Review & Optimization](codereview/2026-06-08-database-schema-review.md) | active |
+No active code reviews at this time.
 
 ## Diagrams
 
@@ -81,6 +78,9 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-06-08 | [Schema Hardening](archive/plans/2026-06-08-schema-hardening.md) | completed — circular FK fix, search sync, reviewed_unmappable status, pipeline_status column |
+| 2026-06-08 | [Literature Profile Read Model](archive/plans/2026-06-08-literature-profile-refactor.md) | completed — CQRS read-model, literature_profiles table, pipeline integration |
+| 2026-06-08 | [Bilingual Comparison UX](archive/plans/2026-06-08-bilingual-comparison-ux.md) | completed — bilingual comparison detail page |
 | 2026-06-08 | [Evidence Traceability Fix](archive/plans/2026-06-08-evidence-traceability-fix.md) | completed — source span display + offset fix |
 | 2026-06-07 | [Evidence Detail Traceability Highlights](archive/plans/2026-06-07-evidence-detail-traceability-highlights.md) | completed — evidence detail page with distribution, traceability, highlights |
 | 2026-06-06 | [Ant Design X AI Chat](archive/plans/2026-06-06-antd-x-ai-chat.md) | completed — @ant-design/x chat integration |
@@ -140,6 +140,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status/PR |
 |---|---|---|
+| 2026-06-08 | [Database Schema Review & Optimization](archive/codereview/2026-06-08-database-schema-review.md) | resolved — 18 tables, 7 migrations, schema hardening fixes applied |
 | 2026-06-04 | [Redis connection manager plan review](archive/codereview/2026-06-04-redis-connection-manager.md) | resolved — plan approved after 2 blocking + 3 important fixes |
 | 2026-05-12 | [cross-lingual module v2 round 3 — approved](archive/codereview/2026-05-12-feat-cross-lingual-module-v2-r3.md) | approved — 58/58 tests |
 | 2026-05-12 | [cross-lingual module v2](archive/codereview/2026-05-12-feat-cross-lingual-module-v2.md) | resolved |
