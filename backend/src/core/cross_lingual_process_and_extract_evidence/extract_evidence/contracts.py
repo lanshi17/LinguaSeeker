@@ -184,6 +184,30 @@ class EvidenceExtractionStatus(str, Enum):
     NOT_RELEVANT = "not_relevant"
 
 
+class EvidenceNormalizationIssueType(str, Enum):
+    INVALID_HGVS = "invalid_hgvs"
+    MISSING_VARIANT_DETAIL = "missing_variant_detail"
+    SEMANTIC_CONFLICT = "semantic_conflict"
+    GENERIC_PREDICTION_TOOL = "generic_prediction_tool"
+    VALUE_NORMALIZED = "value_normalized"
+    DUPLICATE_MERGED = "duplicate_merged"
+
+
+class EvidenceNormalizationSeverity(str, Enum):
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+
+
+class EvidenceNormalizationIssue(BaseModel):
+    issue_type: EvidenceNormalizationIssueType
+    severity: EvidenceNormalizationSeverity = EvidenceNormalizationSeverity.WARNING
+    field_id: str
+    message: str
+    original_value: str | int | float | bool | list[str] | None = None
+    normalized_value: str | int | float | bool | list[str] | None = None
+
+
 class EvidenceExtractionResult(BaseModel):
     status: EvidenceExtractionStatus
     document_id: str
@@ -193,6 +217,7 @@ class EvidenceExtractionResult(BaseModel):
     evidence_chains: list[EvidenceChain] = Field(default_factory=list)
     special_evidence: list[SpecialEvidenceRecord] = Field(default_factory=list)
     quality_report: QualityReport | None = None
+    normalization_issues: list[EvidenceNormalizationIssue] = Field(default_factory=list)
 
 
 class DualTrackDocuments(BaseModel):
@@ -226,4 +251,5 @@ class EvidenceExtractionState(BaseModel):
     evidence_chains: list[EvidenceChain] = Field(default_factory=list)
     special_evidence: list[SpecialEvidenceRecord] = Field(default_factory=list)
     quality_report: QualityReport | None = None
+    normalization_issues: list[EvidenceNormalizationIssue] = Field(default_factory=list)
     status: EvidenceExtractionStatus = EvidenceExtractionStatus.COMPLETED
