@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import tempfile
 import zipfile
 from collections import defaultdict
@@ -375,6 +376,28 @@ class MinerURemoteParser(ParserStrategy):
                     images[rel_path] = img_file.read_bytes()
         return images
 
+    @staticmethod
+    def _extract_abstract_from_markdown(text: str) -> str | None:
+        """Extract abstract text from MinerU-generated markdown.
+
+        Looks for common academic paper patterns:
+        - "Abstract" / "ABSTRACT" heading
+        - "摘要" / "【摘要】" heading (Chinese)
+        Falls back to first substantial paragraph before "Introduction"/"Keywords".
+        """
+        if not text:
+            return None
+        # Pattern: heading-style abstract section
+        pattern = r"(?:^|\n)\s*(?:#{1,3}\s*)?(?:\*\*)?(?:Abstract|ABSTRACT|摘要|【摘要】)(?:\*\*)?\s*(?::\s*)?\n(.*?)(?=\n\s*(?:#{1,3}\s*)?(?:\*\*)?(?:Introduction|INTRODUCTION|引言|关键词|Keywords|KEYWORDS|Background|BACKGROUND|1\s*[\.\)])|\Z)"
+        m = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+        if m:
+            abstract = m.group(1).strip()
+            # Remove trailing markdown artifacts
+            abstract = re.sub(r"\n\s*[\*\-]\s*$", "", abstract).strip()
+            if len(abstract) > 30:
+                return abstract
+        return None
+
     def _parse_extracted_content(self, extract_dir: Path) -> _MinerURawResult:
         """Parse extracted zip content into structured result."""
         json_files = list(extract_dir.rglob("*.json"))
@@ -420,12 +443,13 @@ class MinerURemoteParser(ParserStrategy):
 
         # Priority 4: full.md only
         if full_markdown:
+            abstract = self._extract_abstract_from_markdown(full_markdown)
             return _MinerURawResult(
                 state="done",
                 total_pages=1,
                 title=None,
                 authors=[],
-                abstract=None,
+                abstract=abstract,
                 pages=[_MinerUPageData(page_number=1, markdown=full_markdown, figures=[], tables=[])],
                 full_markdown=full_markdown,
                 images=images,
@@ -441,12 +465,16 @@ class MinerURemoteParser(ParserStrategy):
             # Try alternative format
             pages_data = data.get("pages", [])
             if pages_data:
+                abstract = data.get("abstract")
+                if not abstract:
+                    combined_md = "\n\n".join(p.get("markdown", "") for p in pages_data)
+                    abstract = self._extract_abstract_from_markdown(combined_md)
                 return _MinerURawResult(
                     state="done",
                     total_pages=len(pages_data),
                     title=data.get("title"),
                     authors=data.get("authors", []),
-                    abstract=data.get("abstract"),
+                    abstract=abstract,
                     pages=pages_data,
                     full_markdown="\n\n".join(p.get("markdown", "") for p in pages_data),
                     raw_blocks=[],
@@ -469,12 +497,17 @@ class MinerURemoteParser(ParserStrategy):
                 "tables": [],
             })
 
+        abstract = data.get("abstract")
+        if not abstract:
+            combined_md = "\n\n".join(full_markdown_parts)
+            abstract = self._extract_abstract_from_markdown(combined_md)
+
         return _MinerURawResult(
             state="done",
             total_pages=len(pages),
             title=data.get("title"),
             authors=data.get("authors", []),
-            abstract=data.get("abstract"),
+            abstract=abstract,
             pages=pages,
             full_markdown="\n\n".join(full_markdown_parts),
             raw_blocks=[],
@@ -494,14 +527,17 @@ class MinerURemoteParser(ParserStrategy):
                 "tables": [],
             })
 
+        combined_markdown = "\n\n".join(full_markdown_parts)
+        abstract = self._extract_abstract_from_markdown(combined_markdown)
+
         return _MinerURawResult(
             state="done",
             total_pages=len(pages),
             title=None,
             authors=[],
-            abstract=None,
+            abstract=abstract,
             pages=pages,
-            full_markdown="\n\n".join(full_markdown_parts),
+            full_markdown=combined_markdown,
             raw_blocks=[],
         )
 
@@ -515,12 +551,13 @@ class MinerURemoteParser(ParserStrategy):
             pages_map[page_idx].append(item)
 
         if not pages_map:
+            abstract = self._extract_abstract_from_markdown(full_markdown)
             return _MinerURawResult(
                 state="done",
                 total_pages=1,
                 title=None,
                 authors=[],
-                abstract=None,
+                abstract=abstract,
                 pages=[_MinerUPageData(page_number=1, markdown=full_markdown, figures=[], tables=[])],
                 full_markdown=full_markdown,
                 raw_blocks=raw_blocks,
@@ -560,14 +597,19 @@ class MinerURemoteParser(ParserStrategy):
                 tables=tables,
             ))
 
+        combined_markdown = "\n\n".join(full_parts)
+        abstract = self._extract_abstract_from_markdown(combined_markdown)
+        if not abstract and full_markdown:
+            abstract = self._extract_abstract_from_markdown(full_markdown)
+
         return _MinerURawResult(
             state="done",
             total_pages=len(pages),
             title=None,
             authors=[],
-            abstract=None,
+            abstract=abstract,
             pages=pages,
-            full_markdown="\n\n".join(full_parts),
+            full_markdown=combined_markdown,
             raw_blocks=raw_blocks,
         )
 
