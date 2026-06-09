@@ -87,3 +87,43 @@ class TestOnlineAcquisitionWorkflow:
 
         assert result["success"] is True
         assert len(result["candidate_links"]) > 0
+
+    @pytest.mark.asyncio
+    async def test_prefer_web_firecrawl_failure_returns_warning(self):
+        """prefer=web handles Firecrawl failure without crashing the workflow."""
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow._acquire_links_firecrawl",
+            new_callable=AsyncMock,
+            side_effect=RuntimeError("firecrawl down"),
+        ):
+            result = await online_acquisition_workflow({
+                "action": "search",
+                "query": "BRCA1",
+                "prefer": "web",
+            })
+
+        assert result["success"] is False
+        assert any("firecrawl acquisition failed" in warning for warning in result["warnings"])
+        assert result["route"]["used"] == "web"
+
+    @pytest.mark.asyncio
+    async def test_prefer_web_includes_source_trace(self):
+        """prefer=web exposes Firecrawl source_trace for debugging."""
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.web_search import (
+            SearchLink,
+        )
+
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow._acquire_links_firecrawl",
+            new_callable=AsyncMock,
+            return_value=[SearchLink(url="https://example.com/paper.pdf", title="Paper")],
+        ):
+            result = await online_acquisition_workflow({
+                "action": "search",
+                "query": "BRCA1",
+                "prefer": "web",
+            })
+
+        assert result["success"] is True
+        assert result["raw"]["source_trace"][0]["provider"] == "firecrawl"
+        assert result["raw"]["source_trace"][0]["items_count"] == 1

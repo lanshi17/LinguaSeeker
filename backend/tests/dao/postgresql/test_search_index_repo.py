@@ -136,17 +136,21 @@ async def test_search_by_pmid_returns_rows() -> None:
 
 
 @pytest.mark.asyncio
-async def test_search_no_filters_returns_empty_does_not_crash() -> None:
-    """Search with no filters does not execute a wasteful query."""
+async def test_search_no_filters_returns_default_list_view() -> None:
+    """Search with no filters returns the default list view."""
     from src.dao.postgresql.search_index_repo import SearchIndexRepository
 
     session = _fake_session()
+    mock_result = MagicMock()
+    mock_result.mappings.return_value.all.return_value = [
+        {"canonical_evidence_id": "c1", "field_id": "gene_symbol"},
+    ]
+    session.execute.return_value = mock_result
     repo = SearchIndexRepository(session)
 
     rows = await repo.search()
-    assert rows == []
-    # Should not query when there are no filters.
-    session.execute.assert_not_awaited()
+    assert len(rows) == 1
+    session.execute.assert_awaited_once()
 
 
 # ── Repository refresh tests ───────────────────────────────────────────────

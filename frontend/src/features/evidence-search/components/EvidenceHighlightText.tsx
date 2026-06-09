@@ -10,6 +10,7 @@ export type { EvidenceHighlightTone } from "../types/evidenceSearch";
 interface EvidenceHighlightTextProps {
   highlight?: EvidenceChainHighlight | null;
   active?: boolean;
+  anchorValue?: string | null;
   label?: string;
   tone?: EvidenceHighlightTone;
 }
@@ -23,9 +24,37 @@ const TONE_STYLES: Record<EvidenceHighlightTone, string> = {
   variant: "bg-cyan-200 text-cyan-950 ring-1 ring-cyan-300",
 };
 
+function escapedRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function findAnchorRange(text: string, rawValue?: string | null) {
+  const value = rawValue?.trim();
+  if (!value || value.length === 1) {
+    return null;
+  }
+  if (value.length === 2) {
+    if (value !== value.toUpperCase()) {
+      return null;
+    }
+    const match = new RegExp(`(^|[^A-Za-z0-9])(${escapedRegExp(value)})(?![A-Za-z0-9])`).exec(text);
+    if (!match) {
+      return null;
+    }
+    const start = match.index + match[1].length;
+    return { start, end: start + value.length };
+  }
+  const index = text.toLowerCase().indexOf(value.toLowerCase());
+  if (index < 0) {
+    return null;
+  }
+  return { start: index, end: index + value.length };
+}
+
 export function EvidenceHighlightText({
   highlight,
   active = false,
+  anchorValue,
   label,
   tone = "neutral",
 }: EvidenceHighlightTextProps) {
@@ -37,11 +66,19 @@ export function EvidenceHighlightText({
     );
   }
 
-  const start = Math.max(0, Math.min(highlight.highlight_start, highlight.text.length));
-  const end = Math.max(start, Math.min(highlight.highlight_end, highlight.text.length));
+  let start = Math.max(0, Math.min(highlight.highlight_start, highlight.text.length));
+  let end = Math.max(start, Math.min(highlight.highlight_end, highlight.text.length));
+  if (end === start) {
+    const anchor = findAnchorRange(highlight.text, anchorValue);
+    if (anchor) {
+      start = anchor.start;
+      end = anchor.end;
+    }
+  }
   const before = highlight.text.slice(0, start);
   const marked = highlight.text.slice(start, end);
   const after = highlight.text.slice(end);
+  const hasMark = end > start;
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm leading-7 text-gray-800 shadow-sm">
@@ -55,11 +92,13 @@ export function EvidenceHighlightText({
       </div>
       <p className="whitespace-pre-wrap">
         {before}
-        <mark
-          className={`rounded px-1 py-0.5 font-medium ${active ? TONE_STYLES[tone] : "bg-yellow-100 text-gray-900"}`}
-        >
-          {marked}
-        </mark>
+        {hasMark ? (
+          <mark
+            className={`rounded px-1 py-0.5 font-medium ${active ? TONE_STYLES[tone] : "bg-yellow-100 text-gray-900"}`}
+          >
+            {marked}
+          </mark>
+        ) : null}
         {after}
       </p>
     </div>

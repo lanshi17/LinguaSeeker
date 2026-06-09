@@ -58,14 +58,22 @@ class LangChainEvidenceProvider:
             return self._ctx.standard_effort
         return self._ctx.strong_effort
 
+    def _api_keys_for_tier(self, tier: EvidenceModelTier) -> list[str]:
+        if tier == EvidenceModelTier.FAST:
+            keys = [*self._ctx.api_keys, self._ctx.api_key]
+        else:
+            keys = [*self._ctx.reasoning_api_keys, self._ctx.reasoning_api_key]
+        return [key.strip() for key in keys if key and key.strip()]
+
     def _client_for_tier(self, tier: EvidenceModelTier) -> LLMPoolAdapter:
         if tier not in self._clients:
             if tier == EvidenceModelTier.FAST:
-                api_keys = self._ctx.api_keys
                 base_url = self._ctx.base_url
             else:
-                api_keys = self._ctx.reasoning_api_keys
                 base_url = self._ctx.reasoning_base_url
+            api_keys = self._api_keys_for_tier(tier)
+            if not api_keys:
+                raise RuntimeError(f"missing LLM API key for evidence extraction tier {tier.value}")
 
             model_kwargs: dict[str, Any] = {}
             effort = self._effort_for_tier(tier)

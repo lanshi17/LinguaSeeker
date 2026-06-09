@@ -287,6 +287,30 @@ def test_build_highlight_value_fallback_for_document_global_offsets():
     assert highlight.highlight_end == 5
 
 
+def test_build_highlight_value_fallback_when_offsets_are_missing():
+    """_build_highlight uses the evidence value when no offsets were stored."""
+    highlight = _build_highlight(
+        {"text_snippet": "The RB gene was evaluated.", "start_offset": None, "end_offset": None},
+        value="RB",
+    )
+
+    assert highlight is not None
+    assert highlight.highlight_start == 4
+    assert highlight.highlight_end == 6
+
+
+def test_build_highlight_value_fallback_for_two_letter_gene_symbol():
+    """_build_highlight can anchor distinctive two-letter uppercase gene symbols."""
+    highlight = _build_highlight(
+        {"text_snippet": "Testing confirmed RB expression.", "start_offset": 500, "end_offset": 502},
+        value="RB",
+    )
+
+    assert highlight is not None
+    assert highlight.highlight_start == 18
+    assert highlight.highlight_end == 20
+
+
 def test_build_highlight_value_fallback_requires_min_length():
     """_build_highlight skips value fallback for short values (< 3 chars)."""
     highlight = _build_highlight(
