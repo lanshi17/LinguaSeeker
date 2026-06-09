@@ -10,7 +10,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     BilingualSpan,
     TrackSpan,
 )
-from src.dao.postgresql.models import RunEvidenceItem
+from src.dao.postgresql.models import CanonicalEvidenceItem, RunEvidenceItem
 
 
 class SourceLinker:
@@ -27,23 +27,36 @@ class SourceLinker:
     ) -> TrackSpan | None:
         """Retrieve source span for one track (original or translated).
 
-        Returns None if no run item exists for the specified track.
+        Loads the canonical item first to resolve the best run via
+        current_best_run_evidence_id, then fetches that run item.
+        Returns None if the canonical item or its best run doesn't exist.
         """
-        stmt = (
-            select(RunEvidenceItem)
-            .where(
-                RunEvidenceItem.canonical_evidence_id == canonical_evidence_id,
-                RunEvidenceItem.track == track,
-            )
-            .limit(1)
+        # Step 1: load canonical item to get the best run pointer
+        canonical_stmt = select(CanonicalEvidenceItem).where(
+            CanonicalEvidenceItem.canonical_evidence_id == canonical_evidence_id,
         )
-        result = await self._session.execute(stmt)
-        item = result.scalar_one_or_none()
+        canonical_result = await self._session.execute(canonical_stmt)
+        canonical = canonical_result.scalar_one_or_none()
+
+        if canonical is None or canonical.current_best_run_evidence_id is None:
+            return None
+
+        # Step 2: load the best run evidence item
+        run_stmt = select(RunEvidenceItem).where(
+            RunEvidenceItem.run_evidence_item_id == canonical.current_best_run_evidence_id,
+        )
+        run_result = await self._session.execute(run_stmt)
+        item = run_result.scalar_one_or_none()
 
         if item is None:
             return None
 
-        span_data = item.source_span or {}
+        # Step 3: extract span from the run item
+        return self._build_track_span(track, item.source_span or {})
+
+    @staticmethod
+    def _build_track_span(track: str, span_data: dict) -> TrackSpan:
+        """Build a TrackSpan from raw source_span JSONB data."""
         return TrackSpan(
             track=track,  # type: ignore[arg-type]
             source_span=span_data,
