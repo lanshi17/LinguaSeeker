@@ -10,6 +10,9 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     EvidenceExtractionState,
     EvidenceExtractionStatus,
     EvidenceItem,
+    EvidenceNormalizationIssue,
+    EvidenceNormalizationIssueType,
+    EvidenceNormalizationSeverity,
     EvidenceStatus,
     ExternalIds,
     PageSpan,
@@ -271,3 +274,46 @@ def test_evidence_extraction_state_roundtrip():
     restored = EvidenceExtractionState(**data)
     assert restored.document.document_id == "doc-1"
     assert restored.status == EvidenceExtractionStatus.COMPLETED
+
+
+def test_evidence_normalization_issue_contract() -> None:
+    issue = EvidenceNormalizationIssue(
+        issue_type=EvidenceNormalizationIssueType.INVALID_HGVS,
+        severity=EvidenceNormalizationSeverity.ERROR,
+        field_id="A.variant_hgvs_g",
+        message="Coordinate-only value is not valid HGVS.",
+        original_value="chr6_44270253",
+    )
+
+    assert issue.issue_type == EvidenceNormalizationIssueType.INVALID_HGVS
+    assert issue.severity == EvidenceNormalizationSeverity.ERROR
+    assert issue.field_id == "A.variant_hgvs_g"
+
+
+def test_extraction_result_and_state_carry_normalization_issues() -> None:
+    issue = EvidenceNormalizationIssue(
+        issue_type=EvidenceNormalizationIssueType.INVALID_HGVS,
+        severity=EvidenceNormalizationSeverity.ERROR,
+        field_id="A.variant_hgvs_g",
+        message="Coordinate-only value is not valid HGVS.",
+        original_value="chr6_44270253",
+    )
+
+    result = EvidenceExtractionResult(
+        status=EvidenceExtractionStatus.COMPLETED,
+        document_id="doc",
+        track=Track.ORIGINAL,
+        normalization_issues=[issue],
+    )
+    state = EvidenceExtractionState(
+        document=TrackDocument(
+            document_id="doc",
+            track=Track.ORIGINAL,
+            formatted_text="",
+            page_spans=[],
+        ),
+        normalization_issues=[issue],
+    )
+
+    assert result.normalization_issues == [issue]
+    assert state.normalization_issues == [issue]
