@@ -87,6 +87,14 @@ async def lifespan(app: FastAPI):
     wire_dependencies()
     logger.info("Pipeline orchestrator initialized")
 
+    # Ensure standalone tables (independent MetaData, not managed by Alembic) exist
+    from src.dao.postgresql.search_index_repo import search_index_metadata
+    _wiring.get_session_factory()  # trigger lazy engine creation
+    engine = _wiring.get_engine()
+    if engine is not None:
+        async with engine.begin() as conn:
+            await conn.run_sync(search_index_metadata.create_all)
+
     # Recover pipeline runs interrupted by server restart
     from src.api.v1.pipeline import get_pipeline_runner
     try:
