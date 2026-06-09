@@ -240,3 +240,21 @@ class TestDownloadCandidates:
             results = await _download_candidates(candidates, str(tmp_path))
 
         assert results == []
+
+    @pytest.mark.asyncio
+    async def test_download_unexpected_exception_is_logged(self, tmp_path):
+        from src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow import _download_candidates
+
+        candidates = [{"url": "https://example.com/bad.pdf", "title": "Bad Paper"}]
+
+        with patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.download_file_from_url",
+            new_callable=AsyncMock,
+            side_effect=ValueError("bad url"),
+        ), patch(
+            "src.core.ingest_and_digitize_data.document_acquisition.online_acquisition.workflow.logger"
+        ) as mock_logger:
+            results = await _download_candidates(candidates, str(tmp_path))
+
+        assert results == []
+        mock_logger.warning.assert_called()
