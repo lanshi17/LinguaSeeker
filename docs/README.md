@@ -136,8 +136,8 @@ No active code reviews at this time.
 | 2026-05-07 | [user upload](archive/plans/2026-05-07-user-upload.md) | completed |
 | 2026-05-06 | [literature acquisition](archive/plans/2026-05-06-literature-acquisition.md) | completed |
 | 2026-05-05 | [rust-io literature gateway](archive/plans/2026-05-05-rust-io-literature-gateway.md) | completed |
+| 2026-06-09 | [Hide Empty English Translation Track](archive/plans/2026-06-09-hide-empty-english-translation-track.md) | completed — availability-aware reader; 9/9 tests |
 
-| 2026-06-09 | [Hide Empty English Translation Track](archive/plans/2026-06-09-hide-empty-english-translation-track.md) | completed — showTranslatedDocument = paragraphs.length > 0; 10/10 tests |
 ### Completed Code Reviews
 
 | date | title | status/PR |
