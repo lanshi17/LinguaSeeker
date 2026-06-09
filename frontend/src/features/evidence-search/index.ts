@@ -12,6 +12,7 @@ export {
   countEvidenceCategories,
   countEvidenceHighlightTones,
   evidenceToneForItem,
+  hasTranslatedDocumentText,
 } from "./utils/evidenceDocument";
 export {
   buildBilingualCompareHref,

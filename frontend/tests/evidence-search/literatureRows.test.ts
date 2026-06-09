@@ -8,6 +8,7 @@ import {
 import {
   buildEvidenceDocument,
   countEvidenceHighlightTones,
+  hasTranslatedDocumentText,
 } from "../../src/features/evidence-search/utils/evidenceDocument";
 import type {
   EvidenceGroupDetailResponse,
@@ -291,5 +292,55 @@ describe("evidence document helpers", () => {
 
     assert.equal(originalDocument.paragraphs.length, 1);
     assert.equal(translatedDocument.paragraphs.length, 0);
+  });
+
+  it("detects translated track availability from non-empty API text", () => {
+    assert.equal(hasTranslatedDocumentText({
+      ...DETAIL,
+      translated_document_text: "  English translation text.  ",
+      traces: [],
+    }), true);
+
+    assert.equal(hasTranslatedDocumentText({
+      ...DETAIL,
+      translated_document_text: null,
+      traces: [{
+        canonical_evidence_id: "ev-a",
+        field_id: "A.gene_disease_relationship",
+        field_name: "Gene-Disease Relationship",
+        original_value: "causative",
+        translated_value: "causative",
+        alignment_confidence: null,
+        original: null,
+        translated: {
+          text: "  Translated trace text.  ",
+          highlight_start: 2,
+          highlight_end: 12,
+          source_span: {},
+        },
+      }],
+    }), true);
+  });
+
+  it("ignores whitespace-only translated track text", () => {
+    assert.equal(hasTranslatedDocumentText({
+      ...DETAIL,
+      translated_document_text: "   ",
+      traces: [{
+        canonical_evidence_id: "ev-a",
+        field_id: "A.gene_disease_relationship",
+        field_name: "Gene-Disease Relationship",
+        original_value: "causative",
+        translated_value: null,
+        alignment_confidence: null,
+        original: null,
+        translated: {
+          text: "   ",
+          highlight_start: 0,
+          highlight_end: 0,
+          source_span: {},
+        },
+      }],
+    }), false);
   });
 });

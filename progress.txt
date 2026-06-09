@@ -278,3 +278,5 @@
 [2026-06-09] [ACMG evidence normalization fixes plan review updates] [completed]
 
 [2026-06-09] [Hide empty English translation track: data-availability follow-up] [done] Replaced paragraphs.length>0 with availability check on translated_document_text||traces.translated.text to stop reader collapse when filter state hides all spans. Collapsed duplicate null/undefined tests into one with a comment. Fixed orphaned README row + missing blank line before heading. 9/9 tests, lint and type-check clean.
+
+[2026-06-09] [Hide empty English translation track: helper extraction] [done] Extracted hasTranslatedDocumentText(detail) into evidenceDocument.ts to make the availability gate unit-testable. Helper trims both translated_document_text and trace.translated.text, so whitespace-only API input does not leak. Updated EvidenceDetailView to call the helper, updated the archived plan to reflect the final approach. Tests: 11/11, lint and type-check clean.

@@ -178,6 +178,15 @@ export function countEvidenceHighlightTones(
   return counts;
 }
 
+export function hasTranslatedDocumentText(
+  detail: EvidenceGroupDetailResponse,
+): boolean {
+  return (
+    Boolean(detail.translated_document_text?.trim()) ||
+    detail.traces.some((trace) => Boolean(trace.translated?.text.trim()))
+  );
+}
+
 function labelForTrace(trace: EvidenceTrackTrace) {
   return trace.field_name ?? trace.field_id;
 }
