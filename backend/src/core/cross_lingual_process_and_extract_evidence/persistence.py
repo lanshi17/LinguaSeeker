@@ -73,9 +73,9 @@ class DocumentPersistenceService:
         base.mkdir(parents=True, exist_ok=True)
         now = datetime.now(timezone.utc)
 
-        # Save original.json (structured blocks)
+        # Save original.json (structured blocks + full markdown fallback)
         original_path = base / "original.json"
-        original_data = {
+        original_data: dict = {
             "metadata": {
                 "doc_id": doc_id,
                 "source_language": result.source_language,
@@ -83,12 +83,14 @@ class DocumentPersistenceService:
             },
             "blocks": [b.to_dict() for b in result.original_blocks],
         }
+        if not result.original_blocks and result.formatted_original:
+            original_data["formatted_text"] = result.formatted_original
         _write_json(original_path, json.dumps(original_data, ensure_ascii=False, indent=2))
         logger.info("Saved original JSON: {}", original_path)
 
-        # Save translated.json (structured blocks with translations)
+        # Save translated.json (structured blocks + full markdown fallback)
         translated_path = base / "translated.json"
-        translated_data = {
+        translated_data: dict = {
             "metadata": {
                 "doc_id": doc_id,
                 "source_language": result.source_language,
@@ -98,6 +100,8 @@ class DocumentPersistenceService:
             },
             "blocks": [b.to_dict() for b in result.translated_blocks],
         }
+        if not result.translated_blocks and result.translated_english:
+            translated_data["formatted_text"] = result.translated_english
         _write_json(translated_path, json.dumps(translated_data, ensure_ascii=False, indent=2))
         logger.info("Saved translated JSON: {}", translated_path)
 
