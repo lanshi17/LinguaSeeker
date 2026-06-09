@@ -26,20 +26,19 @@ npm run build        # Production build
 │  ┌──────────┐ ┌──────────────┐ ┌──────────────────────────┐ │
 │  │ (auth)/   │ │(dashboard)/  │ │  app/layout.tsx          │ │
 │  │  login    │ │  pipeline/   │ │    QueryProvider          │ │
-│  │  register │ │  tasks/      │ │    NotificationToast      │ │
-│  │           │ │  evidence/   │ │                            │ │
-│  │           │ │  chat/       │ │  app/(dashboard)/layout   │ │
-│  │           │ │  graph/      │ │    DashboardLayout        │ │
-│  │           │ │  documents/  │ │      Sidebar + main       │ │
+│  │  register │ │  evidence/   │ │    NotificationToast      │ │
+│  │           │ │  chat/       │ │                            │ │
+│  │           │ │              │ │  app/(dashboard)/layout   │ │
+│  │           │ │              │ │    DashboardLayout        │ │
+│  │           │ │              │ │      Sidebar + main       │ │
 │  └──────────┘ └──────────────┘ └──────────────────────────┘ │
 └────────────────────────┬────────────────────────────────────┘
                          │ imports from
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  src/features/              (10 self-contained modules)     │
+│  src/features/              (4 implemented modules)         │
 │                                                             │
-│  auth/  pipeline/  task-flow/  literature/  evidence/       │
-│  delta-audit/  source-link/  chat/  document-viewer/  graph/ │
+│  auth/  pipeline/  evidence-search/  chat/                  │
 │                                                             │
 │  Each module:                                               │
 │  ├── index.ts        ← barrel export (public API)           │
@@ -47,16 +46,17 @@ npm run build        # Production build
 │  ├── hooks/          ← TanStack Query + state hooks         │
 │  ├── services/       ← Axios API calls                      │
 │  ├── types/          ← request/response/domain types        │
-│  └── stores/         ← feature-local Zustand (optional)     │
+│  └── utils/          ← feature-local utilities (optional)   │
 └────────────────────────┬────────────────────────────────────┘
                          │ imports from
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  src/                   (shared infrastructure)              │
 │                                                             │
-│  lib/api/       client.ts (Axios), error.ts, sse.ts         │
-│  lib/hooks/     usePolling, useDebounce                     │
-│  lib/types/     common.ts (ProcessingStatus, PhaseId, ...)  │
+│  lib/api/       client.ts (Axios), error.ts                 │
+│  lib/config/    app.ts, api.ts, types.ts                    │
+│  lib/hooks/     usePolling, useDebounce, useBackendHealth   │
+│  lib/types/     common.ts                                   │
 │  lib/utils/     cn.ts (clsx + tailwind-merge)               │
 │                                                             │
 │  stores/        appStore, toastStore (global Zustand)       │
@@ -97,18 +97,12 @@ page.tsx  ──→  @/features/<name>  (barrel only)
 
 | Module | Components | Hooks | Types | Backend API |
 |--------|-----------|-------|-------|-------------|
-| **pipeline** | 4 | 3 | 5 | `POST /pipeline/run`, `GET /pipeline/runs/{id}/status` |
-| **task-flow** | 5 | 1 | 6 | `POST /tasks/interaction/*` (future) |
-| **chat** | 4 | 3 | 3 | `CRUD /chat/sessions`, `GET .../stream` (SSE) |
-| **graph** | 5 | 1 | 4 | `POST /evidence/search`, `GET /evidence/graph/stats` |
-| **literature** | 3 | 2 | 3 | `POST /tasks/requests/literature/*` (future) |
-| **evidence** | 3 | 1 | 3 | `PATCH /evidence/{id}` |
-| **document-viewer** | 5 | 1 | 0 | `GET /evidence/document/{id}`, `GET /tasks/papers/{id}` |
-| **source-link** | 2 | 2 | 3 | `GET /source-link/{id}/bilingual`, `GET /source-link/{id}/{track}` |
-| **delta-audit** | 2 | 1 | 3 | `GET /delta-audit/` |
-| **auth** | 2 | 1 | 3 | `POST /auth/login`, `POST /auth/register` (via BFF) |
+| **auth** | 2 | 1 | 1 | `POST /auth/login`, `POST /auth/register` |
+| **pipeline** | 4 | 3 | 1 | `POST /pipeline/run`, `GET /pipeline/runs/{id}/status` |
+| **evidence-search** | 5 | 2 | 1 | `POST /evidence/search`, `GET /evidence/{id}` |
+| **chat** | 3 | 2 | 1 | `CRUD /chat/sessions`, `POST /chat/messages` |
 
-**Totals:** 35 components, 14 hooks, 33 types across 10 modules.
+**Totals:** 14 components, 8 hooks across 4 implemented modules.
 
 ### Pipeline (backbone feature)
 
@@ -144,29 +138,18 @@ const { sessions, createSession } = useChatSessions(processingRunId);
 // Send a message and get the AI reply
 const { messages, sendMessage } = useChatMessages(sessionId);
 await sendMessage({ content: "What is the ACMG classification?" });
-
-// Stream real-time tokens
-useChatStream({
-  sessionId,
-  onToken: (token) => setStreamBuffer((prev) => prev + token),
-  onDone: () => finalizeMessage(),
-  onError: (err) => addToast({ level: "error", title: err }),
-});
 ```
 
-### Task Flow (feature-local store)
+### Evidence Search
 
-The only feature with its own Zustand store — the clarification flow has complex multi-step state that doesn't belong in a global store.
+The evidence search feature provides search, results table, and detail views for extracted evidence.
 
 ```typescript
-const {
-  startClarification,  // POST /tasks/interaction/start
-  respondToAgent,      // POST /tasks/interaction/respond
-  confirmForm,         // POST /tasks/interaction/confirm
-  messages,            // Chat message history
-  taskForm,            // Current structured form
-  isClarificationComplete,
-} = useTaskFlow();
+// Search evidence
+const { data, isLoading } = useEvidenceSearch({ query: "BRCA1", ... });
+
+// View group detail
+const { data: detail } = useEvidenceGroupDetail(groupId);
 ```
 
 ## Shared Infrastructure
@@ -267,25 +250,17 @@ The page extracts route params and passes them down. `PipelineStatusView` owns a
 
 | Route | Page | Status |
 |-------|------|--------|
-| `/` | Redirect → `/pipeline` | Active |
+| `/` | Landing / redirect | Active |
 | `/login` | `LoginForm` | Active |
 | `/register` | `RegisterForm` | Active |
-| `/pipeline` | `PipelineSubmitForm` | Active |
-| `/pipeline/[runId]` | `PipelineStatusView` | Active |
-| `/documents/[documentId]` | `DocumentViewer` | Active |
-| `/evidence/audit` | `AuditEventList` | Active |
-| `/chat` | Session list | Stub |
-| `/chat/[sessionId]` | Chat conversation | Stub |
-| `/evidence/[evidenceId]` | Evidence review | Stub |
-| `/graph` | Knowledge graph explorer | Stub |
-| `/requests/[requestId]` | Pipeline monitor | Stub |
-| `/requests/[requestId]/export` | Print/export view | Stub |
-| `/tasks/agent-create` | Agent clarification chat | Stub |
-| `/tasks/new` | Task form + upload | Stub |
-| `/tasks/literature/candidates` | Literature selection | Stub |
-| `/settings` | User settings | Stub |
+| `/pipeline` | `PipelineSubmitForm` + run list | Active |
+| `/pipeline/[runId]` | `PipelineStatusView` + phase timeline | Active |
+| `/evidence` | `EvidenceSearchView` + `EvidenceSearchForm` | Active |
+| `/evidence/detail` | `EvidenceDetailView` | Active |
+| `/chat` | `ChatView` session list | Active |
+| `/chat/[sessionId]` | Chat conversation with messages | Active |
 
-**Active** = wires real feature components. **Stub** = placeholder `<p>` awaiting feature wiring.
+**Active** = wires real feature components with data fetching and rendering.
 
 ## Extension Guide
 
@@ -360,26 +335,6 @@ export function Tooltip({ content, children, className }: TooltipProps) {
     </div>
   );
 }
-```
-
-### Wiring a Stub Page to Real Components
-
-Replace the placeholder `<p>` with the feature component:
-
-```diff
-- import { PageHeader } from "@/components/layout/PageHeader";
-+ import { ChatSessionList } from "@/features/chat";
-+ import { PageHeader } from "@/components/layout/PageHeader";
-
-  export default function ChatPage() {
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Chat Sessions" />
--       <p className="text-sm text-gray-500">ChatSessionList will be rendered here.</p>
-+       <ChatSessionList processingRunId="..." />
-      </div>
-    );
-  }
 ```
 
 ## Dependencies

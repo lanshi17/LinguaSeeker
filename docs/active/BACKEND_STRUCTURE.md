@@ -6,7 +6,7 @@ ACMG Lingua backend is a FastAPI async application organized around a four-phase
 
 Backend responsibilities:
 
-- Own `/api/v1/*` API contracts, JWT signing/verification, task lifecycle, persistence, evidence report generation, chat streaming (SSE), knowledge base queries, HPO autocomplete, NL-to-SQL, and delta audit logging.
+- Own `/api/v1/*` API contracts, JWT signing/verification, task lifecycle, persistence, evidence report generation, chat streaming (SSE), source-link management, and delta audit logging.
 - Orchestrate Multi-Agent workflows for acquisition, parsing, native extraction, translation, translated extraction, fusion, standardization, feedback capture, and batch processing.
 - Reject or flag outputs that cannot be traced back to original anchors and translated anchors when translated text exists.
 - Persist standardized evidence matrices, chat sessions, delta audit logs, and corrected original-translation-evidence triples for future model/prompt improvement.
@@ -48,146 +48,186 @@ Contracts:
 - `supervisor.py`/workflow code wires nodes and edges only. It must not embed extraction, translation, standardization, or report-generation business logic.
 - Telemetry should wrap every node so input IDs, output IDs, warnings, errors, and duration are traceable without ad-hoc logging in each workflow edge.
 
+**Current state**: The codebase partially follows this pattern. Phases 3 and 4 feature slices use `api.py`/`core.py`/`providers.py`/`contracts.py` naming. The orchestrator layer (`agents/`) uses adapter classes (`phase_*_adapter.py`) rather than a single `supervisor.py`. Phase 1 and Phase 2 features use more descriptive internal naming (e.g., `workflow.py`, `orchestrator.py`) rather than the standard `core.py` convention.
+
 ## 2. Directory Structure
 
 ```text
 backend/
 ├── src/
-│   ├── __init__.py
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── config.py
-│   │   ├── ingest_and_digitize_data/                         # Phase 1
-│   │   │   ├── __init__.py
-│   │   │   ├── literature_acquisition/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── contracts.py                              # Search/fetch contracts
-│   │   │   │   ├── gateway.py                                # Provider gateway via rust_io
-│   │   │   │   ├── search_service.py
-│   │   │   │   ├── pubmed_service.py
-│   │   │   │   ├── doi_fallback.py
-│   │   │   │   ├── normalizers.py
-│   │   │   │   ├── web_providers.py
-│   │   │   │   ├── workflow.py
-│   │   │   │   └── web/
-│   │   │   │       ├── base.py
-│   │   │   │       ├── cyberleninka.py
-│   │   │   │       ├── hans_publishers.py
-│   │   │   │       ├── pubscholar.py
-│   │   │   │       └── locators.py
-│   │   │   ├── user_upload/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── contracts.py                              # PDF/DOCX upload contracts
-│   │   │   │   ├── service.py                                # Upload validation/storage
-│   │   │   │   └── workflow.py                               # Upload → parse workflow
-│   │   │   └── ocr/
-│   │   │       ├── mineru_client.py                          # MinerU API client
-│   │   │       ├── paddle_client.py                          # PaddleOCR fallback
-│   │   │       ├── docx_parser.py                            # DOCX text/table/image extraction
-│   │   │       ├── layout_analyzer.py                        # Table/figure/bbox extraction
-│   │   │       ├── metadata_extractor.py                     # DOI/PMID/authors/year/journal
-│   │   │       ├── chunker.py                                # Section/paragraph chunking
-│   │   │       └── source_anchor_parser.py                   # Source anchor and bbox parsing
-│   │   ├── cross_lingual_process_and_extract_evidence/       # Phase 2
-│   │   │   ├── __init__.py
-│   │   │   ├── contracts.py                                  # Dual extraction contracts
-│   │   │   ├── filtering/
-│   │   │   │   └── coarse_filter.py                          # Evidence-bearing chunk filter
-│   │   │   ├── extraction/
-│   │   │   │   ├── native_extractor.py                       # Original-language extraction
-│   │   │   │   ├── translated_extractor.py                   # Translated-text extraction
-│   │   │   │   ├── prompt_templates.py
-│   │   │   │   └── schemas.py
-│   │   │   ├── translation/
-│   │   │   │   ├── document_translation.py                   # English/Chinese rendered translation
-│   │   │   │   ├── terminology.py
-│   │   │   │   └── validation.py
-│   │   │   └── fusion/
-│   │   │       ├── evidence_fuser.py                         # Compare/dedupe/fuse JSON outputs
-│   │   │       ├── anchor_mapper.py                          # original ↔ translated anchors
-│   │   │       └── conflict_detector.py                      # Fusion disagreement flags
-│   │   ├── standardize_entities_and_align_knowledge/         # Phase 3
-│   │   │   ├── __init__.py
-│   │   │   ├── matchers/
-│   │   │   │   ├── gene_matcher.py                           # HGNC matching
-│   │   │   │   ├── disease_matcher.py                        # OMIM/MONDO/HPO matching
-│   │   │   │   ├── phenotype_matcher.py                      # HPO matching
-│   │   │   │   ├── variant_matcher.py                        # HGVS/ClinVar/dbSNP matching
-│   │   │   │   └── frequency_matcher.py                      # gnomAD lookup
-│   │   │   ├── resolvers/
-│   │   │   │   ├── conflict_resolver.py                      # Ambiguity resolution Agent
-│   │   │   │   └── vector_matcher.py                         # pgvector fuzzy matching
-│   │   │   └── db_loaders/
-│   │   │       ├── hgnc_loader.py
-│   │   │       ├── omim_loader.py
-│   │   │       ├── hpo_loader.py
-│   │   │       ├── clingen_loader.py
-│   │   │       ├── clinvar_loader.py
-│   │   │       └── gnomad_loader.py
-│   │   └── visualize_evidence_with_expert_in_loop/           # Phase 4
-│   │       ├── __init__.py
-│   │       ├── report_generator.py                           # PDF/DOCX evidence report generation
-│   │       ├── feedback_service.py                           # Structured expert feedback
-│   │       ├── comment_service.py                            # Review comments
-│   │       ├── source_linker.py                              # original/translated anchor ↔ evidence linking
-│   │       └── dataset_builder.py                            # Future active-learning dataset capture
-│   │       ├── delta_audit_service.py                       # Per-task field modification history
-│   │       ├── chat_service.py                              # Chat session persistence and SSE streaming
-│   │       ├── knowledge_base_service.py                    # Variant search, evidence matrix, NL-to-SQL
-│   │       ├── hpo_service.py                               # HPO autocomplete and lookup
-│   │       └── acmg_draft_service.py                        # ACMG classification draft generation
+│   ├── agents/                                         # Orchestrator layer
+│   │   ├── contracts.py                                # PipelineGraphState, enums, error hierarchy
+│   │   ├── orchestrator.py                             # PipelineOrchestrator — LangGraph graph wiring
+│   │   ├── runner.py                                   # PipelineRunner — background asyncio.Task management
+│   │   ├── concurrency.py                              # PipelineSemaphore, RetryablePhaseExecutor
+│   │   ├── state_persistence.py                        # PostgreSQL state save/load
+│   │   ├── phase_1_adapter.py                          # Phase1Adapter — wraps acquisition + parsing
+│   │   ├── phase_2_adapter.py                          # Phase2Adapter — wraps translation + extraction
+│   │   ├── phase_3_adapter.py                          # Phase3Adapter — wraps entity standardization
+│   │   └── phase_4_factory.py                          # Phase4ServiceFactory — creates Phase 4 services
 │   ├── api/
-│   │   ├── __init__.py
-│   │   ├── deps.py
-│   │   ├── routes/
-│   │   │   ├── __init__.py
-│   │   │   ├── auth.py
-│   │   │   ├── literature.py
-│   │   │   ├── tasks.py
-│   │   │   ├── evidence.py
-│   │   │   ├── health.py
-│   │   │   ├── chat.py                                    # SSE chat streaming + session management
-│   │   │   ├── kb.py                                      # Knowledge base search + variant detail + NL-to-SQL
-│   │   │   ├── hpo.py                                     # HPO autocomplete/search
-│   │   │   ├── delta.py                                   # Delta audit log
-│   │   │   └── settings.py                                # Vocabulary, template, config management
-│   │   └── middleware/
-│   │       ├── __init__.py
-│   │       ├── auth.py
-│   │       └── cors.py
-│   ├── agents/
-│   │   ├── __init__.py
-│   │   ├── supervisor.py
-│   │   └── state.py
+│   │   ├── auth.py                                     # Authentication logic
+│   │   ├── deps.py                                     # Dependency injection
+│   │   ├── wiring.py                                   # App wiring/startup
+│   │   ├── body_size_limit.py                          # Request body size middleware
+│   │   ├── rate_limit.py                               # Rate limiting
+│   │   └── v1/
+│   │       ├── router.py                               # V1 router aggregator
+│   │       ├── pipeline.py                             # Pipeline endpoints
+│   │       ├── evidence.py                             # Evidence search/detail endpoints
+│   │       ├── chat.py                                 # Chat endpoints
+│   │       ├── source_link.py                          # Source link endpoints
+│   │       └── delta_audit.py                          # Delta audit endpoints
+│   ├── core/
+│   │   ├── config.py                                   # Core config (pydantic-settings)
+│   │   ├── config_loader.py                            # YAML config loading
+│   │   ├── ingest_and_digitize_data/                   # Phase 1
+│   │   │   ├── document_acquisition/
+│   │   │   │   ├── contracts.py                        # Search/fetch contracts
+│   │   │   │   ├── service.py                          # Top-level acquisition service
+│   │   │   │   ├── local_upload/
+│   │   │   │   │   ├── contracts.py
+│   │   │   │   │   ├── service.py                      # Upload validation/storage
+│   │   │   │   │   └── workflow.py                     # Upload → parse workflow
+│   │   │   │   └── online_acquisition/
+│   │   │   │       ├── contracts.py                    # Search/fetch contracts
+│   │   │   │       ├── gateway.py                      # Provider gateway via rust_io
+│   │   │   │       ├── search_service.py
+│   │   │   │       ├── pubmed_service.py
+│   │   │   │       ├── doi_fallback.py
+│   │   │   │       ├── normalizers.py
+│   │   │   │       ├── literature_type_classifier.py
+│   │   │   │       ├── provider_health.py
+│   │   │   │       ├── relevance_gate.py
+│   │   │   │       ├── workflow.py
+│   │   │   │       ├── web/
+│   │   │   │       │   ├── base.py
+│   │   │   │       │   ├── cyberleninka.py
+│   │   │   │       │   ├── hans_publishers.py
+│   │   │   │       │   ├── pubscholar.py
+│   │   │   │       │   ├── chinaxiv.py
+│   │   │   │       │   ├── koreascience.py
+│   │   │   │       │   ├── redalyc.py
+│   │   │   │       │   └── locators.py
+│   │   │   │       └── web_search/
+│   │   │   │           ├── adapter.py
+│   │   │   │           └── firecrawl_adapter.py
+│   │   │   └── parse_document/
+│   │   │       ├── base.py                             # Base parser interface
+│   │   │       ├── contracts.py                        # Parse contracts
+│   │   │       ├── exceptions.py                       # Parse-specific exceptions
+│   │   │       ├── orchestrator.py                     # Parse orchestration
+│   │   │       ├── service.py                          # Parse service entry point
+│   │   │       ├── common/
+│   │   │       │   ├── converters.py                   # Format converters
+│   │   │       │   └── parsers.py                      # Shared parsing utilities
+│   │   │       ├── local/
+│   │   │       │   ├── parser.py                       # Local file parser (MinerU)
+│   │   │       │   └── helpers.py
+│   │   │       └── remote/
+│   │   │           └── parser.py                       # Remote API parser (MinerU)
+│   │   ├── cross_lingual_process_and_extract_evidence/ # Phase 2
+│   │   │   ├── contracts.py                            # Dual extraction contracts
+│   │   │   ├── config_context.py                       # Phase 2 config resolution
+│   │   │   ├── workflow.py                             # Phase 2 workflow definition
+│   │   │   ├── router.py                               # Phase 2 internal routing
+│   │   │   ├── persistence.py                          # Phase 2 persistence helpers
+│   │   │   ├── cross_lingual/
+│   │   │   │   ├── format/
+│   │   │   │   │   ├── base.py                         # Base formatter interface
+│   │   │   │   │   ├── formatter.py                    # Document formatting
+│   │   │   │   │   └── segmenter.py                    # Text segmentation
+│   │   │   │   └── translate/
+│   │   │   │       ├── base.py                         # Base translator interface
+│   │   │   │       ├── blocks.py                       # Translation block handling
+│   │   │   │       ├── translator.py                   # Main translator
+│   │   │   │       ├── language_detector.py            # Language detection
+│   │   │   │       ├── postprocess.py                  # Post-translation cleanup
+│   │   │   │       ├── providers.py                    # LLM provider adapters
+│   │   │   │       ├── exceptions.py                   # Translation exceptions
+│   │   │   │       ├── prompts/
+│   │   │   │       │   ├── format.py                   # Formatting prompts
+│   │   │   │       │   ├── terminology.py              # Terminology prompts
+│   │   │   │       │   └── translate.py                # Translation prompts
+│   │   │   │       └── validator/
+│   │   │   │           ├── core.py                     # Validation core logic
+│   │   │   │           ├── normalize.py                # Output normalization
+│   │   │   │           ├── artifacts.py                # Artifact validation
+│   │   │   │           └── redacted.py                 # PII/sensitive data redaction
+│   │   │   └── extract_evidence/
+│   │   │       ├── api.py                              # Orchestrator-facing node adapter
+│   │   │       ├── core.py                             # Extraction domain logic
+│   │   │       ├── providers.py                        # LLM/external service adapters
+│   │   │       ├── contracts.py                        # Extraction contracts
+│   │   │       ├── catalog.py                          # Evidence category catalog
+│   │   │       ├── chunking.py                         # Text chunking for extraction
+│   │   │       ├── config_context.py                   # Extraction config resolution
+│   │   │       ├── normalization.py                    # Evidence value normalization
+│   │   │       ├── prompts.py                          # Extraction prompts
+│   │   │       ├── workflow.py                         # Extraction workflow
+│   │   │       └── stages/
+│   │   │           ├── catalog_extraction.py           # Catalog-based extraction stage
+│   │   │           ├── evidence_map.py                 # Evidence mapping stage
+│   │   │           ├── group_assignment.py             # Evidence group assignment
+│   │   │           ├── quality_validation.py           # Extraction quality checks
+│   │   │           ├── source_grounding.py             # Source anchor grounding
+│   │   │           └── special_evidence.py             # Special evidence type handling
+│   │   ├── standardize_entities_and_align_knowledge/   # Phase 3
+│   │   │   ├── api.py                                  # Orchestrator-facing node adapter
+│   │   │   ├── core.py                                 # Standardization domain logic
+│   │   │   ├── contracts.py                            # Standardization contracts
+│   │   │   ├── adapters.py                             # External DB adapters
+│   │   │   ├── importers.py                            # Reference data importers
+│   │   │   ├── matchers.py                             # Entity matching orchestrator
+│   │   │   ├── normalizers.py                          # Value normalization
+│   │   │   ├── providers.py                            # External service adapters
+│   │   │   ├── repositories.py                         # Standardization data access
+│   │   │   ├── precise_match/
+│   │   │   │   └── core.py                             # Exact/synonym matching
+│   │   │   └── similarity_match/
+│   │   │       ├── core.py                             # Fuzzy/vector matching
+│   │   │       ├── contracts.py                        # Similarity match contracts
+│   │   │       ├── indexer.py                          # Vector index management
+│   │   │       ├── providers.py                        # Embedding service adapters
+│   │   │       └── repositories.py                     # Similarity data access
+│   │   └── visualize_evidence_with_expert_in_loop/     # Phase 4
+│   │       ├── contracts.py                            # Phase 4 contracts
+│   │       ├── providers.py                            # Phase 4 service adapters
+│   │       ├── chat_service.py                         # Chat session persistence and SSE streaming
+│   │       ├── search_service.py                       # Evidence/knowledge search
+│   │       ├── feedback_service.py                     # Structured expert feedback
+│   │       ├── delta_audit_service.py                  # Per-task field modification history
+│   │       └── source_linker.py                        # Original/translated anchor ↔ evidence linking
 │   ├── dao/
-│   │   ├── __init__.py
-│   │   ├── models.py
-│   │   ├── repositories/
-│   │   │   ├── task_repo.py
-│   │   │   ├── result_repo.py
-│   │   │   ├── evidence_repo.py
-│   │   │   ├── entity_repo.py
-│   │   │   ├── user_repo.py
-│   │   │   ├── document_repo.py
-│   │   │   ├── comment_repo.py
-│   │   │   ├── feedback_repo.py
-│   │   │   └── cache_repo.py
-│   │   │   ├── delta_repo.py
-│   │   │   ├── chat_repo.py
-│   │   │   └── kb_repo.py
-│   │   └── connection.py
+│   │   ├── postgresql/
+│   │   │   ├── connection.py                           # Async SQLAlchemy engine/session
+│   │   │   ├── models.py                               # SQLAlchemy ORM models
+│   │   │   ├── contracts.py                            # DAO-layer contracts
+│   │   │   ├── literature_profile_repo.py              # Literature profile persistence
+│   │   │   └── search_index_repo.py                    # Search index persistence
+│   │   ├── redis/
+│   │   │   ├── connection.py                           # Redis async client
+│   │   │   └── cache_repo.py                           # Cache operations
+│   │   ├── neo4j/                                      # Placeholder — future graph DB
+│   │   └── minio/                                      # Placeholder — future object storage
 │   └── utils/
-│       ├── __init__.py
-│       ├── logger.py
-│       └── hash.py
+│       ├── logger.py                                   # Loguru logging config
+│       ├── middleware.py                                # FastAPI middleware utilities
+│       ├── exceptions.py                               # Shared exception hierarchy
+│       ├── health.py                                   # Health check utilities
+│       ├── observability.py                            # Telemetry/tracing utilities
+│       ├── text.py                                     # Text processing utilities
+│       ├── llm_adapter.py                              # Unified LLM client adapter
+│       ├── llm_params.py                               # LLM parameter resolution
+│       └── rust_io.py                                  # Rust IO Python bridge
 ├── libs/
-│   ├── rust-io/
-│   ├── files-io/
-│   └── net-io/
-├── services/model-server/
-├── alembic/versions/
+│   ├── rust-io/                                        # Literature search/download PyO3 crate
+│   ├── files-io/                                       # Unified file I/O PyO3 crate
+│   └── net-io/                                         # Network I/O + MinerU PyO3 crate
+├── services/model-server/                              # Standalone model inference microservice
+├── alembic/versions/                                   # Database migrations
 ├── tests/
-├── .old_version/
+├── .old_version/                                       # Preserved legacy codebase
 ├── pyproject.toml
 └── uv.lock
 ```
@@ -205,11 +245,11 @@ cfg.postgresql.host
 cfg.mineru.api_url
 ```
 
-Environment variables are flat, for example `LLM_API_KEY`, and are mapped to nested Pydantic models by `model_validator`.
+Environment variables are flat, for example `LLM_API_KEY`, and are mapped to nested Pydantic models by `model_validator`. YAML config is loaded via `config_loader.py` from layered sources: `backend/config/defaults`, `backend/config/environments`, and `backend/config/vault`.
 
 ### 3.2 Task Runtime and Lifecycle
 
-`POST /api/v1/tasks` creates an async dual evidence extraction task and returns `task_id` immediately.
+`POST /api/v1/pipeline` creates an async evidence extraction task and returns `task_id` immediately. The pipeline endpoint is defined in `api/v1/pipeline.py` and backed by the orchestrator layer (`agents/orchestrator.py`, `agents/runner.py`).
 
 Supported task inputs:
 
@@ -219,32 +259,55 @@ Supported task inputs:
 
 Runtime behavior:
 
-- Pending/running state may be in memory for MVP.
+- The `PipelineOrchestrator` (`agents/orchestrator.py`) wires the LangGraph topology with phase adapters.
+- `PipelineRunner` (`agents/runner.py`) manages background `asyncio.Task` lifecycle.
+- `PipelineSemaphore` and `RetryablePhaseExecutor` (`agents/concurrency.py`) handle concurrency control and phase-level retries.
+- `PipelineGraphState` (`agents/contracts.py`) is the single source of truth for cross-phase data flow.
+- State persistence to PostgreSQL is handled by `agents/state_persistence.py`.
 - SSE chat streaming and processing progress via Vercel AI SDK (no WebSocket dependency).
-- `POST /api/v1/chat/stream` streams parse progress and evidence cards to frontend.
 - Completed metadata/results persist including chat sessions and delta logs.
-- `GET /api/v1/tasks/{task_id}/result` returns the bilingual evidence matrix result.
 
 ### 3.3 Phase 1: Acquisition, Upload, and Parsing
 
-The literature gateway calls `rust_io` as the canonical Rust middle layer. Rust handles transport and file primitives; Python owns search strategy and workflow policy.
+The acquisition layer is split into `document_acquisition/` with two sub-packages:
+
+- **`local_upload/`**: Handles PDF/DOCX file uploads. Validation, storage, and upload-to-parse workflow (`workflow.py`).
+- **`online_acquisition/`**: Literature search and download. The gateway (`gateway.py`) calls `rust_io` as the canonical Rust middle layer. Rust handles transport and file primitives; Python owns search strategy and workflow policy. Web providers for non-standard sources live in `web/` (CyberLeninka, Hans Publishers, PubScholar, ChinaXiv, KoreaScience, Redalyc). Web search adapters live in `web_search/` (Firecrawl).
+
+Key online acquisition modules: `search_service.py` (multi-provider search), `pubmed_service.py` (PubMed-specific logic), `doi_fallback.py` (DOI resolution fallback), `normalizers.py` (result normalization), `literature_type_classifier.py` (literature type detection), `provider_health.py` (provider availability tracking), `relevance_gate.py` (result relevance filtering).
+
+The parsing layer (`parse_document/`) handles document-to-structured-text conversion:
+
+- `orchestrator.py` coordinates the parse workflow.
+- `service.py` is the entry point.
+- `local/parser.py` handles local file parsing via MinerU.
+- `remote/parser.py` handles remote API parsing via MinerU.
+- `common/` contains shared converters and parsers.
 
 Parsing requirements:
 
-- Metadata extraction should run before full OCR/parsing when possible.
-- MinerU is the primary PDF parser and must output Markdown/HTML plus source anchors/bbox JSON.
-- PaddleOCR fallback may continue only if it produces source anchors or bbox-backed spans.
+- Metadata extraction should run before full parsing when possible.
+- MinerU is the sole document parser (PaddleOCR has been removed). MinerU outputs Markdown/HTML plus source anchors/bbox JSON.
 - DOCX parsing must preserve text, tables, images, and source anchors compatible with downstream evidence links.
 - Layout analysis must preserve table rows/cells and figure regions for later evidence highlighting.
 - Long text chunking must preserve source span mapping.
 
 ### 3.4 Phase 2: Cross-Lingual Dual Evidence Extraction
 
-Non-English evidence extraction follows the dual-pass rule:
+Phase 2 is organized into two main sub-packages:
 
-```text
-Source chunk → coarse filter → native extraction → translation → translated extraction → fusion/cross-validation → standard evidence item
-```
+**`cross_lingual/`** handles document formatting and translation:
+
+- `format/`: Document formatting (formatter, segmenter) for preparing text for translation.
+- `translate/`: Translation pipeline with LLM-based translator, language detection, post-processing, block-level translation, validation (normalization, artifact detection, PII redaction), and prompt management (format, terminology, translate prompts).
+
+**`extract_evidence/`** handles dual-pass evidence extraction following the vertical slice pattern:
+
+- `api.py` exposes the node adapter to the orchestrator.
+- `core.py` contains extraction domain logic.
+- `providers.py` wraps LLM and external service calls.
+- `stages/` contains discrete extraction stages: catalog extraction, evidence mapping, group assignment, quality validation, source grounding, and special evidence handling.
+- Supporting modules: `chunking.py` (text chunking), `normalization.py` (value normalization), `catalog.py` (evidence categories), `prompts.py` (extraction prompts).
 
 The extractor/fusion pipeline must output:
 
@@ -258,33 +321,41 @@ The extractor/fusion pipeline must output:
 - Fusion status: `agreed`, `native_only`, `translated_only`, `conflict`, or `manually_corrected`.
 - Fusion rationale.
 
-Full document or evidence-bearing-section translation is generated for reviewer convenience and for translated-text secondary extraction.
-
 ### 3.5 Phase 3: Entity Standardization
+
+Phase 3 follows the vertical slice pattern with `api.py`, `core.py`, `providers.py`, and `contracts.py`.
+
+Key modules:
+
+- `matchers.py`: Orchestrates the entity matching pipeline.
+- `normalizers.py`: Value normalization before matching.
+- `adapters.py`: External database adapters (HGNC, ClinVar, OMIM, HPO, etc.).
+- `importers.py`: Reference data importers for populating local tables.
+- `repositories.py`: Standardization data access layer.
+- `precise_match/core.py`: Exact and synonym matching logic.
+- `similarity_match/`: Fuzzy/vector matching with `core.py`, `indexer.py` (vector index management), `providers.py` (embedding service adapters), `repositories.py`.
 
 Matching order:
 
 1. Exact match against authoritative local tables.
 2. Synonym/alias match.
 3. pgvector semantic match.
-4. Conflict resolver Agent for ambiguous candidates.
+4. Conflict resolver for ambiguous candidates.
 5. Preserve original and flag unstandardized if no reliable match.
 
 Supported sources include HGNC, ClinVar, dbSNP, OMIM, HPO, ClinGen, and gnomAD where available. Standardization must preserve original extracted value, translated extracted value, standardized value, source database, match status, and match rationale.
 
 ### 3.6 Phase 4: Bilingual Review, Feedback, and Reports
 
-Review and knowledge services support:
+Phase 4 provides review, search, and feedback services:
 
-- Source-linked bilingual evidence matrix display.
-- Chat session persistence and SSE streaming (`chat_service.py`).
-- HPO autocomplete and lookup (`hpo_service.py`).
-- Knowledge base search, variant detail, NL-to-SQL query (`knowledge_base_service.py`).
-- Delta audit logging for all field modifications (`delta_audit_service.py`).
-- ACMG classification draft generation (`acmg_draft_service.py`).
-- Structured feedback by target type: native extraction, translated extraction, translation, fusion, entity, evidence item, missed evidence, report.
-- PDF/DOCX evidence summary report generation.
-- Future dataset capture of corrected original-translation-evidence triples.
+- `chat_service.py`: Chat session persistence and SSE streaming.
+- `search_service.py`: Evidence/knowledge search across persisted data.
+- `feedback_service.py`: Structured expert feedback capture.
+- `delta_audit_service.py`: Per-task field modification history logging.
+- `source_linker.py`: Original/translated anchor to evidence linking.
+- `contracts.py`: Phase 4 typed contracts.
+- `providers.py`: Phase 4 service adapters (LLM, DB, external).
 
 User modifications to evidence cards are silently recorded as delta entries. Current-stage feedback does not directly mutate evidence rows unless a reviewed correction workflow is implemented.
 
@@ -306,7 +377,7 @@ class TaskCreateJsonRequest(BaseModel):
     target_entities: list[str] | None = None
 ```
 
-File upload uses multipart on `POST /api/v1/tasks` and does not use this JSON body. `document_id` is internal and is not accepted in task creation requests.
+File upload uses multipart on `POST /api/v1/pipeline` and does not use this JSON body. `document_id` is internal and is not accepted in task creation requests.
 
 ### 4.2 Source Span and Evidence Contracts
 
@@ -453,115 +524,7 @@ class ReviewComment(BaseModel):
     created_at: datetime
 ```
 
-## 5. API Contracts
-
-### 5.1 Auth
-
-```text
-POST /api/v1/auth/register
-POST /api/v1/auth/verify-email
-POST /api/v1/auth/login
-GET  /api/v1/auth/me
-```
-
-Password reset and refresh-token flows are future work.
-
-### 5.2 Literature, Tasks, Review, Export
-
-```text
-GET  /api/v1/literature/search
-POST /api/v1/tasks
-GET  /api/v1/tasks
-GET  /api/v1/tasks/{task_id}
-WS   /api/v1/tasks/{task_id}/ws
-GET  /api/v1/tasks/{task_id}/result
-POST /api/v1/tasks/{task_id}/comments
-POST /api/v1/tasks/{task_id}/export
-GET  /api/v1/health
-```
-
-### 5.3 P1/Future APIs
-
-```text
-GET /api/v1/evidence
-GET /api/v1/graph/*
-```
-
-## 6. External Integrations
-
-### 6.1 Public Databases
-
-| Database | Data | Storage | Update Frequency |
-|---|---|---|---|
-| HGNC | Gene symbols, aliases, IDs | PostgreSQL | Monthly |
-| OMIM | Gene-disease pairs | PostgreSQL | Monthly |
-| MONDO | Disease ontology | PostgreSQL | Monthly |
-| HPO | Phenotype ontology | PostgreSQL | Monthly |
-| ClinGen | Gene-disease validity references/context | PostgreSQL | Monthly or manual refresh |
-| ClinVar | Variant annotations | PostgreSQL | Weekly |
-| dbSNP | rsID mappings | PostgreSQL | Monthly |
-| gnomAD | Population frequencies | PostgreSQL | Quarterly/when available |
-
-### 6.2 Document Parsing Services
-
-| Service | Type | Input | Required Output |
-|---|---|---|---|
-| MinerU API | Cloud/API parser | PDF | Markdown/HTML + layout JSON + bbox/source anchors |
-| PaddleOCR VLM | Local fallback | PDF/image | Markdown/HTML + source anchors/bbox-backed spans; otherwise fail |
-| DOCX parser | Local parser | DOCX | Text/tables/images + source anchors compatible with evidence linking |
-
-## 7. Testing Strategy
-
-```text
-tests/
-├── core/
-│   ├── ingest_and_digitize_data/
-│   │   ├── literature_acquisition/
-│   │   ├── ocr/
-│   │   └── user_upload/
-│   ├── cross_lingual_process_and_extract_evidence/
-│   ├── standardize_entities_and_align_knowledge/
-│   └── visualize_evidence_with_expert_in_loop/
-├── api/
-├── agents/
-└── integration/
-```
-
-Verification commands:
-
-```bash
-cd backend
-uv run pytest
-uv run ruff check
-```
-
-Phase-specific tests should cover:
-
-- PDF/DOCX upload validation and storage.
-- Traceability gate failures.
-- Native extraction contract validation.
-- Translation anchor mapping validation.
-- Translated extraction contract validation.
-- Fusion conflict detection and deduplication.
-- Entity matching exact/synonym/vector/ambiguous flows.
-- Evidence matrix construction.
-- Structured feedback persistence.
-
-## 8. Old Version Reference
-
-| Old Path | New Target | Reuse |
-|---|---|---|
-| `src/agents/supervisor.py` | `src/agents/supervisor.py` | LangGraph workflow |
-| `src/agents/extraction/node.py` | Phase 2 native/translated extraction | Evidence extraction logic |
-| `src/agents/parsing/translation_tool.py` | Phase 2 translation | Adapt between native and translated extraction passes |
-| `src/domain/agent/prompts.py` | Phase 2 prompts | Native extraction, translated extraction, and fusion prompts |
-| `src/domain/agent/workflow.py` | Phase 2 agents | EvidenceAgent patterns |
-| `src/domain/variant/` | Phase 3 | ClinVar/ClinGen clients |
-| `src/infrastructure/` | DAO layer | PostgreSQL patterns; Redis/Neo4j deferred |
-| `src/tools/external/` | Phase 3 | External DB tools |
-| `src/config.py` | `src/core/config.py` | Config patterns |
-
-### 4.3 Chat and SSE Contracts
+### 4.5 Chat and SSE Contracts
 
 ```python
 class ChatStreamRequest(BaseModel):
@@ -589,60 +552,159 @@ class SSEErrorEvent(TypedDict):
     message: str
 ```
 
-### 4.4 Knowledge Base and Delta Contracts
+### 4.6 Delta Audit Contracts
 
 ```python
-class KBSearchRequest(BaseModel):
-    query: str
-    mode: Literal["exact", "ai", "advanced"] = "exact"
-    dimension: str | None = None
-    acmg_rule: str | None = None
-    gene: str | None = None
-    year_min: int | None = None
-    year_max: int | None = None
-    data_source: Literal["all", "machine", "expert"] = "all"
-
-class NLToSQLRequest(BaseModel):
-    natural_language: str
-
-class NLToSQLResponse(BaseModel):
-    sql: str
-    results: list[dict]
-    row_count: int
-
-class VariantDetailResponse(BaseModel):
-    variant_hgvs: str
-    gene_symbol: str
-    clinvar_classification: str | None
-    gnomad_af: float | None
-    transcript: str | None
-    protein_change: str | None
-    literature_count: int
-    evidence_count: int
-    evidence_matrix: list[dict]  # Grouped by dimension
-
 class DeltaEntry(BaseModel):
     task_id: str
     timestamp: datetime
     field_path: str  # e.g. "evidence_cards[0].phenotype"
     old_value: str | None
     new_value: str | None
+```
 
-class HPOAutocompleteItem(BaseModel):
-    code: str  # e.g. "HP:0001250"
-    term: str  # e.g. "癫痫发作"
+## 5. API Contracts
 
-class ACMGDraftRequest(BaseModel):
-    variant_id: str
+All API routes are defined under `api/v1/` with a central router aggregator (`v1/router.py`). Route modules:
 
-class ACMGDraftResponse(BaseModel):
-    draft_text: str
-    disclaimer: str  # "此文本由 AI 根据已收录证据自动生成，请专家完整审核后使用"
-    session_id: str  # New AI Assistant session ID
+- `v1/pipeline.py` — Task creation, status, and result endpoints.
+- `v1/evidence.py` — Evidence search and detail endpoints.
+- `v1/chat.py` — Chat session and SSE streaming endpoints.
+- `v1/source_link.py` — Source link management endpoints.
+- `v1/delta_audit.py` — Delta audit log endpoints.
 
-class BatchTaskRequest(BaseModel):
-    pmids: list[str]
+### 5.1 Auth
 
-class BatchTaskResponse(BaseModel):
-    created_task_ids: list[str]
-    failed_pmids: list[dict]  # [{pmid, reason}]
+```text
+POST /api/v1/auth/register
+POST /api/v1/auth/verify-email
+POST /api/v1/auth/login
+GET  /api/v1/auth/me
+```
+
+Authentication logic is in `api/auth.py`. Dependency injection is in `api/deps.py`. Rate limiting is in `api/rate_limit.py`. Request body size limits are in `api/body_size_limit.py`.
+
+Password reset and refresh-token flows are future work.
+
+### 5.2 Pipeline, Evidence, Chat, Source Link, Delta Audit
+
+```text
+POST /api/v1/pipeline                                      # Create task
+GET  /api/v1/pipeline                                      # List tasks
+GET  /api/v1/pipeline/{task_id}                            # Task status
+GET  /api/v1/pipeline/{task_id}/result                     # Task result
+
+GET  /api/v1/evidence                                      # Search evidence
+GET  /api/v1/evidence/{evidence_id}                        # Evidence detail
+
+POST /api/v1/chat/stream                                   # SSE chat streaming
+GET  /api/v1/chat/sessions                                 # Chat sessions
+GET  /api/v1/chat/sessions/{session_id}                    # Chat session detail
+
+GET  /api/v1/source-link                                   # List source links
+GET  /api/v1/source-link/{link_id}                         # Source link detail
+
+GET  /api/v1/delta-audit                                   # Delta audit log
+GET  /api/v1/delta-audit/{task_id}                         # Per-task delta log
+
+GET  /api/v1/health                                        # Health check
+```
+
+## 6. External Integrations
+
+### 6.1 Public Databases
+
+| Database | Data | Storage | Update Frequency |
+|---|---|---|---|
+| HGNC | Gene symbols, aliases, IDs | PostgreSQL | Monthly |
+| OMIM | Gene-disease pairs | PostgreSQL | Monthly |
+| MONDO | Disease ontology | PostgreSQL | Monthly |
+| HPO | Phenotype ontology | PostgreSQL | Monthly |
+| ClinGen | Gene-disease validity references/context | PostgreSQL | Monthly or manual refresh |
+| ClinVar | Variant annotations | PostgreSQL | Weekly |
+| dbSNP | rsID mappings | PostgreSQL | Monthly |
+| gnomAD | Population frequencies | PostgreSQL | Quarterly/when available |
+
+### 6.2 Document Parsing Services
+
+| Service | Type | Input | Required Output |
+|---|---|---|---|
+| MinerU API | Cloud/API parser | PDF | Markdown/HTML + layout JSON + bbox/source anchors |
+| DOCX parser | Local parser | DOCX | Text/tables/images + source anchors compatible with evidence linking |
+
+MinerU is the sole document parsing engine. Local file parsing and remote API parsing are handled by `parse_document/local/parser.py` and `parse_document/remote/parser.py` respectively.
+
+### 6.3 Rust Native Extensions
+
+| Crate | Python module | Purpose |
+|---|---|---|
+| `rust-io` | `rust_io` | Literature search/download via providers (Crossref, OpenAlex, EuropePMC, PMC, DOAJ, JStage, Unpaywall). Also `files` submodule for SHA256, file write, PDF validation. |
+| `files-io` | `files_io` | Unified local + S3 file I/O. Dedup, parallel ops, archive (zip/tar/gzip). |
+| `net-io` | `rust_io.net` | Literature search/download via providers + MinerU document parsing API. Same provider set as rust-io, newer architecture. |
+
+## 7. Testing Strategy
+
+```text
+tests/
+├── agents/                                         # Orchestrator layer tests
+├── api/                                            # API endpoint tests
+├── core/
+│   ├── ingest_and_digitize_data/
+│   │   ├── document_acquisition/
+│   │   │   ├── local_upload/
+│   │   │   └── online_acquisition/
+│   │   ├── parse_document/
+│   │   ├── literature_acquisition/
+│   │   └── user_upload/
+│   ├── cross_lingual_process_and_extract_evidence/
+│   │   └── extract_evidence/
+│   ├── standardize_entities_and_align_knowledge/
+│   └── visualize_evidence_with_expert_in_loop/
+├── dao/
+│   ├── postgresql/
+│   └── redis/
+├── utils/
+├── online_acquisition/                             # Online acquisition integration tests
+├── phase4/                                         # Phase 4 service tests
+├── scripts/                                        # Script tests
+├── services/                                       # Service layer tests
+├── integration/                                    # Cross-module integration tests
+└── output/                                         # Test output artifacts
+```
+
+Verification commands:
+
+```bash
+cd backend
+uv run pytest
+uv run ruff check
+```
+
+Phase-specific tests should cover:
+
+- PDF/DOCX upload validation and storage.
+- Traceability gate failures.
+- Native extraction contract validation.
+- Translation anchor mapping validation.
+- Translated extraction contract validation.
+- Fusion conflict detection and deduplication.
+- Entity matching exact/synonym/vector/ambiguous flows.
+- Evidence matrix construction.
+- Structured feedback persistence.
+- Delta audit log recording.
+- Source link creation and retrieval.
+- Chat session persistence and SSE streaming.
+
+## 8. Old Version Reference
+
+| Old Path | New Target | Reuse |
+|---|---|---|
+| `src/agents/supervisor.py` | `src/agents/orchestrator.py` | LangGraph workflow |
+| `src/agents/extraction/node.py` | Phase 2 `extract_evidence/` | Evidence extraction logic |
+| `src/agents/parsing/translation_tool.py` | Phase 2 `cross_lingual/translate/` | Adapt between native and translated extraction passes |
+| `src/domain/agent/prompts.py` | Phase 2 `extract_evidence/prompts.py` | Native extraction, translated extraction, and fusion prompts |
+| `src/domain/agent/workflow.py` | Phase 2 `workflow.py` | EvidenceAgent patterns |
+| `src/domain/variant/` | Phase 3 | ClinVar/ClinGen clients |
+| `src/infrastructure/` | `dao/` layer | PostgreSQL patterns; Redis/Neo4j deferred |
+| `src/tools/external/` | Phase 3 `adapters.py` | External DB tools |
+| `src/config.py` | `src/core/config.py` | Config patterns |

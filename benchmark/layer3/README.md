@@ -1,29 +1,30 @@
-# Layer 3 Evaluation — ClinGen Ground Truth
+# Layer 3 Evaluation -- ClinGen Ground Truth
 
 Automated evaluation of pipeline evidence extraction accuracy against ClinGen gene-disease validity curation data.
-
-## Overview
-
-Uses 30 ClinGen gene-disease entries as ground truth, with PMC full-text articles, to measure:
-
-| Metric | Description |
-|--------|-------------|
-| **Field P/R/F1** | Precision/Recall/F1 for key evidence fields (gene_symbol, disease_diagnosis, gene_disease_relationship) |
-| **Entity Standardization Accuracy** | Whether pipeline resolved gene→HGNC and disease→MONDO IDs correctly |
-| **Cross-lingual Consistency** | Original vs translated track field value agreement |
-| **By Classification** | Metrics broken down by ClinGen classification (Definitive/Strong/Moderate/Limited/Refuted/Disputed) |
-| **By MOI** | Metrics broken down by mode of inheritance (AD/AR/XL/MT/SD) |
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `select_entries.py` | Selects 30 representative entries from ClinGen CSV |
-| `fetch_literature.py` | Searches EuropePMC for PMID/PMC ID per entry |
-| `download_pdfs.py` | Downloads PMC full text via NCBI efetch → markdown |
-| `generate_ground_truth.py` | Generates ground truth JSON with expected fields |
 | `evaluate.py` | Main evaluator: submits articles to pipeline, compares to ground truth |
 | `visualize.py` | Generates charts and HTML report from evaluation JSON |
+| `select_entries.py` | Selects 30 representative entries from ClinGen CSV |
+| `fetch_literature.py` | Searches EuropePMC for PMID/PMC ID per entry |
+| `download_pdfs.py` | Downloads PMC full text via NCBI efetch |
+| `generate_ground_truth.py` | Generates ground truth JSON with expected fields |
+| `mondo_hierarchy.py` | MONDO ontology hierarchy utilities for disease matching |
+| `ground_truth/` | 30 entries: `clingen_000`..`clingen_029`, each with `source.md` + `expected.json`, plus `selection.json` |
+| `reports/` | Evaluation JSON reports, PNG charts, `report.html` |
+
+## Metrics
+
+| Metric | Description |
+|--------|-------------|
+| **Field P/R/F1** | Precision/Recall/F1 for gene_symbol, disease_diagnosis, gene_disease_relationship |
+| **Entity Standardization** | Whether gene->HGNC and disease->MONDO IDs resolved correctly |
+| **Cross-lingual Consistency** | Original vs translated track field value agreement |
+| **By Classification** | Broken down by ClinGen classification (Definitive/Strong/Moderate/Limited/Refuted/Disputed) |
+| **By MOI** | Broken down by mode of inheritance (AD/AR/XL/MT/SD) |
 
 ## Usage
 
@@ -37,7 +38,8 @@ Uses 30 ClinGen gene-disease entries as ground truth, with PMC full-text article
 
 ```bash
 cd backend
-# Evaluate all 30 entries (slow: ~5-10 min each)
+
+# Evaluate all 30 entries
 uv run python -m benchmark.layer3.evaluate --base-url http://localhost:8000 --concurrency 2
 
 # Quick test with 3 entries
@@ -54,40 +56,16 @@ cd backend
 uv run python -m benchmark.layer3.visualize
 ```
 
-Output: `benchmark/layer3/reports/report.html` + 5 PNG charts.
+Output: `benchmark/layer3/reports/report.html` + PNG charts (overall_summary.png, field_f1.png, classification_heatmap.png, entity_standardization.png, moi_comparison.png).
 
 ### Regenerate Ground Truth
 
 ```bash
 cd backend
-uv run python -m benchmark.layer3.select_entries    # Select 30 entries
-uv run python -m benchmark.layer3.fetch_literature  # Query EuropePMC
-uv run python -m benchmark.layer3.download_pdfs     # Download PMC articles
-uv run python -m benchmark.layer3.generate_ground_truth  # Build expected.json
-```
-
-## Report Structure
-
-```json
-{
-  "evaluation_id": "eval_clingen_xxx",
-  "timestamp": "2026-06-08T...",
-  "total_entries": 30,
-  "aggregates": {
-    "overall": {
-      "precision": 0.89,
-      "recall": 1.0,
-      "f1": 0.94,
-      "entity_standardization_accuracy": 0.65,
-      "cross_lingual_consistency": 0.82
-    },
-    "by_field": { "A.gene_symbol": {...}, "B.disease_diagnosis": {...}, ... },
-    "by_classification": { "Definitive": {...}, "Strong": {...}, ... },
-    "by_moi": { "AD": {...}, "AR": {...}, "XL": {...} },
-    "by_entity_type": { "gene": 0.85, "disease": 0.45 }
-  },
-  "per_entry": [ ... ]
-}
+uv run python -m benchmark.layer3.select_entries
+uv run python -m benchmark.layer3.fetch_literature
+uv run python -m benchmark.layer3.download_pdfs
+uv run python -m benchmark.layer3.generate_ground_truth
 ```
 
 ## Ground Truth Selection
@@ -103,10 +81,10 @@ uv run python -m benchmark.layer3.generate_ground_truth  # Build expected.json
 | Refuted | 3 | AD, AR |
 | Disputed | 2 | AD, XL |
 
-Each entry has 3 expected evidence fields:
-- `A.gene_symbol` — gene name (exact match)
-- `B.disease_diagnosis` — disease name (fuzzy word-overlap ≥60%)
-- `A.gene_disease_relationship` — causative/uncertain/disputed/refuted
+Each entry has 3 expected fields:
+- `A.gene_symbol` -- gene name (exact match)
+- `B.disease_diagnosis` -- disease name (fuzzy word-overlap >= 60%)
+- `A.gene_disease_relationship` -- causative/uncertain/disputed/refuted
 
 ## History
 
@@ -115,4 +93,4 @@ Each entry has 3 expected evidence fields:
 | 2026-06-06 | 3 | 50% | Baseline |
 | 2026-06-07 | 3 | 94% | After prompt improvements |
 | 2026-06-07 | 10 | 87.5% | Expanded to 10 entries |
-| 2026-06-08 | 30 | — | Full 30-entry evaluation with entity std + track consistency |
+| 2026-06-08 | 30 | -- | Full 30-entry evaluation with entity std + track consistency |

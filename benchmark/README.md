@@ -1,54 +1,53 @@
 # Benchmark
 
-> Benchmarking and evaluation datasets for the ACMG Lingua backend. Contains literature acquisition test data across multiple languages and literature types.
+> Benchmarking and evaluation infrastructure for ACMG Lingua. Covers literature acquisition, full pipeline execution, and ClinGen Layer 3 ground-truth evaluation.
 
-## Directory Map
+## Directory Structure
 
 ```
 benchmark/
-├── literature_acquisition/
-│   ├── README.md          # Detailed benchmark methodology and results
-│   ├── log/               # Benchmark execution logs
-│   └── downloads/         # Downloaded test papers organized by language
-│       ├── en/            # English papers
-│       ├── ja/            # Japanese papers
-│       ├── ko/            # Korean papers
-│       ├── es/            # Spanish papers
-│       ├── pt/            # Portuguese papers
-│       ├── ru/            # Russian papers
-│       └── zh/            # Chinese papers
-└── pipeline/
-    ├── README.md          # Pipeline benchmark methodology and CLI usage
-    ├── manifest.json      # Selected PDFs for benchmark (1 case_report per language)
-    ├── benchmark.py       # Benchmark runner (HTTP client)
-    └── reports/           # Timestamped JSON reports (tracked in git)
-```
-
-Each language directory contains papers categorized by literature type:
-- `sequencing/` — NGS/WES/WGS studies
-- `functional/` — Functional studies (in vitro, knockout, etc.)
-- `unclassified/` — Unclassified papers
-- `case_report/` — Case reports and case series
-
-## Quick Start
-
-```bash
-cd backend
-
-# View benchmark data structure
-tree benchmark/literature_acquisition/downloads/ -L 2
-
-# Check benchmark logs
-ls benchmark/literature_acquisition/log/
+├── __init__.py
+├── README.md
+├── layer3/                    ClinGen Layer 3 evaluation
+│   ├── evaluate.py            Main evaluator: pipeline vs ground truth
+│   ├── visualize.py           Charts and HTML report generation
+│   ├── select_entries.py      Select representative ClinGen entries
+│   ├── fetch_literature.py    Query EuropePMC for PMID/PMC IDs
+│   ├── download_pdfs.py       Download PMC full-text articles
+│   ├── generate_ground_truth.py  Build expected.json from ClinGen CSV
+│   ├── mondo_hierarchy.py     MONDO ontology hierarchy utilities
+│   ├── ground_truth/          30 ClinGen entries (clingen_000..029 + selection.json)
+│   └── reports/               Evaluation reports (JSON, PNG, HTML)
+├── literature_acquisition/    Literature download benchmarks
+│   ├── benchmark.py           General cancer/genomics benchmark (7 languages)
+│   ├── rett_download.py       Rett/MECP2 disease-specific benchmark (12 languages)
+│   ├── rett_config.json       Rett config v2
+│   ├── rett_config_02.json    Rett config v4 (expanded)
+│   ├── downloads/             Downloaded PDFs + report JSONs
+│   └── log/                   Rotating log files
+└── pipeline/                  Full pipeline benchmark (Phases 1-3)
+    ├── benchmark.py           Benchmark runner (HTTP client)
+    ├── evidence_metrics.py    Evidence extraction metrics
+    ├── manifest.json          Selected PDFs (1 case_report per language)
+    ├── input/                 Test PDFs organized by language
+    │   ├── en/                English (case_report, functional, sequencing, unclassified)
+    │   ├── zh/                Chinese
+    │   ├── ja/                Japanese
+    │   ├── ko/                Korean
+    │   ├── es/                Spanish
+    │   ├── pt/                Portuguese
+    │   └── ru/                Russian
+    └── reports/               Timestamped JSON reports (38 runs)
 ```
 
 ## Sub-module Reference
 
-- **[literature_acquisition/](./literature_acquisition/README.md)** — Literature acquisition benchmark methodology, provider coverage, and evaluation metrics
-- **[pipeline/](./pipeline/README.md)** — Full pipeline benchmark (Phases 1–3) via HTTP API, measuring per-phase timing and reliability across 7 languages
+- **[layer3/](./layer3/README.md)** -- ClinGen Layer 3 evaluation against 30 ground-truth entries. Measures field P/R/F1, entity standardization accuracy, and cross-lingual consistency.
+- **[literature_acquisition/](./literature_acquisition/README.md)** -- Multilingual literature download benchmark. Evaluates provider coverage and success rates across 7-12 languages.
+- **[pipeline/](./pipeline/README.md)** -- Full pipeline benchmark (Phases 1-3) via HTTP API. Measures per-phase timing and reliability across 7 languages.
 
 ## Notes
 
-- Benchmark data is not committed to git (downloaded PDFs are in `.gitignore`).
-- Re-run benchmarks after provider changes to validate search/download success rates.
-- Language coverage: English, Chinese, Japanese, Korean, Spanish, Portuguese, Russian.
+- Downloaded PDFs are not committed to git (in `.gitignore`).
+- Re-run benchmarks after provider changes to validate success rates.
+- Language coverage: English, Chinese, Japanese, Korean, Spanish, Portuguese, Russian (7 core languages; literature acquisition extends to 12).
