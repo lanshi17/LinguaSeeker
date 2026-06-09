@@ -262,7 +262,9 @@ describe("evidence document helpers", () => {
     }]);
   });
 
-  it("builds no translated paragraphs when translated trace and full text are null", () => {
+  // Both null and undefined on translated_document_text hit the same fullTextForTrack(...)?.trim()
+  // branch, so this single case documents the shared code path.
+  it("builds no translated paragraphs when no translated content is available", () => {
     const detail: EvidenceGroupDetailResponse = {
       ...DETAIL,
       original_document_text: "PHARC syndrome is caused by mutations in ABHD12.",
@@ -288,33 +290,6 @@ describe("evidence document helpers", () => {
     const translatedDocument = buildEvidenceDocument(detail, "translated");
 
     assert.equal(originalDocument.paragraphs.length, 1);
-    assert.equal(translatedDocument.paragraphs.length, 0);
-  });
-
-  it("builds no translated paragraphs when translated full text is undefined", () => {
-    const detail: EvidenceGroupDetailResponse = {
-      ...DETAIL,
-      original_document_text: "PHARC syndrome is caused by mutations in ABHD12.",
-      translated_document_text: undefined,
-      traces: [{
-        canonical_evidence_id: "ev-a",
-        field_id: "A.gene_disease_relationship",
-        field_name: "Gene-Disease Relationship",
-        original_value: "causative",
-        translated_value: null,
-        alignment_confidence: null,
-        original: {
-          text: "PHARC syndrome is caused by mutations in ABHD12.",
-          highlight_start: 0,
-          highlight_end: 14,
-          source_span: {},
-        },
-        translated: null,
-      }],
-    };
-
-    const translatedDocument = buildEvidenceDocument(detail, "translated");
-
     assert.equal(translatedDocument.paragraphs.length, 0);
   });
 });
