@@ -42,6 +42,10 @@ class PipelineRunRequest(BaseModel):
     filename: str | None = None
     content_base64: str | None = None
 
+    # Pre-parsed markdown: bypasses Phase 1 MinerU parsing entirely.
+    # When provided, Phase 1 constructs metadata directly from this text.
+    pre_parsed_markdown: str | None = None
+
     # Online acquisition fields
     query: str | None = None
     identifiers: list[str] | None = None
@@ -55,9 +59,9 @@ class PipelineRunRequest(BaseModel):
 
         # Source-specific validation
         if self.source_type == "local":
-            if not self.content_base64:
+            if not self.content_base64 and not self.pre_parsed_markdown:
                 raise ValueError(
-                    "source_type='local' requires content_base64 (filename is optional)"
+                    "source_type='local' requires content_base64 or pre_parsed_markdown"
                 )
         elif self.source_type == "online":
             if not self.query and not self.identifiers:
@@ -225,6 +229,7 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         target_phase=body.target_phase,
         source_key=source_key or None,
         upload_file_path=upload_file_path,
+        pre_parsed_markdown=body.pre_parsed_markdown,
         query=body.query,
         identifiers=body.identifiers,
         action=online_action,

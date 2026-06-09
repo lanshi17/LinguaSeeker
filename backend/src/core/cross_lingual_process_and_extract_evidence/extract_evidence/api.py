@@ -103,6 +103,19 @@ def _build_track_document_from_json(path: Path, track: Track) -> TrackDocument:
     blocks = data.get("blocks", [])
     parsed_blocks = _parse_content_blocks(blocks)
     formatted_text, page_spans = _format_blocks_with_page_spans(blocks, track)
+
+    # Fallback: when blocks are empty, use persisted formatted_text
+    if not formatted_text and data.get("formatted_text"):
+        formatted_text = data["formatted_text"]
+        page_spans = [
+            PageSpan(
+                span_id=f"{track.value}-p1",
+                page=1,
+                start_offset=0,
+                end_offset=len(formatted_text),
+            )
+        ]
+
     return TrackDocument(
         document_id=document_id,
         track=track,

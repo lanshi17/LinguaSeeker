@@ -48,43 +48,61 @@ def xml_to_markdown(xml_text: str) -> str:
         title_text = _extract_text(title)
         if title_text:
             parts.append(f"# {title_text}\n")
+            break  # Only first article-title
 
     # Abstract
     for abstract in root.iter("abstract"):
         abstract_text = _extract_text(abstract)
         if abstract_text:
             parts.append(f"## Abstract\n\n{abstract_text}\n")
+            break  # Only first abstract
 
-    # Body sections
+    # Body
     for body in root.iter("body"):
-        for section in body.iter("sec"):
-            sec_title = section.find("title")
-            sec_text = _extract_text(sec_title) if sec_title is not None else ""
-            if sec_text:
-                parts.append(f"\n## {sec_text}\n")
-            # Extract paragraphs
-            for p in section.findall("p"):
-                p_text = _extract_text(p)
-                if p_text:
-                    parts.append(f"{p_text}\n")
-
-        # Direct paragraphs in body (not in sections)
-        for p in body.findall("p"):
-            p_text = _extract_text(p)
-            if p_text:
-                parts.append(f"{p_text}\n")
-
-    # Tables
-    for table in root.iter("table"):
-        table_text = _extract_table(table)
-        if table_text:
-            parts.append(f"\n{table_text}\n")
+        _extract_body(body, parts, depth=2)
+        break  # Only first body
 
     result = "\n".join(parts)
     if len(result) < 100:
-        # Fallback: extract all text
+        # Fallback: extract all text from root
         result = _extract_text(root)
     return result
+
+
+def _extract_body(body: ET.Element, parts: list[str], depth: int) -> None:
+    """Recursively extract body content with proper heading depth."""
+    heading = "#" * depth
+
+    # Process direct children in order
+    for child in body:
+        tag = child.tag
+        if tag == "sec":
+            sec_title = child.find("title")
+            sec_text = _extract_text(sec_title) if sec_title is not None else ""
+            if sec_text:
+                parts.append(f"\n{heading} {sec_text}\n")
+            # Extract direct paragraphs in this section
+            for p in child.findall("p"):
+                p_text = _extract_text(p)
+                if p_text:
+                    parts.append(f"{p_text}\n")
+            # Recurse into nested sections
+            _extract_body(child, parts, depth=min(depth + 1, 6))
+        elif tag == "p":
+            p_text = _extract_text(child)
+            if p_text:
+                parts.append(f"{p_text}\n")
+        elif tag == "table-wrap" or tag == "fig":
+            caption = child.find("caption")
+            if caption is not None:
+                cap_text = _extract_text(caption)
+                if cap_text:
+                    parts.append(f"\n*{cap_text}*\n")
+            table = child.find("table")
+            if table is not None:
+                table_text = _extract_table(table)
+                if table_text:
+                    parts.append(f"\n{table_text}\n")
 
 
 def _extract_text(element: ET.Element) -> str:
@@ -119,6 +137,7 @@ async def fetch_article(
     client: httpx.AsyncClient,
     entry: dict,
     sem: asyncio.Semaphore,
+    force: bool = False,
 ) -> bool:
     """Fetch PMC article XML and convert to markdown."""
     entry_id = entry["entry_id"]
@@ -129,9 +148,13 @@ async def fetch_article(
 
     entry_dir = GROUND_TRUTH_DIR / entry_id
     md_path = entry_dir / "source.md"
-    if md_path.exists() and md_path.stat().st_size > 500:
-        print(f"  {entry_id}: already exists ({md_path.stat().st_size/1024:.1f} KB)")
-        return True
+    if md_path.exists() and md_path.stat().st_size > 500 and not force:
+        # Quality check: file must have markdown headings
+        content = md_path.read_text(encoding="utf-8")
+        if "\n## " in content or "\n# " in content:
+            print(f"  {entry_id}: already exists ({md_path.stat().st_size/1024:.1f} KB)")
+            return True
+        print(f"  {entry_id}: exists but no headings — re-downloading")
 
     pmc_num = pmcid.replace("PMC", "")
     params = {"db": "pmc", "id": pmc_num, "rettype": "xml"}
@@ -160,12 +183,15 @@ async def fetch_article(
             return False
 
 
-async def main():
+async def main(force: bool = False, entries_filter: list[str] | None = None):
     proxy = load_proxy()
     print(f"Proxy: {proxy or 'none'}")
 
     selection_path = GROUND_TRUTH_DIR / "selection.json"
     entries = json.loads(selection_path.read_text(encoding="utf-8"))
+    if entries_filter:
+        id_set = set(entries_filter)
+        entries = [e for e in entries if e["entry_id"] in id_set]
 
     sem = asyncio.Semaphore(_CONCURRENCY)
     transport_kwargs = {}
@@ -173,7 +199,7 @@ async def main():
         transport_kwargs["proxy"] = proxy
 
     async with httpx.AsyncClient(**transport_kwargs) as client:
-        tasks = [fetch_article(client, e, sem) for e in entries]
+        tasks = [fetch_article(client, e, sem, force=force) for e in entries]
         results = await asyncio.gather(*tasks)
 
     success = sum(1 for r in results if r)
@@ -181,4 +207,9 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    import argparse
+    parser = argparse.ArgumentParser(description="Download PMC articles as markdown")
+    parser.add_argument("--force", action="store_true", help="Force re-download all entries")
+    parser.add_argument("--entries", nargs="+", default=None, help="Specific entry IDs")
+    args = parser.parse_args()
+    asyncio.run(main(force=args.force, entries_filter=args.entries))
