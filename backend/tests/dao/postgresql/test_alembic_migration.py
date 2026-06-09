@@ -188,8 +188,8 @@ def test_head_revision_points_to_terminology_schema() -> None:
     assert base.down_revision is None
 
 
-def test_head_revision_points_to_literature_profiles() -> None:
-    """The Alembic head is the literature_profiles read-model table."""
+def test_head_revision_points_to_pipeline_status_extraction() -> None:
+    """The Alembic head is the pipeline_status column extraction migration."""
     backend_str = str(BACKEND_DIR)
     if backend_str not in sys.path:
         sys.path.insert(0, backend_str)
@@ -204,8 +204,35 @@ def test_head_revision_points_to_literature_profiles() -> None:
     head = script.get_revision("head")
 
     assert head is not None
-    assert head.revision == "lit_profiles_20260608"
-    assert head.down_revision == "6a8f3b1c2d4e"
+    assert head.revision == "extract_pipeline_status_20260608"
+    assert head.down_revision == "reviewed_unmappable_20260608"
+
+
+def test_schema_hardening_migration_chain() -> None:
+    """The schema hardening migrations form a correct linear chain."""
+    backend_str = str(BACKEND_DIR)
+    if backend_str not in sys.path:
+        sys.path.insert(0, backend_str)
+
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    config = Config(str(ALEMBIC_INI))
+    config.set_main_option("script_location", str(MIGRATIONS_DIR))
+    script = ScriptDirectory.from_config(config)
+
+    rm_fk = script.get_revision("rm_canonical_fk_20260608")
+    unmappable = script.get_revision("reviewed_unmappable_20260608")
+    pipeline_status = script.get_revision("extract_pipeline_status_20260608")
+
+    assert rm_fk is not None
+    assert rm_fk.down_revision == "lit_profiles_20260608"
+
+    assert unmappable is not None
+    assert unmappable.down_revision == "rm_canonical_fk_20260608"
+
+    assert pipeline_status is not None
+    assert pipeline_status.down_revision == "reviewed_unmappable_20260608"
 
 
 def test_terminology_relationships_migration_defines_unique_identity_constraint(monkeypatch) -> None:
