@@ -26,8 +26,9 @@ import type {
 } from "../types/evidenceSearch";
 import {
   buildEvidenceDocument,
-  countEvidenceHighlightTones,
-  evidenceToneForItem,
+  CATEGORY_COLORS,
+  EVIDENCE_CATEGORIES,
+  countEvidenceCategories,
   type EvidenceDocumentHighlight,
   type EvidenceDocumentParagraph,
 } from "../utils/evidenceDocument";
@@ -54,45 +55,25 @@ const STATUS_VARIANT: Record<
   rejected: "error",
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  A: "Variant information",
-  B: "Case and phenotype",
-  C: "Segregation",
-  D: "Population frequency",
-  E: "Computational evidence",
-  F: "Functional evidence",
-  G: "Case-control evidence",
-  H: "Contradiction evidence",
-  I: "Gene function",
-  J: "Authority and validity",
-};
+const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
+  Object.entries(CATEGORY_COLORS).map(([k, v]) => [k, v.label]),
+);
 
-const TONE_CHIP_STYLES: Record<EvidenceHighlightTone, string> = {
-  classification: "border-amber-200 bg-amber-50 text-amber-800",
-  disease: "border-rose-200 bg-rose-50 text-rose-800",
-  functional: "border-success-200 bg-success-50 text-success-800",
-  gene: "border-primary-200 bg-primary-50 text-primary-800",
-  neutral: "border-gray-200 bg-gray-50 text-gray-700",
-  variant: "border-cyan-200 bg-cyan-50 text-cyan-800",
-};
+/** Chip styles keyed by category letter, falling back to tone styles. */
+function categoryChipStyle(category?: string | null): string {
+  if (category && CATEGORY_COLORS[category]) {
+    return CATEGORY_COLORS[category].chip;
+  }
+  return "border-gray-200 bg-gray-50 text-gray-700";
+}
 
-const TONE_MARK_STYLES: Record<EvidenceHighlightTone, string> = {
-  classification: "bg-amber-200 text-amber-950 ring-1 ring-amber-300",
-  disease: "bg-rose-200 text-rose-950 ring-1 ring-rose-300",
-  functional: "bg-success-200 text-success-950 ring-1 ring-success-300",
-  gene: "bg-primary-200 text-primary-950 ring-1 ring-primary-300",
-  neutral: "bg-gray-200 text-gray-950 ring-1 ring-gray-300",
-  variant: "bg-cyan-200 text-cyan-950 ring-1 ring-cyan-300",
-};
-
-const TONE_LABELS: Record<EvidenceHighlightTone, string> = {
-  classification: "Classification",
-  disease: "Disease / phenotype",
-  functional: "Functional evidence",
-  gene: "Gene",
-  neutral: "Other evidence",
-  variant: "Variant",
-};
+/** Mark/highlight styles keyed by category letter, falling back to neutral. */
+function categoryMarkStyle(category?: string | null): string {
+  if (category && CATEGORY_COLORS[category]) {
+    return CATEGORY_COLORS[category].mark;
+  }
+  return "bg-gray-200 text-gray-950 ring-1 ring-gray-300";
+}
 
 const HIGHLIGHT_TONES: EvidenceHighlightTone[] = [
   "gene",
@@ -110,7 +91,10 @@ function formatPercent(value?: number | null) {
   return `${(value * 100).toFixed(0)}%`;
 }
 
-function categoryFromItem(item: EvidenceGroupItem) {
+function categoryFromItem(item?: EvidenceGroupItem | null) {
+  if (!item) {
+    return null;
+  }
   if (item.category) {
     return item.category;
   }
@@ -122,10 +106,6 @@ function categoryLabel(category?: string | null) {
     return "Uncategorized";
   }
   return CATEGORY_LABELS[category] ?? category;
-}
-
-function evidenceTone(item?: EvidenceGroupItem | null): EvidenceHighlightTone {
-  return evidenceToneForItem(item);
 }
 
 function itemLabel(item: EvidenceGroupItem) {
@@ -178,15 +158,22 @@ function MetadataToken({
 }
 
 function EvidenceTonePill({ item }: { item: EvidenceGroupItem }) {
-  const tone = evidenceTone(item);
+  const cat = categoryFromItem(item);
   return (
     <span
       className={cn(
-        "rounded-md border px-2 py-1 text-xs font-medium",
-        TONE_CHIP_STYLES[tone],
+        "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium",
+        categoryChipStyle(cat),
       )}
     >
-      {categoryLabel(categoryFromItem(item))}
+      {cat && CATEGORY_COLORS[cat] && (
+        <span
+          className="inline-block h-2 w-2 shrink-0 rounded-full"
+          style={{ backgroundColor: CATEGORY_COLORS[cat].hex }}
+          aria-hidden="true"
+        />
+      )}
+      {categoryLabel(cat)}
     </span>
   );
 }
@@ -444,11 +431,11 @@ function HighlightedParagraph({
         key={`${highlight.evidenceId}-${highlight.start}-${index}`}
         className={cn(
           "rounded px-1 py-0.5 font-semibold",
-          TONE_MARK_STYLES[highlight.tone],
+          categoryMarkStyle(highlight.category),
           highlight.selected &&
             "outline outline-2 outline-offset-2 outline-primary-700",
         )}
-        aria-label={`${TONE_LABELS[highlight.tone]} evidence: ${highlight.label}`}
+        aria-label={`${categoryLabel(highlight.category)} evidence: ${highlight.label}`}
       >
         {paragraph.text.slice(highlight.start, highlight.end)}
       </mark>,
@@ -505,17 +492,18 @@ function EvidenceDocumentReader({
   );
 }
 
-function HighlightLayerToggle({
+function CategoryLayerToggle({
   checked,
   count,
   onChange,
-  tone,
+  category,
 }: {
   checked: boolean;
   count: number;
   onChange: () => void;
-  tone: EvidenceHighlightTone;
+  category: string;
 }) {
+  const cat = CATEGORY_COLORS[category];
   return (
     <label
       className={cn(
@@ -525,6 +513,11 @@ function HighlightLayerToggle({
           : "border-gray-200 bg-white hover:bg-gray-50",
         count === 0 && "cursor-not-allowed opacity-50",
       )}
+      style={
+        checked && cat
+          ? { borderColor: cat.hex + "40", backgroundColor: cat.hex + "10" }
+          : undefined
+      }
     >
       <input
         type="checkbox"
@@ -533,11 +526,20 @@ function HighlightLayerToggle({
         onChange={onChange}
         className="peer sr-only"
       />
-      <span className="min-w-0">
-        <span className="block truncate text-sm font-medium text-gray-900">
-          {TONE_LABELS[tone]}
+      <span className="flex min-w-0 items-center gap-2">
+        <span
+          className="inline-block h-3 w-3 shrink-0 rounded-full"
+          style={{ backgroundColor: cat?.hex ?? "#9CA3AF" }}
+          aria-hidden="true"
+        />
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-medium text-gray-900">
+            {cat?.label ?? category}
+          </span>
+          <span className="text-xs text-gray-500">
+            {count} item{count !== 1 ? "s" : ""}
+          </span>
         </span>
-        <span className="text-xs text-gray-500">{count} item{count !== 1 ? "s" : ""}</span>
       </span>
       <span
         className={cn(
@@ -568,8 +570,11 @@ function BilingualComparison({
   selectedEvidenceId: string | null;
   setSelectedEvidenceId: (value: string) => void;
 }) {
-  const [enabledTones, setEnabledTones] = useState<Set<EvidenceHighlightTone>>(
+  const [enabledTones] = useState<Set<EvidenceHighlightTone>>(
     () => new Set(HIGHLIGHT_TONES),
+  );
+  const [enabledCategories, setEnabledCategories] = useState<Set<string>>(
+    () => new Set(EVIDENCE_CATEGORIES),
   );
   const selectedItem =
     detail.items.find(
@@ -578,8 +583,8 @@ function BilingualComparison({
     detail.items[0] ??
     null;
   const selectedTrace = selectedTraceFor(detail, selectedEvidenceId);
-  const toneCounts = useMemo(
-    () => countEvidenceHighlightTones(detail.items),
+  const categoryCounts = useMemo(
+    () => countEvidenceCategories(detail.items),
     [detail.items],
   );
   const originalDocument = useMemo(
@@ -589,8 +594,9 @@ function BilingualComparison({
         "original",
         enabledTones,
         selectedEvidenceId,
+        enabledCategories,
       ),
-    [detail, enabledTones, selectedEvidenceId],
+    [detail, enabledTones, selectedEvidenceId, enabledCategories],
   );
   const translatedDocument = useMemo(
     () =>
@@ -599,17 +605,18 @@ function BilingualComparison({
         "translated",
         enabledTones,
         selectedEvidenceId,
+        enabledCategories,
       ),
-    [detail, enabledTones, selectedEvidenceId],
+    [detail, enabledTones, selectedEvidenceId, enabledCategories],
   );
 
-  const toggleTone = (tone: EvidenceHighlightTone) => {
-    setEnabledTones((current) => {
+  const toggleCategory = (cat: string) => {
+    setEnabledCategories((current) => {
       const next = new Set(current);
-      if (next.has(tone)) {
-        next.delete(tone);
+      if (next.has(cat)) {
+        next.delete(cat);
       } else {
-        next.add(tone);
+        next.add(cat);
       }
       return next;
     });
@@ -694,16 +701,16 @@ function BilingualComparison({
           <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
               <SlidersHorizontal className="h-4 w-4 text-primary-700" />
-              Highlight layers
+              Evidence categories
             </h3>
             <div className="mt-4 space-y-2">
-              {HIGHLIGHT_TONES.map((tone) => (
-                <HighlightLayerToggle
-                  key={tone}
-                  tone={tone}
-                  count={toneCounts[tone]}
-                  checked={enabledTones.has(tone)}
-                  onChange={() => toggleTone(tone)}
+              {EVIDENCE_CATEGORIES.map((cat) => (
+                <CategoryLayerToggle
+                  key={cat}
+                  category={cat}
+                  count={categoryCounts[cat] ?? 0}
+                  checked={enabledCategories.has(cat)}
+                  onChange={() => toggleCategory(cat)}
                 />
               ))}
             </div>
@@ -718,6 +725,8 @@ function BilingualComparison({
               {detail.items.map((item) => {
                 const active =
                   item.canonical_evidence_id === selectedItem?.canonical_evidence_id;
+                const cat = categoryFromItem(item);
+                const catColor = cat && CATEGORY_COLORS[cat];
                 return (
                   <button
                     key={item.canonical_evidence_id}
@@ -727,8 +736,16 @@ function BilingualComparison({
                       "w-full cursor-pointer rounded-lg border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-primary-500",
                       active
                         ? "border-primary-300 bg-primary-50"
-                        : "border-gray-200 bg-white hover:border-primary-200 hover:bg-gray-50",
+                        : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50",
                     )}
+                    style={
+                      active && catColor
+                        ? {
+                            borderColor: catColor.hex + "60",
+                            backgroundColor: catColor.hex + "12",
+                          }
+                        : undefined
+                    }
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <EvidenceTonePill item={item} />
