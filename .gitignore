@@ -93,3 +93,4 @@ backend/config/vault/*.yaml
 backend/config/vault/*.yml
 !backend/config/vault/*.example
 !backend/config/vault/README.md
+**/nohup.out
