@@ -30,6 +30,11 @@ from benchmark.pipeline.evidence_metrics import query_evidence_metrics
 from src.dao.postgresql.connection import async_session_factory, build_async_engine
 from src.dao.postgresql.models import EvidenceEntityBinding, NormalizedEntity, RunEvidenceItem
 
+try:
+    from benchmark.layer3.mondo_hierarchy import MondoHierarchy
+except ImportError:
+    MondoHierarchy = None  # type: ignore[assignment,misc]
+
 GROUND_TRUTH_DIR = Path(__file__).resolve().parent / "ground_truth"
 REPORTS_DIR = Path(__file__).resolve().parent / "reports"
 
@@ -167,12 +172,25 @@ def fuzzy_match_value(expected: str, extracted: str) -> bool:
     return False
 
 
+# Fields that benefit from ontology ancestry matching
+_DISEASE_FIELDS = {"B.disease_diagnosis", "B.disease_phenotype"}
+
+
 def compare_evidence(
     expected_fields: list[dict],
     extracted_items: list[dict],
+    mondo: Any | None = None,
+    expected_standardization: dict[str, str] | None = None,
 ) -> list[FieldMatch]:
-    """Compare expected evidence fields against extracted items."""
+    """Compare expected evidence fields against extracted items.
+
+    When ``mondo`` is provided and a disease field fails fuzzy matching,
+    falls back to MONDO ancestry checking: the extracted disease label
+    is looked up in MONDO and checked against the expected MONDO ID's
+    ancestor chain.
+    """
     matches: list[FieldMatch] = []
+    expected_mondo_id = (expected_standardization or {}).get("disease", "")
 
     for expected in expected_fields:
         field_id = expected["field_id"]
@@ -211,6 +229,21 @@ def compare_evidence(
                 )
                 if best_match is None or (match_type == "exact" and best_match.match_type != "exact"):
                     best_match = candidate_match
+
+        # Ontology ancestry fallback for disease fields
+        if not best_match and mondo and field_id in _DISEASE_FIELDS and expected_mondo_id:
+            for cand in candidates:
+                extracted_value = str(cand.get("value", ""))
+                if mondo.is_label_descendant_of(extracted_value, expected_mondo_id):
+                    best_match = FieldMatch(
+                        field_id=field_id,
+                        expected_value=expected_value,
+                        matched=True,
+                        extracted_value=extracted_value,
+                        extracted_confidence=cand.get("confidence", 0.0),
+                        match_type="ontology_ancestor",
+                    )
+                    break
 
         if best_match:
             matches.append(best_match)
@@ -397,6 +430,7 @@ async def evaluate_one(
     entry: dict,
     sf,
     semaphore: asyncio.Semaphore,
+    mondo: Any | None = None,
 ) -> EntryMetrics:
     """Evaluate one ground truth entry."""
     entry_id = entry["entry_id"]
@@ -465,6 +499,8 @@ async def evaluate_one(
                     metrics.field_matches = compare_evidence(
                         entry.get("expected_evidence", []),
                         extracted_items,
+                        mondo=mondo,
+                        expected_standardization=entry.get("expected_standardization"),
                     )
 
                     # Entity standardization comparison
@@ -643,12 +679,21 @@ async def run_evaluation(
     engine = build_async_engine()
     sf = async_session_factory(engine)
 
+    # Load MONDO hierarchy for ontology ancestry matching
+    mondo = None
+    if MondoHierarchy is not None:
+        try:
+            mondo = MondoHierarchy.load()
+            logger.info("MONDO hierarchy loaded for ontology ancestry matching")
+        except (FileNotFoundError, Exception) as e:
+            logger.warning("MONDO hierarchy not available: {}", e)
+
     t0 = time.time()
     all_metrics: list[EntryMetrics] = []
 
     async with httpx.AsyncClient(**transport_kwargs) as client:
         for entry in entries:
-            m = await evaluate_one(client, base_url, entry, sf, semaphore)
+            m = await evaluate_one(client, base_url, entry, sf, semaphore, mondo=mondo)
             all_metrics.append(m)
             status_icon = "✓" if m.pipeline_status in ("awaiting_review", "completed") else "✗"
             tp = sum(1 for f in m.field_matches if f.matched)
