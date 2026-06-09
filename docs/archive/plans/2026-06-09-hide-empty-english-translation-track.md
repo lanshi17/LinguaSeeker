@@ -9,7 +9,7 @@
 
 **Goal:** Hide the empty `English translation` reader in the bilingual evidence detail view when the source document is already English and no translated text exists.
 
-**Architecture:** Keep the fix in the compare view because `EvidenceDocumentReader` already treats an empty `paragraphs` array as the no-text state. `EvidenceDetailView` builds original and translated reader documents, checks `translatedDocument.paragraphs.length > 0`, and renders a one-column or two-column reader layout accordingly.
+**Architecture:** Keep translated-track visibility based on raw API data, not the filtered reader output. `EvidenceDetailView` builds original and translated reader documents, calls `hasTranslatedDocumentText(detail)` to decide whether a translated track exists, and renders a one-column or two-column reader layout accordingly.
 
 **Tech Stack:** Next.js App Router, React 18, TypeScript, Tailwind CSS, Node built-in test runner.
 
@@ -21,20 +21,21 @@
 - Modify: `frontend/tests/evidence-search/literatureRows.test.ts`
 - Test target: `frontend/src/features/evidence-search/utils/evidenceDocument.ts`
 
-**Step 1: Keep the existing helper import unchanged**
+**Step 1: Import the translated-track availability helper**
 
-No new import is required. Keep the existing import from `evidenceDocument`:
+Add `hasTranslatedDocumentText` to the existing import from `evidenceDocument`. Preserve all already-used category exports:
 
 ```ts
 import {
   buildEvidenceDocument,
   countEvidenceHighlightTones,
+  hasTranslatedDocumentText,
 } from "../../src/features/evidence-search/utils/evidenceDocument";
 ```
 
 If the import block has additional existing symbols, preserve them. Do not replace the block wholesale.
 
-**Step 2: Write tests documenting both no-translation shapes**
+**Step 2: Write tests for no translated content and visibility-gate edge cases**
 
 Append these tests in the existing `describe("evidence document helpers", () => { ... })` block:
 
@@ -106,7 +107,7 @@ nvm use
 npm test
 ```
 
-Expected: PASS. These tests document the existing data-layer contract used by the UI condition: no translated content produces `translatedDocument.paragraphs.length === 0` for both `null` and `undefined`.
+Expected: PASS. These tests document the data-layer contract and the visibility-gate predicate: no translated content produces `translatedDocument.paragraphs.length === 0`, whitespace-only translated text is ignored, and non-empty translated full text or trace text makes the translated track available.
 
 ### Task 2: Hide The Empty Translated Reader In The Compare View
 
@@ -116,7 +117,7 @@ Expected: PASS. These tests document the existing data-layer contract used by th
 
 **Step 1: Leave the evidenceDocument import intact**
 
-Do not replace the existing import block. It currently includes category exports that are used throughout this component:
+Do not replace the existing import block. It currently includes category exports that are used throughout this component. Add `hasTranslatedDocumentText` while preserving the existing imports:
 
 ```ts
 import {
@@ -124,19 +125,22 @@ import {
   CATEGORY_COLORS,
   EVIDENCE_CATEGORIES,
   countEvidenceCategories,
+  hasTranslatedDocumentText,
   type EvidenceDocumentHighlight,
   type EvidenceDocumentParagraph,
 } from "../utils/evidenceDocument";
 ```
 
-If the live import block differs, preserve all existing used imports and do not add any new import for this task.
+If the live import block differs, preserve all existing used imports.
 
-**Step 2: Compute translated track availability inline**
+**Step 2: Compute translated track availability from raw API data**
 
 Inside `BilingualComparison`, after `translatedDocument` is created, add:
 
 ```ts
-  const showTranslatedDocument = translatedDocument.paragraphs.length > 0;
+  // Data availability ignores user-applied filters so category toggles do not mount/unmount
+  // the translated reader or reflow the document grid.
+  const showTranslatedDocument = hasTranslatedDocumentText(detail);
 ```
 
 **Step 3: Render one or two columns based on availability**

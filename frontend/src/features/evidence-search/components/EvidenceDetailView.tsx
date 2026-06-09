@@ -29,6 +29,7 @@ import {
   CATEGORY_COLORS,
   EVIDENCE_CATEGORIES,
   countEvidenceCategories,
+  hasTranslatedDocumentText,
   type EvidenceDocumentHighlight,
   type EvidenceDocumentParagraph,
 } from "../utils/evidenceDocument";
@@ -609,13 +610,9 @@ function BilingualComparison({
       ),
     [detail, enabledTones, selectedEvidenceId, enabledCategories],
   );
-  // Translate-track data availability ignores user-applied filters: a reader should still be shown
-  // (and let its built-in empty-state render) when the API delivered translated content even if the
-  // active category/toner set filters every span out. Collapsing the reader on every toggle caused
-  // layout flicker for English originals with translated trace highlights.
-  const showTranslatedDocument =
-    Boolean(detail.translated_document_text?.trim()) ||
-    detail.traces.some((trace) => Boolean(trace.translated?.text));
+  // Data availability ignores user-applied filters so category toggles do not mount/unmount
+  // the translated reader or reflow the document grid.
+  const showTranslatedDocument = hasTranslatedDocumentText(detail);
 
   const toggleCategory = (cat: string) => {
     setEnabledCategories((current) => {
