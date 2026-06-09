@@ -292,3 +292,23 @@ def test_run_evidence_item_has_no_canonical_evidence_id() -> None:
 
     column_names = {c.name for c in RunEvidenceItem.__table__.columns}
     assert "canonical_evidence_id" not in column_names
+
+
+def test_pipeline_run_state_has_pipeline_status_column() -> None:
+    """PipelineRunState has a dedicated pipeline_status column (not just JSONB expression)."""
+    from src.dao.postgresql.models import PipelineRunState
+
+    column_names = {c.name for c in PipelineRunState.__table__.columns}
+    assert "pipeline_status" in column_names
+    assert "last_completed_stage" in column_names
+
+    # Verify the index is on the column, not an expression
+    table = PipelineRunState.__table__
+    status_indexes = [
+        idx for idx in table.indexes if idx.name == "ix_pipeline_run_states_pipeline_status"
+    ]
+    assert len(status_indexes) == 1
+    idx = status_indexes[0]
+    # Column-based index: columns should contain 'pipeline_status'
+    idx_col_names = {c.name for c in idx.columns}
+    assert "pipeline_status" in idx_col_names

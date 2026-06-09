@@ -55,11 +55,13 @@ class DirectStatePersistence:
         state_json = state.model_dump(mode="json")
         if existing:
             existing.state_json = state_json
+            existing.pipeline_status = state.pipeline_status.value
         else:
             new_record = PipelineRunState(
                 processing_run_id=UUID(state.processing_run_id),
                 source_document_id=UUID(state.source_document_id),
                 state_json=state_json,
+                pipeline_status=state.pipeline_status.value,
             )
             self._session.add(new_record)
         await self._session.commit()
@@ -108,11 +110,13 @@ class SessionBoundStatePersistence:
                     processing_run_id=UUID(state.processing_run_id),
                     source_document_id=UUID(state.source_document_id),
                     state_json=state_json,
+                    pipeline_status=state.pipeline_status.value,
                 )
                 .on_conflict_do_update(
                     index_elements=["processing_run_id"],
                     set_={
                         "state_json": state_json,
+                        "pipeline_status": state.pipeline_status.value,
                         "updated_at": func.now(),
                     },
                 )
@@ -132,12 +136,10 @@ class SessionBoundStatePersistence:
     async def recover_orphaned_runs(self) -> int:
         """Mark pipeline runs stuck in non-terminal states as FAILED after server restart."""
         async with self._session_factory() as session:
-            # Only load runs in non-terminal states — avoids full table scan.
+            # Only load runs in non-terminal states — uses dedicated column index.
             result = await session.execute(
                 select(PipelineRunState).where(
-                    PipelineRunState.state_json["pipeline_status"].astext.in_(
-                        ("pending", "running")
-                    )
+                    PipelineRunState.pipeline_status.in_(("pending", "running"))
                 )
             )
             records = result.scalars().all()
@@ -150,6 +152,7 @@ class SessionBoundStatePersistence:
                 state.error_phase = _derive_error_phase(state)
                 state.completed_at = datetime.now(timezone.utc).isoformat()
                 record.state_json = state.model_dump(mode="json")
+                record.pipeline_status = "failed"
                 count += 1
 
             if count:
