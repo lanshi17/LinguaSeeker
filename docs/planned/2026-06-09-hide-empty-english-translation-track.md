@@ -2,9 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Status:** in-progress
+**Status:** completed
 **Created:** 2026-06-09
-**Completed:** —
+**Completed:** 2026-06-09
 **PR:** —
 
 **Goal:** Hide the empty `English translation` reader in the bilingual evidence detail view when the source document is already English and no translated text exists.
