@@ -220,6 +220,13 @@ class NormalizedEntity(Base, TimestampMixin):
             unique=True,
             postgresql_where=text("standardization_status = 'unmapped'"),
         ),
+        Index(
+            "uq_normalized_entities_reviewed_unmappable_raw_text",
+            "entity_type",
+            "normalized_raw_text",
+            unique=True,
+            postgresql_where=text("standardization_status = 'reviewed_unmappable'"),
+        ),
         Index("ix_normalized_entities_merged_into_entity_id", "merged_into_entity_id"),
     )
 
