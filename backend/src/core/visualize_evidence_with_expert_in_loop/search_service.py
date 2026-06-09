@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import re
 from typing import Any
 from uuid import UUID
 
@@ -57,6 +58,36 @@ def _category_from_field_id(field_id: str) -> str | None:
     return field_id.split(".", 1)[0]
 
 
+def _parse_source_offset(raw: object) -> int | None:
+    """Parse a stored source offset, preserving missing/invalid as None."""
+    if raw is None:
+        return None
+    return int(raw)
+
+
+def _find_value_anchor(text: str, value: str | None) -> tuple[int, int] | None:
+    """Find a safe value anchor in snippet text."""
+    if not value:
+        return None
+    candidate = value.strip()
+    if not candidate:
+        return None
+    if len(candidate) == 1:
+        return None
+    if len(candidate) == 2:
+        if not candidate.isupper():
+            return None
+        match = re.search(rf"(?<![A-Za-z0-9]){re.escape(candidate)}(?![A-Za-z0-9])", text)
+        if not match:
+            return None
+        return match.start(), match.end()
+
+    index = text.lower().find(candidate.lower())
+    if index < 0:
+        return None
+    return index, index + len(candidate)
+
+
 def _build_highlight(
     source_span: dict[str, object],
     value: str | None = None,
@@ -75,34 +106,31 @@ def _build_highlight(
         return None
 
     text_len = len(text)
-    start = int(source_span.get("start_offset") or 0)
-    raw_end = source_span.get("end_offset")
-    end = int(raw_end) if raw_end is not None else text_len
-    if end < start:
-        end = text_len
+    start = _parse_source_offset(source_span.get("start_offset"))
+    end = _parse_source_offset(source_span.get("end_offset"))
 
     # Clamp offsets to snippet bounds. When start exceeds text length
     # the offsets are document-global; fall back to locating value in snippet.
-    if start >= text_len:
-        # Require a minimum value length to avoid false-positive substring
-        # matches on short strings like single amino acids or nucleotides.
-        if value and len(value) >= 3 and value in text:
-            start = text.index(value)
-            end = start + len(value)
+    if start is None or end is None or start >= text_len:
+        anchor = _find_value_anchor(text, value)
+        if anchor:
+            start, end = anchor
         else:
-            start = 0
-            end = 0
+            start, end = 0, 0
     else:
+        if end < start:
+            end = text_len
         start = max(start, 0)
         end = min(max(end, start), text_len)
 
     page = source_span.get("page")
+    clean_source_span = {k: v for k, v in source_span.items() if v is not None}
     return EvidenceChainHighlight(
         text=text,
         highlight_start=max(start, 0),
         highlight_end=min(max(end, 0), text_len),
         page=page if isinstance(page, int) else None,
-        source_span=source_span,
+        source_span=clean_source_span,
     )
 
 

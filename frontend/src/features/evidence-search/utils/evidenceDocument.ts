@@ -96,12 +96,47 @@ function clampHighlight(
   return { start, end };
 }
 
+function isSafeAnchorValue(value: string) {
+  if (value.length === 1) {
+    return false;
+  }
+  if (value.length === 2) {
+    return value === value.toUpperCase();
+  }
+  return true;
+}
+
+function findAnchorValue(text: string, rawValue?: string | null) {
+  const value = rawValue?.trim();
+  if (!value || !isSafeAnchorValue(value)) {
+    return null;
+  }
+  if (value.length === 2) {
+    const match = new RegExp(`(^|[^A-Za-z0-9])(${value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})(?![A-Za-z0-9])`).exec(text);
+    if (!match || match.index < 0) {
+      return null;
+    }
+    const start = match.index + match[1].length;
+    return { start, end: start + value.length };
+  }
+  const index = text.toLowerCase().indexOf(value.toLowerCase());
+  if (index < 0) {
+    return null;
+  }
+  return { start: index, end: index + value.length };
+}
+
 function findHighlightInFullText(
   fullText: string,
   highlight: EvidenceChainHighlight,
   value?: string | null,
 ): { start: number; end: number } | null {
-  const candidates = [value, highlight.text.slice(highlight.highlight_start, highlight.highlight_end), highlight.text]
+  const valueAnchor = findAnchorValue(fullText, value);
+  if (valueAnchor) {
+    return valueAnchor;
+  }
+
+  const candidates = [highlight.text.slice(highlight.highlight_start, highlight.highlight_end), highlight.text]
     .map((candidate) => candidate?.trim())
     .filter((candidate): candidate is string => Boolean(candidate && candidate.length >= 3));
 

@@ -8,6 +8,7 @@ Phase 3 (Gate): LLM classification on downloaded PDF content.
 from __future__ import annotations
 
 import asyncio
+from dataclasses import asdict
 import hashlib
 import os
 import re
@@ -22,6 +23,7 @@ from .contracts import (
     OnlineAcquisitionRequest,
     OnlineAcquisitionResponse,
     OnlineAcquisitionRouteInfo,
+    OnlineAcquisitionSourceTraceEntry,
 )
 from .gateway import (
     _normalize_doi,
@@ -183,6 +185,28 @@ async def _acquire_links_firecrawl(
             all_links.extend(sr)
 
     return all_links
+
+
+def _source_trace_entry(
+    *,
+    provider: str,
+    success: bool,
+    items_count: int = 0,
+    downloads_count: int = 0,
+    warnings: list[str] | None = None,
+    error: str | None = None,
+) -> OnlineAcquisitionSourceTraceEntry:
+    """Build a provider trace entry for acquisition diagnostics."""
+    return OnlineAcquisitionSourceTraceEntry(
+        provider=provider,
+        attempt=1,
+        action="search",
+        success=success,
+        items_count=items_count,
+        downloads_count=downloads_count,
+        warnings=warnings or [],
+        error=error,
+    )
 
 
 def _coerce_str(value: Any) -> str:
@@ -352,7 +376,12 @@ async def _download_candidates(
         return None
 
     results = await asyncio.gather(*[_download_one(c) for c in candidates], return_exceptions=True)
-    downloads = [r for r in results if isinstance(r, DownloadResult)]
+    downloads: List[DownloadResult] = []
+    for result in results:
+        if isinstance(result, DownloadResult):
+            downloads.append(result)
+        elif isinstance(result, Exception):
+            logger.warning("candidate download failed: {}", result)
 
     return downloads
 
@@ -386,11 +415,12 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
     route = OnlineAcquisitionRouteInfo(
         prefer=request.prefer,
         api_provider=request.api_provider,
-        used="api",
+        used="web" if request.prefer == "web" else "api",
         reason="parallel_acquisition",
         fallback_used=False,
     )
     warnings: List[str] = []
+    source_trace: List[OnlineAcquisitionSourceTraceEntry] = []
 
     download_path = request.download_path
     if language:
@@ -399,17 +429,87 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
     # === Phase 1: Link Acquisition (parallel) ===
     id_params = _build_gateway_identifiers(identifiers)
 
-    api_task = _acquire_links_api(query=query, identifiers=id_params, limit=request.limit)
-    firecrawl_task = _acquire_links_firecrawl(query=query, language=language)
+    api_items: List[Dict[str, Any]] = []
+    firecrawl_links: List[SearchLink] = []
 
-    api_items, firecrawl_links = await asyncio.gather(api_task, firecrawl_task, return_exceptions=True)
+    if request.prefer == "web":
+        try:
+            firecrawl_links = await _acquire_links_firecrawl(query=query, language=language)
+            source_trace.append(_source_trace_entry(
+                provider="firecrawl",
+                success=bool(firecrawl_links),
+                items_count=len(firecrawl_links),
+            ))
+        except Exception as exc:
+            logger.warning("firecrawl acquisition failed: {}", exc)
+            warning = f"firecrawl acquisition failed: {exc}"
+            warnings.append(warning)
+            source_trace.append(_source_trace_entry(
+                provider="firecrawl",
+                success=False,
+                warnings=[warning],
+                error=str(exc),
+            ))
+            firecrawl_links = []
+    elif request.prefer == "api":
+        try:
+            api_items = await _acquire_links_api(query=query, identifiers=id_params, limit=request.limit)
+            source_trace.append(_source_trace_entry(
+                provider="api",
+                success=bool(api_items),
+                items_count=len(api_items),
+            ))
+        except Exception as exc:
+            logger.warning("api acquisition failed: {}", exc)
+            warning = f"api acquisition failed: {exc}"
+            warnings.append(warning)
+            source_trace.append(_source_trace_entry(
+                provider="api",
+                success=False,
+                warnings=[warning],
+                error=str(exc),
+            ))
+            api_items = []
+    else:
+        api_task = _acquire_links_api(query=query, identifiers=id_params, limit=request.limit)
+        firecrawl_task = _acquire_links_firecrawl(query=query, language=language)
 
-    if isinstance(api_items, Exception):
-        logger.warning("api acquisition failed: {}", api_items)
-        api_items = []
-    if isinstance(firecrawl_links, Exception):
-        logger.warning("firecrawl acquisition failed: {}", firecrawl_links)
-        firecrawl_links = []
+        api_result, firecrawl_result = await asyncio.gather(api_task, firecrawl_task, return_exceptions=True)
+
+        if isinstance(api_result, Exception):
+            logger.warning("api acquisition failed: {}", api_result)
+            warning = f"api acquisition failed: {api_result}"
+            warnings.append(warning)
+            source_trace.append(_source_trace_entry(
+                provider="api",
+                success=False,
+                warnings=[warning],
+                error=str(api_result),
+            ))
+        else:
+            api_items = api_result
+            source_trace.append(_source_trace_entry(
+                provider="api",
+                success=bool(api_items),
+                items_count=len(api_items),
+            ))
+        if isinstance(firecrawl_result, Exception):
+            logger.warning("firecrawl acquisition failed: {}", firecrawl_result)
+            warning = f"firecrawl acquisition failed: {firecrawl_result}"
+            warnings.append(warning)
+            source_trace.append(_source_trace_entry(
+                provider="firecrawl",
+                success=False,
+                warnings=[warning],
+                error=str(firecrawl_result),
+            ))
+        else:
+            firecrawl_links = firecrawl_result
+            source_trace.append(_source_trace_entry(
+                provider="firecrawl",
+                success=bool(firecrawl_links),
+                items_count=len(firecrawl_links),
+            ))
 
     candidates = _merge_and_dedupe(api_items, firecrawl_links)
 
@@ -421,6 +521,7 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
             downloads=[],
             warnings=warnings,
             route=route,
+            raw={"source_trace": [asdict(entry) for entry in source_trace]},
             candidate_links=[],
         ).model_dump()
 
@@ -478,6 +579,7 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
             downloads=[],
             warnings=warnings,
             route=route,
+            raw={"source_trace": [asdict(entry) for entry in source_trace]},
             candidate_links=clean_candidates,
         ).model_dump()
 

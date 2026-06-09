@@ -142,9 +142,12 @@ describe("buildLiteratureRows", () => {
       "likely pathogenic",
     ]);
     // Verify avgConfidence is a number (not falsy-gated — 0 is a valid value)
-    assert.equal(typeof rows[0].avgConfidence, "number");
+    const firstAvgConfidence = rows[0].avgConfidence;
+    if (typeof firstAvgConfidence !== "number") {
+      throw new Error("avgConfidence must be a number");
+    }
     // Weighted avg: (0.92*12 + 0.82*8) / 20 = 0.88. Tolerance matches toBeCloseTo default (0.005).
-    assert.ok(Math.abs(rows[0].avgConfidence - 0.88) < 0.005);
+    assert.ok(Math.abs(firstAvgConfidence - 0.88) < 0.005);
 
     // Verify rows[1] (doc-2 with null fields) — prevents null-aggregation regressions
     assert.equal(rows[1].documentId, "doc-2");
@@ -216,5 +219,46 @@ describe("evidence document helpers", () => {
 
     assert.equal(counts.classification, 1);
     assert.equal(counts.functional, 1);
+  });
+
+  it("uses value fallback when snippet offsets have no marked range", () => {
+    const detail: EvidenceGroupDetailResponse = {
+      ...DETAIL,
+      original_document_text: "Testing confirmed RB expression.",
+      items: [{
+        canonical_evidence_id: "ev-rb",
+        field_id: "A.gene_symbol",
+        category: "A",
+        review_status: "provisional",
+        value: "RB",
+      }],
+      traces: [{
+        canonical_evidence_id: "ev-rb",
+        field_id: "A.gene_symbol",
+        field_name: "Gene symbol",
+        original_value: "RB",
+        translated_value: null,
+        alignment_confidence: null,
+        original: {
+          text: "Testing confirmed RB expression.",
+          highlight_start: 0,
+          highlight_end: 0,
+          source_span: {},
+        },
+        translated: null,
+      }],
+    };
+
+    const document = buildEvidenceDocument(detail, "original");
+
+    assert.deepEqual(document.paragraphs[0].highlights.map((highlight) => ({
+      start: highlight.start,
+      end: highlight.end,
+      tone: highlight.tone,
+    })), [{
+      start: 18,
+      end: 20,
+      tone: "gene",
+    }]);
   });
 });

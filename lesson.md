@@ -1531,3 +1531,30 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 **解决方案：** 在旧测试中显式 patch `_refresh_search_index()`，保留原有 profile refresh 和 audit ordering 断言；新增独立测试验证 `_refresh_search_index()` 会委派给 `SearchIndexRepository.refresh()`。
 
 **预防措施：** 服务方法新增写后 side effect 时，同步检查所有 patch 级单元测试是否需要隔离该 side effect，并为新增 side effect 添加单独委派测试。
+
+## 2026-06-09: Bilingual comparison review follow-up
+
+**问题描述：** 原文/译文对照高亮在缺失 offset、文档全局 offset、短基因符号和前端 fallback 场景下不稳定；online acquisition 的 Firecrawl/web 路径错误不可观测；evidence provider 缺 API key 时错误信息滞后且不清晰。
+
+**排查过程：**
+1. 对照 review 列表逐项检查当前 `dev` 实现，确认部分反馈来自另一工作树路径，但核心问题在当前模块仍存在。
+2. 先跑相关测试，发现基线已有 SearchIndex 契约测试和 provider mock 测试失配，以及前端 Node 测试 TypeScript 空值收窄失败。
+3. 为缺失 offset、两字符基因符号、prefer=web 失败、source_trace、下载异常日志、provider 缺 key、前端 value fallback 补复现测试。
+
+**根因分析：**
+1. `_build_highlight()` 把缺失 offset 当作合法 `0/text_len`，导致无 offset 时整段或错误区间被高亮。
+2. value fallback 用固定 `len(value) >= 3` 门槛，避免了单字符误报，但也误杀了 `RB` 这类两字符大写基因符号。
+3. workflow phase 1 没有按 `prefer` 分支建立清晰的错误处理和 trace 记录，`gather(return_exceptions=True)` 后也丢弃了非下载结果异常。
+4. provider 直接把空 key 池交给底层 LLM adapter，导致错误延迟到客户端初始化或首次调用。
+
+**解决方案：**
+1. offset 解析改为保留 `None`，缺失/越界时优先用安全 value anchor；两字符 fallback 只允许独立的大写 token，单字符仍禁用。
+2. workflow 尊重 `prefer=web/api/auto`，失败时写入 warnings，并在 `raw.source_trace` 暴露 provider trace。
+3. `_download_candidates()` 对 unexpected exception 写 warning，避免静默丢弃。
+4. `LangChainEvidenceProvider` 在创建客户端前合并单 key 和 key pool，并对空 key 池快速抛出明确配置错误。
+5. 前端 full-text reader 增加同样的安全 value fallback，测试用显式类型收窄避免 `node:assert` 无法帮助 TypeScript 缩窄类型。
+
+**预防措施：**
+- 高亮逻辑必须区分“offset 缺失”“offset 可解析但越界”和“offset 合法需 clamp”三种状态。
+- `return_exceptions=True` 的结果必须逐项记录异常，不允许只用 `isinstance(success_type)` 过滤。
+- LLM provider 初始化前必须验证配置契约，避免把空凭证传给底层客户端。
