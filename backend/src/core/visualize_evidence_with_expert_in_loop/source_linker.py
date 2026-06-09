@@ -27,31 +27,51 @@ class SourceLinker:
     ) -> TrackSpan | None:
         """Retrieve source span for one track (original or translated).
 
-        Loads the canonical item first to resolve the best run via
-        current_best_run_evidence_id, then fetches that run item.
-        Returns None if the canonical item or its best run doesn't exist.
+        Resolution strategy:
+        1. Load canonical item to get identity fields and current_best_run_evidence_id.
+        2. If the best run matches the requested track, use it directly.
+        3. Otherwise, find a run item by identity tuple + track.
         """
-        # Step 1: load canonical item to get the best run pointer
+        # Step 1: load canonical item
         canonical_stmt = select(CanonicalEvidenceItem).where(
             CanonicalEvidenceItem.canonical_evidence_id == canonical_evidence_id,
         )
         canonical_result = await self._session.execute(canonical_stmt)
         canonical = canonical_result.scalar_one_or_none()
 
-        if canonical is None or canonical.current_best_run_evidence_id is None:
+        if canonical is None:
             return None
 
-        # Step 2: load the best run evidence item
-        run_stmt = select(RunEvidenceItem).where(
-            RunEvidenceItem.run_evidence_item_id == canonical.current_best_run_evidence_id,
-        )
-        run_result = await self._session.execute(run_stmt)
-        item = run_result.scalar_one_or_none()
+        # Step 2: try the best run first (fast path)
+        item = None
+        if canonical.current_best_run_evidence_id is not None:
+            best_stmt = select(RunEvidenceItem).where(
+                RunEvidenceItem.run_evidence_item_id == canonical.current_best_run_evidence_id,
+            )
+            best_result = await self._session.execute(best_stmt)
+            best_item = best_result.scalar_one_or_none()
+            if best_item is not None and best_item.track == track:
+                item = best_item
+
+        # Step 3: fallback — find by identity tuple + track
+        if item is None:
+            fallback_stmt = (
+                select(RunEvidenceItem)
+                .where(
+                    RunEvidenceItem.source_document_id == canonical.source_document_id,
+                    RunEvidenceItem.field_id == canonical.field_id,
+                    RunEvidenceItem.position_hash == canonical.position_hash,
+                    RunEvidenceItem.entity_scope_hash == canonical.entity_scope_hash,
+                    RunEvidenceItem.track == track,
+                )
+                .limit(1)
+            )
+            fallback_result = await self._session.execute(fallback_stmt)
+            item = fallback_result.scalar_one_or_none()
 
         if item is None:
             return None
 
-        # Step 3: extract span from the run item
         return self._build_track_span(track, item.source_span or {})
 
     @staticmethod
