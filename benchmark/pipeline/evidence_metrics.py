@@ -15,6 +15,7 @@ from sqlalchemy import func, select, case, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.dao.postgresql.models import (
+    CanonicalEvidenceItem,
     EvidenceEntityBinding,
     RunEvidenceItem,
 )
@@ -262,12 +263,16 @@ async def query_evidence_metrics(
         found_key_fields = {r.field_id for r in (await session.execute(stmt)).all()}
         key_field_found = {f: (f in found_key_fields) for f in _KEY_FIELDS}
 
-        # ── canonical_evidence_items (distinct canonical IDs linked to this run) ──
+        # ── canonical_evidence_items (distinct canonical items linked to this run) ──
         stmt = (
-            select(func.count(func.distinct(RunEvidenceItem.canonical_evidence_id)))
+            select(func.count(func.distinct(CanonicalEvidenceItem.canonical_evidence_id)))
+            .join(
+                RunEvidenceItem,
+                CanonicalEvidenceItem.current_best_run_evidence_id == RunEvidenceItem.run_evidence_item_id,
+            )
             .where(
                 RunEvidenceItem.processing_run_id == run_id,
-                RunEvidenceItem.canonical_evidence_id.isnot(None),
+                CanonicalEvidenceItem.current_best_run_evidence_id.isnot(None),
             )
         )
         canonical_count: int = (await session.execute(stmt)).scalar_one() or 0
