@@ -15,6 +15,7 @@ export interface EvidenceSearchQuery {
 export interface EvidenceSearchResult {
   group_id: string;
   source_document_id: string;
+  title?: string | null;
   pmid?: string | null;
   doi?: string | null;
   gene?: string | null;
@@ -54,6 +55,14 @@ export interface EvidenceGroupItem {
   page?: number | null;
 }
 
+export type EvidenceHighlightTone =
+  | "classification"
+  | "disease"
+  | "functional"
+  | "gene"
+  | "neutral"
+  | "variant";
+
 export interface EvidenceChainHighlight {
   text: string;
   highlight_start: number;
@@ -66,6 +75,8 @@ export interface EvidenceTrackTrace {
   canonical_evidence_id: string;
   field_id: string;
   field_name?: string | null;
+  original_value?: string | null;
+  translated_value?: string | null;
   original?: EvidenceChainHighlight | null;
   translated?: EvidenceChainHighlight | null;
   alignment_confidence?: number | null;
@@ -74,8 +85,11 @@ export interface EvidenceTrackTrace {
 export interface EvidenceGroupDetailResponse {
   group_id: string;
   source_document_id: string;
+  title?: string | null;
   pmid?: string | null;
   doi?: string | null;
+  original_document_text?: string | null;
+  translated_document_text?: string | null;
   gene?: string | null;
   variant?: string | null;
   disease?: string | null;

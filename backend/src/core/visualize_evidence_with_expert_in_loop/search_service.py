@@ -1,7 +1,10 @@
 """Evidence search service with field-level pivoting."""
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 from loguru import logger
 
@@ -20,6 +23,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
 )
 from src.dao.postgresql.models import (
     CanonicalEvidenceItem,
+    SourceDocument,
     SourceDocumentIdentifier,
 )
 
@@ -101,6 +105,51 @@ def _build_highlight(
         source_span=source_span,
     )
 
+
+
+def _load_full_document_text(
+    source_document_id: str | UUID,
+    track: str = "original",
+) -> str | None:
+    """Load full text content for a source document from phase 2 pipeline output.
+
+    Looks for JSON files in the pipeline data directory structure.
+    Returns concatenated text from all blocks, or None if not found.
+    """
+    # Base data directory
+    data_root = Path(__file__).resolve().parents[4] / "data" / "pipeline"
+    if not data_root.exists():
+        return None
+
+    # Convert UUID to string
+    doc_id_str = str(source_document_id)
+
+    # Search for the document across all pipeline runs
+    for pipeline_dir in data_root.iterdir():
+        if not pipeline_dir.is_dir():
+            continue
+        phase2_dir = pipeline_dir / "phase_2"
+        if not phase2_dir.exists():
+            continue
+        doc_dir = phase2_dir / doc_id_str
+        if not doc_dir.exists():
+            continue
+        
+        # Load the requested track
+        doc_file = doc_dir / f"{track}.json"
+        if not doc_file.exists():
+            continue
+
+        try:
+            with open(doc_file, "r", encoding="utf-8") as f:
+                doc_data = json.load(f)
+            # Concatenate all text blocks
+            return "\n\n".join(block.get("text", "").strip() for block in doc_data.get("blocks", []) if block.get("text"))
+        except Exception:
+            logger.warning("Failed to load full {} text for document {}", track, doc_id_str)
+            return None
+
+    return None
 
 class SearchService:
     """Search evidence cards grouped by group_id, pivoting field-level extractions."""
@@ -230,6 +279,7 @@ class SearchService:
         # Batch-load identifiers for all source documents
         doc_ids = {g["source_document_id"] for g in groups.values()}
         ident_map: dict[str, dict[str, str]] = {}
+        title_map: dict[str, str] = {}
         if doc_ids:
             ident_stmt = select(SourceDocumentIdentifier).where(
                 SourceDocumentIdentifier.source_document_id.in_(doc_ids)
@@ -238,6 +288,21 @@ class SearchService:
             for ident in ident_result.scalars():
                 ident_map.setdefault(str(ident.source_document_id), {})
                 ident_map[str(ident.source_document_id)][ident.identifier_type] = ident.identifier_value
+
+            metadata_stmt = select(
+                SourceDocument.source_document_id,
+                SourceDocument.raw_metadata,
+            ).where(SourceDocument.source_document_id.in_(doc_ids))
+            metadata_result = await self._session.execute(metadata_stmt)
+            for row in metadata_result.all():
+                raw_metadata = row.raw_metadata or {}
+                title = (
+                    _coerce_str(raw_metadata.get("title"))
+                    if isinstance(raw_metadata, dict)
+                    else None
+                )
+                if title:
+                    title_map[str(row.source_document_id)] = title
 
         # Build results with pagination
         total = len(groups)
@@ -261,6 +326,7 @@ class SearchService:
                 EvidenceSearchResult(
                     group_id=g["group_id"],
                     source_document_id=g["source_document_id"],
+                    title=title_map.get(str(g["source_document_id"])),
                     pmid=doc_ident.get("pmid"),
                     doi=doc_ident.get("doi"),
                     gene=g["gene"],
@@ -313,6 +379,16 @@ class SearchService:
             ident.identifier_type: ident.identifier_value
             for ident in ident_result.scalars().all()
         }
+        metadata_stmt = select(SourceDocument.raw_metadata).where(
+            SourceDocument.source_document_id == source_document_id
+        )
+        metadata_result = await self._session.execute(metadata_stmt)
+        raw_metadata = metadata_result.scalar_one_or_none() or {}
+        title = (
+            _coerce_str(raw_metadata.get("title"))
+            if isinstance(raw_metadata, dict)
+            else None
+        )
 
         distribution = EvidenceFieldDistribution()
         detail_items: list[EvidenceGroupItem] = []
@@ -455,8 +531,15 @@ class SearchService:
         return EvidenceGroupDetailResponse(
             group_id=group_id,
             source_document_id=source_document_id,
+            title=title,
             pmid=identifiers.get("pmid"),
             doi=identifiers.get("doi"),
+            original_document_text=_load_full_document_text(
+                source_document_id, track="original"
+            ),
+            translated_document_text=_load_full_document_text(
+                source_document_id, track="translated"
+            ),
             gene=gene,
             variant=variant,
             disease=disease,

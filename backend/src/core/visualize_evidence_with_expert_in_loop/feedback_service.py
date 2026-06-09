@@ -93,6 +93,7 @@ class FeedbackService:
                 change_reason=patch.change_reason,
             )
             await self._refresh_literature_profile(evidence.source_document_id)
+            await self._refresh_search_index()
 
         return PatchResult(
             canonical_evidence_id=canonical_evidence_id,
@@ -113,3 +114,13 @@ class FeedbackService:
 
         repo = LiteratureProfileRepository(self._session)
         await repo.refresh_for_document(source_document_id)
+
+    async def _refresh_search_index(self) -> None:
+        """Rebuild the frontend search index after evidence changes.
+
+        Lazy-imports SearchIndexRepository to avoid circular imports.
+        """
+        from src.dao.postgresql.search_index_repo import SearchIndexRepository
+
+        repo = SearchIndexRepository(self._session)
+        await repo.refresh()

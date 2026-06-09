@@ -6,6 +6,7 @@ import type {
 export interface LiteratureEvidenceRow {
   documentId: string;
   representativeGroupId: string;
+  title?: string | null;
   pmid?: string | null;
   doi?: string | null;
   genes: string[];
@@ -55,6 +56,7 @@ export function buildLiteratureRows(
       row = {
         documentId,
         representativeGroupId: item.group_id,
+        title: item.title,
         pmid: item.pmid,
         doi: item.doi,
         genes: [],
@@ -72,6 +74,9 @@ export function buildLiteratureRows(
       rows.set(documentId, row);
     }
 
+    if (!row.title && item.title?.trim()) {
+      row.title = item.title;
+    }
     appendUnique(row.genes, item.gene);
     appendUnique(row.variants, item.variant);
     appendUnique(row.diseases, item.disease);

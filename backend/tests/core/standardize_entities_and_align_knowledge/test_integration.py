@@ -57,6 +57,9 @@ class FakeRepository:
     async def refresh_literature_profile(self, source_document_id: str) -> None:
         pass
 
+    async def refresh_search_index(self) -> None:
+        pass
+
 
 class FakeSimilarityMatcher:
     """Similarity matcher stub that always returns unmapped for test isolation."""

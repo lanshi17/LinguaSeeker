@@ -6,6 +6,11 @@ export { EvidenceDetailView } from "./components/EvidenceDetailView";
 export { useEvidenceSearch } from "./hooks/useEvidenceSearch";
 export { useEvidenceGroupDetail } from "./hooks/useEvidenceGroupDetail";
 export {
+  buildEvidenceDocument,
+  countEvidenceHighlightTones,
+  evidenceToneForItem,
+} from "./utils/evidenceDocument";
+export {
   buildBilingualCompareHref,
   buildLiteratureRows,
   findInitialEvidenceId,
@@ -15,9 +20,16 @@ export type {
   EvidenceFieldDistribution,
   EvidenceGroupDetailResponse,
   EvidenceGroupItem,
+  EvidenceHighlightTone,
   EvidenceSearchQuery,
   EvidenceSearchResult,
   EvidenceSearchResponse,
   EvidenceTrackTrace,
 } from "./types/evidenceSearch";
+export type {
+  EvidenceDocument,
+  EvidenceDocumentHighlight,
+  EvidenceDocumentParagraph,
+  EvidenceToneCounts,
+} from "./utils/evidenceDocument";
 export type { LiteratureEvidenceRow } from "./utils/literatureRows";
