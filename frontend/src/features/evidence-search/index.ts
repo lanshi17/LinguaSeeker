@@ -7,6 +7,9 @@ export { useEvidenceSearch } from "./hooks/useEvidenceSearch";
 export { useEvidenceGroupDetail } from "./hooks/useEvidenceGroupDetail";
 export {
   buildEvidenceDocument,
+  CATEGORY_COLORS,
+  EVIDENCE_CATEGORIES,
+  countEvidenceCategories,
   countEvidenceHighlightTones,
   evidenceToneForItem,
 } from "./utils/evidenceDocument";

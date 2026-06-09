@@ -4,6 +4,7 @@ import type {
   EvidenceChainHighlight,
   EvidenceHighlightTone,
 } from "../types/evidenceSearch";
+import { CATEGORY_COLORS } from "../utils/evidenceDocument";
 
 export type { EvidenceHighlightTone } from "../types/evidenceSearch";
 
@@ -13,6 +14,7 @@ interface EvidenceHighlightTextProps {
   anchorValue?: string | null;
   label?: string;
   tone?: EvidenceHighlightTone;
+  category?: string | null;
 }
 
 const TONE_STYLES: Record<EvidenceHighlightTone, string> = {
@@ -57,6 +59,7 @@ export function EvidenceHighlightText({
   anchorValue,
   label,
   tone = "neutral",
+  category,
 }: EvidenceHighlightTextProps) {
   if (!highlight || !highlight.text) {
     return (
@@ -94,7 +97,13 @@ export function EvidenceHighlightText({
         {before}
         {hasMark ? (
           <mark
-            className={`rounded px-1 py-0.5 font-medium ${active ? TONE_STYLES[tone] : "bg-yellow-100 text-gray-900"}`}
+            className={`rounded px-1 py-0.5 font-medium ${
+              active
+                ? category && CATEGORY_COLORS[category]
+                  ? CATEGORY_COLORS[category].mark
+                  : TONE_STYLES[tone]
+                : "bg-yellow-100 text-gray-900"
+            }`}
           >
             {marked}
           </mark>

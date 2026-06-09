@@ -11,10 +11,87 @@ export interface EvidenceDocumentHighlight {
   fieldId: string;
   label: string;
   tone: EvidenceHighlightTone;
+  category?: string | null;
   start: number;
   end: number;
   selected: boolean;
 }
+
+/**
+ * Per-category color palette for the 10 evidence categories (A–J).
+ *
+ * Each entry contains Tailwind utility strings for:
+ * - `chip`: border + bg + text used on pills / layer toggles
+ * - `mark`: highlight style used on `<mark>` in the document reader
+ */
+export const CATEGORY_COLORS: Record<
+  string,
+  { chip: string; mark: string; label: string; hex: string }
+> = {
+  A: {
+    label: "Variant information",
+    hex: "#F59E0B",
+    chip: "border-amber-200 bg-amber-50 text-amber-800",
+    mark: "bg-amber-200 text-amber-950 ring-1 ring-amber-300",
+  },
+  B: {
+    label: "Case and phenotype",
+    hex: "#3B82F6",
+    chip: "border-blue-200 bg-blue-50 text-blue-800",
+    mark: "bg-blue-200 text-blue-950 ring-1 ring-blue-300",
+  },
+  C: {
+    label: "Segregation",
+    hex: "#8B5CF6",
+    chip: "border-violet-200 bg-violet-50 text-violet-800",
+    mark: "bg-violet-200 text-violet-950 ring-1 ring-violet-300",
+  },
+  D: {
+    label: "Population frequency",
+    hex: "#06B6D4",
+    chip: "border-cyan-200 bg-cyan-50 text-cyan-800",
+    mark: "bg-cyan-200 text-cyan-950 ring-1 ring-cyan-300",
+  },
+  E: {
+    label: "Computational evidence",
+    hex: "#10B981",
+    chip: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    mark: "bg-emerald-200 text-emerald-950 ring-1 ring-emerald-300",
+  },
+  F: {
+    label: "Functional evidence",
+    hex: "#22C55E",
+    chip: "border-green-200 bg-green-50 text-green-800",
+    mark: "bg-green-200 text-green-950 ring-1 ring-green-300",
+  },
+  G: {
+    label: "Case-control evidence",
+    hex: "#F97316",
+    chip: "border-orange-200 bg-orange-50 text-orange-800",
+    mark: "bg-orange-200 text-orange-950 ring-1 ring-orange-300",
+  },
+  H: {
+    label: "Contradiction evidence",
+    hex: "#EF4444",
+    chip: "border-red-200 bg-red-50 text-red-800",
+    mark: "bg-red-200 text-red-950 ring-1 ring-red-300",
+  },
+  I: {
+    label: "Gene function",
+    hex: "#14B8A6",
+    chip: "border-teal-200 bg-teal-50 text-teal-800",
+    mark: "bg-teal-200 text-teal-950 ring-1 ring-teal-300",
+  },
+  J: {
+    label: "Authority and validity",
+    hex: "#EC4899",
+    chip: "border-pink-200 bg-pink-50 text-pink-800",
+    mark: "bg-pink-200 text-pink-950 ring-1 ring-pink-300",
+  },
+};
+
+/** Ordered list of known category keys. */
+export const EVIDENCE_CATEGORIES = Object.keys(CATEGORY_COLORS);
 
 export interface EvidenceDocumentParagraph {
   id: string;
@@ -39,7 +116,10 @@ const EMPTY_TONE_COUNTS: EvidenceToneCounts = {
   variant: 0,
 };
 
-function categoryFromItem(item: EvidenceGroupItem) {
+function categoryFromItem(item?: EvidenceGroupItem | null) {
+  if (!item) {
+    return null;
+  }
   if (item.category) {
     return item.category;
   }
@@ -72,6 +152,20 @@ export function evidenceToneForItem(
     return "functional";
   }
   return "neutral";
+}
+
+/** Count evidence items per category letter (A–J). */
+export function countEvidenceCategories(
+  items: EvidenceGroupItem[],
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const item of items) {
+    const cat = categoryFromItem(item);
+    if (cat) {
+      counts[cat] = (counts[cat] ?? 0) + 1;
+    }
+  }
+  return counts;
 }
 
 export function countEvidenceHighlightTones(
@@ -191,6 +285,7 @@ export function buildEvidenceDocument(
     "variant",
   ]),
   selectedEvidenceId?: string | null,
+  enabledCategories?: ReadonlySet<string> | null,
 ): EvidenceDocument {
   const items = itemByEvidenceId(detail);
   const fullText = fullTextForTrack(detail, track)?.trim();
@@ -205,6 +300,10 @@ export function buildEvidenceDocument(
       const item = items.get(trace.canonical_evidence_id);
       const tone = evidenceToneForItem(item);
       if (!enabledTones.has(tone)) {
+        return [];
+      }
+      const cat = categoryFromItem(item);
+      if (enabledCategories && cat && !enabledCategories.has(cat)) {
         return [];
       }
 
@@ -222,6 +321,7 @@ export function buildEvidenceDocument(
         fieldId: trace.field_id,
         label: labelForTrace(trace),
         tone,
+        category: categoryFromItem(item),
         start: range.start,
         end: range.end,
         selected: trace.canonical_evidence_id === selectedEvidenceId,
@@ -248,8 +348,9 @@ export function buildEvidenceDocument(
 
       const item = items.get(trace.canonical_evidence_id);
       const tone = evidenceToneForItem(item);
+      const cat = categoryFromItem(item);
       const highlights: EvidenceDocumentHighlight[] = [];
-      if (enabledTones.has(tone)) {
+      if (enabledTones.has(tone) && (!enabledCategories || !cat || enabledCategories.has(cat))) {
         const range = clampHighlight(highlight);
         if (range.end > range.start) {
           highlights.push({
@@ -257,6 +358,7 @@ export function buildEvidenceDocument(
             fieldId: trace.field_id,
             label: labelForTrace(trace),
             tone,
+            category: categoryFromItem(item),
             start: range.start,
             end: range.end,
             selected: trace.canonical_evidence_id === selectedEvidenceId,
