@@ -203,6 +203,8 @@ class ChatService:
         evidence = result.scalar_one()
 
         payload = evidence.active_payload
+        best_run_id = evidence.current_best_run_evidence_id
+
         context_parts = [
             "**Evidence Card**",
             f"Gene: {payload.get('gene', 'N/A')}",
@@ -214,45 +216,39 @@ class ChatService:
             f"Summary: {payload.get('summary', 'N/A')}",
         ]
 
-        stmt = (
-            select(NormalizedEntity)
-            .join(
-                EvidenceEntityBinding,
-                EvidenceEntityBinding.entity_id == NormalizedEntity.entity_id,
+        if best_run_id:
+            # Entity bindings via current_best_run_evidence_id
+            stmt = (
+                select(NormalizedEntity)
+                .join(
+                    EvidenceEntityBinding,
+                    EvidenceEntityBinding.entity_id == NormalizedEntity.entity_id,
+                )
+                .where(
+                    EvidenceEntityBinding.run_evidence_item_id == best_run_id,
+                )
             )
-            .where(
-                EvidenceEntityBinding.run_evidence_item_id.in_(
-                    select(RunEvidenceItem.run_evidence_item_id).where(
-                        RunEvidenceItem.canonical_evidence_id == canonical_evidence_id
+            result = await self._session.execute(stmt)
+            entities = result.scalars().all()
+
+            if entities:
+                context_parts.append("\n**Associated Entities**")
+                for entity in entities[:5]:
+                    context_parts.append(
+                        f"- {entity.entity_type}: {entity.display_name} ({entity.external_id})"
                     )
-                )
+
+            # Source snippet from the best run item
+            stmt = select(RunEvidenceItem).where(
+                RunEvidenceItem.run_evidence_item_id == best_run_id,
             )
-        )
-        result = await self._session.execute(stmt)
-        entities = result.scalars().all()
+            result = await self._session.execute(stmt)
+            run_item = result.scalar_one_or_none()
 
-        if entities:
-            context_parts.append("\n**Associated Entities**")
-            for entity in entities[:5]:
-                context_parts.append(
-                    f"- {entity.entity_type}: {entity.display_name} ({entity.external_id})"
-                )
-
-        stmt = (
-            select(RunEvidenceItem)
-            .where(
-                RunEvidenceItem.canonical_evidence_id == canonical_evidence_id,
-                RunEvidenceItem.track == "original",
-            )
-            .limit(1)
-        )
-        result = await self._session.execute(stmt)
-        run_item = result.scalar_one_or_none()
-
-        if run_item and run_item.source_span:
-            snippet = run_item.source_span.get("text_snippet", "")[:300]
-            if snippet:
-                context_parts.append(f"\n**Source Text**\n{snippet}")
+            if run_item and run_item.source_span:
+                snippet = run_item.source_span.get("text_snippet", "")[:300]
+                if snippet:
+                    context_parts.append(f"\n**Source Text**\n{snippet}")
 
         return "\n".join(context_parts)
 
