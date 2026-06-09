@@ -4,15 +4,12 @@
 
 | Layer | Technology | Version | Current Role |
 |---|---|---|---|
-| Frontend | Next.js | 15 | App Router, SSR, API proxy, tab-based layout |
+| Frontend | Next.js | 16 | App Router, SSR, API proxy |
 | UI | React | 18 | Component model, concurrent features |
 | Language | TypeScript | 5.5+ | Strict frontend type safety |
 | Styling | Tailwind CSS | 3.4 | Utility-first UI styling |
-| UI Components | shadcn/ui (Radix UI) | latest | Headless primitives: Drawer, Dialog, Accordion, Command (HPO autocomplete), Tabs |
-| Chat/Streaming | Vercel AI SDK | 4.x | `useChat` hook, SSE streaming, `streamUI` for inline evidence cards |
-| Markdown Render | react-markdown + remark-gfm | 9.x / 4.x | Workspace MD view with custom anchor components |
-| Syntax Highlight | shiki | 1.x | SQL/ddl/dml 代码块语法高亮 (TextMate grammars, github-dark 主题) |
-| State | Zustand | 4.5 | `chatStore` (messages, editing card ID), `workspaceStore` (highlight anchor, reviewed cards), `taskBoardStore` (filters, selection) |
+| UI Components | Ant Design + Ant Design X | 6.x / 2.x | Component library and chat/conversation primitives |
+| State | Zustand | 4.5 | App store (sidebar collapse, theme), toast store |
 | Server State | React Query + Axios | 5.50 / 1.7 | Server state caching + HTTP client |
 | Backend | FastAPI | 0.111+ | Async API, auth, tasks, orchestration |
 | Python | CPython | 3.12+ | Backend runtime |
@@ -26,12 +23,11 @@
 | Vector Search | pgvector | — | Entity fuzzy matching and feedback dataset retrieval |
 | Database | PostgreSQL | 16 | Current MVP primary store |
 | Task Runtime State | In-memory | — | Pending/running task status in MVP |
-| Graph DB | Neo4j | 5.x | P1/future knowledge graph exploration, not current MVP dependency |
-| Cache/Queue | Redis | 8.0 | P1/future distributed cache/runtime |
+| Graph DB | Neo4j | 5.x | Placeholder; future knowledge graph exploration |
+| Cache/Queue | Redis | 8.0 | Used for caching; future distributed runtime |
 | Storage | Local filesystem | — | Current document/result storage |
-| Object Storage | MinIO | — | Deferred production storage option |
-| PDF Parsing | MinerU API | v4 | PDF → Markdown/HTML + layout/bbox JSON |
-| OCR Fallback | PaddleOCR VLM | — | Fallback only with source anchors/bbox-backed spans |
+| Object Storage | MinIO | — | Placeholder; deferred production storage option |
+| PDF Parsing | MinerU API | v4 | PDF to Markdown/HTML + layout/bbox JSON |
 | DOCX Parsing | Python DOCX tooling + files-io boundary | — | DOCX text/table/image extraction |
 | Native Extraction LLM | OpenAI-compatible custom API | — | Original-language evidence extraction |
 | Translation LLM | OpenAI-compatible MT model | — | English/Chinese translation for review and secondary extraction |
@@ -44,7 +40,7 @@
 | Backend Tests | pytest + pytest-asyncio | 9.0+ / 1.3+ | Unit and async tests |
 | Frontend Verification | ESLint + TypeScript check | — | Current frontend verification |
 | Backend Linting | Ruff | 0.5+ | Google Python Style |
-| Frontend Linting | ESLint | 8.57+ | Google TypeScript Style |
+| Frontend Linting | ESLint | 9.x | Google TypeScript Style |
 | Container | Docker Compose | — | Local development orchestration |
 | Python Package Tool | uv | — | Python dependency management |
 | JS Package Tool | nvm + npm | — | Node dependency management |
@@ -72,7 +68,7 @@ shared/            reusable clients, telemetry, persistence, low-level utilities
 config/            environment-backed settings
 ```
 
-In this repository the backend mapping is `src/agents/` for orchestration, `src/core/<phase-or-feature>/` for feature slices, `src/utils/` + `src/dao/` + Rust crates for shared infrastructure, and `src/core/config.py` for configuration. The frontend mapping is route pages as composition/orchestration, feature-oriented components/hooks as vertical slices, and `lib/api`, `lib/types`, `stores`, and UI primitives as shared infrastructure.
+In this repository the backend mapping is `src/agents/` for orchestration, `src/core/<phase-or-feature>/` for feature slices, `src/utils/` + `src/dao/` + Rust crates for shared infrastructure, and `src/core/config.py` for configuration. The frontend mapping is route pages as composition/orchestration, feature-oriented components/hooks as vertical slices (`src/features/<name>/`), and `lib/api`, `lib/types`, `stores`, and UI primitives as shared infrastructure.
 
 Implementation rules:
 
@@ -90,22 +86,146 @@ Implementation rules:
 ```text
 backend/
 ├── src/
-│   ├── core/
-│   │   ├── config.py
-│   │   ├── ingest_and_digitize_data/                       # Phase 1
-│   │   │   ├── literature_acquisition/                     # Providers, gateway, PubMed/web
-│   │   │   ├── user_upload/                                # PDF/DOCX upload workflow
-│   │   │   └── ocr/                                        # MinerU/PaddleOCR/DOCX/layout anchors
-│   │   ├── cross_lingual_process_and_extract_evidence/     # Phase 2
-│   │   │   ├── extraction/                                 # Native + translated extraction
-│   │   │   ├── translation/                                # English/Chinese translation
-│   │   │   └── fusion/                                     # Cross-validation and bilingual anchor fusion
-│   │   ├── standardize_entities_and_align_knowledge/       # Phase 3
-│   │   └── visualize_evidence_with_expert_in_loop/         # Phase 4
-│   ├── api/                                                # FastAPI routes under /api/v1
-│   ├── agents/                                             # Agent orchestration
+│   ├── agents/                                             # Pipeline orchestrator
+│   │   ├── orchestrator.py                                 #   LangGraph workflow topology
+│   │   ├── runner.py                                       #   Pipeline run execution
+│   │   ├── concurrency.py                                  #   Concurrency controls
+│   │   ├── state_persistence.py                            #   State checkpoint persistence
+│   │   ├── contracts.py                                    #   Orchestrator Pydantic contracts
+│   │   ├── phase_1_adapter.py                              #   Phase 1 node adapter
+│   │   ├── phase_2_adapter.py                              #   Phase 2 node adapter
+│   │   ├── phase_3_adapter.py                              #   Phase 3 node adapter
+│   │   └── phase_4_factory.py                              #   Phase 4 node factory
+│   ├── api/                                                # FastAPI routes
+│   │   ├── auth.py                                         #   JWT auth endpoints
+│   │   ├── deps.py                                         #   Dependency injection
+│   │   ├── wiring.py                                       #   Router/app wiring
+│   │   ├── body_size_limit.py                              #   Request body size middleware
+│   │   ├── rate_limit.py                                   #   Rate limiting
+│   │   └── v1/                                             #   Versioned API routes
+│   │       ├── router.py                                   #     v1 router aggregation
+│   │       ├── pipeline.py                                 #     Pipeline submit/status
+│   │       ├── evidence.py                                 #     Evidence search/detail
+│   │       ├── chat.py                                     #     Chat sessions/messages
+│   │       ├── delta_audit.py                              #     Delta audit log
+│   │       └── source_link.py                              #     Source document linking
+│   ├── core/                                               # Feature slices
+│   │   ├── config.py                                       #   pydantic-settings singleton
+│   │   ├── config_loader.py                                #   Layered YAML config loading
+│   │   ├── ingest_and_digitize_data/                       #   Phase 1
+│   │   │   ├── document_acquisition/                       #     Literature acquisition
+│   │   │   │   ├── online_acquisition/                     #       Gateway, providers, search
+│   │   │   │   │   ├── gateway.py                          #         Provider gateway (calls net-io)
+│   │   │   │   │   ├── search_service.py                   #         Multi-provider search orchestration
+│   │   │   │   │   ├── pubmed_service.py                   #         PubMed-specific service
+│   │   │   │   │   ├── doi_fallback.py                     #         DOI resolution fallback
+│   │   │   │   │   ├── literature_type_classifier.py       #         Literature type detection
+│   │   │   │   │   ├── normalizers.py                      #         Result normalization
+│   │   │   │   │   ├── provider_health.py                  #         Provider health tracking
+│   │   │   │   │   ├── relevance_gate.py                   #         Relevance filtering
+│   │   │   │   │   ├── web/                                #         Python web scrapers
+│   │   │   │   │   │   ├── cyberleninka.py                 #           CyberLeninka (Russian)
+│   │   │   │   │   │   ├── hans_publishers.py              #           Hans Publishers (Chinese)
+│   │   │   │   │   │   ├── pubscholar.py                   #           PubScholar (Chinese)
+│   │   │   │   │   │   ├── koreascience.py                 #           KoreaScience (Korean)
+│   │   │   │   │   │   ├── chinaxiv.py                     #           ChinaXiv (Chinese)
+│   │   │   │   │   │   ├── redalyc.py                      #           Redalyc (Spanish/Portuguese)
+│   │   │   │   │   │   └── locators.py                     #           PDF URL locators
+│   │   │   │   │   └── web_search/                         #         Web search adapters
+│   │   │   │   │       ├── adapter.py                      #           Search adapter interface
+│   │   │   │   │       └── firecrawl_adapter.py            #           Firecrawl integration
+│   │   │   │   └── local_upload/                           #       PDF/DOCX upload workflow
+│   │   │   │       ├── service.py
+│   │   │   │       └── workflow.py
+│   │   │   └── parse_document/                             #     Document parsing
+│   │   │       ├── orchestrator.py                         #       Parse orchestration
+│   │   │       ├── service.py                              #       Parse service
+│   │   │       ├── local/                                  #       Local file parsing
+│   │   │       │   ├── parser.py
+│   │   │       │   └── helpers.py
+│   │   │       ├── remote/                                 #       Remote MinerU API parsing
+│   │   │       │   └── parser.py
+│   │   │       └── common/                                 #       Shared converters/parsers
+│   │   │           ├── converters.py
+│   │   │           └── parsers.py
+│   │   ├── cross_lingual_process_and_extract_evidence/     #   Phase 2
+│   │   │   ├── cross_lingual/                              #     Translation pipeline
+│   │   │   │   ├── format/                                 #       Formatting/segmentation
+│   │   │   │   └── translate/                              #       Translation with validation
+│   │   │   │       ├── translator.py
+│   │   │   │       ├── language_detector.py
+│   │   │   │       ├── providers.py
+│   │   │   │       ├── blocks.py
+│   │   │   │       ├── postprocess.py
+│   │   │   │       ├── prompts/                            #         Translation prompts
+│   │   │   │       └── validator/                          #         Translation quality validation
+│   │   │   ├── extract_evidence/                           #     Evidence extraction
+│   │   │   │   ├── workflow.py                             #       Extraction workflow
+│   │   │   │   ├── core.py                                 #       Core extraction logic
+│   │   │   │   ├── api.py                                  #       Orchestrator-facing adapter
+│   │   │   │   ├── providers.py                            #       LLM providers
+│   │   │   │   ├── contracts.py                            #       Typed extraction contracts
+│   │   │   │   ├── normalization.py                        #       Evidence normalization
+│   │   │   │   ├── chunking.py                             #       Document chunking
+│   │   │   │   ├── catalog.py                              #       Evidence type catalog
+│   │   │   │   ├── prompts.py                              #       Extraction prompts
+│   │   │   │   └── stages/                                 #       Multi-stage extraction
+│   │   │   │       ├── catalog_extraction.py
+│   │   │   │       ├── source_grounding.py
+│   │   │   │       ├── evidence_map.py
+│   │   │   │       ├── group_assignment.py
+│   │   │   │       ├── quality_validation.py
+│   │   │   │       └── special_evidence.py
+│   │   │   ├── workflow.py                                 #     Phase 2 top-level workflow
+│   │   │   ├── router.py                                   #     Phase 2 routing
+│   │   │   ├── contracts.py                                #     Phase 2 contracts
+│   │   │   └── persistence.py                              #     Phase 2 persistence
+│   │   ├── standardize_entities_and_align_knowledge/       #   Phase 3
+│   │   │   ├── core.py                                     #     Core standardization logic
+│   │   │   ├── api.py                                      #     Orchestrator-facing adapter
+│   │   │   ├── contracts.py                                #     Standardization contracts
+│   │   │   ├── providers.py                                #     External DB providers
+│   │   │   ├── adapters.py                                 #     External service adapters
+│   │   │   ├── matchers.py                                 #     Entity matching
+│   │   │   ├── normalizers.py                              #     Value normalization
+│   │   │   ├── importers.py                                #     Data importers
+│   │   │   ├── repositories.py                             #     Data repositories
+│   │   │   ├── precise_match/                              #     Exact/synonym matching
+│   │   │   └── similarity_match/                           #     Vector similarity matching
+│   │   │       ├── core.py
+│   │   │       ├── indexer.py
+│   │   │       ├── providers.py
+│   │   │       └── repositories.py
+│   │   └── visualize_evidence_with_expert_in_loop/         #   Phase 4
+│   │       ├── search_service.py                           #     Evidence search
+│   │       ├── chat_service.py                             #     Chat sessions
+│   │       ├── delta_audit_service.py                      #     Delta audit logging
+│   │       ├── feedback_service.py                         #     Expert feedback
+│   │       ├── source_linker.py                            #     Source document linking
+│   │       ├── providers.py                                #     LLM providers
+│   │       └── contracts.py                                #     Phase 4 contracts
 │   ├── dao/                                                # Data access layer
+│   │   ├── postgresql/                                     #   PostgreSQL via SQLAlchemy
+│   │   │   ├── connection.py                               #     Async engine/session
+│   │   │   ├── models.py                                   #     ORM models (all tables)
+│   │   │   ├── contracts.py                                #     DAO contracts
+│   │   │   ├── literature_profile_repo.py                  #     Literature profile repository
+│   │   │   └── search_index_repo.py                        #     Search index repository
+│   │   ├── redis/                                          #   Redis cache layer
+│   │   │   ├── connection.py
+│   │   │   └── cache_repo.py
+│   │   ├── neo4j/                                          #   Neo4j (placeholder)
+│   │   └── minio/                                          #   MinIO (placeholder)
 │   └── utils/                                              # Shared utilities
+│       ├── logger.py                                       #   loguru setup
+│       ├── middleware.py                                    #   Request middleware
+│       ├── exceptions.py                                   #   Custom exceptions
+│       ├── health.py                                       #   Health check
+│       ├── observability.py                                #   Telemetry/tracing
+│       ├── text.py                                         #   Text utilities
+│       ├── llm_adapter.py                                  #   LLM client adapter
+│       ├── llm_params.py                                   #   LLM parameter handling
+│       └── rust_io.py                                      #   Rust I/O Python bridge
 ├── libs/
 │   ├── rust-io/                                            # Canonical Python-facing Rust I/O facade
 │   ├── files-io/                                           # Unified local + S3 file I/O primitives
@@ -142,20 +262,35 @@ Python must handle:
 
 ### 3.3 Literature Providers
 
-| Provider | Search | Download Links | Language/Scope |
-|---|---|---|---|
-| Crossref | Yes | Metadata/link discovery | International |
-| OpenAlex | Yes | Metadata/link discovery | International |
-| EuropePMC | Yes | Metadata/link discovery | European/international |
-| PMC | Yes | Yes | Open access biomedical |
-| DOAJ | Yes | Yes | Open access journals |
-| JStage | Yes | Yes | Japanese |
-| Unpaywall | Yes | Yes | Open access resolution |
-| CyberLeninka | Yes | Yes | Russian |
-| Hans Publishers | Yes | Yes | Chinese |
-| PubScholar | Yes | Yes | Chinese |
+#### Rust net-io Providers (HTTP/search via Rust)
 
-JS-rendered scraping remains a Python concern when needed.
+| Provider | File | Language/Scope |
+|---|---|---|
+| OpenAlex | `openalex.rs` | International |
+| Crossref | `crossref.rs` | International |
+| EuropePMC | `europepmc.rs` | European/international |
+| arXiv | `arxiv.rs` | Preprints |
+| PMC | `pmc.rs` | Open access biomedical |
+| bioRxiv | `biorxiv.rs` | Biology preprints |
+| SciELO | `scielo.rs` | Latin American |
+| CiNII | `cinii.rs` | Japanese |
+| J-STAGE | `jstage.rs` | Japanese |
+| DOAJ | `doaj.rs` | Open access journals |
+| Unpaywall | `unpaywall.rs` | Open access resolution |
+| OpenAIRE | `openaire.rs` | European open science |
+| CORE Search | `core_search.rs` | Open access aggregation |
+| BASE Search | `base_search.rs` | Academic search engine |
+
+#### Python Web Scrapers (JS-rendered or site-specific)
+
+| Scraper | File | Language/Scope |
+|---|---|---|
+| CyberLeninka | `web/cyberleninka.py` | Russian |
+| Hans Publishers | `web/hans_publishers.py` | Chinese |
+| PubScholar | `web/pubscholar.py` | Chinese |
+| KoreaScience | `web/koreascience.py` | Korean |
+| ChinaXiv | `web/chinaxiv.py` | Chinese preprints |
+| Redalyc | `web/redalyc.py` | Spanish/Portuguese |
 
 ### 3.4 Model Server and Model Roles
 
@@ -168,11 +303,9 @@ Standalone FastAPI model service exposes OpenAI-compatible endpoints:
 
 | Role | Config Prefix | Example | Use Case |
 |---|---|---|---|
-| Native Extraction | `LLM_*` | deepseek-v4-flash | Source-language evidence extraction |
-| Translation | `MT_*` | qwen-mt-flash | English/Chinese translation for review and secondary extraction |
-| Secondary Extraction | `LLM_*` or `SECONDARY_EXTRACTION_*` | deepseek-v4-flash | Evidence extraction from translated text |
-| Fusion | `LLM_*` or `FUSION_*` | deepseek-v4-flash | Cross-validation, deduplication, conflict flagging |
-| Vision | `VLM_*` | qwen3-vl-flash | Figure, table, pedigree description |
+| Fast LLM | `FAST_LLM_*` | deepseek-v4-flash | Source-language extraction, general tasks |
+| Reasoning LLM | `REASONING_LLM_*` | deepseek-v4-flash | Evidence review, validation, multi-source reasoning |
+| Multimodal LLM | `MULTIMODAL_LLM_*` | qwen3-vl-flash | Figure, table, pedigree description |
 | Embedding | `EMBEDDING_*` | Qwen3-Embedding-0.6B | Entity matching and feedback retrieval |
 | Rerank | `RERANK_*` | bge-reranker-v2-m3 | Search reranking |
 
@@ -184,87 +317,70 @@ Standalone FastAPI model service exposes OpenAI-compatible endpoints:
 frontend/
 ├── app/
 │   ├── api/                         # Next.js API routes (proxy, auth callbacks)
-│   ├── layout.tsx                   # Root layout with global topbar tabs
-│   ├── page.tsx                     # Redirect to AI Assistant
-│   └── (dashboard)/
-│       ├── layout.tsx               # Dashboard shell with 4 tabs
-│       ├── assistant/               # Tab 1: AI Assistant (chat-driven)
-│       │   └── page.tsx
-│       ├── task-board/              # Tab 2: Task Board
-│       │   ├── page.tsx
-│       │   └── workspace/
-│       │       └── [taskId]/page.tsx  # Evidence Workspace
-│       ├── knowledge-base/          # Tab 3: Knowledge Base Query
-│       │   ├── page.tsx
-│       │   └── variant/
-│       │       └── [variantId]/page.tsx
-│       └── settings/                # Tab 4: Settings
-│           └── page.tsx
-├── components/
-│   ├── ui/                          # shadcn/ui: Button, Input, Select, Dialog, Drawer, Accordion, Command, Tabs, Badge, Spinner
-│   ├── layout/
-│   │   ├── topbar.tsx               # Global fixed topbar with 4 tabs
-│   │   └── dashboard-shell.tsx
-│   ├── assistant/                   # AI Assistant feature slice
-│   │   ├── chat-panel.tsx           # Main chat area with message bubbles
-│   │   ├── chat-input.tsx           # Drag-drop upload + PMID input + send
-│   │   ├── session-sidebar.tsx      # Collapsible history session list
-│   │   ├── evidence-card.tsx        # Inline evidence form card (editable)
-│   │   ├── system-message.tsx       # SSE typewriter system message bubble
-│   │   └── batch-mode-toggle.tsx
-│   ├── task-board/                  # Task Board feature slice
-│   │   ├── task-list.tsx            # Task row cards with status colors
-│   │   ├── status-filter-bar.tsx    # Horizontal status tabs with counts
-│   │   ├── batch-action-bar.tsx     # Floating multi-select action bar
-│   │   ├── resource-panel.tsx       # Collapsible resource monitoring
-│   │   └── delta-audit-panel.tsx    # Slide-out delta audit log
-│   ├── workspace/                   # Evidence Workspace feature slice
-│   │   ├── md-document-view.tsx     # Markdown rendered document (left pane)
-│   │   ├── evidence-card-list.tsx   # Evidence cards (right pane)
-│   │   ├── traceability-drawer.tsx  # Source paragraph slide-out drawer
-│   │   ├── edit-dialog.tsx          # Modal edit form for evidence card
-│   │   └── shortcut-hint.tsx        # Keyboard shortcut reference card
-│   ├── knowledge-base/              # Knowledge Base feature slice
-│   │   ├── search-bar.tsx           # Multi-mode search (exact / AI / filters)
-│   │   ├── evidence-matrix.tsx      # Accordion-grouped evidence matrix
-│   │   ├── variant-metadata.tsx     # Variant metadata dashboard
-│   │   ├── comparison-view.tsx      # Side-by-side evidence comparison
-│   │   └── export-menu.tsx          # CSV / ACMG draft generation
-│   └── settings/                    # Settings feature slice
-│       ├── vocabulary-manager.tsx   # Ontology version cards
-│       ├── template-editor.tsx      # Extraction prompt template cards
-│       └── config-panel.tsx         # MinerU / DB connection config
-├── lib/
-│   ├── api/
-│   │   ├── client.ts                # Axios instance
-│   │   ├── tasks.ts                 # Task CRUD + batch ops
-│   │   ├── chat.ts                  # Chat session + SSE stream
-│   │   ├── knowledge-base.ts        # Search, variant detail, NL-to-SQL
-│   │   ├── hpo.ts                   # HPO autocomplete search
-│   │   ├── delta.ts                 # Delta audit log
-│   │   └── settings.ts              # Ontology versions, config
-│   ├── hooks/
-│   │   ├── use-chat.ts              # Vercel AI SDK useChat wrapper
-│   │   ├── use-evidence-cards.ts    # Card state management
-│   │   ├── use-task-board.ts        # Task list + filters + selection
-│   │   ├── use-workspace.ts         # Workspace state + keyboard shortcuts
-│   │   └── use-knowledge-base.ts    # Search + variant detail
-│   ├── types/
-│   │   ├── chat.ts                  # Message, EvidenceCard, Session
-│   │   ├── task.ts                  # Task, TaskStatus, BatchOp
-│   │   ├── evidence.ts              # EvidenceItem, EvidenceMatrix, EvidenceDimension
-│   │   ├── variant.ts               # Variant, MetadataDashboard
-│   │   ├── delta.ts                 # DeltaEntry, AuditLog
-│   │   └── api.ts                   # Shared API response wrappers
-│   └── utils/
-│       ├── format.ts                # HGVS, date, number formatters
-│       └── keyboard.ts              # Workspace keyboard shortcut manager
-├── stores/
-│   ├── chat-store.ts                # Messages, current session, editing card ID
-│   ├── workspace-store.ts           # Highlight anchor, reviewed card IDs, scroll position
-│   └── task-board-store.ts          # Status filter, search query, selected task IDs
-├── styles/
-│   └── globals.css                  # Tailwind + breathing-light animation
+│   ├── layout.tsx                   # Root layout
+│   ├── page.tsx                     # Entry redirect
+│   ├── providers.tsx                # Global providers (React Query, etc.)
+│   ├── globals.css                  # Tailwind base styles
+│   ├── (auth)/                      # Auth layout group (no sidebar)
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   └── register/
+│   │       └── page.tsx
+│   └── (dashboard)/                 # Dashboard layout group (with sidebar)
+│       ├── layout.tsx               # Dashboard shell with sidebar
+│       ├── pipeline/                # Pipeline management
+│       │   ├── page.tsx             #   Pipeline list / submit
+│       │   └── [runId]/
+│       │       └── page.tsx         #   Pipeline run detail / status
+│       ├── evidence/                # Evidence search and viewing
+│       │   ├── page.tsx             #   Evidence search page
+│       │   └── detail/
+│       │       └── page.tsx         #   Evidence group detail
+│       └── chat/                    # Chat sessions
+│           ├── page.tsx             #   Session list / new chat
+│           └── [sessionId]/
+│               └── page.tsx         #   Chat message view
+├── src/
+│   ├── features/                    # Feature slices (vertical)
+│   │   ├── auth/                    #   Auth feature
+│   │   │   ├── components/          #     LoginForm, RegisterForm
+│   │   │   ├── hooks/               #     useAuth
+│   │   │   ├── services/            #     auth API calls
+│   │   │   └── types/               #     auth types
+│   │   ├── pipeline/                #   Pipeline feature
+│   │   │   ├── components/          #     PipelineSubmitForm, PipelineStatusView,
+│   │   │   │                        #     PhaseTimeline, PhaseDetailCard
+│   │   │   ├── hooks/               #     usePipelineRun, usePipelineStatus, usePhaseTimeline
+│   │   │   ├── services/            #     pipeline API calls
+│   │   │   └── types/               #     pipeline types
+│   │   ├── evidence-search/         #   Evidence search feature
+│   │   │   ├── components/          #     EvidenceSearchForm, EvidenceSearchView,
+│   │   │   │                        #     EvidenceResultsTable, EvidenceDetailView,
+│   │   │   │                        #     EvidenceHighlightText
+│   │   │   ├── hooks/               #     useEvidenceSearch, useEvidenceGroupDetail
+│   │   │   ├── services/            #     evidence search API calls
+│   │   │   ├── types/               #     evidence search types
+│   │   │   └── utils/               #     evidenceDocument, literatureRows helpers
+│   │   └── chat/                    #   Chat feature
+│   │       ├── components/          #     ChatView, PipelineStartForm, PipelineStatusCard
+│   │       ├── hooks/               #     useChatMessages, useChatSessions
+│   │       ├── providers/           #     acmgChatProvider
+│   │       ├── services/            #     chat API calls
+│   │       └── types/               #     chat types
+│   ├── components/                  # Shared components
+│   │   ├── layout/                  #   DashboardLayout, Sidebar, PageHeader, ConnectionStatus
+│   │   ├── ui/                      #   Button, Input, Select, Card, Badge, Modal, Spinner, Toast, ErrorBoundary
+│   │   ├── charts/                  #   Chart components (placeholder)
+│   │   └── forms/                   #   Form components (placeholder)
+│   ├── lib/                         # Shared libraries
+│   │   ├── api/                     #   Axios client (client.ts), error handling (error.ts)
+│   │   ├── config/                  #   App config (api.ts, app.ts, types.ts)
+│   │   ├── hooks/                   #   useBackendHealth, useDebounce, usePolling
+│   │   ├── types/                   #   Common types (common.ts)
+│   │   └── utils/                   #   cn() classname utility
+│   └── stores/                      # Zustand stores
+│       ├── appStore.ts              #   App-level state (sidebar, theme)
+│       └── toastStore.ts            #   Toast notification state
 ├── public/
 ├── tests/
 ├── next.config.ts
@@ -274,39 +390,45 @@ frontend/
 
 ### 4.2 Frontend Responsibilities
 
-- **AI Assistant tab**: Chat-driven upload (drag-drop PDF, PMID input), SSE streaming parse progress via Vercel AI SDK, inline evidence form cards, natural language correction, session persistence.
-- **Task Board tab**: Status-filtered task list, multi-select batch operations, resource monitoring panel, delta audit log slide-out.
-- **Evidence Workspace**: Left/right split (Markdown document + evidence cards), scroll-into-view source highlighting, keyboard shortcuts (J/K/E/Enter/Esc/Ctrl+Z), traceability drawer.
-- **Knowledge Base tab**: Multi-mode search (exact/AI/advanced filters), variant detail page with evidence matrix, row comparison, traceability drawer, CSV export, ACMG classification draft generation.
-- **Settings tab**: Ontology version management, extraction template editing, MinerU/DB configuration.
+- **Auth**: Login and registration forms with JWT token management. Auth route group excludes sidebar layout.
+- **Pipeline**: Submit new pipeline runs (literature input + configuration), monitor active runs with phase-level timeline and status polling, view completed run details.
+- **Evidence Search**: Multi-field evidence search (variant, gene, phenotype, classification), results table with highlighting, evidence group detail view with source linking.
+- **Chat**: Chat session management (create, list, select), message exchange with backend LLM, pipeline start and status cards embedded in chat flow.
 
 FastAPI remains authoritative for API behavior and JWT verification. Next.js does not sign or verify JWTs. In open-source deployment, the frontend does not enforce per-user access control; transparency is maintained via audit logs.
 
 ## 5. Database and State Architecture
 
-### 5.1 PostgreSQL Current MVP Store
+### 5.1 PostgreSQL Store
 
-Core tables to design:
+Current ORM models are defined in `backend/src/dao/postgresql/models.py`. The schema includes:
+
+- `SourceDocument` — stable source document root across processing runs.
+- `PipelineRun` — pipeline execution metadata and status.
+- `ExtractedEvidence` — extracted evidence items with confidence scores and source anchors.
+- `StandardizedEntity` — original value, standardized value, source DB, match rationale.
+- `ChatSession` / `ChatMessage` — persisted chat conversations with message history.
+- `DeltaAuditLog` — per-task field modification history for transparency.
+- `SearchIndex` — literature search index entries.
+
+`pgvector` supports fuzzy entity matching and retrieval of prior feedback examples.
+
+#### Planned Schema (future expansion)
+
+Additional tables from the original design that are not yet implemented:
 
 - `users` — user accounts, password hash, email verification state.
-- `tasks` — task metadata and persisted completed task records.
-- `documents` — uploaded/fetched files, hashes, metadata, rendered original output pointers.
 - `translated_documents` — translated Markdown/HTML output pointers and translation metadata.
 - `document_spans` — original anchors, bbox, page, section, table/figure references.
 - `translated_document_spans` — translated anchors mapped back to original anchors.
 - `native_evidence_items` — original-language extracted evidence and confidence.
 - `translated_evidence_items` — translated-text extracted evidence and confidence.
 - `fused_evidence_items` — deduplicated evidence with agreement/conflict status and bilingual spans.
-- `standardized_entities` — original value, translated value, standardized value, source DB, match rationale.
 - `evidence_matrices` — normalized per-document/per-task evidence matrix snapshots.
-- `delta_audit_logs` — per-task field modification history for transparency (task_id, field_path, old_value, new_value, timestamp).
-- `chat_sessions` — persisted chat conversations with message history and associated task IDs.
 - `review_comments` — expert feedback by target type.
 - `processing_logs` — persisted trace for completed tasks.
 - `cache_entries` — cache keys and reusable output pointers.
 - `feedback_dataset_items` — curated original-translation-evidence corrections for future active-learning workflows.
-
-`pgvector` supports fuzzy entity matching and retrieval of prior feedback examples.
 
 ### 5.2 Runtime State
 
@@ -314,8 +436,8 @@ Current MVP may keep pending/running task state in memory:
 
 - Running tasks may disappear on backend restart.
 - Completed task metadata, original/translated document outputs, evidence matrices, reports, and comments persist.
-- SSE streams chat and processing status via Vercel AI SDK (no WebSocket dependency).
-- Redis is deferred unless task runtime is re-scoped.
+- SSE streams for chat and processing status (no WebSocket dependency).
+- Redis is used for caching; may expand to distributed task runtime in future.
 
 ### 5.3 Public Database Sources
 
@@ -334,34 +456,38 @@ Current MVP may keep pending/running task state in memory:
 
 ### 6.1 Docker Compose
 
-Current local services:
-
 ```yaml
 services:
   frontend:    # Next.js, port 3000
-  backend:     # FastAPI, port 8000
-  postgres:    # PostgreSQL 16, port 5432
-  redis:       # Placeholder/future runtime/cache
+  backend:     # FastAPI, port 8000 (depends on postgres, redis)
+  postgres:    # PostgreSQL 16 Alpine, port 5432 (volume: postgres_data)
+  redis:       # Redis 8.0 Alpine, port 6379
 ```
 
-Neo4j, MinIO, and model-server are optional/future integrations unless explicitly enabled.
+Environment variables are passed directly via docker-compose `environment` block for `DATABASE_URL`, `REDIS_URL`, `POSTGRES_*`, and `REDIS_*`. Neo4j, MinIO, and model-server are optional/future integrations unless explicitly enabled.
 
 ### 6.2 Configuration Domains
 
+Actual configuration prefixes loaded from environment variables and layered YAML (`backend/config/`):
+
 ```text
-LLM_*                  # Native extraction and default extraction/fusion model
-SECONDARY_EXTRACTION_* # Optional translated-text extraction override
-FUSION_*               # Optional fusion/cross-validation override
-MT_*                   # Translation model
-VLM_*                  # Vision model
-EMBEDDING_*            # Embedding model
-RERANK_*               # Rerank model
-MINERU_*               # MinerU OCR/parsing API
-POSTGRES_*             # PostgreSQL
-SMTP_*                 # Email verification
-PUBMED_*               # PubMed API
-REDIS_*                # Future Redis
-NEO4J_*                # Future Neo4j
+FAST_LLM_*             # General-purpose / fast LLM (API key, base URL, model, timeout)
+REASONING_LLM_*        # High-precision reasoning LLM (review, validation, arbitration)
+EMBEDDING_*            # Embedding model (API key, base URL, model, dimension)
+RERANK_*               # Rerank model (API key, base URL, model)
+MINERU_*               # MinerU OCR/parsing API (base URL, API key, timeout)
+MINERU_REMOTE_*        # MinerU remote parsing specifics
+MINERU_LOCAL_*         # MinerU local parsing specifics
+POSTGRES_*             # PostgreSQL (host, port, db, user, password, pool size)
+REDIS_*                # Redis (host, port, db, password)
+WEB_SEARCH_*           # Web search API (API key, base URL, timeout, max results)
+NETWORK_*              # Network/proxy settings
+```
+
+Legacy/optional prefixes that may exist but are not primary:
+
+```text
+NEO4J_*                # Future Neo4j knowledge graph
 MINIO_*                # Future object storage
 ```
 

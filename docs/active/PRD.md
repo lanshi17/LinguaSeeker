@@ -2,7 +2,7 @@
 
 ## 1. Product Positioning
 
-ACMG Lingua is a next-generation medical genetics literature evidence mining and structured traceability workbench. It is an "evidence porter" — absolutely loyal to source data, ensuring every piece of extracted information is 100% traceable to its original location in the literature. The system organizes evidence collection, extraction, standardization, and expert review behind four fixed tabs: AI Assistant, Task Board, Knowledge Base Query, and Settings.
+ACMG Lingua is a next-generation medical genetics literature evidence mining and structured traceability workbench. It is an "evidence porter" — absolutely loyal to source data, ensuring every piece of extracted information is 100% traceable to its original location in the literature. The system organizes evidence collection, extraction, standardization, and expert review behind four fixed tabs: AI Assistant, Task Board, Knowledge Base Query, and Settings. (Note: this is the target design. The current implementation provides: Auth, Pipeline, Evidence Search, and Chat.)
 
 The system provides a high-quality data foundation for downstream clinical interpretation and research computation. It does not perform final autonomous ACMG/GDV medical classification in the current scope.
 
@@ -39,6 +39,8 @@ Design implications:
 | Expert extraction experience is hard to reuse | Preserve original-text and translated-text absolute source positions, structured feedback, and corrected original-translation-evidence triples for institutional extraction knowledge bases and future model/prompt improvement. |
 
 ## 3. Target Users
+
+> **Implementation note:** User stories below describe target UX. The current implementation covers Pipeline submission/monitoring, Evidence search, and Chat.
 
 The personas below are product users, not authorization roles. In open-source deployment, there is no user isolation — all tabs and task lists are visible to all visitors. Data transparency is maintained through audit logs rather than permission systems.
 
@@ -85,6 +87,8 @@ As a system administrator, I open the Settings tab to view current ontology vers
 
 ### Phase 1: Literature Acquisition and Digitization
 
+> **Status: DONE** — all core requirements implemented.
+
 | ID | Requirement | Priority |
 |---|---|---|
 | F1.1 | Accept local PDF upload, including scanned PDFs. | P0 |
@@ -102,6 +106,8 @@ As a system administrator, I open the Settings tab to view current ontology vers
 
 ### Phase 2: Cross-Lingual Processing and Dual Evidence Extraction
 
+> **Status: IN PROGRESS** — translation and multi-stage evidence extraction implemented; dual-track cross-validation and fusion still being refined.
+
 | ID | Requirement | Priority |
 |---|---|---|
 | F2.1 | Perform original-language native entity/relation/evidence extraction before translation. | P0 |
@@ -117,6 +123,8 @@ As a system administrator, I open the Settings tab to view current ontology vers
 
 ### Phase 3: Entity Standardization and Knowledge Alignment
 
+> **Status: IN PROGRESS** — exact and similarity matching implemented; pgvector semantic matching and Agent conflict resolution planned.
+
 | ID | Requirement | Priority |
 |---|---|---|
 | F3.1 | Match gene symbols and aliases against HGNC. | P0 |
@@ -130,6 +138,8 @@ As a system administrator, I open the Settings tab to view current ontology vers
 | F3.9 | Store standardized evidence matrix with match rationale and bilingual traceability. | P0 |
 
 ### Phase 4: Evidence Visualization, Task Management, Knowledge Base, and Expert-in-the-Loop
+
+> **Status: PARTIALLY DONE** — Pipeline submission/monitoring, Evidence search, and Chat features are implemented. The full 4-tab UI (AI Assistant, Task Board, Knowledge Base Query, Settings), evidence workspace with traceability, and batch processing are planned.
 
 | ID | Requirement | Priority |
 |---|---|---|
@@ -150,6 +160,8 @@ As a system administrator, I open the Settings tab to view current ontology vers
 | F4.15 | Batch processing mode: upload .txt file of PMIDs, silent background processing, results in task board pending-review queue. | P1 |
 
 ### Cross-Cutting Requirements
+
+> **Status: MOSTLY DONE** — API layer, async task flow, persistence, and logging are in place. NL-to-SQL endpoint is planned.
 
 | ID | Requirement | Priority |
 |---|---|---|

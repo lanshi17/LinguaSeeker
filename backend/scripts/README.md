@@ -6,12 +6,13 @@
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `build_terminology_embeddings.py` | Build pgvector embeddings for terminology subsets | `uv run python scripts/build_terminology_embeddings.py [--entity-types ...] [--source-dbs ...]` |
 | `e2e_full.py` | Full end-to-end pipeline with composable stages | `uv run python scripts/e2e_full.py --stages parse,translate,extract,standardize,visualize` |
 | `e2e_translate.py` | End-to-end translation pipeline only | `uv run python scripts/e2e_translate.py` |
 | `e2e_extract_evidence.py` | End-to-end evidence extraction only | `uv run python scripts/e2e_extract_evidence.py` |
 | `e2e_standardize_entities.py` | End-to-end entity standardization only | `uv run python scripts/e2e_standardize_entities.py` |
 | `e2e_visualize_feedback.py` | End-to-end Phase 4 visualization + feedback | `uv run python scripts/e2e_visualize_feedback.py` |
+| `build_terminology_embeddings.py` | Build pgvector embeddings for terminology subsets | `uv run python scripts/build_terminology_embeddings.py [--entity-types ...] [--source-dbs ...]` |
+| `render_config.py` | Render merged layered config for debugging | `uv run python scripts/render_config.py --env development` |
 
 ## Quick Start
 
@@ -26,6 +27,9 @@ uv run python scripts/e2e_full.py
 
 # Build embeddings for specific entity types
 uv run python scripts/build_terminology_embeddings.py --entity-types gene disease
+
+# Debug merged config
+uv run python scripts/render_config.py --env development --output /tmp/config.yaml
 ```
 
 ## e2e_full.py Stages
@@ -46,4 +50,5 @@ All scripts use the backend's virtual environment (`uv run`). No separate depend
 
 - E2E scripts require configured external services (LLM endpoints, MinerU API, PostgreSQL).
 - `build_terminology_embeddings.py` requires a populated `terminology_entries` table in PostgreSQL.
-- Scripts are not part of the test suite — they are manual operational tools.
+- `render_config.py` outputs merged YAML for debugging; the output is not read by the runtime loader.
+- Scripts are not part of the test suite -- they are manual operational tools.

@@ -1,6 +1,37 @@
-# ACMG-Lingua Production Deployment (Ansible)
+# deploy/ansible/ -- Production Deployment
 
-Production environment provisioning and deployment via Ansible.
+Ansible-based provisioning and deployment for ACMG Lingua production environments.
+
+## Directory Structure
+
+```
+deploy/ansible/
+├── ansible.cfg                              Ansible configuration
+├── .vault_pass                              Vault password file (git-ignored)
+├── .gitignore                               Ignores vault_pass, vault.yml
+├── inventories/
+│   └── production/
+│       ├── hosts.yml                        Multi-server inventory
+│       ├── hosts-single-server.yml.example  Single-server inventory template
+│       ├── group_vars/
+│       │   ├── all.yml                      Structural config (safe to commit)
+│       │   └── vault.yml.example            Secrets template
+│       └── host_vars/                       Per-host overrides
+├── playbooks/
+│   ├── site.yml                             Main deployment playbook
+│   └── healthcheck.yml                      Post-deployment verification
+├── roles/
+│   ├── common/                              Base packages, sysctl, logrotate, deploy user
+│   ├── postgres/                            PostgreSQL 16 (Docker) + daily backup
+│   ├── redis/                               Redis 8.0 (Docker)
+│   ├── backend/                             FastAPI backend (uv + systemd)
+│   ├── model-server/                        Embedding/Rerank/LLM server (systemd)
+│   ├── frontend/                            Next.js frontend (nvm + systemd)
+│   └── nginx/                               Nginx reverse proxy + auto TLS via certbot
+└── templates/                               Shared templates
+```
+
+Each role follows standard Ansible structure: `tasks/`, `handlers/`, `defaults/`, `templates/`.
 
 ## Prerequisites
 
@@ -8,35 +39,6 @@ Production environment provisioning and deployment via Ansible.
 - Target hosts: Ubuntu 22.04+ / Debian 12+ with SSH access
 - `deploy` user with sudo privileges on all hosts
 - `community.docker` collection (`ansible-galaxy collection install community.docker`)
-
-## Directory Structure
-
-```
-deploy/ansible/
-├── ansible.cfg                              # Ansible configuration
-├── .vault_pass                              # Vault password file (git-ignored)
-├── .gitignore
-├── inventories/
-│   └── production/
-│       ├── hosts.yml                        # Multi-server inventory
-│       ├── hosts-single-server.yml.example  # Single-server inventory template
-│       └── group_vars/
-│           ├── all.yml                      # Structural config (safe to commit)
-│           ├── vault.yml.example            # Secrets template
-│           └── vault.yml                    # Encrypted secrets (git-ignored)
-├── playbooks/
-│   ├── site.yml                             # Main deployment playbook
-│   └── healthcheck.yml                      # Post-deployment verification
-├── roles/
-│   ├── common/                              # Base packages, sysctl, logrotate, deploy user
-│   ├── postgres/                            # PostgreSQL 16 (Docker) + daily backup
-│   ├── redis/                               # Redis 8.0 (Docker)
-│   ├── backend/                             # FastAPI backend (uv + systemd)
-│   ├── model-server/                        # Embedding/Rerank/LLM server (systemd)
-│   ├── frontend/                            # Next.js frontend (nvm + systemd)
-│   └── nginx/                               # Nginx reverse proxy + auto TLS via certbot
-└── templates/                               # Shared templates (if needed)
-```
 
 ## Quick Start
 
@@ -46,55 +48,35 @@ Edit `inventories/production/hosts.yml` and replace placeholder IPs:
 
 ```yaml
 web-01:
-  ansible_host: "203.0.113.10"   # Your web server IP
+  ansible_host: "203.0.113.10"
 app-01:
-  ansible_host: "203.0.113.20"   # Your app server IP
+  ansible_host: "203.0.113.20"
 db-01:
-  ansible_host: "203.0.113.30"   # Your database server IP
+  ansible_host: "203.0.113.30"
 ```
 
-For single-server deployment, use the provided example:
+For single-server deployment:
 
 ```bash
-cp inventories/production/hosts-single-server.yml.example \
-   inventories/production/hosts.yml
-# Then edit YOUR_SERVER_IP
+cp inventories/production/hosts-single-server.yml.example inventories/production/hosts.yml
 ```
 
 ### 2. Configure Secrets
 
 ```bash
-# Copy the example vault
-cp inventories/production/group_vars/vault.yml.example \
-   inventories/production/group_vars/vault.yml
-
-# Edit with your real secrets
+cp inventories/production/group_vars/vault.yml.example inventories/production/group_vars/vault.yml
 ansible-vault encrypt inventories/production/group_vars/vault.yml
-
-# Set vault password
 echo "your-vault-password" > .vault_pass
 chmod 600 .vault_pass
 ```
 
-### 3. Configure Domain
-
-Edit `inventories/production/group_vars/all.yml`:
-
-```yaml
-domain_name: "acmg-lingua.your-domain.com"
-tls_email: "[redacted-email]"
-acmg_cors_origins: "https://acmg-lingua.your-domain.com"
-```
-
-### 4. Deploy
+### 3. Deploy
 
 ```bash
 cd deploy/ansible
-
-# Install required collections
 ansible-galaxy collection install community.docker
 
-# Full deployment (all services)
+# Full deployment
 ansible-playbook playbooks/site.yml
 
 # Deploy specific components
@@ -102,7 +84,7 @@ ansible-playbook playbooks/site.yml --tags infra       # DB + Redis + Model Serv
 ansible-playbook playbooks/site.yml --tags backend      # Backend only
 ansible-playbook playbooks/site.yml --tags frontend     # Frontend + Nginx
 
-# Dry run (check mode)
+# Dry run
 ansible-playbook playbooks/site.yml --check --diff
 
 # Post-deployment health check
@@ -111,11 +93,11 @@ ansible-playbook playbooks/healthcheck.yml
 
 ## Host Topology
 
-| Group   | Host     | Services                        | Port         |
-|---------|----------|---------------------------------|--------------|
-| `web`   | web-01   | Nginx, Frontend (Next.js)       | 80/443, 3000 |
-| `app`   | app-01   | Backend (FastAPI), Model Server | 8000, 8001   |
-| `db`    | db-01    | PostgreSQL 16, Redis 8.0        | 5432, 6379   |
+| Group | Host | Services | Port |
+|-------|------|----------|------|
+| `web` | web-01 | Nginx, Frontend (Next.js) | 80/443, 3000 |
+| `app` | app-01 | Backend (FastAPI), Model Server | 8000, 8001 |
+| `db` | db-01 | PostgreSQL 16, Redis 8.0 | 5432, 6379 |
 
 ## Architecture
 
@@ -125,7 +107,6 @@ Client (HTTPS)
     ▼
 ┌───────────────────────┐
 │   Nginx (web-01)      │  TLS termination, reverse proxy, certbot
-│   :80 → :443          │
 └───┬───────────┬───────┘
     │           │
     ▼           ▼
@@ -144,29 +125,14 @@ Client (HTTPS)
          ┌────────────┐
          │ PostgreSQL │
          │ :5432      │
-         │ + backup   │
          └────────────┘
 ```
 
-## TLS / Let's Encrypt
+## Key Features
 
-TLS certificates are **automatically provisioned** by the nginx role via certbot:
-
-1. First deploy starts Nginx in HTTP-only mode
-2. Certbot obtains the certificate using `--nginx` authenticator
-3. Nginx site config is automatically redeployed with TLS
-4. Auto-renewal via `certbot.timer` systemd unit
-
-No manual certbot steps needed. Just ensure DNS A record points to the web server before deploying.
-
-## Automated Backup
-
-PostgreSQL daily backup runs at 03:00 via cron:
-
-- Backup path: `/opt/acmg-lingua-data/postgres-backups/`
-- Format: `acmg_lingua_YYYYMMDD_HHMMSS.sql.gz`
-- Retention: 30 days (auto-pruned)
-- Manual restore: `gunzip < backup.sql.gz | docker exec -i acmg-postgres psql -U acmg_app -d acmg_lingua`
+- **TLS / Let's Encrypt** -- Automatically provisioned by the nginx role via certbot. First deploy starts HTTP-only, certbot obtains the cert, Nginx redeploys with TLS. Auto-renewal via `certbot.timer`.
+- **Automated backup** -- PostgreSQL daily backup at 03:00 via cron. Stored at `/opt/acmg-lingua-data/postgres-backups/`, retained 30 days.
+- **Security** -- `vault.yml` encrypted with `ansible-vault`, git-ignored. All systemd services run with `NoNewPrivileges` and `ProtectSystem=strict`. Database ports not exposed publicly.
 
 ## Maintenance
 
@@ -184,13 +150,3 @@ ansible-playbook playbooks/healthcheck.yml
 # Rolling restart (backend only)
 ansible-playbook playbooks/site.yml --tags backend
 ```
-
-## Security Notes
-
-- `vault.yml` is **git-ignored** and encrypted with `ansible-vault`
-- `.vault_pass` is **git-ignored** — never commit it
-- All systemd services run with `NoNewPrivileges` and `ProtectSystem=strict`
-- Nginx enforces TLS 1.2+, security headers, and gzip
-- Database ports are not exposed to the public internet (bind to private network)
-- Log rotation: 30 days, auto-compressed
-- TLS auto-renewal via certbot timer

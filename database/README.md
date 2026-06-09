@@ -1,12 +1,32 @@
 # database/
 
-> Database infrastructure layer: PostgreSQL schema migrations, multi-service configuration, and seed data for ACMG Lingua.
+> Database infrastructure layer: PostgreSQL schema migrations, container configuration, seed data, and reference terminology for ACMG Lingua.
+
+## Directory Structure
+
+```
+database/
+├── alembic.ini                          Alembic bootstrap config (script_location, logging, file template)
+├── alembic.ini.jinja                    Jinja2 template for generating alembic.ini
+├── config/
+│   ├── .env                             Container environment (PostgreSQL, Redis, Neo4j, Qdrant, MinIO creds)
+│   ├── .env.example                     Full template with inline documentation
+│   ├── .env.example.jinja               Jinja2 template for .env.example generation
+│   ├── .env.neo4j                       Neo4j auth string
+│   ├── containers.conf                  Podman runtime: proxy bypass, cgroups, subnet reservation
+│   └── qdrant_config.json              Qdrant TLS certificate configuration
+├── migrations/
+│   ├── env.py                           Async migration environment (offline/online, imports Base.metadata)
+│   ├── script.py.mako                   Migration script template (upgrade/downgrade stubs)
+│   └── versions/                        12 migration files (init schema through schema hardening)
+├── seeds/
+│   └── .gitkeep                         Placeholder for future seed data
+└── terminology_database/                Biomedical reference data (see terminology_database/README.md)
+```
 
 ## Quick Start
 
 ```bash
-# From repo root:
-
 # Copy and customize environment
 cp database/config/.env.example database/config/.env
 
@@ -29,97 +49,44 @@ backend/src/core/config.py
     │
     ├──► database/alembic.ini ──► database/migrations/env.py
     │       Alembic bootstrap          Async engine from config, imports
-    │       (script_location,          src.dao.postgresql.models.Base.metadata
-    │        logging)                  Runs offline or online mode
+    │                                  src.dao.postgresql.models.Base.metadata
     │
     ├──► database/migrations/versions/
-    │       Migration revision chain (head → 4a82b5793055_init_mvp_schema)
+    │       12 migration files (head → 2026-06-08 schema hardening)
     │
     ▼
 backend/src/dao/postgresql/models.py
-    │  SQLAlchemy 2.0 ORM: SourceDocument, ProcessingRun,
-    │  CanonicalEvidenceItem, RunEvidenceItem, NormalizedEntity,
-    │  EntityMergeEvent, EvidenceEntityBinding, User
-    │
-    ├──► backend/src/dao/postgresql/connection.py
-    │       build_async_engine() → AsyncEngine (asyncpg)
-    │       async_session_factory() → async_sessionmaker
-    │       get_async_session() → context-managed session
-    │
-    ├──► backend/src/dao/redis/cache_repo.py
-    │       Redis read-cache for documents, evidence, entities
-    │
-    └──► backend/src/dao/postgresql/search_index_repo.py
-            Flattened read-projection for frontend search
+    SQLAlchemy 2.0 ORM: SourceDocument, ProcessingRun,
+    CanonicalEvidenceItem, RunEvidenceItem, NormalizedEntity,
+    EntityMergeEvent, EvidenceEntityBinding, User, LiteratureProfile, ...
 ```
 
 **Key design decisions:**
 
-- **Config lives in `backend/src/core/config.py`**, not duplicated in `database/`. `env.py` imports `get_config()` to derive the PostgreSQL DSN at migration time.
-- **The `.env` files** in `database/config/` supply container-level environment to Podman/Docker Compose services. The backend reads from root `.env` / `.env.local`.
-- **Alembic uses `use_alter=True`** for the circular FK between `canonical_evidence_items` ↔ `run_evidence_items` so both tables can be created before foreign keys are applied.
+- Config lives in `backend/src/core/config.py`. `env.py` imports `get_config()` to derive the PostgreSQL DSN at migration time.
+- The `.env` files in `database/config/` supply container-level environment to Podman/Docker Compose services. The backend reads from root `.env` / `.env.local`.
+- Alembic uses `use_alter=True` for circular FK between `canonical_evidence_items` and `run_evidence_items`.
 
-## Database Schema (MVP v1)
+## Migrations
 
-The initial migration `4a82b5793055` creates 9 tables:
+The `versions/` directory contains 12 migration files:
 
-```
-users
-  │ user_id (PK), email (UQ), password_hash, display_name, status, timestamps
-  │
-  ├── entity_merge_events ─── merged_by_user_id → users.user_id
-  │
-source_documents
-  │ source_document_id (PK), raw_metadata (JSONB),
-  │ latest_processing_run_id (FK ↻ delayed), timestamps
-  │
-  ├── source_document_identifiers
-  │     source_document_identifier_id (PK), source_document_id (FK),
-  │     identifier_type, identifier_value, UQ(type, value)
-  │
-  ├── processing_runs
-  │     processing_run_id (PK), source_document_id (FK),
-  │     parser/translation/extraction/standardization/fusion_version,
-  │     prompt_hash, model_hash, config_hash,
-  │     input_artifacts, output_artifacts (JSONB), run_status, timestamps
-  │
-  ├── canonical_evidence_items
-  │     canonical_evidence_id (PK), source_document_id (FK),
-  │     field_id, position_hash, text_hash, entity_scope_hash,
-  │     UQ(source_document_id, field_id, position_hash, entity_scope_hash),
-  │     current_best_run_evidence_id (FK ↻ delayed),
-  │     current_best_status, conflict_flag, active_payload (JSONB),
-  │     review_status, current_best_confidence ∈ [0,1], timestamps
-  │
-  └── run_evidence_items
-        run_evidence_item_id (PK), processing_run_id (FK),
-        source_document_id (FK), track, field_id, status,
-        value (JSONB), confidence ∈ [0,1],
-        position_hash, text_hash, source_span (JSONB),
-        entity_scope_hash, raw_payload (JSONB),
-        canonical_evidence_id (FK ↻ delayed), timestamps
+| Migration | Purpose |
+|-----------|---------|
+| `4a82b5793055_init_mvp_schema` | Initial MVP schema (9 tables) |
+| `add_terminology_reference_tables` | HGNC, OMIM, HPO, ClinVar, ClinGen, MONDO reference tables |
+| `add_terminology_embeddings_pgvector` | pgvector embeddings for terminology matching |
+| `add_nulls_not_distinct_relationship_constraint` | NOT NULL constraint fix |
+| `add_review_and_chat_tables` | Expert review and AI chat tables |
+| `4ce26825046c_initial_schema` | Schema consolidation |
+| `add_fk_chat_message_evidence_entity` | Chat-evidence entity foreign key |
+| `add_literature_profiles` | CQRS read-model literature profiles table |
+| `add_performance_indexes` | Performance index additions |
+| `add_reviewed_unmappable_status` | reviewed_unmappable status for entities |
+| `extract_pipeline_status_column` | Pipeline status column extraction |
+| `remove_run_evidence_canonical_fk` | Remove run-evidence canonical FK |
 
-normalized_entities
-  │ entity_id (PK), entity_type, external_id,
-  │ normalized_raw_text, display_name, aliases (JSONB),
-  │ standardization_status, merged_into_entity_id (self-FK),
-  │ raw_payload (JSONB), timestamps
-  │ Partial unique indexes:
-  │   (entity_type, external_id) WHERE status='standardized'
-  │   (entity_type, normalized_raw_text) WHERE status='unmapped'
-  │
-  ├── entity_merge_events
-  │     from_entity_id (FK), to_entity_id (FK), merge_reason,
-  │     merged_by_user_id (FK → users), merged_at, raw_payload
-  │
-  └── evidence_entity_bindings
-        evidence_entity_binding_id (PK), run_evidence_item_id (FK),
-        entity_id (FK), entity_type, role, binding_rank, raw_entity_text
-```
-
-**Circular FK resolution:** `canonical_evidence_items.current_best_run_evidence_id` → `run_evidence_items` and `run_evidence_items.canonical_evidence_id` → `canonical_evidence_items` both use `use_alter=True` so table creation succeeds before FK constraints are applied.
-
-## Public API (Alembic CLI)
+### Alembic CLI Reference
 
 | Command | Description |
 |---------|-------------|
@@ -128,288 +95,69 @@ normalized_entities
 | `uv run alembic -c database/alembic.ini revision --autogenerate -m "desc"` | Auto-generate a migration from model drift |
 | `uv run alembic -c database/alembic.ini current` | Show current revision |
 | `uv run alembic -c database/alembic.ini history` | List revision chain |
-| `uv run alembic -c database/alembic.ini upgrade head --sql` | Emit SQL only (offline review) |
-
-### Migration Script Template (`script.py.mako`)
-
-Generated migrations follow this shape:
-
-```python
-"""description
-
-Revision ID: <uuid>
-Revises: <prev>
-Create Date: <timestamp>
-"""
-from typing import Sequence, Union
-from alembic import op
-import sqlalchemy as sa
-
-revision: str = "<rev_id>"
-down_revision: Union[str, None] = "<prev>"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
-
-def upgrade() -> None:
-    pass
-
-def downgrade() -> None:
-    pass
-```
 
 ## Configuration Files
 
-### `database/config/.env` — Container Environment
+### `database/config/.env` / `.env.example`
 
-Provides environment variables consumed by `podman-compose.yml` services:
+Container environment variables consumed by `podman-compose.yml` services:
 
 | Variable | Service | Purpose |
 |----------|---------|---------|
 | `POSTGRES_DB` | PostgreSQL | Database name |
-| `POSTGRES_USER` | PostgreSQL | Superuser |
-| `POSTGRES_PASSWORD` | PostgreSQL | Superuser password |
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` | PostgreSQL | Superuser credentials |
 | `REDIS_PASSWORD` | Redis | AUTH password |
 | `NEO4J_AUTH` | Neo4j | `user/password` single variable |
-| `QDRANT_API_KEY` | Qdrant | API authentication key |
-| `QDRANT_HOST`/`PORT`/`GRPC_PORT` | Qdrant | Connection endpoints |
-| `QDRANT_COLLECTION_NAME` | Qdrant | Default collection |
-| `QDRANT_DIMENSION` | Qdrant | Vector dimension (1536) |
-| `QDRANT_USE_TLS`/`VERIFY_SSL`/`ENABLE_TLS` | Qdrant | TLS configuration |
-| `MINIO_ROOT_USER`/`MINIO_ROOT_PASSWORD` | MinIO | S3-compatible storage credentials |
+| `QDRANT_API_KEY` / `QDRANT_HOST` / `QDRANT_PORT` | Qdrant | Connection endpoints |
+| `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` | MinIO | S3-compatible storage credentials |
 
-### `database/config/.env.example` — Template
+### Other config files
 
-Full template with all variables and inline documentation. Copy and customize:
+- **`containers.conf`** -- Podman runtime: proxy bypass, cgroup v2, reserved subnet.
+- **`qdrant_config.json`** -- Qdrant TLS certificate configuration.
+- **`.env.neo4j`** -- Neo4j auth string only.
+
+## Usage Patterns
+
+### Standard migration workflow
 
 ```bash
-cp database/config/.env.example database/config/.env
+docker compose up -d postgresql
+uv run alembic -c database/alembic.ini upgrade head
+uv run alembic -c database/alembic.ini current
 ```
 
-Also includes Redis, Neo4j, Qdrant, and MinIO settings with descriptions.
+### Adding a new table
 
-### `database/config/containers.conf` — Podman Runtime
+1. Add the SQLAlchemy model to `backend/src/dao/postgresql/models.py`.
+2. Auto-generate the migration: `uv run alembic -c database/alembic.ini revision --autogenerate -m "add_new_table"`.
+3. Review, apply, and test: `uv run pytest backend/tests/dao/ -v`.
 
-Sets proxy bypass for local networks, cgroup v2 `SystemdCgroup=true`, and a reserved subnet (`10.89.0.0/16`) to avoid conflicts with corporate proxies.
-
-### `database/config/qdrant_config.json` — Qdrant TLS
-
-JSON array of TLS certificate configurations. Currently has TLS disabled (`"enabled": false`).
-
-## Internal Design
-
-### Async Migration Environment (`env.py`)
-
-The env.py uses **SQLAlchemy 2.0 async engine** for online migrations:
-
-1. Adds `backend/` to `sys.path` so `src.dao.postgresql.models` is importable from the repo root
-2. Imports `Base` from `src.dao.postgresql.models` as `target_metadata`
-3. `get_url()` calls `get_config().postgresql_dsn` — no hardcoded DSN
-4. Online mode: creates an `AsyncEngine` with `NullPool`, runs migrations inside `connection.run_sync()`
-5. Offline mode: emits SQL to stdout with `literal_binds=True`
-
-### JSONB-as-Storage Strategy
-
-The schema stores flexible payloads as JSONB columns (`active_payload`, `raw_payload`, `input_artifacts`, `output_artifacts`, `value`, `source_span`, `aliases`). ORM models treat these as opaque `dict[str, object]`. Validation is performed at the API/service boundary (Pydantic/FastAPI), NOT in the ORM or database layer. This keeps migrations focused on durable relational structure while allowing payload shapes to evolve independently.
-
-### Entity Uniqueness Strategy
-
-`normalized_entities` uses two **partial unique indexes** instead of a single unique constraint:
-
-- `uq_normalized_entities_standardized_external_id` — for standardized entities (by type + external ID)
-- `uq_normalized_entities_unmapped_raw_text` — for unmapped entities (by type + raw text)
-
-This allows the same entity to transition from unmapped to standardized without uniqueness violations, and recognizes that unmapped entities have no external ID.
-
-### Circular Foreign Key Pattern
-
-`canonical_evidence_items` and `run_evidence_items` reference each other:
-- `canonical_evidence_items.current_best_run_evidence_id` → `run_evidence_items.run_evidence_item_id`
-- `run_evidence_items.canonical_evidence_id` → `canonical_evidence_items.canonical_evidence_id`
-
-Both FKs use `use_alter=True` in the migration so tables are created first, then FKs are applied. At the ORM level, `run_evidence_items.canonical_evidence_id` is nullable (a run item may not yet be linked), while the reverse FK is nullable too (a canonical item may not yet have a best run).
-
-### Configuration Loading Chain
+## Configuration Loading Chain
 
 ```
 database/config/.env ──► podman-compose.yml (container env)
                          injected into PostgreSQL, Redis, Neo4j, Qdrant, MinIO
 
 backend/.env / .env.local ──► backend/src/core/config.py (pydantic-settings)
-                              Settings.postgresql_dsn, etc.
                               │
                               ├──► database/migrations/env.py (alembic at migrate time)
                               └──► backend/src/dao/postgresql/connection.py (runtime engine)
 ```
 
-**The two `.env` files serve different purposes.** Container `.env` provides service-level credentials. Application `.env` provides the connection parameters the backend uses to connect to those services.
+## Common Pitfalls
 
-## Usage Patterns
-
-### Running Migrations (Standard Workflow)
-
-```bash
-# 1. Ensure PostgreSQL is running (via docker-compose)
-docker compose up -d postgresql
-
-# 2. Apply all pending migrations
-uv run alembic -c database/alembic.ini upgrade head
-
-# 3. Verify schema
-uv run alembic -c database/alembic.ini current
-```
-
-### Adding a New Table
-
-```bash
-# 1. Add the SQLAlchemy model to backend/src/dao/postgresql/models.py
-# 2. Auto-generate the migration
-uv run alembic -c database/alembic.ini revision --autogenerate -m "add_new_table"
-
-# 3. Review the generated migration in database/migrations/versions/
-# 4. Apply it
-uv run alembic -c database/alembic.ini upgrade head
-
-# 5. Run tests to verify
-uv run pytest backend/tests/dao/ -v
-```
-
-### Reviewing a Migration Before Applying
-
-```bash
-# Generate SQL without connecting to a live database
-uv run alembic -c database/alembic.ini upgrade head --sql
-```
-
-### Rolling Back
-
-```bash
-# Roll back one revision
-uv run alembic -c database/alembic.ini downgrade -1
-
-# Roll back to a specific revision
-uv run alembic -c database/alembic.ini downgrade 4a82b5793055
-```
-
-## Extension Guide
-
-### Adding a New Write-Model Table
-
-1. **Add the ORM model** to `backend/src/dao/postgresql/models.py`:
-   - Subclass `Base` (for migration-managed tables) or use standalone `MetaData()` (for read projections)
-   - Include `TimestampMixin` if the table needs `created_at`/`updated_at`
-   - Use `Mapped[type]` with `mapped_column()` for SQLAlchemy 2.0 style
-
-2. **Add metadata tests** in `backend/tests/dao/test_models.py`:
-   - Verify table exists in `Base.metadata.tables`
-   - Verify key columns, constraints, indexes
-
-3. **Generate and review the migration**:
-   ```bash
-   uv run alembic -c database/alembic.ini revision --autogenerate -m "description"
-   ```
-   - Verify the generated `upgrade()` and `downgrade()` are correct
-   - For circular FKs, add `use_alter=True`
-   - For partial unique indexes, use `postgresql_where=`
-
-4. **Add a migration test** in `backend/tests/dao/test_alembic_migration.py`
-
-### Adding a Read-Side Projection
-
-Read projections (like `frontend_search_index`) should:
-1. Use standalone `MetaData()` — NOT `Base.metadata` — to avoid polluting Alembic autogenerate
-2. Keep refresh SQL in a repository method (`backend/src/dao/postgresql/search_index_repo.py`)
-3. Test table shape and query behavior separately from migration tests
-
-### Adding a New Infrastructure Service
-
-When adding a new database service (e.g., a vector store):
-1. Add config to `database/config/.env` and `database/config/.env.example`
-2. Add a nested config model to `backend/src/core/config.py` (follow `RedisConfig` / `Neo4jConfig` pattern)
-3. Add the service definition to `docker-compose.yml` (at the repo root)
-4. If the service needs initialization scripts, add them under `scripts/`
-
-### Common Pitfalls
-
-- **Don't hardcode DSNs.** `env.py` reads from `get_config()`. Container `.env` and backend `.env` serve different purposes — don't mix them.
-- **Don't put Neo4j config files on bind mounts.** The official Neo4j image rewrites container config at startup; bind-mounting a host `neo4j.conf` causes `Device or resource busy` errors or file ownership changes.
-- **Use `NEO4J_AUTH=user/password`** as a single variable — never split into `NEO4J_USER` + `NEO4J_PASSWORD`.
-- **JSONB columns are opaque storage.** Validate payload shapes at the API/service layer (Pydantic), not in migrations or ORM models.
-- **`Base.metadata` IS the migration target.** Do not add read-projection models to it. Use standalone `MetaData()` for `search_index_repo.py` patterns.
-
-## Performance Notes
-
-- **Alembic uses `NullPool`** during migrations to avoid holding idle connections during potentially long-running DDL operations.
-- **`expire_on_commit=False`** in the runtime session factory avoids unnecessary per-attribute refresh queries in request handlers.
-- **PostgreSQL search path** is set through asyncpg `server_settings` at engine creation (in `connection.py`), so all queries resolve to the configured app schema without explicit schema prefixes.
-- **Partial unique indexes** on `normalized_entities` are scoped by `standardization_status` — only standardized rows are checked for external ID uniqueness, and only unmapped rows for raw text uniqueness. This avoids full-table unique constraint overhead.
-- The initial migration creates all 9 tables in a single transaction — this is acceptable for MVP but will need splitting if future migrations grow large.
-
-## Dependencies
-
-| Dependency | Version | Purpose |
-|------------|---------|---------|
-| Alembic | ≥1.13 | Async migration framework for PostgreSQL |
-| SQLAlchemy | 2.0 | ORM, metadata, table definitions, SQL expressions |
-| asyncpg | — | PostgreSQL async driver (behind SQLAlchemy) |
-| pydantic-settings | — | `Settings` singleton that provides `postgresql_dsn` to `env.py` |
-| PostgreSQL | 16 | Primary relational database |
-| Redis | 8.0 | Cache layer (via `backend/src/dao/redis/cache_repo.py`) |
-| Neo4j | Community | Graph database for entity relationships |
-| Qdrant | GPU-NVIDIA latest | Vector database for semantic search |
-| MinIO | latest (aistor) | S3-compatible object storage |
+- Don't hardcode DSNs. `env.py` reads from `get_config()`.
+- Don't put Neo4j config files on bind mounts. Use `NEO4J_AUTH=user/password` as a single variable.
+- JSONB columns are opaque storage. Validate payload shapes at the API/service layer (Pydantic), not in migrations.
+- `Base.metadata` IS the migration target. Use standalone `MetaData()` for read projections.
 
 ## Testing
 
 ```bash
-# Migration environment structural tests (no DB required)
 cd backend
-uv run pytest tests/dao/test_alembic_migration.py -v
-
-# ORM model tests (no DB required)
-uv run pytest tests/dao/test_models.py -v
-
-# Configuration DSN tests (no DB required)
-uv run pytest tests/core/test_database_config.py -v
-
-# Connection/session factory tests (no DB required)
-uv run pytest tests/dao/test_connection.py -v
-
-# Full DAO test suite (cache and search-index tests need Redis/PostgreSQL)
-uv run pytest tests/dao/ -v
-
-# Lint
-uv run ruff check src/dao tests/dao tests/core/test_database_config.py
-```
-
-### What's Tested
-
-| Test File | Coverage | Requires Live DB? |
-|-----------|----------|-------------------|
-| `test_alembic_migration.py` | File existence, importability, metadata wiring, revision chain integrity, column parity with ORM, search-index isolation from Base.metadata | No (structural tests); `test_upgrade_head_creates_tables` is skipped |
-| `test_models.py` | Table existence, column definitions, relationships | No |
-| `test_database_config.py` | DSN formatting, user/password escaping, special character handling | No |
-| `test_connection.py` | Engine creation, session factory binding | No |
-| `test_cache_repo.py` | Redis get/set/invalidate with fake Redis | No (uses `fakeredis`) |
-| `test_search_index_repo.py` | Search queries with SQLite in-memory DB | No (uses SQLite) |
-
-Integration tests requiring live PostgreSQL or Redis are marked with `@pytest.mark.skip` and must be run explicitly against a running environment.
-
-## Directory Reference
-
-```
-database/
-├── alembic.ini                  Alembic bootstrap config (script_location, logging, file template)
-├── config/
-│   ├── .env                     Container environment (PostgreSQL, Redis, Neo4j, Qdrant, MinIO creds)
-│   ├── .env.example             Full template with inline documentation
-│   ├── .env.neo4j               Neo4j auth string only
-│   ├── containers.conf          Podman runtime: proxy bypass, cgroups, subnet reservation
-│   └── qdrant_config.json       Qdrant TLS certificate configuration
-├── migrations/
-│   ├── env.py                   Async migration environment (offline/online, imports Base.metadata)
-│   ├── script.py.mako           Migration script template (upgrade/downgrade stubs)
-│   └── versions/
-│       └── 2026-05-18_4a82b5793055_init_mvp_schema.py    Initial MVP schema (9 tables)
-└── seeds/
-    └── .gitkeep                 Placeholder for future seed data
+uv run pytest tests/dao/test_alembic_migration.py -v    # Migration structural tests
+uv run pytest tests/dao/test_models.py -v                # ORM model tests
+uv run pytest tests/core/test_database_config.py -v      # DSN config tests
+uv run pytest tests/dao/ -v                              # Full DAO suite
 ```
