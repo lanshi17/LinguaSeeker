@@ -273,3 +273,8 @@
 [2026-06-09] [ACMG evidence normalization fixes implementation plan] [completed]
 
 [2026-06-09] [Hide empty English translation track: track-availability regression tests] [done] Added two evidence-document tests covering translated_document_text=null and =undefined; both produce paragraphs.length=0. Full npm test run: 10/10 pass.
+
+[2026-06-09] [Hide empty English translation track: compare view conditional render] [done] Added showTranslatedDocument = translatedDocument.paragraphs.length > 0 and conditionally render the English translation reader. Lint clean, type-check clean, 10/10 tests pass.
+[2026-06-09] [ACMG evidence normalization fixes plan review updates] [completed]
+
+[2026-06-09] [Hide empty English translation track: data-availability follow-up] [done] Replaced paragraphs.length>0 with availability check on translated_document_text||traces.translated.text to stop reader collapse when filter state hides all spans. Collapsed duplicate null/undefined tests into one with a comment. Fixed orphaned README row + missing blank line before heading. 9/9 tests, lint and type-check clean.

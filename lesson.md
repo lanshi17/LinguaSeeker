@@ -1558,3 +1558,21 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 - 高亮逻辑必须区分“offset 缺失”“offset 可解析但越界”和“offset 合法需 clamp”三种状态。
 - `return_exceptions=True` 的结果必须逐项记录异常，不允许只用 `isinstance(success_type)` 过滤。
 - LLM provider 初始化前必须验证配置契约，避免把空凭证传给底层客户端。
+
+## 2026-06-09 Hide empty English translation track — data-availability follow-up
+
+- Problem description: After merging the initial fix, `showTranslatedDocument = paragraphs.length > 0` collapsed the translated reader and the two-column grid whenever category/tone filters hid every translated span, even when the API had delivered translated content.
+- Investigation process: Re-read `buildEvidenceDocument` to confirm the no-fullText branch returns 0 paragraphs whenever filter state empties the trace list, and confirmed the component's `length > 0` condition cannot tell data-absence from filter-state.
+- Root cause: UI was using a render-time consequence of the filter as a proxy for data availability.
+- Solution: Compute availability from `detail.translated_document_text?.trim()` and `traces.translated?.text`; let `EvidenceDocumentReader`'s existing empty-state handle the filter-to-zero case.
+- Prevention: Distinguish "API gave us nothing" from "current filter selection renders nothing" at the predicate; never use a downstream rendered count to make a structural visibility decision.
+- Follow-up: Collapsed two near-duplicate null/undefined tests into one with a comment explaining the shared code path; fixed an orphaned `docs/README.md` table row that was placed below a blank line.
+
+## 2026-06-09 Empty English translation track displayed for English originals
+
+- Problem description: The bilingual evidence detail page showed an `English translation` reader with `0 aligned paragraphs` when the original document was already English and no translated text existed.
+- Investigation process: Searched the frontend and backend for bilingual evidence rendering, confirmed `EvidenceDetailView.tsx` always renders both original and translated readers, and confirmed `buildEvidenceDocument` can legitimately return an empty translated document.
+- Root cause: The compare view treated the translated track as present based on the view mode alone, instead of checking whether the translated document had any non-empty paragraphs.
+- Solution: Plan an inline `translatedDocument.paragraphs.length > 0` check and conditionally render the translated reader only when content exists.
+- Prevention: Preserve existing imports in implementation plans and prefer existing empty-state signals before adding helper abstractions.
+- Follow-up: Plan review found the helper and import snippet were unnecessary and could mislead implementation by dropping existing category imports. Revised the plan to use the existing `translatedDocument.paragraphs.length > 0` state directly and document both `null` and `undefined` missing-translation inputs.
