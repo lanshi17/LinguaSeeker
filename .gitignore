@@ -63,6 +63,7 @@ e2e_output
 .codex/*
 backend/output/*
 database/terminology_database/*
+!database/terminology_database/README.md
 .reasonix/*
 .claude/*
 data/pipeline/*
