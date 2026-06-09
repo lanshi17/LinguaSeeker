@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 
 import httpx
 from loguru import logger
@@ -16,6 +17,26 @@ from ..contracts import (
 )
 from ..exceptions import MinerUAPIError
 from .helpers import image_to_base64, pdf_to_images
+
+
+def _extract_abstract_from_markdown(text: str) -> str | None:
+    """Extract abstract text from markdown content.
+
+    Looks for common academic paper patterns:
+    - "Abstract" / "ABSTRACT" heading
+    - "摘要" / "【摘要】" heading (Chinese)
+    Falls back to first substantial paragraph before "Introduction"/"Keywords".
+    """
+    if not text:
+        return None
+    pattern = r"(?:^|\n)\s*(?:#{1,3}\s*)?(?:\*\*)?(?:Abstract|ABSTRACT|摘要|【摘要】)(?:\*\*)?\s*(?::\s*)?\n(.*?)(?=\n\s*(?:#{1,3}\s*)?(?:\*\*)?(?:Introduction|INTRODUCTION|引言|关键词|Keywords|KEYWORDS|Background|BACKGROUND|1\s*[\.\)])|\Z)"
+    m = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+    if m:
+        abstract = m.group(1).strip()
+        abstract = re.sub(r"\n\s*[\*\-]\s*$", "", abstract).strip()
+        if len(abstract) > 30:
+            return abstract
+    return None
 
 
 class MinerULocalParser(ParserStrategy):
@@ -58,11 +79,14 @@ class MinerULocalParser(ParserStrategy):
                 pages.append(page)
                 full_markdown_parts.append(page.markdown)
 
+        combined_markdown = "\n\n".join(full_markdown_parts)
+        abstract = _extract_abstract_from_markdown(combined_markdown)
+
         metadata = DocumentMetadata(
             total_pages=len(pages),
             title=None,
             authors=[],
-            abstract_text=None,
+            abstract_text=abstract,
         )
 
         return ParseResult(

@@ -1,43 +1,73 @@
-# ACMG-Lingua
+# ACMG Lingua
 
-Variant classification and evidence interpretation platform
+Multi-Agent infrastructure platform for medical genetics literature automation and structured evidence extraction.
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 15, React 18, TypeScript, Tailwind CSS, Zustand, React Query |
-| Backend | Python 3.12+, FastAPI, SQLAlchemy, Alembic, Celery |
-| Native I/O | Rust (PyO3 extension via `backend/libs/`) |
+| Frontend | Next.js 15 (App Router), React 18, TypeScript, Tailwind CSS, Zustand, React Query, Axios |
+| Backend | Python 3.12+, FastAPI, SQLAlchemy 2.0 (async), Alembic, LangGraph |
+| Native I/O | Rust (PyO3/maturin extensions: rust-io, files-io, net-io) |
+| Model Server | Standalone FastAPI service (Embedding, Rerank, VLM, LLM chat) |
 | Database | PostgreSQL 16, Redis 8.0 |
-| Infra | Docker Compose |
-
+| Infra | Docker Compose, Ansible (deploy/ansible/) |
 
 ## Project Structure
 
 ```
 .
-├── backend/            # FastAPI application
-│   ├── app/            # Application core (api, models, schemas, services, tasks, utils)
-│   ├── alembic/        # Database migrations
-│   ├── libs/           # PyO3 native extensions (rust-io, files-io, net-io)
-│   └── tests/          # Backend tests (pytest)
-├── frontend/           # Next.js application
-│   ├── app/            # App Router pages
-│   ├── components/     # React components (ui, charts, forms, layout)
-│   ├── lib/            # Utilities, hooks, types, API clients
-│   └── tests/          # Frontend tests
-├── database/
-│   ├── migrations/     # SQL migration scripts
-│   └── seeds/          # Seed data
-├── services/           # External service configurations
-├── scripts/            # Initialization and startup scripts
-├── deploy/             # Container and orchestration configs
-├── docs/               # Documentation (archive completed docs to docs/archive/)
-├── logs/               # Runtime logs (timestamp-named)
-├── progress.txt        # Project progress tracking
-├── lesson.md           # Debugging and iteration retrospectives
-└── AGENTS.md           # Project rules and conventions
+├── backend/                        # FastAPI application
+│   ├── app/                        # Entry point (main.py only)
+│   ├── src/                        # Business logic (Orchestrated Vertical Slice Architecture)
+│   │   ├── agents/                 # Pipeline orchestrator (LangGraph)
+│   │   ├── api/                    # FastAPI routes (v1/)
+│   │   ├── core/                   # Feature slices (Phase 1-4)
+│   │   │   ├── config.py                       # Settings
+│   │   │   ├── ingest_and_digitize_data/       # Phase 1
+│   │   │   ├── cross_lingual_process_and_extract_evidence/  # Phase 2
+│   │   │   ├── standardize_entities_and_align_knowledge/    # Phase 3
+│   │   │   └── visualize_evidence_with_expert_in_loop/      # Phase 4
+│   │   ├── dao/                    # Data access (PostgreSQL, Redis, Neo4j, MinIO)
+│   │   └── utils/                  # Shared utilities
+│   ├── libs/                       # Rust native extensions (rust-io, files-io, net-io)
+│   ├── services/model-server/      # Standalone model inference service
+│   ├── config/                     # Layered YAML config (defaults, environments, vault)
+│   ├── tests/                      # Backend tests
+│   ├── alembic/                    # Migration scaffold
+│   ├── scripts/                    # E2E and utility scripts
+│   └── pyproject.toml              # Python project (uv-managed)
+├── frontend/                       # Next.js application
+│   ├── app/                        # App Router pages
+│   │   ├── (auth)/                 # Login, register
+│   │   └── (dashboard)/            # Pipeline, evidence, chat
+│   ├── src/                        # Feature modules + shared code
+│   │   ├── features/               # auth, pipeline, evidence-search, chat
+│   │   ├── components/             # layout/, ui/
+│   │   ├── lib/                    # config/, api/, hooks/, types/, utils/
+│   │   └── stores/                 # Zustand stores
+│   ├── tests/                      # Frontend tests
+│   └── package.json                # Node project (nvm/npm)
+├── database/                       # Alembic migrations + terminology data
+│   ├── migrations/                 # SQL migration scripts (versions/)
+│   ├── terminology_database/       # Reference data (ClinVar, ClinGen, HPO, OMIM, etc.)
+│   └── config/                     # DB config files
+├── deploy/
+│   └── ansible/                    # Ansible deployment automation
+│       ├── roles/                  # backend, frontend, postgres, redis, nginx, model-server, common
+│       ├── playbooks/              # site.yml, healthcheck.yml
+│       └── inventories/            # production/
+├── docs/                           # Documentation (active, planned, archive)
+├── benchmark/                      # Pipeline benchmarking + ClinGen Layer 3 evaluation
+│   ├── pipeline/                   # Pipeline benchmarks
+│   └── layer3/                     # ClinGen evaluation (ground_truth/)
+├── scripts/                        # Project-level utility scripts
+├── data/                           # Runtime data
+├── knowledges/                     # Knowledge base documents
+├── docker-compose.yml              # Local development orchestration
+├── AGENTS.md                       # Project rules and conventions
+├── progress.txt                    # Progress tracking
+└── lesson.md                       # Retrospective notes
 ```
 
 ## Getting Started
@@ -84,7 +114,13 @@ npm run dev
 ```bash
 cd backend/libs/rust-io
 cargo test
-cargo bench
+```
+
+**Model server:**
+
+```bash
+cd backend/services/model-server
+uv run python main.py
 ```
 
 ## Development Commands
@@ -96,8 +132,10 @@ cargo bench
 | `cd backend && uv run pytest tests/path/to/test.py::test_name` | Run a single test |
 | `cd frontend && npm run lint` | Lint frontend code |
 | `cd frontend && npm run type-check` | TypeScript type check |
+| `cd frontend && npm run build` | Production build |
 | `cd backend/libs/rust-io && cargo test` | Run Rust tests |
 | `cd backend/libs/rust-io && cargo bench` | Run Rust benchmarks |
+| `cd backend/services/model-server && uv run python main.py` | Start model server |
 | `docker compose up` | Start full stack |
 
 ## Branch Strategy
