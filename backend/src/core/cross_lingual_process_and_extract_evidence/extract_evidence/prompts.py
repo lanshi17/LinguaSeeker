@@ -168,6 +168,9 @@ RULES:
     Decision guidance: Use "causative" when the gene is established as a disease gene (e.g., pathogenic variants described, known disease gene, ACMG pathogenic classification, ClinGen Definitive/Strong/Moderate curation, or multiple independent studies with replicated functional or genetic evidence confirm the gene causes the disease). A single case report or preliminary association alone does NOT qualify as "causative" — use "associated" or "susceptibility" instead. Individual variant classifications (e.g., VUS) do NOT downgrade the gene-disease relationship — the relationship reflects the overall gene-disease validity, not individual variant pathogenicity. Use "associated" only when the gene-disease link itself is explicitly described as merely correlative or preliminary without causal evidence.
 18. For B.disease_diagnosis, extract ONLY the primary disease name relevant to the target gene (e.g., "Fabry disease", "Charcot-Marie-Tooth disease"). Do NOT extract lists of unrelated diseases, background comorbidities, or general medical history.
 19. For B.disease_diagnosis, if the document mentions multiple diseases, extract ONLY the one most directly linked to the gene being curated. Ignore incidental mentions of other conditions.
+20. For B.age_of_onset, extract referral, diagnosis, first symptoms, or presentation age. Do NOT use developmental milestones as B.age_of_onset, for example sitting, walking, or speaking ages unless the sentence explicitly states symptom onset.
+21. Computational predictions support PP3/BP4 only. Do not treat in silico predictions as F.functional_result, F.assay_type, or other functional evidence fields unless there is a real wet-lab, cell, animal, or patient-derived assay.
+22. E.prediction_tools_list requires named tools such as SpliceAI, CADD, REVEL, PolyPhen-2, SIFT, MutationTaster, or MaxEntScan. Generic phrases like "in silico tools" are insufficient and must be not_found.
 
 DOCUMENT BLOCKS:
 {text}

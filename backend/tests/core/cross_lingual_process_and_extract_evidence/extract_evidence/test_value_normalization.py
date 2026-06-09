@@ -4,6 +4,7 @@ from __future__ import annotations
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     EvidenceItem,
     EvidenceStatus,
+    SourceLocation,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.normalization import (
     AcmgEvidenceValueNormalizer,
@@ -86,19 +87,16 @@ def test_rejected_item_clears_stale_assigned_codes() -> None:
 
 def test_de_novo_status_is_normalized_to_enum_value() -> None:
     inputs = [
-        _item("C.de_novo_status", "not de novo"),
-        _item("C.de_novo_status", False),
-        _item("C.de_novo_status", 0),
+        _item("C.de_novo_status", "not de novo").model_copy(update={"group_id": "g1"}),
+        _item("C.de_novo_status", False).model_copy(update={"group_id": "g2"}),
+        _item("C.de_novo_status", 0).model_copy(update={"group_id": "g3"}),
     ]
 
     items, issues = AcmgEvidenceValueNormalizer().normalize(inputs)
 
     assert [item.value for item in items] == ["not_de_novo", "not_de_novo", "not_de_novo"]
-    assert [issue.issue_type.value for issue in issues] == [
-        "value_normalized",
-        "value_normalized",
-        "value_normalized",
-    ]
+    value_issues = [i for i in issues if i.issue_type.value == "value_normalized"]
+    assert len(value_issues) == 3
 
 
 def test_consanguinity_preserves_detail_and_normalizes_status() -> None:
@@ -111,9 +109,9 @@ def test_consanguinity_preserves_detail_and_normalizes_status() -> None:
 
 def test_consanguinity_unknown_is_not_marked_present() -> None:
     inputs = [
-        _item("B.consanguinity", "unknown"),
-        _item("B.consanguinity", "N/A"),
-        _item("B.consanguinity", "not applicable"),
+        _item("B.consanguinity", "unknown").model_copy(update={"group_id": "g1"}),
+        _item("B.consanguinity", "N/A").model_copy(update={"group_id": "g2"}),
+        _item("B.consanguinity", "not applicable").model_copy(update={"group_id": "g3"}),
     ]
 
     items, _ = AcmgEvidenceValueNormalizer().normalize(inputs)
@@ -122,8 +120,138 @@ def test_consanguinity_unknown_is_not_marked_present() -> None:
 
 
 def test_obligate_carriers_numeric_and_parent_text_normalize_to_count() -> None:
-    inputs = [_item("C.obligate_carriers", "parents"), _item("C.obligate_carriers", True)]
+    inputs = [
+        _item("C.obligate_carriers", "parents").model_copy(update={"group_id": "g1"}),
+        _item("C.obligate_carriers", True).model_copy(update={"group_id": "g2"}),
+    ]
 
     items, _ = AcmgEvidenceValueNormalizer().normalize(inputs)
 
     assert [item.value for item in items] == [2, 2]
+
+
+def test_age_of_onset_rejects_developmental_milestone_text() -> None:
+    item = _item("B.age_of_onset", "started sitting with support at the age of 15 months")
+
+    items, issues = AcmgEvidenceValueNormalizer().normalize([item])
+
+    assert items[0].status == EvidenceStatus.NOT_FOUND
+    assert items[0].value is None
+    assert issues[0].issue_type.value == "semantic_conflict"
+
+
+def test_age_of_onset_does_not_reject_non_milestone_support_text() -> None:
+    item = _item("B.age_of_onset", "required respiratory support from age 2")
+
+    items, issues = AcmgEvidenceValueNormalizer().normalize([item])
+
+    assert items[0].status == EvidenceStatus.FOUND
+    assert items[0].value == "required respiratory support from age 2"
+    assert issues == []
+
+
+def test_in_silico_functional_phrase_is_not_functional_evidence() -> None:
+    item = _item("F.functional_result", "functional analysis predicted by in silico tools")
+
+    items, issues = AcmgEvidenceValueNormalizer().normalize([item])
+
+    assert items[0].status == EvidenceStatus.NOT_FOUND
+    assert items[0].value is None
+    assert issues[0].issue_type.value == "semantic_conflict"
+
+
+def test_generic_prediction_tool_name_is_rejected() -> None:
+    item = _item("E.prediction_tools_list", "in silico tools")
+
+    items, issues = AcmgEvidenceValueNormalizer().normalize([item])
+
+    assert items[0].status == EvidenceStatus.NOT_FOUND
+    assert items[0].value is None
+    assert issues[0].issue_type.value == "generic_prediction_tool"
+
+
+def test_empty_prediction_tools_list_is_not_generic_tool_evidence() -> None:
+    items, issues = AcmgEvidenceValueNormalizer().normalize([
+        _item("E.prediction_tools_list", []),
+    ])
+
+    assert items[0].status == EvidenceStatus.NOT_FOUND
+    assert items[0].value is None
+    assert issues == []
+
+
+def test_mixed_prediction_tools_filters_generic_entry_with_audit_issue() -> None:
+    items, issues = AcmgEvidenceValueNormalizer().normalize([
+        _item("E.prediction_tools_list", ["CADD", "in silico tools"]),
+    ])
+
+    assert items[0].status == EvidenceStatus.FOUND
+    assert items[0].value == ["CADD"]
+    assert [issue.issue_type.value for issue in issues] == [
+        "value_normalized",
+        "generic_prediction_tool",
+    ]
+
+
+def test_duplicate_facts_merge_by_group_field_and_value() -> None:
+    duplicate_items = [
+        _item("A.gene_symbol", "AARS2").model_copy(update={"group_id": "gene=AARS2|variant=__missing__", "confidence": 0.80}),
+        _item("A.gene_symbol", " AARS2 ").model_copy(update={"group_id": "gene=AARS2|variant=__missing__", "confidence": 0.95}),
+        _item("B.age_current_or_last_followup", "10 years").model_copy(update={"group_id": "gene=AARS2|variant=__missing__"}),
+        _item("B.age_current_or_last_followup", "10 years").model_copy(update={"group_id": "gene=AARS2|variant=__missing__"}),
+    ]
+
+    items, issues = AcmgEvidenceValueNormalizer().normalize(duplicate_items)
+
+    assert len(items) == 2
+    assert items[0].field_id == "A.gene_symbol"
+    assert items[0].confidence == 0.95
+    assert items[1].field_id == "B.age_current_or_last_followup"
+    assert items[1].value == "10 years"
+    assert [issue.issue_type.value for issue in issues].count("duplicate_merged") == 2
+
+
+def test_duplicate_merge_preserves_available_raw_source() -> None:
+    source = SourceLocation(
+        context_type="text",
+        context_ref="case paragraph",
+        text_snippet="AARS2",
+        block_index=4,
+    )
+    duplicate_items = [
+        _item("A.gene_symbol", "AARS2").model_copy(update={
+            "group_id": "gene=AARS2|variant=__missing__",
+            "confidence": 0.80,
+            "raw_source": source,
+        }),
+        _item("A.gene_symbol", "AARS2").model_copy(update={
+            "group_id": "gene=AARS2|variant=__missing__",
+            "confidence": 0.95,
+            "raw_source": None,
+        }),
+    ]
+
+    items, _ = AcmgEvidenceValueNormalizer().normalize(duplicate_items)
+
+    assert items[0].confidence == 0.95
+    assert items[0].raw_source == source
+
+
+def test_duplicate_merge_keeps_distinct_source_blocks() -> None:
+    source_1 = SourceLocation(context_type="text", context_ref="case", text_snippet="AARS2", block_index=1)
+    source_2 = SourceLocation(context_type="table", context_ref="Table 1", text_snippet="AARS2", block_index=7)
+
+    items, issues = AcmgEvidenceValueNormalizer().normalize([
+        _item("A.gene_symbol", "AARS2").model_copy(update={"raw_source": source_1}),
+        _item("A.gene_symbol", "AARS2").model_copy(update={"raw_source": source_2}),
+    ])
+
+    assert len(items) == 2
+    assert issues == []
+
+
+def test_normalized_value_key_preserves_falsey_values() -> None:
+    normalizer = AcmgEvidenceValueNormalizer()
+
+    assert normalizer._normalized_value_key(0) != normalizer._normalized_value_key(None)
+    assert normalizer._normalized_value_key(False) != normalizer._normalized_value_key(None)
