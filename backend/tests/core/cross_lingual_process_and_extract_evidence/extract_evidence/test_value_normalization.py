@@ -83,3 +83,48 @@ def test_rejected_item_clears_stale_assigned_codes() -> None:
 
     assert items[0].assigned_acmg_codes == []
     assert items[0].assigned_clingen_modules == []
+
+
+def test_de_novo_status_is_normalized_to_enum_value() -> None:
+    inputs = [
+        _item("C.de_novo_status", "not de novo"),
+        _item("C.de_novo_status", False),
+        _item("C.de_novo_status", 0),
+    ]
+
+    items, issues = AcmgEvidenceValueNormalizer().normalize(inputs)
+
+    assert [item.value for item in items] == ["not_de_novo", "not_de_novo", "not_de_novo"]
+    assert [issue.issue_type.value for issue in issues] == [
+        "value_normalized",
+        "value_normalized",
+        "value_normalized",
+    ]
+
+
+def test_consanguinity_preserves_detail_and_normalizes_status() -> None:
+    items, _ = AcmgEvidenceValueNormalizer().normalize([
+        _item("B.consanguinity", "first-degree maternal cousins"),
+    ])
+
+    assert items[0].value == "present:first-degree maternal cousins"
+
+
+def test_consanguinity_unknown_is_not_marked_present() -> None:
+    inputs = [
+        _item("B.consanguinity", "unknown"),
+        _item("B.consanguinity", "N/A"),
+        _item("B.consanguinity", "not applicable"),
+    ]
+
+    items, _ = AcmgEvidenceValueNormalizer().normalize(inputs)
+
+    assert [item.value for item in items] == ["unknown", "unknown", "unknown"]
+
+
+def test_obligate_carriers_numeric_and_parent_text_normalize_to_count() -> None:
+    inputs = [_item("C.obligate_carriers", "parents"), _item("C.obligate_carriers", True)]
+
+    items, _ = AcmgEvidenceValueNormalizer().normalize(inputs)
+
+    assert [item.value for item in items] == [2, 2]
