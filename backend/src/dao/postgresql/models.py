@@ -249,7 +249,6 @@ class RunEvidenceItem(Base, TimestampMixin):
         CheckConstraint("confidence >= 0 AND confidence <= 1", name="ck_run_evidence_items_confidence_range"),
         Index("ix_run_evidence_items_processing_run_id", "processing_run_id"),
         Index("ix_run_evidence_items_source_document_id", "source_document_id"),
-        Index("ix_run_evidence_items_canonical_evidence_id", "canonical_evidence_id"),
     )
 
     run_evidence_item_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -273,11 +272,6 @@ class RunEvidenceItem(Base, TimestampMixin):
     source_span: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
     entity_scope_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     raw_payload: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
-    canonical_evidence_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("canonical_evidence_items.canonical_evidence_id", use_alter=True),
-        nullable=True,
-    )
 
 
 class EvidenceEntityBinding(Base, TimestampMixin):

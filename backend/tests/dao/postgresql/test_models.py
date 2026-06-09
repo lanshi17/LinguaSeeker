@@ -262,3 +262,11 @@ def test_chat_messages_role_column() -> None:
     """Messages distinguish user vs assistant."""
     table = _table("chat_messages")
     assert "role" in table.c
+
+
+def test_run_evidence_item_has_no_canonical_evidence_id() -> None:
+    """RunEvidenceItem no longer has canonical_evidence_id (dead FK removed)."""
+    from src.dao.postgresql.models import RunEvidenceItem
+
+    column_names = {c.name for c in RunEvidenceItem.__table__.columns}
+    assert "canonical_evidence_id" not in column_names
