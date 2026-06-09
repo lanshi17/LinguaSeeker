@@ -609,7 +609,13 @@ function BilingualComparison({
       ),
     [detail, enabledTones, selectedEvidenceId, enabledCategories],
   );
-  const showTranslatedDocument = translatedDocument.paragraphs.length > 0;
+  // Translate-track data availability ignores user-applied filters: a reader should still be shown
+  // (and let its built-in empty-state render) when the API delivered translated content even if the
+  // active category/toner set filters every span out. Collapsing the reader on every toggle caused
+  // layout flicker for English originals with translated trace highlights.
+  const showTranslatedDocument =
+    Boolean(detail.translated_document_text?.trim()) ||
+    detail.traces.some((trace) => Boolean(trace.translated?.text));
 
   const toggleCategory = (cat: string) => {
     setEnabledCategories((current) => {
