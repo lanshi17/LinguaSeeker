@@ -23,7 +23,7 @@ export default async function EvidenceDetailPage({ searchParams }: EvidenceDetai
         title={view === "compare" ? "Bilingual Evidence" : "Literature Detail"}
         description={
           view === "compare"
-            ? "Compare original and translated evidence spans with field-level highlights."
+            ? "Read original and English full-text evidence side by side with category highlight controls."
             : "Review literature metadata, evidence distribution, and extracted fields."
         }
       />

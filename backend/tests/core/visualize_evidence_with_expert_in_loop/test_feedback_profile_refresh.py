@@ -61,16 +61,71 @@ class TestFeedbackProfileRefresh:
         with patch.object(
             service, "_refresh_literature_profile", new_callable=AsyncMock
         ) as mock_refresh:
-            patch_req = EvidencePatchRequest(
-                fields={"phenotype": "Updated"},
-                change_reason="test",
-            )
-            await service.patch_evidence(
-                canonical_evidence_id=evidence_id,
-                patch=patch_req,
-                reviewer_id=None,
-            )
-            mock_refresh.assert_awaited_once_with(doc_id)
+            with patch.object(service, "_refresh_search_index", new_callable=AsyncMock):
+                patch_req = EvidencePatchRequest(
+                    fields={"phenotype": "Updated"},
+                    change_reason="test",
+                )
+                await service.patch_evidence(
+                    canonical_evidence_id=evidence_id,
+                    patch=patch_req,
+                    reviewer_id=None,
+                )
+                mock_refresh.assert_awaited_once_with(doc_id)
+
+    async def test_patch_calls_refresh_search_index(self) -> None:
+        """patch_evidence calls _refresh_search_index after an evidence change."""
+        from src.core.visualize_evidence_with_expert_in_loop.contracts import (
+            EvidencePatchRequest,
+        )
+
+        doc_id = uuid4()
+        evidence_id = uuid4()
+
+        mock_evidence = MagicMock()
+        mock_evidence.canonical_evidence_id = evidence_id
+        mock_evidence.source_document_id = doc_id
+        mock_evidence.active_payload = {
+            "gene": "GLA",
+            "phenotype": "Fabry disease",
+            "classification": None,
+            "variant": None,
+            "disease": None,
+            "evidence_strength": None,
+            "evidence_type": None,
+            "functional_impact": None,
+            "inheritance_pattern": None,
+            "zygosity": None,
+            "references": [],
+            "summary": None,
+        }
+        mock_evidence.review_status = "provisional"
+
+        mock_result = MagicMock()
+        mock_result.scalar_one.return_value = mock_evidence
+
+        session = MagicMock()
+        session.execute = AsyncMock(return_value=mock_result)
+        session.flush = AsyncMock()
+
+        service = FeedbackService(session)
+
+        with patch.object(
+            service, "_refresh_literature_profile", new_callable=AsyncMock
+        ):
+            with patch.object(
+                service, "_refresh_search_index", new_callable=AsyncMock
+            ) as mock_refresh_index:
+                patch_req = EvidencePatchRequest(
+                    fields={"phenotype": "Updated"},
+                    change_reason="test",
+                )
+                await service.patch_evidence(
+                    canonical_evidence_id=evidence_id,
+                    patch=patch_req,
+                    reviewer_id=None,
+                )
+                mock_refresh_index.assert_awaited_once_with()
 
     async def test_refresh_delegates_to_literature_profile_repo(self) -> None:
         """_refresh_literature_profile creates a LiteratureProfileRepository and
@@ -95,6 +150,27 @@ class TestFeedbackProfileRefresh:
 
             mock_repo_cls.assert_called_once_with(session)
             mock_repo.refresh_for_document.assert_awaited_once_with(doc_id)
+
+    async def test_refresh_search_index_delegates_to_search_index_repo(self) -> None:
+        """_refresh_search_index creates a SearchIndexRepository and calls refresh."""
+        from src.core.visualize_evidence_with_expert_in_loop.feedback_service import (
+            FeedbackService,
+        )
+
+        session = MagicMock()
+        service = FeedbackService(session)
+
+        with patch(
+            "src.dao.postgresql.search_index_repo.SearchIndexRepository"
+        ) as mock_repo_cls:
+            mock_repo = MagicMock()
+            mock_repo.refresh = AsyncMock()
+            mock_repo_cls.return_value = mock_repo
+
+            await service._refresh_search_index()
+
+            mock_repo_cls.assert_called_once_with(session)
+            mock_repo.refresh.assert_awaited_once_with()
 
     async def test_refresh_skipped_when_no_deltas_and_no_status_change(self) -> None:
         """_refresh_literature_profile is NOT called when patch produces no
@@ -204,15 +280,20 @@ class TestFeedbackProfileRefresh:
             ) as mock_refresh:
                 mock_refresh.side_effect = lambda _: call_order.append("refresh")
 
-                patch_req = EvidencePatchRequest(
-                    fields={"phenotype": "Updated phenotype"},
-                    change_reason="ordering test",
-                )
-                await service.patch_evidence(
-                    canonical_evidence_id=evidence_id,
-                    patch=patch_req,
-                    reviewer_id=None,
-                )
+                with patch.object(
+                    service, "_refresh_search_index", new_callable=AsyncMock
+                ) as mock_refresh_index:
+                    mock_refresh_index.side_effect = lambda: call_order.append("search_index")
+
+                    patch_req = EvidencePatchRequest(
+                        fields={"phenotype": "Updated phenotype"},
+                        change_reason="ordering test",
+                    )
+                    await service.patch_evidence(
+                        canonical_evidence_id=evidence_id,
+                        patch=patch_req,
+                        reviewer_id=None,
+                    )
 
                 assert "refresh" in call_order
                 assert call_order.index("audit_event") < call_order.index("refresh")

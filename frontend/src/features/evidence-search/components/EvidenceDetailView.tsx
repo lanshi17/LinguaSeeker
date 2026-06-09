@@ -1,16 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   BookOpen,
   Columns2,
   FileText,
+  Highlighter,
   Languages,
   ListChecks,
   Percent,
   Search,
   ShieldCheck,
+  SlidersHorizontal,
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
@@ -20,15 +22,19 @@ import { useEvidenceGroupDetail } from "../hooks/useEvidenceGroupDetail";
 import type {
   EvidenceGroupDetailResponse,
   EvidenceGroupItem,
+  EvidenceHighlightTone,
 } from "../types/evidenceSearch";
+import {
+  buildEvidenceDocument,
+  countEvidenceHighlightTones,
+  evidenceToneForItem,
+  type EvidenceDocumentHighlight,
+  type EvidenceDocumentParagraph,
+} from "../utils/evidenceDocument";
 import {
   buildBilingualCompareHref,
   findInitialEvidenceId,
 } from "../utils/literatureRows";
-import {
-  EvidenceHighlightText,
-  type EvidenceHighlightTone,
-} from "./EvidenceHighlightText";
 
 type DetailViewMode = "overview" | "compare";
 
@@ -70,6 +76,33 @@ const TONE_CHIP_STYLES: Record<EvidenceHighlightTone, string> = {
   variant: "border-cyan-200 bg-cyan-50 text-cyan-800",
 };
 
+const TONE_MARK_STYLES: Record<EvidenceHighlightTone, string> = {
+  classification: "bg-amber-200 text-amber-950 ring-1 ring-amber-300",
+  disease: "bg-rose-200 text-rose-950 ring-1 ring-rose-300",
+  functional: "bg-success-200 text-success-950 ring-1 ring-success-300",
+  gene: "bg-primary-200 text-primary-950 ring-1 ring-primary-300",
+  neutral: "bg-gray-200 text-gray-950 ring-1 ring-gray-300",
+  variant: "bg-cyan-200 text-cyan-950 ring-1 ring-cyan-300",
+};
+
+const TONE_LABELS: Record<EvidenceHighlightTone, string> = {
+  classification: "Classification",
+  disease: "Disease / phenotype",
+  functional: "Functional evidence",
+  gene: "Gene",
+  neutral: "Other evidence",
+  variant: "Variant",
+};
+
+const HIGHLIGHT_TONES: EvidenceHighlightTone[] = [
+  "gene",
+  "variant",
+  "disease",
+  "classification",
+  "functional",
+  "neutral",
+];
+
 function formatPercent(value?: number | null) {
   if (value == null) {
     return "\u2014";
@@ -92,29 +125,7 @@ function categoryLabel(category?: string | null) {
 }
 
 function evidenceTone(item?: EvidenceGroupItem | null): EvidenceHighlightTone {
-  const fieldId = item?.field_id.toLowerCase() ?? "";
-  const category = item ? categoryFromItem(item) : null;
-
-  if (fieldId.includes("gene")) {
-    return "gene";
-  }
-  if (fieldId.includes("variant") || fieldId.includes("hgvs")) {
-    return "variant";
-  }
-  if (fieldId.includes("disease") || fieldId.includes("phenotype")) {
-    return "disease";
-  }
-  if (
-    fieldId.includes("classification") ||
-    fieldId.includes("pathogenic") ||
-    fieldId.includes("acmg")
-  ) {
-    return "classification";
-  }
-  if (["F", "G", "I"].includes(category ?? "")) {
-    return "functional";
-  }
-  return "neutral";
+  return evidenceToneForItem(item);
 }
 
 function itemLabel(item: EvidenceGroupItem) {
@@ -143,6 +154,26 @@ function selectedTraceFor(
     detail.traces.find((trace) => trace.field_id === selectedItem?.field_id) ??
     detail.traces[0] ??
     null
+  );
+}
+
+function detailTitle(detail: EvidenceGroupDetailResponse) {
+  const title = detail.title?.trim();
+  return title || "Untitled literature record";
+}
+
+function MetadataToken({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string | null;
+}) {
+  return (
+    <span className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-primary-100 bg-white px-2.5 py-1 text-xs text-primary-900">
+      <span className="font-semibold">{label}</span>
+      <span className="truncate font-mono">{value?.trim() || "\u2014"}</span>
+    </span>
   );
 }
 
@@ -189,7 +220,7 @@ function EvidenceItemSummary({
           className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md border border-primary-200 bg-primary-50 px-3 text-sm font-medium text-primary-800 transition-colors hover:bg-primary-100 focus-visible:ring-2 focus-visible:ring-primary-500"
         >
           <Columns2 className="h-4 w-4" />
-          Compare text
+          Compare full text
         </Link>
       </div>
 
@@ -231,12 +262,17 @@ function LiteratureOverview({
                 <BookOpen className="h-4 w-4" />
                 Literature record
               </p>
-              <h2 className="mt-2 text-xl font-semibold text-gray-950">
-                PMID {detail.pmid ?? "\u2014"}
+              <h2 className="mt-2 max-w-4xl text-xl font-semibold leading-7 text-gray-950">
+                {detailTitle(detail)}
               </h2>
-              <p className="mt-1 truncate text-sm text-primary-900">
-                DOI {detail.doi ?? "\u2014"}
-              </p>
+              <div className="mt-3 flex max-w-4xl flex-wrap gap-2">
+                <MetadataToken
+                  label="UUID"
+                  value={detail.source_document_id}
+                />
+                <MetadataToken label="PMID" value={detail.pmid} />
+                <MetadataToken label="DOI" value={detail.doi} />
+              </div>
             </div>
             <Badge variant={STATUS_VARIANT.approved}>Traceable</Badge>
           </div>
@@ -352,7 +388,7 @@ function LiteratureOverview({
                 className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md bg-primary-700 px-3 text-sm font-medium text-white transition-colors hover:bg-primary-800 focus-visible:ring-2 focus-visible:ring-primary-500"
               >
                 <Languages className="h-4 w-4" />
-                Open comparison
+                Full-text comparison
               </Link>
             )}
           </div>
@@ -372,6 +408,155 @@ function LiteratureOverview({
   );
 }
 
+function normalizedHighlights(paragraph: EvidenceDocumentParagraph) {
+  const highlights = [...paragraph.highlights].sort((a, b) => a.start - b.start);
+  const normalized: EvidenceDocumentHighlight[] = [];
+  let cursor = 0;
+
+  for (const highlight of highlights) {
+    const start = Math.max(cursor, Math.max(0, Math.min(highlight.start, paragraph.text.length)));
+    const end = Math.max(start, Math.min(highlight.end, paragraph.text.length));
+    if (end <= start) {
+      continue;
+    }
+    normalized.push({ ...highlight, start, end });
+    cursor = end;
+  }
+
+  return normalized;
+}
+
+function HighlightedParagraph({
+  paragraph,
+}: {
+  paragraph: EvidenceDocumentParagraph;
+}) {
+  const highlights = normalizedHighlights(paragraph);
+  const nodes: ReactNode[] = [];
+  let cursor = 0;
+
+  highlights.forEach((highlight, index) => {
+    if (highlight.start > cursor) {
+      nodes.push(paragraph.text.slice(cursor, highlight.start));
+    }
+    nodes.push(
+      <mark
+        key={`${highlight.evidenceId}-${highlight.start}-${index}`}
+        className={cn(
+          "rounded px-1 py-0.5 font-semibold",
+          TONE_MARK_STYLES[highlight.tone],
+          highlight.selected &&
+            "outline outline-2 outline-offset-2 outline-primary-700",
+        )}
+        aria-label={`${TONE_LABELS[highlight.tone]} evidence: ${highlight.label}`}
+      >
+        {paragraph.text.slice(highlight.start, highlight.end)}
+      </mark>,
+    );
+    cursor = highlight.end;
+  });
+
+  if (cursor < paragraph.text.length) {
+    nodes.push(paragraph.text.slice(cursor));
+  }
+
+  return (
+    <div className="border-b border-gray-100 py-4 last:border-b-0">
+      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+        <span className="rounded-md bg-gray-100 px-2 py-1 font-medium text-gray-700">
+          {paragraph.highlights[0]?.label ?? "Document text"}
+        </span>
+        <span>Page {paragraph.page ?? "\u2014"}</span>
+      </div>
+      <p className="whitespace-pre-wrap text-sm leading-7 text-gray-800">
+        {nodes.length > 0 ? nodes : paragraph.text}
+      </p>
+    </div>
+  );
+}
+
+function EvidenceDocumentReader({
+  title,
+  paragraphs,
+}: {
+  title: string;
+  paragraphs: EvidenceDocumentParagraph[];
+}) {
+  return (
+    <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+      <div className="border-b border-gray-100 bg-gray-50 px-4 py-3">
+        <h3 className="text-sm font-semibold text-gray-950">{title}</h3>
+        <p className="mt-1 text-xs text-gray-500">
+          {paragraphs.length} aligned paragraph{paragraphs.length !== 1 ? "s" : ""}
+        </p>
+      </div>
+      <div className="max-h-[720px] overflow-y-auto px-4">
+        {paragraphs.length > 0 ? (
+          paragraphs.map((paragraph) => (
+            <HighlightedParagraph key={paragraph.id} paragraph={paragraph} />
+          ))
+        ) : (
+          <div className="px-2 py-10 text-center text-sm text-gray-500">
+            No document text is available for this track.
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function HighlightLayerToggle({
+  checked,
+  count,
+  onChange,
+  tone,
+}: {
+  checked: boolean;
+  count: number;
+  onChange: () => void;
+  tone: EvidenceHighlightTone;
+}) {
+  return (
+    <label
+      className={cn(
+        "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 transition-colors",
+        checked
+          ? "border-primary-200 bg-primary-50"
+          : "border-gray-200 bg-white hover:bg-gray-50",
+        count === 0 && "cursor-not-allowed opacity-50",
+      )}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={count === 0}
+        onChange={onChange}
+        className="peer sr-only"
+      />
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-medium text-gray-900">
+          {TONE_LABELS[tone]}
+        </span>
+        <span className="text-xs text-gray-500">{count} item{count !== 1 ? "s" : ""}</span>
+      </span>
+      <span
+        className={cn(
+          "relative h-6 w-11 shrink-0 rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-primary-500 peer-focus-visible:ring-offset-2",
+          checked ? "bg-primary-700" : "bg-gray-300",
+        )}
+        aria-hidden="true"
+      >
+        <span
+          className={cn(
+            "absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform",
+            checked && "translate-x-5",
+          )}
+        />
+      </span>
+    </label>
+  );
+}
+
 function BilingualComparison({
   detail,
   groupId,
@@ -383,6 +568,9 @@ function BilingualComparison({
   selectedEvidenceId: string | null;
   setSelectedEvidenceId: (value: string) => void;
 }) {
+  const [enabledTones, setEnabledTones] = useState<Set<EvidenceHighlightTone>>(
+    () => new Set(HIGHLIGHT_TONES),
+  );
   const selectedItem =
     detail.items.find(
       (item) => item.canonical_evidence_id === selectedEvidenceId,
@@ -390,7 +578,42 @@ function BilingualComparison({
     detail.items[0] ??
     null;
   const selectedTrace = selectedTraceFor(detail, selectedEvidenceId);
-  const tone = evidenceTone(selectedItem);
+  const toneCounts = useMemo(
+    () => countEvidenceHighlightTones(detail.items),
+    [detail.items],
+  );
+  const originalDocument = useMemo(
+    () =>
+      buildEvidenceDocument(
+        detail,
+        "original",
+        enabledTones,
+        selectedEvidenceId,
+      ),
+    [detail, enabledTones, selectedEvidenceId],
+  );
+  const translatedDocument = useMemo(
+    () =>
+      buildEvidenceDocument(
+        detail,
+        "translated",
+        enabledTones,
+        selectedEvidenceId,
+      ),
+    [detail, enabledTones, selectedEvidenceId],
+  );
+
+  const toggleTone = (tone: EvidenceHighlightTone) => {
+    setEnabledTones((current) => {
+      const next = new Set(current);
+      if (next.has(tone)) {
+        next.delete(tone);
+      } else {
+        next.add(tone);
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-5">
@@ -407,14 +630,16 @@ function BilingualComparison({
           <div className="min-w-0">
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary-800">
               <Columns2 className="h-4 w-4" />
-              Bilingual evidence trace
+              Bilingual full-text document
             </p>
-            <h2 className="mt-2 text-xl font-semibold text-gray-950">
-              {selectedItem ? itemLabel(selectedItem) : "No evidence selected"}
+            <h2 className="mt-2 max-w-4xl text-xl font-semibold leading-7 text-gray-950">
+              {detailTitle(detail)}
             </h2>
-            <p className="mt-1 font-mono text-xs text-gray-500">
-              {selectedItem?.field_id ?? "\u2014"}
-            </p>
+            <div className="mt-3 flex max-w-4xl flex-wrap gap-2">
+              <MetadataToken label="UUID" value={detail.source_document_id} />
+              <MetadataToken label="PMID" value={detail.pmid} />
+              <MetadataToken label="DOI" value={detail.doi} />
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {selectedItem && <EvidenceTonePill item={selectedItem} />}
@@ -465,78 +690,104 @@ function BilingualComparison({
       </section>
 
       <div className="grid gap-5 lg:grid-cols-[340px_minmax(0,1fr)]">
-        <aside className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-            <Search className="h-4 w-4 text-primary-700" />
-            Evidence items
-          </h3>
-          <div className="mt-4 max-h-[620px] space-y-2 overflow-y-auto pr-1">
-            {detail.items.map((item) => {
-              const active =
-                item.canonical_evidence_id === selectedItem?.canonical_evidence_id;
-              return (
-                <button
-                  key={item.canonical_evidence_id}
-                  type="button"
-                  onClick={() => setSelectedEvidenceId(item.canonical_evidence_id)}
-                  className={cn(
-                    "w-full cursor-pointer rounded-lg border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-primary-500",
-                    active
-                      ? "border-primary-300 bg-primary-50"
-                      : "border-gray-200 bg-white hover:border-primary-200 hover:bg-gray-50",
-                  )}
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <EvidenceTonePill item={item} />
-                    <span className="text-xs text-gray-500">
-                      {formatPercent(item.confidence)}
-                    </span>
-                  </div>
-                  <p className="mt-2 line-clamp-2 text-sm font-medium text-gray-900">
-                    {itemLabel(item)}
-                  </p>
-                  <p className="mt-1 line-clamp-2 text-xs text-gray-500">
-                    {item.value ?? "\u2014"}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
+        <aside className="space-y-4">
+          <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+              <SlidersHorizontal className="h-4 w-4 text-primary-700" />
+              Highlight layers
+            </h3>
+            <div className="mt-4 space-y-2">
+              {HIGHLIGHT_TONES.map((tone) => (
+                <HighlightLayerToggle
+                  key={tone}
+                  tone={tone}
+                  count={toneCounts[tone]}
+                  checked={enabledTones.has(tone)}
+                  onChange={() => toggleTone(tone)}
+                />
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+              <Search className="h-4 w-4 text-primary-700" />
+              Evidence navigator
+            </h3>
+            <div className="mt-4 max-h-[460px] space-y-2 overflow-y-auto pr-1">
+              {detail.items.map((item) => {
+                const active =
+                  item.canonical_evidence_id === selectedItem?.canonical_evidence_id;
+                return (
+                  <button
+                    key={item.canonical_evidence_id}
+                    type="button"
+                    onClick={() => setSelectedEvidenceId(item.canonical_evidence_id)}
+                    className={cn(
+                      "w-full cursor-pointer rounded-lg border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-primary-500",
+                      active
+                        ? "border-primary-300 bg-primary-50"
+                        : "border-gray-200 bg-white hover:border-primary-200 hover:bg-gray-50",
+                    )}
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <EvidenceTonePill item={item} />
+                      <span className="text-xs text-gray-500">
+                        {formatPercent(item.confidence)}
+                      </span>
+                    </div>
+                    <p className="mt-2 line-clamp-2 text-sm font-medium text-gray-900">
+                      {itemLabel(item)}
+                    </p>
+                    <p className="mt-1 line-clamp-2 text-xs text-gray-500">
+                      {item.value ?? "\u2014"}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
         </aside>
 
         <section className="space-y-4">
           <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Extracted value
-            </p>
-            <p className="mt-2 text-sm leading-6 text-gray-800">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <Highlighter className="h-4 w-4 text-primary-700" />
+                  Active evidence
+                </p>
+                <h3 className="mt-2 text-sm font-semibold text-gray-950">
+                  {selectedItem ? itemLabel(selectedItem) : "No evidence selected"}
+                </h3>
+                <p className="mt-1 font-mono text-xs text-gray-500">
+                  {selectedItem?.field_id ?? "\u2014"}
+                </p>
+              </div>
+              {selectedItem && (
+                <Badge
+                  variant={
+                    STATUS_VARIANT[selectedItem.review_status] ?? "default"
+                  }
+                >
+                  {selectedItem.review_status}
+                </Badge>
+              )}
+            </div>
+            <p className="mt-3 text-sm leading-6 text-gray-800">
               {selectedItem?.value ?? "\u2014"}
             </p>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-2">
-            <section>
-              <h3 className="mb-2 text-sm font-semibold text-gray-900">
-                Original text
-              </h3>
-              <EvidenceHighlightText
-                highlight={selectedTrace?.original}
-                label={selectedItem?.field_id}
-                tone={tone}
-                active
-              />
-            </section>
-            <section>
-              <h3 className="mb-2 text-sm font-semibold text-gray-900">
-                Translated text
-              </h3>
-              <EvidenceHighlightText
-                highlight={selectedTrace?.translated}
-                label={selectedItem?.field_id}
-                tone={tone}
-                active
-              />
-            </section>
+            <EvidenceDocumentReader
+              title="Original document"
+              paragraphs={originalDocument.paragraphs}
+            />
+            <EvidenceDocumentReader
+              title="English translation"
+              paragraphs={translatedDocument.paragraphs}
+            />
           </div>
         </section>
       </div>

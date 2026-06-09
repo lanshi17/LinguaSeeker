@@ -1,6 +1,6 @@
 # Evidence Search Feature Module
 
-> Literature-level search and review UI for structured ACMG evidence. The module queries evidence groups, aggregates them into literature rows, and provides a two-step detail flow for bilingual source-span comparison.
+> Literature-level search and review UI for structured ACMG evidence. The module queries evidence groups, aggregates them into literature rows, and provides a title/UUID-first detail flow with bilingual full-document evidence highlighting.
 
 ## Quick Start
 
@@ -37,13 +37,15 @@ features/evidence-search/
 │   ├── EvidenceSearchForm.tsx       # Gene, variant, disease, PMID filters
 │   ├── EvidenceResultsTable.tsx     # Literature-row result table/cards
 │   ├── EvidenceDetailView.tsx       # Literature overview + compare mode
-│   └── EvidenceHighlightText.tsx    # Tone-aware source-span highlighting
+│   └── EvidenceHighlightText.tsx    # Reusable single-span highlighter
 ├── hooks/
 │   ├── useEvidenceSearch.ts         # Paginated search query state
 │   └── useEvidenceGroupDetail.ts    # Group detail query state
 ├── services/evidenceSearch.ts       # API client calls
 ├── types/evidenceSearch.ts          # API boundary types
-├── utils/literatureRows.ts          # Literature-row aggregation helpers
+├── utils/
+│   ├── evidenceDocument.ts          # Full-document reader and highlight helpers
+│   └── literatureRows.ts            # Literature-row aggregation helpers
 └── index.ts                         # Public exports
 ```
 
@@ -59,12 +61,14 @@ Data flow:
 /evidence/detail?groupId=...
   -> useEvidenceGroupDetail(groupId)
   -> GET /api/v1/evidence/groups/detail?group_id=...
-  -> overview shows metadata, coverage, categories, evidence items
-  -> "Compare text" links to view=compare&evidenceId=...
+  -> overview shows title, UUID, PMID/DOI, coverage, categories, evidence items
+  -> "Full-text comparison" links to view=compare&evidenceId=...
 
 /evidence/detail?groupId=...&view=compare&evidenceId=...
   -> same detail payload
-  -> selected evidence item drives original/translated highlights
+  -> buildEvidenceDocument() creates original/English reader paragraphs
+  -> sidebar toggles evidence highlight categories
+  -> selected evidence item is emphasized in both document columns
 ```
 
 ## Public API
@@ -107,6 +111,9 @@ Loads the detail payload used by both overview and bilingual comparison views.
 | `buildLiteratureRows` | `(results: EvidenceSearchResult[]) => LiteratureEvidenceRow[]` | Groups paged evidence results by `source_document_id` |
 | `findInitialEvidenceId` | `(detail, requestedEvidenceId?) => string \| null` | Selects a valid requested evidence id or first traceable item |
 | `buildBilingualCompareHref` | `(groupId, evidenceId?) => string` | Creates a stable compare-mode detail URL |
+| `buildEvidenceDocument` | `(detail, track, enabledTones?, selectedEvidenceId?) => EvidenceDocument` | Builds full-document reader paragraphs and highlight ranges |
+| `countEvidenceHighlightTones` | `(items) => EvidenceToneCounts` | Counts sidebar highlight categories |
+| `evidenceToneForItem` | `(item?) => EvidenceHighlightTone` | Maps field/category metadata to a semantic highlight tone |
 
 ## Internal Design
 
@@ -120,6 +127,7 @@ Each `LiteratureEvidenceRow` contains:
 |-------|--------|
 | `documentId` | `source_document_id`, falling back to `group_id` |
 | `representativeGroupId` | First group on the current page for navigation |
+| `title` | First available search result `title` |
 | `genes`, `variants`, `diseases`, `classifications` | Unique values in first-seen order |
 | `fieldCount` | Sum of evidence group `field_count` values |
 | `groupCount` | Number of groups represented by the row |
@@ -133,13 +141,19 @@ Each `LiteratureEvidenceRow` contains:
 | Mode | URL | Purpose |
 |------|-----|---------|
 | Overview | `/evidence/detail?groupId=...` | Literature metadata, evidence coverage, category distribution, evidence item list |
-| Compare | `/evidence/detail?groupId=...&view=compare&evidenceId=...` | Original/translated source spans with active evidence highlighting |
+| Compare | `/evidence/detail?groupId=...&view=compare&evidenceId=...` | Original/English full-document reader with category highlight controls |
 
-The compare view does not fetch a second payload. It selects the requested evidence item from the group detail response and pairs it with the best trace by `canonical_evidence_id`, falling back to `field_id`.
+The overview header treats `title` and `source_document_id` as primary identifiers because PMID and DOI may be missing. PMID/DOI remain visible as secondary metadata tokens.
+
+The compare view does not fetch a second payload. It selects the requested evidence item from the group detail response and builds two document readers:
+
+- If future backend payloads provide `original_document_text` or `translated_document_text`, `buildEvidenceDocument()` tries to locate each evidence span inside the full text.
+- With the current trace-only payload, it synthesizes a full-document style reader from every available original/translated trace snippet.
+- Highlight category toggles filter the rendered `<mark>` ranges without changing the underlying text.
 
 ### Highlight Tones
 
-`EvidenceHighlightText` accepts a semantic tone:
+`EvidenceHighlightTone` is shared by `EvidenceHighlightText`, `EvidenceDetailView`, and `evidenceDocument.ts`:
 
 | Tone | Typical fields |
 |------|----------------|
@@ -150,7 +164,7 @@ The compare view does not fetch a second payload. It selects the requested evide
 | `functional` | Catalog categories `F`, `G`, or `I` |
 | `neutral` | Fallback |
 
-The same tone is used for evidence category chips and `<mark>` source-span highlights so users can scan evidence classes consistently.
+The same tone is used for evidence category chips, sidebar switches, and `<mark>` source-span highlights so users can scan evidence classes consistently.
 
 ## Usage Patterns
 
@@ -167,7 +181,7 @@ function LiteratureList() {
     <ul>
       {rows.map((row) => (
         <li key={row.documentId}>
-          PMID {row.pmid ?? "-"}: {row.genes.join(", ")}
+          {row.title ?? "Untitled literature record"}: {row.genes.join(", ")}
         </li>
       ))}
     </ul>
@@ -199,9 +213,10 @@ The UI is ready for a dedicated literature endpoint. Replace the page-level sour
 ### Adding a new evidence class color
 
 1. Add a tone to `EvidenceHighlightTone`.
-2. Add the `<mark>` class in `EvidenceHighlightText.tsx`.
+2. Add the `<mark>` class in `EvidenceDetailView.tsx`.
 3. Add matching chip classes in `EvidenceDetailView.tsx`.
-4. Update `evidenceTone()` to map the field or category.
+4. Update `evidenceToneForItem()` in `utils/evidenceDocument.ts` to map the field or category.
+5. Add/adjust tests in `frontend/tests/evidence-search/literatureRows.test.ts`.
 
 ## Performance Notes
 
@@ -209,6 +224,7 @@ The UI is ready for a dedicated literature endpoint. Replace the page-level sour
 - Literature aggregation is page-local and linear in `results.length`.
 - No virtualization is used; the UI is sized for the current page size.
 - Detail and compare modes share one TanStack Query cache entry per `groupId`.
+- The full-document reader uses bounded scroll containers (`max-h-[720px]`) instead of virtualizing trace snippets.
 
 ## Dependencies
 
@@ -217,7 +233,7 @@ The UI is ready for a dedicated literature endpoint. Replace the page-level sour
 | `@tanstack/react-query` | `^5.50.0` | Query caching and refetch state |
 | `axios` | `^1.7.0` | API client via `apiClient` |
 | `lucide-react` | `^1.17.0` | Consistent UI icons |
-| `vitest` | `^4.1.8` | Frontend unit tests |
+| Node.js test runner | Node 20 | Frontend unit tests after TypeScript compilation |
 
 ## Testing
 
@@ -227,6 +243,7 @@ Focused tests live in `frontend/tests/evidence-search/`.
 cd frontend
 nvm use
 npm test -- tests/evidence-search/literatureRows.test.ts
+npm test
 npm run type-check
 npm run lint
 npm run build

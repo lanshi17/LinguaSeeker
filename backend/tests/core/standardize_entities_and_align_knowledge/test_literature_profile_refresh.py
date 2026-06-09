@@ -97,3 +97,41 @@ async def test_standardization_service_refresh_called_after_upsert_canonical() -
     # Verify the call order: refresh comes after upsert_canonical_evidence.
     call_order = [name for name, _, _ in repository.method_calls]
     assert call_order.index("refresh_literature_profile") > call_order.index("upsert_canonical_evidence")
+
+
+@pytest.mark.asyncio
+async def test_standardization_service_refreshes_search_index_after_literature_profile() -> None:
+    """StandardizationService.run() refreshes frontend_search_index after literature profile refresh."""
+    service, matcher, repository = _make_service()
+
+    candidate = StandardizationCandidate(
+        candidate_id="c1",
+        entity_type=EntityType.GENE,
+        role=BindingRole.SUBJECT,
+        raw_text="BRCA1",
+        chain_id="chain1",
+        track="original",
+    )
+    match = EntityMatch(
+        candidate=candidate,
+        status=MatchStatus.STANDARDIZED,
+        external_id="HGNC:1100",
+        display_name="BRCA1",
+        match_method=MatchMethod.PRECISE,
+    )
+    matcher.match.return_value = match
+
+    input_data = StandardizationInput(
+        document_id="doc-3",
+        source_document_id="sd-3",
+        processing_run_id="run-3",
+        candidates=(candidate,),
+        evidence_items=(),
+        track_payloads={},
+    )
+
+    await service.run(input_data)
+
+    repository.refresh_search_index.assert_awaited_once_with()
+    call_order = [name for name, _, _ in repository.method_calls]
+    assert call_order.index("refresh_search_index") > call_order.index("refresh_literature_profile")

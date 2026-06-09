@@ -62,6 +62,9 @@ class FakeRepository:
     async def refresh_literature_profile(self, source_document_id: str) -> None:
         self.profile_refreshed = source_document_id
 
+    async def refresh_search_index(self) -> None:
+        self.search_index_refreshed = True
+
 
 @pytest.mark.asyncio
 async def test_standardization_service_matches_and_persists_candidates() -> None:

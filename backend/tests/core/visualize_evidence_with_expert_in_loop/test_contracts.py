@@ -146,6 +146,7 @@ def test_evidence_group_detail_contract_accepts_traceability_payload():
     detail = EvidenceGroupDetailResponse(
         group_id="gene=['BRCA1']|variant=['c.68_69delAG']",
         source_document_id=source_document_id,
+        title="BRCA1 clinical evidence paper",
         pmid="12345678",
         doi="10.1000/example",
         gene="BRCA1",
@@ -192,6 +193,7 @@ def test_evidence_group_detail_contract_accepts_traceability_payload():
 
     dumped = detail.model_dump()
     assert dumped["group_id"].startswith("gene=")
+    assert dumped["title"] == "BRCA1 clinical evidence paper"
     assert dumped["distribution"]["by_category"] == {"A": 1}
     assert dumped["traces"][0]["original"]["highlight_start"] == 0
 

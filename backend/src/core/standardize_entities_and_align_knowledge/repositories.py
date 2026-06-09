@@ -886,6 +886,13 @@ class StandardizationRepository:
         profile_repo = LiteratureProfileRepository(self.session)
         await profile_repo.refresh_for_document(UUID(source_document_id))
 
+    async def refresh_search_index(self) -> None:
+        """Refresh the frontend_search_index read model."""
+        from src.dao.postgresql.search_index_repo import SearchIndexRepository
+
+        index_repo = SearchIndexRepository(self.session)
+        await index_repo.refresh()
+
     async def upsert_canonical_evidence(
         self,
         input_data: StandardizationInput,
