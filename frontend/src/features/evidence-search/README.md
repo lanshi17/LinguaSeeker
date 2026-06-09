@@ -150,6 +150,7 @@ The compare view does not fetch a second payload. It selects the requested evide
 - If future backend payloads provide `original_document_text` or `translated_document_text`, `buildEvidenceDocument()` tries to locate each evidence span inside the full text.
 - With the current trace-only payload, it synthesizes a full-document style reader from every available original/translated trace snippet.
 - Highlight category toggles filter the rendered `<mark>` ranges without changing the underlying text.
+- When `translatedDocument.paragraphs.length === 0` (no translated full text and no translated trace snippets), the compare view hides the `English translation` reader and uses a single column. This avoids an empty-state card for English originals that were not retranslated.
 
 ### Highlight Tones
 
