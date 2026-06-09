@@ -57,6 +57,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | date | title | status |
 |---|---|---|
+| 2026-06-09 | [ACMG Evidence Normalization Fixes](planned/2026-06-09-acmg-evidence-normalization-fixes.md) | planned |
 | 2026-06-06 | [Frontend Layered Configuration](planned/2026-06-06-frontend-layered-config.md) | planned |
 
 ## Active Code Reviews
@@ -136,6 +137,7 @@ No active code reviews at this time.
 | 2026-05-06 | [literature acquisition](archive/plans/2026-05-06-literature-acquisition.md) | completed |
 | 2026-05-05 | [rust-io literature gateway](archive/plans/2026-05-05-rust-io-literature-gateway.md) | completed |
 
+| 2026-06-09 | [Hide Empty English Translation Track](archive/plans/2026-06-09-hide-empty-english-translation-track.md) | completed — showTranslatedDocument = paragraphs.length > 0; 10/10 tests |
 ### Completed Code Reviews
 
 | date | title | status/PR |
