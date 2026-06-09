@@ -630,10 +630,7 @@ class PipelineRunState(Base):
     __tablename__ = "pipeline_run_states"
     __table_args__ = (
         Index("ix_pipeline_run_states_source_document_id", "source_document_id"),
-        Index(
-            "ix_pipeline_run_states_pipeline_status",
-            text("(state_json ->> 'pipeline_status')"),
-        ),
+        Index("ix_pipeline_run_states_pipeline_status", "pipeline_status"),
     )
 
     processing_run_id: Mapped[uuid.UUID] = mapped_column(
@@ -647,6 +644,10 @@ class PipelineRunState(Base):
         nullable=False,
     )
     state_json: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
+    pipeline_status: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="pending", server_default=text("'pending'")
+    )
+    last_completed_stage: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
