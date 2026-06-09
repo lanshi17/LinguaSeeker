@@ -609,6 +609,7 @@ function BilingualComparison({
       ),
     [detail, enabledTones, selectedEvidenceId, enabledCategories],
   );
+  const showTranslatedDocument = translatedDocument.paragraphs.length > 0;
 
   const toggleCategory = (cat: string) => {
     setEnabledCategories((current) => {
@@ -796,15 +797,22 @@ function BilingualComparison({
             </p>
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div
+            className={cn(
+              "grid gap-4",
+              showTranslatedDocument && "xl:grid-cols-2",
+            )}
+          >
             <EvidenceDocumentReader
               title="Original document"
               paragraphs={originalDocument.paragraphs}
             />
-            <EvidenceDocumentReader
-              title="English translation"
-              paragraphs={translatedDocument.paragraphs}
-            />
+            {showTranslatedDocument && (
+              <EvidenceDocumentReader
+                title="English translation"
+                paragraphs={translatedDocument.paragraphs}
+              />
+            )}
           </div>
         </section>
       </div>
