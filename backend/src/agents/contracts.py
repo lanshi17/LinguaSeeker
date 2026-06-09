@@ -231,6 +231,9 @@ class PipelineGraphState(BaseModel):
     # Upload content (base64 decoded to temp file)
     upload_file_path: str | None = None
 
+    # Pre-parsed markdown (bypasses Phase 1 MinerU parsing)
+    pre_parsed_markdown: str | None = None
+
     # Online acquisition fields (passed through to Phase1Adapter)
     query: str | None = None
     identifiers: list[str] | None = None

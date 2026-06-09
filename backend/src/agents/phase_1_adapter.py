@@ -4,6 +4,7 @@ Raises classified errors for orchestrator-level retry decisions.
 """
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -49,6 +50,9 @@ class Phase1Adapter:
 
     Raises RetryablePhaseError for transient failures (timeouts, rate limits).
     Raises PermanentPhaseError for permanent failures (file not found, invalid input).
+
+    When ``state.pre_parsed_markdown`` is set, skips MinerU entirely and
+    constructs Phase1Output directly from the provided markdown text.
     """
 
     def __init__(
@@ -66,9 +70,10 @@ class Phase1Adapter:
         Raises RetryablePhaseError or PermanentPhaseError on failure.
         """
         logger.info(
-            "Phase 1 started: run={}, source={}",
+            "Phase 1 started: run={}, source={}, pre_parsed={}",
             state.processing_run_id,
             state.source_type.value,
+            state.pre_parsed_markdown is not None,
         )
 
         state.phase_1_status = PhaseStatusDetail(
@@ -77,6 +82,11 @@ class Phase1Adapter:
         )
 
         try:
+            # Fast path: pre-parsed markdown bypasses MinerU entirely
+            if state.pre_parsed_markdown:
+                state = await self._build_from_pre_parsed(state)
+                return state
+
             # Read uploaded file bytes if available
             content_bytes: bytes | None = None
             upload_filename: str | None = None
@@ -171,3 +181,67 @@ class Phase1Adapter:
                 f"Phase 1 unexpected error: {e}",
                 phase=1,
             ) from e
+
+    async def _build_from_pre_parsed(
+        self, state: PipelineGraphState,
+    ) -> PipelineGraphState:
+        """Construct Phase1Output from pre-parsed markdown, skipping MinerU."""
+        assert state.pre_parsed_markdown is not None  # noqa: S101
+        markdown_text = state.pre_parsed_markdown
+
+        backend_root = Path(__file__).resolve().parent.parent.parent
+        output_dir = backend_root / "data" / "pipeline" / state.processing_run_id / "phase_1"
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        md_path = output_dir / "output.md"
+        meta_path = output_dir / "metadata.json"
+
+        # Write markdown
+        async with aiofiles.open(str(md_path), "w") as f:
+            await f.write(markdown_text)
+
+        # Construct metadata JSON compatible with Phase 2 expectations
+        metadata = {
+            "total_pages": 1,
+            "title": None,
+            "authors": [],
+            "abstract_text": None,
+            "pages": [
+                {
+                    "page_number": 1,
+                    "markdown": markdown_text,
+                    "figures": [],
+                    "tables": [],
+                }
+            ],
+            "content_blocks": [],
+        }
+        async with aiofiles.open(str(meta_path), "w") as f:
+            await f.write(json.dumps(metadata, indent=2))
+
+        state.phase_1_output = Phase1Output(
+            pdf_path="",
+            md_path=str(md_path),
+            metadata_path=str(meta_path),
+            output_dir=str(output_dir),
+            images_dir=None,
+        )
+
+        state.phase_1_status = PhaseStatusDetail(
+            status=PhaseStatus.COMPLETED,
+            started_at=state.phase_1_status.started_at,
+            completed_at=datetime.now().isoformat(),
+            duration_seconds=(
+                datetime.now() - datetime.fromisoformat(state.phase_1_status.started_at)
+            ).total_seconds()
+            if state.phase_1_status.started_at
+            else None,
+            summary={"source": "pre_parsed_markdown"},
+        )
+
+        logger.info(
+            "Phase 1 completed (pre-parsed): run={}, {} chars",
+            state.processing_run_id,
+            len(markdown_text),
+        )
+        return state

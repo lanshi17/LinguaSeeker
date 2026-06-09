@@ -323,19 +323,28 @@ async def compare_track_consistency(
 async def submit_and_poll(
     client: httpx.AsyncClient,
     base_url: str,
-    pdf_bytes: bytes,
+    pdf_bytes: bytes | None,
     filename: str,
+    pre_parsed_markdown: str | None = None,
 ) -> dict:
-    """Submit PDF and poll until completion."""
-    content_b64 = base64.b64encode(pdf_bytes).decode("ascii")
+    """Submit document and poll until completion.
+
+    Uses pre_parsed_markdown when provided (bypasses MinerU Phase 1).
+    Falls back to PDF submission via content_base64 otherwise.
+    """
+    payload: dict = {
+        "source_type": "local",
+        "mode": "full",
+        "filename": filename,
+    }
+    if pre_parsed_markdown:
+        payload["pre_parsed_markdown"] = pre_parsed_markdown
+    if pdf_bytes:
+        payload["content_base64"] = base64.b64encode(pdf_bytes).decode("ascii")
+
     resp = await client.post(
         f"{base_url}/api/v1/pipeline/run",
-        json={
-            "source_type": "local",
-            "mode": "full",
-            "filename": filename,
-            "content_base64": content_b64,
-        },
+        json=payload,
         timeout=60.0,
     )
     if resp.status_code == 409:
@@ -343,14 +352,10 @@ async def submit_and_poll(
         import time as _time
         unique_name = filename.rsplit(".", 1)
         unique_name = f"{unique_name[0]}_{int(_time.time())}.{unique_name[1]}" if len(unique_name) == 2 else f"{filename}_{int(_time.time())}"
+        payload["filename"] = unique_name
         resp = await client.post(
             f"{base_url}/api/v1/pipeline/run",
-            json={
-                "source_type": "local",
-                "mode": "full",
-                "filename": unique_name,
-                "content_base64": content_b64,
-            },
+            json=payload,
             timeout=60.0,
         )
     resp.raise_for_status()
@@ -418,13 +423,16 @@ async def evaluate_one(
         metrics.pipeline_status = "source_too_small"
         return metrics
 
-    # Convert to PDF
-    pdf_bytes = markdown_to_pdf_bytes(md_text, title=f"{gene} - {entry.get('disease_label', '')}")
-
+    # Submit pre-parsed markdown directly (bypasses MinerU Phase 1)
     async with semaphore:
         t0 = time.time()
         try:
-            status_data = await submit_and_poll(client, base_url, pdf_bytes, f"{entry_id}.pdf")
+            status_data = await submit_and_poll(
+                client, base_url,
+                pdf_bytes=None,
+                filename=f"{entry_id}.md",
+                pre_parsed_markdown=md_text,
+            )
             metrics.duration_s = round(time.time() - t0, 2)
             metrics.pipeline_status = status_data.get("pipeline_status", "unknown")
 
@@ -605,7 +613,12 @@ def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
     }
 
 
-async def run_evaluation(base_url: str, concurrency: int, limit: int | None = None):
+async def run_evaluation(
+    base_url: str,
+    concurrency: int,
+    limit: int | None = None,
+    entry_ids: list[str] | None = None,
+):
     """Main evaluation orchestrator."""
     logger.remove()
     logger.add(sys.stderr, level="INFO", format="{time:HH:mm:ss} | {level:<7} | {message}")
@@ -616,6 +629,9 @@ async def run_evaluation(base_url: str, concurrency: int, limit: int | None = No
     entries = json.loads(selection_path.read_text(encoding="utf-8"))
     # Only entries with source text
     entries = [e for e in entries if (GROUND_TRUTH_DIR / e["entry_id"] / "source.md").exists()]
+    if entry_ids:
+        id_set = set(entry_ids)
+        entries = [e for e in entries if e["entry_id"] in id_set]
     if limit:
         entries = entries[:limit]
     logger.info("Evaluating {} entries", len(entries))
@@ -710,5 +726,6 @@ if __name__ == "__main__":
     parser.add_argument("--base-url", default="http://localhost:8000")
     parser.add_argument("--concurrency", type=int, default=1)
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--entries", nargs="+", default=None, help="Specific entry IDs to evaluate")
     args = parser.parse_args()
-    asyncio.run(run_evaluation(args.base_url, args.concurrency, args.limit))
+    asyncio.run(run_evaluation(args.base_url, args.concurrency, args.limit, args.entries))
