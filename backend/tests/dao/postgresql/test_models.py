@@ -102,6 +102,18 @@ def test_normalized_entity_unmapped_raw_text_unique_index() -> None:
     assert str(index.dialect_options["postgresql"]["where"]) == "standardization_status = 'unmapped'"
 
 
+def test_normalized_entity_reviewed_unmappable_raw_text_unique_index() -> None:
+    """Reviewed-unmappable entities are unique by entity type and normalized raw text."""
+    index = _index_by_name(
+        _table("normalized_entities"),
+        "uq_normalized_entities_reviewed_unmappable_raw_text",
+    )
+
+    assert index.unique
+    assert tuple(expression.name for expression in index.expressions) == ("entity_type", "normalized_raw_text")
+    assert str(index.dialect_options["postgresql"]["where"]) == "standardization_status = 'reviewed_unmappable'"
+
+
 def test_run_evidence_confidence_has_database_range_constraint() -> None:
     """Run-level confidence cannot be outside the normalized 0..1 range."""
     constraint = _check_constraint_by_name(
@@ -262,6 +274,16 @@ def test_chat_messages_role_column() -> None:
     """Messages distinguish user vs assistant."""
     table = _table("chat_messages")
     assert "role" in table.c
+
+
+def test_normalized_entity_accepts_reviewed_unmappable_status() -> None:
+    """NormalizedEntity.standardization_status accepts 'reviewed_unmappable'."""
+    from src.dao.postgresql.models import NormalizedEntity
+
+    # The column is String(32) -- no ENUM constraint. Verify the column exists
+    # and the value fits within the length limit.
+    col = NormalizedEntity.__table__.columns["standardization_status"]
+    assert col.type.length >= len("reviewed_unmappable")
 
 
 def test_run_evidence_item_has_no_canonical_evidence_id() -> None:
