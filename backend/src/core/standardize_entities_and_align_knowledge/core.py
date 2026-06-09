@@ -38,6 +38,7 @@ class StandardizationService:
         await self._repository.persist_bindings(input_data, matches, entity_ids)
         await self._repository.upsert_canonical_evidence(input_data, matches, entity_ids)
         await self._repository.refresh_literature_profile(input_data.source_document_id)
+        await self._repository.refresh_search_index()
         return StandardizationResult(
             document_id=input_data.document_id,
             match_count=len(matches),

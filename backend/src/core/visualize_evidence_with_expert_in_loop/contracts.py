@@ -205,8 +205,11 @@ class EvidenceSearchResult(BaseModel):
 
     group_id: str
     source_document_id: UUID
+    title: str | None = None
     pmid: str | None = None
     doi: str | None = None
+    original_document_text: str | None = None
+    translated_document_text: str | None = None
     gene: str | None = None
     variant: str | None = None
     disease: str | None = None
@@ -277,6 +280,7 @@ class EvidenceGroupDetailResponse(BaseModel):
 
     group_id: str
     source_document_id: UUID
+    title: str | None = None
     pmid: str | None = None
     doi: str | None = None
     gene: str | None = None

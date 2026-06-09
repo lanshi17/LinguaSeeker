@@ -1499,3 +1499,35 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 **预防措施：**
 - URL 参数和查询结果可直接推导出的 UI 状态不要放入 effect 同步。
 - 需要“初始值 + 用户覆盖”的场景，优先使用派生值加 override state。
+
+## 2026-06-08: Frontend Test Build Artifacts Entering ESLint
+
+**问题描述：** 新增 Node 原生测试编译流程后，`npm test` 会输出 `.test-build/`。随后执行 `npm run lint` 时，ESLint 扫描该目录中的 CommonJS 编译产物并报 `@typescript-eslint/no-require-imports`。
+
+**排查过程：**
+- 先运行 `npm test`，确认测试会生成 `.test-build/`。
+- 再运行 `npm run lint`，错误文件全部位于 `.test-build/`，且不是源 TS/TSX 文件。
+- 检查 `frontend/.gitignore`，确认 `.test-build/` 已被 git 忽略，但 ESLint 配置没有忽略该目录。
+
+**根因分析：** `.gitignore` 只影响版本控制，不会自动约束 ESLint 扫描范围。测试编译产物使用 CommonJS 输出，触发源代码 lint 规则属于工具范围配置问题。
+
+**解决方案：** 在 `frontend/eslint.config.mjs` 中添加 `ignores: [".test-build/**"]`，让 lint 只检查源文件和配置文件。
+
+**预防措施：**
+- 新增测试编译输出目录时，同时更新 `.gitignore` 和 ESLint ignore。
+- CI/本地验证顺序包含 `npm test && npm run lint`，确保测试产物不会污染后续 lint。
+
+## 2026-06-09: FeedbackService 新增写后刷新时旧 mock 测试需要隔离新 side effect
+
+**问题描述：** 给 `FeedbackService.patch_evidence()` 增加 `_refresh_search_index()` 后，旧的 profile refresh 单元测试失败，真实 `SearchIndexRepository.refresh()` 在 `MagicMock` session 上执行到 `await commit()` 并报错。
+
+**排查过程：**
+- 先运行新增 RED 测试，确认失败点是缺少 `refresh_search_index` 调用和 `_refresh_search_index` 方法。
+- 实现后重跑 focused tests，发现新增测试通过，但两个旧测试失败。
+- 阅读堆栈，确认失败来自旧测试只 mock `_refresh_literature_profile()`，没有 mock 新增的 `_refresh_search_index()`。
+
+**根因分析：** 新增 search-index refresh 是 patch 后的真实 side effect。旧测试使用 `MagicMock` session 并没有为真实 repository 的 async `commit()` 提供 awaitable mock，因此测试边界不再完整。
+
+**解决方案：** 在旧测试中显式 patch `_refresh_search_index()`，保留原有 profile refresh 和 audit ordering 断言；新增独立测试验证 `_refresh_search_index()` 会委派给 `SearchIndexRepository.refresh()`。
+
+**预防措施：** 服务方法新增写后 side effect 时，同步检查所有 patch 级单元测试是否需要隔离该 side effect，并为新增 side effect 添加单独委派测试。

@@ -70,6 +70,7 @@ async def test_get_evidence_group_detail(async_client: AsyncClient):
     mock_response = EvidenceGroupDetailResponse(
         group_id=group_id,
         source_document_id=source_document_id,
+        title="BRCA1 clinical evidence paper",
         gene="BRCA1",
         variant="c.68_69delAG",
         disease="Hereditary breast and ovarian cancer",
@@ -91,6 +92,7 @@ async def test_get_evidence_group_detail(async_client: AsyncClient):
     assert response.status_code == 200
     data = response.json()
     assert data["group_id"] == group_id
+    assert data["title"] == "BRCA1 clinical evidence paper"
     assert data["gene"] == "BRCA1"
 
 

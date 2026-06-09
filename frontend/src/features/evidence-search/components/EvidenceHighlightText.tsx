@@ -1,14 +1,11 @@
 "use client";
 
-import type { EvidenceChainHighlight } from "../types/evidenceSearch";
+import type {
+  EvidenceChainHighlight,
+  EvidenceHighlightTone,
+} from "../types/evidenceSearch";
 
-export type EvidenceHighlightTone =
-  | "classification"
-  | "disease"
-  | "functional"
-  | "gene"
-  | "neutral"
-  | "variant";
+export type { EvidenceHighlightTone } from "../types/evidenceSearch";
 
 interface EvidenceHighlightTextProps {
   highlight?: EvidenceChainHighlight | null;

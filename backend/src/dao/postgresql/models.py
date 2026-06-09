@@ -120,6 +120,33 @@ class LiteratureProfile(Base, TimestampMixin):
     authors: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'"))
     journal: Mapped[str | None] = mapped_column(Text, nullable=True)
     publication_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # evidence_groups schema (produced by LiteratureProfileRepository._build_evidence_groups):
+    # [
+    #   {
+    #     "group_id": str,
+    #     "summary": {
+    #       "gene": str | None,
+    #       "variant": str | None,
+    #       "disease": str | None,
+    #       "classification": str | None,
+    #     },
+    #     "avg_confidence": float | None,
+    #     "field_count": int,
+    #     "review_status": str,  # provisional | approved | corrected | rejected
+    #     "fields": [
+    #       {
+    #         "canonical_evidence_id": str,
+    #         "field_id": str,
+    #         "field_name": str | None,
+    #         "category": str | None,
+    #         "value": str | None,
+    #         "confidence": float | None,
+    #         "status": str | None,
+    #         "track": str | None,
+    #       }
+    #     ],
+    #   }
+    # ]
     evidence_groups: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'"))
     review_status: Mapped[str] = mapped_column(
         String(32), nullable=False, default="provisional", server_default=text("'provisional'")

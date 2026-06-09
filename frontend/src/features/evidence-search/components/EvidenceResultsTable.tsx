@@ -46,6 +46,10 @@ function joinedLabel(values: string[]) {
   return values.length > 0 ? values.join(", ") : "\u2014";
 }
 
+function literatureTitle(row: LiteratureEvidenceRow) {
+  return row.title?.trim() || "Untitled literature record";
+}
+
 function TokenList({
   values,
   tone,
@@ -170,11 +174,11 @@ export function EvidenceResultsTable({
                 <FileText className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="font-mono text-xs font-medium text-gray-500">
-                  PMID {row.pmid ?? "\u2014"}
+                <p className="line-clamp-2 text-sm font-semibold leading-5 text-gray-950">
+                  {literatureTitle(row)}
                 </p>
-                <p className="mt-1 text-sm text-gray-500">
-                  DOI {row.doi ?? "\u2014"}
+                <p className="mt-1 truncate font-mono text-xs text-gray-500">
+                  UUID {row.documentId}
                 </p>
               </div>
               <Badge variant={STATUS_VARIANT[row.reviewStatus] ?? "info"}>
@@ -182,6 +186,10 @@ export function EvidenceResultsTable({
               </Badge>
             </div>
             <div className="mt-4 space-y-3">
+              <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                <span>PMID {row.pmid ?? "\u2014"}</span>
+                <span>DOI {row.doi ?? "\u2014"}</span>
+              </div>
               <TokenList values={row.genes} tone="primary" />
               <TokenList values={row.variants} tone="success" />
               <p className="line-clamp-2 text-sm text-gray-700">
@@ -215,7 +223,7 @@ export function EvidenceResultsTable({
                 key={row.documentId}
                 role={onRowClick ? "link" : undefined}
                 tabIndex={onRowClick ? 0 : undefined}
-                aria-label={`Open literature evidence ${row.pmid ?? row.documentId}`}
+                aria-label={`Open literature evidence ${row.title ?? row.pmid ?? row.documentId}`}
                 onClick={() => onRowClick?.(row)}
                 onKeyDown={(e) => {
                   if (onRowClick && (e.key === "Enter" || e.key === " ")) {
@@ -231,11 +239,14 @@ export function EvidenceResultsTable({
                       <FileText className="h-4 w-4" />
                     </span>
                     <div className="min-w-0">
-                      <p className="font-mono text-xs font-semibold text-gray-900">
-                        PMID {row.pmid ?? "\u2014"}
+                      <p className="line-clamp-2 text-sm font-semibold leading-5 text-gray-950">
+                        {literatureTitle(row)}
+                      </p>
+                      <p className="mt-1 truncate font-mono text-xs text-gray-500">
+                        UUID {row.documentId}
                       </p>
                       <p className="mt-1 truncate text-xs text-gray-500">
-                        DOI {row.doi ?? "\u2014"}
+                        PMID {row.pmid ?? "\u2014"} · DOI {row.doi ?? "\u2014"}
                       </p>
                       <p className="mt-2 inline-flex items-center gap-1 text-xs text-gray-500">
                         <Layers3 className="h-3.5 w-3.5" />
