@@ -648,6 +648,9 @@ class PipelineRunState(Base):
         String(32), nullable=False, default="pending", server_default=text("'pending'")
     )
     last_completed_stage: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # Reserved: not yet populated by state_persistence.py.
+    # Intended for crash-recovery triage (e.g., "phase_2_standardization").
+    # Derivable from state_json phase statuses when needed.
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
