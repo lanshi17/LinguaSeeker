@@ -1,0 +1,114 @@
+{
+  "evaluation_id": "eval_clingen_c715cd4a",
+  "timestamp": "2026-06-09T13:13:35",
+  "config": {
+    "base_url": "http://localhost:8000",
+    "concurrency": 1,
+    "limit": null
+  },
+  "total_entries": 1,
+  "total_duration_s": 345.6,
+  "aggregates": {
+    "overall": {
+      "true_positives": 3,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "entity_standardization_accuracy": 0.0,
+      "cross_lingual_consistency": 0.7222
+    },
+    "by_field": {
+      "A.gene_symbol": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "B.disease_diagnosis": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "A.gene_disease_relationship": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "by_classification": {
+      "Definitive": {
+        "count": 1,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "by_moi": {
+      "SD": {
+        "count": 1,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.7222
+      }
+    },
+    "by_entity_type": {
+      "gene": 0.0,
+      "disease": 0.0
+    }
+  },
+  "per_entry": [
+    {
+      "entry_id": "clingen_005",
+      "gene_symbol": "ABCC8",
+      "classification": "Definitive",
+      "moi": "SD",
+      "pipeline_status": "awaiting_review",
+      "duration_s": 345.49,
+      "evidence_count": 64,
+      "found_rate": 0.8594,
+      "grounding_rate": 0.0,
+      "standardization_accuracy": 0.0,
+      "track_consistency": 0.7222222222222222,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCC8",
+          "matched": true,
+          "extracted": "{'value': 'ABCC8'}",
+          "match_type": "fuzzy"
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "monogenic diabetes",
+          "matched": true,
+          "extracted": "{'value': 'maturity-onset diabetes of the young, type 12 (MODY12)'}",
+          "match_type": "ontology_ancestor"
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "{'value': 'causative'}",
+          "match_type": "fuzzy"
+        }
+      ],
+      "entity_matches": {
+        "gene": {
+          "matched": false,
+          "expected_id": "HGNC:59",
+          "actual_id": null,
+          "status": "not_found"
+        },
+        "disease": {
+          "matched": false,
+          "expected_id": "MONDO:0015967",
+          "actual_id": null,
+          "status": "not_found"
+        }
+      }
+    }
+  ]
+}

@@ -418,7 +418,25 @@ def load_proxy() -> str | None:
     if config_path.exists():
         with open(config_path) as f:
             cfg = yaml.safe_load(f)
-        return cfg.get("network", {}).get("proxy", "")
+        proxy = cfg.get("network", {}).get("proxy", "")
+        if proxy:
+            # Check if proxy is reachable before returning it
+            import socket
+            from urllib.parse import urlparse
+            try:
+                parsed = urlparse(proxy)
+                host = parsed.hostname
+                port = parsed.port or (443 if parsed.scheme == "https" else 80)
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(1.0)
+                result = sock.connect_ex((host, port))
+                sock.close()
+                if result != 0:
+                    logger.warning("Proxy {} is not reachable, skipping", proxy)
+                    return None
+            except Exception:
+                return None
+        return proxy
     return None
 
 
