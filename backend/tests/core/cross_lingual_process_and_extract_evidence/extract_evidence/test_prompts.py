@@ -161,3 +161,30 @@ def test_build_block_prompt_text_can_select_original_block_indices():
     assert "[Block 0" not in text
     assert "[Block 1 | text | page 2]" in text
     assert "[Block 2 | table | page 3]" in text
+
+
+def test_catalog_prompt_distinguishes_age_of_onset_from_milestones() -> None:
+    prompt = get_catalog_extraction_prompt(
+        document_id="doc",
+        track=Track.ORIGINAL,
+        text="started sitting with support at the age of 15 months; referred at 17 months",
+        catalog=EVIDENCE_FIELD_SPECS,
+        evidence_map_summary="AARS2 case",
+    )
+
+    assert "Do NOT use developmental milestones as B.age_of_onset" in prompt
+    assert "referral, diagnosis, first symptoms, or presentation age" in prompt
+
+
+def test_catalog_prompt_requires_named_prediction_tools() -> None:
+    prompt = get_catalog_extraction_prompt(
+        document_id="doc",
+        track=Track.ORIGINAL,
+        text="functional analysis by in silico tools",
+        catalog=EVIDENCE_FIELD_SPECS,
+        evidence_map_summary="AARS2 case",
+    )
+
+    assert "Computational predictions support PP3/BP4 only" in prompt
+    assert "Do not treat in silico predictions as F.functional_result" in prompt
+    assert "E.prediction_tools_list requires named tools" in prompt
