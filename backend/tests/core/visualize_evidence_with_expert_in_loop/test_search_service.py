@@ -24,13 +24,18 @@ class _FakeScalarResult:
         """Return scalar rows."""
         return self._values
 
+    def __iter__(self):
+        """Iterate scalar rows."""
+        return iter(self._values)
+
 
 class _FakeResult:
     """Minimal SQLAlchemy result shim for async service tests."""
 
-    def __init__(self, rows=None, scalars=None):
+    def __init__(self, rows=None, scalars=None, scalar=None):
         self._rows = rows or []
         self._scalars = scalars or []
+        self._scalar = scalar
 
     def all(self):
         """Return row tuples."""
@@ -39,6 +44,10 @@ class _FakeResult:
     def scalars(self):
         """Return scalar result wrapper."""
         return _FakeScalarResult(self._scalars)
+
+    def scalar_one_or_none(self):
+        """Return one scalar row."""
+        return self._scalar
 
 
 class _FakeSession:
@@ -50,6 +59,53 @@ class _FakeSession:
     async def execute(self, _stmt):
         """Return the next queued result."""
         return self._results.pop(0)
+
+
+@pytest.mark.asyncio
+async def test_search_evidence_includes_document_title():
+    """Search result rows include literature title from source metadata."""
+    source_document_id = uuid4()
+    evidence_id = uuid4()
+    group_id = "gene=['BRCA1']"
+
+    rows = [
+        SimpleNamespace(
+            canonical_evidence_id=evidence_id,
+            source_document_id=source_document_id,
+            field_id="A.gene_symbol",
+            review_status="provisional",
+            current_best_confidence=Decimal("0.9500"),
+            active_payload={
+                "group_id": group_id,
+                "value": "BRCA1",
+            },
+        )
+    ]
+    identifiers = [
+        SimpleNamespace(
+            source_document_id=source_document_id,
+            identifier_type="pmid",
+            identifier_value="12345678",
+        ),
+    ]
+    metadata = [
+        SimpleNamespace(
+            source_document_id=source_document_id,
+            raw_metadata={"title": "BRCA1 evidence paper"},
+        ),
+    ]
+
+    service = SearchService(_FakeSession([
+        _FakeResult(rows=rows),
+        _FakeResult(scalars=identifiers),
+        _FakeResult(rows=metadata),
+    ]))
+
+    response = await service.search_evidence()
+
+    assert response.total == 1
+    assert response.items[0].title == "BRCA1 evidence paper"
+    assert response.items[0].pmid == "12345678"
 
 
 @pytest.mark.asyncio
@@ -118,6 +174,7 @@ async def test_get_group_detail_pivots_distribution_and_traces():
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=identifiers),
+        _FakeResult(scalar={"title": "BRCA1 evidence paper"}),
     ]))
 
     detail = await service.get_group_detail(group_id=group_id)
@@ -126,6 +183,7 @@ async def test_get_group_detail_pivots_distribution_and_traces():
     assert detail.gene == "BRCA1"
     assert detail.disease == "Hereditary breast and ovarian cancer"
     assert detail.pmid == "12345678"
+    assert detail.title == "BRCA1 evidence paper"
     assert detail.distribution.by_category == {"A": 1, "B": 1}
     assert detail.distribution.by_status == {"provisional": 1, "approved": 1}
     assert detail.item_count == 2
@@ -187,6 +245,7 @@ async def test_get_group_detail_includes_value_anchors_for_paired_field():
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=[]),
+        _FakeResult(scalar={}),
     ]))
 
     detail = await service.get_group_detail(group_id=group_id)
@@ -194,6 +253,8 @@ async def test_get_group_detail_includes_value_anchors_for_paired_field():
     trace = next(trace for trace in detail.traces if trace.field_id == "A.gene_symbol")
     assert trace.original_value == "BRCA1"
     assert trace.translated_value == "BRCA1"
+    # Verify empty metadata path: title should be None, not crash
+    assert detail.title is None
 
 
 def test_coerce_str_joins_list_values():
@@ -273,6 +334,7 @@ async def test_get_group_detail_skips_field_ids_without_standard_tracks():
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=identifiers),
+        _FakeResult(scalar={}),
     ]))
 
     detail = await service.get_group_detail(group_id=group_id)
@@ -280,6 +342,7 @@ async def test_get_group_detail_skips_field_ids_without_standard_tracks():
     # The 'review' track row should be in items but NOT produce a trace
     assert len(detail.items) == 1
     assert len(detail.traces) == 0
+    assert detail.title is None
 
 
 @pytest.mark.asyncio
@@ -311,6 +374,7 @@ async def test_get_group_detail_single_track_field_produces_partial_trace():
     service = SearchService(_FakeSession([
         _FakeResult(rows=rows),
         _FakeResult(scalars=identifiers),
+        _FakeResult(scalar={}),
     ]))
 
     detail = await service.get_group_detail(group_id=group_id)
@@ -318,3 +382,4 @@ async def test_get_group_detail_single_track_field_produces_partial_trace():
     assert len(detail.traces) == 1
     assert detail.traces[0].original is not None
     assert detail.traces[0].translated is None
+    assert detail.title is None
