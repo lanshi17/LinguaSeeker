@@ -119,6 +119,105 @@ class TestChatService:
 
         assert len(messages) == 5
 
+    async def test_build_evidence_context_uses_current_best_run_id(
+        self, db_session: AsyncSession
+    ) -> None:
+        """_build_evidence_context resolves canonical -> current_best_run_evidence_id -> entity + source."""
+        from src.dao.postgresql.models import (
+            CanonicalEvidenceItem,
+            NormalizedEntity,
+            EvidenceEntityBinding,
+            RunEvidenceItem,
+            SourceDocument,
+            ProcessingRun,
+        )
+
+        # Seed prerequisite rows
+        doc = SourceDocument(source_document_id=uuid.uuid4(), raw_metadata={})
+        db_session.add(doc)
+        await db_session.flush()
+
+        run = ProcessingRun(
+            processing_run_id=uuid.uuid4(),
+            source_document_id=doc.source_document_id,
+            run_status="completed",
+        )
+        db_session.add(run)
+        await db_session.flush()
+
+        run_item = RunEvidenceItem(
+            run_evidence_item_id=uuid.uuid4(),
+            processing_run_id=run.processing_run_id,
+            source_document_id=doc.source_document_id,
+            track="original",
+            field_id="A.gene_symbol",
+            status="found",
+            value={"value": "BRCA1"},
+            confidence=0.95,
+            position_hash="h1",
+            text_hash="h2",
+            source_span={"text_snippet": "BRCA1 variant detected in exon 11"},
+            entity_scope_hash="h3",
+        )
+        db_session.add(run_item)
+        await db_session.flush()
+
+        canonical = CanonicalEvidenceItem(
+            canonical_evidence_id=uuid.uuid4(),
+            source_document_id=doc.source_document_id,
+            field_id="A.gene_symbol",
+            position_hash="h1",
+            text_hash="h2",
+            entity_scope_hash="h3",
+            current_best_run_evidence_id=run_item.run_evidence_item_id,
+            current_best_status="found",
+            current_best_confidence=0.95,
+            active_payload={
+                "gene": "BRCA1",
+                "variant": "c.5266dupC",
+                "phenotype": "Breast cancer",
+                "disease": "Hereditary Breast and Ovarian Cancer",
+                "classification": "Pathogenic",
+                "evidence_strength": "Very Strong",
+                "summary": "BRCA1 frameshift variant",
+            },
+        )
+        db_session.add(canonical)
+        await db_session.flush()
+
+        entity = NormalizedEntity(
+            entity_id=uuid.uuid4(),
+            entity_type="gene",
+            display_name="BRCA1 DNA repair associated",
+            external_id="HGNC:1100",
+            normalized_raw_text="BRCA1",
+        )
+        db_session.add(entity)
+        await db_session.flush()
+
+        binding = EvidenceEntityBinding(
+            evidence_entity_binding_id=uuid.uuid4(),
+            run_evidence_item_id=run_item.run_evidence_item_id,
+            entity_id=entity.entity_id,
+            entity_type="gene",
+            role="subject",
+            binding_rank=1,
+            raw_entity_text="BRCA1",
+        )
+        db_session.add(binding)
+        await db_session.flush()
+
+        # Act
+        service = ChatService(db_session)
+        context = await service._build_evidence_context(
+            canonical_evidence_id=canonical.canonical_evidence_id,
+        )
+
+        # Assert
+        assert isinstance(context, str)
+        assert "BRCA1" in context
+        assert "BRCA1 variant detected" in context
+
     async def _create_test_run(self, session: AsyncSession) -> uuid.UUID:
         """Helper: create a test processing run."""
         from src.dao.postgresql.models import ProcessingRun, SourceDocument
