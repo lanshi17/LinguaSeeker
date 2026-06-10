@@ -188,3 +188,18 @@ def test_catalog_prompt_requires_named_prediction_tools() -> None:
     assert "Computational predictions support PP3/BP4 only" in prompt
     assert "Do not treat in silico predictions as F.functional_result" in prompt
     assert "E.prediction_tools_list requires named tools" in prompt
+
+
+def test_catalog_prompt_requires_gene_symbol_from_disease_prefix() -> None:
+    prompt = get_catalog_extraction_prompt(
+        document_id="doc",
+        track=Track.ORIGINAL,
+        text="AARS2-mutation related mitochondrial disease",
+        catalog=EVIDENCE_FIELD_SPECS,
+        evidence_map_summary="AARS2 case",
+    )
+
+    assert "A.gene_symbol" in prompt
+    assert "AARS2-related" in prompt
+    assert "must extract the gene symbol independently" in prompt
+    assert "must not leave A.gene_symbol as not_found" in prompt
