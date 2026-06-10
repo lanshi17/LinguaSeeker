@@ -276,6 +276,8 @@
 
 [2026-06-09] [Hide empty English translation track: compare view conditional render] [done] Added showTranslatedDocument = translatedDocument.paragraphs.length > 0 and conditionally render the English translation reader. Lint clean, type-check clean, 10/10 tests pass.
 [2026-06-09] [ACMG evidence normalization fixes plan review updates] [completed]
+[2026-06-09] [Hide empty English translation track: 3-pass code review] [done] Extracted hasTranslatedDocumentText(detail) helper with symmetric trim, 3 tests (availability, trace-level, whitespace rejection), 11/11 pass. Archived stale plan doc. Doc-organize: moved ACMG normalization fixes to archive.
+[2026-06-09] [Doc organize: archive ACMG normalization fixes plan] [done] Status updated to completed, moved planned/ → archive/plans/, docs/README.md index updated.
 
 [2026-06-09] [Hide empty English translation track: data-availability follow-up] [done] Replaced paragraphs.length>0 with availability check on translated_document_text||traces.translated.text to stop reader collapse when filter state hides all spans. Collapsed duplicate null/undefined tests into one with a comment. Fixed orphaned README row + missing blank line before heading. 9/9 tests, lint and type-check clean.
 
