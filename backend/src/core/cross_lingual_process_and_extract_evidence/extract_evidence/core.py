@@ -266,23 +266,67 @@ class FieldValueNormalizer:
         # Exact match
         if raw in valid_values:
             return item
+        # Negation and hedging checks — must run before substring/keyword matching
+        if item.field_id == "A.gene_disease_relationship":
+            if re.search(r"\b(?:non[-\s]?causal|not causal|not causative)\b", raw):
+                return item.model_copy(update={"value": "associated"})
+            if re.search(r"\bnot (?:a )?(?:known )?disease gene\b", raw):
+                return item.model_copy(update={"value": "uncertain"})
+            if "preliminary association" in raw or "only a preliminary" in raw:
+                return item.model_copy(update={"value": "associated"})
         # Substring match — find the valid value contained in the raw text
         for v in valid_values:
             if v in raw:
                 return item.model_copy(update={"value": v})
-        # Keyword match — look for key words
+        # Keyword match — word-boundary regex patterns
         keyword_map = {
-            "causative": ("cause", "causative", "pathogenic", "responsible"),
-            "associated": ("associated", "association", "linked", "related"),
-            "susceptibility": ("susceptibility", "susceptible", "risk", "predispos"),
-            "uncertain": ("uncertain", "unclear", "possible", "potential"),
-            "disputed": ("disputed", "controversial", "conflicting"),
-            "refuted": ("refuted", "refute", "no evidence", "not supported"),
-            "no_relationship": ("no relationship", "no known", "not related"),
+            "causative": (
+                r"\bcauses?\b",
+                r"\bcausative\b",
+                r"\bcausal\b",
+                r"\bpathogenic\b",
+                r"\bresponsible\b",
+                r"\bknown disease gene\b",
+                r"\bdisease gene\b",
+            ),
+            "associated": (
+                r"\bassociated\b",
+                r"\bassociation\b",
+                r"\blink(?:ed)?\b",
+                r"\brelated\b",
+            ),
+            "susceptibility": (
+                r"\bsusceptibility\b",
+                r"\bsusceptible\b",
+                r"\brisk\b",
+                r"\bpredispos",
+            ),
+            "uncertain": (
+                r"\buncertain\b",
+                r"\bunclear\b",
+                r"\bpossible\b",
+                r"\bpotential\b",
+            ),
+            "disputed": (
+                r"\bdisputed\b",
+                r"\bcontroversial\b",
+                r"\bconflicting\b",
+            ),
+            "refuted": (
+                r"\brefuted\b",
+                r"\brefute\b",
+                r"\bno evidence\b",
+                r"\bnot supported\b",
+            ),
+            "no_relationship": (
+                r"\bno relationship\b",
+                r"\bno known\b",
+                r"\bnot related\b",
+            ),
         }
-        for v, keywords in keyword_map.items():
-            if any(kw in raw for kw in keywords):
-                return item.model_copy(update={"value": v})
+        for value, patterns in keyword_map.items():
+            if any(re.search(pattern, raw) for pattern in patterns):
+                return item.model_copy(update={"value": value})
         # Default: keep original but log
         return item
 
