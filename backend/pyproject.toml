@@ -5,6 +5,7 @@ description = "Variant classification and evidence interpretation platform"
 requires-python = ">=3.12"
 
 dependencies = [
+    "acmg-config-loader",
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.30.0",
     "pydantic>=2.7.0",
@@ -74,6 +75,7 @@ url = "https://mirrors.aliyun.com/pypi/simple/"
 
 
 [tool.uv.sources]
+acmg-config-loader = { path = "../libs/config-loader", editable = true }
 rust-io = { path = "libs/rust-io", editable = true }
 
 [tool.pytest.ini_options]
