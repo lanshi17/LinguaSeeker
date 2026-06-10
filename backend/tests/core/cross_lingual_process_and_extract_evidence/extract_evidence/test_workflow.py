@@ -4,8 +4,9 @@ from unittest.mock import MagicMock
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import EvidenceExtractionService
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     DocumentEvidenceMap,
-    EvidenceItem,
+    EvidenceExtractionState,
     EvidenceExtractionStatus,
+    EvidenceItem,
     EvidenceStatus,
     PageSpan,
     SourceLocation,
@@ -13,7 +14,9 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     Track,
     TrackDocument,
 )
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import EvidenceNormalizationIssueType
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.core import EvidenceChainBuilder
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.normalization import AcmgEvidenceValueNormalizer
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.workflow import EvidenceExtractionWorkflow
 
 
@@ -148,3 +151,32 @@ def test_evidence_chain_builder_skips_ambiguous_sources():
     assert chains[0].gene_text == ""
     assert chains[0].disease_text == "Fabry disease"
     assert chains[0].variant_text == "p.R227X"
+
+
+def test_workflow_normalization_node_rejects_coordinate_only_hgvs() -> None:
+    workflow = EvidenceExtractionWorkflow.__new__(EvidenceExtractionWorkflow)
+    workflow._value_normalizer = AcmgEvidenceValueNormalizer()
+    state = EvidenceExtractionState(
+        document=TrackDocument(
+            document_id="doc",
+            track=Track.ORIGINAL,
+            formatted_text="chr6_44270253",
+            page_spans=[],
+        ),
+        evidence_items=[
+            EvidenceItem(
+                field_id="A.variant_hgvs_g",
+                category="A",
+                field_name="HGVS genomic variant",
+                status=EvidenceStatus.FOUND,
+                value="chr6_44270253",
+                confidence=0.9,
+            )
+        ],
+    )
+
+    result = workflow._node_value_normalization(state)
+
+    assert result.evidence_items[0].status == EvidenceStatus.NOT_FOUND
+    assert result.normalization_issues[0].field_id == "A.variant_hgvs_g"
+    assert result.normalization_issues[0].issue_type == EvidenceNormalizationIssueType.INVALID_HGVS
