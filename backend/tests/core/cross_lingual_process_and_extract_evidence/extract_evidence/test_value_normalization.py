@@ -193,6 +193,29 @@ def test_mixed_prediction_tools_filters_generic_entry_with_audit_issue() -> None
     ]
 
 
+def test_string_prediction_tools_splits_and_filters_generic_phrases() -> None:
+    items, issues = AcmgEvidenceValueNormalizer().normalize([
+        _item("E.prediction_tools_list", "CADD, in silico tools"),
+    ])
+
+    assert items[0].status == EvidenceStatus.FOUND
+    assert items[0].value == ["CADD"]
+    assert [issue.issue_type.value for issue in issues] == [
+        "value_normalized",
+        "generic_prediction_tool",
+    ]
+
+
+def test_string_prediction_tools_all_generic_is_rejected() -> None:
+    items, issues = AcmgEvidenceValueNormalizer().normalize([
+        _item("E.prediction_tools_list", "in silico tools, bioinformatics tools"),
+    ])
+
+    assert items[0].status == EvidenceStatus.NOT_FOUND
+    assert items[0].value is None
+    assert issues[0].issue_type.value == "generic_prediction_tool"
+
+
 def test_duplicate_facts_merge_by_group_field_and_value() -> None:
     duplicate_items = [
         _item("A.gene_symbol", "AARS2").model_copy(update={"group_id": "gene=AARS2|variant=__missing__", "confidence": 0.80}),

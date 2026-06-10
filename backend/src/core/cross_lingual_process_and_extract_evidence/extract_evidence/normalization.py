@@ -233,7 +233,26 @@ class AcmgEvidenceValueNormalizer:
                 return replacement, issues
         else:
             text = str(item.value).strip()
-            if text.lower() not in self._GENERIC_PREDICTION_VALUES:
+            if text.lower() in self._GENERIC_PREDICTION_VALUES:
+                pass  # fall through to reject below
+            elif "," in text or ";" in text:
+                values = [v.strip() for v in re.split(r"[,;]", text) if v.strip()]
+                named = [v for v in values if v.lower() not in self._GENERIC_PREDICTION_VALUES]
+                if named:
+                    replacement, issues = self._with_value_issue(item, named)
+                    if len(named) != len(values):
+                        issues.append(
+                            EvidenceNormalizationIssue(
+                                issue_type=EvidenceNormalizationIssueType.GENERIC_PREDICTION_TOOL,
+                                severity=EvidenceNormalizationSeverity.WARNING,
+                                field_id=item.field_id,
+                                message="Generic prediction-tool phrase removed from named tool list.",
+                                original_value=item.value,
+                                normalized_value=named,
+                            )
+                        )
+                    return replacement, issues
+            else:
                 return item, []
         return (
             self._reject_item(item),
