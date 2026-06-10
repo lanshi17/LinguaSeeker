@@ -164,6 +164,31 @@ async def test_search_no_filters_returns_default_list_view() -> None:
 # ── Repository refresh tests ───────────────────────────────────────────────
 
 
+def test_refresh_insert_sql_includes_created_at():
+    """The refresh() INSERT statement must select created_at from canonical_evidence_items."""
+    import inspect
+
+    from src.dao.postgresql.search_index_repo import SearchIndexRepository
+
+    source = inspect.getsource(SearchIndexRepository.refresh)
+
+    # Find the INSERT block and verify created_at appears in both the
+    # column list (INSERT INTO ... (..., created_at)) and the SELECT
+    # clause (SELECT ..., cei.created_at).
+    insert_start = source.index("INSERT INTO frontend_search_index")
+    insert_block = source[insert_start:]
+
+    # Extract column list: between the first ( and the closing ) before SELECT
+    col_list_end = insert_block.index(")")
+    col_list = insert_block[:col_list_end]
+    assert "created_at" in col_list, "created_at missing from INSERT column list"
+
+    # Extract SELECT clause: from SELECT to the closing triple-quote
+    select_start = insert_block.index("SELECT")
+    select_block = insert_block[select_start:]
+    assert "cei.created_at" in select_block, "cei.created_at missing from SELECT clause"
+
+
 @pytest.mark.asyncio
 async def test_refresh_truncates_and_rebuilds() -> None:
     """Refresh truncates the search index and rebuilds from canonical evidence."""

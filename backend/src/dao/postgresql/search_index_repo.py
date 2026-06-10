@@ -185,7 +185,8 @@ class SearchIndexRepository:
                     review_status,
                     current_best_confidence,
                     search_text,
-                    active_payload
+                    active_payload,
+                    created_at
                 )
                 SELECT
                     cei.canonical_evidence_id,
@@ -207,7 +208,8 @@ class SearchIndexRepository:
                     cei.review_status,
                     cei.current_best_confidence,
                     COALESCE(cei.active_payload ->> '{SEARCH_TEXT_PAYLOAD_KEY}', '') AS search_text,
-                    cei.active_payload
+                    cei.active_payload,
+                    cei.created_at
                 FROM canonical_evidence_items cei
                 LEFT JOIN source_document_identifiers sdi_pmid
                     ON  sdi_pmid.source_document_id = cei.source_document_id
