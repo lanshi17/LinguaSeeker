@@ -170,3 +170,67 @@ def test_field_value_normalizer_uses_token_before_relationship_hint() -> None:
     normalized = FieldValueNormalizer.normalize_items([item])
 
     assert normalized[0].value == "AARS2"
+
+
+def test_field_value_normalizer_rejects_unknown_placeholder() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="unknown",
+        confidence=0.3,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].status == EvidenceStatus.NOT_FOUND
+    assert normalized[0].value is None
+
+
+def test_field_value_normalizer_rejects_none_placeholder() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="none",
+        confidence=0.3,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].status == EvidenceStatus.NOT_FOUND
+    assert normalized[0].value is None
+
+
+def test_field_value_normalizer_rejects_common_english_word() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="patient",
+        confidence=0.5,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].status == EvidenceStatus.NOT_FOUND
+    assert normalized[0].value is None
+
+
+def test_field_value_normalizer_preserves_uppercase_gene_symbol() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="BRCA1",
+        confidence=0.95,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "BRCA1"
+    assert normalized[0].status == EvidenceStatus.FOUND
