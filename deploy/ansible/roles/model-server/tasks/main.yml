@@ -2,8 +2,8 @@
 
 - name: Sync model-server source code
   synchronize:
-    src: "{{ playbook_dir }}/../../backend/services/model-server/"
-    dest: "{{ project_root }}/model-server/"
+    src: "{{ playbook_dir }}/../../../services/model-server/"
+    dest: "{{ project_root }}/services/model-server/"
     delete: yes
     rsync_opts:
       - "--exclude=.venv"
@@ -13,7 +13,7 @@
 - name: Install model-server Python dependencies
   command: uv sync --no-dev
   args:
-    chdir: "{{ project_root }}/model-server"
+    chdir: "{{ project_root }}/services/model-server"
   environment:
     UV_CACHE_DIR: "{{ project_root }}/.cache/uv"
 
