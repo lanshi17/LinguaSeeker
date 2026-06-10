@@ -10,11 +10,11 @@ from acmg_config_loader import load_backend_config_into_env
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-# File is currently at backend/services/model-server/app/config.py.
-# parents[3] is `backend/`, which is the backend root whose `config/` we load.
-# Path is updated in Task 7 to `parents[3] / "backend"` after the move to
-# services/model-server/app/config.py.
-_BACKEND_ROOT = Path(__file__).resolve().parents[3]
+# File is at services/model-server/app/config.py.
+# parents[0] = app, parents[1] = model-server, parents[2] = services,
+# parents[3] = repo root. The backend root we need to load `config/` from is
+# `repo_root/backend/`.
+_BACKEND_ROOT = Path(__file__).resolve().parents[3] / "backend"
 
 load_backend_config_into_env(_BACKEND_ROOT)
 
