@@ -203,3 +203,17 @@ def test_catalog_prompt_requires_gene_symbol_from_disease_prefix() -> None:
     assert "AARS2-related" in prompt
     assert "must extract the gene symbol independently" in prompt
     assert "must not leave A.gene_symbol as not_found" in prompt
+
+
+def test_catalog_prompt_relationship_distinguishes_established_from_preliminary() -> None:
+    prompt = get_catalog_extraction_prompt(
+        document_id="doc",
+        track=Track.ORIGINAL,
+        text="AARS1 causes Charcot-Marie-Tooth disease",
+        catalog=EVIDENCE_FIELD_SPECS,
+        evidence_map_summary="AARS1 case",
+    )
+
+    assert "known disease gene" in prompt
+    assert "established causal relationship" in prompt
+    assert "Do not choose associated merely because the sentence contains associated" in prompt
