@@ -81,8 +81,13 @@ export function buildLiteratureRows(
     }
 
     // Keep the latest created_at across merged groups.
+    // Use Date.parse() for numeric comparison — lexicographic string
+    // comparison fails when timezone offsets differ (e.g. -08:00 vs Z).
     if (item.created_at) {
-      if (!row.createdAt || item.created_at > row.createdAt) {
+      if (
+        !row.createdAt ||
+        Date.parse(item.created_at) > Date.parse(row.createdAt)
+      ) {
         row.createdAt = item.created_at;
       }
     }
