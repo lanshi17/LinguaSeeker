@@ -294,6 +294,10 @@ class SearchService:
             if row.current_best_confidence is not None:
                 g["confidences"].append(float(row.current_best_confidence))
 
+            # Keep the latest created_at within a group.
+            if row.created_at and (g["created_at"] is None or row.created_at > g["created_at"]):
+                g["created_at"] = row.created_at
+
             field_id = row.field_id
             value = payload.get("value")
 
