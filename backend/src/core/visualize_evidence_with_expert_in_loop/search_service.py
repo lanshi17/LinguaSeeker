@@ -248,6 +248,7 @@ class SearchService:
                 CanonicalEvidenceItem.review_status,
                 CanonicalEvidenceItem.current_best_confidence,
                 CanonicalEvidenceItem.active_payload,
+                CanonicalEvidenceItem.created_at,
             )
         )
 
@@ -278,6 +279,7 @@ class SearchService:
                     "group_id": group_id,
                     "source_document_id": row.source_document_id,
                     "canonical_evidence_id": row.canonical_evidence_id,
+                    "created_at": row.created_at,
                     "review_status": row.review_status,
                     "field_count": 0,
                     "confidences": [],
@@ -291,6 +293,10 @@ class SearchService:
             g["field_count"] += 1
             if row.current_best_confidence is not None:
                 g["confidences"].append(float(row.current_best_confidence))
+
+            # Keep the latest created_at within a group.
+            if row.created_at and (g["created_at"] is None or row.created_at > g["created_at"]):
+                g["created_at"] = row.created_at
 
             field_id = row.field_id
             value = payload.get("value")
@@ -365,6 +371,7 @@ class SearchService:
                     avg_confidence=avg_conf,
                     review_status=g["review_status"],
                     canonical_evidence_id=g["canonical_evidence_id"],
+                    created_at=g["created_at"],
                 )
             )
 

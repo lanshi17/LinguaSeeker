@@ -53,6 +53,14 @@ def test_search_index_table_has_required_columns() -> None:
     assert required <= columns, f"Missing columns: {required - columns}"
 
 
+def test_search_index_table_has_created_at_column() -> None:
+    """The frontend_search_index table must expose a created_at column."""
+    from src.dao.postgresql.search_index_repo import frontend_search_index
+
+    col_names = [c.name for c in frontend_search_index.columns]
+    assert "created_at" in col_names
+
+
 def test_search_index_table_has_unique_index_on_canonical_id() -> None:
     """The table has a unique index on canonical_evidence_id for CONCURRENTLY refresh."""
     from src.dao.postgresql.search_index_repo import frontend_search_index
@@ -154,6 +162,31 @@ async def test_search_no_filters_returns_default_list_view() -> None:
 
 
 # ── Repository refresh tests ───────────────────────────────────────────────
+
+
+def test_refresh_insert_sql_includes_created_at():
+    """The refresh() INSERT statement must select created_at from canonical_evidence_items."""
+    import inspect
+
+    from src.dao.postgresql.search_index_repo import SearchIndexRepository
+
+    source = inspect.getsource(SearchIndexRepository.refresh)
+
+    # Find the INSERT block and verify created_at appears in both the
+    # column list (INSERT INTO ... (..., created_at)) and the SELECT
+    # clause (SELECT ..., cei.created_at).
+    insert_start = source.index("INSERT INTO frontend_search_index")
+    insert_block = source[insert_start:]
+
+    # Extract column list: between the first ( and the closing ) before SELECT
+    col_list_end = insert_block.index(")")
+    col_list = insert_block[:col_list_end]
+    assert "created_at" in col_list, "created_at missing from INSERT column list"
+
+    # Extract SELECT clause: from SELECT to the closing triple-quote
+    select_start = insert_block.index("SELECT")
+    select_block = insert_block[select_start:]
+    assert "cei.created_at" in select_block, "cei.created_at missing from SELECT clause"
 
 
 @pytest.mark.asyncio
