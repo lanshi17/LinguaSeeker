@@ -6,7 +6,9 @@
 
 **Architecture:** No new database columns on `canonical_evidence_items` (it already has `created_at` via `TimestampMixin`). We add a `created_at` column to `frontend_search_index` for the search-index path, update the `EvidenceSearchResult` / `LiteratureProfileSummary` contracts, propagate through `SearchService` and `LiteratureProfileRepository`, and display in the frontend `EvidenceResultsTable`. The `created_at` value flows as an ISO 8601 string through the API and is formatted as a locale date in the UI.
 
-**Tech Stack:** Python, SQLAlchemy, Alembic, Pydantic, FastAPI, TypeScript, React, Next.js
+**Semantic rule for literature rows:** When `buildLiteratureRows()` merges multiple evidence groups into one literature-level row, `createdAt` is set to the **latest** (max) timestamp across merged groups. This represents the most recent evidence processing time for that document.
+
+**Tech Stack:** Python, SQLAlchemy, Alembic, Pydantic, FastAPI, TypeScript, Node.js test runner (`node:test`)
 
 ---
 
@@ -14,10 +16,11 @@
 
 **Files:**
 - Modify: `backend/src/dao/postgresql/search_index_repo.py:38-62`
+- Modify: `backend/tests/dao/postgresql/test_search_index_repo.py`
 
 **Step 1: Write the failing test**
 
-Open `backend/tests/dao/postgresql/test_search_index_repo.py` and add a test that asserts the `created_at` column exists on the table:
+In `backend/tests/dao/postgresql/test_search_index_repo.py`, add:
 
 ```python
 def test_search_index_table_has_created_at_column():
@@ -35,9 +38,8 @@ Expected: FAIL with `assert 'created_at' in [...]`
 
 **Step 3: Write minimal implementation**
 
-In `backend/src/dao/postgresql/search_index_repo.py`, add the `created_at` column after the `active_payload` column (line 52). Import `DateTime` and `func` from SQLAlchemy:
+In `backend/src/dao/postgresql/search_index_repo.py`, add `DateTime` and `func` to the existing imports (line 13-26):
 
-Add `DateTime` and `func` to the existing imports (line 13-26):
 ```python
 from sqlalchemy import (
     Column,
@@ -58,6 +60,7 @@ from sqlalchemy import (
 ```
 
 Add the column after `active_payload` (after line 52):
+
 ```python
     Column(
         "created_at",
@@ -88,6 +91,8 @@ git commit -m "feat: add created_at column to frontend_search_index table defini
 
 **Step 1: Write the migration**
 
+Use the same `information_schema.tables` guard pattern from `2026-06-08_add_performance_indexes.py`:
+
 ```python
 """Add created_at to frontend_search_index.
 
@@ -98,7 +103,6 @@ Create Date: 2026-06-10
 from alembic import op
 import sqlalchemy as sa
 
-# revision identifiers
 revision = "add_created_at_search_idx"
 down_revision = "<current_head>"  # Replace with actual head at execution time
 branch_labels = None
@@ -106,6 +110,30 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # Guard: table may not be created yet.
+    conn = op.get_bind()
+    result = conn.execute(
+        sa.text(
+            "SELECT EXISTS (SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = current_schema() "
+            "AND table_name = 'frontend_search_index')"
+        )
+    ).scalar()
+    if not result:
+        return
+
+    # Also guard against column already existing (idempotent).
+    col_exists = conn.execute(
+        sa.text(
+            "SELECT EXISTS (SELECT 1 FROM information_schema.columns "
+            "WHERE table_schema = current_schema() "
+            "AND table_name = 'frontend_search_index' "
+            "AND column_name = 'created_at')"
+        )
+    ).scalar()
+    if col_exists:
+        return
+
     op.add_column(
         "frontend_search_index",
         sa.Column(
@@ -118,6 +146,17 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    conn = op.get_bind()
+    result = conn.execute(
+        sa.text(
+            "SELECT EXISTS (SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = current_schema() "
+            "AND table_name = 'frontend_search_index')"
+        )
+    ).scalar()
+    if not result:
+        return
+
     op.drop_column("frontend_search_index", "created_at")
 ```
 
@@ -125,8 +164,8 @@ def downgrade() -> None:
 
 **Step 2: Verify migration syntax**
 
-Run: `cd backend && uv run alembic check`
-Expected: No syntax errors (migration file is valid Python).
+Run: `cd backend && python -c "import ast; ast.parse(open('../database/migrations/versions/2026-06-10_add_created_at_to_search_index.py').read()); print('OK')"`
+Expected: OK
 
 **Step 3: Commit**
 
@@ -141,32 +180,45 @@ git commit -m "feat: add created_at migration for frontend_search_index"
 
 **Files:**
 - Modify: `backend/src/dao/postgresql/search_index_repo.py:161-213`
+- Modify: `backend/tests/dao/postgresql/test_search_index_repo.py`
 
-**Step 1: Write the failing test**
+**Step 1: Write the failing behavioral test**
 
-In `backend/tests/dao/postgresql/test_search_index_repo.py`, add:
+In `backend/tests/dao/postgresql/test_search_index_repo.py`, add a test that verifies the refresh SQL includes `created_at` in both the INSERT column list and the SELECT source:
 
 ```python
-def test_refresh_populates_created_at(monkeypatch):
-    """refresh() should populate created_at from canonical_evidence_items."""
-    from src.dao.postgresql.search_index_repo import frontend_search_index
-
-    # Verify the refresh SQL includes created_at in both INSERT and SELECT.
-    import src.dao.postgresql.search_index_repo as mod
+def test_refresh_insert_sql_includes_created_at():
+    """The refresh() INSERT statement must select created_at from canonical_evidence_items."""
+    from src.dao.postgresql.search_index_repo import SearchIndexRepository
     import inspect
 
-    source = inspect.getsource(mod.SearchIndexRepository.refresh)
-    assert "created_at" in source
+    source = inspect.getsource(SearchIndexRepository.refresh)
+
+    # Find the INSERT block and verify created_at appears in both the
+    # column list (INSERT INTO ... (..., created_at)) and the SELECT
+    # clause (SELECT ..., cei.created_at).
+    insert_start = source.index("INSERT INTO frontend_search_index")
+    insert_block = source[insert_start:]
+
+    # Extract column list: between the first ( and the closing ) before SELECT
+    col_list_end = insert_block.index(")")
+    col_list = insert_block[:col_list_end]
+    assert "created_at" in col_list, "created_at missing from INSERT column list"
+
+    # Extract SELECT clause: from SELECT to the closing triple-quote
+    select_start = insert_block.index("SELECT")
+    select_block = insert_block[select_start:]
+    assert "cei.created_at" in select_block, "cei.created_at missing from SELECT clause"
 ```
 
 **Step 2: Run test to verify it fails**
 
-Run: `cd backend && uv run pytest tests/dao/postgresql/test_search_index_repo.py::test_refresh_populates_created_at -v`
-Expected: FAIL (the current `refresh()` method does not mention `created_at`).
+Run: `cd backend && uv run pytest tests/dao/postgresql/test_search_index_repo.py::test_refresh_insert_sql_includes_created_at -v`
+Expected: FAIL (the current `refresh()` does not include `created_at`).
 
 **Step 3: Write minimal implementation**
 
-In `backend/src/dao/postgresql/search_index_repo.py`, update the `refresh()` method's INSERT SQL (line 168-210):
+In `backend/src/dao/postgresql/search_index_repo.py`, update the `refresh()` method's INSERT SQL:
 
 Add `created_at` to the column list in the INSERT statement (after `active_payload`):
 ```sql
@@ -194,7 +246,7 @@ Add `cei.created_at` to the SELECT list (after `cei.active_payload`):
 
 **Step 4: Run test to verify it passes**
 
-Run: `cd backend && uv run pytest tests/dao/postgresql/test_search_index_repo.py::test_refresh_populates_created_at -v`
+Run: `cd backend && uv run pytest tests/dao/postgresql/test_search_index_repo.py::test_refresh_insert_sql_includes_created_at -v`
 Expected: PASS
 
 **Step 5: Commit**
@@ -211,6 +263,7 @@ git commit -m "feat: populate created_at in search index refresh"
 **Files:**
 - Modify: `backend/src/core/visualize_evidence_with_expert_in_loop/contracts.py:203-220` (EvidenceSearchResult)
 - Modify: `backend/src/core/visualize_evidence_with_expert_in_loop/contracts.py:297-315` (LiteratureProfileSummary)
+- Create: `backend/tests/core/visualize_evidence_with_expert_in_loop/test_contracts_created_at.py`
 
 **Step 1: Write the failing test**
 
@@ -258,6 +311,15 @@ def test_literature_profile_summary_has_created_at():
         created_at=now,
     )
     assert summary.created_at == now
+
+
+def test_literature_profile_summary_created_at_optional():
+    """created_at should be optional (backward compatible)."""
+    summary = LiteratureProfileSummary(
+        literature_profile_id=uuid4(),
+        source_document_id=uuid4(),
+    )
+    assert summary.created_at is None
 ```
 
 **Step 2: Run test to verify it fails**
@@ -299,10 +361,11 @@ git commit -m "feat: add created_at to EvidenceSearchResult and LiteratureProfil
 - Modify: `backend/src/core/visualize_evidence_with_expert_in_loop/search_service.py:243-251` (SELECT clause)
 - Modify: `backend/src/core/visualize_evidence_with_expert_in_loop/search_service.py:269-288` (group accumulator)
 - Modify: `backend/src/core/visualize_evidence_with_expert_in_loop/search_service.py:353-369` (result construction)
+- Modify: `backend/tests/core/visualize_evidence_with_expert_in_loop/test_search_service.py`
 
 **Step 1: Write the failing test**
 
-In `backend/tests/core/visualize_evidence_with_expert_in_loop/test_search_service.py`, add:
+In `backend/tests/core/visualize_evidence_with_expert_in_loop/test_search_service.py`, add a test using the same fixture pattern as existing tests:
 
 ```python
 @pytest.mark.asyncio
@@ -316,12 +379,12 @@ async def test_search_evidence_includes_created_at(session_with_data):
     assert response.items[0].created_at is not None
 ```
 
-> **Note:** Adapt `session_with_data` to whatever fixture name the existing tests use. Check the existing test file for the fixture pattern.
+> **Note:** Adapt `session_with_data` to whatever fixture name the existing tests use. Check the existing test file for the fixture pattern and reuse it.
 
 **Step 2: Run test to verify it fails**
 
 Run: `cd backend && uv run pytest tests/core/visualize_evidence_with_expert_in_loop/test_search_service.py::test_search_evidence_includes_created_at -v`
-Expected: FAIL with `assert None is not None` (created_at not populated).
+Expected: FAIL with `assert None is not None`
 
 **Step 3: Write minimal implementation**
 
@@ -404,8 +467,9 @@ git commit -m "feat: propagate created_at in SearchService.search_evidence()"
 
 **Files:**
 - Modify: `backend/src/dao/postgresql/literature_profile_repo.py:406-436` (search result dict)
+- Create: `backend/tests/dao/postgresql/test_literature_profile_created_at.py`
 
-**Step 1: Write the failing test**
+**Step 1: Write the failing behavioral test**
 
 Create `backend/tests/dao/postgresql/test_literature_profile_created_at.py`:
 
@@ -413,35 +477,70 @@ Create `backend/tests/dao/postgresql/test_literature_profile_created_at.py`:
 """Tests for created_at exposure in literature profile search."""
 from __future__ import annotations
 
+from unittest.mock import MagicMock, AsyncMock
+from datetime import datetime, timezone
+
 import pytest
 
 
-def test_literature_search_result_includes_created_at_key():
-    """LiteratureProfileRepository.search() should include created_at in result dicts."""
+@pytest.mark.asyncio
+async def test_search_result_dict_contains_created_at():
+    """LiteratureProfileRepository.search() result dicts must include created_at."""
     from src.dao.postgresql.literature_profile_repo import LiteratureProfileRepository
-    import inspect
 
-    source = inspect.getsource(LiteratureProfileRepository.search)
-    assert '"created_at"' in source
+    # Build a mock row that mimics a LiteratureProfile ORM object.
+    mock_row = MagicMock()
+    mock_row.literature_profile_id = "00000000-0000-0000-0000-000000000001"
+    mock_row.source_document_id = "00000000-0000-0000-0000-000000000002"
+    mock_row.pmid = "12345"
+    mock_row.doi = "10.1000/test"
+    mock_row.title = "Test Paper"
+    mock_row.journal = "Test Journal"
+    mock_row.publication_year = 2026
+    mock_row.review_status = "provisional"
+    mock_row.overall_confidence = None
+    mock_row.total_evidence_fields = 1
+    mock_row.found_count = 1
+    mock_row.evidence_groups = []
+    mock_row.created_at = datetime(2026, 6, 10, 12, 0, 0, tzinfo=timezone.utc)
+
+    # Mock session: count query returns 1, data query returns [mock_row].
+    mock_session = AsyncMock()
+
+    count_result = MagicMock()
+    count_result.scalar_one.return_value = 1
+
+    data_result = MagicMock()
+    data_result.scalars.return_value.all.return_value = [mock_row]
+
+    call_count = 0
+    async def mock_execute(stmt):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return count_result
+        return data_result
+
+    mock_session.execute = mock_execute
+
+    repo = LiteratureProfileRepository(mock_session)
+    items, total = await repo.search(page=1, page_size=50)
+
+    assert total == 1
+    assert len(items) == 1
+    assert "created_at" in items[0]
+    assert items[0]["created_at"] == "2026-06-10T12:00:00+00:00"
 ```
 
 **Step 2: Run test to verify it fails**
 
 Run: `cd backend && uv run pytest tests/dao/postgresql/test_literature_profile_created_at.py -v`
-Expected: FAIL
+Expected: FAIL — `KeyError: 'created_at'` or `'created_at' not in items[0]`.
 
 **Step 3: Write minimal implementation**
 
-In `backend/src/dao/postgresql/literature_profile_repo.py`, add `created_at` to the item dict in the `search()` method (after `"classification"` on line ~436):
+In `backend/src/dao/postgresql/literature_profile_repo.py`, add `created_at` to the item dict in the `search()` method (after `"classification"`):
 
-```python
-            items.append({
-                ...existing keys...,
-                "created_at": row.created_at.isoformat() if row.created_at else None,
-            })
-```
-
-The full updated append block:
 ```python
             items.append({
                 "literature_profile_id": str(row.literature_profile_id),
@@ -480,35 +579,75 @@ git commit -m "feat: expose created_at in LiteratureProfileRepository.search()"
 
 ---
 
-### Task 7: Add `created_at` to frontend TypeScript types
+### Task 7: Add `created_at` to frontend TypeScript types and row builder
 
 **Files:**
 - Modify: `frontend/src/features/evidence-search/types/evidenceSearch.ts:15-29` (EvidenceSearchResult)
+- Modify: `frontend/src/features/evidence-search/utils/literatureRows.ts` (LiteratureEvidenceRow + buildLiteratureRows)
+- Modify: `frontend/tests/evidence-search/literatureRows.test.ts`
 
 **Step 1: Write the failing test**
 
 In `frontend/tests/evidence-search/literatureRows.test.ts`, add:
 
 ```typescript
-it("propagates created_at from search result to literature row", () => {
-  const results: EvidenceSearchResult[] = [
-    {
-      group_id: "g1",
-      source_document_id: "doc-1",
-      field_count: 1,
-      review_status: "provisional",
-      created_at: "2026-06-10T12:00:00Z",
-    },
-  ];
-  const rows = buildLiteratureRows(results);
-  expect(rows[0].createdAt).toBe("2026-06-10T12:00:00Z");
+describe("created_at propagation", () => {
+  it("propagates created_at from search result to literature row", () => {
+    const results: EvidenceSearchResult[] = [
+      {
+        group_id: "g1",
+        source_document_id: "doc-1",
+        field_count: 1,
+        review_status: "provisional",
+        created_at: "2026-06-10T12:00:00Z",
+      },
+    ];
+    const rows = buildLiteratureRows(results);
+    assert.equal(rows[0].createdAt, "2026-06-10T12:00:00Z");
+  });
+
+  it("uses latest created_at when merging multiple groups for same document", () => {
+    const results: EvidenceSearchResult[] = [
+      {
+        group_id: "g1",
+        source_document_id: "doc-1",
+        field_count: 1,
+        review_status: "provisional",
+        created_at: "2026-06-09T08:00:00Z",
+      },
+      {
+        group_id: "g2",
+        source_document_id: "doc-1",
+        field_count: 1,
+        review_status: "provisional",
+        created_at: "2026-06-10T12:00:00Z",
+      },
+    ];
+    const rows = buildLiteratureRows(results);
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].createdAt, "2026-06-10T12:00:00Z");
+  });
+
+  it("handles null created_at gracefully", () => {
+    const results: EvidenceSearchResult[] = [
+      {
+        group_id: "g1",
+        source_document_id: "doc-1",
+        field_count: 1,
+        review_status: "provisional",
+        created_at: null,
+      },
+    ];
+    const rows = buildLiteratureRows(results);
+    assert.equal(rows[0].createdAt, null);
+  });
 });
 ```
 
 **Step 2: Run test to verify it fails**
 
-Run: `cd frontend && npx vitest run tests/evidence-search/literatureRows.test.ts`
-Expected: FAIL — `createdAt` not on row or result type.
+Run: `cd frontend && npm run test`
+Expected: FAIL — `createdAt` not on type or not propagated.
 
 **Step 3: Write minimal implementation**
 
@@ -524,34 +663,25 @@ In `frontend/src/features/evidence-search/utils/literatureRows.ts`, add to `Lite
   createdAt?: string | null;
 ```
 
-In the `buildLiteratureRows` function, propagate `created_at` when building the initial row (inside the `if (!row)` block, around line 56-74):
-
+Add `createdAt` tracking to the mutable row in the `buildLiteratureRows` function. Inside the `if (!row)` block, initialize:
 ```typescript
-      row = {
-        documentId,
-        representativeGroupId: item.group_id,
-        title: item.title,
-        pmid: item.pmid,
-        doi: item.doi,
-        genes: [],
-        variants: [],
-        diseases: [],
-        classifications: [],
-        fieldCount: 0,
-        groupCount: 0,
-        avgConfidence: null,
-        reviewStatus: "unknown",
         createdAt: item.created_at ?? null,
-        confidenceTotal: 0,
-        confidenceWeight: 0,
-        statuses: new Set<string>(),
-      };
+```
+
+After the existing `if (!row.title && item.title?.trim())` block (around line 77-79), add max-date aggregation:
+```typescript
+    // Keep the latest created_at across merged groups.
+    if (item.created_at) {
+      if (!row.createdAt || item.created_at > row.createdAt) {
+        row.createdAt = item.created_at;
+      }
+    }
 ```
 
 **Step 4: Run test to verify it passes**
 
-Run: `cd frontend && npx vitest run tests/evidence-search/literatureRows.test.ts`
-Expected: PASS (all tests including the new one).
+Run: `cd frontend && npm run test`
+Expected: PASS (all tests including the new ones).
 
 **Step 5: Commit**
 
@@ -577,7 +707,11 @@ function formatDate(isoString?: string | null) {
     return "—";
   }
   try {
-    return new Date(isoString).toLocaleDateString("zh-CN", {
+    const date = new Date(isoString);
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+    return date.toLocaleDateString("zh-CN", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -590,7 +724,7 @@ function formatDate(isoString?: string | null) {
 
 **Step 2: Add `Created` column to the desktop table**
 
-In the `<thead>` (around line 211-218), add a new column header. Adjust widths to accommodate:
+In the `<thead>` (around line 211-218), add a new column header and adjust widths:
 
 ```tsx
               <th className="w-[20%] px-4 py-3">Literature</th>
@@ -602,7 +736,7 @@ In the `<thead>` (around line 211-218), add a new column header. Adjust widths t
               <th className="w-[8%] px-4 py-3 text-right">Fields</th>
 ```
 
-Add the `<td>` cell in the table body, after the Classification cell (around line 269):
+Add the `<td>` cell in the table body, after the Classification `<td>` (around line 269):
 
 ```tsx
                 <td className="px-4 py-4 align-top text-xs text-gray-500">
@@ -623,10 +757,10 @@ In the mobile card footer grid (around line 199-203), change from 3 columns to 4
             </div>
 ```
 
-**Step 4: Manually verify in browser**
+**Step 4: Run frontend build to check for type errors**
 
-Run: `cd frontend && npm run dev`
-Navigate to the evidence search page and confirm the "Created" column displays formatted dates.
+Run: `cd frontend && npm run type-check`
+Expected: No TypeScript errors.
 
 **Step 5: Commit**
 
@@ -646,7 +780,7 @@ Expected: All tests PASS (no regressions).
 
 **Step 2: Run all frontend tests**
 
-Run: `cd frontend && npx vitest run`
+Run: `cd frontend && npm run test`
 Expected: All tests PASS.
 
 **Step 3: Run linting**
