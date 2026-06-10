@@ -7,10 +7,10 @@
 ## Quick Start
 
 ```bash
-cd backend/services/model-server
+cd services/model-server
 
-# Install the parent project WITH the `model-server` extra (vllm lives there, not in [dev])
-uv pip install -e "../../.[model-server]"
+# Install the service + dev dependencies
+uv sync --extra dev
 
 # Start (port 8001 by default)
 uv run python main.py
@@ -394,14 +394,14 @@ The VLM path has two integration points:
 | `pytest` | ≥9.0.3 (dev) | Test framework |
 | `pytest-asyncio` | ≥1.3.0 (dev) | Async test support |
 
-All dependencies are declared in the parent `backend/pyproject.toml`. The model server shares the backend virtual environment — no separate venv needed.
+All dependencies are declared in this service's `pyproject.toml` and resolved by `uv sync --extra dev` into the local `.venv/`.
 
 ## Testing
 
 ```bash
-cd backend/services/model-server
+cd services/model-server
 
-# Run all tests (no GPU required — vllm.LLM is mocked)
+# Run all tests (no GPU required — vllm.LLM is mocked via conftest stubs)
 uv run pytest
 
 # Run a single test file
