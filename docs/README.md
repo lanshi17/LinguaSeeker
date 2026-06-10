@@ -81,4 +81,4 @@ Every `backend/` module has its own `README.md` developer guide. Key modules:
 - **[backend/src/core/](../backend/src/core/README.md)** -- Vertical feature slices
 - **[backend/src/dao/](../backend/src/dao/README.md)** -- Persistence layer
 - **[backend/libs/](../backend/libs/README.md)** -- Rust native extensions (rust-io, net-io, files-io)
-- **[backend/services/model-server/](../backend/services/model-server/README.md)** -- Embedding/Rerank/LLM server
+- **[services/model-server/](../services/model-server/README.md)** -- Embedding/Rerank/LLM server

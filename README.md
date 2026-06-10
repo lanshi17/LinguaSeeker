@@ -31,12 +31,13 @@ Multi-Agent infrastructure platform for medical genetics literature automation a
 │   │   ├── dao/                    # Data access (PostgreSQL, Redis, Neo4j, MinIO)
 │   │   └── utils/                  # Shared utilities
 │   ├── libs/                       # Rust native extensions (rust-io, files-io, net-io)
-│   ├── services/model-server/      # Standalone model inference service
 │   ├── config/                     # Layered YAML config (defaults, environments, vault)
 │   ├── tests/                      # Backend tests
 │   ├── alembic/                    # Migration scaffold
 │   ├── scripts/                    # E2E and utility scripts
 │   └── pyproject.toml              # Python project (uv-managed)
+├── services/                       # Standalone microservices
+│   └── model-server/               # Embedding/Rerank/VLM inference (port 8001)
 ├── frontend/                       # Next.js application
 │   ├── app/                        # App Router pages
 │   │   ├── (auth)/                 # Login, register
@@ -119,7 +120,7 @@ cargo test
 **Model server:**
 
 ```bash
-cd backend/services/model-server
+cd services/model-server
 uv run python main.py
 ```
 
@@ -135,7 +136,7 @@ uv run python main.py
 | `cd frontend && npm run build` | Production build |
 | `cd backend/libs/rust-io && cargo test` | Run Rust tests |
 | `cd backend/libs/rust-io && cargo bench` | Run Rust benchmarks |
-| `cd backend/services/model-server && uv run python main.py` | Start model server |
+| `cd services/model-server && uv run python main.py` | Start model server |
 | `docker compose up` | Start full stack |
 
 ## Branch Strategy

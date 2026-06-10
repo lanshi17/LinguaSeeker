@@ -310,7 +310,7 @@ Three PyO3 crates, all using `cdylib` + `rlib` crate types, async via `pyo3-asyn
 
 All three expose async Python functions via `pyo3_async_runtimes::tokio::future_into_py`. The Python gateway (`src/core/ingest_and_digitize_data/document_acquisition/online_acquisition/gateway.py`) calls `net_io.fetch_one()` for HTTP I/O and handles PDF downloads in Python.
 
-#### Model Server (`backend/services/model-server/`)
+#### Model Server (`services/model-server/`)
 
 Standalone FastAPI microservice (port 8001) for local model inference: Embedding, Rerank, LLM chat. OpenAI-compatible API. Models lazy-loaded on first request. Shares the `backend/config/` layered configuration source with the backend.
 
@@ -400,7 +400,7 @@ To rebuild the PyO3 extension after Rust changes: `maturin develop --release` (f
 #### Model Server
 
 ```bash
-cd backend/services/model-server
+cd services/model-server
 uv run python main.py       # Starts on :8001
 uv run python main.py --port 8002
 ```

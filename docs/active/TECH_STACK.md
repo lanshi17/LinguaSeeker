@@ -230,7 +230,6 @@ backend/
 │   ├── rust-io/                                            # Canonical Python-facing Rust I/O facade
 │   ├── files-io/                                           # Unified local + S3 file I/O primitives
 │   └── net-io/                                             # HTTP/web I/O + MinerU API primitives
-├── services/model-server/                                  # Embedding/rerank/LLM API
 ├── alembic/
 ├── tests/
 └── .old_version/                                           # Previous implementation reference
