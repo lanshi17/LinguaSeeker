@@ -229,6 +229,7 @@ def test_duplicate_facts_merge_by_group_field_and_value() -> None:
     assert len(items) == 2
     assert items[0].field_id == "A.gene_symbol"
     assert items[0].confidence == 0.95
+    assert items[0].value == "AARS2"
     assert items[1].field_id == "B.age_current_or_last_followup"
     assert items[1].value == "10 years"
     assert [issue.issue_type.value for issue in issues].count("duplicate_merged") == 2
