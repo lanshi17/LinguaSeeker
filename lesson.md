@@ -1576,3 +1576,38 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 - Solution: Plan an inline `translatedDocument.paragraphs.length > 0` check and conditionally render the translated reader only when content exists.
 - Prevention: Preserve existing imports in implementation plans and prefer existing empty-state signals before adding helper abstractions.
 - Follow-up: Plan review found the helper and import snippet were unnecessary and could mislead implementation by dropping existing category imports. Revised the plan to use the existing `translatedDocument.paragraphs.length > 0` state directly and document both `null` and `undefined` missing-translation inputs.
+
+## 2026-06-10: model-server migration to top-level services/
+
+**Problem:** `backend/services/model-server/` was the only microservice in the backend tree, but its lifecycle (vllm, mineru_vl_utils, heavy CUDA deps) was bolted onto the backend's lockfile via an optional `[model-server]` extra. That bloat forced every backend CI / lint / test run to resolve vllm and torch, and the model-server's `app/config.py` had a `sys.path.insert(0, _BACKEND_ROOT)` hack to reach the shared YAML loader.
+
+**Root cause / motivation:** Three concrete pain points:
+1. `uv lock` for the backend pulled in 206 packages including vllm + torch + xgrammar (~3.5 GB wheel) even when running CPU-only unit tests.
+2. Deployment had to install the entire backend toolchain on the model-server host (and vice versa).
+3. The model-server had no clean way to import the shared loader without sys.path manipulation.
+
+**Fix:** Atomic migration as one branch (`migrate-model-server`).
+- Extracted the 74-line `config_loader.py` into a new shared package `libs/config-loader/` (named `acmg-config-loader`), stdlib + pyyaml only, editable path source.
+- Moved `backend/services/model-server/` → `services/model-server/` with its own `pyproject.toml` and `uv.lock` (206 packages, now isolated).
+- Replaced the `sys.path` hack with a direct `from acmg_config_loader import load_backend_config_into_env`.
+- Updated `start_model_server.sh`, `deploy/ansible/roles/model-server/` (consistent `src`/`dest`/`chdir`/`WorkingDirectory`), `copier.yaml`, and all active docs.
+- Removed the `model-server` extra from `backend/pyproject.toml` (and the jinja template); `backend/uv.lock` shrank by 2190 lines.
+
+**Verification:**
+- 26/26 model-server tests pass (CPU-only stubs via conftest).
+- 4/4 shared loader tests pass.
+- 2/2 backend config loader tests pass (via the shim).
+- Ruff clean for model-server and shared loader.
+- 6 pre-existing ruff errors in backend `src/` are unrelated to this migration (they exist on `dev` HEAD before any changes — F401, E741, E402, F841 in `cross_lingual_process_and_extract_evidence/extract_evidence/stages/special_evidence.py`, `relevance_gate.py`, and a test file).
+
+**Issues hit and how they were resolved:**
+1. **Local pypi mirror (`http://127.0.0.1:3141`) timed out** during `uv pip install`. The devpi service was unreachable, so I used `UV_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/` to route through aliyun. Note for ops: devpi availability is a real environmental dependency; if it's down, the migration can't be exercised in this workspace. Fix: restart devpi or add aliyun to the default index list.
+2. **`uv sync` and `uv pip install -e ".[dev]"` for the backend timed out (>15 min)** because torch + vllm wheels are huge. Worked around by installing only the test-minimum set (sqlalchemy, aiosqlite, pgvector, asyncpg, redis, fastapi, uvicorn, alembic, pydantic, pydantic-settings) directly via `uv pip install` into the existing `.venv`. This is sufficient to run `tests/core/test_config_loader.py` and the shim — the full backend test suite is not in scope for the migration's verification.
+3. **One test (`test_model_server_reuses_backend_config_loader`) was checking the OLD behavior** — it imported `src.core.config_loader` and asserted `app.config.load_backend_config_into_env is load_backend_config_into_env` (the backend's symbol). With the new architecture, the model-server imports `acmg_config_loader` directly (no longer the backend's shim). Updated the test to assert the new shared loader and renamed it to `test_model_server_uses_shared_config_loader` to match the new contract.
+4. **The implementation plan went through 6 review findings** (1 pre-move path regression, 1 leftover dir cleanup, 1 ansible path consistency, 1 smoke-test semantics, 1 missing `uv lock`, 1 nit on RED test expectation). All were addressed before execution started. This is the second migration to be reviewed-via-plan-mode in this project (the first was 2026-05-18 database MVP) — the upfront review caught 3 blocking issues that would have derailed execution.
+
+**Prevention:**
+- When a "service" lives inside an application tree and has a different runtime profile (different deps, different deploy unit), promote it to the repo root **before** more services are added — N=1 is the cheapest time to migrate.
+- When splitting a shared module, keep the new package **stdlib + minimal third-party** (just pyyaml here). Don't transitively pull FastAPI/Pydantic into the shared layer; that defeats the purpose of "shared".
+- Plan-mode review caught 6 issues that the implementation would have hit; the review cost ~5 minutes, the cost of those issues in execution would have been 1+ hour of fix-and-retry loops. The discipline of "write plan → review → execute" pays off for any migration touching more than ~5 files.
+- For `sys.path.insert(...)` workarounds, the smell is the right trigger: any time a module reaches up to a parent's tree to import a sibling, it's a sign the sibling should be a proper installable package.

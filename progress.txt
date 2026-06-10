@@ -288,3 +288,4 @@
 [2026-06-10] ClinGen batch regression extraction quality fixes implemented and verified [completed]
 [2026-06-10] [Wrote implementation plan: expose created_at in evidence fusion view] [DONE]
 [2026-06-10] [Expose created_at in evidence fusion view: 8 commits, full pipeline from DB to UI] [DONE]
+[2026-06-10] [migrate-model-server-to-top-level-services] [done] Moved backend/services/model-server → top-level services/model-server with independent pyproject/lockfile; extracted shared YAML loader into libs/config-loader (acmg-config-loader); updated deploy, scripts, docs, and copier templates. 26 model-server tests + 4 shared loader tests + 2 backend config loader tests pass; ruff clean for model-server and shared loader (6 pre-existing backend ruff errors unrelated to migration).
