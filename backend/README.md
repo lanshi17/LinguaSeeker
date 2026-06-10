@@ -25,8 +25,6 @@ backend/
 │   ├── rust-io/          #   Facade crate (cdylib) -- Python module `rust_io`
 │   ├── net-io/           #   HTTP I/O: 14 literature providers + MinerU API
 │   └── files-io/         #   File I/O: local + S3, archives, SHA-256 dedup
-├── services/
-│   └── model-server/     # Standalone model inference service (port 8001)
 ├── alembic/              # Alembic scaffold (real migrations in database/migrations/)
 ├── scripts/              # E2E and operational scripts
 ├── tests/                # pytest test suite
@@ -106,5 +104,5 @@ Typed validation via `src/core/config.py` (`Settings`, `get_config()`).
 - [config/](config/README.md) -- Configuration management
 - [libs/](libs/README.md) -- Rust native extensions
 - [scripts/](scripts/README.md) -- E2E and operational scripts
-- [services/model-server/](services/model-server/README.md) -- Model inference service
+- [services/model-server/](../services/model-server/README.md) -- Model inference service (top-level)
 - [tests/](tests/README.md) -- Test suite

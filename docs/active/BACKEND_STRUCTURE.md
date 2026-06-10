@@ -224,7 +224,6 @@ backend/
 │   ├── rust-io/                                        # Literature search/download PyO3 crate
 │   ├── files-io/                                       # Unified file I/O PyO3 crate
 │   └── net-io/                                         # Network I/O + MinerU PyO3 crate
-├── services/model-server/                              # Standalone model inference microservice
 ├── alembic/versions/                                   # Database migrations
 ├── tests/
 ├── .old_version/                                       # Preserved legacy codebase
