@@ -155,7 +155,7 @@ _exclude:
   - "backend/config/vault/*.yml"
   - "backend/pyproject.toml"
   - "backend/app/main.py"
-  - "backend/services/model-server/main.py"
+  - "services/model-server/main.py"
   - "backend/src/core/config.py"
   - "backend/src/utils/exceptions.py"
   - "backend/libs/rust-io/Cargo.toml"
