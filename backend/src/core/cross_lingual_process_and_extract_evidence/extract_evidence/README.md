@@ -552,6 +552,12 @@ uv run pytest tests/core/cross_lingual_process_and_extract_evidence/ -v
 
 318 tests across the full cross-lingual module, plus 65 documented skips for fixture- or env-dependent scenarios.
 
+## ACMG Value Normalization
+
+`normalization.py` runs after group assignment and before source grounding. It rejects coordinate-only HGVS/reference values, normalizes segregation and family values, blocks developmental milestone ages from `B.age_of_onset`, keeps computational prediction evidence out of functional evidence fields, and merges duplicate facts by `(group_id, field_id, normalized_value)`.
+
+Normalization emits `EvidenceNormalizationIssue` records so UI and review workflows can show exactly which extracted values were rejected or rewritten.
+
 ### What's not tested
 
 - Real LLM hallucination edge cases (prompt quality relies on iterative refinement)

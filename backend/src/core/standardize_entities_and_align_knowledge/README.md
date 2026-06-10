@@ -376,6 +376,10 @@ uv run pytest tests/core/standardize_entities_and_align_knowledge tests/dao/test
 uv run ruff check src tests
 ```
 
+## ACMG-Ready Projection
+
+`acmg_projection.py` converts standardized entity matches into compact rules-engine facts. Phenotype matches with `HP:` identifiers from proband fields (`B.hpo_terms`, `B.clinical_phenotypes`) are exposed as `hpo_terms`, while unmapped phenotype text remains available in the original evidence items for human review. Family and model phenotype fields (e.g. `C.maternal_phenotype`, `I.animal_model_phenotype`) are excluded from proband HPO projection.
+
 Coverage areas currently present:
 
 - ORM + Alembic parity for terminology and pgvector tables

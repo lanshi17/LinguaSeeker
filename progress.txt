@@ -283,3 +283,5 @@
 
 [2026-06-09] [Hide empty English translation track: helper extraction] [done] Extracted hasTranslatedDocumentText(detail) into evidenceDocument.ts to make the availability gate unit-testable. Helper trims both translated_document_text and trace.translated.text, so whitespace-only API input does not leak. Updated EvidenceDetailView to call the helper, updated the archived plan to reflect the final approach. Tests: 11/11, lint and type-check clean.
 [2026-06-10] [ClinGen batch regression extraction quality implementation plan] [completed]
+[2026-06-10] [ClinGen batch regression extraction quality plan review fixes] [completed]
+[2026-06-10] [ACMG evidence normalization and HPO projection fixes] [completed] Fixed HGVS coordinate-only rejection, segregation field normalization, age-of-onset milestone guard, prediction/functional separation, duplicate merge, workflow wiring, HPO projection with proband field restriction. 65/65 focused tests pass, ruff clean.
