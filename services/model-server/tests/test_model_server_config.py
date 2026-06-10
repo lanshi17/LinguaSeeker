@@ -47,9 +47,9 @@ def test_no_env_files_configured():
     assert env_file is None
 
 
-def test_model_server_reuses_backend_config_loader():
-    """Model-server uses the shared backend/config loader instead of a local copy."""
+def test_model_server_uses_shared_config_loader():
+    """Model-server uses the shared acmg-config-loader package (no local copy)."""
     import app.config as model_server_config
-    from src.core.config_loader import load_backend_config_into_env
+    from acmg_config_loader import load_backend_config_into_env
 
     assert model_server_config.load_backend_config_into_env is load_backend_config_into_env
