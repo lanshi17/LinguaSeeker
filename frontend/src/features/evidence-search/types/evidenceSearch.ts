@@ -26,6 +26,7 @@ export interface EvidenceSearchResult {
   avg_confidence?: number | null;
   review_status: string;
   canonical_evidence_id?: string | null;
+  created_at?: string | null;
 }
 
 /** GET /api/v1/evidence/search response. */
