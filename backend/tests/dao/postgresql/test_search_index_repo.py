@@ -53,6 +53,14 @@ def test_search_index_table_has_required_columns() -> None:
     assert required <= columns, f"Missing columns: {required - columns}"
 
 
+def test_search_index_table_has_created_at_column() -> None:
+    """The frontend_search_index table must expose a created_at column."""
+    from src.dao.postgresql.search_index_repo import frontend_search_index
+
+    col_names = [c.name for c in frontend_search_index.columns]
+    assert "created_at" in col_names
+
+
 def test_search_index_table_has_unique_index_on_canonical_id() -> None:
     """The table has a unique index on canonical_evidence_id for CONCURRENTLY refresh."""
     from src.dao.postgresql.search_index_repo import frontend_search_index
