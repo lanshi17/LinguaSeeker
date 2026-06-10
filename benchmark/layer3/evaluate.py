@@ -17,6 +17,7 @@ import json
 import re
 import sys
 import time
+import unicodedata
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -108,6 +109,30 @@ def markdown_to_pdf_bytes(md_text: str, title: str = "") -> bytes:
 
 # ── Comparison ─────────────────────────────────────────────────────────
 
+_PUNCT_TRANSLATION = str.maketrans({
+    "‐": "-",  # ‐ hyphen
+    "‑": "-",  # ‑ non-breaking hyphen
+    "‒": "-",  # ‒ figure dash
+    "–": "-",  # – en dash
+    "—": "-",  # — em dash
+    "―": "-",  # ― horizontal bar
+    "−": "-",  # − minus sign
+    "－": "-",  # － fullwidth hyphen-minus
+    "‘": "'",  # ' left single quotation mark
+    "’": "'",  # ' right single quotation mark
+    "“": '"',  # " left double quotation mark
+    "”": '"',  # " right double quotation mark
+})
+
+
+def normalize_comparison_text(value: str) -> str:
+    """Normalize harmless typography differences for benchmark matching."""
+    normalized = unicodedata.normalize("NFKC", value)
+    normalized = normalized.translate(_PUNCT_TRANSLATION)
+    normalized = re.sub(r"\s+", " ", normalized)
+    return normalized.strip()
+
+
 @dataclass
 class FieldMatch:
     """Result of matching one expected field against extracted evidence."""
@@ -145,8 +170,10 @@ def fuzzy_match_value(expected: str, extracted: str) -> bool:
     """Fuzzy value matching with word-overlap for disease names."""
     if not expected or not extracted:
         return False
-    exp_lower = expected.lower().strip()
-    ext_lower = extracted.lower().strip()
+    exp_norm = normalize_comparison_text(expected)
+    ext_norm = normalize_comparison_text(extracted)
+    exp_lower = exp_norm.lower()
+    ext_lower = ext_norm.lower()
     # Exact match
     if exp_lower == ext_lower:
         return True
@@ -154,7 +181,7 @@ def fuzzy_match_value(expected: str, extracted: str) -> bool:
     if exp_lower in ext_lower or ext_lower in exp_lower:
         return True
     # Gene symbol exact match (case-sensitive)
-    if expected.strip() == extracted.strip():
+    if exp_norm == ext_norm:
         return True
     # Word-overlap matching for disease names
     # e.g., "Charcot-Marie-Tooth disease" matches "Charcot-Marie-Tooth disease axonal type 2N"
