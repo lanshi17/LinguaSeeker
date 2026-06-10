@@ -183,6 +183,15 @@ class FieldValueNormalizer:
         ),
     }
 
+    _GENE_SYMBOL_RE = re.compile(r"\b[A-Za-z][A-Za-z0-9]{1,9}\b")
+    _GENE_RELATIONSHIP_PREFIX_RE = re.compile(
+        r"\b(?P<gene>[A-Za-z][A-Za-z0-9]{1,9})(?:[-\s]+)(?:related|mutation|associated)\b",
+        re.IGNORECASE,
+    )
+    _GENE_NON_SYMBOL_VALUES = {
+        "ACMG", "CNV", "DNA", "HGNC", "HGVS", "OMIM", "RNA", "SNP",
+    }
+
     @classmethod
     def normalize_items(cls, items: list[EvidenceItem]) -> list[EvidenceItem]:
         """Normalize field values to their constrained formats."""
@@ -191,12 +200,32 @@ class FieldValueNormalizer:
             if item.status != EvidenceStatus.FOUND:
                 normalized.append(item)
                 continue
+            if item.field_id == "A.gene_symbol" and item.value is not None:
+                normalized.append(cls._normalize_gene_symbol(item))
+                continue
             enum_values = cls._ENUM_FIELDS.get(item.field_id)
             if enum_values and item.value is not None:
                 normalized.append(cls._normalize_enum(item, enum_values))
             else:
                 normalized.append(item)
         return normalized
+
+    @classmethod
+    def _normalize_gene_symbol(cls, item: EvidenceItem) -> EvidenceItem:
+        """Extract a clean HGNC-style gene symbol from the raw value."""
+        raw = str(item.value).strip()
+        if cls._GENE_SYMBOL_RE.fullmatch(raw):
+            normalized = raw.upper()
+            if normalized in cls._GENE_NON_SYMBOL_VALUES:
+                return item
+            return item.model_copy(update={"value": normalized})
+        match = cls._GENE_RELATIONSHIP_PREFIX_RE.search(raw)
+        if match is None:
+            return item
+        normalized = match.group("gene").upper()
+        if normalized in cls._GENE_NON_SYMBOL_VALUES:
+            return item
+        return item.model_copy(update={"value": normalized})
 
     @classmethod
     def _normalize_enum(cls, item: EvidenceItem, valid_values: tuple[str, ...]) -> EvidenceItem:
