@@ -3,20 +3,18 @@
 from __future__ import annotations
 
 import os
-import sys
 from functools import lru_cache
 from pathlib import Path
 
+from acmg_config_loader import load_backend_config_into_env
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-_SERVICE_ROOT = Path(__file__).resolve().parents[1]
+
+# File is currently at backend/services/model-server/app/config.py.
+# parents[3] is `backend/`, which is the backend root whose `config/` we load.
+# Path is updated in Task 7 to `parents[3] / "backend"` after the move to
+# services/model-server/app/config.py.
 _BACKEND_ROOT = Path(__file__).resolve().parents[3]
-
-if str(_BACKEND_ROOT) not in sys.path:
-    sys.path.insert(0, str(_BACKEND_ROOT))
-
-from src.core.config_loader import load_backend_config_into_env  # noqa: E402
-
 
 load_backend_config_into_env(_BACKEND_ROOT)
 
