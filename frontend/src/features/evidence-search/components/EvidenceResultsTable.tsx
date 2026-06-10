@@ -42,6 +42,25 @@ function formatPercent(value?: number | null) {
   return `${(value * 100).toFixed(0)}%`;
 }
 
+function formatDate(isoString?: string | null) {
+  if (!isoString) {
+    return "\u2014";
+  }
+  try {
+    const date = new Date(isoString);
+    if (Number.isNaN(date.getTime())) {
+      return "\u2014";
+    }
+    return date.toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  } catch {
+    return "\u2014";
+  }
+}
+
 function joinedLabel(values: string[]) {
   return values.length > 0 ? values.join(", ") : "\u2014";
 }
@@ -196,10 +215,11 @@ export function EvidenceResultsTable({
                 {joinedLabel(row.diseases)}
               </p>
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-2 border-t border-gray-100 pt-3 text-xs text-gray-500">
+            <div className="mt-4 grid grid-cols-4 gap-2 border-t border-gray-100 pt-3 text-xs text-gray-500">
               <span>{row.groupCount} group{row.groupCount !== 1 ? "s" : ""}</span>
               <span>{row.fieldCount} fields</span>
               <span>{formatPercent(row.avgConfidence)}</span>
+              <span>{formatDate(row.createdAt)}</span>
             </div>
           </button>
         ))}
@@ -209,10 +229,11 @@ export function EvidenceResultsTable({
         <table className="w-full table-fixed text-sm">
           <thead className="border-b border-gray-200 bg-gray-50">
             <tr className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <th className="w-[24%] px-4 py-3">Literature</th>
-              <th className="w-[22%] px-4 py-3">Evidence Focus</th>
-              <th className="w-[20%] px-4 py-3">Disease</th>
-              <th className="w-[16%] px-4 py-3">Classification</th>
+              <th className="w-[20%] px-4 py-3">Literature</th>
+              <th className="w-[18%] px-4 py-3">Evidence Focus</th>
+              <th className="w-[16%] px-4 py-3">Disease</th>
+              <th className="w-[14%] px-4 py-3">Classification</th>
+              <th className="w-[10%] px-4 py-3">Created</th>
               <th className="w-[10%] px-4 py-3">Review</th>
               <th className="w-[8%] px-4 py-3 text-right">Fields</th>
             </tr>
@@ -266,6 +287,9 @@ export function EvidenceResultsTable({
                 </td>
                 <td className="px-4 py-4 align-top">
                   <TokenList values={row.classifications} tone="amber" />
+                </td>
+                <td className="px-4 py-4 align-top text-xs text-gray-500">
+                  {formatDate(row.createdAt)}
                 </td>
                 <td className="px-4 py-4 align-top">
                   <Badge variant={STATUS_VARIANT[row.reviewStatus] ?? "info"}>
