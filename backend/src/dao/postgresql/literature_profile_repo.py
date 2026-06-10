@@ -433,6 +433,7 @@ class LiteratureProfileRepository:
                 "variant": merged["variant"],
                 "disease": merged["disease"],
                 "classification": merged["classification"],
+                "created_at": row.created_at.isoformat() if row.created_at else None,
             })
 
         return items, total_count
