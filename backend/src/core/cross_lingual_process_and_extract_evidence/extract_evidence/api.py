@@ -51,6 +51,7 @@ class EvidenceExtractionService:
             evidence_chains=state.evidence_chains,
             special_evidence=state.special_evidence,
             quality_report=state.quality_report,
+            normalization_issues=state.normalization_issues,
         )
 
     async def run_dual(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:

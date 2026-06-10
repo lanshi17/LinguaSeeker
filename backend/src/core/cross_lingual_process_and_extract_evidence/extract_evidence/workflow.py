@@ -19,6 +19,7 @@ from .contracts import (
 )
 from .chunking import DEFAULT_INPUT_BUDGET_TOKENS
 from .core import EvidenceChainBuilder
+from .normalization import AcmgEvidenceValueNormalizer
 from .providers import LangChainEvidenceProvider
 from .stages.catalog_extraction import CatalogExtractionStage
 from .stages.evidence_map import RelevanceScanStage
@@ -40,6 +41,7 @@ class EvidenceExtractionWorkflow:
         self._catalog_extraction = CatalogExtractionStage(provider, input_budget_tokens=input_budget_tokens)
         self._special_evidence = SpecialEvidenceStage(provider, input_budget_tokens=input_budget_tokens)
         self._group_assignment = GroupAssignmentStage()
+        self._value_normalizer = AcmgEvidenceValueNormalizer()
         self._source_grounding = SourceGroundingStage()
         self._quality_gate = QualityGateStage()
         self._chain_builder = EvidenceChainBuilder()
@@ -90,6 +92,12 @@ class EvidenceExtractionWorkflow:
         state.special_evidence = grouped_special
         return state
 
+    def _node_value_normalization(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        items, issues = self._value_normalizer.normalize(state.evidence_items)
+        state.evidence_items = items
+        state.normalization_issues = [*state.normalization_issues, *issues]
+        return state
+
     def _node_source_grounding(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         grounded_items, grounded_special = self._source_grounding.run(
             state.document,
@@ -127,6 +135,7 @@ class EvidenceExtractionWorkflow:
         graph.add_node("catalog_extraction", self._node_catalog_extraction)
         graph.add_node("special_evidence", self._node_special_evidence)
         graph.add_node("group_assignment", self._node_group_assignment)
+        graph.add_node("value_normalization", self._node_value_normalization)
         graph.add_node("source_grounding", self._node_source_grounding)
         graph.add_node("chain_assembly", self._node_chain_assembly)
         graph.add_node("quality_gate", self._node_quality_gate)
@@ -140,7 +149,8 @@ class EvidenceExtractionWorkflow:
         )
         graph.add_edge("catalog_extraction", "special_evidence")
         graph.add_edge("special_evidence", "group_assignment")
-        graph.add_edge("group_assignment", "source_grounding")
+        graph.add_edge("group_assignment", "value_normalization")
+        graph.add_edge("value_normalization", "source_grounding")
         graph.add_edge("source_grounding", "chain_assembly")
         graph.add_edge("chain_assembly", "quality_gate")
         graph.add_edge("quality_gate", END)
@@ -156,6 +166,7 @@ class EvidenceExtractionWorkflow:
         graph.add_node("catalog_extraction", self._async_node_catalog_extraction)
         graph.add_node("special_evidence", self._async_node_special_evidence)
         graph.add_node("group_assignment", self._node_group_assignment)
+        graph.add_node("value_normalization", self._node_value_normalization)
         graph.add_node("source_grounding", self._node_source_grounding)
         graph.add_node("chain_assembly", self._node_chain_assembly)
         graph.add_node("quality_gate", self._node_quality_gate)
@@ -169,7 +180,8 @@ class EvidenceExtractionWorkflow:
         )
         graph.add_edge("catalog_extraction", "special_evidence")
         graph.add_edge("special_evidence", "group_assignment")
-        graph.add_edge("group_assignment", "source_grounding")
+        graph.add_edge("group_assignment", "value_normalization")
+        graph.add_edge("value_normalization", "source_grounding")
         graph.add_edge("source_grounding", "chain_assembly")
         graph.add_edge("chain_assembly", "quality_gate")
         graph.add_edge("quality_gate", END)
