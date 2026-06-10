@@ -268,7 +268,7 @@ class FieldValueNormalizer:
             return item
         # Negation and hedging checks — must run before substring/keyword matching
         if item.field_id == "A.gene_disease_relationship":
-            if re.search(r"\b(?:non[-\s]?causal|not causal|not causative)\b", raw):
+            if re.search(r"\b(?:non[-\s]?caus(?:al|ative)?|not (?:a )?caus(?:al|ative)?)\b", raw):
                 return item.model_copy(update={"value": "associated"})
             if re.search(r"\bnot (?:a )?(?:known )?disease gene\b", raw):
                 return item.model_copy(update={"value": "uncertain"})

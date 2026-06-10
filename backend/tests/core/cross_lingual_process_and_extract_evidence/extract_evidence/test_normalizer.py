@@ -309,3 +309,33 @@ def test_field_value_normalizer_prefers_hedged_association_over_causative_keywor
     normalized = FieldValueNormalizer.normalize_items([item])
 
     assert normalized[0].value == "associated"
+
+
+def test_field_value_normalizer_handles_non_causative_association() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_disease_relationship",
+        category="A",
+        field_name="Reported gene-disease relationship",
+        status=EvidenceStatus.FOUND,
+        value="non-causative association",
+        confidence=0.8,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "associated"
+
+
+def test_field_value_normalizer_handles_not_a_causative_association() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_disease_relationship",
+        category="A",
+        field_name="Reported gene-disease relationship",
+        status=EvidenceStatus.FOUND,
+        value="not a causative association",
+        confidence=0.8,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "associated"
