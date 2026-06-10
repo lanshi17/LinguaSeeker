@@ -52,6 +52,8 @@ Out of scope:
 ## Task 1: Normalize Benchmark Text Comparison
 
 **Files:**
+- Create: `benchmark/__init__.py`
+- Create: `benchmark/layer3/__init__.py`
 - Modify: `benchmark/layer3/evaluate.py`
 - Create: `backend/tests/benchmark/layer3/test_evaluate_matching.py`
 
@@ -75,6 +77,10 @@ def test_fuzzy_match_value_treats_dash_variants_as_equivalent() -> None:
 
 def test_fuzzy_match_value_normalizes_curly_quotes_and_spacing() -> None:
     assert fuzzy_match_value("AARS2-related disease", "AARS2‑related  disease")
+
+
+def test_fuzzy_match_value_normalizes_cjk_fullwidth_hyphen() -> None:
+    assert fuzzy_match_value("AARS2-related disease", "AARS2－related disease")
 ```
 
 **Step 2: Run test to verify it fails**
@@ -82,8 +88,7 @@ def test_fuzzy_match_value_normalizes_curly_quotes_and_spacing() -> None:
 Run:
 
 ```bash
-cd backend
-uv run pytest tests/benchmark/layer3/test_evaluate_matching.py -v
+uv --project backend run pytest backend/tests/benchmark/layer3/test_evaluate_matching.py -v
 ```
 
 Expected: at least `test_fuzzy_match_value_treats_dash_variants_as_equivalent` fails before implementation.
@@ -93,6 +98,9 @@ Expected: at least `test_fuzzy_match_value_treats_dash_variants_as_equivalent` f
 In `benchmark/layer3/evaluate.py`, add near the comparison section:
 
 ```python
+import unicodedata
+
+
 _PUNCT_TRANSLATION = str.maketrans({
     "‐": "-",
     "‑": "-",
@@ -101,6 +109,7 @@ _PUNCT_TRANSLATION = str.maketrans({
     "—": "-",
     "―": "-",
     "−": "-",
+    "－": "-",
     "‘": "'",
     "’": "'",
     "“": '"',
@@ -110,7 +119,8 @@ _PUNCT_TRANSLATION = str.maketrans({
 
 def normalize_comparison_text(value: str) -> str:
     """Normalize harmless typography differences for benchmark matching."""
-    normalized = value.translate(_PUNCT_TRANSLATION)
+    normalized = unicodedata.normalize("NFKC", value)
+    normalized = normalized.translate(_PUNCT_TRANSLATION)
     normalized = re.sub(r"\s+", " ", normalized)
     return normalized.strip()
 ```
@@ -133,13 +143,24 @@ Update gene exact check:
 
 Keep `FieldMatch.extracted_value` unchanged so reports still show raw extracted output.
 
+Also create empty package marker files so root-level benchmark modules are importable from tests and `python -m`:
+
+```python
+"""Benchmark utilities."""
+```
+
+Use that content for `benchmark/__init__.py`, and this content for `benchmark/layer3/__init__.py`:
+
+```python
+"""ClinGen layer-3 benchmark utilities."""
+```
+
 **Step 4: Run test to verify it passes**
 
 Run:
 
 ```bash
-cd backend
-uv run pytest tests/benchmark/layer3/test_evaluate_matching.py -v
+uv --project backend run pytest backend/tests/benchmark/layer3/test_evaluate_matching.py -v
 ```
 
 Expected: PASS.
@@ -147,7 +168,7 @@ Expected: PASS.
 **Step 5: Commit**
 
 ```bash
-git add benchmark/layer3/evaluate.py backend/tests/benchmark/layer3/test_evaluate_matching.py
+git add benchmark/__init__.py benchmark/layer3/__init__.py benchmark/layer3/evaluate.py backend/tests/benchmark/layer3/test_evaluate_matching.py
 git commit -m "test: cover clingen benchmark text normalization"
 ```
 
@@ -258,6 +279,36 @@ def test_field_value_normalizer_preserves_plain_gene_symbol() -> None:
     normalized = FieldValueNormalizer.normalize_items([item])
 
     assert normalized[0].value == "ABCA3"
+
+
+def test_field_value_normalizer_extracts_lowercase_related_gene_phrase() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="aars2-related mitochondrial disease",
+        confidence=0.74,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "AARS2"
+
+
+def test_field_value_normalizer_uses_token_before_relationship_hint() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="Mito AARS2-related disease",
+        confidence=0.74,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "AARS2"
 ```
 
 **Step 2: Run tests to verify failure**
@@ -276,8 +327,14 @@ Expected: FAIL because gene phrase cleanup is not implemented.
 In `FieldValueNormalizer`, add:
 
 ```python
-    _GENE_SYMBOL_RE = re.compile(r"\b[A-Z][A-Z0-9]{1,9}\b")
-    _GENE_PREFIX_HINTS = ("-related", "-mutation", "-associated", " related", " mutation", " associated")
+    _GENE_SYMBOL_RE = re.compile(r"\b[A-Za-z][A-Za-z0-9]{1,9}\b")
+    _GENE_RELATIONSHIP_PREFIX_RE = re.compile(
+        r"\b(?P<gene>[A-Za-z][A-Za-z0-9]{1,9})(?:[-\s]+)(?:related|mutation|associated)\b",
+        re.IGNORECASE,
+    )
+    _GENE_NON_SYMBOL_VALUES = {
+        "ACMG", "CNV", "DNA", "HGNC", "HGVS", "OMIM", "RNA", "SNP",
+    }
 ```
 
 Update `normalize_items()` before enum handling:
@@ -295,17 +352,20 @@ Add:
     def _normalize_gene_symbol(cls, item: EvidenceItem) -> EvidenceItem:
         raw = str(item.value).strip()
         if cls._GENE_SYMBOL_RE.fullmatch(raw):
-            return item.model_copy(update={"value": raw.upper()})
-        lowered = raw.lower()
-        if not any(hint in lowered for hint in cls._GENE_PREFIX_HINTS):
-            return item
-        match = cls._GENE_SYMBOL_RE.search(raw)
+            normalized = raw.upper()
+            if normalized in cls._GENE_NON_SYMBOL_VALUES:
+                return item
+            return item.model_copy(update={"value": normalized})
+        match = cls._GENE_RELATIONSHIP_PREFIX_RE.search(raw)
         if match is None:
             return item
-        return item.model_copy(update={"value": match.group(0).upper()})
+        normalized = match.group("gene").upper()
+        if normalized in cls._GENE_NON_SYMBOL_VALUES:
+            return item
+        return item.model_copy(update={"value": normalized})
 ```
 
-This is intentionally conservative: it only extracts a token when the value contains relationship-prefix hints.
+This is intentionally conservative: phrase cleanup only extracts the token immediately before `related`, `mutation`, or `associated`, instead of the first uppercase token in the whole string. It also leaves common non-gene biomedical abbreviations unchanged so downstream HGNC matching can surface the problem rather than silently rewriting it.
 
 **Step 4: Run normalizer tests**
 
@@ -385,6 +445,51 @@ def test_field_value_normalizer_keeps_preliminary_association_as_associated() ->
     normalized = FieldValueNormalizer.normalize_items([item])
 
     assert normalized[0].value == "associated"
+
+
+def test_field_value_normalizer_does_not_upgrade_negated_causal_text() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_disease_relationship",
+        category="A",
+        field_name="Reported gene-disease relationship",
+        status=EvidenceStatus.FOUND,
+        value="non-causal association",
+        confidence=0.8,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "associated"
+
+
+def test_field_value_normalizer_does_not_upgrade_not_disease_gene_text() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_disease_relationship",
+        category="A",
+        field_name="Reported gene-disease relationship",
+        status=EvidenceStatus.FOUND,
+        value="not a known disease gene",
+        confidence=0.8,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "uncertain"
+
+
+def test_field_value_normalizer_prefers_hedged_association_over_causative_keyword() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_disease_relationship",
+        category="A",
+        field_name="Reported gene-disease relationship",
+        status=EvidenceStatus.FOUND,
+        value="possibly causative but only a preliminary association",
+        confidence=0.8,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "associated"
 ```
 
 **Step 3: Run tests to verify failure**
@@ -400,7 +505,7 @@ uv run pytest \
   -v
 ```
 
-Expected: FAIL on missing prompt text and missing `known disease gene` mapping.
+Expected: FAIL on missing prompt text and missing negation/hedging handling.
 
 **Step 4: Update prompt and normalizer**
 
@@ -410,20 +515,72 @@ In `prompts.py`, strengthen the relationship rule:
 Decision guidance: Use "causative" when the document supports an established causal relationship: known disease gene, pathogenic variants causing the disease, ACMG pathogenic/likely pathogenic variants in affected cases, ClinGen Definitive/Strong/Moderate curation, or replicated genetic/functional evidence. Do not choose associated merely because the sentence contains associated; choose "associated" only when the gene-disease link itself is explicitly preliminary, correlative, risk-modifying, or not established as causal.
 ```
 
-In `FieldValueNormalizer._normalize_enum()`, update `keyword_map`:
+In `FieldValueNormalizer._normalize_enum()`, add negation and hedging checks before positive keyword matching:
 
 ```python
-            "causative": (
-                "cause", "causative", "causal", "pathogenic",
-                "responsible", "known disease gene", "disease gene",
-            ),
-            "associated": (
-                "preliminary association", "associated", "association",
-                "linked", "related",
-            ),
+        if item.field_id == "A.gene_disease_relationship":
+            if re.search(r"\b(?:non[-\s]?causal|not causal|not causative)\b", raw):
+                return item.model_copy(update={"value": "associated"})
+            if re.search(r"\bnot (?:a )?(?:known )?disease gene\b", raw):
+                return item.model_copy(update={"value": "uncertain"})
+            if "preliminary association" in raw or "only a preliminary" in raw:
+                return item.model_copy(update={"value": "associated"})
 ```
 
-Keep exact enum match first.
+Then update `keyword_map` to use word-safe regex patterns through a helper rather than bare `kw in raw`. Preserve the existing non-relationship enum mappings by converting each phrase to a regex pattern:
+
+```python
+        keyword_map = {
+            "causative": (
+                r"\bcauses?\b",
+                r"\bcausative\b",
+                r"\bcausal\b",
+                r"\bpathogenic\b",
+                r"\bresponsible\b",
+                r"\bknown disease gene\b",
+                r"\bdisease gene\b",
+            ),
+            "associated": (
+                r"\bassociated\b",
+                r"\bassociation\b",
+                r"\blink(?:ed)?\b",
+                r"\brelated\b",
+            ),
+            "susceptibility": (
+                r"\bsusceptibility\b",
+                r"\bsusceptible\b",
+                r"\brisk\b",
+                r"\bpredispos",
+            ),
+            "uncertain": (
+                r"\buncertain\b",
+                r"\bunclear\b",
+                r"\bpossible\b",
+                r"\bpotential\b",
+            ),
+            "disputed": (
+                r"\bdisputed\b",
+                r"\bcontroversial\b",
+                r"\bconflicting\b",
+            ),
+            "refuted": (
+                r"\brefuted\b",
+                r"\brefute\b",
+                r"\bno evidence\b",
+                r"\bnot supported\b",
+            ),
+            "no_relationship": (
+                r"\bno relationship\b",
+                r"\bno known\b",
+                r"\bnot related\b",
+            ),
+        }
+        for value, patterns in keyword_map.items():
+            if any(re.search(pattern, raw) for pattern in patterns):
+                return item.model_copy(update={"value": value})
+```
+
+Keep exact enum match first, then negation/hedging checks, then word-boundary positive keyword matching. Do not add `preliminary association` to the keyword map because existing exact substring handling can make that entry unreachable; handle it explicitly before positive keyword mapping.
 
 **Step 5: Run focused tests**
 
@@ -472,6 +629,19 @@ def test_compare_evidence_counts_extra_found_candidate_as_over_extraction() -> N
     assert matches[0].matched
     assert matches[0].match_type == "exact"
     assert matches[0].extra_found_values == ["BRCA1"]
+
+
+def test_compare_evidence_deduplicates_extra_found_values() -> None:
+    expected = [{"field_id": "A.gene_symbol", "value": "AARS2"}]
+    extracted = [
+        {"field_id": "A.gene_symbol", "status": "found", "value": "AARS2", "confidence": 0.9},
+        {"field_id": "A.gene_symbol", "status": "found", "value": "BRCA1", "confidence": 0.6},
+        {"field_id": "A.gene_symbol", "status": "found", "value": "BRCA1", "confidence": 0.5},
+    ]
+
+    matches = compare_evidence(expected, extracted)
+
+    assert matches[0].extra_found_values == ["BRCA1"]
 ```
 
 **Step 2: Run test to verify failure**
@@ -479,47 +649,65 @@ def test_compare_evidence_counts_extra_found_candidate_as_over_extraction() -> N
 Run:
 
 ```bash
-cd backend
-uv run pytest tests/benchmark/layer3/test_evaluate_matching.py::test_compare_evidence_counts_extra_found_candidate_as_over_extraction -v
+uv --project backend run pytest backend/tests/benchmark/layer3/test_evaluate_matching.py::test_compare_evidence_counts_extra_found_candidate_as_over_extraction -v
 ```
 
 Expected: FAIL because `FieldMatch.extra_found_values` does not exist.
 
 **Step 3: Implement minimal metric field**
 
-In `FieldMatch`, add:
+Import `replace` and update `FieldMatch`:
 
 ```python
+from dataclasses import dataclass, field, replace
+
+
     extra_found_values: list[str] = field(default_factory=list)
 ```
 
-In `compare_evidence()`, after choosing `best_match`, compute extras:
+In `compare_evidence()`, compute extras after both fuzzy matching and ontology fallback have had a chance to set `best_match`. Replace the existing final `if best_match: matches.append(best_match)` block with this single append path:
 
 ```python
         if best_match:
-            extra_values = []
+            extra_values: list[str] = []
+            seen_extra_values: set[str] = set()
             for cand in candidates:
                 value = str(cand.get("value", ""))
+                normalized_value = normalize_comparison_text(value).lower()
+                if normalized_value in seen_extra_values:
+                    continue
                 if value != best_match.extracted_value and not fuzzy_match_value(expected_value, value):
+                    seen_extra_values.add(normalized_value)
                     extra_values.append(value)
-            matches.append(best_match.__class__(
-                **{**best_match.__dict__, "extra_found_values": extra_values}
-            ))
+            matches.append(replace(best_match, extra_found_values=extra_values))
 ```
 
-Prefer `dataclasses.replace(best_match, extra_found_values=extra_values)` if `replace` is imported from `dataclasses`.
+Do not leave the old `matches.append(best_match)` in place. There must be exactly one append for a matched field.
 
-Update aggregate precision:
+Add a helper inside or near `compute_aggregate_metrics()` to keep FP calculations consistent:
 
 ```python
-    over_extracted = sum(len(f.extra_found_values) for m in all_metrics for f in m.field_matches)
-    fp = (
-        sum(1 for m in all_metrics for f in m.field_matches if f.match_type == "wrong_value")
-        + over_extracted
-    )
+    def _false_positive_count(metrics_list: list[EntryMetrics]) -> int:
+        wrong_values = sum(
+            1 for m in metrics_list for f in m.field_matches
+            if f.match_type == "wrong_value"
+        )
+        over_extracted = sum(
+            len(f.extra_found_values)
+            for m in metrics_list
+            for f in m.field_matches
+        )
+        return wrong_values + over_extracted
+
+    def _over_extraction_count(metrics_list: list[EntryMetrics]) -> int:
+        return sum(
+            len(f.extra_found_values)
+            for m in metrics_list
+            for f in m.field_matches
+        )
 ```
 
-Add `"over_extractions": over_extracted` to report `overall`.
+Use `_false_positive_count()` for overall, `by_field`, `by_classification`, and `by_moi` FP calculations. Add `"over_extractions": _over_extraction_count(all_metrics)` to report `overall`, and include over-extraction counts in `by_field`, `by_classification`, and `by_moi` dictionaries where practical.
 
 Update per-entry field serialization:
 
@@ -533,8 +721,7 @@ Update per-entry field serialization:
 Run:
 
 ```bash
-cd backend
-uv run pytest tests/benchmark/layer3/test_evaluate_matching.py -v
+uv --project backend run pytest backend/tests/benchmark/layer3/test_evaluate_matching.py -v
 ```
 
 Expected: PASS.
@@ -557,12 +744,11 @@ git commit -m "feat: expose benchmark over extraction metrics"
 Run:
 
 ```bash
-cd backend
-uv run pytest \
-  tests/benchmark/layer3/test_evaluate_matching.py \
-  tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_prompts.py \
-  tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_normalizer.py \
-  tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_value_normalization.py \
+uv --project backend run pytest \
+  backend/tests/benchmark/layer3/test_evaluate_matching.py \
+  backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_prompts.py \
+  backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_normalizer.py \
+  backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_value_normalization.py \
   -v
 ```
 
@@ -573,8 +759,7 @@ Expected: PASS.
 Run:
 
 ```bash
-cd backend
-uv run python -m benchmark.layer3.evaluate --entries clingen_000 clingen_001 clingen_002
+uv --project backend run python -m benchmark.layer3.evaluate --entries clingen_000 clingen_001 clingen_002
 ```
 
 Expected:
@@ -587,12 +772,11 @@ Expected:
 Run:
 
 ```bash
-cd backend
-uv run python - <<'PY'
+uv --project backend run python - <<'PY'
 from pathlib import Path
 import json
 
-report = max(Path("../benchmark/layer3/reports").glob("eval_*.json"), key=lambda p: p.stat().st_mtime)
+report = max(Path("benchmark/layer3/reports").glob("eval_*.json"), key=lambda p: p.stat().st_mtime)
 data = json.loads(report.read_text(encoding="utf-8"))
 print(report)
 print(data["aggregates"]["overall"])
@@ -646,4 +830,3 @@ Use `skill:requesting-code-review`.
 git add docs/codereview/2026-06-10-clingen-batch-regression-extraction-quality.md
 git commit -m "docs: request review for clingen regression fixes"
 ```
-
