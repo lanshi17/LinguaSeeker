@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from src.core.standardize_entities_and_align_knowledge.contracts import (
+    AcmgReadyEvidenceItem,
+    AcmgReadyEvidenceSet,
     BindingRole,
     CanonicalStatusRank,
     EntityMatch,
@@ -171,3 +173,16 @@ def test_standardization_result_carries_matches() -> None:
     )
     assert len(result.matches) == 1
     assert result.matches[0].candidate.raw_text == "BRCA1"
+
+
+def test_acmg_ready_contracts_capture_hpo_ids_and_normalized_values() -> None:
+    item = AcmgReadyEvidenceItem(
+        field_id="B.clinical_phenotypes",
+        normalized_key="clinical_phenotypes",
+        normalized_value=["HP:0001263", "HP:0001252"],
+        raw_values=("global developmental delay", "hypotonia"),
+        source_field_ids=("B.clinical_phenotypes",),
+    )
+    evidence_set = AcmgReadyEvidenceSet(document_id="doc-1", items=(item,))
+
+    assert evidence_set.items[0].normalized_value == ["HP:0001263", "HP:0001252"]
