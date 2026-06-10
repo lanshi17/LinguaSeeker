@@ -183,6 +183,25 @@ class FieldValueNormalizer:
         ),
     }
 
+    _GENE_SYMBOL_RE = re.compile(r"\b[A-Za-z][A-Za-z0-9]{1,9}\b")
+    _GENE_RELATIONSHIP_PREFIX_RE = re.compile(
+        r"\b(?P<gene>[A-Za-z][A-Za-z0-9]{1,9})(?:[-\s]+)(?:related|mutation|associated)\b",
+        re.IGNORECASE,
+    )
+    _GENE_NON_SYMBOL_VALUES = {
+        "ACMG", "CNV", "DNA", "HGNC", "HGVS", "OMIM", "RNA", "SNP",
+    }
+    _GENE_PLACEHOLDER_OR_COMMON_WORDS = {
+        "unknown", "none", "not found", "not_found", "n/a", "na",
+        "gene", "genes", "patient", "patients", "proband", "family",
+        "control", "controls", "case", "cases", "study", "studies",
+        "sample", "samples", "variant", "variants", "mutation",
+        "mutations", "exon", "exons", "intron", "introns",
+        "chromosome", "deletion", "insertion", "analysis", "testing",
+        "normal", "abnormal", "positive", "negative", "wildtype",
+        "heterozygous", "homozygous", "carrier", "carriers",
+    }
+
     @classmethod
     def normalize_items(cls, items: list[EvidenceItem]) -> list[EvidenceItem]:
         """Normalize field values to their constrained formats."""
@@ -190,6 +209,9 @@ class FieldValueNormalizer:
         for item in items:
             if item.status != EvidenceStatus.FOUND:
                 normalized.append(item)
+                continue
+            if item.field_id == "A.gene_symbol" and item.value is not None:
+                normalized.append(cls._normalize_gene_symbol(item))
                 continue
             enum_values = cls._ENUM_FIELDS.get(item.field_id)
             if enum_values and item.value is not None:
@@ -199,29 +221,112 @@ class FieldValueNormalizer:
         return normalized
 
     @classmethod
+    def _normalize_gene_symbol(cls, item: EvidenceItem) -> EvidenceItem:
+        """Extract a clean HGNC-style gene symbol from the raw value.
+
+        Only uppercases tokens that are already in gene-symbol-like form
+        (contains at least one uppercase letter) or were extracted from a
+        disease-prefix phrase. Rejects common placeholder words and English
+        words that are not gene symbols.
+        """
+        raw = str(item.value).strip()
+        if cls._GENE_SYMBOL_RE.fullmatch(raw):
+            if raw.lower() in cls._GENE_PLACEHOLDER_OR_COMMON_WORDS:
+                return cls._reject_gene_symbol(item)
+            if raw == raw.lower():
+                return item
+            normalized = raw.upper()
+            if normalized in cls._GENE_NON_SYMBOL_VALUES:
+                return item
+            return item.model_copy(update={"value": normalized})
+        match = cls._GENE_RELATIONSHIP_PREFIX_RE.search(raw)
+        if match is None:
+            return item
+        candidate = match.group("gene")
+        if candidate.lower() in cls._GENE_PLACEHOLDER_OR_COMMON_WORDS:
+            return cls._reject_gene_symbol(item)
+        normalized = candidate.upper()
+        if normalized in cls._GENE_NON_SYMBOL_VALUES:
+            return item
+        return item.model_copy(update={"value": normalized})
+
+    @staticmethod
+    def _reject_gene_symbol(item: EvidenceItem) -> EvidenceItem:
+        """Reject a gene symbol value as not_found."""
+        return item.model_copy(update={
+            "status": EvidenceStatus.NOT_FOUND,
+            "value": None,
+            "confidence": 0.0,
+        })
+
+    @classmethod
     def _normalize_enum(cls, item: EvidenceItem, valid_values: tuple[str, ...]) -> EvidenceItem:
         """Normalize a field value to the best matching enum value."""
         raw = str(item.value).strip().lower()
         # Exact match
         if raw in valid_values:
             return item
+        # Negation and hedging checks — must run before substring/keyword matching
+        if item.field_id == "A.gene_disease_relationship":
+            if re.search(r"\b(?:non[-\s]?caus(?:al|ative)?|not (?:a )?caus(?:al|ative)?)\b", raw):
+                return item.model_copy(update={"value": "associated"})
+            if re.search(r"\bnot (?:a )?(?:known )?disease gene\b", raw):
+                return item.model_copy(update={"value": "uncertain"})
+            if "preliminary association" in raw or "only a preliminary" in raw:
+                return item.model_copy(update={"value": "associated"})
         # Substring match — find the valid value contained in the raw text
         for v in valid_values:
             if v in raw:
                 return item.model_copy(update={"value": v})
-        # Keyword match — look for key words
+        # Keyword match — word-boundary regex patterns
         keyword_map = {
-            "causative": ("cause", "causative", "pathogenic", "responsible"),
-            "associated": ("associated", "association", "linked", "related"),
-            "susceptibility": ("susceptibility", "susceptible", "risk", "predispos"),
-            "uncertain": ("uncertain", "unclear", "possible", "potential"),
-            "disputed": ("disputed", "controversial", "conflicting"),
-            "refuted": ("refuted", "refute", "no evidence", "not supported"),
-            "no_relationship": ("no relationship", "no known", "not related"),
+            "causative": (
+                r"\bcauses?\b",
+                r"\bcausative\b",
+                r"\bcausal\b",
+                r"\bpathogenic\b",
+                r"\bresponsible\b",
+                r"\bknown disease gene\b",
+                r"\bdisease gene\b",
+            ),
+            "associated": (
+                r"\bassociated\b",
+                r"\bassociation\b",
+                r"\blink(?:ed)?\b",
+                r"\brelated\b",
+            ),
+            "susceptibility": (
+                r"\bsusceptibility\b",
+                r"\bsusceptible\b",
+                r"\brisk\b",
+                r"\bpredispos",
+            ),
+            "uncertain": (
+                r"\buncertain\b",
+                r"\bunclear\b",
+                r"\bpossible\b",
+                r"\bpotential\b",
+            ),
+            "disputed": (
+                r"\bdisputed\b",
+                r"\bcontroversial\b",
+                r"\bconflicting\b",
+            ),
+            "refuted": (
+                r"\brefuted\b",
+                r"\brefute\b",
+                r"\bno evidence\b",
+                r"\bnot supported\b",
+            ),
+            "no_relationship": (
+                r"\bno relationship\b",
+                r"\bno known\b",
+                r"\bnot related\b",
+            ),
         }
-        for v, keywords in keyword_map.items():
-            if any(kw in raw for kw in keywords):
-                return item.model_copy(update={"value": v})
+        for value, patterns in keyword_map.items():
+            if any(re.search(pattern, raw) for pattern in patterns):
+                return item.model_copy(update={"value": value})
         # Default: keep original but log
         return item
 
