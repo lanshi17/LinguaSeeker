@@ -10,6 +10,6 @@
 # ──────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-cd "$(dirname "$0")/../backend/services/model-server"
+cd "$(dirname "$0")/../services/model-server"
 
 exec uv run python main.py "$@"
