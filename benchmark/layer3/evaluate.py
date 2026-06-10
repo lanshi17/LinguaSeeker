@@ -17,8 +17,9 @@ import json
 import re
 import sys
 import time
+import unicodedata
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 import httpx
@@ -108,6 +109,30 @@ def markdown_to_pdf_bytes(md_text: str, title: str = "") -> bytes:
 
 # ── Comparison ─────────────────────────────────────────────────────────
 
+_PUNCT_TRANSLATION = str.maketrans({
+    "‐": "-",  # ‐ hyphen
+    "‑": "-",  # ‑ non-breaking hyphen
+    "‒": "-",  # ‒ figure dash
+    "–": "-",  # – en dash
+    "—": "-",  # — em dash
+    "―": "-",  # ― horizontal bar
+    "−": "-",  # − minus sign
+    "－": "-",  # － fullwidth hyphen-minus
+    "‘": "'",  # ' left single quotation mark
+    "’": "'",  # ' right single quotation mark
+    "“": '"',  # " left double quotation mark
+    "”": '"',  # " right double quotation mark
+})
+
+
+def normalize_comparison_text(value: str) -> str:
+    """Normalize harmless typography differences for benchmark matching."""
+    normalized = unicodedata.normalize("NFKC", value)
+    normalized = normalized.translate(_PUNCT_TRANSLATION)
+    normalized = re.sub(r"\s+", " ", normalized)
+    return normalized.strip()
+
+
 @dataclass
 class FieldMatch:
     """Result of matching one expected field against extracted evidence."""
@@ -118,6 +143,7 @@ class FieldMatch:
     extracted_value: str | None = None
     extracted_confidence: float | None = None
     match_type: str = "none"  # exact, fuzzy, none
+    extra_found_values: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -145,8 +171,10 @@ def fuzzy_match_value(expected: str, extracted: str) -> bool:
     """Fuzzy value matching with word-overlap for disease names."""
     if not expected or not extracted:
         return False
-    exp_lower = expected.lower().strip()
-    ext_lower = extracted.lower().strip()
+    exp_norm = normalize_comparison_text(expected)
+    ext_norm = normalize_comparison_text(extracted)
+    exp_lower = exp_norm.lower()
+    ext_lower = ext_norm.lower()
     # Exact match
     if exp_lower == ext_lower:
         return True
@@ -154,7 +182,7 @@ def fuzzy_match_value(expected: str, extracted: str) -> bool:
     if exp_lower in ext_lower or ext_lower in exp_lower:
         return True
     # Gene symbol exact match (case-sensitive)
-    if expected.strip() == extracted.strip():
+    if exp_norm == ext_norm:
         return True
     # Word-overlap matching for disease names
     # e.g., "Charcot-Marie-Tooth disease" matches "Charcot-Marie-Tooth disease axonal type 2N"
@@ -246,7 +274,17 @@ def compare_evidence(
                     break
 
         if best_match:
-            matches.append(best_match)
+            extra_values: list[str] = []
+            seen_extra_values: set[str] = set()
+            for cand in candidates:
+                value = str(cand.get("value", ""))
+                normalized_value = normalize_comparison_text(value).lower()
+                if normalized_value in seen_extra_values:
+                    continue
+                if value != best_match.extracted_value and not fuzzy_match_value(expected_value, value):
+                    seen_extra_values.add(normalized_value)
+                    extra_values.append(value)
+            matches.append(replace(best_match, extra_found_values=extra_values))
         else:
             # Found field but wrong value
             matches.append(FieldMatch(
@@ -609,11 +647,32 @@ async def evaluate_one(
     return metrics
 
 
+def _false_positive_count(metrics_list: list[EntryMetrics]) -> int:
+    wrong_values = sum(
+        1 for m in metrics_list for f in m.field_matches
+        if f.match_type == "wrong_value"
+    )
+    over_extracted = sum(
+        len(f.extra_found_values)
+        for m in metrics_list
+        for f in m.field_matches
+    )
+    return wrong_values + over_extracted
+
+
+def _over_extraction_count(metrics_list: list[EntryMetrics]) -> int:
+    return sum(
+        len(f.extra_found_values)
+        for m in metrics_list
+        for f in m.field_matches
+    )
+
+
 def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
     """Compute aggregate P/R/F1 from per-entry metrics."""
     # Field-level P/R/F1
     tp = sum(1 for m in all_metrics for f in m.field_matches if f.matched)
-    fp = sum(1 for m in all_metrics for f in m.field_matches if f.match_type == "wrong_value")
+    fp = _false_positive_count(all_metrics)
     fn = sum(1 for m in all_metrics for f in m.field_matches if f.match_type in ("missing", "none"))
 
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
@@ -625,20 +684,27 @@ def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
     for m in all_metrics:
         for f in m.field_matches:
             if f.field_id not in by_field:
-                by_field[f.field_id] = {"tp": 0, "fp": 0, "fn": 0}
+                by_field[f.field_id] = {"tp": 0, "fp": 0, "fn": 0, "over_extractions": 0}
             if f.matched:
                 by_field[f.field_id]["tp"] += 1
             elif f.match_type == "wrong_value":
                 by_field[f.field_id]["fp"] += 1
             else:
                 by_field[f.field_id]["fn"] += 1
+            by_field[f.field_id]["fp"] += len(f.extra_found_values)
+            by_field[f.field_id]["over_extractions"] += len(f.extra_found_values)
 
     field_f1 = {}
     for fid, counts in by_field.items():
         p = counts["tp"] / (counts["tp"] + counts["fp"]) if (counts["tp"] + counts["fp"]) > 0 else 0
         r = counts["tp"] / (counts["tp"] + counts["fn"]) if (counts["tp"] + counts["fn"]) > 0 else 0
         f = 2 * p * r / (p + r) if (p + r) > 0 else 0
-        field_f1[fid] = {"precision": round(p, 4), "recall": round(r, 4), "f1": round(f, 4)}
+        field_f1[fid] = {
+            "precision": round(p, 4),
+            "recall": round(r, 4),
+            "f1": round(f, 4),
+            "over_extractions": counts["over_extractions"],
+        }
 
     # By classification
     by_cls: dict[str, list] = {}
@@ -648,7 +714,7 @@ def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
     cls_metrics = {}
     for cls, metrics_list in by_cls.items():
         cls_tp = sum(1 for m in metrics_list for f in m.field_matches if f.matched)
-        cls_fp = sum(1 for m in metrics_list for f in m.field_matches if f.match_type == "wrong_value")
+        cls_fp = _false_positive_count(metrics_list)
         cls_fn = sum(1 for m in metrics_list for f in m.field_matches if f.match_type in ("missing", "none"))
         cls_p = cls_tp / (cls_tp + cls_fp) if (cls_tp + cls_fp) > 0 else 0
         cls_r = cls_tp / (cls_tp + cls_fn) if (cls_tp + cls_fn) > 0 else 0
@@ -658,6 +724,7 @@ def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
             "precision": round(cls_p, 4),
             "recall": round(cls_r, 4),
             "f1": round(cls_f1, 4),
+            "over_extractions": _over_extraction_count(metrics_list),
         }
 
     # Entity standardization accuracy
@@ -695,7 +762,7 @@ def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
     moi_metrics = {}
     for moi, metrics_list in by_moi.items():
         moi_tp = sum(1 for m in metrics_list for f in m.field_matches if f.matched)
-        moi_fp = sum(1 for m in metrics_list for f in m.field_matches if f.match_type == "wrong_value")
+        moi_fp = _false_positive_count(metrics_list)
         moi_fn = sum(1 for m in metrics_list for f in m.field_matches if f.match_type in ("missing", "none"))
         moi_p = moi_tp / (moi_tp + moi_fp) if (moi_tp + moi_fp) > 0 else 0
         moi_r = moi_tp / (moi_tp + moi_fn) if (moi_tp + moi_fn) > 0 else 0
@@ -709,6 +776,7 @@ def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
             "f1": round(moi_f1, 4),
             "standardization_accuracy": round(sum(std_vals) / len(std_vals), 4) if std_vals else 0.0,
             "track_consistency": round(sum(tc_vals) / len(tc_vals), 4) if tc_vals else 0.0,
+            "over_extractions": _over_extraction_count(metrics_list),
         }
 
     return {
@@ -719,6 +787,7 @@ def compute_aggregate_metrics(all_metrics: list[EntryMetrics]) -> dict:
             "precision": round(precision, 4),
             "recall": round(recall, 4),
             "f1": round(f1, 4),
+            "over_extractions": _over_extraction_count(all_metrics),
             "entity_standardization_accuracy": round(entity_standardization_accuracy, 4),
             "cross_lingual_consistency": round(cross_lingual_consistency, 4),
         },
@@ -813,7 +882,8 @@ async def run_evaluation(
                 "field_matches": [
                     {"field_id": f.field_id, "expected": f.expected_value,
                      "matched": f.matched, "extracted": f.extracted_value,
-                     "match_type": f.match_type}
+                     "match_type": f.match_type,
+                     "extra_found_values": f.extra_found_values}
                     for f in m.field_matches
                 ],
                 "entity_matches": m.entity_matches,
