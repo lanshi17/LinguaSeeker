@@ -18,6 +18,8 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
 class AcmgReadyProjector:
     """Build compact key-value evidence for downstream rules-based ACMG consumers."""
 
+    _PROBAND_PHENOTYPE_FIELDS = frozenset({"B.hpo_terms", "B.clinical_phenotypes"})
+
     def project(
         self,
         input_data: StandardizationInput,
@@ -48,6 +50,7 @@ class AcmgReadyProjector:
         for match in matches:
             if (
                 match.candidate.entity_type == EntityType.PHENOTYPE
+                and match.candidate.field_id in self._PROBAND_PHENOTYPE_FIELDS
                 and match.status == MatchStatus.STANDARDIZED
                 and match.external_id
                 and match.external_id.startswith("HP:")

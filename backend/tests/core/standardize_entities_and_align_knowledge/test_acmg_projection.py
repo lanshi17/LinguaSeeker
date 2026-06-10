@@ -55,3 +55,32 @@ def test_projector_maps_clinical_phenotypes_to_hpo_ids() -> None:
     assert result.items[0].field_id == "B.clinical_phenotypes"
     assert result.items[0].normalized_key == "hpo_terms"
     assert result.items[0].normalized_value == ["HP:0001263"]
+
+
+def test_maternal_phenotype_not_projected_as_proband_hpo() -> None:
+    candidate = StandardizationCandidate(
+        candidate_id="phenotype-maternal",
+        entity_type=EntityType.PHENOTYPE,
+        role=BindingRole.CONTEXT,
+        raw_text="hypotonia",
+        chain_id="chain-1",
+        track="original",
+        field_id="C.maternal_phenotype",
+    )
+    match = EntityMatch(
+        candidate=candidate,
+        status=MatchStatus.STANDARDIZED,
+        external_id="HP:0001252",
+        display_name="Hypotonia",
+    )
+    input_data = StandardizationInput(
+        document_id="doc-1",
+        source_document_id="source-1",
+        processing_run_id="run-1",
+        candidates=(candidate,),
+        evidence_items=(),
+    )
+
+    result = AcmgReadyProjector().project(input_data, (match,))
+
+    assert result.items == ()
