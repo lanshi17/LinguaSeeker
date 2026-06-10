@@ -116,6 +116,26 @@ class StandardizationInput:
 
 
 @dataclass(frozen=True)
+class AcmgReadyEvidenceItem:
+    """Normalized evidence fact suitable for rules-based ACMG consumers."""
+
+    field_id: str
+    normalized_key: str
+    normalized_value: str | int | float | bool | list[str] | None
+    raw_values: tuple[str, ...] = ()
+    source_field_ids: tuple[str, ...] = ()
+    confidence: float = 0.0
+
+
+@dataclass(frozen=True)
+class AcmgReadyEvidenceSet:
+    """Document-level normalized evidence projection for ACMG scoring consumers."""
+
+    document_id: str
+    items: tuple[AcmgReadyEvidenceItem, ...] = ()
+
+
+@dataclass(frozen=True)
 class StandardizationResult:
     """Summary result for one standardization run."""
 
@@ -126,3 +146,4 @@ class StandardizationResult:
     unmapped_count: int
     normalized_entity_ids: tuple[str, ...]
     matches: tuple[EntityMatch, ...] = ()
+    acmg_ready: AcmgReadyEvidenceSet | None = None
