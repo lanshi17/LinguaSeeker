@@ -163,6 +163,58 @@ describe("buildLiteratureRows", () => {
   });
 });
 
+describe("created_at propagation", () => {
+  it("propagates created_at from search result to literature row", () => {
+    const results: EvidenceSearchResult[] = [
+      {
+        group_id: "g1",
+        source_document_id: "doc-1",
+        field_count: 1,
+        review_status: "provisional",
+        created_at: "2026-06-10T12:00:00Z",
+      },
+    ];
+    const rows = buildLiteratureRows(results);
+    assert.equal(rows[0].createdAt, "2026-06-10T12:00:00Z");
+  });
+
+  it("uses latest created_at when merging multiple groups for same document", () => {
+    const results: EvidenceSearchResult[] = [
+      {
+        group_id: "g1",
+        source_document_id: "doc-1",
+        field_count: 1,
+        review_status: "provisional",
+        created_at: "2026-06-09T08:00:00Z",
+      },
+      {
+        group_id: "g2",
+        source_document_id: "doc-1",
+        field_count: 1,
+        review_status: "provisional",
+        created_at: "2026-06-10T12:00:00Z",
+      },
+    ];
+    const rows = buildLiteratureRows(results);
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].createdAt, "2026-06-10T12:00:00Z");
+  });
+
+  it("handles null created_at gracefully", () => {
+    const results: EvidenceSearchResult[] = [
+      {
+        group_id: "g1",
+        source_document_id: "doc-1",
+        field_count: 1,
+        review_status: "provisional",
+        created_at: null,
+      },
+    ];
+    const rows = buildLiteratureRows(results);
+    assert.equal(rows[0].createdAt, null);
+  });
+});
+
 describe("bilingual comparison helpers", () => {
   it("selects a requested evidence id when it exists", () => {
     assert.equal(findInitialEvidenceId(DETAIL, "ev-b"), "ev-b");
