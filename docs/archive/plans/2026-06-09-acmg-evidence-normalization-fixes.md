@@ -2,10 +2,10 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-06-09
-**Completed:** 
-**PR:** 
+**Completed:** 2026-06-09
+**PR:** merged (fd8229a3)
 
 **Goal:** Fix critical ACMG evidence extraction errors around HGVS fields, semantic age/evidence interpretation, duplicate facts, enum/value normalization, and HPO-ready phenotype mapping.
 
