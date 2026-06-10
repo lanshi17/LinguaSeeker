@@ -6,6 +6,14 @@ from decimal import Decimal
 from types import SimpleNamespace
 from uuid import uuid4
 
+_DEFAULT_TS = datetime(2026, 1, 1, tzinfo=timezone.utc)
+
+
+def _cei(**kwargs):
+    """Create a SimpleNamespace for a CanonicalEvidenceItem row with defaults."""
+    kwargs.setdefault("created_at", _DEFAULT_TS)
+    return SimpleNamespace(**kwargs)
+
 import pytest
 
 from src.core.visualize_evidence_with_expert_in_loop.search_service import (
@@ -70,7 +78,7 @@ async def test_search_evidence_includes_document_title():
     group_id = "gene=['BRCA1']"
 
     rows = [
-        SimpleNamespace(
+        _cei(
             canonical_evidence_id=evidence_id,
             source_document_id=source_document_id,
             field_id="A.gene_symbol",
@@ -84,14 +92,14 @@ async def test_search_evidence_includes_document_title():
         )
     ]
     identifiers = [
-        SimpleNamespace(
+        _cei(
             source_document_id=source_document_id,
             identifier_type="pmid",
             identifier_value="12345678",
         ),
     ]
     metadata = [
-        SimpleNamespace(
+        _cei(
             source_document_id=source_document_id,
             raw_metadata={"title": "BRCA1 evidence paper"},
         ),
@@ -120,7 +128,7 @@ async def test_search_evidence_includes_created_at():
     ts = datetime(2026, 6, 10, 12, 0, 0, tzinfo=timezone.utc)
 
     rows = [
-        SimpleNamespace(
+        _cei(
             canonical_evidence_id=evidence_id,
             source_document_id=source_document_id,
             field_id="A.gene_symbol",
@@ -155,7 +163,7 @@ async def test_get_group_detail_pivots_distribution_and_traces():
     group_id = "gene=['BRCA1']|variant=['c.68_69delAG']"
 
     rows = [
-        SimpleNamespace(
+        _cei(
             canonical_evidence_id=gene_evidence_id,
             source_document_id=source_document_id,
             field_id="A.gene_symbol",
@@ -175,7 +183,7 @@ async def test_get_group_detail_pivots_distribution_and_traces():
                 },
             },
         ),
-        SimpleNamespace(
+        _cei(
             canonical_evidence_id=disease_evidence_id,
             source_document_id=source_document_id,
             field_id="B.disease_diagnosis",
@@ -197,12 +205,12 @@ async def test_get_group_detail_pivots_distribution_and_traces():
         ),
     ]
     identifiers = [
-        SimpleNamespace(
+        _cei(
             source_document_id=source_document_id,
             identifier_type="pmid",
             identifier_value="12345678",
         ),
-        SimpleNamespace(
+        _cei(
             source_document_id=source_document_id,
             identifier_type="doi",
             identifier_value="10.1000/example",
@@ -238,7 +246,7 @@ async def test_get_group_detail_includes_value_anchors_for_paired_field():
     group_id = "gene=['BRCA1']"
 
     rows = [
-        SimpleNamespace(
+        _cei(
             canonical_evidence_id=original_id,
             source_document_id=source_document_id,
             field_id="A.gene_symbol",
@@ -258,7 +266,7 @@ async def test_get_group_detail_includes_value_anchors_for_paired_field():
                 },
             },
         ),
-        SimpleNamespace(
+        _cei(
             canonical_evidence_id=translated_id,
             source_document_id=source_document_id,
             field_id="A.gene_symbol",
@@ -375,7 +383,7 @@ async def test_get_group_detail_skips_field_ids_without_standard_tracks():
     group_id = "gene=['BRCA1']"
 
     rows = [
-        SimpleNamespace(
+        _cei(
             canonical_evidence_id=ev_id,
             source_document_id=source_document_id,
             field_id="A.gene_symbol",
@@ -415,7 +423,7 @@ async def test_get_group_detail_single_track_field_produces_partial_trace():
     group_id = "gene=['BRCA1']"
 
     rows = [
-        SimpleNamespace(
+        _cei(
             canonical_evidence_id=ev_id,
             source_document_id=source_document_id,
             field_id="A.gene_symbol",
