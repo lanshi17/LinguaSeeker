@@ -5,6 +5,7 @@ Project documentation organized by lifecycle status.
 ```text
 docs/
 ├── active/           # Current active documentation
+├── plans/            # Skill-authored implementation plans pending execution
 ├── planned/          # Planned work that has not started
 ├── codereview/       # Active code reviews (.gitkeep)
 ├── diagrams/         # Mermaid flowcharts (phase1-phase4)
@@ -17,6 +18,7 @@ docs/
 ## Classification Rules
 
 - `active/` -- In-progress implementation plans and living reference documents.
+- `plans/` -- Skill-authored implementation plans pending execution.
 - `planned/` -- Planned work that has not started (`YYYY-MM-DD-<topic>.md`).
 - `codereview/` -- Active code review reports.
 - `diagrams/` -- Mermaid flowcharts (`.mmd`) for the four pipeline phases.
@@ -53,6 +55,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
+| 2026-06-10 | [ClinGen Batch Regression Extraction Quality](plans/2026-06-10-clingen-batch-regression-extraction-quality.md) | planned |
 | 2026-06-06 | [Frontend Layered Configuration](planned/2026-06-06-frontend-layered-config.md) | planned |
 
 ## Diagrams

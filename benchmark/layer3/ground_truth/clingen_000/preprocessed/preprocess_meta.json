@@ -1,0 +1,13 @@
+{
+  "entry_id": "clingen_000",
+  "run_id": "803b9809-c075-46bb-8b51-966fb5279908",
+  "pipeline_status": "awaiting_review",
+  "duration_s": 315.45,
+  "phase_1_files": [
+    "output.md",
+    "metadata.json"
+  ],
+  "phase_2_files": [
+    "extraction_result.json"
+  ]
+}
