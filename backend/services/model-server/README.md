@@ -9,8 +9,8 @@
 ```bash
 cd backend/services/model-server
 
-# Dependencies are declared in the parent pyproject.toml (vllm, mineru_vl_utils, loguru, …)
-uv pip install -e "../../.[dev]"
+# Install the parent project WITH the `model-server` extra (vllm lives there, not in [dev])
+uv pip install -e "../../.[model-server]"
 
 # Start (port 8001 by default)
 uv run python main.py
