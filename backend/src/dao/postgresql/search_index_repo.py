@@ -12,6 +12,7 @@ from typing import Any
 
 from sqlalchemy import (
     Column,
+    DateTime,
     Index,
     Integer,
     MetaData,
@@ -20,6 +21,7 @@ from sqlalchemy import (
     Table,
     Text,
     cast,
+    func,
     or_,
     select,
     text,
@@ -50,6 +52,12 @@ frontend_search_index = Table(
     Column("current_best_confidence", Numeric(5, 4), nullable=True),
     Column("search_text", Text, nullable=False, server_default=text("''")),
     Column("active_payload", JSONB, nullable=False, server_default=text("'{}'")),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    ),
     Index(
         "ix_frontend_search_index_canonical_evidence_id",
         "canonical_evidence_id",
