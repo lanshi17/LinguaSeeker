@@ -206,6 +206,49 @@ class EvidenceModelTier(str, Enum):
 | `normalize` | `(items: list[EvidenceItem]) -> list[EvidenceItem]` | Legacy global full-catalog normalization helper, kept for older callers and tests. |
 | `normalize_grouped` | `(items: list[EvidenceItem]) -> list[EvidenceItem]` | Expands grouped sparse evidence to a full per-group catalog, keeping the best candidate per field within each group. |
 
+Status rank: FOUND(3) > SOURCE_INVALID(2) > TABLE_UNGROUNDED(1) = OCR_GAP(1) > NOT_FOUND(0). Tiebreaker: confidence.
+
+### `RawSourceNormalizer` (`core.py`)
+
+Moves LLM-provided `source` into `raw_source` before grounding. This separation ensures the grounder can validate sources independently rather than trusting LLM-asserted locations.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `normalize_items` | `(items: list[EvidenceItem]) -> list[EvidenceItem]` | Moves `source` → `raw_source`, sets `source=None`. Drops NOT_FOUND items. |
+| `normalize_special_records` | `(records: list[SpecialEvidenceRecord]) -> list[SpecialEvidenceRecord]` | Same for special evidence records. |
+
+### `FieldValueNormalizer` (`core.py`)
+
+Enforces enum/format constraints on specific evidence field values. Applied after LLM extraction, before source grounding.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `normalize_items` | `(items: list[EvidenceItem]) -> list[EvidenceItem]` | Dispatches to field-specific normalizers. |
+
+**Gene symbol normalization** (`A.gene_symbol`):
+- Single-token values with at least one uppercase letter are uppercased (e.g., "Brca1" → "BRCA1")
+- Disease-prefix phrases are cleaned: "AARS2-mutation related mitochondrial disease" → "AARS2"
+- Placeholder/common words ("unknown", "none", "patient", "gene", etc.) are rejected to NOT_FOUND
+- Non-symbol biomedical abbreviations ("ACMG", "DNA", "HGNC", etc.) are preserved as-is
+
+**Relationship normalization** (`A.gene_disease_relationship`):
+- Negation detection runs BEFORE substring/keyword matching to prevent false upgrades:
+  - "non-causal", "non-causative", "not causal", "not causative" → `"associated"`
+  - "not a known disease gene" → `"uncertain"`
+  - "preliminary association", "only a preliminary" → `"associated"`
+- Word-boundary regex patterns for 7 value categories (causative, associated, susceptibility, uncertain, disputed, refuted, no_relationship)
+- "known disease gene" and "disease gene" map to `"causative"`
+
+### `GroupAssigner` (`core.py`)
+
+Assigns deterministic variant-centered group IDs (`"gene={token}|variant={token}"`) to evidence items and special records.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `assign` | `(document, items, special_records) -> tuple[list[EvidenceItem], list[SpecialEvidenceRecord]]` | Assigns group IDs to all items and records. |
+
+Algorithm: (1) Build groups from gene+variant pairs found in items; (2) For each item, match by gene/variant field type or text proximity; (3) For special records, text-match then nearest-group fallback. Gene resolution prefers same-block gene items → nearest gene by block distance → text presence → regex inference.
+
 ### `EvidenceChainBuilder` (`core.py`)
 
 | Method | Signature | Description |
