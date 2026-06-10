@@ -234,3 +234,78 @@ def test_field_value_normalizer_preserves_uppercase_gene_symbol() -> None:
 
     assert normalized[0].value == "BRCA1"
     assert normalized[0].status == EvidenceStatus.FOUND
+
+
+def test_field_value_normalizer_maps_known_disease_gene_to_causative() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_disease_relationship",
+        category="A",
+        field_name="Reported gene-disease relationship",
+        status=EvidenceStatus.FOUND,
+        value="known disease gene",
+        confidence=0.9,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "causative"
+
+
+def test_field_value_normalizer_keeps_preliminary_association_as_associated() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_disease_relationship",
+        category="A",
+        field_name="Reported gene-disease relationship",
+        status=EvidenceStatus.FOUND,
+        value="preliminary association only",
+        confidence=0.8,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "associated"
+
+
+def test_field_value_normalizer_does_not_upgrade_negated_causal_text() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_disease_relationship",
+        category="A",
+        field_name="Reported gene-disease relationship",
+        status=EvidenceStatus.FOUND,
+        value="non-causal association",
+        confidence=0.8,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "associated"
+
+
+def test_field_value_normalizer_does_not_upgrade_not_disease_gene_text() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_disease_relationship",
+        category="A",
+        field_name="Reported gene-disease relationship",
+        status=EvidenceStatus.FOUND,
+        value="not a known disease gene",
+        confidence=0.8,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "uncertain"
+
+
+def test_field_value_normalizer_prefers_hedged_association_over_causative_keyword() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_disease_relationship",
+        category="A",
+        field_name="Reported gene-disease relationship",
+        status=EvidenceStatus.FOUND,
+        value="possibly causative but only a preliminary association",
+        confidence=0.8,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "associated"
