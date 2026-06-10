@@ -475,6 +475,68 @@ async def evaluate_one(
         metrics.pipeline_status = "source_too_small"
         return metrics
 
+    # Check for preprocessed Phase 1+2 data
+    preprocessed_path = GROUND_TRUTH_DIR / entry_id / "preprocessed" / "phase_2" / "extraction_result.json"
+    use_preprocessed = preprocessed_path.exists()
+
+    if use_preprocessed:
+        # Load preprocessed extraction results directly (skip pipeline)
+        logger.info("[{}] Using preprocessed Phase 1+2 data", entry_id)
+        t0 = time.time()
+        try:
+            with open(preprocessed_path) as f:
+                extraction_data = json.load(f)
+
+            # Extract evidence items from both tracks
+            extracted_items = []
+            original_items = []
+            translated_items = []
+            for track_key, track_list in [("original_result", original_items), ("translated_result", translated_items)]:
+                track_data = extraction_data.get(track_key, {})
+                for item in track_data.get("evidence_items", []):
+                    extracted_item = {
+                        "field_id": item.get("field_id", ""),
+                        "status": item.get("status", ""),
+                        "value": item.get("value", ""),
+                        "confidence": float(item.get("confidence", 0) or 0),
+                    }
+                    extracted_items.append(extracted_item)
+                    track_list.append(extracted_item)
+
+            metrics.pipeline_status = "preprocessed"
+            metrics.evidence_count = len(extracted_items)
+            found_count = sum(1 for i in extracted_items if i["status"] == "found")
+            metrics.found_rate = found_count / len(extracted_items) if extracted_items else 0.0
+
+            # Compare evidence
+            metrics.field_matches = compare_evidence(
+                entry.get("expected_evidence", []),
+                extracted_items,
+                mondo=mondo,
+                expected_standardization=entry.get("expected_standardization"),
+            )
+
+            # Track consistency from preprocessed data
+            orig_by_field = {i["field_id"]: str(i["value"]) for i in original_items if i["status"] == "found"}
+            trans_by_field = {i["field_id"]: str(i["value"]) for i in translated_items if i["status"] == "found"}
+            common_fields = set(orig_by_field.keys()) & set(trans_by_field.keys())
+            if common_fields:
+                matched = sum(1 for f in common_fields if fuzzy_match_value(orig_by_field[f], trans_by_field[f]))
+                metrics.track_consistency = matched / len(common_fields)
+
+            # Entity standardization: not available from preprocessed data
+            metrics.standardization_accuracy = 0.0
+
+            metrics.duration_s = round(time.time() - t0, 2)
+            logger.info("[{}] Preprocessed evaluation complete: {}/{} fields matched",
+                        entry_id, sum(1 for f in metrics.field_matches if f.matched), len(metrics.field_matches))
+
+        except Exception as e:
+            logger.error("[{}] Preprocessed evaluation failed: {}", entry_id, e)
+            metrics.pipeline_status = "preprocess_error"
+
+        return metrics
+
     # Submit pre-parsed markdown directly (bypasses MinerU Phase 1)
     async with semaphore:
         t0 = time.time()

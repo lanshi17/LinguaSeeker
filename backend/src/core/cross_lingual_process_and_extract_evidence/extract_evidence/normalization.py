@@ -278,11 +278,11 @@ class AcmgEvidenceValueNormalizer:
             key = self._dedupe_key(base_key, item, by_key)
             existing = by_key.get(key)
             if existing is None:
-                by_key[key] = item
+                by_key[key] = self._clean_value(item)
                 order.append(key)
                 continue
             if item.confidence > existing.confidence:
-                by_key[key] = self._merge_source(item, existing)
+                by_key[key] = self._clean_value(self._merge_source(item, existing))
             elif existing.raw_source is None and item.raw_source is not None:
                 by_key[key] = existing.model_copy(update={"raw_source": item.raw_source})
             issues.append(
@@ -296,6 +296,14 @@ class AcmgEvidenceValueNormalizer:
                 )
             )
         return [by_key[key] for key in order], issues
+
+    @staticmethod
+    def _clean_value(item: EvidenceItem) -> EvidenceItem:
+        if isinstance(item.value, str):
+            cleaned = re.sub(r"\s+", " ", item.value.strip())
+            if cleaned != item.value:
+                return item.model_copy(update={"value": cleaned})
+        return item
 
     def _dedupe_key(
         self,
