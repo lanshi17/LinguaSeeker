@@ -53,7 +53,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
-| 2026-06-09 | [ACMG Evidence Normalization Fixes](planned/2026-06-09-acmg-evidence-normalization-fixes.md) | planned |
 | 2026-06-06 | [Frontend Layered Configuration](planned/2026-06-06-frontend-layered-config.md) | planned |
 
 ## Diagrams
@@ -67,7 +66,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Archive Index
 
-The `archive/plans/` directory contains 50+ completed plans. The `archive/codereview/` directory contains 20+ resolved code reviews. See individual directories for full listings.
+The `archive/plans/` directory contains 59 completed plans. The `archive/codereview/` directory contains 20 resolved code reviews. See individual directories for full listings.
 
 ## Module README Index
 
