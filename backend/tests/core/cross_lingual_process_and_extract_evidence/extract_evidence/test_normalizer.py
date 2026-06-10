@@ -107,3 +107,66 @@ def test_normalizer_backfills_full_catalog_per_group():
     group_items = [i for i in normalized if i.group_id == "gene=GLA|variant=__missing__"]
     assert any(i.field_id == "A.gene_symbol" and i.status == EvidenceStatus.FOUND for i in group_items)
     assert any(i.field_id == "A.variant_hgvs_c" and i.status == EvidenceStatus.NOT_FOUND for i in group_items)
+
+
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.core import FieldValueNormalizer
+
+
+def test_field_value_normalizer_extracts_gene_from_related_phrase() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="AARS2-mutation related mitochondrial disease",
+        confidence=0.74,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "AARS2"
+
+
+def test_field_value_normalizer_preserves_plain_gene_symbol() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="ABCA3",
+        confidence=0.95,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "ABCA3"
+
+
+def test_field_value_normalizer_extracts_lowercase_related_gene_phrase() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="aars2-related mitochondrial disease",
+        confidence=0.74,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "AARS2"
+
+
+def test_field_value_normalizer_uses_token_before_relationship_hint() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="Mito AARS2-related disease",
+        confidence=0.74,
+    )
+
+    normalized = FieldValueNormalizer.normalize_items([item])
+
+    assert normalized[0].value == "AARS2"
