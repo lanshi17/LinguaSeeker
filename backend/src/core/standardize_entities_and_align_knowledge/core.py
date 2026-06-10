@@ -6,6 +6,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     StandardizationInput,
     StandardizationResult,
 )
+from src.core.standardize_entities_and_align_knowledge.acmg_projection import AcmgReadyProjector
 from src.core.standardize_entities_and_align_knowledge.matchers import TerminologyMatcher
 from src.core.standardize_entities_and_align_knowledge.repositories import (
     StandardizationRepository,
@@ -18,6 +19,7 @@ class StandardizationService:
     def __init__(self, matcher: TerminologyMatcher, repository: StandardizationRepository):
         self._matcher = matcher
         self._repository = repository
+        self._acmg_projector = AcmgReadyProjector()
 
     async def run(self, input_data: StandardizationInput) -> StandardizationResult:
         """Run deterministic matching and persist the resulting normalized state."""
@@ -39,6 +41,7 @@ class StandardizationService:
         await self._repository.upsert_canonical_evidence(input_data, matches, entity_ids)
         await self._repository.refresh_literature_profile(input_data.source_document_id)
         await self._repository.refresh_search_index()
+        acmg_ready = self._acmg_projector.project(input_data, matches)
         return StandardizationResult(
             document_id=input_data.document_id,
             match_count=len(matches),
@@ -47,4 +50,5 @@ class StandardizationService:
             unmapped_count=sum(match.status == MatchStatus.UNMAPPED for match in matches),
             normalized_entity_ids=entity_ids,
             matches=matches,
+            acmg_ready=acmg_ready,
         )

@@ -243,3 +243,37 @@ async def test_standardization_service_result_includes_matches() -> None:
     assert len(result.matches) == 1
     assert result.matches[0].candidate.raw_text == "BRCA1"
     assert result.matches[0].status == MatchStatus.STANDARDIZED
+
+
+@pytest.mark.asyncio
+async def test_standardization_service_returns_acmg_ready_projection() -> None:
+    candidate = StandardizationCandidate(
+        candidate_id="phenotype-1",
+        entity_type=EntityType.PHENOTYPE,
+        role=BindingRole.CONTEXT,
+        raw_text="hypotonia",
+        chain_id="chain-1",
+        track="original",
+        field_id="B.clinical_phenotypes",
+    )
+    input_data = StandardizationInput(
+        document_id="doc-1",
+        source_document_id="source-1",
+        processing_run_id="run-1",
+        candidates=(candidate,),
+        evidence_items=(),
+    )
+
+    class HpoMatcher:
+        async def match(self, candidate):
+            return EntityMatch(
+                candidate=candidate,
+                status=MatchStatus.STANDARDIZED,
+                external_id="HP:0001252",
+                display_name="Hypotonia",
+            )
+
+    result = await StandardizationService(HpoMatcher(), FakeRepository()).run(input_data)
+
+    assert result.acmg_ready is not None
+    assert result.acmg_ready.items[0].normalized_value == ["HP:0001252"]
