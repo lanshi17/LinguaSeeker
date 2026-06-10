@@ -1,6 +1,7 @@
 """Tests for evidence search service aggregation."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from decimal import Decimal
 from types import SimpleNamespace
 from uuid import uuid4
@@ -79,6 +80,7 @@ async def test_search_evidence_includes_document_title():
                 "group_id": group_id,
                 "value": "BRCA1",
             },
+            created_at=datetime(2026, 6, 1, tzinfo=timezone.utc),
         )
     ]
     identifiers = [
@@ -106,6 +108,42 @@ async def test_search_evidence_includes_document_title():
     assert response.total == 1
     assert response.items[0].title == "BRCA1 evidence paper"
     assert response.items[0].pmid == "12345678"
+    assert response.items[0].created_at is not None
+
+
+@pytest.mark.asyncio
+async def test_search_evidence_includes_created_at():
+    """Search results must include created_at from canonical evidence."""
+    source_document_id = uuid4()
+    evidence_id = uuid4()
+    group_id = "gene=['BRCA1']"
+    ts = datetime(2026, 6, 10, 12, 0, 0, tzinfo=timezone.utc)
+
+    rows = [
+        SimpleNamespace(
+            canonical_evidence_id=evidence_id,
+            source_document_id=source_document_id,
+            field_id="A.gene_symbol",
+            review_status="provisional",
+            current_best_confidence=Decimal("0.9500"),
+            active_payload={
+                "group_id": group_id,
+                "value": "BRCA1",
+            },
+            created_at=ts,
+        )
+    ]
+
+    service = SearchService(_FakeSession([
+        _FakeResult(rows=rows),
+        _FakeResult(scalars=[]),
+        _FakeResult(rows=[]),
+    ]))
+
+    response = await service.search_evidence()
+
+    assert len(response.items) > 0
+    assert response.items[0].created_at == ts
 
 
 @pytest.mark.asyncio
