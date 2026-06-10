@@ -17,6 +17,7 @@ export interface LiteratureEvidenceRow {
   groupCount: number;
   avgConfidence?: number | null;
   reviewStatus: string;
+  createdAt?: string | null;
 }
 
 interface MutableLiteratureEvidenceRow extends LiteratureEvidenceRow {
@@ -67,6 +68,7 @@ export function buildLiteratureRows(
         groupCount: 0,
         avgConfidence: null,
         reviewStatus: "unknown",
+        createdAt: item.created_at ?? null,
         confidenceTotal: 0,
         confidenceWeight: 0,
         statuses: new Set<string>(),
@@ -77,6 +79,19 @@ export function buildLiteratureRows(
     if (!row.title && item.title?.trim()) {
       row.title = item.title;
     }
+
+    // Keep the latest created_at across merged groups.
+    // Use Date.parse() for numeric comparison — lexicographic string
+    // comparison fails when timezone offsets differ (e.g. -08:00 vs Z).
+    if (item.created_at) {
+      if (
+        !row.createdAt ||
+        Date.parse(item.created_at) > Date.parse(row.createdAt)
+      ) {
+        row.createdAt = item.created_at;
+      }
+    }
+
     appendUnique(row.genes, item.gene);
     appendUnique(row.variants, item.variant);
     appendUnique(row.diseases, item.disease);

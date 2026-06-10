@@ -218,6 +218,7 @@ class EvidenceSearchResult(BaseModel):
     avg_confidence: float | None = None
     review_status: str = "provisional"
     canonical_evidence_id: UUID | None = None
+    created_at: datetime | None = None
 
 
 class EvidenceSearchResponse(BaseModel):
@@ -313,6 +314,7 @@ class LiteratureProfileSummary(BaseModel):
     variant: str | None = None
     disease: str | None = None
     classification: str | None = None
+    created_at: datetime | None = None
 
 
 class LiteratureSearchResponse(BaseModel):
