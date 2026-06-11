@@ -68,10 +68,10 @@ class ChatService:
     async def create_session(
         self,
         *,
-        processing_run_id: UUID,
+        processing_run_id: UUID | None,
         user_id: UUID | None = None,
     ) -> ChatSessionResponse:
-        """Create a new chat session bound to a processing run."""
+        """Create a new chat session, optionally bound to a processing run."""
         session = ChatSession(
             processing_run_id=processing_run_id,
             user_id=user_id,
@@ -274,6 +274,23 @@ class ChatService:
 
         return "note"
 
+    def _system_prompt(self, *, has_evidence_context: bool) -> str:
+        """Build the chat system prompt for evidence-bound or standalone chat."""
+        if has_evidence_context:
+            return (
+                "You are a clinical genetics assistant inside ACMG Lingua. Answer "
+                "questions about evidence cards using the provided context. Be "
+                "precise and cite specific fields from the evidence card."
+            )
+
+        return (
+            "You are the ACMG Lingua assistant. Help users start literature "
+            "evidence extraction pipelines, upload biomedical PDFs, search "
+            "existing evidence, and understand ACMG evidence extraction results. "
+            "Do not provide a clinical diagnosis. When evidence is unavailable, "
+            "state what information is needed."
+        )
+
     async def generate_reply(
         self,
         *,
@@ -300,11 +317,7 @@ class ChatService:
                 canonical_evidence_id=evidence_id
             )
 
-        system_prompt = (
-            "You are a clinical genetics assistant. Answer questions about "
-            "evidence cards using the provided context. Be precise and cite "
-            "specific fields from the evidence card."
-        )
+        system_prompt = self._system_prompt(has_evidence_context=bool(context))
 
         provider = self._reasoning_provider
         if provider is None:
@@ -345,7 +358,7 @@ class ChatService:
         if intent == "note":
             return
 
-        if intent == "correction":
+        if intent == "correction" and evidence_id:
             yield {
                 "type": "text",
                 "content": f"Correction applied to evidence {evidence_id}.",
@@ -359,11 +372,7 @@ class ChatService:
                 canonical_evidence_id=evidence_id
             )
 
-        system_prompt = (
-            "You are a clinical genetics assistant. Answer questions about "
-            "evidence cards using the provided context. Be precise and cite "
-            "specific fields from the evidence card."
-        )
+        system_prompt = self._system_prompt(has_evidence_context=bool(context))
 
         provider = self._reasoning_provider
         if provider is None:

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import uuid
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,6 +32,15 @@ class TestChatService:
         session = await service.create_session(processing_run_id=run_id, user_id=None)
 
         assert session.processing_run_id == run_id
+        assert session.message_count == 0
+
+    async def test_create_standalone_session(self, db_session: AsyncSession) -> None:
+        """Creates a chat session that is not bound to a pipeline run."""
+        service = ChatService(db_session)
+
+        session = await service.create_session(processing_run_id=None, user_id=None)
+
+        assert session.processing_run_id is None
         assert session.message_count == 0
 
     async def test_append_message(self, db_session: AsyncSession) -> None:
@@ -118,6 +128,26 @@ class TestChatService:
         )
 
         assert len(messages) == 5
+
+    async def test_generate_reply_without_evidence_uses_general_chat_prompt(
+        self, db_session: AsyncSession
+    ) -> None:
+        """Standalone chat uses a general assistant prompt without evidence context."""
+        provider = MagicMock()
+        provider.generate = AsyncMock(return_value="I can help start a pipeline.")
+        service = ChatService(db_session, reasoning_provider=provider)
+        session = await service.create_session(processing_run_id=None, user_id=None)
+
+        reply = await service.generate_reply(
+            session_id=session.chat_session_id,
+            user_message="What can you do?",
+            evidence_id=None,
+        )
+
+        assert reply == "I can help start a pipeline."
+        kwargs = provider.generate.await_args.kwargs
+        assert "ACMG Lingua" in kwargs["system_prompt"]
+        assert "pipeline" in kwargs["system_prompt"].lower()
 
     async def test_build_evidence_context_uses_current_best_run_id(
         self, db_session: AsyncSession
