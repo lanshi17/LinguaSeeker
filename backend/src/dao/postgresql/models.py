@@ -555,7 +555,7 @@ class ReviewAuditEvent(Base):
 
 
 class ChatSession(Base, TimestampMixin):
-    """Chat session bound to a processing run."""
+    """Chat session optionally bound to a processing run."""
 
     __tablename__ = "chat_sessions"
     __table_args__ = (
@@ -571,10 +571,10 @@ class ChatSession(Base, TimestampMixin):
         primary_key=True,
         default=uuid.uuid4,
     )
-    processing_run_id: Mapped[uuid.UUID] = mapped_column(
+    processing_run_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("processing_runs.processing_run_id"),
-        nullable=False,
+        nullable=True,
     )
     user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),

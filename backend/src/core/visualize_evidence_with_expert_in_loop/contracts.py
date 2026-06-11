@@ -144,7 +144,7 @@ class ChatSessionResponse(BaseModel):
     """API response for a chat session."""
 
     chat_session_id: UUID
-    processing_run_id: UUID
+    processing_run_id: UUID | None
     user_id: UUID | None
     created_at: datetime
     message_count: int = 0
