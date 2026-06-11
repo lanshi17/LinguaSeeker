@@ -1,10 +1,8 @@
 /**
  * API configuration.
  *
- * Centralizes API-related settings consumed by useBackendHealth
- * and other infrastructure hooks. The apiClient hardcodes its
- * own baseURL to avoid Turbopack module-caching issues with
- * NEXT_PUBLIC_* inlining.
+ * Centralizes API-related settings consumed by the shared API
+ * client, infrastructure hooks, and feature service helpers.
  */
 
 import type { ApiConfig } from "./types";

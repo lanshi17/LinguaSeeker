@@ -56,7 +56,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | Date | Title | Status |
 |------|-------|--------|
 | 2026-06-10 | [ClinGen Batch Regression Extraction Quality](plans/2026-06-10-clingen-batch-regression-extraction-quality.md) | planned |
-| 2026-06-06 | [Frontend Layered Configuration](planned/2026-06-06-frontend-layered-config.md) | planned |
 
 ## Diagrams
 
@@ -69,7 +68,11 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Archive Index
 
-The `archive/plans/` directory contains 60 completed plans. The `archive/codereview/` directory contains 20 resolved code reviews. See individual directories for full listings.
+The `archive/plans/` directory contains 61 completed plans. The `archive/codereview/` directory contains 20 resolved code reviews. See individual directories for full listings.
+
+| Date | Title | Status |
+|------|-------|--------|
+| 2026-06-06 | [Frontend Layered Configuration](archive/plans/2026-06-06-frontend-layered-config.md) | completed |
 
 ## Module README Index
 

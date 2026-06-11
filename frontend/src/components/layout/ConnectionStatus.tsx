@@ -52,9 +52,12 @@ export function ConnectionStatus() {
     >
       {/* Status dot */}
       <button
-        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-gray-100"
+        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1"
         aria-label={config.ariaLabel}
         aria-live="polite"
+        aria-expanded={showTooltip}
+        onClick={() => setShowTooltip((o) => !o)}
+        onBlur={() => setShowTooltip(false)}
       >
         <span className="relative flex h-2.5 w-2.5">
           {status !== "checking" && (

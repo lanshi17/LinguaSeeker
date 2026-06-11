@@ -6,9 +6,6 @@
 
 @layer base {
   :root {
-    --background: 255 255 255;
-    --foreground: 15 23 42;
-    /* Medical teal design system */
     color-scheme: light;
   }
 
