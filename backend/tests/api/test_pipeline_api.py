@@ -266,3 +266,34 @@ async def test_post_pipeline_run_duplicate_prevention(async_client: AsyncClient)
         )
 
         assert response.status_code == 409
+
+
+
+@pytest.mark.asyncio
+async def test_post_pipeline_run_accepts_extraction_target(async_client: AsyncClient):
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        mock_runner = MagicMock()
+        mock_runner.start = MagicMock(return_value=MagicMock())
+        mock_runner.is_running_for_source = MagicMock(return_value=False)
+        mock_get_runner.return_value = mock_runner
+
+        response = await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "filename": "abca3.md",
+                "pre_parsed_markdown": "ABCA3 and CFTR are discussed.",
+                "target": {
+                    "gene_symbol": "ABCA3",
+                    "disease_name": "ABCA3 deficiency",
+                    "variant_hgvs_p": "p.Q215*",
+                    "clingen_entry_id": "CGGV:0001",
+                },
+                "mode": "full",
+            },
+        )
+
+    assert response.status_code == 202
+    state = mock_runner.start.call_args[0][0]
+    assert state.extraction_target.gene_symbol == "ABCA3"
+    assert "gene=ABCA3" in state.source_key

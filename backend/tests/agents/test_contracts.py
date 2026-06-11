@@ -161,3 +161,20 @@ def test_phase_status_detail():
     assert detail.status == PhaseStatus.COMPLETED
     assert detail.duration_seconds == 300.0
     assert detail.error is None
+
+def test_pipeline_graph_state_carries_extraction_target() -> None:
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+        ExtractionTarget,
+    )
+
+    target = ExtractionTarget(gene_symbol="ABCA3", disease_name="ABCA3 deficiency")
+    state = PipelineGraphState(
+        processing_run_id="run-123",
+        source_document_id="doc-456",
+        mode=PipelineMode.FULL,
+        source_type=SourceType.LOCAL,
+        extraction_target=target,
+    )
+
+    assert state.extraction_target == target
+    assert state.model_dump()["extraction_target"]["gene_symbol"] == "ABCA3"
