@@ -9,7 +9,6 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     EvidenceExtractionResult,
     EvidenceItem,
     EvidenceStatus,
-    ExtractionTarget,
 )
 from src.core.standardize_entities_and_align_knowledge.contracts import (
     BindingRole,
