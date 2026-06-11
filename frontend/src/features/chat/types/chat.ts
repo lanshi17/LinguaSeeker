@@ -1,10 +1,10 @@
 /** Message role in a chat conversation. */
 export type ChatRole = "user" | "assistant" | "system";
 
-/** GET /chat/sessions response item. */
+/** Normalized chat session used by the frontend. */
 export interface ChatSessionResponse {
   session_id: string;
-  processing_run_id: string;
+  processing_run_id: string | null;
   created_at: string;
   message_count: number;
 }
@@ -12,7 +12,7 @@ export interface ChatSessionResponse {
 /** Raw backend chat session response. */
 export interface BackendChatSessionResponse {
   chat_session_id: string;
-  processing_run_id: string;
+  processing_run_id: string | null;
   created_at: string;
   message_count: number;
 }
@@ -20,10 +20,11 @@ export interface BackendChatSessionResponse {
 /** GET /chat/sessions/{id}/messages response item. */
 export interface ChatMessageResponse {
   message_id: string;
+  chat_session_id: string;
   role: ChatRole;
   content: string;
-  evidence_id?: string;
-  entity_id?: string;
+  evidence_id?: string | null;
+  entity_id?: string | null;
   created_at: string;
 }
 
