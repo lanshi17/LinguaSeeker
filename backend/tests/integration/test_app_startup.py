@@ -63,6 +63,8 @@ async def test_lifespan_disposes_redis_on_shutdown() -> None:
 
     with (
         patch("src.api.wiring.wire_dependencies"),
+        patch("src.api.wiring.get_engine", return_value=None),
+        patch("src.api.wiring.get_session_factory", return_value=None),
         patch("src.api.wiring.dispose_engine", new_callable=AsyncMock) as mock_dispose_pg,
         patch("src.api.wiring.dispose_redis", new_callable=AsyncMock) as mock_dispose_redis,
         patch(
@@ -93,6 +95,8 @@ async def test_lifespan_disposal_order_is_lifo() -> None:
 
     with (
         patch("src.api.wiring.wire_dependencies"),
+        patch("src.api.wiring.get_engine", return_value=None),
+        patch("src.api.wiring.get_session_factory", return_value=None),
         patch("src.api.wiring.dispose_engine", new_callable=AsyncMock) as mock_dispose_pg,
         patch("src.api.wiring.dispose_redis", new_callable=AsyncMock) as mock_dispose_redis,
         patch(
@@ -123,6 +127,8 @@ async def test_lifespan_disposal_exception_safety() -> None:
 
     with (
         patch("src.api.wiring.wire_dependencies"),
+        patch("src.api.wiring.get_engine", return_value=None),
+        patch("src.api.wiring.get_session_factory", return_value=None),
         patch("src.api.wiring.dispose_engine", new_callable=AsyncMock) as mock_dispose_pg,
         patch("src.api.wiring.dispose_redis", new_callable=AsyncMock) as mock_dispose_redis,
         patch(

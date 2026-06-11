@@ -6,7 +6,7 @@ Two implementations:
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
 
@@ -165,13 +165,27 @@ class SessionBoundStatePersistence:
                 return None
             return PipelineGraphState.model_validate(record.state_json)
 
-    async def recover_orphaned_runs(self) -> int:
-        """Mark pipeline runs stuck in non-terminal states as FAILED after server restart."""
+    async def recover_orphaned_runs(self, *, heartbeat_timeout_seconds: int = 300) -> int:
+        """Mark pipeline runs stuck in non-terminal states as FAILED.
+
+        Only fails runs whose heartbeat is older than the timeout (default 5 minutes).
+        Legacy rows without a heartbeat use updated_at as fallback.
+        """
         async with self._session_factory() as session:
-            # Only load runs in non-terminal states — uses dedicated column index.
+            now = datetime.now(timezone.utc)
+            timeout_cutoff = now - timedelta(seconds=heartbeat_timeout_seconds)
+
+            # Select active runs where heartbeat is stale or missing
             result = await session.execute(
                 select(PipelineRunState).where(
-                    PipelineRunState.pipeline_status.in_(("pending", "running"))
+                    PipelineRunState.pipeline_status.in_(("pending", "running")),
+                    (
+                        (PipelineRunState.heartbeat_at < timeout_cutoff)
+                        | (
+                            (PipelineRunState.heartbeat_at.is_(None))
+                            & (PipelineRunState.updated_at < timeout_cutoff)
+                        )
+                    ),
                 )
             )
             records = result.scalars().all()
@@ -180,16 +194,16 @@ class SessionBoundStatePersistence:
             for record in records:
                 state = PipelineGraphState.model_validate(record.state_json)
                 state.pipeline_status = PipelineStatus.FAILED
-                state.error_message = "Pipeline interrupted by server restart"
+                state.error_message = "Pipeline heartbeat expired"
                 state.error_phase = _derive_error_phase(state)
-                state.completed_at = datetime.now(timezone.utc).isoformat()
+                state.completed_at = now.isoformat()
                 record.state_json = state.model_dump(mode="json")
                 record.pipeline_status = "failed"
                 count += 1
 
             if count:
                 await session.commit()
-                logger.warning("Recovered {} orphaned pipeline run(s) from server restart", count)
+                logger.warning("Recovered {} orphaned pipeline run(s) with stale heartbeat", count)
 
             return count
 
