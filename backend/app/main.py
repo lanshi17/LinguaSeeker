@@ -59,6 +59,43 @@ def _error_response(
     return JSONResponse(status_code=status, content=body, headers={"X-Request-ID": request_id})
 
 
+async def _try_startup_lock(engine) -> bool:
+    """Acquire a PostgreSQL advisory lock for startup initialization.
+
+    Returns True if the lock was acquired (this worker should run recovery).
+    Returns False if another worker already holds the lock.
+    Returns True for non-PostgreSQL engines (SQLite in tests).
+    """
+    from sqlalchemy import text
+
+    try:
+        async with engine.begin() as conn:
+            result = await conn.execute(
+                text("SELECT pg_try_advisory_lock(hashtext('acmg_lingua_backend_startup'))")
+            )
+            acquired = result.scalar()
+            if acquired:
+                # Keep lock reference for release on shutdown
+                _try_startup_lock._lock_conn = conn
+            return bool(acquired)
+    except Exception:
+        # Non-PostgreSQL engines (SQLite in tests) don't have advisory locks
+        return True
+
+
+async def _release_startup_lock(engine) -> None:
+    """Release the PostgreSQL advisory lock held during startup."""
+    from sqlalchemy import text
+
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(
+                text("SELECT pg_advisory_unlock(hashtext('acmg_lingua_backend_startup'))")
+            )
+    except Exception:
+        pass
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize and teardown application resources."""
@@ -88,20 +125,31 @@ async def lifespan(app: FastAPI):
     logger.info("Pipeline orchestrator initialized")
 
     # Ensure standalone tables (independent MetaData, not managed by Alembic) exist
+    # Use advisory lock to prevent multi-worker races on table creation and recovery
     from src.dao.postgresql.search_index_repo import search_index_metadata
     _wiring.get_session_factory()  # trigger lazy engine creation
     engine = _wiring.get_engine()
+
+    startup_lock_acquired = False
     if engine is not None:
+        startup_lock_acquired = await _try_startup_lock(engine)
+    if engine is not None and startup_lock_acquired:
         async with engine.begin() as conn:
             await conn.run_sync(search_index_metadata.create_all)
 
-    # Recover pipeline runs interrupted by server restart
+    # Recover pipeline runs interrupted by server restart (only if we hold the lock)
     from src.api.v1.pipeline import get_pipeline_runner
-    try:
-        runner = get_pipeline_runner()
-        await runner.recover_orphaned_runs()
-    except Exception as exc:
-        logger.warning("Orphaned run recovery failed: {}", exc)
+    if startup_lock_acquired:
+        try:
+            runner = get_pipeline_runner()
+            await runner.recover_orphaned_runs()
+        except Exception as exc:
+            logger.warning("Orphaned run recovery failed: {}", exc)
+        finally:
+            if engine is not None:
+                await _release_startup_lock(engine)
+    else:
+        logger.info("Skipping startup recovery — another worker holds the advisory lock")
 
     # Startup health checks (non-blocking — warn but don't crash)
     try:
