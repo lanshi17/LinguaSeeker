@@ -6,15 +6,14 @@ from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from starlette.requests import Request
-
-from src.api.rate_limit import limiter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
 from src.api.auth import require_api_key
 from src.api.deps import get_db_session, get_phase4_factory
+from src.api.rate_limit import limiter
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     ChatMessageResponse,
     ChatSessionResponse,
@@ -24,7 +23,7 @@ router = APIRouter()
 
 
 class CreateSessionRequest(BaseModel):
-    processing_run_id: UUID
+    processing_run_id: UUID | None = None
     user_id: UUID | None = None
 
 
@@ -33,6 +32,7 @@ class AppendMessageRequest(BaseModel):
     content: str
     evidence_id: UUID | None = None
     entity_id: UUID | None = None
+    auto_reply: bool = False
 
 
 @router.post("/sessions", response_model=ChatSessionResponse)
@@ -95,7 +95,7 @@ async def append_message(
         entity_id=body.entity_id,
     )
 
-    if body.role == "user":
+    if body.role == "user" and body.auto_reply:
         reply = await service.generate_reply(
             session_id=session_id,
             user_message=body.content,
