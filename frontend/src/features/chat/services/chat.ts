@@ -2,9 +2,10 @@ import { apiClient } from "@/lib/api/client";
 import { apiConfig } from "@/lib/config";
 import type {
   BackendChatSessionResponse,
-  ChatSessionResponse,
   ChatMessageResponse,
+  ChatSessionResponse,
 } from "../types/chat";
+import { buildAppendMessageBody } from "../utils/messageRequests";
 
 function normalizeSession(session: BackendChatSessionResponse): ChatSessionResponse {
   return {
@@ -16,11 +17,12 @@ function normalizeSession(session: BackendChatSessionResponse): ChatSessionRespo
 }
 
 export async function createSession(
-  processingRunId: string,
+  processingRunId?: string | null,
 ): Promise<ChatSessionResponse> {
+  const body = processingRunId ? { processing_run_id: processingRunId } : {};
   const { data } = await apiClient.post<BackendChatSessionResponse>(
     "/chat/sessions",
-    { processing_run_id: processingRunId },
+    body,
   );
   return normalizeSession(data);
 }
@@ -52,7 +54,7 @@ export async function appendMessage(
 ): Promise<ChatMessageResponse> {
   const { data } = await apiClient.post<ChatMessageResponse>(
     `/chat/sessions/${sessionId}/messages`,
-    { content, evidence_id: evidenceId },
+    buildAppendMessageBody(content, evidenceId),
   );
   return data;
 }
