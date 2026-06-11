@@ -1577,37 +1577,98 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 - Prevention: Preserve existing imports in implementation plans and prefer existing empty-state signals before adding helper abstractions.
 - Follow-up: Plan review found the helper and import snippet were unnecessary and could mislead implementation by dropping existing category imports. Revised the plan to use the existing `translatedDocument.paragraphs.length > 0` state directly and document both `null` and `undefined` missing-translation inputs.
 
-## 2026-06-10: model-server migration to top-level services/
+## 2026-06-10: model-server migration plan Batch 1 checkpoint
 
-**Problem:** `backend/services/model-server/` was the only microservice in the backend tree, but its lifecycle (vllm, mineru_vl_utils, heavy CUDA deps) was bolted onto the backend's lockfile via an optional `[model-server]` extra. That bloat forced every backend CI / lint / test run to resolve vllm and torch, and the model-server's `app/config.py` had a `sys.path.insert(0, _BACKEND_ROOT)` hack to reach the shared YAML loader.
+**Problem:** Batch 1 execution started from a `dev` state that already contained the model-server migration commits. The first verification attempt for `libs/config-loader` failed with `Failed to spawn: pytest`.
 
-**Root cause / motivation:** Three concrete pain points:
-1. `uv lock` for the backend pulled in 206 packages including vllm + torch + xgrammar (~3.5 GB wheel) even when running CPU-only unit tests.
-2. Deployment had to install the entire backend toolchain on the model-server host (and vice versa).
-3. The model-server had no clean way to import the shared loader without sys.path manipulation.
+**Investigation:** `libs/config-loader/pyproject.toml` already declares `pytest` under the `dev` optional dependency group. The failing command used `uv run --project libs/config-loader pytest ...`, which does not install optional dev dependencies for that project.
 
-**Fix:** Atomic migration as one branch (`migrate-model-server`).
-- Extracted the 74-line `config_loader.py` into a new shared package `libs/config-loader/` (named `acmg-config-loader`), stdlib + pyyaml only, editable path source.
-- Moved `backend/services/model-server/` → `services/model-server/` with its own `pyproject.toml` and `uv.lock` (206 packages, now isolated).
-- Replaced the `sys.path` hack with a direct `from acmg_config_loader import load_backend_config_into_env`.
-- Updated `start_model_server.sh`, `deploy/ansible/roles/model-server/` (consistent `src`/`dest`/`chdir`/`WorkingDirectory`), `copier.yaml`, and all active docs.
-- Removed the `model-server` extra from `backend/pyproject.toml` (and the jinja template); `backend/uv.lock` shrank by 2190 lines.
+**Root cause:** The verification command omitted `--extra dev`, so the isolated config-loader environment did not contain pytest.
+
+**Solution:** Re-ran the shared loader verification with `uv run --project libs/config-loader --extra dev pytest libs/config-loader/tests -v`.
 
 **Verification:**
-- 26/26 model-server tests pass (CPU-only stubs via conftest).
-- 4/4 shared loader tests pass.
-- 2/2 backend config loader tests pass (via the shim).
-- Ruff clean for model-server and shared loader.
-- 6 pre-existing ruff errors in backend `src/` are unrelated to this migration (they exist on `dev` HEAD before any changes — F401, E741, E402, F841 in `cross_lingual_process_and_extract_evidence/extract_evidence/stages/special_evidence.py`, `relevance_gate.py`, and a test file).
+- Shared loader tests: 4/4 passed.
+- Backend config-loader shim verification initially blocked because full backend environment synchronization timed out; later completed with scoped test dependencies: 2/2 passed and ruff clean for `src/core/config_loader.py`.
 
-**Issues hit and how they were resolved:**
-1. **Local pypi mirror (`http://127.0.0.1:3141`) timed out** during `uv pip install`. The devpi service was unreachable, so I used `UV_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/` to route through aliyun. Note for ops: devpi availability is a real environmental dependency; if it's down, the migration can't be exercised in this workspace. Fix: restart devpi or add aliyun to the default index list.
-2. **`uv sync` and `uv pip install -e ".[dev]"` for the backend timed out (>15 min)** because torch + vllm wheels are huge. Worked around by installing only the test-minimum set (sqlalchemy, aiosqlite, pgvector, asyncpg, redis, fastapi, uvicorn, alembic, pydantic, pydantic-settings) directly via `uv pip install` into the existing `.venv`. This is sufficient to run `tests/core/test_config_loader.py` and the shim — the full backend test suite is not in scope for the migration's verification.
-3. **One test (`test_model_server_reuses_backend_config_loader`) was checking the OLD behavior** — it imported `src.core.config_loader` and asserted `app.config.load_backend_config_into_env is load_backend_config_into_env` (the backend's symbol). With the new architecture, the model-server imports `acmg_config_loader` directly (no longer the backend's shim). Updated the test to assert the new shared loader and renamed it to `test_model_server_uses_shared_config_loader` to match the new contract.
-4. **The implementation plan went through 6 review findings** (1 pre-move path regression, 1 leftover dir cleanup, 1 ansible path consistency, 1 smoke-test semantics, 1 missing `uv lock`, 1 nit on RED test expectation). All were addressed before execution started. This is the second migration to be reviewed-via-plan-mode in this project (the first was 2026-05-18 database MVP) — the upfront review caught 3 blocking issues that would have derailed execution.
-
-**Prevention:**
-- When a "service" lives inside an application tree and has a different runtime profile (different deps, different deploy unit), promote it to the repo root **before** more services are added — N=1 is the cheapest time to migrate.
-- When splitting a shared module, keep the new package **stdlib + minimal third-party** (just pyyaml here). Don't transitively pull FastAPI/Pydantic into the shared layer; that defeats the purpose of "shared".
-- Plan-mode review caught 6 issues that the implementation would have hit; the review cost ~5 minutes, the cost of those issues in execution would have been 1+ hour of fix-and-retry loops. The discipline of "write plan → review → execute" pays off for any migration touching more than ~5 files.
+**Prevention:** Use the package's declared optional dependency group when verifying standalone Python packages with test-only dependencies, and avoid recording full migration/test completion until every verification step has completed successfully.
 - For `sys.path.insert(...)` workarounds, the smell is the right trigger: any time a module reaches up to a parent's tree to import a sibling, it's a sign the sibling should be a proper installable package.
+
+## 2026-06-11: model-server migration Batch 2 verification
+
+**Problem:** The migration branch already contained Tasks 4–6, but plan verification commands that sync full backend/model-server environments were either previously timed out or would install heavy service dependencies unnecessarily.
+
+**Investigation:** The touched files for Tasks 4–6 were already in their intended state: `backend/pyproject.toml` depends on editable `acmg-config-loader`, `backend/src/core/config_loader.py` is a re-export shim, `services/model-server/app/config.py` imports `acmg_config_loader` directly, and `services/model-server/pyproject.toml` defines the standalone service skeleton.
+
+**Root cause:** Full-project `uv run` verification couples small config-loader checks to large backend/model-server dependency graphs. Backend tests also import global `tests/conftest.py`, which requires database-related packages even for the targeted config-loader tests.
+
+**Solution:** Verified the touched contracts with scoped `uv run --no-project --with ...` commands that install only the dependencies required by the targeted tests and ruff checks.
+
+**Verification:**
+- `libs/config-loader`: 4/4 tests passed and ruff clean.
+- `backend`: `tests/core/test_config_loader.py` passed 2/2 with scoped dependencies; `ruff check src/core/config_loader.py` clean.
+- `services/model-server`: `tests/test_config_loader_path.py` passed 1/1 with scoped dependencies; `ruff check app/config.py tests/test_config_loader_path.py` clean.
+
+**Prevention:** For migration checkpoints, prefer exact touched-file verification when full dependency synchronization is unrelated to the change and known to be slow; record the command scope explicitly so results are not mistaken for full-suite verification.
+
+## 2026-06-11: model-server migration Batch 3 verification
+
+**Problem:** Tasks 7–9 were already applied in the migration branch, but full model-server verification initially failed under scoped dependencies.
+
+**Investigation:** The first full-suite scoped command omitted `fastapi`, then the retry omitted `numpy`. The failures were import-time errors (`ModuleNotFoundError: No module named 'fastapi'`, then missing `numpy` causing patch target resolution failures for `app.domain.embedding` and `app.domain.rerank`). The codebase's `tests/conftest.py` already stubs GPU-only `vllm` and `mineru_vl_utils`, so no real GPU dependency was needed.
+
+**Root cause:** The scoped verification environment did not include all non-GPU runtime dependencies imported by the model-server modules before tests patch GPU interfaces.
+
+**Solution:** Re-ran the model-server suite with scoped dependencies including `fastapi`, `uvicorn`, `httpx`, `pydantic`, `pydantic-settings`, `pyyaml`, `pillow`, `loguru`, `numpy`, pytest tools, and editable `acmg-config-loader`.
+
+**Verification:**
+- `services/model-server/tests/test_model_server_config.py` + `tests/test_config_loader_path.py`: 6/6 passed.
+- Full `services/model-server/tests/`: 26/26 passed with CPU-only optional dependency stubs.
+- `ruff check app/ tests/`: clean.
+- `scripts/start_model_server.sh` resolves to `services/model-server/main.py`.
+- Deploy Ansible role YAML parses and systemd template renders `WorkingDirectory=/srv/acmg-lingua/services/model-server` plus the expected `uv run python main.py --port 8001` command.
+
+**Prevention:** When using scoped `uv run --no-project --with ...` verification, include every import-time runtime dependency, not only test tools and the specific dependency being exercised.
+
+## 2026-06-11: model-server migration Batch 4 verification
+
+**Problem:** Tasks 10–12 were already applied, but one verification attempt used `ruff check pyproject.toml.jinja`, which failed with TOML/Python syntax errors because the file contains raw Jinja control syntax.
+
+**Investigation:** The actual task requirement is to ensure the backend template no longer includes a `model-server` extra and still renders/parses correctly. Linting the raw `.jinja` file does not test that contract.
+
+**Root cause:** The verification targeted the template source with the wrong tool instead of rendering the template first.
+
+**Solution:** Rendered `backend/pyproject.toml.jinja` with representative Copier context, parsed the rendered TOML with `tomllib`, and asserted `project.optional-dependencies` has no `model-server` key.
+
+**Verification:**
+- `services/model-server/README.md` has no stale `backend/services/model-server` path.
+- `backend/pyproject.toml` and `backend/pyproject.toml.jinja` have no `model-server` extra or `vllm` reference.
+- `backend/uv.lock` has no `name = "vllm"` or `name = "xgrammar"` entries.
+- `uv lock` in `backend/` resolves successfully.
+- Backend config-loader targeted tests pass 2/2 with scoped dependencies.
+- `services/model-server/main.py.jinja` renders with representative Copier context.
+- `copier.yaml` excludes `services/model-server/main.py`, and both `services/model-server/main.py` and `.jinja` exist.
+
+**Prevention:** For template files, verify the rendered artifact and parse it with the target format parser; do not lint the raw Jinja source as if it were TOML/Python.
+
+## 2026-06-11: model-server migration Batch 5 final verification
+
+**Problem:** Final documentation grep found historical `backend/services/model-server` references under `docs/archive/`, while active docs/root docs were clean.
+
+**Investigation:** The migration plan's active-doc verification targets `README.md`, `backend/README.md`, `docs/active/`, `docs/README.md`, and `AGENTS.md`. Archive documents preserve historical plans/reviews and still mention old paths by design.
+
+**Root cause:** A broad `docs/` grep includes archived historical records that are not current project guidance.
+
+**Solution:** Verified active documentation separately from archived history, and used source-only grep for code/config/scripts.
+
+**Verification:**
+- Root/active docs: no stale `backend/services/model-server` references in `README.md`, `backend/README.md`, `docs/README.md`, `docs/active/`, or `AGENTS.md`.
+- Source/config/script grep: `rg -n "backend/services/model-server" --type py --type toml --type yaml --type sh` returned no output.
+- `libs/config-loader`: 4/4 tests passed and ruff clean.
+- `services/model-server`: 26/26 tests passed and ruff clean.
+- `backend`: `tests/core/test_config_loader.py` passed 2/2 and `src/core/config_loader.py` ruff clean.
+- `backend/uv.lock`: no `vllm` or `xgrammar` package entries after `uv lock` resolution.
+- Acceptance paths: `services/model-server/uv.lock` exists, `libs/config-loader/` exists, `backend/services/` no longer exists.
+- `scripts/start_model_server.sh` resolves to `services/model-server/main.py`; Ansible systemd template renders `WorkingDirectory=/srv/acmg-lingua/services/model-server` and the expected `uv run python main.py --port 8001` command.
+
+**Prevention:** Separate current documentation checks from archived historical records; archive docs can preserve old paths, while active docs and source/config/scripts must reflect current layout.
