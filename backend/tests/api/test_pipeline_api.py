@@ -18,8 +18,8 @@ async def test_pipeline_run_injects_content_to_state(async_client):
     """POST /api/v1/pipeline/run injects base64 content into state via temp file."""
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
         mock_runner = MagicMock()
-        mock_runner.start = MagicMock()
-        mock_runner.is_running_for_source = MagicMock(return_value=False)
+        mock_runner.start = AsyncMock(return_value=MagicMock())
+        mock_runner.is_running_for_source = AsyncMock(return_value=False)
         mock_get_runner.return_value = mock_runner
 
         # Patch aiofiles.open to avoid writing real files to disk
@@ -50,8 +50,8 @@ async def test_post_pipeline_run(async_client: AsyncClient):
     """POST /api/v1/pipeline/run accepts request and returns run ID."""
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
         mock_runner = MagicMock()
-        mock_runner.start = MagicMock(return_value=MagicMock())
-        mock_runner.is_running_for_source = MagicMock(return_value=False)
+        mock_runner.start = AsyncMock(return_value=MagicMock())
+        mock_runner.is_running_for_source = AsyncMock(return_value=False)
         mock_get_runner.return_value = mock_runner
 
         # Mock aiofiles.open to avoid writing real files
@@ -252,7 +252,7 @@ async def test_post_pipeline_run_duplicate_prevention(async_client: AsyncClient)
     """POST with same source_document_id while run is in-progress returns 409 (N3 fix)."""
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
         mock_runner = MagicMock()
-        mock_runner.is_running_for_source = MagicMock(return_value=True)
+        mock_runner.is_running_for_source = AsyncMock(return_value=True)
         mock_get_runner.return_value = mock_runner
 
         response = await async_client.post(
@@ -273,8 +273,8 @@ async def test_post_pipeline_run_duplicate_prevention(async_client: AsyncClient)
 async def test_post_pipeline_run_accepts_extraction_target(async_client: AsyncClient):
     with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
         mock_runner = MagicMock()
-        mock_runner.start = MagicMock(return_value=MagicMock())
-        mock_runner.is_running_for_source = MagicMock(return_value=False)
+        mock_runner.start = AsyncMock(return_value=MagicMock())
+        mock_runner.is_running_for_source = AsyncMock(return_value=False)
         mock_get_runner.return_value = mock_runner
 
         response = await async_client.post(
@@ -297,3 +297,29 @@ async def test_post_pipeline_run_accepts_extraction_target(async_client: AsyncCl
     state = mock_runner.start.call_args[0][0]
     assert state.extraction_target.gene_symbol == "ABCA3"
     assert "gene=ABCA3" in state.source_key
+
+
+@pytest.mark.asyncio
+async def test_post_pipeline_run_duplicate_source_key_race_returns_409(async_client: AsyncClient):
+    """POST returns 409 when unique source_key constraint catches a race."""
+    from sqlalchemy.exc import IntegrityError
+
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        runner = MagicMock()
+        runner.is_running_for_source = AsyncMock(return_value=False)
+        runner.start = AsyncMock(
+            side_effect=IntegrityError("insert", {}, Exception("duplicate source_key"))
+        )
+        mock_get_runner.return_value = runner
+
+        response = await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "mode": "full",
+                "filename": "same.pdf",
+                "content_base64": "JVBERi0xLjQK",
+            },
+        )
+
+    assert response.status_code == 409
