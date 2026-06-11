@@ -12,6 +12,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
     MatchStatus,
     SimilarityCandidate,
     StandardizationCandidate,
+    StandardizationInput,
     StandardizationResult,
     TerminologyCandidate,
 )
@@ -186,3 +187,21 @@ def test_acmg_ready_contracts_capture_hpo_ids_and_normalized_values() -> None:
     evidence_set = AcmgReadyEvidenceSet(document_id="doc-1", items=(item,))
 
     assert evidence_set.items[0].normalized_value == ["HP:0001263", "HP:0001252"]
+
+
+def test_standardization_input_carries_extraction_target() -> None:
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+        ExtractionTarget,
+    )
+
+    target = ExtractionTarget(gene_symbol="ABCA3", disease_name="ABCA3 deficiency")
+    input_data = StandardizationInput(
+        document_id="doc",
+        source_document_id="source",
+        processing_run_id="run",
+        candidates=(),
+        evidence_items=(),
+        extraction_target=target,
+    )
+
+    assert input_data.extraction_target == target
