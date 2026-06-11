@@ -199,7 +199,7 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
 
     # N3: Duplicate run prevention — check if same source is already being processed
     source_key = _build_source_key(body)
-    if source_key and runner.is_running_for_source(source_key):
+    if source_key and await runner.is_running_for_source(source_key):
         raise HTTPException(
             status_code=409,
             detail=f"A pipeline run is already in progress for this source: {source_key}",
@@ -258,7 +258,15 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         extraction_target=body.extraction_target,
     )
 
-    task = runner.start(initial_state)
+    from sqlalchemy.exc import IntegrityError
+
+    try:
+        task = await runner.start(initial_state)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=409,
+            detail=f"A pipeline run is already in progress for this source: {source_key}",
+        )
 
     # Clean up temp file after pipeline completes (success or failure)
     if upload_file_path:

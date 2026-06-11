@@ -11,7 +11,7 @@ from typing import Optional
 from uuid import UUID
 
 from loguru import logger
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -41,7 +41,13 @@ class DirectStatePersistence:
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def save(self, state: PipelineGraphState) -> None:
+    async def save(
+        self,
+        state: PipelineGraphState,
+        *,
+        owner_worker_id: str | None = None,
+        heartbeat_at: datetime | None = None,
+    ) -> None:
         # Ensure source_document exists (FK requirement for pipeline_run_states)
         sd_id = UUID(state.source_document_id)
         existing_sd = await self._session.get(SourceDocument, sd_id)
@@ -56,12 +62,21 @@ class DirectStatePersistence:
         if existing:
             existing.state_json = state_json
             existing.pipeline_status = state.pipeline_status.value
+            if state.source_key is not None:
+                existing.source_key = state.source_key
+            if owner_worker_id is not None:
+                existing.owner_worker_id = owner_worker_id
+            if heartbeat_at is not None:
+                existing.heartbeat_at = heartbeat_at
         else:
             new_record = PipelineRunState(
                 processing_run_id=UUID(state.processing_run_id),
                 source_document_id=UUID(state.source_document_id),
                 state_json=state_json,
                 pipeline_status=state.pipeline_status.value,
+                source_key=state.source_key,
+                owner_worker_id=owner_worker_id,
+                heartbeat_at=heartbeat_at,
             )
             self._session.add(new_record)
         await self._session.commit()
@@ -92,7 +107,13 @@ class SessionBoundStatePersistence:
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]):
         self._session_factory = session_factory
 
-    async def save(self, state: PipelineGraphState) -> None:
+    async def save(
+        self,
+        state: PipelineGraphState,
+        *,
+        owner_worker_id: str | None = None,
+        heartbeat_at: datetime | None = None,
+    ) -> None:
         async with self._session_factory() as session:
             # Ensure source_document exists (FK requirement for pipeline_run_states)
             sd_id = UUID(state.source_document_id)
@@ -104,6 +125,18 @@ class SessionBoundStatePersistence:
             await session.execute(sd_upsert)
 
             state_json = state.model_dump(mode="json")
+            upsert_set: dict[str, object] = {
+                "state_json": state_json,
+                "pipeline_status": state.pipeline_status.value,
+                "updated_at": func.now(),
+            }
+            if state.source_key is not None:
+                upsert_set["source_key"] = state.source_key
+            if owner_worker_id is not None:
+                upsert_set["owner_worker_id"] = owner_worker_id
+            if heartbeat_at is not None:
+                upsert_set["heartbeat_at"] = heartbeat_at
+
             stmt = (
                 pg_insert(PipelineRunState)
                 .values(
@@ -111,14 +144,13 @@ class SessionBoundStatePersistence:
                     source_document_id=UUID(state.source_document_id),
                     state_json=state_json,
                     pipeline_status=state.pipeline_status.value,
+                    source_key=state.source_key,
+                    owner_worker_id=owner_worker_id,
+                    heartbeat_at=heartbeat_at,
                 )
                 .on_conflict_do_update(
                     index_elements=["processing_run_id"],
-                    set_={
-                        "state_json": state_json,
-                        "pipeline_status": state.pipeline_status.value,
-                        "updated_at": func.now(),
-                    },
+                    set_=upsert_set,
                 )
             )
             await session.execute(stmt)
@@ -160,3 +192,34 @@ class SessionBoundStatePersistence:
                 logger.warning("Recovered {} orphaned pipeline run(s) from server restart", count)
 
             return count
+
+    async def heartbeat(self, processing_run_id: str, owner_worker_id: str) -> bool:
+        """Refresh heartbeat for an active run owned by this worker.
+
+        Returns True if the heartbeat was updated (run exists and is owned by this worker).
+        """
+        async with self._session_factory() as session:
+            result = await session.execute(
+                update(PipelineRunState)
+                .where(
+                    PipelineRunState.processing_run_id == UUID(processing_run_id),
+                    PipelineRunState.owner_worker_id == owner_worker_id,
+                    PipelineRunState.pipeline_status.in_(("pending", "running")),
+                )
+                .values(heartbeat_at=func.now())
+            )
+            await session.commit()
+            return result.rowcount > 0
+
+    async def has_active_source_key(self, source_key: str) -> bool:
+        """Return True when any pending/running run owns this source key."""
+        async with self._session_factory() as session:
+            result = await session.execute(
+                select(PipelineRunState.processing_run_id)
+                .where(
+                    PipelineRunState.source_key == source_key,
+                    PipelineRunState.pipeline_status.in_(("pending", "running")),
+                )
+                .limit(1)
+            )
+            return result.scalar_one_or_none() is not None

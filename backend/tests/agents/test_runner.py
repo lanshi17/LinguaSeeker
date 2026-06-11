@@ -80,7 +80,7 @@ async def test_runner_executes_in_background(
         state_persistence=mock_persistence,
     )
 
-    task = runner.start(sample_state)
+    task = await runner.start(sample_state)
     await task
 
     assert mock_orchestrator.run.called
@@ -100,7 +100,7 @@ async def test_runner_captures_errors(
         state_persistence=mock_persistence,
     )
 
-    task = runner.start(sample_state)
+    task = await runner.start(sample_state)
     await task
 
     assert task.done()
@@ -167,7 +167,7 @@ async def test_cleanup_identity_check_prevents_stale_task_removal(
         state_persistence=mock_persistence,
     )
 
-    task1 = runner.start(sample_state)
+    task1 = await runner.start(sample_state)
     await task1
     assert task1.done()
 
@@ -176,7 +176,7 @@ async def test_cleanup_identity_check_prevents_stale_task_removal(
     running_state.pipeline_status = PipelineStatus.RUNNING
     mock_orchestrator.run.return_value = running_state
 
-    task2 = runner.start(sample_state)
+    task2 = await runner.start(sample_state)
     # task1's cleanup already ran; task2 must still be tracked
     assert runner._active_tasks.get("run-123") is task2
     task2.cancel()
@@ -186,17 +186,21 @@ async def test_cleanup_identity_check_prevents_stale_task_removal(
         pass
 
 
-def test_is_running_for_source_ignores_terminal_states(sample_state):
+@pytest.mark.asyncio
+async def test_is_running_for_source_ignores_terminal_states(sample_state):
     """is_running_for_source must not match COMPLETED or FAILED states.
 
     Validates the _ACTIVE_STATUSES filter by registering a fake task that
     appears active (is_running=True) but whose cached state is terminal.
     Without the status filter this would incorrectly block resubmission.
     """
+    mock_persistence = MagicMock(has_active_source_key=AsyncMock(return_value=False))
     runner = PipelineRunner(
         orchestrator=MagicMock(),
         semaphore=MagicMock(),
-        state_persistence=MagicMock(),
+        state_persistence=mock_persistence,
+        worker_id="worker-a",
+        heartbeat_interval_seconds=0.01,
     )
 
     # Insert a COMPLETED state and register a fake "active" task for the
@@ -211,7 +215,7 @@ def test_is_running_for_source_ignores_terminal_states(sample_state):
     runner._active_tasks["run-done"] = fake_task
 
     # The status filter should reject COMPLETED even though is_running is True.
-    assert runner.is_running_for_source("test-query") is False
+    assert await runner.is_running_for_source("test-query") is False
 
     # FAILED state should also be rejected with an active task.
     failed = sample_state.model_copy(deep=True)
@@ -223,7 +227,7 @@ def test_is_running_for_source_ignores_terminal_states(sample_state):
     fake_task2.done.return_value = False
     runner._active_tasks["run-failed"] = fake_task2
 
-    assert runner.is_running_for_source("test-query") is False
+    assert await runner.is_running_for_source("test-query") is False
 
 
 @pytest.mark.asyncio
@@ -247,7 +251,7 @@ async def test_cancelled_task_persists_failed_state(
         state_persistence=mock_persistence,
     )
 
-    task = runner.start(sample_state)
+    task = await runner.start(sample_state)
     await reached_orchestrator.wait()
     task.cancel()
 
@@ -288,7 +292,7 @@ async def test_cancelled_task_preserves_current_phase(
         state_persistence=mock_persistence,
     )
 
-    task = runner.start(sample_state)
+    task = await runner.start(sample_state)
     await reached_orchestrator.wait()
     task.cancel()
 
@@ -326,7 +330,7 @@ async def test_cancelled_task_defaults_phase_when_orchestrator_did_not_set(
         state_persistence=mock_persistence,
     )
 
-    task = runner.start(sample_state)
+    task = await runner.start(sample_state)
     await reached_orchestrator.wait()
     task.cancel()
 
@@ -343,11 +347,15 @@ async def test_cancelled_task_defaults_phase_when_orchestrator_did_not_set(
 
 
 @pytest.mark.asyncio
-async def test_get_last_state_marks_orphaned_run_as_failed(
+async def test_get_last_state_is_read_only_for_active_db_runs(
     sample_state, mock_orchestrator, mock_semaphore, mock_persistence
 ):
-    """get_last_state marks DB-loaded RUNNING runs as FAILED when no task exists."""
-    # DB returns a RUNNING state (server restarted mid-pipeline)
+    """get_last_state returns DB-loaded RUNNING state without mutation.
+
+    Stale active rows are handled by heartbeat recovery, not by GET-triggered writes.
+    This prevents multi-worker false-failure on status polling.
+    """
+    # DB returns a RUNNING state (may be owned by another worker)
     db_state = sample_state.model_copy(deep=True)
     db_state.pipeline_status = PipelineStatus.RUNNING
     mock_persistence.load.return_value = db_state
@@ -356,15 +364,15 @@ async def test_get_last_state_marks_orphaned_run_as_failed(
         orchestrator=mock_orchestrator,
         semaphore=mock_semaphore,
         state_persistence=mock_persistence,
+        worker_id="worker-a",
+        heartbeat_interval_seconds=0.01,
     )
 
     result = await runner.get_last_state("run-123")
 
     assert result is not None
-    assert result.pipeline_status == PipelineStatus.FAILED
-    assert "server restart" in (result.error_message or "").lower()
-    # Should be persisted and cached
-    mock_persistence.save.assert_called_once()
+    assert result.pipeline_status == PipelineStatus.RUNNING  # read-only, no mutation
+    mock_persistence.save.assert_not_awaited()
     assert runner.get_last_state_cached("run-123") is result
 
 
@@ -392,7 +400,7 @@ async def test_get_last_state_does_not_mark_active_run_as_failed(
     )
 
     # Start a real task so is_running returns True
-    task = runner.start(sample_state)
+    task = await runner.start(sample_state)
     # Give the task a moment to start
     await asyncio.sleep(0.01)
 
@@ -447,7 +455,7 @@ async def test_shutdown_waits_for_active_tasks(sample_state, mock_semaphore, moc
         state_persistence=mock_persistence,
     )
 
-    runner.start(sample_state)
+    await runner.start(sample_state)
     await task_started.wait()
 
     # Release the task so shutdown can complete
@@ -494,7 +502,7 @@ async def test_shutdown_times_out_on_long_running_tasks(
         state_persistence=mock_persistence,
     )
 
-    task = runner.start(sample_state)
+    task = await runner.start(sample_state)
     await task_started.wait()
 
     # Shutdown with very short timeout — should return without blocking
@@ -509,3 +517,81 @@ async def test_shutdown_times_out_on_long_running_tasks(
         await task
     except asyncio.CancelledError:
         pass
+
+
+@pytest.mark.asyncio
+async def test_get_last_state_does_not_fail_active_db_run_from_another_worker(
+    sample_state, mock_orchestrator, mock_semaphore, mock_persistence
+):
+    """get_last_state must NOT mutate a RUNNING run loaded from DB when no local
+    task exists — the run may be owned by another worker."""
+    db_state = sample_state.model_copy(deep=True)
+    db_state.pipeline_status = PipelineStatus.RUNNING
+    mock_persistence.load.return_value = db_state
+
+    runner = PipelineRunner(
+        orchestrator=mock_orchestrator,
+        semaphore=mock_semaphore,
+        state_persistence=mock_persistence,
+        worker_id="worker-b",
+        heartbeat_interval_seconds=0.01,
+    )
+
+    result = await runner.get_last_state("run-123")
+
+    assert result is db_state
+    assert result.pipeline_status == PipelineStatus.RUNNING
+    mock_persistence.save.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_runner_error_state_preserves_latest_phase_outputs(
+    sample_state, mock_semaphore, mock_persistence
+):
+    """Error state must use the latest cached state as model_copy base, not initial_state."""
+    from src.agents.contracts import Phase1Output, PhaseStatus, PhaseStatusDetail
+
+    latest = sample_state.model_copy(deep=True)
+    latest.phase_1_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
+    latest.phase_1_output = Phase1Output(
+        pdf_path="/tmp/a.pdf",
+        md_path="/tmp/a.md",
+        metadata_path="/tmp/a.json",
+        output_dir="/tmp",
+    )
+
+    orch = MagicMock()
+    orch.run = AsyncMock(side_effect=RuntimeError("boom"))
+
+    runner = PipelineRunner(
+        orchestrator=orch,
+        semaphore=mock_semaphore,
+        state_persistence=mock_persistence,
+        worker_id="worker-a",
+        heartbeat_interval_seconds=0.01,
+    )
+    runner.remember_state(sample_state.processing_run_id, latest)
+
+    task = await runner.start(sample_state)
+    await task
+
+    final_state = runner.get_last_state_cached(sample_state.processing_run_id)
+    assert final_state is not None
+    assert final_state.phase_1_output == latest.phase_1_output
+    assert final_state.phase_1_status.status == PhaseStatus.COMPLETED
+    assert final_state.pipeline_status == PipelineStatus.FAILED
+
+
+@pytest.mark.asyncio
+async def test_is_running_for_source_checks_persistence_when_cache_misses(
+    sample_state, mock_orchestrator, mock_semaphore, mock_persistence
+):
+    """is_running_for_source falls back to persistence for cross-worker dedup."""
+    mock_persistence.has_active_source_key = AsyncMock(return_value=True)
+    runner = PipelineRunner(
+        mock_orchestrator, mock_semaphore, mock_persistence,
+        worker_id="worker-a", heartbeat_interval_seconds=0.01,
+    )
+
+    assert await runner.is_running_for_source("pmid:123") is True
+    mock_persistence.has_active_source_key.assert_awaited_once_with("pmid:123")
