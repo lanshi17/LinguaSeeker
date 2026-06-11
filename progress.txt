@@ -291,3 +291,5 @@
 [2026-06-10] [migrate-model-server-to-top-level-services] [done] Moved backend/services/model-server → top-level services/model-server with independent pyproject/lockfile; extracted shared YAML loader into libs/config-loader (acmg-config-loader); updated deploy, scripts, docs, and copier templates. 26 model-server tests + 4 shared loader tests + 2 backend config loader tests pass; ruff clean for model-server and shared loader (6 pre-existing backend ruff errors unrelated to migration).
 [2026-06-11] frontend layered config implementation completed
 [2026-06-11] [VS Code Settings Sync Profiles configuration plan] [completed]
+[2026-06-11] [Target anchored evidence extraction implementation plan] [completed]
+[2026-06-11] [Target anchored evidence extraction implementation] [completed] Added ExtractionTarget propagation through API, PipelineGraphState, Phase 2 documents, prompts (target-anchored catalog), EvidenceRoleRouter, TargetEntityGuard (context contamination), target-aware entity_scope_hash in Phase 3, ClinGen benchmark target payload, and regression tests. 109 focused tests passing, ruff clean.

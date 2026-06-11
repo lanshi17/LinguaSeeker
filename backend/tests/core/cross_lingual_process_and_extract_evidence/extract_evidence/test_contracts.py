@@ -13,8 +13,10 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     EvidenceNormalizationIssue,
     EvidenceNormalizationIssueType,
     EvidenceNormalizationSeverity,
+    EvidenceRole,
     EvidenceStatus,
     ExternalIds,
+    ExtractionTarget,
     PageSpan,
     QualityReport,
     SourceLocation,
@@ -317,3 +319,111 @@ def test_extraction_result_and_state_carry_normalization_issues() -> None:
 
     assert result.normalization_issues == [issue]
     assert state.normalization_issues == [issue]
+
+def test_extraction_target_contract_normalizes_scope_identity() -> None:
+    target = ExtractionTarget(
+        gene_symbol=" abca3 ",
+        disease_name=" Interstitial lung disease due to ABCA3 deficiency ",
+        variant_hgvs_p=" p.Q215* ",
+        clingen_entry_id="CGGV:0001",
+    )
+
+    assert target.gene_symbol == "ABCA3"
+    assert target.disease_name == "Interstitial lung disease due to ABCA3 deficiency"
+    assert target.scope_key == (
+        "gene=ABCA3|disease=interstitial lung disease due to abca3 deficiency|"
+        "variant_p=p.Q215*|clingen=CGGV:0001"
+    )
+
+
+def test_extraction_target_rejects_blank_gene_or_disease() -> None:
+    with pytest.raises(ValidationError):
+        ExtractionTarget(gene_symbol="  ", disease_name="x")
+    with pytest.raises(ValidationError):
+        ExtractionTarget(gene_symbol="ABCA3", disease_name="  ")
+
+
+def test_track_document_and_result_carry_extraction_target() -> None:
+    target = ExtractionTarget(gene_symbol="ABCA3", disease_name="ABCA3 deficiency")
+    doc = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text="ABCA3 case",
+        page_spans=[],
+        extraction_target=target,
+    )
+    result = EvidenceExtractionResult(
+        status=EvidenceExtractionStatus.COMPLETED,
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        extraction_target=target,
+    )
+
+    assert doc.extraction_target == target
+    assert result.extraction_target == target
+
+
+def test_evidence_item_defaults_to_primary_role() -> None:
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="ABCA3",
+        confidence=0.9,
+    )
+
+    assert item.evidence_role == EvidenceRole.PRIMARY
+    assert EvidenceRole.PHENOTYPE.value == "phenotype"
+
+
+def test_evidence_status_includes_context_contamination() -> None:
+    assert EvidenceStatus.CONTEXT_CONTAMINATION.value == "context_contamination"
+
+
+def test_quality_report_has_context_contamination_count() -> None:
+    report = QualityReport(passed=True)
+    assert report.context_contamination_count == 0
+
+
+def test_evidence_extraction_result_separates_phenotype_and_discarded() -> None:
+    target = ExtractionTarget(gene_symbol="AARS2", disease_name="AARS2-related leukodystrophy")
+    primary = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.FOUND,
+        value="AARS2",
+        confidence=0.9,
+    )
+    phenotype = EvidenceItem(
+        field_id="B.disease_diagnosis",
+        category="B",
+        field_name="Disease diagnosis",
+        status=EvidenceStatus.FOUND,
+        value="COXPD8",
+        confidence=0.9,
+        evidence_role=EvidenceRole.PHENOTYPE,
+    )
+    discarded = EvidenceItem(
+        field_id="B.disease_diagnosis",
+        category="B",
+        field_name="Disease diagnosis",
+        status=EvidenceStatus.FOUND,
+        value="Anti-NF155 autoimmune nodopathy",
+        confidence=0.9,
+        evidence_role=EvidenceRole.COMPARATOR,
+    )
+    result = EvidenceExtractionResult(
+        status=EvidenceExtractionStatus.COMPLETED,
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        extraction_target=target,
+        evidence_items=[primary],
+        phenotype_evidence=[phenotype],
+        discarded_evidence=[discarded],
+    )
+
+    assert result.phenotype_evidence == [phenotype]
+    assert result.discarded_evidence == [discarded]
+    assert result.evidence_items == [primary]

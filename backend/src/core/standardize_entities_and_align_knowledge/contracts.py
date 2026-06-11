@@ -5,6 +5,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    ExtractionTarget,
+)
+
 
 class EntityType(str, Enum):
     """Supported biomedical entity types for Phase 3 matching."""
@@ -113,6 +117,7 @@ class StandardizationInput:
     candidates: tuple[StandardizationCandidate, ...]
     evidence_items: tuple[Any, ...]
     track_payloads: dict[str, Any] = field(default_factory=dict)
+    extraction_target: ExtractionTarget | None = None
 
 
 @dataclass(frozen=True)
