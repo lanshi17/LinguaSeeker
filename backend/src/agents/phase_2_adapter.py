@@ -146,6 +146,7 @@ class Phase2Adapter:
             dual_documents = await asyncio.to_thread(
                 EvidenceExtractionService.build_dual_documents_from_output_dir,
                 cross_lingual_output.output_dir,
+                state.extraction_target,
             )
 
             # Run dual-track extraction via the service facade
@@ -188,9 +189,9 @@ class Phase2Adapter:
                 summary={
                     "relevant": not both_not_relevant,
                     "source_language": cross_lingual_output.source_language,
+                    "target_gene": state.extraction_target.gene_symbol if state.extraction_target else None,
                 },
             )
-
             logger.info(
                 "Phase 2 completed: run={}, skip_phase_3_reason={}",
                 state.processing_run_id,
