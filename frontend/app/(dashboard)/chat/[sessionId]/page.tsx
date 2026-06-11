@@ -11,7 +11,7 @@ export default async function ChatSessionPage({
   const { sessionId } = await params;
 
   return (
-    <div className="space-y-6">
+    <div className="flex min-h-0 flex-col gap-4">
       <PageHeader title="Chat" description={`Session: ${sessionId}`} />
       <ChatView sessionId={sessionId} />
     </div>

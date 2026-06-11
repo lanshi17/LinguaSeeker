@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   XProvider,
   Bubble,
@@ -12,8 +12,18 @@ import {
 import { useXChat, useXConversations } from "@ant-design/x-sdk";
 import { RobotOutlined, UserOutlined } from "@ant-design/icons";
 import { Avatar, message as antdMessage } from "antd";
-import { createAcmgChatProvider, sendChatMessage } from "../providers/acmgChatProvider";
+import {
+  createAcmgChatProvider,
+  sendChatMessage,
+} from "../providers/acmgChatProvider";
 import { useChatSessions } from "../hooks/useChatSessions";
+import { listMessages } from "../services/chat";
+import {
+  loadActiveChatSession,
+  rememberActiveChatSession,
+  upsertLocalChatSession,
+} from "../utils/localSessions";
+import { toXChatDefaultMessages } from "../utils/messageHistory";
 import {
   PipelineStartForm,
   PipelineStatusCard,
@@ -96,9 +106,8 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     [providerCache],
   );
 
-  const { sessions, createSession, isCreating } = useChatSessions(
-    processingRunId ?? "",
-  );
+  const { sessions, createSession, isCreating } =
+    useChatSessions(processingRunId);
 
   const conversationItems = useMemo(
     () =>
@@ -114,34 +123,70 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     activeConversationKey,
     setActiveConversationKey,
     addConversation,
+    setConversations,
   } = useXConversations({
     defaultConversations: conversationItems,
     defaultActiveConversationKey: sessions[0]?.session_id,
   });
 
+  const handleActiveConversationChange = useCallback(
+    (key: string) => {
+      setActiveConversationKey(key);
+      if (!processingRunId) {
+        rememberActiveChatSession(undefined, key);
+      }
+    },
+    [processingRunId, setActiveConversationKey],
+  );
+
+  useEffect(() => {
+    setConversations(conversationItems);
+
+    const activeExists = conversationItems.some(
+      (item) => item.key === activeConversationKey,
+    );
+    if (activeConversationKey && activeExists) {
+      return;
+    }
+
+    const remembered = !processingRunId ? loadActiveChatSession() : null;
+    const rememberedExists = conversationItems.some(
+      (item) => item.key === remembered,
+    );
+
+    if (remembered && rememberedExists) {
+      handleActiveConversationChange(remembered);
+      return;
+    }
+
+    if (conversationItems[0]) {
+      handleActiveConversationChange(conversationItems[0].key);
+    }
+  }, [
+    activeConversationKey,
+    conversationItems,
+    handleActiveConversationChange,
+    processingRunId,
+    setConversations,
+  ]);
+
   const activeProvider = activeConversationKey
     ? getProvider(activeConversationKey)
     : undefined;
 
-  const { messages, onRequest, isRequesting, abort } = useXChat({
+  const loadDefaultMessages = useCallback(
+    async (info?: { conversationKey?: string }) => {
+      if (!info?.conversationKey) return [];
+      const history = await listMessages(info.conversationKey);
+      return toXChatDefaultMessages(history);
+    },
+    [],
+  );
+
+  const { messages, onRequest, isRequesting, abort, queueRequest } = useXChat({
     provider: activeProvider,
     conversationKey: activeConversationKey,
-    // Parse backend's JSON SSE format: {"type":"text","content":"..."} → "..."
-    parser: (msg) => {
-      if (msg.role !== "assistant" || !msg.content) return msg;
-      try {
-        const parsed = JSON.parse(msg.content);
-        if (parsed.type === "text" && parsed.content) {
-          return { ...msg, content: parsed.content };
-        }
-        if (parsed.type === "error") {
-          return { ...msg, content: `[Error] ${parsed.message}` };
-        }
-      } catch {
-        // Not JSON — use as-is
-      }
-      return msg;
-    },
+    defaultMessages: loadDefaultMessages,
   });
 
   // ── Embedded form state (declared before callbacks that use it) ──
@@ -152,19 +197,66 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     phases?: Record<string, { status: string; duration_seconds?: number | null }>;
   } | null>(null);
 
-  // ── Send message: POST to persist, then stream AI reply ──
+  const createAndActivateSession = useCallback(async (): Promise<string> => {
+    const session = await createSession();
+    const item = {
+      key: session.session_id,
+      label: `Session ${session.session_id.slice(0, 8)}`,
+    };
+
+    addConversation(item);
+    handleActiveConversationChange(session.session_id);
+
+    if (!processingRunId) {
+      upsertLocalChatSession(undefined, session);
+      rememberActiveChatSession(undefined, session.session_id);
+    }
+
+    return session.session_id;
+  }, [
+    addConversation,
+    createSession,
+    handleActiveConversationChange,
+    processingRunId,
+  ]);
+
+  const ensureActiveSession = useCallback(async (): Promise<string> => {
+    if (activeConversationKey) return activeConversationKey;
+    return createAndActivateSession();
+  }, [activeConversationKey, createAndActivateSession]);
+
+  // ── Send message: create session if needed, POST to persist, then stream AI reply ──
   const handleSendMessage = useCallback(
     async (content: string) => {
-      if (!activeConversationKey) return;
+      const trimmed = content.trim();
+      if (!trimmed) return;
+
       setActiveForm(null);
+
       try {
-        await sendChatMessage(activeConversationKey, content);
-        onRequest({ messages: [{ role: "user", content }] });
+        const sessionKey = await ensureActiveSession();
+        await sendChatMessage(sessionKey, trimmed);
+        const request = {
+          messages: [{ role: "user" as const, content: trimmed }],
+        };
+
+        if (sessionKey === activeConversationKey) {
+          onRequest(request);
+          return;
+        }
+
+        queueRequest(sessionKey, request);
       } catch {
         antdMessage.error("Failed to send message");
       }
     },
-    [activeConversationKey, onRequest, setActiveForm],
+    [
+      activeConversationKey,
+      ensureActiveSession,
+      onRequest,
+      queueRequest,
+      setActiveForm,
+    ],
   );
 
   // ── Poll pipeline status ──
@@ -264,6 +356,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         variant: "borderless" as const,
         contentRender: () => (
           <PipelineStartForm
+            defaultSourceType={activeForm === "upload-pdf" ? "local" : "online"}
             onSubmit={handlePipelineSubmit}
             isSubmitting={isRequesting}
           />
@@ -292,15 +385,14 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   }, [messages, activeForm, pipelineStatus, isRequesting, handlePipelineSubmit]);
 
   // ── Prompt click handler ──
-  function handlePromptClick(key: string) {
+  async function handlePromptClick(key: string) {
     if (key === "start-pipeline" || key === "upload-pdf") {
-      // Show embedded form instead of sending a text message
-      setActiveForm(key);
-      const content =
-        key === "start-pipeline"
-          ? "I want to start an evidence extraction pipeline."
-          : "I want to upload a PDF for evidence extraction.";
-      handleSendMessage(content);
+      try {
+        await ensureActiveSession();
+        setActiveForm(key);
+      } catch {
+        antdMessage.error("Failed to create session");
+      }
       return;
     }
 
@@ -311,23 +403,14 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
     const prompt = PROMPT_ITEMS.find((p) => p.key === key);
     if (prompt) {
-      handleSendMessage(prompt.description);
+      void handleSendMessage(prompt.description);
     }
   }
 
   // ── Create session ──
   async function handleCreateSession() {
-    if (!processingRunId) {
-      antdMessage.warning("Start a pipeline first to create a chat session.");
-      return;
-    }
     try {
-      const session = await createSession();
-      addConversation({
-        key: session.session_id,
-        label: `Session ${session.session_id.slice(0, 8)}`,
-      });
-      setActiveConversationKey(session.session_id);
+      await createAndActivateSession();
     } catch {
       antdMessage.error("Failed to create session");
     }
@@ -335,16 +418,13 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
   return (
     <XProvider>
-      <div
-        className="flex rounded-lg border border-gray-200 bg-white"
-        style={{ height: "calc(100vh - 12rem)" }}
-      >
+      <div className="flex min-h-[620px] overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm md:h-[calc(100vh-8.5rem)]">
         {/* Conversation sidebar */}
         <Conversations
           style={{ width: 240, borderRight: "1px solid #f0f0f0" }}
           items={conversations}
           activeKey={activeConversationKey}
-          onActiveChange={setActiveConversationKey}
+          onActiveChange={handleActiveConversationChange}
           creation={{
             onClick: handleCreateSession,
             disabled: isCreating,
@@ -352,19 +432,20 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         />
 
         {/* Main chat area */}
-        <div className="flex flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col">
           {bubbleItems.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center">
+            <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-8 text-center md:px-10">
               <Welcome
                 title="ACMG Lingua Agent"
                 description="I'll guide you through evidence extraction. Upload a paper, search by PMID, or ask me anything about variant classification."
                 variant="borderless"
               />
               <Prompts
+                className="w-full max-w-3xl"
                 items={PROMPT_ITEMS}
                 wrap
                 onItemClick={(info) =>
-                  handlePromptClick(info.data.key as string)
+                  void handlePromptClick(info.data.key as string)
                 }
               />
             </div>
@@ -403,6 +484,7 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
   const { messages, onRequest, isRequesting, abort } = useXChat({
     provider,
     conversationKey: sessionId,
+    defaultMessages: async () => toXChatDefaultMessages(await listMessages(sessionId)),
   });
 
   const bubbleItems = useMemo(
@@ -419,12 +501,9 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
 
   return (
     <XProvider>
-      <div
-        className="flex flex-col rounded-lg border border-gray-200 bg-white"
-        style={{ height: "calc(100vh - 12rem)" }}
-      >
+      <div className="flex min-h-[620px] flex-col overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm md:h-[calc(100vh-8.5rem)]">
         {bubbleItems.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center">
+          <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-8 text-center md:px-10">
             <Welcome
               title="ACMG Lingua Agent"
               description="Ask questions about variant classification, evidence review, or pipeline results."
@@ -447,8 +526,15 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
           loading={isRequesting}
           onCancel={abort}
           onSubmit={async (val) => {
-            await sendChatMessage(sessionId, val);
-            onRequest({ messages: [{ role: "user", content: val }] });
+            const trimmed = val.trim();
+            if (!trimmed) return;
+
+            try {
+              await sendChatMessage(sessionId, trimmed);
+              onRequest({ messages: [{ role: "user", content: trimmed }] });
+            } catch {
+              antdMessage.error("Failed to send message");
+            }
           }}
           placeholder="Ask the ACMG Agent..."
         />

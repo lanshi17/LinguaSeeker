@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -9,6 +9,7 @@ import { Upload, Search } from "lucide-react";
 interface PipelineStartFormProps {
   onSubmit: (data: PipelineFormData) => void;
   isSubmitting?: boolean;
+  defaultSourceType?: "online" | "local";
 }
 
 export interface PipelineFormData {
@@ -27,10 +28,17 @@ export interface PipelineFormData {
 export function PipelineStartForm({
   onSubmit,
   isSubmitting,
+  defaultSourceType = "online",
 }: PipelineStartFormProps) {
-  const [sourceType, setSourceType] = useState<"online" | "local">("online");
+  const [sourceType, setSourceType] = useState<"online" | "local">(
+    defaultSourceType,
+  );
   const [query, setQuery] = useState("");
   const [file, setFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    setSourceType(defaultSourceType);
+  }, [defaultSourceType]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
