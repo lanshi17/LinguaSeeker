@@ -167,9 +167,11 @@ class PipelineRunner:
         task = self._active_tasks.get(processing_run_id)
         return task is not None and not task.done()
 
-    async def recover_orphaned_runs(self) -> int:
+    async def recover_orphaned_runs(self, *, heartbeat_timeout_seconds: int = 300) -> int:
         """Mark runs stuck in non-terminal states as FAILED after server restart."""
-        return await self._persistence.recover_orphaned_runs()
+        return await self._persistence.recover_orphaned_runs(
+            heartbeat_timeout_seconds=heartbeat_timeout_seconds
+        )
 
     async def shutdown(self, timeout: float = 60.0) -> None:
         """Wait for active pipeline tasks to complete before server shutdown.
