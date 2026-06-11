@@ -18,6 +18,10 @@ from src.agents.phase_2_adapter import Phase2Adapter
 def sample_state(tmp_path) -> PipelineGraphState:
     metadata = tmp_path / "metadata.json"
     metadata.write_text(json.dumps({"pages": [], "content_blocks": []}))
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+        ExtractionTarget,
+    )
+
     return PipelineGraphState(
         processing_run_id="run-123",
         source_document_id="doc-456",
@@ -30,7 +34,12 @@ def sample_state(tmp_path) -> PipelineGraphState:
             output_dir=str(tmp_path / "output"),
             images_dir=str(tmp_path / "images"),
         ),
+        extraction_target=ExtractionTarget(
+            gene_symbol="ABCA3",
+            disease_name="ABCA3 deficiency",
+        ),
     )
+
 
 
 @pytest.mark.asyncio
@@ -124,6 +133,9 @@ async def test_phase_2_adapter_success(sample_state: PipelineGraphState):
     assert result_state.phase_2_output is not None
     assert result_state.phase_2_output.source_language == "zh"
     assert isinstance(result_state.phase_2_output, Phase2Output)
+    mock_build.assert_called_once()
+    assert mock_build.call_args.args[1] == sample_state.extraction_target
+
 
 
 @pytest.mark.asyncio

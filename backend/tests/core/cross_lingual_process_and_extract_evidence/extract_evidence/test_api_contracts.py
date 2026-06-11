@@ -9,6 +9,9 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     TrackDocument,
 )
 
+import json
+
+
 
 def test_track_document_carries_minimal_content_blocks():
     doc = TrackDocument(
@@ -87,3 +90,43 @@ def test_result_model_dump_exposes_group_and_chain_fields():
     result = item.model_dump()
 
     assert result["group_id"] == "gene=BRCA1|variant=c.5266dupC"
+def test_build_dual_documents_accepts_extraction_target(tmp_path) -> None:
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
+        EvidenceExtractionService,
+    )
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+        ExtractionTarget,
+    )
+
+    payload = {
+        "metadata": {"doc_id": "doc-target", "source_language": "en"},
+        "formatted_text": "ABCA3 and CFTR are both mentioned.",
+        "blocks": [],
+    }
+    (tmp_path / "original.json").write_text(json.dumps(payload), encoding="utf-8")
+    (tmp_path / "translated.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    target = ExtractionTarget(gene_symbol="ABCA3", disease_name="ABCA3 deficiency")
+    docs = EvidenceExtractionService.build_dual_documents_from_output_dir(tmp_path, target)
+
+    assert docs.original.extraction_target == target
+    assert docs.translated.extraction_target == target
+
+
+def test_build_dual_documents_target_optional(tmp_path) -> None:
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import (
+        EvidenceExtractionService,
+    )
+
+    payload = {
+        "metadata": {"doc_id": "doc-no-target", "source_language": "en"},
+        "formatted_text": "No target.",
+        "blocks": [],
+    }
+    (tmp_path / "original.json").write_text(json.dumps(payload), encoding="utf-8")
+    (tmp_path / "translated.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    docs = EvidenceExtractionService.build_dual_documents_from_output_dir(tmp_path)
+
+    assert docs.original.extraction_target is None
+    assert docs.translated.extraction_target is None
