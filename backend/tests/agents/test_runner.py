@@ -474,10 +474,10 @@ async def test_shutdown_returns_immediately_when_no_active_tasks(
 
 
 @pytest.mark.asyncio
-async def test_shutdown_times_out_on_long_running_tasks(
+async def test_shutdown_cancels_tasks_after_timeout(
     sample_state, mock_semaphore, mock_persistence
 ):
-    """shutdown() should return after timeout even if tasks are still running."""
+    """shutdown() should cancel tasks that exceed the grace timeout."""
     orch = MagicMock()
     task_started = asyncio.Event()
     hang_forever: asyncio.Future[None] = asyncio.get_running_loop().create_future()
@@ -497,15 +497,9 @@ async def test_shutdown_times_out_on_long_running_tasks(
     task = runner.start(sample_state)
     await task_started.wait()
 
-    # Shutdown with very short timeout — should return without blocking
+    # Shutdown with very short timeout — should cancel the hanging task
     await runner.shutdown(timeout=0.1)
 
-    # Task is still running (not cancelled by shutdown)
-    assert not task.done()
-
-    # Cleanup
-    task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        pass
+    # Task should be cancelled and done after shutdown
+    assert task.done()
+    assert task.cancelled()
