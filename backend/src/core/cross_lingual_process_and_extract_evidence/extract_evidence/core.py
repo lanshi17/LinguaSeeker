@@ -1,6 +1,7 @@
 """Deterministic source grounding and quality validation."""
 from __future__ import annotations
 
+import ast
 from dataclasses import dataclass
 import re
 
@@ -12,6 +13,7 @@ from .contracts import (
     EvidenceChain,
     EvidenceItem,
     EvidenceStatus,
+    ExtractionTarget,
     PageSpan,
     QualityIssue,
     QualityReport,
@@ -136,11 +138,11 @@ class EvidenceItemNormalizer:
             EvidenceStatus.TABLE_UNGROUNDED: 1,
             EvidenceStatus.OCR_GAP: 1,
             EvidenceStatus.NOT_FOUND: 0,
+            EvidenceStatus.CONTEXT_CONTAMINATION: 0,
         }
         current_score = (rank[current.status], current.confidence)
         candidate_score = (rank[candidate.status], candidate.confidence)
         return candidate if candidate_score > current_score else current
-
 
 class RawSourceNormalizer:
     """Moves ungrounded LLM sources to raw_source before grounding."""
@@ -170,6 +172,73 @@ class RawSourceNormalizer:
                 "source": None,
             }))
         return normalized
+
+
+class TargetEntityGuard:
+    """Validates primary entity fields against the extraction target."""
+
+    _GUARDED_FIELDS: tuple[str, ...] = ("A.gene_symbol",)
+
+    def apply(
+        self,
+        items: list[EvidenceItem],
+        extraction_target: ExtractionTarget | None,
+    ) -> list[EvidenceItem]:
+        if extraction_target is None:
+            return items
+        return [self._guard_one(item, extraction_target) for item in items]
+
+    def _guard_one(self, item: EvidenceItem, target: ExtractionTarget) -> EvidenceItem:
+        if item.status != EvidenceStatus.FOUND or item.field_id not in self._GUARDED_FIELDS:
+            return item
+        values = self._extract_gene_values(item.value)
+        if len(values) > 1:
+            if target.gene_symbol in values:
+                return item.model_copy(update={
+                    "value": target.gene_symbol,
+                    "notes": self._append_note(item.notes, "target_guard:list_to_target"),
+                })
+            return self._contaminated(
+                item,
+                f"target gene {target.gene_symbol} not in extracted gene list {values}",
+            )
+        actual = values[0] if values else str(item.value or "").strip().upper()
+        if actual != target.gene_symbol:
+            return self._contaminated(
+                item,
+                f"extracted {actual}, expected {target.gene_symbol}",
+            )
+        return item.model_copy(update={"value": target.gene_symbol})
+
+    @staticmethod
+    def _contaminated(item: EvidenceItem, reason: str) -> EvidenceItem:
+        return item.model_copy(update={
+            "status": EvidenceStatus.CONTEXT_CONTAMINATION,
+            "notes": (
+                f"{item.notes}; target_guard:{reason}" if item.notes else f"target_guard:{reason}"
+            ),
+            "assigned_acmg_codes": [],
+            "assigned_clingen_modules": [],
+        })
+
+    @staticmethod
+    def _extract_gene_values(value: object) -> list[str]:
+        if isinstance(value, list):
+            return [str(entry).strip().upper() for entry in value if str(entry).strip()]
+        text = str(value or "").strip()
+        if text.startswith("["):
+            try:
+                parsed = ast.literal_eval(text)
+            except (SyntaxError, ValueError):
+                return [text.upper()]
+            if isinstance(parsed, list):
+                return [str(entry).strip().upper() for entry in parsed if str(entry).strip()]
+        return [text.upper()] if text else []
+
+    @staticmethod
+    def _append_note(existing: str, note: str) -> str:
+        return f"{existing}; {note}" if existing else note
+
 
 
 class FieldValueNormalizer:
@@ -1127,6 +1196,7 @@ class QualityValidator:
         ocr_gap_count = 0
         table_ungrounded_count = 0
         ambiguous_source_count = 0
+        context_contamination_count = 0
 
         for item in items:
             if item.status == EvidenceStatus.FOUND:
@@ -1165,7 +1235,17 @@ class QualityValidator:
                 reason = f"{item.field_id} may require table-path grounding"
                 human_review_reasons.append(reason)
                 human_review_by_category["table_grounding"].append(reason)
-
+            elif item.status == EvidenceStatus.CONTEXT_CONTAMINATION:
+                context_contamination_count += 1
+                reason = f"{item.field_id} rejected as target context contamination: {item.notes}"
+                issues.append(QualityIssue(
+                    issue_type="context_contamination",
+                    field_id=item.field_id,
+                    description=item.notes,
+                    severity="error",
+                ))
+                human_review_reasons.append(reason)
+                human_review_by_category["workflow"].append(reason)
         missing_required = self._required - {
             item.field_id for item in items
             if item.status == EvidenceStatus.FOUND
@@ -1218,6 +1298,7 @@ class QualityValidator:
                 EvidenceStatus.SOURCE_INVALID,
                 EvidenceStatus.OCR_GAP,
                 EvidenceStatus.TABLE_UNGROUNDED,
+                EvidenceStatus.CONTEXT_CONTAMINATION,
             }
             for item in full_chain_items
         ):
@@ -1255,6 +1336,7 @@ class QualityValidator:
             ocr_gap_count=ocr_gap_count,
             table_ungrounded_count=table_ungrounded_count,
             ambiguous_source_count=ambiguous_source_count,
+            context_contamination_count=context_contamination_count,
             human_review_required=len(human_review_reasons) > 0,
             human_review_reasons=human_review_reasons,
             human_review_by_category=human_review_by_category,
