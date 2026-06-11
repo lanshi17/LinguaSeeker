@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+import os
+import socket
 from collections import OrderedDict
 from datetime import datetime, timezone
 from typing import Any
@@ -29,12 +31,16 @@ class PipelineRunner:
         orchestrator: Any,
         semaphore: PipelineSemaphore,
         state_persistence: SessionBoundStatePersistence,
+        worker_id: str | None = None,
+        heartbeat_interval_seconds: float = 15.0,
     ):
         self._orchestrator = orchestrator
         self._semaphore = semaphore
         self._persistence = state_persistence
         self._active_tasks: dict[str, asyncio.Task] = {}
         self._last_states: OrderedDict[str, PipelineGraphState] = OrderedDict()
+        self._worker_id = worker_id or f"{socket.gethostname()}:{os.getpid()}:{id(self)}"
+        self._heartbeat_interval = heartbeat_interval_seconds
 
     def remember_state(self, run_id: str, state: PipelineGraphState) -> None:
         """Store a state in the cache, evicting the oldest if over limit."""
@@ -43,55 +49,82 @@ class PipelineRunner:
         while len(self._last_states) > self._MAX_CACHED_STATES:
             self._last_states.popitem(last=False)
 
-    def start(self, initial_state: PipelineGraphState) -> asyncio.Task:
-        """Start a pipeline run as a background task."""
+    async def start(self, initial_state: PipelineGraphState) -> asyncio.Task:
+        """Start a pipeline run as a background task.
+
+        Performs initial durable claim (with ownership metadata) before scheduling
+        the background task. IntegrityError from the first save propagates to the
+        API route as the race-proof duplicate-source guard.
+        """
         run_id = initial_state.processing_run_id
+        now = datetime.now(timezone.utc)
+
+        # Durable claim: persist initial state with ownership before background task
+        await self._persistence.save(
+            initial_state,
+            owner_worker_id=self._worker_id,
+            heartbeat_at=now,
+        )
+        # Only set initial state in cache if no newer state exists for this run_id
+        if run_id not in self._last_states:
+            self.remember_state(run_id, initial_state)
 
         async def _run_pipeline():
-            # N12 fix: Persist initial PENDING state before acquiring semaphore
-            # so status endpoint can find the run even while queued.
-            await self._persistence.save(initial_state)
-            self.remember_state(run_id, initial_state)
-            async with self._semaphore:
-                logger.info("Pipeline execution started: run={}", run_id)
+            # Heartbeat loop: refresh ownership while pipeline is active
+            heartbeat_task: asyncio.Task | None = None
+            try:
+                async def _heartbeat_loop():
+                    while True:
+                        await asyncio.sleep(self._heartbeat_interval)
+                        await self._persistence.heartbeat(run_id, self._worker_id)
+
+                heartbeat_task = asyncio.create_task(_heartbeat_loop())
+            except Exception:
+                logger.debug("Heartbeat task creation failed for run={}", run_id)
+
+            logger.info("Pipeline execution started: run={}", run_id)
+            try:
+                result = await self._orchestrator.run(initial_state)
+                self.remember_state(run_id, result)
+                logger.info("Pipeline execution completed: run={}", run_id)
+                return result
+            except (Exception, asyncio.CancelledError) as e:
+                is_cancel = isinstance(e, asyncio.CancelledError)
+                log_fn = logger.warning if is_cancel else logger.exception
+                log_fn("Pipeline {}cancelled: run={}", "cancel " if is_cancel else "failed ", run_id)
+                # Use latest cached state as base so error preserves phase outputs
+                last_state = self._last_states.get(run_id)
+                base_state = last_state if last_state is not None else initial_state
+                current_phase = (
+                    base_state.error_phase
+                    if base_state.error_phase is not None
+                    else _derive_error_phase(base_state)
+                )
+                error_state = base_state.model_copy(
+                    update={
+                        "pipeline_status": PipelineStatus.FAILED,
+                        "error_message": f"Pipeline {'cancelled' if is_cancel else 'failed'}: {e}",
+                        "error_phase": current_phase,
+                        "completed_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
+                self.remember_state(run_id, error_state)
                 try:
-                    result = await self._orchestrator.run(initial_state)
-                    self.remember_state(run_id, result)
-                    logger.info("Pipeline execution completed: run={}", run_id)
-                    return result
-                except (Exception, asyncio.CancelledError) as e:
-                    is_cancel = isinstance(e, asyncio.CancelledError)
-                    log_fn = logger.warning if is_cancel else logger.exception
-                    log_fn("Pipeline {}cancelled: run={}", "cancel " if is_cancel else "failed ", run_id)
-                    # Derive the current phase from the last-notified state so the
-                    # error report reflects which phase was actually interrupted.
-                    last_state = self._last_states.get(run_id)
-                    if last_state is not None:
-                        current_phase = (
-                            last_state.error_phase
-                            if last_state.error_phase is not None
-                            else _derive_error_phase(last_state)
-                        )
-                    else:
-                        current_phase = 0
-                    error_state = initial_state.model_copy(
-                        update={
-                            "pipeline_status": PipelineStatus.FAILED,
-                            "error_message": f"Pipeline {'cancelled' if is_cancel else 'failed'}: {e}",
-                            "error_phase": current_phase,
-                            "completed_at": datetime.now(timezone.utc).isoformat(),
-                        }
+                    await self._persistence.save(error_state)
+                except Exception:
+                    logger.exception(
+                        "Failed to persist error state for run={}", run_id
                     )
-                    self.remember_state(run_id, error_state)
+                if is_cancel:
+                    raise
+                return error_state
+            finally:
+                if heartbeat_task is not None:
+                    heartbeat_task.cancel()
                     try:
-                        await self._persistence.save(error_state)
-                    except Exception:
-                        logger.exception(
-                            "Failed to persist error state for run={}", run_id
-                        )
-                    if is_cancel:
-                        raise
-                    return error_state
+                        await heartbeat_task
+                    except (asyncio.CancelledError, Exception):
+                        pass
 
         task = asyncio.create_task(_run_pipeline())
         self._active_tasks[run_id] = task
@@ -114,37 +147,19 @@ class PipelineRunner:
         """Get the last known state for a pipeline run.
 
         Checks in-memory cache first (fast path), then falls back to
-        PostgreSQL for crash recovery scenarios.  If a run loaded from
-        the DB shows an active status but no task is running (server
-        restarted mid-pipeline), it is marked FAILED before returning.
+        PostgreSQL for crash recovery scenarios.  Read-only: never mutates
+        a run loaded from DB — stale active rows are handled by heartbeat
+        recovery, not by GET-triggered writes.
         """
         # Check in-memory first
         cached = self._last_states.get(processing_run_id)
         if cached is not None:
             return cached
 
-        # Fall back to database (crash recovery)
+        # Fall back to database (crash recovery) — read-only
         state = await self._persistence.load(processing_run_id)
-        if state is None:
-            return None
-
-        # Runtime guard: DB says active but no task exists → orphaned run
-        if state.pipeline_status in self._ACTIVE_STATUSES and not self.is_running(processing_run_id):
-            logger.warning(
-                "Orphaned run detected on status poll: run={}, status={}",
-                processing_run_id, state.pipeline_status.value,
-            )
-            state.pipeline_status = PipelineStatus.FAILED
-            state.error_message = "Pipeline interrupted by server restart"
-            state.error_phase = _derive_error_phase(state)
-            state.completed_at = datetime.now(timezone.utc).isoformat()
+        if state is not None:
             self.remember_state(processing_run_id, state)
-            try:
-                await self._persistence.save(state)
-            except Exception:
-                logger.exception("Failed to persist orphaned run state: run={}", processing_run_id)
-            return state
-
         return state
 
     def is_running(self, processing_run_id: str) -> bool:
@@ -187,22 +202,20 @@ class PipelineRunner:
             else:
                 logger.warning("Pipeline run {} still running after shutdown timeout — will be recovered on next start", rid)
 
-    def is_running_for_source(self, source_key: str) -> bool:
+    async def is_running_for_source(self, source_key: str) -> bool:
         """Check if any active run is processing this source key (N3 fix).
 
         Compares against state.source_key (filename or query), not
         source_document_id (UUID), so the API route can dedup by
-        user-visible identifiers.
+        user-visible identifiers.  Falls back to persistence for
+        cross-worker dedup when the in-memory cache misses.
         """
         for run_id, state in self._last_states.items():
             if (
                 state.source_key == source_key
-                # Status check filters out terminal states (COMPLETED/FAILED) so
-                # stale cache entries don't falsely block new submissions.
                 and state.pipeline_status in self._ACTIVE_STATUSES
-                # is_running() is still needed: CancelledError (BaseException)
-                # may leave status as PENDING while the task is already done.
                 and self.is_running(run_id)
             ):
                 return True
-        return False
+        # Cross-worker dedup: check persistence for active source keys
+        return await self._persistence.has_active_source_key(source_key)
