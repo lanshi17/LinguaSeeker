@@ -20,19 +20,14 @@
 
 import { AbstractChatProvider, XRequest } from "@ant-design/x-sdk";
 import type { SSEOutput } from "@ant-design/x-sdk";
-import type {
-  TransformMessage,
-} from "@ant-design/x-sdk/es/chat-providers/AbstractChatProvider";
+import type { TransformMessage } from "@ant-design/x-sdk/es/chat-providers/AbstractChatProvider";
 import { apiClient } from "@/lib/api/client";
-
-/** Message shape used by @ant-design/x Bubble components. */
-interface ChatMessage {
-  role: string;
-  content: string;
-}
+import type { ChatBubbleMessage } from "../utils/messageHistory";
+import { buildAppendMessageBody } from "../utils/messageRequests";
+import { appendAssistantChunk } from "../utils/sse";
 
 interface ChatRequestParams {
-  messages?: ChatMessage[];
+  messages?: ChatBubbleMessage[];
 }
 
 /**
@@ -44,12 +39,16 @@ interface ChatRequestParams {
  * 3. The backend agent (ReasoningLLMProvider) generates a streamed reply
  * 4. Tokens are parsed from the SSE stream and displayed in real-time
  */
-class AcmgChatProvider extends AbstractChatProvider<ChatMessage, unknown, SSEOutput> {
+class AcmgChatProvider extends AbstractChatProvider<
+  ChatBubbleMessage,
+  unknown,
+  SSEOutput
+> {
   private sessionId: string;
 
   constructor(sessionId: string) {
     // Create an XRequest that points to the stream endpoint.
-    // The actual POST happens in transformParams before XRequest runs.
+    // The actual POST happens in ChatView before XRequest runs.
     const baseURL = `/api/v1/chat/sessions/${sessionId}/stream`;
 
     const request = XRequest<unknown, SSEOutput>(baseURL, {
@@ -79,8 +78,8 @@ class AcmgChatProvider extends AbstractChatProvider<ChatMessage, unknown, SSEOut
   /**
    * Called before XRequest.run(). We don't send a body to the stream
    * endpoint — the user message was already persisted via POST.
-   * Return empty params since the stream endpoint uses query params
-   * set by the XRequest configuration.
+   * Return request params so the custom fetch can place the latest user
+   * message into the stream endpoint query string.
    */
   transformParams(requestParams: ChatRequestParams): ChatRequestParams {
     return requestParams;
@@ -89,15 +88,17 @@ class AcmgChatProvider extends AbstractChatProvider<ChatMessage, unknown, SSEOut
   /**
    * Create the local user message for display in the chat bubble.
    */
-  transformLocalMessage(requestParams: ChatRequestParams): ChatMessage {
+  transformLocalMessage(requestParams: ChatRequestParams): ChatBubbleMessage {
     return requestParams.messages?.at(-1) ?? { role: "user", content: "" };
   }
 
   /**
-   * Not used in our flow — the stream handles token accumulation.
+   * Accumulate streamed backend chunks into the visible assistant message.
    */
-  transformMessage(info: TransformMessage<ChatMessage, SSEOutput>): ChatMessage {
-    return info.originMessage ?? { role: "assistant", content: "" };
+  transformMessage(
+    info: TransformMessage<ChatBubbleMessage, SSEOutput>,
+  ): ChatBubbleMessage {
+    return appendAssistantChunk(info.originMessage, info.chunk);
   }
 }
 
@@ -114,7 +115,7 @@ export function createAcmgChatProvider(sessionId: string) {
 }
 
 /**
- * Send a user message to the backend (persist + trigger AI reply).
+ * Send a user message to the backend (persist only).
  * Called by ChatView before opening the SSE stream.
  */
 export async function sendChatMessage(
@@ -122,9 +123,8 @@ export async function sendChatMessage(
   content: string,
   evidenceId?: string,
 ): Promise<void> {
-  await apiClient.post(`/chat/sessions/${sessionId}/messages`, {
-    content,
-    role: "user",
-    ...(evidenceId ? { evidence_id: evidenceId } : {}),
-  });
+  await apiClient.post(
+    `/chat/sessions/${sessionId}/messages`,
+    buildAppendMessageBody(content, evidenceId),
+  );
 }
