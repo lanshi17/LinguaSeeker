@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import uuid
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,25 +19,24 @@ class TestChatSSE:
     async def test_stream_reply_format(self, db_session: AsyncSession) -> None:
         """SSE stream yields properly formatted events."""
         run_id = await self._create_test_run(db_session)
-        service = ChatService(db_session)
-        session = await service.create_session(processing_run_id=run_id, user_id=None)
 
         async def mock_stream(*args, **kwargs):
             yield "The "
             yield "gene "
             yield "is GLA."
 
-        with patch(
-            "src.core.visualize_evidence_with_expert_in_loop.providers.ReasoningLLMProvider.stream",
-            side_effect=mock_stream,
+        provider = MagicMock()
+        provider.stream = mock_stream
+        service = ChatService(db_session, reasoning_provider=provider)
+        session = await service.create_session(processing_run_id=run_id, user_id=None)
+
+        events = []
+        async for event in service.stream_reply(
+            session_id=session.chat_session_id,
+            user_message="What is the gene?",
+            evidence_id=None,
         ):
-            events = []
-            async for event in service.stream_reply(
-                session_id=session.chat_session_id,
-                user_message="What is the gene?",
-                evidence_id=None,
-            ):
-                events.append(event)
+            events.append(event)
 
         text_events = [e for e in events if e["type"] == "text"]
         assert len(text_events) == 3
@@ -51,24 +50,23 @@ class TestChatSSE:
     async def test_stream_reply_error_handling(self, db_session: AsyncSession) -> None:
         """SSE stream yields error event on failure."""
         run_id = await self._create_test_run(db_session)
-        service = ChatService(db_session)
-        session = await service.create_session(processing_run_id=run_id, user_id=None)
 
         async def mock_stream_error(*args, **kwargs):
             raise RuntimeError("LLM timeout")
             yield  # noqa: unreachable  # makes it a generator
 
-        with patch(
-            "src.core.visualize_evidence_with_expert_in_loop.providers.ReasoningLLMProvider.stream",
-            side_effect=mock_stream_error,
+        provider = MagicMock()
+        provider.stream = mock_stream_error
+        service = ChatService(db_session, reasoning_provider=provider)
+        session = await service.create_session(processing_run_id=run_id, user_id=None)
+
+        events = []
+        async for event in service.stream_reply(
+            session_id=session.chat_session_id,
+            user_message="What is the gene?",
+            evidence_id=None,
         ):
-            events = []
-            async for event in service.stream_reply(
-                session_id=session.chat_session_id,
-                user_message="What is the gene?",
-                evidence_id=None,
-            ):
-                events.append(event)
+            events.append(event)
 
         error_events = [e for e in events if e["type"] == "error"]
         assert len(error_events) == 1
@@ -93,22 +91,21 @@ class TestChatSSE:
     async def test_stream_reply_persists_message(self, db_session: AsyncSession) -> None:
         """Streamed AI reply is persisted so it appears in message history."""
         run_id = await self._create_test_run(db_session)
-        service = ChatService(db_session)
-        session = await service.create_session(processing_run_id=run_id, user_id=None)
 
         async def mock_stream(*args, **kwargs):
             yield "The gene is GLA."
 
-        with patch(
-            "src.core.visualize_evidence_with_expert_in_loop.providers.ReasoningLLMProvider.stream",
-            side_effect=mock_stream,
+        provider = MagicMock()
+        provider.stream = mock_stream
+        service = ChatService(db_session, reasoning_provider=provider)
+        session = await service.create_session(processing_run_id=run_id, user_id=None)
+
+        async for _ in service.stream_reply(
+            session_id=session.chat_session_id,
+            user_message="What is the gene?",
+            evidence_id=None,
         ):
-            async for _ in service.stream_reply(
-                session_id=session.chat_session_id,
-                user_message="What is the gene?",
-                evidence_id=None,
-            ):
-                pass
+            pass
 
         messages = await service.list_messages(session_id=session.chat_session_id)
         assistant_msgs = [m for m in messages if m.role == "assistant"]
@@ -118,23 +115,22 @@ class TestChatSSE:
     async def test_stream_reply_error_no_persistence(self, db_session: AsyncSession) -> None:
         """Errored stream does not persist partial reply."""
         run_id = await self._create_test_run(db_session)
-        service = ChatService(db_session)
-        session = await service.create_session(processing_run_id=run_id, user_id=None)
 
         async def mock_stream_error(*args, **kwargs):
             raise RuntimeError("LLM timeout")
             yield  # noqa: unreachable  # makes it a generator
 
-        with patch(
-            "src.core.visualize_evidence_with_expert_in_loop.providers.ReasoningLLMProvider.stream",
-            side_effect=mock_stream_error,
+        provider = MagicMock()
+        provider.stream = mock_stream_error
+        service = ChatService(db_session, reasoning_provider=provider)
+        session = await service.create_session(processing_run_id=run_id, user_id=None)
+
+        async for _ in service.stream_reply(
+            session_id=session.chat_session_id,
+            user_message="What is the gene?",
+            evidence_id=None,
         ):
-            async for _ in service.stream_reply(
-                session_id=session.chat_session_id,
-                user_message="What is the gene?",
-                evidence_id=None,
-            ):
-                pass
+            pass
 
         messages = await service.list_messages(session_id=session.chat_session_id)
         assistant_msgs = [m for m in messages if m.role == "assistant"]

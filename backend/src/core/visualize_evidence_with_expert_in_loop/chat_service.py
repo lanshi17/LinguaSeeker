@@ -107,15 +107,7 @@ class ChatService:
         self._session.add(message)
         await self._session.flush()
 
-        return ChatMessageResponse(
-            message_id=message.message_id,
-            chat_session_id=message.chat_session_id,
-            role=message.role,  # type: ignore[arg-type]
-            content=message.content,
-            evidence_id=message.evidence_id,
-            entity_id=message.entity_id,
-            created_at=message.created_at,
-        )
+        return self._to_message_response(message)
 
     async def list_messages(
         self,
@@ -133,18 +125,7 @@ class ChatService:
         result = await self._session.execute(stmt)
         messages = result.scalars().all()
 
-        return [
-            ChatMessageResponse(
-                message_id=msg.message_id,
-                chat_session_id=msg.chat_session_id,
-                role=msg.role,  # type: ignore[arg-type]
-                content=msg.content,
-                evidence_id=msg.evidence_id,
-                entity_id=msg.entity_id,
-                created_at=msg.created_at,
-            )
-            for msg in messages
-        ]
+        return [self._to_message_response(msg) for msg in messages]
 
     async def list_sessions(
         self,
@@ -184,6 +165,19 @@ class ChatService:
             for session, msg_count in rows
         ]
 
+    @staticmethod
+    def _to_message_response(message: ChatMessage) -> ChatMessageResponse:
+        """Convert a ChatMessage ORM row to a validated API response."""
+        return ChatMessageResponse(
+            message_id=message.message_id,
+            chat_session_id=message.chat_session_id,
+            role=message.role,
+            content=message.content,
+            evidence_id=message.evidence_id,
+            entity_id=message.entity_id,
+            created_at=message.created_at,
+        )
+
     async def _build_evidence_context(
         self,
         *,
@@ -200,7 +194,14 @@ class ChatService:
             CanonicalEvidenceItem.canonical_evidence_id == canonical_evidence_id
         )
         result = await self._session.execute(stmt)
-        evidence = result.scalar_one()
+        evidence = result.scalar_one_or_none()
+
+        if evidence is None:
+            logger.warning(
+                "Chat evidence context requested for missing canonical evidence: {}",
+                canonical_evidence_id,
+            )
+            return ""
 
         payload = evidence.active_payload
         best_run_id = evidence.current_best_run_evidence_id
