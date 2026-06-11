@@ -12,6 +12,7 @@
   },
   "include": [
     "tests/**/*.test.ts",
-    "src/features/evidence-search/**/*.ts"
+    "src/features/evidence-search/**/*.ts",
+    "src/lib/**/*.ts"
   ]
 }
