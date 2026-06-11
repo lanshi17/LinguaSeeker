@@ -56,6 +56,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | Date | Title | Status |
 |------|-------|--------|
 | 2026-06-10 | [ClinGen Batch Regression Extraction Quality](plans/2026-06-10-clingen-batch-regression-extraction-quality.md) | planned |
+| 2026-06-11 | [VS Code Settings Sync Profiles](plans/2026-06-11-vscode-settings-sync-profiles.md) | planned |
 
 ## Diagrams
 
