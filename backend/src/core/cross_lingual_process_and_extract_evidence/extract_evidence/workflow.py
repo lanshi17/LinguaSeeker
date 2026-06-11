@@ -7,27 +7,27 @@ Name mapping:
 """
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from langgraph.graph import END, StateGraph
 from loguru import logger
-
 from .contracts import (
     EvidenceExtractionState,
     EvidenceExtractionStatus,
     TrackDocument,
 )
 from .chunking import DEFAULT_INPUT_BUDGET_TOKENS
-from .core import EvidenceChainBuilder
+from .core import EvidenceChainBuilder, TargetEntityGuard
 from .normalization import AcmgEvidenceValueNormalizer
 from .providers import LangChainEvidenceProvider
 from .stages.catalog_extraction import CatalogExtractionStage
 from .stages.evidence_map import RelevanceScanStage
 from .stages.group_assignment import GroupAssignmentStage
 from .stages.quality_validation import QualityGateStage
+from .stages.role_routing import EvidenceRoleRouter
 from .stages.source_grounding import SourceGroundingStage
 from .stages.special_evidence import SpecialEvidenceStage
-
 
 class EvidenceExtractionWorkflow:
     """LangGraph workflow for block-aware evidence extraction."""
@@ -45,6 +45,8 @@ class EvidenceExtractionWorkflow:
         self._source_grounding = SourceGroundingStage()
         self._quality_gate = QualityGateStage()
         self._chain_builder = EvidenceChainBuilder()
+        self._role_router = EvidenceRoleRouter()
+        self._target_guard = TargetEntityGuard()
         self._graph = self._build_graph()
         self._async_graph = self._build_async_graph()
 
@@ -92,10 +94,25 @@ class EvidenceExtractionWorkflow:
         state.special_evidence = grouped_special
         return state
 
+    def _node_role_routing(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        primary, phenotype, discarded = self._role_router.route(state.evidence_items)
+        state.evidence_items = primary
+        state.phenotype_evidence = phenotype
+        state.discarded_evidence = discarded
+        return state
+
+
     def _node_value_normalization(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         items, issues = self._value_normalizer.normalize(state.evidence_items)
         state.evidence_items = items
         state.normalization_issues = [*state.normalization_issues, *issues]
+        return state
+
+    def _node_target_guard(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        state.evidence_items = self._target_guard.apply(
+            state.evidence_items,
+            state.document.extraction_target,
+        )
         return state
 
     def _node_source_grounding(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
@@ -107,6 +124,7 @@ class EvidenceExtractionWorkflow:
         state.evidence_items = grounded_items
         state.special_evidence = grounded_special
         return state
+
 
     def _node_chain_assembly(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         state.evidence_chains = self._chain_builder.build(state.evidence_items, state.special_evidence)
@@ -135,7 +153,9 @@ class EvidenceExtractionWorkflow:
         graph.add_node("catalog_extraction", self._node_catalog_extraction)
         graph.add_node("special_evidence", self._node_special_evidence)
         graph.add_node("group_assignment", self._node_group_assignment)
+        graph.add_node("role_routing", self._node_role_routing)
         graph.add_node("value_normalization", self._node_value_normalization)
+        graph.add_node("target_guard", self._node_target_guard)
         graph.add_node("source_grounding", self._node_source_grounding)
         graph.add_node("chain_assembly", self._node_chain_assembly)
         graph.add_node("quality_gate", self._node_quality_gate)
@@ -149,8 +169,10 @@ class EvidenceExtractionWorkflow:
         )
         graph.add_edge("catalog_extraction", "special_evidence")
         graph.add_edge("special_evidence", "group_assignment")
-        graph.add_edge("group_assignment", "value_normalization")
-        graph.add_edge("value_normalization", "source_grounding")
+        graph.add_edge("group_assignment", "role_routing")
+        graph.add_edge("role_routing", "value_normalization")
+        graph.add_edge("value_normalization", "target_guard")
+        graph.add_edge("target_guard", "source_grounding")
         graph.add_edge("source_grounding", "chain_assembly")
         graph.add_edge("chain_assembly", "quality_gate")
         graph.add_edge("quality_gate", END)
@@ -166,7 +188,9 @@ class EvidenceExtractionWorkflow:
         graph.add_node("catalog_extraction", self._async_node_catalog_extraction)
         graph.add_node("special_evidence", self._async_node_special_evidence)
         graph.add_node("group_assignment", self._node_group_assignment)
+        graph.add_node("role_routing", self._node_role_routing)
         graph.add_node("value_normalization", self._node_value_normalization)
+        graph.add_node("target_guard", self._node_target_guard)
         graph.add_node("source_grounding", self._node_source_grounding)
         graph.add_node("chain_assembly", self._node_chain_assembly)
         graph.add_node("quality_gate", self._node_quality_gate)
@@ -180,8 +204,10 @@ class EvidenceExtractionWorkflow:
         )
         graph.add_edge("catalog_extraction", "special_evidence")
         graph.add_edge("special_evidence", "group_assignment")
-        graph.add_edge("group_assignment", "value_normalization")
-        graph.add_edge("value_normalization", "source_grounding")
+        graph.add_edge("group_assignment", "role_routing")
+        graph.add_edge("role_routing", "value_normalization")
+        graph.add_edge("value_normalization", "target_guard")
+        graph.add_edge("target_guard", "source_grounding")
         graph.add_edge("source_grounding", "chain_assembly")
         graph.add_edge("chain_assembly", "quality_gate")
         graph.add_edge("quality_gate", END)
@@ -189,9 +215,8 @@ class EvidenceExtractionWorkflow:
 
         return graph.compile()
 
-    async def run(self, document: TrackDocument) -> EvidenceExtractionState:
-        import asyncio
 
+    async def run(self, document: TrackDocument) -> EvidenceExtractionState:
         initial_state = EvidenceExtractionState(document=document)
         try:
             loop = asyncio.get_running_loop()

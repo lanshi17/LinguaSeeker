@@ -159,6 +159,7 @@ def _item_rank(item: EvidenceItem) -> tuple[int, float]:
         EvidenceStatus.TABLE_UNGROUNDED: 1,
         EvidenceStatus.OCR_GAP: 1,
         EvidenceStatus.NOT_FOUND: 0,
+        EvidenceStatus.CONTEXT_CONTAMINATION: 0,
     }
     return (status_rank[item.status], item.confidence)
 

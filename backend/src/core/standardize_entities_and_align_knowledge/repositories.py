@@ -21,6 +21,7 @@ from src.core.standardize_entities_and_align_knowledge.contracts import (
 from src.core.standardize_entities_and_align_knowledge.importers import ImportBatch
 from src.core.standardize_entities_and_align_knowledge.normalizers import (
     make_entity_scope_hash,
+    make_target_scope_bindings,
     normalize_disease_lookup_text,
     normalize_gene_symbol,
     normalize_lookup_text,
@@ -831,7 +832,7 @@ class StandardizationRepository:
     ) -> tuple[str, ...]:
         """Insert run-level evidence items."""
         self._run_item_rows = []
-        scope_hashes = self._build_chain_scope_hashes(matches)
+        scope_hashes = self._build_chain_scope_hashes(input_data, matches)
         record_specs = self._build_run_item_specs(input_data, matches, scope_hashes)
         run_items: list[RunEvidenceItem] = []
 
@@ -1106,18 +1107,19 @@ class StandardizationRepository:
     def _json_text(self, payload: Any) -> str:
         """Serialize staging payloads for COPY temp tables."""
         return json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str)
-
     def _build_chain_scope_hashes(
         self,
+        input_data: StandardizationInput,
         matches: tuple[EntityMatch, ...],
     ) -> dict[str, str]:
         """Build chain-level scope hashes from the current entity matches."""
+        target_bindings = make_target_scope_bindings(input_data.extraction_target)
         grouped: dict[str, list[tuple[str, str]]] = defaultdict(list)
         for match in matches:
             identity = match.external_id or match.candidate.raw_text
             grouped[match.candidate.chain_id].append((match.candidate.role.value, identity))
         return {
-            chain_id: make_entity_scope_hash(bindings)
+            chain_id: make_entity_scope_hash([*target_bindings, *bindings])
             for chain_id, bindings in grouped.items()
         }
 
@@ -1128,6 +1130,7 @@ class StandardizationRepository:
         scope_hashes: dict[str, str],
     ) -> list[RunItemSpec]:
         """Build run-item persistence specs from track payloads or match fallbacks."""
+        target_scope_hash = make_entity_scope_hash(make_target_scope_bindings(input_data.extraction_target))
         specs: list[RunItemSpec] = []
         for payload in input_data.track_payloads.values():
             if not isinstance(payload, dict):
@@ -1157,13 +1160,12 @@ class StandardizationRepository:
                         ),
                         text_hash=self._hash_payload(item.get("value")),
                         source_span=item.get("source") if isinstance(item.get("source"), dict) else {},
-                        entity_scope_hash=scope_hashes.get(group_id, make_entity_scope_hash([])),
+                        entity_scope_hash=scope_hashes.get(group_id, target_scope_hash),
                         raw_payload=item,
                     ),
                 )
         if specs:
             return specs
-
         for match in matches:
             status = "found" if match.status == MatchStatus.STANDARDIZED else "not_found"
             value = {
@@ -1183,7 +1185,7 @@ class StandardizationRepository:
                     position_hash=self._hash_payload({"candidate_id": match.candidate.candidate_id}),
                     text_hash=self._hash_payload(match.candidate.raw_text),
                     source_span={},
-                    entity_scope_hash=scope_hashes.get(match.candidate.chain_id, make_entity_scope_hash([])),
+                    entity_scope_hash=scope_hashes.get(match.candidate.chain_id, target_scope_hash),
                     raw_payload={
                         "candidate_id": match.candidate.candidate_id,
                         "rationale": match.rationale,
@@ -1191,7 +1193,6 @@ class StandardizationRepository:
                 ),
             )
         return specs
-
     def _related_run_rows(self, match: EntityMatch) -> list[RunEvidenceItem]:
         """Return run evidence rows related to the current entity match."""
         related = [
