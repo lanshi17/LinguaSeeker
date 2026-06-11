@@ -189,7 +189,7 @@ def test_head_revision_points_to_terminology_schema() -> None:
 
 
 def test_head_revision_points_to_pipeline_status_extraction() -> None:
-    """The Alembic head is the pipeline_status column extraction migration."""
+    """The Alembic head is the pipeline run leases migration."""
     backend_str = str(BACKEND_DIR)
     if backend_str not in sys.path:
         sys.path.insert(0, backend_str)
@@ -204,8 +204,26 @@ def test_head_revision_points_to_pipeline_status_extraction() -> None:
     head = script.get_revision("head")
 
     assert head is not None
-    assert head.revision == "extract_pipeline_status_20260608"
-    assert head.down_revision == "reviewed_unmappable_20260608"
+    assert head.revision == "pipeline_run_leases_20260611"
+    assert head.down_revision == "add_created_at_search_idx"
+
+
+def test_pipeline_run_leases_migration_chain() -> None:
+    """The pipeline run leases migration chains after add_created_at_search_idx."""
+    backend_str = str(BACKEND_DIR)
+    if backend_str not in sys.path:
+        sys.path.insert(0, backend_str)
+
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    config = Config(str(ALEMBIC_INI))
+    config.set_main_option("script_location", str(MIGRATIONS_DIR))
+    script = ScriptDirectory.from_config(config)
+
+    lease_revision = script.get_revision("pipeline_run_leases_20260611")
+    assert lease_revision is not None
+    assert lease_revision.down_revision == "add_created_at_search_idx"
 
 
 def test_schema_hardening_migration_chain() -> None:
