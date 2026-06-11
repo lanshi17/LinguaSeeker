@@ -16,7 +16,7 @@ from ..chunking import (
     build_block_prompt_chunks,
     merge_sparse_evidence_items,
 )
-from ..contracts import DocumentEvidenceMap, EvidenceItem, Track, TrackDocument
+from ..contracts import DocumentEvidenceMap, EvidenceItem, ExtractionTarget, Track, TrackDocument
 from ..core import FieldValueNormalizer, RawSourceNormalizer
 from ..prompts import get_catalog_extraction_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
@@ -41,13 +41,14 @@ class CatalogExtractionStage:
         # Use catalog groups for parallel extraction; fall back to full catalog
         self._catalog_groups: dict[str, tuple] = dict(CATALOG_GROUPS) if CATALOG_GROUPS else {"full": EVIDENCE_FIELD_SPECS}
 
-    def _max_group_overhead(self, summary: str) -> int:
+    def _max_group_overhead(self, summary: str, extraction_target: ExtractionTarget | None) -> int:
         """Estimate the maximum prompt overhead across all catalog groups."""
         max_overhead = 0
         for catalog in self._catalog_groups.values():
             overhead = estimate_tokens(get_catalog_extraction_prompt(
                 document_id="", track=Track.ORIGINAL, text="",
                 catalog=catalog, evidence_map_summary=summary,
+                extraction_target=extraction_target,
             ))
             max_overhead = max(max_overhead, overhead)
         return max_overhead
@@ -58,7 +59,7 @@ class CatalogExtractionStage:
         evidence_map: DocumentEvidenceMap,
     ) -> list[EvidenceItem]:
         summary = self._summarize_map(evidence_map)
-        overhead = self._max_group_overhead(summary)
+        overhead = self._max_group_overhead(summary, document.extraction_target)
         chunks = build_block_prompt_chunks(
             document,
             input_budget_tokens=self._input_budget_tokens,
@@ -74,6 +75,7 @@ class CatalogExtractionStage:
                     text=chunk.text,
                     catalog=catalog,
                     evidence_map_summary=chunk_summary,
+                    extraction_target=document.extraction_target,
                 )
                 stage = self._stage_name(chunk, group_name)
                 items = self._provider.invoke_structured(
@@ -92,9 +94,8 @@ class CatalogExtractionStage:
         document: TrackDocument,
         evidence_map: DocumentEvidenceMap,
     ) -> list[EvidenceItem]:
-        """Async version — runs chunk × group LLM calls concurrently."""
         summary = self._summarize_map(evidence_map)
-        overhead = self._max_group_overhead(summary)
+        overhead = self._max_group_overhead(summary, document.extraction_target)
         chunks = build_block_prompt_chunks(
             document,
             input_budget_tokens=self._input_budget_tokens,
@@ -111,6 +112,7 @@ class CatalogExtractionStage:
                 text=chunk.text,
                 catalog=catalog,
                 evidence_map_summary=chunk_summary,
+                extraction_target=document.extraction_target,
             )
             stage = self._stage_name(chunk, group_name)
             async with sem:
