@@ -25,9 +25,9 @@ from .stages.catalog_extraction import CatalogExtractionStage
 from .stages.evidence_map import RelevanceScanStage
 from .stages.group_assignment import GroupAssignmentStage
 from .stages.quality_validation import QualityGateStage
+from .stages.role_routing import EvidenceRoleRouter
 from .stages.source_grounding import SourceGroundingStage
 from .stages.special_evidence import SpecialEvidenceStage
-
 
 class EvidenceExtractionWorkflow:
     """LangGraph workflow for block-aware evidence extraction."""
@@ -45,6 +45,7 @@ class EvidenceExtractionWorkflow:
         self._source_grounding = SourceGroundingStage()
         self._quality_gate = QualityGateStage()
         self._chain_builder = EvidenceChainBuilder()
+        self._role_router = EvidenceRoleRouter()
         self._graph = self._build_graph()
         self._async_graph = self._build_async_graph()
 
@@ -92,6 +93,13 @@ class EvidenceExtractionWorkflow:
         state.special_evidence = grouped_special
         return state
 
+    def _node_role_routing(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        primary, phenotype, discarded = self._role_router.route(state.evidence_items)
+        state.evidence_items = primary
+        state.phenotype_evidence = phenotype
+        state.discarded_evidence = discarded
+        return state
+
     def _node_value_normalization(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         items, issues = self._value_normalizer.normalize(state.evidence_items)
         state.evidence_items = items
@@ -135,6 +143,7 @@ class EvidenceExtractionWorkflow:
         graph.add_node("catalog_extraction", self._node_catalog_extraction)
         graph.add_node("special_evidence", self._node_special_evidence)
         graph.add_node("group_assignment", self._node_group_assignment)
+        graph.add_node("role_routing", self._node_role_routing)
         graph.add_node("value_normalization", self._node_value_normalization)
         graph.add_node("source_grounding", self._node_source_grounding)
         graph.add_node("chain_assembly", self._node_chain_assembly)
@@ -149,7 +158,8 @@ class EvidenceExtractionWorkflow:
         )
         graph.add_edge("catalog_extraction", "special_evidence")
         graph.add_edge("special_evidence", "group_assignment")
-        graph.add_edge("group_assignment", "value_normalization")
+        graph.add_edge("group_assignment", "role_routing")
+        graph.add_edge("role_routing", "value_normalization")
         graph.add_edge("value_normalization", "source_grounding")
         graph.add_edge("source_grounding", "chain_assembly")
         graph.add_edge("chain_assembly", "quality_gate")
@@ -166,6 +176,7 @@ class EvidenceExtractionWorkflow:
         graph.add_node("catalog_extraction", self._async_node_catalog_extraction)
         graph.add_node("special_evidence", self._async_node_special_evidence)
         graph.add_node("group_assignment", self._node_group_assignment)
+        graph.add_node("role_routing", self._node_role_routing)
         graph.add_node("value_normalization", self._node_value_normalization)
         graph.add_node("source_grounding", self._node_source_grounding)
         graph.add_node("chain_assembly", self._node_chain_assembly)
@@ -180,7 +191,8 @@ class EvidenceExtractionWorkflow:
         )
         graph.add_edge("catalog_extraction", "special_evidence")
         graph.add_edge("special_evidence", "group_assignment")
-        graph.add_edge("group_assignment", "value_normalization")
+        graph.add_edge("group_assignment", "role_routing")
+        graph.add_edge("role_routing", "value_normalization")
         graph.add_edge("value_normalization", "source_grounding")
         graph.add_edge("source_grounding", "chain_assembly")
         graph.add_edge("chain_assembly", "quality_gate")
