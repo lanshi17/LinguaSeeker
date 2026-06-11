@@ -1,7 +1,9 @@
 """Tests for ClinGen layer-3 value matching."""
 from __future__ import annotations
 
-from benchmark.layer3.evaluate import compare_evidence, fuzzy_match_value
+import pytest
+
+from benchmark.layer3.evaluate import compare_evidence, fuzzy_match_value, submit_and_poll
 
 
 def test_fuzzy_match_value_treats_dash_variants_as_equivalent() -> None:
@@ -44,3 +46,48 @@ def test_compare_evidence_deduplicates_extra_found_values() -> None:
     matches = compare_evidence(expected, extracted)
 
     assert matches[0].extra_found_values == ["BRCA1"]
+
+
+class FakePipelineClient:
+    def __init__(self) -> None:
+        self.post_payloads = []
+
+    async def post(self, url: str, json: dict, timeout: float):  # noqa: ANN001
+        self.post_payloads.append(json)
+        return FakeResponse(202, {"status_url": "/status"})
+
+    async def get(self, url: str, timeout: float):  # noqa: ANN001
+        return FakeResponse(200, {"pipeline_status": "completed"})
+
+
+class FakeResponse:
+    def __init__(self, status_code: int, payload: dict) -> None:
+        self.status_code = status_code
+        self._payload = payload
+
+    def raise_for_status(self) -> None:
+        return None
+
+    def json(self) -> dict:
+        return self._payload
+
+
+@pytest.mark.asyncio
+async def test_submit_and_poll_sends_extraction_target(monkeypatch) -> None:
+    monkeypatch.setattr("benchmark.layer3.evaluate.POLL_INTERVAL_S", 0)
+    client = FakePipelineClient()
+
+    await submit_and_poll(
+        client,
+        "http://test",
+        pdf_bytes=None,
+        filename="clingen_002.md",
+        pre_parsed_markdown="ABCA3 text",
+        extraction_target={
+            "gene_symbol": "ABCA3",
+            "disease_name": "interstitial lung disease due to ABCA3 deficiency",
+            "clingen_entry_id": "clingen_002",
+        },
+    )
+
+    assert client.post_payloads[0]["target"]["gene_symbol"] == "ABCA3"
