@@ -356,3 +356,18 @@ def test_normalizer_keeps_source_invalid_without_source_invalid():
 
     assert diagnosis.status == EvidenceStatus.SOURCE_INVALID
     assert diagnosis.value == "Diagnosis confirmed by genetic testing and clinical features"
+
+def test_quality_validation_counts_context_contamination():
+    item = EvidenceItem(
+        field_id="A.gene_symbol",
+        category="A",
+        field_name="Gene symbol",
+        status=EvidenceStatus.CONTEXT_CONTAMINATION,
+        value="CFTR",
+        confidence=0.8,
+    )
+
+    report = QualityValidator(required_field_ids={"A.gene_symbol"}).validate([item], contradictions=[])
+
+    assert report.context_contamination_count == 1
+    assert report.scorable is False

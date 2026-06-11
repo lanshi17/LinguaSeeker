@@ -678,3 +678,12 @@ async def test_upsert_normalized_entity_persists_similarity_rationale() -> None:
     assert normalized_entity.raw_payload["match_method"] == "similarity"
     assert normalized_entity.raw_payload["similarity_score"] == 0.91
     assert normalized_entity.raw_payload["semantic_candidates"][0]["external_id"] == "HGNC:1100"
+
+
+
+def test_context_contamination_is_not_canonical_eligible() -> None:
+    from src.core.standardize_entities_and_align_knowledge.repositories import (
+        CANONICAL_ELIGIBLE_STATUSES,
+    )
+
+    assert "context_contamination" not in CANONICAL_ELIGIBLE_STATUSES
