@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from src.core.standardize_entities_and_align_knowledge.normalizers import (
     make_entity_scope_hash,
+    make_target_scope_bindings,
     normalize_disease_lookup_text,
     normalize_gene_symbol,
     normalize_lookup_text,
@@ -95,3 +96,16 @@ def test_normalize_disease_lookup_text_passes_through_english() -> None:
 def test_normalize_disease_lookup_text_passes_through_unknown_chinese() -> None:
     """Unknown Chinese disease names pass through as normalized lookup text."""
     assert normalize_disease_lookup_text("未知疾病") == "未知疾病"
+
+
+def test_target_scope_bindings_change_entity_scope_hash() -> None:
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+        ExtractionTarget,
+    )
+    abca3 = ExtractionTarget(gene_symbol="ABCA3", disease_name="ABCA3 deficiency")
+    cftr = ExtractionTarget(gene_symbol="CFTR", disease_name="cystic fibrosis")
+    entity_bindings = [("subject", "HGNC:33"), ("context", "MONDO:0000001")]
+
+    assert make_entity_scope_hash([*make_target_scope_bindings(abca3), *entity_bindings]) != (
+        make_entity_scope_hash([*make_target_scope_bindings(cftr), *entity_bindings])
+    )

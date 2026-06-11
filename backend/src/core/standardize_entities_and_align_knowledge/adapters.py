@@ -9,6 +9,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     EvidenceExtractionResult,
     EvidenceItem,
     EvidenceStatus,
+    ExtractionTarget,
 )
 from src.core.standardize_entities_and_align_knowledge.contracts import (
     BindingRole,
@@ -55,6 +56,9 @@ class DualResultAdapter:
         for track_result in (result.original_result, result.translated_result):
             self._add_chain_candidates(track_result, candidates, seen)
             self._add_phenotype_candidates(track_result, candidates, seen)
+            self._add_phenotype_evidence_candidates(track_result, candidates, seen)
+
+        extraction_target = result.original_result.extraction_target or result.translated_result.extraction_target
 
         return StandardizationInput(
             document_id=result.document_id,
@@ -66,6 +70,7 @@ class DualResultAdapter:
                 "original": result.original_result.model_dump(mode="json"),
                 "translated": result.translated_result.model_dump(mode="json"),
             },
+            extraction_target=extraction_target,
         )
 
     def _add_chain_candidates(
@@ -111,6 +116,27 @@ class DualResultAdapter:
         """Extract phenotype candidates from supported phenotype evidence fields."""
         for item in result.evidence_items:
             if item.status != EvidenceStatus.FOUND or item.field_id not in PHENOTYPE_FIELD_IDS:
+                continue
+            for raw_text in self._extract_field_values(item):
+                self._append_candidate(
+                    candidates,
+                    seen,
+                    entity_type=EntityType.PHENOTYPE,
+                    raw_text=raw_text,
+                    chain_id=item.group_id or item.field_id,
+                    track=result.track.value,
+                    field_id=item.field_id,
+                )
+
+    def _add_phenotype_evidence_candidates(
+        self,
+        result: EvidenceExtractionResult,
+        candidates: list[StandardizationCandidate],
+        seen: set[tuple[EntityType, str, str]],
+    ) -> None:
+        """Extract phenotype candidates from explicit phenotype_evidence items."""
+        for item in result.phenotype_evidence:
+            if item.status != EvidenceStatus.FOUND:
                 continue
             for raw_text in self._extract_field_values(item):
                 self._append_candidate(
