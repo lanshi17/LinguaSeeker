@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import uuid
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,6 +27,19 @@ class TestChatAI:
 
         assert "GLA" in context
         assert "Fabry disease" in context
+        assert "Patient diagnosed with Fabry disease" in context
+
+    async def test_build_evidence_context_missing_evidence_returns_empty(
+        self, db_session: AsyncSession
+    ) -> None:
+        """Missing evidence IDs should not raise NoResultFound."""
+        service = ChatService(db_session)
+
+        context = await service._build_evidence_context(
+            canonical_evidence_id=uuid.uuid4()
+        )
+
+        assert context == ""
 
     async def test_detect_intent_question(self, db_session: AsyncSession) -> None:
         """Pure question triggers AI reply."""
@@ -50,23 +63,23 @@ class TestChatAI:
         """AI generates reply for questions."""
         evidence_id = await self._create_evidence_with_bindings(db_session)
         run_id = await self._create_test_run(db_session)
-        service = ChatService(db_session)
+        provider = MagicMock()
+        provider.generate = AsyncMock(return_value="The gene is GLA.")
+        service = ChatService(db_session, reasoning_provider=provider)
         session = await service.create_session(processing_run_id=run_id, user_id=None)
 
-        with patch(
-            "src.core.visualize_evidence_with_expert_in_loop.providers.ReasoningLLMProvider.generate",
-            new_callable=AsyncMock,
-        ) as mock_llm:
-            mock_llm.return_value = "The gene is GLA."
-            reply = await service.generate_reply(
-                session_id=session.chat_session_id,
-                user_message="What is the gene?",
-                evidence_id=evidence_id,
-            )
+        reply = await service.generate_reply(
+            session_id=session.chat_session_id,
+            user_message="What is the gene?",
+            evidence_id=evidence_id,
+        )
 
         assert reply is not None
         assert "GLA" in reply
-        mock_llm.assert_called_once()
+        provider.generate.assert_awaited_once()
+        kwargs = provider.generate.await_args.kwargs
+        assert "Evidence Card" in kwargs["context"]
+        assert "GLA" in kwargs["context"]
 
     async def test_generate_reply_note(self, db_session: AsyncSession) -> None:
         """Note does not generate AI reply."""
@@ -105,6 +118,28 @@ class TestChatAI:
         session.add(run)
         await session.flush()
 
+        run_item = RunEvidenceItem(
+            run_evidence_item_id=uuid.uuid4(),
+            processing_run_id=run.processing_run_id,
+            source_document_id=doc.source_document_id,
+            track="original",
+            field_id="A.test.1",
+            status="found",
+            value={},
+            confidence=0.95,
+            position_hash="pos1",
+            text_hash="txt1",
+            entity_scope_hash="scope1",
+            source_span={
+                "text_snippet": "Patient diagnosed with Fabry disease at age 30.",
+                "start_offset": 0,
+                "end_offset": 50,
+                "page": 1,
+            },
+        )
+        session.add(run_item)
+        await session.flush()
+
         evidence = CanonicalEvidenceItem(
             canonical_evidence_id=uuid.uuid4(),
             source_document_id=doc.source_document_id,
@@ -112,6 +147,7 @@ class TestChatAI:
             position_hash="abc",
             text_hash="def",
             entity_scope_hash="ghi",
+            current_best_run_evidence_id=run_item.run_evidence_item_id,
             current_best_status="found",
             review_status="provisional",
             active_payload={
@@ -132,28 +168,6 @@ class TestChatAI:
             standardization_status="standardized",
         )
         session.add(entity)
-        await session.flush()
-
-        run_item = RunEvidenceItem(
-            run_evidence_item_id=uuid.uuid4(),
-            processing_run_id=run.processing_run_id,
-            source_document_id=doc.source_document_id,
-            canonical_evidence_id=evidence.canonical_evidence_id,
-            track="original",
-            field_id="A.test.1",
-            status="found",
-            value={},
-            position_hash="pos1",
-            text_hash="txt1",
-            entity_scope_hash="scope1",
-            source_span={
-                "text_snippet": "Patient diagnosed with Fabry disease at age 30.",
-                "start_offset": 0,
-                "end_offset": 50,
-                "page": 1,
-            },
-        )
-        session.add(run_item)
         await session.flush()
 
         binding = EvidenceEntityBinding(

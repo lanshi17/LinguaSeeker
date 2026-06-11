@@ -161,6 +161,14 @@ class ChatMessageResponse(BaseModel):
     entity_id: UUID | None
     created_at: datetime
 
+    @field_validator("role", mode="before")
+    @classmethod
+    def validate_role(cls, v: object) -> object:
+        """Validate ORM string roles before Literal coercion."""
+        if not isinstance(v, str) or v not in {"user", "assistant"}:
+            raise ValueError("role must be 'user' or 'assistant'")
+        return v
+
 
 class PatchResultResponse(BaseModel):
     """API response for PATCH /evidence."""
