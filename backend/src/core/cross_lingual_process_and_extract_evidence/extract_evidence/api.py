@@ -12,6 +12,7 @@ from .contracts import (
     DualEvidenceExtractionResult,
     DualTrackDocuments,
     EvidenceExtractionResult,
+    ExtractionTarget,
     PageSpan,
     Track,
     TrackDocument,
@@ -52,6 +53,9 @@ class EvidenceExtractionService:
             special_evidence=state.special_evidence,
             quality_report=state.quality_report,
             normalization_issues=state.normalization_issues,
+            extraction_target=document.extraction_target,
+            phenotype_evidence=state.phenotype_evidence,
+            discarded_evidence=state.discarded_evidence,
         )
 
     async def run_dual(self, documents: DualTrackDocuments) -> DualEvidenceExtractionResult:
@@ -86,10 +90,15 @@ class EvidenceExtractionService:
         )
 
     @staticmethod
-    def build_dual_documents_from_output_dir(output_dir: str | Path) -> DualTrackDocuments:
+    def build_dual_documents_from_output_dir(
+        output_dir: str | Path,
+        extraction_target: ExtractionTarget | None = None,
+    ) -> DualTrackDocuments:
         base = Path(output_dir)
-        original = _build_track_document_from_json(base / "original.json", Track.ORIGINAL)
-        translated = _build_track_document_from_json(base / "translated.json", Track.TRANSLATED)
+        original = _build_track_document_from_json(base / "original.json", Track.ORIGINAL, extraction_target)
+        translated = _build_track_document_from_json(
+            base / "translated.json", Track.TRANSLATED, extraction_target
+        )
         return DualTrackDocuments(
             document_id=original.document_id,
             original=original,
@@ -97,7 +106,12 @@ class EvidenceExtractionService:
         )
 
 
-def _build_track_document_from_json(path: Path, track: Track) -> TrackDocument:
+
+def _build_track_document_from_json(
+    path: Path,
+    track: Track,
+    extraction_target: ExtractionTarget | None = None,
+) -> TrackDocument:
     data = json.loads(path.read_text(encoding="utf-8"))
     metadata = data.get("metadata", {})
     document_id = metadata.get("doc_id") or path.parent.name
@@ -127,6 +141,7 @@ def _build_track_document_from_json(path: Path, track: Track) -> TrackDocument:
             "source_path": str(path),
             "source_language": str(metadata.get("source_language", "")),
         },
+        extraction_target=extraction_target,
     )
 
 
