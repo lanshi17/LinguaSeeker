@@ -24,6 +24,9 @@ from src.agents.contracts import (
     PipelineMode,
     SourceType,
 )
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    ExtractionTarget,
+)
 
 router = APIRouter()
 
@@ -49,6 +52,9 @@ class PipelineRunRequest(BaseModel):
     # Online acquisition fields
     query: str | None = None
     identifiers: list[str] | None = None
+
+    # Target gene-disease hypothesis (Phase 2/3 evidence extraction)
+    extraction_target: ExtractionTarget | None = Field(default=None, alias="target")
 
     @model_validator(mode="after")
     def validate_request(self) -> "PipelineRunRequest":
@@ -129,6 +135,21 @@ def set_pipeline_runner(runner):
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 
+def _build_source_key(body: PipelineRunRequest) -> str | None:
+    """Build the dedup source key, including extraction target scope when present.
+
+    Appending the target scope makes duplicate-run detection target-aware:
+    the same filename submitted with different targets is treated as a
+    distinct run (no 409 conflict). The same document extracted for
+    different hypotheses should produce separate runs.
+    """
+    base_key = body.filename or (body.query or "")
+    if not base_key:
+        return None
+    if body.extraction_target is None:
+        return base_key
+    return f"{base_key}|{body.extraction_target.scope_key}"
+
 def _determine_current_phase(state: PipelineGraphState) -> str | None:
     """Determine which phase is currently running."""
     phase_map = {
@@ -177,7 +198,7 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
     runner = get_pipeline_runner()
 
     # N3: Duplicate run prevention — check if same source is already being processed
-    source_key = body.filename or (body.query or "")
+    source_key = _build_source_key(body)
     if source_key and runner.is_running_for_source(source_key):
         raise HTTPException(
             status_code=409,
@@ -234,6 +255,7 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
         identifiers=body.identifiers,
         action=online_action,
         created_at=datetime.now().isoformat(),
+        extraction_target=body.extraction_target,
     )
 
     task = runner.start(initial_state)
