@@ -27,7 +27,7 @@ rerank:
 # ── Database Connections (Local) ─────────────────────────────────────────
 postgres:
   host: "127.0.0.1"
-  db: "lingua_db"
+  db: "lingua_dev"
   schema: "lingua"
 
 redis:

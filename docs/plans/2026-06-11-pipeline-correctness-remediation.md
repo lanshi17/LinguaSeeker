@@ -21,6 +21,8 @@ Use @executing-plans for task-by-task execution. Use @test-driven-development fo
 
 Before implementation, re-run the `.old_version/` search in Task 1. The quick planning scan found old supervisor `finalize` tests and node patterns, but no reusable multi-worker heartbeat or active-payload contract implementation.
 
+Line numbers in the `Files:` lists are orientation anchors from the planning review. Before editing each task, re-check current locations with `rg` and `nl -ba` because nearby files are active.
+
 This plan intentionally fixes the verified P0/P1 correctness issues first:
 
 - Multi-worker false failure on status polling and startup recovery.
@@ -299,7 +301,7 @@ async def test_runner_error_state_preserves_latest_phase_outputs(
     )
     runner.remember_state(sample_state.processing_run_id, latest)
 
-    task = runner.start(sample_state)
+    task = await runner.start(sample_state)
     await task
 
     final_state = runner.get_last_state_cached(sample_state.processing_run_id)
@@ -323,16 +325,44 @@ async def test_is_running_for_source_checks_persistence_when_cache_misses(
     mock_persistence.has_active_source_key.assert_awaited_once_with("pmid:123")
 ```
 
+Add an API race test for the unique `source_key` constraint:
+
+```python
+@pytest.mark.asyncio
+async def test_post_pipeline_run_duplicate_source_key_race_returns_409(async_client):
+    from sqlalchemy.exc import IntegrityError
+
+    with patch("src.api.v1.pipeline.get_pipeline_runner") as mock_get_runner:
+        runner = MagicMock()
+        runner.is_running_for_source = AsyncMock(return_value=False)
+        runner.start = AsyncMock(
+            side_effect=IntegrityError("insert", {}, Exception("duplicate source_key"))
+        )
+        mock_get_runner.return_value = runner
+
+        response = await async_client.post(
+            "/api/v1/pipeline/run",
+            json={
+                "source_type": "local",
+                "mode": "full",
+                "filename": "same.pdf",
+                "content_base64": "JVBERi0xLjQK",
+            },
+        )
+
+    assert response.status_code == 409
+```
+
 **Step 2: Run tests to verify they fail**
 
 Run:
 
 ```bash
 cd backend
-uv run pytest tests/agents/test_runner.py::test_get_last_state_does_not_fail_active_db_run_from_another_worker tests/agents/test_runner.py::test_runner_error_state_preserves_latest_phase_outputs tests/agents/test_runner.py::test_is_running_for_source_checks_persistence_when_cache_misses -q
+uv run pytest tests/agents/test_runner.py::test_get_last_state_does_not_fail_active_db_run_from_another_worker tests/agents/test_runner.py::test_runner_error_state_preserves_latest_phase_outputs tests/agents/test_runner.py::test_is_running_for_source_checks_persistence_when_cache_misses tests/api/test_pipeline_api.py::test_post_pipeline_run_duplicate_source_key_race_returns_409 -q
 ```
 
-Expected: FAIL because `get_last_state()` still writes failure states, `is_running_for_source()` is synchronous/in-memory only, and error state is copied from `initial_state`.
+Expected: FAIL because `get_last_state()` still writes failure states, `is_running_for_source()` is synchronous/in-memory only, error state is copied from `initial_state`, and the API cannot yet map a source-key insert race to 409.
 
 **Step 3: Implement persistence APIs**
 
@@ -373,9 +403,10 @@ heartbeat_interval_seconds: float = 15.0,
 
 Default `worker_id` to `f"{socket.gethostname()}:{os.getpid()}:{id(self)}"`.
 
-In `start()`:
+Change `PipelineRunner.start()` to `async def start(...) -> asyncio.Task`. It must perform the initial durable claim before scheduling the background task:
 
-- Save initial state with `owner_worker_id=self._worker_id` and `heartbeat_at=datetime.now(timezone.utc)`.
+- Save initial state with `owner_worker_id=self._worker_id` and `heartbeat_at=datetime.now(timezone.utc)` before `asyncio.create_task(...)`.
+- Let `sqlalchemy.exc.IntegrityError` from that first save propagate to the API route; this is the race-proof duplicate-source guard behind the pre-check.
 - Start a heartbeat task before acquiring the process-local semaphore.
 - Cancel the heartbeat task in `finally`.
 - On exception/cancel, use `last_state or initial_state` as the `model_copy()` base.
@@ -391,7 +422,9 @@ return state
 
 Change `is_running_for_source()` to `async def` and fall back to `await self._persistence.has_active_source_key(source_key)`.
 
-Update `backend/src/api/v1/pipeline.py:202` to await the async source check.
+Update `backend/src/api/v1/pipeline.py` to await the async source check and `await runner.start(initial_state)`. Wrap `await runner.start(...)` in `try/except IntegrityError` and return HTTP 409 with the same duplicate-source message. This catches the partial unique index race when two workers submit the same source at the same time.
+
+Design tradeoff: `get_last_state()` must stay read-only. Removing write-side orphan detection from GET means a failed heartbeat mechanism is not detected by polling. Stale active rows are handled by explicit heartbeat recovery; do not reintroduce GET-triggered writes because that is the multi-worker false-failure bug this task fixes.
 
 **Step 5: Run tests to verify they pass**
 
@@ -402,7 +435,7 @@ cd backend
 uv run pytest tests/agents/test_runner.py tests/agents/test_state_persistence_layer.py tests/api/test_pipeline_api.py::test_post_pipeline_run_duplicate_prevention -q
 ```
 
-Expected: PASS. The duplicate-prevention API test should mock `runner.is_running_for_source = AsyncMock(return_value=True)`.
+Expected: PASS. The duplicate-prevention API test should mock `runner.is_running_for_source = AsyncMock(return_value=True)`, and tests that start the runner directly must use `task = await runner.start(sample_state)`.
 
 **Step 6: Commit**
 
@@ -483,6 +516,8 @@ Change `recover_orphaned_runs()` signature:
 ```python
 async def recover_orphaned_runs(self, *, heartbeat_timeout_seconds: int = 300) -> int:
 ```
+
+Keep the timeout paired with `PipelineRunner(heartbeat_interval_seconds=15.0)`: `300 / 15 = 20` missed heartbeats before a run is marked failed. This five-minute grace period is deliberate; it avoids failing long LLM calls during transient event-loop or database pressure.
 
 Select only active runs where:
 
@@ -594,6 +629,28 @@ Expected: FAIL because the graph always starts at `phase_1` and does not stop at
 
 **Step 3: Implement conditional entry and stop-after-target routing**
 
+First verify the LangGraph API in the active environment:
+
+```bash
+cd backend
+uv run python - <<'PY'
+from langgraph.graph import StateGraph
+assert hasattr(StateGraph, "set_conditional_entry_point")
+PY
+```
+
+Expected: PASS on the current `langgraph` 1.2.x installation. If it fails, use the compatible `START` fallback:
+
+```python
+from langgraph.graph import START
+
+graph.add_conditional_edges(
+    START,
+    self._route_entry,
+    {"phase_1": "phase_1", "phase_2": "phase_2", "phase_3": "phase_3"},
+)
+```
+
 In `PipelineOrchestrator`, add:
 
 ```python
@@ -650,15 +707,20 @@ Add route:
 @router.post("/runs/{processing_run_id}/finalize", response_model=PipelineFinalizeResponse)
 async def finalize_pipeline_run(processing_run_id: str, _api_key: str | None = Depends(require_api_key)):
     runner = get_pipeline_runner()
-    state = await runner.finalize_review(processing_run_id)
+    state = await runner.get_last_state(processing_run_id)
     if state is None:
         raise HTTPException(status_code=404, detail=f"Pipeline run {processing_run_id} not found")
-    if state.pipeline_status != PipelineStatus.COMPLETED:
+    if state.pipeline_status == PipelineStatus.COMPLETED:
+        return PipelineFinalizeResponse(...)
+    if state.pipeline_status != PipelineStatus.AWAITING_REVIEW:
         raise HTTPException(status_code=409, detail="Only awaiting_review runs can be finalized")
+    finalized = await runner.finalize_review(processing_run_id)
+    if finalized is None:
+        raise HTTPException(status_code=404, detail=f"Pipeline run {processing_run_id} not found")
     return PipelineFinalizeResponse(...)
 ```
 
-Add `finalize_review()` to `PipelineRunner` and `SessionBoundStatePersistence`. It must transition `PipelineStatus.AWAITING_REVIEW -> PipelineStatus.COMPLETED`, return `COMPLETED` unchanged for idempotent repeat calls, and return other current states so the API can produce 409.
+Add `finalize_review()` to `PipelineRunner` and `SessionBoundStatePersistence`. It must only transition `PipelineStatus.AWAITING_REVIEW -> PipelineStatus.COMPLETED`. The route does the pre-transition guard; repeat calls against already completed runs are idempotent at the route layer.
 
 **Step 6: Run tests to verify they pass**
 
@@ -830,7 +892,28 @@ Do not write `new_card.model_dump()` into `active_payload`.
 
 **Step 6: Update chat context projection**
 
-In `chat_service.py`, replace direct `payload.get("gene")` reads with `EvidenceCardPayload.from_field_payload(field_id=evidence.field_id, payload=payload)`.
+In `chat_service.py`, replace direct `payload.get("gene")` reads with `EvidenceCardPayload.from_field_payload(field_id=evidence.field_id, payload=payload)`, then read the projected card fields:
+
+```python
+payload = evidence.active_payload or {}
+card = EvidenceCardPayload.from_field_payload(
+    field_id=evidence.field_id,
+    payload=payload,
+)
+
+context_parts = [
+    "**Evidence Card**",
+    f"Gene: {card.gene or 'N/A'}",
+    f"Variant: {card.variant or 'N/A'}",
+    f"Phenotype: {card.phenotype or 'N/A'}",
+    f"Disease: {card.disease or 'N/A'}",
+    f"Classification: {card.classification or 'N/A'}",
+    f"Evidence Strength: {card.evidence_strength or 'N/A'}",
+    f"Summary: {card.summary or 'N/A'}",
+]
+```
+
+This intentionally projects one field-level `CanonicalEvidenceItem` into one populated card field. It does not attempt to reconstruct a whole evidence group from a single canonical row.
 
 **Step 7: Run tests to verify they pass**
 
@@ -1152,6 +1235,8 @@ if (token && config.headers) {
 ```
 
 Do not introduce `NEXT_PUBLIC_API_KEY`; that would expose a production secret in the browser.
+
+Record this as technical debt in the code comment: `Authorization: Bearer` represents user auth, while `X-API-Key` is the backend's static service key. Sending the same browser token in both headers is only a transitional compatibility shim. The follow-up architecture should either implement real backend bearer-token auth or move static API-key injection to a Next.js server-side proxy that reads a server-only environment variable.
 
 **Step 6: Run backend and frontend tests**
 
