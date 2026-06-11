@@ -1,5 +1,17 @@
 # Lesson Log
 
+## 2026-06-11: Code review evaluated wrong branch — worktree isolation matters
+
+**Problem**: A code review document claimed the target-anchored extraction implementation was ~15% complete, listing every feature as missing. The review evaluated the `dev` branch (main repo), not the worktree (`docs/target-anchored-extraction-plan`) where all 11 feature commits landed.
+
+**Investigation**: Ran `grep` on every claim against the worktree files. Every single assertion was wrong — `ExtractionTarget` was a `BaseModel` with full normalization (not a frozen dataclass), `EvidenceRole` had correct values (PRIMARY/PHENOTYPE/COMPARATOR/CONTEXT, not GENE/DISEASE/VARIANT), `stages/role_routing.py` existed, `TargetEntityGuard` existed, all test files existed and passed (119/119).
+
+**Root cause**: The reviewer checked out the `dev` branch instead of the worktree branch. Git worktrees have separate working directories but share the same `.git` — the branch name matters. The review document was generated without verifying which branch/working directory was being analyzed.
+
+**Solution**: Wrote a corrected review with verified line references for every checkpoint, committed to the worktree's `docs/codereview/`.
+
+**Prevention**: When reviewing code in a worktree, always verify the current branch with `git branch --show-current` before reading files. When presenting a code review, include the branch name and at least one verified line reference per claim. Never assume the main working directory reflects the feature branch.
+
 ## 2026-06-08: Plan review caught unsafe highlight fallback and throwaway frontend steps
 
 **Problem**: The bilingual comparison implementation plan proposed an `_build_highlight` rewrite that would regress valid-start/oversized-end clamping and remove the short-value guard too broadly. The frontend plan also added inline JSX that a later task immediately deleted, and the component sketch omitted key null/zero-length rendering cases.
