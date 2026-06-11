@@ -9,20 +9,20 @@ interface PhaseTimelineProps {
 
 const statusStyles: Record<string, string> = {
   queued: "bg-gray-200 text-gray-500",
-  running: "bg-blue-100 text-blue-700 animate-pulse",
-  completed: "bg-green-100 text-green-700",
+  running: "bg-primary-100 text-primary-700 animate-pulse",
+  completed: "bg-success-100 text-success-700",
   failed: "bg-red-100 text-red-700",
   cancelled: "bg-gray-100 text-gray-400",
 };
 
 const connectorStyles: Record<string, string> = {
-  completed: "bg-green-400",
+  completed: "bg-success-400",
   default: "bg-gray-200",
 };
 
 export function PhaseTimeline({ steps }: PhaseTimelineProps) {
   return (
-    <div className="flex items-center gap-0">
+    <div className="flex items-center gap-0 overflow-x-auto px-2">
       {steps.map((step, i) => (
         <div key={step.phaseId} className="flex items-center">
           {/* Phase node */}

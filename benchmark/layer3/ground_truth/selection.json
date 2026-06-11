@@ -132,13 +132,13 @@
       "gene": "HGNC:33",
       "disease": "MONDO:0012582"
     },
-    "source_pmid": "34481500",
-    "source_pmc": "PMC8418291",
-    "source_pdf_url": "https://europepmc.org/article/PMC/8418291?pdf=render",
-    "notes": "",
-    "source_title": "The frequency of rare and monogenic diseases in pediatric organ transplant recipients in Italy.",
-    "source_journal": "",
-    "source_year": "2021"
+    "source_pmid": "41090249",
+    "source_pmc": "PMC12522028",
+    "source_pdf_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12522028/pdf/",
+    "notes": "Replaced epidemiology survey with focused ABCA3 cohort study",
+    "source_title": "Phenotype-Genotype Correlations in ABCA3 Patients-The RespiRare Cohort.",
+    "source_journal": "Pediatr Pulmonol",
+    "source_year": "2025"
   },
   {
     "entry_id": "clingen_003",
