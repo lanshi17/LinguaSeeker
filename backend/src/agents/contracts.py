@@ -6,6 +6,9 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    ExtractionTarget,
+)
 
 # ── Enums ────────────────────────────────────────────────────────────────────
 
@@ -238,3 +241,6 @@ class PipelineGraphState(BaseModel):
     query: str | None = None
     identifiers: list[str] | None = None
     action: str | None = None
+
+    # Target gene-disease hypothesis for evidence extraction (Phase 2/3)
+    extraction_target: ExtractionTarget | None = None

@@ -16,6 +16,7 @@ import base64
 import json
 import re
 import sys
+from typing import Any
 import time
 import unicodedata
 import uuid
@@ -397,6 +398,7 @@ async def submit_and_poll(
     pdf_bytes: bytes | None,
     filename: str,
     pre_parsed_markdown: str | None = None,
+    extraction_target: dict | None = None,
 ) -> dict:
     """Submit document and poll until completion.
 
@@ -412,6 +414,8 @@ async def submit_and_poll(
         payload["pre_parsed_markdown"] = pre_parsed_markdown
     if pdf_bytes:
         payload["content_base64"] = base64.b64encode(pdf_bytes).decode("ascii")
+    if extraction_target is not None:
+        payload["target"] = extraction_target
 
     resp = await client.post(
         f"{base_url}/api/v1/pipeline/run",
@@ -576,6 +580,12 @@ async def evaluate_one(
         return metrics
 
     # Submit pre-parsed markdown directly (bypasses MinerU Phase 1)
+    extraction_target = {
+        "gene_symbol": entry["gene_symbol"],
+        "disease_name": entry["disease_label"],
+        "variant_hgvs_p": "",
+        "clingen_entry_id": entry_id,
+    }
     async with semaphore:
         t0 = time.time()
         try:
@@ -584,6 +594,7 @@ async def evaluate_one(
                 pdf_bytes=None,
                 filename=f"{entry_id}.md",
                 pre_parsed_markdown=md_text,
+                extraction_target=extraction_target,
             )
             metrics.duration_s = round(time.time() - t0, 2)
             metrics.pipeline_status = status_data.get("pipeline_status", "unknown")

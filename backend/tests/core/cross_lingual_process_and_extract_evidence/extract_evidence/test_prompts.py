@@ -217,3 +217,47 @@ def test_catalog_prompt_relationship_distinguishes_established_from_preliminary(
     assert "known disease gene" in prompt
     assert "established causal relationship" in prompt
     assert "Do not choose associated merely because the sentence contains associated" in prompt
+
+
+def test_catalog_prompt_declares_target_and_strict_entity_rules() -> None:
+    from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+        ExtractionTarget,
+    )
+
+    target = ExtractionTarget(
+        gene_symbol="ABCA3",
+        disease_name="interstitial lung disease due to ABCA3 deficiency",
+    )
+
+    prompt = get_catalog_extraction_prompt(
+        document_id="doc",
+        track=Track.ORIGINAL,
+        text="ABCA3 and CFTR are mentioned.",
+        catalog=EVIDENCE_FIELD_SPECS,
+        evidence_map_summary="Genes: ABCA3, CFTR",
+        extraction_target=target,
+    )
+
+    assert "TARGET GENE: ABCA3" in prompt
+    assert "TARGET DISEASE: interstitial lung disease due to ABCA3 deficiency" in prompt
+    assert "Extract evidence ONLY for the target gene-disease pair" in prompt
+    assert "Other genes mentioned for comparison" in prompt
+    assert "gene_symbol field MUST be a single string" in prompt
+    assert "evidence_role" in prompt
+    assert '"primary"' in prompt
+    assert '"phenotype"' in prompt
+    assert '"comparator"' in prompt
+    assert '"context"' in prompt
+
+
+def test_catalog_prompt_omits_target_section_when_not_provided() -> None:
+    prompt = get_catalog_extraction_prompt(
+        document_id="doc",
+        track=Track.ORIGINAL,
+        text="ABCA3",
+        catalog=EVIDENCE_FIELD_SPECS,
+        evidence_map_summary="AARS2 case",
+    )
+
+    assert "TARGET GENE:" not in prompt
+    assert "TARGET DISEASE:" not in prompt

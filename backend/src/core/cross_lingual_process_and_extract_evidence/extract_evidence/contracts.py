@@ -1,6 +1,7 @@
 """Contracts for evidence extraction."""
 from __future__ import annotations
 
+import re
 from enum import Enum
 from typing import Literal
 
@@ -10,6 +11,50 @@ from pydantic import BaseModel, Field, model_validator
 class Track(str, Enum):
     ORIGINAL = "original"
     TRANSLATED = "translated"
+
+
+
+_SPACE_RE = re.compile(r"\s+")
+
+
+class ExtractionTarget(BaseModel):
+    """Target gene-disease hypothesis for extraction."""
+
+    gene_symbol: str
+    disease_name: str
+    variant_hgvs_p: str = ""
+    clingen_entry_id: str = ""
+
+    @model_validator(mode="after")
+    def normalize_target_fields(self) -> ExtractionTarget:
+        self.gene_symbol = _SPACE_RE.sub(" ", self.gene_symbol.strip()).upper()
+        self.disease_name = _SPACE_RE.sub(" ", self.disease_name.strip())
+        self.variant_hgvs_p = _SPACE_RE.sub(" ", self.variant_hgvs_p.strip())
+        self.clingen_entry_id = _SPACE_RE.sub(" ", self.clingen_entry_id.strip())
+        if not self.gene_symbol:
+            raise ValueError("gene_symbol is required")
+        if not self.disease_name:
+            raise ValueError("disease_name is required")
+        return self
+
+    @property
+    def scope_key(self) -> str:
+        return "|".join(
+            [
+                f"gene={self.gene_symbol}",
+                f"disease={self.disease_name.casefold()}",
+                f"variant_p={self.variant_hgvs_p}",
+                f"clingen={self.clingen_entry_id}",
+            ]
+        )
+
+
+class EvidenceRole(str, Enum):
+    PRIMARY = "primary"
+    PHENOTYPE = "phenotype"
+    COMPARATOR = "comparator"
+    CONTEXT = "context"
+
 
 
 class ExternalIds(BaseModel):
@@ -52,6 +97,8 @@ class TrackDocument(BaseModel):
     blocks: list[ContentBlock] = Field(default_factory=list)
     external_ids: ExternalIds = Field(default_factory=ExternalIds)
     metadata: dict[str, str] = Field(default_factory=dict)
+    extraction_target: ExtractionTarget | None = None
+
 
 
 class SourcePrecision(str, Enum):
@@ -73,13 +120,14 @@ class SourceLocation(BaseModel):
     block_type: Literal["text", "table", "figure", "image", "caption", "supplementary"] = "text"
     source_precision: SourcePrecision = SourcePrecision.EXACT
 
-
 class EvidenceStatus(str, Enum):
     FOUND = "found"
     NOT_FOUND = "not_found"
     SOURCE_INVALID = "source_invalid"
     OCR_GAP = "ocr_gap"
     TABLE_UNGROUNDED = "table_ungrounded"
+    CONTEXT_CONTAMINATION = "context_contamination"
+
 
 
 class EvidenceItem(BaseModel):
@@ -106,7 +154,7 @@ class EvidenceItem(BaseModel):
     inference_basis: list[str] = Field(default_factory=list)
     requires_external_completion: bool = False
     external_completion_note: str = ""
-
+    evidence_role: EvidenceRole = EvidenceRole.PRIMARY
 
 class EvidenceChain(BaseModel):
     chain_id: str
@@ -157,10 +205,12 @@ class QualityIssue(BaseModel):
         "low_confidence",
         "contradiction",
         "missing_required",
+        "context_contamination",
     ]
     field_id: str
     description: str
     severity: Literal["warning", "error"] = "warning"
+
 
 
 class QualityReport(BaseModel):
@@ -174,9 +224,11 @@ class QualityReport(BaseModel):
     ocr_gap_count: int = 0
     table_ungrounded_count: int = 0
     ambiguous_source_count: int = 0
+    context_contamination_count: int = 0
     human_review_required: bool = False
     human_review_reasons: list[str] = Field(default_factory=list)
     human_review_by_category: dict[str, list[str]] = Field(default_factory=dict)
+
 
 
 class EvidenceExtractionStatus(str, Enum):
@@ -218,6 +270,10 @@ class EvidenceExtractionResult(BaseModel):
     special_evidence: list[SpecialEvidenceRecord] = Field(default_factory=list)
     quality_report: QualityReport | None = None
     normalization_issues: list[EvidenceNormalizationIssue] = Field(default_factory=list)
+    extraction_target: ExtractionTarget | None = None
+    phenotype_evidence: list[EvidenceItem] = Field(default_factory=list)
+    discarded_evidence: list[EvidenceItem] = Field(default_factory=list)
+
 
 
 class DualTrackDocuments(BaseModel):
@@ -253,3 +309,5 @@ class EvidenceExtractionState(BaseModel):
     quality_report: QualityReport | None = None
     normalization_issues: list[EvidenceNormalizationIssue] = Field(default_factory=list)
     status: EvidenceExtractionStatus = EvidenceExtractionStatus.COMPLETED
+    phenotype_evidence: list[EvidenceItem] = Field(default_factory=list)
+    discarded_evidence: list[EvidenceItem] = Field(default_factory=list)
