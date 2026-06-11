@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .catalog import EvidenceFieldSpec
-    from .contracts import ContentBlock, Track, TrackDocument
+    from .contracts import ContentBlock, ExtractionTarget, Track, TrackDocument
 
 
 _EVIDENCE_MAP_JSON_EXAMPLE = {
@@ -128,15 +128,43 @@ DOCUMENT TEXT:
 """
 
 
+
+def _target_prompt_section(extraction_target: ExtractionTarget | None) -> str:
+    if extraction_target is None:
+        return "TARGET: Not provided."
+    return (
+        f"TARGET GENE: {extraction_target.gene_symbol}\n"
+        f"TARGET DISEASE: {extraction_target.disease_name}\n"
+        f"TARGET VARIANT P: {extraction_target.variant_hgvs_p or 'not specified'}\n"
+        f"CLINGEN ENTRY: {extraction_target.clingen_entry_id or 'not specified'}"
+    )
+
+
 def get_catalog_extraction_prompt(
     document_id: str,
     track: Track,
     text: str,
     catalog: tuple[EvidenceFieldSpec, ...],
     evidence_map_summary: str,
+    extraction_target: ExtractionTarget | None = None,
 ) -> str:
     catalog_text = _catalog_compact_text(catalog)
-    return f"""You are extracting structured evidence from a biomedical document.
+    target_section = _target_prompt_section(extraction_target)
+    return f"""You are extracting structured evidence from a biomedical document for a SPECIFIC target gene-disease pair.
+
+{target_section}
+
+STRICT TARGET RULES:
+1. Extract evidence ONLY for the target gene-disease pair above when a target is provided.
+2. Other genes mentioned for comparison, controls, family history, or differential diagnosis are context; do NOT extract them as primary findings.
+3. If the document discusses multiple diseases, extract ONLY evidence relevant to the target disease as primary evidence.
+4. The A.gene_symbol field MUST be a single string, not a list.
+
+EVIDENCE ROLE: For each evidence item, assign evidence_role:
+- "primary": directly supports or describes the TARGET gene-disease pair
+- "phenotype": syndrome, subtype, HPO term, or downstream manifestation caused by the target disease
+- "comparator": disease/gene mentioned only for differential diagnosis, comparison, controls, or exclusion
+- "context": background information not specific to this target
 
 Document ID: {document_id}
 Track: {track.value}
