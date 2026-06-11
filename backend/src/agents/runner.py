@@ -164,6 +164,10 @@ class PipelineRunner:
         is disposed.  Without this, ``uvicorn --reload`` or SIGTERM cancels
         the asyncio tasks immediately, leaving orphaned runs in the database.
 
+        After the grace timeout expires, pending tasks are explicitly cancelled
+        and given a short window to persist their FAILED state before the DB
+        engine is disposed.
+
         Args:
             timeout: Maximum seconds to wait per task.  Should be at least
                 as long as the LLM timeout (default 60s) to avoid cancelling
@@ -184,8 +188,20 @@ class PipelineRunner:
                     logger.warning("Pipeline run {} finished with error during shutdown: {}", rid, exc)
                 else:
                     logger.info("Pipeline run {} completed during shutdown", rid)
-            else:
-                logger.warning("Pipeline run {} still running after shutdown timeout — will be recovered on next start", rid)
+
+        if pending:
+            pending_ids = [rid for rid, t in active.items() if t in pending]
+            logger.warning(
+                "Cancelling {} pipeline task(s) that exceeded shutdown timeout: {}",
+                len(pending), pending_ids,
+            )
+            for task in pending:
+                task.cancel()
+            # Brief grace period for CancelledError handlers to persist FAILED state.
+            await asyncio.wait(pending, timeout=5.0)
+            for rid, task in active.items():
+                if task in pending and not task.done():
+                    logger.error("Pipeline run {} could not be cancelled before shutdown", rid)
 
     def is_running_for_source(self, source_key: str) -> bool:
         """Check if any active run is processing this source key (N3 fix).
