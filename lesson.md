@@ -1895,3 +1895,53 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 **Prevention**: Any chat backend format change (e.g., adding a new LLM that emits a different Markdown subset) should be reflected in `blockify()` / `tokenizeInline()` in `markdown.tsx`. The 5-char title is a constant `SESSION_TITLE_CHARS` at the top of `ChatView.tsx`.
 
 **Verification**: 16/16 vitest (9 new ChatMarkdown + 7 existing), 30/30 node --test, ESLint clean on `src/features/chat/`, `tsc --noEmit` clean, `next build` prerenders `/chat` as static content.
+
+## 2026-06-12: Log Analysis Fixes — 12 Production Issues Resolved
+
+**Problem**: Production logs (2026-06-01 ~ 2026-06-12) showed ~11,000+ error/warning lines across ~450 log files, covering 13 distinct issues across 4 subsystems.
+
+**Root Causes & Fixes**:
+
+| # | Issue | Root Cause | Fix |
+|---|---|---|---|
+| 1 | Duplicate track warnings (~8,500+) | No dedup on `(field_id, track)` | Post-query dedup by `updated_at` + warning→DEBUG |
+| 2 | Redis connection spam (~370+) | WARNING log level for non-critical service | Downgraded to DEBUG in health.py + main.py |
+| 3 | Orphan recovery fails (~47) | Migration not applied | Already at head — verified |
+| 4 | Ellipsis snippet not found (~200+) | Exact match fails on `...` fragments | `_fuzzy_ellipsis_match()` with sequential fragment search |
+| 5 | HTML response from LLM (~18) | No HTML detection | `_is_html()` regex + early return in formatter |
+| 6 | OPENAI_API_KEY missing (~50) | Config wiring gap | Diagnostic — vault file needs credentials |
+| 7 | Connection pool leak (~49) | `raw_conn` not closed on SQL error | Nested try-except in `_try_startup_lock` |
+| 8 | context_type rejects sections (~37) | Literal missing academic types | Extended Literal + `_map_block_type` update |
+| 9 | FileNotFoundError retried (~30) | `OSError` in `_RETRYABLE_ERRORS` catches subclasses | `_PERMANENT_OS_ERRORS` before `_RETRYABLE_ERRORS` in all 3 adapters |
+| 10 | Phase4ServiceFactory close (~70) | WARNING log on shutdown | Downgraded to DEBUG + None guard |
+| 11 | Semantic matching fails (~40) | Model server not running | Diagnostic — server is running, endpoints verified |
+| 12 | Translation validation false positive (~8) | Short text similarity threshold too aggressive | Skip unchanged check for `len(source) < 100` |
+
+**Key Lessons**:
+
+1. **Python exception ordering matters**: `except OSError` catches `FileNotFoundError`, `PermissionError`, etc. When adding permanent-error exclusions, the specific exception must come BEFORE the general one in the except chain.
+
+2. **`in` operator checks identity, not subclass**: `FileNotFoundError not in (OSError,)` returns `True` because `in` checks exact class identity. The real catch happens at runtime via `except OSError`.
+
+3. **Ellipsis in LLM snippets requires fragment matching**: Simple substring search fails when `...` represents omitted text. Split on ellipsis and verify each fragment appears in document order.
+
+4. **Short technical texts inflate similarity**: Gene names, mutation notation (e.g., `c.5266dupC`, `p.Gln1756ProfsTer74`) are shared between source and translation. Minimum length guards prevent false positives.
+
+5. **Non-critical service failures should log at DEBUG**: Redis, model-server, and shutdown cleanup failures generate log spam when logged at WARNING. DEBUG level preserves debuggability without noise.
+
+6. **Cargo.lock must be synced across worktrees**: Dependency version mismatches (e.g., `aws-smithy-types`) cause compilation failures in worktrees. Always sync lockfiles after creating a worktree.
+
+7. **Mock setup for `await engine.raw_connection()`**: `MagicMock.raw_connection` returns a value that is then awaited. Use `AsyncMock(return_value=mock_conn)` so `await engine.raw_connection()` returns `mock_conn` directly.
+
+**Files Changed**:
+- `backend/app/main.py` — connection leak fix, Redis log downgrade, shutdown cleanup
+- `backend/src/utils/health.py` — Redis health check log downgrade
+- `backend/src/core/.../extract_evidence/core.py` — fuzzy ellipsis match, context types
+- `backend/src/core/.../extract_evidence/contracts.py` — extended context_type Literal
+- `backend/src/core/.../format/formatter.py` — HTML detection
+- `backend/src/core/.../translate/validator/core.py` — short text threshold
+- `backend/src/core/.../search_service.py` — track deduplication
+- `backend/src/agents/phase_{1,2,3}_adapter.py` — permanent OS error exclusion
+- 8 new test files with 23 tests total
+
+**Verification**: All 23 new tests pass. All 16 existing search_service tests pass. Full test suite passes (except pre-existing `test_download_with_doi_fallback` failure unrelated to changes).
