@@ -251,3 +251,24 @@ class SessionBoundStatePersistence:
                 .limit(1)
             )
             return result.scalar_one_or_none() is not None
+
+    async def finalize_review(self, processing_run_id: str) -> PipelineGraphState | None:
+        """Transition a run from AWAITING_REVIEW to COMPLETED.
+
+        Returns the finalized state, or None if the run was not found.
+        """
+        async with self._session_factory() as session:
+            record = await session.get(
+                PipelineRunState, UUID(processing_run_id)
+            )
+            if record is None:
+                return None
+
+            state = PipelineGraphState.model_validate(record.state_json)
+            state.pipeline_status = PipelineStatus.COMPLETED
+            state.completed_at = datetime.now(timezone.utc).isoformat()
+
+            record.state_json = state.model_dump(mode="json")
+            record.pipeline_status = "completed"
+            await session.commit()
+            return state
