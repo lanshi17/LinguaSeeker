@@ -32,6 +32,14 @@ reasoning_llm:
   base_url: {{ reasoning_llm.base_url | default('') }}
   timeout: {{ reasoning_llm.timeout }}
 
+# ── Chat Interaction LLM (lightweight conversational) ────────────────────
+chat_llm:
+  api_key: {{ chat_llm.api_key | default('') }}
+  base_url: {{ chat_llm.base_url | default('') }}
+  model: {{ chat_llm.model }}
+  timeout: {{ chat_llm.timeout }}
+
+
 # ── Embedding (local model-server) ──────────────────────────────────────
 embedding:
   base_url: {{ embedding.base_url | default('') }}

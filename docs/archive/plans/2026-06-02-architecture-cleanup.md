@@ -900,12 +900,12 @@ from src.api.wiring import wire_dependencies, dispose_engine
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize and teardown application resources."""
-    logger.info("Starting ACMG Lingua backend")
+    logger.info("Starting Cross Evidencebackend")
     wire_dependencies(app)
     logger.info("Pipeline orchestrator initialized")
     yield
     await dispose_engine()
-    logger.info("ACMG Lingua backend stopped")
+    logger.info("Cross Evidencebackend stopped")
 
 
 app = FastAPI(

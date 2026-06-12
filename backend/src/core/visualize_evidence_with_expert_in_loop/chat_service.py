@@ -26,7 +26,7 @@ from src.dao.postgresql.models import (
 
 if TYPE_CHECKING:
     from src.core.visualize_evidence_with_expert_in_loop.providers import (
-        ReasoningLLMProvider,
+        ChatLLMProvider,
     )
 
 # Pre-compiled regex patterns for _detect_intent (avoid per-call compilation)
@@ -74,10 +74,10 @@ class ChatService:
     def __init__(
         self,
         session: AsyncSession,
-        reasoning_provider: ReasoningLLMProvider | None = None,
+        chat_provider: ChatLLMProvider | None = None,
     ):
         self._session = session
-        self._reasoning_provider = reasoning_provider
+        self._chat_provider = chat_provider
 
     async def create_session(
         self,
@@ -303,7 +303,7 @@ class ChatService:
             )
 
         return (
-            "You are the ACMG Lingua assistant. Help users start literature "
+            "You are the Cross Evidenceassistant. Help users start literature "
             "evidence extraction pipelines, upload biomedical PDFs, search "
             "existing evidence, and understand ACMG evidence extraction results. "
             "Do not provide a clinical diagnosis. When evidence is unavailable, "
@@ -338,17 +338,17 @@ class ChatService:
 
         system_prompt = self._system_prompt(has_evidence_context=bool(context))
 
-        provider = self._reasoning_provider
+        provider = self._chat_provider
         if provider is None:
             logger.warning(
-                "ChatService called without injected provider — "
+                "ChatService.generate_reply called without injected provider — "
                 "creating fallback (leaked httpx client). "
                 "Fix: inject via Phase4ServiceFactory.create_chat_service()"
             )
             from src.core.visualize_evidence_with_expert_in_loop.providers import (
-                ReasoningLLMProvider,
+                ChatLLMProvider,
             )
-            provider = ReasoningLLMProvider()
+            provider = ChatLLMProvider()
 
         reply = await provider.generate(
             system_prompt=system_prompt,
@@ -393,7 +393,7 @@ class ChatService:
 
         system_prompt = self._system_prompt(has_evidence_context=bool(context))
 
-        provider = self._reasoning_provider
+        provider = self._chat_provider
         if provider is None:
             logger.warning(
                 "ChatService.stream_reply called without injected provider — "
@@ -401,9 +401,9 @@ class ChatService:
                 "Fix: inject via Phase4ServiceFactory.create_chat_service()"
             )
             from src.core.visualize_evidence_with_expert_in_loop.providers import (
-                ReasoningLLMProvider,
+                ChatLLMProvider,
             )
-            provider = ReasoningLLMProvider()
+            provider = ChatLLMProvider()
 
         buffered: list[str] = []
         try:

@@ -135,7 +135,7 @@ class TestChatService:
         """Standalone chat uses a general assistant prompt without evidence context."""
         provider = MagicMock()
         provider.generate = AsyncMock(return_value="I can help start a pipeline.")
-        service = ChatService(db_session, reasoning_provider=provider)
+        service = ChatService(db_session, chat_provider=provider)
         session = await service.create_session(processing_run_id=None, user_id=None)
 
         reply = await service.generate_reply(
