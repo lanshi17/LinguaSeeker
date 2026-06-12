@@ -1,5 +1,7 @@
+import { AxiosError } from "axios";
 import { apiClient } from "@/lib/api/client";
 import type {
+  PipelineRunListResponse,
   PipelineRunRequest,
   PipelineRunResponse,
   PipelineStatusResponse,
@@ -24,4 +26,27 @@ export async function getPipelineStatus(
     `/pipeline/runs/${runId}/status`,
   );
   return data;
+}
+
+/**
+ * List all pipeline runs (GET /pipeline/runs).
+ * Tolerates 404 / 501 from backends that have not yet shipped the list
+ * endpoint — returns an empty list so the UI can render an empty state
+ * rather than an error.
+ */
+export async function listPipelineRuns(): Promise<PipelineRunListResponse> {
+  try {
+    const { data } = await apiClient.get<PipelineRunListResponse>(
+      "/pipeline/runs",
+    );
+    return data;
+  } catch (err) {
+    if (err instanceof AxiosError) {
+      const status = err.response?.status;
+      if (status === 404 || status === 501) {
+        return { items: [], total: 0 };
+      }
+    }
+    throw err;
+  }
 }

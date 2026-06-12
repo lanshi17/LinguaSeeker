@@ -1,4 +1,5 @@
 import { PipelineSubmitForm } from "@/features/pipeline";
+import { RunHistory } from "@/features/pipeline";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function PipelinePage() {
@@ -8,7 +9,10 @@ export default function PipelinePage() {
         title="New Pipeline Run"
         description="Submit a document or search query to start the evidence extraction pipeline."
       />
-      <PipelineSubmitForm />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+        <PipelineSubmitForm />
+        <RunHistory />
+      </div>
     </div>
   );
 }
