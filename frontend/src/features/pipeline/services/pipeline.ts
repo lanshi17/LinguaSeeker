@@ -1,4 +1,4 @@
-import { AxiosError } from "axios";
+import { ApiError } from "@/lib/api/error";
 import { apiClient } from "@/lib/api/client";
 import type {
   PipelineRunListResponse,
@@ -41,9 +41,8 @@ export async function listPipelineRuns(): Promise<PipelineRunListResponse> {
     );
     return data;
   } catch (err) {
-    if (err instanceof AxiosError) {
-      const status = err.response?.status;
-      if (status === 404 || status === 501) {
+    if (err instanceof ApiError) {
+      if (err.status === 404 || err.status === 501) {
         return { items: [], total: 0 };
       }
     }

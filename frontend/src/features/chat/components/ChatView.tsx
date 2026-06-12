@@ -23,7 +23,10 @@ import {
   rememberActiveChatSession,
   upsertLocalChatSession,
 } from "../utils/localSessions";
-import { toXChatDefaultMessages } from "../utils/messageHistory";
+import {
+  toUniqueChatMessageKeys,
+  toXChatDefaultMessages,
+} from "../utils/messageHistory";
 import {
   PipelineStartForm,
   PipelineStatusCard,
@@ -338,9 +341,10 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
   // ── Build bubble items with contentRender for embedded forms ──
   const bubbleItems = useMemo(() => {
+    const messageKeys = toUniqueChatMessageKeys(messages);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const items: any[] = messages.map(({ id, message, status }) => ({
-      key: id,
+    const items: any[] = messages.map(({ message, status }, index) => ({
+      key: messageKeys[index],
       role: message.role,
       content: message.content,
       streaming: status === "loading" || status === "updating",
@@ -488,14 +492,16 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
   });
 
   const bubbleItems = useMemo(
-    () =>
-      messages.map(({ id, message, status }) => ({
-        key: id,
+    () => {
+      const messageKeys = toUniqueChatMessageKeys(messages);
+      return messages.map(({ message, status }, index) => ({
+        key: messageKeys[index],
         role: message.role,
         content: message.content,
         streaming: status === "loading" || status === "updating",
         loading: status === "loading" && !message.content,
-      })),
+      }));
+    },
     [messages],
   );
 

@@ -17,17 +17,24 @@ interface PipelineStatusViewProps {
   runId: string;
 }
 
-const TERMINAL: ReadonlyArray<ProcessingStatus> = [
+const NON_LIVE: ReadonlyArray<ProcessingStatus> = [
   "completed",
   "failed",
-  "cancelled",
+  "skipped",
+  "awaiting_review",
 ];
 
 export function PipelineStatusView({ runId }: PipelineStatusViewProps) {
   const { data, isLoading, error, isFetching } = usePipelineStatus(runId);
   const timelineSteps = usePhaseTimeline(data);
-  const isLive = data ? !TERMINAL.includes(data.pipeline_status) : false;
-  const elapsed = useElapsedSeconds(isLive ? data?.started_at : data?.completed_at);
+  const isLive = data ? !NON_LIVE.includes(data.pipeline_status) : false;
+  // For terminal runs, compute duration from start to completion; for live, use real-time timer
+  const terminalDuration =
+    data?.started_at && data?.completed_at
+      ? (new Date(data.completed_at).getTime() - new Date(data.started_at).getTime()) / 1000
+      : null;
+  const liveElapsed = useElapsedSeconds(isLive ? data?.started_at : undefined);
+  const elapsed = isLive ? liveElapsed : terminalDuration;
 
   if (isLoading) {
     return (
