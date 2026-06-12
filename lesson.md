@@ -1860,3 +1860,38 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 **Prevention**: Any Next.js App Router component that renders values from `localStorage`, `sessionStorage`, or `window.*` must gate the affected JSX on a `mounted` flag, not just gate the data fetch. The data hook can stay eager; the divergence is in the JSX. Document this in the chat feature README so the next person doesn't re-introduce the bug.
 
 **Verification**: 7/7 vitest, 30/30 node --test, 0 ESLint errors on `src/features/chat/`, `tsc --noEmit` clean, `next build` prerenders `/chat` as static content. The original `message channel closed` warnings from Chrome Built-In AI are unrelated and persist (they are external to the app).
+
+---
+
+## 2026-06-12: Migration not applied causing startup errors
+
+**Symptoms**:
+1. `SAWarning: The garbage collector is trying to clean up non-checked-in connection` during `_try_startup_lock(engine)`
+2. `ProgrammingError: column pipeline_run_states.source_key does not exist` during `recover_orphaned_runs()`
+
+**Root cause**: Migration `2026-06-11_add_pipeline_run_leases.py` (adding `source_key`, `owner_worker_id`, `heartbeat_at` columns) was defined in the model and migration file but never applied to the database. Additionally, `alembic_version.version_num` was `varchar(32)` but the revision ID `2026_06_11_allow_standalone_chat_sessions` is 41 characters, causing a `StringDataRightTruncationError` when attempting to apply migrations.
+
+**Fix**:
+1. Altered `alembic_version.version_num` to `varchar(255)` to accommodate long revision IDs
+2. Ran `alembic -c database/alembic.ini upgrade head` — all 3 pending migrations applied successfully
+
+**Prevention**: Always apply migrations after creating them. Consider using shorter revision IDs (alembic's auto-generated hashes) instead of full date strings to avoid varchar(32) overflow in the alembic_version table. Alternatively, the initial migration could create `alembic_version.version_num` as varchar(255) instead of the default 32.
+
+## 2026-06-12: Chat UX fixes -- Markdown rendering, sender clear, session delete
+
+**Problem**: From browser QA: (1) LLM assistant replies containing `**bold**`, `` `code` ``, and fenced code blocks rendered as plain text. (2) The sender textarea did not clear after sending a message. (3) Sessions could not be deleted from the sidebar, and session titles showed \"Session {uuid8}\" instead of a recognizable prefix.
+
+**Investigation**: (1) `@ant-design/x` Bubble supports `contentRender`, which overrides the text display with a React component. The `@ant-design/x-markdown` sub-package was not installed. Rather than adding a new dependency, a minimal, dependency-free streaming-safe Markdown renderer was built. (2) The Sender is uncontrolled by default; `@ant-design/x` provides a `SenderRef` with `.clear()` on the inner `TextArea`. (3) `@ant-design/x` Conversations supports a per-item `menu` prop (Ant Design `MenuProps`). The backend has no `DELETE /chat/sessions` endpoint (confirmed: only CRUD GET/POST).
+
+**Fix**:
+- **Markdown renderer** (`utils/markdown.tsx`, 150 LOC): Tokenizes lines into blocks (paragraph, fenced code, unordered list) then inline tokens (`**bold**`, `*italic*`, `` `code` ``). Uses React primitives only — NO `dangerouslySetInnerHTML`. Streaming-safe: unclosed `**` at end of string renders as literal. Wired via `contentRender` prop on `bubbleItems` for `role === \"assistant\"`.
+- **Sender clear**: Added `useRef<SenderRef>` to both `FullChatView` and `SingleSessionChat`. The new `handleSubmitAndClear` / `handleSingleSessionSubmit` wraps the existing handler logic and calls `finally(() => ref.current?.clear())`, so the input clears even after a failed send (the error toast is still visible).
+- **Session title**: Added `sessionLabels` state mapping `sessionId → firstMessage`. Captured in `handleSendMessage` via `captureFirstMessageLabel(sid, content)` which stores the first 5 chars. `conversationItems` uses the label if available, otherwise the default `\"Session {id.slice(0,8)}\"`.
+- **Session deletion**: `Conversations` menu prop returns a single \"Delete\" entry with `Modal.confirm`. Calls `removeSession(sessionId)` (which removes from localStorage via `removeLocalChatSession`) and also calls `useXConversations.removeConversation(sessionId)`. If the deleted session was active, switches to the next available session.
+
+**New files**: `utils/markdown.tsx`, `tests/features/chat/ChatMarkdown.test.tsx` (9 vitest tests).
+**Modified**: `ChatView.tsx` (+167/-24), `useChatSessions.ts` (+14), `localSessions.ts` (+18), `vitest.config.ts` (+1).
+
+**Prevention**: Any chat backend format change (e.g., adding a new LLM that emits a different Markdown subset) should be reflected in `blockify()` / `tokenizeInline()` in `markdown.tsx`. The 5-char title is a constant `SESSION_TITLE_CHARS` at the top of `ChatView.tsx`.
+
+**Verification**: 16/16 vitest (9 new ChatMarkdown + 7 existing), 30/30 node --test, ESLint clean on `src/features/chat/`, `tsc --noEmit` clean, `next build` prerenders `/chat` as static content.
