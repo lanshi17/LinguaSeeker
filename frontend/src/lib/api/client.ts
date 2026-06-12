@@ -5,6 +5,9 @@
  * - Request interceptor injects the auth token from localStorage.
  * - Response interceptor normalizes errors into ApiError and redirects
  *   to /login on 401 (with a guard to prevent duplicate navigations).
+ *
+ * The backend's X-API-Key header is injected server-side by
+ * middleware.ts — never expose API keys to the browser bundle.
  */
 
 import axios from "axios";
@@ -31,11 +34,8 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // Static API key from build-time env var (NEXT_PUBLIC_API_KEY).
-    // This is the backend's X-API-Key, independent of user auth.
-    if (apiConfig.apiKey && config.headers) {
-      config.headers["X-API-Key"] = apiConfig.apiKey;
-    }
+    // X-API-Key is injected by middleware.ts on the server side.
+    // Do NOT add it here — NEXT_PUBLIC_* vars leak to the browser.
   }
   return config;
 });

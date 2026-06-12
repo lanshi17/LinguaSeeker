@@ -1,5 +1,5 @@
 {
-  "name": "acmg-lingua-frontend",
+  "name": "cross-evidence-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:node": "rm -rf .test-build && tsc -p tsconfig.test.json && node --test '.test-build/tests/**/*.test.js'",
+    "test:node": "rm -rf .test-build && tsc -p tsconfig.test.json && node --test .test-build/tests/**/*.test.js",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
