@@ -6,8 +6,6 @@ import {
   Bubble,
   Sender,
   Conversations,
-  Welcome,
-  Prompts,
 } from "@ant-design/x";
 import type { SenderRef } from "@ant-design/x/es/sender/interface";
 import { useXChat, useXConversations } from "@ant-design/x-sdk";
@@ -32,6 +30,8 @@ import { detectChatActionIntent } from "../utils/intent";
 import { ChatMarkdown } from "../utils/markdown";
 import { PipelineStartForm, PipelineStatusCard } from "./forms";
 import type { PipelineFormData } from "./forms";
+import { ChatEmptyState } from "./ChatEmptyState";
+import { CHAT_PROMPTS } from "./prompts";
 import { apiClient } from "@/lib/api/client";
 import { extractErrorMessage } from "@/lib/api/error";
 
@@ -59,26 +59,6 @@ const roles = {
     ),
   },
 };
-
-// ─── Prompt suggestions ────────────────────────────────────────────────
-
-const PROMPT_ITEMS = [
-  {
-    key: "start-pipeline",
-    label: "Start Pipeline",
-    description: "Analyze a biomedical paper and extract evidence.",
-  },
-  {
-    key: "upload-pdf",
-    label: "Upload PDF",
-    description: "Upload a PDF document for evidence extraction.",
-  },
-  {
-    key: "search-evidence",
-    label: "Search Evidence",
-    description: "Search existing evidence by gene, variant, or disease.",
-  },
-];
 
 // ─── Main ChatView ─────────────────────────────────────────────────────
 
@@ -512,7 +492,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       return;
     }
 
-    const prompt = PROMPT_ITEMS.find((p) => p.key === key);
+    const prompt = CHAT_PROMPTS.find((p) => p.key === key);
     if (prompt) {
       void handleSendMessage(prompt.description);
     }
@@ -600,7 +580,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
   return (
     <XProvider>
-      <div className="flex min-h-[620px] overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm md:h-[calc(100vh-8.5rem)]">
+      <div className="flex h-full overflow-hidden bg-white">
         {/* Conversation sidebar — gated on `mounted` to keep SSR HTML
             identical to the first client render (see hydration comment
             above). The placeholder reserves the 240px column so the
@@ -627,21 +607,11 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         {/* Main chat area */}
         <div className="flex min-w-0 flex-1 flex-col">
           {bubbleItems.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-8 text-center md:px-10">
-              <Welcome
-                title="Cross EvidenceAgent"
-                description="I'll guide you through evidence extraction. Upload a paper, search by PMID, or ask me anything about variant classification."
-                variant="borderless"
-              />
-              <Prompts
-                className="w-full max-w-3xl"
-                items={PROMPT_ITEMS}
-                wrap
-                onItemClick={(info) =>
-                  void handlePromptClick(info.data.key as string)
-                }
-              />
-            </div>
+            <ChatEmptyState
+              prompts={CHAT_PROMPTS}
+              onPromptSelect={(key) => void handlePromptClick(key)}
+              sessionCount={sessions.length}
+            />
           ) : (
             <Bubble.List
               className="flex-1 overflow-auto"
@@ -720,15 +690,22 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
 
   return (
     <XProvider>
-      <div className="flex min-h-[620px] flex-col overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm md:h-[calc(100vh-8.5rem)]">
+      <div className="flex h-full flex-col overflow-hidden bg-white">
         {bubbleItems.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-8 text-center md:px-10">
-            <Welcome
-              title="Cross EvidenceAgent"
-              description="Ask questions about variant classification, evidence review, or pipeline results."
-              variant="borderless"
-            />
-          </div>
+          <ChatEmptyState
+            prompts={CHAT_PROMPTS}
+            onPromptSelect={(key) => {
+              if (key === "search-evidence") {
+                window.location.href = "/evidence";
+                return;
+              }
+              const prompt = CHAT_PROMPTS.find((p) => p.key === key);
+              if (prompt) {
+                void handleSingleSessionSubmit(prompt.description);
+              }
+            }}
+            sessionCount={1}
+          />
         ) : (
           <Bubble.List
             className="flex-1 overflow-auto"
