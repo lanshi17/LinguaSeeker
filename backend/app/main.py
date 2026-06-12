@@ -78,11 +78,16 @@ async def _try_startup_lock(engine) -> bool:
 
     try:
         raw_conn = await engine.raw_connection()
-        result = await raw_conn.exec_driver_sql(
-            "SELECT pg_try_advisory_lock(hashtext('cross_evidence_backend_startup'))"
-        )
-        row = result.fetchone()
-        acquired = bool(row[0]) if row else False
+        try:
+            result = await raw_conn.exec_driver_sql(
+                "SELECT pg_try_advisory_lock(hashtext('cross_evidence_backend_startup'))"
+            )
+            row = result.fetchone()
+            acquired = bool(row[0]) if row else False
+        except Exception:
+            await raw_conn.close()
+            return True
+
         if acquired:
             _startup_lock_raw_conn = raw_conn
         else:
