@@ -96,6 +96,15 @@ export function ChatView({ processingRunId, sessionId }: ChatViewProps) {
 // ─── Full Chat View ────────────────────────────────────────────────────
 
 function FullChatView({ processingRunId }: { processingRunId?: string }) {
+  // The hook below reads localStorage in its initial state, which differs
+  // from the SSR render and would trip React's hydration check. We render
+  // a stable placeholder first, then flip `mounted` in an effect to show
+  // the real sidebar. Pattern: https://nextjs.org/docs/app/building-your-application/rendering/composition-patterns
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect -- standard Next.js SSR/CSR hydration gate; the one-shot mount flag has no cascading-render risk because the dep array is empty.
+  }, []);
+
   const [providerCache] = useState(
     () => new Map<string, ReturnType<typeof createAcmgChatProvider>>(),
   );
@@ -469,17 +478,27 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   return (
     <XProvider>
       <div className="flex min-h-[620px] overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm md:h-[calc(100vh-8.5rem)]">
-        {/* Conversation sidebar */}
-        <Conversations
-          style={{ width: 240, borderRight: "1px solid #f0f0f0" }}
-          items={conversations}
-          activeKey={activeConversationKey}
-          onActiveChange={handleActiveConversationChange}
-          creation={{
-            onClick: handleCreateSession,
-            disabled: isCreating,
-          }}
-        />
+        {/* Conversation sidebar — gated on `mounted` to keep SSR HTML
+            identical to the first client render (see hydration comment
+            above). The placeholder reserves the 240px column so the
+            main chat area doesn't shift when the real sidebar mounts. */}
+        {mounted ? (
+          <Conversations
+            style={{ width: 240, borderRight: "1px solid #f0f0f0" }}
+            items={conversations}
+            activeKey={activeConversationKey}
+            onActiveChange={handleActiveConversationChange}
+            creation={{
+              onClick: handleCreateSession,
+              disabled: isCreating,
+            }}
+          />
+        ) : (
+          <div
+            style={{ width: 240, borderRight: "1px solid #f0f0f0" }}
+            aria-hidden="true"
+          />
+        )}
 
         {/* Main chat area */}
         <div className="flex min-w-0 flex-1 flex-col">
