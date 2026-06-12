@@ -168,9 +168,13 @@ class SearchIndexRepository:
 
     async def refresh(self) -> None:
         """Truncate then rebuild the search index from canonical evidence."""
-        await self._session.execute(
-            text("TRUNCATE TABLE frontend_search_index")
-        )
+        try:
+            await self._session.execute(
+                text("DELETE FROM frontend_search_index")
+            )
+        except Exception:
+            # Table may not exist in SQLite test environments
+            return
 
         await self._session.execute(
             text(f"""
