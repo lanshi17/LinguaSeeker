@@ -78,6 +78,10 @@ class MultiStageTranslator(BaseTranslator):
 
     _MAX_SEGMENT_RETRIES: int = 3
     _MAX_TERMINOLOGY_ENTRIES: int = 100
+    # When check_block_language flags >40% untranslated source-language blocks,
+    # retry the block-mode translation once with a strict English-only prompt.
+    # Capped at 1 to bound LLM cost on pathological inputs.
+    _MAX_PER_BLOCK_RETRIES: int = 1
 
     # Pre-compiled regex for _clean_terminology
     _TERM_HEADER_RE = re.compile(
@@ -337,6 +341,8 @@ class MultiStageTranslator(BaseTranslator):
         formatted: FormattedDocument,
         terminology: str,
         non_empty: list[tuple[int, ContentBlock]],
+        *,
+        strict: bool = False,
     ) -> Tuple[str, List[str], List[str]]:
         """Translate all text/title blocks in a single LLM call.
 
@@ -344,6 +350,10 @@ class MultiStageTranslator(BaseTranslator):
         then splits the translated output on the same markers to recover
         per-block translations. Adjacent short keyword blocks are merged
         before translation to prevent context pollution.
+
+        Args:
+            strict: When True, use a stronger English-only prompt as a
+                retry after the per-block language check failed once.
 
         Returns:
             Tuple of (joined_translated_text, source_block_texts, translated_block_texts).
@@ -363,12 +373,14 @@ class MultiStageTranslator(BaseTranslator):
         )
 
         logger.info(
-            "Translating {} blocks in single call ({} chars), {} English-only blocks preserved",
-            len(merged_blocks), len(marked_source), len(english_overrides),
+            "Translating {} blocks in single call ({} chars), {} English-only blocks preserved, strict={}",
+            len(merged_blocks), len(marked_source), len(english_overrides), strict,
         )
 
         # Single LLM call for the entire document
-        prompt = get_full_document_translate_prompt(marked_source, terminology)
+        prompt = get_full_document_translate_prompt(
+            marked_source, terminology, strict=strict,
+        )
         translated = await invoke_with_retry(self._llm, prompt, "translate/full", system_prompt)
 
         # Strip prompt artifacts
@@ -478,6 +490,8 @@ class MultiStageTranslator(BaseTranslator):
     async def translate_segments(
         self, formatted: FormattedDocument, terminology: str,
         blocks: List[ContentBlock] | None = None,
+        *,
+        strict: bool = False,
     ) -> Tuple[str, List[str], List[str]]:
         """Translate document segment by segment with per-segment validation.
 
@@ -491,6 +505,7 @@ class MultiStageTranslator(BaseTranslator):
             blocks: Optional ContentBlock list. When provided, each non-empty
                 text/title block is translated individually for guaranteed
                 block-level alignment.
+            strict: Forwarded to ``_translate_blocks`` for the retry pass.
 
         Returns:
             Tuple of (joined_translated_text, source_segments, translated_parts).
@@ -506,7 +521,7 @@ class MultiStageTranslator(BaseTranslator):
                                                 (b.type == "footer" and _DOI_RE.search(b.text)))]
             if non_empty:
                 return await self._translate_blocks(
-                    formatted, terminology, non_empty,
+                    formatted, terminology, non_empty, strict=strict,
                 )
 
         text = formatted.formatted_markdown
@@ -657,11 +672,13 @@ class MultiStageTranslator(BaseTranslator):
 
     async def run_pipeline(
         self, formatted: FormattedDocument, blocks: List[ContentBlock] | None = None,
+        *,
+        strict: bool = False,
     ) -> Tuple[Dict[str, str], str, str, str, List[str], List[str], List[str]]:
         # ── Stage 1: Translate (terminology + full-document translation) ──
         terminology = await self.extract_terminology(formatted)
         translated, source_segments, translated_parts = await self.translate_segments(
-            formatted, terminology, blocks=blocks,
+            formatted, terminology, blocks=blocks, strict=strict,
         )
 
         # ── Stage 2: Self-review (LLM quality check and correction) ──────
@@ -840,10 +857,57 @@ class MultiStageTranslator(BaseTranslator):
         translated_blocks = deduplicate_bilingual_blocks(translated_blocks)
 
         # Per-block language detection: catch partial translation failures
-        # (e.g. ru doc where only first page was translated)
-        check_block_language(
-            translated_blocks, formatted.source_language or "unknown",
-        )
+        # (e.g. ru doc where only first page was translated).
+        # If the LLM returned mostly source-language text (a known failure
+        # mode for medical/scientific Chinese documents where the LLM
+        # reproduces the source alongside the translation), retry once
+        # with a strict English-only prompt before raising.
+        try:
+            check_block_language(
+                translated_blocks, formatted.source_language or "unknown",
+            )
+        except TranslationError as exc:
+            if (
+                "per_block_check" in str(exc)
+                and self._MAX_PER_BLOCK_RETRIES > 0
+            ):
+                logger.warning(
+                    "Per-block language check failed ({}). "
+                    "Retrying translation with strict English-only prompt.",
+                    exc,
+                )
+                (
+                    terminology_map, translated, source_segments,
+                    translated_parts, warnings,
+                ) = await self.run_pipeline(
+                    formatted, blocks=blocks if blocks else None, strict=True,
+                )
+                tr_segments = []
+                translated_offset = 0
+                for idx, src_seg in enumerate(source_segments):
+                    src_bbox = None
+                    for sent in formatted.sentences:
+                        if sent.text.strip() in src_seg.strip() or src_seg.strip() in sent.text:
+                            src_bbox = sent
+                            break
+                    tr_text = translated_parts[idx] if idx < len(translated_parts) else ""
+                    tr_segments.append(TranslationSegment(
+                        index=idx, source_text=src_seg,
+                        translated_text=tr_text,
+                        source_bbox=src_bbox,
+                    ))
+                    translated_offset += len(tr_text) + 2
+                translated_blocks = build_translated_blocks(
+                    blocks, tr_segments, translated,
+                    text_block_indices=getattr(self, '_text_block_indices', None),
+                    aux_translations=aux_translations,
+                )
+                translated_blocks = deduplicate_bilingual_blocks(translated_blocks)
+                check_block_language(
+                    translated_blocks, formatted.source_language or "unknown",
+                )
+            else:
+                raise
 
         # Flag blocks with quality issues for manual review
         flagged = flag_quality_issues(translated_blocks)

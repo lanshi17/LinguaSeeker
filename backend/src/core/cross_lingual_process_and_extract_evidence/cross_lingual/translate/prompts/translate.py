@@ -64,11 +64,23 @@ def get_translate_prompt(
 def get_full_document_translate_prompt(
     marked_source: str,
     terminology: str,
+    *,
+    strict: bool = False,
 ) -> str:
     """Build the prompt for translating a full document in one call.
 
     The source text contains ``[BLOCK_N]`` markers that delimit each
     content block. The LLM must preserve these markers exactly.
+
+    Args:
+        marked_source: Source text with ``[BLOCK_N]`` markers.
+        terminology: Extracted bilingual term pairs.
+        strict: When True, append an explicit English-only directive used
+            as a retry instruction when the per-block language check
+            flags too many untranslated source-language blocks. This
+            prevents the LLM from reproducing the source alongside the
+            translation (a common failure mode for medical/scientific
+            texts with many untranslatable proper nouns).
     """
     parts: list[str] = []
 
@@ -103,6 +115,19 @@ def get_full_document_translate_prompt(
         "'CondonPlus' stays 'CondonPlus', not 'CodonPlus').\n"
         "- Output ONLY the translated document with [BLOCK_N] markers.\n"
     )
+
+    if strict:
+        parts.append(
+            "[STRICT ENGLISH-ONLY RETRY]\n"
+            "- A previous translation attempt left untranslated source-language text in the output.\n"
+            "- Output MUST be entirely English. The ONLY allowed non-English content is:\n"
+            "  * Chinese given names / surnames (pinyin form)\n"
+            "  * Established English scientific terms (e.g. Rett syndrome, MECP2, BRCA1, IVIG)\n"
+            "  * Direct quotes from references\n"
+            "- Translate EVERY Chinese sentence to English. Do NOT reproduce the Chinese source\n"
+            "  before or after the English translation.\n"
+            "- Do NOT add a bilingual format. ONE language per block: English.\n"
+        )
 
     parts.append(f"[DOCUMENT]\n{marked_source}")
     return "\n".join(parts)
