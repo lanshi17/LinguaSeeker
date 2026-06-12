@@ -304,3 +304,4 @@
 
 [2026-06-12] fix(chat): prevent SSR/CSR hydration mismatch on chat sidebar (commit 85eb66d5) -- gated <Conversations> on a mounted flag in ChatView.tsx; useChatSessions.ts untouched. Verified: 7/7 vitest, 30/30 node --test, 0 ESLint errors on src/features/chat/, tsc clean, next build prerenders /chat as static content. [done]
 [2026-06-12] fix(chat): "Illegal header value b'Bearer '" error when REASONING_LLM_API_KEY is unset — ReasoningLLMProvider now falls back to generic LLM config (api_key, model, base_url) and validates before HTTP calls with a clear error message [done]
+[2026-06-12] fix(chat): fix system prompt typo "Cross Evidenceassistant" → "ACMG Lingua assistant" introduced in chat LLM config refactor [done]
