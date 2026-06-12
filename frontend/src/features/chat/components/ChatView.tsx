@@ -35,8 +35,8 @@ import type { PipelineFormData } from "./forms";
 import { apiClient } from "@/lib/api/client";
 import { extractErrorMessage } from "@/lib/api/error";
 
-/** Max characters of the first user message used as the session title. */
-const SESSION_TITLE_CHARS = 5;
+/** Max words of the first user message used as the session title. */
+const SESSION_TITLE_WORDS = 5;
 
 interface ChatViewProps {
   processingRunId?: string;
@@ -119,7 +119,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     useChatSessions(processingRunId);
 
   // Per-session title overrides: first user message's first
-  // SESSION_TITLE_CHARS characters. Default label used until then.
+  // SESSION_TITLE_WORDS words. Default label used until then.
   const [sessionLabels, setSessionLabels] = useState<Record<string, string>>(
     {},
   );
@@ -151,7 +151,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         if (prev[sessionKey]) return prev;
         const trimmed = content.trim();
         if (!trimmed) return prev;
-        return { ...prev, [sessionKey]: trimmed.slice(0, SESSION_TITLE_CHARS) };
+        return { ...prev, [sessionKey]: trimmed.split(/\s+/).slice(0, SESSION_TITLE_WORDS).join(" ") };
       });
     },
     [],
