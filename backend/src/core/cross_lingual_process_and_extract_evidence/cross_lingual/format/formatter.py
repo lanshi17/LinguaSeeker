@@ -14,6 +14,13 @@ from ...contracts import (
 )
 from .base import BaseFormatter
 
+_HTML_DETECT_RE = re.compile(r"^\s*<(!DOCTYPE|html|head|body|title)\b", re.IGNORECASE | re.DOTALL)
+
+
+def _is_html(text: str) -> bool:
+    """Return True if text looks like an HTML document."""
+    return bool(_HTML_DETECT_RE.match(text[:500]))
+
 
 def build_page_offset_map(pages: List[Dict[str, Any]]) -> Dict[int, int]:
     """Build a mapping from character offset to page number.
@@ -250,6 +257,10 @@ class MarkdownFormatter(BaseFormatter):
             from langchain_core.messages import HumanMessage
             response = self._llm.invoke([HumanMessage(content=prompt)])
             formatted = response.content if hasattr(response, 'content') else str(response)
+
+            if _is_html(formatted):
+                logger.warning("LLM format output is HTML (likely error page), keeping original")
+                return doc
 
             # Safety: if output is too different in length, keep original
             if abs(len(formatted) - len(doc.formatted_markdown)) > len(doc.formatted_markdown) * 0.3:
