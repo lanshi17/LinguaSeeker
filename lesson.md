@@ -1762,3 +1762,21 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 - Never use `Path(__file__).resolve().parents[N]` for project-relative paths. Always anchor to a named constant exposed from `src.core.config` (`BACKEND_ROOT`, `REPO_ROOT`) or a config-driven setting. The N-index is invisible to a reader and silently wrong if the file is moved.
 - When a function's "return None" path hides a missing resource, add an integration smoke test (e.g. start backend, hit the endpoint, assert the field is non-null) — unit tests on the data layer alone won't catch a path-resolution bug of this shape.
 - The frontend's silent fallback (render snippets when full text is missing) was the user-visible symptom. Frontend fallbacks should be explicit (an empty-state banner), not invisible.
+
+## 2026-06-12 — Ant Design X chat messages can repeat `msg_0` after hook remounts
+
+**Problem:** The chat page emitted React's duplicate child key warning for `msg_0` at `ChatPage -> ChatView`.
+
+**Investigation:** `ChatView` passed `useXChat()` message IDs directly to `Bubble.List` item keys. The installed `@ant-design/x-sdk` creates local message IDs with a hook-local counter (`msg_0`, `msg_1`, ...), while its message store is global by `conversationKey`. When the hook remounts or another chat view binds the same conversation, the counter can restart while the global store still contains prior local messages.
+
+**Root cause:** SDK-generated message IDs are unique only within one hook instance, not necessarily within the persisted conversation store used across remounts. Rendering those IDs directly as React keys makes duplicate `msg_0` entries possible.
+
+**Solution:** Added `toUniqueChatMessageKeys()` to disambiguate repeated SDK IDs at render time without mutating SDK message IDs. `FullChatView` and `SingleSessionChat` now pass those unique keys to `Bubble.List`. The history mapper also uses a type guard so system-role backend messages are filtered before building `ChatBubbleMessage` values.
+
+**Verification:**
+- Red-green frontend regression test: duplicate IDs `msg_0`, `msg_0`, `msg_1`, `msg_0` map to unique keys `msg_0`, `msg_0__2`, `msg_1`, `msg_0__3`.
+- `source ~/.nvm/nvm.sh && nvm use && npm test`: 26/26 frontend tests passed.
+- `npm run type-check` is still blocked by unrelated pre-existing pipeline status type mismatches.
+- `npm run lint` is still blocked by unrelated pre-existing `react-hooks/set-state-in-effect` errors in `PipelineStartForm.tsx` and `useChatSessions.ts`.
+
+**Prevention:** Do not mutate Ant Design X SDK message IDs during streaming because `useXChat` uses them internally for updates. If the SDK ID source is not globally unique, derive render-only keys at the list boundary and cover duplicate-ID cases with utility tests.

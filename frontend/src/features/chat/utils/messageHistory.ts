@@ -7,13 +7,21 @@ export interface ChatBubbleMessage {
   content: string;
 }
 
+interface ChatMessageKeySource {
+  id: string | number;
+}
+
+function isChatBubbleMessage(
+  message: ChatMessageResponse,
+): message is ChatMessageResponse & { role: ChatBubbleMessage["role"] } {
+  return message.role === "user" || message.role === "assistant";
+}
+
 export function toXChatDefaultMessages(
   messages: ChatMessageResponse[],
 ): DefaultMessageInfo<ChatBubbleMessage>[] {
   return messages
-    .filter(
-      (message) => message.role === "user" || message.role === "assistant",
-    )
+    .filter(isChatBubbleMessage)
     .map((message) => ({
       id: message.message_id,
       status: "success" as const,
@@ -22,4 +30,18 @@ export function toXChatDefaultMessages(
         content: message.content,
       },
     }));
+}
+
+export function toUniqueChatMessageKeys(
+  messages: readonly ChatMessageKeySource[],
+): string[] {
+  const seen = new Map<string, number>();
+
+  return messages.map(({ id }) => {
+    const key = String(id);
+    const count = (seen.get(key) ?? 0) + 1;
+    seen.set(key, count);
+
+    return count === 1 ? key : `${key}__${count}`;
+  });
 }

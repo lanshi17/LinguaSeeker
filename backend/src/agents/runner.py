@@ -159,7 +159,9 @@ class PipelineRunner:
 
         # Fall back to database (crash recovery) — read-only
         state = await self._persistence.load(processing_run_id)
-        if state is not None:
+        if state is not None and state.pipeline_status not in self._ACTIVE_STATUSES:
+            # Only cache terminal states from DB; active states owned by
+            # another worker would become stale if cached here.
             self.remember_state(processing_run_id, state)
         return state
 

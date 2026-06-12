@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import type { ChatMessageResponse } from "../../../src/features/chat/types/chat";
-import { toXChatDefaultMessages } from "../../../src/features/chat/utils/messageHistory";
+import {
+  toUniqueChatMessageKeys,
+  toXChatDefaultMessages,
+} from "../../../src/features/chat/utils/messageHistory";
 
 describe("chat message history mapping", () => {
   it("maps backend messages to @ant-design/x default messages", () => {
@@ -40,5 +43,16 @@ describe("chat message history mapping", () => {
         },
       },
     ]);
+  });
+
+  it("creates unique render keys when SDK message ids repeat", () => {
+    const keys = toUniqueChatMessageKeys([
+      { id: "msg_0" },
+      { id: "msg_0" },
+      { id: "msg_1" },
+      { id: "msg_0" },
+    ]);
+
+    assert.deepEqual(keys, ["msg_0", "msg_0__2", "msg_1", "msg_0__3"]);
   });
 });

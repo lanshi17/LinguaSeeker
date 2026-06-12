@@ -297,3 +297,5 @@
 [2026-06-11] [Pipeline correctness remediation plan review fixes] [completed]
 [2026-06-11] ClinGen batch regression extraction quality fixes implemented and verified [completed]
 [2026-06-12] [Pipeline correctness remediation: multi-worker leases, payload preservation, phase mode, review finalization, auth/status contracts] [done]
+[2026-06-12] [Chat duplicate message key fix: disambiguated repeated Ant Design X SDK message IDs for Bubble.List rendering] [done]
+[2025-07-14] 新增规则26 — 通过 .codegraph/ 快速了解项目（符号级代码智能索引优先使用原则）[完成]
