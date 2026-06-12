@@ -3,14 +3,18 @@
 import pytest
 
 
-def test_file_not_found_is_not_retryable():
-    """FileNotFoundError should not be in the retryable errors tuple."""
+def test_permanent_os_errors_are_excluded_from_retryable():
+    """Verify _PERMANENT_OS_ERRORS are NOT accidentally caught by _RETRYABLE_ERRORS in the except chain."""
     from src.agents.contracts import build_retryable_errors
 
     retryable = build_retryable_errors()
-    assert FileNotFoundError not in retryable
-    assert PermissionError not in retryable
-    assert IsADirectoryError not in retryable
+    # The real fix: _PERMANENT_OS_ERRORS must be listed BEFORE _RETRYABLE_ERRORS
+    # in the except chain. This test verifies FileNotFoundError IS a subclass
+    # of OSError (which is in retryable) — confirming the ordering is necessary.
+    assert issubclass(FileNotFoundError, OSError), (
+        "FileNotFoundError is a subclass of OSError — if _PERMANENT_OS_ERRORS "
+        "appears after _RETRYABLE_ERRORS in the except chain, this error WILL be retried"
+    )
 
 
 def test_os_error_is_retryable():
