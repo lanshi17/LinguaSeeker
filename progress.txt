@@ -296,3 +296,4 @@
 [2026-06-11] [Pipeline correctness remediation implementation plan] [completed]
 [2026-06-11] [Pipeline correctness remediation plan review fixes] [completed]
 [2026-06-11] ClinGen batch regression extraction quality fixes implemented and verified [completed]
+[2026-06-12] [Pipeline correctness remediation: multi-worker leases, payload preservation, phase mode, review finalization, auth/status contracts] [done]

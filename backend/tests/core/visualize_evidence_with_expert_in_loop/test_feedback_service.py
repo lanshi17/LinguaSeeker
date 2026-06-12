@@ -163,7 +163,55 @@ class TestFeedbackService:
                 reviewer_id=None,
             )
 
-    async def _create_test_evidence(self, session: AsyncSession) -> uuid.UUID:
+    async def test_patch_preserves_field_level_active_payload_keys(
+        self, db_session: AsyncSession
+    ) -> None:
+        """Patching must preserve field-level keys (group_id, source, track, entity_id)."""
+        from unittest.mock import AsyncMock, patch as mock_patch
+
+        evidence_id = await self._create_test_evidence(
+            db_session,
+            field_id="B.disease_diagnosis",
+            active_payload={
+                "field_id": "B.disease_diagnosis",
+                "field_name": "Disease diagnosis",
+                "value": "Fabry disease",
+                "group_id": "case-1",
+                "track": "original",
+                "source": {"text_snippet": "Fabry disease was diagnosed"},
+                "entity_id": "entity-1",
+            },
+        )
+
+        service = FeedbackService(db_session)
+        # Mock refresh calls to avoid SQLite TRUNCATE issue (pre-existing)
+        with (
+            mock_patch.object(service, "_refresh_literature_profile", new_callable=AsyncMock),
+            mock_patch.object(service, "_refresh_search_index", new_callable=AsyncMock),
+        ):
+            await service.patch_evidence(
+                canonical_evidence_id=evidence_id,
+                patch=EvidencePatchRequest(fields={"disease": "Fabry disease type I"}),
+                reviewer_id=None,
+            )
+
+        from src.dao.postgresql.models import CanonicalEvidenceItem
+
+        evidence = await db_session.get(CanonicalEvidenceItem, evidence_id)
+        assert evidence is not None
+        assert evidence.active_payload["group_id"] == "case-1"
+        assert evidence.active_payload["source"] == {"text_snippet": "Fabry disease was diagnosed"}
+        assert evidence.active_payload["track"] == "original"
+        assert evidence.active_payload["entity_id"] == "entity-1"
+        assert evidence.active_payload["value"] == "Fabry disease type I"
+
+    async def _create_test_evidence(
+        self,
+        session: AsyncSession,
+        *,
+        field_id: str = "A.test.1",
+        active_payload: dict | None = None,
+    ) -> uuid.UUID:
         """Helper: create test evidence card with provisional status."""
         from uuid import uuid4
 
@@ -173,19 +221,22 @@ class TestFeedbackService:
         session.add(doc)
         await session.flush()
 
+        if active_payload is None:
+            active_payload = EvidenceCardPayload(
+                gene="GLA",
+                phenotype="Fabry disease",
+            ).model_dump()
+
         evidence = CanonicalEvidenceItem(
             canonical_evidence_id=uuid4(),
             source_document_id=doc.source_document_id,
-            field_id="A.test.1",
+            field_id=field_id,
             position_hash="abc123",
             text_hash="def456",
             entity_scope_hash="ghi789",
             current_best_status="found",
             review_status="provisional",
-            active_payload=EvidenceCardPayload(
-                gene="GLA",
-                phenotype="Fabry disease",
-            ).model_dump(),
+            active_payload=active_payload,
         )
         session.add(evidence)
         await session.flush()

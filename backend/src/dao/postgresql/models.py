@@ -631,6 +631,13 @@ class PipelineRunState(Base):
     __table_args__ = (
         Index("ix_pipeline_run_states_source_document_id", "source_document_id"),
         Index("ix_pipeline_run_states_pipeline_status", "pipeline_status"),
+        Index("ix_pipeline_run_states_owner_heartbeat", "owner_worker_id", "heartbeat_at"),
+        Index(
+            "ux_pipeline_run_states_active_source_key",
+            "source_key",
+            unique=True,
+            postgresql_where=text("source_key IS NOT NULL AND pipeline_status IN ('pending', 'running')"),
+        ),
     )
 
     processing_run_id: Mapped[uuid.UUID] = mapped_column(
@@ -661,4 +668,10 @@ class PipelineRunState(Base):
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
+    )
+    # Durable worker lease fields for multi-worker coordination
+    source_key: Mapped[str | None] = mapped_column(Text, nullable=True)
+    owner_worker_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    heartbeat_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
