@@ -22,7 +22,7 @@ FastAPI is authoritative for authentication and API behavior. Next.js proxies re
 
 ### 2.1 Core Positioning
 
-CrossEvidence is an "evidence porter" -- absolutely loyal to source data. Every piece of extracted information must be 100% traceable to its original location in the literature.
+CrossEvidence is an "evidence porter" -- absolutely loyal to source data. Every piece of extracted information must be citation-valid-by-construction: each adopted evidence item carries a programmatically verifiable source span anchor to its original location in the literature.
 
 ### 2.2 Design Principles
 

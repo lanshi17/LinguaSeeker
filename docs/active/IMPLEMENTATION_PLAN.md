@@ -2,7 +2,7 @@
 
 ## 1. Execution Strategy
 
-Implementation follows a four-phase evidence infrastructure pipeline. The current product scope is upstream evidence automation: acquire literature, parse documents, extract evidence from original text and translated text, fuse bilingual extraction results, standardize entities, build evidence matrices, support bilingual source-linked expert review, and export evidence summary reports.
+Implementation follows a four-phase evidence infrastructure pipeline. The current product scope is upstream evidence automation: acquire literature, parse documents, extract evidence from original text and translated text (storing both tracks side-by-side), standardize entities, build evidence matrices, support bilingual source-linked expert review, and export evidence summary reports.
 
 ```text
 Acquire/Upload → Parse/Digitize → Native Extraction → Translation → Translated Extraction → Fusion → Standardization → Evidence Matrix → Bilingual Review/Export
@@ -73,7 +73,7 @@ These are prerequisites for all phases.
 | 0.11 | Chat API | `backend/src/api/v1/chat.py` chat sessions and messages | [DONE] | Chat session/message CRUD works |
 | 0.12 | Review/feedback API | `backend/src/core/visualize_evidence_with_expert_in_loop/feedback_service.py` | [DONE] | Feedback persists correctly |
 | 0.13 | Delta audit API | `backend/src/api/v1/delta_audit.py` + `backend/src/core/visualize_evidence_with_expert_in_loop/delta_audit_service.py` | [DONE] | Delta entries returned |
-| 0.14 | Cache metadata | PDF/DOCX hash + PMID/DOI + parser/translation/extraction/fusion/model versions | [TODO] | Reused outputs produce normal task flow |
+| 0.14 | Cache metadata | PDF/DOCX hash + PMID/DOI + parser/translation/extraction/model versions | [TODO] | Reused outputs produce normal task flow |
 | 0.15 | Frontend API client | `frontend/src/lib/api/client.ts` Axios client for `/api/v1/*` | [DONE] | Requests route through Next.js proxy |
 | 0.16 | Frontend dashboard shell | DashboardLayout with Sidebar navigation; layout components in `frontend/src/components/layout/` | [DONE] | Sidebar renders, navigation works |
 | 0.17 | Frontend SSE chat hook | Chat hooks in `frontend/src/features/chat/hooks/` (useChatMessages, useChatSessions) | [DONE] | Chat messages render in UI |
@@ -99,25 +99,25 @@ These are prerequisites for all phases.
 | 1.14 | Frontend chat panel | Message bubble stream (text, system-progress with SSE typewriter, evidence card), session sidebar | [TODO] | Full chat flow works end-to-end |
 | 1.15 | Cache reuse integration | Hash and PMID/DOI keys can reuse outputs without exposing cache markers | [TODO] | Repeated inputs create new task IDs and complete normally |
 
-### 3.2 Phase 2: Dual Cross-Lingual Extraction, Translation, and Fusion
+### 3.2 Phase 2: Dual Cross-Lingual Extraction and Translation
 
-This phase is the highest-priority quality layer. The implementation must avoid both single-pass translation-first extraction and single-pass native-only extraction. It uses original-language extraction, translated-text extraction, and fusion.
+This phase is the highest-priority quality layer. The implementation must avoid both single-pass translation-first extraction and single-pass native-only extraction. It uses original-language extraction and translated-text extraction, storing both tracks side-by-side for expert review. Automated cross-track reconciliation (comparison, deduplication, conflict flagging) is planned.
 
 | # | Task | Description | Status | Verify |
 |---|---|---|---|---|
-| 2.1 | Dual extraction contracts | Pydantic models for original spans, translated spans, native evidence, translated evidence, fused evidence, confidence, fusion status. Contracts in `backend/src/core/cross_lingual_process_and_extract_evidence/contracts.py` | [DONE] | Models validate sample JSON |
+| 2.1 | Dual extraction contracts | Pydantic models for original spans, translated spans, native evidence, translated evidence, dual-track evidence, confidence. Contracts in `backend/src/core/cross_lingual_process_and_extract_evidence/contracts.py` | [DONE] | Models validate sample JSON |
 | 2.2 | Coarse evidence filter | Identify chunks likely containing phenotype, variant, segregation, functional, frequency, method, or result evidence | [TODO] | Filter recall tested on mixed chunks |
 | 2.3 | Native extractor | Extract entities/relations/evidence from source-language chunks via `extract_evidence/stages/catalog_extraction.py` and `evidence_map.py` | [DONE] | Non-English sample produces native evidence JSON with original anchors |
 | 2.4 | Fine-grained native prompts | Medical prompts for phenotypes, methods, experimental results, table/figure evidence, population data | [TODO] | Prompt outputs match schema |
 | 2.5 | Document/chunk translation | `cross_lingual/translate/translator.py` + `language_detector.py` + `prompts/` translate evidence-bearing chunks; preserve anchor mapping | [DONE] | Translated output maps back to original anchors |
 | 2.6 | Translation validation | `cross_lingual/translate/validator/` detects dropped content, terminology drift, and biomedical literal changes | [DONE] | Bad translations flagged |
 | 2.7 | Translated-text extractor | Extract evidence from translated content using same target schema via `extract_evidence/stages/` | [DONE] | Translated sample produces translated evidence JSON |
-| 2.8 | Fusion and cross-validation | Compare native JSON and translated JSON; deduplicate; flag native-only, translated-only, and conflicts via `extract_evidence/stages/group_assignment.py` | [DONE] | Fusion tests cover agreement and disagreement |
-| 2.9 | Evidence confidence scoring | Combine native confidence, translated confidence, translation quality, and fusion status via `extract_evidence/stages/quality_validation.py` | [IN PROGRESS] | Confidence included for all fused items |
-| 2.10 | Bi-directional source span linkage | Link evidence to original and translated anchors/bbox/table/figure IDs via `extract_evidence/stages/source_grounding.py` | [DONE] | Every fused evidence item has required traceability |
+| 2.8 | Cross-track reconciliation | Compare native JSON and translated JSON; deduplicate; flag native-only, translated-only, and conflicts. *(Infrastructure ready; automated reconciliation algorithm planned.)* | [PLANNED] | Reconciliation tests cover agreement and disagreement |
+| 2.9 | Evidence confidence scoring | Combine native confidence, translated confidence, translation quality via `extract_evidence/stages/quality_validation.py` | [IN PROGRESS] | Confidence included for all dual-track items |
+| 2.10 | Bi-directional source span linkage | Link evidence to original and translated anchors/bbox/table/figure IDs via `extract_evidence/stages/source_grounding.py` | [DONE] | Every dual-track evidence item has required traceability |
 | 2.11 | JSON parsing/repair | Robust LLM JSON parsing with explicit failure when unrecoverable via `extract_evidence/common/` | [DONE] | Invalid output fails truthfully |
-| 2.12 | Supervisor integration | `cross_lingual/workflow.py` + `router.py` + `persistence.py` wire nodes: parse -> native_extract -> translate -> translated_extract -> fuse | [DONE] | Pipeline order is correct |
-| 2.13 | Frontend evidence base | Display original/translated snippets, fusion status, confidence, and source links | [TODO] | Evidence items render with bilingual traceability |
+| 2.12 | Supervisor integration | `cross_lingual/workflow.py` + `router.py` + `persistence.py` wire nodes: parse -> native_extract -> translate -> translated_extract -> *(reconcile: planned)* | [DONE] | Pipeline order is correct |
+| 2.13 | Frontend evidence base | Display original/translated snippets, reconciliation status, confidence, and source links | [TODO] | Evidence items render with bilingual traceability |
 
 ### 3.3 Phase 3: Entity Standardization and Evidence Matrix Persistence
 
@@ -135,8 +135,8 @@ This phase is the highest-priority quality layer. The implementation must avoid 
 | 3.10 | Vector embedding pipeline | `similarity_match/indexer.py` + `providers.py` + `repositories.py` embed aliases/entities for pgvector search | [DONE] | Similarity search works |
 | 3.11 | Conflict resolution Agent | Resolve ambiguous matches using article context, original terms, and translated terms | [TODO] | Ambiguous matches resolved with rationale |
 | 3.12 | Standardization schema | Preserve original + translated + standardized values + match status via `contracts.py` | [DONE] | JSON includes all values and rationale |
-| 3.13 | Evidence matrix builder | Combine fused evidence items and standardized entities into matrix snapshot | [TODO] | EvidenceMatrix validates and persists |
-| 3.14 | Supervisor integration | Add standardization and matrix persistence node | [TODO] | Pipeline: fused evidence -> standardized evidence matrix |
+| 3.13 | Evidence matrix builder | Combine dual-track evidence items and standardized entities into matrix snapshot | [TODO] | EvidenceMatrix validates and persists |
+| 3.14 | Supervisor integration | Add standardization and matrix persistence node | [TODO] | Pipeline: dual-track evidence -> standardized evidence matrix |
 
 ### 3.4 Phase 4: Frontend UI — AI Assistant, Task Board, Knowledge Base, Workspace, Settings
 
@@ -186,8 +186,8 @@ The following frontend feature components have been implemented and are availabl
 1. Acquisition/upload + traceable parsing [DONE]
     │
     ▼
-2. Native extraction + translation + translated extraction + fusion [IN PROGRESS]
-    │   ├── Contracts, extraction, translation, fusion, source grounding, workflow: DONE
+2. Native extraction + translation + translated extraction [IN PROGRESS]
+    │   ├── Contracts, extraction, translation, source grounding, workflow: DONE
     │   └── Confidence scoring, coarse filter, fine-grained prompts: IN PROGRESS/TODO
     │
     ▼
@@ -209,7 +209,7 @@ These can run concurrently once dependencies are satisfied:
 - **1.2-1.3** search/task flow || **1.4-1.12** parsing/metadata/layout || **1.13-1.14** frontend input/status.
 - **2.1-2.4** native contracts/prompts/extractor || **2.5-2.6** translation/validation.
 - **2.7** translated extractor can begin once the shared schema from **2.1** exists.
-- **2.8-2.10** fusion/source-linking depends on native, translation, and translated extraction contracts.
+- **2.8-2.10** reconciliation/source-linking depends on native, translation, and translated extraction contracts. *(2.8 reconciliation is planned.)*
 - **3.1-3.5** data loaders by source database.
 - **3.6-3.9** matchers after relevant loaders.
 - **4.1-4.3** chat/evidence cards || **4.4-4.7** task board/delta || **4.8-4.10** workspace || **4.11-4.15** knowledge base/settings/drafts || **4.16-4.18** batch/export/e2e.
@@ -223,7 +223,7 @@ These can run concurrently once dependencies are satisfied:
 
 | New Task | Old Version Source | Adaptation Needed |
 |---|---|---|
-| 0.1 DB schema | `src/infrastructure/models.py` | Expand for original/translated spans, native/translated/fused evidence, feedback, cache, evidence matrix snapshots |
+| 0.1 DB schema | `src/infrastructure/models.py` | Expand for original/translated spans, native/translated dual-track evidence, feedback, cache, evidence matrix snapshots |
 | 0.2 ORM models | `src/infrastructure/postgres.py` | Update to async SQLAlchemy |
 | 0.5 API routes | `src/api/routes/` | Align to `/api/v1/auth/*`, `/api/v1/pipeline/*`, `/api/v1/evidence/*`, `/api/v1/chat/*` |
 | 0.6 Auth | `src/api/dependencies.py` | Add JWT signing/verification and email verification state |
@@ -232,9 +232,9 @@ These can run concurrently once dependencies are satisfied:
 | 2.3 Native extraction | `src/agents/extraction/node.py` | Adapt to source-language native extraction |
 | 2.5 Translation | `src/agents/parsing/translation_tool.py` | Preserve anchors and biomedical literals for secondary extraction |
 | 2.7 Translated extraction | `src/agents/extraction/node.py` | Reuse schema on translated text |
-| 2.8 Fusion prompts | `src/domain/agent/prompts.py` | Add native-vs-translated comparison, dedupe, and conflict prompts |
+| 2.8 Reconciliation prompts *(planned)* | `src/domain/agent/prompts.py` | Add native-vs-translated comparison, dedupe, and conflict prompts |
 | 3.x Matchers | `src/domain/variant/`, `src/tools/external/` | ClinVar/ClinGen clients and normalizers |
-| Supervisor workflow | `src/agents/supervisor.py` | Enforce parse -> native_extract -> translate -> translated_extract -> fuse -> standardize -> matrix -> review/export order |
+| Supervisor workflow | `src/agents/supervisor.py` | Enforce parse -> native_extract -> translate -> translated_extract -> *(reconcile: planned)* -> standardize -> matrix -> review/export order |
 | Infrastructure | `src/infrastructure/` | PostgreSQL patterns; Redis/Neo4j portions deferred |
 
 ## 7. Verification Checkpoints
@@ -243,8 +243,8 @@ These can run concurrently once dependencies are satisfied:
 |---|---|---|
 | 0 | DB created, FastAPI starts, auth works, pipeline API returns results, chat API connects, dashboard frontend renders | MOSTLY DONE (lint/type-check wiring pending) |
 | 1 | Chat PDF/PMID input -> SSE progress -> traceable rendered document; no-bbox output fails truthfully | DONE |
-| 2 | Non-English source -> native JSON -> translated document -> translated JSON -> fused evidence with bilingual anchors, fusion status, and confidence | IN PROGRESS (confidence scoring refinement pending) |
-| 3 | Fused evidence JSON -> standardized entities with original + translated + standardized values + match rationale -> persisted evidence matrix | IN PROGRESS (matrix builder, conflict resolver pending) |
+| 2 | Non-English source -> native JSON -> translated document -> translated JSON -> dual-track evidence with bilingual anchors and confidence | IN PROGRESS (confidence scoring refinement pending; reconciliation planned) |
+| 3 | Dual-track evidence JSON -> standardized entities with original + translated + standardized values + match rationale -> persisted evidence matrix | IN PROGRESS (matrix builder, conflict resolver pending) |
 | 4 | End-to-end: chat upload -> SSE -> inline cards -> NL correction -> confirm -> task board -> workspace review with shortcuts -> knowledge base search -> knowledge base matrix -> traceability drawer -> ACMG draft -> export | IN PROGRESS (evidence cards, workspace, export pending) |
 
 ## 8. Deferred / P1 Work

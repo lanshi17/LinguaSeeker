@@ -168,7 +168,7 @@ As a system administrator, I open the Settings tab to view current ontology vers
 | F5.1 | FastAPI owns `/api/v1/*` API behavior and JWT signing/verification. | P0 |
 | F5.2 | Next.js proxies API calls and renders UI; it does not sign or verify JWTs. | P0 |
 | F5.3 | Chat sessions, task board, and knowledge base are publicly visible in open-source deployment; audit logs replace permission-based isolation. | P0 |
-| F5.4 | Async task creation/status/result flow; SSE streams chat and processing progress via Vercel AI SDK. | P0 |
+| F5.4 | Async task creation/status/result flow; SSE streams chat and processing progress via FastAPI `StreamingResponse`. | P0 |
 | F5.5 | Persist chat sessions, delta edits, completed metadata, document outputs, evidence matrix, reports, and feedback. | P0 |
 | F5.6 | Cache by PDF/DOCX hash, PMID, DOI, prompt version, parser version, translation version, extraction model versions, and model config. | P1 |
 | F5.7 | Use loguru logs under `logs/`. | P0 |
