@@ -65,8 +65,11 @@ class PipelineRunner:
             owner_worker_id=self._worker_id,
             heartbeat_at=now,
         )
-        # Only set initial state in cache if no newer state exists for this run_id
-        if run_id not in self._last_states:
+        # Overwrite cache for phase reruns (old terminal → new pending),
+        # but preserve non-terminal cached states that may be newer
+        # (e.g. set by on_state_change during a previous run).
+        cached = self._last_states.get(run_id)
+        if cached is None or cached.pipeline_status not in self._ACTIVE_STATUSES:
             self.remember_state(run_id, initial_state)
 
         async def _run_pipeline():
