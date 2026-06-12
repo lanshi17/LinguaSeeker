@@ -154,6 +154,8 @@ def _build_source_key(body: PipelineRunRequest) -> str | None:
     different hypotheses should produce separate runs.
     """
     base_key = body.filename or (body.query or "")
+    if not base_key and body.identifiers:
+        base_key = ",".join(sorted(body.identifiers))
     if not base_key:
         return None
     if body.extraction_target is None:

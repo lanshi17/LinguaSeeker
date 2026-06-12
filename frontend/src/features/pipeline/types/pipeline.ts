@@ -9,11 +9,22 @@ export interface PipelineRunRequest {
   /** Base64-encoded file content for local uploads. */
   content_base64?: string;
   filename?: string;
+  /** Pre-parsed markdown (bypasses Phase 1 parsing). */
+  pre_parsed_markdown?: string;
   /** Online query string for literature search. */
   query?: string;
   identifiers?: string[];
-  /** Target phase when mode is "phase". */
-  target_phase?: PhaseId;
+  /** Target phase number (1-3) when mode is "phase". */
+  target_phase?: number;
+  /** Existing run ID for phase 2/3 reruns. */
+  processing_run_id?: string;
+  /** Target gene-disease hypothesis for extraction. */
+  target?: {
+    gene_symbol?: string;
+    disease_name?: string;
+    variant_hgvs_p?: string;
+    clingen_entry_id?: string;
+  };
 }
 
 /** POST /pipeline/run response body. */
