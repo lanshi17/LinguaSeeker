@@ -430,6 +430,7 @@ class SearchService:
                 CanonicalEvidenceItem.review_status,
                 CanonicalEvidenceItem.current_best_confidence,
                 CanonicalEvidenceItem.active_payload,
+                CanonicalEvidenceItem.updated_at,
             )
             .where(CanonicalEvidenceItem.active_payload["group_id"].astext == group_id)
             .order_by(CanonicalEvidenceItem.field_id)
@@ -438,6 +439,18 @@ class SearchService:
         rows = result.all()
         if not rows:
             raise NoResultFound()
+
+        # Deduplicate by (field_id, track): keep the most recently updated row
+        # to avoid "Duplicate track" warnings from the trace-building loop.
+        seen: dict[tuple[str, str], int] = {}
+        deduped_rows = []
+        for row in sorted(rows, key=lambda r: r.updated_at or "", reverse=True):
+            track = (row.active_payload or {}).get("track", "original")
+            key = (row.field_id, track)
+            if key not in seen:
+                seen[key] = 1
+                deduped_rows.append(row)
+        rows = deduped_rows
 
         source_document_id = rows[0].source_document_id
 
@@ -529,7 +542,7 @@ class SearchService:
                 track = payload.get("track")
                 if track == "original":
                     if original_row is not None:
-                        logger.warning(
+                        logger.debug(
                             "Duplicate original track for field_id={}: "
                             "overwriting with canonical_evidence_id={}",
                             field_id,
@@ -538,7 +551,7 @@ class SearchService:
                     original_row = row
                 elif track == "translated":
                     if translated_row is not None:
-                        logger.warning(
+                        logger.debug(
                             "Duplicate translated track for field_id={}: "
                             "overwriting with canonical_evidence_id={}",
                             field_id,
