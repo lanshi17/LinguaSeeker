@@ -880,7 +880,7 @@ git commit -m "feat: support standalone chat sessions on frontend"
 ## Task 5: Real SSE Chat Provider
 
 **Files:**
-- Modify: `frontend/src/features/chat/providers/acmgChatProvider.ts`
+- Modify: `frontend/src/features/chat/providers/chatProvider.ts`
 - Modify: `frontend/src/features/chat/services/chat.ts`
 - Create: `frontend/src/features/chat/utils/sse.ts`
 - Test: `frontend/tests/features/chat/sse.test.ts`
@@ -984,10 +984,10 @@ export function appendAssistantChunk(
 
 **Step 4: Update provider transform and persist-only POST**
 
-In `frontend/src/features/chat/providers/acmgChatProvider.ts`:
+In `frontend/src/features/chat/providers/chatProvider.ts`:
 
 - Import `appendAssistantChunk` and `ChatBubbleMessage`.
-- Change `AcmgChatProvider` generic from local `ChatMessage` to `ChatBubbleMessage`.
+- Change `CrossEvidenceChatProvider` generic from local `ChatMessage` to `ChatBubbleMessage`.
 - Replace `transformMessage()`:
 
 ```typescript
@@ -1022,7 +1022,7 @@ Expected: PASS after Task 6 updates any ChatView types.
 **Step 6: Commit**
 
 ```bash
-git add frontend/src/features/chat/providers/acmgChatProvider.ts frontend/src/features/chat/services/chat.ts frontend/src/features/chat/utils/sse.ts frontend/tests/features/chat/sse.test.ts
+git add frontend/src/features/chat/providers/chatProvider.ts frontend/src/features/chat/services/chat.ts frontend/src/features/chat/utils/sse.ts frontend/tests/features/chat/sse.test.ts
 git commit -m "fix: stream real chat chunks in frontend provider"
 ```
 
@@ -1320,7 +1320,7 @@ Verify:
 - Reload. The same session remains selected.
 - Click the `Upload PDF` prompt. The form opens with local upload selected.
 - Select a PDF and submit. A pipeline status card appears.
-- Send `What can you help me do with ACMG evidence?`. The assistant streams text.
+- Send `What can you help me do with evidence extraction?`. The assistant streams text.
 
 **Step 10: Commit**
 
@@ -1390,9 +1390,9 @@ def _system_prompt(self, *, has_evidence_context: bool) -> str:
         )
 
     return (
-        "You are the CrossEvidence assistant. Help users start literature "
+        "You are the Cross Evidence assistant. Help users start literature "
         "evidence extraction pipelines, upload biomedical PDFs, search "
-        "existing evidence, and understand ACMG evidence extraction results. "
+        "existing evidence, and understand evidence extraction results. "
         "Do not provide a clinical diagnosis. When evidence is unavailable, "
         "state what information is needed."
     )

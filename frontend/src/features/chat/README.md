@@ -14,7 +14,7 @@ features/chat/
 ├── hooks/
 │   ├── useChatSessions.ts     Query + mutation for session list
 │   └── useChatMessages.ts     Query + mutation for message history
-├── providers/acmgChatProvider.ts  Backend SSE -> @ant-design/x-sdk adapter
+├── providers/chatProvider.ts  Backend SSE -> @ant-design/x-sdk adapter
 ├── services/chat.ts           REST API calls + SSE stream URL builder
 ├── types/chat.ts              ChatRole, ChatSessionResponse, ChatMessageResponse, ChatSSEEvent
 └── index.ts
@@ -29,7 +29,7 @@ features/chat/
 
 ## SSE Protocol
 
-Backend uses a custom (non-OpenAI) SSE format: `event: token\ndata: text\n\n` ending with `event: done\ndata: [DONE]`. The `acmgFetch` adapter in `providers/acmgChatProvider.ts` transforms this into `SSEOutput` for `@ant-design/x-sdk`.
+Backend uses a custom (non-OpenAI) SSE format: `event: token\ndata: text\n\n` ending with `event: done\ndata: [DONE]`. The adapter in `providers/chatProvider.ts` transforms this into `SSEOutput` for `@ant-design/x-sdk`.
 
 ## Hooks
 

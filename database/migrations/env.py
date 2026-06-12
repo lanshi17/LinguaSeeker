@@ -1,4 +1,4 @@
-"""Alembic async migration environment for ACMG-Lingua.
+"""Alembic async migration environment for Cross Evidence.
 
 Adapted from ``alembic init -t async`` with repo-relative import handling.
 """

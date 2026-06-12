@@ -24,7 +24,7 @@ _TIMEOUT = 60
 _BROWSER_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,application/pdf;q=0.8,*/*;q=0.7",
     "Accept-Language": "en-US,en;q=0.9,zh-CN;q=0.8,ja;q=0.7",
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 ACMG-Lingua/1.0",
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 Cross-Evidence/1.0",
 }
 
 

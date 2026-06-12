@@ -1,4 +1,4 @@
-"""Centralized exception hierarchy for ACMG-Lingua backend.
+"""Centralized exception hierarchy for Cross Evidence backend.
 
 All domain exceptions inherit from ``ACMGException`` which carries a
 human-readable ``message`` and a stable ``code`` string.  The API layer
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 
 class ACMGException(Exception):
-    """Base exception for all ACMG-Lingua domain errors."""
+    """Base exception for all Cross Evidence domain errors."""
 
     def __init__(self, message: str, *, code: str = "INTERNAL_ERROR") -> None:
         self.message = message

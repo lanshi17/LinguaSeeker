@@ -49,7 +49,7 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps) {
           </span>
         ) : (
           <span className="text-lg font-bold text-primary-700">
-            ACMG Lingua
+            Cross Evidence
           </span>
         )}
       </div>

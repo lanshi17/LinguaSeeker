@@ -27,7 +27,7 @@ rerank:
 # ── Database Connections (Production) ────────────────────────────────────
 postgres:
   host: "postgres-server"
-  db: "acmg_lingua"
+  db: "cross_evidence"
   schema: "acmg_app"
 
 redis:
