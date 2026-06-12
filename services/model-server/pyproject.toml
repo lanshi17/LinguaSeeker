@@ -1,7 +1,7 @@
 [project]
-name = "acmg-lingua-model-server"
+name = "cross-evidence-model-server"
 version = "0.1.0"
-description = "Standalone FastAPI inference service (Embedding, Rerank, VLM) for ACMG-Lingua"
+description = "Standalone FastAPI inference service (Embedding, Rerank, VLM) for Cross Evidence"
 requires-python = ">=3.12"
 dependencies = [
     "acmg-config-loader",

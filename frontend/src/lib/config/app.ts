@@ -11,7 +11,7 @@
 import type { AppConfig, FeatureFlags } from "./types";
 
 export const appConfig: AppConfig = {
-  name: process.env.NEXT_PUBLIC_APP_NAME ?? "ACMG Lingua",
+  name: process.env.NEXT_PUBLIC_APP_NAME ?? "Cross Evidence",
   version: process.env.NEXT_PUBLIC_APP_VERSION ?? "0.0.0",
   environment:
     process.env.NODE_ENV === "production" ? "production" : "development",

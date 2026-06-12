@@ -123,7 +123,7 @@ frontend/
 │   │       ├── services/ (chat.ts)
 │   │       ├── types/ (chat.ts)
 │   │       ├── hooks/ (useChatMessages.ts, useChatSessions.ts)
-│   │       ├── providers/ (acmgChatProvider.ts)
+│   │       ├── providers/ (chatProvider.ts)
 │   │       └── index.ts
 │   ├── components/
 │   │   ├── layout/ (DashboardLayout.tsx, Sidebar.tsx, PageHeader.tsx,
@@ -165,7 +165,7 @@ src/stores/                  # Global UI/runtime state only
 Rules:
 - `api`/hook layer fetches or mutates backend data.
 - Component views render state and emit typed events.
-- Shared UI primitives stay generic -- no ACMG evidence concepts.
+- Shared UI primitives stay generic -- no domain-specific evidence concepts.
 - Page files wire slices together and pass state; they do not contain business rules.
 
 ## 5. Current Implementation: Chat Feature
@@ -186,7 +186,7 @@ The chat feature is the primary entry point. It provides conversation-based inte
 ### 5.3 Services
 
 - **chat.ts** -- API calls for chat sessions and messages.
-- **acmgChatProvider.ts** -- Chat provider abstraction for ACMG-specific chat behavior.
+- **chatProvider.ts** -- Chat provider abstraction for Cross Evidence chat behavior.
 
 ### 5.4 Types
 

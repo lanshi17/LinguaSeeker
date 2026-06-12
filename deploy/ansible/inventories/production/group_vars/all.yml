@@ -17,10 +17,10 @@
 # ── Application ───────────────────────────────────────────────────────────
 acmg_environment: production
 acmg_debug: false
-acmg_cors_origins: "https://acmg-lingua.your-domain.com"
+acmg_cors_origins: "https://cross-evidence.your-domain.com"
 
 # ── Domain / TLS ──────────────────────────────────────────────────────────
-domain_name: "acmg-lingua.your-domain.com"
+domain_name: "cross-evidence.your-domain.com"
 tls_email: "admin@your-domain.com"
 
 # ── Fast LLM ──────────────────────────────────────────────────────────────
@@ -60,7 +60,7 @@ mineru_local_dpi: 200
 # ── PostgreSQL ────────────────────────────────────────────────────────────
 postgres_host: "{{ hostvars[groups['db'][0]]['ansible_host'] }}"
 postgres_port: 5432
-postgres_db: "acmg_lingua"
+postgres_db: "cross_evidence"
 postgres_schema: "acmg_app"
 postgres_user: "acmg_app"
 postgres_pool_size: 20

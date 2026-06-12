@@ -1,5 +1,5 @@
 # ============================================================================
-# ACMG-Lingua — Single-Server Inventory Example
+# Cross Evidence — Single-Server Inventory Example
 # ============================================================================
 # All services on one machine. Copy to hosts.yml to use:
 #   cp hosts-single-server.yml.example hosts.yml
@@ -26,7 +26,7 @@ all:
   vars:
     ansible_user: deploy
     ansible_python_interpreter: /usr/bin/python3
-    project_root: /opt/acmg-lingua
+    project_root: /opt/cross-evidence
     backend_root: "{{ project_root }}/backend"
     frontend_root: "{{ project_root }}/frontend"
     deploy_env: production

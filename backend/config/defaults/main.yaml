@@ -1,5 +1,5 @@
 # ============================================================================
-# ACMG-Lingua Backend — Default Configuration Variables
+# Cross Evidence Backend — Default Configuration Variables
 # ============================================================================
 # Base structural defaults for all environments. Safe to commit.
 # Override in environments/<env>.yaml and vault/<env>.yaml
@@ -35,7 +35,7 @@ reasoning_llm:
 
 # ── Chat Interaction LLM (lightweight conversational) ─────────────────────
 chat_llm:
-  model: "Qwen/Qwen3.5-35B-A3B"
+  model: "nex-agi/Nex-N2-Pro" #Qwen/Qwen3.6-35B-A3B
   timeout: 30
   max_tokens: 4096
   temperature: 0.7
@@ -67,7 +67,7 @@ mineru:
 postgres:
   host: "127.0.0.1"
   port: 5432
-  db: "acmg_lingua"
+  db: "cross_evidence"
   schema: "acmg_app"
   pool_size: 20
   max_overflow: 30

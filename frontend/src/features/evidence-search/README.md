@@ -1,6 +1,6 @@
 # Evidence Search Feature
 
-> Literature-level search and review for ACMG evidence. Queries evidence groups, aggregates into literature rows, and provides bilingual full-document highlighting.
+> Literature-level search and review for evidence. Queries evidence groups, aggregates into literature rows, and provides bilingual full-document highlighting.
 
 ## Structure
 

@@ -363,7 +363,7 @@ frontend/
 │   │   └── chat/                    #   Chat feature
 │   │       ├── components/          #     ChatView, PipelineStartForm, PipelineStatusCard
 │   │       ├── hooks/               #     useChatMessages, useChatSessions
-│   │       ├── providers/           #     acmgChatProvider
+│   │       ├── providers/           #     chatProvider
 │   │       ├── services/            #     chat API calls
 │   │       └── types/               #     chat types
 │   ├── components/                  # Shared components

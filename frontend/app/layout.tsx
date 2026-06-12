@@ -5,7 +5,7 @@ import { NotificationToast } from "@/components/ui/Toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ACMG Lingua",
+  title: "Cross Evidence",
   description:
     "Multi-Agent infrastructure for medical genetics literature automation and structured evidence extraction.",
 };

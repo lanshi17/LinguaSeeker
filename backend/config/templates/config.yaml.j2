@@ -80,7 +80,7 @@ redis:
 postgres:
   host: {{ postgres.host | default('127.0.0.1') }}
   port: {{ postgres.port }}
-  db: {{ postgres.db | default('acmg_lingua') }}
+  db: {{ postgres.db | default('cross_evidence') }}
   schema: {{ postgres.schema | default('acmg_app') }}
   user: {{ postgres.user | default('') }}
   password: {{ postgres.password | default('') }}

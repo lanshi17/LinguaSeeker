@@ -134,7 +134,7 @@ async def preprocess_entry(
             return False
 
         # Copy Phase 1/2 outputs to ground_truth
-        pipeline_dir = Path("/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline") / run_id
+        pipeline_dir = Path("/data/yangzs/Projects/01_ACMG_Lingua/backend/data/pipeline") / run_id  # noqa: hardcoded-dev-path
         phase1_dir = pipeline_dir / "phase_1"
         phase2_dir = pipeline_dir / "phase_2"
 

@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "rust-io"
 requires-python = ">=3.12"
-description = "High-performance Rust native extensions for ACMG Lingua: literature search, MinerU document parsing, file I/O, S3, archives, and SHA-256 dedup."
+description = "High-performance Rust native extensions for Cross Evidence: literature search, MinerU document parsing, file I/O, S3, archives, and SHA-256 dedup."
 readme = "README.md"
 license = "MIT"
 authors = [
@@ -23,8 +23,8 @@ classifiers = [
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://github.com/lanshi17/acmg-lingua"
-Repository = "https://github.com/lanshi17/acmg-lingua"
+Homepage = "https://github.com/lanshi17/cross-evidence"
+Repository = "https://github.com/lanshi17/cross-evidence"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]

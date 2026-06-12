@@ -71,7 +71,7 @@ frontend/src/features/
 ├── chat/            components/ (ChatView)
 │                    components/forms/ (PipelineStartForm, PipelineStatusCard)
 │                    hooks/ (useChatSessions, useChatMessages)
-│                    providers/ (acmgChatProvider — SSE-based custom provider)
+│                    providers/ (chatProvider — SSE-based custom provider)
 │                    services/ (chat — session CRUD, message append, stream URL)
 │                    types/ (ChatSessionResponse, ChatMessageResponse, ChatSSEEvent)
 ├── pipeline/        components/ (PipelineSubmitForm, PipelineStatusView,
@@ -139,13 +139,13 @@ User types message and hits Send
   ├── 2. Open SSE stream: GET /api/v1/chat/sessions/{sessionId}/stream
   │       ?user_message=...
   │
-  └── 3. SSE events parsed by AcmgChatProvider:
+  └── 3. SSE events parsed by CrossEvidenceChatProvider:
         data: {"type": "text", "content": "..."}  → accumulate tokens
         data: {"type": "done"}                     → stream complete
         data: {"type": "error", "message": "..."}  → display error
 ```
 
-The `AcmgChatProvider` extends `AbstractChatProvider` from `@ant-design/x-sdk`.
+The `CrossEvidenceChatProvider` extends `AbstractChatProvider` from `@ant-design/x-sdk`.
 It customizes the fetch function to append `user_message` as a query parameter
 to the SSE endpoint. The backend agent auto-classifies intent (question,
 correction, note) and streams replies accordingly.
@@ -177,7 +177,7 @@ PipelineStartForm submit
 
 Renders a simpler `ChatView` for a single session — no conversation sidebar,
 no prompt suggestions. Just `Bubble.List` + `Sender`. Messages are streamed
-via the same `AcmgChatProvider` mechanism.
+via the same `CrossEvidenceChatProvider` mechanism.
 
 ### 3.5 Session Persistence
 
