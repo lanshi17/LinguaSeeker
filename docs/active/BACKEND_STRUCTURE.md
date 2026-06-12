@@ -1,8 +1,8 @@
-# BACKEND_STRUCTURE — ACMG Lingua Backend
+# BACKEND_STRUCTURE — CrossEvidence Backend
 
 ## 1. Overview
 
-ACMG Lingua backend is a FastAPI async application organized around a four-phase evidence infrastructure pipeline. It ingests literature or user-uploaded PDF/DOCX documents, parses them into traceable structured documents, performs original-language extraction and translated-text secondary extraction, fuses bilingual evidence, standardizes biomedical entities, builds evidence matrices, and persists source-linked review feedback.
+CrossEvidence backend is a FastAPI async application organized around a four-phase evidence infrastructure pipeline. It ingests literature or user-uploaded PDF/DOCX documents, parses them into traceable structured documents, performs original-language extraction and translated-text secondary extraction, fuses bilingual evidence, standardizes biomedical entities, builds evidence matrices, and persists source-linked review feedback.
 
 Backend responsibilities:
 

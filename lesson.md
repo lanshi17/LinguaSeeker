@@ -1,5 +1,58 @@
 # Lesson Log
 
+## 2026-06-12: Pipeline status poll misclassified running jobs as failed
+
+**Problem**: The frontend showed the pipeline badge as `failed` while the backend pipeline was still running. The visible symptom came from `/api/v1/pipeline/runs/{id}/status`, which could turn a DB-loaded `RUNNING` state into `FAILED` when the current worker did not have a local asyncio task for that run.
+
+**Investigation**: Traced the frontend polling path (`usePipelineStatus`, `ChatView`, `PipelineStatusCard`) and confirmed it only renders the backend status it receives. Then inspected `PipelineRunner.get_last_state()`: after cache miss and DB load, it treated any active status without a local task as an orphaned run and immediately relabeled it `FAILED`. Startup already runs `recover_orphaned_runs()`, so the query-time relabeling was redundant and unsafe in multi-worker / reload setups.
+
+**Root cause**: Query-time orphan detection used only local process state (`is_running()`) to infer global pipeline liveness. In a distributed or multi-worker deployment, a healthy pipeline can be running on another worker while the current worker has no task handle, which produced a false `failed` state.
+
+**Fix**: Removed the relabeling block from `PipelineRunner.get_last_state()`. The status endpoint now returns the persisted DB state unchanged. Orphan recovery remains handled at startup by `recover_orphaned_runs()`. Updated the runner regression test to assert that a DB `RUNNING` state stays `RUNNING` and is not persisted as `FAILED`.
+
+**Prevention**: Do not mutate durable pipeline status during read-only status polling. Recovery logic belongs in startup repair or explicit reconciliation, not in the hot path that feeds the UI.
+
+## 2026-06-12: Pipeline Phase 2 per_block_check failure on Chinese medical documents — LLM reproduced source alongside translation
+
+**Problem**: A Chinese medical case-report PDF (`5例Rett综合征样表型患儿的基因突变分析`) made it through Phase 1 (MinerU parsing) and entered Phase 2 (translate). The LLM (mimo-v2.5-pro via xiaomimimo.com) returned text that was still 82% Chinese (31/38 blocks > 40% per-block threshold). The new `_check_block_language` validator correctly raised `TranslationError("per_block_check — 31/38 blocks still in zh (82% > 40% threshold)")` and the pipeline was aborted. Frontend labeled this as "Extraction ✕" (because Phase 2 is translate+extract and the failure happened in the translate stage). Self-review grew text 6455→17303 chars (2.7x), indicating the LLM reproduced the Chinese source alongside its English translation — a known failure mode for medical/scientific Chinese documents with many untranslatable proper nouns (MECP2, Rett syndrome, IVIG, etc.).
+
+**Investigation**: Read `logs/2026-06-12_102940.log` for run 3957d7f8. The `translate_segments` stage ran with `lang=zh` and produced 64→49 translated blocks, but 31/38 text/title blocks still had >15% CJK characters. The self-review step (`mimo-v2.5-pro`) grew the text 2.7x without actually translating, suggesting the LLM echoed the source content. The per-block check (added in the 2026-05-20 round 2 fixes per `_BLOCK_SOURCE_LANG_THRESHOLD = 0.15` and `_UNTRANSLATED_BLOCK_RATIO = 0.40` in `postprocess.py`) caught the issue and aborted.
+
+**Root cause**: The mimo-v2.5-pro model has a tendency to reproduce source-language text in its Chinese→English translation output for medical/scientific documents, even when instructed to translate. The translation validator correctly detected this, but there was no recovery path — the pipeline failed outright.
+
+**Fix**: Added a strict-retry path in `translate_to_result()` that catches `TranslationError` with `"per_block_check"` in the message and re-runs the translation pipeline once with a stricter prompt. The new `get_full_document_translate_prompt(marked_source, terminology, strict=True)` appends an explicit `[STRICT ENGLISH-ONLY RETRY]` block that:
+- Demands output MUST be entirely English
+- Enumerates the only allowed non-English content (pinyin names, established English scientific terms, direct quotes)
+- Explicitly forbids reproducing Chinese source alongside translation
+- Forbids bilingual output format
+
+The retry is bounded by `_MAX_PER_BLOCK_RETRIES = 1` to prevent runaway LLM cost on pathological inputs. If the strict retry also fails, the `TranslationError` propagates as before. Other `TranslationError` types (e.g. `unchanged`, `non_english_output`) are NOT retried — they indicate different failure modes that wouldn't benefit from a stronger prompt.
+
+**Files changed**:
+- `backend/src/core/cross_lingual_process_and_extract_evidence/cross_lingual/translate/prompts/translate.py` — added `strict` parameter to `get_full_document_translate_prompt()` with the STRICT ENGLISH-ONLY block
+- `backend/src/core/cross_lingual_process_and_extract_evidence/cross_lingual/translate/translator.py` — added `_MAX_PER_BLOCK_RETRIES = 1` constant, threaded `strict` through `_translate_blocks()` → `translate_segments()` → `run_pipeline()`, added retry logic in `translate_to_result()`
+- `backend/tests/core/cross_lingual_process_and_extract_evidence/test_round2_fixes.py` — added `TestStrictRetryPrompt` (2 tests) and `TestPerBlockRetryBehavior` (3 tests)
+
+**Verification**: All 59 focused translation tests pass (54 existing + 5 new). Ruff clean on changed files. The retry path activates only when the per-block check fails with the specific `per_block_check` error — other translation failures propagate immediately.
+
+**Prevention**: When integrating LLMs for translation, always include a recovery path for partial-translation failures. The strict prompt pattern (re-running with an explicit "ALL output must be English" directive) is a robust, low-cost fix for models that occasionally echo source content. When adding new validation rules, consider whether a softer fallback (retry with stronger prompt) is more useful than a hard failure for known-bounded LLM behaviors.
+
+## 2026-06-11: Chat session creation 500 — DB schema NOT NULL vs code nullable mismatch
+
+**Problem**: `POST /api/v1/chat/sessions` returned 500 (Internal Server Error) when called without `processing_run_id`. The frontend creates standalone chat sessions for the standalone chat mode, which sends an empty body `{}`.
+
+**Investigation**: Server log showed `POST /api/v1/chat/sessions -> 500` with no error detail in logs (500 too fast — 2ms — bypassed structured error handlers). Direct test of `ChatService.create_session()` revealed:
+- `sqlalchemy.exc.IntegrityError`: null value in column `processing_run_id` of relation `chat_sessions` violates not-null constraint
+- The ORM model `ChatSession` defines `processing_run_id: Mapped[UUID | None]` (`nullable=True`)
+- The API route accepts `CreateSessionRequest` with `processing_run_id: UUID | None = None`
+- But the DB migration set `processing_run_id` as `NOT NULL`
+
+**Root cause**: Schema/migration mismatch. The code consistently treats `processing_run_id` as optional (standalone chat sessions don't belong to any processing run), but the migration didn't match.
+
+**Fix**: `ALTER TABLE chat_sessions ALTER COLUMN processing_run_id DROP NOT NULL`
+
+**Prevention**: When running new migrations, verify that nullable columns in the ORM model match the migration output. After-the-fact schema fixes should be added as new migration scripts.
+
 ## 2026-06-11: Code review evaluated wrong branch — worktree isolation matters
 
 **Problem**: A code review document claimed the target-anchored extraction implementation was ~15% complete, listing every feature as missing. The review evaluated the `dev` branch (main repo), not the worktree (`docs/target-anchored-extraction-plan`) where all 11 feature commits landed.
@@ -1638,7 +1691,7 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 - Full `services/model-server/tests/`: 26/26 passed with CPU-only optional dependency stubs.
 - `ruff check app/ tests/`: clean.
 - `scripts/start_model_server.sh` resolves to `services/model-server/main.py`.
-- Deploy Ansible role YAML parses and systemd template renders `WorkingDirectory=/srv/acmg-lingua/services/model-server` plus the expected `uv run python main.py --port 8001` command.
+- Deploy Ansible role YAML parses and systemd template renders `WorkingDirectory=/srv/cross-evidence/services/model-server` plus the expected `uv run python main.py --port 8001` command.
 
 **Prevention:** When using scoped `uv run --no-project --with ...` verification, include every import-time runtime dependency, not only test tools and the specific dependency being exercised.
 
@@ -1681,6 +1734,31 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 - `backend`: `tests/core/test_config_loader.py` passed 2/2 and `src/core/config_loader.py` ruff clean.
 - `backend/uv.lock`: no `vllm` or `xgrammar` package entries after `uv lock` resolution.
 - Acceptance paths: `services/model-server/uv.lock` exists, `libs/config-loader/` exists, `backend/services/` no longer exists.
-- `scripts/start_model_server.sh` resolves to `services/model-server/main.py`; Ansible systemd template renders `WorkingDirectory=/srv/acmg-lingua/services/model-server` and the expected `uv run python main.py --port 8001` command.
+- `scripts/start_model_server.sh` resolves to `services/model-server/main.py`; Ansible systemd template renders `WorkingDirectory=/srv/cross-evidence/services/model-server` and the expected `uv run python main.py --port 8001` command.
 
 **Prevention:** Separate current documentation checks from archived historical records; archive docs can preserve old paths, while active docs and source/config/scripts must reflect current layout.
+
+
+## 2026-06-12 — Off-by-one in `_load_full_document_text` collapses evidence detail to highlight snippets
+
+**Problem:** Frontend `BilingualComparison` on `/evidence/detail?view=compare` only rendered the small highlight snippets instead of the full document body with overlays. User reported the reader should "show the full text, not just the evidence items."
+
+**Investigation:** The compare-mode reader renders `detail.original_document_text` / `detail.translated_document_text` (full text + overlays) when populated, and otherwise falls back to per-trace highlight snippets — exactly the symptom. Tracing the backend: `SearchService.get_group_detail` calls `_load_full_document_text(source_document_id, track=...)`, which had a hard-coded `Path(__file__).resolve().parents[4] / "data" / "pipeline"`. From `backend/src/core/visualize_evidence_with_expert_in_loop/search_service.py` that resolves to `<repo>/data/pipeline` — but the phase-2 outputs are written to `backend/data/pipeline` (4 levels up, inside the backend package, as documented in the project README). The directory never existed, so the function always returned `None` and the frontend silently fell back to highlight snippets only.
+
+**Root cause:** An off-by-one in a `Path(__file__).resolve().parents[N]` index. Such indices are fragile because they depend on the file's depth in the package tree and break silently the moment the file moves or the package is renamed. The project already exposes stable `BACKEND_ROOT` and `REPO_ROOT` constants in `src.core.config` for exactly this kind of anchor.
+
+**Solution:**
+- Replaced the `parents[4]` index with `BACKEND_ROOT / "data" / "pipeline"` (primary) and added `REPO_ROOT / "data" / "pipeline"` as a fallback so the loader still works if the data directory is relocated or the deployment layout changes.
+- Narrowed the catch-all `except Exception` to `(OSError, json.JSONDecodeError)` so unexpected errors surface instead of being silently swallowed.
+- Added 3 unit tests covering: backend-root read, missing-data returns `None`, repo-root fallback.
+
+**Verification:**
+- `uv run ruff check src/core/visualize_evidence_with_expert_in_loop/search_service.py` — all checks passed.
+- `uv run pytest tests/core/visualize_evidence_with_expert_in_loop/test_search_service.py` — 16/16 passed (13 pre-existing + 3 new).
+- 22 unrelated pre-existing test failures in the full suite were verified to fail on the unchanged baseline (sqlite vs postgres `TRUNCATE` syntax) and are not caused by this change.
+- After backend restart, `GET /api/v1/evidence/groups/detail?group_id=...` returns a non-null `original_document_text` and `translated_document_text`, so the frontend's `buildEvidenceDocument()` will render the full text with category highlights.
+
+**Prevention:**
+- Never use `Path(__file__).resolve().parents[N]` for project-relative paths. Always anchor to a named constant exposed from `src.core.config` (`BACKEND_ROOT`, `REPO_ROOT`) or a config-driven setting. The N-index is invisible to a reader and silently wrong if the file is moved.
+- When a function's "return None" path hides a missing resource, add an integration smoke test (e.g. start backend, hit the endpoint, assert the field is non-null) — unit tests on the data layer alone won't catch a path-resolution bug of this shape.
+- The frontend's silent fallback (render snippets when full text is missing) was the user-visible symptom. Frontend fallbacks should be explicit (an empty-state banner), not invisible.

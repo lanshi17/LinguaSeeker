@@ -1,6 +1,6 @@
 # Alembic
 
-> Database migration environment for the ACMG Lingua backend. Manages PostgreSQL schema migrations for the `acmg_app` schema.
+> Database migration environment for the CrossEvidence backend. Manages PostgreSQL schema migrations for the `acmg_app` schema.
 
 ## Directory Map
 

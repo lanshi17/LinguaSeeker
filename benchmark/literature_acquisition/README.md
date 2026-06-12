@@ -1,6 +1,6 @@
 # Benchmark: Literature Acquisition
 
-> Multilingual literature download benchmark for the ACMG Lingua online acquisition pipeline. Evaluates provider coverage, download success rates, and literature type classification across 7-12 languages.
+> Multilingual literature download benchmark for the CrossEvidence online acquisition pipeline. Evaluates provider coverage, download success rates, and literature type classification across 7-12 languages.
 
 ## Files
 

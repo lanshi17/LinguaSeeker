@@ -1,6 +1,6 @@
 # Document Acquisition
 
-> Unified document acquisition facade for ACMG Lingua's Phase 1 pipeline. Provides a single `acquire()` entry point that routes to either local file upload or online literature search/download with multi-provider fallback chains.
+> Unified document acquisition facade for CrossEvidence's Phase 1 pipeline. Provides a single `acquire()` entry point that routes to either local file upload or online literature search/download with multi-provider fallback chains.
 
 ## Quick Start
 

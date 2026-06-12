@@ -1,6 +1,6 @@
 # Backend
 
-> FastAPI backend for ACMG Lingua -- a multi-agent platform for medical genetics literature automation and structured evidence extraction.
+> FastAPI backend for CrossEvidence -- a multi-agent platform for medical genetics literature automation and structured evidence extraction.
 
 ## Directory Structure
 

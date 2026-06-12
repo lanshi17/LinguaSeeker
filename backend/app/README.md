@@ -1,6 +1,6 @@
 # app
 
-> FastAPI application entry point for the ACMG Lingua backend. Creates the ASGI app via a factory function, configures lifespan hooks, middleware, and mounts the v1 router.
+> FastAPI application entry point for the CrossEvidence backend. Creates the ASGI app via a factory function, configures lifespan hooks, middleware, and mounts the v1 router.
 
 ## Quick Start
 
