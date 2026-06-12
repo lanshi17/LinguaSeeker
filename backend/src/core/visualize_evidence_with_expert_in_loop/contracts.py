@@ -1,9 +1,10 @@
 """Typed contracts for Phase 4 evidence review and feedback."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 from enum import Enum
-from typing import ClassVar, Literal, TypedDict
+from typing import Any, ClassVar, Literal, TypedDict
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -86,6 +87,40 @@ class EvidenceCardPayload(BaseModel):
         "references",
         "summary",
     )
+
+    @classmethod
+    def from_field_payload(cls, *, field_id: str, payload: Mapping[str, Any]) -> "EvidenceCardPayload":
+        """Project a field-level payload dict into a card-level view.
+
+        Maps the field_id to the appropriate card field and extracts
+        the value from the payload.  Returns a card with at most one
+        populated field.
+        """
+        card = cls()
+        card_field = card_field_for_field_id(field_id)
+        if card_field is not None:
+            return card.model_copy(update={card_field: payload.get("value")})
+        return card
+
+
+# ── Field-level to card-level projection mapping ─────────────────────────
+
+FIELD_ID_TO_CARD_FIELD: dict[str, str] = {
+    "A.gene_symbol": "gene",
+    "B.disease_diagnosis": "disease",
+    "B.clinical_diagnosis": "disease",
+    "J.authority_classification": "classification",
+}
+
+
+def card_field_for_field_id(field_id: str) -> str | None:
+    """Map a field_id to the corresponding EvidenceCardPayload field name.
+
+    Returns None when the field_id has no card-level projection.
+    """
+    if field_id.startswith("A.variant_hgvs_") or field_id == "A.variant_legacy_name":
+        return "variant"
+    return FIELD_ID_TO_CARD_FIELD.get(field_id)
 
 
 class DeltaEntry(BaseModel):
