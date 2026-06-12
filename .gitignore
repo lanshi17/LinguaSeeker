@@ -98,3 +98,4 @@ backend/config/vault/*.yml
 .aider*
 .mcp.json
 opencode.jsonc
+.venv

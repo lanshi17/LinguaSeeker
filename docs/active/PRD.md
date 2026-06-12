@@ -2,7 +2,7 @@
 
 ## 1. Product Positioning
 
-CrossEvidence is a next-generation medical genetics literature evidence mining and structured traceability workbench. It is an "evidence porter" — absolutely loyal to source data, ensuring every piece of extracted information is 100% traceable to its original location in the literature. The system organizes evidence collection, extraction, standardization, and expert review behind four fixed tabs: AI Assistant, Task Board, Knowledge Base Query, and Settings. (Note: this is the target design. The current implementation provides: Auth, Pipeline, Evidence Search, and Chat.)
+CrossEvidence is a next-generation medical genetics literature evidence mining and structured traceability workbench. It is an "evidence porter" — absolutely loyal to source data, ensuring every piece of extracted information is **citation-valid-by-construction**: each adopted evidence item carries a programmatically verifiable source span anchor to its original location in the literature. The system organizes evidence collection, extraction, standardization, and expert review behind four fixed tabs: AI Assistant, Task Board, Knowledge Base Query, and Settings. (Note: this is the target design. The current implementation provides: Auth, Pipeline, Evidence Search, and Chat.)
 
 The system provides a high-quality data foundation for downstream clinical interpretation and research computation. It does not perform final autonomous ACMG/GDV medical classification in the current scope.
 
@@ -96,7 +96,7 @@ As a system administrator, I open the Settings tab to view current ontology vers
 | F1.3 | Accept PMID/DOI input for literature retrieval. | P0 |
 | F1.4 | Accept keyword search across configured providers. | P1 |
 | F1.5 | Extract metadata before full OCR/parsing when possible: DOI, PMID, authors, year, journal, source quality signals. | P1 |
-| F1.6 | Parse PDF through MinerU primary path and PaddleOCR fallback. | P0 |
+| F1.6 | Parse PDF through MinerU (sole document parsing engine). | P0 |
 | F1.7 | Convert documents to Markdown/HTML with source anchors and bounding boxes. | P0 |
 | F1.8 | Reject parse output that cannot provide source anchors or bbox-backed spans for evidence review. | P0 |
 | F1.9 | Parse tables into structured JSON/CSV where available. | P1 |
@@ -106,7 +106,7 @@ As a system administrator, I open the Settings tab to view current ontology vers
 
 ### Phase 2: Cross-Lingual Processing and Dual Evidence Extraction
 
-> **Status: IN PROGRESS** — translation and multi-stage evidence extraction implemented; dual-track cross-validation and fusion still being refined.
+> **Status: IN PROGRESS** — translation and multi-stage evidence extraction implemented; cross-track reconciliation (automated merge of native and translated results) is planned but not yet implemented. Current behavior stores both tracks side-by-side for expert review.
 
 | ID | Requirement | Priority |
 |---|---|---|
@@ -116,8 +116,8 @@ As a system administrator, I open the Settings tab to view current ontology vers
 | F2.4 | Preserve biomedical literals across both passes: HGVS, gene symbols, transcript IDs, protein names, rsIDs, accession IDs, measurements. | P0 |
 | F2.5 | Use coarse-grained filtering to identify paragraphs/regions likely containing target evidence. | P1 |
 | F2.6 | Use fine-grained extraction Agents for phenotypes, experimental methods, experimental results, population frequency, segregation, and other target evidence. | P0 |
-| F2.7 | Cross-validate, deduplicate, and fuse original-language JSON and translated-text JSON into unified evidence items. | P0 |
-| F2.8 | Output structured JSON with confidence scores, agreement status, and fusion rationale per field/evidence item. | P0 |
+| F2.7 | Cross-validate, deduplicate, and reconcile original-language JSON and translated-text JSON into unified evidence items. *(Currently stores both tracks side-by-side; automated reconciliation is planned.)* | P0 |
+| F2.8 | Output structured JSON with confidence scores and agreement status per field/evidence item. *(Fusion rationale is planned once reconciliation is implemented.)* | P0 |
 | F2.9 | Link each evidence item to bi-directional traceability anchors: original page/line/bbox and translated page/line/bbox where available. | P0 |
 | F2.10 | Support table-derived, figure-derived, and text-derived evidence items. | P1 |
 
