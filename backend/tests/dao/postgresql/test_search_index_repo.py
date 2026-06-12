@@ -15,6 +15,7 @@ def _fake_session() -> MagicMock:
     session = MagicMock()
     session.execute = AsyncMock()
     session.commit = AsyncMock()
+    session.flush = AsyncMock()
     session.rollback = AsyncMock()
     session.close = AsyncMock()
     return session
@@ -199,13 +200,13 @@ async def test_refresh_truncates_and_rebuilds() -> None:
 
     await repo.refresh()
 
-    # Must issue TRUNCATE first.
+    # Must issue DELETE first.
     execute_calls = [c.args[0] for c in session.execute.call_args_list]
-    truncate_texts = [str(c) for c in execute_calls if "TRUNCATE" in str(c).upper()]
-    assert len(truncate_texts) >= 1, "refresh must truncate the search index"
+    delete_texts = [str(c) for c in execute_calls if "DELETE" in str(c).upper()]
+    assert len(delete_texts) >= 1, "refresh must delete the search index"
 
-    # Must commit after rebuild.
-    session.commit.assert_awaited_once()
+    # Must flush after rebuild (caller owns commit/rollback).
+    session.flush.assert_awaited_once()
 
 
 # ── Integration test (skip when PostgreSQL is unavailable) ───────────────────
