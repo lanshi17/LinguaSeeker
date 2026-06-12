@@ -303,7 +303,7 @@ class ChatService:
             )
 
         return (
-            "You are the Cross Evidenceassistant. Help users start literature "
+            "You are the ACMG Lingua assistant. Help users start literature "
             "evidence extraction pipelines, upload biomedical PDFs, search "
             "existing evidence, and understand ACMG evidence extraction results. "
             "Do not provide a clinical diagnosis. When evidence is unavailable, "
