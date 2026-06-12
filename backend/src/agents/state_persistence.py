@@ -110,6 +110,13 @@ class DirectStatePersistence:
             "use SessionBoundStatePersistence for source dedup."
         )
 
+    async def finalize_review(self, processing_run_id: str) -> PipelineGraphState | None:
+        """Not supported in unit-test persistence — raises on misuse."""
+        raise NotImplementedError(
+            "finalize_review is not available in DirectStatePersistence; "
+            "use SessionBoundStatePersistence for review finalization."
+        )
+
 
 class SessionBoundStatePersistence:
     """Save/load PipelineGraphState with session-per-operation.
@@ -256,6 +263,7 @@ class SessionBoundStatePersistence:
         """Transition a run from AWAITING_REVIEW to COMPLETED.
 
         Returns the finalized state, or None if the run was not found.
+        Returns the current state unchanged if not in AWAITING_REVIEW status.
         """
         async with self._session_factory() as session:
             record = await session.get(
@@ -265,6 +273,9 @@ class SessionBoundStatePersistence:
                 return None
 
             state = PipelineGraphState.model_validate(record.state_json)
+            if state.pipeline_status != PipelineStatus.AWAITING_REVIEW:
+                return state
+
             state.pipeline_status = PipelineStatus.COMPLETED
             state.completed_at = datetime.now(timezone.utc).isoformat()
 
