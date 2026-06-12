@@ -55,7 +55,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
-| 2026-06-11 | [Pipeline Correctness Remediation](plans/2026-06-11-pipeline-correctness-remediation.md) | planned |
 | 2026-06-11 | [Standalone Chat Upload AI](plans/2026-06-11-standalone-chat-upload-ai.md) | planned |
 | 2026-06-11 | [VS Code Settings Sync Profiles](plans/2026-06-11-vscode-settings-sync-profiles.md) | planned |
 
