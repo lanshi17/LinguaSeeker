@@ -36,10 +36,13 @@ def validate_translation_output(source_text: str, translated_text: str) -> None:
     if cjk_count and len(translated) > 0 and cjk_count / len(translated) > 0.10:
         raise ValueError("translation_validation_failed: non_english_output")
 
-    # Check if translation is essentially unchanged from source
-    ratio = SequenceMatcher(None, source.lower(), translated.lower()).ratio()
-    if source and ratio >= 0.85:
-        raise ValueError("translation_validation_failed: unchanged")
+    # Check if translation is essentially unchanged from source.
+    # Skip for short texts (<100 chars) where shared technical terms
+    # (gene names, mutation notation) inflate the similarity ratio.
+    if source and len(source) >= 100:
+        ratio = SequenceMatcher(None, source.lower(), translated.lower()).ratio()
+        if ratio >= 0.85:
+            raise ValueError("translation_validation_failed: unchanged")
 
     # Check detected language of output
     detected = _DETECTOR.detect_language_of(translated[:4000])
