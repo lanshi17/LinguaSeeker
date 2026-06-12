@@ -10,10 +10,10 @@
 
 ---
 
-**Status:** in-progress
+**Status:** completed
 **Created:** 2026-06-11
-**Completed:** N/A
-**PR:** N/A
+**Completed:** 2026-06-12
+**PR:** merged to dev (fbd49efa)
 
 ## Progress Recording Rule
 
