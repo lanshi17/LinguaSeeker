@@ -153,7 +153,7 @@ def _make_pdf_response(pdf_bytes: bytes = b"%PDF-1.4 fake", url: str = "https://
     """Build a mock httpx response for a successful PDF stream.
 
     ``raise_for_status`` and ``headers`` are synchronous in httpx, so the
-    mock must be a ``MagicMock`` (not ``AsyncMock``).  Only ``ait_bytes``
+    mock must be a ``MagicMock`` (not ``AsyncMock``).  Only ``aiter_bytes``
     needs to be an async generator.
     """
     mock_response = MagicMock()
@@ -161,10 +161,10 @@ def _make_pdf_response(pdf_bytes: bytes = b"%PDF-1.4 fake", url: str = "https://
     mock_response.url = url
     mock_response.raise_for_status = MagicMock()
 
-    async def _ait_bytes():
+    async def _aiter_bytes():
         yield pdf_bytes
 
-    mock_response.ait_bytes = _ait_bytes
+    mock_response.aiter_bytes = _aiter_bytes
     return mock_response
 
 

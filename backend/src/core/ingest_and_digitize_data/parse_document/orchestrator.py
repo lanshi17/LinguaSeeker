@@ -115,7 +115,7 @@ class DocumentParseOrchestrator(ParserStrategy):
                             )
 
                         downloaded = 0
-                        async for chunk in resp.ait_bytes():
+                        async for chunk in resp.aiter_bytes():
                             downloaded += len(chunk)
                             if downloaded > _MAX_DOWNLOAD_BYTES:
                                 raise MinerUAPIError(
