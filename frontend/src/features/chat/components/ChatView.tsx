@@ -28,10 +28,7 @@ import {
   toXChatDefaultMessages,
 } from "../utils/messageHistory";
 import { detectChatActionIntent } from "../utils/intent";
-import {
-  PipelineStartForm,
-  PipelineStatusCard,
-} from "./forms";
+import { PipelineStartForm, PipelineStatusCard } from "./forms";
 import type { PipelineFormData } from "./forms";
 import { apiClient } from "@/lib/api/client";
 import { extractErrorMessage } from "@/lib/api/error";
@@ -47,19 +44,13 @@ const roles = {
   assistant: {
     placement: "start" as const,
     avatar: (
-      <Avatar
-        icon={<RobotOutlined />}
-        style={{ backgroundColor: "#0891b2" }}
-      />
+      <Avatar icon={<RobotOutlined />} style={{ backgroundColor: "#0891b2" }} />
     ),
   },
   user: {
     placement: "end" as const,
     avatar: (
-      <Avatar
-        icon={<UserOutlined />}
-        style={{ backgroundColor: "#22c55e" }}
-      />
+      <Avatar icon={<UserOutlined />} style={{ backgroundColor: "#22c55e" }} />
     ),
   },
 };
@@ -214,7 +205,10 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   const [pipelineStatus, setPipelineStatus] = useState<{
     runId: string;
     status: string;
-    phases?: Record<string, { status: string; duration_seconds?: number | null }>;
+    phases?: Record<
+      string,
+      { status: string; duration_seconds?: number | null }
+    >;
   } | null>(null);
 
   const createAndActivateSession = useCallback(async (): Promise<string> => {
@@ -318,7 +312,12 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
   // ── Poll pipeline status ──
   const pollPipelineStatus = useCallback(async (runId: string) => {
-    const TERMINAL = new Set(["completed", "failed", "awaiting_review", "cancelled"]);
+    const TERMINAL = new Set([
+      "completed",
+      "failed",
+      "awaiting_review",
+      "cancelled",
+    ]);
     const MAX_POLL_MS = 30 * 60 * 1000; // 30 min safety cap
     const startedAt = Date.now();
     let consecutiveErrors = 0;
@@ -338,7 +337,10 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
           status: data.pipeline_status,
           phases: data.phases,
         });
-        if (!TERMINAL.has(data.pipeline_status) && Date.now() - startedAt < MAX_POLL_MS) {
+        if (
+          !TERMINAL.has(data.pipeline_status) &&
+          Date.now() - startedAt < MAX_POLL_MS
+        ) {
           setTimeout(poll, 2000);
         }
       } catch {
@@ -387,10 +389,18 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         pollPipelineStatus(runId);
       } catch (err: unknown) {
         console.error("[Pipeline] start failed:", err);
-        antdMessage.error(`Failed to start pipeline: ${extractErrorMessage(err)}`);
+        antdMessage.error(
+          `Failed to start pipeline: ${extractErrorMessage(err)}`,
+        );
       }
     },
-    [activeProvider, onRequest, pollPipelineStatus, setActiveForm, setPipelineStatus],
+    [
+      activeProvider,
+      onRequest,
+      pollPipelineStatus,
+      setActiveForm,
+      setPipelineStatus,
+    ],
   );
 
   // ── Build bubble items with contentRender for embedded forms ──
@@ -441,7 +451,13 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     }
 
     return items;
-  }, [messages, activeForm, pipelineStatus, isRequesting, handlePipelineSubmit]);
+  }, [
+    messages,
+    activeForm,
+    pipelineStatus,
+    isRequesting,
+    handlePipelineSubmit,
+  ]);
 
   // ── Prompt click handler ──
   async function handlePromptClick(key: string) {
@@ -505,7 +521,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
           {bubbleItems.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-8 text-center md:px-10">
               <Welcome
-                title="ACMG Lingua Agent"
+                title="Cross EvidenceAgent"
                 description="I'll guide you through evidence extraction. Upload a paper, search by PMID, or ask me anything about variant classification."
                 variant="borderless"
               />
@@ -553,22 +569,20 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
   const { messages, onRequest, isRequesting, abort } = useXChat({
     provider,
     conversationKey: sessionId,
-    defaultMessages: async () => toXChatDefaultMessages(await listMessages(sessionId)),
+    defaultMessages: async () =>
+      toXChatDefaultMessages(await listMessages(sessionId)),
   });
 
-  const bubbleItems = useMemo(
-    () => {
-      const messageKeys = toUniqueChatMessageKeys(messages);
-      return messages.map(({ message, status }, index) => ({
-        key: messageKeys[index],
-        role: message.role,
-        content: message.content,
-        streaming: status === "loading" || status === "updating",
-        loading: status === "loading" && !message.content,
-      }));
-    },
-    [messages],
-  );
+  const bubbleItems = useMemo(() => {
+    const messageKeys = toUniqueChatMessageKeys(messages);
+    return messages.map(({ message, status }, index) => ({
+      key: messageKeys[index],
+      role: message.role,
+      content: message.content,
+      streaming: status === "loading" || status === "updating",
+      loading: status === "loading" && !message.content,
+    }));
+  }, [messages]);
 
   return (
     <XProvider>
@@ -576,7 +590,7 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
         {bubbleItems.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-8 text-center md:px-10">
             <Welcome
-              title="ACMG Lingua Agent"
+              title="Cross EvidenceAgent"
               description="Ask questions about variant classification, evidence review, or pipeline results."
               variant="borderless"
             />

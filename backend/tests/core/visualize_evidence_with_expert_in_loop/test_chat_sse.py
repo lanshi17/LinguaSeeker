@@ -27,7 +27,7 @@ class TestChatSSE:
 
         provider = MagicMock()
         provider.stream = mock_stream
-        service = ChatService(db_session, reasoning_provider=provider)
+        service = ChatService(db_session, chat_provider=provider)
         session = await service.create_session(processing_run_id=run_id, user_id=None)
 
         events = []
@@ -57,7 +57,7 @@ class TestChatSSE:
 
         provider = MagicMock()
         provider.stream = mock_stream_error
-        service = ChatService(db_session, reasoning_provider=provider)
+        service = ChatService(db_session, chat_provider=provider)
         session = await service.create_session(processing_run_id=run_id, user_id=None)
 
         events = []
@@ -97,7 +97,7 @@ class TestChatSSE:
 
         provider = MagicMock()
         provider.stream = mock_stream
-        service = ChatService(db_session, reasoning_provider=provider)
+        service = ChatService(db_session, chat_provider=provider)
         session = await service.create_session(processing_run_id=run_id, user_id=None)
 
         async for _ in service.stream_reply(
@@ -122,7 +122,7 @@ class TestChatSSE:
 
         provider = MagicMock()
         provider.stream = mock_stream_error
-        service = ChatService(db_session, reasoning_provider=provider)
+        service = ChatService(db_session, chat_provider=provider)
         session = await service.create_session(processing_run_id=run_id, user_id=None)
 
         async for _ in service.stream_reply(

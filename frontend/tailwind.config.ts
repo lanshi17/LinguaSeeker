@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 /**
- * ACMG Lingua Design System
+ * Cross EvidenceDesign System
  *
  * Based on UI/UX Pro Max "Accessible & Ethical" style:
  * - Medical teal primary (#0891B2)
@@ -10,10 +10,7 @@ import type { Config } from "tailwindcss";
  * - Figtree / Noto Sans typography
  */
 const config: Config = {
-  content: [
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-  ],
+  content: ["./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {

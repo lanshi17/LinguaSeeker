@@ -1,5 +1,20 @@
 # Lesson Log
 
+## 2026-06-12: "Illegal header value b'Bearer '" in chat when REASONING_LLM_API_KEY unset
+
+**Problem**: The ant-bubble chat displayed `[Error] Illegal header value b'Bearer '` when the user sent a message. The chat stopped working entirely.
+
+**Investigation**: Traced the error chain from the frontend's SSE handler (`sse.ts` prepends `[Error]` to backend error events), through the SSE stream endpoint (`chat.py` → `chat_service.py`), into `ReasoningLLMProvider.stream()` which constructs `Authorization: f"Bearer {self._api_key}"`. The `reasoning_llm_api_key` env var defaults to `""`, so the header value becomes `Bearer ` (with space but no token). httpx rejects this as an invalid header value.
+
+**Root cause**: `ReasoningLLMProvider.__init__()` read `cfg.reasoning.api_key` directly without fallback to the generic LLM config (`cfg.llm.api_key`), and made no validation before constructing the HTTP header. When `REASONING_LLM_API_KEY` was unset, the empty string produced the illegal `Bearer ` header value, and the cryptic httpx error propagated to the user as-is.
+
+**Fix**:
+1. In `__init__`, fall back empty reasoning-specific fields (`api_key`, `model`, `base_url`) to the generic LLM config via `or` — so if only `FAST_LLM_API_KEY` is set, chat still works.
+2. Added `_ensure_configured()` helper that raises `ValueError` with a clear message (`"Reasoning LLM API key is not configured. Set REASONING_LLM_API_KEY or FAST_LLM_API_KEY."`) before any HTTP call.
+3. Called `_ensure_configured()` at the top of both `generate()` and `stream()`.
+
+**Prevention**: Any LLM provider that constructs `Authorization: Bearer {key}` headers must validate the key is non-empty before the HTTP call. Fallback chains (reasoning → generic) reduce the blast radius of a missing config and make the system self-healing when the same key is reused across LLM tiers.
+
 ## 2026-06-12: Pipeline status poll misclassified running jobs as failed
 
 **Problem**: The frontend showed the pipeline badge as `failed` while the backend pipeline was still running. The visible symptom came from `/api/v1/pipeline/runs/{id}/status`, which could turn a DB-loaded `RUNNING` state into `FAILED` when the current worker did not have a local asyncio task for that run.

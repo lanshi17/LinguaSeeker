@@ -290,7 +290,7 @@
 
 ### Project Overview
 
-ACMG Lingua is a Multi-Agent infrastructure platform for medical genetics literature automation and structured evidence extraction. It provides a four-phase evidence pipeline: literature acquisition and digitization, cross-lingual dual evidence extraction and fusion, entity standardization and knowledge alignment, and bilingual visualization with expert-in-the-loop feedback. Monorepo with a Next.js frontend, FastAPI backend, and three Rust native extensions via PyO3.
+Cross Evidenceis a Multi-Agent infrastructure platform for medical genetics literature automation and structured evidence extraction. It provides a four-phase evidence pipeline: literature acquisition and digitization, cross-lingual dual evidence extraction and fusion, entity standardization and knowledge alignment, and bilingual visualization with expert-in-the-loop feedback. Monorepo with a Next.js frontend, FastAPI backend, and three Rust native extensions via PyO3.
 
 ### Architecture
 

@@ -145,17 +145,36 @@ def set_pipeline_runner(runner):
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 
+def _normalize_identifiers(identifiers: list[str]) -> str:
+    """Normalize identifiers to a canonical form for dedup.
+
+    Strips whitespace, lowercases, and strips common prefixes like
+    'PMID:', 'DOI:', 'PMCID:' to ensure equivalent identifiers
+    produce the same key.
+    """
+    import re
+
+    normalized: list[str] = []
+    for raw in identifiers:
+        val = raw.strip().lower()
+        # Strip common prefixes: pmid:, doi:, pmcid:
+        val = re.sub(r"^(pmid|doi|pmcid)\s*:\s*", "", val)
+        normalized.append(val)
+    return ",".join(sorted(normalized))
+
+
 def _build_source_key(body: PipelineRunRequest) -> str | None:
     """Build the dedup source key, including extraction target scope when present.
 
-    Appending the target scope makes duplicate-run detection target-aware:
-    the same filename submitted with different targets is treated as a
-    distinct run (no 409 conflict). The same document extracted for
-    different hypotheses should produce separate runs.
+    For online runs with identifiers, identifiers are always the primary key
+    (query text varies but the same PMID should deduplicate). For other cases,
+    filename takes priority, then query.
     """
-    base_key = body.filename or (body.query or "")
-    if not base_key and body.identifiers:
-        base_key = ",".join(sorted(body.identifiers))
+    base_key: str | None = None
+    if body.identifiers:
+        base_key = _normalize_identifiers(body.identifiers)
+    else:
+        base_key = body.filename or body.query or None
     if not base_key:
         return None
     if body.extraction_target is None:
@@ -292,7 +311,7 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
     online_action = None
     if body.source_type == "online":
         if body.identifiers:
-            online_action = "fetch"
+            online_action = "download"
         else:
             online_action = "search"
 

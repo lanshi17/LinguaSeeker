@@ -41,11 +41,16 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps) {
       {/* Brand */}
       <div className="flex h-14 items-center border-b border-gray-200 px-4">
         {effectiveCollapsed ? (
-          <span className="text-lg font-bold text-primary-700" aria-hidden="true">
+          <span
+            className="text-lg font-bold text-primary-700"
+            aria-hidden="true"
+          >
             A
           </span>
         ) : (
-          <span className="text-lg font-bold text-primary-700">ACMG Lingua</span>
+          <span className="text-lg font-bold text-primary-700">
+            ACMG Lingua
+          </span>
         )}
       </div>
 
@@ -82,7 +87,7 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps) {
       {/* Footer */}
       <div className="border-t border-gray-200 p-4">
         {!effectiveCollapsed && (
-          <p className="text-xs text-gray-400">ACMG Lingua v0.1.0</p>
+          <p className="text-xs text-gray-400">Cross Evidencev0.1.0</p>
         )}
       </div>
     </aside>

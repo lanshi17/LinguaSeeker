@@ -18,7 +18,7 @@ from src.core.visualize_evidence_with_expert_in_loop.feedback_service import (
     FeedbackService,
 )
 from src.core.visualize_evidence_with_expert_in_loop.providers import (
-    ReasoningLLMProvider,
+    ChatLLMProvider,
 )
 from src.core.visualize_evidence_with_expert_in_loop.source_linker import SourceLinker
 
@@ -36,17 +36,17 @@ class Phase4ServiceFactory:
     def __init__(self, cfg: Settings):
         self._cfg = cfg
         self._delta_audit = DeltaAuditService()
-        self._reasoning_provider = ReasoningLLMProvider()
+        self._chat_provider = ChatLLMProvider()
 
     @property
-    def reasoning_provider(self) -> ReasoningLLMProvider:
-        return self._reasoning_provider
+    def chat_provider(self) -> ChatLLMProvider:
+        return self._chat_provider
 
     def create_feedback_service(self, session: AsyncSession) -> FeedbackService:
         return FeedbackService(session)
 
     def create_chat_service(self, session: AsyncSession) -> ChatService:
-        return ChatService(session=session, reasoning_provider=self._reasoning_provider)
+        return ChatService(session=session, chat_provider=self._chat_provider)
 
     def create_source_linker(self, session: AsyncSession) -> SourceLinker:
         return SourceLinker(session)
@@ -57,4 +57,4 @@ class Phase4ServiceFactory:
 
     async def close(self) -> None:
         """Close long-lived resources (httpx client)."""
-        await self._reasoning_provider.close()
+        await self._chat_provider.close()

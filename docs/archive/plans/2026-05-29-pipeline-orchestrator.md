@@ -3512,7 +3512,7 @@ async def get_pipeline_status(processing_run_id: str):
 Modify `backend/src/api/v1/router.py`:
 
 ```python
-"""API v1 router for ACMG Lingua backend."""
+"""API v1 router for Cross Evidencebackend."""
 from __future__ import annotations
 
 from fastapi import APIRouter
@@ -3669,7 +3669,7 @@ from src.api.v1.router import router as v1_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize and teardown application resources."""
-    logger.info("Starting ACMG Lingua backend")
+    logger.info("Starting Cross Evidencebackend")
 
     # Initialize pipeline orchestrator
     from src.core.config import get_config
@@ -3771,11 +3771,11 @@ async def lifespan(app: FastAPI):
 
     # Teardown
     await engine.dispose()
-    logger.info("ACMG Lingua backend stopped")
+    logger.info("Cross Evidencebackend stopped")
 
 
 app = FastAPI(
-    title="ACMG Lingua Backend",
+    title="Cross EvidenceBackend",
     version="0.1.0",
     lifespan=lifespan,
 )
