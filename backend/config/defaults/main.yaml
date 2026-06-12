@@ -35,11 +35,10 @@ reasoning_llm:
 
 # ── Chat Interaction LLM (lightweight conversational) ─────────────────────
 chat_llm:
-  model: "mimo-v2.5"
+  model: "Qwen/Qwen3.5-35B-A3B"
   timeout: 30
   max_tokens: 4096
   temperature: 0.7
-
 
 # ── Embedding Model ───────────────────────────────────────────────────────
 embedding:
