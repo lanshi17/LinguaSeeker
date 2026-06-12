@@ -29,9 +29,20 @@ features/chat/
 
 ## SSE Protocol
 
-Backend uses a custom (non-OpenAI) SSE format: `event: token\ndata: text\n\n` ending with `event: done\ndata: [DONE]`. The adapter in `providers/chatProvider.ts` transforms this into `SSEOutput` for `@ant-design/x-sdk`.
+Backend streams standard SSE `data:` lines where each data payload is JSON:
+`{"type":"text","content":"..."}`, `{"type":"done"}`, or
+`{"type":"error","message":"..."}`. The adapter in `providers/chatProvider.ts`
+accumulates `"text"` chunks into the assistant bubble content.
 
 ## Hooks
 
-- `useChatSessions(runId)` -- list/create sessions for a pipeline run.
+- `useChatSessions(runId?)` -- list/create sessions. When `runId` is null/undefined, manages standalone sessions in browser `localStorage`; when a `runId` is provided, fetches pipeline-bound sessions from the backend.
 - `useChatMessages(sessionId)` -- message history + send messages.
+
+## Standalone Sessions
+
+`/chat` supports standalone chat sessions without a pipeline run. Standalone
+session metadata (session ID, creation time, message count) is persisted in
+browser `localStorage`. The active session ID is also stored there so reloads
+restore the last active conversation. All message history and assistant replies
+are persisted in the backend database.
