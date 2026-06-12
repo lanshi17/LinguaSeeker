@@ -1,10 +1,8 @@
 import { ChatView } from "@/features/chat";
-import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function ChatPage() {
   return (
-    <div className="flex min-h-0 flex-col gap-4">
-      <PageHeader title="Chat Sessions" />
+    <div className="-mx-4 -mt-4 h-[calc(100vh-3.5rem)] md:-mx-6 md:-mt-6">
       <ChatView />
     </div>
   );
