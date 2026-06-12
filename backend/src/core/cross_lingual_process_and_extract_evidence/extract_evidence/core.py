@@ -53,6 +53,7 @@ def _fuzzy_ellipsis_match(snippet: str, doc_text: str) -> bool:
     for frag in fragments:
         norm_frag = _normalize_for_grounding(frag)
         if not norm_frag:
+            logger.debug("Skipping empty fragment after normalization in fuzzy ellipsis match")
             continue
         pos = normalized_doc.find(norm_frag, last_pos + 1)
         if pos == -1:
@@ -814,7 +815,7 @@ class SourceGrounder:
                 parts.append(value.strip())
         return "\n".join(parts).strip()
 
-    @staticmethod
+    # Class-level constant — immutable, safe to share across instances/subclasses.
     _KNOWN_CONTEXT_TYPES = frozenset({
         "text", "table", "figure", "supplementary", "caption",
         "abstract", "introduction", "methods", "results", "discussion",
