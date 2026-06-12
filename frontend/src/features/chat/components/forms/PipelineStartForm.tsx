@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -35,10 +35,6 @@ export function PipelineStartForm({
   );
   const [query, setQuery] = useState("");
   const [file, setFile] = useState<File | null>(null);
-
-  useEffect(() => {
-    setSourceType(defaultSourceType);
-  }, [defaultSourceType]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
