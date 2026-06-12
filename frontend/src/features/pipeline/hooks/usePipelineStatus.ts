@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getPipelineStatus } from "../services/pipeline";
 import type { PipelineStatusResponse } from "../types/pipeline";
 
-const TERMINAL_STATUSES = new Set(["completed", "failed", "cancelled", "awaiting_review"]);
+const TERMINAL_STATUSES = new Set(["completed", "failed", "skipped", "awaiting_review"]);
 const MAX_POLL_MS = 30 * 60 * 1000; // 30 min safety cap
 
 /**

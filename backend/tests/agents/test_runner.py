@@ -373,7 +373,8 @@ async def test_get_last_state_is_read_only_for_active_db_runs(
     assert result is not None
     assert result.pipeline_status == PipelineStatus.RUNNING  # read-only, no mutation
     mock_persistence.save.assert_not_awaited()
-    assert runner.get_last_state_cached("run-123") is result
+    # Active DB states are NOT cached (would become stale across workers)
+    assert runner.get_last_state_cached("run-123") is None
 
 
 @pytest.mark.asyncio
@@ -508,15 +509,9 @@ async def test_shutdown_cancels_tasks_after_timeout(
     # Shutdown with very short timeout — should cancel the hanging task
     await runner.shutdown(timeout=0.1)
 
-    # Task is still running (not cancelled by shutdown)
-    assert not task.done()
-
-    # Cleanup
-    task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        pass
+    # Task should be cancelled and done after shutdown
+    assert task.done()
+    assert task.cancelled()
 
 
 @pytest.mark.asyncio

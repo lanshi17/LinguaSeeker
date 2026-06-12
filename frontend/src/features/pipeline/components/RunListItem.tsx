@@ -16,11 +16,11 @@ interface RunListItemProps {
 }
 
 const STATUS_LABEL: Record<ProcessingStatus, string> = {
-  queued: "Queued",
+  pending: "Pending",
   running: "Running",
   completed: "Completed",
   failed: "Failed",
-  cancelled: "Cancelled",
+  skipped: "Skipped",
   awaiting_review: "Awaiting review",
 };
 
@@ -28,34 +28,40 @@ const STATUS_TONE: Record<
   ProcessingStatus,
   "default" | "info" | "success" | "error" | "warning"
 > = {
-  queued: "default",
+  pending: "default",
   running: "info",
   completed: "success",
   failed: "error",
-  cancelled: "warning",
+  skipped: "default",
   awaiting_review: "warning",
 };
 
-const PULSE_TONE: Record<ProcessingStatus, "primary" | "success" | "warning" | "error" | "neutral"> = {
-  queued: "neutral",
+const PULSE_TONE: Record<
+  ProcessingStatus,
+  "primary" | "success" | "warning" | "error" | "neutral"
+> = {
+  pending: "neutral",
   running: "primary",
   completed: "success",
   failed: "error",
-  cancelled: "neutral",
+  skipped: "neutral",
   awaiting_review: "warning",
 };
 
 export function RunListItem({ run, index }: RunListItemProps) {
   const [copied, setCopied] = useState(false);
-  const isLive = run.pipeline_status === "running" || run.pipeline_status === "queued";
-  const elapsed = useElapsedSeconds(isLive ? run.started_at : run.completed_at);
+  const isLive = run.pipeline_status === "running" || run.pipeline_status === "pending";
+  const liveElapsed = useElapsedSeconds(isLive ? run.started_at : undefined);
+  const terminalDuration =
+    run.started_at && run.completed_at
+      ? (new Date(run.completed_at).getTime() - new Date(run.started_at).getTime()) / 1000
+      : null;
 
   const completedPhases = run.completed_phases ?? 0;
   const totalPhases = run.total_phases ?? 3;
   const progress = Math.min(100, Math.max(0, (completedPhases / totalPhases) * 100));
 
-  const durationSeconds =
-    run.elapsed_seconds ?? (isLive ? elapsed : elapsed);
+  const durationSeconds = run.elapsed_seconds ?? (isLive ? liveElapsed : terminalDuration);
 
   async function handleCopy(e: React.MouseEvent) {
     e.preventDefault();
@@ -90,8 +96,9 @@ export function RunListItem({ run, index }: RunListItemProps) {
                 "h-2.5 w-2.5 rounded-full",
                 run.pipeline_status === "completed" && "bg-success-500",
                 run.pipeline_status === "failed" && "bg-red-500",
-                run.pipeline_status === "cancelled" && "bg-gray-400",
-                run.pipeline_status === "queued" && "bg-gray-300",
+                run.pipeline_status === "skipped" && "bg-gray-400",
+                run.pipeline_status === "pending" && "bg-gray-300",
+                run.pipeline_status === "awaiting_review" && "bg-amber-400",
               )}
               aria-hidden
             />
