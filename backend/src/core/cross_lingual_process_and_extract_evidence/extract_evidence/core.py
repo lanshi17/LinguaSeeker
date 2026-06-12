@@ -815,14 +815,17 @@ class SourceGrounder:
         return "\n".join(parts).strip()
 
     @staticmethod
+    _KNOWN_CONTEXT_TYPES = frozenset({
+        "text", "table", "figure", "supplementary", "caption",
+        "abstract", "introduction", "methods", "results", "discussion",
+        "conclusion", "background",
+    })
+
+    @staticmethod
     def _map_block_type(block_type: str) -> str:
-        if block_type == "table":
-            return "table"
-        if block_type == "image":
-            return "image"
-        if block_type == "chart":
-            return "figure"
-        return "text"
+        mapping = {"chart": "figure", "image": "figure", "table": "table"}
+        mapped = mapping.get(block_type, block_type)
+        return mapped if mapped in EvidenceItemNormalizer._KNOWN_CONTEXT_TYPES else "text"
 
     def _find_block_for_offsets(
         self,
