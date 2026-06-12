@@ -1827,3 +1827,21 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 
 **Prevention:** When `/executing-plans` targets an existing branch, always inspect that branch's history first to detect pre-existing work. The current `skill:executing-plans` reads the plan file but does not warn about prior implementations of the same plan. A future improvement would be to diff the plan's "Files to Modify" list against the branch's existing commits and prompt the user when a partial implementation already exists.
 >>>>>>> 027e8bec (docs(evidence): document bilingual comparison completion)
+
+## 2026-06-12: Chat sidebar hydration mismatch on Next.js App Router static prerender
+
+**Problem**: Console showed `Uncaught Error: Hydration failed because the server rendered HTML didn't match the client` with the diff `+ <li title="Session 8a2b5104..." className="ant-conversations-item ant-conversations-item-active">`. The /chat route is statically prerendered (it appeared as `○ /chat` in `next build` output), and the SSR HTML had no sidebar items because `window.localStorage` is undefined on the server. The first client render then produced the persisted sessions, diverging from the SSR HTML.
+
+**Investigation**: Confirmed via grep that the project has zero `chrome.*`, `window.ai`, `postMessage`, `addEventListener('message')`, `MessageChannel`, or `BroadcastChannel` references in the frontend tree. The earlier `message channel closed` warnings were from Chrome Built-In AI or an extension, not from our code. The new error was a real React hydration failure — its `+` diff line pointed at a specific `<li>` we own, not a generic Chrome internal file.
+
+**Root cause**: `useChatSessions` uses `useState(() => loadLocalChatSessions())` which reads `localStorage` eagerly on first render. In Next.js App Router, this hook runs during the SSR prerender with `localStorage === undefined` and during the first client render with persisted data — producing two different DOM trees. The `<Conversations>` `activeKey` was the most visible symptom (it added the `ant-conversations-item-active` class on the client only), but any localStorage-driven field could have caused it.
+
+**Fix**: Gated the `<Conversations>` JSX on a `mounted` flag set in a one-shot mount effect. First client render matches the SSR HTML (an empty 240px placeholder div with the same width style, so the layout doesn't shift). The effect fires after hydration completes and the second render paints the real sidebar. The `useChatSessions` hook is left untouched — its eager localStorage read is fine once the JSX is gated, because the value is no longer used to produce SSR HTML.
+
+**Lint gotcha**: The `mounted` pattern trips `react-hooks/set-state-in-effect` (a React 19+ rule that warns about cascading renders from `setState` in effects). For this one-shot mount-flag pattern the warning is a false positive: the dep array is empty so the effect runs exactly once, and the rule's suggested alternative (`useSyncExternalStore`) does not apply because the data flows through a TanStack Query / `useState` pipeline, not a raw external store. Suppressed with a per-line `// eslint-disable-line react-hooks/set-state-in-effect` that cites this rationale inline.
+
+**Why not move the localStorage read into the hook**: First attempt (lazy `useState` -> `useEffect` with `setLocalSessions`) preserved behavior but tripped the same lint rule. Second attempt (`useSyncExternalStore`) would have required a custom pub/sub for in-tab updates — overkill. Third attempt (also `useSyncExternalStore` with a no-op subscribe) regressed new-session visibility because the snapshot would not re-read after a `setItem`. The JSX-level gate is the simplest correct fix.
+
+**Prevention**: Any Next.js App Router component that renders values from `localStorage`, `sessionStorage`, or `window.*` must gate the affected JSX on a `mounted` flag, not just gate the data fetch. The data hook can stay eager; the divergence is in the JSX. Document this in the chat feature README so the next person doesn't re-introduce the bug.
+
+**Verification**: 7/7 vitest, 30/30 node --test, 0 ESLint errors on `src/features/chat/`, `tsc --noEmit` clean, `next build` prerenders `/chat` as static content. The original `message channel closed` warnings from Chrome Built-In AI are unrelated and persist (they are external to the app).
