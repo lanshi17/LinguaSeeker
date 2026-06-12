@@ -47,6 +47,18 @@ class TestChatAI:
         intent = service._detect_intent("What is the gene symbol?")
         assert intent == "question"
 
+    async def test_detect_intent_action_request(self, db_session: AsyncSession) -> None:
+        """Standalone action requests should not produce silent empty replies."""
+        service = ChatService(db_session)
+        intent = service._detect_intent("我想做文献的证据提取")
+        assert intent == "question"
+
+    async def test_detect_intent_greeting(self, db_session: AsyncSession) -> None:
+        """Standalone greetings should receive assistant guidance."""
+        service = ChatService(db_session)
+        intent = service._detect_intent("hi")
+        assert intent == "question"
+
     async def test_detect_intent_correction(self, db_session: AsyncSession) -> None:
         """Correction instruction triggers structured operation."""
         service = ChatService(db_session)
