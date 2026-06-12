@@ -198,14 +198,15 @@ async def lifespan(app: FastAPI):
 
     try:
         phase4_factory = get_phase4_factory()
-        await phase4_factory.close()
-    except Exception:
-        logger.warning("Phase4ServiceFactory close failed during shutdown")
+        if phase4_factory is not None:
+            await phase4_factory.close()
+    except Exception as exc:
+        logger.debug("Phase4ServiceFactory close failed during shutdown: {}", exc)
     finally:
         try:
             await _wiring.dispose_redis()
-        except Exception:
-            logger.warning("Redis disposal failed during shutdown")
+        except Exception as exc:
+            logger.debug("Redis disposal failed during shutdown: {}", exc)
         try:
             await _wiring.dispose_engine()
         except Exception:
