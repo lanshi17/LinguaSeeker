@@ -120,8 +120,13 @@ class Phase3Adapter:
                 unmapped_count=standardization_result.unmapped_count,
             )
 
-            # D4 fix: Set skip reason if no candidates were standardized
-            if standardization_result.standardized_count == 0:
+            # D4 fix: Set skip reason if no candidates exist at all
+            candidate_count = (
+                standardization_result.standardized_count
+                + standardization_result.ambiguous_count
+                + standardization_result.unmapped_count
+            )
+            if candidate_count == 0:
                 state.skip_phase_3_reason = SkipPhase3Reason.NO_CANDIDATES
                 state.phase_3_status = PhaseStatusDetail(
                     status=PhaseStatus.COMPLETED,
@@ -133,8 +138,10 @@ class Phase3Adapter:
                     if state.phase_3_status.started_at
                     else None,
                     summary={
-                        "match_count": 0,
-                        "standardized_count": 0,
+                        "match_count": standardization_result.match_count,
+                        "standardized_count": standardization_result.standardized_count,
+                        "ambiguous_count": standardization_result.ambiguous_count,
+                        "unmapped_count": standardization_result.unmapped_count,
                         "skip_reason": "no_candidates",
                     },
                 )
@@ -156,6 +163,8 @@ class Phase3Adapter:
                 summary={
                     "match_count": standardization_result.match_count,
                     "standardized_count": standardization_result.standardized_count,
+                    "ambiguous_count": standardization_result.ambiguous_count,
+                    "unmapped_count": standardization_result.unmapped_count,
                 },
             )
 
