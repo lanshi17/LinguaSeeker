@@ -146,7 +146,13 @@ export interface ChatMarkdownProps {
 }
 
 export function ChatMarkdown({ source }: ChatMarkdownProps) {
-  if (!source) return null;
+  if (!source) {
+    return (
+      <span className="italic text-gray-400" data-testid="chat-empty-reply">
+        (no response)
+      </span>
+    );
+  }
 
   const blocks = blockify(source);
 
