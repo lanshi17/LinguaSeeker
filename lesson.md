@@ -1781,6 +1781,7 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 
 **Prevention:** Do not mutate Ant Design X SDK message IDs during streaming because `useXChat` uses them internally for updates. If the SDK ID source is not globally unique, derive render-only keys at the list boundary and cover duplicate-ID cases with utility tests.
 
+<<<<<<< HEAD
 ## 2026-06-12 — Chat action requests were routed to silent note intent
 
 **Problem:** The chat page displayed empty assistant bubbles after inputs such as `hi` and `I want to do literature evidence extraction`. Natural-language requests to start extraction did not open the embedded pipeline card, and database lookup requests were not routed to the evidence search experience.
@@ -1801,3 +1802,28 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 - `uv run ruff check src/core/visualize_evidence_with_expert_in_loop/chat_service.py tests/core/visualize_evidence_with_expert_in_loop/test_chat_ai.py`: passed.
 
 **Prevention:** Keep product action routing deterministic at the UI boundary before starting SSE. Backend chat intent should still treat standalone greetings and action requests as reply-worthy, while evidence-bound notes can remain silent only when the UI intentionally uses that mode.
+
+## 2026-06-12: Bilingual comparison rebase — pre-existing branch with stale plan
+
+**Problem:** The user invoked `/executing-plans bilingual-comparison-ux │ feat/bilingual-comparison-ux`, but the `feat/bilingual-comparison-ux` branch already had 4 plan commits from 2026-06-08 sitting on top of an older dev base. The 4 dev commits between the merge-base and current dev (chat duplicate keys, pipeline run history, nginx, cache-only-terminal) plus extensive Phase 2/3/4 work had not been merged into the branch. The plan's `BilingualComparison` component had a `trace: EvidenceTrackTrace | null` API, but dev had since refactored `EvidenceDetailView` to call it with a richer `detail/groupId/selectedEvidenceId/setSelectedEvidenceId` API.
+
+**Investigation:** Discovered the existing worktree at `~/.config/superpowers/worktrees/01_ACMG_Lingua/bilingual-comparison-ux` (with 16 unrelated WIP files from Phase 2/3 work). The plan's 4 commits were valid (Task 1–4) but they sat on a 4-day-stale dev base. Confirmed 13-file intersection between the two branches: `contracts.py`, `search_service.py`, two test files, plan doc, `docs/README.md`, `package.json`, two evidence components, `index.ts`, `evidence-search/README.md`, `types/evidenceSearch.ts`, `lesson.md`, `progress.txt`.
+
+**Root cause:** The plan was correctly executed on 2026-06-08, but the branch was never merged back to dev. While the branch waited, dev drifted forward 4 commits, including the `EvidenceDetailView` rewrite that changed how `BilingualComparison` was called.
+
+**Solution:** Opened `.worktrees/merge-bilingual-comparison-ux` on a fresh `merge/bilingual-comparison-ux-onto-dev` branch from current dev HEAD. Cherry-picked the 4 plan commits sequentially, resolving 13 conflict regions:
+- `search_service.py` — kept dev's stricter single-letter / uppercase-2-letter rules but adopted feat's safer `(offset, valid)` parser signature and the token-boundary regex for 3+ letter values; merged bodies manually.
+- `test_search_service.py` — kept both dev's tests (RB uppercase, missing offsets) and feat's tests (case-insensitive, ambiguous single-letter, unknown value).
+- `EvidenceDetailView.tsx` — kept dev's restructured page (with `initialView="compare"` mode) and the new compare-view integration.
+- `EvidenceHighlightText.tsx` — kept dev's tone/category coloring and `findAnchorRange` fallback, added feat's "highlight unavailable" chip (per user's "keep existing component" choice).
+- `BilingualComparison.tsx` — extended feat's single-`trace` API with a discriminated union that also accepts the dev API (`detail`, `groupId`, `selectedEvidenceId`, `setSelectedEvidenceId`), so it works in both standalone and compare-mode usage.
+- `package.json` — kept vitest per user choice; removed the dev `node --test` test script.
+- Docs (lesson, progress, READMEs) — kept dev content and appended a new entry documenting the rebase.
+
+**Verification:**
+- All 4 cherry-picked commits applied with new SHAs on `merge/bilingual-comparison-ux-onto-dev`.
+- 13 conflicting files resolved without dropping any test cases or feature flags.
+- BilingualComparison component now supports both legacy `trace` calls (used by the new test) and dev's compare-mode API.
+
+**Prevention:** When `/executing-plans` targets an existing branch, always inspect that branch's history first to detect pre-existing work. The current `skill:executing-plans` reads the plan file but does not warn about prior implementations of the same plan. A future improvement would be to diff the plan's "Files to Modify" list against the branch's existing commits and prompt the user when a partial implementation already exists.
+>>>>>>> 027e8bec (docs(evidence): document bilingual comparison completion)
