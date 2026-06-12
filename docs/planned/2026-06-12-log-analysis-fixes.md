@@ -22,11 +22,11 @@
 | 6 | `OPENAI_API_KEY` missing for relevance_scan | ~50 | P1 | Config wiring gap — wrong config variable used |
 | 7 | Connection pool leak in `_try_startup_lock` | ~49 | P1 | `raw_conn` not closed on exception path |
 | 8 | `context_type` Literal rejects academic sections | ~37 | P1 | Enum missing `results`/`discussion`/`methods`/`background` |
-| 9 | Phase 2 file-not-found after Phase 1 temp cleanup | ~30 | P2 | `FileNotFoundError` retried as transient; temp file race |
+| 9 | Phase 2 file-not-found after Phase 1 temp cleanup | ~30 | P2 | Phase adapter wraps `FileNotFoundError` as `PermanentPhaseError` (correct), but repeated pipeline runs each log the error; misleading log message |
 | 10 | Phase 3 DB objects missing (`literature_profiles`, `frontend_search_index`) | ~4 | P2 | Migrations not applied or runtime table creation timing |
 | 11 | Semantic matching connection failure | ~40 | P2 | Model server not running at `localhost:8001` |
-| 12 | Phase4ServiceFactory close failure on shutdown | ~70 | P2 | Missing try-except in shutdown cleanup |
-| 13 | Translation validation: "unchanged" | ~8 | P3 | LLM returns source language text; threshold too aggressive |
+| 12 | Phase4ServiceFactory close failure on shutdown | ~70 | P2 | Shutdown cleanup logs at WARNING level even for benign failures |
+| 13 | Translation validation: "unchanged" | ~8 | P3 | Short texts with shared technical terms trigger similarity threshold; no length guard |
 
 ---
 
@@ -262,7 +262,7 @@ git commit -m "fix: close raw_conn on SQL error in _try_startup_lock"
 - Modify: `backend/app.main:lifespan` (around lines 60-90)
 - Test: `backend/tests/test_health.py` (new)
 
-**Step 1: Write the failing test**
+**Step 1: Write the regression test (characterizes current behavior)**
 
 ```python
 # backend/tests/test_health.py
@@ -295,26 +295,31 @@ async def test_redis_health_check_skips_when_client_none():
         assert result is False
 ```
 
-**Step 2: Run test to verify current behavior**
+**Step 2: Run test to verify current behavior is correct**
 
 ```bash
 cd backend
 uv run pytest tests/test_health.py -v
 ```
 
-Expected: PASS (existing code already returns False; validates the behavior).
-
+Expected: PASS (existing `_check_redis` already returns `False` on failure — this is a regression guard).
 **Step 3: Downgrade Redis startup log from WARNING to DEBUG**
 
-In `backend/app.main`, find the lifespan health check section. Change Redis failure logging:
+In `backend/app/main.py:166-174` (lifespan health check section), change the failure logging to use DEBUG for Redis specifically:
 
 ```python
-for svc, ok in results.items():
-    if not ok:
-        level = "debug" if svc == "redis" else "warning"
-        getattr(logger, level)("Startup connectivity check failed: {}", svc)
-```
+# CURRENT (line ~170):
+if failed:
+    logger.warning("Startup connectivity check failed: {}", ", ".join(failed))
 
+# AFTER:
+if failed:
+    critical_failed = [s for s in failed if s != "redis"]
+    if critical_failed:
+        logger.warning("Startup connectivity check failed: {}", ", ".join(critical_failed))
+    if "redis" in failed:
+        logger.debug("Redis health check failed (non-critical)")
+```
 **Step 4: Run tests**
 
 ```bash
@@ -339,7 +344,8 @@ git commit -m "fix: downgrade Redis startup failure to debug level"
 **Problem:** LLM extracts evidence snippets containing `...` (ellipsis), which are exact-matched against the original document and fail. ~200+ warnings of `ellipsis_detected` and `not found in document`.
 
 **Files:**
-- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/core.py:454,508,523,540`
+- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/core.py:681-689` (ellipsis check in `_ground_one`)
+- Modify: `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/core.py:976-985` (existing `_normalize_snippet_for_search` — reuse or extend)
 - Test: `backend/tests/core/test_grounding.py` (new)
 
 **Step 1: Write the failing test**
@@ -389,40 +395,39 @@ Expected: FAIL — `_normalize_for_grounding` doesn't exist.
 
 **Step 3: Add fuzzy normalization helper**
 
-In `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/core.py`, add:
+In `backend/src/core/cross_lingual_process_and_extract_evidence/extract_evidence/core.py`, add a new helper (or extend the existing `_normalize_snippet_for_search` at line 976):
 
 ```python
-import re
-
-_ELLIPSIS_RE = re.compile(r"\s*\.{2,}\s*")
-_MULTI_SPACE_RE = re.compile(r"\s+")
+# NOTE: `import re` already exists at top of core.py — do not re-add.
+_GROUNDING_ELLIPSIS_RE = re.compile(r"\s*\.{2,}\s*")
+_GROUNDING_SPACE_RE = re.compile(r"\s+")
 
 def _normalize_for_grounding(text: str) -> str:
     """Normalize text for fuzzy grounding: strip ellipsis, collapse whitespace, lowercase."""
-    text = _ELLIPSIS_RE.sub(" ", text)
-    text = _MULTI_SPACE_RE.sub(" ", text).strip()
+    text = _GROUNDING_ELLIPSIS_RE.sub(" ", text)
+    text = _GROUNDING_SPACE_RE.sub(" ", text).strip()
     return text.lower()
 ```
 
-Then in `_ground_one` (around line 454), change the ellipsis detection path:
+Then in `_ground_one` (line 681), change the ellipsis detection path:
 
 ```python
-# BEFORE (line ~454):
-if "..." in snippet:
-    logger.warning("Snippet '{}' contains ellipsis, marking SOURCE_INVALID (ellipsis_detected)", snippet[:80])
-    return _make_invalid_location(...)
+# BEFORE (line ~681):
+if self._snippet_has_ellipsis(snippet):
+    logger.warning("Snippet '{}' contains ellipsis, marking SOURCE_INVALID (ellipsis_detected)", snippet)
+    return item.model_copy(update={...})
 
 # AFTER:
-if "..." in snippet:
+if self._snippet_has_ellipsis(snippet):
     # Try fuzzy match: strip ellipsis and do substring search
     normalized_snippet = _normalize_for_grounding(snippet)
-    normalized_doc = _normalize_for_grounding(doc_text)
+    normalized_doc = _normalize_for_grounding(document.formatted_text)
     if normalized_snippet and normalized_snippet in normalized_doc:
         logger.debug("Snippet matched via fuzzy grounding (ellipsis stripped)")
-        # Continue with normal grounding
+        # Continue with normal grounding flow below
     else:
         logger.warning("Snippet '{}' contains ellipsis and not found via fuzzy match, marking SOURCE_INVALID", snippet[:80])
-        return _make_invalid_location(...)
+        return item.model_copy(update={...})
 ```
 
 **Step 4: Run test to verify it passes**
@@ -667,78 +672,122 @@ git commit -m "feat: extend context_type to accept academic section types"
 
 ---
 
-### Task 8: Don't Retry FileNotFoundError in Phase Execution
+### Task 8: Improve FileNotFoundError Messaging in Phase Execution
 
-**Problem:** Phase 2 retries `FileNotFoundError` on `phase_1/metadata.json` (~30 occurrences) — this is a permanent error, not transient. Also `FileNotFoundError` for upload PDFs that were deleted.
+**Problem:** ~30 occurrences of `FileNotFoundError` for `phase_1/metadata.json` and upload PDFs that were deleted. The phase adapters correctly classify these as `PermanentPhaseError` (never retried), and `RetryablePhaseExecutor` already skips retry for permanent errors. The log noise comes from repeated pipeline runs — each run logs the error once. The fix is to make the error message clearly indicate it's a permanent failure (not transient), so operators don't mistake it for a retry-worthy transient error.
 
 **Files:**
-- Modify: `backend/src/agents/concurrency.py:59` (retry error handler)
+- Modify: `backend/src/agents/phase_2_adapter.py` (line ~82-86 — `phase_1_output is None` check, or wherever `FileNotFoundError` surfaces)
 - Test: `backend/tests/agents/test_phase2_retry.py` (new)
 
-**Step 1: Write the failing test**
+**Step 1: Write the characterization test**
 
 ```python
 # backend/tests/agents/test_phase2_retry.py
-"""Tests for retry logic distinguishing permanent vs transient errors."""
+"""Tests verifying FileNotFoundError is never retried."""
 
 import pytest
+from src.agents.concurrency import RetryablePhaseExecutor
+from src.agents.contracts import RetryablePhaseError
 
 
 @pytest.mark.asyncio
-async def test_file_not_found_is_not_retried():
-    """FileNotFoundError should fail immediately, not retry."""
-    from src.agents.concurrency import execute_with_retry
+async def test_file_not_found_error_is_not_retried():
+    """FileNotFoundError propagates immediately — retry logic never catches it."""
+    executor = RetryablePhaseExecutor(max_retries=2, backoff_base=0.01)
 
     call_count = 0
 
-    async def failing_phase():
+    async def failing_phase(state):
         nonlocal call_count
         call_count += 1
         raise FileNotFoundError("No such file: phase_1/metadata.json")
 
     with pytest.raises(FileNotFoundError):
-        await execute_with_retry(phase_name="phase_2", fn=failing_phase, max_retries=2)
+        await executor.execute_with_retry(
+            operation=failing_phase, state=None, phase_name="phase_2"
+        )
+
+    assert call_count == 1  # Never retried
+
+
+@pytest.mark.asyncio
+async def test_permanent_phase_error_is_not_retried():
+    """PermanentPhaseError propagates immediately."""
+    from src.agents.contracts import PermanentPhaseError
+
+    executor = RetryablePhaseExecutor(max_retries=2, backoff_base=0.01)
+    call_count = 0
+
+    async def failing_phase(state):
+        nonlocal call_count
+        call_count += 1
+        raise PermanentPhaseError("file not found", phase=2)
+
+    with pytest.raises(PermanentPhaseError):
+        await executor.execute_with_retry(
+            operation=failing_phase, state=None, phase_name="phase_2"
+        )
 
     assert call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_retryable_phase_error_is_retried():
+    """RetryablePhaseError is retried (smoke test to confirm retry works)."""
+    executor = RetryablePhaseExecutor(max_retries=2, backoff_base=0.01)
+    call_count = 0
+
+    async def failing_phase(state):
+        nonlocal call_count
+        call_count += 1
+        raise RetryablePhaseError("transient timeout", phase=2)
+
+    with pytest.raises(RetryablePhaseError):
+        await executor.execute_with_retry(
+            operation=failing_phase, state=None, phase_name="phase_2"
+        )
+
+    assert call_count == 3  # 1 initial + 2 retries
 ```
 
-**Step 2: Run test to verify it fails**
+**Step 2: Run test to verify current behavior is correct**
 
 ```bash
 cd backend
 uv run pytest tests/agents/test_phase2_retry.py -v
 ```
 
-Expected: FAIL — `execute_with_retry` retries FileNotFoundError.
+Expected: All 3 PASS — `FileNotFoundError` and `PermanentPhaseError` are never retried; `RetryablePhaseError` is retried.
 
-**Step 3: Fix retry logic**
+**Step 3: Improve the error message in the phase adapter**
 
-In `backend/src/agents/concurrency.py`, add at module level:
-
-```python
-_PERMANENT_ERRORS = (FileNotFoundError, PermissionError, IsADirectoryError)
-```
-
-In `execute_with_retry`, change the except clause:
+In `backend/src/agents/phase_2_adapter.py`, ensure the `FileNotFoundError` path produces a message that clearly distinguishes permanent from transient:
 
 ```python
-    except _PERMANENT_ERRORS:
-        raise
-    except Exception as exc:
-        # existing retry logic
+# When phase_1_output is missing (line ~82):
+if state.phase_1_output is None:
+    raise PermanentPhaseError(
+        "Phase 1 output not found (permanent — check that phase 1 completed successfully and temp files were not cleaned up)",
+        phase=2,
+    )
 ```
 
-**Step 4: Run test to verify it passes**
+No retry-logic changes are needed in `concurrency.py` — the current behavior is already correct.
+
+**Step 4: Run tests to verify**
 
 ```bash
 uv run pytest tests/agents/test_phase2_retry.py -v
 ```
 
+Expected: PASS
+
 **Step 5: Commit**
 
 ```bash
-git add backend/src/agents/concurrency.py backend/tests/agents/test_phase2_retry.py
-git commit -m "fix: don't retry FileNotFoundError in phase execution"
+git add backend/src/agents/phase_2_adapter.py backend/tests/agents/test_phase2_retry.py
+git commit -m "fix: clarify permanent error message in phase 2 adapter"
 ```
 
 ---
@@ -778,9 +827,27 @@ Read `backend/src/core/visualize_evidence_with_expert_in_loop/search_service.py:
 - Line ~503: `items_by_field` partitions by `field_id`
 - Line ~508-537: For each field, picks first `original` and first `translated` — logs warning on duplicates
 
-**Step 3: Add post-query deduplication**
+**Step 3: Add `updated_at` to SELECT and add post-query deduplication**
 
-In `get_group_detail`, after the SQL query (around line 432), add deduplication before the trace-building loop:
+First, add `CanonicalEvidenceItem.updated_at` to the SELECT at line 427 so the dedup code can sort by recency:
+
+```python
+stmt = (
+    select(
+        CanonicalEvidenceItem.canonical_evidence_id,
+        CanonicalEvidenceItem.source_document_id,
+        CanonicalEvidenceItem.field_id,
+        CanonicalEvidenceItem.review_status,
+        CanonicalEvidenceItem.current_best_confidence,
+        CanonicalEvidenceItem.active_payload,
+        CanonicalEvidenceItem.updated_at,             # ← ADD for dedup tiebreaking
+    )
+    .where(CanonicalEvidenceItem.active_payload["group_id"].astext == group_id)
+    .order_by(CanonicalEvidenceItem.field_id)
+)
+```
+
+Then, after fetching rows (after line 438), add deduplication before the trace-building loop:
 
 ```python
 # After fetching rows, deduplicate by (field_id, track):
@@ -813,45 +880,47 @@ git commit -m "fix: deduplicate tracks in search_service get_group_detail"
 
 ---
 
-### Task 10: Ensure Phase4ServiceFactory Shutdown is Safe
+### Task 10: Downgrade Shutdown Cleanup Logs from WARNING to DEBUG
 
-**Problem:** ~70 warnings of `Phase4ServiceFactory close failed during shutdown` and ~10 `Redis disposal failed during shutdown`. Shutdown cleanup throws exceptions that propagate.
+**Problem:** ~70 warnings of `Phase4ServiceFactory close failed during shutdown` and ~10 `Redis disposal failed during shutdown`. The shutdown code at `main.py:190-205` already wraps both cleanup calls in try-except, so exceptions do not propagate — but they log at `logger.warning` level, producing noise on every graceful restart. The fix is to downgrade these to `logger.debug`.
 
 **Files:**
-- Modify: `backend/app/main.py` (lifespan shutdown section, around lines 100-120)
+- Modify: `backend/app/main.py:195-201` (shutdown cleanup logging)
 
 **Step 1: Read the current shutdown code**
 
 ```bash
 cd backend
-# Read the lifespan function shutdown section
+# Lines 190-205 in app/main.py already have try-except — confirm
 ```
 
-**Step 2: Wrap Phase4ServiceFactory close in try-except**
+**Step 2: Downgrade log levels in shutdown cleanup**
 
-In `backend/app/main.py`, in the lifespan shutdown section:
+In `backend/app/main.py:195-201`, change `logger.warning` to `logger.debug` for benign shutdown failures:
 
 ```python
-# Find the Phase4ServiceFactory close call and wrap it:
-try:
-    if _phase4_factory:
-        await _phase4_factory.close()
+# CURRENT (lines ~195-201):
+except Exception:
+    logger.warning("Phase4ServiceFactory close failed during shutdown")
+...
+except Exception:
+    logger.warning("Redis disposal failed during shutdown")
+
+# AFTER:
 except Exception as exc:
     logger.debug("Phase4ServiceFactory close failed during shutdown: {}", exc)
-
-# Similarly for Redis disposal:
-try:
-    if _redis_client:
-        await _redis_client.aclose()
+...
 except Exception as exc:
     logger.debug("Redis disposal failed during shutdown: {}", exc)
 ```
+
+Note: the exception variable (`as exc`) should also be captured so the message includes the actual error for debugging.
 
 **Step 3: Commit**
 
 ```bash
 git add backend/app/main.py
-git commit -m "fix: wrap shutdown cleanup in try-except to prevent warning spam"
+git commit -m "fix: downgrade shutdown cleanup logs from warning to debug"
 ```
 
 ---
@@ -917,41 +986,74 @@ No commit needed — this is operational.
 import pytest
 
 
-def test_short_technical_text_not_flagged_as_unchanged():
-    """Short texts with many shared technical terms should not be flagged."""
+def test_short_cjk_technical_text_not_flagged():
+    """Short CJK-source texts with shared technical terms should not be falsely flagged."""
     from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.validator.core import validate_translation_output
 
-    source = "BRCA1 gene mutation c.5266dupC (p.Gln1756ProfsTer74) was identified."
-    translated = "BRCA1基因突变c.5266dupC（p.Gln1756ProfsTer74）被鉴定。"
+    # Chinese source with shared English gene/mutation notation
+    source = "患者携带BRCA1基因c.5266dupC（p.Gln1756ProfsTer74）突变。"
+    translated = "The patient carries BRCA1 gene c.5266dupC (p.Gln1756ProfsTer74) mutation."
 
-    # Many shared tokens (gene names, mutation notation) but genuinely translated
-    # Should NOT raise TranslationError
+    # Many shared ASCII tokens (BRCA1, c.5266dupC, p.Gln1756ProfsTer74) but genuinely translated
+    # With CJK-aware threshold (0.95 for short CJK-source texts), should NOT raise
     try:
         validate_translation_output(source, translated)
     except Exception as e:
         pytest.fail(f"Should not raise for genuine translation with shared terms: {e}")
-```
 
-**Step 2: Run test**
+
+def test_short_cjk_untranslated_still_caught():
+    """Short CJK-source text returned unchanged is still caught (ratio >= 0.95)."""
+    from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.validator.core import validate_translation_output
+
+    source = "患者携带BRCA1 c.5266dupC突变。"
+    translated = "患者携带BRCA1 c.5266dupC突变。"  # unchanged
+
+    with pytest.raises(ValueError, match="translation_validation_failed: unchanged"):
+        validate_translation_output(source, translated)
+
+
+def test_short_english_untranslated_still_caught():
+    """Short English text returned unchanged is caught at threshold 0.85."""
+    from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.validator.core import validate_translation_output
+
+    source = "c.1234A>G (p.Thr412Ala) in exon 10"
+    translated = "c.1234A>G (p.Thr412Ala) in exon 10"  # unchanged
+
+    with pytest.raises(ValueError, match="translation_validation_failed: unchanged"):
+        validate_translation_output(source, translated)
+
+**Step 2: Run test to verify current behavior**
 
 ```bash
 cd backend
 uv run pytest tests/core/test_translation_validator.py -v
 ```
 
+Expected:
+- `test_short_cjk_technical_text_not_flagged` — FAIL (current 0.85 threshold falsely flags the genuine translation)
+- `test_short_cjk_untranslated_still_caught` — PASS
+- `test_short_english_untranslated_still_caught` — PASS
+```
+
 **Step 3: Adjust validation logic**
 
-In `validator/core.py:32-34`, add a minimum length guard:
+In `validator/core.py`, instead of a blanket length guard (which would mask genuine untranslated short texts), use a CJK-aware adjustment: for short texts, raise the similarity threshold from 0.85 to 0.95, AND require CJK characters to be present in the source before applying the unchanged check. This protects short biomedical texts with shared technical terms while still catching genuinely untranslated Chinese text.
+
+Replace lines 39-42 in `core.py`:
 
 ```python
-# Only flag as 'unchanged' if the text is long enough for the comparison to be meaningful
-# and the similarity is truly high
-if len(source_text) < 100:
-    # Short texts with shared technical terms are expected to be similar
-    return  # Skip unchanged check for short texts
+# BEFORE (lines 39-42):
+if source and ratio >= 0.85:
+    raise ValueError("translation_validation_failed: unchanged")
 
-if similarity_ratio >= 0.85:
-    raise TranslationError("translation_validation_failed: unchanged")
+# AFTER:
+# For short texts with high CJK content in source, use a stricter threshold.
+# Short technical texts (gene names, mutations) share many tokens across languages.
+source_cjk_count = len(_CJK_RE.findall(source))
+threshold = 0.95 if (len(source) < 150 and source_cjk_count > 0) else 0.85
+if source and ratio >= threshold:
+    raise ValueError("translation_validation_failed: unchanged")
 ```
 
 **Step 4: Run test to verify it passes**
@@ -965,7 +1067,7 @@ uv run pytest tests/core/test_translation_validator.py -v
 ```bash
 git add backend/src/core/cross_lingual_process_and_extract_evidence/cross_lingual/translate/validator/core.py \
        backend/tests/core/test_translation_validator.py
-git commit -m "fix: skip unchanged check for short technical texts in translation validation"
+git commit -m "fix: use CJK-aware similarity threshold for short texts in translation validation"
 ```
 
 ---
@@ -990,9 +1092,9 @@ Expected:
 - No `source_key does not exist` errors
 - No `literature_profiles does not exist` errors
 - Redis failure logged at DEBUG level (if Redis not running)
-- No connection leak warnings
-- No duplicate track warnings
-
+- No connection leak warnings from `_try_startup_lock`
+- Shutdown cleanup failures logged at DEBUG level
+- Duplicate track occurrences reduced (fully eliminated in trace building; remaining edge cases at DEBUG level)
 ---
 
 ## Post-Plan Cleanup
