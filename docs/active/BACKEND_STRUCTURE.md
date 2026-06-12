@@ -2,12 +2,12 @@
 
 ## 1. Overview
 
-CrossEvidence backend is a FastAPI async application organized around a four-phase evidence infrastructure pipeline. It ingests literature or user-uploaded PDF/DOCX documents, parses them into traceable structured documents, performs original-language extraction and translated-text secondary extraction, fuses bilingual evidence, standardizes biomedical entities, builds evidence matrices, and persists source-linked review feedback.
+CrossEvidence backend is a FastAPI async application organized around a four-phase evidence infrastructure pipeline. It ingests literature or user-uploaded PDF/DOCX documents, parses them into citation-valid structured documents, performs original-language extraction and translated-text secondary extraction (storing both tracks side-by-side), standardizes biomedical entities, builds evidence matrices, and persists source-linked review feedback. Automated cross-track reconciliation is planned.
 
 Backend responsibilities:
 
 - Own `/api/v1/*` API contracts, JWT signing/verification, task lifecycle, persistence, evidence report generation, chat streaming (SSE), source-link management, and delta audit logging.
-- Orchestrate Multi-Agent workflows for acquisition, parsing, native extraction, translation, translated extraction, fusion, standardization, feedback capture, and batch processing.
+- Orchestrate Multi-Agent workflows for acquisition, parsing, native extraction, translation, translated extraction, standardization, feedback capture, and batch processing. Cross-track reconciliation is planned.
 - Reject or flag outputs that cannot be traced back to original anchors and translated anchors when translated text exists.
 - Persist standardized evidence matrices, chat sessions, delta audit logs, and corrected original-translation-evidence triples for future model/prompt improvement.
 - Keep Rust PyO3 crates constrained to low-level I/O.
@@ -263,7 +263,7 @@ Runtime behavior:
 - `PipelineSemaphore` and `RetryablePhaseExecutor` (`agents/concurrency.py`) handle concurrency control and phase-level retries.
 - `PipelineGraphState` (`agents/contracts.py`) is the single source of truth for cross-phase data flow.
 - State persistence to PostgreSQL is handled by `agents/state_persistence.py`.
-- SSE chat streaming and processing progress via Vercel AI SDK (no WebSocket dependency).
+- SSE chat streaming and processing progress via FastAPI `StreamingResponse` (no WebSocket dependency, no Vercel AI SDK).
 - Completed metadata/results persist including chat sessions and delta logs.
 
 ### 3.3 Phase 1: Acquisition, Upload, and Parsing
@@ -308,7 +308,7 @@ Phase 2 is organized into two main sub-packages:
 - `stages/` contains discrete extraction stages: catalog extraction, evidence mapping, group assignment, quality validation, source grounding, and special evidence handling.
 - Supporting modules: `chunking.py` (text chunking), `normalization.py` (value normalization), `catalog.py` (evidence categories), `prompts.py` (extraction prompts).
 
-The extractor/fusion pipeline must output:
+The dual extraction pipeline must output:
 
 - Original source-language value.
 - Translated value.
@@ -317,8 +317,8 @@ The extractor/fusion pipeline must output:
 - Original source span: page, section/line, source anchor, bbox, table/figure ID.
 - Translated source span: page/section/line, translated anchor, mapped original anchor, bbox/table/figure ID when available.
 - Confidence score.
-- Fusion status: `agreed`, `native_only`, `translated_only`, `conflict`, or `manually_corrected`.
-- Fusion rationale.
+- *(Planned)* Reconciliation status: `agreed`, `native_only`, `translated_only`, `conflict`, or `manually_corrected`.
+- *(Planned)* Reconciliation rationale.
 
 ### 3.5 Phase 3: Entity Standardization
 
@@ -423,8 +423,8 @@ class EvidenceItem(BaseModel):
     native_extraction_value: str | None
     translated_extraction_value: str | None
     confidence: float
-    fusion_status: Literal["agreed", "native_only", "translated_only", "conflict", "manually_corrected"]
-    fusion_rationale: str | None
+    # reconciliation_status: Literal["agreed", "native_only", "translated_only", "conflict", "manually_corrected"]  # PLANNED
+    # reconciliation_rationale: str | None  # PLANNED
     source_span: SourceSpan
     translated_source_span: TranslatedSourceSpan | None
 
@@ -477,7 +477,7 @@ class EvidenceMatrix(BaseModel):
     standardized_entities: list[StandardizedEntity]
     low_confidence_count: int
     unstandardized_count: int
-    fusion_conflict_count: int
+    reconciliation_conflict_count: int  # PLANNED: field exists in target schema, not yet populated
     native_only_count: int
     translated_only_count: int
 
@@ -498,7 +498,7 @@ class ReviewCommentRequest(BaseModel):
         "native_extraction",
         "translated_extraction",
         "translation",
-        "fusion",
+        "reconciliation",  # PLANNED: target type for cross-track reconciliation feedback
         "entity",
         "evidence_item",
         "missed_evidence",
@@ -701,7 +701,7 @@ Phase-specific tests should cover:
 | `src/agents/supervisor.py` | `src/agents/orchestrator.py` | LangGraph workflow |
 | `src/agents/extraction/node.py` | Phase 2 `extract_evidence/` | Evidence extraction logic |
 | `src/agents/parsing/translation_tool.py` | Phase 2 `cross_lingual/translate/` | Adapt between native and translated extraction passes |
-| `src/domain/agent/prompts.py` | Phase 2 `extract_evidence/prompts.py` | Native extraction, translated extraction, and fusion prompts |
+| `src/domain/agent/prompts.py` | Phase 2 `extract_evidence/prompts.py` | Native extraction, translated extraction prompts; reconciliation prompts (planned) |
 | `src/domain/agent/workflow.py` | Phase 2 `workflow.py` | EvidenceAgent patterns |
 | `src/domain/variant/` | Phase 3 | ClinVar/ClinGen clients |
 | `src/infrastructure/` | `dao/` layer | PostgreSQL patterns; Redis/Neo4j deferred |
