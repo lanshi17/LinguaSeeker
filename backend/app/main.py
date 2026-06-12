@@ -59,41 +59,53 @@ def _error_response(
     return JSONResponse(status_code=status, content=body, headers={"X-Request-ID": request_id})
 
 
+_startup_lock_raw_conn = None
+
+
 async def _try_startup_lock(engine) -> bool:
     """Acquire a PostgreSQL advisory lock for startup initialization.
+
+    Uses a raw connection (not returned to pool) so the lock persists
+    for the duration of the startup phase.  PostgreSQL advisory locks
+    are session-scoped: they release automatically when the connection
+    closes.
 
     Returns True if the lock was acquired (this worker should run recovery).
     Returns False if another worker already holds the lock.
     Returns True for non-PostgreSQL engines (SQLite in tests).
     """
-    from sqlalchemy import text
+    global _startup_lock_raw_conn
 
     try:
-        async with engine.begin() as conn:
-            result = await conn.execute(
-                text("SELECT pg_try_advisory_lock(hashtext('acmg_lingua_backend_startup'))")
-            )
-            acquired = result.scalar()
-            if acquired:
-                # Keep lock reference for release on shutdown
-                _try_startup_lock._lock_conn = conn
-            return bool(acquired)
+        raw_conn = await engine.raw_connection()
+        result = await raw_conn.exec_driver_sql(
+            "SELECT pg_try_advisory_lock(hashtext('acmg_lingua_backend_startup'))"
+        )
+        row = result.fetchone()
+        acquired = bool(row[0]) if row else False
+        if acquired:
+            _startup_lock_raw_conn = raw_conn
+        else:
+            await raw_conn.close()
+        return acquired
     except Exception:
         # Non-PostgreSQL engines (SQLite in tests) don't have advisory locks
         return True
 
 
-async def _release_startup_lock(engine) -> None:
-    """Release the PostgreSQL advisory lock held during startup."""
-    from sqlalchemy import text
+async def _release_startup_lock() -> None:
+    """Release the PostgreSQL advisory lock by closing the raw connection.
 
-    try:
-        async with engine.begin() as conn:
-            await conn.execute(
-                text("SELECT pg_advisory_unlock(hashtext('acmg_lingua_backend_startup'))")
-            )
-    except Exception:
-        pass
+    PostgreSQL automatically releases all advisory locks when a connection
+    is closed, so explicit pg_advisory_unlock is not required.
+    """
+    global _startup_lock_raw_conn
+    if _startup_lock_raw_conn is not None:
+        try:
+            await _startup_lock_raw_conn.close()
+        except Exception:
+            pass
+        _startup_lock_raw_conn = None
 
 
 @asynccontextmanager
@@ -146,8 +158,7 @@ async def lifespan(app: FastAPI):
         except Exception as exc:
             logger.warning("Orphaned run recovery failed: {}", exc)
         finally:
-            if engine is not None:
-                await _release_startup_lock(engine)
+            await _release_startup_lock()
     else:
         logger.info("Skipping startup recovery — another worker holds the advisory lock")
 

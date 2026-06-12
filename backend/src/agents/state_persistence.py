@@ -89,11 +89,25 @@ class DirectStatePersistence:
             return None
         return PipelineGraphState.model_validate(record.state_json)
 
-    async def recover_orphaned_runs(self) -> int:
+    async def recover_orphaned_runs(self, *, heartbeat_timeout_seconds: int = 300) -> int:
         """Not supported in unit-test persistence — raises on misuse."""
         raise NotImplementedError(
             "recover_orphaned_runs is not available in DirectStatePersistence; "
             "use SessionBoundStatePersistence for crash recovery."
+        )
+
+    async def heartbeat(self, processing_run_id: str, owner_worker_id: str) -> bool:
+        """Not supported in unit-test persistence — raises on misuse."""
+        raise NotImplementedError(
+            "heartbeat is not available in DirectStatePersistence; "
+            "use SessionBoundStatePersistence for heartbeat refresh."
+        )
+
+    async def has_active_source_key(self, source_key: str) -> bool:
+        """Not supported in unit-test persistence — raises on misuse."""
+        raise NotImplementedError(
+            "has_active_source_key is not available in DirectStatePersistence; "
+            "use SessionBoundStatePersistence for source dedup."
         )
 
 
