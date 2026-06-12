@@ -255,6 +255,26 @@
 - 敏感变量不得写入 Ansible 普通变量文件；必须通过环境变量、Ansible Vault，或现有 `backend/config/vault/<env>.yaml` 注入，并确保不提交明文密钥。
 - 需要脚本辅助时，脚本仍放入 `scripts/`，但必须由 Ansible playbook 调用或在 playbook/README 中记录调用关系。
 
+### 26. 代码智能 — 通过 `.codegraph/` 快速了解项目
+
+- 项目使用 **CodeGraph** 进行符号级代码智能索引，索引文件位于 `.codegraph/`（已加入 `.gitignore`，不纳入版本控制）。
+- 当前索引覆盖 **590 个文件**、**7152 个节点**（函数、类、方法、接口等）、**13263 条边**（调用关系、继承关系等），横跨 Python、TypeScript、Rust、YAML 等语言。
+- **优先级原则**：对于符号级代码查询，优先使用 CodeGraph 工具而非 `grep`/`read_file`：
+
+| 场景 | 优先工具 | 说明 |
+|---|---|---|
+| 架构问题（"X 是如何工作的？"） | `codegraph_context` | 一站式返回入口点 + 相关符号 + 关键代码 |
+| 符号搜索（查找函数、类、接口定义） | `codegraph_search` | 按名称快速定位符号位置 |
+| 调用链追溯（"谁调用了 X？"） | `codegraph_callers` | 列出所有调用方 |
+| 调用链追溯（"X 调用了谁？"） | `codegraph_callees` | 列出所有被调用方 |
+| 影响分析（"改了 X 会影响什么？"） | `codegraph_impact` | 递归分析依赖链 |
+| 完整调用路径（"从 A 到 B 的链路？"） | `codegraph_trace` | 返回每跳的完整代码 |
+| 项目文件结构浏览 | `codegraph_files` | 按语言/目录查看文件树 |
+
+- `codegraph_context` 对架构类问题最为高效，应在深入代码前**优先调用**。
+- `grep` / `read_file` 仍用于搜索注释、字符串字面量、配置值等非符号信息。
+- 索引由 daemon 自动维护；如需重建或排查索引问题，检查 `.codegraph/daemon.log`。
+
 ---
 
 ## 三、违反处理
