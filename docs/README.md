@@ -54,7 +54,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | Date | Title | Status |
 |------|-------|--------|
 | 2026-06-12 | [BIBM Novelty 攻关（诊断优先研究计划）](planned/2026-06-12-bibm-novelty.md) | planned |
-| 2026-06-11 | [Standalone Chat Upload AI](planned/2026-06-11-standalone-chat-upload-ai.md) | in-progress |
 
 ## Diagrams
 
