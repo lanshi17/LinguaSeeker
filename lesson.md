@@ -1780,3 +1780,24 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 - `npm run lint` is still blocked by unrelated pre-existing `react-hooks/set-state-in-effect` errors in `PipelineStartForm.tsx` and `useChatSessions.ts`.
 
 **Prevention:** Do not mutate Ant Design X SDK message IDs during streaming because `useXChat` uses them internally for updates. If the SDK ID source is not globally unique, derive render-only keys at the list boundary and cover duplicate-ID cases with utility tests.
+
+## 2026-06-12 — Chat action requests were routed to silent note intent
+
+**Problem:** The chat page displayed empty assistant bubbles after inputs such as `hi` and `I want to do literature evidence extraction`. Natural-language requests to start extraction did not open the embedded pipeline card, and database lookup requests were not routed to the evidence search experience.
+
+**Investigation:** The frontend only handled action routing from prompt button clicks. Free-form Sender input always persisted the user message and opened the backend SSE stream. Backend `ChatService._detect_intent()` classified non-question, non-correction text as `note`; `stream_reply()` returned without yielding tokens for notes. Ant Design X then had no assistant content to render, producing the visible empty robot bubble.
+
+**Root cause:** Action intent was split across UI prompts and backend chat intent detection. The free-form message path lacked deterministic routing for product actions, while backend note intent was too narrow for standalone conversational greetings and action requests.
+
+**Solution:** Added a small frontend intent classifier for chat actions. Extraction and upload requests now open the existing `PipelineStartForm`; database/evidence lookup requests route to `/evidence`; unrelated text continues through chat. Backend question patterns now include greetings and standalone extraction/search/upload requests so direct chat streams do not silently return for these inputs.
+
+**Verification:**
+- Frontend red-green regression: `detectChatActionIntent("我想做文献的证据提取")` -> `start-pipeline`, upload text -> `upload-pdf`, database lookup -> `search-evidence`, `hi` -> `chat`.
+- Backend red-green regression: `_detect_intent("我想做文献的证据提取")` and `_detect_intent("hi")` now return `question`.
+- `source ~/.nvm/nvm.sh && nvm use && npm test`: 30/30 frontend tests passed.
+- `source ~/.nvm/nvm.sh && nvm use && npm run lint`: passed.
+- `source ~/.nvm/nvm.sh && nvm use && npm run type-check`: passed.
+- `uv run pytest tests/core/visualize_evidence_with_expert_in_loop/test_chat_ai.py tests/core/visualize_evidence_with_expert_in_loop/test_chat_sse.py -q`: 14/14 passed.
+- `uv run ruff check src/core/visualize_evidence_with_expert_in_loop/chat_service.py tests/core/visualize_evidence_with_expert_in_loop/test_chat_ai.py`: passed.
+
+**Prevention:** Keep product action routing deterministic at the UI boundary before starting SSE. Backend chat intent should still treat standalone greetings and action requests as reply-worthy, while evidence-bound notes can remain silent only when the UI intentionally uses that mode.

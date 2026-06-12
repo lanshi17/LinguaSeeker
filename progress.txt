@@ -299,3 +299,4 @@
 [2026-06-12] [Pipeline correctness remediation: multi-worker leases, payload preservation, phase mode, review finalization, auth/status contracts] [done]
 [2026-06-12] [Chat duplicate message key fix: disambiguated repeated Ant Design X SDK message IDs for Bubble.List rendering] [done]
 [2025-07-14] 新增规则26 — 通过 .codegraph/ 快速了解项目（符号级代码智能索引优先使用原则）[完成]
+[2026-06-12] [Chat intent routing fix: natural-language extraction requests open the pipeline card, database lookup requests route to evidence search, and standalone greetings/action requests no longer produce empty assistant bubbles] [done]
