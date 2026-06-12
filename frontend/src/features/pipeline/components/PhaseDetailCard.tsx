@@ -138,10 +138,13 @@ function PhaseStatusBadge({ status }: { status: ProcessingStatus }) {
   if (status === "failed") {
     return <Badge variant="error">Failed</Badge>;
   }
-  if (status === "cancelled") {
-    return <Badge variant="warning">Cancelled</Badge>;
+  if (status === "skipped") {
+    return <Badge variant="default">Skipped</Badge>;
   }
-  return <Badge variant="default">Queued</Badge>;
+  if (status === "awaiting_review") {
+    return <Badge variant="warning">Awaiting Review</Badge>;
+  }
+  return <Badge variant="default">Pending</Badge>;
 }
 
 function NodeList({ nodes }: { nodes: PhaseNode[] }) {
@@ -173,8 +176,8 @@ function NodeRow({ node }: { node: PhaseNode }) {
         node.status === "running" && "border-primary-200 bg-primary-50/40",
         node.status === "completed" && "border-success-200 bg-success-50/30",
         node.status === "failed" && "border-red-200 bg-red-50/40",
-        node.status === "queued" && "border-gray-200 bg-gray-50/50",
-        node.status === "cancelled" && "border-gray-200 bg-gray-50/30",
+        node.status === "pending" && "border-gray-200 bg-gray-50/50",
+        node.status === "skipped" && "border-gray-200 bg-gray-50/30",
       )}
     >
       <div className="flex items-center gap-2">
