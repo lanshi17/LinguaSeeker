@@ -80,11 +80,12 @@ class PipelineRunner:
 
                 heartbeat_task = asyncio.create_task(_heartbeat_loop())
             except Exception:
-                logger.debug("Heartbeat task creation failed for run={}", run_id)
+                logger.warning("Heartbeat task creation failed for run={}", run_id)
 
             logger.info("Pipeline execution started: run={}", run_id)
             try:
-                result = await self._orchestrator.run(initial_state)
+                async with self._semaphore:
+                    result = await self._orchestrator.run(initial_state)
                 self.remember_state(run_id, result)
                 logger.info("Pipeline execution completed: run={}", run_id)
                 return result
