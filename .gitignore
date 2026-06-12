@@ -85,6 +85,7 @@ backend/config-dev.yaml
 copier_defaults.yaml
 database/config/.env.neo4j
 benchmark/literature_acquisition/downloads/*.jsonl
+.env
 **/*/.env
 backend/data/*
 
