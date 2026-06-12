@@ -267,7 +267,7 @@ Status is polled via usePipelineStatus hook:
 | Phase | ID | Purpose |
 |---|---|---|
 | Phase 1 — Acquisition | `phase_1` | Literature acquisition + MinerU document parsing |
-| Phase 2 — Extraction | `phase_2` | Cross-lingual evidence extraction + translation + fusion |
+| Phase 2 — Extraction | `phase_2` | Cross-lingual dual-track extraction (native + translated); cross-track reconciliation planned |
 | Phase 3 — Standardization | `phase_3` | Entity standardization + knowledge alignment |
 
 Phase 3 may be skipped (`skip_phase_3_reason` field in status response).
@@ -443,7 +443,7 @@ Orchestrator (src/agents/)
   │  LangGraph workflow topology, PipelineGraphState, routing
   │
   ├──► Phase 1: acquisition + MinerU document parsing
-  ├──► Phase 2: cross-lingual extraction + translation + fusion
+  ├──► Phase 2: cross-lingual extraction + translation (dual-track; reconciliation planned)
   └──► Phase 3: entity standardization + knowledge alignment
           │
           ▼
