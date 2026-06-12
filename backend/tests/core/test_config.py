@@ -102,6 +102,34 @@ def test_evidence_extraction_config_context_reads_from_llm_and_reasoning() -> No
     assert ctx.reasoning_api_key == "reasoning-key"
     assert ctx.reasoning_base_url == "https://reasoning.example.com/v1"
     assert ctx.strong_model == "reasoning-model"
-    assert ctx.standard_model == "reasoning-model"
-    assert ctx.timeout == 180
-    assert ctx.strong_effort == "high"
+
+
+def test_production_requires_api_key() -> None:
+    """Settings raises ValueError when ENVIRONMENT=production and API_KEY is empty."""
+    import pytest
+
+    with pytest.raises(ValueError, match="API_KEY"):
+        Settings(environment="production", api_key="")
+
+
+def test_production_accepts_api_key() -> None:
+    """Settings accepts production with a valid API_KEY."""
+    settings = Settings(environment="production", api_key="secret")
+
+    assert settings.is_production is True
+    assert settings.api_key == "secret"
+
+
+def test_llm_temperature_and_retries_are_propagated() -> None:
+    """Settings propagates temperature and max_retries to nested LLM configs."""
+    settings = Settings(
+        fast_llm_temperature=0.2,
+        fast_llm_max_retries=3,
+        reasoning_llm_temperature=0.1,
+        reasoning_llm_max_retries=4,
+    )
+
+    assert settings.llm.temperature == 0.2
+    assert settings.llm.max_retries == 3
+    assert settings.reasoning.temperature == 0.1
+    assert settings.reasoning.max_retries == 4

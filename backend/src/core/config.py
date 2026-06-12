@@ -51,6 +51,8 @@ class LLMConfig(BaseModel):
     model: str = ""
     max_tokens: int = 8192
     timeout: int = 60
+    temperature: float | None = None
+    max_retries: int = 0
 
     @property
     def all_api_keys(self) -> list[str]:
@@ -75,6 +77,8 @@ class ReasoningConfig(BaseModel):
     base_url: str = ""
     max_tokens: int = 8192
     timeout: int = 60
+    temperature: float | None = None
+    max_retries: int = 0
 
     @property
     def all_api_keys(self) -> list[str]:
@@ -343,6 +347,8 @@ class Settings(BaseSettings):
             model=self.fast_llm_model,
             max_tokens=self.fast_llm_max_tokens,
             timeout=self.fast_llm_timeout,
+            temperature=self.fast_llm_temperature,
+            max_retries=self.fast_llm_max_retries,
         )
         self.reasoning = ReasoningConfig(
             api_key=self.reasoning_llm_api_key,
@@ -352,6 +358,8 @@ class Settings(BaseSettings):
             base_url=self.reasoning_llm_base_url,
             max_tokens=self.reasoning_llm_max_tokens,
             timeout=self.reasoning_llm_timeout,
+            temperature=self.reasoning_llm_temperature,
+            max_retries=self.reasoning_llm_max_retries,
         )
         self.embedding = EmbeddingConfig(
             base_url=self.embedding_base_url,
@@ -403,6 +411,10 @@ class Settings(BaseSettings):
             proxy=self.network_proxy,
             no_proxy=self.network_no_proxy,
         )
+
+        if self.is_production and not self.api_key.strip():
+            raise ValueError("API_KEY must be set when ENVIRONMENT=production")
+
         return self
 
     # ── Derived helpers ──────────────────────────────────────────────────

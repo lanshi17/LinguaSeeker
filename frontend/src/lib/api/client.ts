@@ -30,6 +30,12 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem("access_token");
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+      // TECH DEBT: Authorization: Bearer represents user auth, while
+      // X-API-Key is the backend's static service key. Sending the same
+      // browser token in both headers is a transitional compatibility shim.
+      // Follow-up: implement real backend bearer-token auth or move static
+      // API-key injection to a Next.js server-side proxy.
+      config.headers["X-API-Key"] = token;
     }
   }
   return config;
