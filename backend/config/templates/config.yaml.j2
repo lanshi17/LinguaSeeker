@@ -100,8 +100,8 @@ network:
   no_proxy: "{{ network.no_proxy | default('') }}"
 
 # ── Model Server GPU settings ──────────────────────────────────────────
-vlm_model_id: "{{ vlm_model_id | default('') }}"
+doc_parse_model_id: "{{ doc_parse_model_id | default('') }}"
 embedding_gpu_memory_utilization: {{ embedding_gpu_memory_utilization | default(0.35) }}
 embedding_max_model_len: {{ embedding_max_model_len | default(4096) }}
 rerank_gpu_memory_utilization: {{ rerank_gpu_memory_utilization | default(0.2) }}
-vlm_gpu_memory_utilization: {{ vlm_gpu_memory_utilization | default(0.5) }}
+doc_parse_gpu_memory_utilization: {{ doc_parse_gpu_memory_utilization | default(0.5) }}

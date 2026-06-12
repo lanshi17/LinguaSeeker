@@ -48,13 +48,13 @@ class Settings(BaseSettings):
 
     # Document parsing model (MinerU)
     doc_parse_model_id: str = ""
-    vlm_image_analysis: bool = False
+    doc_parse_image_analysis: bool = False
 
     # vllm shared settings
     vllm_gpu_memory_utilization: float = 0.9
     embedding_gpu_memory_utilization: float = 0.9
     rerank_gpu_memory_utilization: float = 0.9
-    vlm_gpu_memory_utilization: float = 0.9
+    doc_parse_gpu_memory_utilization: float = 0.9
 
 
 @lru_cache(maxsize=1)
