@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   XProvider,
   Bubble,
@@ -9,9 +9,10 @@ import {
   Welcome,
   Prompts,
 } from "@ant-design/x";
+import type { SenderRef } from "@ant-design/x/es/sender/interface";
 import { useXChat, useXConversations } from "@ant-design/x-sdk";
-import { RobotOutlined, UserOutlined } from "@ant-design/icons";
-import { Avatar, message as antdMessage } from "antd";
+import { RobotOutlined, UserOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Avatar, Modal, message as antdMessage } from "antd";
 import {
   createAcmgChatProvider,
   sendChatMessage,
@@ -28,10 +29,14 @@ import {
   toXChatDefaultMessages,
 } from "../utils/messageHistory";
 import { detectChatActionIntent } from "../utils/intent";
+import { ChatMarkdown } from "../utils/markdown";
 import { PipelineStartForm, PipelineStatusCard } from "./forms";
 import type { PipelineFormData } from "./forms";
 import { apiClient } from "@/lib/api/client";
 import { extractErrorMessage } from "@/lib/api/error";
+
+/** Max characters of the first user message used as the session title. */
+const SESSION_TITLE_CHARS = 5;
 
 interface ChatViewProps {
   processingRunId?: string;
@@ -61,7 +66,7 @@ const PROMPT_ITEMS = [
   {
     key: "start-pipeline",
     label: "Start Pipeline",
-    description: "Analyze a biomedical paper and extract ACMG evidence.",
+    description: "Analyze a biomedical paper and extract evidence.",
   },
   {
     key: "upload-pdf",
@@ -110,16 +115,22 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     [providerCache],
   );
 
-  const { sessions, createSession, isCreating } =
+  const { sessions, createSession, isCreating, removeSession } =
     useChatSessions(processingRunId);
+
+  // Per-session title overrides: first user message's first
+  // SESSION_TITLE_CHARS characters. Default label used until then.
+  const [sessionLabels, setSessionLabels] = useState<Record<string, string>>(
+    {},
+  );
 
   const conversationItems = useMemo(
     () =>
       sessions.map((s) => ({
         key: s.session_id,
-        label: `Session ${s.session_id.slice(0, 8)}`,
+        label: sessionLabels[s.session_id] ?? `Session ${s.session_id.slice(0, 8)}`,
       })),
-    [sessions],
+    [sessions, sessionLabels],
   );
 
   const {
@@ -128,10 +139,23 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     setActiveConversationKey,
     addConversation,
     setConversations,
+    removeConversation,
   } = useXConversations({
     defaultConversations: conversationItems,
     defaultActiveConversationKey: sessions[0]?.session_id,
   });
+
+  const captureFirstMessageLabel = useCallback(
+    (sessionKey: string, content: string) => {
+      setSessionLabels((prev) => {
+        if (prev[sessionKey]) return prev;
+        const trimmed = content.trim();
+        if (!trimmed) return prev;
+        return { ...prev, [sessionKey]: trimmed.slice(0, SESSION_TITLE_CHARS) };
+      });
+    },
+    [],
+  );
 
   const handleActiveConversationChange = useCallback(
     (key: string) => {
@@ -271,6 +295,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         try {
           const sessionKey = await ensureActiveSession();
           await sendChatMessage(sessionKey, trimmed);
+          captureFirstMessageLabel(sessionKey, trimmed);
 
           if (sessionKey === activeConversationKey) {
             appendLocalUserMessage(trimmed);
@@ -286,6 +311,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       try {
         const sessionKey = await ensureActiveSession();
         await sendChatMessage(sessionKey, trimmed);
+        captureFirstMessageLabel(sessionKey, trimmed);
         const request = {
           messages: [{ role: "user" as const, content: trimmed }],
         };
@@ -303,6 +329,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     [
       activeConversationKey,
       appendLocalUserMessage,
+      captureFirstMessageLabel,
       ensureActiveSession,
       onRequest,
       queueRequest,
@@ -413,6 +440,15 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       content: message.content,
       streaming: status === "loading" || status === "updating",
       loading: status === "loading" && !message.content,
+      // Render assistant replies as Markdown; user messages are typically
+      // plain text and pass through verbatim.
+      ...(message.role === "assistant"
+        ? {
+            contentRender: (content: string) => (
+              <ChatMarkdown source={content} />
+            ),
+          }
+        : {}),
     }));
 
     // Append form bubble if active
@@ -491,6 +527,77 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     }
   }
 
+  // ── Delete session (client-side hide; backend has no DELETE endpoint) ──
+  const handleDeleteSession = useCallback(
+    (sessionId: string) => {
+      Modal.confirm({
+        title: "Delete this chat session?",
+        content:
+          "The session is removed from the sidebar. The conversation itself is still reachable via direct URL.",
+        okText: "Delete",
+        okButtonProps: { danger: true },
+        cancelText: "Cancel",
+        onOk: () => {
+          removeSession(sessionId);
+          removeConversation(sessionId);
+          if (activeConversationKey === sessionId) {
+            const remaining = sessions.filter((s) => s.session_id !== sessionId);
+            const next = remaining[0]?.session_id;
+            if (next) {
+              handleActiveConversationChange(next);
+            } else {
+              setActiveConversationKey("");
+            }
+          }
+        },
+      });
+    },
+    [
+      activeConversationKey,
+      handleActiveConversationChange,
+      removeConversation,
+      removeSession,
+      sessions,
+      setActiveConversationKey,
+    ],
+  );
+
+  // Conversations menu factory: a single "Delete" entry per session.
+  const conversationsMenu = useCallback(
+    (item: { key: string }) => ({
+      items: [
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <DeleteOutlined />,
+          danger: true,
+          onClick: ({
+            domEvent,
+          }: {
+            domEvent: React.MouseEvent | React.KeyboardEvent;
+          }) => {
+            domEvent.stopPropagation();
+            handleDeleteSession(item.key);
+          },
+        },
+      ],
+    }),
+    [handleDeleteSession],
+  );
+
+  // Sender ref: lets us clear the input after a successful send.
+  const senderRef = useRef<SenderRef>(null);
+  const handleSubmitAndClear = useCallback(
+    (content: string) => {
+      void handleSendMessage(content).finally(() => {
+        // Clear unconditionally so a failed send still resets the UI
+        // (the error is surfaced via antdMessage in the catch branch).
+        senderRef.current?.clear();
+      });
+    },
+    [handleSendMessage],
+  );
+
   return (
     <XProvider>
       <div className="flex min-h-[620px] overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm md:h-[calc(100vh-8.5rem)]">
@@ -504,6 +611,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
             items={conversations}
             activeKey={activeConversationKey}
             onActiveChange={handleActiveConversationChange}
+            menu={conversationsMenu}
             creation={{
               onClick: handleCreateSession,
               disabled: isCreating,
@@ -545,12 +653,13 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
           )}
 
           <Sender
+            ref={senderRef}
             className="border-t border-gray-100"
             style={{ padding: 16 }}
             loading={isRequesting}
             onCancel={abort}
-            onSubmit={handleSendMessage}
-            placeholder="Ask the ACMG Agent..."
+            onSubmit={handleSubmitAndClear}
+            placeholder="Ask the Cross Evidence Agent..."
           />
         </div>
       </div>
@@ -581,8 +690,33 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
       content: message.content,
       streaming: status === "loading" || status === "updating",
       loading: status === "loading" && !message.content,
+      ...(message.role === "assistant"
+        ? {
+            contentRender: (content: string) => (
+              <ChatMarkdown source={content} />
+            ),
+          }
+        : {}),
     }));
   }, [messages]);
+
+  const senderRef = useRef<SenderRef>(null);
+  const handleSingleSessionSubmit = useCallback(
+    (val: string) => {
+      const trimmed = val.trim();
+      if (!trimmed) return;
+      const task = (async () => {
+        try {
+          await sendChatMessage(sessionId, trimmed);
+          onRequest({ messages: [{ role: "user", content: trimmed }] });
+        } catch {
+          antdMessage.error("Failed to send message");
+        }
+      })();
+      void task.finally(() => senderRef.current?.clear());
+    },
+    [onRequest, sessionId],
+  );
 
   return (
     <XProvider>
@@ -606,22 +740,13 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
         )}
 
         <Sender
+          ref={senderRef}
           className="border-t border-gray-100"
           style={{ padding: 16 }}
           loading={isRequesting}
           onCancel={abort}
-          onSubmit={async (val) => {
-            const trimmed = val.trim();
-            if (!trimmed) return;
-
-            try {
-              await sendChatMessage(sessionId, trimmed);
-              onRequest({ messages: [{ role: "user", content: trimmed }] });
-            } catch {
-              antdMessage.error("Failed to send message");
-            }
-          }}
-          placeholder="Ask the ACMG Agent..."
+          onSubmit={handleSingleSessionSubmit}
+          placeholder="Ask the Cross Evidence Agent..."
         />
       </div>
     </XProvider>
