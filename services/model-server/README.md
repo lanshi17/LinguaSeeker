@@ -19,7 +19,7 @@ uv run python main.py
 uv run python main.py --port 8002
 ```
 
-Set `VLM_MODEL_ID=opendatalab/MinerU2.5-Pro-2604-1.2B` in `.env.local` to enable document extraction.
+Set `DOC_PARSE_MODEL_ID=opendatalab/MinerU2.5-Pro-2604-1.2B` in `.env.local` to enable document extraction.
 
 ## Architecture
 
@@ -116,7 +116,7 @@ Supporting types:
 | `POST` | `/v1/rerank` | `RerankRequest` | `RerankResponse` | Query-document relevance scores |
 | `POST` | `/v1/chat/completions` | `VLMExtractRequest` | `VLMExtractResponse` | Multimodal document extraction (OpenAI-compatible) |
 
-The VLM endpoint (`/v1/chat/completions`) is **only registered** when `VLM_MODEL_ID` is configured.
+The VLM endpoint (`/v1/chat/completions`) is **only registered** when `DOC_PARSE_MODEL_ID` is configured.
 When VLM is disabled, the route is omitted and clients get **404**. In custom wiring/tests,
 calling the route without `bind()` returns **503**.
 
@@ -168,8 +168,8 @@ All request/response models are Pydantic `BaseModel` subclasses. Key types:
 | `EMBEDDING_MODEL_ID` | `Qwen/Qwen3-Embedding-0.6B` | HuggingFace model ID |
 | `EMBEDDING_DIMENSION` | `1024` | Output vector dimension |
 | `RERANK_MODEL_ID` | `BAAI/bge-reranker-v2-m3` | HuggingFace model ID |
-| `VLM_MODEL_ID` | `""` (empty = disabled) | MinerU VLM model; set to enable |
-| `VLM_IMAGE_ANALYSIS` | `false` | Enable chart/figure analysis in MinerU |
+| `DOC_PARSE_MODEL_ID` | `""` (empty = disabled) | MinerU VLM model; set to enable |
+| `DOC_PARSE_IMAGE_ANALYSIS` | `false` | Enable chart/figure analysis in MinerU |
 | `VLLM_GPU_MEMORY_UTILIZATION` | `0.9` | vllm GPU memory fraction |
 | `HF_HOME` | `~/.cache/huggingface/hub` | Model cache directory |
 
@@ -218,7 +218,7 @@ which orchestrates a two-step process (structure detection → content extractio
 - **Request validation:** Pydantic `ValidationError` on malformed input → FastAPI auto-returns 422.
 - **VLM-specific:** `_parse_figure()` and `_parse_table()` catch `ValidationError` on upstream data → 502 with detail.
 - **Service unavailable:** in custom wiring/tests, the VLM endpoint returns 503 when `_service` is `None`.
-  In the normal startup path, the route is not registered unless `VLM_MODEL_ID` is set, so clients see 404 instead.
+  In the normal startup path, the route is not registered unless `DOC_PARSE_MODEL_ID` is set, so clients see 404 instead.
 - **No retry logic** — callers (the backend gateway) must implement retries.
 
 ### Logging
@@ -364,7 +364,7 @@ The VLM path has two integration points:
   resources are released even when inference raises.
 - **Model download on first load.** If HuggingFace Hub is slow or blocked, `_load()` hangs. Pre-download models to `HF_HOME` or set `HF_ENDPOINT` to a mirror.
 - **Don't call `infer()` from async coroutines without thread offloading.** vllm's `.embed()`, `.score()`, and `.chat()` are synchronous GPU operations. FastAPI's default thread pool handles this, but raw `asyncio.create_task(svc.infer(…))` will block the event loop.
-- **VLM service is optional.** Routes referencing it are only registered when `VLM_MODEL_ID` is set. Backend callers should check `/health` before calling the VLM endpoint.
+- **VLM service is optional.** Routes referencing it are only registered when `DOC_PARSE_MODEL_ID` is set. Backend callers should check `/health` before calling the VLM endpoint.
 
 ## Performance Notes
 
