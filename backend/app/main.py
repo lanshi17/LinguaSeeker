@@ -173,8 +173,8 @@ async def lifespan(app: FastAPI):
         failed = checks.failed_services()
         if failed:
             for svc in failed:
-                level = "debug" if svc == "redis" else "warning"
-                getattr(logger, level)("Startup connectivity check failed: {}", svc)
+                logger.log("DEBUG" if svc == "redis" else "WARNING",
+                           "Startup connectivity check failed: {}", svc)
         else:
             logger.info("Startup connectivity check passed")
     except Exception as exc:
