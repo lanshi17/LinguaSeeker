@@ -1,8 +1,8 @@
 import type { LoginRequest, LoginResponse, RegisterRequest } from "../types/auth";
 
 // Backend auth routes not yet implemented — calls real API client.
-// The static API key is injected via NEXT_PUBLIC_API_KEY env var
-// and sent as X-API-Key by the request interceptor.
+// The static API key is injected server-side by middleware.ts from
+// the API_KEY env var (never exposed to the browser bundle).
 
 export async function login(body: LoginRequest): Promise<LoginResponse> {
   void body;

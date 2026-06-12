@@ -20,8 +20,11 @@ export interface AppConfig {
 export interface ApiConfig {
   /**
    * Base URL for API requests.
-   * Relative path ("/api/v1") → goes through Next.js proxy.
-   * Absolute URL ("http://host:port/api/v1") → direct connection.
+   *
+   * MUST be a relative path ("/api/v1") in production so that requests
+   * pass through Next.js middleware.ts, which injects the server-side
+   * X-API-Key header.  An absolute URL bypasses middleware and protected
+   * routes will 401.
    */
   baseUrl: string;
   /** Request timeout in milliseconds. */
