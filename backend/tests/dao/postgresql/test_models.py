@@ -312,3 +312,26 @@ def test_pipeline_run_state_has_pipeline_status_column() -> None:
     # Column-based index: columns should contain 'pipeline_status'
     idx_col_names = {c.name for c in idx.columns}
     assert "pipeline_status" in idx_col_names
+
+
+def test_pipeline_run_state_has_lease_columns() -> None:
+    """PipelineRunState has durable worker ownership columns."""
+    from src.dao.postgresql.models import PipelineRunState
+
+    table = PipelineRunState.__table__
+    column_names = {column.name for column in table.columns}
+
+    assert "owner_worker_id" in column_names
+    assert "heartbeat_at" in column_names
+    assert "source_key" in column_names
+
+
+def test_pipeline_run_state_has_active_source_index() -> None:
+    """PipelineRunState has indexes for heartbeat lookup and source dedup."""
+    from src.dao.postgresql.models import PipelineRunState
+
+    table = PipelineRunState.__table__
+    index_names = {idx.name for idx in table.indexes}
+
+    assert "ix_pipeline_run_states_owner_heartbeat" in index_names
+    assert "ux_pipeline_run_states_active_source_key" in index_names

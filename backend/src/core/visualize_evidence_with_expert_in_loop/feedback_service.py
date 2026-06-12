@@ -13,6 +13,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     EvidencePatchRequest,
     ReviewStatus,
     TargetType,
+    card_field_for_field_id,
 )
 from src.core.visualize_evidence_with_expert_in_loop.delta_audit_service import (
     DeltaAuditService,
@@ -64,20 +65,37 @@ class FeedbackService:
         result = await self._session.execute(stmt)
         evidence = result.scalar_one()
 
-        old_payload = EvidenceCardPayload(**evidence.active_payload)
+        # Use raw payload dict to preserve field-level keys (group_id, source, track, etc.)
+        payload = dict(evidence.active_payload or {})
+        field_id = str(payload.get("field_id") or evidence.field_id)
 
-        new_data = old_payload.model_dump()
-        new_data.update(patch.fields)
-        new_payload = EvidenceCardPayload(**new_data)
+        # Build old card view: prefer field-level projection, fall back to direct card keys
+        has_card_keys = any(k in EvidenceCardPayload.DIFF_FIELDS for k in payload)
+        if has_card_keys:
+            # Payload contains card-level keys directly (e.g. test data or legacy payloads)
+            old_card = EvidenceCardPayload(**{k: v for k, v in payload.items() if k in EvidenceCardPayload.DIFF_FIELDS})
+        else:
+            old_card = EvidenceCardPayload.from_field_payload(field_id=field_id, payload=payload)
 
-        field_deltas = DeltaAuditService.compute_deltas(old_payload, new_payload)
+        new_card_data = old_card.model_dump()
+        new_card_data.update(patch.fields)
+        new_card = EvidenceCardPayload(**new_card_data)
+
+        field_deltas = DeltaAuditService.compute_deltas(old_card, new_card)
 
         old_status = ReviewStatus(evidence.review_status)
         new_status = patch.new_status or (
             ReviewStatus.CORRECTED if field_deltas else old_status
         )
 
-        evidence.active_payload = new_payload.model_dump()
+        # Merge: update patched card fields into the raw payload
+        for field_name, field_value in patch.fields.items():
+            payload[field_name] = field_value
+        card_field = card_field_for_field_id(field_id)
+        if card_field is not None and card_field in patch.fields:
+            payload["value"] = patch.fields[card_field]
+        payload["field_id"] = field_id
+        evidence.active_payload = payload
         evidence.review_status = new_status.value
         await self._session.flush()
 

@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
     ChatMessageResponse,
     ChatSessionResponse,
+    EvidenceCardPayload,
 )
 from src.dao.postgresql.models import (
     CanonicalEvidenceItem,
@@ -203,18 +204,22 @@ class ChatService:
             )
             return ""
 
-        payload = evidence.active_payload
+        payload = evidence.active_payload or {}
         best_run_id = evidence.current_best_run_evidence_id
 
+        card = EvidenceCardPayload.from_field_payload(
+            field_id=evidence.field_id,
+            payload=payload,
+        )
         context_parts = [
             "**Evidence Card**",
-            f"Gene: {payload.get('gene', 'N/A')}",
-            f"Variant: {payload.get('variant', 'N/A')}",
-            f"Phenotype: {payload.get('phenotype', 'N/A')}",
-            f"Disease: {payload.get('disease', 'N/A')}",
-            f"Classification: {payload.get('classification', 'N/A')}",
-            f"Evidence Strength: {payload.get('evidence_strength', 'N/A')}",
-            f"Summary: {payload.get('summary', 'N/A')}",
+            f"Gene: {card.gene or 'N/A'}",
+            f"Variant: {card.variant or 'N/A'}",
+            f"Phenotype: {card.phenotype or 'N/A'}",
+            f"Disease: {card.disease or 'N/A'}",
+            f"Classification: {card.classification or 'N/A'}",
+            f"Evidence Strength: {card.evidence_strength or 'N/A'}",
+            f"Summary: {card.summary or 'N/A'}",
         ]
 
         if best_run_id:

@@ -160,3 +160,83 @@ async def test_phase_3_adapter_skipped_when_zero_standardized(
     assert result_state.phase_3_status.status == PhaseStatus.COMPLETED
     assert result_state.skip_phase_3_reason == SkipPhase3Reason.NO_CANDIDATES
     assert result_state.phase_3_status.summary["skip_reason"] == "no_candidates"
+
+
+@pytest.mark.asyncio
+async def test_phase_3_does_not_skip_when_ambiguous_entities_exist(
+    sample_state: PipelineGraphState,
+):
+    """Phase 3 must not set NO_CANDIDATES when ambiguous entities exist."""
+    result_state = await _run_phase_3_with_counts(
+        sample_state,
+        match_count=1,
+        standardized_count=0,
+        ambiguous_count=1,
+        unmapped_count=0,
+    )
+
+    assert result_state.skip_phase_3_reason is None
+    assert result_state.phase_3_status.status == PhaseStatus.COMPLETED
+    assert result_state.phase_3_status.summary["ambiguous_count"] == 1
+
+
+@pytest.mark.asyncio
+async def test_phase_3_does_not_skip_when_unmapped_entities_exist(
+    sample_state: PipelineGraphState,
+):
+    """Phase 3 must not set NO_CANDIDATES when unmapped entities exist."""
+    result_state = await _run_phase_3_with_counts(
+        sample_state,
+        match_count=1,
+        standardized_count=0,
+        ambiguous_count=0,
+        unmapped_count=1,
+    )
+
+    assert result_state.skip_phase_3_reason is None
+    assert result_state.phase_3_status.status == PhaseStatus.COMPLETED
+    assert result_state.phase_3_status.summary["unmapped_count"] == 1
+
+
+async def _run_phase_3_with_counts(
+    sample_state: PipelineGraphState,
+    *,
+    match_count: int,
+    standardized_count: int,
+    ambiguous_count: int,
+    unmapped_count: int,
+) -> PipelineGraphState:
+    """Helper: run Phase 3 with specific standardization counts."""
+    from src.core.standardize_entities_and_align_knowledge.contracts import (
+        StandardizationResult,
+    )
+
+    mock_standardization = MagicMock()
+    mock_standardization.run_dual_result = AsyncMock(
+        return_value=StandardizationResult(
+            document_id="doc-456",
+            match_count=match_count,
+            standardized_count=standardized_count,
+            ambiguous_count=ambiguous_count,
+            unmapped_count=unmapped_count,
+            normalized_entity_ids=(),
+            matches=(),
+        )
+    )
+
+    mock_session = MagicMock()
+    mock_session.commit = AsyncMock()
+    mock_session_factory = MagicMock()
+    mock_session_factory.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_session_factory.return_value.__aexit__ = AsyncMock(return_value=False)
+
+    adapter = Phase3Adapter(
+        standardization_service=mock_standardization,
+        session_factory=mock_session_factory,
+    )
+
+    with patch(
+        "src.agents.phase_3_adapter.DualEvidenceExtractionResult.model_validate",
+        return_value=MagicMock(),
+    ):
+        return await adapter.run(sample_state)
