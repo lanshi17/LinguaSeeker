@@ -5,7 +5,6 @@ Project documentation organized by lifecycle status.
 ```text
 docs/
 ├── active/           # Current active documentation
-├── plans/            # Skill-authored implementation plans pending execution
 ├── planned/          # Planned work that has not started
 ├── codereview/       # Active code reviews (.gitkeep)
 ├── diagrams/         # Mermaid flowcharts (phase1-phase4)
@@ -18,7 +17,6 @@ docs/
 ## Classification Rules
 
 - `active/` -- In-progress implementation plans and living reference documents.
-- `plans/` -- Skill-authored implementation plans pending execution.
 - `planned/` -- Planned work that has not started (`YYYY-MM-DD-<topic>.md`).
 - `codereview/` -- Active code review reports.
 - `diagrams/` -- Mermaid flowcharts (`.mmd`) for the four pipeline phases.
@@ -55,8 +53,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
-| 2026-06-11 | [Standalone Chat Upload AI](plans/2026-06-11-standalone-chat-upload-ai.md) | planned |
-| 2026-06-11 | [VS Code Settings Sync Profiles](plans/2026-06-11-vscode-settings-sync-profiles.md) | planned |
+| 2026-06-11 | [Standalone Chat Upload AI](planned/2026-06-11-standalone-chat-upload-ai.md) | planned |
 
 ## Diagrams
 
@@ -69,7 +66,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Archive Index
 
-The `archive/plans/` directory contains 64 completed plans (the bilingual comparison UX plan was added to this count after the 2026-06-12 rebase onto current dev). The `archive/codereview/` directory contains 22 resolved code reviews. See individual directories for full listings.
+The `archive/plans/` directory contains 65 completed plans. The `archive/codereview/` directory contains 22 resolved code reviews. See individual directories for full listings.
 
 ## Module README Index
 
