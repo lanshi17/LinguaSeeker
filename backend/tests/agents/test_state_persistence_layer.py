@@ -1,5 +1,7 @@
 """Tests for pipeline state persistence layer."""
 import uuid
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -14,6 +16,16 @@ from src.agents.contracts import (
     PhaseErrorDetail,
 )
 from src.agents.state_persistence import DirectStatePersistence, SessionBoundStatePersistence
+
+
+def _make_session_factory(session: AsyncSession):
+    """Wrap a single session as an async_sessionmaker-compatible factory."""
+
+    @asynccontextmanager
+    async def _factory():
+        yield session
+
+    return _factory
 
 
 @pytest.fixture
@@ -125,3 +137,56 @@ async def test_session_bound_save_uses_upsert():
     mock_session.execute.assert_awaited()
     mock_session.get.assert_not_awaited()
     mock_session.add.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_recover_orphaned_runs_ignores_fresh_heartbeat(db_session: AsyncSession):
+    """Recovery must not fail runs with a recent heartbeat."""
+    persistence = SessionBoundStatePersistence(_make_session_factory(db_session))
+
+    state = PipelineGraphState(
+        processing_run_id=str(uuid.uuid4()),
+        source_document_id=str(uuid.uuid4()),
+        mode=PipelineMode.FULL,
+        source_type=SourceType.LOCAL,
+        pipeline_status=PipelineStatus.RUNNING,
+    )
+    await persistence.save(
+        state,
+        owner_worker_id="worker-a",
+        heartbeat_at=datetime.now(timezone.utc),
+    )
+
+    recovered = await persistence.recover_orphaned_runs(heartbeat_timeout_seconds=120)
+
+    assert recovered == 0
+    loaded = await persistence.load(state.processing_run_id)
+    assert loaded is not None
+    assert loaded.pipeline_status == PipelineStatus.RUNNING
+
+
+@pytest.mark.asyncio
+async def test_recover_orphaned_runs_fails_stale_heartbeat(db_session: AsyncSession):
+    """Recovery must fail runs whose heartbeat is older than the timeout."""
+    persistence = SessionBoundStatePersistence(_make_session_factory(db_session))
+
+    state = PipelineGraphState(
+        processing_run_id=str(uuid.uuid4()),
+        source_document_id=str(uuid.uuid4()),
+        mode=PipelineMode.FULL,
+        source_type=SourceType.LOCAL,
+        pipeline_status=PipelineStatus.RUNNING,
+    )
+    await persistence.save(
+        state,
+        owner_worker_id="worker-a",
+        heartbeat_at=datetime.now(timezone.utc) - timedelta(minutes=10),
+    )
+
+    recovered = await persistence.recover_orphaned_runs(heartbeat_timeout_seconds=120)
+
+    assert recovered == 1
+    loaded = await persistence.load(state.processing_run_id)
+    assert loaded is not None
+    assert loaded.pipeline_status == PipelineStatus.FAILED
+    assert loaded.error_message == "Pipeline heartbeat expired"

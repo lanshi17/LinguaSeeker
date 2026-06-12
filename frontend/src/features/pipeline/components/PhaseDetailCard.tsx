@@ -11,11 +11,12 @@ const STATUS_BADGE_VARIANT: Record<
   string,
   "default" | "info" | "success" | "error" | "warning"
 > = {
-  queued: "default",
+  pending: "default",
   running: "info",
+  awaiting_review: "warning",
   completed: "success",
   failed: "error",
-  cancelled: "warning",
+  skipped: "default",
 };
 
 function formatValue(val: unknown): string {

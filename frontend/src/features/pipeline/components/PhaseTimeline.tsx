@@ -8,11 +8,12 @@ interface PhaseTimelineProps {
 }
 
 const statusStyles: Record<string, string> = {
-  queued: "bg-gray-200 text-gray-500",
+  pending: "bg-gray-200 text-gray-500",
   running: "bg-primary-100 text-primary-700 animate-pulse",
+  awaiting_review: "bg-amber-100 text-amber-700",
   completed: "bg-success-100 text-success-700",
   failed: "bg-red-100 text-red-700",
-  cancelled: "bg-gray-100 text-gray-400",
+  skipped: "bg-gray-100 text-gray-400",
 };
 
 const connectorStyles: Record<string, string> = {
@@ -30,7 +31,7 @@ export function PhaseTimeline({ steps }: PhaseTimelineProps) {
             <div
               className={cn(
                 "flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold",
-                statusStyles[step.status] ?? statusStyles.queued,
+                statusStyles[step.status] ?? statusStyles.pending,
               )}
             >
               {i + 1}

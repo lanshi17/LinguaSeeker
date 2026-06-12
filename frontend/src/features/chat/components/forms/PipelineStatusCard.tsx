@@ -10,9 +10,10 @@ interface PipelineStatusCardProps {
   phases?: Record<string, { status: string; duration_seconds?: number | null }>;
 }
 
-const STATUS_VARIANT: Record<string, "default" | "info" | "success" | "error"> = {
-  queued: "default",
+const STATUS_VARIANT: Record<string, "default" | "info" | "success" | "error" | "warning"> = {
+  pending: "default",
   running: "info",
+  awaiting_review: "warning",
   completed: "success",
   failed: "error",
 };
@@ -24,10 +25,12 @@ const PHASE_LABELS: Record<string, string> = {
 };
 
 const PHASE_STATUS_ICON: Record<string, string> = {
+  pending: "○",
   completed: "✓",
   running: "●",
   failed: "✕",
-  queued: "○",
+  skipped: "⊘",
+  awaiting_review: "◎",
 };
 
 /**
@@ -70,7 +73,9 @@ export function PipelineStatusCard({
                       "bg-green-100 text-green-700",
                     phase.status === "running" && "bg-blue-100 text-blue-700",
                     phase.status === "failed" && "bg-red-100 text-red-700",
-                    phase.status === "queued" && "bg-gray-100 text-gray-500",
+                    phase.status === "pending" && "bg-gray-100 text-gray-500",
+                    phase.status === "skipped" && "bg-gray-100 text-gray-400",
+                    phase.status === "awaiting_review" && "bg-amber-100 text-amber-700",
                   )}
                 >
                   <span>{PHASE_STATUS_ICON[phase.status] ?? "○"}</span>

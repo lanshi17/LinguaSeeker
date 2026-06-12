@@ -59,6 +59,55 @@ def _error_response(
     return JSONResponse(status_code=status, content=body, headers={"X-Request-ID": request_id})
 
 
+_startup_lock_raw_conn = None
+
+
+async def _try_startup_lock(engine) -> bool:
+    """Acquire a PostgreSQL advisory lock for startup initialization.
+
+    Uses a raw connection (not returned to pool) so the lock persists
+    for the duration of the startup phase.  PostgreSQL advisory locks
+    are session-scoped: they release automatically when the connection
+    closes.
+
+    Returns True if the lock was acquired (this worker should run recovery).
+    Returns False if another worker already holds the lock.
+    Returns True for non-PostgreSQL engines (SQLite in tests).
+    """
+    global _startup_lock_raw_conn
+
+    try:
+        raw_conn = await engine.raw_connection()
+        result = await raw_conn.exec_driver_sql(
+            "SELECT pg_try_advisory_lock(hashtext('acmg_lingua_backend_startup'))"
+        )
+        row = result.fetchone()
+        acquired = bool(row[0]) if row else False
+        if acquired:
+            _startup_lock_raw_conn = raw_conn
+        else:
+            await raw_conn.close()
+        return acquired
+    except Exception:
+        # Non-PostgreSQL engines (SQLite in tests) don't have advisory locks
+        return True
+
+
+async def _release_startup_lock() -> None:
+    """Release the PostgreSQL advisory lock by closing the raw connection.
+
+    PostgreSQL automatically releases all advisory locks when a connection
+    is closed, so explicit pg_advisory_unlock is not required.
+    """
+    global _startup_lock_raw_conn
+    if _startup_lock_raw_conn is not None:
+        try:
+            await _startup_lock_raw_conn.close()
+        except Exception:
+            pass
+        _startup_lock_raw_conn = None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize and teardown application resources."""
@@ -88,20 +137,30 @@ async def lifespan(app: FastAPI):
     logger.info("Pipeline orchestrator initialized")
 
     # Ensure standalone tables (independent MetaData, not managed by Alembic) exist
+    # Use advisory lock to prevent multi-worker races on table creation and recovery
     from src.dao.postgresql.search_index_repo import search_index_metadata
     _wiring.get_session_factory()  # trigger lazy engine creation
     engine = _wiring.get_engine()
+
+    startup_lock_acquired = False
     if engine is not None:
+        startup_lock_acquired = await _try_startup_lock(engine)
+    if engine is not None and startup_lock_acquired:
         async with engine.begin() as conn:
             await conn.run_sync(search_index_metadata.create_all)
 
-    # Recover pipeline runs interrupted by server restart
+    # Recover pipeline runs interrupted by server restart (only if we hold the lock)
     from src.api.v1.pipeline import get_pipeline_runner
-    try:
-        runner = get_pipeline_runner()
-        await runner.recover_orphaned_runs()
-    except Exception as exc:
-        logger.warning("Orphaned run recovery failed: {}", exc)
+    if startup_lock_acquired:
+        try:
+            runner = get_pipeline_runner()
+            await runner.recover_orphaned_runs()
+        except Exception as exc:
+            logger.warning("Orphaned run recovery failed: {}", exc)
+        finally:
+            await _release_startup_lock()
+    else:
+        logger.info("Skipping startup recovery — another worker holds the advisory lock")
 
     # Startup health checks (non-blocking — warn but don't crash)
     try:

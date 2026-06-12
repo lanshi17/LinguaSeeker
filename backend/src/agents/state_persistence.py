@@ -6,12 +6,12 @@ Two implementations:
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
 
 from loguru import logger
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -41,7 +41,13 @@ class DirectStatePersistence:
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def save(self, state: PipelineGraphState) -> None:
+    async def save(
+        self,
+        state: PipelineGraphState,
+        *,
+        owner_worker_id: str | None = None,
+        heartbeat_at: datetime | None = None,
+    ) -> None:
         # Ensure source_document exists (FK requirement for pipeline_run_states)
         sd_id = UUID(state.source_document_id)
         existing_sd = await self._session.get(SourceDocument, sd_id)
@@ -56,12 +62,21 @@ class DirectStatePersistence:
         if existing:
             existing.state_json = state_json
             existing.pipeline_status = state.pipeline_status.value
+            if state.source_key is not None:
+                existing.source_key = state.source_key
+            if owner_worker_id is not None:
+                existing.owner_worker_id = owner_worker_id
+            if heartbeat_at is not None:
+                existing.heartbeat_at = heartbeat_at
         else:
             new_record = PipelineRunState(
                 processing_run_id=UUID(state.processing_run_id),
                 source_document_id=UUID(state.source_document_id),
                 state_json=state_json,
                 pipeline_status=state.pipeline_status.value,
+                source_key=state.source_key,
+                owner_worker_id=owner_worker_id,
+                heartbeat_at=heartbeat_at,
             )
             self._session.add(new_record)
         await self._session.commit()
@@ -74,11 +89,32 @@ class DirectStatePersistence:
             return None
         return PipelineGraphState.model_validate(record.state_json)
 
-    async def recover_orphaned_runs(self) -> int:
+    async def recover_orphaned_runs(self, *, heartbeat_timeout_seconds: int = 300) -> int:
         """Not supported in unit-test persistence — raises on misuse."""
         raise NotImplementedError(
             "recover_orphaned_runs is not available in DirectStatePersistence; "
             "use SessionBoundStatePersistence for crash recovery."
+        )
+
+    async def heartbeat(self, processing_run_id: str, owner_worker_id: str) -> bool:
+        """Not supported in unit-test persistence — raises on misuse."""
+        raise NotImplementedError(
+            "heartbeat is not available in DirectStatePersistence; "
+            "use SessionBoundStatePersistence for heartbeat refresh."
+        )
+
+    async def has_active_source_key(self, source_key: str) -> bool:
+        """Not supported in unit-test persistence — raises on misuse."""
+        raise NotImplementedError(
+            "has_active_source_key is not available in DirectStatePersistence; "
+            "use SessionBoundStatePersistence for source dedup."
+        )
+
+    async def finalize_review(self, processing_run_id: str) -> PipelineGraphState | None:
+        """Not supported in unit-test persistence — raises on misuse."""
+        raise NotImplementedError(
+            "finalize_review is not available in DirectStatePersistence; "
+            "use SessionBoundStatePersistence for review finalization."
         )
 
 
@@ -92,7 +128,13 @@ class SessionBoundStatePersistence:
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]):
         self._session_factory = session_factory
 
-    async def save(self, state: PipelineGraphState) -> None:
+    async def save(
+        self,
+        state: PipelineGraphState,
+        *,
+        owner_worker_id: str | None = None,
+        heartbeat_at: datetime | None = None,
+    ) -> None:
         async with self._session_factory() as session:
             # Ensure source_document exists (FK requirement for pipeline_run_states)
             sd_id = UUID(state.source_document_id)
@@ -104,6 +146,18 @@ class SessionBoundStatePersistence:
             await session.execute(sd_upsert)
 
             state_json = state.model_dump(mode="json")
+            upsert_set: dict[str, object] = {
+                "state_json": state_json,
+                "pipeline_status": state.pipeline_status.value,
+                "updated_at": func.now(),
+            }
+            if state.source_key is not None:
+                upsert_set["source_key"] = state.source_key
+            if owner_worker_id is not None:
+                upsert_set["owner_worker_id"] = owner_worker_id
+            if heartbeat_at is not None:
+                upsert_set["heartbeat_at"] = heartbeat_at
+
             stmt = (
                 pg_insert(PipelineRunState)
                 .values(
@@ -111,14 +165,13 @@ class SessionBoundStatePersistence:
                     source_document_id=UUID(state.source_document_id),
                     state_json=state_json,
                     pipeline_status=state.pipeline_status.value,
+                    source_key=state.source_key,
+                    owner_worker_id=owner_worker_id,
+                    heartbeat_at=heartbeat_at,
                 )
                 .on_conflict_do_update(
                     index_elements=["processing_run_id"],
-                    set_={
-                        "state_json": state_json,
-                        "pipeline_status": state.pipeline_status.value,
-                        "updated_at": func.now(),
-                    },
+                    set_=upsert_set,
                 )
             )
             await session.execute(stmt)
@@ -133,13 +186,27 @@ class SessionBoundStatePersistence:
                 return None
             return PipelineGraphState.model_validate(record.state_json)
 
-    async def recover_orphaned_runs(self) -> int:
-        """Mark pipeline runs stuck in non-terminal states as FAILED after server restart."""
+    async def recover_orphaned_runs(self, *, heartbeat_timeout_seconds: int = 300) -> int:
+        """Mark pipeline runs stuck in non-terminal states as FAILED.
+
+        Only fails runs whose heartbeat is older than the timeout (default 5 minutes).
+        Legacy rows without a heartbeat use updated_at as fallback.
+        """
         async with self._session_factory() as session:
-            # Only load runs in non-terminal states — uses dedicated column index.
+            now = datetime.now(timezone.utc)
+            timeout_cutoff = now - timedelta(seconds=heartbeat_timeout_seconds)
+
+            # Select active runs where heartbeat is stale or missing
             result = await session.execute(
                 select(PipelineRunState).where(
-                    PipelineRunState.pipeline_status.in_(("pending", "running"))
+                    PipelineRunState.pipeline_status.in_(("pending", "running")),
+                    (
+                        (PipelineRunState.heartbeat_at < timeout_cutoff)
+                        | (
+                            (PipelineRunState.heartbeat_at.is_(None))
+                            & (PipelineRunState.updated_at < timeout_cutoff)
+                        )
+                    ),
                 )
             )
             records = result.scalars().all()
@@ -148,15 +215,71 @@ class SessionBoundStatePersistence:
             for record in records:
                 state = PipelineGraphState.model_validate(record.state_json)
                 state.pipeline_status = PipelineStatus.FAILED
-                state.error_message = "Pipeline interrupted by server restart"
+                state.error_message = "Pipeline heartbeat expired"
                 state.error_phase = _derive_error_phase(state)
-                state.completed_at = datetime.now(timezone.utc).isoformat()
+                state.completed_at = now.isoformat()
                 record.state_json = state.model_dump(mode="json")
                 record.pipeline_status = "failed"
                 count += 1
 
             if count:
                 await session.commit()
-                logger.warning("Recovered {} orphaned pipeline run(s) from server restart", count)
+                logger.warning("Recovered {} orphaned pipeline run(s) with stale heartbeat", count)
 
             return count
+
+    async def heartbeat(self, processing_run_id: str, owner_worker_id: str) -> bool:
+        """Refresh heartbeat for an active run owned by this worker.
+
+        Returns True if the heartbeat was updated (run exists and is owned by this worker).
+        """
+        async with self._session_factory() as session:
+            result = await session.execute(
+                update(PipelineRunState)
+                .where(
+                    PipelineRunState.processing_run_id == UUID(processing_run_id),
+                    PipelineRunState.owner_worker_id == owner_worker_id,
+                    PipelineRunState.pipeline_status.in_(("pending", "running")),
+                )
+                .values(heartbeat_at=func.now())
+            )
+            await session.commit()
+            return result.rowcount > 0
+
+    async def has_active_source_key(self, source_key: str) -> bool:
+        """Return True when any pending/running run owns this source key."""
+        async with self._session_factory() as session:
+            result = await session.execute(
+                select(PipelineRunState.processing_run_id)
+                .where(
+                    PipelineRunState.source_key == source_key,
+                    PipelineRunState.pipeline_status.in_(("pending", "running")),
+                )
+                .limit(1)
+            )
+            return result.scalar_one_or_none() is not None
+
+    async def finalize_review(self, processing_run_id: str) -> PipelineGraphState | None:
+        """Transition a run from AWAITING_REVIEW to COMPLETED.
+
+        Returns the finalized state, or None if the run was not found.
+        Returns the current state unchanged if not in AWAITING_REVIEW status.
+        """
+        async with self._session_factory() as session:
+            record = await session.get(
+                PipelineRunState, UUID(processing_run_id)
+            )
+            if record is None:
+                return None
+
+            state = PipelineGraphState.model_validate(record.state_json)
+            if state.pipeline_status != PipelineStatus.AWAITING_REVIEW:
+                return state
+
+            state.pipeline_status = PipelineStatus.COMPLETED
+            state.completed_at = datetime.now(timezone.utc).isoformat()
+
+            record.state_json = state.model_dump(mode="json")
+            record.pipeline_status = "completed"
+            await session.commit()
+            return state
