@@ -76,7 +76,7 @@ export function BilingualComparison(props: BilingualComparisonProps) {
   );
 }
 
-function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | null }) {
+export function TraceComparisonPanel({ trace }: { trace: EvidenceTrackTrace | null }) {
   if (!trace) {
     return (
       <p className="py-8 text-center text-sm text-gray-400">No evidence selected.</p>

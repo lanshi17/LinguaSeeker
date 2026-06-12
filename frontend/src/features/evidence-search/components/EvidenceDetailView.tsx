@@ -37,7 +37,7 @@ import {
   buildBilingualCompareHref,
   findInitialEvidenceId,
 } from "../utils/literatureRows";
-import { BilingualComparison } from "./BilingualComparison";
+import { TraceComparisonPanel } from "./BilingualComparison";
 
 type DetailViewMode = "overview" | "compare";
 
@@ -561,7 +561,7 @@ function CategoryLayerToggle({
   );
 }
 
-function BilingualComparison({
+function BilingualCompareView({
   detail,
   groupId,
   selectedEvidenceId,
@@ -629,6 +629,9 @@ function BilingualComparison({
 
   return (
     <div className="space-y-5">
+      {selectedTrace && (
+        <TraceComparisonPanel trace={selectedTrace} />
+      )}
       <Link
         href={`/evidence/detail?groupId=${encodeURIComponent(groupId)}`}
         className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-900"
@@ -869,7 +872,7 @@ export function EvidenceDetailView({
 
   if (initialView === "compare") {
     return (
-      <BilingualComparison
+      <BilingualCompareView
         detail={detail}
         groupId={groupId}
         selectedEvidenceId={selectedEvidenceId}

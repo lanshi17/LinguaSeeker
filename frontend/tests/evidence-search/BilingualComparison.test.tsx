@@ -89,8 +89,8 @@ describe("BilingualComparison (detail props)", () => {
       />,
     );
 
-    expect(screen.getByText("Original value")).toBeInTheDocument();
-    expect(screen.getByText("Translated value")).toBeInTheDocument();
+    expect(screen.getAllByText("Original value").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Translated value").length).toBeGreaterThanOrEqual(1);
   });
 
   it("shows an empty state when the detail has no traces", () => {
