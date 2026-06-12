@@ -31,6 +31,36 @@ _MULTISPACE_PATTERN = re.compile(r"\s+")
 _MISSING_GROUP_VALUE = "__missing__"
 
 
+def _normalize_for_grounding(text: str) -> str:
+    """Normalize text for fuzzy grounding: collapse whitespace, lowercase."""
+    text = _MULTISPACE_PATTERN.sub(" ", text).strip()
+    return text.lower()
+
+
+def _fuzzy_ellipsis_match(snippet: str, doc_text: str) -> bool:
+    """Check if an ellipsis-containing snippet matches the document.
+
+    Splits on ellipsis and verifies each fragment appears in the document
+    in order.  Returns True if all fragments are found sequentially.
+    """
+    fragments = _ELLIPSIS_PATTERN.split(snippet)
+    fragments = [f.strip() for f in fragments if f.strip()]
+    if not fragments:
+        return False
+
+    normalized_doc = _normalize_for_grounding(doc_text)
+    last_pos = -1
+    for frag in fragments:
+        norm_frag = _normalize_for_grounding(frag)
+        if not norm_frag:
+            continue
+        pos = normalized_doc.find(norm_frag, last_pos + 1)
+        if pos == -1:
+            return False
+        last_pos = pos
+    return True
+
+
 def normalize_group_token(value: object) -> str:
     text = str(value or "").strip()
     text = re.sub(r"\s+", "", text)
@@ -679,14 +709,20 @@ class SourceGrounder:
         snippet = source.text_snippet
 
         if self._snippet_has_ellipsis(snippet):
-            logger.warning("Snippet '{}' contains ellipsis, marking SOURCE_INVALID (ellipsis_detected)", snippet)
-            return item.model_copy(update={
-                "status": EvidenceStatus.SOURCE_INVALID,
-                "raw_source": source,
-                "source": None,
-                "assigned_acmg_codes": [],
-                "assigned_clingen_modules": [],
-            })
+            # Try fuzzy match: split on ellipsis, verify each fragment in order
+            block = self._block_for_index(document, source.block_index)
+            block_text = self._block_readable_text(block) if block is not None else ""
+            if _fuzzy_ellipsis_match(snippet, block_text):
+                logger.debug("Snippet matched via fuzzy grounding (ellipsis fragments found in order)")
+            else:
+                logger.warning("Snippet '{}' contains ellipsis and not found via fuzzy match, marking SOURCE_INVALID", snippet)
+                return item.model_copy(update={
+                    "status": EvidenceStatus.SOURCE_INVALID,
+                    "raw_source": source,
+                    "source": None,
+                    "assigned_acmg_codes": [],
+                    "assigned_clingen_modules": [],
+                })
 
 
         grounded_source = self._ground_source(document, source)
