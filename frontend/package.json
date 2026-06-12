@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:node": "rm -rf .test-build && tsc -p tsconfig.test.json && node --test '.test-build/tests/**/*.test.js'",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
