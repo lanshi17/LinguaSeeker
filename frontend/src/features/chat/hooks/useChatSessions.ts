@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ChatSessionResponse } from "../types/chat";
 import {
@@ -16,13 +16,9 @@ import {
 export function useChatSessions(processingRunId?: string | null) {
   const queryClient = useQueryClient();
   const standalone = !processingRunId;
-  const [localSessions, setLocalSessions] = useState<ChatSessionResponse[]>([]);
-
-  useEffect(() => {
-    if (standalone) {
-      setLocalSessions(loadLocalChatSessions());
-    }
-  }, [standalone]);
+  const [localSessions, setLocalSessions] = useState<ChatSessionResponse[]>(() =>
+    standalone ? loadLocalChatSessions() : [],
+  );
 
   const sessionsQuery = useQuery({
     queryKey: ["chat", "sessions", processingRunId],

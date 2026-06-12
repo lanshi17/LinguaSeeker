@@ -27,6 +27,7 @@ import {
   toUniqueChatMessageKeys,
   toXChatDefaultMessages,
 } from "../utils/messageHistory";
+import { detectChatActionIntent } from "../utils/intent";
 import {
   PipelineStartForm,
   PipelineStatusCard,
@@ -186,7 +187,14 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     [],
   );
 
-  const { messages, onRequest, isRequesting, abort, queueRequest } = useXChat({
+  const {
+    messages,
+    onRequest,
+    isRequesting,
+    abort,
+    queueRequest,
+    setMessages,
+  } = useXChat({
     provider: activeProvider,
     conversationKey: activeConversationKey,
     defaultMessages: loadDefaultMessages,
@@ -228,6 +236,20 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     return createAndActivateSession();
   }, [activeConversationKey, createAndActivateSession]);
 
+  const appendLocalUserMessage = useCallback(
+    (content: string) => {
+      setMessages((current) => [
+        ...current,
+        {
+          id: `local_${Date.now()}_${current.length}`,
+          message: { role: "user" as const, content },
+          status: "local" as const,
+        },
+      ]);
+    },
+    [setMessages],
+  );
+
   // ── Send message: create session if needed, POST to persist, then stream AI reply ──
   const handleSendMessage = useCallback(
     async (content: string) => {
@@ -235,6 +257,28 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       if (!trimmed) return;
 
       setActiveForm(null);
+
+      const actionIntent = detectChatActionIntent(trimmed);
+      if (actionIntent === "search-evidence") {
+        window.location.href = "/evidence";
+        return;
+      }
+
+      if (actionIntent === "start-pipeline" || actionIntent === "upload-pdf") {
+        try {
+          const sessionKey = await ensureActiveSession();
+          await sendChatMessage(sessionKey, trimmed);
+
+          if (sessionKey === activeConversationKey) {
+            appendLocalUserMessage(trimmed);
+          }
+
+          setActiveForm(actionIntent);
+        } catch {
+          antdMessage.error("Failed to open evidence extraction form");
+        }
+        return;
+      }
 
       try {
         const sessionKey = await ensureActiveSession();
@@ -255,6 +299,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     },
     [
       activeConversationKey,
+      appendLocalUserMessage,
       ensureActiveSession,
       onRequest,
       queueRequest,
@@ -360,6 +405,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         variant: "borderless" as const,
         contentRender: () => (
           <PipelineStartForm
+            key={activeForm}
             defaultSourceType={activeForm === "upload-pdf" ? "local" : "online"}
             onSubmit={handlePipelineSubmit}
             isSubmitting={isRequesting}
