@@ -22,6 +22,7 @@ from src.agents.contracts import (
     PhaseStatusDetail,
     PipelineGraphState,
     PipelineMode,
+    PipelineStatus,
     SourceType,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
@@ -40,6 +41,7 @@ class PipelineRunRequest(BaseModel):
     source_type: Literal["local", "online"]
     mode: Literal["full", "phase"] = "full"
     target_phase: int | None = Field(default=None, ge=1, le=3)  # N2: range validation
+    processing_run_id: str | None = None  # For phase mode re-run from existing state
 
     # Local upload fields
     filename: str | None = None
@@ -63,17 +65,25 @@ class PipelineRunRequest(BaseModel):
         if self.mode == "phase" and self.target_phase is None:
             raise ValueError("target_phase is required when mode is 'phase'")
 
-        # Source-specific validation
-        if self.source_type == "local":
-            if not self.content_base64 and not self.pre_parsed_markdown:
+        # Phase mode with target > 1 requires processing_run_id
+        if self.mode == "phase" and self.target_phase is not None and self.target_phase > 1:
+            if not self.processing_run_id:
                 raise ValueError(
-                    "source_type='local' requires content_base64 or pre_parsed_markdown"
+                    "processing_run_id is required when mode='phase' and target_phase > 1"
                 )
-        elif self.source_type == "online":
-            if not self.query and not self.identifiers:
-                raise ValueError(
-                    "source_type='online' requires query or identifiers"
-                )
+
+        # Source-specific validation (skip for phase re-run)
+        if not (self.mode == "phase" and self.processing_run_id):
+            if self.source_type == "local":
+                if not self.content_base64 and not self.pre_parsed_markdown:
+                    raise ValueError(
+                        "source_type='local' requires content_base64 or pre_parsed_markdown"
+                    )
+            elif self.source_type == "online":
+                if not self.query and not self.identifiers:
+                    raise ValueError(
+                        "source_type='online' requires query or identifiers"
+                    )
 
         return self
 
@@ -197,6 +207,42 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
     """
     runner = get_pipeline_runner()
 
+    # Phase re-run: resume from existing state for target_phase 2/3
+    if body.mode == "phase" and body.processing_run_id:
+        existing_state = await runner.get_last_state(body.processing_run_id)
+        if existing_state is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Pipeline run {body.processing_run_id} not found",
+            )
+        initial_state = existing_state.model_copy(
+            deep=True,
+            update={
+                "mode": PipelineMode.PHASE,
+                "target_phase": body.target_phase,
+                "pipeline_status": PipelineStatus.PENDING,
+                "error_message": None,
+                "error_phase": None,
+                "completed_at": None,
+            },
+        )
+        from sqlalchemy.exc import IntegrityError
+
+        try:
+            task = await runner.start(initial_state)
+        except IntegrityError:
+            raise HTTPException(
+                status_code=409,
+                detail="A pipeline run is already in progress for this source",
+            )
+
+        return PipelineRunResponse(
+            processing_run_id=existing_state.processing_run_id,
+            source_document_id=existing_state.source_document_id,
+            status="accepted",
+            status_url=f"/api/v1/pipeline/runs/{existing_state.processing_run_id}/status",
+        )
+
     # N3: Duplicate run prevention — check if same source is already being processed
     source_key = _build_source_key(body)
     if source_key and await runner.is_running_for_source(source_key):
@@ -319,4 +365,54 @@ async def get_pipeline_status(processing_run_id: str, _api_key: str | None = Dep
         error_phase=state.error_phase,
         started_at=state.started_at,
         completed_at=state.completed_at,
+    )
+
+
+class PipelineFinalizeResponse(BaseModel):
+    """Response from finalizing a pipeline run."""
+
+    processing_run_id: str
+    pipeline_status: str
+    completed_at: str
+
+
+@router.post("/runs/{processing_run_id}/finalize", response_model=PipelineFinalizeResponse)
+async def finalize_pipeline_run(processing_run_id: str, _api_key: str | None = Depends(require_api_key)):
+    """Finalize a pipeline run that is awaiting review.
+
+    Transitions from AWAITING_REVIEW to COMPLETED. Idempotent for already-completed runs.
+    """
+    runner = get_pipeline_runner()
+    state = await runner.get_last_state(processing_run_id)
+    if state is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Pipeline run {processing_run_id} not found",
+        )
+
+    # Idempotent: already completed
+    if state.pipeline_status == PipelineStatus.COMPLETED:
+        return PipelineFinalizeResponse(
+            processing_run_id=state.processing_run_id,
+            pipeline_status=state.pipeline_status.value,
+            completed_at=state.completed_at or "",
+        )
+
+    if state.pipeline_status != PipelineStatus.AWAITING_REVIEW:
+        raise HTTPException(
+            status_code=409,
+            detail="Only awaiting_review runs can be finalized",
+        )
+
+    finalized = await runner.finalize_review(processing_run_id)
+    if finalized is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Pipeline run {processing_run_id} not found",
+        )
+
+    return PipelineFinalizeResponse(
+        processing_run_id=finalized.processing_run_id,
+        pipeline_status=finalized.pipeline_status.value,
+        completed_at=finalized.completed_at or "",
     )

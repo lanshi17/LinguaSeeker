@@ -271,3 +271,72 @@ async def test_orchestrator_notifies_on_state_change(
     assert len(notifications) >= 3
     # Final notification should be "awaiting_review"
     assert notifications[-1] == "awaiting_review"
+
+
+@pytest.mark.asyncio
+async def test_phase_mode_target_1_stops_after_phase_1(
+    sample_state, mock_adapters, mock_persistence, mock_retry_executor
+):
+    """Phase mode with target_phase=1 runs only Phase 1 and stops."""
+    state = sample_state.model_copy(update={"mode": PipelineMode.PHASE, "target_phase": 1})
+    state_after_1 = state.model_copy(deep=True)
+    state_after_1.phase_1_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
+    state_after_1.phase_1_output = Phase1Output(
+        pdf_path="/tmp/test.pdf",
+        md_path="/tmp/test.md",
+        metadata_path="/tmp/test.json",
+        output_dir="/tmp/output",
+    )
+    mock_adapters["phase_1"].run.return_value = state_after_1
+
+    async def _pass_through(**kw):
+        return await kw["operation"](kw["state"])
+
+    mock_retry_executor.execute_with_retry.side_effect = _pass_through
+    orchestrator = PipelineOrchestrator(mock_adapters, mock_persistence, mock_retry_executor)
+
+    result = await orchestrator.run(state)
+
+    assert result.phase_1_status.status == PhaseStatus.COMPLETED
+    assert result.pipeline_status == PipelineStatus.AWAITING_REVIEW
+    mock_adapters["phase_2"].run.assert_not_called()
+    mock_adapters["phase_3"].run.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_phase_mode_target_2_starts_at_phase_2_when_upstream_complete(
+    mock_adapters, mock_persistence, mock_retry_executor
+):
+    """Phase mode with target_phase=2 starts at Phase 2 when Phase 1 is complete."""
+    state = PipelineGraphState(
+        processing_run_id="run-123",
+        source_document_id="doc-456",
+        mode=PipelineMode.PHASE,
+        source_type=SourceType.LOCAL,
+        target_phase=2,
+        phase_1_status=PhaseStatusDetail(status=PhaseStatus.COMPLETED),
+        phase_1_output=Phase1Output(
+            pdf_path="/tmp/test.pdf",
+            md_path="/tmp/test.md",
+            metadata_path="/tmp/test.json",
+            output_dir="/tmp/output",
+        ),
+    )
+
+    state_after_2 = state.model_copy(deep=True)
+    state_after_2.phase_2_status = PhaseStatusDetail(status=PhaseStatus.COMPLETED)
+    mock_adapters["phase_2"].run.return_value = state_after_2
+
+    async def _pass_through(**kw):
+        return await kw["operation"](kw["state"])
+
+    mock_retry_executor.execute_with_retry.side_effect = _pass_through
+    orchestrator = PipelineOrchestrator(mock_adapters, mock_persistence, mock_retry_executor)
+
+    result = await orchestrator.run(state)
+
+    assert result.phase_2_status.status == PhaseStatus.COMPLETED
+    assert result.pipeline_status == PipelineStatus.AWAITING_REVIEW
+    mock_adapters["phase_1"].run.assert_not_called()
+    mock_adapters["phase_2"].run.assert_called_once()
+    mock_adapters["phase_3"].run.assert_not_called()

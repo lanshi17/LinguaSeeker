@@ -158,17 +158,27 @@ class PipelineOrchestrator:
             self._adapters["phase_3"], state, "phase_3"
         )
 
+    def _route_entry(self, state: PipelineGraphState) -> str:
+        """Route entry point: start at target phase in phase mode, or phase 1 in full mode."""
+        if state.mode == PipelineMode.PHASE and state.target_phase is not None:
+            return f"phase_{state.target_phase}"
+        return "phase_1"
+
     def _route_after_phase_1(self, state: PipelineGraphState) -> str:
-        """Route after Phase 1: continue or stop on failure."""
+        """Route after Phase 1: continue or stop on failure/target reached."""
         if state.phase_1_status.status == PhaseStatus.FAILED:
             logger.error("Phase 1 failed, stopping pipeline")
+            return "end"
+        if state.mode == PipelineMode.PHASE and state.target_phase == 1:
             return "end"
         return "phase_2"
 
     def _route_after_phase_2(self, state: PipelineGraphState) -> str:
-        """Route after Phase 2: continue to Phase 3 or stop on failure."""
+        """Route after Phase 2: continue to Phase 3 or stop on failure/target reached."""
         if state.phase_2_status.status == PhaseStatus.FAILED:
             logger.error("Phase 2 failed, stopping pipeline")
+            return "end"
+        if state.mode == PipelineMode.PHASE and state.target_phase == 2:
             return "end"
         return "phase_3"
 
@@ -186,7 +196,10 @@ class PipelineOrchestrator:
         graph.add_node("phase_2", self._node_phase_2)
         graph.add_node("phase_3", self._node_phase_3)
 
-        graph.set_entry_point("phase_1")
+        graph.set_conditional_entry_point(
+            self._route_entry,
+            {"phase_1": "phase_1", "phase_2": "phase_2", "phase_3": "phase_3"},
+        )
 
         graph.add_conditional_edges(
             "phase_1",
