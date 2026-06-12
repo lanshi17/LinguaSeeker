@@ -88,7 +88,7 @@ network_no_proxy: "cn,ncbi.nlm.nih.gov,nlm.nih.gov,unpaywall.org,localhost,127.0
 embedding_gpu_memory_utilization: 0.35
 embedding_max_model_len: 4096
 rerank_gpu_memory_utilization: 0.20
-vlm_gpu_memory_utilization: 0.50
+doc_parse_gpu_memory_utilization: 0.50
 
 # ── Backend Service ───────────────────────────────────────────────────────
 backend_port: 8000

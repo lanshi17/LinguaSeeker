@@ -42,8 +42,8 @@ _rerank_svc = RerankService(
 )
 _vlm_svc = VLMService(
     model_id=cfg.doc_parse_model_id,
-    gpu_memory_utilization=cfg.vlm_gpu_memory_utilization,
-    image_analysis=cfg.vlm_image_analysis,
+    gpu_memory_utilization=cfg.doc_parse_gpu_memory_utilization,
+    image_analysis=cfg.doc_parse_image_analysis,
 ) if cfg.doc_parse_model_id else None
 
 # Wire services into API routes
