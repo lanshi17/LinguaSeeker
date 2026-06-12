@@ -70,7 +70,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Archive Index
 
-The `archive/plans/` directory contains 63 completed plans. The `archive/codereview/` directory contains 22 resolved code reviews. See individual directories for full listings.
+The `archive/plans/` directory contains 64 completed plans (the bilingual comparison UX plan was added to this count after the 2026-06-12 rebase onto current dev). The `archive/codereview/` directory contains 22 resolved code reviews. See individual directories for full listings.
 
 ## Module README Index
 
