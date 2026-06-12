@@ -1,5 +1,5 @@
 /**
- * Custom chat provider for the ACMG Lingua backend.
+ * Custom chat provider for the Cross Evidencebackend.
  *
  * Backend chat agent flow:
  * 1. POST /api/v1/chat/sessions/{id}/messages  → persist user message
@@ -31,7 +31,7 @@ interface ChatRequestParams {
 }
 
 /**
- * Custom provider that binds to the ACMG Lingua backend's chat agent.
+ * Custom provider that binds to the Cross Evidencebackend's chat agent.
  *
  * On request:
  * 1. Persists the user message via POST /chat/sessions/{id}/messages

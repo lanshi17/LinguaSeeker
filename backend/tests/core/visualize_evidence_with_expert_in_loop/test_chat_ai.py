@@ -77,7 +77,7 @@ class TestChatAI:
         run_id = await self._create_test_run(db_session)
         provider = MagicMock()
         provider.generate = AsyncMock(return_value="The gene is GLA.")
-        service = ChatService(db_session, reasoning_provider=provider)
+        service = ChatService(db_session, chat_provider=provider)
         session = await service.create_session(processing_run_id=run_id, user_id=None)
 
         reply = await service.generate_reply(

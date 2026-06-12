@@ -93,6 +93,31 @@ class ReasoningConfig(BaseModel):
         return keys
 
 
+class ChatLLMConfig(BaseModel):
+    """Dedicated chat interaction LLM (lightweight, conversational)."""
+
+    api_key: str = ""
+    api_keys: list[str] = Field(default_factory=list)
+    base_url: str = ""
+    model: str = ""
+    max_tokens: int = 4096
+    timeout: int = 30
+    temperature: float | None = 0.7
+    max_retries: int = 0
+
+    @property
+    def all_api_keys(self) -> list[str]:
+        """Return all available API keys (deduplicated, preserving order)."""
+        seen: set[str] = set()
+        keys: list[str] = []
+        for k in [*self.api_keys, self.api_key]:
+            k = k.strip()
+            if k and k not in seen:
+                seen.add(k)
+                keys.append(k)
+        return keys
+
+
 class EmbeddingConfig(BaseModel):
     """Embedding model."""
 
@@ -248,6 +273,18 @@ class Settings(BaseSettings):
     reasoning_llm_timeout: int = 0
     reasoning_llm_max_retries: int = 0
 
+    # ── Chat interaction LLM flat fields (CHAT_LLM_*) ──────────────────
+
+    chat_llm_api_key: str = ""
+    chat_llm_api_keys: list[str] = Field(default_factory=list)
+    chat_llm_model: str = ""
+    chat_llm_base_url: str = ""
+    chat_llm_temperature: float | None = None
+    chat_llm_max_tokens: int = 4096
+    chat_llm_timeout: int = 0
+    chat_llm_max_retries: int = 0
+
+
     # ── Embedding flat fields (EMBEDDING_*) ──────────────────────────────
 
     embedding_base_url: str = ""
@@ -319,6 +356,7 @@ class Settings(BaseSettings):
 
     llm: LLMConfig = Field(default_factory=LLMConfig, exclude=True)
     reasoning: ReasoningConfig = Field(default_factory=ReasoningConfig, exclude=True)
+    chat: ChatLLMConfig = Field(default_factory=ChatLLMConfig, exclude=True)
     embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig, exclude=True)
     rerank: RerankConfig = Field(default_factory=RerankConfig, exclude=True)
     mineru: MinerUConfig = Field(default_factory=MinerUConfig, exclude=True)
@@ -360,6 +398,16 @@ class Settings(BaseSettings):
             timeout=self.reasoning_llm_timeout,
             temperature=self.reasoning_llm_temperature,
             max_retries=self.reasoning_llm_max_retries,
+        )
+        self.chat = ChatLLMConfig(
+            api_key=self.chat_llm_api_key,
+            api_keys=self.chat_llm_api_keys,
+            base_url=self.chat_llm_base_url,
+            model=self.chat_llm_model,
+            max_tokens=self.chat_llm_max_tokens,
+            timeout=self.chat_llm_timeout,
+            temperature=self.chat_llm_temperature,
+            max_retries=self.chat_llm_max_retries,
         )
         self.embedding = EmbeddingConfig(
             base_url=self.embedding_base_url,

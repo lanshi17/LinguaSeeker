@@ -172,9 +172,14 @@ class SearchIndexRepository:
             await self._session.execute(
                 text("DELETE FROM frontend_search_index")
             )
-        except Exception:
-            # Table may not exist in SQLite test environments
-            return
+        except Exception as exc:
+            # In SQLite test environments the table may not exist.
+            # Only swallow "no such table"; re-raise everything else
+            # (permissions, connection, schema errors) so callers are
+            # not silently left with a stale search index.
+            if "no such table" in str(exc).lower():
+                return
+            raise
 
         await self._session.execute(
             text(f"""
@@ -224,4 +229,4 @@ class SearchIndexRepository:
             """),
         )
 
-        await self._session.commit()
+        await self._session.flush()

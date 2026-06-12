@@ -307,7 +307,7 @@ class LiteratureProfileRepository:
             },
         )
         await self._session.execute(stmt)
-        await self._session.commit()
+        await self._session.flush()
 
     # ── Queries ───────────────────────────────────────────────────────────
 

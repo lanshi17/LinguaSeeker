@@ -1,4 +1,4 @@
-# ACMG Lingua — Copier Template Configuration (Monorepo Root)
+# Cross Evidence— Copier Template Configuration (Monorepo Root)
 # ============================================================
 # Run:  copier copy . /path/to/new-project
 
@@ -113,7 +113,6 @@ _exclude:
   - "backend/libs/files-io/Cargo.lock"
   - "backend/libs/net-io/target"
   - "backend/libs/net-io/Cargo.lock"
-
 
   # ── Runtime directories ──────────────────────────────────────────
   - "logs"
