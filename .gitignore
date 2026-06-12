@@ -99,3 +99,5 @@ backend/config/vault/*.yml
 .mcp.json
 opencode.jsonc
 .venv
+.playwright-mcp/*
+.mcp-mcp/*

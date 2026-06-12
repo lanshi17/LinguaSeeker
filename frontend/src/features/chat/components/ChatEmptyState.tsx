@@ -21,7 +21,10 @@ export function ChatEmptyState({
   onPromptSelect,
   sessionCount,
 }: ChatEmptyStateProps) {
-  const [labTime, setLabTime] = useState<string>(() => formatLabTime(new Date()));
+  // The clock is client-only. Initialize to an empty placeholder so the
+  // server-rendered markup matches the first client render; the real
+  // time is filled in on mount and then ticks every second.
+  const [labTime, setLabTime] = useState<string>("--:--:-- · UTC+8");
 
   // Hold the count at 0 for the first client render so the markup matches
   // the SSR pass. The real count arrives on the next tick and then
@@ -33,6 +36,8 @@ export function ChatEmptyState({
   }, [sessionCount]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot hydration gate; the wall clock cannot be read during component init without causing an SSR/CSR hydration mismatch, so the first real value is set here.
+    setLabTime(formatLabTime(new Date()));
     const id = setInterval(() => setLabTime(formatLabTime(new Date())), 1000);
     return () => clearInterval(id);
   }, []);
