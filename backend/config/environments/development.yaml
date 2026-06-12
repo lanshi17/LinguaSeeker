@@ -17,6 +17,9 @@ fast_llm:
 reasoning_llm:
   base_url: "https://token-plan-cn.xiaomimimo.com/v1"
 
+chat_llm:
+  base_url: "https://api.siliconflow.cn"
+
 # ── Model Server (Local) ─────────────────────────────────────────────────
 embedding:
   base_url: "http://localhost:8001/v1"

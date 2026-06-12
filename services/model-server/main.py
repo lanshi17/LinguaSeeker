@@ -69,7 +69,7 @@ async def lifespan(app: FastAPI):
         _vlm_svc.unload()
 
 
-app = FastAPI(title="ACMG-Lingua Model Server", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Cross Evidence Model Server", version="1.0.0", lifespan=lifespan)
 app.add_middleware(request_monitor_middleware_factory())
 
 app.include_router(embedding.router)

@@ -16,11 +16,11 @@ services:
       - postgres
       - redis
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/acmg_lingua
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/cross_evidence
       - REDIS_URL=redis://redis:6379/0
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
-      - POSTGRES_DB=acmg_lingua
+      - POSTGRES_DB=cross_evidence
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - REDIS_HOST=redis
@@ -31,7 +31,7 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: acmg_lingua
+      POSTGRES_DB: cross_evidence
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:

@@ -2,7 +2,7 @@
 name = "files-io"
 version = "0.1.0"
 edition = "2024"
-description = "Unified local + S3 file I/O for ACMG Lingua"
+description = "Unified local + S3 file I/O for Cross Evidence"
 
 [lib]
 name = "files_io"

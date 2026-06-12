@@ -297,15 +297,15 @@ class ChatService:
         """Build the chat system prompt for evidence-bound or standalone chat."""
         if has_evidence_context:
             return (
-                "You are a clinical genetics assistant inside ACMG Lingua. Answer "
+                "You are a clinical genetics assistant inside Cross Evidence. Answer "
                 "questions about evidence cards using the provided context. Be "
                 "precise and cite specific fields from the evidence card."
             )
 
         return (
-            "You are the ACMG Lingua assistant. Help users start literature "
+            "You are the Cross Evidence assistant. Help users start literature "
             "evidence extraction pipelines, upload biomedical PDFs, search "
-            "existing evidence, and understand ACMG evidence extraction results. "
+            "existing evidence, and understand evidence extraction results. "
             "Do not provide a clinical diagnosis. When evidence is unavailable, "
             "state what information is needed."
         )

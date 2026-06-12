@@ -79,7 +79,7 @@ async def _try_startup_lock(engine) -> bool:
     try:
         raw_conn = await engine.raw_connection()
         result = await raw_conn.exec_driver_sql(
-            "SELECT pg_try_advisory_lock(hashtext('acmg_lingua_backend_startup'))"
+            "SELECT pg_try_advisory_lock(hashtext('cross_evidence_backend_startup'))"
         )
         row = result.fetchone()
         acquired = bool(row[0]) if row else False
@@ -121,7 +121,7 @@ async def lifespan(app: FastAPI):
     cfg = get_config()
     setup_logging(environment=cfg.environment, debug=cfg.debug)
     logger = get_logger()
-    logger.info("Starting ACMG-Lingua backend (env={})", cfg.environment)
+    logger.info("Starting Cross Evidence backend (env={})", cfg.environment)
 
     if cfg.network.proxy:
         logger.info("Network proxy enabled: {} (bypass: {} domains)", cfg.network.proxy, len(cfg.network.no_proxy.split(",")))
@@ -203,7 +203,7 @@ async def lifespan(app: FastAPI):
             await _wiring.dispose_engine()
         except Exception:
             logger.warning("PostgreSQL engine disposal failed during shutdown")
-        logger.info("ACMG-Lingua backend stopped")
+        logger.info("Cross Evidence backend stopped")
 
 
 class HealthResponse(BaseModel):
@@ -223,7 +223,7 @@ def create_app() -> FastAPI:
     cfg = get_config()
 
     _app = FastAPI(
-        title="ACMG-Lingua Backend",
+        title="Cross Evidence Backend",
         description="Variant classification and evidence interpretation platform",
         version="0.1.0",
         lifespan=lifespan,

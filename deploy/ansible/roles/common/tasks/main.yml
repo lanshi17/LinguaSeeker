@@ -42,10 +42,10 @@
   loop:
     - "{{ project_root }}"
     - "{{ project_root }}/logs"
-    - /opt/acmg-lingua-data
-    - /opt/acmg-lingua-data/postgres
-    - /opt/acmg-lingua-data/redis
-    - /opt/acmg-lingua-data/model-cache
+    - /opt/cross-evidence-data
+    - /opt/cross-evidence-data/postgres
+    - /opt/cross-evidence-data/redis
+    - /opt/cross-evidence-data/model-cache
 
 - name: Set timezone to Asia/Shanghai
   timezone:
@@ -76,5 +76,5 @@
           copytruncate
           su deploy deploy
       }
-    dest: /etc/logrotate.d/acmg-lingua
+    dest: /etc/logrotate.d/cross-evidence
     mode: "0644"

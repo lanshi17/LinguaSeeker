@@ -2,7 +2,7 @@
 services:
   redis:
     image: redis:8.0-alpine
-    container_name: acmg-redis
+    container_name: cross-evidence-redis
     restart: unless-stopped
     ports:
       - "{{ redis_port }}:6379"
@@ -19,7 +19,7 @@ services:
       - "{{ vault_redis_password }}"
 {% endif %}
     volumes:
-      - /opt/acmg-lingua-data/redis:/data
+      - /opt/cross-evidence-data/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
