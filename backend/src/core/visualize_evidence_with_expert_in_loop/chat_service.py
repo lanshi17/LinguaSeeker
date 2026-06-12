@@ -34,13 +34,26 @@ _QUESTION_PATTERNS: list[re.Pattern[str]] = [
     re.compile(p)
     for p in [
         r"\?",
+        r"^\s*(hi|hello|hey)\s*[!.。！]?\s*$",
+        r"^\s*(你好|您好)\s*[!.。！]?\s*$",
         r"\bwhat\b",
         r"\bwhy\b",
         r"\bhow\b",
         r"\bwhich\b",
+        r"\bhelp\b",
+        r"\bi\s+(want|need|would like)\b.*\b(extract|extraction|search|query|analyze|analyse|upload)\b",
+        r"\b(start|run)\b.*\bpipeline\b",
+        r"\b(search|query|lookup)\b.*\b(database|db|evidence)\b",
         r"\b什么\b",
         r"\b为什么\b",
         r"\b如何\b",
+        r"我想",
+        r"我要",
+        r"请帮",
+        r"帮我",
+        r"文献.*(提取|抽取|分析)",
+        r"(证据|信息).*(提取|抽取)",
+        r"(查询|检索|搜索|查找).*(数据库|证据库|已有证据|现有证据)",
     ]
 ]
 _CORRECTION_PATTERNS: list[re.Pattern[str]] = [

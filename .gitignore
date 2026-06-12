@@ -95,3 +95,5 @@ backend/config/vault/*.yml
 !backend/config/vault/README.md
 **/nohup.out
 .aider*
+.mcp.json
+opencode.jsonc
