@@ -77,9 +77,19 @@ class PipelineRunner:
             heartbeat_task: asyncio.Task | None = None
             try:
                 async def _heartbeat_loop():
+                    consecutive_failures = 0
                     while True:
                         await asyncio.sleep(self._heartbeat_interval)
-                        await self._persistence.heartbeat(run_id, self._worker_id)
+                        try:
+                            await self._persistence.heartbeat(run_id, self._worker_id)
+                            consecutive_failures = 0
+                        except Exception:
+                            consecutive_failures += 1
+                            logger.warning(
+                                "Heartbeat failed for run={} (consecutive failures: {})",
+                                run_id,
+                                consecutive_failures,
+                            )
 
                 heartbeat_task = asyncio.create_task(_heartbeat_loop())
             except Exception:

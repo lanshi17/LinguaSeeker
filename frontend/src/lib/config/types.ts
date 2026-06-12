@@ -30,6 +30,12 @@ export interface ApiConfig {
   healthEndpoint: string;
   /** Health check polling interval in milliseconds. */
   healthPollInterval: number;
+  /**
+   * Static API key sent as X-API-Key header.
+   * Injected via NEXT_PUBLIC_API_KEY env var.
+   * Empty string when auth is disabled (dev default).
+   */
+  apiKey: string;
 }
 
 export interface FeatureFlags {

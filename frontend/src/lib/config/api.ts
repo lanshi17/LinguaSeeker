@@ -13,4 +13,5 @@ export const apiConfig: ApiConfig = {
   healthEndpoint: process.env.NEXT_PUBLIC_HEALTH_ENDPOINT || "/health",
   healthPollInterval:
     Number(process.env.NEXT_PUBLIC_HEALTH_POLL_INTERVAL) || 30_000,
+  apiKey: process.env.NEXT_PUBLIC_API_KEY || "",
 };
