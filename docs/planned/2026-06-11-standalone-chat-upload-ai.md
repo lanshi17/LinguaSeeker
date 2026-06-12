@@ -10,7 +10,7 @@
 
 ---
 
-**Status:** planned
+**Status:** in-progress
 **Created:** 2026-06-11
 **Completed:** N/A
 **PR:** N/A

@@ -172,25 +172,34 @@ Rules:
 
 The chat feature is the primary entry point. It provides conversation-based interaction with pipeline integration.
 
-### 5.1 Components
+### 5.1 Standalone Sessions
+
+`/chat` supports standalone chat sessions without a pipeline run. Standalone
+session metadata is stored in browser `localStorage` (keys: `cross-evidence.chat.sessions.v1`,
+`cross-evidence.chat.activeSessionId.v1`). Reloading restores session cards and
+the active session. All message history and assistant replies are persisted in
+the backend. The "Upload PDF" prompt opens the pipeline form with local upload
+mode selected by default; submitting a PDF starts the pipeline without navigation.
+
+### 5.2 Components
 
 - **ChatView.tsx** -- Main chat interface rendering message streams.
-- **PipelineStartForm.tsx** -- Form embedded in chat to start new pipeline runs.
+- **PipelineStartForm.tsx** -- Form embedded in chat to start new pipeline runs. Supports `defaultSourceType` prop to open in local or online mode.
 - **PipelineStatusCard.tsx** -- Inline card showing pipeline run status within chat context.
 
-### 5.2 Hooks
+### 5.3 Hooks
 
 - **useChatMessages.ts** -- Message state and send operations for a chat session.
-- **useChatSessions.ts** -- Session list management and session switching.
+- **useChatSessions.ts** -- Session list management and session switching. Handles both pipeline-bound sessions (server state) and standalone sessions (localStorage state).
 
-### 5.3 Services
+### 5.4 Services
 
-- **chat.ts** -- API calls for chat sessions and messages.
-- **chatProvider.ts** -- Chat provider abstraction for Cross Evidence chat behavior.
+- **chat.ts** -- API calls for chat sessions and messages. `createSession()` accepts optional `processingRunId`.
+- **chatProvider.ts** -- Chat provider abstraction for Cross Evidence chat behavior. Uses SSE with JSON events (`{"type":"text","content":"..."}`, `{"type":"done"}`, `{"type":"error","message":"..."}`).
 
-### 5.4 Types
+### 5.5 Types
 
-- **chat.ts** -- Message, Session, and related type definitions.
+- **chat.ts** -- Message, Session (`processing_run_id: string | null`), and related type definitions.
 
 ---
 
