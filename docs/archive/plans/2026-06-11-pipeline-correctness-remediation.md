@@ -8,10 +8,10 @@
 
 **Tech Stack:** FastAPI, Pydantic v2, SQLAlchemy 2 async ORM, Alembic, LangGraph, pytest/pytest-asyncio, Next.js 15, TypeScript, Axios, npm via nvm.
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-06-11
-**Completed:** -
-**PR:** -
+**Completed:** 2026-06-12
+**PR:** merged to dev
 
 ---
 
