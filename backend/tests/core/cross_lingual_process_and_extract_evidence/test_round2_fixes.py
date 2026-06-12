@@ -11,6 +11,7 @@ import pytest
 
 from src.core.cross_lingual_process_and_extract_evidence.contracts import (
     ContentBlock,
+    FormattedDocument,
 )
 from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.blocks import (
     _KW_MERGE_SEP,
@@ -301,3 +302,229 @@ class TestBilingualBlockDedup:
         # The two identical text blocks should be deduped
         text_blocks = [b for b in result if b.type == "text"]
         assert len(text_blocks) == 1
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# 4. Strict retry: per-block language check failure path
+# ══════════════════════════════════════════════════════════════════════════
+
+
+class TestStrictRetryPrompt:
+    """The strict-mode full-document prompt must demand English-only output."""
+
+    def test_default_prompt_omits_strict_directive(self):
+        """Default prompt should not contain the STRICT ENGLISH-ONLY block."""
+        from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.prompts import (
+            get_full_document_translate_prompt,
+        )
+        prompt = get_full_document_translate_prompt("test content", "terms")
+        assert "STRICT ENGLISH-ONLY" not in prompt
+
+    def test_strict_prompt_adds_directive(self):
+        """Strict prompt must contain the STRICT ENGLISH-ONLY directive."""
+        from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.prompts import (
+            get_full_document_translate_prompt,
+        )
+        prompt = get_full_document_translate_prompt("test content", "terms", strict=True)
+        assert "STRICT ENGLISH-ONLY" in prompt
+        # Must explicitly forbid reproducing source alongside translation
+        assert "MUST be entirely English" in prompt
+        # Must enumerate the only allowed non-English content
+        assert "pinyin" in prompt.lower()
+        # Must still include the document body
+        assert "test content" in prompt
+
+
+class TestPerBlockRetryBehavior:
+    """translate_to_result must retry with strict prompt when per-block check fails."""
+
+    @pytest.mark.asyncio
+    async def test_retry_called_when_per_block_check_fails(self, monkeypatch):
+        """When check_block_language raises per_block_check, run_pipeline must be
+        called again with strict=True and the result must be returned."""
+        from src.core.cross_lingual_process_and_extract_evidence.config_context import (
+            TranslationConfigContext,
+        )
+        from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import (
+            MultiStageTranslator,
+        )
+        from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.exceptions import (
+            TranslationError,
+        )
+
+        ctx = TranslationConfigContext(
+            model="test-model",
+            api_key="test-key",
+            base_url="http://localhost:8001/v1",
+        )
+        translator = MultiStageTranslator(ctx=ctx)
+
+        pipeline_calls: list[bool] = []
+        call_count = {"n": 0}
+
+        async def fake_run_pipeline(
+            self, formatted, blocks=None, *, strict=False,
+        ):
+            pipeline_calls.append(strict)
+            call_count["n"] += 1
+            return ({}, f"output-{call_count['n']}", [], [], [])
+
+        # First call: simulate per-block check failure
+        # Second call: simulate success (no exception)
+        check_calls: list[int] = []
+
+        def fake_check_block_language(blocks, source_language):
+            check_calls.append(len(check_calls) + 1)
+            if len(check_calls) == 1:
+                raise TranslationError(
+                    "translation_validation_failed: per_block_check — 5/5 blocks still in zh"
+                )
+            # Second check (after retry) returns without raising
+
+        async def fake_extract_terminology(self, formatted):
+            return ""
+        async def fake_self_review(self, source, translated, system_prompt=""):
+            return translated
+        async def fake_translate_segments(self, formatted, terminology, blocks=None, *, strict=False):
+            return ("", [], [])
+        async def fake_translate_aux(self, blocks, system_prompt=""):
+            return {}
+
+        monkeypatch.setattr(MultiStageTranslator, "run_pipeline", fake_run_pipeline)
+        monkeypatch.setattr(
+            "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.check_block_language",
+            fake_check_block_language,
+        )
+        monkeypatch.setattr(MultiStageTranslator, "extract_terminology", fake_extract_terminology)
+        monkeypatch.setattr(MultiStageTranslator, "_self_review", fake_self_review)
+        monkeypatch.setattr(MultiStageTranslator, "translate_segments", fake_translate_segments)
+        monkeypatch.setattr(MultiStageTranslator, "_translate_auxiliary_blocks", fake_translate_aux)
+
+        formatted = FormattedDocument(
+            formatted_markdown="text", source_language="zh", original_blocks=[], sentences=[],
+        )
+        result = await translator.translate_to_result(formatted)
+
+        # The first call should be non-strict, the second should be strict
+        assert pipeline_calls == [False, True], (
+            f"Expected pipeline called once non-strict then once strict, got {pipeline_calls}"
+        )
+        # check_block_language should have been called twice (once before, once after retry)
+        assert len(check_calls) == 2
+        # Final translated text should be the second (retry) output
+        assert "output-2" in result.translated_english
+
+    @pytest.mark.asyncio
+    async def test_retry_exhausted_raises_translation_error(self, monkeypatch):
+        """If the strict retry's per-block check also fails, TranslationError must propagate."""
+        from src.core.cross_lingual_process_and_extract_evidence.config_context import (
+            TranslationConfigContext,
+        )
+        from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import (
+            MultiStageTranslator,
+        )
+        from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.exceptions import (
+            TranslationError,
+        )
+
+        ctx = TranslationConfigContext(
+            model="test-model",
+            api_key="test-key",
+            base_url="http://localhost:8001/v1",
+        )
+        translator = MultiStageTranslator(ctx=ctx)
+
+        async def fake_run_pipeline(
+            self, formatted, blocks=None, *, strict=False,
+        ):
+            return ({}, "output", [], [], [])
+
+        # Always raise (both first and second attempt fail the check)
+        def fake_check_block_language(blocks, source_language):
+            raise TranslationError(
+                "translation_validation_failed: per_block_check — 5/5 blocks still in zh"
+            )
+
+        async def fake_extract_terminology(self, formatted):
+            return ""
+        async def fake_self_review(self, source, translated, system_prompt=""):
+            return translated
+        async def fake_translate_segments(self, formatted, terminology, blocks=None, *, strict=False):
+            return ("", [], [])
+        async def fake_translate_aux(self, blocks, system_prompt=""):
+            return {}
+
+        monkeypatch.setattr(MultiStageTranslator, "run_pipeline", fake_run_pipeline)
+        monkeypatch.setattr(
+            "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.check_block_language",
+            fake_check_block_language,
+        )
+        monkeypatch.setattr(MultiStageTranslator, "extract_terminology", fake_extract_terminology)
+        monkeypatch.setattr(MultiStageTranslator, "_self_review", fake_self_review)
+        monkeypatch.setattr(MultiStageTranslator, "translate_segments", fake_translate_segments)
+        monkeypatch.setattr(MultiStageTranslator, "_translate_auxiliary_blocks", fake_translate_aux)
+
+        formatted = FormattedDocument(
+            formatted_markdown="text", source_language="zh", original_blocks=[], sentences=[],
+        )
+        with pytest.raises(TranslationError, match="per_block_check"):
+            await translator.translate_to_result(formatted)
+
+    @pytest.mark.asyncio
+    async def test_other_translation_errors_not_retried(self, monkeypatch):
+        """TranslationErrors that are NOT per_block_check must NOT trigger retry."""
+        from src.core.cross_lingual_process_and_extract_evidence.config_context import (
+            TranslationConfigContext,
+        )
+        from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator import (
+            MultiStageTranslator,
+        )
+        from src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.exceptions import (
+            TranslationError,
+        )
+
+        ctx = TranslationConfigContext(
+            model="test-model",
+            api_key="test-key",
+            base_url="http://localhost:8001/v1",
+        )
+        translator = MultiStageTranslator(ctx=ctx)
+
+        pipeline_calls: list[bool] = []
+
+        async def fake_run_pipeline(
+            self, formatted, blocks=None, *, strict=False,
+        ):
+            pipeline_calls.append(strict)
+            return ({}, "output", [], [], [])
+
+        def fake_check_block_language(blocks, source_language):
+            raise TranslationError("translation_validation_failed: non_english_output")
+
+        async def fake_extract_terminology(self, formatted):
+            return ""
+        async def fake_self_review(self, source, translated, system_prompt=""):
+            return translated
+        async def fake_translate_segments(self, formatted, terminology, blocks=None, *, strict=False):
+            return ("", [], [])
+        async def fake_translate_aux(self, blocks, system_prompt=""):
+            return {}
+
+        monkeypatch.setattr(MultiStageTranslator, "run_pipeline", fake_run_pipeline)
+        monkeypatch.setattr(
+            "src.core.cross_lingual_process_and_extract_evidence.cross_lingual.translate.translator.check_block_language",
+            fake_check_block_language,
+        )
+        monkeypatch.setattr(MultiStageTranslator, "extract_terminology", fake_extract_terminology)
+        monkeypatch.setattr(MultiStageTranslator, "_self_review", fake_self_review)
+        monkeypatch.setattr(MultiStageTranslator, "translate_segments", fake_translate_segments)
+        monkeypatch.setattr(MultiStageTranslator, "_translate_auxiliary_blocks", fake_translate_aux)
+
+        formatted = FormattedDocument(
+            formatted_markdown="text", source_language="zh", original_blocks=[], sentences=[],
+        )
+        with pytest.raises(TranslationError, match="non_english_output"):
+            await translator.translate_to_result(formatted)
+
+        # Only the initial (non-strict) call should have happened
+        assert pipeline_calls == [False]
