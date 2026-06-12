@@ -209,6 +209,11 @@ async def start_pipeline_run(request: Request, body: PipelineRunRequest, _api_ke
 
     # Phase re-run: resume from existing state for target_phase 2/3
     if body.mode == "phase" and body.processing_run_id:
+        if runner.is_running(body.processing_run_id):
+            raise HTTPException(
+                status_code=409,
+                detail=f"Pipeline run {body.processing_run_id} is currently running",
+            )
         existing_state = await runner.get_last_state(body.processing_run_id)
         if existing_state is None:
             raise HTTPException(
