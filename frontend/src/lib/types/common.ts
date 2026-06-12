@@ -19,12 +19,12 @@ export interface ApiErrorResponse {
 
 /** Processing run status shared across pipeline features. */
 export type ProcessingStatus =
-  | "pending"
+  | "queued"
   | "running"
-  | "awaiting_review"
   | "completed"
   | "failed"
-  | "skipped";
+  | "cancelled"
+  | "awaiting_review";
 
 /** Phase identifier in the 3-phase pipeline. */
 export type PhaseId = "phase_1" | "phase_2" | "phase_3";
