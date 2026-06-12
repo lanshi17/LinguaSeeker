@@ -40,13 +40,12 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
-| 2026-06-06 | [ClinGen-based Layer 3 Pipeline Evaluation](active/2026-06-06-clingen-layer3-evaluation.md) | in-progress |
-| 2026-05-09 | [PRD](active/PRD.md) | active -- v2.0 tab-based UI |
-| 2026-05-09 | [Application Flow](active/APP_FLOW.md) | active -- v2.0 tab navigation |
-| 2026-05-09 | [Technology Stack](active/TECH_STACK.md) | active -- v2.0 SSE, Vercel AI SDK, shadcn/ui |
-| 2026-05-09 | [Frontend Guidelines](active/FRONTEND_GUIDELINES.md) | active -- v2.0 four-tab layout |
-| 2026-05-09 | [Backend Structure](active/BACKEND_STRUCTURE.md) | active -- v2.0 APIs |
-| 2026-05-09 | [Implementation Plan](active/IMPLEMENTATION_PLAN.md) | active -- v2.0 frontend tasks |
+| 2026-05-09 | [PRD](active/PRD.md) | active -- citation-valid-by-construction, dual-track extraction |
+| 2026-05-09 | [Application Flow](active/APP_FLOW.md) | active -- SSE chat + 2-tab layout (AI Chat, Evidence) |
+| 2026-05-09 | [Technology Stack](active/TECH_STACK.md) | active -- FastAPI StreamingResponse SSE, MinerU-only parsing |
+| 2026-05-09 | [Frontend Guidelines](active/FRONTEND_GUIDELINES.md) | active -- 2-tab layout, vertical feature slices |
+| 2026-05-09 | [Backend Structure](active/BACKEND_STRUCTURE.md) | active -- LangGraph orchestrator, 4-phase pipeline |
+| 2026-05-09 | [Implementation Plan](active/IMPLEMENTATION_PLAN.md) | active -- Phase 1-2 done, Phase 3-4 in progress |
 | 2026-05-13 | [Phase Workflow Overview](active/phase_workflow_overview.md) | active -- four-phase pipeline reference |
 
 ## Planned Work
@@ -66,7 +65,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Archive Index
 
-The `archive/plans/` directory contains 65 completed plans. The `archive/codereview/` directory contains 22 resolved code reviews. See individual directories for full listings.
+The `archive/plans/` directory contains 67 completed plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
 
 ## Module README Index
 
