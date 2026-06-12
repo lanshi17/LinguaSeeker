@@ -357,16 +357,51 @@ def test_build_highlight_value_fallback_for_two_letter_gene_symbol():
     assert highlight.highlight_end == 20
 
 
-def test_build_highlight_value_fallback_requires_min_length():
-    """_build_highlight skips value fallback for short values (< 3 chars)."""
+def test_build_highlight_value_fallback_is_case_insensitive():
+    """Value 'brca1' should highlight inside 'BRCA1 was detected.'."""
     highlight = _build_highlight(
-        {"text_snippet": "A was detected.", "start_offset": 500, "end_offset": 501},
+        {"text_snippet": "BRCA1 was detected.", "start_offset": 900, "end_offset": 905},
+        value="brca1",
+    )
+
+    assert highlight is not None
+    assert highlight.highlight_start == 0
+    assert highlight.highlight_end == 5
+
+
+def test_build_highlight_value_fallback_allows_short_distinctive_tokens():
+    """Short tokens with digits/punctuation can be safe enough for value fallback."""
+    highlight = _build_highlight(
+        {"text_snippet": "Variant V2 was observed.", "start_offset": 900, "end_offset": 902},
+        value="V2",
+    )
+
+    assert highlight is not None
+    assert highlight.highlight_start == 8
+    assert highlight.highlight_end == 10
+
+
+def test_build_highlight_value_fallback_ignores_ambiguous_single_letter_tokens():
+    """Pure single-letter values should not match common prose such as articles."""
+    highlight = _build_highlight(
+        {"text_snippet": "A variant was detected in BRCA1.", "start_offset": 900, "end_offset": 901},
         value="A",
     )
-    # Short value should NOT be used as substring fallback — offsets go to (0, 0)
+
     assert highlight is not None
     assert highlight.highlight_start == 0
     assert highlight.highlight_end == 0
+
+
+def test_build_highlight_value_fallback_marks_unknown_when_value_absent():
+    """When value cannot be located, highlight_start == highlight_end == 0."""
+    highlight = _build_highlight(
+        {"text_snippet": "No relevant finding.", "start_offset": 900, "end_offset": 910},
+        value="BRCA1",
+    )
+
+    assert highlight is not None
+    assert highlight.highlight_start == highlight.highlight_end == 0
 
 
 def test_build_highlight_returns_none_for_empty_text():
