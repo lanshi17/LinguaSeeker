@@ -6,6 +6,7 @@ export default defineConfig({
     include: [
       "tests/evidence-search/BilingualComparison.test.tsx",
       "tests/evidence-search/EvidenceHighlightText.test.tsx",
+      "tests/features/chat/ChatMarkdown.test.tsx",
     ],
   },
 });

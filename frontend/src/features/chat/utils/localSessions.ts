@@ -1,7 +1,7 @@
 import type { ChatSessionResponse } from "../types/chat";
 
-export const CHAT_SESSIONS_KEY = "acmg-lingua.chat.sessions.v1";
-export const ACTIVE_CHAT_SESSION_KEY = "acmg-lingua.chat.activeSessionId.v1";
+export const CHAT_SESSIONS_KEY = "cross-evidence.chat.sessions.v1";
+export const ACTIVE_CHAT_SESSION_KEY = "cross-evidence.chat.activeSessionId.v1";
 
 const MAX_LOCAL_SESSIONS = 20;
 
@@ -90,4 +90,18 @@ export function loadActiveChatSession(storage?: Storage): string | null {
   if (!target) return null;
 
   return target.getItem(ACTIVE_CHAT_SESSION_KEY);
+}
+
+export function removeLocalChatSession(
+  storage: Storage | undefined,
+  sessionId: string,
+): ChatSessionResponse[] {
+  const sessions = loadLocalChatSessions(storage).filter(
+    (item) => item.session_id !== sessionId,
+  );
+  saveLocalChatSessions(storage, sessions);
+  if (loadActiveChatSession(storage) === sessionId) {
+    safeStorage(storage)?.removeItem(ACTIVE_CHAT_SESSION_KEY);
+  }
+  return sessions;
 }
