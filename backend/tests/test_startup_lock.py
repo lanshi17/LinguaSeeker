@@ -4,6 +4,15 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 
+@pytest.fixture(autouse=True)
+def reset_lock_global():
+    """Reset module-level global between tests to prevent stale state."""
+    import app.main
+    app.main._startup_lock_raw_conn = None
+    yield
+    app.main._startup_lock_raw_conn = None
+
+
 @pytest.mark.asyncio
 async def test_startup_lock_closes_connection_on_sql_error():
     """raw_conn must be closed even when SQL execution fails."""
