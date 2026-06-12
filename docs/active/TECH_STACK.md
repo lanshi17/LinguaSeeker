@@ -15,7 +15,7 @@
 | Python | CPython | 3.12+ | Backend runtime |
 | ORM | SQLAlchemy | 2.0+ | Async PostgreSQL access |
 | Migrations | Alembic | 1.13+ | Schema versioning |
-| Validation | Pydantic | 2.7+ | API, extraction, fusion, and evidence contracts |
+| Validation | Pydantic | 2.7+ | API, extraction, and evidence contracts |
 | Config | pydantic-settings | 2.3+ | Environment-based config |
 | Native I/O | Rust + PyO3 | 0.28 | Low-level HTTP/file/document I/O |
 | Async Runtime | tokio | 1.x | Rust async runtime |
@@ -32,7 +32,7 @@
 | Native Extraction LLM | OpenAI-compatible custom API | — | Original-language evidence extraction |
 | Translation LLM | OpenAI-compatible MT model | — | English/Chinese translation for review and secondary extraction |
 | Secondary Extraction LLM | OpenAI-compatible custom API | — | Translated-text evidence extraction |
-| Fusion LLM/Agent | OpenAI-compatible custom API | — | Native/translated JSON comparison, deduplication, conflict flagging |
+| Cross-Track Reconciliation *(planned)* | — | — | Automated comparison of native/translated tracks; not yet implemented. Currently both tracks stored side-by-side for expert review. |
 | VLM | OpenAI-compatible vision model | — | Figure, table, and pedigree description |
 | Embedding | Qwen3-Embedding-0.6B | — | Entity matching and feedback retrieval |
 | Rerank | bge-reranker-v2-m3 | — | Literature/search reranking |
@@ -50,8 +50,8 @@
 ## 2. Architectural Principles
 
 1. **Evidence extraction is the product boundary.** Current MVP builds the evidence data foundation for downstream medical rating; it does not produce final autonomous ACMG/GDV classifications.
-2. **Dual extraction beats single-pass translation.** For non-English documents, extract from the original text, translate to English/Chinese, extract again from translated text, then fuse and cross-validate both JSON outputs.
-3. **Python owns business strategy.** Provider fallback, extraction policy, fusion policy, standardization decisions, workflow orchestration, and API contracts stay in Python.
+2. **Dual extraction beats single-pass translation.** For non-English documents, extract from the original text, translate to English/Chinese, extract again from translated text. Both extraction results are stored side-by-side for expert review. Automated cross-track reconciliation is planned to deduplicate and flag conflicts.
+3. **Python owns business strategy.** Provider fallback, extraction policy, cross-track reconciliation policy (planned), standardization decisions, workflow orchestration, and API contracts stay in Python.
 4. **Rust owns low-level I/O.** Rust crates perform HTTP fetches, file hashing/writing, archive handling, PDF validation, and bounded I/O primitives.
 5. **Bi-directional traceability is mandatory.** Evidence without original anchors, and translated anchors when translated text exists, cannot support displayed evidence rows.
 6. **Standardization is layered.** Exact match → synonym match → vector match → conflict resolver Agent.
@@ -255,7 +255,7 @@ Python must handle:
 - Provider fallback strategy.
 - Ranking, deduplication, retry, and rate-limit policy.
 - Document source selection.
-- Native extraction, translated extraction, fusion, and standardization policy.
+- Native extraction, translated extraction, and standardization policy. Cross-track reconciliation policy (planned).
 - Bi-directional source traceability policy.
 - API response contracts.
 
@@ -515,7 +515,7 @@ cargo test
 | `src/agents/supervisor.py` | `src/agents/supervisor.py` | LangGraph workflow orchestration |
 | `src/agents/extraction/node.py` | Phase 2 native and translated extraction | Evidence extraction node patterns |
 | `src/agents/parsing/translation_tool.py` | Phase 2 translation | Terminology/structure/draft/review pipeline between extraction passes |
-| `src/domain/agent/prompts.py` | Phase 2 prompts | Native extraction, translated extraction, and fusion prompts |
+| `src/domain/agent/prompts.py` | Phase 2 prompts | Native extraction, translated extraction prompts; cross-track reconciliation prompts (planned) |
 | `src/domain/variant/` | Phase 3 standardization | ClinVar/ClinGen clients and normalizers |
 | `src/infrastructure/` | DAO layer | PostgreSQL patterns; Redis/Neo4j deferred |
 | `src/tools/external/` | Public DB integrations | External database tooling |
