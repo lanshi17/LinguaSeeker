@@ -12,6 +12,7 @@ _DEFAULT_TS = datetime(2026, 1, 1, tzinfo=timezone.utc)
 def _cei(**kwargs):
     """Create a SimpleNamespace for a CanonicalEvidenceItem row with defaults."""
     kwargs.setdefault("created_at", _DEFAULT_TS)
+    kwargs.setdefault("updated_at", _DEFAULT_TS)
     return SimpleNamespace(**kwargs)
 
 import pytest
