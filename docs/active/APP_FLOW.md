@@ -179,12 +179,25 @@ Renders a simpler `ChatView` for a single session — no conversation sidebar,
 no prompt suggestions. Just `Bubble.List` + `Sender`. Messages are streamed
 via the same `CrossEvidenceChatProvider` mechanism.
 
-### 3.5 Session Persistence
+### 3.5 Standalone Chat Sessions
+
+`/chat` supports standalone chat sessions that are not bound to a pipeline run.
+When opened without a `processingRunId`, the chat feature:
+
+- Creates sessions with `POST /api/v1/chat/sessions` (empty body).
+- Stores visible session metadata in browser `localStorage` (key: `cross-evidence.chat.sessions.v1`).
+- Remembers the active session ID in `localStorage` (key: `cross-evidence.chat.activeSessionId.v1`).
+- Reloading `/chat` restores the standalone session cards and active session from `localStorage`.
+- Clicking the "Upload PDF" prompt opens the pipeline form with local upload selected by default.
+- Uploading a PDF starts `POST /api/v1/pipeline/run`, shows an inline status card, and does not navigate away.
+- All message history and assistant responses are persisted in the backend database.
+
+### 3.6 Session Persistence
 
 ```
 Chat session data model:
   ├── session_id (UUID)
-  ├── processing_run_id (links to pipeline run)
+  ├── processing_run_id (UUID | null — nullable for standalone sessions)
   ├── created_at
   └── message_count
 
