@@ -1,6 +1,6 @@
 # Agents (Orchestrator)
 
-> Pipeline orchestrator layer for ACMG Lingua. Owns LangGraph topology, pipeline state, phase adapters, concurrency control, and state persistence. Contains zero business rules — all domain logic lives in `core/` feature slices.
+> Pipeline orchestrator layer for CrossEvidence. Owns LangGraph topology, pipeline state, phase adapters, concurrency control, and state persistence. Contains zero business rules — all domain logic lives in `core/` feature slices.
 
 ## Quick Start
 
@@ -81,7 +81,7 @@ result = await task  # or poll with runner.get_last_state(run_id)
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `start` | `(initial_state: PipelineGraphState) -> asyncio.Task` | Start background pipeline execution |
-| `get_last_state` | `async (run_id: str) -> PipelineGraphState \| None` | Get state (memory cache → PostgreSQL fallback) |
+| `get_last_state` | `async (run_id: str) -> PipelineGraphState \| None` | Read state (memory cache → PostgreSQL fallback, no mutation) |
 | `get_last_state_cached` | `(run_id: str) -> PipelineGraphState \| None` | Fast path: memory cache only |
 | `is_running` | `(run_id: str) -> bool` | Check if a run is currently active |
 | `is_running_for_source` | `(source_key: str) -> bool` | Dedup check by filename/query |
@@ -132,7 +132,7 @@ Phase adapters translate domain exceptions into classified orchestrator errors:
 
 ### State Persistence
 
-State is saved to PostgreSQL (`pipeline_run_states` table) after each phase completes (success or failure). `SessionBoundStatePersistence` creates a fresh session per operation to avoid stale-session bugs in long-lived contexts. `PipelineRunner.get_last_state()` checks in-memory cache first, then falls back to DB for crash recovery.
+State is saved to PostgreSQL (`pipeline_run_states` table) after each phase completes (success or failure). `SessionBoundStatePersistence` creates a fresh session per operation to avoid stale-session bugs in long-lived contexts. `PipelineRunner.get_last_state()` checks in-memory cache first, then falls back to DB without changing the stored status. Orphan recovery runs once during app startup via `recover_orphaned_runs()`.
 
 ### Single-Phase Mode
 

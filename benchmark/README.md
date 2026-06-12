@@ -1,6 +1,6 @@
 # Benchmark
 
-> Benchmarking and evaluation infrastructure for ACMG Lingua. Covers literature acquisition, full pipeline execution, and ClinGen Layer 3 ground-truth evaluation.
+> Benchmarking and evaluation infrastructure for CrossEvidence. Covers literature acquisition, full pipeline execution, and ClinGen Layer 3 ground-truth evaluation.
 
 ## Directory Structure
 

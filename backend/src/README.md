@@ -1,6 +1,6 @@
 # src
 
-> Python business logic root for the ACMG Lingua backend. All application code (except the FastAPI entry point) lives here, organized into five top-level packages following the Orchestrated Vertical Slice Architecture.
+> Python business logic root for the CrossEvidence backend. All application code (except the FastAPI entry point) lives here, organized into five top-level packages following the Orchestrated Vertical Slice Architecture.
 
 ## Package Map
 

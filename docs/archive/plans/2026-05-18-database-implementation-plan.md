@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Build the MVP database layer for ACMG Lingua with normalized PostgreSQL persistence, Redis read caching, Alembic migrations, async SQLAlchemy access, and a flattened search index for fast front-end lookup.
+**Goal:** Build the MVP database layer for CrossEvidence with normalized PostgreSQL persistence, Redis read caching, Alembic migrations, async SQLAlchemy access, and a flattened search index for fast front-end lookup.
 
 **Architecture:** Keep the write side normalized and versioned: source documents, external identifiers, processing runs, run-level evidence, canonical evidence, normalized entities, and entity bindings remain separate tables. Expose a dedicated read model for front-end search so gene/variant/DOI/PMID queries do not pay the full join cost on every keystroke. Redis stays a DAO cache only, invalidated proactively when a run completes or review status changes.
 

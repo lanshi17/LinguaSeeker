@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ── ACMG-Lingua Backend — Development Server ──────────────────────────────
+# ── CrossEvidence Backend — Development Server ──────────────────────────────
 # Starts uvicorn with hot-reload, excluding files that change during pipeline
 # execution (logs, temp data, migrations) so that editing state_persistence
 # or running a pipeline doesn't kill in-flight requests.

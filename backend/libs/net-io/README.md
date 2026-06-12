@@ -1,6 +1,6 @@
 # net-io
 
-> Rust library for HTTP/web I/O operations in ACMG Lingua -- literature provider APIs, HTML scraping, PDF link extraction, and MinerU document parsing. **Not a standalone Python module** -- accessed via the `rust_io.net` facade.
+> Rust library for HTTP/web I/O operations in CrossEvidence -- literature provider APIs, HTML scraping, PDF link extraction, and MinerU document parsing. **Not a standalone Python module** -- accessed via the `rust_io.net` facade.
 
 ## From Python
 
@@ -123,7 +123,7 @@ def extract_pdf_links(html, base_url) -> list[str]
 |---------|---------|-------|
 | Timeout | 30,000 ms | Configurable per-call via `timeout_ms` |
 | Max retries | 2 (3 total attempts) | Exponential backoff starting at 1s, capped at 2^20 ms |
-| User-Agent | `acmg-lingua-io/0.1.0` | |
+| User-Agent | `cross-evidence-io/0.1.0` | |
 | Redirects | Up to 10 | |
 | Gzip | Enabled | |
 

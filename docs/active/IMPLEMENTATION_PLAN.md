@@ -1,4 +1,4 @@
-# IMPLEMENTATION_PLAN — ACMG Lingua
+# IMPLEMENTATION_PLAN — CrossEvidence
 
 ## 1. Execution Strategy
 
