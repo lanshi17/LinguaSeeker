@@ -1,4 +1,4 @@
-# TECH_STACK — ACMG Lingua Technology Stack
+# TECH_STACK — CrossEvidence Technology Stack
 
 ## 1. Overview
 

@@ -1,6 +1,6 @@
 # deploy/ansible/ -- Production Deployment
 
-Ansible-based provisioning and deployment for ACMG Lingua production environments.
+Ansible-based provisioning and deployment for CrossEvidence production environments.
 
 ## Directory Structure
 
@@ -131,7 +131,7 @@ Client (HTTPS)
 ## Key Features
 
 - **TLS / Let's Encrypt** -- Automatically provisioned by the nginx role via certbot. First deploy starts HTTP-only, certbot obtains the cert, Nginx redeploys with TLS. Auto-renewal via `certbot.timer`.
-- **Automated backup** -- PostgreSQL daily backup at 03:00 via cron. Stored at `/opt/acmg-lingua-data/postgres-backups/`, retained 30 days.
+- **Automated backup** -- PostgreSQL daily backup at 03:00 via cron. Stored at `/opt/cross-evidence-data/postgres-backups/`, retained 30 days.
 - **Security** -- `vault.yml` encrypted with `ansible-vault`, git-ignored. All systemd services run with `NoNewPrivileges` and `ProtectSystem=strict`. Database ports not exposed publicly.
 
 ## Maintenance

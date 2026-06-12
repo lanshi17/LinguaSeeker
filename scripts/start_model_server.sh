@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ── ACMG-Lingua Model Server ─────────────────────────────────────────────
+# ── CrossEvidence Model Server ─────────────────────────────────────────────
 # Starts the model server (embedding, rerank, VLM) on port 8001 by default.
 # Models are lazy-loaded on first request; embedding, rerank, and VLM share
 # a single GPU sequentially.

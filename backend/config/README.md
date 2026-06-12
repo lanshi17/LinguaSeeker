@@ -88,7 +88,7 @@ For debugging or inspecting the merged layered values:
 uv run python scripts/render_config.py --env development
 
 # Render to a temporary file
-uv run python scripts/render_config.py --env production --output /tmp/acmg-lingua-config.yaml
+uv run python scripts/render_config.py --env production --output /tmp/cross-evidence-config.yaml
 ```
 
 Rendered files are not read by the runtime loader. Runtime configuration remains `backend/config/` plus explicit environment variables.

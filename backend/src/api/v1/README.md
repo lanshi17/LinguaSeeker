@@ -1,6 +1,6 @@
 # API v1 Routes
 
-> REST endpoint definitions for ACMG Lingua's v1 API. All routes are mounted under `/api/v1` and delegate to the orchestrator or Phase 4 services via injected dependencies.
+> REST endpoint definitions for CrossEvidence's v1 API. All routes are mounted under `/api/v1` and delegate to the orchestrator or Phase 4 services via injected dependencies.
 
 ## Route Map
 

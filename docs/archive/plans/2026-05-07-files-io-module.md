@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Build a PyO3 native extension (`files_io`) providing unified local + S3 file I/O, folder compress/extract, parallel batch operations, and hash-based deduplication for the ACMG Lingua backend.
+**Goal:** Build a PyO3 native extension (`files_io`) providing unified local + S3 file I/O, folder compress/extract, parallel batch operations, and hash-based deduplication for the CrossEvidence backend.
 
 **Architecture:** Trait-based backend abstraction (`FileOps`) with local (`std::fs`) and S3 (`aws-sdk-s3`) implementations. `File` Python class auto-dispatches by path scheme (`/local/path` vs `s3://bucket/key`). Core operations are sync; heavy operations (large copy, compress, extract, parallel batch) provide async versions via `tokio::task::spawn_blocking`. Hash dedup uses SHA-256 content hashing.
 
@@ -80,7 +80,7 @@ backend/libs/files-io/
 name = "files-io"
 version = "0.1.0"
 edition = "2024"
-description = "Unified local + S3 file I/O for ACMG Lingua"
+description = "Unified local + S3 file I/O for CrossEvidence"
 
 [lib]
 name = "files_io"

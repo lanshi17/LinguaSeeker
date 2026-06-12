@@ -1,6 +1,6 @@
 # Native Extensions
 
-> Rust/PyO3 native extensions for ACMG Lingua -- literature acquisition, MinerU document parsing, file I/O (local + S3), archive handling, and SHA-256 deduplication. Three crates, one Python module: `rust_io`.
+> Rust/PyO3 native extensions for CrossEvidence -- literature acquisition, MinerU document parsing, file I/O (local + S3), archive handling, and SHA-256 deduplication. Three crates, one Python module: `rust_io`.
 
 ## Crate Map
 

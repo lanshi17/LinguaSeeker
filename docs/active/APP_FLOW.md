@@ -1,13 +1,13 @@
-# APP_FLOW — ACMG Lingua Application Flow
+# APP_FLOW — CrossEvidence Application Flow
 
 ## 1. Navigation & Architecture Overview
 
-ACMG Lingua uses a sidebar-based dashboard layout. Unauthenticated users are
+CrossEvidence uses a sidebar-based dashboard layout. Unauthenticated users are
 redirected to the login page. The root route (`/`) redirects to `/chat`.
 
 ```
 ┌──────────────┬───────────────────────────────────────────────┐
-│  ACMG Lingua │  ┌──────────────────────────────────────────┐ │
+│  CrossEvidence │  ┌──────────────────────────────────────────┐ │
 │              │  │  header: sidebar toggle · connection status│ │
 │  [AI Chat]   │  ├──────────────────────────────────────────┤ │
 │  [Evidence]  │  │                                          │ │
@@ -116,7 +116,7 @@ FullChatView renders:
   │
   └── Right: Chat area
         ├── Empty state:
-        │     Welcome component ("ACMG Lingua Agent" + description)
+        │     Welcome component ("CrossEvidence Agent" + description)
         │     + Prompt suggestions (3 clickable items):
         │       - "Start Pipeline" → shows inline PipelineStartForm
         │       - "Upload PDF" → shows inline PipelineStartForm (file mode)

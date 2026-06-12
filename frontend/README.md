@@ -1,4 +1,4 @@
-# Frontend — ACMG Lingua
+# Frontend — CrossEvidence
 
 > Next.js 15 App Router frontend for a medical genetics evidence extraction platform. Business feature architecture with thin page shells, self-contained feature modules, and shared infrastructure.
 

@@ -1,6 +1,6 @@
 # Ingest & Digitize Data (Phase 1)
 
-> Phase 1 of the ACMG Lingua pipeline: acquire documents (local upload or online literature search) and parse them into structured markdown via MinerU. Provides a unified facade that routes to the appropriate acquisition source and a parsing service that handles both local and remote MinerU backends.
+> Phase 1 of the CrossEvidence pipeline: acquire documents (local upload or online literature search) and parse them into structured markdown via MinerU. Provides a unified facade that routes to the appropriate acquisition source and a parsing service that handles both local and remote MinerU backends.
 
 ## Quick Start
 

@@ -1,6 +1,6 @@
 # database/
 
-> Database infrastructure layer: PostgreSQL schema migrations, container configuration, seed data, and reference terminology for ACMG Lingua.
+> Database infrastructure layer: PostgreSQL schema migrations, container configuration, seed data, and reference terminology for CrossEvidence.
 
 ## Directory Structure
 

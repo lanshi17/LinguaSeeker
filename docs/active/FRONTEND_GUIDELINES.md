@@ -1,4 +1,4 @@
-# FRONTEND_GUIDELINES — ACMG Lingua Frontend
+# FRONTEND_GUIDELINES — CrossEvidence Frontend
 
 ## 1. Tech Stack
 
@@ -22,7 +22,7 @@ FastAPI is authoritative for authentication and API behavior. Next.js proxies re
 
 ### 2.1 Core Positioning
 
-ACMG Lingua is an "evidence porter" -- absolutely loyal to source data. Every piece of extracted information must be 100% traceable to its original location in the literature.
+CrossEvidence is an "evidence porter" -- absolutely loyal to source data. Every piece of extracted information must be 100% traceable to its original location in the literature.
 
 ### 2.2 Design Principles
 
@@ -50,7 +50,7 @@ The dashboard uses a collapsible sidebar layout. The root page (`/`) redirects t
 
 ```
 ┌─────────────┬───────────────────────────────────────────┐
-│  ACMG Lingua│                                           │
+│  CrossEvidence│                                           │
 │             │              Top Bar                       │
 │  [AI Chat]  ├───────────────────────────────────────────┤
 │  [Evidence] │                                           │
