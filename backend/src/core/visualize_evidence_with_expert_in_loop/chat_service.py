@@ -291,7 +291,7 @@ class ChatService:
         if any(p.search(msg_lower) for p in _CORRECTION_PATTERNS):
             return "correction"
 
-        return "note"
+        return "question"
 
     def _system_prompt(self, *, has_evidence_context: bool) -> str:
         """Build the chat system prompt for evidence-bound or standalone chat."""
