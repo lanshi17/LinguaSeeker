@@ -433,32 +433,6 @@ docker compose up
 
 ### Key Patterns
 
-#### Old Version Code Reuse
-
-The previous codebase is preserved in `backend/.old_version/`. **Always check it before writing new code.** Search first, reuse preferentially, adapt to new architecture.
-
-```bash
-grep -r "keyword" backend/.old_version/src/
-find backend/.old_version/ -name "*.py" | xargs grep "ClassNameOrFunction"
-tree backend/.old_version/src/ -L 2
-```
-
-| Directory | Contents |
-|---|---|
-| `.old_version/src/` | Core business logic (agents, api, domain, infrastructure, services, tools, utils) |
-| `.old_version/utils/` | Shared utility modules |
-| `.old_version/configs/` | App and database configuration |
-| `.old_version/scripts/` | Ops scripts (log cleanup, cache purge, data sync, etc.) |
-| `.old_version/database/` | Alembic migrations, Neo4j, Qdrant, MinIO configs |
-| `.old_version/tests/` | Existing test cases |
-| `.old_version/knowledge_docs/` | Knowledge base documents |
-| `.old_version/lesson.md` | Past retrospective notes |
-| `.old_version/prd.json` | Product requirements |
-
-**Workflow**: Search first → reuse preferentially → adapt to new architecture → annotate source for complex migrations.
-
-**Prohibited**: Writing new features without checking `.old_version/`, copying without adaptation, deleting `.old_version/`.
-
 #### Literature Provider System
 
 The literature acquisition gateway supports multiple providers (Crossref, OpenAlex, EuropePMC, PMC, DOAJ, JStage, Unpaywall, plus web scrapers for CyberLeninka, Hans Publishers, PubScholar). Rust handles HTTP I/O; Python handles business logic, retry, and PDF download orchestration.
