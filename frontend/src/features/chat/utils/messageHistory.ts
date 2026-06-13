@@ -1,10 +1,12 @@
 import type { DefaultMessageInfo } from "@ant-design/x-sdk/es/x-chat";
 
+import type { ChatAction } from "../types/actions";
 import type { ChatMessageResponse } from "../types/chat";
 
 export interface ChatBubbleMessage {
   role: "user" | "assistant";
   content: string;
+  action?: ChatAction;
 }
 
 interface ChatMessageKeySource {
