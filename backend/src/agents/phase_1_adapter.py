@@ -35,6 +35,9 @@ if TYPE_CHECKING:
     )
 
 _RETRYABLE_ERRORS = build_retryable_errors()
+# FileNotFoundError/PermissionError are OSError subclasses but are permanent,
+# not transient — must not be retried.
+_PERMANENT_OS_ERRORS = (FileNotFoundError, PermissionError, IsADirectoryError)
 
 # Permanent errors that should NOT be retried
 try:
@@ -160,6 +163,12 @@ class Phase1Adapter:
 
             logger.info("Phase 1 completed: run={}", state.processing_run_id)
             return state
+
+        except _PERMANENT_OS_ERRORS as e:
+            raise PermanentPhaseError(
+                f"Phase 1 permanent file error: {e}",
+                phase=1,
+            ) from e
 
         except _RETRYABLE_ERRORS as e:
             raise RetryablePhaseError(
