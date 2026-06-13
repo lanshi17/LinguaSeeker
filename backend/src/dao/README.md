@@ -24,6 +24,7 @@ postgresql/connection.py  ->  AsyncEngine / async_sessionmaker / session context
         +--> postgresql/contracts.py                 typed infrastructure contracts
         +--> postgresql/search_index_repo.py         flattened read projection queries
         +--> postgresql/literature_profile_repo.py   per-document evidence group aggregation
+        +--> redis/connection.py                   async Redis client builder
         +--> redis/cache_repo.py                     Redis read-cache and invalidation
 ```
 
@@ -63,6 +64,12 @@ The normalized PostgreSQL write model is migration-managed through `Base.metadat
 |---|---|
 | `search` | Queries `frontend_search_index` with OR-combined filters (gene_ids, variant_ids, doi, pmid, field_id) |
 | `refresh` | Truncates and rebuilds the read projection from canonical evidence and source identifiers |
+
+### redis/connection.py
+
+| Function | Description |
+|---|---|
+| `build_redis_client` | Creates an async Redis client from config (host, port, db, password) |
 
 ### redis/cache_repo.py
 

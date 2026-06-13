@@ -21,6 +21,30 @@ uv run python main.py --port 8002
 
 Set `DOC_PARSE_MODEL_ID=opendatalab/MinerU2.5-Pro-2604-1.2B` in `.env.local` to enable document extraction.
 
+## Directory Structure
+
+```
+app/
+├── __init__.py
+├── config.py           # Settings via pydantic-settings (layered YAML + env vars)
+├── api/
+│   ├── health.py       # GET /health — model readiness per service
+│   ├── embedding.py    # POST /v1/embeddings — text to vector
+│   ├── rerank.py       # POST /v1/rerank — query-document relevance scoring
+│   └── vlm.py          # POST /v1/chat/completions — multimodal document extraction
+├── domain/
+│   ├── base.py         # ABC BaseModelService (lazy loading + unload lifecycle)
+│   ├── embedding.py    # EmbeddingService (Qwen3-Embedding-0.6B via vllm)
+│   ├── rerank.py       # RerankService (bge-reranker-v2-m3 via vllm)
+│   └── vlm.py          # VLMService (MinerU2.5-Pro via vllm)
+├── models/
+│   └── schemas.py      # Pydantic request/response schemas
+├── enums/
+│   └── model_type.py   # ModelType enum: EMBEDDING, RERANK, LLM, VLM
+└── utils/
+    └── logger.py       # loguru config + request monitoring ASGI middleware
+```
+
 ## Architecture
 
 ```
@@ -159,7 +183,7 @@ All request/response models are Pydantic `BaseModel` subclasses. Key types:
 
 ### Configuration (app/config.py)
 
-`Settings` is a `pydantic-settings.BaseSettings` singleton reading from `.env.local` / `.env`.
+`Settings` is a `pydantic-settings.BaseSettings` singleton. Configuration is loaded from the backend's layered YAML files (`backend/config/`) via `acmg_config_loader`, then overridden by environment variables.
 
 | Env var | Default | Purpose |
 |---------|---------|---------|
@@ -167,10 +191,14 @@ All request/response models are Pydantic `BaseModel` subclasses. Key types:
 | `PORT` | `8001` | Listen port |
 | `EMBEDDING_MODEL_ID` | `Qwen/Qwen3-Embedding-0.6B` | HuggingFace model ID |
 | `EMBEDDING_DIMENSION` | `1024` | Output vector dimension |
+| `EMBEDDING_MAX_MODEL_LEN` | `32768` | Max sequence length for embedding model |
 | `RERANK_MODEL_ID` | `BAAI/bge-reranker-v2-m3` | HuggingFace model ID |
 | `DOC_PARSE_MODEL_ID` | `""` (empty = disabled) | MinerU VLM model; set to enable |
 | `DOC_PARSE_IMAGE_ANALYSIS` | `false` | Enable chart/figure analysis in MinerU |
-| `VLLM_GPU_MEMORY_UTILIZATION` | `0.9` | vllm GPU memory fraction |
+| `EMBEDDING_GPU_MEMORY_UTILIZATION` | `0.9` | vllm GPU memory fraction for embedding |
+| `RERANK_GPU_MEMORY_UTILIZATION` | `0.9` | vllm GPU memory fraction for rerank |
+| `DOC_PARSE_GPU_MEMORY_UTILIZATION` | `0.9` | vllm GPU memory fraction for VLM |
+| `LOG_LEVEL` | `info` | Logging level (debug, info, warning, error) |
 | `HF_HOME` | `~/.cache/huggingface/hub` | Model cache directory |
 
 Access via `from app.config import get_config; cfg = get_config()`.
@@ -422,3 +450,4 @@ uv run pytest -v
 - No end-to-end tests from the backend gateway to the model server.
 - Rerank service has no `_load()` test (the `test_rerank_vllm.py` only tests `infer()`).
 - Health endpoint only tested implicitly via `test_main_wiring.py`.
+- Config tests include `test_model_server_config.py` and `test_config_loader_path.py` for settings validation.
