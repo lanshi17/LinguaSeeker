@@ -42,6 +42,9 @@ if TYPE_CHECKING:
     )
 
 _RETRYABLE_ERRORS = build_retryable_errors() + (CatalogExtractionError,)
+# FileNotFoundError/PermissionError are OSError subclasses but are permanent,
+# not transient — must not be retried.
+_PERMANENT_OS_ERRORS = (FileNotFoundError, PermissionError, IsADirectoryError)
 
 
 class Phase2Adapter:
@@ -198,6 +201,12 @@ class Phase2Adapter:
                 state.skip_phase_3_reason,
             )
             return state
+
+        except _PERMANENT_OS_ERRORS as e:
+            raise PermanentPhaseError(
+                f"Phase 2 permanent file error: {e}",
+                phase=2,
+            ) from e
 
         except _RETRYABLE_ERRORS as e:
             raise RetryablePhaseError(

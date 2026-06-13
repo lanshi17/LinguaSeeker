@@ -112,7 +112,11 @@ class SourceLocation(BaseModel):
     page: int = 0
     start_offset: int = -1
     end_offset: int = -1
-    context_type: Literal["text", "table", "figure", "supplementary", "caption"]
+    context_type: Literal[
+        "text", "table", "figure", "supplementary", "caption",
+        "abstract", "introduction", "methods", "results", "discussion",
+        "conclusion", "background",
+    ]
     context_ref: str
     text_snippet: str
     block_index: int = -1

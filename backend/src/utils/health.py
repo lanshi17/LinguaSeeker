@@ -77,12 +77,12 @@ async def _check_redis() -> bool:
 
         client = get_redis_client()
         if client is None:
-            logger.warning("Redis health check skipped: client not initialized")
+            logger.debug("Redis health check skipped: client not initialized")
             return False
         pong = await client.ping()
         return bool(pong)
     except Exception as exc:
-        logger.warning("Redis health check failed: {}", exc)
+        logger.debug("Redis health check failed: {}", exc)
         return False
 
 
