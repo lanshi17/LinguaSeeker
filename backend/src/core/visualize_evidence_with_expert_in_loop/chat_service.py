@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.visualize_evidence_with_expert_in_loop.contracts import (
+    ChatAction,
     ChatMessageResponse,
     ChatSessionResponse,
     EvidenceCardPayload,
@@ -29,7 +30,38 @@ if TYPE_CHECKING:
         ChatLLMProvider,
     )
 
-# Pre-compiled regex patterns for _detect_intent (avoid per-call compilation)
+CHAT_AGENT_CAPABILITIES_PROMPT = (
+    "You are the Cross Evidence orchestration assistant. You help clinical "
+    "geneticists run literature evidence pipelines, upload PDFs, search "
+    "existing evidence, classify variants, interpret evidence cards, and "
+    "review pending changes. You ALWAYS reply in the same language as the "
+    "user. Do NOT provide a clinical diagnosis.\n\n"
+    "You have six dispatchable capabilities. Each requires specific slots "
+    "before it can run. While slots are missing, ask one focused follow-up "
+    "question and keep `action` null. Once every required slot is gathered, "
+    "set `action.intent` to the matching value and put the slots in "
+    "`action.slots`. Keep the reply natural — do not echo JSON.\n\n"
+    "Capabilities:\n"
+    "1. start-pipeline — run a literature → extraction pipeline.\n"
+    "   slots: { source_type: 'online'|'local', query?: str, "
+    "identifiers?: list as comma-string }. For online: need at least one of "
+    "query or identifiers. For local: ask the user to upload a PDF instead.\n"
+    "2. upload-pdf — guide the user through PDF upload.\n"
+    "   slots: { filename?: str }. Always dispatch even with empty slots so "
+    "the upload form opens.\n"
+    "3. search-evidence — search the existing evidence database.\n"
+    "   slots: { gene?, variant?, disease?, pmid?, doi? }. Need at least one.\n"
+    "4. classify-variant — propose ACMG classification (placeholder).\n"
+    "   slots: { variant: str, gene?, disease? }. Need variant.\n"
+    "5. interpret-evidence — summarise an evidence card.\n"
+    "   slots: { evidence_id?: uuid, gene?, variant? }.\n"
+    "6. review-changes — list pending review items.\n"
+    "   slots: { filter?: 'awaiting_review'|'all' }. Default filter is "
+    "'awaiting_review'.\n\n"
+    "Identity questions ('who are you?', '你是谁') get a direct answer with "
+    "action=null. Casual greetings get a brief greeting with action=null."
+)
+
 _QUESTION_PATTERNS: list[re.Pattern[str]] = [
     re.compile(p)
     for p in [
@@ -109,6 +141,7 @@ class ChatService:
         content: str,
         evidence_id: UUID | None = None,
         entity_id: UUID | None = None,
+        action: ChatAction | None = None,
     ) -> ChatMessageResponse:
         """Append a message to a chat session."""
         message = ChatMessage(
@@ -117,6 +150,7 @@ class ChatService:
             content=content,
             evidence_id=evidence_id,
             entity_id=entity_id,
+            action=action.model_dump(mode="json") if action else None,
         )
         self._session.add(message)
         await self._session.flush()
@@ -182,6 +216,14 @@ class ChatService:
     @staticmethod
     def _to_message_response(message: ChatMessage) -> ChatMessageResponse:
         """Convert a ChatMessage ORM row to a validated API response."""
+        action: ChatAction | None = None
+        if message.action:
+            try:
+                action = ChatAction.model_validate(message.action)
+            except Exception as exc:
+                logger.warning("Stored chat action failed validation: {}", exc)
+                action = None
+
         return ChatMessageResponse(
             message_id=message.message_id,
             chat_session_id=message.chat_session_id,
@@ -189,6 +231,7 @@ class ChatService:
             content=message.content,
             evidence_id=message.evidence_id,
             entity_id=message.entity_id,
+            action=action,
             created_at=message.created_at,
         )
 
@@ -302,13 +345,7 @@ class ChatService:
                 "precise and cite specific fields from the evidence card."
             )
 
-        return (
-            "You are the Cross Evidence assistant. Help users start literature "
-            "evidence extraction pipelines, upload biomedical PDFs, search "
-            "existing evidence, and understand evidence extraction results. "
-            "Do not provide a clinical diagnosis. When evidence is unavailable, "
-            "state what information is needed."
-        )
+        return CHAT_AGENT_CAPABILITIES_PROMPT
 
     async def generate_reply(
         self,
@@ -369,13 +406,11 @@ class ChatService:
 
         Yields:
             {"type": "text", "content": "..."} for each chunk
+            {"type": "action", "intent": ..., "slots": {...}} when the agent dispatches
             {"type": "done"} on completion
             {"type": "error", "message": "..."} on failure
         """
         intent = self._detect_intent(user_message)
-
-        if intent == "note":
-            return
 
         if intent == "correction" and evidence_id:
             yield {
@@ -405,6 +440,16 @@ class ChatService:
             )
             provider = ChatLLMProvider()
 
+        if not context:
+            async for event in self._stream_router_envelope(
+                provider=provider,
+                session_id=session_id,
+                system_prompt=system_prompt,
+                user_message=user_message,
+            ):
+                yield event
+            return
+
         buffered: list[str] = []
         try:
             async for chunk in provider.stream(
@@ -419,7 +464,6 @@ class ChatService:
             yield {"type": "error", "message": str(e)}
             return
 
-        # Persist complete streamed reply so it appears in message history
         complete_reply = "".join(buffered)
         if complete_reply:
             await self.append_message(
@@ -428,3 +472,59 @@ class ChatService:
                 content=complete_reply,
                 evidence_id=evidence_id,
             )
+
+    async def _stream_router_envelope(
+        self,
+        *,
+        provider: ChatLLMProvider,
+        session_id: UUID,
+        system_prompt: str,
+        user_message: str,
+    ):
+        history = await self._load_router_history(session_id=session_id)
+        try:
+            reply, action = await provider.route_intent(
+                system_prompt=system_prompt,
+                user_message=user_message,
+                history=history,
+            )
+        except Exception as e:
+            yield {"type": "error", "message": str(e)}
+            return
+
+        if reply:
+            yield {"type": "text", "content": reply}
+
+        if action is not None:
+            yield {
+                "type": "action",
+                "intent": action.intent,
+                "slots": action.slots,
+            }
+
+        yield {"type": "done"}
+
+        if reply or action is not None:
+            await self.append_message(
+                session_id=session_id,
+                role="assistant",
+                content=reply or "",
+                action=action,
+            )
+
+    async def _load_router_history(
+        self,
+        *,
+        session_id: UUID,
+        limit: int = 10,
+    ) -> list[dict[str, str]]:
+        stmt = (
+            select(ChatMessage)
+            .where(ChatMessage.chat_session_id == session_id)
+            .order_by(ChatMessage.created_at.desc())
+            .limit(limit)
+        )
+        result = await self._session.execute(stmt)
+        rows = list(result.scalars().all())
+        rows.reverse()
+        return [{"role": m.role, "content": m.content} for m in rows if m.content]
