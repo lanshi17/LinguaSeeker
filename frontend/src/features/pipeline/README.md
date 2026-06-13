@@ -10,9 +10,12 @@ features/pipeline/
 │   ├── PipelineSubmitForm.tsx   Source type selector + file upload / query input
 │   ├── PipelineStatusView.tsx   Orchestrates timeline + phase cards
 │   ├── PhaseTimeline.tsx        Visual step-by-step progress (numbered circles)
-│   └── PhaseDetailCard.tsx      Per-phase status card with timing and errors
+│   ├── PhaseDetailCard.tsx      Per-phase status card with timing and errors
+│   ├── RunHistory.tsx           List of past pipeline runs
+│   └── RunListItem.tsx          Individual run row in history list
 ├── hooks/
 │   ├── usePipelineRun.ts        useMutation for POST /pipeline/run
+│   ├── usePipelineRuns.ts       useQuery for listing pipeline runs
 │   ├── usePipelineStatus.ts     useQuery with 2s polling, auto-stops on terminal state
 │   └── usePhaseTimeline.ts      Projects status dict to ordered PhaseTimelineStep[]
 ├── services/pipeline.ts         startPipelineRun(), getPipelineStatus()
