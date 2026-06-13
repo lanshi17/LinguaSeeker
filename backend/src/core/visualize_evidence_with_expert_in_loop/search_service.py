@@ -170,47 +170,90 @@ def _build_highlight(
 
 
 
+def _concat_blocks(doc_data: dict) -> str | None:
+    """Concatenate text blocks from a persisted JSON document."""
+    blocks = doc_data.get("blocks", [])
+    if blocks:
+        text = "\n\n".join(
+            block.get("text", "").strip()
+            for block in blocks
+            if block.get("text")
+        )
+        if text:
+            return text
+    formatted = doc_data.get("formatted_text", "").strip()
+    return formatted or None
+
+
+def _load_from_dir(doc_dir: Path, track: str) -> str | None:
+    """Try to load and concatenate text from a single document directory."""
+    doc_file = doc_dir / f"{track}.json"
+    if not doc_file.exists():
+        return None
+    try:
+        with open(doc_file, "r", encoding="utf-8") as f:
+            return _concat_blocks(json.load(f))
+    except Exception:
+        logger.warning("Failed to load full {} text from {}", track, doc_file)
+        return None
+
+
 def _load_full_document_text(
     source_document_id: str | UUID,
     track: str = "original",
+    identifiers: dict[str, str] | None = None,
 ) -> str | None:
-    """Load full text content for a source document from phase 2 pipeline output.
+    """Load full text content for a source document from pipeline output.
 
-    Looks for JSON files in the pipeline data directory structure.
+    Searches three locations in order:
+    1. ``backend/data/pipeline/*/phase_2/{doc_id}/`` — current pipeline output.
+    2. ``backend/output/cross_lingual/**/{doc_id}/`` — legacy output by UUID.
+    3. ``backend/output/cross_lingual/**/{identifier}/`` — legacy output by DOI/PMID.
+
     Returns concatenated text from all blocks, or None if not found.
     """
-    # Base data directory
-    data_root = Path(__file__).resolve().parents[4] / "data" / "pipeline"
-    if not data_root.exists():
-        return None
-
-    # Convert UUID to string
+    backend_root = Path(__file__).resolve().parents[3]
     doc_id_str = str(source_document_id)
 
-    # Search for the document across all pipeline runs
-    for pipeline_dir in data_root.iterdir():
-        if not pipeline_dir.is_dir():
-            continue
-        phase2_dir = pipeline_dir / "phase_2"
-        if not phase2_dir.exists():
-            continue
-        doc_dir = phase2_dir / doc_id_str
-        if not doc_dir.exists():
-            continue
-        
-        # Load the requested track
-        doc_file = doc_dir / f"{track}.json"
-        if not doc_file.exists():
-            continue
+    # 1. Current pipeline output: backend/data/pipeline/{run_id}/phase_2/{doc_id}/
+    pipeline_root = backend_root / "data" / "pipeline"
+    if pipeline_root.exists():
+        for pipeline_dir in pipeline_root.iterdir():
+            if not pipeline_dir.is_dir():
+                continue
+            doc_dir = pipeline_dir / "phase_2" / doc_id_str
+            result = _load_from_dir(doc_dir, track)
+            if result:
+                return result
 
-        try:
-            with open(doc_file, "r", encoding="utf-8") as f:
-                doc_data = json.load(f)
-            # Concatenate all text blocks
-            return "\n\n".join(block.get("text", "").strip() for block in doc_data.get("blocks", []) if block.get("text"))
-        except Exception:
-            logger.warning("Failed to load full {} text for document {}", track, doc_id_str)
-            return None
+    # 2. Legacy output: backend/output/cross_lingual/{lang}/{doc_id}/
+    legacy_root = backend_root / "output" / "cross_lingual"
+    if legacy_root.exists():
+        # Try by UUID first
+        for lang_dir in legacy_root.iterdir():
+            if not lang_dir.is_dir():
+                continue
+            result = _load_from_dir(lang_dir / doc_id_str, track)
+            if result:
+                return result
+
+        # 3. Try by external identifiers (DOI, PMID) for legacy data
+        if identifiers:
+            search_keys = [
+                v.replace("/", "_")
+                for v in identifiers.values()
+                if v
+            ]
+            for lang_dir in legacy_root.iterdir():
+                if not lang_dir.is_dir():
+                    continue
+                for child in lang_dir.iterdir():
+                    if not child.is_dir():
+                        continue
+                    if child.name in search_keys or child.name.replace("/", "_") in search_keys:
+                        result = _load_from_dir(child, track)
+                        if result:
+                            return result
 
     return None
 
@@ -618,10 +661,10 @@ class SearchService:
             pmid=identifiers.get("pmid"),
             doi=identifiers.get("doi"),
             original_document_text=_load_full_document_text(
-                source_document_id, track="original"
+                source_document_id, track="original", identifiers=identifiers,
             ),
             translated_document_text=_load_full_document_text(
-                source_document_id, track="translated"
+                source_document_id, track="translated", identifiers=identifiers,
             ),
             gene=gene,
             variant=variant,
