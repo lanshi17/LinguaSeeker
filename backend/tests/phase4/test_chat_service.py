@@ -32,6 +32,14 @@ def test_detect_intent_correction(mock_session):
 
 
 def test_detect_intent_note(mock_session):
-    """Messages without question or correction patterns are notes."""
+    """Ambiguous messages default to "question" (per docstring contract)."""
     service = ChatService(mock_session)
-    assert service._detect_intent("I reviewed this evidence") == "note"
+    assert service._detect_intent("I reviewed this evidence") == "question"
+
+
+def test_detect_intent_identity_questions_default_to_question(mock_session):
+    """Identity questions (who are you / 你是谁) reach the LLM, not 'note'."""
+    service = ChatService(mock_session)
+    assert service._detect_intent("who are you") == "question"
+    assert service._detect_intent("Who are you?") == "question"
+    assert service._detect_intent("你是谁") == "question"
