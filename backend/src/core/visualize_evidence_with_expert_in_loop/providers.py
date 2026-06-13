@@ -5,8 +5,10 @@ import json
 from collections.abc import AsyncIterator
 
 import httpx
+from loguru import logger
 
 from src.core.config import get_config
+from src.core.visualize_evidence_with_expert_in_loop.contracts import ChatAction
 
 
 class ReasoningLLMProvider:
@@ -299,3 +301,82 @@ class ChatLLMProvider:
         response.raise_for_status()
         data = response.json()
         return data["choices"][0]["message"]["content"]
+
+    async def route_intent(
+        self,
+        *,
+        system_prompt: str,
+        user_message: str,
+        history: list[dict[str, str]] | None = None,
+    ) -> tuple[str, ChatAction | None]:
+        """Ask the LLM for a `{reply, action}` JSON envelope.
+
+        Returns a `(reply_text, action)` pair. ``action`` is ``None`` when the
+        agent is still gathering slots; the caller streams ``reply_text`` and
+        emits the action only when present.
+        """
+        self._ensure_configured()
+
+        envelope_instruction = (
+            "Respond ONLY with a single JSON object matching this schema: "
+            '{"reply": string, "action": null | {"intent": string, '
+            '"slots": object}}. '
+            "Set action=null while you still need information from the user; "
+            "set action={...} once you have enough slots to dispatch."
+        )
+        full_system = f"{system_prompt}\n\n{envelope_instruction}"
+
+        messages: list[dict[str, str]] = [{"role": "system", "content": full_system}]
+        if history:
+            messages.extend(history)
+        messages.append({"role": "user", "content": user_message})
+
+        payload: dict[str, object] = {
+            "model": self._model,
+            "messages": messages,
+            "max_tokens": self._max_tokens,
+            "response_format": {"type": "json_object"},
+        }
+        if self._temperature is not None:
+            payload["temperature"] = self._temperature
+
+        client = self._get_client()
+        response = await client.post(
+            f"{self._base_url}/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self._api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
+        response.raise_for_status()
+        data = response.json()
+        raw = data["choices"][0]["message"]["content"]
+        return self._parse_envelope(raw)
+
+    @staticmethod
+    def _parse_envelope(raw: str) -> tuple[str, ChatAction | None]:
+        try:
+            envelope = json.loads(raw)
+        except json.JSONDecodeError:
+            logger.warning("Chat envelope JSON decode failed; falling back to plain text")
+            return raw, None
+
+        if not isinstance(envelope, dict):
+            return raw, None
+
+        reply = envelope.get("reply")
+        if not isinstance(reply, str):
+            reply = ""
+
+        action_payload = envelope.get("action")
+        if action_payload is None:
+            return reply, None
+
+        try:
+            action = ChatAction.model_validate(action_payload)
+        except Exception as exc:
+            logger.warning("Chat action validation failed: {}", exc)
+            return reply, None
+
+        return reply, action

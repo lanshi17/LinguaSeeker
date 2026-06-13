@@ -1945,3 +1945,44 @@ LLMPoolAdapter: round-robin 轮询 + 401/403 自动 failover
 - 8 new test files with 23 tests total
 
 **Verification**: All 23 new tests pass. All 16 existing search_service tests pass. Full test suite passes (except pre-existing `test_download_with_doi_fallback` failure unrelated to changes).
+
+---
+
+## 2026-06-13 — Structured Intent Routing for Chat Agent
+
+### Problem
+The chat agent had two regex-based intent layers:
+1. Frontend `detectChatActionIntent` in `frontend/src/features/chat/utils/intent.ts` decided whether to open a form
+2. Backend `ChatService._detect_intent` decided whether to call the LLM at all (treating "notes" as no-reply)
+
+This produced silent empty assistant bubbles for messages that didn't match any pattern (e.g. "你是谁") because the backend classified them as "note" and skipped the LLM. The frontend regex also couldn't gather slots — it always opened a blank form.
+
+### Root Cause
+Hand-written regexes cannot conversationally gather PICO/PMID/PDF slots, and the dual-layer heuristic produced unpredictable silences when neither layer matched.
+
+### Solution
+- Single structured protocol driven by the chat LLM in JSON mode (existing pattern from `extract_evidence/providers.py::invoke_structured`).
+- New SSE event type `{type:"action", intent, slots}` emitted between text chunks and `done` once the LLM signals dispatch.
+- Frontend stores the action on the bubble and renders a dedicated `ChatActionBubble` with click-to-open, removing the regex layer entirely.
+
+### Pitfalls Hit
+1. **Sqlite test DB enforces NOT NULL on `position_hash`/`text_hash`/`entity_scope_hash`/`current_best_status`** — the production schema has these as required, so test fixtures need explicit values even though the prod DB also defaults them. First fixture attempt with only `field_id` + `active_payload` failed integrity check.
+2. **`useXChat` `setMessages` is unused** after structured-action wiring — initial draft kept the old `appendLocalUserMessage` helper which optimistically inserted a "local" user bubble. With the structured path the user message is appended via the regular request flow, so the local-message path was dead code that ESLint flagged.
+3. **Old regex test file (`frontend/tests/features/chat/intent.test.ts`) still imported `detectChatActionIntent`** — deleting `intent.ts` broke the type-check until the test was also removed.
+
+### Prevention
+- Always run `npm run type-check` after deleting a frontend module — orphaned imports are caught immediately.
+- For backend test fixtures, mirror the actual production NOT NULL constraints rather than relying on default values.
+- When replacing a heuristic layer with an LLM-driven path, delete the heuristic and its tests in the same change to avoid stale dispatch sites.
+
+### Files Changed
+- `backend/src/core/visualize_evidence_with_expert_in_loop/contracts.py` — add `ChatAction` + `ChatActionIntent` Literal, `action` field on `ChatMessageResponse`
+- `backend/src/core/visualize_evidence_with_expert_in_loop/providers.py` — add `ChatLLMProvider.route_intent` (JSON-mode envelope parsing)
+- `backend/src/core/visualize_evidence_with_expert_in_loop/chat_service.py` — `_stream_router_envelope` path emitting action events; `CHAT_AGENT_CAPABILITIES_PROMPT`; persist action via `append_message(action=...)`
+- `backend/src/dao/postgresql/models.py` — `ChatMessage.action: JSONB | None`
+- `database/migrations/versions/2026-06-13_add_chat_message_action.py` — schema migration
+- `frontend/src/features/chat/types/actions.ts`, `utils/sse.ts`, `utils/messageHistory.ts` — protocol types
+- `frontend/src/features/chat/components/ChatActionBubble.tsx` — new dispatch UI
+- `frontend/src/features/chat/components/ChatView.tsx` — replace regex dispatch with structured handler; pre-fill form from slots
+- `frontend/src/features/chat/components/forms/PipelineStartForm.tsx` — accept `defaultQuery`
+- Removed: `frontend/src/features/chat/utils/intent.ts`, `frontend/tests/features/chat/intent.test.ts`

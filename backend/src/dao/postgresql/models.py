@@ -613,6 +613,10 @@ class ChatMessage(Base):
         ForeignKey("normalized_entities.entity_id"),
         nullable=True,
     )
+    action: Mapped[dict[str, object] | None] = mapped_column(
+        JSONB,
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

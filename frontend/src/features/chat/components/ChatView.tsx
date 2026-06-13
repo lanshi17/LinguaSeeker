@@ -26,10 +26,11 @@ import {
   toUniqueChatMessageKeys,
   toXChatDefaultMessages,
 } from "../utils/messageHistory";
-import { detectChatActionIntent } from "../utils/intent";
+import type { ChatAction, ChatActionIntent } from "../types/actions";
 import { ChatMarkdown } from "../utils/markdown";
 import { PipelineStartForm, PipelineStatusCard } from "./forms";
 import type { PipelineFormData } from "./forms";
+import { ChatActionBubble } from "./ChatActionBubble";
 import { ChatEmptyState } from "./ChatEmptyState";
 import { CHAT_PROMPTS } from "./prompts";
 import { apiClient } from "@/lib/api/client";
@@ -197,7 +198,6 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     isRequesting,
     abort,
     queueRequest,
-    setMessages,
   } = useXChat({
     provider: activeProvider,
     conversationKey: activeConversationKey,
@@ -205,7 +205,13 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   });
 
   // ── Embedded form state (declared before callbacks that use it) ──
-  const [activeForm, setActiveForm] = useState<string | null>(null);
+  const [activeForm, setActiveForm] = useState<ChatActionIntent | null>(null);
+  const [activeFormSlots, setActiveFormSlots] = useState<
+    ChatAction["slots"] | null
+  >(null);
+  const [dispatchedActions, setDispatchedActions] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [pipelineStatus, setPipelineStatus] = useState<{
     runId: string;
     status: string;
@@ -243,18 +249,44 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     return createAndActivateSession();
   }, [activeConversationKey, createAndActivateSession]);
 
-  const appendLocalUserMessage = useCallback(
-    (content: string) => {
-      setMessages((current) => [
-        ...current,
-        {
-          id: `local_${Date.now()}_${current.length}`,
-          message: { role: "user" as const, content },
-          status: "local" as const,
-        },
-      ]);
+  const handleDispatchAction = useCallback(
+    (action: ChatAction, key?: string) => {
+      if (key) {
+        setDispatchedActions((prev) => {
+          if (prev.has(key)) return prev;
+          const next = new Set(prev);
+          next.add(key);
+          return next;
+        });
+      }
+
+      if (action.intent === "search-evidence") {
+        const params = new URLSearchParams();
+        for (const [slot, value] of Object.entries(action.slots ?? {})) {
+          if (value) params.set(slot, value);
+        }
+        const qs = params.toString();
+        window.location.href = qs ? `/evidence?${qs}` : "/evidence";
+        return;
+      }
+
+      if (action.intent === "review-changes") {
+        const filter = action.slots?.filter ?? "awaiting_review";
+        window.location.href = `/evidence?review_status=${filter ?? "awaiting_review"}`;
+        return;
+      }
+
+      if (action.intent === "start-pipeline" || action.intent === "upload-pdf") {
+        setActiveForm(action.intent);
+        setActiveFormSlots(action.slots ?? {});
+        return;
+      }
+
+      antdMessage.info(
+        `${action.intent} is recognised but its dedicated form is not implemented yet.`,
+      );
     },
-    [setMessages],
+    [setActiveForm, setActiveFormSlots, setDispatchedActions],
   );
 
   // ── Send message: create session if needed, POST to persist, then stream AI reply ──
@@ -264,29 +296,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       if (!trimmed) return;
 
       setActiveForm(null);
-
-      const actionIntent = detectChatActionIntent(trimmed);
-      if (actionIntent === "search-evidence") {
-        window.location.href = "/evidence";
-        return;
-      }
-
-      if (actionIntent === "start-pipeline" || actionIntent === "upload-pdf") {
-        try {
-          const sessionKey = await ensureActiveSession();
-          await sendChatMessage(sessionKey, trimmed);
-          captureFirstMessageLabel(sessionKey, trimmed);
-
-          if (sessionKey === activeConversationKey) {
-            appendLocalUserMessage(trimmed);
-          }
-
-          setActiveForm(actionIntent);
-        } catch {
-          antdMessage.error("Failed to open evidence extraction form");
-        }
-        return;
-      }
+      setActiveFormSlots(null);
 
       try {
         const sessionKey = await ensureActiveSession();
@@ -308,12 +318,12 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     },
     [
       activeConversationKey,
-      appendLocalUserMessage,
       captureFirstMessageLabel,
       ensureActiveSession,
       onRequest,
       queueRequest,
       setActiveForm,
+      setActiveFormSlots,
     ],
   );
 
@@ -414,24 +424,36 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   const bubbleItems = useMemo(() => {
     const messageKeys = toUniqueChatMessageKeys(messages);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const items: any[] = messages.map(({ message, status }, index) => ({
-      key: messageKeys[index],
-      role: message.role,
-      content: message.content,
-      streaming: status === "loading" || status === "updating",
-      loading: status === "loading" && !message.content,
-      // Render assistant replies as Markdown; user messages are typically
-      // plain text and pass through verbatim.
-      ...(message.role === "assistant"
-        ? {
-            contentRender: (content: string) => (
-              <ChatMarkdown source={content} />
-            ),
-          }
-        : {}),
-    }));
+    const items: any[] = messages.map(({ id, message, status }, index) => {
+      const messageKey = messageKeys[index];
+      const action = (message as { action?: ChatAction }).action;
+      const dispatchKey = `${id ?? messageKey}`;
 
-    // Append form bubble if active
+      const renderAssistant = (content: string) => (
+        <div>
+          <ChatMarkdown source={content} />
+          {action ? (
+            <ChatActionBubble
+              action={action}
+              dispatched={dispatchedActions.has(dispatchKey)}
+              onDispatch={(payload) => handleDispatchAction(payload, dispatchKey)}
+            />
+          ) : null}
+        </div>
+      );
+
+      return {
+        key: messageKey,
+        role: message.role,
+        content: message.content,
+        streaming: status === "loading" || status === "updating",
+        loading: status === "loading" && !message.content,
+        ...(message.role === "assistant"
+          ? { contentRender: renderAssistant }
+          : {}),
+      };
+    });
+
     if (activeForm === "start-pipeline" || activeForm === "upload-pdf") {
       items.push({
         key: "__form__",
@@ -440,8 +462,13 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         variant: "borderless" as const,
         contentRender: () => (
           <PipelineStartForm
-            key={activeForm}
+            key={`${activeForm}:${activeFormSlots?.query ?? ""}`}
             defaultSourceType={activeForm === "upload-pdf" ? "local" : "online"}
+            defaultQuery={
+              activeForm === "start-pipeline"
+                ? activeFormSlots?.query ?? undefined
+                : undefined
+            }
             onSubmit={handlePipelineSubmit}
             isSubmitting={isRequesting}
           />
@@ -449,7 +476,6 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       });
     }
 
-    // Append status bubble if pipeline is running
     if (pipelineStatus) {
       items.push({
         key: "__status__",
@@ -470,9 +496,12 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   }, [
     messages,
     activeForm,
+    activeFormSlots,
     pipelineStatus,
     isRequesting,
     handlePipelineSubmit,
+    dispatchedActions,
+    handleDispatchAction,
   ]);
 
   // ── Prompt click handler ──
@@ -481,6 +510,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       try {
         await ensureActiveSession();
         setActiveForm(key);
+        setActiveFormSlots({});
       } catch {
         antdMessage.error("Failed to create session");
       }
@@ -489,6 +519,11 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
     if (key === "search-evidence") {
       window.location.href = "/evidence";
+      return;
+    }
+
+    if (key === "review-changes") {
+      window.location.href = "/evidence?review_status=awaiting_review";
       return;
     }
 
