@@ -78,11 +78,16 @@ async def _try_startup_lock(engine) -> bool:
 
     try:
         raw_conn = await engine.raw_connection()
-        result = await raw_conn.exec_driver_sql(
-            "SELECT pg_try_advisory_lock(hashtext('cross_evidence_backend_startup'))"
-        )
-        row = result.fetchone()
-        acquired = bool(row[0]) if row else False
+        try:
+            result = await raw_conn.exec_driver_sql(
+                "SELECT pg_try_advisory_lock(hashtext('cross_evidence_backend_startup'))"
+            )
+            row = result.fetchone()
+            acquired = bool(row[0]) if row else False
+        except Exception:
+            await raw_conn.close()
+            return True
+
         if acquired:
             _startup_lock_raw_conn = raw_conn
         else:
@@ -167,7 +172,9 @@ async def lifespan(app: FastAPI):
         checks = await check_all_connections()
         failed = checks.failed_services()
         if failed:
-            logger.warning("Startup connectivity check failed: {}", ", ".join(failed))
+            for svc in failed:
+                logger.log("DEBUG" if svc == "redis" else "WARNING",
+                           "Startup connectivity check failed: {}", svc)
         else:
             logger.info("Startup connectivity check passed")
     except Exception as exc:
@@ -191,14 +198,15 @@ async def lifespan(app: FastAPI):
 
     try:
         phase4_factory = get_phase4_factory()
-        await phase4_factory.close()
-    except Exception:
-        logger.warning("Phase4ServiceFactory close failed during shutdown")
+        if phase4_factory is not None:
+            await phase4_factory.close()
+    except Exception as exc:
+        logger.debug("Phase4ServiceFactory close failed during shutdown: {}", exc)
     finally:
         try:
             await _wiring.dispose_redis()
-        except Exception:
-            logger.warning("Redis disposal failed during shutdown")
+        except Exception as exc:
+            logger.debug("Redis disposal failed during shutdown: {}", exc)
         try:
             await _wiring.dispose_engine()
         except Exception:
