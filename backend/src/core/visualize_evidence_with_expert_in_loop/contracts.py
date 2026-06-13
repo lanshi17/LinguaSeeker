@@ -347,6 +347,8 @@ class EvidenceGroupDetailResponse(BaseModel):
     variant: str | None = None
     disease: str | None = None
     classification: str | None = None
+    original_document_text: str | None = None
+    translated_document_text: str | None = None
     item_count: int
     avg_confidence: float | None = None
     distribution: EvidenceFieldDistribution

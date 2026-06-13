@@ -1,3 +1,4 @@
+[2026-06-13] [Fix bilingual evidence view showing fragments instead of full document text] [done]
 [2026-06-11] [Standalone chat session, local upload prompt, and real AI streaming chat] [done]
 [2026-06-08] Graceful shutdown for pipeline runner: added shutdown() method to PipelineRunner that waits for active tasks before DB disposal; lifespan calls it with 90s timeout; created scripts/start_backend_dev.sh with --reload-exclude patterns and --timeout-graceful-shutdown 120 [done]
 [2026-06-08] Database schema review & optimization: added 12 indexes (JSONB expression, GIN, composite), fixed N+1 query in upsert_canonical_evidence, added lazy="raise" to all ORM relationships, fixed 12 review findings (recover_orphaned_runs WHERE+error_phase+tz+LSP, runner None-guard, pipeline_run_states JSONB idx, lock_timeout, tuple_() chunking, dropped 4 redundant indexes, removed dup log, added test coverage) [done]

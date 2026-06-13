@@ -1986,3 +1986,36 @@ Hand-written regexes cannot conversationally gather PICO/PMID/PDF slots, and the
 - `frontend/src/features/chat/components/ChatView.tsx` — replace regex dispatch with structured handler; pre-fill form from slots
 - `frontend/src/features/chat/components/forms/PipelineStartForm.tsx` — accept `defaultQuery`
 - Removed: `frontend/src/features/chat/utils/intent.ts`, `frontend/tests/features/chat/intent.test.ts`
+
+## 2026-06-13: Frontend bilingual view shows evidence snippets instead of full document text
+
+**Problem**: The bilingual evidence detail view (`/evidence/detail?view=compare`) showed individual evidence snippets as separate "aligned paragraphs" instead of rendering the full source document text with evidence highlights overlaid.
+
+**Investigation**: Traced the data flow from frontend to backend:
+1. Frontend `buildEvidenceDocument()` (evidenceDocument.ts) checks `detail.original_document_text` — if present, renders full text with highlights; if absent, falls back to one paragraph per trace snippet.
+2. The frontend type `EvidenceGroupDetailResponse` already declared `original_document_text` and `translated_document_text` as optional fields.
+3. Backend `SearchService.get_group_detail()` (search_service.py) loads full text via `_load_full_document_text()` and passes it to `EvidenceGroupDetailResponse(...)`.
+4. **Bug 1 — Pydantic silently dropped the fields**: `EvidenceGroupDetailResponse` Pydantic model (contracts.py) did NOT declare these two fields. Pydantic v2 default `extra="ignore"` silently discarded them during model construction.
+5. **Bug 2 — Wrong filesystem path**: `_load_full_document_text()` used `Path(__file__).resolve().parents[4] / "data" / "pipeline"` which resolved to `<repo_root>/data/pipeline/`, but the pipeline writer (`phase_2_adapter.py`) writes to `<backend_root>/data/pipeline/` (using `parents[3]`). Neither directory contained data.
+6. **Bug 3 — No legacy fallback**: Actual document data existed at `backend/output/cross_lingual/{lang}/{doc_id}/` (legacy output), but the reader only searched `data/pipeline/`.
+
+**Root cause**: Three independent bugs compounded:
+- Missing Pydantic field declarations → fields silently dropped from API response
+- `parents[4]` vs `parents[3]` path off-by-one → reader searched wrong directory
+- No fallback for legacy `output/cross_lingual/` data
+
+**Fix**:
+1. Added `original_document_text: str | None = None` and `translated_document_text: str | None = None` to `EvidenceGroupDetailResponse` in contracts.py.
+2. Fixed `_load_full_document_text()` path to use `parents[3]` (backend root).
+3. Extracted `_concat_blocks()` and `_load_from_dir()` helpers.
+4. Added three-tier search: current pipeline path → legacy path by UUID → legacy path by DOI/PMID identifiers.
+5. Updated caller to pass `identifiers` dict for the identifier-based fallback.
+
+**Prevention**:
+- When a Pydantic model is used as an API response, always verify that the fields you pass at construction time are actually declared in the model. Pydantic v2's `extra="ignore"` default silently drops undeclared fields — prefer `extra="forbid"` in dev/test to catch this early.
+- Path calculations using `Path.parents[N]` are fragile — one off-by-one and you're reading the wrong directory. Prefer named constants or config values for root paths.
+- When a reader and writer are in different modules, ensure they agree on the storage path. Consider extracting a shared `get_output_root()` utility.
+
+### Files Changed
+- `backend/src/core/visualize_evidence_with_expert_in_loop/contracts.py` — add `original_document_text`, `translated_document_text` to `EvidenceGroupDetailResponse`
+- `backend/src/core/visualize_evidence_with_expert_in_loop/search_service.py` — fix path, add legacy fallback, extract helpers
