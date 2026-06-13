@@ -66,10 +66,10 @@ class TestChatAI:
         assert intent == "correction"
 
     async def test_detect_intent_note(self, db_session: AsyncSession) -> None:
-        """Note does not trigger AI reply."""
+        """Notes now default to question (handled by router)."""
         service = ChatService(db_session)
         intent = service._detect_intent("Need to verify this later")
-        assert intent == "note"
+        assert intent == "question"
 
     async def test_generate_reply_question(self, db_session: AsyncSession) -> None:
         """AI generates reply for questions."""
@@ -94,9 +94,11 @@ class TestChatAI:
         assert "GLA" in kwargs["context"]
 
     async def test_generate_reply_note(self, db_session: AsyncSession) -> None:
-        """Note does not generate AI reply."""
+        """A note-style message now reaches the LLM via the router."""
         run_id = await self._create_test_run(db_session)
-        service = ChatService(db_session)
+        provider = MagicMock()
+        provider.generate = AsyncMock(return_value="Noted.")
+        service = ChatService(db_session, chat_provider=provider)
         session = await service.create_session(processing_run_id=run_id, user_id=None)
 
         reply = await service.generate_reply(
@@ -105,7 +107,7 @@ class TestChatAI:
             evidence_id=None,
         )
 
-        assert reply is None
+        assert reply == "Noted."
 
     async def _create_evidence_with_bindings(self, session: AsyncSession) -> uuid.UUID:
         """Helper: create evidence with entity bindings."""

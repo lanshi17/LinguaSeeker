@@ -185,6 +185,21 @@ class ChatSessionResponse(BaseModel):
     message_count: int = 0
 
 
+ChatActionIntent = Literal[
+    "start-pipeline",
+    "upload-pdf",
+    "search-evidence",
+    "classify-variant",
+    "interpret-evidence",
+    "review-changes",
+]
+
+
+class ChatAction(BaseModel):
+    intent: ChatActionIntent
+    slots: dict[str, str | None] = Field(default_factory=dict)
+
+
 class ChatMessageResponse(BaseModel):
     """API response for a chat message."""
 
@@ -194,6 +209,7 @@ class ChatMessageResponse(BaseModel):
     content: str
     evidence_id: UUID | None
     entity_id: UUID | None
+    action: ChatAction | None = None
     created_at: datetime
 
     @field_validator("role", mode="before")

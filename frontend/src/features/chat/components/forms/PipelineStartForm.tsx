@@ -10,6 +10,7 @@ interface PipelineStartFormProps {
   onSubmit: (data: PipelineFormData) => void;
   isSubmitting?: boolean;
   defaultSourceType?: "online" | "local";
+  defaultQuery?: string;
 }
 
 export interface PipelineFormData {
@@ -18,22 +19,16 @@ export interface PipelineFormData {
   file?: File;
 }
 
-/**
- * Inline form for starting a pipeline, rendered inside a chat bubble.
- *
- * Two modes:
- * - Online: search by query/PMID/DOI
- * - Local: upload a PDF file
- */
 export function PipelineStartForm({
   onSubmit,
   isSubmitting,
   defaultSourceType = "online",
+  defaultQuery,
 }: PipelineStartFormProps) {
   const [sourceType, setSourceType] = useState<"online" | "local">(
     defaultSourceType,
   );
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(defaultQuery ?? "");
   const [file, setFile] = useState<File | null>(null);
 
   function handleSubmit(e: React.FormEvent) {

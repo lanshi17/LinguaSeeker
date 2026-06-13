@@ -1,10 +1,17 @@
 import type { SSEOutput } from "@ant-design/x-sdk";
 
+import type { ChatAction, ChatActionIntent } from "../types/actions";
 import type { ChatBubbleMessage } from "./messageHistory";
 
 interface BackendTextEvent {
   type: "text";
   content: string;
+}
+
+interface BackendActionEvent {
+  type: "action";
+  intent: ChatActionIntent;
+  slots: Record<string, string | undefined>;
 }
 
 interface BackendDoneEvent {
@@ -16,7 +23,11 @@ interface BackendErrorEvent {
   message: string;
 }
 
-type BackendStreamEvent = BackendTextEvent | BackendDoneEvent | BackendErrorEvent;
+type BackendStreamEvent =
+  | BackendTextEvent
+  | BackendActionEvent
+  | BackendDoneEvent
+  | BackendErrorEvent;
 
 function parseBackendEvent(chunk: SSEOutput | undefined): BackendStreamEvent | null {
   if (!chunk || typeof chunk.data !== "string") return null;
@@ -44,6 +55,17 @@ export function appendAssistantChunk(
     return {
       ...current,
       content: `${current.content}${event.content}`,
+    };
+  }
+
+  if (event.type === "action") {
+    const action: ChatAction = {
+      intent: event.intent,
+      slots: event.slots,
+    };
+    return {
+      ...current,
+      action,
     };
   }
 
