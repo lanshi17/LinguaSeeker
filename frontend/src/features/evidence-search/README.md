@@ -11,7 +11,8 @@ features/evidence-search/
 │   ├── EvidenceSearchForm.tsx       Gene, variant, disease, PMID filters
 │   ├── EvidenceResultsTable.tsx     Literature-row result cards
 │   ├── EvidenceDetailView.tsx       Literature overview + compare mode
-│   └── EvidenceHighlightText.tsx    Reusable single-span highlighter
+│   ├── EvidenceHighlightText.tsx    Reusable single-span highlighter
+│   └── BilingualComparison.tsx      Original/translated value-anchored snippet panel
 ├── hooks/
 │   ├── useEvidenceSearch.ts         Paginated search query state
 │   └── useEvidenceGroupDetail.ts    Group detail query state

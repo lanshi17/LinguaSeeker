@@ -33,7 +33,9 @@ src/utils/
 ├── health.py          # startup dependency health checks (PostgreSQL, Redis)
 ├── observability.py   # traced_node decorator (LangSmith + loguru)
 ├── text.py            # sanitize_filename, strip_json_fences
-└── rust_io.py         # lazy imports for PyO3 native extensions
+├── rust_io.py         # lazy imports for PyO3 native extensions
+├── llm_adapter.py     # LLM client adapter with API key pool (round-robin rotation + failover)
+└── llm_params.py      # LLM parameter resolution (resolve_max_tokens)
 ```
 
 Flat module structure — no sub-packages. Each module is independently importable with zero cross-dependencies within `utils/`.
@@ -67,6 +69,19 @@ Centralized lazy imports for the two PyO3 native extensions (`rust_io.files`, `r
 | `NET_AVAILABLE` | `bool` | `True` if `rust_io.net` loaded successfully. |
 
 **Error behavior:** When the native extension is missing, `files_io` / `net_io` are set to `None`. Attribute access on `None` (e.g., `files_io.File(...)`) raises `AttributeError`, **not** `ImportError`. The module catches `_NATIVE_IMPORT_ERRORS = (ImportError, RuntimeError, SystemError, OSError)` to handle all failure modes of PyO3 extension loading.
+
+### llm_adapter.py
+
+| Class/Function | Signature | Description |
+|----------|-----------|-------------|
+| `LLMPoolAdapter` | `(clients: list[BaseChatModel])` | Wraps multiple ChatOpenAI clients with round-robin key rotation. Drop-in replacement for ChatOpenAI (.invoke, .ainvoke, .with_structured_output). |
+| `create_llm_client` | `(model, base_url, api_key="", api_keys=None, temperature=0.0, max_tokens=8192, timeout=60, model_kwargs=None) -> LLMPoolAdapter` | Factory that creates an LLM client with optional key pool. Single key = backward compatible; multiple keys = high-concurrency pool. |
+
+### llm_params.py
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `resolve_max_tokens` | `(configured_max_tokens: int, percentage: float = 1.0, *, minimum: int = 256) -> int` | Scale max_tokens by percentage with floor. Used for dynamic output budget scaling per task complexity. |
 
 ## Usage Patterns
 
@@ -137,6 +152,19 @@ def _write_json(path: Path, data: str) -> None:
 
 **Hard-dependency modules** — modules where rust_io is required (e.g., `parse_document`) may use `files_io` / `net_io` unconditionally. They will raise `AttributeError` if the extension is missing, which is acceptable since the module is non-functional without it.
 
+### create_llm_client — high-concurrency LLM access
+
+```python
+from src.utils.llm_adapter import create_llm_client
+
+# Single key (backward compatible)
+client = create_llm_client(model="gpt-4", api_key="sk-...", base_url="...")
+
+# Key pool (high concurrency — round-robin rotation with auth failover)
+client = create_llm_client(model="gpt-4", api_keys=["sk-1...", "sk-2..."], base_url="...")
+result = client.invoke(messages)
+```
+
 ## Internal Design
 
 **sanitize_filename** — Two-pass regex: first replaces forbidden characters (`[\\/:*?"<>|]+`) with `_`, then collapses whitespace. The `+` quantifier means consecutive forbidden chars produce a single `_`, not one per character.
@@ -160,7 +188,7 @@ uv run pytest tests/utils/test_text.py -v
 uv run pytest tests/utils/test_observability.py -v
 ```
 
-30 tests total: 7 for `sanitize_filename`, 6 for `strip_json_fences`, 6 for `traced_node` (+1 async), 3 for `logger`, 15 for `exceptions`, 5 for `middleware`, 2 for `health`.
+30+ tests total: 7 for `sanitize_filename`, 6 for `strip_json_fences`, 6 for `traced_node` (+1 async), 3 for `logger`, 15 for `exceptions`, 5 for `middleware`, 2 for `health`. Additional tests exist for `llm_adapter` and `llm_params` — run `uv run pytest tests/utils/ -v` to verify current count.
 
 ## Dependencies
 
@@ -169,6 +197,7 @@ uv run pytest tests/utils/test_observability.py -v
 | `langsmith` | `observability.py` | `@traceable` decorator for LangSmith tracing |
 | `loguru` | `observability.py`, `rust_io.py` | Structured logging for node lifecycle and import warnings |
 | `rust_io` (native) | `rust_io.py` | PyO3 extensions for file I/O and HTTP/provider operations |
+| `langchain_openai` | `llm_adapter.py` | ChatOpenAI client creation |
 
 ## Extension Guide
 
