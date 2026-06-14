@@ -2548,3 +2548,15 @@ Removed only the eight all-zero local ref files under `.git/refs/heads/`, then r
 **Solution**: Added `--system-strategy` support to `diagnose_baselines.py`, preserved eval-report behavior when the flag is omitted, and wrote regression coverage for selecting `context_verifier_reconcile` from a reconcile ablation report. The real G1 comparison `baseline_comparison_20260614_211111.json` now reports SYSTEM N=30 with the intended candidate strategy.
 
 **Prevention**: Every paper-facing comparison command must name both the report path and the strategy/baseline identity when the report can contain multiple methods. Do not infer candidate identity from a multi-strategy report filename.
+
+## 2026-06-14: Citation validity must distinguish offset drift from hallucinated spans
+
+**Problem**: The first G2 traceability run reported candidate CVR=0.9545 and HCR=0.0455 because four cited spans had offsets that did not point to the same text in `source.md`. Manual inspection showed two cases were exact token sequences elsewhere in the source, and two cases differed only by a small article insertion around otherwise contiguous token text.
+
+**Investigation**: Printed predicted snippet text, canonical offset text, and token windows for the four invalid spans. `clingen_019` snippets were recoverable as contiguous token sequences despite offset drift. `clingen_006` snippets matched real source passages after removing article tokens such as `a` and `the`, while still preserving token order and contiguity.
+
+**Root cause**: The initial validator used offset containment and normalized substring containment, but not token-sequence containment. This treated recoverable citations with stale offsets as hallucinations, which made HCR too pessimistic and conflated span-offset drift with invented citations.
+
+**Solution**: Added a deterministic token-sequence fallback that accepts a citation only when the predicted snippet is recoverable as a contiguous token sequence in the source text, optionally after dropping `a/an/the`. It does not accept loose bag-of-words overlap. Regenerated traceability reports; the candidate report `traceability_context_verifier_reconcile_20260614_213054.json` now has CVR=1.0 and HCR=0.0.
+
+**Prevention**: For traceability metrics, keep separate concepts separate: offset validity, recoverable citation text, boundary tightness, and semantic support. Do not label offset drift as hallucination when the cited text is recoverable, and do not accept unordered token overlap as valid citation evidence.
