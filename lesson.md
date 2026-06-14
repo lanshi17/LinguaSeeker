@@ -2584,3 +2584,15 @@ Removed only the eight all-zero local ref files under `.git/refs/heads/`, then r
 **Solution**: Added optional score fields to the ablation candidate payload and `FieldMatch`, then serialized them through `reconcile_ablation` and `evaluate.py`. Smoke verification confirmed contextual `field_matches` now include non-null score components.
 
 **Prevention**: Before tuning verifier weights or boundary rules, ensure report artifacts expose the decision components needed to explain the change. Do not diagnose algorithmic failures from value-only reports.
+
+## 2026-06-14: Bare association language should be uncertain in source-only relationship extraction
+
+**Problem**: G3 relationship failures included source snippets such as `associated with ALS` and gene-list text saying genes were `related to ALS`. The verifier previously returned `associated`, which is not one of the Main Paper-safe semantic outcomes and does not distinguish weak association from causal gene-disease validity.
+
+**Investigation**: Added source-only verifier regressions from the refreshed G3 diagnosis rows. The tests confirmed causal, disputed, and refuted cases were already covered, while bare association and related gene-list cases still returned `associated`.
+
+**Root cause**: `_recommend_value` treated direct association cues as a final relationship label whenever no hedging term was present. That overstates weak article-local evidence and makes contextual reconcile accept an ambiguous label instead of surfacing `uncertain`.
+
+**Solution**: Changed direct association-only evidence to recommend `uncertain` unless stronger causal, susceptibility, refuting, or disputed cues are present.
+
+**Prevention**: In biomedical relationship extraction, reserve causal labels for direct causal language. Treat `associated`, `related`, and broad gene-list membership as weak evidence unless another source-local cue upgrades or refutes the relationship.
