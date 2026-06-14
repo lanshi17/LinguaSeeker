@@ -1,6 +1,7 @@
 """Token-budgeted prompt chunking helpers for evidence extraction."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from .contracts import (
@@ -86,6 +87,7 @@ def build_block_prompt_chunks(
     input_budget_tokens: int = DEFAULT_INPUT_BUDGET_TOKENS,
     prompt_overhead_tokens: int = 0,
     seam_context_chars: int = _DEFAULT_SEAM_CONTEXT_CHARS,
+    block_indices: Sequence[int] | None = None,
 ) -> list[EvidencePromptChunk]:
     """Split document blocks into prompt-safe chunks while preserving block indices."""
     if not document.blocks:
@@ -98,7 +100,11 @@ def build_block_prompt_chunks(
     pending_indices: list[int] = []
     raw_chunks: list[tuple[str, tuple[int, ...]]] = []
 
-    for block_index, block in enumerate(document.blocks):
+    indices = block_indices if block_indices is not None else range(len(document.blocks))
+    for block_index in indices:
+        if block_index < 0 or block_index >= len(document.blocks):
+            continue
+        block = document.blocks[block_index]
         body = block_readable_text(block)
         if not body:
             continue

@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 class Track(str, Enum):
     ORIGINAL = "original"
     TRANSLATED = "translated"
+    RECONCILED = "reconciled"
 
 
 
@@ -302,6 +303,7 @@ class DualEvidenceExtractionResult(BaseModel):
     document_id: str
     original_result: EvidenceExtractionResult
     translated_result: EvidenceExtractionResult
+    reconciled_result: EvidenceExtractionResult | None = None
 
 
 class EvidenceExtractionState(BaseModel):

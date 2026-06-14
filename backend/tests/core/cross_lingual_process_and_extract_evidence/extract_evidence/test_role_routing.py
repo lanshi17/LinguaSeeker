@@ -5,6 +5,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     EvidenceItem,
     EvidenceRole,
     EvidenceStatus,
+    ExtractionTarget,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.stages.role_routing import (
     EvidenceRoleRouter,
@@ -61,3 +62,28 @@ def test_role_router_handles_empty_input() -> None:
     assert primary == []
     assert phenotype == []
     assert discarded == []
+
+
+def test_role_router_promotes_target_identity_context() -> None:
+    target = ExtractionTarget(
+        gene_symbol="TLR5",
+        disease_name="systemic lupus erythematosus, susceptibility to, 1",
+    )
+
+    primary, phenotype, discarded = EvidenceRoleRouter().route(
+        [
+            _item("A.gene_symbol", "TLR5", EvidenceRole.CONTEXT),
+            _item("B.disease_diagnosis", "systemic lupus erythematosus", EvidenceRole.CONTEXT),
+            _item("A.gene_disease_relationship", "no_relationship", EvidenceRole.CONTEXT),
+        ],
+        extraction_target=target,
+    )
+
+    assert [(item.field_id, item.value, item.evidence_role) for item in primary] == [
+        ("A.gene_symbol", "TLR5", EvidenceRole.PRIMARY),
+        ("B.disease_diagnosis", "systemic lupus erythematosus", EvidenceRole.PRIMARY),
+    ]
+    assert phenotype == []
+    assert [(item.field_id, item.value) for item in discarded] == [
+        ("A.gene_disease_relationship", "no_relationship"),
+    ]

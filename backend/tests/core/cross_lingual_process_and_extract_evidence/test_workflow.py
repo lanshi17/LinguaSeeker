@@ -9,9 +9,12 @@ from src.core.cross_lingual_process_and_extract_evidence.workflow import Transla
 def mock_config():
     cfg = MagicMock()
     cfg.llm.api_key = "test-key"
+    cfg.llm.all_api_keys = ["test-key"]
     cfg.llm.base_url = "http://localhost:8001/v1"
     cfg.llm.model = "test-model"
     cfg.llm.temperature = 0.0
+    cfg.llm.max_tokens = 1024
+    cfg.llm.timeout = 1
     return cfg
 
 
@@ -56,8 +59,11 @@ def test_config_context_from_config(mock_config):
 def test_config_context_from_config_default_temperature():
     cfg = MagicMock()
     cfg.llm.api_key = "key"
+    cfg.llm.all_api_keys = ["key"]
     cfg.llm.base_url = "http://localhost"
     cfg.llm.model = "model"
+    cfg.llm.max_tokens = 1024
+    cfg.llm.timeout = 1
     del cfg.llm.temperature  # getattr will return default
     ctx = TranslationConfigContext.from_config(cfg)
     assert ctx.temperature == 0.0
@@ -73,7 +79,10 @@ def test_translation_service_save(tmp_path):
     cfg = MagicMock()
     cfg.llm.model = "test-model"
     cfg.llm.api_key = "test-key"
+    cfg.llm.all_api_keys = ["test-key"]
     cfg.llm.base_url = "http://localhost:8001"
+    cfg.llm.max_tokens = 1024
+    cfg.llm.timeout = 1
 
     service = TranslationService(cfg=cfg)
 
@@ -112,7 +121,10 @@ def test_translation_service_save_with_images(tmp_path):
     cfg = MagicMock()
     cfg.llm.model = "test-model"
     cfg.llm.api_key = "test-key"
+    cfg.llm.all_api_keys = ["test-key"]
     cfg.llm.base_url = "http://localhost:8001"
+    cfg.llm.max_tokens = 1024
+    cfg.llm.timeout = 1
 
     service = TranslationService(cfg=cfg)
 

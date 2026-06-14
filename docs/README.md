@@ -40,6 +40,12 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
+| 2026-06-14 | [BIBM Main Paper Detailed Execution Plan](active/2026-06-14-bibm-main-paper-detailed-execution-plan.md) | in-progress |
+| 2026-06-14 | [BIBM Main Paper Roadmap](active/2026-06-14-bibm-main-paper-roadmap.md) | in-progress |
+| 2026-06-14 | [BIBM Main Paper Effect Improvement Plan](active/2026-06-14-bibm-main-paper-effect-improvement-plan.md) | in-progress |
+| 2026-06-14 | [BIBM Main Paper Rescue](active/2026-06-14-bibm-main-paper-rescue.md) | in-progress |
+| 2026-06-13 | [BIBM G1 Decision Memo](active/2026-06-13-bibm-g1-decision.md) | in-progress |
+| 2026-06-12 | [BIBM Novelty Diagnosis](active/2026-06-12-bibm-novelty.md) | in-progress |
 | 2026-05-09 | [PRD](active/PRD.md) | active -- citation-valid-by-construction, dual-track extraction |
 | 2026-05-09 | [Application Flow](active/APP_FLOW.md) | active -- SSE chat + 2-tab layout (AI Chat, Evidence) |
 | 2026-05-09 | [Technology Stack](active/TECH_STACK.md) | active -- FastAPI StreamingResponse SSE, MinerU-only parsing |
@@ -54,6 +60,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 |------|-------|--------|
 | 2026-06-12 | [BIBM Novelty 攻关（诊断优先研究计划）](planned/2026-06-12-bibm-novelty.md) | planned |
 | 2026-06-12 | [Log Analysis Fixes](planned/2026-06-12-log-analysis-fixes.md) | planned |
+| 2026-06-14 | [BIBM Main Paper Next Gate Plan](planned/2026-06-14-bibm-main-paper-next-gate-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Detailed Plan](planned/2026-06-14-bibm-main-paper-detailed-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Rescue Plan](planned/2026-06-14-bibm-main-paper-rescue.md) | planned |
 | 2026-06-14 | [BIBM Main Paper 指标提升实施计划](planned/2026-06-14-bibm-main-paper-effect-plan.md) | planned |
@@ -69,7 +76,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Archive Index
 
-The `archive/plans/` directory contains 67 completed plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
+The `archive/plans/` directory contains 70 completed plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
 
 ## Module README Index
 
