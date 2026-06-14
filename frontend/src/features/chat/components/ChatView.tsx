@@ -31,8 +31,16 @@ import { ChatMarkdown } from "../utils/markdown";
 import { PipelineStartForm, PipelineStatusCard } from "./forms";
 import type { PipelineFormData } from "./forms";
 import { ChatActionBubble } from "./ChatActionBubble";
+import { ThinkingIndicator } from "./ThinkingIndicator";
 import { apiClient } from "@/lib/api/client";
 import { extractErrorMessage } from "@/lib/api/error";
+import {
+  BookOpen,
+  FlaskConical,
+  Search,
+  Sparkles,
+  Upload,
+} from "lucide-react";
 
 /** Max words of the first user message used as the session title. */
 const SESSION_TITLE_WORDS = 5;
@@ -61,68 +69,116 @@ const roles = {
 
 // ─── Default welcome message shown when chat is empty ───────────────────
 
-const WELCOME_MESSAGE = (
-  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-    <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: "#374151" }}>
-      Welcome to <strong>Cross Evidence</strong> — a literature-grounded
-      assistant for variant and evidence classification.
-    </p>
-    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "#6b7280" }}>
-      I ingest biomedical literature, run a four-phase extraction pipeline
-      (acquisition → cross-lingual dual extraction → entity standardisation →
-      expert-in-the-loop review), and ground every claim in source coordinates.
-    </p>
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 6,
-        marginTop: 4,
-        padding: "12px 16px",
-        background: "#f9fafb",
-        borderRadius: 8,
-        border: "1px solid #e5e7eb",
-      }}
-    >
-      <span
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          color: "#9ca3af",
-        }}
-      >
-        Quick start
-      </span>
-      {[
-        "Run a paper through the four-phase pipeline (e.g. PMID 34521984)",
-        "Upload a PDF — the pipeline parses, translates, and emits structured evidence",
-        "Search extracted evidence by gene, variant, disease, or ACMG code",
-        "Classify a variant with ACMG/AMP 2015 criteria walkthrough",
-      ].map((item) => (
-        <span
-          key={item}
-          style={{ fontSize: 13.5, lineHeight: 1.5, color: "#4b5563" }}
-        >
-          • {item}
-        </span>
-      ))}
+interface SuggestionChip {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  /** Message content sent when the chip is clicked. */
+  message: string;
+  accent: string; // tailwind bg class (light)
+  accentText: string; // tailwind text class
+}
+
+const SUGGESTIONS: SuggestionChip[] = [
+  {
+    icon: <FlaskConical className="h-4 w-4" />,
+    title: "Run the pipeline",
+    description: "Ingest a paper via PMID, DOI, or keyword",
+    message: "Run the four-phase pipeline on PMID 34521984",
+    accent: "bg-cyan-50",
+    accentText: "text-cyan-600",
+  },
+  {
+    icon: <Upload className="h-4 w-4" />,
+    title: "Upload a PDF",
+    description: "Parse, translate, and extract evidence",
+    message: "I want to upload a PDF",
+    accent: "bg-violet-50",
+    accentText: "text-violet-600",
+  },
+  {
+    icon: <Search className="h-4 w-4" />,
+    title: "Search evidence",
+    description: "Query extracted evidence by gene or variant",
+    message: "Search the evidence database",
+    accent: "bg-emerald-50",
+    accentText: "text-emerald-600",
+  },
+  {
+    icon: <BookOpen className="h-4 w-4" />,
+    title: "Classify a variant",
+    description: "Walk through ACMG/AMP 2015 criteria",
+    message: "Help me classify a variant with ACMG criteria",
+    accent: "bg-amber-50",
+    accentText: "text-amber-600",
+  },
+];
+
+interface WelcomeBlockProps {
+  onPick?: (message: string) => void;
+}
+
+function WelcomeBlock({ onPick }: WelcomeBlockProps) {
+  return (
+    <div className="space-y-5">
+      <div className="flex items-start gap-3">
+        <div className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-sm">
+          <Sparkles className="h-4 w-4" aria-hidden="true" />
+        </div>
+        <div className="space-y-1.5">
+          <h2 className="text-[15px] font-semibold tracking-tight text-gray-900">
+            Welcome to <span className="text-cyan-600">Cross Evidence</span>
+          </h2>
+          <p className="text-[13.5px] leading-relaxed text-gray-600">
+            A literature-grounded assistant for variant and evidence
+            classification. I run a four-phase extraction pipeline and ground
+            every claim in source coordinates.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        {SUGGESTIONS.map((chip) => {
+          const isInteractive = Boolean(onPick);
+          return (
+            <button
+              key={chip.title}
+              type="button"
+              onClick={() => onPick?.(chip.message)}
+              disabled={!isInteractive}
+              className={[
+                "group flex items-start gap-3 rounded-xl border border-gray-100",
+                "bg-white p-3 text-left transition-all duration-150",
+                isInteractive
+                  ? "cursor-pointer hover:-translate-y-0.5 hover:border-gray-200 hover:shadow-sm"
+                  : "cursor-default",
+              ].join(" ")}
+            >
+              <span
+                className={`flex h-8 w-8 flex-none items-center justify-center rounded-lg ${chip.accent} ${chip.accentText}`}
+              >
+                {chip.icon}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] font-medium text-gray-900">
+                  {chip.title}
+                </span>
+                <span className="mt-0.5 block truncate text-[12px] text-gray-500">
+                  {chip.description}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <p className="border-t border-gray-100 pt-3 text-[11.5px] leading-relaxed text-gray-400">
+        The agent does not provide clinical diagnoses. Outputs are research-grade
+        evidence for review by qualified professionals.
+      </p>
     </div>
-    <p
-      style={{
-        margin: 0,
-        fontSize: 12,
-        color: "#9ca3af",
-        borderTop: "1px solid #e5e7eb",
-        paddingTop: 10,
-      }}
-    >
-      The agent does not provide clinical diagnoses. Outputs are research-grade
-      evidence for review by qualified professionals.
-    </p>
-  </div>
-);
+  );
+}
 
 // ─── Main ChatView ─────────────────────────────────────────────────────
 
@@ -492,25 +548,49 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       const action = (message as { action?: ChatAction }).action;
       const dispatchKey = `${id ?? messageKey}`;
 
-      const renderAssistant = (content: string) => (
-        <div>
-          <ChatMarkdown source={content} />
-          {action ? (
-            <ChatActionBubble
-              action={action}
-              dispatched={dispatchedActions.has(dispatchKey)}
-              onDispatch={(payload) => handleDispatchAction(payload, dispatchKey)}
+      const renderAssistant = (content: string) => {
+        const isLoadingEmpty =
+          (status === "loading" || status === "updating") && !content;
+        const isStreaming =
+          !isLoadingEmpty &&
+          (status === "loading" || status === "updating") &&
+          Boolean(content);
+
+        if (isLoadingEmpty) {
+          return (
+            <ThinkingIndicator
+              hints={[
+                "Reading your message",
+                "Retrieving relevant literature",
+                "Reasoning over the evidence",
+                "Drafting a grounded reply",
+              ]}
             />
-          ) : null}
-        </div>
-      );
+          );
+        }
+
+        return (
+          <div className={isStreaming ? "chat-streaming-cursor" : ""}>
+            <ChatMarkdown source={content} />
+            {action ? (
+              <ChatActionBubble
+                action={action}
+                dispatched={dispatchedActions.has(dispatchKey)}
+                onDispatch={(payload) =>
+                  handleDispatchAction(payload, dispatchKey)
+                }
+              />
+            ) : null}
+          </div>
+        );
+      };
 
       return {
         key: messageKey,
         role: message.role,
         content: message.content,
-        streaming: status === "loading" || status === "updating",
-        loading: status === "loading" && !message.content,
+        streaming: false, // we render our own cursor via chat-streaming-cursor
+        loading: false, // we render our own ThinkingIndicator via contentRender
         ...(message.role === "assistant"
           ? { contentRender: renderAssistant }
           : {}),
@@ -560,7 +640,10 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         key: "__welcome__",
         role: "assistant",
         content: "",
-        contentRender: () => WELCOME_MESSAGE,
+        variant: "borderless" as const,
+        contentRender: () => (
+          <WelcomeBlock onPick={(msg) => void handleSendMessage(msg)} />
+        ),
       });
     }
 
@@ -572,6 +655,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     pipelineStatus,
     isRequesting,
     handlePipelineSubmit,
+    handleSendMessage,
     dispatchedActions,
     handleDispatchAction,
   ]);
@@ -724,29 +808,47 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
 
   const bubbleItems = useMemo(() => {
     const messageKeys = toUniqueChatMessageKeys(messages);
-    const items = messages.map(({ message, status }, index) => ({
-      key: messageKeys[index],
-      role: message.role,
-      content: message.content,
-      streaming: status === "loading" || status === "updating",
-      loading: status === "loading" && !message.content,
-      ...(message.role === "assistant"
-        ? {
-            contentRender: (content: string) => (
-              <ChatMarkdown source={content} />
-            ),
-          }
-        : {}),
-    }));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const items: any[] = messages.map(({ message, status }, index) => {
+      const isLoadingEmpty =
+        (status === "loading" || status === "updating") && !message.content;
+      const isStreaming =
+        !isLoadingEmpty &&
+        (status === "loading" || status === "updating") &&
+        Boolean(message.content);
+
+      return {
+        key: messageKeys[index],
+        role: message.role,
+        content: message.content,
+        streaming: false,
+        loading: false,
+        ...(message.role === "assistant"
+          ? {
+              contentRender: (content: string) => {
+                if (isLoadingEmpty) {
+                  return <ThinkingIndicator />;
+                }
+                return (
+                  <div className={isStreaming ? "chat-streaming-cursor" : ""}>
+                    <ChatMarkdown source={content} />
+                  </div>
+                );
+              },
+            }
+          : {}),
+      };
+    });
 
     if (items.length === 0) {
       items.unshift({
         key: "__welcome__",
-        role: "assistant" as const,
+        role: "assistant",
         content: "",
         streaming: false,
         loading: false,
-        contentRender: () => WELCOME_MESSAGE,
+        variant: "borderless",
+        contentRender: () => <WelcomeBlock />,
       });
     }
 
