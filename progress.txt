@@ -1,3 +1,4 @@
+[2026-06-14] Drafted BIBM Main Paper rescue plan with current diagnosis, source-aware alias rescue, evaluation gates, and paper packaging steps [done]
 [2026-06-14] Redundant code audit & cleanup: removed orphaned doi_fallback.py (167 lines), unused useChatMessages hook, deleted ChatEmptyState/prompts.ts; merged 4 duplicate test files (quality_validator→validation, source_grounder→grounding); relocated misplaced phase4/ tests; updated LLM config and stale README [done]
 [2026-06-13] [Markdown rendering for bilingual evidence full-text view with highlight compatibility] [done]
 [2026-06-13] [Fix bilingual evidence view showing fragments instead of full document text] [done]
@@ -326,3 +327,4 @@
 [2026-06-13] Update all project folder READMEs — 7 stale updated, 11 new created [completed]
 [2026-06-13] [Pulled latest dev metadata after removing all-zero local Git refs] [completed]
 [2026-06-14] [BIBM Main Paper 指标提升实施计划：按 P0/P1/P2/P3 拆分算法、评测、实体对齐和前端审查闭环，新增 TC-CER novelty、go/no-go gate、baseline/ablation/traceability 计划] [planned]
+[2026-06-14] [BIBM Main Paper detailed plan drafted and indexed] [completed]

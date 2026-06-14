@@ -22,13 +22,13 @@ debug: false
 
 # ── Fast LLM (OpenAI-compatible) ──────────────────────────────────────────
 fast_llm:
-  model: "gpt-5.4-mini"
+  model: "gpt-5-mini"
   timeout: 60
   max_tokens: 16384
 
 # ── Reasoning LLM ─────────────────────────────────────────────────────────
 reasoning_llm:
-  model: "gpt-5.5"
+  model: "gpt-5"
   reasoning_effort: "xhigh"
   timeout: 300
   max_tokens: 32768
