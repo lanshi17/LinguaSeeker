@@ -176,6 +176,48 @@ def test_context_verifier_reconcile_strategy_uses_target_safe_context() -> None:
     assert items[0]["value"] == "causative"
 
 
+def test_context_verifier_reconcile_exposes_score_components() -> None:
+    result = DualEvidenceExtractionResult(
+        document_id="doc-ablation",
+        original_result=_result(
+            Track.ORIGINAL,
+            [
+                _item(
+                    field_id="A.gene_disease_relationship",
+                    value="associated",
+                    confidence=0.7,
+                    source=SourceLocation(
+                        span_id="causal-span",
+                        page=1,
+                        start_offset=0,
+                        end_offset=60,
+                        context_type="text",
+                        context_ref="Results",
+                        text_snippet="Pathogenic variants in BRCA1 cause Breast cancer.",
+                        source_precision=SourcePrecision.EXACT,
+                    ),
+                )
+            ],
+        ),
+        translated_result=_result(Track.TRANSLATED, []),
+    )
+
+    items = build_extracted_items(
+        result,
+        AblationStrategy.CONTEXT_VERIFIER_RECONCILE,
+        context_pack=_context(),
+    )
+
+    assert items[0]["best_score"] > 0
+    assert items[0]["source_score"] == 1.0
+    assert items[0]["confidence_score"] == 0.7
+    assert items[0]["verifier_support_score"] > 0
+    assert items[0]["target_specificity_score"] == 1.0
+    assert items[0]["contradiction_penalty"] == 0.0
+    assert items[0]["accepted_track"] == "original"
+    assert items[0]["normalized_value"] == "causative"
+
+
 def test_run_ablation_compares_all_strategies_on_same_entries(tmp_path: Path) -> None:
     entry_id = "clingen_test"
     entry_dir = tmp_path / entry_id

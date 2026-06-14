@@ -26,6 +26,10 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.core import (
     reconcile_results,
 )
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.contracts import (
+    CandidateScore,
+    FieldDecision,
+)
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.contextual import (
     reconcile_with_context,
 )
@@ -45,6 +49,16 @@ class ExtractedAblationItem(TypedDict):
     value: object
     confidence: float
     source_span: NotRequired[dict[str, object]]
+    best_score: NotRequired[float]
+    source_score: NotRequired[float]
+    confidence_score: NotRequired[float]
+    agreement_score: NotRequired[float]
+    status_score: NotRequired[float]
+    verifier_support_score: NotRequired[float]
+    target_specificity_score: NotRequired[float]
+    contradiction_penalty: NotRequired[float]
+    accepted_track: NotRequired[str]
+    normalized_value: NotRequired[str]
 
 
 class FieldMatchPayload(TypedDict):
@@ -57,6 +71,16 @@ class FieldMatchPayload(TypedDict):
     source_span: dict[str, object] | None
     match_type: str
     extra_found_values: list[str]
+    best_score: float | None
+    source_score: float | None
+    confidence_score: float | None
+    agreement_score: float | None
+    status_score: float | None
+    verifier_support_score: float | None
+    target_specificity_score: float | None
+    contradiction_penalty: float | None
+    accepted_track: str | None
+    normalized_value: str | None
 
 
 class EntryMetricsPayload(TypedDict):
@@ -152,11 +176,12 @@ def build_extracted_items(
     elif strategy == AblationStrategy.CONTEXT_VERIFIER_RECONCILE:
         if context_pack is None:
             raise ValueError("context_pack is required for context_verifier_reconcile")
-        items = reconcile_with_context(
+        reconciled = reconcile_with_context(
             result.original_result,
             result.translated_result,
             context_pack,
-        ).result.evidence_items
+        )
+        return tuple(_to_scored_extracted_item(decision) for decision in reconciled.decisions if decision.accepted is not None)
     else:
         raise ValueError(f"unsupported ablation strategy: {strategy}")
     return tuple(_to_extracted_item(item) for item in items)
@@ -263,6 +288,32 @@ def _to_extracted_item(item: EvidenceItem) -> ExtractedAblationItem:
     if item.source is not None:
         extracted["source_span"] = _source_to_payload(item.source)
     return extracted
+
+
+def _to_scored_extracted_item(decision: FieldDecision) -> ExtractedAblationItem:
+    """Serialize an accepted contextual decision with score components."""
+    if decision.accepted is None:
+        raise ValueError("Cannot serialize a contextual decision without an accepted item")
+    extracted = _to_extracted_item(decision.accepted)
+    if decision.accepted_score is not None:
+        extracted.update(_score_to_payload(decision.accepted_score))
+    return extracted
+
+
+def _score_to_payload(score: CandidateScore) -> dict[str, float | str]:
+    """Serialize score components used by contextual reconcile diagnostics."""
+    return {
+        "best_score": score.score,
+        "source_score": score.source_score,
+        "confidence_score": score.confidence_score,
+        "agreement_score": score.agreement_score,
+        "status_score": score.status_score,
+        "verifier_support_score": score.verifier_support_score,
+        "target_specificity_score": score.target_specificity_score,
+        "contradiction_penalty": score.contradiction_penalty,
+        "accepted_track": score.track.value,
+        "normalized_value": score.normalized_value,
+    }
 
 
 def _source_to_payload(source: SourceLocation) -> dict[str, object]:
@@ -394,6 +445,16 @@ def _serialize_field_match(match: FieldMatch) -> FieldMatchPayload:
         "source_span": match.source_span,
         "match_type": match.match_type,
         "extra_found_values": match.extra_found_values,
+        "best_score": match.best_score,
+        "source_score": match.source_score,
+        "confidence_score": match.confidence_score,
+        "agreement_score": match.agreement_score,
+        "status_score": match.status_score,
+        "verifier_support_score": match.verifier_support_score,
+        "target_specificity_score": match.target_specificity_score,
+        "contradiction_penalty": match.contradiction_penalty,
+        "accepted_track": match.accepted_track,
+        "normalized_value": match.normalized_value,
     }
 
 
