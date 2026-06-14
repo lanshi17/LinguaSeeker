@@ -264,3 +264,41 @@ class TestChatService:
         session.add(run)
         await session.flush()
         return run.processing_run_id
+
+
+# ─── Intent detection tests (moved from tests/phase4/) ─────────────────
+
+
+def test_detect_intent_question_with_change_keyword():
+    """Questions containing 'change' are classified as questions, not corrections."""
+    service = ChatService(MagicMock())
+    assert service._detect_intent("What should I change?") == "question"
+    assert service._detect_intent("How do I change this?") == "question"
+
+
+def test_detect_intent_plain_question():
+    """Simple questions are detected correctly."""
+    service = ChatService(MagicMock())
+    assert service._detect_intent("What is the evidence?") == "question"
+    assert service._detect_intent("Why was this classified?") == "question"
+
+
+def test_detect_intent_correction():
+    """Clear corrections without question marks are detected."""
+    service = ChatService(MagicMock())
+    assert service._detect_intent("change the classification to benign") == "correction"
+    assert service._detect_intent("update the gene to BRCA1") == "correction"
+
+
+def test_detect_intent_note():
+    """Ambiguous messages default to 'question' (per docstring contract)."""
+    service = ChatService(MagicMock())
+    assert service._detect_intent("I reviewed this evidence") == "question"
+
+
+def test_detect_intent_identity_questions_default_to_question():
+    """Identity questions (who are you / 你是谁) reach the LLM, not 'note'."""
+    service = ChatService(MagicMock())
+    assert service._detect_intent("who are you") == "question"
+    assert service._detect_intent("Who are you?") == "question"
+    assert service._detect_intent("你是谁") == "question"

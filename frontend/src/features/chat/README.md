@@ -8,9 +8,6 @@
 features/chat/
 ├── components/
 │   ├── ChatView.tsx             Main chat UI (XProvider, Bubble.List, Sender, Conversations)
-│   ├── ChatEmptyState.tsx       Empty state when no session is active
-│   ├── ChatEmptyState.css       Styles for empty state
-│   ├── prompts.ts               Default prompt suggestions for new conversations
 │   └── forms/
 │       ├── PipelineStartForm    Form to start a pipeline from chat
 │       ├── PipelineStatusCard   Pipeline status summary card

@@ -12,7 +12,6 @@ from .contracts import (
     OnlineAcquisitionRouteInfo,
     OnlineAcquisitionSourceTraceEntry,
 )
-from .doi_fallback import doi_fallback_download, probe_doi_landing_page
 from .gateway import (
     call_provider,
     search_provider,
@@ -34,9 +33,6 @@ __all__ = [
     # Gateway
     "call_provider",
     "search_provider",
-    # DOI fallback
-    "probe_doi_landing_page",
-    "doi_fallback_download",
     # PubMed
     "OnlineAcquisitionPubMedService",
     "OnlineAcquisitionPubMedCandidate",
