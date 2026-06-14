@@ -38,6 +38,7 @@ import {
   findInitialEvidenceId,
 } from "../utils/literatureRows";
 import { TraceComparisonPanel } from "./BilingualComparison";
+import { MarkdownDocumentViewer } from "./MarkdownDocumentViewer";
 
 type DetailViewMode = "overview" | "compare";
 
@@ -57,25 +58,11 @@ const STATUS_VARIANT: Record<
   rejected: "error",
 };
 
-const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
-  Object.entries(CATEGORY_COLORS).map(([k, v]) => [k, v.label]),
-);
-
-/** Chip styles keyed by category letter, falling back to tone styles. */
-function categoryChipStyle(category?: string | null): string {
-  if (category && CATEGORY_COLORS[category]) {
-    return CATEGORY_COLORS[category].chip;
-  }
-  return "border-gray-200 bg-gray-50 text-gray-700";
-}
-
-/** Mark/highlight styles keyed by category letter, falling back to neutral. */
-function categoryMarkStyle(category?: string | null): string {
-  if (category && CATEGORY_COLORS[category]) {
-    return CATEGORY_COLORS[category].mark;
-  }
-  return "bg-gray-200 text-gray-950 ring-1 ring-gray-300";
-}
+import {
+  categoryChipStyle,
+  categoryLabel,
+  categoryMarkStyle,
+} from "../utils/categoryStyles";
 
 const HIGHLIGHT_TONES: EvidenceHighlightTone[] = [
   "gene",
@@ -101,13 +88,6 @@ function categoryFromItem(item?: EvidenceGroupItem | null) {
     return item.category;
   }
   return item.field_id.includes(".") ? item.field_id.split(".", 1)[0] : null;
-}
-
-function categoryLabel(category?: string | null) {
-  if (!category) {
-    return "Uncategorized";
-  }
-  return CATEGORY_LABELS[category] ?? category;
 }
 
 function itemLabel(item: EvidenceGroupItem) {
@@ -471,19 +451,30 @@ function EvidenceDocumentReader({
   title: string;
   paragraphs: EvidenceDocumentParagraph[];
 }) {
+  const isFullText = paragraphs.length === 1 && paragraphs[0].text.length > 500;
+
   return (
     <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
       <div className="border-b border-gray-100 bg-gray-50 px-4 py-3">
         <h3 className="text-sm font-semibold text-gray-950">{title}</h3>
         <p className="mt-1 text-xs text-gray-500">
-          {paragraphs.length} aligned paragraph{paragraphs.length !== 1 ? "s" : ""}
+          {isFullText
+            ? "Full document with evidence highlights"
+            : `${paragraphs.length} aligned paragraph${paragraphs.length !== 1 ? "s" : ""}`}
         </p>
       </div>
       <div className="max-h-[720px] overflow-y-auto px-4">
         {paragraphs.length > 0 ? (
-          paragraphs.map((paragraph) => (
-            <HighlightedParagraph key={paragraph.id} paragraph={paragraph} />
-          ))
+          isFullText ? (
+            <MarkdownDocumentViewer
+              markdown={paragraphs[0].text}
+              highlights={paragraphs[0].highlights}
+            />
+          ) : (
+            paragraphs.map((paragraph) => (
+              <HighlightedParagraph key={paragraph.id} paragraph={paragraph} />
+            ))
+          )
         ) : (
           <div className="px-2 py-10 text-center text-sm text-gray-500">
             No document text is available for this track.

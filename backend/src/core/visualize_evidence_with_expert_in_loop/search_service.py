@@ -24,6 +24,7 @@ from src.core.visualize_evidence_with_expert_in_loop.contracts import (
 )
 from src.dao.postgresql.models import (
     CanonicalEvidenceItem,
+    PipelineRunState,
     SourceDocument,
     SourceDocumentIdentifier,
 )
@@ -202,20 +203,27 @@ def _load_full_document_text(
     source_document_id: str | UUID,
     track: str = "original",
     identifiers: dict[str, str] | None = None,
+    known_output_dir: str | None = None,
 ) -> str | None:
     """Load full text content for a source document from pipeline output.
 
-    Searches three locations in order:
-    1. ``backend/data/pipeline/*/phase_2/{doc_id}/`` — current pipeline output.
-    2. ``backend/output/cross_lingual/**/{doc_id}/`` — legacy output by UUID.
-    3. ``backend/output/cross_lingual/**/{identifier}/`` — legacy output by DOI/PMID.
+    Searches in order:
+    1. ``known_output_dir`` — exact path from pipeline_run_states.state_json.
+    2. ``backend/data/pipeline/*/phase_2/{doc_id}/`` — scan current pipeline output.
+    3. ``backend/output/cross_lingual/**/`` — legacy output (by UUID or identifiers).
 
     Returns concatenated text from all blocks, or None if not found.
     """
+    # 1. Exact path from persisted pipeline state
+    if known_output_dir:
+        result = _load_from_dir(Path(known_output_dir), track)
+        if result:
+            return result
+
     backend_root = Path(__file__).resolve().parents[3]
     doc_id_str = str(source_document_id)
 
-    # 1. Current pipeline output: backend/data/pipeline/{run_id}/phase_2/{doc_id}/
+    # 2. Current pipeline output: backend/data/pipeline/{run_id}/phase_2/{doc_id}/
     pipeline_root = backend_root / "data" / "pipeline"
     if pipeline_root.exists():
         for pipeline_dir in pipeline_root.iterdir():
@@ -226,10 +234,9 @@ def _load_full_document_text(
             if result:
                 return result
 
-    # 2. Legacy output: backend/output/cross_lingual/{lang}/{doc_id}/
+    # 3. Legacy output: backend/output/cross_lingual/{lang}/{doc_id}/
     legacy_root = backend_root / "output" / "cross_lingual"
     if legacy_root.exists():
-        # Try by UUID first
         for lang_dir in legacy_root.iterdir():
             if not lang_dir.is_dir():
                 continue
@@ -237,7 +244,6 @@ def _load_full_document_text(
             if result:
                 return result
 
-        # 3. Try by external identifiers (DOI, PMID) for legacy data
         if identifiers:
             search_keys = [
                 v.replace("/", "_")
@@ -516,6 +522,21 @@ class SearchService:
             else None
         )
 
+        # Look up phase_2 output_dir from persisted pipeline state
+        phase2_output_dir: str | None = None
+        run_state_stmt = (
+            select(PipelineRunState.state_json)
+            .where(PipelineRunState.source_document_id == source_document_id)
+            .order_by(PipelineRunState.created_at.desc())
+            .limit(1)
+        )
+        run_state_result = await self._session.execute(run_state_stmt)
+        state_json = run_state_result.scalar_one_or_none()
+        if isinstance(state_json, dict):
+            p2_output = state_json.get("phase_2_output")
+            if isinstance(p2_output, dict):
+                phase2_output_dir = p2_output.get("output_dir")
+
         distribution = EvidenceFieldDistribution()
         detail_items: list[EvidenceGroupItem] = []
         confidences: list[float] = []
@@ -661,10 +682,16 @@ class SearchService:
             pmid=identifiers.get("pmid"),
             doi=identifiers.get("doi"),
             original_document_text=_load_full_document_text(
-                source_document_id, track="original", identifiers=identifiers,
+                source_document_id,
+                track="original",
+                identifiers=identifiers,
+                known_output_dir=phase2_output_dir,
             ),
             translated_document_text=_load_full_document_text(
-                source_document_id, track="translated", identifiers=identifiers,
+                source_document_id,
+                track="translated",
+                identifiers=identifiers,
+                known_output_dir=phase2_output_dir,
             ),
             gene=gene,
             variant=variant,
