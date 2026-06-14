@@ -177,6 +177,16 @@ class FieldMatch:
     source_span: dict[str, object] | None = None
     match_type: str = "none"  # exact, fuzzy, none
     extra_found_values: list[str] = field(default_factory=list)
+    best_score: float | None = None
+    source_score: float | None = None
+    confidence_score: float | None = None
+    agreement_score: float | None = None
+    status_score: float | None = None
+    verifier_support_score: float | None = None
+    target_specificity_score: float | None = None
+    contradiction_penalty: float | None = None
+    accepted_track: str | None = None
+    normalized_value: str | None = None
 
 
 @dataclass
@@ -300,6 +310,7 @@ def compare_evidence(
                 extracted_confidence=confidence,
                 source_span=source_span,
                 match_type=match_type,
+                **_score_components(cand),
             )
             if best_match is None or (match_type == "exact" and best_match.match_type != "exact"):
                 best_match = candidate_match
@@ -317,6 +328,7 @@ def compare_evidence(
                         extracted_confidence=cand.get("confidence", 0.0),
                         source_span=cand.get("source_span") if isinstance(cand.get("source_span"), dict) else None,
                         match_type="ontology_ancestor",
+                        **_score_components(cand),
                     )
                     break
 
@@ -342,9 +354,42 @@ def compare_evidence(
                 extracted_confidence=candidates[0].get("confidence", 0.0),
                 source_span=candidates[0].get("source_span") if isinstance(candidates[0].get("source_span"), dict) else None,
                 match_type="wrong_value",
+                **_score_components(candidates[0]),
             ))
 
     return matches
+
+
+def _score_components(candidate: dict) -> dict[str, float | str | None]:
+    """Copy optional contextual reconcile score components from a benchmark candidate."""
+    return {
+        "best_score": _optional_float(candidate.get("best_score")),
+        "source_score": _optional_float(candidate.get("source_score")),
+        "confidence_score": _optional_float(candidate.get("confidence_score")),
+        "agreement_score": _optional_float(candidate.get("agreement_score")),
+        "status_score": _optional_float(candidate.get("status_score")),
+        "verifier_support_score": _optional_float(candidate.get("verifier_support_score")),
+        "target_specificity_score": _optional_float(candidate.get("target_specificity_score")),
+        "contradiction_penalty": _optional_float(candidate.get("contradiction_penalty")),
+        "accepted_track": _optional_string(candidate.get("accepted_track")),
+        "normalized_value": _optional_string(candidate.get("normalized_value")),
+    }
+
+
+def _optional_float(value: object) -> float | None:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _optional_string(value: object) -> str | None:
+    if value is None:
+        return None
+    text = str(value)
+    return text if text else None
 
 
 def mark_expected_fields_missing(
@@ -1002,7 +1047,17 @@ async def run_evaluation(
                      "matched": f.matched, "extracted": f.extracted_value,
                      "source_span": f.source_span,
                      "match_type": f.match_type,
-                     "extra_found_values": f.extra_found_values}
+                     "extra_found_values": f.extra_found_values,
+                     "best_score": f.best_score,
+                     "source_score": f.source_score,
+                     "confidence_score": f.confidence_score,
+                     "agreement_score": f.agreement_score,
+                     "status_score": f.status_score,
+                     "verifier_support_score": f.verifier_support_score,
+                     "target_specificity_score": f.target_specificity_score,
+                     "contradiction_penalty": f.contradiction_penalty,
+                     "accepted_track": f.accepted_track,
+                     "normalized_value": f.normalized_value}
                     for f in m.field_matches
                 ],
                 "entity_matches": m.entity_matches,

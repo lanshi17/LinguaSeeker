@@ -75,6 +75,42 @@ def test_compare_evidence_preserves_source_span_for_matched_candidate() -> None:
     assert matches[0].source_span == source_span
 
 
+def test_compare_evidence_preserves_contextual_score_components() -> None:
+    expected = [{"field_id": "A.gene_symbol", "value": "AARS2"}]
+    extracted = [
+        {
+            "field_id": "A.gene_symbol",
+            "status": "found",
+            "value": "AARS2",
+            "confidence": 0.9,
+            "best_score": 0.91,
+            "source_score": 1.0,
+            "confidence_score": 0.9,
+            "agreement_score": 0.0,
+            "status_score": 1.0,
+            "verifier_support_score": 0.8,
+            "target_specificity_score": 1.0,
+            "contradiction_penalty": 0.0,
+            "accepted_track": "original",
+            "normalized_value": "aars2",
+        }
+    ]
+
+    matches = compare_evidence(expected, extracted)
+
+    assert matches[0].matched
+    assert matches[0].best_score == 0.91
+    assert matches[0].source_score == 1.0
+    assert matches[0].confidence_score == 0.9
+    assert matches[0].agreement_score == 0.0
+    assert matches[0].status_score == 1.0
+    assert matches[0].verifier_support_score == 0.8
+    assert matches[0].target_specificity_score == 1.0
+    assert matches[0].contradiction_penalty == 0.0
+    assert matches[0].accepted_track == "original"
+    assert matches[0].normalized_value == "aars2"
+
+
 def test_compare_evidence_preserves_source_span_for_wrong_value_candidate() -> None:
     expected = [{"field_id": "A.gene_symbol", "value": "AARS2"}]
     source_span = {"text_snippet": "BRCA1 distractor", "start_offset": 40, "end_offset": 55}
