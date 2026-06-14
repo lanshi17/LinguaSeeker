@@ -186,7 +186,7 @@ def _recommend_value(
     if susceptibility_score:
         return RelationshipLabel.SUSCEPTIBILITY.value
     if direct_association_score and not hedged_inference_score:
-        return RelationshipLabel.ASSOCIATED.value
+        return RelationshipLabel.UNCERTAIN.value
     normalized = _normalize(candidate_value).replace(" ", "_")
     if normalized in {label.value for label in RelationshipLabel}:
         return normalized
