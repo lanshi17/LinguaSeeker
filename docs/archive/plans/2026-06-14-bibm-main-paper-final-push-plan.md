@@ -1,9 +1,9 @@
 # BIBM Main Paper Final Push Implementation Plan
 
-**Status:** in-progress
+**Status:** completed
 **Created:** 2026-06-14
-**Completed:** —
-**PR:** —
+**Completed:** 2026-06-15
+**PR:** local commits `f9a9ec00`, `261a23e8`, `7e4fc58e`
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
