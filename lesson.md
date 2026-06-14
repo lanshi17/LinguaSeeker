@@ -2560,3 +2560,15 @@ Removed only the eight all-zero local ref files under `.git/refs/heads/`, then r
 **Solution**: Added a deterministic token-sequence fallback that accepts a citation only when the predicted snippet is recoverable as a contiguous token sequence in the source text, optionally after dropping `a/an/the`. It does not accept loose bag-of-words overlap. Regenerated traceability reports; the candidate report `traceability_context_verifier_reconcile_20260614_213054.json` now has CVR=1.0 and HCR=0.0.
 
 **Prevention**: For traceability metrics, keep separate concepts separate: offset validity, recoverable citation text, boundary tightness, and semantic support. Do not label offset drift as hallucination when the cited text is recoverable, and do not accept unordered token overlap as valid citation evidence.
+
+## 2026-06-14: Relationship repair must not leak ClinGen validity labels
+
+**Problem**: G3 diagnosis on `reconcile_ablation_20260614_155845.json` still shows `wrong_relationship_semantics=7`, including rows whose gold labels are `refuted` or `causative` while the article-local source snippet only says `associated`, `related`, or `predicted`. A naive fix could map those rows from `expected.json` classification or gold relationship labels, improving F1 while invalidating the Main Paper no-leakage claim.
+
+**Investigation**: Refreshed contextual diagnosis as `contextual_reconcile_diagnosis_20260614_215118.json` and ran the deterministic verifier over each relationship failure using only source snippets plus target-safe context. Several rows did not contain source-local refutation or causal evidence; the gap is partly between ClinGen gene-disease validity semantics and article-local extraction semantics.
+
+**Root cause**: The current method mixes article-local relation cues with benchmark labels that sometimes encode ClinGen curation outcomes. Source-only extraction can justify `uncertain`, `associated`, or `disputed` for weak/predicted evidence, but cannot honestly infer `refuted` without negative source evidence or an allowed external validity context.
+
+**Solution**: Wrote the G3 repair plan to separate source-only algorithmic fixes from evaluation/ontology sensitivity analysis. The plan explicitly forbids using `expected_evidence`, evaluator matches, or ClinGen classification as runtime relationship answers.
+
+**Prevention**: Before optimizing a paper-facing metric, classify each failure as source-evidence error, target-boundary error, evaluator-normalization issue, or label-semantics mismatch. Do not implement metric-improving rules that cannot be defended as runtime inputs in the methods section.
