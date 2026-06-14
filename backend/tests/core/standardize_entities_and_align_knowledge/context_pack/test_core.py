@@ -121,3 +121,39 @@ def test_build_context_pack_harvests_safe_source_stem_aliases(tmp_path: Path) ->
     assert "systemic lupus erythematosus" in pack.disease.aliases
     assert "SLE" in pack.disease.aliases
     assert "TLR7" not in pack.disease.aliases
+
+
+def test_build_context_pack_harvests_source_observed_mondo_disease_aliases(tmp_path: Path) -> None:
+    expected_path = tmp_path / "expected.json"
+    expected_path.write_text(
+        json.dumps(
+            {
+                "entry_id": "clingen_010",
+                "gene_symbol": "AP1G1",
+                "disease_label": "complex neurodevelopmental disorder",
+                "mondo_id": "MONDO:0100038",
+                "moi": "AD",
+                "classification": "Definitive",
+                "expected_evidence": [
+                    {"field_id": "A.gene_disease_relationship", "value": "causative"}
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "source.md").write_text(
+        "Variants in the AP1G1 gene have recently been associated with "
+        "Usmani-Riazuddin syndrome (USRISD), a very rare human genetic disorder. "
+        "AP1G1 neurodevelopmental disorder can present with epilepsy and developmental delay.",
+        encoding="utf-8",
+    )
+
+    pack = build_context_pack_from_expected_json(expected_path)
+    aliases = {alias.casefold() for alias in pack.disease.aliases}
+
+    assert "Usmani-Riazuddin syndrome" in pack.disease.aliases
+    assert "USRISD" in pack.disease.aliases
+    assert "epilepsy" not in aliases
+    assert "developmental delay" not in aliases
+    assert "Usmani-Riazuddin syndrome, autosomal dominant" not in pack.disease.aliases
+    assert "Usmani-Riazuddin syndrome, autosomal recessive" not in pack.disease.aliases

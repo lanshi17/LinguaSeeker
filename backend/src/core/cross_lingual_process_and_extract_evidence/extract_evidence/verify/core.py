@@ -113,11 +113,20 @@ def score_candidate_support(item: EvidenceVerificationInput) -> EvidenceVerifica
     hedged_inference_score = _contains_any(snippet, _HEDGED_INFERENCE_TERMS)
     refute_score = _contains_any(snippet, _REFUTATION_TERMS)
     disputed_score = _contains_any(snippet, _DISPUTED_TERMS)
+    mendelian_variant_association_score = _mendelian_variant_association(
+        snippet=snippet,
+        target_gene=target_gene,
+        target_aliases=target_aliases,
+        direct_association_score=direct_association_score,
+        hedged_inference_score=hedged_inference_score,
+        refute_score=refute_score,
+        disputed_score=disputed_score,
+    )
     disease_list_penalty = _disease_list_penalty(snippet, target_aliases)
 
     recommended_value = _recommend_value(
         item.candidate_value,
-        causal_score,
+        causal_score or mendelian_variant_association_score,
         direct_association_score,
         susceptibility_score,
         hedged_inference_score,
@@ -126,7 +135,7 @@ def score_candidate_support(item: EvidenceVerificationInput) -> EvidenceVerifica
     )
     support_score = _support_score(
         target_specificity_score=target_specificity_score,
-        causal_score=causal_score,
+        causal_score=causal_score or mendelian_variant_association_score,
         direct_association_score=direct_association_score,
         susceptibility_score=susceptibility_score,
         hedged_inference_score=hedged_inference_score,
@@ -232,6 +241,27 @@ def _disease_list_penalty(snippet: str, disease_aliases: tuple[str, ...]) -> flo
     if list_hits >= 1:
         return 0.15
     return 0.0
+
+
+def _mendelian_variant_association(
+    *,
+    snippet: str,
+    target_gene: str,
+    target_aliases: tuple[str, ...],
+    direct_association_score: bool,
+    hedged_inference_score: bool,
+    refute_score: bool,
+    disputed_score: bool,
+) -> bool:
+    """Detect high-specificity Mendelian variant association wording."""
+    if not direct_association_score or hedged_inference_score or refute_score or disputed_score:
+        return False
+    if not target_gene or target_gene not in snippet:
+        return False
+    if not any(alias and alias in snippet for alias in target_aliases):
+        return False
+    gene_window = rf"\bvariants?\s+(?:in|of)\s+(?:the\s+)?{re.escape(target_gene)}(?:\s+gene)?\b"
+    return bool(re.search(gene_window, snippet))
 
 
 def _rationale(

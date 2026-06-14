@@ -83,6 +83,25 @@ def test_score_candidate_support_treats_functional_model_causation_as_causative(
     assert result.requires_review is False
 
 
+def test_score_candidate_support_treats_mendelian_variant_association_as_causative() -> None:
+    result = score_candidate_support(
+        _verification_input(
+            candidate_value="associated",
+            source_snippet=(
+                "Variants in the AP1G1 gene have recently been associated with "
+                "Usmani-Riazuddin syndrome, a very rare human genetic disorder."
+            ),
+            target_gene="AP1G1",
+            target_disease="complex neurodevelopmental disorder",
+            disease_aliases=("complex neurodevelopmental disorder", "Usmani-Riazuddin syndrome"),
+        )
+    )
+
+    assert result.recommended_value == "causative"
+    assert result.support_score >= 0.75
+    assert result.requires_review is False
+
+
 def test_score_candidate_support_marks_unclear_pathogenic_link_as_uncertain() -> None:
     result = score_candidate_support(
         _verification_input(
@@ -241,7 +260,6 @@ def test_score_candidate_support_does_not_refute_without_negative_source_evidenc
     )
 
     assert result.recommended_value != "refuted"
-
 
 
 def test_score_candidate_support_uses_uncertain_for_indirect_weak_relationship_evidence() -> None:
