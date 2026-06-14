@@ -1135,6 +1135,8 @@ class StandardizationRepository:
         for payload in input_data.track_payloads.values():
             if not isinstance(payload, dict):
                 continue
+            if payload.get("audit_only") is True:
+                continue
             track = self._normalize_enum_like_string(payload.get("track"))
             for item in payload.get("evidence_items", []):
                 if not isinstance(item, dict):

@@ -248,3 +248,117 @@ def test_dual_result_adapter_carries_target_and_phenotype_evidence() -> None:
 
     assert output.extraction_target == target
     assert any(candidate.raw_text == "COXPD8" for candidate in output.candidates)
+
+
+def test_dual_result_adapter_prefers_reconciled_result_for_default_input() -> None:
+    result = DualEvidenceExtractionResult(
+        document_id="doc-reconciled",
+        original_result=EvidenceExtractionResult(
+            status=EvidenceExtractionStatus.COMPLETED,
+            document_id="doc-reconciled",
+            track=Track.ORIGINAL,
+            evidence_items=[
+                EvidenceItem(
+                    field_id="A.gene_symbol",
+                    category="A",
+                    field_name="Gene symbol",
+                    status=EvidenceStatus.FOUND,
+                    value="BRCA1",
+                    confidence=0.8,
+                )
+            ],
+            evidence_chains=[EvidenceChain(chain_id="chain-original", gene_text="BRCA1")],
+        ),
+        translated_result=EvidenceExtractionResult(
+            status=EvidenceExtractionStatus.COMPLETED,
+            document_id="doc-reconciled",
+            track=Track.TRANSLATED,
+            evidence_items=[
+                EvidenceItem(
+                    field_id="A.gene_symbol",
+                    category="A",
+                    field_name="Gene symbol",
+                    status=EvidenceStatus.FOUND,
+                    value="BRCA2",
+                    confidence=0.8,
+                )
+            ],
+            evidence_chains=[EvidenceChain(chain_id="chain-translated", gene_text="BRCA2")],
+        ),
+        reconciled_result=EvidenceExtractionResult(
+            status=EvidenceExtractionStatus.COMPLETED,
+            document_id="doc-reconciled",
+            track=Track.RECONCILED,
+            evidence_items=[
+                EvidenceItem(
+                    field_id="A.gene_symbol",
+                    category="A",
+                    field_name="Gene symbol",
+                    status=EvidenceStatus.FOUND,
+                    value="AARS2",
+                    confidence=0.9,
+                )
+            ],
+            evidence_chains=[EvidenceChain(chain_id="chain-reconciled", gene_text="AARS2")],
+        ),
+    )
+
+    output = DualResultAdapter().to_standardization_input(
+        result,
+        source_document_id="source-reconciled",
+        processing_run_id="run-reconciled",
+    )
+
+    assert [item.value for item in output.evidence_items] == ["AARS2"]
+    gene_candidates = [candidate for candidate in output.candidates if candidate.entity_type == EntityType.GENE]
+    assert [candidate.raw_text for candidate in gene_candidates] == ["AARS2"]
+    assert gene_candidates[0].track == "reconciled"
+    assert set(output.track_payloads) == {"reconciled", "audit_original", "audit_translated"}
+    assert output.track_payloads["audit_original"]["audit_only"] is True
+    assert output.track_payloads["audit_translated"]["audit_only"] is True
+    assert "audit_only" not in output.track_payloads["reconciled"]
+
+
+def test_dual_result_adapter_preserves_legacy_union_when_reconciled_result_absent() -> None:
+    result = DualEvidenceExtractionResult(
+        document_id="doc-legacy",
+        original_result=EvidenceExtractionResult(
+            status=EvidenceExtractionStatus.COMPLETED,
+            document_id="doc-legacy",
+            track=Track.ORIGINAL,
+            evidence_items=[
+                EvidenceItem(
+                    field_id="A.gene_symbol",
+                    category="A",
+                    field_name="Gene symbol",
+                    status=EvidenceStatus.FOUND,
+                    value="BRCA1",
+                    confidence=0.8,
+                )
+            ],
+        ),
+        translated_result=EvidenceExtractionResult(
+            status=EvidenceExtractionStatus.COMPLETED,
+            document_id="doc-legacy",
+            track=Track.TRANSLATED,
+            evidence_items=[
+                EvidenceItem(
+                    field_id="A.gene_symbol",
+                    category="A",
+                    field_name="Gene symbol",
+                    status=EvidenceStatus.FOUND,
+                    value="BRCA2",
+                    confidence=0.8,
+                )
+            ],
+        ),
+    )
+
+    output = DualResultAdapter().to_standardization_input(
+        result,
+        source_document_id="source-legacy",
+        processing_run_id="run-legacy",
+    )
+
+    assert [item.value for item in output.evidence_items] == ["BRCA1", "BRCA2"]
+    assert set(output.track_payloads) == {"original", "translated"}
