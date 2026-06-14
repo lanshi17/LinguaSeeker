@@ -12,6 +12,18 @@
 
 **Prevention**: Before touching files, pick the narrowest approved editing tool. Use `apply_patch` for manual textual changes; reserve scripts for bulk mechanical rewrites that are not practical as patches.
 
+## 2026-06-14: G3 disease boundary repair must stay source-supported and score-aware
+
+**Problem**: The remaining BIBM G3 gap was not raw extraction anymore; it was boundary selection and relation semantics. A naive disease canonicalization rule or label-driven repair would have leaked benchmark truth, while score tuning without exposing score components would have been impossible to defend in a paper.
+
+**Investigation**: Verified the contextual reconciler, verifier, and benchmark evaluator together. Relationship labels now stay source-only, bare association language falls back to `uncertain`, and disease canonicalization only applies when the source snippet contains a safe target alias. The benchmark report also preserves score decomposition so later metric changes can be traced to verifier support, target specificity, contradiction penalties, and cross-track agreement.
+
+**Root cause**: The old behavior mixed evaluation-friendly boundary relaxation with method logic. That blurs the line between a defendable algorithm and metric tuning.
+
+**Fix**: Keep runtime repair source-grounded, require explicit source alias support for target disease canonicalization, and expose score components in the report before any further boundary tuning.
+
+**Prevention**: For benchmark-facing logic, always separate source evidence, target-safe aliases, and gold labels. If a claim depends on traceability or reconciliation quality, surface the underlying score components first so the paper can explain the gain instead of only reporting it.
+
 ## 2026-06-14: Worktree backend verification used shared backend env after local editable install hit rust-io build failure
 
 **Problem**: The worktree backend environment did not have `pytest` available, and `uv pip install -e '.[dev]'` inside the worktree backend attempted to rebuild the editable `rust-io` dependency. That rebuild failed inside `aws-runtime` with `error[E0282]: type annotations needed`, so a direct worktree-local `python -m pytest` path was not usable.
