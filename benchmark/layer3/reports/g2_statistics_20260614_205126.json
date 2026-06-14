@@ -1,0 +1,24 @@
+{
+  "source_report_path": "benchmark/layer3/reports/reconcile_ablation_20260614_155845.json",
+  "baseline_strategy": "grounded_hard_rule",
+  "candidate_strategy": "context_verifier_reconcile",
+  "sample_size": 30,
+  "baseline_f1": 0.882,
+  "candidate_f1": 0.9157,
+  "delta_f1": 0.0337,
+  "bootstrap_samples": 10000,
+  "bootstrap_ci_low": 0.0068,
+  "bootstrap_ci_high": 0.0637,
+  "sign_test_p": 0.0625,
+  "significant": false,
+  "main_paper_ready": false,
+  "baseline_over_extractions": 0,
+  "candidate_over_extractions": 0,
+  "delta_over_extractions": 0,
+  "baseline_hcr": 0.0,
+  "candidate_hcr": 0.0,
+  "delta_hcr": 0.0,
+  "warnings": [
+    "paired_delta_not_significant; do not claim superiority"
+  ]
+}

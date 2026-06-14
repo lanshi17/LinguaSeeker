@@ -2524,3 +2524,15 @@ Removed only the eight all-zero local ref files under `.git/refs/heads/`, then r
 **Solution**: Use the shared backend venv for verification when worktree uv sync is broken, keep disputed/refuted as separate verifier labels, and use normalized equality in `compare_evidence` before falling back to fuzzy matching.
 
 **Prevention**: Add a lighter-weight verification path for worktrees with broken editable Rust builds, and keep benchmark normalization rules explicit so disease punctuation changes do not leak into fuzzy-only matches.
+
+## 2026-06-14: Frozen manifests must reject smoke baseline reports
+
+**Problem**: While generating the BIBM Main Paper G0 frozen manifest, selecting baseline reports by newest filename picked `baseline_b0_20260613_005330.json` and related smoke reports with `total_entries=1`, not the full N=30 baseline reports. The manifest generation correctly failed with `B0 total_entries=1 does not match frozen N=30`.
+
+**Investigation**: Listed every `baseline_b*.json` with `baseline_id`, `baseline_name`, `total_entries`, and `per_entry` count. The full-N reports were B0 `baseline_b0_20260613_013114.json`, B1 `baseline_b1_20260613_014535.json`, B2 `baseline_b2_20260613_020025.json`, B3 `baseline_b3_20260613_021408.json`, and B4 `baseline_b4_20260613_031120.json`; earlier timestamped files were smoke or N=3 diagnostics.
+
+**Root cause**: Timestamp recency is not a valid proxy for benchmark scope. Baseline reports from smoke, N=3, and N=30 runs share the same filename family, so a naive `ls -t baseline_b*.json | head` can silently select the wrong evidence set.
+
+**Solution**: Extended `main_paper_rescue_manifest.py` to require frozen entry IDs, validate `total_entries`, validate exposed `per_entry` IDs when available, and reject G2 reports whose `source_report_path` does not match the manifest ablation report. Regenerated the manifest only after passing B0-B4 full-N reports explicitly.
+
+**Prevention**: For paper-facing manifests and tables, never select baseline reports by timestamp alone. Always inspect `total_entries`, `per_entry` count, and matched entry IDs before freezing a report path.
