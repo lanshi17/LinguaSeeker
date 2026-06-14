@@ -2006,16 +2006,74 @@ Hand-written regexes cannot conversationally gather PICO/PMID/PDF slots, and the
 
 **Fix**:
 1. Added `original_document_text: str | None = None` and `translated_document_text: str | None = None` to `EvidenceGroupDetailResponse` in contracts.py.
-2. Fixed `_load_full_document_text()` path to use `parents[3]` (backend root).
-3. Extracted `_concat_blocks()` and `_load_from_dir()` helpers.
-4. Added three-tier search: current pipeline path → legacy path by UUID → legacy path by DOI/PMID identifiers.
-5. Updated caller to pass `identifiers` dict for the identifier-based fallback.
+2. Refactored `_load_full_document_text()` to accept `known_output_dir` parameter.
+3. `get_group_detail()` queries `pipeline_run_states.state_json` → `phase_2_output.output_dir` to get the exact path the pipeline wrote to, passing it as `known_output_dir`. This eliminates path guessing entirely.
+4. Fallback chain: exact DB path → scan `backend/data/pipeline/` → scan `backend/output/cross_lingual/` (legacy).
+5. Extracted `_concat_blocks()` and `_load_from_dir()` helpers.
+
+**Key insight**: `pipeline_run_states.state_json` stores the full `PipelineGraphState` (JSONB), which includes `phase_2_output.output_dir`. Querying this is authoritative — no need to guess paths.
 
 **Prevention**:
 - When a Pydantic model is used as an API response, always verify that the fields you pass at construction time are actually declared in the model. Pydantic v2's `extra="ignore"` default silently drops undeclared fields — prefer `extra="forbid"` in dev/test to catch this early.
-- Path calculations using `Path.parents[N]` are fragile — one off-by-one and you're reading the wrong directory. Prefer named constants or config values for root paths.
-- When a reader and writer are in different modules, ensure they agree on the storage path. Consider extracting a shared `get_output_root()` utility.
+- When intermediate output paths are persisted in state, read them back from state rather than reconstructing them from convention.
 
 ### Files Changed
 - `backend/src/core/visualize_evidence_with_expert_in_loop/contracts.py` — add `original_document_text`, `translated_document_text` to `EvidenceGroupDetailResponse`
-- `backend/src/core/visualize_evidence_with_expert_in_loop/search_service.py` — fix path, add legacy fallback, extract helpers
+- `backend/src/core/visualize_evidence_with_expert_in_loop/search_service.py` — DB-driven path lookup, legacy fallback, extract helpers
+
+---
+
+## 2026-06-13: Markdown rendering with evidence highlight compatibility
+
+**Problem**: Full document text contains markdown formatting (headings, bold, lists, links), but the `HighlightedParagraph` component rendered it as plain text with `whitespace-pre-wrap`. Markdown syntax was visible as raw characters.
+
+**Challenge**: Evidence highlights are positioned by character offsets in the raw text. Markdown rendering strips syntax characters (`##`, `**`, `[]()`, etc.), shifting text positions. Direct offset mapping is fragile because syntax varies (ATX headings, emphasis markers, link syntax).
+
+**Solution**: react-markdown + DOM Range API approach:
+1. Render markdown with `react-markdown` — proper block/inline rendering.
+2. Walk DOM text nodes, match each against the raw text using `indexOf` to build position mappings (handles stripped syntax automatically).
+3. For each highlight, split text nodes at boundaries and wrap with styled `<mark>` elements.
+4. Clean up marks on re-render via `useEffect` cleanup.
+
+**Key insight**: Instead of building a full offset map, search for each DOM text node's content in the raw text sequentially. Markdown syntax characters are skipped naturally because they don't appear in the rendered DOM text.
+
+**Implementation**:
+- `MarkdownDocumentViewer` component renders markdown and applies highlights via DOM manipulation
+- `EvidenceDocumentReader` detects full-text mode (single paragraph > 500 chars) and switches to markdown rendering
+- Extracted `categoryChipStyle`, `categoryMarkStyle`, `categoryLabel` to `utils/categoryStyles.ts` to avoid circular imports
+
+**Prevention**: When mixing rich text rendering with character-offset-based annotations, use DOM text node walking + search-based position mapping rather than trying to calculate offset transformations through markdown ASTs.
+
+### Files Changed
+- `frontend/src/features/evidence-search/components/MarkdownDocumentViewer.tsx` — new component
+- `frontend/src/features/evidence-search/components/EvidenceDetailView.tsx` — use MarkdownDocumentViewer for full text, extract shared utils
+- `frontend/src/features/evidence-search/utils/categoryStyles.ts` — extracted shared style functions
+- `frontend/package.json` — added `react-markdown` dependency
+
+---
+
+## 2026-06-13: Git fetch blocked by all-zero local refs
+
+### Problem
+`git fetch origin` failed while syncing `dev` with:
+
+```text
+fatal: bad object refs/heads/feature/intent-routing
+error: github.com:lanshi17/ACMG-Lingua.git did not send all necessary objects
+```
+
+### Investigation
+- `git show-ref --heads --verify refs/heads/feature/intent-routing` reported a bad ref.
+- `.git/refs/heads/feature/intent-routing` contained `0000000000000000000000000000000000000000`.
+- `git for-each-ref` showed seven additional all-zero `worktree-agent-*` refs.
+- `git ls-remote --heads origin dev feature/intent-routing` returned only `dev`, so the broken feature ref was local-only.
+
+### Root Cause
+Local branch reference files had been left with the null object id, which made Git advertise invalid local objects during fetch negotiation.
+
+### Solution
+Removed only the eight all-zero local ref files under `.git/refs/heads/`, then reran `git fetch origin` and `git pull --ff-only origin dev`. The pull completed with `Already up to date`.
+
+### Prevention
+- If `git fetch` reports `bad object refs/heads/<branch>`, inspect the local ref file before retrying.
+- Treat all-zero loose refs as local repository metadata corruption; confirm the branch is not active in `git worktree list` and not present on remote before deleting the ref file.
