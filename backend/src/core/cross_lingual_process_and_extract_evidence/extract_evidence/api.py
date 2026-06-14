@@ -18,6 +18,7 @@ from .contracts import (
     TrackDocument,
 )
 from .providers import LangChainEvidenceProvider
+from .reconcile.api import CrossTrackReconcileService
 from .workflow import EvidenceExtractionWorkflow
 
 
@@ -40,6 +41,7 @@ class EvidenceExtractionService:
         self._ctx = EvidenceExtractionConfigContext.from_config(cfg)
         self._provider = LangChainEvidenceProvider(self._ctx)
         self._workflow = EvidenceExtractionWorkflow(provider=self._provider)
+        self._reconcile_service = CrossTrackReconcileService()
 
     async def run(self, document: TrackDocument) -> EvidenceExtractionResult:
         state = await self._workflow.run_async(document)
@@ -67,6 +69,7 @@ class EvidenceExtractionService:
             document_id=documents.document_id,
             original_result=original_result,
             translated_result=translated_result,
+            reconciled_result=self._reconcile_service.run(original_result, translated_result),
         )
 
     def run_sync(self, document: TrackDocument) -> EvidenceExtractionResult:

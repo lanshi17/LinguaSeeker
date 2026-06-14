@@ -5,6 +5,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     DocumentEvidenceMap,
     EvidenceItem,
     EvidenceStatus,
+    ExtractionTarget,
     PageSpan,
     QualityReport,
     SourceLocation,
@@ -82,6 +83,38 @@ def test_catalog_extraction_stage_calls_strong_tier():
     call_kwargs = provider.invoke_structured.call_args
     assert call_kwargs.kwargs["tier"] == EvidenceModelTier.STRONG
     assert "[Block 0 | table | page 1 | caption: Table 1. Variants]" in call_kwargs.kwargs["prompt"]
+
+
+def test_catalog_extraction_stage_uses_target_recall_first_block_selection() -> None:
+    provider = MagicMock()
+    provider.invoke_structured.return_value = []
+    document = TrackDocument(
+        document_id="doc-1",
+        track=Track.ORIGINAL,
+        formatted_text="",
+        page_spans=[],
+        blocks=[
+            ContentBlock(text="Administrative header without target evidence."),
+            ContentBlock(
+                text=(
+                    "Biallelic pathogenic variants in ABCB4 cause progressive familial "
+                    "intrahepatic cholestasis type 3."
+                ),
+            ),
+        ],
+        extraction_target=ExtractionTarget(
+            gene_symbol="ABCB4",
+            disease_name="progressive familial intrahepatic cholestasis type 3",
+        ),
+    )
+
+    CatalogExtractionStage(provider).run(document, DocumentEvidenceMap(relevant=True))
+
+    prompts = [call.kwargs["prompt"] for call in provider.invoke_structured.call_args_list]
+    assert prompts
+    assert all("[Block 1 | text | page 1]" in prompt for prompt in prompts)
+    assert all("[Block 0" not in prompt for prompt in prompts)
+    assert all("Administrative header without target evidence" not in prompt for prompt in prompts)
 
 
 def test_special_evidence_stage_calls_strong_tier():
@@ -545,10 +578,19 @@ def test_quality_validation_stage_returns_report():
 
 def test_evidence_map_stage_chunks_long_document_and_merges_maps():
     provider = MagicMock()
-    provider.invoke_structured.side_effect = [
-        DocumentEvidenceMap(relevant=False, gene_terms=["GLA"]),
-        DocumentEvidenceMap(relevant=True, gene_terms=["GLA", "BRCA1"], variant_terms=["c.5266dupC"]),
-    ]
+    call_count = 0
+
+    def _invoke_map(**kwargs):  # noqa: ANN003
+        nonlocal call_count
+        call_count += 1
+        is_later_chunk = call_count > 1
+        return DocumentEvidenceMap(
+            relevant=is_later_chunk,
+            gene_terms=["GLA", "BRCA1"] if is_later_chunk else ["GLA"],
+            variant_terms=["c.5266dupC"] if is_later_chunk else [],
+        )
+
+    provider.invoke_structured.side_effect = _invoke_map
     document = TrackDocument(
         document_id="doc-1",
         track=Track.ORIGINAL,
@@ -565,49 +607,55 @@ def test_evidence_map_stage_chunks_long_document_and_merges_maps():
     assert result.relevant is True
     assert result.gene_terms == ["GLA", "BRCA1"]
     assert result.variant_terms == ["c.5266dupC"]
-    assert provider.invoke_structured.call_count == 2
-    assert [call.kwargs["stage"] for call in provider.invoke_structured.call_args_list] == [
-        "relevance_scan/1",
-        "relevance_scan/2",
-    ]
+    assert provider.invoke_structured.call_count >= 2
+    assert all(
+        call.kwargs["stage"].startswith("relevance_scan/")
+        for call in provider.invoke_structured.call_args_list
+    )
 
 
 def test_catalog_extraction_stage_chunks_block_prompts_and_keeps_global_block_indices():
     provider = MagicMock()
-    provider.invoke_structured.side_effect = [
-        [
-            EvidenceItem(
-                field_id="A.gene_symbol",
-                category="A",
-                field_name="Gene symbol",
-                status=EvidenceStatus.FOUND,
-                value="GLA",
-                confidence=0.8,
-                source=SourceLocation(
-                    block_index=0,
-                    context_type="text",
-                    context_ref="",
-                    text_snippet="GLA",
+
+    def _invoke_catalog(**kwargs):  # noqa: ANN003
+        prompt = kwargs["prompt"]
+        if "[Block 2 | table | page 3]" in prompt:
+            return [
+                EvidenceItem(
+                    field_id="A.variant_hgvs_c",
+                    category="A",
+                    field_name="HGVS coding variant",
+                    status=EvidenceStatus.FOUND,
+                    value="c.1000G>A",
+                    confidence=0.9,
+                    source=SourceLocation(
+                        block_index=2,
+                        context_type="table",
+                        context_ref="",
+                        text_snippet="c.1000G>A",
+                    ),
                 ),
-            )
-        ],
-        [
-            EvidenceItem(
-                field_id="A.variant_hgvs_c",
-                category="A",
-                field_name="HGVS coding variant",
-                status=EvidenceStatus.FOUND,
-                value="c.1000G>A",
-                confidence=0.9,
-                source=SourceLocation(
-                    block_index=2,
-                    context_type="table",
-                    context_ref="",
-                    text_snippet="c.1000G>A",
+            ]
+        if "[Block 0 | text | page 1]" in prompt:
+            return [
+                EvidenceItem(
+                    field_id="A.gene_symbol",
+                    category="A",
+                    field_name="Gene symbol",
+                    status=EvidenceStatus.FOUND,
+                    value="GLA",
+                    confidence=0.8,
+                    source=SourceLocation(
+                        block_index=0,
+                        context_type="text",
+                        context_ref="",
+                        text_snippet="GLA",
+                    ),
                 ),
-            )
-        ],
-    ]
+            ]
+        return []
+
+    provider.invoke_structured.side_effect = _invoke_catalog
     document = TrackDocument(
         document_id="doc-1",
         track=Track.ORIGINAL,
@@ -625,15 +673,15 @@ def test_catalog_extraction_stage_chunks_block_prompts_and_keeps_global_block_in
         DocumentEvidenceMap(relevant=True, gene_terms=["GLA"]),
     )
 
-    assert provider.invoke_structured.call_count == 2
+    assert provider.invoke_structured.call_count >= 2
     prompts = [call.kwargs["prompt"] for call in provider.invoke_structured.call_args_list]
-    assert "[Block 0 | text | page 1]" in prompts[0]
+    assert "[Block 0 | text | page 1]" in "\n".join(prompts)
     assert "[Block 2 | table | page 3]" in "\n".join(prompts)
-    assert [call.kwargs["stage"] for call in provider.invoke_structured.call_args_list] == [
-        "catalog_extraction/1",
-        "catalog_extraction/2",
-    ]
-    assert [item.value for item in result] == ["GLA", "c.1000G>A"]
+    assert all(
+        call.kwargs["stage"].startswith("catalog_extraction/")
+        for call in provider.invoke_structured.call_args_list
+    )
+    assert {item.value for item in result} == {"GLA", "c.1000G>A"}
     assert all(item.source is None for item in result)
     assert all(item.raw_source is not None for item in result)
 

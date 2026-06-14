@@ -31,7 +31,8 @@ LangGraph Pipeline (workflow.py)
   │    Scan document for evidence categories present
   │
   ├─ Stage 2: CatalogExtractionStage     [catalog_extraction.py]
-  │    Extract all 138 fields using chunked LLM calls
+  │    Extract catalog fields using chunked STRONG-tier LLM calls
+  │    Uses recall-first block selection when a target gene-disease pair exists
   │
   ├─ Stage 3: SourceGroundingStage       [source_grounding.py]
   │    Validate and repair source spans against document text
@@ -63,7 +64,14 @@ LangGraph Pipeline (workflow.py)
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `__init__` | `(provider, input_budget_tokens=DEFAULT)` | Inject LLM provider |
-| `run` | `(document, evidence_map) -> list[EvidenceItem]` | Extract all 138 catalog fields. Uses chunked prompts for long documents, merges sparse items. |
+| `run` | `(document, evidence_map) -> list[EvidenceItem]` | Extract catalog fields. Uses recall-first block selection for target-scoped documents, chunked prompts for long documents, and sparse item merging. |
+
+### `SelectedBlock` and Recall-First Selection (`block_selection.py`)
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `select_recall_first_blocks` | `(document: TrackDocument, *, max_blocks: int = 12, disease_aliases: Sequence[str] = ()) -> tuple[SelectedBlock, ...]` | Select target-relevant original block indices before catalog extraction. |
+| `score_block` | `(index: int, block: ContentBlock, target: ExtractionTarget, disease_aliases: Sequence[str] = ()) -> SelectedBlock | None` | Score one block by target gene, target disease, disease-family fallback, relationship cues, variant cues, table/caption cues, and section cues. |
 
 ### `SourceGroundingStage` (`source_grounding.py`)
 
@@ -91,8 +99,18 @@ Runs quality rules (completeness, consistency, grounding coverage) and produces 
 Both `RelevanceScanStage` and `CatalogExtractionStage` chunk long documents to stay within LLM token budgets:
 
 - `build_text_prompt_chunks()` — splits text by token budget
-- `build_block_prompt_chunks()` — splits by content blocks
+- `build_block_prompt_chunks()` — splits by content blocks and can restrict to selected original block indices
 - `merge_evidence_maps()` / `merge_sparse_evidence_items()` — combines chunk results
+
+### Target-Scoped Recall-First Extraction
+
+When `TrackDocument.extraction_target` is present, `CatalogExtractionStage` calls
+`select_recall_first_blocks()` before prompt chunking. The selector is intentionally
+recall-first: it keeps blocks with target gene evidence, target disease evidence,
+relationship cues, variant/pathogenic cues, table/caption context, and section cues.
+The selected indices are passed into `build_block_prompt_chunks()` without reindexing,
+so prompts still contain the canonical block labels such as `[Block 12 | table | page 4]`.
+This keeps source grounding and later audit views aligned with the original document.
 
 ### Source Grounding Algorithm
 
