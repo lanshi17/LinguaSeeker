@@ -17,7 +17,7 @@
 
 ## Main Paper Position
 
-Current maturity is about 60%-65% for a Main Paper attempt: the research direction is credible, but the experimental proof is not yet strong enough.
+Current maturity is now suitable for a conservative Main Paper attempt, but not for a broad SOTA superiority claim. The G0-G4 evidence package supports a strong internal-method claim against `grounded_hard_rule`; the margin over the strongest matched LLM baseline is positive but below the pre-declared strong-superiority threshold.
 
 ### Novelty Sentence
 
@@ -25,66 +25,92 @@ We propose a citation-valid-by-construction cross-lingual biomedical evidence re
 
 ### Current Anchor Facts
 
-Use these as the current frozen G0-G2 anchors. They are report facts, but superiority claims still depend on the later G3/G4 gates because `main_paper_ready=false`.
+Use these as the frozen G0-G4 anchors for the next writing package. These are report facts from the aligned 2026-06-15 package.
 
 ```text
 Latest ablation report:
-benchmark/layer3/reports/reconcile_ablation_20260614_155845.json
+benchmark/layer3/reports/reconcile_ablation_20260615_010725.json
 
 N=30 context_verifier_reconcile:
-precision=0.8636
-recall=0.9744
-F1=0.9157
+precision=0.9205
+recall=0.9759
+F1=0.9474
 
 N=30 grounded_hard_rule:
 precision=0.8068
 recall=0.9726
 F1=0.8820
 
+N=30 source_grounded_reconcile:
+precision=0.8182
+recall=0.9730
+F1=0.8889
+
+N=30 dual_union:
+precision=0.7935
+recall=0.9733
+F1=0.8743
+
 Current frozen manifest:
-benchmark/layer3/reports/main_paper_rescue_manifest_20260614_214404.json
+benchmark/layer3/reports/main_paper_rescue_manifest_20260615_011528.json
 
 Matched baseline ladder:
-benchmark/layer3/reports/baseline_comparison_20260614_211111.json
+benchmark/layer3/reports/baseline_comparison_20260615_013313.json
 B0 F1=0.9286, matched_to_system_entries=true
 B1 F1=0.9024, matched_to_system_entries=true
 B2 F1=0.8957, matched_to_system_entries=true
 B3 F1=0.9024, matched_to_system_entries=true
 B4 F1=0.9222, matched_to_system_entries=true
+candidate-vs-strongest-matched-baseline delta=+0.0188, below the strong-superiority threshold of +0.03
 
-Traceability report:
-benchmark/layer3/reports/traceability_context_verifier_reconcile_20260614_213054.json
+Candidate traceability report:
+benchmark/layer3/reports/traceability_context_verifier_reconcile_20260615_011414.json
 CVR=1.0
 HCR=0.0
-SpanBoundaryF1=0.744
-ESR=0.8636
-TraceableF1=0.9157
+SpanBoundaryF1=0.7467
+ESR=0.9205
+TraceableF1=0.9474
 CLC=0.194
 
+Internal baseline traceability reports:
+benchmark/layer3/reports/traceability_grounded_hard_rule_20260615_013608.json
+benchmark/layer3/reports/traceability_source_grounded_reconcile_20260615_013609.json
+grounded_hard_rule TraceableF1=0.8820
+source_grounded_reconcile TraceableF1=0.8889
+
 Weakest current field:
-A.gene_disease_relationship F1=0.8462
+A.gene_disease_relationship F1=0.8889
+B.disease_diagnosis F1=0.9655
 
 Aligned G2 statistics:
-benchmark/layer3/reports/g2_statistics_20260614_205126.json
+benchmark/layer3/reports/g2_statistics_20260615_010748.json
 baseline_f1=0.8820
-candidate_f1=0.9157
-delta_f1=0.0337
-CI=[0.0068, 0.0637]
-sign_test_p=0.0625
-main_paper_ready=false
+candidate_f1=0.9474
+delta_f1=0.0654
+CI=[0.0302, 0.1060]
+sign_test_p=0.0039
+main_paper_ready=true
 
 Latest contextual diagnosis:
-benchmark/layer3/reports/contextual_reconcile_diagnosis_20260614_153234.json
-wrong_relationship_semantics=9
-disease_boundary_error=7
+benchmark/layer3/reports/contextual_reconcile_diagnosis_20260615_011335.json
+source_label_visibility_limit=5
+disease_boundary_error=2
 candidate_absent=2
+
+Final paper tables:
+benchmark/layer3/reports/main_paper_tables_20260615_011554.md
+benchmark/layer3/reports/main_paper_tables_20260615_011554.csv
 ```
+
+The implementation tasks below are retained as the execution plan and audit trail. Their timestamped command examples may reference earlier 2026-06-14 reports; for writing, tables, and claim decisions, the 2026-06-15 frozen anchors above override those historical examples.
 
 ### Claims Allowed Only After Gates
 
-- Allowed after G0-G4: "citation-valid-by-construction accepted evidence" when every accepted citation is emitted from a verified source span id.
-- Allowed after G3: "significantly improves field-level extraction F1" only if paired statistics pass on the frozen entry set.
-- Allowed after G2/G4: "reduces hallucinated citation risk" only if traceability metrics are computed for system and citation-generating baselines.
+- Allowed now: "citation-valid-by-construction accepted evidence" for this benchmark because every accepted citation is emitted from a verified source span id.
+- Allowed now: "significantly improves over the grounded hard-rule internal baseline on the frozen N=30 set" because paired statistics pass on the aligned report.
+- Allowed now: "traceability-centered competitive cross-lingual evidence extraction" against the matched baseline ladder.
+- Qualified only: "reduces hallucinated citation risk" because B0-B4 do not expose citation surfaces; use direct HCR comparison only for citation-generating baselines or internal grounded strategies.
+- Not allowed yet: "significantly outperforms every matched LLM baseline" because the candidate-vs-B0 gap is +0.0188, below the pre-declared +0.03 strong-superiority threshold.
 - Not allowed: "100% semantically correct traceability", "general cross-lingual IE paradigm", "clinical ACMG classification automation", or "native multilingual superiority" without native-language gold data.
 
 ## Global Stop Rules
@@ -844,12 +870,27 @@ score = w_source * source_score
 
 ## Completion Checklist
 
-- [ ] G0 manifest generated and source-aligned.
-- [ ] G1 B0-B5 baseline ladder complete on matched N.
-- [ ] G2 traceability metrics implemented and reported.
-- [ ] G3 relationship/disease-boundary errors repaired and diagnosis rerun.
-- [ ] G4 final statistics pass or conservative fallback is explicitly chosen.
-- [ ] `progress.txt` updated after each completed node.
-- [ ] `lesson.md` updated for every debugging detour.
-- [ ] `docs/README.md` kept in sync after doc changes.
-- [ ] No UI tasks started before G2/G3 pass.
+- [x] G0 manifest generated and source-aligned: `main_paper_rescue_manifest_20260615_011528.json`.
+- [x] G1 B0-B5 baseline ladder complete on matched N: `baseline_comparison_20260615_013313.json`, with B0-B4 matched to the frozen system entry set and B5 represented by `grounded_hard_rule`.
+- [x] G2 traceability metrics implemented and reported: candidate plus internal grounded baselines have CVR/HCR/SpanBoundaryF1/ESR/TraceableF1/CLC reports.
+- [x] G3 relationship/disease-boundary errors repaired and diagnosis rerun: `A.gene_disease_relationship` F1=0.8889, `B.disease_diagnosis` F1=0.9655, and diagnosis now separates `source_label_visibility_limit` from algorithmic errors.
+- [x] G4 final statistics pass against the grounded hard-rule internal baseline: delta F1=+0.0654, CI=[0.0302, 0.1060], sign-test p=0.0039, `main_paper_ready=true`.
+- [x] Conservative fallback explicitly chosen for matched LLM baselines: candidate beats B0 by +0.0188 but does not meet the +0.03 strong-superiority threshold.
+- [x] `progress.txt` updated after completed nodes.
+- [x] `lesson.md` updated for debugging detours.
+- [x] `docs/README.md` kept in sync after this final doc refresh.
+- [x] No UI tasks started before G2/G3 pass.
+
+## Remaining Paper Work
+
+The next step is not more UI or broad feature implementation. Write the Main Paper package around the conservative claim:
+
+```text
+CrossEvidence is a citation-valid-by-construction, traceability-centered cross-lingual biomedical evidence reconciliation framework. On a frozen N=30 ClinGen/ACMG-style benchmark, context-verifier reconciliation significantly improves over a grounded hard-rule internal baseline while remaining competitive with matched LLM baselines and providing explicit citation-validity metrics.
+```
+
+Required writing artifacts:
+
+- `docs/active/bibm-main-paper-claim-matrix.md`: allowed claims, supporting report paths, and forbidden claims.
+- `docs/active/bibm-main-paper-outline.md`: 8-page IEEE double-column outline with table placement.
+- `docs/active/bibm-main-paper-limitations.md`: sample-size, citation-surface, source-label visibility, and non-clinical-use limitations.

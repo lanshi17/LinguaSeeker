@@ -2656,3 +2656,15 @@ Removed only the eight all-zero local ref files under `.git/refs/heads/`, then r
 **Solution**: Added `source_label_visibility_limit` to `contextual_reconcile_diagnosis.py` and regression coverage for predicted/weak source snippets. The final diagnosis for `reconcile_ablation_20260615_010725.json` reports `source_label_visibility_limit=5`, `disease_boundary_error=2`, and `candidate_absent=2`, instead of presenting all weak-source label gaps as algorithmic semantic failures.
 
 **Prevention**: For paper-facing error analysis, separate source-visible evidence failures from external-label mismatch. Do not tune runtime rules to reproduce ClinGen gold labels unless the same information is explicitly allowed as runtime context and documented in the method.
+
+## 2026-06-15: Paper-facing report summaries must inspect payload schema
+
+**Problem**: While refreshing the final-push plan, initial `jq` checks assumed older report keys such as `overall`, `by_field`, or object-indexed `strategies`. The current reports store ablation metrics under `strategies[][].aggregates` and baseline comparisons under `rows`.
+
+**Investigation**: Ran `jq 'keys'` on the final reports and then queried the concrete payload paths before writing the plan update.
+
+**Root cause**: Report schemas evolved during the BIBM benchmark work, and filename/timestamp familiarity is not enough to safely summarize paper numbers.
+
+**Solution**: Updated the final-push plan only after reading the current payload schema and concrete metric paths for ablation, baseline comparison, traceability, diagnosis, manifest, and table reports.
+
+**Prevention**: For every paper-facing metric refresh, first inspect top-level keys and identity fields, then extract values from payload paths. Do not write claim text from remembered schema names.
