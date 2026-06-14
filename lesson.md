@@ -2536,3 +2536,15 @@ Removed only the eight all-zero local ref files under `.git/refs/heads/`, then r
 **Solution**: Extended `main_paper_rescue_manifest.py` to require frozen entry IDs, validate `total_entries`, validate exposed `per_entry` IDs when available, and reject G2 reports whose `source_report_path` does not match the manifest ablation report. Regenerated the manifest only after passing B0-B4 full-N reports explicitly.
 
 **Prevention**: For paper-facing manifests and tables, never select baseline reports by timestamp alone. Always inspect `total_entries`, `per_entry` count, and matched entry IDs before freezing a report path.
+
+## 2026-06-14: Baseline comparisons need explicit system strategy for ablation reports
+
+**Problem**: The planned G1 command used `reconcile_ablation_20260614_155845.json` as the system report, but `diagnose_baselines.py` originally expected `eval_*.json`-style top-level `per_entry` data. Passing an ablation report without selecting a strategy would make the system side effectively N=0 or use the wrong payload shape.
+
+**Investigation**: Compared the two report schemas. `eval_*.json` has top-level `total_entries`, `aggregates`, and `per_entry`, while `reconcile_ablation_*.json` nests those fields under each row in `strategies`. The G1 paper-facing comparison must use the `context_verifier_reconcile` strategy inside the ablation report.
+
+**Root cause**: The diagnostic assumed one system-report schema, but the Main Paper path now treats a strategy within an ablation report as the candidate method. The CLI did not expose a way to bind that strategy explicitly.
+
+**Solution**: Added `--system-strategy` support to `diagnose_baselines.py`, preserved eval-report behavior when the flag is omitted, and wrote regression coverage for selecting `context_verifier_reconcile` from a reconcile ablation report. The real G1 comparison `baseline_comparison_20260614_211111.json` now reports SYSTEM N=30 with the intended candidate strategy.
+
+**Prevention**: Every paper-facing comparison command must name both the report path and the strategy/baseline identity when the report can contain multiple methods. Do not infer candidate identity from a multi-strategy report filename.
