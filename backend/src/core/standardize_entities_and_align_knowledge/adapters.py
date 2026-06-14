@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, TypedDict
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     DualEvidenceExtractionResult,
@@ -38,6 +38,16 @@ PHENOTYPE_FIELD_IDS = {
 _PHENOTYPE_SPLIT_RE = re.compile(r"[、,;；]")
 
 
+class TrackPayloads(TypedDict, total=False):
+    """Phase 3 track payload map with optional audit-only entries."""
+
+    original: Any
+    translated: Any
+    reconciled: Any
+    audit_original: Any
+    audit_translated: Any
+
+
 class DualResultAdapter:
     """Convert dual-track evidence extraction output into typed standardization input."""
 
@@ -51,26 +61,53 @@ class DualResultAdapter:
         """Project a dual extraction result into Phase 3 candidate input."""
         candidates: list[StandardizationCandidate] = []
         seen: set[tuple[EntityType, str, str]] = set()
+        primary_results = self._primary_results(result)
 
-        for track_result in (result.original_result, result.translated_result):
+        for track_result in primary_results:
             self._add_chain_candidates(track_result, candidates, seen)
             self._add_phenotype_candidates(track_result, candidates, seen)
             self._add_phenotype_evidence_candidates(track_result, candidates, seen)
 
-        extraction_target = result.original_result.extraction_target or result.translated_result.extraction_target
+        extraction_target = (
+            primary_results[0].extraction_target
+            or result.original_result.extraction_target
+            or result.translated_result.extraction_target
+        )
 
         return StandardizationInput(
             document_id=result.document_id,
             source_document_id=source_document_id,
             processing_run_id=processing_run_id,
             candidates=tuple(candidates),
-            evidence_items=tuple([*result.original_result.evidence_items, *result.translated_result.evidence_items]),
-            track_payloads={
-                "original": result.original_result.model_dump(mode="json"),
-                "translated": result.translated_result.model_dump(mode="json"),
-            },
+            evidence_items=tuple(item for track_result in primary_results for item in track_result.evidence_items),
+            track_payloads=self._track_payloads(result),
             extraction_target=extraction_target,
         )
+
+    def _primary_results(self, result: DualEvidenceExtractionResult) -> tuple[EvidenceExtractionResult, ...]:
+        """Return the default extraction results consumed by Phase 3."""
+        if result.reconciled_result is not None:
+            return (result.reconciled_result,)
+        return (result.original_result, result.translated_result)
+
+    def _track_payloads(self, result: DualEvidenceExtractionResult) -> TrackPayloads:
+        """Build persistence payloads while retaining original tracks for audit."""
+        if result.reconciled_result is not None:
+            return {
+                "reconciled": result.reconciled_result.model_dump(mode="json"),
+                "audit_original": {
+                    "audit_only": True,
+                    **result.original_result.model_dump(mode="json"),
+                },
+                "audit_translated": {
+                    "audit_only": True,
+                    **result.translated_result.model_dump(mode="json"),
+                },
+            }
+        return {
+            "original": result.original_result.model_dump(mode="json"),
+            "translated": result.translated_result.model_dump(mode="json"),
+        }
 
     def _add_chain_candidates(
         self,

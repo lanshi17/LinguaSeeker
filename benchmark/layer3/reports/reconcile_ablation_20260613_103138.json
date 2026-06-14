@@ -1,0 +1,388 @@
+{
+  "evaluation_id": "reconcile_ablation_20260613_103138",
+  "timestamp": "2026-06-13T10:31:38",
+  "config": {
+    "ground_truth_dir": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth",
+    "entry_ids": [
+      "clingen_002"
+    ],
+    "limit": null,
+    "report_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/reports/reconcile_ablation_20260613_103138.json"
+  },
+  "strategies": [
+    {
+      "strategy": "dual_union",
+      "total_entries": 1,
+      "status_counts": {
+        "completed": 1
+      },
+      "aggregates": {
+        "overall": {
+          "true_positives": 3,
+          "false_positives": 1,
+          "false_negatives": 0,
+          "precision": 0.75,
+          "recall": 1.0,
+          "f1": 0.8571,
+          "over_extractions": 1,
+          "entity_standardization_accuracy": 0.0,
+          "cross_lingual_consistency": 0.0
+        },
+        "by_field": {
+          "A.gene_symbol": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "over_extractions": 0
+          },
+          "B.disease_diagnosis": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1": 0.6667,
+            "over_extractions": 1
+          },
+          "A.gene_disease_relationship": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "over_extractions": 0
+          }
+        },
+        "by_classification": {
+          "Definitive": {
+            "count": 1,
+            "precision": 0.75,
+            "recall": 1.0,
+            "f1": 0.8571,
+            "over_extractions": 1
+          }
+        },
+        "by_moi": {
+          "AR": {
+            "count": 1,
+            "precision": 0.75,
+            "recall": 1.0,
+            "f1": 0.8571,
+            "standardization_accuracy": 0.0,
+            "track_consistency": 0.0,
+            "over_extractions": 1
+          }
+        },
+        "by_entity_type": {}
+      },
+      "per_entry": [
+        {
+          "entry_id": "clingen_002",
+          "gene_symbol": "ABCA3",
+          "classification": "Definitive",
+          "moi": "AR",
+          "language": "en",
+          "pipeline_status": "completed",
+          "error_message": null,
+          "evidence_count": 63,
+          "found_rate": 0.9047619047619048,
+          "field_matches": [
+            {
+              "field_id": "A.gene_symbol",
+              "expected": "ABCA3",
+              "matched": true,
+              "extracted": "ABCA3",
+              "source_span": {
+                "span_id": "original-p1",
+                "page": 1,
+                "start_offset": 87,
+                "end_offset": 243,
+                "text_snippet": "ABSTRACT Background ATP‐binding cassette transporter A3 (ABCA3) deficiency is one of the most severe causes of childhood interstitial lung diseases (chILD).",
+                "source_precision": "corrected"
+              },
+              "match_type": "exact",
+              "extra_found_values": []
+            },
+            {
+              "field_id": "B.disease_diagnosis",
+              "expected": "interstitial lung disease due to ABCA3 deficiency",
+              "matched": true,
+              "extracted": "interstitial lung disease due to ABCA3 deficiency",
+              "source_span": {
+                "span_id": "original-p1",
+                "page": 1,
+                "start_offset": 87,
+                "end_offset": 243,
+                "text_snippet": "ABSTRACT Background ATP‐binding cassette transporter A3 (ABCA3) deficiency is one of the most severe causes of childhood interstitial lung diseases (chILD).",
+                "source_precision": "corrected"
+              },
+              "match_type": "exact",
+              "extra_found_values": [
+                "chILD due to ABCA3 deficiency"
+              ]
+            },
+            {
+              "field_id": "A.gene_disease_relationship",
+              "expected": "causative",
+              "matched": true,
+              "extracted": "causative",
+              "source_span": {
+                "span_id": "original-p1",
+                "page": 1,
+                "start_offset": 1449,
+                "end_offset": 1578,
+                "text_snippet": "Conclusion The variable presentation and outcome of chILD due to ABCA3 pathogenic variants are linked to the underlying genotype.",
+                "source_precision": "corrected"
+              },
+              "match_type": "exact",
+              "extra_found_values": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "strategy": "grounded_hard_rule",
+      "total_entries": 1,
+      "status_counts": {
+        "completed": 1
+      },
+      "aggregates": {
+        "overall": {
+          "true_positives": 2,
+          "false_positives": 1,
+          "false_negatives": 0,
+          "precision": 0.6667,
+          "recall": 1.0,
+          "f1": 0.8,
+          "over_extractions": 0,
+          "entity_standardization_accuracy": 0.0,
+          "cross_lingual_consistency": 0.0
+        },
+        "by_field": {
+          "A.gene_symbol": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "over_extractions": 0
+          },
+          "B.disease_diagnosis": {
+            "precision": 0.0,
+            "recall": 0,
+            "f1": 0,
+            "over_extractions": 0
+          },
+          "A.gene_disease_relationship": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "over_extractions": 0
+          }
+        },
+        "by_classification": {
+          "Definitive": {
+            "count": 1,
+            "precision": 0.6667,
+            "recall": 1.0,
+            "f1": 0.8,
+            "over_extractions": 0
+          }
+        },
+        "by_moi": {
+          "AR": {
+            "count": 1,
+            "precision": 0.6667,
+            "recall": 1.0,
+            "f1": 0.8,
+            "standardization_accuracy": 0.0,
+            "track_consistency": 0.0,
+            "over_extractions": 0
+          }
+        },
+        "by_entity_type": {}
+      },
+      "per_entry": [
+        {
+          "entry_id": "clingen_002",
+          "gene_symbol": "ABCA3",
+          "classification": "Definitive",
+          "moi": "AR",
+          "language": "en",
+          "pipeline_status": "completed",
+          "error_message": null,
+          "evidence_count": 37,
+          "found_rate": 0.9459459459459459,
+          "field_matches": [
+            {
+              "field_id": "A.gene_symbol",
+              "expected": "ABCA3",
+              "matched": true,
+              "extracted": "ABCA3",
+              "source_span": {
+                "span_id": "original-p1",
+                "page": 1,
+                "start_offset": 87,
+                "end_offset": 243,
+                "text_snippet": "ABSTRACT Background ATP‐binding cassette transporter A3 (ABCA3) deficiency is one of the most severe causes of childhood interstitial lung diseases (chILD).",
+                "source_precision": "corrected"
+              },
+              "match_type": "exact",
+              "extra_found_values": []
+            },
+            {
+              "field_id": "B.disease_diagnosis",
+              "expected": "interstitial lung disease due to ABCA3 deficiency",
+              "matched": false,
+              "extracted": "chILD due to ABCA3 deficiency",
+              "source_span": {
+                "span_id": "original-p1",
+                "page": 1,
+                "start_offset": 87,
+                "end_offset": 243,
+                "text_snippet": "ABSTRACT Background ATP‐binding cassette transporter A3 (ABCA3) deficiency is one of the most severe causes of childhood interstitial lung diseases (chILD).",
+                "source_precision": "corrected"
+              },
+              "match_type": "wrong_value",
+              "extra_found_values": []
+            },
+            {
+              "field_id": "A.gene_disease_relationship",
+              "expected": "causative",
+              "matched": true,
+              "extracted": "causative",
+              "source_span": {
+                "span_id": "original-p1",
+                "page": 1,
+                "start_offset": 87,
+                "end_offset": 243,
+                "text_snippet": "ABSTRACT Background ATP‐binding cassette transporter A3 (ABCA3) deficiency is one of the most severe causes of childhood interstitial lung diseases (chILD).",
+                "source_precision": "corrected"
+              },
+              "match_type": "exact",
+              "extra_found_values": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "strategy": "source_grounded_reconcile",
+      "total_entries": 1,
+      "status_counts": {
+        "completed": 1
+      },
+      "aggregates": {
+        "overall": {
+          "true_positives": 3,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "over_extractions": 0,
+          "entity_standardization_accuracy": 0.0,
+          "cross_lingual_consistency": 0.0
+        },
+        "by_field": {
+          "A.gene_symbol": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "over_extractions": 0
+          },
+          "B.disease_diagnosis": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "over_extractions": 0
+          },
+          "A.gene_disease_relationship": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "over_extractions": 0
+          }
+        },
+        "by_classification": {
+          "Definitive": {
+            "count": 1,
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "over_extractions": 0
+          }
+        },
+        "by_moi": {
+          "AR": {
+            "count": 1,
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "standardization_accuracy": 0.0,
+            "track_consistency": 0.0,
+            "over_extractions": 0
+          }
+        },
+        "by_entity_type": {}
+      },
+      "per_entry": [
+        {
+          "entry_id": "clingen_002",
+          "gene_symbol": "ABCA3",
+          "classification": "Definitive",
+          "moi": "AR",
+          "language": "en",
+          "pipeline_status": "completed",
+          "error_message": null,
+          "evidence_count": 37,
+          "found_rate": 0.9459459459459459,
+          "field_matches": [
+            {
+              "field_id": "A.gene_symbol",
+              "expected": "ABCA3",
+              "matched": true,
+              "extracted": "ABCA3",
+              "source_span": {
+                "span_id": "original-p1",
+                "page": 1,
+                "start_offset": 87,
+                "end_offset": 243,
+                "text_snippet": "ABSTRACT Background ATP‐binding cassette transporter A3 (ABCA3) deficiency is one of the most severe causes of childhood interstitial lung diseases (chILD).",
+                "source_precision": "corrected"
+              },
+              "match_type": "exact",
+              "extra_found_values": []
+            },
+            {
+              "field_id": "B.disease_diagnosis",
+              "expected": "interstitial lung disease due to ABCA3 deficiency",
+              "matched": true,
+              "extracted": "interstitial lung disease due to ABCA3 deficiency",
+              "source_span": {
+                "span_id": "original-p1",
+                "page": 1,
+                "start_offset": 87,
+                "end_offset": 243,
+                "text_snippet": "ABSTRACT Background ATP‐binding cassette transporter A3 (ABCA3) deficiency is one of the most severe causes of childhood interstitial lung diseases (chILD).",
+                "source_precision": "corrected"
+              },
+              "match_type": "exact",
+              "extra_found_values": []
+            },
+            {
+              "field_id": "A.gene_disease_relationship",
+              "expected": "causative",
+              "matched": true,
+              "extracted": "causative",
+              "source_span": {
+                "span_id": "original-p1",
+                "page": 1,
+                "start_offset": 87,
+                "end_offset": 243,
+                "text_snippet": "ABSTRACT Background ATP‐binding cassette transporter A3 (ABCA3) deficiency is one of the most severe causes of childhood interstitial lung diseases (chILD).",
+                "source_precision": "corrected"
+              },
+              "match_type": "exact",
+              "extra_found_values": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

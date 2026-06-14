@@ -1,0 +1,217 @@
+{
+  "total_entries": 30,
+  "covered_count": 14,
+  "needs_pipeline_count": 16,
+  "rows": [
+    {
+      "entry_id": "clingen_000",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_000/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_001",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_001/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_002",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_002/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_003",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_003/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_004",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_004/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_005",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_005/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_006",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_006/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_007",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_007/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_008",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_008/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_009",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_009/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_010",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_010/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_011",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_011/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_012",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_012/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_013",
+      "status": "preprocessed",
+      "artifact_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth/clingen_013/preprocessed/phase_2/extraction_result.json",
+      "processing_run_id": null,
+      "message": "Benchmark preprocessed artifact already exists."
+    },
+    {
+      "entry_id": "clingen_014",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_015",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_016",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_017",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_018",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_019",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_020",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_021",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_022",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_023",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_024",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_025",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_026",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_027",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_028",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_029",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    }
+  ]
+}

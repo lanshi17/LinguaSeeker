@@ -140,6 +140,27 @@ def _target_prompt_section(extraction_target: ExtractionTarget | None) -> str:
     )
 
 
+def relationship_decision_guidance() -> str:
+    """Return field-specific guidance for gene-disease relationship extraction."""
+    return """"causative": use when the document supports an established causal relationship, including known disease gene assertions, pathogenic/likely pathogenic variants in affected cases, replicated genetic evidence, functional validation, biallelic loss-of-function evidence for recessive disease, or deficiency language directly linking the target gene to the target disease.
+"associated": use only when the gene-disease link is explicitly preliminary, correlative, cohort-level, or not established as causal. Do not choose associated merely because the sentence contains associated, predicted, or involved.
+"susceptibility": use when the gene or variant is described as a risk factor, modifier, predisposition, or susceptibility locus rather than a deterministic disease cause.
+"uncertain": use when evidence is insufficient, variant interpretation is uncertain, the text says the relationship remains unclear, or the sentence uses incidental-finding / might be due / may be due / could be due / pathogenic-link-unclear language.
+"disputed": use when the document describes conflicting evidence, disputed validity, contradictory reports, unresolved disagreement, or computationally predicted targets that are not directly validated.
+"refuted": use when the document provides evidence against the gene-disease relationship, says the association is not supported, or rules it out.
+"no_relationship": use when there is no gene-disease relationship between the target gene and target disease in the cited span."""
+
+
+def disease_boundary_guidance() -> str:
+    """Return target-only disease boundary guidance for diagnosis extraction."""
+    return """TARGET DISEASE BOUNDARY for B.disease_diagnosis:
+- Extract the primary target disease name, not every disease term in the document.
+- Do NOT extract disease lists, differential diagnoses, exclusion lists, or unrelated disease examples.
+- Do NOT extract comorbidities, complications, manifestations, phenotypes, or general medical history as the primary diagnosis.
+- Do NOT extract background diseases from introductions, reviews, controls, or family history unless the target gene is directly linked to that disease in the same evidence context.
+- Do NOT over-specialize or under-specialize the target disease name. Preserve the target-level disease boundary supported by the evidence span."""
+
+
 def get_catalog_extraction_prompt(
     document_id: str,
     track: Track,
@@ -150,6 +171,8 @@ def get_catalog_extraction_prompt(
 ) -> str:
     catalog_text = _catalog_compact_text(catalog)
     target_section = _target_prompt_section(extraction_target)
+    relationship_guidance = relationship_decision_guidance()
+    boundary_guidance = disease_boundary_guidance()
     return f"""You are extracting structured evidence from a biomedical document for a SPECIFIC target gene-disease pair.
 
 {target_section}
@@ -194,9 +217,11 @@ RULES:
 16. Do not calculate character offsets. Leave start_offset and end_offset absent or at defaults.
 17. For A.gene_symbol, exhaustively extract a standalone HGNC-style gene symbol from titles, abstracts, variant descriptions, tables, and disease modifiers. If the gene appears as a disease-name prefix such as "AARS2-related disease", "AARS2-mutation related mitochondrial disease", or "AARS1-associated Charcot-Marie-Tooth disease", you must extract the gene symbol independently into A.gene_symbol and must not leave A.gene_symbol as not_found.
 18. For A.gene_disease_relationship, the value MUST be one of: "causative", "associated", "susceptibility", "uncertain", "disputed", "refuted", "no_relationship". Do NOT return sentences or descriptions.
-    Decision guidance: Use "causative" when the document supports an established causal relationship: known disease gene, pathogenic variants causing the disease, ACMG pathogenic/likely pathogenic variants in affected cases, ClinGen Definitive/Strong/Moderate curation, or replicated genetic/functional evidence. Do not choose associated merely because the sentence contains associated; choose "associated" only when the gene-disease link itself is explicitly preliminary, correlative, risk-modifying, or not established as causal.
+    Decision guidance:
+{relationship_guidance}
 19. For B.disease_diagnosis, extract ONLY the primary disease name relevant to the target gene (e.g., "Fabry disease", "Charcot-Marie-Tooth disease"). Do NOT extract lists of unrelated diseases, background comorbidities, or general medical history.
 20. For B.disease_diagnosis, if the document mentions multiple diseases, extract ONLY the one most directly linked to the gene being curated. Ignore incidental mentions of other conditions.
+{boundary_guidance}
 21. For B.age_of_onset, extract referral, diagnosis, first symptoms, or presentation age. Do NOT use developmental milestones as B.age_of_onset, for example sitting, walking, or speaking ages unless the sentence explicitly states symptom onset.
 22. Computational predictions support PP3/BP4 only. Do not treat in silico predictions as F.functional_result, F.assay_type, or other functional evidence fields unless there is a real wet-lab, cell, animal, or patient-derived assay.
 23. E.prediction_tools_list requires named tools such as SpliceAI, CADD, REVEL, PolyPhen-2, SIFT, MutationTaster, or MaxEntScan. Generic phrases like "in silico tools" are insufficient and must be not_found.

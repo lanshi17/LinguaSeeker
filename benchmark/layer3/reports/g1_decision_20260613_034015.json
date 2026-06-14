@@ -1,0 +1,49 @@
+{
+  "recommendation": "owner_decision_required",
+  "main_paper_ready": false,
+  "system_report_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/reports/eval_db_inventory_20260613_033106.json",
+  "evidence": {
+    "system_report": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/reports/eval_db_inventory_20260613_033106.json",
+    "system_entries": 3,
+    "inventory_mapped": 3,
+    "inventory_total_expected": 30,
+    "best_matched_baseline_f1": 0.9412,
+    "best_matched_baselines": [
+      "B0",
+      "B1",
+      "B2",
+      "B3",
+      "B4"
+    ],
+    "grounding_report": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/reports/eval_db_inventory_20260613_033106.json",
+    "native_gain_root": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/literature_acquisition/downloads/rett"
+  },
+  "directions": [
+    {
+      "direction": "A_structured_extraction",
+      "signal": "no_go",
+      "key_numbers": "SYSTEM F1=0.8889; best matched baseline B0/B1/B2/B3/B4 F1=0.9412; mapped_system_coverage=3/30",
+      "data_legality": "ClinGen GT is valid for field P/R/F1; current system coverage is incomplete.",
+      "missing_work": "Current full-system N=30 and a statistically defensible win over B1/B4."
+    },
+    {
+      "direction": "B_native_gain",
+      "signal": "not_evaluable",
+      "key_numbers": "files_discovered=0; files_analyzed=0; original_only=0",
+      "data_legality": "rett is native multilingual, but current artifact set has no evaluable dual-track outputs.",
+      "missing_work": "Materialize rett dual-track extraction results and add GT or validated recall proxy."
+    },
+    {
+      "direction": "C_grounding_traceability",
+      "signal": "weak_feasibility_signal",
+      "key_numbers": "CVR=1.0; HCR=0.0; span_evidence=9; N=3",
+      "data_legality": "Source-span validity is measurable; semantic correctness is still governed by P/R/F1.",
+      "missing_work": "Full span-bearing report, ESR/span-boundary checks, reconcile/ranking algorithm, and ablation."
+    }
+  ],
+  "owner_options": [
+    "run_current_full_system_n30",
+    "pivot_demo_resource_track",
+    "implement_direction_c_reconcile_ranking"
+  ]
+}

@@ -8,6 +8,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.prompt
     build_block_prompt_text,
     get_catalog_extraction_prompt,
     get_evidence_map_prompt,
+    relationship_decision_guidance,
 )
 
 
@@ -217,6 +218,54 @@ def test_catalog_prompt_relationship_distinguishes_established_from_preliminary(
     assert "known disease gene" in prompt
     assert "established causal relationship" in prompt
     assert "Do not choose associated merely because the sentence contains associated" in prompt
+
+
+def test_catalog_prompt_relationship_mentions_unclear_and_predicted_cues() -> None:
+    prompt = get_catalog_extraction_prompt(
+        document_id="doc",
+        track=Track.ORIGINAL,
+        text="The relationship remains unclear and some targets are predicted",
+        catalog=EVIDENCE_FIELD_SPECS,
+        evidence_map_summary="AARS1 case",
+    )
+
+    lower = prompt.lower()
+    assert "pathogenic-link-unclear" in lower
+    assert "predicted targets" in lower
+    assert "may be due" in lower or "might be due" in lower
+
+
+def test_relationship_decision_guidance_defines_every_allowed_relationship_label() -> None:
+    guidance = relationship_decision_guidance()
+
+    expected_definitions = {
+        "causative": "established causal",
+        "associated": "preliminary",
+        "susceptibility": "risk",
+        "uncertain": "insufficient",
+        "disputed": "conflicting",
+        "refuted": "evidence against",
+        "no_relationship": "no gene-disease relationship",
+    }
+    for label, required_phrase in expected_definitions.items():
+        assert f'"{label}"' in guidance
+        assert required_phrase in guidance
+
+
+def test_catalog_prompt_has_target_only_disease_boundary_guidance() -> None:
+    prompt = get_catalog_extraction_prompt(
+        document_id="doc",
+        track=Track.ORIGINAL,
+        text="The paper lists lupus, infection, and background autoimmune diseases.",
+        catalog=EVIDENCE_FIELD_SPECS,
+        evidence_map_summary="TLR5 case",
+    )
+
+    assert "target disease boundary" in prompt.lower()
+    assert "Do NOT extract disease lists" in prompt
+    assert "Do NOT extract comorbidities" in prompt
+    assert "Do NOT extract background diseases" in prompt
+    assert "Do NOT over-specialize or under-specialize the target disease name" in prompt
 
 
 def test_catalog_prompt_declares_target_and_strict_entity_rules() -> None:
