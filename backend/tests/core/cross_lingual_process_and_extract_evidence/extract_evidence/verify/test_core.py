@@ -162,6 +162,53 @@ def test_score_candidate_support_marks_predicted_targets_as_disputed() -> None:
     assert result.requires_review is True
 
 
+def test_score_candidate_support_treats_bare_association_as_uncertain() -> None:
+    result = score_candidate_support(
+        _verification_input(
+            candidate_value="associated",
+            source_snippet="associated with ALS",
+            target_gene="LGALSL",
+            target_disease="amyotrophic lateral sclerosis",
+            disease_aliases=("amyotrophic lateral sclerosis", "ALS"),
+        )
+    )
+
+    assert result.recommended_value == "uncertain"
+
+
+def test_score_candidate_support_treats_related_gene_list_as_uncertain() -> None:
+    result = score_candidate_support(
+        _verification_input(
+            candidate_value="causative",
+            source_snippet=(
+                "Among the 15 associated variants, 10 were located in genes previously "
+                "shown to be related to ALS: SOD1, CFAP410, NEK1, KIF5A, FUS and TBK1."
+            ),
+            target_gene="CFAP410",
+            target_disease="amyotrophic lateral sclerosis",
+            disease_aliases=("amyotrophic lateral sclerosis", "ALS"),
+        )
+    )
+
+    assert result.recommended_value == "uncertain"
+
+
+def test_score_candidate_support_does_not_refute_without_negative_source_evidence() -> None:
+    result = score_candidate_support(
+        _verification_input(
+            candidate_value="associated",
+            source_snippet=(
+                "CHRNA7 have been reported to be associated with neuropsychiatric "
+                "phenotypes including epilepsy."
+            ),
+            target_gene="CHRNA7",
+            target_disease="epilepsy",
+            disease_aliases=("epilepsy",),
+        )
+    )
+
+    assert result.recommended_value != "refuted"
+
 
 
 def test_score_candidate_support_uses_uncertain_for_indirect_weak_relationship_evidence() -> None:
