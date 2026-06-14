@@ -19,6 +19,7 @@ GENE_FIELD_IDS = frozenset({"A.gene_symbol"})
 ROOT_CAUSE_ORDER = (
     "candidate_absent",
     "source_invalid_or_unscorable",
+    "source_label_visibility_limit",
     "wrong_relationship_semantics",
     "disease_boundary_error",
     "non_target_contamination",
@@ -234,10 +235,7 @@ def _entry_rows(raw_entry: Mapping[str, Any]) -> list[ContextualFieldDiagnosis]:
 
 def _should_include_match(raw_match: Mapping[str, Any]) -> bool:
     """Return True only for rows that still need diagnosis."""
-    match_type = str(raw_match.get("match_type", ""))
     if not bool(raw_match.get("matched", False)):
-        return True
-    if match_type != "exact":
         return True
     return _extra_found_count(raw_match) > 0
 
@@ -275,16 +273,17 @@ def _root_cause(
     source_valid_count: int,
 ) -> str:
     field_id = str(raw_match.get("field_id", ""))
-    match_type = str(raw_match.get("match_type", ""))
     matched = bool(raw_match.get("matched", False))
     extra_found_count = _extra_found_count(raw_match)
     if candidate_count == 0:
         return "candidate_absent"
     if source_valid_count == 0:
         return "source_invalid_or_unscorable"
-    if field_id == RELATIONSHIP_FIELD_ID and (not matched or match_type != "exact"):
+    if field_id == RELATIONSHIP_FIELD_ID and not matched and _is_source_label_visibility_limit(raw_match):
+        return "source_label_visibility_limit"
+    if field_id == RELATIONSHIP_FIELD_ID and not matched:
         return "wrong_relationship_semantics"
-    if field_id in DISEASE_FIELD_IDS and (not matched or match_type != "exact" or extra_found_count > 0):
+    if field_id in DISEASE_FIELD_IDS and (not matched or extra_found_count > 0):
         return "disease_boundary_error"
     if extra_found_count > 0:
         return "non_target_contamination"
@@ -326,6 +325,26 @@ def _source_precision(source_span: object) -> str | None:
         return None
     precision = source_span.get("source_precision")
     return None if precision is None else str(precision)
+
+
+def _is_source_label_visibility_limit(raw_match: Mapping[str, Any]) -> bool:
+    expected = str(raw_match.get("expected") or "").casefold()
+    extracted = str(raw_match.get("extracted") or "").casefold()
+    source_span = raw_match.get("source_span")
+    if not expected or expected == extracted or not isinstance(source_span, Mapping):
+        return False
+    snippet = str(source_span.get("text_snippet") or "").casefold()
+    if not snippet:
+        return False
+    if expected == "refuted":
+        return not any(term in snippet for term in ("no evidence", "not associated", "refuted", "refute"))
+    if expected == "causative":
+        causal_terms = ("cause", "causal", "causative", "disease-causing", "pathogenic variant", "biallelic")
+        weak_terms = ("unclear", "incidental finding", "associated", "moderate:")
+        return any(term in snippet for term in weak_terms) and not any(term in snippet for term in causal_terms)
+    if expected == "disputed":
+        return not any(term in snippet for term in ("disputed", "conflict", "conflicting", "controversial"))
+    return False
 
 
 def _optional_str(value: object) -> str | None:
