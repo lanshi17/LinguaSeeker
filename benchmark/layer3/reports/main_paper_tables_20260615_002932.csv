@@ -1,0 +1,16 @@
+table,total_entries,covered_count,needs_pipeline_count,frozen_entry_count,git_commit,ablation_report,method,role,precision,recall,f1,delta_f1_vs_grounded_hard_rule,sign_test_p,main_paper_ready,strategy,strategy_or_baseline_id,citation_validity_rate,hallucinated_citation_rate,span_boundary_f1,evidence_support_rate,traceable_f1,cross_lingual_consistency,root_cause,error_count,source_report
+Table 1 Dataset composition,30,30,0,30,7ed7063469d60710dab146c5ba89b5c8be509dd4,benchmark/layer3/reports/reconcile_ablation_20260614_230554.json,,,,,,,,,,,,,,,,,,,
+Table 2 Main method vs baselines,30,,,,,,B0,baseline,0.9398,0.9176,0.9286,,,,,,,,,,,,,,
+Table 2 Main method vs baselines,30,,,,,,B1,baseline,0.9136,0.8916,0.9024,,,,,,,,,,,,,,
+Table 2 Main method vs baselines,30,,,,,,B2,baseline,0.9125,0.8795,0.8957,,,,,,,,,,,,,,
+Table 2 Main method vs baselines,30,,,,,,B3,baseline,0.9367,0.8706,0.9024,,,,,,,,,,,,,,
+Table 2 Main method vs baselines,30,,,,,,B4,baseline,0.9277,0.9167,0.9222,,,,,,,,,,,,,,
+Table 2 Main method vs baselines,30,,,,,,context_verifier_reconcile,ours,0.8977,0.9753,0.9349,0.0529,0.0391,True,,,,,,,,,,,
+Table 3 Ablation study,30,,,,,,,,0.7935,0.9733,0.8743,,,,dual_union,,,,,,,,,,
+Table 3 Ablation study,30,,,,,,,,0.8068,0.9726,0.882,,,,grounded_hard_rule,,,,,,,,,,
+Table 3 Ablation study,30,,,,,,,,0.8182,0.973,0.8889,,,,source_grounded_reconcile,,,,,,,,,,
+Table 3 Ablation study,30,,,,,,,,0.8977,0.9753,0.9349,,,,context_verifier_reconcile,,,,,,,,,,
+Table 4 Traceability metrics,,,,,,,,,,,,,,,,context_verifier_reconcile,1.0,0.0,0.7467,0.8977,0.9349,0.194,,,
+Table 5 Error breakdown,,,,,,,,,,,,,,,context_verifier_reconcile,,,,,,,,wrong_relationship_semantics,6,benchmark/layer3/reports/reconcile_ablation_20260614_230554.json
+Table 5 Error breakdown,,,,,,,,,,,,,,,context_verifier_reconcile,,,,,,,,disease_boundary_error,4,benchmark/layer3/reports/reconcile_ablation_20260614_230554.json
+Table 5 Error breakdown,,,,,,,,,,,,,,,context_verifier_reconcile,,,,,,,,candidate_absent,2,benchmark/layer3/reports/reconcile_ablation_20260614_230554.json

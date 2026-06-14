@@ -12,6 +12,7 @@ _CAUSAL_TERMS = (
     "causes",
     "caused by",
     "causal",
+    "disease-causing",
     "pathogenic variant",
     "pathogenic variants",
     "biallelic",
@@ -179,12 +180,12 @@ def _recommend_value(
         return "disputed"
     if refute_score:
         return RelationshipLabel.REFUTED.value
-    if hedged_inference_score:
-        return RelationshipLabel.UNCERTAIN.value
     if causal_score:
         return RelationshipLabel.CAUSATIVE.value
     if susceptibility_score:
         return RelationshipLabel.SUSCEPTIBILITY.value
+    if hedged_inference_score:
+        return RelationshipLabel.UNCERTAIN.value
     if direct_association_score and not hedged_inference_score:
         return RelationshipLabel.UNCERTAIN.value
     normalized = _normalize(candidate_value).replace(" ", "_")
@@ -209,7 +210,7 @@ def _support_score(
     elif refute_score:
         cue_score = 0.0
     elif causal_score:
-        cue_score = 0.35
+        cue_score = 0.45
     elif susceptibility_score:
         cue_score = 0.25
     elif direct_association_score:
