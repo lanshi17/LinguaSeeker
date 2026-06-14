@@ -894,3 +894,4 @@ Drafted writing artifacts:
 - `docs/active/2026-06-15-bibm-main-paper-claim-matrix.md`: allowed claims, supporting report paths, and forbidden claims.
 - `docs/active/2026-06-15-bibm-main-paper-outline.md`: 8-page IEEE double-column outline with table placement.
 - `docs/active/2026-06-15-bibm-main-paper-limitations.md`: sample-size, citation-surface, source-label visibility, and non-clinical-use limitations.
+- `docs/active/2026-06-15-bibm-main-paper-manuscript-draft.md`: first full manuscript draft grounded in the frozen 2026-06-15 evidence package.
