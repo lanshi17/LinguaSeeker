@@ -119,6 +119,43 @@ def test_contextual_reconcile_uses_verifier_to_override_relationship_label() -> 
     assert "verifier relationship override" in accepted.inference_basis
 
 
+def test_contextual_reconcile_upgrades_mendelian_variant_association() -> None:
+    context = TargetContextPack(
+        entry_id="clingen_010",
+        gene=GeneContext(symbol="AP1G1", hgnc_id=None, aliases=("AP1G1",)),
+        disease=DiseaseContext(
+            label="complex neurodevelopmental disorder",
+            mondo_id=None,
+            aliases=("complex neurodevelopmental disorder", "Usmani-Riazuddin syndrome"),
+            ancestor_labels=(),
+        ),
+        moi="AD",
+        source_pmid=None,
+        source_pmc=None,
+    )
+    original = _result(
+        Track.ORIGINAL,
+        [
+            _item(
+                field_id="A.gene_disease_relationship",
+                value="associated",
+                confidence=0.8,
+                source=_source(
+                    "Variants in the AP1G1 gene have recently been associated with "
+                    "Usmani-Riazuddin syndrome, a very rare human genetic disorder."
+                ),
+            )
+        ],
+    )
+    translated = _result(Track.TRANSLATED, [])
+
+    output = reconcile_with_context(original, translated, context)
+
+    accepted = output.result.evidence_items[0]
+    assert accepted.value == "causative"
+    assert "verifier relationship override" in accepted.inference_basis
+
+
 def test_contextual_reconcile_penalizes_non_target_disease_candidate() -> None:
     original = _result(
         Track.ORIGINAL,

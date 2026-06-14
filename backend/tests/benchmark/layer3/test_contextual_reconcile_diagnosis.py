@@ -18,12 +18,13 @@ def _field_match(
     matched: bool = False,
     match_type: str = "wrong_value",
     source_precision: str | None = "corrected",
+    source_snippet: str = "source evidence",
     extra_found_values: list[str] | None = None,
 ) -> dict[str, object]:
     source_span = None
     if source_precision is not None:
         source_span = {
-            "text_snippet": "source evidence",
+            "text_snippet": source_snippet,
             "source_precision": source_precision,
         }
     return {
@@ -157,12 +158,11 @@ def test_diagnosis_filters_strategy_and_assigns_one_root_cause(tmp_path: Path) -
 
     root_causes = {f"{row.entry_id}:{row.field_id}": row.root_cause for row in diagnosis.rows}
 
-    assert len(diagnosis.rows) == 4
+    assert len(diagnosis.rows) == 3
     assert root_causes == {
         "clingen_001:A.gene_disease_relationship": "wrong_relationship_semantics",
         "clingen_002:B.disease_diagnosis": "candidate_absent",
         "clingen_003:A.gene_symbol": "non_target_contamination",
-        "clingen_004:B.disease_diagnosis": "disease_boundary_error",
     }
 
 
@@ -175,10 +175,9 @@ def test_diagnosis_payload_includes_counts_scores_and_summary(tmp_path: Path) ->
     payload = contextual_diagnosis_to_payload(diagnosis)
 
     assert payload["strategy"] == "context_verifier_reconcile"
-    assert payload["total_rows"] == 4
+    assert payload["total_rows"] == 3
     assert payload["summary"]["by_root_cause"] == {
         "candidate_absent": 1,
-        "disease_boundary_error": 1,
         "non_target_contamination": 1,
         "wrong_relationship_semantics": 1,
     }
@@ -192,3 +191,52 @@ def test_diagnosis_payload_includes_counts_scores_and_summary(tmp_path: Path) ->
     assert relationship_row["verifier_support_score"] is None
     assert relationship_row["target_specificity_score"] is None
     assert relationship_row["contradiction_penalty"] is None
+
+
+def test_diagnosis_excludes_successful_non_exact_disease_matches(tmp_path: Path) -> None:
+    diagnosis = build_contextual_reconcile_diagnosis(
+        _write_report(tmp_path / "ablation.json"),
+        strategy="context_verifier_reconcile",
+    )
+
+    rows = {
+        f"{row.entry_id}:{row.field_id}:{row.match_type}"
+        for row in diagnosis.rows
+    }
+
+    assert "clingen_004:B.disease_diagnosis:fuzzy" not in rows
+
+
+def test_diagnosis_separates_relationship_gold_label_visibility_limits(tmp_path: Path) -> None:
+    report_path = tmp_path / "ablation.json"
+    report_path.write_text(
+        json.dumps(
+            {
+                "strategies": [
+                    {
+                        "strategy": "context_verifier_reconcile",
+                        "total_entries": 1,
+                        "per_entry": [
+                            _entry(
+                                "clingen_027",
+                                [
+                                    _field_match(
+                                        field_id="A.gene_disease_relationship",
+                                        expected="refuted",
+                                        extracted="uncertain",
+                                        source_snippet="Predicted epilepsy associated genes",
+                                    )
+                                ],
+                            )
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    diagnosis = build_contextual_reconcile_diagnosis(report_path)
+
+    assert len(diagnosis.rows) == 1
+    assert diagnosis.rows[0].root_cause == "source_label_visibility_limit"
