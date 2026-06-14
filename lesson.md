@@ -2668,3 +2668,15 @@ Removed only the eight all-zero local ref files under `.git/refs/heads/`, then r
 **Solution**: Updated the final-push plan only after reading the current payload schema and concrete metric paths for ablation, baseline comparison, traceability, diagnosis, manifest, and table reports.
 
 **Prevention**: For every paper-facing metric refresh, first inspect top-level keys and identity fields, then extract values from payload paths. Do not write claim text from remembered schema names.
+
+## 2026-06-15: Markdown writing-package drafts need staged whitespace checks
+
+**Problem**: The first staged BIBM writing-package draft failed `git diff --staged --check` because three new Markdown files had extra blank lines at EOF.
+
+**Investigation**: Inspected the tail of each new document and confirmed the staged whitespace errors were limited to EOF blank lines.
+
+**Root cause**: The patch that added long Markdown files left an extra empty line after the final paragraph/checklist block.
+
+**Solution**: Removed the extra EOF blank lines and reran staged whitespace checks before committing.
+
+**Prevention**: For generated or hand-written Markdown deliverables, run `git diff --check` before staging and `git diff --staged --check` after staging.

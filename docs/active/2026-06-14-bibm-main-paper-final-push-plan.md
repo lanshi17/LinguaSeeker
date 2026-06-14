@@ -889,8 +889,8 @@ The next step is not more UI or broad feature implementation. Write the Main Pap
 CrossEvidence is a citation-valid-by-construction, traceability-centered cross-lingual biomedical evidence reconciliation framework. On a frozen N=30 ClinGen/ACMG-style benchmark, context-verifier reconciliation significantly improves over a grounded hard-rule internal baseline while remaining competitive with matched LLM baselines and providing explicit citation-validity metrics.
 ```
 
-Required writing artifacts:
+Drafted writing artifacts:
 
-- `docs/active/bibm-main-paper-claim-matrix.md`: allowed claims, supporting report paths, and forbidden claims.
-- `docs/active/bibm-main-paper-outline.md`: 8-page IEEE double-column outline with table placement.
-- `docs/active/bibm-main-paper-limitations.md`: sample-size, citation-surface, source-label visibility, and non-clinical-use limitations.
+- `docs/active/2026-06-15-bibm-main-paper-claim-matrix.md`: allowed claims, supporting report paths, and forbidden claims.
+- `docs/active/2026-06-15-bibm-main-paper-outline.md`: 8-page IEEE double-column outline with table placement.
+- `docs/active/2026-06-15-bibm-main-paper-limitations.md`: sample-size, citation-surface, source-label visibility, and non-clinical-use limitations.
