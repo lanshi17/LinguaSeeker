@@ -2572,3 +2572,15 @@ Removed only the eight all-zero local ref files under `.git/refs/heads/`, then r
 **Solution**: Wrote the G3 repair plan to separate source-only algorithmic fixes from evaluation/ontology sensitivity analysis. The plan explicitly forbids using `expected_evidence`, evaluator matches, or ClinGen classification as runtime relationship answers.
 
 **Prevention**: Before optimizing a paper-facing metric, classify each failure as source-evidence error, target-boundary error, evaluator-normalization issue, or label-semantics mismatch. Do not implement metric-improving rules that cannot be defended as runtime inputs in the methods section.
+
+## 2026-06-14: G3 diagnosis needs score decomposition before tuning
+
+**Problem**: The first contextual diagnosis reports listed `best_score`, `verifier_support_score`, `target_specificity_score`, and `contradiction_penalty` as `null`, so relationship and disease-boundary errors could not be attributed to scoring, support, target specificity, or source grounding.
+
+**Investigation**: Traced `reconcile_ablation.py` and found that `context_verifier_reconcile` discarded `FieldDecision.accepted_score` by serializing only accepted `EvidenceItem` values before calling `compare_evidence`. `FieldMatch` also had no optional score fields, so even if candidate scores were present they would not survive into JSON reports.
+
+**Root cause**: Benchmark report serialization was optimized for P/R/F1 comparison, not for reviewer-facing algorithm audit. It preserved source spans but dropped the score decomposition that explains the evidence-graph decision.
+
+**Solution**: Added optional score fields to the ablation candidate payload and `FieldMatch`, then serialized them through `reconcile_ablation` and `evaluate.py`. Smoke verification confirmed contextual `field_matches` now include non-null score components.
+
+**Prevention**: Before tuning verifier weights or boundary rules, ensure report artifacts expose the decision components needed to explain the change. Do not diagnose algorithmic failures from value-only reports.
