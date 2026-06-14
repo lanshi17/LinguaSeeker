@@ -50,6 +50,39 @@ def test_score_candidate_support_rewards_target_specific_causal_evidence() -> No
     assert result.requires_review is False
 
 
+def test_score_candidate_support_treats_disease_causing_language_as_causative() -> None:
+    result = score_candidate_support(
+        _verification_input(
+            source_snippet="TBC1D8B was recently discovered as a novel disease-causing gene for X-linked NPHS.",
+            target_gene="TBC1D8B",
+            target_disease="nephrotic syndrome, type 20",
+            disease_aliases=("nephrotic syndrome, type 20", "NPHS20"),
+        )
+    )
+
+    assert result.recommended_value == "causative"
+    assert result.support_score >= 0.75
+    assert result.requires_review is False
+
+
+def test_score_candidate_support_treats_functional_model_causation_as_causative() -> None:
+    result = score_candidate_support(
+        _verification_input(
+            source_snippet=(
+                "MUT AP1G1 mRNA injection causes significant developmental abnormalities "
+                "(32-47%) vs controls (1-3%), supporting a causative relationship."
+            ),
+            target_gene="AP1G1",
+            target_disease="complex neurodevelopmental disorder",
+            disease_aliases=("complex neurodevelopmental disorder", "Usmani-Riazuddin syndrome"),
+        )
+    )
+
+    assert result.recommended_value == "causative"
+    assert result.support_score >= 0.7
+    assert result.requires_review is False
+
+
 def test_score_candidate_support_marks_unclear_pathogenic_link_as_uncertain() -> None:
     result = score_candidate_support(
         _verification_input(
