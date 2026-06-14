@@ -1,6 +1,6 @@
 # BIBM Main Paper Final Push Implementation Plan
 
-**Status:** planned
+**Status:** in-progress
 **Created:** 2026-06-14
 **Completed:** —
 **PR:** —
@@ -25,7 +25,7 @@ We propose a citation-valid-by-construction cross-lingual biomedical evidence re
 
 ### Current Anchor Facts
 
-Use these as planning anchors, not final paper claims until G0 freezes a consistent manifest:
+Use these as the current frozen G0-G2 anchors. They are report facts, but superiority claims still depend on the later G3/G4 gates because `main_paper_ready=false`.
 
 ```text
 Latest ablation report:
@@ -41,16 +41,36 @@ precision=0.8068
 recall=0.9726
 F1=0.8820
 
+Current frozen manifest:
+benchmark/layer3/reports/main_paper_rescue_manifest_20260614_214404.json
+
+Matched baseline ladder:
+benchmark/layer3/reports/baseline_comparison_20260614_211111.json
+B0 F1=0.9286, matched_to_system_entries=true
+B1 F1=0.9024, matched_to_system_entries=true
+B2 F1=0.8957, matched_to_system_entries=true
+B3 F1=0.9024, matched_to_system_entries=true
+B4 F1=0.9222, matched_to_system_entries=true
+
+Traceability report:
+benchmark/layer3/reports/traceability_context_verifier_reconcile_20260614_213054.json
+CVR=1.0
+HCR=0.0
+SpanBoundaryF1=0.744
+ESR=0.8636
+TraceableF1=0.9157
+CLC=0.194
+
 Weakest current field:
 A.gene_disease_relationship F1=0.8462
 
-Latest G2 statistics file currently points to an older ablation:
-benchmark/layer3/reports/g2_statistics_20260614_153211.json
+Aligned G2 statistics:
+benchmark/layer3/reports/g2_statistics_20260614_205126.json
 baseline_f1=0.8820
-candidate_f1=0.9024
-delta_f1=0.0204
-CI=[0.0, 0.045]
-sign_test_p=0.25
+candidate_f1=0.9157
+delta_f1=0.0337
+CI=[0.0068, 0.0637]
+sign_test_p=0.0625
 main_paper_ready=false
 
 Latest contextual diagnosis:
