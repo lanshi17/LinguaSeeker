@@ -31,8 +31,6 @@ import { ChatMarkdown } from "../utils/markdown";
 import { PipelineStartForm, PipelineStatusCard } from "./forms";
 import type { PipelineFormData } from "./forms";
 import { ChatActionBubble } from "./ChatActionBubble";
-import { ChatEmptyState } from "./ChatEmptyState";
-import { CHAT_PROMPTS } from "./prompts";
 import { apiClient } from "@/lib/api/client";
 import { extractErrorMessage } from "@/lib/api/error";
 
@@ -60,6 +58,71 @@ const roles = {
     ),
   },
 };
+
+// ─── Default welcome message shown when chat is empty ───────────────────
+
+const WELCOME_MESSAGE = (
+  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: "#374151" }}>
+      Welcome to <strong>Cross Evidence</strong> — a literature-grounded
+      assistant for variant and evidence classification.
+    </p>
+    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "#6b7280" }}>
+      I ingest biomedical literature, run a four-phase extraction pipeline
+      (acquisition → cross-lingual dual extraction → entity standardisation →
+      expert-in-the-loop review), and ground every claim in source coordinates.
+    </p>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+        marginTop: 4,
+        padding: "12px 16px",
+        background: "#f9fafb",
+        borderRadius: 8,
+        border: "1px solid #e5e7eb",
+      }}
+    >
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: "#9ca3af",
+        }}
+      >
+        Quick start
+      </span>
+      {[
+        "Run a paper through the four-phase pipeline (e.g. PMID 34521984)",
+        "Upload a PDF — the pipeline parses, translates, and emits structured evidence",
+        "Search extracted evidence by gene, variant, disease, or ACMG code",
+        "Classify a variant with ACMG/AMP 2015 criteria walkthrough",
+      ].map((item) => (
+        <span
+          key={item}
+          style={{ fontSize: 13.5, lineHeight: 1.5, color: "#4b5563" }}
+        >
+          • {item}
+        </span>
+      ))}
+    </div>
+    <p
+      style={{
+        margin: 0,
+        fontSize: 12,
+        color: "#9ca3af",
+        borderTop: "1px solid #e5e7eb",
+        paddingTop: 10,
+      }}
+    >
+      The agent does not provide clinical diagnoses. Outputs are research-grade
+      evidence for review by qualified professionals.
+    </p>
+  </div>
+);
 
 // ─── Main ChatView ─────────────────────────────────────────────────────
 
@@ -492,6 +555,15 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       });
     }
 
+    if (items.length === 0) {
+      items.unshift({
+        key: "__welcome__",
+        role: "assistant",
+        content: "",
+        contentRender: () => WELCOME_MESSAGE,
+      });
+    }
+
     return items;
   }, [
     messages,
@@ -503,35 +575,6 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     dispatchedActions,
     handleDispatchAction,
   ]);
-
-  // ── Prompt click handler ──
-  async function handlePromptClick(key: string) {
-    if (key === "start-pipeline" || key === "upload-pdf") {
-      try {
-        await ensureActiveSession();
-        setActiveForm(key);
-        setActiveFormSlots({});
-      } catch {
-        antdMessage.error("Failed to create session");
-      }
-      return;
-    }
-
-    if (key === "search-evidence") {
-      window.location.href = "/evidence";
-      return;
-    }
-
-    if (key === "review-changes") {
-      window.location.href = "/evidence?review_status=awaiting_review";
-      return;
-    }
-
-    const prompt = CHAT_PROMPTS.find((p) => p.key === key);
-    if (prompt) {
-      void handleSendMessage(prompt.description);
-    }
-  }
 
   // ── Create session ──
   async function handleCreateSession() {
@@ -641,21 +684,13 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
         {/* Main chat area */}
         <div className="flex min-w-0 flex-1 flex-col">
-          {bubbleItems.length === 0 ? (
-            <ChatEmptyState
-              prompts={CHAT_PROMPTS}
-              onPromptSelect={(key) => void handlePromptClick(key)}
-              sessionCount={sessions.length}
-            />
-          ) : (
-            <Bubble.List
-              className="flex-1 overflow-auto"
-              style={{ padding: 16 }}
-              items={bubbleItems}
-              role={roles}
-              autoScroll
-            />
-          )}
+          <Bubble.List
+            className="flex-1 overflow-auto"
+            style={{ padding: 16 }}
+            items={bubbleItems}
+            role={roles}
+            autoScroll
+          />
 
           <Sender
             ref={senderRef}
@@ -689,7 +724,7 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
 
   const bubbleItems = useMemo(() => {
     const messageKeys = toUniqueChatMessageKeys(messages);
-    return messages.map(({ message, status }, index) => ({
+    const items = messages.map(({ message, status }, index) => ({
       key: messageKeys[index],
       role: message.role,
       content: message.content,
@@ -703,6 +738,19 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
           }
         : {}),
     }));
+
+    if (items.length === 0) {
+      items.unshift({
+        key: "__welcome__",
+        role: "assistant" as const,
+        content: "",
+        streaming: false,
+        loading: false,
+        contentRender: () => WELCOME_MESSAGE,
+      });
+    }
+
+    return items;
   }, [messages]);
 
   const senderRef = useRef<SenderRef>(null);
@@ -726,30 +774,13 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
   return (
     <XProvider>
       <div className="flex h-full flex-col overflow-hidden bg-white">
-        {bubbleItems.length === 0 ? (
-          <ChatEmptyState
-            prompts={CHAT_PROMPTS}
-            onPromptSelect={(key) => {
-              if (key === "search-evidence") {
-                window.location.href = "/evidence";
-                return;
-              }
-              const prompt = CHAT_PROMPTS.find((p) => p.key === key);
-              if (prompt) {
-                void handleSingleSessionSubmit(prompt.description);
-              }
-            }}
-            sessionCount={1}
-          />
-        ) : (
-          <Bubble.List
-            className="flex-1 overflow-auto"
-            style={{ padding: 16 }}
-            items={bubbleItems}
-            role={roles}
-            autoScroll
-          />
-        )}
+        <Bubble.List
+          className="flex-1 overflow-auto"
+          style={{ padding: 16 }}
+          items={bubbleItems}
+          role={roles}
+          autoScroll
+        />
 
         <Sender
           ref={senderRef}
