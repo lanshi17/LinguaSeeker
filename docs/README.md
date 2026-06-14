@@ -42,6 +42,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 |------|-------|--------|
 | 2026-06-14 | [BIBM Main Paper G3 Semantic Boundary Repair Implementation Plan](active/2026-06-14-bibm-main-paper-g3-semantic-boundary-repair-plan.md) | in-progress |
 | 2026-06-14 | [BIBM Main Paper Final Push Implementation Plan](active/2026-06-14-bibm-main-paper-final-push-plan.md) | in-progress |
+| 2026-06-15 | [Main Paper Tables Developer Guide](active/2026-06-15-main-paper-tables-guide.md) | in-progress |
 | 2026-06-14 | [Traceability Metrics Developer Guide](active/2026-06-14-traceability-metrics-guide.md) | in-progress |
 | 2026-06-14 | [BIBM Main Paper Detailed Execution Plan](active/2026-06-14-bibm-main-paper-detailed-execution-plan.md) | in-progress |
 | 2026-06-14 | [BIBM Main Paper Roadmap](active/2026-06-14-bibm-main-paper-roadmap.md) | in-progress |
