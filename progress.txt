@@ -1,3 +1,4 @@
+[2026-06-14] Redundant code audit & cleanup: removed orphaned doi_fallback.py (167 lines), unused useChatMessages hook, deleted ChatEmptyState/prompts.ts; merged 4 duplicate test files (quality_validator→validation, source_grounder→grounding); relocated misplaced phase4/ tests; updated LLM config and stale README [done]
 [2026-06-13] [Markdown rendering for bilingual evidence full-text view with highlight compatibility] [done]
 [2026-06-13] [Fix bilingual evidence view showing fragments instead of full document text] [done]
 [2026-06-11] [Standalone chat session, local upload prompt, and real AI streaming chat] [done]
