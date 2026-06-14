@@ -54,6 +54,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 |------|-------|--------|
 | 2026-06-12 | [BIBM Novelty 攻关（诊断优先研究计划）](planned/2026-06-12-bibm-novelty.md) | planned |
 | 2026-06-12 | [Log Analysis Fixes](planned/2026-06-12-log-analysis-fixes.md) | planned |
+| 2026-06-14 | [BIBM Main Paper 指标提升实施计划](planned/2026-06-14-bibm-main-paper-effect-plan.md) | planned |
 
 ## Diagrams
 
