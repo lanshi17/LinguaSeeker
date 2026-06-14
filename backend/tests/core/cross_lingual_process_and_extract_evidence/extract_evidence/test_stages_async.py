@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import CATALOG_GROUPS
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     DocumentEvidenceMap,
     EvidenceItem,
@@ -38,6 +39,10 @@ def _make_document() -> TrackDocument:
 
 def _make_evidence_map() -> DocumentEvidenceMap:
     return DocumentEvidenceMap(relevant=True, disease_terms=["cancer"], gene_terms=["BRCA1"])
+
+
+def _catalog_task_count(chunk_count: int) -> int:
+    return chunk_count * len(CATALOG_GROUPS)
 
 
 @pytest.mark.asyncio
@@ -103,7 +108,7 @@ async def test_catalog_extraction_async_runs_chunks_concurrently() -> None:
         elapsed = time.monotonic() - start
 
     assert elapsed < 0.09
-    assert mock_provider.ainvoke_structured.await_count == 2
+    assert mock_provider.ainvoke_structured.await_count == _catalog_task_count(2)
 
 
 @pytest.mark.asyncio
@@ -200,7 +205,8 @@ async def test_catalog_extraction_raises_when_all_chunks_fail() -> None:
             MagicMock(index=2, total=2, text="c2", total_tokens=100),
         ],
     ):
-        with pytest.raises(CatalogExtractionError, match="All 2 extraction chunks failed"):
+        expected_tasks = _catalog_task_count(2)
+        with pytest.raises(CatalogExtractionError, match=f"All {expected_tasks} extraction tasks failed"):
             await stage.run_async(_make_document(), _make_evidence_map())
 
 
@@ -214,7 +220,7 @@ async def test_catalog_extraction_returns_partial_when_majority_fail() -> None:
     async def _partial_fail(**kwargs):  # noqa: ANN003
         nonlocal call_count
         call_count += 1
-        if call_count <= 2:
+        if call_count <= 4:
             raise RuntimeError("LLM timeout")
         return [
             EvidenceItem(
@@ -241,9 +247,9 @@ async def test_catalog_extraction_returns_partial_when_majority_fail() -> None:
     ):
         result = await stage.run_async(_make_document(), _make_evidence_map())
 
-    # 2/3 failed (>50%), but the 1 success should still produce results
+    # 4/6 tasks failed (>50%), but successful tasks should still produce results.
     assert len(result) >= 1
-    assert call_count == 3
+    assert call_count == _catalog_task_count(3)
 
 
 @pytest.mark.asyncio
@@ -283,6 +289,6 @@ async def test_catalog_extraction_minority_failure_still_returns() -> None:
     ):
         result = await stage.run_async(_make_document(), _make_evidence_map())
 
-    # 1/3 failed (<50%), should return results from 2 successful chunks
+    # 1/6 tasks failed (<50%), should return results from successful tasks.
     assert len(result) >= 1
-    assert call_count == 3
+    assert call_count == _catalog_task_count(3)

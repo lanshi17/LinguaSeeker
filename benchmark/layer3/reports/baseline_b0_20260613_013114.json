@@ -1,0 +1,1410 @@
+{
+  "evaluation_id": "baseline_b0_20260613_013114",
+  "timestamp": "2026-06-13T01:31:14",
+  "baseline_id": "B0",
+  "baseline_name": "Naive single-prompt LLM",
+  "config": {
+    "ground_truth_dir": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/ground_truth",
+    "limit": null,
+    "entry_ids": [],
+    "report_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/bibm-novelty-diagnosis/benchmark/layer3/reports/baseline_b0_20260613_013114.json"
+  },
+  "total_entries": 30,
+  "total_duration_s": 720.12,
+  "aggregates": {
+    "overall": {
+      "true_positives": 78,
+      "false_positives": 5,
+      "false_negatives": 7,
+      "precision": 0.9398,
+      "recall": 0.9176,
+      "f1": 0.9286,
+      "over_extractions": 0,
+      "entity_standardization_accuracy": 0.0,
+      "cross_lingual_consistency": 0.0
+    },
+    "by_field": {
+      "A.gene_symbol": {
+        "precision": 1.0,
+        "recall": 0.9667,
+        "f1": 0.9831,
+        "over_extractions": 0
+      },
+      "B.disease_diagnosis": {
+        "precision": 1.0,
+        "recall": 0.9667,
+        "f1": 0.9831,
+        "over_extractions": 0
+      },
+      "A.gene_disease_relationship": {
+        "precision": 0.8,
+        "recall": 0.8,
+        "f1": 0.8,
+        "over_extractions": 0
+      }
+    },
+    "by_classification": {
+      "Definitive": {
+        "count": 10,
+        "precision": 0.9667,
+        "recall": 1.0,
+        "f1": 0.9831,
+        "over_extractions": 0
+      },
+      "Strong": {
+        "count": 5,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "over_extractions": 0
+      },
+      "Moderate": {
+        "count": 5,
+        "precision": 0.9333,
+        "recall": 1.0,
+        "f1": 0.9655,
+        "over_extractions": 0
+      },
+      "Limited": {
+        "count": 5,
+        "precision": 1.0,
+        "recall": 0.7333,
+        "f1": 0.8462,
+        "over_extractions": 0
+      },
+      "Refuted": {
+        "count": 3,
+        "precision": 0.75,
+        "recall": 0.8571,
+        "f1": 0.8,
+        "over_extractions": 0
+      },
+      "Disputed": {
+        "count": 2,
+        "precision": 0.75,
+        "recall": 0.6,
+        "f1": 0.6667,
+        "over_extractions": 0
+      }
+    },
+    "by_moi": {
+      "AD": {
+        "count": 7,
+        "precision": 0.9048,
+        "recall": 1.0,
+        "f1": 0.95,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "AR": {
+        "count": 7,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "SD": {
+        "count": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "XL": {
+        "count": 5,
+        "precision": 1.0,
+        "recall": 0.9333,
+        "f1": 0.9655,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "MT": {
+        "count": 2,
+        "precision": 0.75,
+        "recall": 0.6,
+        "f1": 0.6667,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "UD": {
+        "count": 5,
+        "precision": 0.8182,
+        "recall": 0.6923,
+        "f1": 0.75,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      }
+    },
+    "by_entity_type": {}
+  },
+  "per_entry": [
+    {
+      "entry_id": "clingen_000",
+      "gene_symbol": "AARS1",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 21.31,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "AARS1",
+          "matched": true,
+          "extracted": "AARS1",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Charcot-Marie-Tooth disease axonal type 2N",
+          "matched": true,
+          "extracted": "Charcot-Marie-Tooth disease axonal type 2N",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": false,
+          "extracted": "uncertain",
+          "source_span": null,
+          "match_type": "wrong_value",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_001",
+      "gene_symbol": "AARS2",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 21.4,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "AARS2",
+          "matched": true,
+          "extracted": "AARS2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "mitochondrial disease",
+          "matched": true,
+          "extracted": "mitochondrial disease",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_002",
+      "gene_symbol": "ABCA3",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 16.18,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCA3",
+          "matched": true,
+          "extracted": "ABCA3",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "interstitial lung disease due to ABCA3 deficiency",
+          "matched": true,
+          "extracted": "interstitial lung disease due to ABCA3 deficiency",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_003",
+      "gene_symbol": "ABCA4",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 37.21,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCA4",
+          "matched": true,
+          "extracted": "ABCA4",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "ABCA4-related retinopathy",
+          "matched": true,
+          "extracted": "ABCA4-related retinopathy",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_004",
+      "gene_symbol": "ABCB4",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 22.84,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCB4",
+          "matched": true,
+          "extracted": "ABCB4",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "progressive familial intrahepatic cholestasis type 3",
+          "matched": true,
+          "extracted": "progressive familial intrahepatic cholestasis type 3",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_005",
+      "gene_symbol": "ABCC8",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "SD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 15.1,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCC8",
+          "matched": true,
+          "extracted": "ABCC8",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "monogenic diabetes",
+          "matched": true,
+          "extracted": "monogenic diabetes",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_006",
+      "gene_symbol": "ABCD1",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "XL",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 16.8,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCD1",
+          "matched": true,
+          "extracted": "ABCD1",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "adrenoleukodystrophy",
+          "matched": true,
+          "extracted": "adrenoleukodystrophy",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_007",
+      "gene_symbol": "ABCG5",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 16.38,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCG5",
+          "matched": true,
+          "extracted": "ABCG5",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "sitosterolemia",
+          "matched": true,
+          "extracted": "sitosterolemia",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_008",
+      "gene_symbol": "ABCG8",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 18.23,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCG8",
+          "matched": true,
+          "extracted": "ABCG8",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "sitosterolemia",
+          "matched": true,
+          "extracted": "sitosterolemia",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_009",
+      "gene_symbol": "ABHD12",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 16.08,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABHD12",
+          "matched": true,
+          "extracted": "ABHD12",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "PHARC syndrome",
+          "matched": true,
+          "extracted": "PHARC syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_010",
+      "gene_symbol": "AP1G1",
+      "disease_label": "",
+      "classification": "Strong",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 23.23,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "AP1G1",
+          "matched": true,
+          "extracted": "AP1G1",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "complex neurodevelopmental disorder",
+          "matched": true,
+          "extracted": "complex neurodevelopmental disorder",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_011",
+      "gene_symbol": "H4C5",
+      "disease_label": "",
+      "classification": "Strong",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 17.66,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "H4C5",
+          "matched": true,
+          "extracted": "H4C5",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Tessadori-Van Haaften neurodevelopmental syndrome 3",
+          "matched": true,
+          "extracted": "Tessadori-Van Haaften neurodevelopmental syndrome 3",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_012",
+      "gene_symbol": "KCNQ1",
+      "disease_label": "",
+      "classification": "Strong",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 17.19,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "KCNQ1",
+          "matched": true,
+          "extracted": "KCNQ1",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "short QT syndrome",
+          "matched": true,
+          "extracted": "short QT syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_013",
+      "gene_symbol": "MAP1B",
+      "disease_label": "",
+      "classification": "Strong",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 26.67,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MAP1B",
+          "matched": true,
+          "extracted": "MAP1B",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "periventricular nodular heterotopia",
+          "matched": true,
+          "extracted": "periventricular nodular heterotopia",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_014",
+      "gene_symbol": "PCGF2",
+      "disease_label": "",
+      "classification": "Strong",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 18.48,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "PCGF2",
+          "matched": true,
+          "extracted": "PCGF2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "turnpenny-fry syndrome",
+          "matched": true,
+          "extracted": "turnpenny-fry syndrome",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_015",
+      "gene_symbol": "MT-TI",
+      "disease_label": "",
+      "classification": "Moderate",
+      "moi": "MT",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 27.16,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MT-TI",
+          "matched": true,
+          "extracted": "MT-TI",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "hypertrophic cardiomyopathy",
+          "matched": true,
+          "extracted": "hypertrophic cardiomyopathy",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": false,
+          "extracted": "uncertain",
+          "source_span": null,
+          "match_type": "wrong_value",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_016",
+      "gene_symbol": "TBC1D8B",
+      "disease_label": "",
+      "classification": "Moderate",
+      "moi": "XL",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 14.5,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "TBC1D8B",
+          "matched": true,
+          "extracted": "TBC1D8B",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "nephrotic syndrome, type 20",
+          "matched": true,
+          "extracted": "nephrotic syndrome, type 20",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_017",
+      "gene_symbol": "TLR7",
+      "disease_label": "",
+      "classification": "Moderate",
+      "moi": "XL",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 20.6,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "TLR7",
+          "matched": true,
+          "extracted": "TLR7",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "systemic lupus erythematosus 17",
+          "matched": true,
+          "extracted": "systemic lupus erythematosus 17",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_018",
+      "gene_symbol": "POLA1",
+      "disease_label": "",
+      "classification": "Moderate",
+      "moi": "XL",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 21.85,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "POLA1",
+          "matched": true,
+          "extracted": "POLA1",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "X-linked reticulate pigmentary disorder",
+          "matched": true,
+          "extracted": "X-linked reticulate pigmentary disorder",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_019",
+      "gene_symbol": "UNC93B1",
+      "disease_label": "",
+      "classification": "Moderate",
+      "moi": "SD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 24.56,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "UNC93B1",
+          "matched": true,
+          "extracted": "UNC93B1",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "systemic lupus erythematosus",
+          "matched": true,
+          "extracted": "systemic lupus erythematosus",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_020",
+      "gene_symbol": "GJA1",
+      "disease_label": "",
+      "classification": "Limited",
+      "moi": "UD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 33.92,
+      "evidence_count": 3,
+      "found_rate": 0.3333333333333333,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "GJA1",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "congenital heart disease",
+          "matched": true,
+          "extracted": "congenital heart disease",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "uncertain",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_021",
+      "gene_symbol": "LGALSL",
+      "disease_label": "",
+      "classification": "Limited",
+      "moi": "UD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 21.88,
+      "evidence_count": 3,
+      "found_rate": 0.6666666666666666,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "LGALSL",
+          "matched": true,
+          "extracted": "LGALSL",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "amyotrophic lateral sclerosis",
+          "matched": true,
+          "extracted": "amyotrophic lateral sclerosis",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "uncertain",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_022",
+      "gene_symbol": "ARHGEF28",
+      "disease_label": "",
+      "classification": "Limited",
+      "moi": "SD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 29.17,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ARHGEF28",
+          "matched": true,
+          "extracted": "ARHGEF28",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "amyotrophic lateral sclerosis",
+          "matched": true,
+          "extracted": "amyotrophic lateral sclerosis",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "uncertain",
+          "matched": true,
+          "extracted": "uncertain",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_023",
+      "gene_symbol": "CFAP410",
+      "disease_label": "",
+      "classification": "Limited",
+      "moi": "SD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 34.17,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "CFAP410",
+          "matched": true,
+          "extracted": "CFAP410",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "amyotrophic lateral sclerosis",
+          "matched": true,
+          "extracted": "amyotrophic lateral sclerosis",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "uncertain",
+          "matched": true,
+          "extracted": "uncertain",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_024",
+      "gene_symbol": "TLR5",
+      "disease_label": "",
+      "classification": "Limited",
+      "moi": "UD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 20.23,
+      "evidence_count": 3,
+      "found_rate": 0.6666666666666666,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "TLR5",
+          "matched": true,
+          "extracted": "TLR5",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "systemic lupus erythematosus, susceptibility to, 1",
+          "matched": true,
+          "extracted": "systemic lupus erythematosus",
+          "source_span": null,
+          "match_type": "fuzzy",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "uncertain",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_025",
+      "gene_symbol": "CHRNA7",
+      "disease_label": "",
+      "classification": "Refuted",
+      "moi": "UD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 29.24,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "CHRNA7",
+          "matched": true,
+          "extracted": "CHRNA7",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "epilepsy",
+          "matched": true,
+          "extracted": "epilepsy",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "refuted",
+          "matched": false,
+          "extracted": "causative",
+          "source_span": null,
+          "match_type": "wrong_value",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_026",
+      "gene_symbol": "SRPX2",
+      "disease_label": "",
+      "classification": "Refuted",
+      "moi": "XL",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 30.69,
+      "evidence_count": 3,
+      "found_rate": 0.6666666666666666,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "SRPX2",
+          "matched": true,
+          "extracted": "SRPX2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "epilepsy",
+          "matched": true,
+          "extracted": "epilepsy",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "refuted",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_027",
+      "gene_symbol": "ADRA2B",
+      "disease_label": "",
+      "classification": "Refuted",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 31.65,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ADRA2B",
+          "matched": true,
+          "extracted": "ADRA2B",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "epilepsy",
+          "matched": true,
+          "extracted": "epilepsy",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "refuted",
+          "matched": false,
+          "extracted": "uncertain",
+          "source_span": null,
+          "match_type": "wrong_value",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_028",
+      "gene_symbol": "MT-TL2",
+      "disease_label": "",
+      "classification": "Disputed",
+      "moi": "MT",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 36.78,
+      "evidence_count": 3,
+      "found_rate": 0.3333333333333333,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MT-TL2",
+          "matched": true,
+          "extracted": "MT-TL2",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Leigh syndrome",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "disputed",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_029",
+      "gene_symbol": "BMPR1A",
+      "disease_label": "",
+      "classification": "Disputed",
+      "moi": "UD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 38.98,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "BMPR1A",
+          "matched": true,
+          "extracted": "BMPR1A",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "pulmonary arterial hypertension",
+          "matched": true,
+          "extracted": "pulmonary arterial hypertension",
+          "source_span": null,
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "disputed",
+          "matched": false,
+          "extracted": "uncertain",
+          "source_span": null,
+          "match_type": "wrong_value",
+          "extra_found_values": []
+        }
+      ]
+    }
+  ]
+}

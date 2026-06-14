@@ -166,6 +166,50 @@ class FakeResult:
         return self._rows
 
 
+def test_build_run_item_specs_skips_audit_only_track_payloads() -> None:
+    repo = StandardizationRepository(FakeSession())
+    input_data = StandardizationInput(
+        document_id="doc-reconciled",
+        source_document_id="source-reconciled",
+        processing_run_id="run-reconciled",
+        candidates=(),
+        evidence_items=(),
+        track_payloads={
+            "reconciled": {
+                "track": "reconciled",
+                "evidence_items": [
+                    {
+                        "field_id": "A.gene_symbol",
+                        "group_id": "gene=BRCA1",
+                        "status": "found",
+                        "value": "BRCA1",
+                        "confidence": 0.9,
+                    }
+                ],
+            },
+            "audit_original": {
+                "audit_only": True,
+                "track": "original",
+                "evidence_items": [
+                    {
+                        "field_id": "A.gene_symbol",
+                        "group_id": "gene=BRCA2",
+                        "status": "found",
+                        "value": "BRCA2",
+                        "confidence": 0.9,
+                    }
+                ],
+            },
+        },
+    )
+
+    specs = repo._build_run_item_specs(input_data, matches=(), scope_hashes={})
+
+    assert len(specs) == 1
+    assert specs[0].track == "reconciled"
+    assert specs[0].value == {"value": "BRCA1"}
+
+
 @pytest.mark.asyncio
 async def test_find_alias_candidates_filters_by_type_and_alias() -> None:
     """Alias lookup queries filter by entity type and normalized alias."""

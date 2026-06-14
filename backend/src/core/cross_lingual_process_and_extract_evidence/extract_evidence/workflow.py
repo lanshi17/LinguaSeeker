@@ -95,7 +95,10 @@ class EvidenceExtractionWorkflow:
         return state
 
     def _node_role_routing(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
-        primary, phenotype, discarded = self._role_router.route(state.evidence_items)
+        primary, phenotype, discarded = self._role_router.route(
+            state.evidence_items,
+            extraction_target=state.document.extraction_target,
+        )
         state.evidence_items = primary
         state.phenotype_evidence = phenotype
         state.discarded_evidence = discarded

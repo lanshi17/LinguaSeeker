@@ -26,7 +26,7 @@ from pathlib import Path
 import httpx
 import yaml
 from loguru import logger
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from benchmark.pipeline.evidence_metrics import query_evidence_metrics
 from src.dao.postgresql.connection import async_session_factory, build_async_engine
@@ -43,6 +43,28 @@ REPORTS_DIR = Path(__file__).resolve().parent / "reports"
 POLL_INTERVAL_S = 5.0
 MAX_POLL_ATTEMPTS = 360  # 30 min max per entry
 TERMINAL_STATUSES = {"awaiting_review", "completed", "failed"}
+
+
+def _run_id_from_status_url(status_url: str) -> str | None:
+    """Extract a pipeline run ID from the canonical status URL."""
+    match = re.search(r"/runs/([^/]+)/status$", status_url)
+    return match.group(1) if match else None
+
+
+async def preflight_database_connection(session_factory) -> None:  # noqa: ANN001
+    """Verify evaluator DB credentials before submitting long-running pipeline jobs."""
+    try:
+        async with session_factory() as session:
+            row = (
+                await session.execute(text("select current_user, current_database()"))
+            ).one()
+    except Exception as exc:
+        raise RuntimeError(
+            "Layer 3 database preflight failed before pipeline submission. "
+            "Check POSTGRES_USER/POSTGRES_PASSWORD and worktree vault/env setup."
+        ) from exc
+
+    logger.info("DB preflight OK: user={} database={}", row[0], row[1])
 
 
 # ── PDF generation ─────────────────────────────────────────────────────
@@ -124,12 +146,21 @@ _PUNCT_TRANSLATION = str.maketrans({
     "“": '"',  # " left double quotation mark
     "”": '"',  # " right double quotation mark
 })
+_NORMALIZE_CANDIDATE_PUNCT = str.maketrans({
+    ",": " ",
+    ";": " ",
+    ":": " ",
+    "，": " ",
+    "；": " ",
+    "：": " ",
+})
 
 
 def normalize_comparison_text(value: str) -> str:
     """Normalize harmless typography differences for benchmark matching."""
     normalized = unicodedata.normalize("NFKC", value)
     normalized = normalized.translate(_PUNCT_TRANSLATION)
+    normalized = normalized.translate(_NORMALIZE_CANDIDATE_PUNCT)
     normalized = re.sub(r"\s+", " ", normalized)
     return normalized.strip()
 
@@ -143,6 +174,7 @@ class FieldMatch:
     matched: bool
     extracted_value: str | None = None
     extracted_confidence: float | None = None
+    source_span: dict[str, object] | None = None
     match_type: str = "none"  # exact, fuzzy, none
     extra_found_values: list[str] = field(default_factory=list)
 
@@ -157,7 +189,11 @@ class EntryMetrics:
     language: str
     moi: str = ""
     run_id: str | None = None
+    status_url: str | None = None
     pipeline_status: str = "pending"
+    error_message: str | None = None
+    last_pipeline_status: str | None = None
+    last_current_phase: str | None = None
     duration_s: float = 0.0
     field_matches: list[FieldMatch] = field(default_factory=list)
     entity_matches: dict[str, bool] = field(default_factory=dict)
@@ -245,19 +281,28 @@ def compare_evidence(
         for cand in candidates:
             extracted_value = str(cand.get("value", ""))
             confidence = cand.get("confidence", 0.0)
+            source_span = cand.get("source_span") if isinstance(cand.get("source_span"), dict) else None
 
-            if fuzzy_match_value(expected_value, extracted_value):
-                match_type = "exact" if expected_value.lower() == extracted_value.lower() else "fuzzy"
-                candidate_match = FieldMatch(
-                    field_id=field_id,
-                    expected_value=expected_value,
-                    matched=True,
-                    extracted_value=extracted_value,
-                    extracted_confidence=confidence,
-                    match_type=match_type,
-                )
-                if best_match is None or (match_type == "exact" and best_match.match_type != "exact"):
-                    best_match = candidate_match
+            expected_norm = normalize_comparison_text(expected_value).lower()
+            extracted_norm = normalize_comparison_text(extracted_value).lower()
+            if expected_norm == extracted_norm:
+                match_type = "exact"
+            elif fuzzy_match_value(expected_value, extracted_value):
+                match_type = "fuzzy"
+            else:
+                continue
+
+            candidate_match = FieldMatch(
+                field_id=field_id,
+                expected_value=expected_value,
+                matched=True,
+                extracted_value=extracted_value,
+                extracted_confidence=confidence,
+                source_span=source_span,
+                match_type=match_type,
+            )
+            if best_match is None or (match_type == "exact" and best_match.match_type != "exact"):
+                best_match = candidate_match
 
         # Ontology ancestry fallback for disease fields
         if not best_match and mondo and field_id in _DISEASE_FIELDS and expected_mondo_id:
@@ -270,6 +315,7 @@ def compare_evidence(
                         matched=True,
                         extracted_value=extracted_value,
                         extracted_confidence=cand.get("confidence", 0.0),
+                        source_span=cand.get("source_span") if isinstance(cand.get("source_span"), dict) else None,
                         match_type="ontology_ancestor",
                     )
                     break
@@ -294,10 +340,25 @@ def compare_evidence(
                 matched=False,
                 extracted_value=str(candidates[0].get("value", "")),
                 extracted_confidence=candidates[0].get("confidence", 0.0),
+                source_span=candidates[0].get("source_span") if isinstance(candidates[0].get("source_span"), dict) else None,
                 match_type="wrong_value",
             ))
 
     return matches
+
+
+def mark_expected_fields_missing(
+    metrics: EntryMetrics,
+    entry: dict,
+    mondo: Any | None = None,
+) -> None:
+    """Populate missing field matches when no usable extraction result exists."""
+    metrics.field_matches = compare_evidence(
+        entry.get("expected_evidence", []),
+        [],
+        mondo=mondo,
+        expected_standardization=entry.get("expected_standardization"),
+    )
 
 
 async def compare_entity_standardization(
@@ -436,6 +497,9 @@ async def submit_and_poll(
     resp.raise_for_status()
     data = resp.json()
     status_url = data["status_url"]
+    run_id = data.get("processing_run_id") or _run_id_from_status_url(status_url)
+    source_document_id = data.get("source_document_id")
+    last_status: dict[str, Any] | None = None
 
     # Poll
     for attempt in range(MAX_POLL_ATTEMPTS):
@@ -446,13 +510,26 @@ async def submit_and_poll(
                 continue
             resp.raise_for_status()
             status_data = resp.json()
+            if run_id and not status_data.get("processing_run_id"):
+                status_data["processing_run_id"] = run_id
+            if source_document_id and not status_data.get("source_document_id"):
+                status_data["source_document_id"] = source_document_id
+            status_data["status_url"] = status_url
+            last_status = status_data
             ps = status_data.get("pipeline_status", "")
             if ps in TERMINAL_STATUSES:
                 return status_data
         except Exception:
             continue
 
-    return {"pipeline_status": "timeout", "error_message": "Poll timed out"}
+    return {
+        "pipeline_status": "timeout",
+        "error_message": "Poll timed out",
+        "processing_run_id": run_id,
+        "source_document_id": source_document_id,
+        "status_url": status_url,
+        "last_status": last_status,
+    }
 
 
 def load_proxy() -> str | None:
@@ -510,11 +587,13 @@ async def evaluate_one(
     source_path = GROUND_TRUTH_DIR / entry_id / "source.md"
     if not source_path.exists():
         metrics.pipeline_status = "no_source"
+        mark_expected_fields_missing(metrics, entry, mondo=mondo)
         return metrics
 
     md_text = source_path.read_text(encoding="utf-8")
     if len(md_text) < 100:
         metrics.pipeline_status = "source_too_small"
+        mark_expected_fields_missing(metrics, entry, mondo=mondo)
         return metrics
 
     # Check for preprocessed Phase 1+2 data
@@ -576,6 +655,8 @@ async def evaluate_one(
         except Exception as e:
             logger.error("[{}] Preprocessed evaluation failed: {}", entry_id, e)
             metrics.pipeline_status = "preprocess_error"
+            metrics.error_message = str(e)
+            mark_expected_fields_missing(metrics, entry, mondo=mondo)
 
         return metrics
 
@@ -598,10 +679,18 @@ async def evaluate_one(
             )
             metrics.duration_s = round(time.time() - t0, 2)
             metrics.pipeline_status = status_data.get("pipeline_status", "unknown")
+            metrics.run_id = status_data.get("processing_run_id")
+            metrics.status_url = status_data.get("status_url")
+            metrics.error_message = status_data.get("error_message")
+            last_status = status_data.get("last_status")
+            if isinstance(last_status, dict):
+                metrics.last_pipeline_status = last_status.get("pipeline_status")
+                metrics.last_current_phase = last_status.get("current_phase")
 
             if metrics.pipeline_status in ("awaiting_review", "completed"):
-                run_id = status_data.get("processing_run_id")
-                metrics.run_id = run_id
+                run_id = metrics.run_id
+                if not run_id:
+                    raise RuntimeError("Pipeline completed without processing_run_id")
 
                 # Query evidence metrics from PG
                 try:
@@ -617,10 +706,17 @@ async def evaluate_one(
                             RunEvidenceItem.status,
                             RunEvidenceItem.value,
                             RunEvidenceItem.confidence,
+                            RunEvidenceItem.source_span,
                         ).where(RunEvidenceItem.processing_run_id == uuid.UUID(run_id))
                         rows = (await session.execute(stmt)).all()
                         extracted_items = [
-                            {"field_id": r.field_id, "status": r.status, "value": r.value, "confidence": float(r.confidence) if r.confidence else 0.0}
+                            {
+                                "field_id": r.field_id,
+                                "status": r.status,
+                                "value": r.value,
+                                "confidence": float(r.confidence) if r.confidence else 0.0,
+                                "source_span": r.source_span,
+                            }
                             for r in rows
                         ]
 
@@ -649,10 +745,15 @@ async def evaluate_one(
 
                 except Exception as e:
                     logger.warning("[{}] Evidence query failed: {}", entry_id, e)
+                    mark_expected_fields_missing(metrics, entry, mondo=mondo)
+            else:
+                mark_expected_fields_missing(metrics, entry, mondo=mondo)
 
         except Exception as e:
             metrics.duration_s = round(time.time() - t0, 2)
             metrics.pipeline_status = "error"
+            metrics.error_message = str(e)
+            mark_expected_fields_missing(metrics, entry, mondo=mondo)
             logger.error("[{}] Pipeline error: {}", entry_id, e)
 
     return metrics
@@ -838,6 +939,7 @@ async def run_evaluation(
     semaphore = asyncio.Semaphore(concurrency)
     engine = build_async_engine()
     sf = async_session_factory(engine)
+    await preflight_database_connection(sf)
 
     # Load MONDO hierarchy for ontology ancestry matching
     mondo = None
@@ -883,7 +985,12 @@ async def run_evaluation(
                 "gene_symbol": m.gene_symbol,
                 "classification": m.classification,
                 "moi": m.moi,
+                "run_id": m.run_id,
+                "status_url": m.status_url,
                 "pipeline_status": m.pipeline_status,
+                "error_message": m.error_message,
+                "last_pipeline_status": m.last_pipeline_status,
+                "last_current_phase": m.last_current_phase,
                 "duration_s": m.duration_s,
                 "evidence_count": m.evidence_count,
                 "found_rate": m.found_rate,
@@ -893,6 +1000,7 @@ async def run_evaluation(
                 "field_matches": [
                     {"field_id": f.field_id, "expected": f.expected_value,
                      "matched": f.matched, "extracted": f.extracted_value,
+                     "source_span": f.source_span,
                      "match_type": f.match_type,
                      "extra_found_values": f.extra_found_values}
                     for f in m.field_matches

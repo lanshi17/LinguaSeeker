@@ -1,0 +1,60 @@
+{
+  "source_report_path": "benchmark/layer3/reports/reconcile_ablation_20260613_165254.json",
+  "baseline_strategy": "dual_union",
+  "candidate_strategy": "source_grounded_reconcile",
+  "total_cases": 3,
+  "cases": [
+    {
+      "entry_id": "clingen_002",
+      "field_id": "B.disease_diagnosis",
+      "improvement_type": "over_extraction_removed",
+      "expected": "interstitial lung disease due to ABCA3 deficiency",
+      "baseline_strategy": "dual_union",
+      "baseline_extracted": "interstitial lung disease due to ABCA3 deficiency",
+      "baseline_match_type": "exact",
+      "candidate_strategy": "source_grounded_reconcile",
+      "candidate_extracted": "interstitial lung disease due to ABCA3 deficiency",
+      "candidate_match_type": "exact",
+      "removed_extra_values": [
+        "chILD due to ABCA3 deficiency"
+      ],
+      "source_snippet": "ABSTRACT Background ATP‐binding cassette transporter A3 (ABCA3) deficiency is one of the most severe causes of childhood interstitial lung diseases (chILD).",
+      "source_precision": "corrected"
+    },
+    {
+      "entry_id": "clingen_016",
+      "field_id": "B.disease_diagnosis",
+      "improvement_type": "over_extraction_removed",
+      "expected": "nephrotic syndrome, type 20",
+      "baseline_strategy": "dual_union",
+      "baseline_extracted": "nephrotic syndrome type 20 (NPHS20)",
+      "baseline_match_type": "fuzzy",
+      "candidate_strategy": "source_grounded_reconcile",
+      "candidate_extracted": "neonatal nephrotic syndrome combined with acute kidney injury",
+      "candidate_match_type": "wrong_value",
+      "removed_extra_values": [
+        "Nephrotic syndrome (NPHS) with acute kidney injury (AKI)",
+        "neonatal nephrotic syndrome combined with acute kidney injury"
+      ],
+      "source_snippet": "Novel TBC1D8B variant causes neonatal nephrotic syndrome combined with acute kidney injury",
+      "source_precision": "corrected"
+    },
+    {
+      "entry_id": "clingen_017",
+      "field_id": "A.gene_disease_relationship",
+      "improvement_type": "over_extraction_removed",
+      "expected": "causative",
+      "baseline_strategy": "dual_union",
+      "baseline_extracted": "causative",
+      "baseline_match_type": "exact",
+      "candidate_strategy": "source_grounded_reconcile",
+      "candidate_extracted": "causative",
+      "candidate_match_type": "exact",
+      "removed_extra_values": [
+        "associated"
+      ],
+      "source_snippet": "TLR7 gain-of-function genetic variation causes human lupus",
+      "source_precision": "corrected"
+    }
+  ]
+}

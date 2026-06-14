@@ -1,0 +1,166 @@
+{
+  "report_path": "benchmark/layer3/reports/reconcile_ablation_20260614_140733.json",
+  "strategy": "context_verifier_reconcile",
+  "total_rows": 7,
+  "summary": {
+    "by_root_cause": {
+      "candidate_absent": 2,
+      "wrong_relationship_semantics": 3,
+      "disease_boundary_error": 2
+    },
+    "by_field": {
+      "B.disease_diagnosis": 2,
+      "A.gene_disease_relationship": 4,
+      "A.gene_symbol": 1
+    },
+    "by_match_type": {
+      "wrong_value": 4,
+      "fuzzy": 1,
+      "missing": 2
+    }
+  },
+  "rows": [
+    {
+      "entry_id": "clingen_020",
+      "field_id": "B.disease_diagnosis",
+      "expected": "congenital heart disease",
+      "extracted": "Tetralogy of Fallot",
+      "matched": false,
+      "match_type": "wrong_value",
+      "root_cause": "disease_boundary_error",
+      "candidate_count": 1,
+      "found_candidate_count": 1,
+      "source_valid_candidate_count": 1,
+      "source_precision": "ambiguous",
+      "best_score": null,
+      "verifier_support_score": null,
+      "target_specificity_score": null,
+      "contradiction_penalty": null,
+      "notes": [
+        "Score components are unavailable in the current ablation report."
+      ]
+    },
+    {
+      "entry_id": "clingen_020",
+      "field_id": "A.gene_disease_relationship",
+      "expected": "uncertain",
+      "extracted": "associated",
+      "matched": false,
+      "match_type": "wrong_value",
+      "root_cause": "wrong_relationship_semantics",
+      "candidate_count": 1,
+      "found_candidate_count": 1,
+      "source_valid_candidate_count": 1,
+      "source_precision": "ambiguous",
+      "best_score": null,
+      "verifier_support_score": null,
+      "target_specificity_score": null,
+      "contradiction_penalty": null,
+      "notes": [
+        "Score components are unavailable in the current ablation report."
+      ]
+    },
+    {
+      "entry_id": "clingen_021",
+      "field_id": "A.gene_disease_relationship",
+      "expected": "uncertain",
+      "extracted": "associated",
+      "matched": false,
+      "match_type": "wrong_value",
+      "root_cause": "wrong_relationship_semantics",
+      "candidate_count": 1,
+      "found_candidate_count": 1,
+      "source_valid_candidate_count": 1,
+      "source_precision": "corrected",
+      "best_score": null,
+      "verifier_support_score": null,
+      "target_specificity_score": null,
+      "contradiction_penalty": null,
+      "notes": [
+        "Score components are unavailable in the current ablation report."
+      ]
+    },
+    {
+      "entry_id": "clingen_024",
+      "field_id": "B.disease_diagnosis",
+      "expected": "systemic lupus erythematosus, susceptibility to, 1",
+      "extracted": "systemic lupus erythematosus",
+      "matched": true,
+      "match_type": "fuzzy",
+      "root_cause": "disease_boundary_error",
+      "candidate_count": 1,
+      "found_candidate_count": 1,
+      "source_valid_candidate_count": 1,
+      "source_precision": "ambiguous",
+      "best_score": null,
+      "verifier_support_score": null,
+      "target_specificity_score": null,
+      "contradiction_penalty": null,
+      "notes": [
+        "Score components are unavailable in the current ablation report."
+      ]
+    },
+    {
+      "entry_id": "clingen_024",
+      "field_id": "A.gene_disease_relationship",
+      "expected": "uncertain",
+      "extracted": "no_relationship",
+      "matched": false,
+      "match_type": "wrong_value",
+      "root_cause": "wrong_relationship_semantics",
+      "candidate_count": 1,
+      "found_candidate_count": 1,
+      "source_valid_candidate_count": 1,
+      "source_precision": "ambiguous",
+      "best_score": null,
+      "verifier_support_score": null,
+      "target_specificity_score": null,
+      "contradiction_penalty": null,
+      "notes": [
+        "Score components are unavailable in the current ablation report."
+      ]
+    },
+    {
+      "entry_id": "clingen_028",
+      "field_id": "A.gene_symbol",
+      "expected": "MT-TL2",
+      "extracted": null,
+      "matched": false,
+      "match_type": "missing",
+      "root_cause": "candidate_absent",
+      "candidate_count": 0,
+      "found_candidate_count": 0,
+      "source_valid_candidate_count": 0,
+      "source_precision": null,
+      "best_score": null,
+      "verifier_support_score": null,
+      "target_specificity_score": null,
+      "contradiction_penalty": null,
+      "notes": [
+        "No found candidate is visible in this ablation report for the field.",
+        "Score components are unavailable in the current ablation report."
+      ]
+    },
+    {
+      "entry_id": "clingen_028",
+      "field_id": "A.gene_disease_relationship",
+      "expected": "disputed",
+      "extracted": null,
+      "matched": false,
+      "match_type": "missing",
+      "root_cause": "candidate_absent",
+      "candidate_count": 0,
+      "found_candidate_count": 0,
+      "source_valid_candidate_count": 0,
+      "source_precision": null,
+      "best_score": null,
+      "verifier_support_score": null,
+      "target_specificity_score": null,
+      "contradiction_penalty": null,
+      "notes": [
+        "No found candidate is visible in this ablation report for the field.",
+        "Score components are unavailable in the current ablation report."
+      ]
+    }
+  ]
+}

@@ -20,6 +20,7 @@ from ..contracts import DocumentEvidenceMap, EvidenceItem, ExtractionTarget, Tra
 from ..core import FieldValueNormalizer, RawSourceNormalizer
 from ..prompts import get_catalog_extraction_prompt
 from ..providers import EvidenceModelTier, LangChainEvidenceProvider
+from .block_selection import select_recall_first_blocks
 from ...cross_lingual.format.segmenter import estimate_tokens
 
 _DEFAULT_CHUNK_CONCURRENCY = 5
@@ -64,6 +65,7 @@ class CatalogExtractionStage:
             document,
             input_budget_tokens=self._input_budget_tokens,
             prompt_overhead_tokens=overhead,
+            block_indices=self._recall_first_block_indices(document),
         )
         extracted: list[EvidenceItem] = []
         for chunk in chunks:
@@ -100,6 +102,7 @@ class CatalogExtractionStage:
             document,
             input_budget_tokens=self._input_budget_tokens,
             prompt_overhead_tokens=overhead,
+            block_indices=self._recall_first_block_indices(document),
         )
         sem = asyncio.Semaphore(_DEFAULT_CHUNK_CONCURRENCY)
         num_tasks = len(chunks) * len(self._catalog_groups)
@@ -175,6 +178,15 @@ class CatalogExtractionStage:
         if chunk.total > 1:
             base = f"catalog_extraction/{group_name}/{chunk.index}"
         return base
+
+    @staticmethod
+    def _recall_first_block_indices(document: TrackDocument) -> tuple[int, ...] | None:
+        if document.extraction_target is None:
+            return None
+        selected = select_recall_first_blocks(document)
+        if not selected:
+            return None
+        return tuple(block.index for block in selected)
 
     @staticmethod
     def _summarize_map(emap: DocumentEvidenceMap) -> str:
