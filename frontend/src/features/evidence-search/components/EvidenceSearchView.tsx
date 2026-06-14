@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Card } from "@/components/ui/Card";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { EvidenceSearchForm } from "./EvidenceSearchForm";
 import { EvidenceResultsTable } from "./EvidenceResultsTable";
@@ -27,7 +26,7 @@ export function EvidenceSearchView() {
   return (
     <div className="space-y-6">
       <ErrorBoundary>
-        <Card className="border-primary-100 bg-white shadow-sm">
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <EvidenceSearchForm
             filters={filters}
             onUpdateFilter={updateFilter}
@@ -35,16 +34,19 @@ export function EvidenceSearchView() {
             onClear={clearFilters}
             isSearching={isFetching}
           />
-        </Card>
+        </div>
       </ErrorBoundary>
 
       <ErrorBoundary>
         {error ? (
-          <Card className="py-10 text-center">
-            <p className="text-sm text-red-600">
-              Failed to load evidence: {error.message}
+          <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-10 text-center">
+            <p className="text-sm font-medium text-red-700">
+              Failed to load evidence
             </p>
-          </Card>
+            <p className="mt-1 text-xs text-red-600">
+              {error.message}
+            </p>
+          </div>
         ) : (
           <EvidenceResultsTable
             results={results}
