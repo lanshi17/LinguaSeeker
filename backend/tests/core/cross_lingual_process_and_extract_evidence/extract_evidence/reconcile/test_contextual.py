@@ -152,6 +152,30 @@ def test_contextual_reconcile_penalizes_non_target_disease_candidate() -> None:
     assert output.result.discarded_evidence[0].value == "influenza"
 
 
+def test_contextual_reconcile_canonicalizes_target_supported_disease_boundary() -> None:
+    original = _result(
+        Track.ORIGINAL,
+        [
+            _item(
+                field_id="B.disease_diagnosis",
+                value="Tetralogy of Fallot",
+                confidence=0.95,
+                source=_source(
+                    "Tetralogy of Fallot is the most common cyanotic congenital heart disease.",
+                    precision=SourcePrecision.AMBIGUOUS,
+                ),
+            )
+        ],
+    )
+    translated = _result(Track.TRANSLATED, [])
+
+    output = reconcile_with_context(original, translated, _indirect_context())
+
+    accepted = output.result.evidence_items[0]
+    assert accepted.value == "congenital heart disease"
+    assert "target disease boundary canonicalization" in accepted.inference_basis
+
+
 def test_contextual_reconcile_turns_indirect_relationship_evidence_into_uncertain() -> None:
     original = _result(
         Track.ORIGINAL,

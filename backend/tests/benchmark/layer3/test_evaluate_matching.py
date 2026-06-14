@@ -148,6 +148,23 @@ def test_compare_evidence_treats_disease_punctuation_only_variants_as_exact() ->
     assert matches[0].match_type == "exact"
 
 
+def test_compare_evidence_keeps_disease_boundary_overlap_as_fuzzy() -> None:
+    expected = [{"field_id": "B.disease_diagnosis", "value": "congenital heart disease"}]
+    extracted = [
+        {
+            "field_id": "B.disease_diagnosis",
+            "status": "found",
+            "value": "Tetralogy of Fallot, congenital heart disease",
+            "confidence": 0.9,
+        }
+    ]
+
+    matches = compare_evidence(expected, extracted)
+
+    assert matches[0].matched
+    assert matches[0].match_type == "fuzzy"
+
+
 class FakePipelineClient:
     def __init__(self) -> None:
         self.post_payloads = []

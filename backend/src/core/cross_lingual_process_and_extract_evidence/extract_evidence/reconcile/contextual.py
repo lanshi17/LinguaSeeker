@@ -107,7 +107,13 @@ def _decide_fields(
             and accepted_score.score - competing_score.score < params.conflict_margin
         )
         rationale = _accepted_rationale(accepted_score, requires_review)
-        accepted = _annotate_accepted(accepted_candidate.item, rationale, accepted_score, requires_review)
+        accepted = _annotate_accepted(
+            accepted_candidate.item,
+            rationale,
+            accepted_score,
+            requires_review,
+            context,
+        )
         rejected = tuple(
             _annotate_rejected(candidate.item, candidate.track, score, accepted_score)
             for candidate, score in ranked[1:]
@@ -233,6 +239,7 @@ def _annotate_accepted(
     rationale: str,
     score: CandidateScore,
     requires_review: bool,
+    context: TargetContextPack,
 ) -> EvidenceItem:
     basis = [*item.inference_basis, "contextual verifier reconcile"]
     update: dict[str, object] = {
@@ -242,9 +249,23 @@ def _annotate_accepted(
     if _can_apply_relationship_override(item, score):
         update["value"] = score.normalized_value
         update["inference_basis"] = [*basis, "verifier relationship override"]
+    if _can_canonicalize_target_disease(item, context):
+        update["value"] = context.disease.label
+        update["inference_basis"] = [*basis, "target disease boundary canonicalization"]
     if requires_review:
         update["notes"] = _append_note(str(update["notes"]), "manual review recommended")
     return item.model_copy(update=update)
+
+
+def _can_canonicalize_target_disease(item: EvidenceItem, context: TargetContextPack) -> bool:
+    if item.field_id != "B.disease_diagnosis" or not context.disease.label:
+        return False
+    source = item.source or item.raw_source
+    if source is None:
+        return False
+    snippet = source.text_snippet.casefold()
+    aliases = tuple(alias.casefold() for alias in context.disease.aliases if alias)
+    return any(alias and alias in snippet for alias in aliases)
 
 
 def _annotate_rejected(
