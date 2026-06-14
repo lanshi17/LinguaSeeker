@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
     ContentBlock,
     DocumentEvidenceMap,
+    DualEvidenceExtractionResult,
     DualTrackDocuments,
     EvidenceChain,
     EvidenceExtractionResult,
@@ -162,6 +163,7 @@ def test_evidence_item_rejects_negative_confidence():
 def test_enum_values():
     assert Track.ORIGINAL.value == "original"
     assert Track.TRANSLATED.value == "translated"
+    assert Track.RECONCILED.value == "reconciled"
     assert EvidenceStatus.FOUND.value == "found"
     assert EvidenceStatus.NOT_FOUND.value == "not_found"
     assert EvidenceStatus.OCR_GAP.value == "ocr_gap"
@@ -427,3 +429,37 @@ def test_evidence_extraction_result_separates_phenotype_and_discarded() -> None:
     assert result.phenotype_evidence == [phenotype]
     assert result.discarded_evidence == [discarded]
     assert result.evidence_items == [primary]
+
+
+def test_dual_evidence_extraction_result_accepts_optional_reconciled_result() -> None:
+    original = EvidenceExtractionResult(
+        status=EvidenceExtractionStatus.COMPLETED,
+        document_id="doc-reconcile",
+        track=Track.ORIGINAL,
+    )
+    translated = EvidenceExtractionResult(
+        status=EvidenceExtractionStatus.COMPLETED,
+        document_id="doc-reconcile",
+        track=Track.TRANSLATED,
+    )
+    historical_result = DualEvidenceExtractionResult(
+        document_id="doc-reconcile",
+        original_result=original,
+        translated_result=translated,
+    )
+
+    assert historical_result.reconciled_result is None
+
+    reconciled = EvidenceExtractionResult(
+        status=EvidenceExtractionStatus.COMPLETED,
+        document_id="doc-reconcile",
+        track=Track.RECONCILED,
+    )
+    result = DualEvidenceExtractionResult(
+        document_id="doc-reconcile",
+        original_result=original,
+        translated_result=translated,
+        reconciled_result=reconciled,
+    )
+
+    assert result.reconciled_result == reconciled

@@ -43,7 +43,8 @@ def should_skip_translation(text: str) -> bool:
     sample = str(text or "").strip()
     if not sample:
         return True
-    if _CJK_RE.search(sample):
+    cjk_count = len(_CJK_RE.findall(sample))
+    if cjk_count / len(sample) > 0.05:
         return False
     lang = detect_language(sample)
     return lang == "en"

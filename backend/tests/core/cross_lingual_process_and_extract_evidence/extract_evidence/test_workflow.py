@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.api import EvidenceExtractionService
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
@@ -41,6 +41,7 @@ async def test_workflow_returns_not_relevant():
     provider = MagicMock()
     emap = DocumentEvidenceMap(relevant=False)
     provider.invoke_structured.return_value = emap
+    provider.ainvoke_structured = AsyncMock(return_value=emap)
 
     workflow = EvidenceExtractionWorkflow(provider=provider)
 
@@ -62,6 +63,7 @@ async def test_service_facade_builds_result(mock_config):
     provider = MagicMock()
     emap = DocumentEvidenceMap(relevant=False)
     provider.invoke_structured.return_value = emap
+    provider.ainvoke_structured = AsyncMock(return_value=emap)
 
     service = EvidenceExtractionService(cfg=mock_config)
     service._workflow = EvidenceExtractionWorkflow(provider=provider)
