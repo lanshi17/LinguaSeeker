@@ -39,12 +39,26 @@ class BaselineLLMEvidenceItem(BaseModel):
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     source_quote: str = ""
 
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalize_status(cls, value: object) -> object:
+        """Accept common prompt-only schema drift in status values."""
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"", "none", "unknown", "not found", "not_found"}:
+                return "not_found"
+            if normalized not in {"found", "not_found"}:
+                return "found"
+        return value
+
     @field_validator("confidence", mode="before")
     @classmethod
     def normalize_confidence(cls, value: object) -> object:
         """Accept common LLM confidence labels in addition to numeric scores."""
         if isinstance(value, str):
             normalized = value.strip().lower()
+            if not normalized:
+                return 0.0
             label_scores = {
                 "high": 0.9,
                 "strong": 0.9,

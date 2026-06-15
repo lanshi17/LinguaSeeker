@@ -216,6 +216,28 @@ def test_baseline_llm_response_normalizes_confidence_labels() -> None:
     assert [item.confidence for item in response.evidence_items] == [0.9, 0.9, 0.6, 0.3]
 
 
+def test_baseline_llm_response_normalizes_schema_drift() -> None:
+    from benchmark.layer3.baselines.llm_common import BaselineLLMResponse
+
+    response = BaselineLLMResponse.model_validate(
+        {
+            "evidence_items": [
+                {
+                    "field_id": "A.gene_disease_relationship",
+                    "status": "uncertain",
+                    "value": "uncertain",
+                    "confidence": "",
+                }
+            ]
+        }
+    )
+
+    item = response.evidence_items[0]
+    assert item.status == "found"
+    assert item.value == "uncertain"
+    assert item.confidence == 0.0
+
+
 def test_translate_then_extract_skips_translation_for_english_source() -> None:
     from benchmark.layer3.baselines.llm_common import should_translate_before_extract
 
