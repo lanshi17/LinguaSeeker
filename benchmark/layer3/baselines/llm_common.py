@@ -18,7 +18,15 @@ from src.utils.llm_adapter import LLMPoolAdapter, create_llm_client
 from src.utils.text import strip_json_fences
 
 
-BaselineMode = Literal["naive", "translate_then_extract", "original_only", "rag", "single_agent_cot"]
+BaselineMode = Literal[
+    "naive",
+    "translate_then_extract",
+    "original_only",
+    "rag",
+    "single_agent_cot",
+    "citation_required",
+    "direct_json",
+]
 
 
 class BaselineLLMEvidenceItem(BaseModel):
@@ -28,6 +36,7 @@ class BaselineLLMEvidenceItem(BaseModel):
     status: Literal["found", "not_found"] = "not_found"
     value: str | int | float | bool | list[str] | None = ""
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    source_quote: str = ""
 
     @field_validator("confidence", mode="before")
     @classmethod
@@ -74,15 +83,23 @@ class LLMRuntimeConfig:
 class LLMBaselineExtractor:
     """Single-call and two-call LLM baselines for ClinGen evidence extraction."""
 
-    def __init__(self, mode: BaselineMode):
+    def __init__(
+        self,
+        mode: BaselineMode,
+        *,
+        model_override: str | None = None,
+        temperature: float = 0.0,
+        max_tokens_override: int | None = None,
+    ):
         self._mode = mode
         runtime = _runtime_config(use_reasoning=mode == "single_agent_cot")
+        model = model_override or runtime.model
         self._client = create_llm_client(
-            model=runtime.model,
+            model=model,
             base_url=runtime.base_url,
             api_keys=runtime.api_keys,
-            temperature=0.0,
-            max_tokens=runtime.max_tokens,
+            temperature=temperature,
+            max_tokens=max_tokens_override or runtime.max_tokens,
             timeout=runtime.timeout,
         )
 
@@ -101,6 +118,11 @@ class LLMBaselineExtractor:
                 status=item.status,
                 value=item.value,
                 confidence=item.confidence,
+                source_span=(
+                    quote_to_source_span(item.source_quote, source_text)
+                    if self._mode == "citation_required" and item.status == "found"
+                    else None
+                ),
             )
             for item in response.evidence_items
         ]
@@ -118,9 +140,20 @@ class LLMBaselineExtractor:
         return message.content
 
 
-def make_extractor(mode: BaselineMode) -> LLMBaselineExtractor:
+def make_extractor(
+    mode: BaselineMode,
+    *,
+    model_override: str | None = None,
+    temperature: float = 0.0,
+    max_tokens_override: int | None = None,
+) -> LLMBaselineExtractor:
     """Create an LLM-backed baseline extractor."""
-    return LLMBaselineExtractor(mode=mode)
+    return LLMBaselineExtractor(
+        mode=mode,
+        model_override=model_override,
+        temperature=temperature,
+        max_tokens_override=max_tokens_override,
+    )
 
 
 def should_translate_before_extract(mode: BaselineMode, source_text: str) -> bool:
@@ -180,6 +213,12 @@ def _build_extraction_prompt(mode: BaselineMode, entry: BaselineEntry, document_
             "Think through the evidence internally as a single agent, but return only the final JSON object. "
             "Do not expose reasoning text."
         ),
+        "citation_required": (
+            "Use one direct prompt-only extraction pass. Do not use tools, retrieval, multi-agent validation, "
+            "evidence graphs, or reconciliation. For each found field, include source_quote as a verbatim "
+            "contiguous quote from the document text."
+        ),
+        "direct_json": "Use one direct extraction pass. Do not perform multi-stage validation.",
     }[mode]
     return (
         "You are evaluating a baseline for ACMG/ClinGen gene-disease evidence extraction.\n"
@@ -191,11 +230,43 @@ def _build_extraction_prompt(mode: BaselineMode, entry: BaselineEntry, document_
         "- A.gene_symbol: the target gene symbol if supported\n"
         "- B.disease_diagnosis: the target disease or phenotype if supported\n"
         "- A.gene_disease_relationship: one of causative, disputed, refuted, uncertain, or not_found\n\n"
-        "Each evidence item must have field_id, status (found or not_found), value, and confidence.\n"
+        "Each evidence item must have field_id, status (found or not_found), value, confidence, "
+        "and source_quote. For found items, source_quote must be a verbatim contiguous excerpt "
+        "from the document text, preferably <= 240 characters. For not_found items, source_quote "
+        "must be an empty string.\n"
         "Return only JSON. Do not add Markdown fences or explanation.\n\n"
         "Document text:\n"
         f"{_truncate_text(document_text, max_chars=50000)}"
     )
+
+
+def quote_to_source_span(source_quote: str, source_text: str) -> dict[str, object]:
+    """Map an LLM-provided quote to canonical source text for measurement only."""
+    quote = source_quote.strip()
+    if not quote:
+        return {
+            "span_id": "llm-quote",
+            "start_offset": -1,
+            "end_offset": -1,
+            "text_snippet": "",
+            "source_precision": "llm_quote_missing",
+        }
+    start = source_text.find(quote)
+    if start >= 0:
+        return {
+            "span_id": "llm-quote",
+            "start_offset": start,
+            "end_offset": start + len(quote),
+            "text_snippet": quote,
+            "source_precision": "llm_quote_exact",
+        }
+    return {
+        "span_id": "llm-quote",
+        "start_offset": -1,
+        "end_offset": -1,
+        "text_snippet": quote,
+        "source_precision": "llm_quote_unmapped",
+    }
 
 
 def _select_relevant_snippets(source_text: str, entry: BaselineEntry, max_chars: int = 12000) -> str:
