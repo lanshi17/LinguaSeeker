@@ -332,17 +332,19 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     ? getProvider(activeConversationKey)
     : undefined;
 
-  const {
-    messages,
-    onRequest,
-    isRequesting,
-    abort,
-    setMessages,
-  } = useXChat({
+  const xChat = useXChat({
     provider: activeProvider,
     conversationKey: activeConversationKey,
     defaultMessages: async () => [],
   });
+
+  // useXChat should always return an object, but guard against
+  // undefined to prevent "Cannot read properties of undefined" crashes.
+  const messages = xChat?.messages ?? [];
+  const onRequest = xChat?.onRequest;
+  const isRequesting = xChat?.isRequesting ?? false;
+  const abort = xChat?.abort;
+  const setMessages = xChat?.setMessages;
 
   // Explicit, deterministic message hydration on session switch.
   // Runs on every `activeConversationKey` change — including the *second*
@@ -351,30 +353,30 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   useEffect(() => {
     let cancelled = false;
     if (!activeConversationKey) {
-      setMessages([]);
+      setMessages?.([]);
       return;
     }
 
     // Abort any in-flight SSE stream from the previous session so
     // its updateMessage calls don't write into the now-stale store.
-    abort();
+    abort?.();
 
     // Clear the visible list synchronously so no previous-session bubble
     // can flash while the network call is in flight.
-    setMessages([]);
+    setMessages?.([]);
 
     listMessages(activeConversationKey)
       .then((history) => {
         if (cancelled) return;
         // toXChatDefaultMessages always provides `id`; cast past the
         // optional-id stub that DefaultMessageInfo uses.
-        setMessages(
+        setMessages?.(
           toXChatDefaultMessages(history) as MessageInfo<ChatBubbleMessage>[],
         );
       })
       .catch(() => {
         if (cancelled) return;
-        setMessages([]);
+        setMessages?.([]);
       });
 
     return () => {
@@ -532,7 +534,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
         await sendChatMessage(sessionKey, trimmed);
         captureFirstMessageLabel(sessionKey, trimmed);
-        onRequest({ messages: [{ role: "user" as const, content: trimmed }] });
+        onRequest?.({ messages: [{ role: "user" as const, content: trimmed }] });
       } catch {
         antdMessage.error("Failed to send message");
       }
@@ -614,7 +616,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         // Only post to chat if a session is active; otherwise the
         // pipeline status card alone is sufficient feedback.
         if (activeProvider) {
-          onRequest({
+          onRequest?.({
             messages: [
               {
                 role: "assistant" as const,
@@ -889,7 +891,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
             className="border-t border-gray-100"
             style={{ padding: 16 }}
             loading={isRequesting}
-            onCancel={abort}
+            onCancel={() => abort?.()}
             onSubmit={handleSubmitAndClear}
             placeholder="Ask the Cross Evidence Agent..."
           />
