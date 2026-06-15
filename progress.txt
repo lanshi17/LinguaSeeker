@@ -1,5 +1,6 @@
 [2026-06-15] Phase A: Learned arbitrator LOO evaluation — Gate A FAILED (learned F1=0.8889 vs contextual F1=0.9474, delta=-0.0585). Kept as negative ablation. Phase B cancelled. [completed]
 [2026-06-15] Phase 0: Froze main paper baseline manifest (N=30, CVR F1=0.9474, GPT-5=0.9222) and added 5-check leakage audit (all pass) [completed]
+[2026-06-15] Refined BIBM multilingual benchmark plan to keep ClinGen 30, add ClinVar as structured anchor, and restrict the multilingual main corpus to zh/ja/ko + Europe PMC while excluding unlabeled local PDFs from scored evaluation [completed]
 [2026-06-15] Completed BIBM Benchmark Expansion Phase C plan for deterministic N=60+ selection, coverage reporting, and later annotation/split scaffolding [completed]
 [2026-06-15] Optimized learned arbitrator and benchmark expansion plan with BIBM main-paper gates, leakage checks, offline policy evaluation, and held-out evaluation path [planned]
 [2026-06-15] Drafted BIBM main paper TeX initial version in isolated worktree with IEEEtran structure, scientific figures, and compact tables [completed]

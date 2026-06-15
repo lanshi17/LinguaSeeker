@@ -19,6 +19,45 @@
 
 不主张"自动提升临床评级准确率"；只主张"提升 evidence coverage、traceability、curator utility"。
 
+## Confirmed Source Strategy
+
+The user-approved source split is now fixed as:
+
+1. **ClinGen 30** stays unchanged as the high-precision gold core.
+2. **ClinVar** is the large structured anchor for scale and generalization. Use high-confidence / reviewed / expert-panel subsets for comparison; do not treat ClinVar as the multilingual main test set.
+3. **Multilingual main corpus** is limited to **Chinese + Japanese + Korean** raw literature, with **Europe PMC** as a cross-regional supplement.
+4. **Local PDFs** under `benchmark/pipeline/input/{zh,ja,ko}` and `benchmark/literature_acquisition/downloads/rett/{zh,ja,ko}` are valid raw sources, but they are **unlabeled by default** and should stay in a pressure-test / spot-check pool unless manually annotated.
+5. **Out-of-scope for the main paper benchmark**: the extra `de/es/fr/pt/ru` corpora already present in the repo. Keep them as secondary diagnostics or future expansion material, not as the core multilingual result.
+
+Required raw-source metadata for every newly acquired file:
+
+- `source_database`
+- `source_url`
+- `article_language`
+- `local_path`
+- `sha256`
+- `access_status`
+- `annotation_status`
+
+The implementation goal is to keep three layers separate at all times:
+
+- gold-bearing data (`ClinGen 30`)
+- structured anchor data (`ClinVar`)
+- unlabeled multilingual raw corpora (`zh/ja/ko` PDFs)
+
+Observed local inventory at the time of planning:
+
+- `database/terminology_database/clinvar/`: `variant_summary.txt`, `variant_summary.core.tsv`, `clinvar.vcf.gz`
+- `benchmark/pipeline/input/zh`: 63 PDFs
+- `benchmark/pipeline/input/ja`: 47 PDFs
+- `benchmark/pipeline/input/ko`: 49 PDFs
+- `benchmark/literature_acquisition/downloads/rett/zh`: 10 PDFs
+- `benchmark/literature_acquisition/downloads/rett/ja`: 14 PDFs
+- `benchmark/literature_acquisition/downloads/rett/ko`: 2 PDFs
+
+These raw PDFs are sufficient to start the multilingual pilot and pressure-test the
+original-first extraction flow without inventing a new acquisition target set.
+
 ## Current State (Audited 2026-06-15, 3 rounds)
 
 > These facts are machine-verified (commands actually run, tests actually executed), not inferred from file listings.
@@ -119,6 +158,8 @@ augmentation depend on it.
 - evidence type
 
 译文轨只作为理解和交叉验证，不允许替代原文 span 作为最终 citation。
+
+For the raw multilingual corpus, the initial deliverable is a frozen source inventory plus PDF extraction outputs. Formal benchmark scoring only starts after a small manually annotated pilot is frozen.
 
 ### 3. Translation-With-Anchor
 
@@ -276,10 +317,12 @@ scorable fields × 30 entries = 90 records.
 数据：
 
 - 选择 20-50 个 variant / gene-disease cases。
-- 每个 case 构造两套文献：
-  - English-only literature set
-  - multilingual literature set，包括中文、日文等非英文文献
+- 每个 case 构造三层数据：
+  - `ClinVar` high-confidence structured anchor
+  - `zh/ja/ko` raw multilingual literature set
+  - unlabeled local PDF pressure-test pool
 - gold label 不是最终 pathogenicity classification，而是 evidence items 和 source spans。
+- Formal metrics only use frozen gold or manually spot-annotated pilot subsets; unlabeled local PDFs stay outside the scored denominator.
 
 实验分组：
 
@@ -306,6 +349,8 @@ corpus exists. The metric module runs but produces invalid output until blocker 
 Start with the N=10 pilot, report real yield numbers, then decide on N=30 / N=50 expansion
 per the Implementation Order.
 
+**Scope note (confirmed by user):** do not expand the paper-facing multilingual benchmark to `de/es/fr/pt/ru`. Keep those corpora as optional diagnostics only. The paper-facing multilingual claim should stay on `zh/ja/ko + Europe PMC`.
+
 ---
 
 ## Implementation Order
@@ -313,6 +358,11 @@ per the Implementation Order.
 1. **Repo hygiene first**
    - 当前有未提交文档变更和 `.qoder/` 未跟踪目录。
    - 执行前先检查 `git status`，只保留与本方案相关的文档或新建干净 worktree。
+
+0. **Raw source acquisition first**
+   - Freeze source manifests for `ClinVar` and `zh/ja/ko` raw corpora before adding new evaluation claims.
+   - Record `source_database`, `source_url`, `article_language`, `local_path`, `sha256`, and `annotation_status` for each file.
+   - Keep unlabeled local PDFs separate from scored benchmark inputs.
 
 2. **Evaluation-first minimal path**
    - 先做 Benchmark A，不先做 learned arbitrator。
@@ -403,6 +453,8 @@ PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.laye
   `NonEnglishYield=1.0` — invalid, because all items lack language metadata).
 - `benchmark_readiness` must show `annotated_count=30` before Benchmark A Table 4 is
   publishable.
+- `source_inventory` for the multilingual corpus must separate gold, structured anchor,
+  and unlabeled pools before any score is reported.
 
 Acceptance criteria:
 
@@ -410,6 +462,7 @@ Acceptance criteria:
 - CrossEvidence has competitive F1 and better traceability than prompt-only citation baselines.
 - Full method outperforms no-alignment and no-traceability ablations on TraceableF1 or HCR.
 - Benchmark B pilot shows measurable non-English evidence yield with source-valid spans.
+- The raw corpus inventory is reproducible and clearly separates `ClinGen`, `ClinVar`, and unlabeled multilingual PDFs.
 - Manuscript claim matrix explicitly states the system does not perform autonomous ACMG classification.
 
 ## Assumptions

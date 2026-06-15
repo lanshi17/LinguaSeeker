@@ -1,5 +1,17 @@
 # Lesson Log
 
+## 2026-06-15: Multilingual benchmark planning must separate scored gold, structured anchors, and unlabeled pressure-test corpora
+
+**Problem**: The raw source strategy for the BIBM benchmark could easily collapse into a single "multilingual corpus" bucket, which would blur what is actually measurable. That would make ClinGen gold, ClinVar scale, and local PDF pressure-testing look interchangeable even though they serve different purposes.
+
+**Investigation**: Re-checked the local inventory and the existing terminology/database layout. The repo already has `database/terminology_database/clinvar/{variant_summary.txt, variant_summary.core.tsv, clinvar.vcf.gz}` plus substantial zh/ja/ko PDF pools under `benchmark/pipeline/input/` and `benchmark/literature_acquisition/downloads/rett/`. Those files are useful, but they are not all valid scored benchmark inputs.
+
+**Root cause**: Planning started from source availability instead of evaluation role. That encourages overloading the same corpus for gold labels, anchor comparisons, and unlabeled stress tests.
+
+**Fix**: Lock the plan to a three-layer split: ClinGen 30 as gold, ClinVar as structured anchor, and zh/ja/ko raw PDFs as the multilingual main corpus. Keep extra de/es/fr/pt/ru files and unlabeled local PDFs outside the scored denominator unless they are manually annotated.
+
+**Prevention**: Whenever a benchmark gains a new source family, write down the evaluation role before the acquisition path. If a corpus cannot be scored, label it as pressure-test or spot-check material up front so later claims stay honest.
+
 ## 2026-06-15: Benchmark expansion selection needs an explicit diversity objective, not just a global sort
 
 **Problem**: The first cut of the Phase C selector produced a valid manifest, but the selected slice was too homogeneous: all `Strong` classifications and a heavy `AD` skew. That satisfied freezing, but not the actual expansion intent.

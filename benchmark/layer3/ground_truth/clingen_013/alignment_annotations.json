@@ -1,0 +1,44 @@
+{
+  "entry_id": "clingen_013",
+  "records": [
+    {
+      "entry_id": "clingen_013",
+      "field_id": "A.gene_symbol",
+      "original_value": "MAP1B",
+      "translated_value": "MAP1B",
+      "normalized_value": "MAP1B",
+      "original_span_id": "gold",
+      "translated_span_id": "gold",
+      "alignment_label": "aligned",
+      "support_label": "supports",
+      "drift_reason": "gold_value_recovered_both_tracks",
+      "confidence": 1.0
+    },
+    {
+      "entry_id": "clingen_013",
+      "field_id": "A.disease_diagnosis",
+      "original_value": null,
+      "translated_value": "periventricular nodular heterotopia",
+      "normalized_value": "periventricular nodular heterotopia",
+      "original_span_id": "",
+      "translated_span_id": "gold",
+      "alignment_label": "missing",
+      "support_label": "insufficient",
+      "drift_reason": "gold_value_single_track_only",
+      "confidence": 1.0
+    },
+    {
+      "entry_id": "clingen_013",
+      "field_id": "A.gene_disease_relationship",
+      "original_value": "causative",
+      "translated_value": "causative",
+      "normalized_value": "causative",
+      "original_span_id": "gold",
+      "translated_span_id": "gold",
+      "alignment_label": "aligned",
+      "support_label": "supports",
+      "drift_reason": "gold_value_recovered_both_tracks",
+      "confidence": 1.0
+    }
+  ]
+}
