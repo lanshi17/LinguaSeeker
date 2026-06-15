@@ -6,7 +6,7 @@ import asyncio
 import json
 import sys
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import NotRequired, TypedDict
@@ -123,6 +123,7 @@ class BaselineConfig:
     entry_ids: tuple[str, ...] = ()
     limit: int | None = None
     save_report: bool = True
+    metadata: Mapping[str, object] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -323,6 +324,7 @@ def _serialize_report(
             "limit": config.limit,
             "entry_ids": list(config.entry_ids),
             "report_path": str(report_path) if report_path else None,
+            **dict(config.metadata),
         },
         "total_entries": report.total_entries,
         "total_duration_s": report.total_duration_s,
