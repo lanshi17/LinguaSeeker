@@ -1,5 +1,29 @@
 # Lesson Log
 
+## 2026-06-15: Benchmark expansion selection needs an explicit diversity objective, not just a global sort
+
+**Problem**: The first cut of the Phase C selector produced a valid manifest, but the selected slice was too homogeneous: all `Strong` classifications and a heavy `AD` skew. That satisfied freezing, but not the actual expansion intent.
+
+**Investigation**: Checked the frozen ClinGen CSV distribution and the generated manifest. The source corpus is broad, so the homogeneity came from the selector logic, not the input data.
+
+**Root cause**: The selector used a single global sort key and then truncated the top `N`. That is deterministic, but it optimizes rank, not coverage.
+
+**Fix**: Replaced the truncation with a deterministic greedy selector that rewards first-time coverage of classification, MOI, and GCEP categories, then falls back to stable tie-breakers. Added a regression test that would have caught the uniform-classification output.
+
+**Prevention**: For benchmark expansion, encode the intended coverage objective directly in the selection algorithm and assert on the resulting category mix, not just on determinism and provenance.
+
+## 2026-06-15: Benchmark expansion should separate frozen selection, acquisition coverage, and held-out claims
+
+**Problem**: The Phase C expansion work for BIBM can be described too optimistically if selection, source acquisition, annotation, and split freeze are treated as one step. That would blur what is actually implementable now versus what still depends on external source availability.
+
+**Investigation**: Re-read the current benchmark state. The N=30 core set is frozen and supported by existing reports, the multilingual Benchmark B pilot already exists as a frozen manifest, and the current repository has enough structure to add a deterministic expansion selector plus a coverage report. But there is no frozen N=60 expansion manifest, no adjudicated annotation set, and no held-out split yet.
+
+**Root cause**: Planning jumped too quickly from "there is a larger ClinGen CSV and multilingual corpus" to "the full expansion can be evaluated". That skips the actual dependency chain: select candidates, acquire sources, materialize artifacts, annotate, freeze splits, then evaluate.
+
+**Fix**: Keep Phase C scoped to deterministic expansion selection and artifact coverage first. Treat split freeze and held-out evaluation as later, blocked tasks.
+
+**Prevention**: When expanding a benchmark, write the plan so that each artifact layer is independently auditable. If the source artifacts do not exist yet, do not draft paper-facing claims about held-out performance.
+
 ## 2026-06-15: Learned arbitrator LOO evaluation — data-driven cannot beat calibrated weights under N=30
 
 **Problem**: Attempted to replace the deterministic `context_verifier_reconcile` (F1=0.9474) with a learned L2 logistic regression arbitrator using 21 features and leave-one-entry-out policy evaluation on the frozen N=30 benchmark.

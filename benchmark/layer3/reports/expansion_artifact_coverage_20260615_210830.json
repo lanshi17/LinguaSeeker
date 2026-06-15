@@ -1,0 +1,220 @@
+{
+  "evaluation_id": "expansion_artifact_coverage_20260615",
+  "timestamp": "2026-06-15T21:08:30",
+  "selection_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/expansion_selection_20260615.json",
+  "total_entries": 30,
+  "covered_count": 0,
+  "needs_pipeline_count": 30,
+  "rows": [
+    {
+      "entry_id": "clingen_030",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_031",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_032",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_033",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_034",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_035",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_036",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_037",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_038",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_039",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_040",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_041",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_042",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_043",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_044",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_045",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_046",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_047",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_048",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_049",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_050",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_051",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_052",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_053",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_054",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_055",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_056",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_057",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_058",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    },
+    {
+      "entry_id": "clingen_059",
+      "status": "needs_pipeline_run",
+      "artifact_path": null,
+      "processing_run_id": null,
+      "message": "No reusable Phase 2 artifact or mappable DB run found."
+    }
+  ]
+}
