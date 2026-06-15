@@ -1,0 +1,677 @@
+{
+  "evaluation_type": "leave_one_entry_out",
+  "timestamp": "2026-06-15T18:08:25",
+  "n_folds": 30,
+  "contextual_overall_f1": 0.9474,
+  "learned_overall_f1": 0.8889,
+  "delta_f1": -0.058499999999999996,
+  "per_field_contextual_f1": {
+    "A.gene_symbol": 0.9831,
+    "B.disease_diagnosis": 0.9655,
+    "A.gene_disease_relationship": 0.8889
+  },
+  "per_field_learned_f1": {
+    "A.gene_symbol": 0.9831,
+    "B.disease_diagnosis": 0.9091,
+    "A.gene_disease_relationship": 0.75
+  },
+  "relationship_error_reduction": -1.2502250225022506,
+  "gate_a_passed": false,
+  "folds": [
+    {
+      "held_out_entry_id": "clingen_000",
+      "contextual_f1": 0.8,
+      "learned_f1": 0.8,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.34597529305750147,
+          "learned_value": "associated",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9926218927162852,
+          "learned_value": "aars1",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.004825659346938168,
+          "learned_value": "charcot-marie-tooth disease, axonal type 2n",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_001",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.9122706850200775,
+          "learned_value": "causative",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9988393117149004,
+          "learned_value": "aars2",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.6895896666552618,
+          "learned_value": "mitochondrial disease",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_002",
+      "contextual_f1": 1.0,
+      "learned_f1": 0.8,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.8344069705234698,
+          "learned_value": "causative",
+          "learned_track": "original"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9944706138705081,
+          "learned_value": "abca3",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.2751034380702342,
+          "learned_value": "interstitial lung disease due to abca3 deficiency",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_003",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.41992703861519626,
+          "learned_value": "causative",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9951152395224259,
+          "learned_value": "abca4",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.21104803460479263,
+          "learned_value": "abca4-related retinopathy",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_004",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.9097971281319992,
+          "learned_value": "causative",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9964386845117185,
+          "learned_value": "abcb4",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.8672887474656862,
+          "learned_value": "progressive familial intrahepatic cholestasis type 3",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_005",
+      "contextual_f1": 0.8,
+      "learned_f1": 0.8,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.873891222813154,
+          "learned_value": "causative",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9985485142106643,
+          "learned_value": "abcc8",
+          "learned_track": "original"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.03495290838359442,
+          "learned_value": "maturity-onset diabetes of the young, type 12 (mody12)",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_006",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.28308874938094153,
+          "learned_value": "causative",
+          "learned_track": "original"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.6839785186495956,
+          "learned_value": "abcd1",
+          "learned_track": "original"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.02168731545497656,
+          "learned_value": "x-linked adrenoleukodystrophy",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_007",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.918844649450603,
+          "learned_value": "causative",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9971411004362724,
+          "learned_value": "abcg5",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.7090951487457828,
+          "learned_value": "sitosterolemia",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_008",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.8735286656612921,
+          "learned_value": "causative",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9992653467126382,
+          "learned_value": "abcg8",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.6295782209588896,
+          "learned_value": "sitosterolemia",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_009",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.8868758441846317,
+          "learned_value": "causative",
+          "learned_track": "original"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9965012692288437,
+          "learned_value": "abhd12",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.6237723870354801,
+          "learned_value": "pharc syndrome",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_010",
+      "contextual_f1": 1.0,
+      "learned_f1": 0.8,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.9417328271359248,
+          "learned_value": "causative",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.999161666781215,
+          "learned_value": "ap1g1",
+          "learned_track": "original"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.8118677556249241,
+          "learned_value": "usmani–riazuddin syndrome (usrisd, mim#619467)",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_011",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.9653501389606225,
+          "learned_value": "causative",
+          "learned_track": "original"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.999452004514921,
+          "learned_value": "h4c5",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.927259504718174,
+          "learned_value": "tessadori-van haaften neurodevelopmental syndrome 3",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_012",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.9358889724203311,
+          "learned_value": "causative",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9989192703371956,
+          "learned_value": "kcnq1",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.7197472193193188,
+          "learned_value": "short qt syndrome",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_013",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.9660864153825919,
+          "learned_value": "causative",
+          "learned_track": "original"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9988666874354042,
+          "learned_value": "map1b",
+          "learned_track": "original"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.8805187861075306,
+          "learned_value": "periventricular nodular heterotopia",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_014",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.9553760149912793,
+          "learned_value": "causative",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9986476146931319,
+          "learned_value": "pcgf2",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.8804313852134681,
+          "learned_value": "turnpenny-fry syndrome",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_015",
+      "contextual_f1": 0.8,
+      "learned_f1": 0.8,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.6233593961613055,
+          "learned_value": "associated",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9975746676524363,
+          "learned_value": "mt-ti",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.8299427040716948,
+          "learned_value": "hypertrophic cardiomyopathy",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_016",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.9274334905289684,
+          "learned_value": "causative",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9971676974918185,
+          "learned_value": "tbc1d8b",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.20368678294802395,
+          "learned_value": "nephrotic syndrome type 20 (nphs20)",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_017",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.9291264577597831,
+          "learned_value": "causative",
+          "learned_track": "original"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9985538838594052,
+          "learned_value": "tlr7",
+          "learned_track": "original"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.8547165452918066,
+          "learned_value": "systemic lupus erythematosus 17",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_018",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.7684485504475537,
+          "learned_value": "causative",
+          "learned_track": "original"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9912620319847495,
+          "learned_value": "pola1",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.7706259556027713,
+          "learned_value": "x-linked reticulate pigmentary disorder",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_019",
+      "contextual_f1": 1.0,
+      "learned_f1": 1.0,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.6833672517158181,
+          "learned_value": "causative",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.99902481441755,
+          "learned_value": "unc93b1",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.69990792264351,
+          "learned_value": "systemic lupus erythematosus",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_020",
+      "contextual_f1": 1.0,
+      "learned_f1": 0.5,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.3861528216609982,
+          "learned_value": "associated",
+          "learned_track": "original"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9975601861758935,
+          "learned_value": "gja1",
+          "learned_track": "original"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.5380387351477727,
+          "learned_value": "tetralogy of fallot",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_021",
+      "contextual_f1": 1.0,
+      "learned_f1": 0.8,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.030610570163405546,
+          "learned_value": "associated",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9423089480916227,
+          "learned_value": "lgalsl",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.07143552580717753,
+          "learned_value": "amyotrophic lateral sclerosis",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_022",
+      "contextual_f1": 1.0,
+      "learned_f1": 0.8,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.3924482114929869,
+          "learned_value": "associated",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.999111159622162,
+          "learned_value": "arhgef28",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.8229826088507931,
+          "learned_value": "amyotrophic lateral sclerosis",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_023",
+      "contextual_f1": 1.0,
+      "learned_f1": 0.8,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.5820896365727358,
+          "learned_value": "associated",
+          "learned_track": "original"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9991827628914168,
+          "learned_value": "cfap410",
+          "learned_track": "original"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.7175109840891021,
+          "learned_value": "amyotrophic lateral sclerosis",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_024",
+      "contextual_f1": 1.0,
+      "learned_f1": 0.8,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.06916943953256106,
+          "learned_value": "no_relationship",
+          "learned_track": "original"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9938255444023822,
+          "learned_value": "tlr5",
+          "learned_track": "original"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.6351152216598057,
+          "learned_value": "systemic lupus erythematosus",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_025",
+      "contextual_f1": 0.8,
+      "learned_f1": 0.8,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.25556149737660605,
+          "learned_value": "associated",
+          "learned_track": "original"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9965239195390152,
+          "learned_value": "chrna7",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.519170211517941,
+          "learned_value": "epilepsy",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_026",
+      "contextual_f1": 0.5,
+      "learned_f1": 0.5,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.1952341327798839,
+          "learned_value": "associated",
+          "learned_track": "translated"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.5953137839986042,
+          "learned_value": "srpx2",
+          "learned_track": "original"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.10113236866635367,
+          "learned_value": "epilepsy",
+          "learned_track": "translated"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_027",
+      "contextual_f1": 0.8,
+      "learned_f1": 0.8,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.0020680649068521065,
+          "learned_value": "uncertain",
+          "learned_track": "original"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9990620889851617,
+          "learned_value": "adra2b",
+          "learned_track": "original"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.003936718492745178,
+          "learned_value": "epilepsy",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_028",
+      "contextual_f1": 0.5,
+      "learned_f1": 0.5,
+      "field_decisions": {
+        "A.gene_symbol": {
+          "learned_prob": 0.9962156723846929,
+          "learned_value": "mt-tl2",
+          "learned_track": "original"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 2.415152714537454e-12,
+          "learned_value": "leigh syndrome",
+          "learned_track": "original"
+        }
+      }
+    },
+    {
+      "held_out_entry_id": "clingen_029",
+      "contextual_f1": 1.0,
+      "learned_f1": 0.8,
+      "field_decisions": {
+        "A.gene_disease_relationship": {
+          "learned_prob": 0.5375502149252388,
+          "learned_value": "associated",
+          "learned_track": "original"
+        },
+        "A.gene_symbol": {
+          "learned_prob": 0.9991349291240208,
+          "learned_value": "bmpr1a",
+          "learned_track": "translated"
+        },
+        "B.disease_diagnosis": {
+          "learned_prob": 0.8288153366210468,
+          "learned_value": "pulmonary arterial hypertension",
+          "learned_track": "translated"
+        }
+      }
+    }
+  ]
+}
