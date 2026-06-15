@@ -1,0 +1,91 @@
+{
+  "report_path": "benchmark/layer3/reports/baseline_b9_claude_sonnet45_prompt_cite_20260615_113759.json",
+  "strategy_or_baseline_id": "B9_CLAUDE_SONNET45_PROMPT_CITE",
+  "entry_ids": [
+    "clingen_000",
+    "clingen_001",
+    "clingen_002",
+    "clingen_003",
+    "clingen_004",
+    "clingen_005",
+    "clingen_006",
+    "clingen_007",
+    "clingen_008",
+    "clingen_009",
+    "clingen_010",
+    "clingen_011",
+    "clingen_012",
+    "clingen_013",
+    "clingen_014",
+    "clingen_015",
+    "clingen_016",
+    "clingen_017",
+    "clingen_018",
+    "clingen_019",
+    "clingen_020",
+    "clingen_021",
+    "clingen_022",
+    "clingen_023",
+    "clingen_024",
+    "clingen_025",
+    "clingen_026",
+    "clingen_027",
+    "clingen_028",
+    "clingen_029"
+  ],
+  "overall": {
+    "traceability": {
+      "citation_validity_rate": 0.7342,
+      "hallucinated_citation_rate": 0.2658,
+      "span_boundary_f1": 1.0,
+      "evidence_support_rate": 0.8987,
+      "traceable_f1": 0.6476,
+      "cross_lingual_consistency": 0.194
+    }
+  },
+  "by_field": {
+    "A.gene_disease_relationship": {
+      "traceability": {
+        "citation_validity_rate": 0.5417,
+        "hallucinated_citation_rate": 0.4583,
+        "span_boundary_f1": 1.0,
+        "evidence_support_rate": 0.7083,
+        "traceable_f1": 0.3919,
+        "cross_lingual_consistency": null
+      }
+    },
+    "A.gene_symbol": {
+      "traceability": {
+        "citation_validity_rate": 0.8846,
+        "hallucinated_citation_rate": 0.1154,
+        "span_boundary_f1": 1.0,
+        "evidence_support_rate": 0.9615,
+        "traceable_f1": 0.8042,
+        "cross_lingual_consistency": null
+      }
+    },
+    "B.disease_diagnosis": {
+      "traceability": {
+        "citation_validity_rate": 0.7586,
+        "hallucinated_citation_rate": 0.2414,
+        "span_boundary_f1": 1.0,
+        "evidence_support_rate": 1.0,
+        "traceable_f1": 0.7458,
+        "cross_lingual_consistency": null
+      }
+    }
+  },
+  "counts": {
+    "citation_total": 79,
+    "citation_valid": 58,
+    "hallucinated": 21,
+    "span_boundary_tp": 2095,
+    "span_boundary_fp": 0,
+    "span_boundary_fn": 0,
+    "evidence_total": 79,
+    "evidence_supported": 71
+  },
+  "warnings": [
+    "no_gold_source_span_annotations; span_boundary_f1 uses canonical offset text when available"
+  ]
+}
