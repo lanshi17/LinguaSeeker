@@ -71,6 +71,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-06-14 | [BIBM Main Paper Detailed Plan](planned/2026-06-14-bibm-main-paper-detailed-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Rescue Plan](planned/2026-06-14-bibm-main-paper-rescue.md) | planned |
 | 2026-06-14 | [BIBM Main Paper 指标提升实施计划](planned/2026-06-14-bibm-main-paper-effect-plan.md) | planned |
+| 2026-06-15 | [Prompt-Only Frontier Model Baselines Implementation Plan](planned/2026-06-15-prompt-only-frontier-model-baselines.md) | planned |
 
 ## Diagrams
 
