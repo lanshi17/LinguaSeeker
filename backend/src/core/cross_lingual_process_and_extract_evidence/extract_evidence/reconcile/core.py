@@ -19,6 +19,9 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconc
     ReconcileOutput,
     ReconcileParams,
 )
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.alignment import (
+    build_alignment_records,
+)
 
 
 _SPACE_RE = re.compile(r"\s+")
@@ -72,6 +75,7 @@ def reconcile_results(
     return ReconcileOutput(
         result=result,
         decisions=(*evidence_decisions, *phenotype_decisions),
+        alignment_records=build_alignment_records(original, translated),
     )
 
 
