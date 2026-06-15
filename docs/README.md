@@ -67,6 +67,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
+| 2026-06-15 | [BIBM Main Paper Pipeline Optimization & Benchmark Plan](planned/2026-06-15-bibm-main-paper-pipeline-optimization-and-benchmark-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Next Gate Plan](planned/2026-06-14-bibm-main-paper-next-gate-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Detailed Plan](planned/2026-06-14-bibm-main-paper-detailed-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Rescue Plan](planned/2026-06-14-bibm-main-paper-rescue.md) | planned |

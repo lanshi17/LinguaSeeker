@@ -241,6 +241,14 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--overwrite", action="store_true", help="Allow replacing existing differing artifacts.")
     parser.add_argument("--from-db", action="store_true", help="Reconstruct artifacts from run_evidence_items.")
+    parser.add_argument(
+        "--backfill-language",
+        action="store_true",
+        help=(
+            "Stamp article_language metadata onto evidence items in existing "
+            "phase_2 artifacts (idempotent; respects --write)."
+        ),
+    )
     parser.add_argument("--vault", type=Path, default=None, help="Optional backend vault path for DB credentials.")
     args = parser.parse_args(argv)
 
@@ -251,6 +259,10 @@ def main(argv: list[str] | None = None) -> None:
         write=args.write,
         overwrite=args.overwrite,
     )
+    if args.backfill_language:
+        report = backfill_language_metadata(config)
+        print(format_backfill_report(report))
+        return
     if args.from_db:
         report = asyncio.run(
             materialize_phase2_artifacts_from_db(
@@ -261,6 +273,114 @@ def main(argv: list[str] | None = None) -> None:
     else:
         report = materialize_phase2_artifacts(config)
     print(format_materialize_report(report))
+
+
+def backfill_language_metadata(config: MaterializeConfig) -> MaterializeReport:
+    """Stamp article_language onto evidence items of existing phase_2 artifacts.
+
+    The Layer 3 ClinGen N=30 corpus is English-only: both the original track
+    and the translated track are English. This helper makes existing
+    pre-language-metadata artifacts consistent with the workflow fix, so the
+    benchmark metrics read valid ``article_language`` / ``is_english`` /
+    ``requires_translation`` / ``evidence_source_language`` without re-running
+    the full pipeline. Idempotent: items already carrying language metadata
+    are left untouched.
+    """
+    rows: list[MaterializeRow] = []
+    for entry_id in _selected_entry_ids(config):
+        artifact_path = _destination_path(config.ground_truth_dir, entry_id)
+        if not artifact_path.exists():
+            rows.append(
+                MaterializeRow(
+                    entry_id=entry_id,
+                    status="missing_artifact",
+                    destination_path=artifact_path,
+                    message="No phase_2 extraction_result.json to backfill.",
+                )
+            )
+            continue
+        payload = json.loads(artifact_path.read_text(encoding="utf-8"))
+        stamped, changed = _stamp_artifact_language(payload, config, entry_id)
+        if not changed:
+            rows.append(
+                MaterializeRow(
+                    entry_id=entry_id,
+                    status="already_materialized",
+                    destination_path=artifact_path,
+                    message="All items already carry language metadata.",
+                )
+            )
+            continue
+        if config.write:
+            artifact_path.write_text(
+                json.dumps(stamped, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            status = "materialized"
+        else:
+            status = "would_materialize"
+        rows.append(
+            MaterializeRow(
+                entry_id=entry_id,
+                status=status,
+                destination_path=artifact_path,
+                message="backfilled_language_metadata",
+            )
+        )
+    return MaterializeReport(rows=tuple(rows))
+
+
+def _stamp_artifact_language(
+    payload: dict[str, object],
+    config: MaterializeConfig,
+    entry_id: str,
+) -> tuple[dict[str, object], bool]:
+    """Return ``(payload, changed)`` with language metadata stamped on evidence items."""
+    metadata = _entry_metadata(config.ground_truth_dir, entry_id)
+    target_gene = metadata.get("gene_symbol", "")
+    target_disease = metadata.get("disease_name", "")
+    changed = False
+    for track_key, default_language in (
+        ("original_result", "en"),
+        ("translated_result", "en"),
+    ):
+        track_result = payload.get(track_key)
+        if not isinstance(track_result, dict):
+            continue
+        items = track_result.get("evidence_items")
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            existing = item.get("article_language")
+            if isinstance(existing, str) and existing.strip():
+                continue
+            is_english = default_language in {"en", "eng", "english"}
+            item["article_language"] = default_language
+            item["is_english"] = is_english
+            item["requires_translation"] = not is_english
+            item["evidence_source_language"] = default_language
+            if not item.get("target_gene") and target_gene:
+                item["target_gene"] = target_gene
+            if not item.get("target_disease") and target_disease:
+                item["target_disease"] = target_disease
+            changed = True
+    return payload, changed
+
+
+def format_backfill_report(report: MaterializeReport) -> str:
+    """Format the language-metadata backfill report for terminal output."""
+    lines = [
+        (
+            f"backfilled={report.materialized_count} "
+            f"would_backfill={report.would_materialize_count} total={len(report.rows)}"
+        ),
+        "entry status destination message",
+    ]
+    for row in report.rows:
+        destination = str(row.destination_path) if row.destination_path is not None else "-"
+        lines.append(f"{row.entry_id} {row.status} {destination} {row.message}")
+    return "\n".join(lines)
 
 
 def format_materialize_report(report: MaterializeReport) -> str:

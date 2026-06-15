@@ -37,6 +37,29 @@ _CONFLICT_VALUES = {
     "no relationship",
     "no_relationship",
 }
+_NEGATION_CUES = {
+    "no", "not", "none", "without", "absent", "absence",
+    "denies", "denied", "negative", "non",
+    "rare", "unrelated", "ruled out", "excluded",
+    "failed", "did not", "doesn't", "doesn t", "don't", "don t",
+}
+# Field-id substrings whose values are quantitative medical evidence. A numeric
+# drift in these fields changes clinical interpretation (allele count, frequency,
+# segregation/family count, functional assay).
+_NUMERIC_FIELD_HINTS = (
+    "frequency",
+    "allele",
+    "count",
+    "segregation",
+    "family",
+    "pedigree",
+    "penetrance",
+    "assay",
+    "functional",
+    "age",
+    "onset",
+    "variant",
+)
 
 
 def build_alignment_records(
@@ -119,10 +142,17 @@ def _alignment_decision(
         return EvidenceAlignmentLabel.MISSING, EvidenceSupportLabel.INSUFFICIENT, "single_track_only"
     if original_value == translated_value:
         return EvidenceAlignmentLabel.ALIGNED, EvidenceSupportLabel.SUPPORTS, ""
-    if _is_partial_match(original_value, translated_value):
-        return EvidenceAlignmentLabel.PARTIAL, EvidenceSupportLabel.SUPPORTS, "boundary_or_qualifier_difference"
+    # Medically-critical drift checks run before the partial-match heuristic,
+    # because a negation flip or a numeric change can co-occur with high token
+    # overlap while altering the clinical claim.
+    if _is_negation_loss(original_value, translated_value):
+        return EvidenceAlignmentLabel.DRIFTED, EvidenceSupportLabel.CONTRADICTS, "negation_lost_or_gained"
+    if _is_numeric_drift(field_id, original_value, translated_value):
+        return EvidenceAlignmentLabel.DRIFTED, EvidenceSupportLabel.INSUFFICIENT, "numeric_evidence_changed"
     if _is_relationship_drift(field_id, original_value, translated_value):
         return EvidenceAlignmentLabel.DRIFTED, EvidenceSupportLabel.INSUFFICIENT, "relationship_cue_changed"
+    if _is_partial_match(original_value, translated_value):
+        return EvidenceAlignmentLabel.PARTIAL, EvidenceSupportLabel.SUPPORTS, "boundary_or_qualifier_difference"
     if _is_conflict(original_value, translated_value):
         return EvidenceAlignmentLabel.CONFLICT, EvidenceSupportLabel.CONTRADICTS, "mutually_exclusive_values"
     return EvidenceAlignmentLabel.CONFLICT, EvidenceSupportLabel.CONTRADICTS, "value_mismatch"
@@ -147,6 +177,66 @@ def _is_relationship_drift(field_id: str, original_value: str, translated_value:
 
 def _is_conflict(original_value: str, translated_value: str) -> bool:
     return original_value in _CONFLICT_VALUES and translated_value in _CONFLICT_VALUES
+
+
+def _is_negation_loss(original_value: str, translated_value: str) -> bool:
+    """Return True when negation is present on one side but absent on the other.
+
+    Medical evidence is especially sensitive to negation: "no pathogenic
+    variant" vs "pathogenic variant" flips the clinical claim. A drift here
+    is a contradiction, not a partial match.
+    """
+    original_negated = _is_negated(original_value)
+    translated_negated = _is_negated(translated_value)
+    return original_negated != translated_negated
+
+
+def _is_negated(value: str) -> bool:
+    """Return True if the value text carries an explicit negation cue."""
+    tokens = set(_SPACE_RE.sub(" ", value).split())
+    if tokens & _NEGATION_CUES:
+        return True
+    lowered = f" {value} "
+    return any(cue in lowered for cue in ("no ", "not ", "n't ", "without ", "absence of"))
+
+
+def _is_numeric_drift(field_id: str, original_value: str, translated_value: str) -> bool:
+    """Return True when a numeric medical value changed across tracks.
+
+    Catches drifts in allele count, frequency, family/segregation count,
+    penetrance, assay values, etc. — fields where a numeric change alters the
+    evidence strength. Returns False if both sides share the same number set.
+    """
+    if not _is_numeric_field(field_id):
+        # Still detect numeric drift when the values themselves are dominated
+        # by numbers (e.g. a frequency string on a generic field).
+        if not (_is_number_dominated(original_value) and _is_number_dominated(translated_value)):
+            return False
+    original_numbers = _extract_numbers(original_value)
+    translated_numbers = _extract_numbers(translated_value)
+    if not original_numbers and not translated_numbers:
+        return False
+    return set(original_numbers) != set(translated_numbers)
+
+
+def _is_numeric_field(field_id: str) -> bool:
+    lowered = field_id.casefold()
+    return any(hint in lowered for hint in _NUMERIC_FIELD_HINTS)
+
+
+_NUMBER_RE = re.compile(r"-?\d+(?:\.\d+)?")
+
+
+def _extract_numbers(value: str) -> tuple[str, ...]:
+    return tuple(_NUMBER_RE.findall(value))
+
+
+def _is_number_dominated(value: str) -> bool:
+    numbers = _extract_numbers(value)
+    if not numbers:
+        return False
+    digits = sum(len(n) for n in numbers)
+    return digits >= len(value.strip()) * 0.5
 
 
 def _value_text(item: EvidenceItem | None) -> str:

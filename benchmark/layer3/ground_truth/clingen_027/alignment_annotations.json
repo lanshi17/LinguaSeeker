@@ -1,0 +1,44 @@
+{
+  "entry_id": "clingen_027",
+  "records": [
+    {
+      "entry_id": "clingen_027",
+      "field_id": "A.gene_symbol",
+      "original_value": "ADRA2B",
+      "translated_value": "ADRA2B",
+      "normalized_value": "ADRA2B",
+      "original_span_id": "gold",
+      "translated_span_id": "gold",
+      "alignment_label": "aligned",
+      "support_label": "supports",
+      "drift_reason": "gold_value_recovered_both_tracks",
+      "confidence": 1.0
+    },
+    {
+      "entry_id": "clingen_027",
+      "field_id": "A.disease_diagnosis",
+      "original_value": null,
+      "translated_value": null,
+      "normalized_value": "epilepsy",
+      "original_span_id": "",
+      "translated_span_id": "",
+      "alignment_label": "missing",
+      "support_label": "insufficient",
+      "drift_reason": "gold_value_not_recovered",
+      "confidence": 1.0
+    },
+    {
+      "entry_id": "clingen_027",
+      "field_id": "A.gene_disease_relationship",
+      "original_value": "uncertain",
+      "translated_value": null,
+      "normalized_value": "associated",
+      "original_span_id": "gold",
+      "translated_span_id": "",
+      "alignment_label": "missing",
+      "support_label": "insufficient",
+      "drift_reason": "gold_value_single_track_only",
+      "confidence": 1.0
+    }
+  ]
+}

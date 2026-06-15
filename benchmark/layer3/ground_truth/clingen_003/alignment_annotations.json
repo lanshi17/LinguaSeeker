@@ -1,0 +1,44 @@
+{
+  "entry_id": "clingen_003",
+  "records": [
+    {
+      "entry_id": "clingen_003",
+      "field_id": "A.gene_symbol",
+      "original_value": "ABCA4",
+      "translated_value": "ABCA4",
+      "normalized_value": "ABCA4",
+      "original_span_id": "gold",
+      "translated_span_id": "gold",
+      "alignment_label": "aligned",
+      "support_label": "supports",
+      "drift_reason": "gold_value_recovered_both_tracks",
+      "confidence": 1.0
+    },
+    {
+      "entry_id": "clingen_003",
+      "field_id": "A.disease_diagnosis",
+      "original_value": null,
+      "translated_value": null,
+      "normalized_value": "abca4-related retinopathy",
+      "original_span_id": "",
+      "translated_span_id": "",
+      "alignment_label": "missing",
+      "support_label": "insufficient",
+      "drift_reason": "gold_value_not_recovered",
+      "confidence": 1.0
+    },
+    {
+      "entry_id": "clingen_003",
+      "field_id": "A.gene_disease_relationship",
+      "original_value": "causative",
+      "translated_value": "causative",
+      "normalized_value": "causative",
+      "original_span_id": "gold",
+      "translated_span_id": "gold",
+      "alignment_label": "aligned",
+      "support_label": "supports",
+      "drift_reason": "gold_value_recovered_both_tracks",
+      "confidence": 1.0
+    }
+  ]
+}

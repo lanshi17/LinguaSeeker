@@ -1,1 +1,737 @@
-{"document_id": "ca45cb16-e2ca-41c2-9946-a88c2aceb4ad", "original_result": {"status": "completed", "document_id": "ca45cb16-e2ca-41c2-9946-a88c2aceb4ad", "track": "original", "evidence_map": {"relevant": true, "disease_terms": ["ABCA4-related retinopathy"], "gene_terms": ["ABCA4"], "variant_terms": [], "case_references": [], "authority_references": [], "contradictions": [], "structure_hints": ["Erratum notice"]}, "evidence_items": [{"field_id": "A.gene_symbol", "category": "A", "field_name": "Gene symbol", "status": "found", "value": "ABCA4", "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": {"span_id": "original-p1", "page": 1, "start_offset": 14, "end_offset": 97, "context_type": "text", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure\u2013Function Relationship", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "ambiguous"}, "raw_source": {"span_id": "block_0", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure\u2013Function Relationship", "block_index": 0, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 1.0, "group_id": "gene=ABCA4|variant=__missing__", "notes": "Gene symbol extracted from the article title prefix 'ABCA4 -Related Retinopathy'.", "inference_basis": ["gene_prefix_in_disease_name"], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}, {"field_id": "A.gene_disease_relationship", "category": "A", "field_name": "Reported gene-disease relationship", "status": "found", "value": "causative", "assigned_acmg_codes": ["PP4"], "assigned_clingen_modules": [], "source": {"span_id": "original-p1", "page": 1, "start_offset": 38, "end_offset": 64, "context_type": "text", "context_ref": "title", "text_snippet": "ABCA4 -Related Retinopathy", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "ambiguous"}, "raw_source": {"span_id": "erratum_title", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "title", "text_snippet": "ABCA4 -Related Retinopathy", "block_index": 0, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 0.9, "group_id": "gene=ABCA4|variant=__missing__", "notes": "The title format 'ABCA4-Related Retinopathy' indicates a known causal relationship established in the research field.", "inference_basis": ["title_format_indicates_established_relationship"], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}, {"field_id": "B.disease_diagnosis", "category": "B", "field_name": "Disease diagnosis", "status": "found", "value": "ABCA4-related retinopathy", "assigned_acmg_codes": ["PP4"], "assigned_clingen_modules": [], "source": {"span_id": "original-p1", "page": 1, "start_offset": 38, "end_offset": 64, "context_type": "text", "context_ref": "title", "text_snippet": "ABCA4 -Related Retinopathy", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "ambiguous"}, "raw_source": {"span_id": "erratum_title", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "title", "text_snippet": "ABCA4 -Related Retinopathy", "block_index": 0, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 0.95, "group_id": "gene=ABCA4|variant=__missing__", "notes": "Disease name extracted from the article title.", "inference_basis": ["title_contains_disease_name"], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}, {"field_id": "A.gene_disease_relationship", "category": "A", "field_name": "Gene-disease relationship", "status": "found", "value": "causative", "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": {"span_id": "original-p1", "page": 1, "start_offset": 14, "end_offset": 97, "context_type": "text", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure\u2013Function Relationship", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "ambiguous"}, "raw_source": {"span_id": "block_0", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure\u2013Function Relationship", "block_index": 0, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 0.9, "group_id": "gene=ABCA4|variant=__missing__", "notes": "The title directly names the disease as 'ABCA4 -Related Retinopathy', indicating an established causal relationship.", "inference_basis": ["explicit_gene_disease_naming"], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}, {"field_id": "B.disease_diagnosis", "category": "B", "field_name": "Disease diagnosis", "status": "found", "value": "ABCA4-related retinopathy", "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": {"span_id": "original-p1", "page": 1, "start_offset": 14, "end_offset": 97, "context_type": "text", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure\u2013Function Relationship", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "ambiguous"}, "raw_source": {"span_id": "block_0", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure\u2013Function Relationship", "block_index": 0, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 1.0, "group_id": "gene=ABCA4|variant=__missing__", "notes": "Primary disease name explicitly stated in the title.", "inference_basis": ["explicit_disease_name"], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}, {"field_id": "A.disease_name", "category": "A", "field_name": "Disease name", "status": "found", "value": "ABCA4-related retinopathy", "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": {"span_id": "original-p1", "page": 1, "start_offset": 14, "end_offset": 97, "context_type": "text", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure\u2013Function Relationship", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "ambiguous"}, "raw_source": {"span_id": "block_0", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure\u2013Function Relationship", "block_index": 0, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 1.0, "group_id": "gene=ABCA4|variant=__missing__", "notes": "Disease name extracted from the article title.", "inference_basis": ["explicit_disease_name"], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}, {"field_id": "A.clingen_entry", "category": "A", "field_name": "ClinGen entry", "status": "source_invalid", "value": "clingen_003", "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": null, "raw_source": {"span_id": "system_instruction", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "system_instruction", "text_snippet": "CLINGEN ENTRY: clingen_003", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 1.0, "group_id": "gene=ABCA4|variant=__missing__", "notes": "Value provided in the system instruction for this specific curation task.", "inference_basis": ["system_instruction"], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}], "evidence_chains": [], "special_evidence": [], "quality_report": {"passed": true, "scorable": false, "score_gate_passed": false, "issues": [{"issue_type": "missing_required", "field_id": "D.allele_frequency", "description": "Required field D.allele_frequency is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "B.disease_diagnosis", "description": "Required field B.disease_diagnosis is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "A.variant_hgvs_p", "description": "Required field A.variant_hgvs_p is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "B.diagnosis_sufficiency", "description": "Required field B.diagnosis_sufficiency is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "A.gene_symbol", "description": "Required field A.gene_symbol is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "A.variant_hgvs_c", "description": "Required field A.variant_hgvs_c is missing", "severity": "warning"}], "found_count": 6, "not_found_count": 0, "source_invalid_count": 1, "ocr_gap_count": 0, "table_ungrounded_count": 0, "ambiguous_source_count": 6, "context_contamination_count": 0, "human_review_required": true, "human_review_reasons": ["A.gene_symbol has ambiguous source grounding", "A.gene_disease_relationship has ambiguous source grounding", "B.disease_diagnosis has ambiguous source grounding", "A.gene_disease_relationship has ambiguous source grounding", "B.disease_diagnosis has ambiguous source grounding", "A.disease_name has ambiguous source grounding", "A.clingen_entry has invalid source grounding", "D.allele_frequency is required for scoring but is not grounded", "B.disease_diagnosis is required for scoring but is not grounded", "A.variant_hgvs_p is required for scoring but is not grounded", "B.diagnosis_sufficiency is required for scoring but is not grounded", "A.gene_symbol is required for scoring but is not grounded", "A.variant_hgvs_c is required for scoring but is not grounded", "No full evidence chain was produced"], "human_review_by_category": {"source_grounding": ["A.gene_symbol has ambiguous source grounding", "A.gene_disease_relationship has ambiguous source grounding", "B.disease_diagnosis has ambiguous source grounding", "A.gene_disease_relationship has ambiguous source grounding", "B.disease_diagnosis has ambiguous source grounding", "A.disease_name has ambiguous source grounding", "A.clingen_entry has invalid source grounding"], "table_grounding": [], "scoring_gate": ["D.allele_frequency is required for scoring but is not grounded", "B.disease_diagnosis is required for scoring but is not grounded", "A.variant_hgvs_p is required for scoring but is not grounded", "B.diagnosis_sufficiency is required for scoring but is not grounded", "A.gene_symbol is required for scoring but is not grounded", "A.variant_hgvs_c is required for scoring but is not grounded"], "contradictions": [], "workflow": ["No full evidence chain was produced"]}}, "normalization_issues": [], "extraction_target": {"gene_symbol": "ABCA4", "disease_name": "ABCA4-related retinopathy", "variant_hgvs_p": "", "clingen_entry_id": "clingen_003"}, "phenotype_evidence": [], "discarded_evidence": []}, "translated_result": {"status": "completed", "document_id": "ca45cb16-e2ca-41c2-9946-a88c2aceb4ad", "track": "translated", "evidence_map": {"relevant": true, "disease_terms": ["ABCA4-related retinopathy"], "gene_terms": ["ABCA4"], "variant_terms": [], "case_references": [], "authority_references": [], "contradictions": [], "structure_hints": []}, "evidence_items": [{"field_id": "A.gene_symbol", "category": "gene_and_variant", "field_name": "Gene symbol", "status": "found", "value": "ABCA4", "assigned_acmg_codes": ["PVS1", "PP2", "BP1"], "assigned_clingen_modules": [], "source": {"span_id": "translated-p1", "page": 1, "start_offset": 14, "end_offset": 64, "context_type": "abstract", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "ambiguous"}, "raw_source": {"span_id": "", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "abstract", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy", "block_index": 0, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 1.0, "group_id": "gene=ABCA4|variant=__missing__", "notes": "Gene symbol extracted from document title prefix pattern 'ABCA4 -Related Retinopathy'", "inference_basis": [], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}, {"field_id": "A.gene_disease_relationship", "category": "gene_and_variant", "field_name": "Reported gene-disease relationship", "status": "found", "value": "causative", "assigned_acmg_codes": ["PP4"], "assigned_clingen_modules": [], "source": {"span_id": "translated-p1", "page": 1, "start_offset": 14, "end_offset": 64, "context_type": "abstract", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "ambiguous"}, "raw_source": {"span_id": "", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "abstract", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy", "block_index": 0, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 0.9, "group_id": "gene=ABCA4|variant=__missing__", "notes": "The title 'ABCA4 -Related Retinopathy' implies an established causal relationship based on naming convention", "inference_basis": [], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}, {"field_id": "B.disease_diagnosis", "category": "case_and_phenotype", "field_name": "Disease diagnosis", "status": "found", "value": "ABCA4-related retinopathy", "assigned_acmg_codes": ["PP4"], "assigned_clingen_modules": [], "source": {"span_id": "translated-p1", "page": 1, "start_offset": 14, "end_offset": 64, "context_type": "abstract", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "ambiguous"}, "raw_source": {"span_id": "", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "abstract", "context_ref": "title", "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy", "block_index": 0, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 1.0, "group_id": "gene=ABCA4|variant=__missing__", "notes": "Disease diagnosis extracted from document title", "inference_basis": [], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}], "evidence_chains": [], "special_evidence": [], "quality_report": {"passed": true, "scorable": false, "score_gate_passed": false, "issues": [{"issue_type": "missing_required", "field_id": "D.allele_frequency", "description": "Required field D.allele_frequency is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "B.disease_diagnosis", "description": "Required field B.disease_diagnosis is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "A.variant_hgvs_p", "description": "Required field A.variant_hgvs_p is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "B.diagnosis_sufficiency", "description": "Required field B.diagnosis_sufficiency is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "A.gene_symbol", "description": "Required field A.gene_symbol is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "A.variant_hgvs_c", "description": "Required field A.variant_hgvs_c is missing", "severity": "warning"}], "found_count": 3, "not_found_count": 0, "source_invalid_count": 0, "ocr_gap_count": 0, "table_ungrounded_count": 0, "ambiguous_source_count": 3, "context_contamination_count": 0, "human_review_required": true, "human_review_reasons": ["A.gene_symbol has ambiguous source grounding", "A.gene_disease_relationship has ambiguous source grounding", "B.disease_diagnosis has ambiguous source grounding", "D.allele_frequency is required for scoring but is not grounded", "B.disease_diagnosis is required for scoring but is not grounded", "A.variant_hgvs_p is required for scoring but is not grounded", "B.diagnosis_sufficiency is required for scoring but is not grounded", "A.gene_symbol is required for scoring but is not grounded", "A.variant_hgvs_c is required for scoring but is not grounded", "No full evidence chain was produced"], "human_review_by_category": {"source_grounding": ["A.gene_symbol has ambiguous source grounding", "A.gene_disease_relationship has ambiguous source grounding", "B.disease_diagnosis has ambiguous source grounding"], "table_grounding": [], "scoring_gate": ["D.allele_frequency is required for scoring but is not grounded", "B.disease_diagnosis is required for scoring but is not grounded", "A.variant_hgvs_p is required for scoring but is not grounded", "B.diagnosis_sufficiency is required for scoring but is not grounded", "A.gene_symbol is required for scoring but is not grounded", "A.variant_hgvs_c is required for scoring but is not grounded"], "contradictions": [], "workflow": ["No full evidence chain was produced"]}}, "normalization_issues": [], "extraction_target": {"gene_symbol": "ABCA4", "disease_name": "ABCA4-related retinopathy", "variant_hgvs_p": "", "clingen_entry_id": "clingen_003"}, "phenotype_evidence": [], "discarded_evidence": []}}
+{
+  "document_id": "ca45cb16-e2ca-41c2-9946-a88c2aceb4ad",
+  "original_result": {
+    "status": "completed",
+    "document_id": "ca45cb16-e2ca-41c2-9946-a88c2aceb4ad",
+    "track": "original",
+    "evidence_map": {
+      "relevant": true,
+      "disease_terms": [
+        "ABCA4-related retinopathy"
+      ],
+      "gene_terms": [
+        "ABCA4"
+      ],
+      "variant_terms": [],
+      "case_references": [],
+      "authority_references": [],
+      "contradictions": [],
+      "structure_hints": [
+        "Erratum notice"
+      ]
+    },
+    "evidence_items": [
+      {
+        "field_id": "A.gene_symbol",
+        "category": "A",
+        "field_name": "Gene symbol",
+        "status": "found",
+        "value": "ABCA4",
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": {
+          "span_id": "original-p1",
+          "page": 1,
+          "start_offset": 14,
+          "end_offset": 97,
+          "context_type": "text",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure–Function Relationship",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "ambiguous"
+        },
+        "raw_source": {
+          "span_id": "block_0",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure–Function Relationship",
+          "block_index": 0,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 1.0,
+        "group_id": "gene=ABCA4|variant=__missing__",
+        "notes": "Gene symbol extracted from the article title prefix 'ABCA4 -Related Retinopathy'.",
+        "inference_basis": [
+          "gene_prefix_in_disease_name"
+        ],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "ABCA4",
+        "target_disease": "ABCA4-related retinopathy"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "category": "A",
+        "field_name": "Reported gene-disease relationship",
+        "status": "found",
+        "value": "causative",
+        "assigned_acmg_codes": [
+          "PP4"
+        ],
+        "assigned_clingen_modules": [],
+        "source": {
+          "span_id": "original-p1",
+          "page": 1,
+          "start_offset": 38,
+          "end_offset": 64,
+          "context_type": "text",
+          "context_ref": "title",
+          "text_snippet": "ABCA4 -Related Retinopathy",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "ambiguous"
+        },
+        "raw_source": {
+          "span_id": "erratum_title",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "title",
+          "text_snippet": "ABCA4 -Related Retinopathy",
+          "block_index": 0,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 0.9,
+        "group_id": "gene=ABCA4|variant=__missing__",
+        "notes": "The title format 'ABCA4-Related Retinopathy' indicates a known causal relationship established in the research field.",
+        "inference_basis": [
+          "title_format_indicates_established_relationship"
+        ],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "ABCA4",
+        "target_disease": "ABCA4-related retinopathy"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "category": "B",
+        "field_name": "Disease diagnosis",
+        "status": "found",
+        "value": "ABCA4-related retinopathy",
+        "assigned_acmg_codes": [
+          "PP4"
+        ],
+        "assigned_clingen_modules": [],
+        "source": {
+          "span_id": "original-p1",
+          "page": 1,
+          "start_offset": 38,
+          "end_offset": 64,
+          "context_type": "text",
+          "context_ref": "title",
+          "text_snippet": "ABCA4 -Related Retinopathy",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "ambiguous"
+        },
+        "raw_source": {
+          "span_id": "erratum_title",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "title",
+          "text_snippet": "ABCA4 -Related Retinopathy",
+          "block_index": 0,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 0.95,
+        "group_id": "gene=ABCA4|variant=__missing__",
+        "notes": "Disease name extracted from the article title.",
+        "inference_basis": [
+          "title_contains_disease_name"
+        ],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "ABCA4",
+        "target_disease": "ABCA4-related retinopathy"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "category": "A",
+        "field_name": "Gene-disease relationship",
+        "status": "found",
+        "value": "causative",
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": {
+          "span_id": "original-p1",
+          "page": 1,
+          "start_offset": 14,
+          "end_offset": 97,
+          "context_type": "text",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure–Function Relationship",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "ambiguous"
+        },
+        "raw_source": {
+          "span_id": "block_0",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure–Function Relationship",
+          "block_index": 0,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 0.9,
+        "group_id": "gene=ABCA4|variant=__missing__",
+        "notes": "The title directly names the disease as 'ABCA4 -Related Retinopathy', indicating an established causal relationship.",
+        "inference_basis": [
+          "explicit_gene_disease_naming"
+        ],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "ABCA4",
+        "target_disease": "ABCA4-related retinopathy"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "category": "B",
+        "field_name": "Disease diagnosis",
+        "status": "found",
+        "value": "ABCA4-related retinopathy",
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": {
+          "span_id": "original-p1",
+          "page": 1,
+          "start_offset": 14,
+          "end_offset": 97,
+          "context_type": "text",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure–Function Relationship",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "ambiguous"
+        },
+        "raw_source": {
+          "span_id": "block_0",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure–Function Relationship",
+          "block_index": 0,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 1.0,
+        "group_id": "gene=ABCA4|variant=__missing__",
+        "notes": "Primary disease name explicitly stated in the title.",
+        "inference_basis": [
+          "explicit_disease_name"
+        ],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "ABCA4",
+        "target_disease": "ABCA4-related retinopathy"
+      },
+      {
+        "field_id": "A.disease_name",
+        "category": "A",
+        "field_name": "Disease name",
+        "status": "found",
+        "value": "ABCA4-related retinopathy",
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": {
+          "span_id": "original-p1",
+          "page": 1,
+          "start_offset": 14,
+          "end_offset": 97,
+          "context_type": "text",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure–Function Relationship",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "ambiguous"
+        },
+        "raw_source": {
+          "span_id": "block_0",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy: Structure–Function Relationship",
+          "block_index": 0,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 1.0,
+        "group_id": "gene=ABCA4|variant=__missing__",
+        "notes": "Disease name extracted from the article title.",
+        "inference_basis": [
+          "explicit_disease_name"
+        ],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "ABCA4",
+        "target_disease": "ABCA4-related retinopathy"
+      },
+      {
+        "field_id": "A.clingen_entry",
+        "category": "A",
+        "field_name": "ClinGen entry",
+        "status": "source_invalid",
+        "value": "clingen_003",
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": null,
+        "raw_source": {
+          "span_id": "system_instruction",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "system_instruction",
+          "text_snippet": "CLINGEN ENTRY: clingen_003",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 1.0,
+        "group_id": "gene=ABCA4|variant=__missing__",
+        "notes": "Value provided in the system instruction for this specific curation task.",
+        "inference_basis": [
+          "system_instruction"
+        ],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "ABCA4",
+        "target_disease": "ABCA4-related retinopathy"
+      }
+    ],
+    "evidence_chains": [],
+    "special_evidence": [],
+    "quality_report": {
+      "passed": true,
+      "scorable": false,
+      "score_gate_passed": false,
+      "issues": [
+        {
+          "issue_type": "missing_required",
+          "field_id": "D.allele_frequency",
+          "description": "Required field D.allele_frequency is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "B.disease_diagnosis",
+          "description": "Required field B.disease_diagnosis is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "A.variant_hgvs_p",
+          "description": "Required field A.variant_hgvs_p is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "B.diagnosis_sufficiency",
+          "description": "Required field B.diagnosis_sufficiency is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "A.gene_symbol",
+          "description": "Required field A.gene_symbol is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "A.variant_hgvs_c",
+          "description": "Required field A.variant_hgvs_c is missing",
+          "severity": "warning"
+        }
+      ],
+      "found_count": 6,
+      "not_found_count": 0,
+      "source_invalid_count": 1,
+      "ocr_gap_count": 0,
+      "table_ungrounded_count": 0,
+      "ambiguous_source_count": 6,
+      "context_contamination_count": 0,
+      "human_review_required": true,
+      "human_review_reasons": [
+        "A.gene_symbol has ambiguous source grounding",
+        "A.gene_disease_relationship has ambiguous source grounding",
+        "B.disease_diagnosis has ambiguous source grounding",
+        "A.gene_disease_relationship has ambiguous source grounding",
+        "B.disease_diagnosis has ambiguous source grounding",
+        "A.disease_name has ambiguous source grounding",
+        "A.clingen_entry has invalid source grounding",
+        "D.allele_frequency is required for scoring but is not grounded",
+        "B.disease_diagnosis is required for scoring but is not grounded",
+        "A.variant_hgvs_p is required for scoring but is not grounded",
+        "B.diagnosis_sufficiency is required for scoring but is not grounded",
+        "A.gene_symbol is required for scoring but is not grounded",
+        "A.variant_hgvs_c is required for scoring but is not grounded",
+        "No full evidence chain was produced"
+      ],
+      "human_review_by_category": {
+        "source_grounding": [
+          "A.gene_symbol has ambiguous source grounding",
+          "A.gene_disease_relationship has ambiguous source grounding",
+          "B.disease_diagnosis has ambiguous source grounding",
+          "A.gene_disease_relationship has ambiguous source grounding",
+          "B.disease_diagnosis has ambiguous source grounding",
+          "A.disease_name has ambiguous source grounding",
+          "A.clingen_entry has invalid source grounding"
+        ],
+        "table_grounding": [],
+        "scoring_gate": [
+          "D.allele_frequency is required for scoring but is not grounded",
+          "B.disease_diagnosis is required for scoring but is not grounded",
+          "A.variant_hgvs_p is required for scoring but is not grounded",
+          "B.diagnosis_sufficiency is required for scoring but is not grounded",
+          "A.gene_symbol is required for scoring but is not grounded",
+          "A.variant_hgvs_c is required for scoring but is not grounded"
+        ],
+        "contradictions": [],
+        "workflow": [
+          "No full evidence chain was produced"
+        ]
+      }
+    },
+    "normalization_issues": [],
+    "extraction_target": {
+      "gene_symbol": "ABCA4",
+      "disease_name": "ABCA4-related retinopathy",
+      "variant_hgvs_p": "",
+      "clingen_entry_id": "clingen_003"
+    },
+    "phenotype_evidence": [],
+    "discarded_evidence": []
+  },
+  "translated_result": {
+    "status": "completed",
+    "document_id": "ca45cb16-e2ca-41c2-9946-a88c2aceb4ad",
+    "track": "translated",
+    "evidence_map": {
+      "relevant": true,
+      "disease_terms": [
+        "ABCA4-related retinopathy"
+      ],
+      "gene_terms": [
+        "ABCA4"
+      ],
+      "variant_terms": [],
+      "case_references": [],
+      "authority_references": [],
+      "contradictions": [],
+      "structure_hints": []
+    },
+    "evidence_items": [
+      {
+        "field_id": "A.gene_symbol",
+        "category": "gene_and_variant",
+        "field_name": "Gene symbol",
+        "status": "found",
+        "value": "ABCA4",
+        "assigned_acmg_codes": [
+          "PVS1",
+          "PP2",
+          "BP1"
+        ],
+        "assigned_clingen_modules": [],
+        "source": {
+          "span_id": "translated-p1",
+          "page": 1,
+          "start_offset": 14,
+          "end_offset": 64,
+          "context_type": "abstract",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "ambiguous"
+        },
+        "raw_source": {
+          "span_id": "",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "abstract",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy",
+          "block_index": 0,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 1.0,
+        "group_id": "gene=ABCA4|variant=__missing__",
+        "notes": "Gene symbol extracted from document title prefix pattern 'ABCA4 -Related Retinopathy'",
+        "inference_basis": [],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "ABCA4",
+        "target_disease": "ABCA4-related retinopathy"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "category": "gene_and_variant",
+        "field_name": "Reported gene-disease relationship",
+        "status": "found",
+        "value": "causative",
+        "assigned_acmg_codes": [
+          "PP4"
+        ],
+        "assigned_clingen_modules": [],
+        "source": {
+          "span_id": "translated-p1",
+          "page": 1,
+          "start_offset": 14,
+          "end_offset": 64,
+          "context_type": "abstract",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "ambiguous"
+        },
+        "raw_source": {
+          "span_id": "",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "abstract",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy",
+          "block_index": 0,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 0.9,
+        "group_id": "gene=ABCA4|variant=__missing__",
+        "notes": "The title 'ABCA4 -Related Retinopathy' implies an established causal relationship based on naming convention",
+        "inference_basis": [],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "ABCA4",
+        "target_disease": "ABCA4-related retinopathy"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "category": "case_and_phenotype",
+        "field_name": "Disease diagnosis",
+        "status": "found",
+        "value": "ABCA4-related retinopathy",
+        "assigned_acmg_codes": [
+          "PP4"
+        ],
+        "assigned_clingen_modules": [],
+        "source": {
+          "span_id": "translated-p1",
+          "page": 1,
+          "start_offset": 14,
+          "end_offset": 64,
+          "context_type": "abstract",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "ambiguous"
+        },
+        "raw_source": {
+          "span_id": "",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "abstract",
+          "context_ref": "title",
+          "text_snippet": "Inner Retina Changes in ABCA4 -Related Retinopathy",
+          "block_index": 0,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 1.0,
+        "group_id": "gene=ABCA4|variant=__missing__",
+        "notes": "Disease diagnosis extracted from document title",
+        "inference_basis": [],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "ABCA4",
+        "target_disease": "ABCA4-related retinopathy"
+      }
+    ],
+    "evidence_chains": [],
+    "special_evidence": [],
+    "quality_report": {
+      "passed": true,
+      "scorable": false,
+      "score_gate_passed": false,
+      "issues": [
+        {
+          "issue_type": "missing_required",
+          "field_id": "D.allele_frequency",
+          "description": "Required field D.allele_frequency is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "B.disease_diagnosis",
+          "description": "Required field B.disease_diagnosis is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "A.variant_hgvs_p",
+          "description": "Required field A.variant_hgvs_p is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "B.diagnosis_sufficiency",
+          "description": "Required field B.diagnosis_sufficiency is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "A.gene_symbol",
+          "description": "Required field A.gene_symbol is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "A.variant_hgvs_c",
+          "description": "Required field A.variant_hgvs_c is missing",
+          "severity": "warning"
+        }
+      ],
+      "found_count": 3,
+      "not_found_count": 0,
+      "source_invalid_count": 0,
+      "ocr_gap_count": 0,
+      "table_ungrounded_count": 0,
+      "ambiguous_source_count": 3,
+      "context_contamination_count": 0,
+      "human_review_required": true,
+      "human_review_reasons": [
+        "A.gene_symbol has ambiguous source grounding",
+        "A.gene_disease_relationship has ambiguous source grounding",
+        "B.disease_diagnosis has ambiguous source grounding",
+        "D.allele_frequency is required for scoring but is not grounded",
+        "B.disease_diagnosis is required for scoring but is not grounded",
+        "A.variant_hgvs_p is required for scoring but is not grounded",
+        "B.diagnosis_sufficiency is required for scoring but is not grounded",
+        "A.gene_symbol is required for scoring but is not grounded",
+        "A.variant_hgvs_c is required for scoring but is not grounded",
+        "No full evidence chain was produced"
+      ],
+      "human_review_by_category": {
+        "source_grounding": [
+          "A.gene_symbol has ambiguous source grounding",
+          "A.gene_disease_relationship has ambiguous source grounding",
+          "B.disease_diagnosis has ambiguous source grounding"
+        ],
+        "table_grounding": [],
+        "scoring_gate": [
+          "D.allele_frequency is required for scoring but is not grounded",
+          "B.disease_diagnosis is required for scoring but is not grounded",
+          "A.variant_hgvs_p is required for scoring but is not grounded",
+          "B.diagnosis_sufficiency is required for scoring but is not grounded",
+          "A.gene_symbol is required for scoring but is not grounded",
+          "A.variant_hgvs_c is required for scoring but is not grounded"
+        ],
+        "contradictions": [],
+        "workflow": [
+          "No full evidence chain was produced"
+        ]
+      }
+    },
+    "normalization_issues": [],
+    "extraction_target": {
+      "gene_symbol": "ABCA4",
+      "disease_name": "ABCA4-related retinopathy",
+      "variant_hgvs_p": "",
+      "clingen_entry_id": "clingen_003"
+    },
+    "phenotype_evidence": [],
+    "discarded_evidence": []
+  }
+}
