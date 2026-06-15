@@ -14,6 +14,9 @@ from dataclasses import dataclass
 from sqlalchemy import func, select, case, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.catalog import (
+    EVIDENCE_FIELD_SPECS,
+)
 from src.dao.postgresql.models import (
     CanonicalEvidenceItem,
     EvidenceEntityBinding,
@@ -74,19 +77,24 @@ class EvidenceMetrics:
 
 
 # ── Catalog category definitions ──────────────────────────────────────
-# Maps category prefix to display name and expected field count
-_CATALOG_CATEGORIES = {
-    "A": ("Variant Information", 18),
-    "B": ("Case/Phenotype", 22),
-    "C": ("Segregation/Family", 18),
-    "D": ("Population/Frequency", 9),
-    "E": ("Computational/Prediction", 8),
-    "F": ("Functional", 17),
-    "G": ("Case-Control", 12),
-    "H": ("Contradiction/Exclusion", 10),
-    "I": ("Gene Function/Experimental", 18),
-    "J": ("Authority/Time Validity", 6),
-}
+# Derived from core EVIDENCE_FIELD_SPECS at runtime to avoid silent drift.
+
+
+def _build_catalog_categories() -> dict[str, tuple[str, int]]:
+    """Build category → (display_name, field_count) from the core catalog."""
+    categories: dict[str, tuple[str, int]] = {}
+    counts: dict[str, int] = {}
+    names: dict[str, str] = {}
+    for spec in EVIDENCE_FIELD_SPECS:
+        counts[spec.category_id] = counts.get(spec.category_id, 0) + 1
+        if spec.category_id not in names:
+            names[spec.category_id] = spec.category_name
+    for cat_id in sorted(counts):
+        categories[cat_id] = (names[cat_id], counts[cat_id])
+    return categories
+
+
+_CATALOG_CATEGORIES = _build_catalog_categories()
 
 # Key fields that must be found for ACMG scoring
 _KEY_FIELDS = [
