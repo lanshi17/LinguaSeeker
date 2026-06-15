@@ -471,45 +471,80 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
             ))
             api_items = []
     else:
-        api_task = _acquire_links_api(query=query, identifiers=id_params, limit=request.limit)
-        firecrawl_task = _acquire_links_firecrawl(query=query, language=language)
+        # Auto: deterministic identifiers (DOI/PMID/PMCID) route API-only —
+        # direct provider APIs are authoritative and Firecrawl would only
+        # waste credits scraping landing pages that never yield PDFs.
+        has_deterministic_id = bool(
+            identifiers.get("doi") or identifiers.get("pmid") or identifiers.get("pmcid")
+        )
 
-        api_result, firecrawl_result = await asyncio.gather(api_task, firecrawl_task, return_exceptions=True)
+        if has_deterministic_id:
+            try:
+                api_items = await _acquire_links_api(
+                    query=query, identifiers=id_params, limit=request.limit,
+                )
+                source_trace.append(_source_trace_entry(
+                    provider="api",
+                    success=bool(api_items),
+                    items_count=len(api_items),
+                ))
+            except Exception as exc:
+                logger.warning("api acquisition failed: {}", exc)
+                warning = f"api acquisition failed: {exc}"
+                warnings.append(warning)
+                source_trace.append(_source_trace_entry(
+                    provider="api",
+                    success=False,
+                    warnings=[warning],
+                    error=str(exc),
+                ))
+            route = OnlineAcquisitionRouteInfo(
+                prefer=request.prefer,
+                api_provider=request.api_provider,
+                used="api",
+                reason="deterministic_identifier",
+                fallback_used=False,
+            )
+        else:
+            api_task = _acquire_links_api(query=query, identifiers=id_params, limit=request.limit)
+            firecrawl_task = _acquire_links_firecrawl(query=query, language=language)
 
-        if isinstance(api_result, Exception):
-            logger.warning("api acquisition failed: {}", api_result)
-            warning = f"api acquisition failed: {api_result}"
-            warnings.append(warning)
-            source_trace.append(_source_trace_entry(
-                provider="api",
-                success=False,
-                warnings=[warning],
-                error=str(api_result),
-            ))
-        else:
-            api_items = api_result
-            source_trace.append(_source_trace_entry(
-                provider="api",
-                success=bool(api_items),
-                items_count=len(api_items),
-            ))
-        if isinstance(firecrawl_result, Exception):
-            logger.warning("firecrawl acquisition failed: {}", firecrawl_result)
-            warning = f"firecrawl acquisition failed: {firecrawl_result}"
-            warnings.append(warning)
-            source_trace.append(_source_trace_entry(
-                provider="firecrawl",
-                success=False,
-                warnings=[warning],
-                error=str(firecrawl_result),
-            ))
-        else:
-            firecrawl_links = firecrawl_result
-            source_trace.append(_source_trace_entry(
-                provider="firecrawl",
-                success=bool(firecrawl_links),
-                items_count=len(firecrawl_links),
-            ))
+            api_result, firecrawl_result = await asyncio.gather(api_task, firecrawl_task, return_exceptions=True)
+
+            if isinstance(api_result, Exception):
+                logger.warning("api acquisition failed: {}", api_result)
+                warning = f"api acquisition failed: {api_result}"
+                warnings.append(warning)
+                source_trace.append(_source_trace_entry(
+                    provider="api",
+                    success=False,
+                    warnings=[warning],
+                    error=str(api_result),
+                ))
+            else:
+                api_items = api_result
+                source_trace.append(_source_trace_entry(
+                    provider="api",
+                    success=bool(api_items),
+                    items_count=len(api_items),
+                ))
+            if isinstance(firecrawl_result, Exception):
+                logger.warning("firecrawl acquisition failed: {}", firecrawl_result)
+                warning = f"firecrawl acquisition failed: {firecrawl_result}"
+                warnings.append(warning)
+                source_trace.append(_source_trace_entry(
+                    provider="firecrawl",
+                    success=False,
+                    warnings=[warning],
+                    error=str(firecrawl_result),
+                ))
+            else:
+                firecrawl_links = firecrawl_result
+                source_trace.append(_source_trace_entry(
+                    provider="firecrawl",
+                    success=bool(firecrawl_links),
+                    items_count=len(firecrawl_links),
+                ))
 
     candidates = _merge_and_dedupe(api_items, firecrawl_links)
 

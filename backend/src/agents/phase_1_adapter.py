@@ -125,8 +125,17 @@ class Phase1Adapter:
             elif acquisition_result.downloads:
                 pdf_path = acquisition_result.downloads[0].file_path
             else:
+                # Acquisition returned metadata/items but no downloadable PDF.
+                # Most common cause: the article is paywalled or the provider
+                # has no OA copy. Not retryable — retrying would hit the same
+                # providers and get the same empty result.
+                reasons = list(acquisition_result.warnings or [])
+                detail = (
+                    f" ({'; '.join(reasons[:3])})" if reasons else ""
+                )
                 raise PermanentPhaseError(
-                    "Acquisition succeeded but no file path found",
+                    f"Full-text PDF unavailable for the given identifier{detail}. "
+                    f"The article may be paywalled or no OA copy is indexed.",
                     phase=1,
                 )
 
