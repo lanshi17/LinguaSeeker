@@ -1,3 +1,7 @@
+[2026-06-15] Phase 0: Froze main paper baseline manifest (N=30, CVR F1=0.9474, GPT-5=0.9222) and added 5-check leakage audit (all pass) [completed]
+[2026-06-15] Optimized learned arbitrator and benchmark expansion plan with BIBM main-paper gates, leakage checks, offline policy evaluation, and held-out evaluation path [planned]
+[2026-06-15] Drafted BIBM main paper TeX initial version in isolated worktree with IEEEtran structure, scientific figures, and compact tables [completed]
+[2026-06-15] Cleaned up redundant bibm-tex-draft worktree and branch after dev merge [completed]
 [2026-06-15] Planned prompt-only frontier model baseline sweep for BIBM Main Paper comparison [planned]
 [2026-06-14] Drafted BIBM Main Paper rescue plan with current diagnosis, source-aware alias rescue, evaluation gates, and paper packaging steps [done]
 [2026-06-14] BIBM G3 semantic boundary repair: exposed contextual reconcile scores, tightened source-only relationship semantics, and canonicalized supported target disease boundaries [done]
@@ -409,3 +413,4 @@
 
 [2026-06-15] [Fix ChatView abort TypeError on session switch] [done]
 [2026-06-15] [BIBM cross-lingual alignment and evidence augmentation metric infrastructure] [done] Added typed EvidenceAlignmentRecord labels, evidence language/source metadata, deterministic original-translation alignment records, alignment gate policy, Layer 3 alignment metrics CLI, and evidence augmentation matrix CLI. Verified focused backend/reconcile/benchmark suite passed (62/62), Ruff passed on touched files, and both new CLIs smoke-tested.
+[2026-06-15] [BIBM Related Work draft] [done] Wrote comprehensive Related Work section for BIBM main paper manuscript based on 31-agent literature survey covering ~600 related systems across 12+ domains. Four subsections: (1) Biomedical IE and Entity Normalization, (2) Cross-Lingual and Translation-Based IE, (3) LLM-Based Extraction and Citation Grounding, (4) Clinical Genetics and ACMG/ClinGen Evidence Curation. Positioned CrossEvidence against TransFusion (ACL 2025), AutoPM3 (Bioinformatics 2025), AcmGENTIC, KARMA, and existing ACMG tools. Key differentiators: dual-track deterministic reconciliation, citation-valid acceptance (CVR=1.0), 138-field ACMG/ClinGen catalog extraction from full-text literature. [done]
