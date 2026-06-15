@@ -34,6 +34,7 @@ frozen manifest JSON
   -> Table 3 ablation strategy ladder
   -> Table 4 traceability metrics from the manifest traceability report
   -> Table 5 contextual diagnosis summary for the same ablation report
+  -> Table 6 Benchmark A readiness and Benchmark B pilot selection status
   -> Markdown and CSV exports
 ```
 
@@ -43,7 +44,7 @@ The module is deterministic and offline. It does not run extraction, call LLMs, 
 
 | Function or type | Signature | Purpose |
 |---|---|---|
-| `build_main_paper_tables` | `build_main_paper_tables(manifest_path: Path) -> MainPaperTables` | Builds the five paper tables from one frozen manifest. |
+| `build_main_paper_tables` | `build_main_paper_tables(manifest_path: Path) -> MainPaperTables` | Builds the six paper tables from one frozen manifest. |
 | `main_paper_tables_to_payload` | `main_paper_tables_to_payload(tables: MainPaperTables) -> MainPaperTablesPayload` | Converts typed table objects into a JSON-serializable payload. |
 | `write_main_paper_tables` | `write_main_paper_tables(tables: MainPaperTables, reports_dir: Path = REPORTS_DIR) -> ReportPaths` | Writes timestamped Markdown and CSV exports. |
 | `MainPaperTable` | `@dataclass(frozen=True)` | Holds one table title plus immutable row mappings. |
@@ -59,14 +60,15 @@ The module is deterministic and offline. It does not run extraction, call LLMs, 
 | Table 3 Ablation study | `strategies` from the manifest. |
 | Table 4 Traceability metrics | Manifest `source_reports.traceability_report`; falls back to candidate F1 when no report is available. |
 | Table 5 Error breakdown | Latest matching `contextual_reconcile_diagnosis_*.json` whose `report_path` matches the manifest ablation report. |
+| Table 6 Benchmark readiness and pilot selection | Manifest `source_reports.benchmark_a_readiness_report` and `source_reports.benchmark_b_pilot_selection_report`; the table shows whether those reports are frozen, not the experimental result itself. |
 
 ## Current Snapshot
 
 The current generated table package is:
 
 ```text
-benchmark/layer3/reports/main_paper_tables_20260615_002932.md
-benchmark/layer3/reports/main_paper_tables_20260615_002932.csv
+benchmark/layer3/reports/main_paper_tables_20260615_194001.md
+benchmark/layer3/reports/main_paper_tables_20260615_194001.csv
 ```
 
 Key numbers:
@@ -92,6 +94,8 @@ When adding a new table:
 4. Extend `backend/tests/benchmark/layer3/test_main_paper_tables.py`.
 
 Keep the table builder as a report summarizer. It should not run experiments, mutate source reports, or infer paper claims that are not already present in the frozen manifest and aligned analysis reports.
+
+Table 6 is intentionally conservative: it should surface readiness status and frozen pilot selection metadata only. Do not turn it into a new benchmark result table.
 
 ## Testing
 

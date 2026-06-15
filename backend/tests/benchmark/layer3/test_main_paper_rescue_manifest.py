@@ -116,6 +116,8 @@ def test_manifest_payload_records_baseline_and_no_go_gate(tmp_path: Path) -> Non
     assert payload["g2_statistics"]["significant"] is False
     assert payload["strategies"][1]["strategy"] == "context_verifier_reconcile"
     assert payload["baselines"][0]["label"] == "B0"
+    assert payload["source_reports"]["benchmark_a_readiness_report"] is None
+    assert payload["source_reports"]["benchmark_b_pilot_selection_report"] is None
 
 
 def test_manifest_payload_records_reproducibility_and_no_leakage(tmp_path: Path) -> None:
@@ -165,3 +167,22 @@ def test_write_manifest_persists_traceable_json(tmp_path: Path) -> None:
     assert report_path.name.startswith("main_paper_rescue_manifest_")
     assert saved["g2_statistics"]["main_paper_ready"] is False
     assert saved["source_reports"]["g2_report"] == str(tmp_path / "g2.json")
+
+
+def test_manifest_payload_records_readiness_reports(tmp_path: Path) -> None:
+    ablation_report = _ablation_report(tmp_path / "ablation.json")
+    readiness_report = _write_json(tmp_path / "benchmark_readiness.json", {"status": "ok"})
+    pilot_report = _write_json(tmp_path / "benchmark_b_pilot_selection.json", {"status": "ok"})
+    manifest = build_manifest(
+        coverage_report_path=_coverage_report(tmp_path / "coverage.json"),
+        ablation_report_path=ablation_report,
+        g2_report_path=_g2_report(tmp_path / "g2.json", source_report_path=ablation_report),
+        baseline_report_paths=(),
+        benchmark_a_readiness_report_path=readiness_report,
+        benchmark_b_pilot_selection_report_path=pilot_report,
+    )
+
+    payload = manifest_to_payload(manifest)
+
+    assert payload["source_reports"]["benchmark_a_readiness_report"] == str(readiness_report)
+    assert payload["source_reports"]["benchmark_b_pilot_selection_report"] == str(pilot_report)

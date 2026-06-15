@@ -1,0 +1,263 @@
+{
+  "evaluation_id": "benchmark_readiness_20260615_193750",
+  "timestamp": "2026-06-15T19:37:50",
+  "config": {
+    "ground_truth_root": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth",
+    "entry_ids": [],
+    "limit": null
+  },
+  "overall": {
+    "total_entries": 30,
+    "annotated_count": 0,
+    "invalid_count": 0,
+    "missing_count": 30,
+    "alignment_annotation_coverage": 0.0,
+    "invalid_entry_ids": [],
+    "missing_entry_ids": [
+      "clingen_000",
+      "clingen_001",
+      "clingen_002",
+      "clingen_003",
+      "clingen_004",
+      "clingen_005",
+      "clingen_006",
+      "clingen_007",
+      "clingen_008",
+      "clingen_009",
+      "clingen_010",
+      "clingen_011",
+      "clingen_012",
+      "clingen_013",
+      "clingen_014",
+      "clingen_015",
+      "clingen_016",
+      "clingen_017",
+      "clingen_018",
+      "clingen_019",
+      "clingen_020",
+      "clingen_021",
+      "clingen_022",
+      "clingen_023",
+      "clingen_024",
+      "clingen_025",
+      "clingen_026",
+      "clingen_027",
+      "clingen_028",
+      "clingen_029"
+    ]
+  },
+  "rows": [
+    {
+      "entry_id": "clingen_000",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_001",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_002",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_003",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_004",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_005",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_006",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_007",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_008",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_009",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_010",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_011",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_012",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_013",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_014",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_015",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_016",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_017",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_018",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_019",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_020",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_021",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_022",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_023",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_024",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_025",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_026",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_027",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_028",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    },
+    {
+      "entry_id": "clingen_029",
+      "status": "missing_alignment_annotations",
+      "annotation_path": null,
+      "message": "alignment_annotations.json is missing."
+    }
+  ],
+  "warnings": [
+    "clingen_000: missing alignment_annotations.json",
+    "clingen_001: missing alignment_annotations.json",
+    "clingen_002: missing alignment_annotations.json",
+    "clingen_003: missing alignment_annotations.json",
+    "clingen_004: missing alignment_annotations.json",
+    "clingen_005: missing alignment_annotations.json",
+    "clingen_006: missing alignment_annotations.json",
+    "clingen_007: missing alignment_annotations.json",
+    "clingen_008: missing alignment_annotations.json",
+    "clingen_009: missing alignment_annotations.json",
+    "clingen_010: missing alignment_annotations.json",
+    "clingen_011: missing alignment_annotations.json",
+    "clingen_012: missing alignment_annotations.json",
+    "clingen_013: missing alignment_annotations.json",
+    "clingen_014: missing alignment_annotations.json",
+    "clingen_015: missing alignment_annotations.json",
+    "clingen_016: missing alignment_annotations.json",
+    "clingen_017: missing alignment_annotations.json",
+    "clingen_018: missing alignment_annotations.json",
+    "clingen_019: missing alignment_annotations.json",
+    "clingen_020: missing alignment_annotations.json",
+    "clingen_021: missing alignment_annotations.json",
+    "clingen_022: missing alignment_annotations.json",
+    "clingen_023: missing alignment_annotations.json",
+    "clingen_024: missing alignment_annotations.json",
+    "clingen_025: missing alignment_annotations.json",
+    "clingen_026: missing alignment_annotations.json",
+    "clingen_027: missing alignment_annotations.json",
+    "clingen_028: missing alignment_annotations.json",
+    "clingen_029: missing alignment_annotations.json"
+  ]
+}

@@ -16,6 +16,7 @@ TABLE_MAIN = "Table 2 Main method vs baselines"
 TABLE_ABLATION = "Table 3 Ablation study"
 TABLE_TRACEABILITY = "Table 4 Traceability metrics"
 TABLE_ERRORS = "Table 5 Error breakdown"
+TABLE_READINESS = "Table 6 Benchmark readiness and pilot selection"
 
 ERROR_ROOT_CAUSE_ORDER = (
     "wrong_relationship_semantics",
@@ -64,7 +65,7 @@ class ReportPaths:
 
 
 def build_main_paper_tables(manifest_path: Path) -> MainPaperTables:
-    """Build the five reviewer-facing Main Paper tables from a frozen manifest."""
+    """Build the six reviewer-facing Main Paper tables from a frozen manifest."""
     manifest = _load_json_object(manifest_path)
     return MainPaperTables(
         generated_at=time.strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -75,6 +76,7 @@ def build_main_paper_tables(manifest_path: Path) -> MainPaperTables:
             MainPaperTable(TABLE_ABLATION, _ablation_rows(manifest)),
             MainPaperTable(TABLE_TRACEABILITY, _traceability_rows(manifest, manifest_path=manifest_path)),
             MainPaperTable(TABLE_ERRORS, _error_rows(manifest, manifest_path=manifest_path)),
+            MainPaperTable(TABLE_READINESS, _readiness_rows(manifest)),
         ),
     )
 
@@ -127,6 +129,8 @@ def _dataset_rows(manifest: Mapping[str, Any]) -> tuple[Mapping[str, object], ..
             "covered_count": _int(coverage.get("covered_count")),
             "needs_pipeline_count": _int(coverage.get("needs_pipeline_count")),
             "frozen_entry_count": len(entry_ids),
+            "benchmark_a_readiness_status": _readiness_status(source_reports.get("benchmark_a_readiness_report")),
+            "benchmark_b_pilot_selection_status": _readiness_status(source_reports.get("benchmark_b_pilot_selection_report")),
             "git_commit": str(reproducibility.get("git_commit") or manifest.get("git_commit") or ""),
             "ablation_report": str(source_reports.get("ablation_report") or ""),
         },
@@ -237,6 +241,26 @@ def _error_rows(
             "source_report": "",
         }
         for root_cause in ERROR_ROOT_CAUSE_ORDER
+    )
+
+
+def _readiness_rows(manifest: Mapping[str, Any]) -> tuple[Mapping[str, object], ...]:
+    source_reports = _mapping(manifest.get("source_reports"))
+    readiness_report = str(source_reports.get("benchmark_a_readiness_report") or "")
+    pilot_report = str(source_reports.get("benchmark_b_pilot_selection_report") or "")
+    return (
+        {
+            "artifact": "Benchmark A readiness",
+            "status": _readiness_status(readiness_report),
+            "report_path": readiness_report,
+            "note": "Alignment annotations are required before Benchmark A metrics are reportable.",
+        },
+        {
+            "artifact": "Benchmark B pilot selection",
+            "status": _readiness_status(pilot_report),
+            "report_path": pilot_report,
+            "note": "Multilingual pilot selection is frozen from the existing non-English corpus.",
+        },
     )
 
 
@@ -384,6 +408,12 @@ def _markdown_cell(value: object) -> str:
     if value is None:
         return ""
     return str(value).replace("|", "\\|").replace("\n", " ")
+
+
+def _readiness_status(value: object) -> str:
+    if isinstance(value, str) and value:
+        return "report-available"
+    return "not-yet-reportable"
 
 
 def _mapping(value: object) -> Mapping[str, Any]:

@@ -21,7 +21,9 @@ This matrix binds every paper-facing claim to frozen evidence artifacts. It is t
 | Internal source-grounded traceability | `benchmark/layer3/reports/traceability_source_grounded_reconcile_20260615_013609.json` | TraceableF1=0.8889 |
 | Same-window prompt-only frontier sweep | `benchmark/layer3/reports/prompt_model_baseline_tables_20260615_114312.md` | B6-B10 citation-required prompt-only baselines, release cohort 2025-08-07 to 2025-09-30, same provider gateway and prompt; strongest GPT-5 F1=0.9222, TraceableF1=0.9109 |
 | Error diagnosis | `benchmark/layer3/reports/contextual_reconcile_diagnosis_20260615_011335.json` | `source_label_visibility_limit=5`, `disease_boundary_error=2`, `candidate_absent=2` |
-| Paper tables | `benchmark/layer3/reports/main_paper_tables_20260615_011554.md` | Tables 1-5 generated from the frozen manifest |
+| Benchmark A readiness | `benchmark/layer3/reports/benchmark_readiness_*.json` | Current state report: alignment annotations are missing or invalid on the frozen N=30 set; Benchmark A metrics are not yet reportable without gold annotation files |
+| Benchmark B pilot selection | `benchmark/layer3/ground_truth/benchmark_b_pilot_selection.json` | Frozen multilingual pilot selection from the existing non-English corpus; use this as the source for the N=10 pilot, not as an experimental result |
+| Paper tables | `benchmark/layer3/reports/main_paper_tables_20260615_194001.md` | Tables 1-6 generated from the frozen manifest |
 
 ## Primary Paper Position
 
@@ -57,6 +59,8 @@ On a frozen N=30 ClinGen/ACMG-style benchmark, context-verifier reconciliation i
 | "Reduces hallucinated citation risk" | Directly compare against the citation-required B6-B10 prompt-only frontier sweep and internal grounded strategies. For B0-B4, state that their current reports have no citation surface, so HCR is not directly comparable. |
 | "Cross-lingual consistency" | Report CLC as a reliability/audit metric, not as proof of native multilingual superiority. The current ClinGen benchmark is not native multilingual gold data. |
 | "Main Paper ready" | Say the internal grounded-baseline statistics pass the Main Paper evidence gate; do not say all SOTA baseline superiority gates are closed. |
+| "Benchmark A readiness" | Say alignment-annotation coverage is reportable but not yet sufficient for Benchmark A metrics unless valid `alignment_annotations.json` files exist. |
+| "Benchmark B pilot selection" | Say the multilingual pilot is frozen and eligible for downstream experiments, but do not imply evidence yield has been measured yet. |
 | "ACMG/ClinGen evidence automation" | Say structured evidence extraction and reconciliation, not clinical ACMG classification automation. |
 
 ## Forbidden Claims

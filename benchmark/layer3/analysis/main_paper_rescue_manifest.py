@@ -65,6 +65,8 @@ class SourceReportsPayload(TypedDict):
     ablation_report: str
     g2_report: str
     traceability_report: str | None
+    benchmark_a_readiness_report: str | None
+    benchmark_b_pilot_selection_report: str | None
     baseline_reports: list[str]
 
 
@@ -178,6 +180,8 @@ class MainPaperRescueManifest:
     ablation_report_path: Path
     g2_report_path: Path
     traceability_report_path: Path | None
+    benchmark_a_readiness_report_path: Path | None
+    benchmark_b_pilot_selection_report_path: Path | None
     reproducibility: ReproducibilityLedger
     no_leakage: NoLeakageDeclaration
     coverage: CoverageSummary
@@ -196,6 +200,8 @@ def build_manifest(
     entry_ids: tuple[str, ...] | None = None,
     ground_truth_root: Path | None = None,
     traceability_report_path: Path | None = None,
+    benchmark_a_readiness_report_path: Path | None = None,
+    benchmark_b_pilot_selection_report_path: Path | None = None,
     commands: Mapping[str, str] | None = None,
     no_leakage: NoLeakageDeclaration | None = None,
 ) -> MainPaperRescueManifest:
@@ -206,6 +212,10 @@ def build_manifest(
     baseline_payloads = tuple(_load_json_object(path) for path in baseline_report_paths)
     if traceability_report_path is not None and not traceability_report_path.exists():
         raise FileNotFoundError(traceability_report_path)
+    if benchmark_a_readiness_report_path is not None and not benchmark_a_readiness_report_path.exists():
+        raise FileNotFoundError(benchmark_a_readiness_report_path)
+    if benchmark_b_pilot_selection_report_path is not None and not benchmark_b_pilot_selection_report_path.exists():
+        raise FileNotFoundError(benchmark_b_pilot_selection_report_path)
     frozen_entry_ids = _resolve_entry_ids(
         explicit_entry_ids=entry_ids,
         ablation_payload=ablation_payload,
@@ -229,6 +239,8 @@ def build_manifest(
         ablation_report_path=ablation_report_path,
         g2_report_path=g2_report_path,
         traceability_report_path=traceability_report_path,
+        benchmark_a_readiness_report_path=benchmark_a_readiness_report_path,
+        benchmark_b_pilot_selection_report_path=benchmark_b_pilot_selection_report_path,
         reproducibility=ReproducibilityLedger(
             git_commit=commit,
             entry_ids=frozen_entry_ids,
@@ -237,6 +249,8 @@ def build_manifest(
                 ablation_report_path=ablation_report_path,
                 g2_report_path=g2_report_path,
                 traceability_report_path=traceability_report_path,
+                benchmark_a_readiness_report_path=benchmark_a_readiness_report_path,
+                benchmark_b_pilot_selection_report_path=benchmark_b_pilot_selection_report_path,
                 baseline_report_paths=baseline_report_paths,
             ),
             commands=commands
@@ -245,6 +259,8 @@ def build_manifest(
                 ablation_report_path=ablation_report_path,
                 g2_report_path=g2_report_path,
                 traceability_report_path=traceability_report_path,
+                benchmark_a_readiness_report_path=benchmark_a_readiness_report_path,
+                benchmark_b_pilot_selection_report_path=benchmark_b_pilot_selection_report_path,
                 baseline_report_paths=baseline_report_paths,
             ),
         ),
@@ -269,6 +285,16 @@ def manifest_to_payload(manifest: MainPaperRescueManifest) -> MainPaperRescueMan
             "ablation_report": str(manifest.ablation_report_path),
             "g2_report": str(manifest.g2_report_path),
             "traceability_report": str(manifest.traceability_report_path) if manifest.traceability_report_path else None,
+            "benchmark_a_readiness_report": (
+                str(manifest.benchmark_a_readiness_report_path)
+                if manifest.benchmark_a_readiness_report_path
+                else None
+            ),
+            "benchmark_b_pilot_selection_report": (
+                str(manifest.benchmark_b_pilot_selection_report_path)
+                if manifest.benchmark_b_pilot_selection_report_path
+                else None
+            ),
             "baseline_reports": [str(summary.report_path) for summary in manifest.baselines],
         },
         "reproducibility": {
@@ -347,6 +373,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--g2-report", type=Path, required=True)
     parser.add_argument("--baseline-report", type=Path, action="append", default=[])
     parser.add_argument("--traceability-report", type=Path, default=None)
+    parser.add_argument("--benchmark-a-readiness-report", type=Path, default=None)
+    parser.add_argument("--benchmark-b-pilot-selection-report", type=Path, default=None)
     parser.add_argument("--entry-id", action="append", default=[])
     parser.add_argument("--ground-truth-root", type=Path, default=GROUND_TRUTH_DIR)
     parser.add_argument("--reports-dir", type=Path, default=REPORTS_DIR)
@@ -361,6 +389,8 @@ def main(argv: list[str] | None = None) -> None:
         entry_ids=tuple(args.entry_id) or None,
         ground_truth_root=args.ground_truth_root,
         traceability_report_path=args.traceability_report,
+        benchmark_a_readiness_report_path=args.benchmark_a_readiness_report,
+        benchmark_b_pilot_selection_report_path=args.benchmark_b_pilot_selection_report,
     )
     if args.write:
         print(f"REPORT: {write_manifest(manifest, reports_dir=args.reports_dir)}")
@@ -584,11 +614,17 @@ def _generated_report_paths(
     ablation_report_path: Path,
     g2_report_path: Path,
     traceability_report_path: Path | None,
+    benchmark_a_readiness_report_path: Path | None,
+    benchmark_b_pilot_selection_report_path: Path | None,
     baseline_report_paths: tuple[Path, ...],
 ) -> tuple[Path, ...]:
     report_paths: list[Path] = [coverage_report_path, ablation_report_path, g2_report_path]
     if traceability_report_path is not None:
         report_paths.append(traceability_report_path)
+    if benchmark_a_readiness_report_path is not None:
+        report_paths.append(benchmark_a_readiness_report_path)
+    if benchmark_b_pilot_selection_report_path is not None:
+        report_paths.append(benchmark_b_pilot_selection_report_path)
     report_paths.extend(baseline_report_paths)
     return tuple(report_paths)
 
@@ -599,6 +635,8 @@ def _default_commands(
     ablation_report_path: Path,
     g2_report_path: Path,
     traceability_report_path: Path | None,
+    benchmark_a_readiness_report_path: Path | None,
+    benchmark_b_pilot_selection_report_path: Path | None,
     baseline_report_paths: tuple[Path, ...],
 ) -> Mapping[str, str]:
     manifest_parts = [
@@ -610,6 +648,10 @@ def _default_commands(
     ]
     if traceability_report_path is not None:
         manifest_parts.append(f"--traceability-report {traceability_report_path}")
+    if benchmark_a_readiness_report_path is not None:
+        manifest_parts.append(f"--benchmark-a-readiness-report {benchmark_a_readiness_report_path}")
+    if benchmark_b_pilot_selection_report_path is not None:
+        manifest_parts.append(f"--benchmark-b-pilot-selection-report {benchmark_b_pilot_selection_report_path}")
     for baseline_report_path in baseline_report_paths:
         manifest_parts.append(f"--baseline-report {baseline_report_path}")
     manifest_parts.append("--write")
@@ -620,6 +662,10 @@ def _default_commands(
         "python -m benchmark.layer3.analysis.reconcile_ablation --write",
         "baselines": "PYTHONPATH=.:backend uv run --project backend --no-sync "
         "python -m benchmark.layer3.analysis.diagnose_baselines --write",
+        "benchmark_a_readiness": "PYTHONPATH=.:backend uv run --project backend --no-sync "
+        "python -m benchmark.layer3.analysis.benchmark_readiness --write",
+        "benchmark_b_pilot_selection": "PYTHONPATH=.:backend uv run --project backend --no-sync "
+        "python -m benchmark.layer3.analysis.select_benchmark_b_pilot --write",
         "g2_statistics": "PYTHONPATH=.:backend uv run --project backend --no-sync "
         "python -m benchmark.layer3.analysis.g2_statistics "
         f"--report {ablation_report_path} "

@@ -27,6 +27,8 @@ def _manifest_report(path: Path) -> Path:
                 "ablation_report": "benchmark/layer3/reports/reconcile_ablation_20260614_230554.json",
                 "g2_report": "benchmark/layer3/reports/g2_statistics_20260614_230555.json",
                 "traceability_report": "benchmark/layer3/reports/traceability_context_verifier_reconcile_20260614_213054.json",
+                "benchmark_a_readiness_report": "benchmark/layer3/reports/benchmark_readiness_20260615_180000.json",
+                "benchmark_b_pilot_selection_report": "benchmark/layer3/reports/benchmark_b_pilot_selection.json",
                 "baseline_reports": [
                     "benchmark/layer3/reports/baseline_b0_20260613_031120.json",
                 ],
@@ -95,6 +97,7 @@ def test_main_paper_tables_uses_frozen_manifest_and_reports(tmp_path: Path) -> N
     assert payload["tables"]["Table 3 Ablation study"][0]["strategy"] == "grounded_hard_rule"
     assert payload["tables"]["Table 4 Traceability metrics"][0]["strategy_or_baseline_id"] == "context_verifier_reconcile"
     assert payload["tables"]["Table 5 Error breakdown"][0]["root_cause"] == "wrong_relationship_semantics"
+    assert payload["tables"]["Table 6 Benchmark readiness and pilot selection"][0]["status"] == "report-available"
 
 
 def test_write_main_paper_tables_persists_md_and_csv(tmp_path: Path) -> None:

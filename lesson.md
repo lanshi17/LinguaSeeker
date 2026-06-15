@@ -2748,3 +2748,15 @@ lifecycle transitions.
 **Fix**: Renamed the file to `2026-06-15-learned-arbitrator-and-benchmark-expansion.md` so the path, title, and `docs/README.md` entry agree.
 
 **Prevention**: When a plan title changes, update the filename and all index links in the same edit so the docs tree stays self-consistent.
+
+## 2026-06-15 — Benchmark readiness and pilot selection must stay isolated from experimental claims
+
+**Problem**: While adding Benchmark A readiness and Benchmark B pilot support, it was easy to let the manifest and paper tables drift into implying completed experiments instead of current readiness state.
+
+**Investigation**: Traced how `main_paper_rescue_manifest.py` feeds `main_paper_tables.py`, then added the new report paths, status rows, and claim-matrix language separately so the documents could refer to frozen readiness artifacts without reclassifying them as results.
+
+**Root cause**: Readiness artifacts and result artifacts were being treated as the same kind of report. That makes it too easy for a paper-facing table to overstate what has actually been measured.
+
+**Solution**: Kept Benchmark A as a readiness report with explicit invalid/missing annotation states, froze Benchmark B as a deterministic pilot-selection manifest, and marked both as conservative status entries in the tables and claim matrix.
+
+**Prevention**: When a new paper-facing artifact is a status or freeze step, keep it separate from experimental metrics in both code and manuscript. Update the manifest, tables, and claim matrix together so they tell the same story.
