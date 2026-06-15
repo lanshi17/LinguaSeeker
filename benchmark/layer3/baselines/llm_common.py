@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
+import httpx
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -80,6 +81,50 @@ class LLMRuntimeConfig:
     timeout: int
 
 
+@dataclass
+class RawOpenAICompatibleClient:
+    """Minimal OpenAI-compatible chat client for provider aliases LangChain cannot parse."""
+
+    model: str
+    base_url: str
+    api_keys: list[str]
+    temperature: float
+    max_tokens: int
+    timeout: int
+    _next_key_index: int = 0
+
+    def request_payload(self, prompt: str) -> dict[str, object]:
+        """Build the OpenAI-compatible chat completion payload."""
+        return {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+        }
+
+    async def ainvoke_json_text(self, prompt: str) -> str:
+        """Invoke chat completions and return the assistant text content."""
+        key = self._next_api_key()
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.post(
+                f"{self.base_url.rstrip('/')}/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {key}",
+                    "Content-Type": "application/json",
+                },
+                json=self.request_payload(prompt),
+            )
+        response.raise_for_status()
+        return _extract_chat_content(response.json())
+
+    def _next_api_key(self) -> str:
+        if not self.api_keys:
+            return ""
+        key = self.api_keys[self._next_key_index % len(self.api_keys)]
+        self._next_key_index += 1
+        return key
+
+
 class LLMBaselineExtractor:
     """Single-call and two-call LLM baselines for ClinGen evidence extraction."""
 
@@ -91,19 +136,33 @@ class LLMBaselineExtractor:
         temperature: float = 0.0,
         max_tokens_override: int | None = None,
         input_max_chars: int = 50000,
+        use_raw_client: bool = False,
     ):
         self._mode = mode
         self._input_max_chars = input_max_chars
         runtime = _runtime_config(use_reasoning=mode == "single_agent_cot")
         model = model_override or runtime.model
-        self._client = create_llm_client(
-            model=model,
-            base_url=runtime.base_url,
-            api_keys=runtime.api_keys,
-            temperature=temperature,
-            max_tokens=max_tokens_override or runtime.max_tokens,
-            timeout=runtime.timeout,
-        )
+        max_tokens = max_tokens_override or runtime.max_tokens
+        self._raw_client: RawOpenAICompatibleClient | None = None
+        self._client: LLMPoolAdapter | None = None
+        if use_raw_client:
+            self._raw_client = RawOpenAICompatibleClient(
+                model=model,
+                base_url=runtime.base_url,
+                api_keys=runtime.api_keys,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                timeout=runtime.timeout,
+            )
+        else:
+            self._client = create_llm_client(
+                model=model,
+                base_url=runtime.base_url,
+                api_keys=runtime.api_keys,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                timeout=runtime.timeout,
+            )
 
     async def extract(self, entry: BaselineEntry, source_text: str) -> list[BaselineEvidenceItem]:
         working_text = source_text
@@ -113,7 +172,12 @@ class LLMBaselineExtractor:
             working_text = _select_relevant_snippets(source_text, entry)
 
         prompt = _build_extraction_prompt(self._mode, entry, working_text, max_chars=self._input_max_chars)
-        response = await _invoke_json(self._client, prompt)
+        if self._raw_client is not None:
+            response = await _invoke_json_raw(self._raw_client, prompt)
+        elif self._client is not None:
+            response = await _invoke_json(self._client, prompt)
+        else:
+            raise RuntimeError("baseline LLM client is not configured")
         return [
             BaselineEvidenceItem(
                 field_id=item.field_id,
@@ -136,6 +200,8 @@ class LLMBaselineExtractor:
             "Return only the English translation.\n\n"
             f"{_truncate_text(source_text, max_chars=50000)}"
         )
+        if self._client is None:
+            raise RuntimeError("translation baseline requires the LangChain client")
         message = await self._client.ainvoke([HumanMessage(content=prompt)])
         if not isinstance(message.content, str):
             raise RuntimeError("translation baseline returned non-text content")
@@ -149,6 +215,7 @@ def make_extractor(
     temperature: float = 0.0,
     max_tokens_override: int | None = None,
     input_max_chars: int = 50000,
+    use_raw_client: bool = False,
 ) -> LLMBaselineExtractor:
     """Create an LLM-backed baseline extractor."""
     return LLMBaselineExtractor(
@@ -157,6 +224,7 @@ def make_extractor(
         temperature=temperature,
         max_tokens_override=max_tokens_override,
         input_max_chars=input_max_chars,
+        use_raw_client=use_raw_client,
     )
 
 
@@ -205,6 +273,35 @@ async def _invoke_json(client: LLMPoolAdapter, prompt: str) -> BaselineLLMRespon
         if not match:
             raise
         return BaselineLLMResponse.model_validate(json.loads(match.group(0)))
+
+
+async def _invoke_json_raw(client: RawOpenAICompatibleClient, prompt: str) -> BaselineLLMResponse:
+    json_text = strip_json_fences(await client.ainvoke_json_text(prompt))
+    try:
+        return BaselineLLMResponse.model_validate_json(json_text)
+    except (ValidationError, ValueError):
+        match = re.search(r"\{.*\}", json_text, flags=re.DOTALL)
+        if not match:
+            raise
+        return BaselineLLMResponse.model_validate(json.loads(match.group(0)))
+
+
+def _extract_chat_content(payload: object) -> str:
+    if not isinstance(payload, dict):
+        raise RuntimeError("raw baseline response is not a JSON object")
+    choices = payload.get("choices")
+    if not isinstance(choices, list) or not choices:
+        raise RuntimeError("raw baseline response missing choices")
+    first_choice = choices[0]
+    if not isinstance(first_choice, dict):
+        raise RuntimeError("raw baseline first choice is not an object")
+    message = first_choice.get("message")
+    if not isinstance(message, dict):
+        raise RuntimeError("raw baseline response missing message")
+    content = message.get("content")
+    if not isinstance(content, str):
+        raise RuntimeError("raw baseline response content is not text")
+    return content
 
 
 def _build_extraction_prompt(
