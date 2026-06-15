@@ -2,9 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Status:** planned
+**Status:** stopped — Gate A failed, learned arbitrator kept as negative ablation
 **Created:** 2026-06-15
-**Completed:** —
+**Completed:** 2026-06-15 (Phase 0 + Phase A)
 **PR:** —
 
 **Goal:** Improve CrossEvidence's main-paper evidence quality by testing whether a learned, interpretable arbitrator can outperform the current contextual verifier reconcile, while expanding the benchmark only where it strengthens statistical power and held-out generalization.
