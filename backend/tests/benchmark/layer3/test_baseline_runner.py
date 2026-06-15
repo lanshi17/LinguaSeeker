@@ -216,6 +216,45 @@ def test_baseline_llm_response_normalizes_confidence_labels() -> None:
     assert [item.confidence for item in response.evidence_items] == [0.9, 0.9, 0.6, 0.3]
 
 
+def test_baseline_llm_response_normalizes_schema_drift() -> None:
+    from benchmark.layer3.baselines.llm_common import BaselineLLMResponse
+
+    response = BaselineLLMResponse.model_validate(
+        {
+            "evidence_items": [
+                {
+                    "field_id": "A.gene_disease_relationship",
+                    "status": "uncertain",
+                    "value": "uncertain",
+                    "confidence": "",
+                },
+                {
+                    "field_id": "B.disease_diagnosis",
+                    "status": "not_found",
+                    "value": "",
+                    "confidence": "N/A",
+                },
+                {
+                    "field_id": "A.gene_symbol",
+                    "status": "not_found",
+                    "value": "",
+                    "confidence": None,
+                },
+                {
+                    "field_id": "A.gene_disease_relationship",
+                    "status": "not_found",
+                    "value": "",
+                    "confidence": "No explicit support in the source text.",
+                }
+            ]
+        }
+    )
+
+    assert response.evidence_items[0].status == "found"
+    assert response.evidence_items[0].value == "uncertain"
+    assert [item.confidence for item in response.evidence_items] == [0.0, 0.0, 0.0, 0.0]
+
+
 def test_translate_then_extract_skips_translation_for_english_source() -> None:
     from benchmark.layer3.baselines.llm_common import should_translate_before_extract
 
@@ -231,3 +270,33 @@ def test_translate_then_extract_skips_translation_for_english_source() -> None:
         "naive",
         "MECP2 基因突变可导致 Rett 综合征。",
     )
+
+
+def test_baseline_report_serializes_metadata(tmp_path: Path) -> None:
+    from benchmark.layer3.baselines.runner import BaselineConfig, BaselineReport, _serialize_report
+
+    report = BaselineReport(
+        baseline_id="B6_GPT5_PROMPT_CITE",
+        baseline_name="GPT-5 prompt-only citation-required",
+        total_entries=0,
+        total_duration_s=0.0,
+        aggregates={"overall": {"precision": 0.0, "recall": 0.0, "f1": 0.0}},
+        per_entry=[],
+    )
+    config = BaselineConfig(
+        baseline_id="B6_GPT5_PROMPT_CITE",
+        baseline_name="GPT-5 prompt-only citation-required",
+        ground_truth_dir=tmp_path,
+        reports_dir=tmp_path,
+        metadata={
+            "model": "gpt-5",
+            "prompt_mode": "citation_required",
+            "temperature": 0.0,
+        },
+    )
+
+    payload = _serialize_report(report, config, None)
+
+    assert payload["config"]["model"] == "gpt-5"
+    assert payload["config"]["prompt_mode"] == "citation_required"
+    assert payload["config"]["temperature"] == 0.0

@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
+import httpx
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -18,7 +19,15 @@ from src.utils.llm_adapter import LLMPoolAdapter, create_llm_client
 from src.utils.text import strip_json_fences
 
 
-BaselineMode = Literal["naive", "translate_then_extract", "original_only", "rag", "single_agent_cot"]
+BaselineMode = Literal[
+    "naive",
+    "translate_then_extract",
+    "original_only",
+    "rag",
+    "single_agent_cot",
+    "citation_required",
+    "direct_json",
+]
 
 
 class BaselineLLMEvidenceItem(BaseModel):
@@ -28,13 +37,32 @@ class BaselineLLMEvidenceItem(BaseModel):
     status: Literal["found", "not_found"] = "not_found"
     value: str | int | float | bool | list[str] | None = ""
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    source_quote: str = ""
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalize_status(cls, value: object) -> object:
+        """Accept common prompt-only schema drift in status values."""
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"", "none", "unknown", "not found", "not_found"}:
+                return "not_found"
+            if normalized not in {"found", "not_found"}:
+                return "found"
+        return value
 
     @field_validator("confidence", mode="before")
     @classmethod
     def normalize_confidence(cls, value: object) -> object:
         """Accept common LLM confidence labels in addition to numeric scores."""
+        if value is None:
+            return 0.0
         if isinstance(value, str):
             normalized = value.strip().lower()
+            if not normalized:
+                return 0.0
+            if normalized in {"n/a", "na", "not applicable", "not_applicable"}:
+                return 0.0
             label_scores = {
                 "high": 0.9,
                 "strong": 0.9,
@@ -50,7 +78,11 @@ class BaselineLLMEvidenceItem(BaseModel):
                 try:
                     return float(normalized[:-1]) / 100.0
                 except ValueError:
-                    return value
+                    return 0.0
+            try:
+                return float(normalized)
+            except ValueError:
+                return 0.0
         return value
 
 
@@ -71,20 +103,88 @@ class LLMRuntimeConfig:
     timeout: int
 
 
+@dataclass
+class RawOpenAICompatibleClient:
+    """Minimal OpenAI-compatible chat client for provider aliases LangChain cannot parse."""
+
+    model: str
+    base_url: str
+    api_keys: list[str]
+    temperature: float
+    max_tokens: int
+    timeout: int
+    _next_key_index: int = 0
+
+    def request_payload(self, prompt: str) -> dict[str, object]:
+        """Build the OpenAI-compatible chat completion payload."""
+        return {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+        }
+
+    async def ainvoke_json_text(self, prompt: str) -> str:
+        """Invoke chat completions and return the assistant text content."""
+        key = self._next_api_key()
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.post(
+                f"{self.base_url.rstrip('/')}/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {key}",
+                    "Content-Type": "application/json",
+                },
+                json=self.request_payload(prompt),
+            )
+        response.raise_for_status()
+        return _extract_chat_content(response.json())
+
+    def _next_api_key(self) -> str:
+        if not self.api_keys:
+            return ""
+        key = self.api_keys[self._next_key_index % len(self.api_keys)]
+        self._next_key_index += 1
+        return key
+
+
 class LLMBaselineExtractor:
     """Single-call and two-call LLM baselines for ClinGen evidence extraction."""
 
-    def __init__(self, mode: BaselineMode):
+    def __init__(
+        self,
+        mode: BaselineMode,
+        *,
+        model_override: str | None = None,
+        temperature: float = 0.0,
+        max_tokens_override: int | None = None,
+        input_max_chars: int = 50000,
+        use_raw_client: bool = False,
+    ):
         self._mode = mode
+        self._input_max_chars = input_max_chars
         runtime = _runtime_config(use_reasoning=mode == "single_agent_cot")
-        self._client = create_llm_client(
-            model=runtime.model,
-            base_url=runtime.base_url,
-            api_keys=runtime.api_keys,
-            temperature=0.0,
-            max_tokens=runtime.max_tokens,
-            timeout=runtime.timeout,
-        )
+        model = model_override or runtime.model
+        max_tokens = max_tokens_override or runtime.max_tokens
+        self._raw_client: RawOpenAICompatibleClient | None = None
+        self._client: LLMPoolAdapter | None = None
+        if use_raw_client:
+            self._raw_client = RawOpenAICompatibleClient(
+                model=model,
+                base_url=runtime.base_url,
+                api_keys=runtime.api_keys,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                timeout=runtime.timeout,
+            )
+        else:
+            self._client = create_llm_client(
+                model=model,
+                base_url=runtime.base_url,
+                api_keys=runtime.api_keys,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                timeout=runtime.timeout,
+            )
 
     async def extract(self, entry: BaselineEntry, source_text: str) -> list[BaselineEvidenceItem]:
         working_text = source_text
@@ -93,14 +193,24 @@ class LLMBaselineExtractor:
         if self._mode == "rag":
             working_text = _select_relevant_snippets(source_text, entry)
 
-        prompt = _build_extraction_prompt(self._mode, entry, working_text)
-        response = await _invoke_json(self._client, prompt)
+        prompt = _build_extraction_prompt(self._mode, entry, working_text, max_chars=self._input_max_chars)
+        if self._raw_client is not None:
+            response = await _invoke_json_raw(self._raw_client, prompt)
+        elif self._client is not None:
+            response = await _invoke_json(self._client, prompt)
+        else:
+            raise RuntimeError("baseline LLM client is not configured")
         return [
             BaselineEvidenceItem(
                 field_id=item.field_id,
                 status=item.status,
                 value=item.value,
                 confidence=item.confidence,
+                source_span=(
+                    quote_to_source_span(item.source_quote, source_text)
+                    if self._mode == "citation_required" and item.status == "found"
+                    else None
+                ),
             )
             for item in response.evidence_items
         ]
@@ -112,15 +222,32 @@ class LLMBaselineExtractor:
             "Return only the English translation.\n\n"
             f"{_truncate_text(source_text, max_chars=50000)}"
         )
+        if self._client is None:
+            raise RuntimeError("translation baseline requires the LangChain client")
         message = await self._client.ainvoke([HumanMessage(content=prompt)])
         if not isinstance(message.content, str):
             raise RuntimeError("translation baseline returned non-text content")
         return message.content
 
 
-def make_extractor(mode: BaselineMode) -> LLMBaselineExtractor:
+def make_extractor(
+    mode: BaselineMode,
+    *,
+    model_override: str | None = None,
+    temperature: float = 0.0,
+    max_tokens_override: int | None = None,
+    input_max_chars: int = 50000,
+    use_raw_client: bool = False,
+) -> LLMBaselineExtractor:
     """Create an LLM-backed baseline extractor."""
-    return LLMBaselineExtractor(mode=mode)
+    return LLMBaselineExtractor(
+        mode=mode,
+        model_override=model_override,
+        temperature=temperature,
+        max_tokens_override=max_tokens_override,
+        input_max_chars=input_max_chars,
+        use_raw_client=use_raw_client,
+    )
 
 
 def should_translate_before_extract(mode: BaselineMode, source_text: str) -> bool:
@@ -170,7 +297,42 @@ async def _invoke_json(client: LLMPoolAdapter, prompt: str) -> BaselineLLMRespon
         return BaselineLLMResponse.model_validate(json.loads(match.group(0)))
 
 
-def _build_extraction_prompt(mode: BaselineMode, entry: BaselineEntry, document_text: str) -> str:
+async def _invoke_json_raw(client: RawOpenAICompatibleClient, prompt: str) -> BaselineLLMResponse:
+    json_text = strip_json_fences(await client.ainvoke_json_text(prompt))
+    try:
+        return BaselineLLMResponse.model_validate_json(json_text)
+    except (ValidationError, ValueError):
+        match = re.search(r"\{.*\}", json_text, flags=re.DOTALL)
+        if not match:
+            raise
+        return BaselineLLMResponse.model_validate(json.loads(match.group(0)))
+
+
+def _extract_chat_content(payload: object) -> str:
+    if not isinstance(payload, dict):
+        raise RuntimeError("raw baseline response is not a JSON object")
+    choices = payload.get("choices")
+    if not isinstance(choices, list) or not choices:
+        raise RuntimeError("raw baseline response missing choices")
+    first_choice = choices[0]
+    if not isinstance(first_choice, dict):
+        raise RuntimeError("raw baseline first choice is not an object")
+    message = first_choice.get("message")
+    if not isinstance(message, dict):
+        raise RuntimeError("raw baseline response missing message")
+    content = message.get("content")
+    if not isinstance(content, str):
+        raise RuntimeError("raw baseline response content is not text")
+    return content
+
+
+def _build_extraction_prompt(
+    mode: BaselineMode,
+    entry: BaselineEntry,
+    document_text: str,
+    *,
+    max_chars: int = 50000,
+) -> str:
     mode_instruction = {
         "naive": "Use one direct extraction pass. Do not perform multi-stage validation.",
         "translate_then_extract": "The document has already been translated to English. Extract from this translation only.",
@@ -180,7 +342,21 @@ def _build_extraction_prompt(mode: BaselineMode, entry: BaselineEntry, document_
             "Think through the evidence internally as a single agent, but return only the final JSON object. "
             "Do not expose reasoning text."
         ),
+        "citation_required": (
+            "Use one direct prompt-only extraction pass. Do not use tools, retrieval, multi-agent validation, "
+            "evidence graphs, or reconciliation. For each found field, include source_quote as a verbatim "
+            "contiguous quote from the document text."
+        ),
+        "direct_json": "Use one direct extraction pass. Do not perform multi-stage validation.",
     }[mode]
+    citation_instruction = (
+        "Each evidence item must have field_id, status (found or not_found), value, confidence, "
+        "and source_quote. For found items, source_quote must be a verbatim contiguous excerpt "
+        "from the document text, preferably <= 240 characters. For not_found items, source_quote "
+        "must be an empty string.\n"
+        if mode == "citation_required"
+        else "Each evidence item must have field_id, status (found or not_found), value, and confidence.\n"
+    )
     return (
         "You are evaluating a baseline for ACMG/ClinGen gene-disease evidence extraction.\n"
         f"{mode_instruction}\n\n"
@@ -191,11 +367,40 @@ def _build_extraction_prompt(mode: BaselineMode, entry: BaselineEntry, document_
         "- A.gene_symbol: the target gene symbol if supported\n"
         "- B.disease_diagnosis: the target disease or phenotype if supported\n"
         "- A.gene_disease_relationship: one of causative, disputed, refuted, uncertain, or not_found\n\n"
-        "Each evidence item must have field_id, status (found or not_found), value, and confidence.\n"
+        f"{citation_instruction}"
         "Return only JSON. Do not add Markdown fences or explanation.\n\n"
         "Document text:\n"
-        f"{_truncate_text(document_text, max_chars=50000)}"
+        f"{_truncate_text(document_text, max_chars=max_chars)}"
     )
+
+
+def quote_to_source_span(source_quote: str, source_text: str) -> dict[str, object]:
+    """Map an LLM-provided quote to canonical source text for measurement only."""
+    quote = source_quote.strip()
+    if not quote:
+        return {
+            "span_id": "llm-quote",
+            "start_offset": -1,
+            "end_offset": -1,
+            "text_snippet": "",
+            "source_precision": "llm_quote_missing",
+        }
+    start = source_text.find(quote)
+    if start >= 0:
+        return {
+            "span_id": "llm-quote",
+            "start_offset": start,
+            "end_offset": start + len(quote),
+            "text_snippet": quote,
+            "source_precision": "llm_quote_exact",
+        }
+    return {
+        "span_id": "llm-quote",
+        "start_offset": -1,
+        "end_offset": -1,
+        "text_snippet": quote,
+        "source_precision": "llm_quote_unmapped",
+    }
 
 
 def _select_relevant_snippets(source_text: str, entry: BaselineEntry, max_chars: int = 12000) -> str:

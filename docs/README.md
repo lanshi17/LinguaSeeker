@@ -65,7 +65,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
-| 2026-06-15 | [Prompt-Only Frontier Model Baselines](planned/2026-06-15-prompt-only-frontier-model-baselines.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Next Gate Plan](planned/2026-06-14-bibm-main-paper-next-gate-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Detailed Plan](planned/2026-06-14-bibm-main-paper-detailed-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Rescue Plan](planned/2026-06-14-bibm-main-paper-rescue.md) | planned |
@@ -82,7 +81,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Archive Index
 
-The `archive/plans/` directory contains 72 completed plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
+The `archive/plans/` directory contains 73 completed plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
 
 ## Module README Index
 
