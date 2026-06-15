@@ -1,5 +1,17 @@
 # Lesson Log
 
+# 2026-06-15: BIBM TeX draft needed explicit source checks and source-controlled structure
+
+**Problem**: The paper draft had to satisfy a conference template constraint set, while the external citations and formatted tables needed to stay scientifically defensible rather than looking like a project report. A naive first pass could easily drift into overclaiming or create layout issues that only show up at compile time.
+
+**Investigation**: Verified the BIBM CFP requirement that full papers are up to 8 pages in IEEE 2-column format and double blind, then wrote the manuscript in IEEEtran conference style with anonymous authors, compact tables, and a schematic vector method figure. Also checked citation-key closure and source-text structure for the TeX draft.
+
+**Root cause**: The main risk was not algorithmic logic but paper packaging: template mismatch, missing anonymous formatting, and bibliography drift from the source papers.
+
+**Fix**: Keep the draft inside an isolated worktree, use IEEEtran conference structure, keep the figure vector and schematic, keep table density high but readable, and treat verified external sources as the only bibliography inputs.
+
+**Prevention**: For future paper drafts, validate the conference format first, then add the manuscript content in a source-controlled directory with explicit figure/table constraints and citation-key closure checks before considering the draft done.
+
 ## 2026-06-14: Simple whitespace edits must use apply_patch or formatter, not ad hoc Python
 
 **Problem**: During BIBM research branch cleanup, a simple trailing-whitespace / blank-line-at-EOF fix was applied with a one-off Python script.
