@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from benchmark.layer3.baselines.llm_common import (
     BaselineLLMEvidenceItem,
+    _build_extraction_prompt,
     quote_to_source_span,
 )
+from benchmark.layer3.baselines.runner import BaselineEntry
 
 
 def test_baseline_llm_evidence_item_accepts_source_quote() -> None:
@@ -43,3 +45,24 @@ def test_quote_to_source_span_preserves_unmapped_quote_for_hcr() -> None:
     assert span["end_offset"] == -1
     assert span["text_snippet"] == "This quote is not present."
     assert span["source_precision"] == "llm_quote_unmapped"
+
+
+def test_citation_required_prompt_requests_source_quote() -> None:
+    prompt = _build_extraction_prompt(
+        "citation_required",
+        BaselineEntry(entry_id="clingen_000", gene_symbol="MECP2", disease_label="Rett syndrome"),
+        "Mutations in MECP2 cause Rett syndrome.",
+    )
+
+    assert "source_quote" in prompt
+    assert "verbatim contiguous excerpt" in prompt
+
+
+def test_direct_prompt_does_not_request_source_quote() -> None:
+    prompt = _build_extraction_prompt(
+        "naive",
+        BaselineEntry(entry_id="clingen_000", gene_symbol="MECP2", disease_label="Rett syndrome"),
+        "Mutations in MECP2 cause Rett syndrome.",
+    )
+
+    assert "source_quote" not in prompt

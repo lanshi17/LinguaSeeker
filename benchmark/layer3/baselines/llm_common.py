@@ -90,8 +90,10 @@ class LLMBaselineExtractor:
         model_override: str | None = None,
         temperature: float = 0.0,
         max_tokens_override: int | None = None,
+        input_max_chars: int = 50000,
     ):
         self._mode = mode
+        self._input_max_chars = input_max_chars
         runtime = _runtime_config(use_reasoning=mode == "single_agent_cot")
         model = model_override or runtime.model
         self._client = create_llm_client(
@@ -110,7 +112,7 @@ class LLMBaselineExtractor:
         if self._mode == "rag":
             working_text = _select_relevant_snippets(source_text, entry)
 
-        prompt = _build_extraction_prompt(self._mode, entry, working_text)
+        prompt = _build_extraction_prompt(self._mode, entry, working_text, max_chars=self._input_max_chars)
         response = await _invoke_json(self._client, prompt)
         return [
             BaselineEvidenceItem(
@@ -146,6 +148,7 @@ def make_extractor(
     model_override: str | None = None,
     temperature: float = 0.0,
     max_tokens_override: int | None = None,
+    input_max_chars: int = 50000,
 ) -> LLMBaselineExtractor:
     """Create an LLM-backed baseline extractor."""
     return LLMBaselineExtractor(
@@ -153,6 +156,7 @@ def make_extractor(
         model_override=model_override,
         temperature=temperature,
         max_tokens_override=max_tokens_override,
+        input_max_chars=input_max_chars,
     )
 
 
@@ -203,7 +207,13 @@ async def _invoke_json(client: LLMPoolAdapter, prompt: str) -> BaselineLLMRespon
         return BaselineLLMResponse.model_validate(json.loads(match.group(0)))
 
 
-def _build_extraction_prompt(mode: BaselineMode, entry: BaselineEntry, document_text: str) -> str:
+def _build_extraction_prompt(
+    mode: BaselineMode,
+    entry: BaselineEntry,
+    document_text: str,
+    *,
+    max_chars: int = 50000,
+) -> str:
     mode_instruction = {
         "naive": "Use one direct extraction pass. Do not perform multi-stage validation.",
         "translate_then_extract": "The document has already been translated to English. Extract from this translation only.",
@@ -220,6 +230,14 @@ def _build_extraction_prompt(mode: BaselineMode, entry: BaselineEntry, document_
         ),
         "direct_json": "Use one direct extraction pass. Do not perform multi-stage validation.",
     }[mode]
+    citation_instruction = (
+        "Each evidence item must have field_id, status (found or not_found), value, confidence, "
+        "and source_quote. For found items, source_quote must be a verbatim contiguous excerpt "
+        "from the document text, preferably <= 240 characters. For not_found items, source_quote "
+        "must be an empty string.\n"
+        if mode == "citation_required"
+        else "Each evidence item must have field_id, status (found or not_found), value, and confidence.\n"
+    )
     return (
         "You are evaluating a baseline for ACMG/ClinGen gene-disease evidence extraction.\n"
         f"{mode_instruction}\n\n"
@@ -230,13 +248,10 @@ def _build_extraction_prompt(mode: BaselineMode, entry: BaselineEntry, document_
         "- A.gene_symbol: the target gene symbol if supported\n"
         "- B.disease_diagnosis: the target disease or phenotype if supported\n"
         "- A.gene_disease_relationship: one of causative, disputed, refuted, uncertain, or not_found\n\n"
-        "Each evidence item must have field_id, status (found or not_found), value, confidence, "
-        "and source_quote. For found items, source_quote must be a verbatim contiguous excerpt "
-        "from the document text, preferably <= 240 characters. For not_found items, source_quote "
-        "must be an empty string.\n"
+        f"{citation_instruction}"
         "Return only JSON. Do not add Markdown fences or explanation.\n\n"
         "Document text:\n"
-        f"{_truncate_text(document_text, max_chars=50000)}"
+        f"{_truncate_text(document_text, max_chars=max_chars)}"
     )
 
 
