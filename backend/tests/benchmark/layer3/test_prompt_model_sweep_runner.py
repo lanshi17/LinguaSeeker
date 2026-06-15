@@ -77,8 +77,37 @@ def test_build_extractor_uses_manifest_input_max_chars(monkeypatch) -> None:
             "temperature": 0.0,
             "max_tokens_override": 4096,
             "input_max_chars": 12000,
+            "use_raw_client": True,
         }
     ]
+
+
+def test_build_extractor_uses_raw_client_by_default(monkeypatch) -> None:
+    calls: list[dict[str, object]] = []
+
+    def fake_make_extractor(**kwargs):  # noqa: ANN001
+        calls.append(kwargs)
+        return object()
+
+    monkeypatch.setattr("benchmark.layer3.baselines.prompt_model_sweep.make_extractor", fake_make_extractor)
+    manifest = PromptModelSweepManifest(
+        run_label="prompt_frontier_20260615",
+        prompt_mode="citation_required",
+        temperature=0.0,
+        max_tokens=4096,
+        input_max_chars=12000,
+        models=(),
+    )
+    spec = PromptModelSpec(
+        baseline_id="B6_GPT5_PROMPT_CITE",
+        baseline_name="GPT-5 prompt-only citation-required",
+        provider_family="openai",
+        model="gpt-5",
+    )
+
+    build_extractor(manifest=manifest, spec=spec)
+
+    assert calls[0]["use_raw_client"] is True
 
 
 @pytest.mark.asyncio
