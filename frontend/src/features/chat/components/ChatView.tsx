@@ -9,6 +9,7 @@ import {
 } from "@ant-design/x";
 import type { SenderRef } from "@ant-design/x/es/sender/interface";
 import { useXChat, useXConversations } from "@ant-design/x-sdk";
+import type { MessageInfo } from "@ant-design/x-sdk/es/x-chat";
 import { RobotOutlined, UserOutlined, DeleteOutlined } from "@ant-design/icons";
 import { Avatar, Modal, message as antdMessage } from "antd";
 import {
@@ -25,7 +26,9 @@ import {
 import {
   toUniqueChatMessageKeys,
   toXChatDefaultMessages,
+  type ChatBubbleMessage,
 } from "../utils/messageHistory";
+import { clearCachedMessageStore } from "../utils/messageStore";
 import type { ChatAction, ChatActionIntent } from "../types/actions";
 import { ChatMarkdown } from "../utils/markdown";
 import { PipelineStartForm, PipelineStatusCard } from "./forms";
@@ -180,6 +183,33 @@ function WelcomeBlock({ onPick }: WelcomeBlockProps) {
   );
 }
 
+// ─── Per-session ephemeral UI state shape ──────────────────────────────
+
+interface PerSessionUIState {
+  activeForm: ChatActionIntent | null;
+  activeFormSlots: ChatAction["slots"] | null;
+  dispatchedActions: Set<string>;
+  pipelineStatus: {
+    runId: string;
+    status: string;
+    phases?: Record<
+      string,
+      { status: string; duration_seconds?: number | null }
+    >;
+  } | null;
+}
+
+/** Returns a fresh default state object. Uses a factory (not a constant)
+ *  so that `dispatchedActions` is never shared across sessions. */
+function createEmptySessionUI(): PerSessionUIState {
+  return {
+    activeForm: null,
+    activeFormSlots: null,
+    dispatchedActions: new Set<string>(),
+    pipelineStatus: null,
+  };
+}
+
 // ─── Main ChatView ─────────────────────────────────────────────────────
 
 export function ChatView({ processingRunId, sessionId }: ChatViewProps) {
@@ -302,43 +332,113 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     ? getProvider(activeConversationKey)
     : undefined;
 
-  const loadDefaultMessages = useCallback(
-    async (info?: { conversationKey?: string }) => {
-      if (!info?.conversationKey) return [];
-      const history = await listMessages(info.conversationKey);
-      return toXChatDefaultMessages(history);
-    },
-    [],
-  );
-
   const {
     messages,
     onRequest,
     isRequesting,
     abort,
-    queueRequest,
+    setMessages,
   } = useXChat({
     provider: activeProvider,
     conversationKey: activeConversationKey,
-    defaultMessages: loadDefaultMessages,
+    defaultMessages: async () => [],
   });
 
-  // ── Embedded form state (declared before callbacks that use it) ──
-  const [activeForm, setActiveForm] = useState<ChatActionIntent | null>(null);
-  const [activeFormSlots, setActiveFormSlots] = useState<
-    ChatAction["slots"] | null
-  >(null);
-  const [dispatchedActions, setDispatchedActions] = useState<Set<string>>(
-    () => new Set(),
+  // Explicit, deterministic message hydration on session switch.
+  // Runs on every `activeConversationKey` change — including the *second*
+  // time we visit a session, where the SDK's cached store would otherwise
+  // re-render stale bubbles until its async defaultMessages resolved.
+  useEffect(() => {
+    let cancelled = false;
+    if (!activeConversationKey) {
+      setMessages([]);
+      return;
+    }
+
+    // Abort any in-flight SSE stream from the previous session so
+    // its updateMessage calls don't write into the now-stale store.
+    abort();
+
+    // Clear the visible list synchronously so no previous-session bubble
+    // can flash while the network call is in flight.
+    setMessages([]);
+
+    listMessages(activeConversationKey)
+      .then((history) => {
+        if (cancelled) return;
+        // toXChatDefaultMessages always provides `id`; cast past the
+        // optional-id stub that DefaultMessageInfo uses.
+        setMessages(
+          toXChatDefaultMessages(history) as MessageInfo<ChatBubbleMessage>[],
+        );
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setMessages([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [abort, activeConversationKey, setMessages]);
+
+  // ── Per-session ephemeral UI state ──
+  const [sessionUI, setSessionUI] = useState<Record<string, PerSessionUIState>>(
+    {},
   );
-  const [pipelineStatus, setPipelineStatus] = useState<{
-    runId: string;
-    status: string;
-    phases?: Record<
-      string,
-      { status: string; duration_seconds?: number | null }
-    >;
-  } | null>(null);
+
+  const activeUI: PerSessionUIState = activeConversationKey
+    ? (sessionUI[activeConversationKey] ?? createEmptySessionUI())
+    : createEmptySessionUI();
+  const { activeForm, activeFormSlots, dispatchedActions, pipelineStatus } =
+    activeUI;
+
+  const updateActiveUI = useCallback(
+    (updater: (prev: PerSessionUIState) => PerSessionUIState) => {
+      if (!activeConversationKey) return;
+      const key = activeConversationKey;
+      setSessionUI((prev) => ({
+        ...prev,
+        [key]: updater(prev[key] ?? createEmptySessionUI()),
+      }));
+    },
+    [activeConversationKey],
+  );
+
+  const setActiveForm = useCallback(
+    (intent: ChatActionIntent | null) =>
+      updateActiveUI((p) => ({ ...p, activeForm: intent })),
+    [updateActiveUI],
+  );
+  const setActiveFormSlots = useCallback(
+    (slots: ChatAction["slots"] | null) =>
+      updateActiveUI((p) => ({ ...p, activeFormSlots: slots })),
+    [updateActiveUI],
+  );
+  const setPipelineStatus = useCallback(
+    (
+      status:
+        | PerSessionUIState["pipelineStatus"]
+        | ((
+            prev: PerSessionUIState["pipelineStatus"],
+          ) => PerSessionUIState["pipelineStatus"]),
+    ) =>
+      updateActiveUI((p) => ({
+        ...p,
+        pipelineStatus:
+          typeof status === "function" ? status(p.pipelineStatus) : status,
+      })),
+    [updateActiveUI],
+  );
+  const setDispatchedActions = useCallback(
+    (next: Set<string> | ((prev: Set<string>) => Set<string>)) =>
+      updateActiveUI((p) => ({
+        ...p,
+        dispatchedActions:
+          typeof next === "function" ? next(p.dispatchedActions) : next,
+      })),
+    [updateActiveUI],
+  );
 
   const createAndActivateSession = useCallback(async (): Promise<string> => {
     const session = await createSession();
@@ -363,10 +463,6 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     processingRunId,
   ]);
 
-  const ensureActiveSession = useCallback(async (): Promise<string> => {
-    if (activeConversationKey) return activeConversationKey;
-    return createAndActivateSession();
-  }, [activeConversationKey, createAndActivateSession]);
 
   const handleDispatchAction = useCallback(
     (action: ChatAction, key?: string) => {
@@ -409,6 +505,13 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
   );
 
   // ── Send message: create session if needed, POST to persist, then stream AI reply ──
+  //
+  // NOTE: We use onRequest from useXChat (not provider.request directly)
+  // because onRequest also manages local message state (user bubble,
+  // loading indicator, streaming updates). The double-rAF ensures the
+  // React state update from createAndActivateSession has committed and
+  // the derived `activeProvider` points at the new session's provider
+  // before onRequest dispatches the SSE stream.
   const handleSendMessage = useCallback(
     async (content: string) => {
       const trimmed = content.trim();
@@ -418,19 +521,18 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       setActiveFormSlots(null);
 
       try {
-        const sessionKey = await ensureActiveSession();
-        await sendChatMessage(sessionKey, trimmed);
-        captureFirstMessageLabel(sessionKey, trimmed);
-        const request = {
-          messages: [{ role: "user" as const, content: trimmed }],
-        };
-
-        if (sessionKey === activeConversationKey) {
-          onRequest(request);
-          return;
+        let sessionKey = activeConversationKey;
+        if (!sessionKey) {
+          sessionKey = await createAndActivateSession();
+          // Wait for the provider re-render to commit.
+          await new Promise<void>((resolve) => {
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+          });
         }
 
-        queueRequest(sessionKey, request);
+        await sendChatMessage(sessionKey, trimmed);
+        captureFirstMessageLabel(sessionKey, trimmed);
+        onRequest({ messages: [{ role: "user" as const, content: trimmed }] });
       } catch {
         antdMessage.error("Failed to send message");
       }
@@ -438,9 +540,8 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     [
       activeConversationKey,
       captureFirstMessageLabel,
-      ensureActiveSession,
+      createAndActivateSession,
       onRequest,
-      queueRequest,
       setActiveForm,
       setActiveFormSlots,
     ],
@@ -487,7 +588,7 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
       }
     };
     setTimeout(poll, 1000);
-  }, []);
+  }, [setPipelineStatus]);
 
   // ── Pipeline form submit ──
   const handlePipelineSubmit = useCallback(
@@ -680,8 +781,15 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
         okButtonProps: { danger: true },
         cancelText: "Cancel",
         onOk: () => {
+          clearCachedMessageStore(sessionId);
           removeSession(sessionId);
           removeConversation(sessionId);
+          // Evict per-session UI state so it doesn't accumulate (#9).
+          setSessionUI((prev) => {
+            const next = { ...prev };
+            delete next[sessionId];
+            return next;
+          });
           if (activeConversationKey === sessionId) {
             const remaining = sessions.filter((s) => s.session_id !== sessionId);
             const next = remaining[0]?.session_id;
