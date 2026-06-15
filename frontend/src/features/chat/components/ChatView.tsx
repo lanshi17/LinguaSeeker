@@ -928,12 +928,59 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
     [sessionId],
   );
 
-  const { messages, onRequest, isRequesting, abort } = useXChat({
+  const xChat = useXChat({
     provider,
     conversationKey: sessionId,
-    defaultMessages: async () =>
-      toXChatDefaultMessages(await listMessages(sessionId)),
+    defaultMessages: async () => [], // Start empty, load in useEffect
   });
+
+  // Guard against undefined returns from useXChat
+  const messages = xChat?.messages ?? [];
+  const onRequest = xChat?.onRequest;
+  const isRequesting = xChat?.isRequesting ?? false;
+  const abort = xChat?.abort;
+  const setMessages = xChat?.setMessages;
+
+  // Explicit message hydration on mount (same pattern as FullChatView)
+  useEffect(() => {
+    let cancelled = false;
+    
+    setMessages?.([]);
+    
+    listMessages(sessionId)
+      .then((history) => {
+        if (cancelled) return;
+        setMessages?.(
+          toXChatDefaultMessages(history) as MessageInfo<ChatBubbleMessage>[],
+        );
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setMessages?.([]);
+      });
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId, setMessages]);
+
+  const handleQuickAction = useCallback(
+    (message: string) => {
+      const task = (async () => {
+        try {
+          await sendChatMessage(sessionId, message);
+          // Use onRequest to properly manage useXChat state
+          if (onRequest) {
+            onRequest({ messages: [{ role: "user" as const, content: message }] });
+          }
+        } catch {
+          antdMessage.error("Failed to send message");
+        }
+      })();
+      void task;
+    },
+    [onRequest, sessionId],
+  );
 
   const bubbleItems = useMemo(() => {
     const messageKeys = toUniqueChatMessageKeys(messages);
@@ -977,12 +1024,12 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
         streaming: false,
         loading: false,
         variant: "borderless",
-        contentRender: () => <WelcomeBlock />,
+        contentRender: () => <WelcomeBlock onPick={handleQuickAction} />,
       });
     }
 
     return items;
-  }, [messages]);
+  }, [messages, handleQuickAction]);
 
   const senderRef = useRef<SenderRef>(null);
   const handleSingleSessionSubmit = useCallback(
@@ -992,7 +1039,11 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
       const task = (async () => {
         try {
           await sendChatMessage(sessionId, trimmed);
-          onRequest({ messages: [{ role: "user", content: trimmed }] });
+          if (onRequest) {
+            onRequest({ messages: [{ role: "user" as const, content: trimmed }] });
+          } else {
+            console.warn("[ChatView] onRequest is undefined - message sent but not displayed");
+          }
         } catch {
           antdMessage.error("Failed to send message");
         }
