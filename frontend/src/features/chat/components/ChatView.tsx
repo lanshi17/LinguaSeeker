@@ -359,7 +359,9 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
     // Abort any in-flight SSE stream from the previous session so
     // its updateMessage calls don't write into the now-stale store.
-    abort?.();
+    // Guarded on activeProvider: the SDK's abort closure is always
+    // defined but throws when invoked without a provider.
+    if (activeProvider) abort?.();
 
     // Clear the visible list synchronously so no previous-session bubble
     // can flash while the network call is in flight.
@@ -382,7 +384,10 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
     return () => {
       cancelled = true;
     };
-  }, [abort, activeConversationKey, setMessages]);
+    // activeProvider is derived from activeConversationKey + a stable cache
+    // and is included so the provider-guard inside the effect never closes
+    // over a stale (possibly undefined) provider reference.
+  }, [abort, activeConversationKey, activeProvider, setMessages]);
 
   // ── Per-session ephemeral UI state ──
   const [sessionUI, setSessionUI] = useState<Record<string, PerSessionUIState>>(
