@@ -1,1 +1,648 @@
-{"document_id": "774191ef-0889-4455-abed-40345a3d3a54", "original_result": {"status": "completed", "document_id": "774191ef-0889-4455-abed-40345a3d3a54", "track": "original", "evidence_map": {"relevant": true, "disease_terms": ["epilepsy", "drug-resistant epilepsy", "temporal lobe epilepsy", "tuberous sclerosis", "periventricular nodular heterotopia", "polymicrogyria", "post-traumatic epilepsy", "Lennox-Gastaut syndrome", "mesial temporal sclerosis", "infantile spasms", "epileptic encephalopathies", "Aicardi syndrome", "Delleman syndrome", "DiGeorge syndrome", "Warburg Micro syndrome"], "gene_terms": ["TSC1", "TSC2", "SRPX2", "RAB3GAP1", "EOMES", "TUBB2B"], "variant_terms": [], "case_references": ["proband", "patient", "patients", "cohort", "case reports", "case study"], "authority_references": ["ClinVar"], "contradictions": [], "structure_hints": ["Table 1: MEG cluster pattern, scatter pattern, prediction", "Table 2: PMG network description and clinical implication", "Fig. 1: radiographic characteristics of type B and C tubers in TSC", "Fig. 2: connection between heterotopia and involved cortex in PVNH"]}, "evidence_items": [{"field_id": "A.gene_symbol", "category": "Assertion", "field_name": "Gene Symbol", "status": "found", "value": "SRPX2", "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": {"span_id": "original-p1", "page": 1, "start_offset": 17478, "end_offset": 17638, "context_type": "text", "context_ref": "Polymicrogyria section", "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "corrected"}, "raw_source": {"span_id": "", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "Polymicrogyria section", "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 0.95, "group_id": "gene=SRPX2|variant=__missing__", "notes": "The gene symbol SRPX2 is explicitly mentioned in the context of polymicrogyria.", "inference_basis": [], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}, {"field_id": "A.gene_disease_relationship", "category": "Assertion", "field_name": "Gene-Disease Relationship", "status": "found", "value": "causative", "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": {"span_id": "original-p1", "page": 1, "start_offset": 17478, "end_offset": 17638, "context_type": "text", "context_ref": "Polymicrogyria section", "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "corrected"}, "raw_source": {"span_id": "", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "Polymicrogyria section", "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 0.9, "group_id": "gene=SRPX2|variant=__missing__", "notes": "The text directly states SRPX2 is 'associated with' polymicrogyria. Given the context of this curation, the relationship is interpreted as causal (a known gene for the disorder).", "inference_basis": ["Document states SRPX2 is associated with polymicrogyria. PMG is a cause of epilepsy. The target disease is epilepsy. The gene-disease link for the purpose of this extraction is SRPX2 -> epilepsy (via PMG)."], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}, {"field_id": "B.disease_diagnosis", "category": "Clinical", "field_name": "Disease Diagnosis", "status": "found", "value": "polymicrogyria", "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": {"span_id": "original-p1", "page": 1, "start_offset": 17478, "end_offset": 17638, "context_type": "text", "context_ref": "Polymicrogyria section", "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "corrected"}, "raw_source": {"span_id": "", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "Polymicrogyria section", "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 0.95, "group_id": "gene=SRPX2|variant=__missing__", "notes": "SRPX2 is directly linked to polymicrogyria (PMG). The target disease 'epilepsy' is a common manifestation of PMG, mentioned elsewhere in the same section.", "inference_basis": [], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}], "evidence_chains": [{"chain_id": "gene=SRPX2|variant=__missing__", "chain_level": "partial", "gene_text": "SRPX2", "gene_id": null, "disease_text": "polymicrogyria", "disease_id": null, "variant_text": "", "variant_id": null, "case_ids": [], "special_evidence_ids": [], "evidence_field_ids": ["A.gene_disease_relationship", "A.gene_symbol", "B.disease_diagnosis"], "contradictions": [], "quality_warnings": []}], "special_evidence": [], "quality_report": {"passed": true, "scorable": false, "score_gate_passed": false, "issues": [{"issue_type": "missing_required", "field_id": "A.variant_hgvs_p", "description": "Required field A.variant_hgvs_p is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "B.diagnosis_sufficiency", "description": "Required field B.diagnosis_sufficiency is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "A.variant_hgvs_c", "description": "Required field A.variant_hgvs_c is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "D.allele_frequency", "description": "Required field D.allele_frequency is missing", "severity": "warning"}], "found_count": 3, "not_found_count": 0, "source_invalid_count": 0, "ocr_gap_count": 0, "table_ungrounded_count": 0, "ambiguous_source_count": 0, "context_contamination_count": 0, "human_review_required": true, "human_review_reasons": ["A.variant_hgvs_p is required for scoring but is not grounded", "B.diagnosis_sufficiency is required for scoring but is not grounded", "A.variant_hgvs_c is required for scoring but is not grounded", "D.allele_frequency is required for scoring but is not grounded", "Incomplete evidence chain requires review"], "human_review_by_category": {"source_grounding": [], "table_grounding": [], "scoring_gate": ["A.variant_hgvs_p is required for scoring but is not grounded", "B.diagnosis_sufficiency is required for scoring but is not grounded", "A.variant_hgvs_c is required for scoring but is not grounded", "D.allele_frequency is required for scoring but is not grounded"], "contradictions": [], "workflow": ["Incomplete evidence chain requires review"]}}, "normalization_issues": [], "extraction_target": {"gene_symbol": "SRPX2", "disease_name": "epilepsy", "variant_hgvs_p": "", "clingen_entry_id": "clingen_026"}, "phenotype_evidence": [], "discarded_evidence": [{"field_id": "A.gene_disease_relationship", "category": "A", "field_name": "gene_disease_relationship", "status": "found", "value": "associated", "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": null, "raw_source": {"span_id": "", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "## Polymicrogyria", "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 0.7, "group_id": "gene=SRPX2|variant=__missing__", "notes": "SRPX2 is associated with polymicrogyria, a condition commonly causing epilepsy, but the direct link to epilepsy is indirect.", "inference_basis": [], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "context"}]}, "translated_result": {"status": "completed", "document_id": "774191ef-0889-4455-abed-40345a3d3a54", "track": "translated", "evidence_map": {"relevant": true, "disease_terms": ["drug-resistant epilepsy", "tuberous sclerosis", "periventricular nodular heterotopia", "polymicrogyria", "post-traumatic epilepsy", "temporal lobe epilepsy", "cingulate gyrus epilepsy", "Lennox-Gastaut syndrome", "epileptic encephalopathies", "mesial temporal sclerosis", "infantile spasms", "malformation of cortical development", "Aicardi syndrome", "Delleman syndrome", "DiGeorge syndrome", "Warburg Micro syndrome"], "gene_terms": ["TSC1", "TSC2", "SRPX2", "RAB3GAP1", "EOMES", "TUBB2B"], "variant_terms": [], "case_references": ["17-year-old male", "22 patients", "105 patients", "49 patients", "32 patients", "64 patients", "14 patients", "66 patients", "39 patients", "57 patients", "12 patients", "23 patients"], "authority_references": ["SANTE trial"], "contradictions": [], "structure_hints": ["Table 1: MEG cluster pattern and prediction", "Table 2: PMG network, description, and clinical implication", "Figure 1: Radiographic characteristics of type B and C tubers", "Figure 2: Location of seizure onset in PVNH"]}, "evidence_items": [{"field_id": "A.gene_disease_relationship", "category": "A", "field_name": "Gene-disease relationship", "status": "source_invalid", "value": "associated", "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": null, "raw_source": {"span_id": "", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "Polymicrogyria", "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [65].", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 0.9, "group_id": "gene=SRPX2|variant=__missing__", "notes": "", "inference_basis": [], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}, {"field_id": "B.disease_diagnosis", "category": "B", "field_name": "Disease diagnosis", "status": "source_invalid", "value": "epilepsy", "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": null, "raw_source": {"span_id": "", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "Polymicrogyria", "text_snippet": "Epilepsy has been shown to be present in up to 87% of PMG cases [66].", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 0.9, "group_id": "gene=SRPX2|variant=__missing__", "notes": "", "inference_basis": [], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "primary"}], "evidence_chains": [], "special_evidence": [], "quality_report": {"passed": true, "scorable": false, "score_gate_passed": false, "issues": [{"issue_type": "missing_required", "field_id": "B.disease_diagnosis", "description": "Required field B.disease_diagnosis is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "B.diagnosis_sufficiency", "description": "Required field B.diagnosis_sufficiency is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "A.variant_hgvs_c", "description": "Required field A.variant_hgvs_c is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "A.variant_hgvs_p", "description": "Required field A.variant_hgvs_p is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "D.allele_frequency", "description": "Required field D.allele_frequency is missing", "severity": "warning"}, {"issue_type": "missing_required", "field_id": "A.gene_symbol", "description": "Required field A.gene_symbol is missing", "severity": "warning"}], "found_count": 0, "not_found_count": 0, "source_invalid_count": 2, "ocr_gap_count": 0, "table_ungrounded_count": 0, "ambiguous_source_count": 0, "context_contamination_count": 0, "human_review_required": true, "human_review_reasons": ["A.gene_disease_relationship has invalid source grounding", "B.disease_diagnosis has invalid source grounding", "B.disease_diagnosis is required for scoring but is not grounded", "B.diagnosis_sufficiency is required for scoring but is not grounded", "A.variant_hgvs_c is required for scoring but is not grounded", "A.variant_hgvs_p is required for scoring but is not grounded", "D.allele_frequency is required for scoring but is not grounded", "A.gene_symbol is required for scoring but is not grounded", "No full evidence chain was produced"], "human_review_by_category": {"source_grounding": ["A.gene_disease_relationship has invalid source grounding", "B.disease_diagnosis has invalid source grounding"], "table_grounding": [], "scoring_gate": ["B.disease_diagnosis is required for scoring but is not grounded", "B.diagnosis_sufficiency is required for scoring but is not grounded", "A.variant_hgvs_c is required for scoring but is not grounded", "A.variant_hgvs_p is required for scoring but is not grounded", "D.allele_frequency is required for scoring but is not grounded", "A.gene_symbol is required for scoring but is not grounded"], "contradictions": [], "workflow": ["No full evidence chain was produced"]}}, "normalization_issues": [], "extraction_target": {"gene_symbol": "SRPX2", "disease_name": "epilepsy", "variant_hgvs_p": "", "clingen_entry_id": "clingen_026"}, "phenotype_evidence": [], "discarded_evidence": [{"field_id": "A.gene_symbol", "category": "A", "field_name": "gene_symbol", "status": "found", "value": "SRPX2", "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": null, "raw_source": {"span_id": "", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "Polymicrogyria", "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [65].", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 1.0, "group_id": "gene=SRPX2|variant=__missing__", "notes": "Gene symbol extracted from list of genes associated with polymicrogyria.", "inference_basis": [], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "context"}, {"field_id": "B.disease_diagnosis", "category": "B", "field_name": "disease_diagnosis", "status": "found", "value": "polymicrogyria", "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": null, "raw_source": {"span_id": "", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "Polymicrogyria", "text_snippet": "PMG is a malformation of cortical development (MCD) that is radiologically defined by an excessive number of abnormally small, partly fused cortical gyri and is thought to be caused by a disruption in neuronal migration and cortical development [62,63].", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 0.9, "group_id": "gene=SRPX2|variant=__missing__", "notes": "Document states SRPX2 is associated with polymicrogyria (PMG). PMG is a condition that frequently leads to epilepsy. The target disease is epilepsy, but the primary disease diagnosis linked to SRPX2 in the document is PMG.", "inference_basis": ["Document states SRPX2 is associated with PMG, which is a condition often leading to epilepsy."], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "context"}, {"field_id": "B.clinical_phenotypes", "category": "B", "field_name": "clinical_phenotypes", "status": "found", "value": ["epilepsy", "polymicrogyria"], "assigned_acmg_codes": [], "assigned_clingen_modules": [], "source": null, "raw_source": {"span_id": "", "page": 0, "start_offset": -1, "end_offset": -1, "context_type": "text", "context_ref": "Polymicrogyria", "text_snippet": "Epilepsy has been shown to be present in up to 87% [66] of PMG cases and is frequently found to be medically refractory [67].", "block_index": -1, "bbox": [], "block_type": "text", "source_precision": "exact"}, "confidence": 0.9, "group_id": "gene=SRPX2|variant=__missing__", "notes": "Document states epilepsy is present in up to 87% of PMG cases. SRPX2 is associated with PMG. Extracted clinical phenotypes include epilepsy and polymicrogyria.", "inference_basis": ["Document states SRPX2 is associated with PMG, and PMG is frequently associated with epilepsy."], "requires_external_completion": false, "external_completion_note": "", "evidence_role": "context"}]}}
+{
+  "document_id": "774191ef-0889-4455-abed-40345a3d3a54",
+  "original_result": {
+    "status": "completed",
+    "document_id": "774191ef-0889-4455-abed-40345a3d3a54",
+    "track": "original",
+    "evidence_map": {
+      "relevant": true,
+      "disease_terms": [
+        "epilepsy",
+        "drug-resistant epilepsy",
+        "temporal lobe epilepsy",
+        "tuberous sclerosis",
+        "periventricular nodular heterotopia",
+        "polymicrogyria",
+        "post-traumatic epilepsy",
+        "Lennox-Gastaut syndrome",
+        "mesial temporal sclerosis",
+        "infantile spasms",
+        "epileptic encephalopathies",
+        "Aicardi syndrome",
+        "Delleman syndrome",
+        "DiGeorge syndrome",
+        "Warburg Micro syndrome"
+      ],
+      "gene_terms": [
+        "TSC1",
+        "TSC2",
+        "SRPX2",
+        "RAB3GAP1",
+        "EOMES",
+        "TUBB2B"
+      ],
+      "variant_terms": [],
+      "case_references": [
+        "proband",
+        "patient",
+        "patients",
+        "cohort",
+        "case reports",
+        "case study"
+      ],
+      "authority_references": [
+        "ClinVar"
+      ],
+      "contradictions": [],
+      "structure_hints": [
+        "Table 1: MEG cluster pattern, scatter pattern, prediction",
+        "Table 2: PMG network description and clinical implication",
+        "Fig. 1: radiographic characteristics of type B and C tubers in TSC",
+        "Fig. 2: connection between heterotopia and involved cortex in PVNH"
+      ]
+    },
+    "evidence_items": [
+      {
+        "field_id": "A.gene_symbol",
+        "category": "Assertion",
+        "field_name": "Gene Symbol",
+        "status": "found",
+        "value": "SRPX2",
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": {
+          "span_id": "original-p1",
+          "page": 1,
+          "start_offset": 17478,
+          "end_offset": 17638,
+          "context_type": "text",
+          "context_ref": "Polymicrogyria section",
+          "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "corrected"
+        },
+        "raw_source": {
+          "span_id": "",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "Polymicrogyria section",
+          "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 0.95,
+        "group_id": "gene=SRPX2|variant=__missing__",
+        "notes": "The gene symbol SRPX2 is explicitly mentioned in the context of polymicrogyria.",
+        "inference_basis": [],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "SRPX2",
+        "target_disease": "epilepsy"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "category": "Assertion",
+        "field_name": "Gene-Disease Relationship",
+        "status": "found",
+        "value": "causative",
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": {
+          "span_id": "original-p1",
+          "page": 1,
+          "start_offset": 17478,
+          "end_offset": 17638,
+          "context_type": "text",
+          "context_ref": "Polymicrogyria section",
+          "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "corrected"
+        },
+        "raw_source": {
+          "span_id": "",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "Polymicrogyria section",
+          "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 0.9,
+        "group_id": "gene=SRPX2|variant=__missing__",
+        "notes": "The text directly states SRPX2 is 'associated with' polymicrogyria. Given the context of this curation, the relationship is interpreted as causal (a known gene for the disorder).",
+        "inference_basis": [
+          "Document states SRPX2 is associated with polymicrogyria. PMG is a cause of epilepsy. The target disease is epilepsy. The gene-disease link for the purpose of this extraction is SRPX2 -> epilepsy (via PMG)."
+        ],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "SRPX2",
+        "target_disease": "epilepsy"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "category": "Clinical",
+        "field_name": "Disease Diagnosis",
+        "status": "found",
+        "value": "polymicrogyria",
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": {
+          "span_id": "original-p1",
+          "page": 1,
+          "start_offset": 17478,
+          "end_offset": 17638,
+          "context_type": "text",
+          "context_ref": "Polymicrogyria section",
+          "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "corrected"
+        },
+        "raw_source": {
+          "span_id": "",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "Polymicrogyria section",
+          "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 0.95,
+        "group_id": "gene=SRPX2|variant=__missing__",
+        "notes": "SRPX2 is directly linked to polymicrogyria (PMG). The target disease 'epilepsy' is a common manifestation of PMG, mentioned elsewhere in the same section.",
+        "inference_basis": [],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "SRPX2",
+        "target_disease": "epilepsy"
+      }
+    ],
+    "evidence_chains": [
+      {
+        "chain_id": "gene=SRPX2|variant=__missing__",
+        "chain_level": "partial",
+        "gene_text": "SRPX2",
+        "gene_id": null,
+        "disease_text": "polymicrogyria",
+        "disease_id": null,
+        "variant_text": "",
+        "variant_id": null,
+        "case_ids": [],
+        "special_evidence_ids": [],
+        "evidence_field_ids": [
+          "A.gene_disease_relationship",
+          "A.gene_symbol",
+          "B.disease_diagnosis"
+        ],
+        "contradictions": [],
+        "quality_warnings": []
+      }
+    ],
+    "special_evidence": [],
+    "quality_report": {
+      "passed": true,
+      "scorable": false,
+      "score_gate_passed": false,
+      "issues": [
+        {
+          "issue_type": "missing_required",
+          "field_id": "A.variant_hgvs_p",
+          "description": "Required field A.variant_hgvs_p is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "B.diagnosis_sufficiency",
+          "description": "Required field B.diagnosis_sufficiency is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "A.variant_hgvs_c",
+          "description": "Required field A.variant_hgvs_c is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "D.allele_frequency",
+          "description": "Required field D.allele_frequency is missing",
+          "severity": "warning"
+        }
+      ],
+      "found_count": 3,
+      "not_found_count": 0,
+      "source_invalid_count": 0,
+      "ocr_gap_count": 0,
+      "table_ungrounded_count": 0,
+      "ambiguous_source_count": 0,
+      "context_contamination_count": 0,
+      "human_review_required": true,
+      "human_review_reasons": [
+        "A.variant_hgvs_p is required for scoring but is not grounded",
+        "B.diagnosis_sufficiency is required for scoring but is not grounded",
+        "A.variant_hgvs_c is required for scoring but is not grounded",
+        "D.allele_frequency is required for scoring but is not grounded",
+        "Incomplete evidence chain requires review"
+      ],
+      "human_review_by_category": {
+        "source_grounding": [],
+        "table_grounding": [],
+        "scoring_gate": [
+          "A.variant_hgvs_p is required for scoring but is not grounded",
+          "B.diagnosis_sufficiency is required for scoring but is not grounded",
+          "A.variant_hgvs_c is required for scoring but is not grounded",
+          "D.allele_frequency is required for scoring but is not grounded"
+        ],
+        "contradictions": [],
+        "workflow": [
+          "Incomplete evidence chain requires review"
+        ]
+      }
+    },
+    "normalization_issues": [],
+    "extraction_target": {
+      "gene_symbol": "SRPX2",
+      "disease_name": "epilepsy",
+      "variant_hgvs_p": "",
+      "clingen_entry_id": "clingen_026"
+    },
+    "phenotype_evidence": [],
+    "discarded_evidence": [
+      {
+        "field_id": "A.gene_disease_relationship",
+        "category": "A",
+        "field_name": "gene_disease_relationship",
+        "status": "found",
+        "value": "associated",
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": null,
+        "raw_source": {
+          "span_id": "",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "## Polymicrogyria",
+          "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [ 65 ].",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 0.7,
+        "group_id": "gene=SRPX2|variant=__missing__",
+        "notes": "SRPX2 is associated with polymicrogyria, a condition commonly causing epilepsy, but the direct link to epilepsy is indirect.",
+        "inference_basis": [],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "context"
+      }
+    ]
+  },
+  "translated_result": {
+    "status": "completed",
+    "document_id": "774191ef-0889-4455-abed-40345a3d3a54",
+    "track": "translated",
+    "evidence_map": {
+      "relevant": true,
+      "disease_terms": [
+        "drug-resistant epilepsy",
+        "tuberous sclerosis",
+        "periventricular nodular heterotopia",
+        "polymicrogyria",
+        "post-traumatic epilepsy",
+        "temporal lobe epilepsy",
+        "cingulate gyrus epilepsy",
+        "Lennox-Gastaut syndrome",
+        "epileptic encephalopathies",
+        "mesial temporal sclerosis",
+        "infantile spasms",
+        "malformation of cortical development",
+        "Aicardi syndrome",
+        "Delleman syndrome",
+        "DiGeorge syndrome",
+        "Warburg Micro syndrome"
+      ],
+      "gene_terms": [
+        "TSC1",
+        "TSC2",
+        "SRPX2",
+        "RAB3GAP1",
+        "EOMES",
+        "TUBB2B"
+      ],
+      "variant_terms": [],
+      "case_references": [
+        "17-year-old male",
+        "22 patients",
+        "105 patients",
+        "49 patients",
+        "32 patients",
+        "64 patients",
+        "14 patients",
+        "66 patients",
+        "39 patients",
+        "57 patients",
+        "12 patients",
+        "23 patients"
+      ],
+      "authority_references": [
+        "SANTE trial"
+      ],
+      "contradictions": [],
+      "structure_hints": [
+        "Table 1: MEG cluster pattern and prediction",
+        "Table 2: PMG network, description, and clinical implication",
+        "Figure 1: Radiographic characteristics of type B and C tubers",
+        "Figure 2: Location of seizure onset in PVNH"
+      ]
+    },
+    "evidence_items": [
+      {
+        "field_id": "A.gene_disease_relationship",
+        "category": "A",
+        "field_name": "Gene-disease relationship",
+        "status": "source_invalid",
+        "value": "associated",
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": null,
+        "raw_source": {
+          "span_id": "",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "Polymicrogyria",
+          "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [65].",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 0.9,
+        "group_id": "gene=SRPX2|variant=__missing__",
+        "notes": "",
+        "inference_basis": [],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "SRPX2",
+        "target_disease": "epilepsy"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "category": "B",
+        "field_name": "Disease diagnosis",
+        "status": "source_invalid",
+        "value": "epilepsy",
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": null,
+        "raw_source": {
+          "span_id": "",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "Polymicrogyria",
+          "text_snippet": "Epilepsy has been shown to be present in up to 87% of PMG cases [66].",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 0.9,
+        "group_id": "gene=SRPX2|variant=__missing__",
+        "notes": "",
+        "inference_basis": [],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "primary",
+        "article_language": "en",
+        "is_english": true,
+        "requires_translation": false,
+        "evidence_source_language": "en",
+        "target_gene": "SRPX2",
+        "target_disease": "epilepsy"
+      }
+    ],
+    "evidence_chains": [],
+    "special_evidence": [],
+    "quality_report": {
+      "passed": true,
+      "scorable": false,
+      "score_gate_passed": false,
+      "issues": [
+        {
+          "issue_type": "missing_required",
+          "field_id": "B.disease_diagnosis",
+          "description": "Required field B.disease_diagnosis is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "B.diagnosis_sufficiency",
+          "description": "Required field B.diagnosis_sufficiency is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "A.variant_hgvs_c",
+          "description": "Required field A.variant_hgvs_c is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "A.variant_hgvs_p",
+          "description": "Required field A.variant_hgvs_p is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "D.allele_frequency",
+          "description": "Required field D.allele_frequency is missing",
+          "severity": "warning"
+        },
+        {
+          "issue_type": "missing_required",
+          "field_id": "A.gene_symbol",
+          "description": "Required field A.gene_symbol is missing",
+          "severity": "warning"
+        }
+      ],
+      "found_count": 0,
+      "not_found_count": 0,
+      "source_invalid_count": 2,
+      "ocr_gap_count": 0,
+      "table_ungrounded_count": 0,
+      "ambiguous_source_count": 0,
+      "context_contamination_count": 0,
+      "human_review_required": true,
+      "human_review_reasons": [
+        "A.gene_disease_relationship has invalid source grounding",
+        "B.disease_diagnosis has invalid source grounding",
+        "B.disease_diagnosis is required for scoring but is not grounded",
+        "B.diagnosis_sufficiency is required for scoring but is not grounded",
+        "A.variant_hgvs_c is required for scoring but is not grounded",
+        "A.variant_hgvs_p is required for scoring but is not grounded",
+        "D.allele_frequency is required for scoring but is not grounded",
+        "A.gene_symbol is required for scoring but is not grounded",
+        "No full evidence chain was produced"
+      ],
+      "human_review_by_category": {
+        "source_grounding": [
+          "A.gene_disease_relationship has invalid source grounding",
+          "B.disease_diagnosis has invalid source grounding"
+        ],
+        "table_grounding": [],
+        "scoring_gate": [
+          "B.disease_diagnosis is required for scoring but is not grounded",
+          "B.diagnosis_sufficiency is required for scoring but is not grounded",
+          "A.variant_hgvs_c is required for scoring but is not grounded",
+          "A.variant_hgvs_p is required for scoring but is not grounded",
+          "D.allele_frequency is required for scoring but is not grounded",
+          "A.gene_symbol is required for scoring but is not grounded"
+        ],
+        "contradictions": [],
+        "workflow": [
+          "No full evidence chain was produced"
+        ]
+      }
+    },
+    "normalization_issues": [],
+    "extraction_target": {
+      "gene_symbol": "SRPX2",
+      "disease_name": "epilepsy",
+      "variant_hgvs_p": "",
+      "clingen_entry_id": "clingen_026"
+    },
+    "phenotype_evidence": [],
+    "discarded_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "category": "A",
+        "field_name": "gene_symbol",
+        "status": "found",
+        "value": "SRPX2",
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": null,
+        "raw_source": {
+          "span_id": "",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "Polymicrogyria",
+          "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B ) and syndromes like Aicardi, Delleman, DiGeorge, and Warburg Micro syndromes [65].",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 1.0,
+        "group_id": "gene=SRPX2|variant=__missing__",
+        "notes": "Gene symbol extracted from list of genes associated with polymicrogyria.",
+        "inference_basis": [],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "context"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "category": "B",
+        "field_name": "disease_diagnosis",
+        "status": "found",
+        "value": "polymicrogyria",
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": null,
+        "raw_source": {
+          "span_id": "",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "Polymicrogyria",
+          "text_snippet": "PMG is a malformation of cortical development (MCD) that is radiologically defined by an excessive number of abnormally small, partly fused cortical gyri and is thought to be caused by a disruption in neuronal migration and cortical development [62,63].",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 0.9,
+        "group_id": "gene=SRPX2|variant=__missing__",
+        "notes": "Document states SRPX2 is associated with polymicrogyria (PMG). PMG is a condition that frequently leads to epilepsy. The target disease is epilepsy, but the primary disease diagnosis linked to SRPX2 in the document is PMG.",
+        "inference_basis": [
+          "Document states SRPX2 is associated with PMG, which is a condition often leading to epilepsy."
+        ],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "context"
+      },
+      {
+        "field_id": "B.clinical_phenotypes",
+        "category": "B",
+        "field_name": "clinical_phenotypes",
+        "status": "found",
+        "value": [
+          "epilepsy",
+          "polymicrogyria"
+        ],
+        "assigned_acmg_codes": [],
+        "assigned_clingen_modules": [],
+        "source": null,
+        "raw_source": {
+          "span_id": "",
+          "page": 0,
+          "start_offset": -1,
+          "end_offset": -1,
+          "context_type": "text",
+          "context_ref": "Polymicrogyria",
+          "text_snippet": "Epilepsy has been shown to be present in up to 87% [66] of PMG cases and is frequently found to be medically refractory [67].",
+          "block_index": -1,
+          "bbox": [],
+          "block_type": "text",
+          "source_precision": "exact"
+        },
+        "confidence": 0.9,
+        "group_id": "gene=SRPX2|variant=__missing__",
+        "notes": "Document states epilepsy is present in up to 87% of PMG cases. SRPX2 is associated with PMG. Extracted clinical phenotypes include epilepsy and polymicrogyria.",
+        "inference_basis": [
+          "Document states SRPX2 is associated with PMG, and PMG is frequently associated with epilepsy."
+        ],
+        "requires_external_completion": false,
+        "external_completion_note": "",
+        "evidence_role": "context"
+      }
+    ]
+  }
+}

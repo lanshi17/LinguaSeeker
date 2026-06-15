@@ -15,6 +15,8 @@ from loguru import logger
 from .contracts import (
     EvidenceExtractionState,
     EvidenceExtractionStatus,
+    EvidenceItem,
+    Track,
     TrackDocument,
 )
 from .chunking import DEFAULT_INPUT_BUDGET_TOKENS
@@ -67,6 +69,27 @@ class EvidenceExtractionWorkflow:
         state.special_evidence = records
         return state
 
+    def _node_language_metadata(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        """Stamp article_language metadata onto every emitted EvidenceItem.
+
+        Resolves the document's article language from the ``TrackDocument``
+        track + metadata (``source_language``), then propagates it to all
+        evidence items. The translated track is always English; the original
+        track carries ``metadata["source_language"]`` (which is ``"en"`` for
+        English originals).
+        """
+        article_language = _resolve_article_language(state.document)
+        state.evidence_items = [
+            _stamp_language(item, state.document, article_language)
+            for item in state.evidence_items
+        ]
+        if state.phenotype_evidence:
+            state.phenotype_evidence = [
+                _stamp_language(item, state.document, article_language)
+                for item in state.phenotype_evidence
+            ]
+        return state
+
     async def _async_node_relevance_scan(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         emap = await self._relevance_scan.run_async(state.document)
         state.evidence_map = emap
@@ -83,6 +106,9 @@ class EvidenceExtractionWorkflow:
         records = await self._special_evidence.run_async(state.document, state.evidence_items)
         state.special_evidence = records
         return state
+
+    async def _async_node_language_metadata(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
+        return self._node_language_metadata(state)
 
     def _node_group_assignment(self, state: EvidenceExtractionState) -> EvidenceExtractionState:
         grouped_items, grouped_special = self._group_assignment.run(
@@ -155,6 +181,7 @@ class EvidenceExtractionWorkflow:
         graph.add_node("relevance_scan", self._node_relevance_scan)
         graph.add_node("catalog_extraction", self._node_catalog_extraction)
         graph.add_node("special_evidence", self._node_special_evidence)
+        graph.add_node("language_metadata", self._node_language_metadata)
         graph.add_node("group_assignment", self._node_group_assignment)
         graph.add_node("role_routing", self._node_role_routing)
         graph.add_node("value_normalization", self._node_value_normalization)
@@ -171,7 +198,8 @@ class EvidenceExtractionWorkflow:
             {"not_relevant": "not_relevant", "catalog_extraction": "catalog_extraction"},
         )
         graph.add_edge("catalog_extraction", "special_evidence")
-        graph.add_edge("special_evidence", "group_assignment")
+        graph.add_edge("special_evidence", "language_metadata")
+        graph.add_edge("language_metadata", "group_assignment")
         graph.add_edge("group_assignment", "role_routing")
         graph.add_edge("role_routing", "value_normalization")
         graph.add_edge("value_normalization", "target_guard")
@@ -190,6 +218,7 @@ class EvidenceExtractionWorkflow:
         graph.add_node("relevance_scan", self._async_node_relevance_scan)
         graph.add_node("catalog_extraction", self._async_node_catalog_extraction)
         graph.add_node("special_evidence", self._async_node_special_evidence)
+        graph.add_node("language_metadata", self._async_node_language_metadata)
         graph.add_node("group_assignment", self._node_group_assignment)
         graph.add_node("role_routing", self._node_role_routing)
         graph.add_node("value_normalization", self._node_value_normalization)
@@ -206,7 +235,8 @@ class EvidenceExtractionWorkflow:
             {"not_relevant": "not_relevant", "catalog_extraction": "catalog_extraction"},
         )
         graph.add_edge("catalog_extraction", "special_evidence")
-        graph.add_edge("special_evidence", "group_assignment")
+        graph.add_edge("special_evidence", "language_metadata")
+        graph.add_edge("language_metadata", "group_assignment")
         graph.add_edge("group_assignment", "role_routing")
         graph.add_edge("role_routing", "value_normalization")
         graph.add_edge("value_normalization", "target_guard")
@@ -239,3 +269,48 @@ class EvidenceExtractionWorkflow:
         if isinstance(final_state, dict):
             final_state = EvidenceExtractionState(**final_state)
         return final_state
+
+
+def _resolve_article_language(document: TrackDocument) -> str:
+    """Resolve the article language code for a track document.
+
+    The translated track is always English. The original track carries its
+    source language in ``metadata["source_language"]`` (defaults to ``"en"``
+    when unset, matching the English-only default of the pipeline).
+    """
+    if document.track == Track.TRANSLATED:
+        return "en"
+    source_language = str(document.metadata.get("source_language", "")).strip().lower()
+    return source_language or "en"
+
+
+def _stamp_language(
+    item: EvidenceItem,
+    document: TrackDocument,
+    article_language: str,
+) -> EvidenceItem:
+    """Stamp article-language metadata onto an evidence item if not already set.
+
+    Derives ``is_english`` / ``requires_translation`` / ``evidence_source_language``
+    directly rather than relying on the contract validator, because
+    ``model_copy`` does not re-run validators in Pydantic v2.
+    """
+    if item.article_language and item.is_english is not None:
+        return item
+    is_english = article_language in {"en", "eng", "english"}
+    target = document.extraction_target
+    target_gene = target.gene_symbol if target else item.target_gene
+    target_disease = target.disease_name if target else item.target_disease
+    target_variant = (target.variant_hgvs_p if target else "") or item.target_variant
+    return item.model_copy(
+        update={
+            "article_language": article_language,
+            "is_english": is_english,
+            "requires_translation": not is_english,
+            "evidence_source_language": article_language,
+            "source_database": item.source_database or document.metadata.get("source_database", ""),
+            "target_gene": target_gene,
+            "target_disease": target_disease,
+            "target_variant": target_variant,
+        }
+    )
