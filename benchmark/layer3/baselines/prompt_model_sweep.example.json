@@ -1,5 +1,7 @@
 {
   "run_label": "prompt_frontier_20260615",
+  "provider_gateway": "integrated_openai_compatible_supplier",
+  "call_interface": "openai_chat_completions",
   "prompt_mode": "citation_required",
   "temperature": 0.0,
   "max_tokens": 4096,

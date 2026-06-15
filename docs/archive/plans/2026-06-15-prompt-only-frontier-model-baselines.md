@@ -2,10 +2,10 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Status:** planned
+**Status:** completed
 **Created:** 2026-06-15
-**Completed:** —
-**PR:** —
+**Completed:** 2026-06-15
+**PR:** local branch `prompt-model-baselines`
 
 **Goal:** Add a reproducible prompt-only model-sweep benchmark that compares CrossEvidence against several mainstream LLMs using the same prompt, same input, same schema, and no evidence-graph reconciliation.
 
@@ -1299,4 +1299,3 @@ competitive extraction + stronger traceable extraction + no answer-key leakage +
 5. Update paper claims and manuscript.
 6. Run verification gate.
 7. Commit only benchmark, report, and docs files from this plan.
-

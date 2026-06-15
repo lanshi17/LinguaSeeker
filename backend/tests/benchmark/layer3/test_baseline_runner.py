@@ -227,15 +227,32 @@ def test_baseline_llm_response_normalizes_schema_drift() -> None:
                     "status": "uncertain",
                     "value": "uncertain",
                     "confidence": "",
+                },
+                {
+                    "field_id": "B.disease_diagnosis",
+                    "status": "not_found",
+                    "value": "",
+                    "confidence": "N/A",
+                },
+                {
+                    "field_id": "A.gene_symbol",
+                    "status": "not_found",
+                    "value": "",
+                    "confidence": None,
+                },
+                {
+                    "field_id": "A.gene_disease_relationship",
+                    "status": "not_found",
+                    "value": "",
+                    "confidence": "No explicit support in the source text.",
                 }
             ]
         }
     )
 
-    item = response.evidence_items[0]
-    assert item.status == "found"
-    assert item.value == "uncertain"
-    assert item.confidence == 0.0
+    assert response.evidence_items[0].status == "found"
+    assert response.evidence_items[0].value == "uncertain"
+    assert [item.confidence for item in response.evidence_items] == [0.0, 0.0, 0.0, 0.0]
 
 
 def test_translate_then_extract_skips_translation_for_english_source() -> None:

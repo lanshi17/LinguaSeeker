@@ -41,8 +41,13 @@ def test_build_baseline_config_records_model_metadata(tmp_path: Path) -> None:
 
     assert config.baseline_id == "B6_GPT5_PROMPT_CITE"
     assert config.metadata["model"] == "gpt-5"
+    assert config.metadata["release_cohort"] == ""
+    assert config.metadata["release_date"] == ""
+    assert config.metadata["release_notes_url"] == ""
     assert config.metadata["prompt_mode"] == "citation_required"
     assert config.metadata["run_label"] == "prompt_frontier_20260615"
+    assert config.metadata["provider_gateway"] == "integrated_openai_compatible_supplier"
+    assert config.metadata["call_interface"] == "openai_chat_completions"
 
 
 def test_build_extractor_uses_manifest_input_max_chars(monkeypatch) -> None:
