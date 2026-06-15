@@ -58,6 +58,7 @@ def build_extractor(*, manifest: PromptModelSweepManifest, spec: PromptModelSpec
         temperature=manifest.temperature,
         max_tokens_override=manifest.max_tokens,
         input_max_chars=manifest.input_max_chars,
+        use_raw_client=True,
     )
 
 
