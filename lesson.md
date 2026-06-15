@@ -2711,3 +2711,15 @@ session transition is silently swallowed rather than crashing the component.
 **Prevention**: Always wrap SDK-provided closures in try/catch when calling them in React
 effects or event handlers — the closure may reference internal state that is invalid during
 lifecycle transitions.
+
+## 2026-06-15 — Fresh worktrees need uv dependency sync before `--no-sync` test runs
+
+**Problem**: Baseline verification in a newly created git worktree failed before test collection with `Failed to spawn: pytest`.
+
+**Investigation**: The command used the project-required `uv run --project backend --no-sync`, which created a fresh `backend/.venv` in the new worktree but did not install declared dev dependencies. `backend/pyproject.toml` declares `pytest` under the dev extras/dependency group, and the worktree had a valid `uv.lock`.
+
+**Root cause**: `--no-sync` is correct for reproducible follow-up test runs, but it assumes the worktree environment has already been synchronized. A fresh worktree has no populated backend virtualenv.
+
+**Solution**: Ran `uv sync --project backend --extra dev` once in the isolated worktree, then reran the baseline and focused verification commands with `--no-sync`.
+
+**Prevention**: In new worktrees, run one `uv sync --project backend --extra dev` before any `uv run --project backend --no-sync pytest` baseline. Keep subsequent test commands on `--no-sync` to avoid implicit dependency churn.

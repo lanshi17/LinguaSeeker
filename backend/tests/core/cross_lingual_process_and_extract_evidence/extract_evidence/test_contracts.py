@@ -6,6 +6,8 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     DocumentEvidenceMap,
     DualEvidenceExtractionResult,
     DualTrackDocuments,
+    EvidenceAlignmentLabel,
+    EvidenceAlignmentRecord,
     EvidenceChain,
     EvidenceExtractionResult,
     EvidenceExtractionState,
@@ -16,6 +18,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     EvidenceNormalizationSeverity,
     EvidenceRole,
     EvidenceStatus,
+    EvidenceSupportLabel,
     ExternalIds,
     ExtractionTarget,
     PageSpan,
@@ -449,6 +452,7 @@ def test_dual_evidence_extraction_result_accepts_optional_reconciled_result() ->
     )
 
     assert historical_result.reconciled_result is None
+    assert historical_result.alignment_records == []
 
     reconciled = EvidenceExtractionResult(
         status=EvidenceExtractionStatus.COMPLETED,
@@ -463,3 +467,47 @@ def test_dual_evidence_extraction_result_accepts_optional_reconciled_result() ->
     )
 
     assert result.reconciled_result == reconciled
+
+
+def test_evidence_item_carries_language_and_source_metadata() -> None:
+    """Evidence items preserve literature language metadata for augmentation analysis."""
+    item = EvidenceItem(
+        field_id="A.variant_hgvs_p",
+        category="A",
+        field_name="Protein variant",
+        status=EvidenceStatus.FOUND,
+        value="p.Arg1352His",
+        confidence=0.9,
+        article_language="zh",
+        source_database="CNKI",
+        target_gene="ABCC8",
+        target_disease="MODY12",
+        target_variant="p.Arg1352His",
+        evidence_source_language="zh",
+    )
+
+    assert item.article_language == "zh"
+    assert item.source_database == "CNKI"
+    assert item.is_english is False
+    assert item.requires_translation is True
+    assert item.evidence_source_language == "zh"
+
+
+def test_alignment_record_contract_uses_enum_labels_and_bounded_confidence() -> None:
+    """Alignment annotations are explicit typed contracts, not free-form dicts."""
+    record = EvidenceAlignmentRecord(
+        entry_id="clingen_000",
+        field_id="A.gene_symbol",
+        original_value="ABCC8",
+        translated_value="ABCC8",
+        normalized_value="abcc8",
+        original_span_id="original-p1",
+        translated_span_id="translated-p1",
+        alignment_label=EvidenceAlignmentLabel.ALIGNED,
+        support_label=EvidenceSupportLabel.SUPPORTS,
+        confidence=0.95,
+    )
+
+    assert record.alignment_label is EvidenceAlignmentLabel.ALIGNED
+    assert record.support_label is EvidenceSupportLabel.SUPPORTS
+    assert record.confidence == 0.95

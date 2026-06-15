@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contracts import (
+    EvidenceAlignmentRecord,
     EvidenceExtractionResult,
     EvidenceItem,
     Track,
@@ -52,3 +53,4 @@ class ReconcileOutput:
 
     result: EvidenceExtractionResult
     decisions: tuple[FieldDecision, ...]
+    alignment_records: tuple[EvidenceAlignmentRecord, ...] = ()
