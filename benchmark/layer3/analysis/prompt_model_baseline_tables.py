@@ -19,8 +19,13 @@ class PromptModelRow(TypedDict):
 
     baseline_id: str
     baseline_name: str
+    release_cohort: str
+    provider_gateway: str
+    call_interface: str
     provider_family: str
     model: str
+    release_date: str
+    release_notes_url: str
     prompt_mode: str
     total_entries: int
     precision: float
@@ -135,8 +140,13 @@ def _row_from_reports(
     return {
         "baseline_id": _baseline_id(baseline_report),
         "baseline_name": str(baseline_report.get("baseline_name") or ""),
+        "release_cohort": str(config.get("release_cohort") or ""),
+        "provider_gateway": str(config.get("provider_gateway") or ""),
+        "call_interface": str(config.get("call_interface") or ""),
         "provider_family": str(config.get("provider_family") or ""),
         "model": str(config.get("model") or ""),
+        "release_date": str(config.get("release_date") or ""),
+        "release_notes_url": str(config.get("release_notes_url") or ""),
         "prompt_mode": str(config.get("prompt_mode") or ""),
         "total_entries": total_entries,
         "precision": _float(overall.get("precision")),

@@ -17,6 +17,8 @@ class PromptModelSpec:
     baseline_name: str
     provider_family: str
     model: str
+    release_date: str = ""
+    release_notes_url: str = ""
 
 
 @dataclass(frozen=True)
@@ -29,6 +31,9 @@ class PromptModelSweepManifest:
     max_tokens: int
     input_max_chars: int
     models: tuple[PromptModelSpec, ...]
+    release_cohort: str = ""
+    provider_gateway: str = "integrated_openai_compatible_supplier"
+    call_interface: str = "openai_chat_completions"
 
 
 def load_prompt_model_sweep_manifest(path: Path) -> PromptModelSweepManifest:
@@ -45,6 +50,9 @@ def load_prompt_model_sweep_manifest(path: Path) -> PromptModelSweepManifest:
         max_tokens=int(payload.get("max_tokens", 4096)),
         input_max_chars=int(payload.get("input_max_chars", 50000)),
         models=models,
+        release_cohort=str(payload.get("release_cohort") or ""),
+        provider_gateway=str(payload.get("provider_gateway") or "integrated_openai_compatible_supplier"),
+        call_interface=str(payload.get("call_interface") or "openai_chat_completions"),
     )
 
 
@@ -56,6 +64,8 @@ def _parse_model_spec(raw: object) -> PromptModelSpec:
         baseline_name=str(raw.get("baseline_name") or "").strip(),
         provider_family=str(raw.get("provider_family") or "").strip(),
         model=str(raw.get("model") or "").strip(),
+        release_date=str(raw.get("release_date") or "").strip(),
+        release_notes_url=str(raw.get("release_notes_url") or "").strip(),
     )
 
 

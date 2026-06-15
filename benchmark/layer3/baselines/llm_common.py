@@ -55,9 +55,13 @@ class BaselineLLMEvidenceItem(BaseModel):
     @classmethod
     def normalize_confidence(cls, value: object) -> object:
         """Accept common LLM confidence labels in addition to numeric scores."""
+        if value is None:
+            return 0.0
         if isinstance(value, str):
             normalized = value.strip().lower()
             if not normalized:
+                return 0.0
+            if normalized in {"n/a", "na", "not applicable", "not_applicable"}:
                 return 0.0
             label_scores = {
                 "high": 0.9,
@@ -74,7 +78,11 @@ class BaselineLLMEvidenceItem(BaseModel):
                 try:
                     return float(normalized[:-1]) / 100.0
                 except ValueError:
-                    return value
+                    return 0.0
+            try:
+                return float(normalized)
+            except ValueError:
+                return 0.0
         return value
 
 
