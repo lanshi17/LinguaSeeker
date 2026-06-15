@@ -12,10 +12,10 @@ cors_origins: "*"
 
 # ── LLM Endpoints (Development) ──────────────────────────────────────────
 fast_llm:
-  base_url: "https://linxi.chat"
+  base_url: "https://linxi.chat/v1"
 
 reasoning_llm:
-  base_url: "https://linxi.chat"
+  base_url: "https://linxi.chat/v1"
 
 chat_llm:
   base_url: "https://api.siliconflow.cn"
