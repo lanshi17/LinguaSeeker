@@ -134,6 +134,24 @@ class EvidenceStatus(str, Enum):
     CONTEXT_CONTAMINATION = "context_contamination"
 
 
+class EvidenceAlignmentLabel(str, Enum):
+    """Original-vs-translation alignment decision for one evidence field."""
+
+    ALIGNED = "aligned"
+    PARTIAL = "partial"
+    DRIFTED = "drifted"
+    CONFLICT = "conflict"
+    MISSING = "missing"
+
+
+class EvidenceSupportLabel(str, Enum):
+    """Whether the compared tracks support the same evidence claim."""
+
+    SUPPORTS = "supports"
+    CONTRADICTS = "contradicts"
+    INSUFFICIENT = "insufficient"
+
+
 
 class EvidenceItem(BaseModel):
     """Extracted evidence for a single catalog field.
@@ -160,6 +178,41 @@ class EvidenceItem(BaseModel):
     requires_external_completion: bool = False
     external_completion_note: str = ""
     evidence_role: EvidenceRole = EvidenceRole.PRIMARY
+    article_language: str = ""
+    source_database: str = ""
+    is_english: bool | None = None
+    requires_translation: bool | None = None
+    target_gene: str = ""
+    target_disease: str = ""
+    target_variant: str = ""
+    evidence_source_language: str = ""
+
+    @model_validator(mode="after")
+    def normalize_language_metadata(self) -> EvidenceItem:
+        language = self.article_language.strip().lower()
+        if language and self.is_english is None:
+            self.is_english = language in {"en", "eng", "english"}
+        if self.requires_translation is None and self.is_english is not None:
+            self.requires_translation = not self.is_english
+        if not self.evidence_source_language and language:
+            self.evidence_source_language = language
+        return self
+
+
+class EvidenceAlignmentRecord(BaseModel):
+    """Source-grounded alignment between original-track and translated-track evidence."""
+
+    entry_id: str = ""
+    field_id: str
+    original_value: str | None = None
+    translated_value: str | None = None
+    normalized_value: str = ""
+    original_span_id: str = ""
+    translated_span_id: str = ""
+    alignment_label: EvidenceAlignmentLabel
+    support_label: EvidenceSupportLabel
+    drift_reason: str = ""
+    confidence: float = Field(ge=0.0, le=1.0)
 
 class EvidenceChain(BaseModel):
     chain_id: str
@@ -304,6 +357,7 @@ class DualEvidenceExtractionResult(BaseModel):
     original_result: EvidenceExtractionResult
     translated_result: EvidenceExtractionResult
     reconciled_result: EvidenceExtractionResult | None = None
+    alignment_records: list[EvidenceAlignmentRecord] = Field(default_factory=list)
 
 
 class EvidenceExtractionState(BaseModel):
