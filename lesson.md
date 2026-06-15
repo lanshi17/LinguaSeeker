@@ -2680,3 +2680,22 @@ Removed only the eight all-zero local ref files under `.git/refs/heads/`, then r
 **Solution**: Removed the extra EOF blank lines and reran staged whitespace checks before committing.
 
 **Prevention**: For generated or hand-written Markdown deliverables, run `git diff --check` before staging and `git diff --staged --check` after staging.
+
+## 2026-06-15 — ChatView `abort()` TypeError during session switch
+
+**Problem**: `Cannot read properties of undefined (reading 'abort')` at `ChatView.tsx:364`
+when switching between chat sessions.
+
+**Root cause**: The `@ant-design/x-sdk` `useXChat` hook's returned `abort` closure throws
+internally when invoked during a provider transition (the internal conversation lookup returns
+`undefined` mid-swap). The existing `if (activeProvider)` guard and `abort?.()` optional chaining
+were insufficient because `abort` was a *function* (truthy, passes `?.`) but its *body* crashed.
+
+**Fix**: Wrapped all three `abort()` call sites in try/catch blocks so a failed abort during a
+session transition is silently swallowed rather than crashing the component.
+
+**Files changed**: `frontend/src/features/chat/components/ChatView.tsx` (lines 365–372, 907–913, 1015–1021)
+
+**Prevention**: Always wrap SDK-provided closures in try/catch when calling them in React
+effects or event handlers — the closure may reference internal state that is invalid during
+lifecycle transitions.

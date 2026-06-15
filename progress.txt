@@ -405,3 +405,5 @@
 [2026-06-15] [Pipeline PMID/DOI routing + evidence highlight hardening] [done] Routed online acquisition auto mode through direct API providers only when a deterministic identifier (DOI/PMID/PMCID) is present, eliminating wasted Firecrawl search+scrape calls and fixing the misleading "Acquisition succeeded but no file path found" Phase 1 error. Hardened MarkdownDocumentViewer highlight rendering to tolerate overlapping text ranges without crashing on splitText. [done]
 [2026-06-15] [fix chat session message bleed-through across create/switch] [done]
 [2026-06-15] [fix chat abort TypeError on session switch] [done] Guarded the session-switch useEffect's abort() call on activeProvider; the @ant-design/x-sdk useXChat hook returns a closure that throws when invoked without a provider, which happened on the initial render before activeConversationKey was set. Added activeProvider to the effect deps so the guard never closes over a stale reference. [done]
+
+[2026-06-15] [Fix ChatView abort TypeError on session switch] [done]

@@ -4,7 +4,7 @@ Project documentation organized by lifecycle status.
 
 ```text
 docs/
-├── active/           # Current active documentation
+├── active/           # In-progress plans & living reference docs
 ├── planned/          # Planned work that has not started
 ├── codereview/       # Active code reviews (.gitkeep)
 ├── diagrams/         # Mermaid flowcharts (phase1-phase4)
@@ -44,8 +44,8 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-06-15 | [BIBM Main Paper Claim Matrix](active/2026-06-15-bibm-main-paper-claim-matrix.md) | in-progress |
 | 2026-06-15 | [BIBM Main Paper Outline](active/2026-06-15-bibm-main-paper-outline.md) | in-progress |
 | 2026-06-15 | [BIBM Main Paper Limitations](active/2026-06-15-bibm-main-paper-limitations.md) | in-progress |
-| 2026-06-14 | [BIBM Main Paper G3 Semantic Boundary Repair Implementation Plan](active/2026-06-14-bibm-main-paper-g3-semantic-boundary-repair-plan.md) | in-progress |
 | 2026-06-15 | [Main Paper Tables Developer Guide](active/2026-06-15-main-paper-tables-guide.md) | in-progress |
+| 2026-06-14 | [BIBM Main Paper G3 Semantic Boundary Repair Implementation Plan](active/2026-06-14-bibm-main-paper-g3-semantic-boundary-repair-plan.md) | in-progress |
 | 2026-06-14 | [Traceability Metrics Developer Guide](active/2026-06-14-traceability-metrics-guide.md) | in-progress |
 | 2026-06-14 | [BIBM Main Paper Detailed Execution Plan](active/2026-06-14-bibm-main-paper-detailed-execution-plan.md) | in-progress |
 | 2026-06-14 | [BIBM Main Paper Roadmap](active/2026-06-14-bibm-main-paper-roadmap.md) | in-progress |
@@ -53,25 +53,23 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-06-14 | [BIBM Main Paper Rescue](active/2026-06-14-bibm-main-paper-rescue.md) | in-progress |
 | 2026-06-13 | [BIBM G1 Decision Memo](active/2026-06-13-bibm-g1-decision.md) | in-progress |
 | 2026-06-12 | [BIBM Novelty Diagnosis](active/2026-06-12-bibm-novelty.md) | in-progress |
-| 2026-05-09 | [PRD](active/PRD.md) | active -- citation-valid-by-construction, dual-track extraction |
-| 2026-05-09 | [Application Flow](active/APP_FLOW.md) | active -- SSE chat + 2-tab layout (AI Chat, Evidence) |
-| 2026-05-09 | [Technology Stack](active/TECH_STACK.md) | active -- FastAPI StreamingResponse SSE, MinerU-only parsing |
-| 2026-05-09 | [Frontend Guidelines](active/FRONTEND_GUIDELINES.md) | active -- 2-tab layout, vertical feature slices |
-| 2026-05-09 | [Backend Structure](active/BACKEND_STRUCTURE.md) | active -- LangGraph orchestrator, 4-phase pipeline |
-| 2026-05-09 | [Implementation Plan](active/IMPLEMENTATION_PLAN.md) | active -- Phase 1-2 done, Phase 3-4 in progress |
-| 2026-05-13 | [Phase Workflow Overview](active/phase_workflow_overview.md) | active -- four-phase pipeline reference |
+| 2026-05-09 | [PRD](active/PRD.md) | reference |
+| 2026-05-09 | [Application Flow](active/APP_FLOW.md) | reference |
+| 2026-05-09 | [Technology Stack](active/TECH_STACK.md) | reference |
+| 2026-05-09 | [Frontend Guidelines](active/FRONTEND_GUIDELINES.md) | reference |
+| 2026-05-09 | [Backend Structure](active/BACKEND_STRUCTURE.md) | reference |
+| 2026-05-09 | [Implementation Plan](active/IMPLEMENTATION_PLAN.md) | reference |
+| 2026-05-13 | [Phase Workflow Overview](active/phase_workflow_overview.md) | reference |
 
 ## Planned Work
 
 | Date | Title | Status |
 |------|-------|--------|
-| 2026-06-12 | [BIBM Novelty 攻关（诊断优先研究计划）](planned/2026-06-12-bibm-novelty.md) | planned |
-| 2026-06-12 | [Log Analysis Fixes](planned/2026-06-12-log-analysis-fixes.md) | planned |
+| 2026-06-15 | [Prompt-Only Frontier Model Baselines](planned/2026-06-15-prompt-only-frontier-model-baselines.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Next Gate Plan](planned/2026-06-14-bibm-main-paper-next-gate-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Detailed Plan](planned/2026-06-14-bibm-main-paper-detailed-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Rescue Plan](planned/2026-06-14-bibm-main-paper-rescue.md) | planned |
-| 2026-06-14 | [BIBM Main Paper 指标提升实施计划](planned/2026-06-14-bibm-main-paper-effect-plan.md) | planned |
-| 2026-06-15 | [Prompt-Only Frontier Model Baselines Implementation Plan](planned/2026-06-15-prompt-only-frontier-model-baselines.md) | planned |
+| 2026-06-14 | [BIBM Main Paper Effect Plan](planned/2026-06-14-bibm-main-paper-effect-plan.md) | planned |
 
 ## Diagrams
 
@@ -84,7 +82,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 ## Archive Index
 
-The `archive/plans/` directory contains 71 completed plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
+The `archive/plans/` directory contains 72 completed plans. The `archive/codereview/` directory contains 24 resolved code reviews. See individual directories for full listings.
 
 ## Module README Index
 
