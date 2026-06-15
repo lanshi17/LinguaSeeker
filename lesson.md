@@ -1,5 +1,20 @@
 # Lesson Log
 
+## 2026-06-15: Learned arbitrator LOO evaluation — data-driven cannot beat calibrated weights under N=30
+
+**Problem**: Attempted to replace the deterministic `context_verifier_reconcile` (F1=0.9474) with a learned L2 logistic regression arbitrator using 21 features and leave-one-entry-out policy evaluation on the frozen N=30 benchmark.
+
+**Investigation**: Built a full pipeline — feature extractor, labeled candidate dataset (311 candidates, 251 positive, 60 negative), LOO training/evaluation loop. The learned arbitrator scored F1=0.8889, underperforming contextual reconcile by -0.0585. The relationship field degraded most severely: 0.8889 → 0.7500 (-125% error increase).
+
+**Root cause**: Three compounding factors:
+1. **Extreme class imbalance**: 80.7% positive candidates. The model defaults to accepting most candidates, reducing precision.
+2. **Insufficient negative examples**: Only 60 competing candidates across 30 entries. L2 logistic regression cannot learn discriminative boundaries from this.
+3. **Domain knowledge in weights**: The contextual verifier's hand-tuned weights (0.30 source + 0.20 agreement + 0.20 verifier + 0.15 target + 0.10 confidence + 0.05 status - 0.25 contradiction) encode biomedical priors that data-driven models cannot recover from small data.
+
+**Fix**: Kept the learned arbitrator as a **negative ablation** in the paper. Gate A failed on both criteria (F1 gain < 0.010, relationship error reduction < 20%). Phase B (runtime integration) was cancelled. The paper now claims: "Deterministic contextual reconcile is robust and near-optimal under small data" — supported by the learned-arbitrator comparison as evidence the weights were not arbitrary.
+
+**Prevention**: When the training signal is sparse (<100 negative samples), do not attempt to replace well-calibrated deterministic rules with learned models. Instead, use the learned-vs-deterministic comparison as a negative ablation to validate the design choices. Future attempts at learned arbitration should wait until N=60+ with adjudicated gold labels and frozen train/dev/test splits (Phase C/D of the plan).
+
 ## 2026-06-14: Simple whitespace edits must use apply_patch or formatter, not ad hoc Python
 
 **Problem**: During BIBM research branch cleanup, a simple trailing-whitespace / blank-line-at-EOF fix was applied with a one-off Python script.
@@ -2723,3 +2738,13 @@ lifecycle transitions.
 **Solution**: Ran `uv sync --project backend --extra dev` once in the isolated worktree, then reran the baseline and focused verification commands with `--no-sync`.
 
 **Prevention**: In new worktrees, run one `uv sync --project backend --extra dev` before any `uv run --project backend --no-sync pytest` baseline. Keep subsequent test commands on `--no-sync` to avoid implicit dependency churn.
+
+## 2026-06-15 — Planned doc filename drifted from the actual BIBM plan title
+
+**Problem**: The planned document under `docs/planned/` was named `2026-06-15-crosslingual-alignment-traceability-evaluation-plan.md`, but its body and the docs index described the learned-arbitrator benchmark expansion plan.
+
+**Root cause**: The document content had already been repurposed to the learned-arbitrator plan, but the filename and README link were not updated to match.
+
+**Fix**: Renamed the file to `2026-06-15-learned-arbitrator-and-benchmark-expansion.md` so the path, title, and `docs/README.md` entry agree.
+
+**Prevention**: When a plan title changes, update the filename and all index links in the same edit so the docs tree stays self-consistent.
