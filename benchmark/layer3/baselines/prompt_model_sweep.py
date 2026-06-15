@@ -48,6 +48,17 @@ def build_baseline_config(
     )
 
 
+def build_extractor(*, manifest: PromptModelSweepManifest, spec: PromptModelSpec):
+    """Build the configured prompt-only extractor for one model spec."""
+    return make_extractor(
+        mode=manifest.prompt_mode,
+        model_override=spec.model,
+        temperature=manifest.temperature,
+        max_tokens_override=manifest.max_tokens,
+        input_max_chars=manifest.input_max_chars,
+    )
+
+
 async def run_model_sweep(
     *,
     manifest_path: Path,
@@ -61,12 +72,7 @@ async def run_model_sweep(
     manifest = load_prompt_model_sweep_manifest(manifest_path)
     report_paths: list[Path] = []
     for spec in manifest.models:
-        extractor = make_extractor(
-            manifest.prompt_mode,
-            model_override=spec.model,
-            temperature=manifest.temperature,
-            max_tokens_override=manifest.max_tokens,
-        )
+        extractor = build_extractor(manifest=manifest, spec=spec)
         report = await run_baseline_evaluation(
             build_baseline_config(
                 manifest=manifest,

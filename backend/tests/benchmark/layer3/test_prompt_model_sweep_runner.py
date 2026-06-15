@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from benchmark.layer3.baselines.model_sweep_contracts import PromptModelSpec, PromptModelSweepManifest
-from benchmark.layer3.baselines.prompt_model_sweep import build_baseline_config
+from benchmark.layer3.baselines.prompt_model_sweep import build_baseline_config, build_extractor
 
 
 def test_build_baseline_config_records_model_metadata(tmp_path: Path) -> None:
@@ -37,3 +37,39 @@ def test_build_baseline_config_records_model_metadata(tmp_path: Path) -> None:
     assert config.metadata["model"] == "gpt-5"
     assert config.metadata["prompt_mode"] == "citation_required"
     assert config.metadata["run_label"] == "prompt_frontier_20260615"
+
+
+def test_build_extractor_uses_manifest_input_max_chars(monkeypatch) -> None:
+    calls: list[dict[str, object]] = []
+
+    def fake_make_extractor(**kwargs):  # noqa: ANN001
+        calls.append(kwargs)
+        return object()
+
+    monkeypatch.setattr("benchmark.layer3.baselines.prompt_model_sweep.make_extractor", fake_make_extractor)
+    manifest = PromptModelSweepManifest(
+        run_label="prompt_frontier_20260615",
+        prompt_mode="citation_required",
+        temperature=0.0,
+        max_tokens=4096,
+        input_max_chars=12000,
+        models=(),
+    )
+    spec = PromptModelSpec(
+        baseline_id="B6_GPT5_PROMPT_CITE",
+        baseline_name="GPT-5 prompt-only citation-required",
+        provider_family="openai",
+        model="gpt-5",
+    )
+
+    build_extractor(manifest=manifest, spec=spec)
+
+    assert calls == [
+        {
+            "mode": "citation_required",
+            "model_override": "gpt-5",
+            "temperature": 0.0,
+            "max_tokens_override": 4096,
+            "input_max_chars": 12000,
+        }
+    ]
