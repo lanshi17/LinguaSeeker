@@ -12,7 +12,7 @@ This document lists the limitations that must be disclosed in the BIBM Main Pape
 ## Short Limitations Paragraph For Paper
 
 ```text
-This study has several limitations. First, the frozen benchmark contains 30 ClinGen/ACMG-style entries, which is sufficient for a controlled method analysis but not for broad claims of general biomedical IE superiority. Second, while the proposed method significantly improves over a grounded hard-rule internal baseline, its margin over the strongest matched LLM baseline is +0.0188 F1 and does not satisfy our pre-declared +0.03 strong-superiority threshold. Third, the current B0-B4 baseline reports do not expose comparable citation surfaces, so hallucinated citation rate can only be directly compared against the system and internal grounded strategies. Fourth, several gene-disease relationship labels encode ClinGen curation semantics that may not be fully visible in article-local source text. Finally, CrossEvidence extracts and reconciles evidence fields; it is not a clinical ACMG classification system and should not be used as autonomous clinical decision support.
+This study has several limitations. First, the frozen benchmark contains 30 ClinGen/ACMG-style entries, which is sufficient for a controlled method analysis but not for broad claims of general biomedical IE superiority. Second, while the proposed method significantly improves over a grounded hard-rule internal baseline, its margin over the strongest matched LLM baseline is +0.0188 F1 and does not satisfy our pre-declared +0.03 strong-superiority threshold. Third, the prompt-only frontier comparison uses a frozen same-release-window provider-alias cohort from 2025-08-07 to 2025-09-30; hosted model behavior and provider routing can change, so the manifest must be treated as part of the evidence package. Fourth, several gene-disease relationship labels encode ClinGen curation semantics that may not be fully visible in article-local source text. Finally, CrossEvidence extracts and reconciles evidence fields; it is not a clinical ACMG classification system and should not be used as autonomous clinical decision support.
 ```
 
 ## Mandatory Limitations
@@ -62,17 +62,18 @@ Forbidden claim:
 Significant superiority over all LLM baselines.
 ```
 
-### 3. Citation Metrics Are Not Fully Comparable To B0-B4
+### 3. Citation Metrics Are Comparable Only For Citation-Generating Baselines
 
 What to say:
 
 ```text
-B0-B4 provide matched extraction comparisons but do not expose a comparable citation surface in the current reports. Therefore, CVR/HCR are reported for the proposed method and internal grounded strategies; direct HCR comparison against B0-B4 requires citation-generating baseline runs.
+B0-B4 provide matched extraction comparisons but do not expose a comparable citation surface in the current reports. The new B6-B10 prompt-only frontier sweep does expose a citation-required surface and can be compared on CVR/HCR/TraceableF1, but those runs are tied to the frozen 2025-08-07 to 2025-09-30 model-release cohort and provider aliases.
 ```
 
 Evidence:
 
 - Candidate CVR=1.0, HCR=0.0.
+- B6-B10 same-window prompt-only frontier sweep: strongest raw prompt-only model is GPT-5 with F1=0.9222, CVR=0.9878, HCR=0.0122, TraceableF1=0.9109.
 - Internal grounded strategies also have citation surfaces.
 - B0-B4 baseline comparison reports contain extraction metrics, not citation validity metrics.
 
@@ -80,6 +81,32 @@ Do not say:
 
 ```text
 The method has lower hallucination rate than every LLM baseline.
+```
+
+Use instead:
+
+```text
+The method has lower HCR than the same-window citation-required prompt-only frontier baselines tested in the frozen manifest.
+```
+
+### 3.1 Provider Alias And Release-Cohort Dependence
+
+What to say:
+
+```text
+The prompt-only frontier sweep is frozen to a same-release-window cohort and records exact provider aliases, release dates, run date, prompt mode, temperature, and input window. This controls model-generation mismatch better than mixing arbitrary latest models, but hosted model providers may still change routing or serving behavior.
+```
+
+Evidence:
+
+- Manifest: `benchmark/layer3/baselines/prompt_model_sweep_20260615.json`.
+- Table: `benchmark/layer3/reports/prompt_model_baseline_tables_20260615_114312.md`.
+- Release cohort: GPT-5 2025-08-07, DeepSeek V3.1 2025-08-21, Qwen3-Max 2025-09-23, Claude Sonnet 4.5 2025-09-29, GLM-4.6 2025-09-30.
+
+Do not say:
+
+```text
+We compared against every frontier model currently available.
 ```
 
 ### 4. Citation Validity Is Not Semantic Perfection

@@ -1,0 +1,1915 @@
+{
+  "evaluation_id": "baseline_b6_gpt5_prompt_cite_20260615_112754",
+  "timestamp": "2026-06-15T11:27:54",
+  "baseline_id": "B6_GPT5_PROMPT_CITE",
+  "baseline_name": "GPT-5 prompt-only citation-required",
+  "config": {
+    "ground_truth_dir": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/prompt-model-baselines/benchmark/layer3/ground_truth",
+    "limit": null,
+    "entry_ids": [],
+    "report_path": "/data/yangzs/.config/superpowers/worktrees/01_ACMG_Lingua/prompt-model-baselines/benchmark/layer3/reports/baseline_b6_gpt5_prompt_cite_20260615_112754.json",
+    "run_label": "prompt_frontier_same_window_20260615",
+    "release_cohort": "frontier_2025q3_aug07_sep30",
+    "provider_gateway": "integrated_openai_compatible_supplier",
+    "call_interface": "openai_chat_completions",
+    "prompt_mode": "citation_required",
+    "provider_family": "openai",
+    "model": "gpt-5-2025-08-07",
+    "release_date": "2025-08-07",
+    "release_notes_url": "https://openai.com/index/introducing-gpt-5-for-developers/",
+    "temperature": 0.0,
+    "max_tokens": 4096,
+    "input_max_chars": 50000,
+    "run_date": "2026-06-15"
+  },
+  "total_entries": 30,
+  "total_duration_s": 741.86,
+  "aggregates": {
+    "overall": {
+      "true_positives": 77,
+      "false_positives": 5,
+      "false_negatives": 8,
+      "precision": 0.939,
+      "recall": 0.9059,
+      "f1": 0.9222,
+      "over_extractions": 0,
+      "entity_standardization_accuracy": 0.0,
+      "cross_lingual_consistency": 0.0
+    },
+    "by_field": {
+      "A.gene_symbol": {
+        "precision": 1.0,
+        "recall": 0.9333,
+        "f1": 0.9655,
+        "over_extractions": 0
+      },
+      "B.disease_diagnosis": {
+        "precision": 1.0,
+        "recall": 0.9667,
+        "f1": 0.9831,
+        "over_extractions": 0
+      },
+      "A.gene_disease_relationship": {
+        "precision": 0.8,
+        "recall": 0.8,
+        "f1": 0.8,
+        "over_extractions": 0
+      }
+    },
+    "by_classification": {
+      "Definitive": {
+        "count": 10,
+        "precision": 0.9667,
+        "recall": 1.0,
+        "f1": 0.9831,
+        "over_extractions": 0
+      },
+      "Strong": {
+        "count": 5,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "over_extractions": 0
+      },
+      "Moderate": {
+        "count": 5,
+        "precision": 0.9333,
+        "recall": 1.0,
+        "f1": 0.9655,
+        "over_extractions": 0
+      },
+      "Limited": {
+        "count": 5,
+        "precision": 0.9167,
+        "recall": 0.7857,
+        "f1": 0.8462,
+        "over_extractions": 0
+      },
+      "Refuted": {
+        "count": 3,
+        "precision": 0.8,
+        "recall": 0.5,
+        "f1": 0.6154,
+        "over_extractions": 0
+      },
+      "Disputed": {
+        "count": 2,
+        "precision": 0.8,
+        "recall": 0.8,
+        "f1": 0.8,
+        "over_extractions": 0
+      }
+    },
+    "by_moi": {
+      "AD": {
+        "count": 7,
+        "precision": 1.0,
+        "recall": 0.8571,
+        "f1": 0.9231,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "AR": {
+        "count": 7,
+        "precision": 0.9524,
+        "recall": 1.0,
+        "f1": 0.9756,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "SD": {
+        "count": 4,
+        "precision": 0.9167,
+        "recall": 1.0,
+        "f1": 0.9565,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "XL": {
+        "count": 5,
+        "precision": 1.0,
+        "recall": 0.9333,
+        "f1": 0.9655,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "MT": {
+        "count": 2,
+        "precision": 0.8,
+        "recall": 0.8,
+        "f1": 0.8,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      },
+      "UD": {
+        "count": 5,
+        "precision": 0.8333,
+        "recall": 0.7692,
+        "f1": 0.8,
+        "standardization_accuracy": 0.0,
+        "track_consistency": 0.0,
+        "over_extractions": 0
+      }
+    },
+    "by_entity_type": {}
+  },
+  "per_entry": [
+    {
+      "entry_id": "clingen_000",
+      "gene_symbol": "AARS1",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 21.06,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "AARS1",
+          "matched": true,
+          "extracted": "AARS1",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 10587,
+            "end_offset": 10695,
+            "text_snippet": "a heterozygous variant of uncertain significance was identified in the Alanyl‐tRNA synthetase 1 (AARS1) gene",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Charcot-Marie-Tooth disease axonal type 2N",
+          "matched": true,
+          "extracted": "Charcot-Marie-Tooth disease axonal type 2N",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 10697,
+            "end_offset": 10771,
+            "text_snippet": "which has been associated with Charcot–Marie–Tooth disease, axonal type 2N",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 10654,
+            "end_offset": 10771,
+            "text_snippet": "the Alanyl‐tRNA synthetase 1 (AARS1) gene, which has been associated with Charcot–Marie–Tooth disease, axonal type 2N",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_001",
+      "gene_symbol": "AARS2",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 22.24,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "AARS2",
+          "matched": true,
+          "extracted": "AARS2",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 17068,
+            "end_offset": 17193,
+            "text_snippet": "AARS2 gene mutations result in a mitochondrial disease with variable clinical manifestations dependent on the exact mutation.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "mitochondrial disease",
+          "matched": true,
+          "extracted": "mitochondrial disease",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 17068,
+            "end_offset": 17193,
+            "text_snippet": "AARS2 gene mutations result in a mitochondrial disease with variable clinical manifestations dependent on the exact mutation.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 17068,
+            "end_offset": 17193,
+            "text_snippet": "AARS2 gene mutations result in a mitochondrial disease with variable clinical manifestations dependent on the exact mutation.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_002",
+      "gene_symbol": "ABCA3",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 15.72,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCA3",
+          "matched": true,
+          "extracted": "ABCA3",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 2231,
+            "end_offset": 2325,
+            "text_snippet": "ABCA3 ( NM_001089 ), an 80 kb gene located on chromosome 16 encodes a 1704 amino acid protein.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "interstitial lung disease due to ABCA3 deficiency",
+          "matched": true,
+          "extracted": "interstitial lung disease due to ABCA3 deficiency",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 1460,
+            "end_offset": 1578,
+            "text_snippet": "The variable presentation and outcome of chILD due to ABCA3 pathogenic variants are linked to the underlying genotype.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": -1,
+            "end_offset": -1,
+            "text_snippet": "ABCA3 deficiency is one of the most severe causes of chILD",
+            "source_precision": "llm_quote_unmapped"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_003",
+      "gene_symbol": "ABCA4",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 13.86,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCA4",
+          "matched": true,
+          "extracted": "ABCA4",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 38,
+            "end_offset": 64,
+            "text_snippet": "ABCA4 -Related Retinopathy",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "ABCA4-related retinopathy",
+          "matched": true,
+          "extracted": "ABCA4-related retinopathy",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 38,
+            "end_offset": 64,
+            "text_snippet": "ABCA4 -Related Retinopathy",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": false,
+          "extracted": "uncertain",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 38,
+            "end_offset": 64,
+            "text_snippet": "ABCA4 -Related Retinopathy",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "wrong_value",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_004",
+      "gene_symbol": "ABCB4",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 19.31,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCB4",
+          "matched": true,
+          "extracted": "ABCB4",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 68077,
+            "end_offset": 68229,
+            "text_snippet": "Loss-of-function variants in the ABCB4 gene, which encodes the phosphatidylcholine (PC) transporter ABCB4 (MDR3 in humans; MDR2 in mice), underlie PFIC3",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "progressive familial intrahepatic cholestasis type 3",
+          "matched": true,
+          "extracted": "progressive familial intrahepatic cholestasis type 3",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 9982,
+            "end_offset": 10042,
+            "text_snippet": "Progressive familial intrahepatic cholestasis type 3 (PFIC3)",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 9982,
+            "end_offset": 10082,
+            "text_snippet": "Progressive familial intrahepatic cholestasis type 3 (PFIC3) is caused by impaired activity of ABCB4",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_005",
+      "gene_symbol": "ABCC8",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "SD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 25.7,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCC8",
+          "matched": true,
+          "extracted": "ABCC8",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 9648,
+            "end_offset": 9848,
+            "text_snippet": "Genetic testing (targeted monogenic diabetes panel, Blueprint Genetics Inc.) identified a heterozygous ABCC8 c.4055G>A (p.Arg1352His) likely pathogenic variant, consistent with MODY, type 12 (MODY12).",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "monogenic diabetes",
+          "matched": true,
+          "extracted": "monogenic diabetes",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 17203,
+            "end_offset": 17329,
+            "text_snippet": "This specific genetic variant is recognized for its association with both hyperinsulinemic hypoglycemia and monogenic diabetes",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 1664,
+            "end_offset": 1822,
+            "text_snippet": "Conversely, activating (gain-of-function) ABCC8 variants impair insulin secretion and can cause diabetes, including neonatal or young-onset monogenic diabetes",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_006",
+      "gene_symbol": "ABCD1",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "XL",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 28.43,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCD1",
+          "matched": true,
+          "extracted": "ABCD1",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 1808,
+            "end_offset": 1966,
+            "text_snippet": "Genetic testing confirmed the diagnosis of X-ALD resulting from novel ATP-binding cassette transports sub-family D member 1 gene ( ABCD1 ) pathogenic variant.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "adrenoleukodystrophy",
+          "matched": true,
+          "extracted": "X-linked adrenoleukodystrophy",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 1296,
+            "end_offset": 1422,
+            "text_snippet": "Abstract X-linked adrenoleukodystrophy (X-ALD) is a rare neurodegenerative demyelinating disorder with variable presentations.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 8700,
+            "end_offset": 8853,
+            "text_snippet": "X-ALD is a rare genetic disorder resulting from a defect in the ABCD1 gene on the Xq28 chromosome, which encodes the adrenoleukodystrophy protein (ALDP).",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_007",
+      "gene_symbol": "ABCG5",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 21.13,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCG5",
+          "matched": true,
+          "extracted": "ABCG5",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 2505,
+            "end_offset": 2677,
+            "text_snippet": "Sitosterolemia is a rare autosomal recessive lipid metabolic disorder caused by mutations in ABCG5 or ABCG8 , leading to pathological accumulation of dietary plant sterols.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "sitosterolemia",
+          "matched": true,
+          "extracted": "sitosterolemia",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 4580,
+            "end_offset": 4777,
+            "text_snippet": "Sitosterolemia, also known as phytosterolemia, is a rare autosomal recessive lipid metabolic disorder characterised by excessive intestinal absorption and reduced biliary excretion of plant sterols",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 4850,
+            "end_offset": 4949,
+            "text_snippet": "The condition is caused by biallelic loss‐of‐function mutations in either the ABCG5 or ABCG8 genes,",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_008",
+      "gene_symbol": "ABCG8",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 21.42,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABCG8",
+          "matched": true,
+          "extracted": "ABCG8",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 298,
+            "end_offset": 363,
+            "text_snippet": "It results from pathogenic mutations in the ABCG5 and ABCG8 genes",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "sitosterolemia",
+          "matched": true,
+          "extracted": "sitosterolemia",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 119,
+            "end_offset": 185,
+            "text_snippet": "Sitosterolemia, also referred to as phytosterolemia (MIM #210,250)",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 119,
+            "end_offset": 363,
+            "text_snippet": "Sitosterolemia, also referred to as phytosterolemia (MIM #210,250), is a rare autosomal recessive sterol storage disorder first identified in 1974 by Bhatacharyya & Connor [ 1 ]. It results from pathogenic mutations in the ABCG5 and ABCG8 genes",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_009",
+      "gene_symbol": "ABHD12",
+      "disease_label": "",
+      "classification": "Definitive",
+      "moi": "AR",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 25.36,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ABHD12",
+          "matched": true,
+          "extracted": "ABHD12",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 6058,
+            "end_offset": 6260,
+            "text_snippet": "PHARC syndrome (Polyneuropathy, Hearing loss, Ataxia, Retinitis pigmentosa (RP), and Cataracts) (MIM# 612674) is an autosomal recessive neurodegenerative disorder caused by mutations in the ABHD12 gene.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "PHARC syndrome",
+          "matched": true,
+          "extracted": "PHARC syndrome",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 6058,
+            "end_offset": 6260,
+            "text_snippet": "PHARC syndrome (Polyneuropathy, Hearing loss, Ataxia, Retinitis pigmentosa (RP), and Cataracts) (MIM# 612674) is an autosomal recessive neurodegenerative disorder caused by mutations in the ABHD12 gene.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": -1,
+            "end_offset": -1,
+            "text_snippet": "then Fiskerstrand et al. identified ABHD12 as the causative gene of PHARC syndrome in 2010 (Fiskerstrand et al. 2010 ).",
+            "source_precision": "llm_quote_unmapped"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_010",
+      "gene_symbol": "AP1G1",
+      "disease_label": "",
+      "classification": "Strong",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 27.11,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "AP1G1",
+          "matched": true,
+          "extracted": "AP1G1",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 4536,
+            "end_offset": 4637,
+            "text_snippet": "Variants in the AP1G1 gene, encoding the gamma-1 subunit of adaptor-related protein complex 1 (AP1γ1)",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "complex neurodevelopmental disorder",
+          "matched": true,
+          "extracted": "complex neurodevelopmental disorder",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 168,
+            "end_offset": 306,
+            "text_snippet": "De Novo and Bi-Allelic Variants in AP1G1 Cause Neurodevelopmental Disorder with Developmental Delay, Intellectual Disability, and Epilepsy",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 168,
+            "end_offset": 306,
+            "text_snippet": "De Novo and Bi-Allelic Variants in AP1G1 Cause Neurodevelopmental Disorder with Developmental Delay, Intellectual Disability, and Epilepsy",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_011",
+      "gene_symbol": "H4C5",
+      "disease_label": "",
+      "classification": "Strong",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 30.49,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "H4C5",
+          "matched": true,
+          "extracted": "H4C5",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 187911,
+            "end_offset": 188016,
+            "text_snippet": "H4C5 | H4 | H4FJ | HIST1H4E | 6p22.2 | 1 | * 602830 | Tessadori-van Haaften neurodevelopmental syndrome 3",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Tessadori-Van Haaften neurodevelopmental syndrome 3",
+          "matched": true,
+          "extracted": "Tessadori-van Haaften neurodevelopmental syndrome 3",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 187911,
+            "end_offset": 188016,
+            "text_snippet": "H4C5 | H4 | H4FJ | HIST1H4E | 6p22.2 | 1 | * 602830 | Tessadori-van Haaften neurodevelopmental syndrome 3",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 187911,
+            "end_offset": 188016,
+            "text_snippet": "H4C5 | H4 | H4FJ | HIST1H4E | 6p22.2 | 1 | * 602830 | Tessadori-van Haaften neurodevelopmental syndrome 3",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_012",
+      "gene_symbol": "KCNQ1",
+      "disease_label": "",
+      "classification": "Strong",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 19.88,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "KCNQ1",
+          "matched": true,
+          "extracted": "KCNQ1",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 7696,
+            "end_offset": 7829,
+            "text_snippet": "SQTS can result from pathogenic variants in potassium channel genes ( KCNH2, KCNQ1, and KCNJ2 ) or anion exchanger SLC4A3 [ 3 , 10 ].",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "short QT syndrome",
+          "matched": true,
+          "extracted": "short QT syndrome",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 4941,
+            "end_offset": 5014,
+            "text_snippet": "Short QT syndrome (SQTS) is an exceptionally rare inherited channelopathy",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 7696,
+            "end_offset": 7829,
+            "text_snippet": "SQTS can result from pathogenic variants in potassium channel genes ( KCNH2, KCNQ1, and KCNJ2 ) or anion exchanger SLC4A3 [ 3 , 10 ].",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_013",
+      "gene_symbol": "MAP1B",
+      "disease_label": "",
+      "classification": "Strong",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 20.81,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MAP1B",
+          "matched": true,
+          "extracted": "MAP1B",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 59749,
+            "end_offset": 59942,
+            "text_snippet": "MAP1B | AD | 5q13.2 | DD, ID, Seizures | Microcephaly with PVNH, Polymicrogyria, Corpus callosum dysgenesis | Hallmayer et al., 2018 [ 77 ] Walters et al., 2018 [ 78 ] Julca et al., 2019 [ 75 ]",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "periventricular nodular heterotopia",
+          "matched": true,
+          "extracted": "periventricular nodular heterotopia",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 8704,
+            "end_offset": 8794,
+            "text_snippet": "Periventricular nodular heterotopia (PVNH) is a malformation of cortical development (MCD)",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 14080,
+            "end_offset": 14176,
+            "text_snippet": "We here review the risk genes with likely pathogenic changes that lead to PVNH in human patients",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_014",
+      "gene_symbol": "PCGF2",
+      "disease_label": "",
+      "classification": "Strong",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 13.59,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "PCGF2",
+          "matched": true,
+          "extracted": "PCGF2",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 525,
+            "end_offset": 630,
+            "text_snippet": "Turnpenny-Fry syndrome (TPFS) is caused by a heterozygous mutation in the PCGF2 gene on chromosome 17q12.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "turnpenny-fry syndrome",
+          "matched": true,
+          "extracted": "Turnpenny-Fry syndrome",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 525,
+            "end_offset": 630,
+            "text_snippet": "Turnpenny-Fry syndrome (TPFS) is caused by a heterozygous mutation in the PCGF2 gene on chromosome 17q12.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 525,
+            "end_offset": 630,
+            "text_snippet": "Turnpenny-Fry syndrome (TPFS) is caused by a heterozygous mutation in the PCGF2 gene on chromosome 17q12.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_015",
+      "gene_symbol": "MT-TI",
+      "disease_label": "",
+      "classification": "Moderate",
+      "moi": "MT",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 18.04,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MT-TI",
+          "matched": true,
+          "extracted": "MT-TI",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 16185,
+            "end_offset": 16227,
+            "text_snippet": "Moderate: TRIM63 , KLHL24 , JPH2 , MT-TI .",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "hypertrophic cardiomyopathy",
+          "matched": true,
+          "extracted": "Hypertrophic cardiomyopathy",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 2424,
+            "end_offset": 2495,
+            "text_snippet": "Hypertrophic cardiomyopathy (HCM) is a common heritable cardiac disease",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": false,
+          "extracted": "uncertain",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 1826,
+            "end_offset": 1955,
+            "text_snippet": "No genes deemed to have moderate or limited evidence had any significant associations with HCM even before Bonferroni correction.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "wrong_value",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_016",
+      "gene_symbol": "TBC1D8B",
+      "disease_label": "",
+      "classification": "Moderate",
+      "moi": "XL",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 17.93,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "TBC1D8B",
+          "matched": true,
+          "extracted": "TBC1D8B",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 2281,
+            "end_offset": 2363,
+            "text_snippet": "TBC1D8B was recently discovered as a novel disease-causing gene for X-linked NPHS.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "nephrotic syndrome, type 20",
+          "matched": true,
+          "extracted": "nephrotic syndrome, type 20",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 24278,
+            "end_offset": 24341,
+            "text_snippet": "The OMIM database maps TBC1D8B defects to NPHS20 (OMIM#301028).",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 2281,
+            "end_offset": 2363,
+            "text_snippet": "TBC1D8B was recently discovered as a novel disease-causing gene for X-linked NPHS.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_017",
+      "gene_symbol": "TLR7",
+      "disease_label": "",
+      "classification": "Moderate",
+      "moi": "XL",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 23.2,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "TLR7",
+          "matched": true,
+          "extracted": "TLR7",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 2106,
+            "end_offset": 2166,
+            "text_snippet": "# TLR7 gain-of-function genetic variation causes human lupus",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "systemic lupus erythematosus 17",
+          "matched": true,
+          "extracted": "systemic lupus erythematosus 17",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 57328,
+            "end_offset": 57359,
+            "text_snippet": "Systemic lupus erythematosus 17",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 2106,
+            "end_offset": 2166,
+            "text_snippet": "# TLR7 gain-of-function genetic variation causes human lupus",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_018",
+      "gene_symbol": "POLA1",
+      "disease_label": "",
+      "classification": "Moderate",
+      "moi": "XL",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 23.9,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "POLA1",
+          "matched": true,
+          "extracted": "POLA1",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 11791,
+            "end_offset": 11811,
+            "text_snippet": "| POLA1 | X-linked |",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "X-linked reticulate pigmentary disorder",
+          "matched": true,
+          "extracted": "X-linked reticulate pigmentary disorder",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 11487,
+            "end_offset": 11526,
+            "text_snippet": "X-linked reticulate pigmentary disorder",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 11487,
+            "end_offset": 11811,
+            "text_snippet": "X-linked reticulate pigmentary disorder | Females: Hyperpigmented patches distributed along the lines of Blaschko. Males: Generalized reticulate hyperpigmentation and hypopigmentation. | Mild hyperkeratosis, acanthosis, hyperpigmentation of the basal layer, and melanin incontinence in the upper dermis. | POLA1 | X-linked |",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_019",
+      "gene_symbol": "UNC93B1",
+      "disease_label": "",
+      "classification": "Moderate",
+      "moi": "SD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 27.87,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "UNC93B1",
+          "matched": true,
+          "extracted": "UNC93B1",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 1735,
+            "end_offset": 1829,
+            "text_snippet": "Gain-of-function human UNC93B1 variants cause systemic lupus erythematosus and chilblain lupus",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "systemic lupus erythematosus",
+          "matched": true,
+          "extracted": "systemic lupus erythematosus",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 1735,
+            "end_offset": 1829,
+            "text_snippet": "Gain-of-function human UNC93B1 variants cause systemic lupus erythematosus and chilblain lupus",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "causative",
+          "matched": true,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 1735,
+            "end_offset": 1829,
+            "text_snippet": "Gain-of-function human UNC93B1 variants cause systemic lupus erythematosus and chilblain lupus",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_020",
+      "gene_symbol": "GJA1",
+      "disease_label": "",
+      "classification": "Limited",
+      "moi": "UD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 20.75,
+      "evidence_count": 3,
+      "found_rate": 0.3333333333333333,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "GJA1",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "congenital heart disease",
+          "matched": true,
+          "extracted": "congenital heart disease",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 1786,
+            "end_offset": 1946,
+            "text_snippet": "Tetralogy of Fallot (TOF) is the most common cyanotic congenital heart disease, accounting for approximately 7–10% of all congenital heart defects (CHDs) [ 1 ].",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "uncertain",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_021",
+      "gene_symbol": "LGALSL",
+      "disease_label": "",
+      "classification": "Limited",
+      "moi": "UD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 32.33,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "LGALSL",
+          "matched": true,
+          "extracted": "LGALSL",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 24938,
+            "end_offset": 25034,
+            "text_snippet": "LAS1L, LGALSL, MAPT, MOBP, NIPA1, PLEKHG5, REEP1, RNF13, SARM1, SCFD1, SLC52A1, SLC52A2, SLC52A3",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "amyotrophic lateral sclerosis",
+          "matched": true,
+          "extracted": "amyotrophic lateral sclerosis",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 3219,
+            "end_offset": 3327,
+            "text_snippet": "Amyotrophic lateral sclerosis (ALS) is a devastating, uniformly lethal degenerative disease of motor neurons",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "uncertain",
+          "matched": true,
+          "extracted": "uncertain",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": -1,
+            "end_offset": -1,
+            "text_snippet": "One hundred twenty-two genes (Table 3) associated with ALS were included in the in silico gene panel",
+            "source_precision": "llm_quote_unmapped"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_022",
+      "gene_symbol": "ARHGEF28",
+      "disease_label": "",
+      "classification": "Limited",
+      "moi": "SD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 32.47,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ARHGEF28",
+          "matched": true,
+          "extracted": "ARHGEF28",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 25484,
+            "end_offset": 25506,
+            "text_snippet": "ARHGEF28 | p.A168T | 1",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "amyotrophic lateral sclerosis",
+          "matched": true,
+          "extracted": "amyotrophic lateral sclerosis",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 2109,
+            "end_offset": 2345,
+            "text_snippet": "Amyotrophic lateral sclerosis (ALS), which is characterized by progressive deterioration of upper and lower motor neurons resulting in severe muscle atrophy, respiratory failure, and death, is a rare and fatal neurodegenerative disease.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "uncertain",
+          "matched": true,
+          "extracted": "uncertain",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 18569,
+            "end_offset": 18668,
+            "text_snippet": "A summary of ALS-associated mutations in Hong Kong shows 42 mutations across 59 alleles (Table 4 ).",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_023",
+      "gene_symbol": "CFAP410",
+      "disease_label": "",
+      "classification": "Limited",
+      "moi": "SD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 59.75,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "CFAP410",
+          "matched": true,
+          "extracted": "CFAP410",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 10959,
+            "end_offset": 11101,
+            "text_snippet": "Among the 15 associated variants, 10 were located in genes previously shown to be related to ALS: SOD1 , CFAP410 , NEK1 , KIF5A , FUS and TBK1",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "amyotrophic lateral sclerosis",
+          "matched": true,
+          "extracted": "amyotrophic lateral sclerosis",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 5670,
+            "end_offset": 5819,
+            "text_snippet": "Amyotrophic lateral sclerosis (ALS) is a heritable disorder where rare variants with low-to-moderate penetrance are thought to dominate genetic risk.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "uncertain",
+          "matched": false,
+          "extracted": "causative",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 10959,
+            "end_offset": 11101,
+            "text_snippet": "Among the 15 associated variants, 10 were located in genes previously shown to be related to ALS: SOD1 , CFAP410 , NEK1 , KIF5A , FUS and TBK1",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "wrong_value",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_024",
+      "gene_symbol": "TLR5",
+      "disease_label": "",
+      "classification": "Limited",
+      "moi": "UD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 19.88,
+      "evidence_count": 3,
+      "found_rate": 0.6666666666666666,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "TLR5",
+          "matched": true,
+          "extracted": "TLR5",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 7283,
+            "end_offset": 7506,
+            "text_snippet": "TLR5 is predominantly expressed in intestinal epithelial cells and recognizes bacterial flagellin, contributing to gut homeostasis and systemic immunity, with associations in Crohn’s disease and bacterial infections [ 23 ].",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "systemic lupus erythematosus, susceptibility to, 1",
+          "matched": true,
+          "extracted": "systemic lupus erythematosus (SLE)",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 549,
+            "end_offset": 620,
+            "text_snippet": "systemic autoimmune diseases such as systemic lupus erythematosus (SLE)",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "fuzzy",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "uncertain",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_025",
+      "gene_symbol": "CHRNA7",
+      "disease_label": "",
+      "classification": "Refuted",
+      "moi": "UD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 25.68,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "CHRNA7",
+          "matched": true,
+          "extracted": "CHRNA7",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 7964,
+            "end_offset": 7989,
+            "text_snippet": "which includes the CHRNA7",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "epilepsy",
+          "matched": true,
+          "extracted": "epilepsy",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 8104,
+            "end_offset": 8158,
+            "text_snippet": "schizophrenia, epilepsy, and autism spectrum disorders",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "refuted",
+          "matched": false,
+          "extracted": "uncertain",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 25767,
+            "end_offset": 25914,
+            "text_snippet": "Research suggests that deletions in the CHRNA7 gene could be a potential pathogenic factor for the phenotypes linked to epilepsy and schizophrenia.",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "wrong_value",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_026",
+      "gene_symbol": "SRPX2",
+      "disease_label": "",
+      "classification": "Refuted",
+      "moi": "XL",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 21.22,
+      "evidence_count": 3,
+      "found_rate": 0.6666666666666666,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "SRPX2",
+          "matched": true,
+          "extracted": "SRPX2",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 26368,
+            "end_offset": 26444,
+            "text_snippet": "It has been associated with certain genes ( SRPX2, RAB3GAP1, EOMES, TUBB2B )",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "epilepsy",
+          "matched": true,
+          "extracted": "epilepsy",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 26529,
+            "end_offset": 26658,
+            "text_snippet": "Epilepsy has been shown to be present in up to 87% [ 66 ] of PMG cases and is frequently found to be medically refractory [ 67 ].",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "refuted",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_027",
+      "gene_symbol": "ADRA2B",
+      "disease_label": "",
+      "classification": "Refuted",
+      "moi": "AD",
+      "language": "en",
+      "pipeline_status": "error",
+      "error_message": "1 validation error for BaselineLLMResponse\n  Invalid JSON: EOF while parsing a value at line 1 column 0 [type=json_invalid, input_value='', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/json_invalid",
+      "duration_s": 55.9,
+      "evidence_count": 0,
+      "found_rate": 0.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "ADRA2B",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "epilepsy",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "refuted",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_028",
+      "gene_symbol": "MT-TL2",
+      "disease_label": "",
+      "classification": "Disputed",
+      "moi": "MT",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 19.17,
+      "evidence_count": 3,
+      "found_rate": 0.6666666666666666,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "MT-TL2",
+          "matched": true,
+          "extracted": "MT-TL2",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 12205,
+            "end_offset": 12235,
+            "text_snippet": "tRNA MT-TL2 CPEO m.12276 G > A",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "Leigh syndrome",
+          "matched": true,
+          "extracted": "Leigh syndrome",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 5116,
+            "end_offset": 5161,
+            "text_snippet": "Coding MT-ATP6 BSN/Leigh syndrome m.8851T > C",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "disputed",
+          "matched": false,
+          "extracted": null,
+          "source_span": null,
+          "match_type": "missing",
+          "extra_found_values": []
+        }
+      ]
+    },
+    {
+      "entry_id": "clingen_029",
+      "gene_symbol": "BMPR1A",
+      "disease_label": "",
+      "classification": "Disputed",
+      "moi": "UD",
+      "language": "en",
+      "pipeline_status": "completed",
+      "error_message": null,
+      "duration_s": 17.65,
+      "evidence_count": 3,
+      "found_rate": 1.0,
+      "field_matches": [
+        {
+          "field_id": "A.gene_symbol",
+          "expected": "BMPR1A",
+          "matched": true,
+          "extracted": "BMPR1A",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 43343,
+            "end_offset": 43502,
+            "text_snippet": "MiR-3168 is the least known miRNA that we studied, some of the targets predicted for it included several BMP receptors involved in PAH ( BMPR2 and BMPR1A ) 2 .",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "B.disease_diagnosis",
+          "expected": "pulmonary arterial hypertension",
+          "matched": true,
+          "extracted": "pulmonary arterial hypertension",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 6211,
+            "end_offset": 6356,
+            "text_snippet": "Pulmonary Arterial Hypertension (PAH) is a rare, progressive disorder characterized by pathological vascular remodeling of the pulmonary arteries",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "exact",
+          "extra_found_values": []
+        },
+        {
+          "field_id": "A.gene_disease_relationship",
+          "expected": "disputed",
+          "matched": false,
+          "extracted": "uncertain",
+          "source_span": {
+            "span_id": "llm-quote",
+            "start_offset": 43394,
+            "end_offset": 43498,
+            "text_snippet": "some of the targets predicted for it included several BMP receptors involved in PAH ( BMPR2 and BMPR1A )",
+            "source_precision": "llm_quote_exact"
+          },
+          "match_type": "wrong_value",
+          "extra_found_values": []
+        }
+      ]
+    }
+  ]
+}

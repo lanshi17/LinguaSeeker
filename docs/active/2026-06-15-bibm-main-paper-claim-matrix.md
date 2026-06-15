@@ -19,6 +19,7 @@ This matrix binds every paper-facing claim to frozen evidence artifacts. It is t
 | Candidate traceability | `benchmark/layer3/reports/traceability_context_verifier_reconcile_20260615_011414.json` | CVR=1.0, HCR=0.0, TraceableF1=0.9474 |
 | Internal baseline traceability | `benchmark/layer3/reports/traceability_grounded_hard_rule_20260615_013608.json` | TraceableF1=0.8820 |
 | Internal source-grounded traceability | `benchmark/layer3/reports/traceability_source_grounded_reconcile_20260615_013609.json` | TraceableF1=0.8889 |
+| Same-window prompt-only frontier sweep | `benchmark/layer3/reports/prompt_model_baseline_tables_20260615_114312.md` | B6-B10 citation-required prompt-only baselines, release cohort 2025-08-07 to 2025-09-30, same provider gateway and prompt; strongest GPT-5 F1=0.9222, TraceableF1=0.9109 |
 | Error diagnosis | `benchmark/layer3/reports/contextual_reconcile_diagnosis_20260615_011335.json` | `source_label_visibility_limit=5`, `disease_boundary_error=2`, `candidate_absent=2` |
 | Paper tables | `benchmark/layer3/reports/main_paper_tables_20260615_011554.md` | Tables 1-5 generated from the frozen manifest |
 
@@ -43,6 +44,7 @@ On a frozen N=30 ClinGen/ACMG-style benchmark, context-verifier reconciliation i
 | Algorithmic contribution | "A traceability-centered evidence reconciliation method for cross-lingual ACMG/ClinGen evidence extraction." | Method design plus ablation report | Do not call it a general cross-lingual IE paradigm. |
 | Internal superiority | "`context_verifier_reconcile` significantly improves over `grounded_hard_rule` on the frozen N=30 set." | G2 statistics: delta=+0.0654, CI lower=0.0302, p=0.0039 | Baseline is an internal deterministic grounded baseline, not the strongest LLM baseline. |
 | Competitive matched-baseline result | "The method remains competitive with matched LLM baselines while adding explicit traceability guarantees." | B0 F1=0.9286 vs system F1=0.9474 | The gap over B0 is +0.0188, below the pre-declared +0.03 strong-superiority threshold. |
+| Same-window frontier prompt-only result | "Against a citation-required prompt-only frontier cohort from the same release window, CrossEvidence achieves higher raw F1 and TraceableF1 than every tested model alias." | B6-B10 table: GPT-5 is strongest prompt-only baseline, F1=0.9222, TraceableF1=0.9109; CrossEvidence F1=0.9474, TraceableF1=0.9474 | Do not claim statistical significance over each frontier model unless a paired test is added. |
 | Citation validity | "Accepted citations are valid by construction against canonical source spans in this benchmark." | Candidate CVR=1.0, HCR=0.0, citation_total=88 | This is citation recoverability, not proof that every value is semantically correct. |
 | Traceable utility | "TraceableF1 improves from 0.8820/0.8889 for internal grounded baselines to 0.9474." | Traceability reports for candidate, `grounded_hard_rule`, `source_grounded_reconcile` | B0-B4 do not emit a comparable citation surface. |
 | Error analysis | "Remaining relationship errors include source-label visibility limits where the article-local evidence does not expose the ClinGen validity label." | Diagnosis report with `source_label_visibility_limit=5` | Do not tune runtime extraction to ClinGen gold labels unless that context is explicitly allowed. |
@@ -52,7 +54,7 @@ On a frozen N=30 ClinGen/ACMG-style benchmark, context-verifier reconciliation i
 
 | Claim | Use only with this qualifier |
 |---|---|
-| "Reduces hallucinated citation risk" | Only against citation-generating baselines or internal grounded strategies. For B0-B4, state that their current reports have no citation surface, so HCR is not directly comparable. |
+| "Reduces hallucinated citation risk" | Directly compare against the citation-required B6-B10 prompt-only frontier sweep and internal grounded strategies. For B0-B4, state that their current reports have no citation surface, so HCR is not directly comparable. |
 | "Cross-lingual consistency" | Report CLC as a reliability/audit metric, not as proof of native multilingual superiority. The current ClinGen benchmark is not native multilingual gold data. |
 | "Main Paper ready" | Say the internal grounded-baseline statistics pass the Main Paper evidence gate; do not say all SOTA baseline superiority gates are closed. |
 | "ACMG/ClinGen evidence automation" | Say structured evidence extraction and reconciliation, not clinical ACMG classification automation. |
@@ -61,7 +63,7 @@ On a frozen N=30 ClinGen/ACMG-style benchmark, context-verifier reconciliation i
 
 | Forbidden wording | Reason |
 |---|---|
-| "The method significantly outperforms all matched LLM baselines." | The candidate-vs-B0 gap is +0.0188, below the +0.03 strong-superiority threshold, and no paired significance test against B0 is frozen. |
+| "The method significantly outperforms all matched LLM or frontier baselines." | The candidate-vs-B0 gap is +0.0188, below the +0.03 strong-superiority threshold, and no paired significance test against B0/B6-B10 is frozen. |
 | "100% semantically correct traceability." | CVR=1.0 means accepted citation spans are recoverable; ESR=0.9205 shows semantic support is high but not perfect. |
 | "Native multilingual superiority." | The frozen ClinGen benchmark is not a native multilingual gold set. |
 | "Clinical decision support system that automates ACMG classification." | The method extracts and reconciles evidence fields; it does not automate clinical classification. |

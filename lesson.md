@@ -2669,6 +2669,18 @@ Removed only the eight all-zero local ref files under `.git/refs/heads/`, then r
 
 **Prevention**: For every paper-facing metric refresh, first inspect top-level keys and identity fields, then extract values from payload paths. Do not write claim text from remembered schema names.
 
+## 2026-06-15: Frontier-model baselines must control release-window mismatch
+
+**Problem**: The first prompt-only frontier sweep selected currently available strong provider aliases such as `gpt-5.5` and `claude-opus-4-8`. This compared models from different release windows, which would let reviewers argue that the baseline table confounds method value with model-generation differences.
+
+**Investigation**: Listed the integrated supplier's `/v1/models` aliases and checked official release-note pages for available GPT, Claude, Qwen, DeepSeek, and GLM models. The provider supports a more comparable 2025-08 to 2025-09 cohort: `gpt-5-2025-08-07`, `deepseek-v3.1`, `qwen3-max`, `claude-sonnet-4-5-20250929`, and `glm-4.6`.
+
+**Root cause**: The initial baseline selection optimized for current market strength instead of experimental fairness. For a Main Paper, "latest available" is less defensible than a frozen cohort whose release dates and provider aliases are explicitly recorded.
+
+**Solution**: Replaced the primary B6-B10 manifest with a same-release-window cohort, added `release_cohort`, `release_date`, `release_notes_url`, `provider_gateway`, and `call_interface` metadata to reports and summary tables, deleted the mixed-era exploratory reports from the working tree, and reran the full N=30 sweep.
+
+**Prevention**: For any paper-facing model comparison, freeze exact model aliases, provider route, prompt mode, run date, and release-window rationale before running the full benchmark. Put mixed-era or unavailable models only in appendix/sensitivity analysis, not in the primary claim table.
+
 ## 2026-06-15: Markdown writing-package drafts need staged whitespace checks
 
 **Problem**: The first staged BIBM writing-package draft failed `git diff --staged --check` because three new Markdown files had extra blank lines at EOF.

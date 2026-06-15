@@ -7,7 +7,7 @@
 
 ## Abstract
 
-Cross-lingual biomedical evidence extraction for clinical genetics requires both accurate structured fields and citations that can be audited against source literature. Direct LLM extraction can produce plausible values, but it does not guarantee that accepted evidence is grounded in recoverable source spans. We present CrossEvidence, a citation-valid-by-construction evidence reconciliation framework for ACMG/ClinGen-style gene-disease evidence extraction. The method converts original-track and translated-track extraction candidates into a typed evidence graph, validates source spans, adds target-safe gene/disease context, and reconciles conflicts using verifier support, target specificity, cross-track agreement, and contradiction-aware scoring. We evaluate on a frozen N=30 ClinGen/ACMG-style benchmark against matched direct LLM, translate-then-extract, original-only, RAG-LLM, single-agent CoT, and grounded hard-rule baselines. Context-verifier reconciliation achieves P=0.9205, R=0.9759, and F1=0.9474, significantly improving over the grounded hard-rule baseline (F1=0.8820; delta=+0.0654; 95% CI=[0.0302, 0.1060]; p=0.0039) while remaining competitive with the strongest matched LLM baseline (F1=0.9286). Accepted citations are recoverable from canonical source spans in the benchmark (CVR=1.0, HCR=0.0). Error analysis shows that the hardest remaining cases are relationship labels whose ClinGen validity semantics are not fully visible in article-local evidence.
+Cross-lingual biomedical evidence extraction for clinical genetics requires both accurate structured fields and citations that can be audited against source literature. Direct LLM extraction can produce plausible values, but it does not guarantee that accepted evidence is grounded in recoverable source spans. We present CrossEvidence, a citation-valid-by-construction evidence reconciliation framework for ACMG/ClinGen-style gene-disease evidence extraction. The method converts original-track and translated-track extraction candidates into a typed evidence graph, validates source spans, adds target-safe gene/disease context, and reconciles conflicts using verifier support, target specificity, cross-track agreement, and contradiction-aware scoring. We evaluate on a frozen N=30 ClinGen/ACMG-style benchmark against matched direct LLM, translate-then-extract, original-only, RAG-LLM, single-agent CoT, same-release-window citation-required frontier prompt-only, and grounded hard-rule baselines. Context-verifier reconciliation achieves P=0.9205, R=0.9759, and F1=0.9474, significantly improving over the grounded hard-rule baseline (F1=0.8820; delta=+0.0654; 95% CI=[0.0302, 0.1060]; p=0.0039). It also exceeds the strongest same-window citation-required prompt-only frontier baseline, GPT-5, on raw F1 (0.9474 vs. 0.9222) and TraceableF1 (0.9474 vs. 0.9109). Accepted citations are recoverable from canonical source spans in the benchmark (CVR=1.0, HCR=0.0). Error analysis shows that the hardest remaining cases are relationship labels whose ClinGen validity semantics are not fully visible in article-local evidence.
 
 ## 1. Introduction
 
@@ -17,12 +17,13 @@ Large language models provide a convenient interface for biomedical information 
 
 We propose CrossEvidence, a citation-valid-by-construction cross-lingual biomedical evidence reconciliation framework. The method extracts original-track and translated-track candidates, converts them into a typed evidence graph, verifies source spans, applies target-safe gene/disease context, and reconciles field conflicts with verifier support, target specificity, agreement, and contradiction penalties. The contribution is not the surrounding multi-agent software; it is the evidence-graph decision layer that turns citation validity into an acceptance invariant.
 
-This paper makes four contributions:
+This paper makes five contributions:
 
 1. A target-safe dual-track evidence graph for ACMG/ClinGen-style gene-disease evidence extraction.
 2. A context-verifier reconciliation method that combines source grounding, target specificity, cross-track agreement, and contradiction-aware scoring.
 3. Traceability metrics that separate citation validity, hallucinated citation rate, span boundary quality, semantic support, and TraceableF1.
 4. A frozen N=30 evaluation against matched LLM baselines and grounded internal ablations, with paired statistics and explicit limitations.
+5. A citation-required prompt-only frontier model sweep using a same-release-window cohort and a single OpenAI-compatible provider gateway, isolating method value from prompt engineering alone.
 
 ## 2. Related Work
 
@@ -98,6 +99,7 @@ We compare the proposed `context_verifier_reconcile` method with five matched ex
 - B3: Keyword RAG + LLM.
 - B4: Single-agent CoT.
 - B5: Grounded hard-rule internal baseline.
+- B6-B10: Same-release-window citation-required prompt-only frontier sweep.
 
 All B0-B4 baseline reports are matched to the same 30 benchmark entries as the system. We report precision, recall, F1, field-level F1, paired bootstrap confidence intervals, and paired sign-test p-values. We also report traceability metrics:
 
@@ -108,7 +110,7 @@ All B0-B4 baseline reports are matched to the same 30 benchmark entries as the s
 - TraceableF1: extraction F1 constrained by citation validity.
 - Cross-Lingual Consistency (CLC): agreement between original and translated tracks before final arbitration.
 
-B0-B4 provide matched extraction baselines but do not expose comparable citation surfaces in the current reports. Therefore, direct CVR/HCR comparisons are reported for the candidate and internal grounded strategies, while B0-B4 are used for extraction-quality comparison.
+B0-B4 provide matched extraction baselines but do not expose comparable citation surfaces in the current reports. B6-B10 use the same citation-required JSON prompt, the same input window, the same integrated OpenAI-compatible provider gateway, and model aliases from a comparable release window: GPT-5 (2025-08-07), DeepSeek V3.1 (2025-08-21), Qwen3-Max (2025-09-23), Claude Sonnet 4.5 (2025-09-29), and GLM-4.6 (2025-09-30). Therefore, B6-B10 can be compared on CVR/HCR/TraceableF1, while B0-B4 are retained for the established extraction-quality ladder.
 
 ## 6. Results
 
@@ -150,9 +152,23 @@ Table 4 reports traceability metrics for the candidate.
 
 The candidate has CVR=1.0 and HCR=0.0 over 88 accepted citations in the frozen benchmark. This supports the citation-valid-by-construction claim for accepted evidence in this evaluation. It does not imply semantic perfection: ESR is 0.9205, and the remaining errors are analyzed separately.
 
-Internal grounded traceability baselines are lower in TraceableF1: `grounded_hard_rule` reaches 0.8820 and `source_grounded_reconcile` reaches 0.8889. B0-B4 do not currently expose citation surfaces, so direct HCR comparisons against those baselines require future citation-generating baseline runs.
+Internal grounded traceability baselines are lower in TraceableF1: `grounded_hard_rule` reaches 0.8820 and `source_grounded_reconcile` reaches 0.8889. B0-B4 do not currently expose citation surfaces, so direct HCR comparisons against those baselines require future citation-generating baseline runs. The citation-required B6-B10 prompt-only sweep below provides the direct prompt-only traceability comparison.
 
-### 6.4 Error Analysis
+### 6.4 Same-Window Prompt-Only Frontier Sweep
+
+To separate model strength from method design, we additionally evaluate citation-required prompt-only baselines across five mainstream model families released within a comparable 2025 frontier window. These baselines differ only by the provider model alias recorded in the manifest; they use the same prompt mode, temperature, input window, raw OpenAI-compatible call path, and evaluation logic.
+
+| baseline_id | model | release_date | precision | recall | f1 | citation_validity_rate | hallucinated_citation_rate | traceable_f1 | error_rate | avg_latency_s |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| B6_GPT5_PROMPT_CITE | gpt-5-2025-08-07 | 2025-08-07 | 0.9390 | 0.9059 | 0.9222 | 0.9878 | 0.0122 | 0.9109 | 0.0333 | 24.7287 |
+| B7_DEEPSEEK_V31_PROMPT_CITE | deepseek-v3.1 | 2025-08-21 | 0.9200 | 0.5349 | 0.6765 | 0.7200 | 0.2800 | 0.4871 | 0.0667 | 5.5830 |
+| B8_QWEN3_MAX_PROMPT_CITE | qwen3-max | 2025-09-23 | 0.9178 | 0.7976 | 0.8535 | 0.8356 | 0.1644 | 0.7132 | 0.0000 | 7.2427 |
+| B9_CLAUDE_SONNET45_PROMPT_CITE | claude-sonnet-4-5-20250929 | 2025-09-29 | 0.8987 | 0.8659 | 0.8820 | 0.7342 | 0.2658 | 0.6476 | 0.0000 | 7.3370 |
+| B10_GLM46_PROMPT_CITE | glm-4.6 | 2025-09-30 | 0.8621 | 0.6098 | 0.7143 | 0.6724 | 0.3276 | 0.4803 | 0.0000 | 6.8700 |
+
+The strongest prompt-only frontier baseline is GPT-5, with F1=0.9222 and TraceableF1=0.9109. CrossEvidence remains higher on both raw F1 and TraceableF1 in this frozen comparison. We do not claim paired statistical superiority over each frontier model unless such tests are added; the result is used to show that prompt engineering alone does not close the traceable-extraction gap in this benchmark.
+
+### 6.5 Error Analysis
 
 Table 5 summarizes remaining errors.
 
@@ -168,7 +184,7 @@ The dominant remaining issue is not a simple extraction failure. Five relationsh
 
 The results support a conservative Main Paper claim. CrossEvidence significantly improves over a grounded hard-rule internal baseline and remains competitive with matched LLM baselines while adding deterministic citation-valid acceptance. The method is strongest when the evidence needed for a field is visible in the article and can be linked to target-safe gene/disease context.
 
-The study has several limitations. First, the frozen benchmark contains 30 ClinGen/ACMG-style entries. This is suitable for controlled method analysis and paired statistics, but not for broad claims of general biomedical IE superiority. Second, the candidate's margin over the strongest matched LLM baseline is +0.0188 F1, below the pre-declared +0.03 strong-superiority threshold. Third, B0-B4 do not expose comparable citation surfaces in the current reports, so hallucinated citation rate cannot be directly compared against those baselines. Fourth, some gene-disease relationship labels reflect external ClinGen validity curation not fully visible in article-local evidence. Finally, CrossEvidence extracts, grounds, and reconciles evidence fields for expert review; it is not an autonomous clinical decision-support or ACMG classification system.
+The study has several limitations. First, the frozen benchmark contains 30 ClinGen/ACMG-style entries. This is suitable for controlled method analysis and paired statistics, but not for broad claims of general biomedical IE superiority. Second, the candidate's margin over the strongest matched B0-B4 LLM extraction baseline is +0.0188 F1, below the pre-declared +0.03 strong-superiority threshold. Third, the B6-B10 prompt-only frontier sweep is tied to exact provider aliases and a same-release-window cohort; hosted model behavior and routing may change over time, so the manifest is part of the frozen evidence package. Fourth, some gene-disease relationship labels reflect external ClinGen validity curation not fully visible in article-local evidence. Finally, CrossEvidence extracts, grounds, and reconciles evidence fields for expert review; it is not an autonomous clinical decision-support or ACMG classification system.
 
 Future work should expand the benchmark, add citation-generating direct LLM and RAG baselines for direct HCR comparison, and build a native multilingual biomedical genetics gold set. Curated ClinGen context could also be tested as a separate external-knowledge ablation, but it should not be mixed into source-only extraction without disclosure.
 
@@ -184,5 +200,6 @@ CrossEvidence frames cross-lingual biomedical evidence extraction as traceabilit
 - Candidate traceability: `benchmark/layer3/reports/traceability_context_verifier_reconcile_20260615_011414.json`
 - Internal baseline traceability: `benchmark/layer3/reports/traceability_grounded_hard_rule_20260615_013608.json`
 - Internal source-grounded traceability: `benchmark/layer3/reports/traceability_source_grounded_reconcile_20260615_013609.json`
+- Same-window prompt-only frontier sweep: `benchmark/layer3/baselines/prompt_model_sweep_20260615.json`, `benchmark/layer3/reports/prompt_model_baseline_tables_20260615_114312.md`
 - Error diagnosis: `benchmark/layer3/reports/contextual_reconcile_diagnosis_20260615_011335.json`
 - Main paper tables: `benchmark/layer3/reports/main_paper_tables_20260615_011554.md`

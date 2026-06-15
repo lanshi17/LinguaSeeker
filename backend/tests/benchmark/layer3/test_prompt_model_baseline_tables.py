@@ -16,7 +16,12 @@ def test_build_prompt_model_table_combines_extraction_and_traceability(tmp_path:
                 "baseline_id": "B6_GPT5_PROMPT_CITE",
                 "baseline_name": "GPT-5 prompt-only citation-required",
                 "config": {
+                    "release_cohort": "frontier_2025q3_q4_aug07_sep30",
+                    "provider_gateway": "integrated_openai_compatible_supplier",
+                    "call_interface": "openai_chat_completions",
                     "model": "gpt-5",
+                    "release_date": "2025-08-07",
+                    "release_notes_url": "https://openai.com/index/introducing-gpt-5-for-developers/",
                     "provider_family": "openai",
                     "prompt_mode": "citation_required",
                 },
@@ -58,6 +63,10 @@ def test_build_prompt_model_table_combines_extraction_and_traceability(tmp_path:
 
     row = table.rows[0]
     assert row["baseline_id"] == "B6_GPT5_PROMPT_CITE"
+    assert row["release_cohort"] == "frontier_2025q3_q4_aug07_sep30"
+    assert row["provider_gateway"] == "integrated_openai_compatible_supplier"
+    assert row["call_interface"] == "openai_chat_completions"
+    assert row["release_date"] == "2025-08-07"
     assert row["model"] == "gpt-5"
     assert row["f1"] == 0.8471
     assert row["delta_f1_vs_ours"] == -0.1003

@@ -18,6 +18,9 @@ def test_load_prompt_model_sweep_manifest_keeps_model_aliases(tmp_path: Path) ->
         json.dumps(
             {
                 "run_label": "prompt_frontier_20260615",
+                "release_cohort": "frontier_2025q3_q4_aug07_sep30",
+                "provider_gateway": "integrated_openai_compatible_supplier",
+                "call_interface": "openai_chat_completions",
                 "prompt_mode": "citation_required",
                 "temperature": 0.0,
                 "max_tokens": 4096,
@@ -28,6 +31,8 @@ def test_load_prompt_model_sweep_manifest_keeps_model_aliases(tmp_path: Path) ->
                         "baseline_name": "GPT-5 prompt-only citation-required",
                         "provider_family": "openai",
                         "model": "gpt-5",
+                        "release_date": "2025-08-07",
+                        "release_notes_url": "https://openai.com/index/introducing-gpt-5-for-developers/",
                     }
                 ],
             }
@@ -38,6 +43,9 @@ def test_load_prompt_model_sweep_manifest_keeps_model_aliases(tmp_path: Path) ->
     manifest = load_prompt_model_sweep_manifest(manifest_path)
 
     assert manifest.run_label == "prompt_frontier_20260615"
+    assert manifest.release_cohort == "frontier_2025q3_q4_aug07_sep30"
+    assert manifest.provider_gateway == "integrated_openai_compatible_supplier"
+    assert manifest.call_interface == "openai_chat_completions"
     assert manifest.prompt_mode == "citation_required"
     assert manifest.models == (
         PromptModelSpec(
@@ -45,6 +53,8 @@ def test_load_prompt_model_sweep_manifest_keeps_model_aliases(tmp_path: Path) ->
             baseline_name="GPT-5 prompt-only citation-required",
             provider_family="openai",
             model="gpt-5",
+            release_date="2025-08-07",
+            release_notes_url="https://openai.com/index/introducing-gpt-5-for-developers/",
         ),
     )
 

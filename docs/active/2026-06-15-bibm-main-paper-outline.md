@@ -53,7 +53,7 @@ End with contributions:
 1. Target-safe dual-track evidence graph for ACMG/ClinGen evidence extraction.
 2. Context-verifier reconciliation with source grounding, target specificity, and contradiction-aware scoring.
 3. Traceability metrics that separate citation validity, hallucinated citation rate, span boundary quality, semantic support, and TraceableF1.
-4. Frozen N=30 benchmark evaluation against matched baseline ladder and internal grounded ablations.
+4. Frozen N=30 benchmark evaluation against matched baseline ladder, a same-release-window citation-required frontier prompt sweep, and internal grounded ablations.
 
 ### 2. Related Work
 
@@ -136,6 +136,7 @@ Baselines:
 - B3: Keyword RAG + LLM.
 - B4: Single-agent CoT.
 - B5: Grounded hard-rule internal baseline.
+- B6-B10: Citation-required prompt-only frontier sweep using the same prompt, same input window, same integrated OpenAI-compatible provider gateway, and a same-release-window model cohort from 2025-08-07 to 2025-09-30.
 
 Metrics:
 
@@ -151,7 +152,7 @@ Metrics:
 State upfront:
 
 ```text
-B0-B4 are matched extraction baselines but do not expose a comparable citation surface in the current reports; citation metrics are therefore reported for the candidate and internal grounded strategies.
+B0-B4 are matched extraction baselines but do not expose a comparable citation surface in the current reports. B6-B10 are citation-required prompt-only frontier baselines and are therefore comparable on CVR, HCR, and TraceableF1, with exact provider aliases and release dates frozen in the manifest.
 ```
 
 ### 6. Results
@@ -169,6 +170,7 @@ Required result narrative:
 - Internal baseline significance: `grounded_hard_rule` F1=0.8820, delta=+0.0654, CI=[0.0302, 0.1060], p=0.0039.
 - Matched LLM baseline stance: strongest B0 F1=0.9286, candidate gap +0.0188; competitive but not a strong-superiority claim.
 - Traceability: candidate CVR=1.0, HCR=0.0, SpanBoundaryF1=0.7467, ESR=0.9205, TraceableF1=0.9474.
+- Same-window prompt-only frontier sweep: strongest GPT-5 baseline F1=0.9222, CVR=0.9878, HCR=0.0122, TraceableF1=0.9109; candidate remains higher on F1 and TraceableF1, but do not claim paired significance over B6-B10 unless tested.
 - Field results: gene F1=0.9831, disease F1=0.9655, relationship F1=0.8889.
 - Error diagnosis: remaining source-label visibility limits=5, disease boundary errors=2, candidate absent=2.
 
@@ -206,7 +208,8 @@ CrossEvidence demonstrates that cross-lingual biomedical evidence extraction can
 | Table 2 | Results | Main method vs baselines |
 | Table 3 | Results | Ablation study |
 | Table 4 | Results | Traceability metrics |
-| Table 5 | Results/discussion | Error breakdown |
+| Table 5 | Results | Same-release-window citation-required prompt-only frontier sweep |
+| Table 6 | Results/discussion | Error breakdown |
 
 ## Writing Checklist
 
