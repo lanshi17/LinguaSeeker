@@ -6,6 +6,8 @@ import asyncio
 from pathlib import Path
 import time
 
+from loguru import logger
+
 from benchmark.layer3.baselines.llm_common import make_extractor
 from benchmark.layer3.baselines.model_sweep_contracts import (
     PromptModelSpec,
@@ -67,24 +69,31 @@ async def run_model_sweep(
     entry_ids: tuple[str, ...] = (),
     limit: int | None = None,
     save_report: bool = True,
+    continue_on_error: bool = False,
 ) -> list[Path]:
     """Run all model specs in a prompt-only sweep manifest."""
     manifest = load_prompt_model_sweep_manifest(manifest_path)
     report_paths: list[Path] = []
     for spec in manifest.models:
-        extractor = build_extractor(manifest=manifest, spec=spec)
-        report = await run_baseline_evaluation(
-            build_baseline_config(
-                manifest=manifest,
-                spec=spec,
-                ground_truth_dir=ground_truth_dir,
-                reports_dir=reports_dir,
-                entry_ids=entry_ids,
-                limit=limit,
-                save_report=save_report,
-            ),
-            extractor.extract,
-        )
+        try:
+            extractor = build_extractor(manifest=manifest, spec=spec)
+            report = await run_baseline_evaluation(
+                build_baseline_config(
+                    manifest=manifest,
+                    spec=spec,
+                    ground_truth_dir=ground_truth_dir,
+                    reports_dir=reports_dir,
+                    entry_ids=entry_ids,
+                    limit=limit,
+                    save_report=save_report,
+                ),
+                extractor.extract,
+            )
+        except Exception:
+            if not continue_on_error:
+                raise
+            logger.exception("Prompt model sweep failed for {} ({})", spec.baseline_id, spec.model)
+            continue
         if report.report_path is not None:
             report_paths.append(report.report_path)
     return report_paths
@@ -99,6 +108,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--entries", nargs="*", default=())
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--no-save", action="store_true")
+    parser.add_argument("--continue-on-error", action="store_true")
     args = parser.parse_args(argv)
 
     report_paths = asyncio.run(
@@ -109,6 +119,7 @@ def main(argv: list[str] | None = None) -> None:
             entry_ids=tuple(args.entries),
             limit=args.limit,
             save_report=not args.no_save,
+            continue_on_error=args.continue_on_error,
         )
     )
     for report_path in report_paths:
