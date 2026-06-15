@@ -359,9 +359,17 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
 
     // Abort any in-flight SSE stream from the previous session so
     // its updateMessage calls don't write into the now-stale store.
-    // Guarded on activeProvider: the SDK's abort closure is always
-    // defined but throws when invoked without a provider.
-    if (activeProvider) abort?.();
+    // Guarded on activeProvider *and* wrapped in try/catch: the SDK's
+    // abort closure can throw when invoked during a provider transition
+    // (the internal conversation lookup returns undefined mid-swap).
+    if (activeProvider) {
+      try {
+        abort?.();
+      } catch {
+        // Swallow — the previous stream is already gone or the provider
+        // is transitioning; either way there is nothing to abort.
+      }
+    }
 
     // Clear the visible list synchronously so no previous-session bubble
     // can flash while the network call is in flight.
@@ -896,7 +904,13 @@ function FullChatView({ processingRunId }: { processingRunId?: string }) {
             className="border-t border-gray-100"
             style={{ padding: 16 }}
             loading={isRequesting}
-            onCancel={() => abort?.()}
+            onCancel={() => {
+              try {
+                abort?.();
+              } catch {
+                // See effect comment above.
+              }
+            }}
             onSubmit={handleSubmitAndClear}
             placeholder="Ask the Cross Evidence Agent..."
           />
@@ -1004,7 +1018,13 @@ function SingleSessionChat({ sessionId }: { sessionId: string }) {
           className="border-t border-gray-100"
           style={{ padding: 16 }}
           loading={isRequesting}
-          onCancel={abort}
+          onCancel={() => {
+            try {
+              abort?.();
+            } catch {
+              // See FullChatView effect comment.
+            }
+          }}
           onSubmit={handleSingleSessionSubmit}
           placeholder="Ask the Cross Evidence Agent..."
         />
