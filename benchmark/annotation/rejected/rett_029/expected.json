@@ -1,28 +1,19 @@
 {
-  "entry_id": "rett_003",
+  "entry_id": "rett_029",
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
   "disease_label": "Rett syndrome",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
-  "source_pmid": null,
-  "source_doi": "10.1186/1471-2350-12-113",
-  "source_title": "De novo deletion in MECP2 in a monozygotic twin pair: a case report",
-  "source_journal": "BMC Medical Genetics",
-  "source_year": "2011",
+  "source_pmid": "",
+  "source_doi": "10.1007/s00439-016-1721-3",
+  "source_title": "Whole exome sequencing of Rett syndrome-like patients reveals the mutational diversity of the clinical phenotype",
+  "source_journal": "Human Genetics",
+  "source_year": "2016",
   "source_language": "en",
   "source_pdf_path": "",
-  "variants": [
-    {
-      "hgvs_c": "",
-      "hgvs_p": "",
-      "variant_type": "deletion",
-      "clinical_significance": "pathogenic",
-      "exon": "3",
-      "domain": "MBD"
-    }
-  ],
+  "variants": [],
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
@@ -53,50 +44,22 @@
       "evaluation_type": "precision_recall"
     },
     {
-      "field_id": "A.variant_type",
-      "value": "deletion",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "B.hpo_terms",
-      "value": "HP:0001250; HP:0002376; HP:0001263; HP:0001249; HP:0001344; HP:0002072; HP:0001251; HP:0004322",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
       "field_id": "B.clinical_phenotypes",
-      "value": "Rett syndrome; Seizures; Developmental regression; Intellectual disability; Non-verbal; Stereotypic hand movements (hand wringing/biting); Wide-based gait / ataxia; Short stature; Small head circumference",
+      "value": "hand stereotypies; microcephaly; epilepsy; apneas and/or hyperventilation; onset of signs before 12 months; language skills loss; motor development delay",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.sex",
-      "value": "Female",
+      "value": "female",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "Approximately 2 years in the younger twin; approximately 2.5 years in the older twin",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_recall"
-    },
-    {
-      "field_id": "C.de_novo_status",
-      "value": "de novo",
+      "value": "before 12 months",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
