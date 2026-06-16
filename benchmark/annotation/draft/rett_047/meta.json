@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_047",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_Prevalence_and_onset_of_comorbidities_in_the_CDKL5_disorder_differ_from_Rett_syndrome.pdf",
+  "language": "fr",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "draft",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

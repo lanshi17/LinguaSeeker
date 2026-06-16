@@ -1,5 +1,31 @@
 # Lesson Log
 
+# Lesson Log
+
+## 2026-06-16: /v1/models 404 does not mean the model server is offline
+
+**Problem**: I checked `http://127.0.0.1:8001/v1/models` and saw `{"detail":"Not Found"}`, which could be mistaken for a general LLM outage.
+
+**Investigation**: Called the actual endpoints used by the backend pipeline: `/v1/embeddings` and `/v1/rerank`. Both returned HTTP 200 with valid payloads. Code search also showed the server exposes `/v1/embeddings`, `/v1/rerank`, and `/v1/chat/completions`, but not `/v1/models`.
+
+**Root cause**: I used an OpenAI-style discovery endpoint that this model server does not implement. The runtime pipeline does not depend on `/v1/models`, so the 404 was a path mismatch, not a connectivity failure.
+
+**Fix**: Treat `/v1/models` as non-authoritative for this service. Use the actual functional endpoints that the backend calls when checking model-server health.
+
+**Prevention**: When validating a local LLM service, verify the exact routes the application uses instead of assuming a generic discovery endpoint exists.
+
+## 2026-06-16: Benchmark B smoke runners need a poll window that matches Phase 2 extraction latency
+
+**Problem**: I ran two multilingual smoke samples through the Benchmark B sample runner, but both CLI runs hit the polling timeout before the backend had fully settled. The first run (`299af5ff-8c71-4c4e-881b-5bf42af74609`, `clingen_000:ja`) eventually reached `awaiting_review` with a real `phase_2/extraction_result.json`, while the second run (`00cb6fea-2e9f-4fd4-ac99-9f12c673120d`, `clingen_003:ko`) was still `running` when the runner exited.
+
+**Investigation**: The sample runner used `--max-poll-attempts 120` with a 5-second interval, so the polling window was 600 seconds. That was not enough for the long-tail multilingual phase 2 work on these case reports. Backend logs showed translation and extraction progressing normally; the timeout was in the smoke harness, not the pipeline itself.
+
+**Root cause**: I treated a fixed 10-minute poll window as a sufficient proxy for completion, but phase 2 can exceed that on real multilingual inputs. A runner timeout therefore does not mean the pipeline failed.
+
+**Fix**: For this smoke validation, keep the completed backend run as evidence that the pipeline closes, and treat the timeout reports as a harness limitation. Use a longer poll window or a smaller sample if the goal is to observe the final runner exit instead of just pipeline liveness.
+
+**Prevention**: For future smoke checks, separate "pipeline completed" from "runner observed completion." If the sample is meant to finish end-to-end, set the poll budget from observed phase 2 latency rather than a fixed 10-minute cap.
+
 ## 2026-06-15: Multilingual benchmark planning must separate scored gold, structured anchors, and unlabeled pressure-test corpora
 
 **Problem**: The raw source strategy for the BIBM benchmark could easily collapse into a single "multilingual corpus" bucket, which would blur what is actually measurable. That would make ClinGen gold, ClinVar scale, and local PDF pressure-testing look interchangeable even though they serve different purposes.
