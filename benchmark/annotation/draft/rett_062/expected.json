@@ -3,7 +3,7 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome (typical and atypical/variant forms; includes preserved speech/Zappella variant)",
+  "disease_label": "Rett syndrome",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "source_pmid": null,
@@ -18,7 +18,7 @@
       "hgvs_c": "",
       "hgvs_p": "p.Arg133Cys",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic (milder phenotype; frequent in Zappella/preserved speech variant, DNA-binding retained)",
+      "clinical_significance": "pathogenic",
       "exon": "",
       "domain": "MBD"
     },
@@ -26,7 +26,7 @@
       "hgvs_c": "",
       "hgvs_p": "p.Ala140Val",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic (milder phenotype; mild ID in females, intellectual disability in males, PPM-X; transcriptional repression relatively preserved)",
+      "clinical_significance": "pathogenic",
       "exon": "",
       "domain": "MBD"
     }
@@ -41,7 +41,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome (typical and atypical/variant forms; includes preserved speech/Zappella variant)",
+      "value": "Rett syndrome",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -92,35 +92,35 @@
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0000733; HP:0001250; HP:0000252; HP:0005484; HP:0001508; HP:0002360; HP:0002650; HP:0003763; HP:0002104; HP:0002883; HP:0001249; HP:0000729; HP:0002066",
+      "value": "HP:0000252; HP:0000253; HP:0002072; HP:0002376; HP:0001250; HP:0001252; HP:0001251; HP:0012759; HP:0000756; HP:0002650; HP:0004322; HP:0000568; HP:0002360; HP:0003763; HP:0011968; HP:0002019; HP:0012171; HP:0001263; HP:0001249; HP:0001257; HP:0001344; HP:0001371",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "developmental regression after a period of normal/near-normal early development; loss of purposeful hand use and acquired language; hand stereotypies (hand-wringing, hand-mouthing, clapping); epilepsy (generalized tonic-clonic and complex partial seizures; ~50-90%); breathing abnormalities (apnea, hyperventilation, breath-holding); acquired (postnatal) microcephaly; growth failure / poor weight gain; sleep rhythm disturbance; gait abnormality / gait apraxia, ataxia; autistic behavior; scoliosis / spinal deformity; bruxism; autonomic dysfunction (cold extremities, QT prolongation, reduced heart rate); dystonia and limb deformity with age",
+      "value": "出生後の頭囲成長減速による後天性・進行性小頭症; 手の常同運動（手もみ・手をねじる・手叩き・口に入れる）; 獲得した手の合目的的運動機能および音声言語機能の退行; てんかん（全般性強直間代発作、複雑部分発作、非定型欠神発作、無呼吸発作）; 乳児期の筋緊張低下; 失調性歩行・歩行障害; 呼吸異常（過呼吸、無呼吸、息止め）; 自閉的行動・自閉症状; 進行性側彎などの骨格変形; 成長障害・体重増加不良; 内斜視; 睡眠リズム障害; 歯ぎしり; 嚥下・摂食障害; 便秘・機能的巨大結腸; 冷たい小さな手足（末梢血管運動障害）; 精神運動発達遅滞; 知的障害; 痙性・筋強直; ジストニア・拘縮",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.sex",
-      "value": "predominantly female (rare male cases: Klinefelter 47,XXY or somatic mosaicism)",
+      "value": "female (predominantly; rare male cases with Klinefelter syndrome or somatic mosaicism)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "infancy; apparent normal development to ~6-18 months, regression after ~18 months",
+      "value": "infancy (apparent regression typically after 6-18 months; major features by ~3 years)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "unknown (not specified for an individual case in the text)",
+      "value": "unknown",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

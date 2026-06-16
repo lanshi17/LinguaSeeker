@@ -3,7 +3,7 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome",
+  "disease_label": "Rett syndrome (classic RTT)",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "source_pmid": null,
@@ -52,7 +52,7 @@
       "variant_type": "frameshift",
       "clinical_significance": "pathogenic (novel)",
       "exon": "",
-      "domain": "C-terminal"
+      "domain": "C-term"
     },
     {
       "hgvs_c": "c.1205insT",
@@ -60,12 +60,12 @@
       "variant_type": "frameshift",
       "clinical_significance": "pathogenic (novel)",
       "exon": "",
-      "domain": "C-terminal"
+      "domain": "C-term"
     },
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "variant_type": "large deletion (exon 4 deletion)",
+      "variant_type": "large deletion (Exon 4 deletion)",
       "clinical_significance": "pathogenic",
       "exon": "4",
       "domain": ""
@@ -84,7 +84,7 @@
       "variant_type": "frameshift",
       "clinical_significance": "pathogenic",
       "exon": "",
-      "domain": "C-terminal"
+      "domain": "C-term"
     },
     {
       "hgvs_c": "c.717delC",
@@ -108,7 +108,7 @@
       "variant_type": "deletion",
       "clinical_significance": "pathogenic (novel)",
       "exon": "",
-      "domain": "C-terminal"
+      "domain": "C-term"
     },
     {
       "hgvs_c": "c.917G>A",
@@ -129,7 +129,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome",
+      "value": "Rett syndrome (classic RTT)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -198,7 +198,7 @@
         "nonsense",
         "frameshift",
         "frameshift",
-        "large deletion (exon 4 deletion)",
+        "large deletion (Exon 4 deletion)",
         "frameshift",
         "frameshift",
         "frameshift",
@@ -217,13 +217,13 @@
         "TRD-NLS",
         "TRD",
         "Inter-domain region",
-        "C-terminal",
-        "C-terminal",
+        "C-term",
+        "C-term",
         "TRD-NLS, 3'UTR",
-        "C-terminal",
+        "C-term",
         "TRD",
         "TRD-NLS",
-        "C-terminal",
+        "C-term",
         "TRD"
       ],
       "source": "article",
@@ -231,14 +231,14 @@
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0002371; HP:0001250; HP:0001288",
+      "value": "HP:0002376; HP:0002072; HP:0001344; HP:0001250; HP:0012759; HP:0002650; HP:0000756",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "normal psychomotor development from birth until 6-18 months followed by developmental regression; loss of acquired hand skills; loss of acquired language/communication skills; stereotypic hand movements; gait abnormalities (dyspraxic or absent ability to walk); seizures; poor social interaction; irregular breathing patterns; scoliosis; cardiac abnormalities",
+      "value": "neurodevelopmental regression; loss of acquired motor/hand skills; loss of acquired language and communication skills; stereotypic hand movements (classic RTT hand); gait abnormalities (dyspraxic or absent ability to walk); seizures; irregular breathing patterns; cardiac abnormalities; scoliosis; poor social interaction",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -252,14 +252,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "6-18 months (regression onset); cohort age range 18-48 months",
+      "value": "6-18 months (normal development followed by regression; index patient regressed after ~8 months with first seizure at 12 months)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo",
+      "value": "de novo (sporadic cases)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

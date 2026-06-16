@@ -9,7 +9,7 @@
   "source_pmid": null,
   "source_doi": null,
   "source_title": "Associations between genotype, phenotype and behaviours measured by the Rett syndrome behaviour questionnaire in Rett syndrome",
-  "source_journal": null,
+  "source_journal": "BMC",
   "source_year": "2024",
   "source_language": "en",
   "source_pdf_path": "",
@@ -85,6 +85,30 @@
       "clinical_significance": "pathogenic",
       "exon": "",
       "domain": "NLS"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "variant_type": "C-terminal deletion",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": ""
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "variant_type": "early truncating",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": ""
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "variant_type": "large deletion",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": ""
     }
   ],
   "expected_evidence": [
@@ -145,21 +169,39 @@
         "nonsense",
         "nonsense",
         "missense",
-        "nonsense"
+        "nonsense",
+        "C-terminal deletion",
+        "early truncating",
+        "large deletion"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "MBD",
+      "candidates": [
+        "MBD",
+        "MBD",
+        "MBD",
+        "TRD",
+        "TRD",
+        "TRD",
+        "TRD"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0007039; HP:0001288; HP:0001250; HP:0002650; HP:0001508; HP:0002019; HP:0002020; HP:0100785; HP:0001260",
+      "value": "HP:0002072; HP:0002376; HP:0002650; HP:0001250; HP:0004322; HP:0002360; HP:0001249; HP:0002019; HP:0012759",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "regression of hand and communication skills; hand stereotypies; gait abnormality; impaired hand function; impaired gross motor function; scoliosis; autonomic dysfunction; epilepsy/seizures; poor growth; sleep difficulties (insomnia); excessive daytime sleepiness; constipation; gastro-esophageal reflux; abnormal behaviours and emotional features (mood fluctuations, night screaming, fear/anxiety)",
+      "value": "regression of hand and communication skills; hand stereotypies; gait abnormality; impaired hand, communication and gross motor function; scoliosis; autonomic dysfunction; epilepsy/seizures; poor growth; sleep difficulties (insomnia, excessive daytime sleepiness); constipation; gastro-esophageal reflux; severe intellectual disability; abnormal behaviours and emotional features (mood fluctuations, screaming at night, fear/anxiety)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

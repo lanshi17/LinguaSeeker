@@ -17,10 +17,10 @@
     {
       "hgvs_c": "c.441_1153del713",
       "hgvs_p": "",
-      "variant_type": "frameshift deletion (713-bp deletion, premature termination at codon 154 of the 487 aa protein)",
+      "variant_type": "frameshift deletion (713-bp deletion causing premature termination at codon 154 of the 487-aa protein)",
       "clinical_significance": "pathogenic",
       "exon": "exon 4",
-      "domain": "large loss spanning from the methyl-CpG binding domain (MBD) to the C-terminal domain"
+      "domain": "spans from methyl-CpG binding domain (MBD) to C-terminal domain"
     }
   ],
   "expected_evidence": [
@@ -61,28 +61,28 @@
     },
     {
       "field_id": "A.variant_type",
-      "value": "frameshift deletion (713-bp deletion, premature termination at codon 154 of the 487 aa protein)",
+      "value": "frameshift deletion (713-bp deletion causing premature termination at codon 154 of the 487-aa protein)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "large loss spanning from the methyl-CpG binding domain (MBD) to the C-terminal domain",
+      "value": "spans from methyl-CpG binding domain (MBD) to C-terminal domain",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0002371; HP:0012171; HP:0001250",
+      "value": "HP:0001250; HP:0002072; HP:0002376; HP:0001344; HP:0000756",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "developmental regression after a period of normal development; loss of acquired speech (said 'papa'/'mama' at 11 months, stopped after 13 months); loss of acquired purposeful hand skills (began at 15 months); stereotypical hand movements (frequent hand wringing); epilepsy/seizures (developed at 30 months, treated with sodium valproate and lamotrigine); emotional/social withdrawal (no longer responding to parents' call)",
+      "value": "epilepsy (developed at 30 months, managed with sodium valproate and lamotrigine); stereotypical hand movements / frequent hand wringing; developmental regression (loss of acquired purposeful hand skills at 15 months); loss of speech (spoke 'papa'/'mama' at 11 months, no longer spoke after 13 months); loss of communicative abilities / emotionally distant, no longer responded to parents' call (autistic-like behavior)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -96,14 +96,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "~13 months (regression began after 13 months; normal development up to ~11 months)",
+      "value": "~13 months (regression onset; speech loss after 13 months, hand-skill loss at 15 months)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "unknown / not de novo confirmed; not detected in parental blood and not found in paternal sperm, but maternal germline mosaicism could not be ruled out, so the deletion is probably inherited from a germline-mosaic parent",
+      "value": "unknown - deletion not detected in blood of parents and not found in father's sperm, but maternal germline mosaicism could not be ruled out; authors conclude the variant is probably inherited from a germline-mosaic parent rather than de novo",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

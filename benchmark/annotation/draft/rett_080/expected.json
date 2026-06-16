@@ -3,12 +3,12 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "典型 Rett 综合征 (typical Rett syndrome)",
+  "disease_label": "typical Rett syndrome",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "source_pmid": null,
   "source_doi": "10.11724/jdmu.2022.06.20",
-  "source_title": "Rett 综合征 1 例 (A case report of Rett syndrome)",
+  "source_title": "Rett综合征1例 (A case report of Rett syndrome)",
   "source_journal": "大连医科大学学报 (Journal of Dalian Medical University)",
   "source_year": "2022",
   "source_language": "zh",
@@ -17,8 +17,8 @@
     {
       "hgvs_c": "c.502C>T",
       "hgvs_p": "p.R168X",
-      "variant_type": "nonsense (无义突变)",
-      "clinical_significance": "pathogenic (致病性, ACMG)",
+      "variant_type": "nonsense",
+      "clinical_significance": "pathogenic",
       "exon": "",
       "domain": ""
     }
@@ -33,7 +33,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "典型 Rett 综合征 (typical Rett syndrome)",
+      "value": "typical Rett syndrome",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -68,21 +68,21 @@
     },
     {
       "field_id": "A.variant_type",
-      "value": "nonsense (无义突变)",
+      "value": "nonsense",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0008733; HP:0100023; HP:0001288; HP:0001250; HP:0002353; HP:0002360; HP:0002104; HP:0000729; HP:0001249; HP:0001510; HP:0002015; HP:0000737; HP:0007328",
+      "value": "HP:0000756; HP:0002376; HP:0002072; HP:0001344; HP:0001251; HP:0001263; HP:0002194; HP:0001249; HP:0011968; HP:0002360; HP:0012759; HP:0004322; HP:0001250",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "运动发育停滞伴倒退 (developmental regression); 部分或完全丧失目的性手部技能 (loss of purposeful hand skills); 语言功能丧失 (loss of acquired language); 手部刻板运动：绞手、拍手、掐指 (hand stereotypies); 步态不稳/运动功能障碍 (gait abnormality); 孤独症样行为 (autistic features); 癫痫样放电/脑电图异常 (epileptiform discharges on EEG); 睡眠增多/睡眠节律紊乱 (sleep disturbance); 清醒期间断呼吸暂停 (waking apnea / breathing abnormality); 认知障碍/智能发育落后 (cognitive impairment); 生长发育迟缓、体重不增 (growth failure); 吞咽困难 (dysphagia); 易激惹、尖叫样抗拒 (irritability, screaming); 可疑痛觉障碍/痛觉敏感性下降 (reduced pain sensitivity); 双眼频繁上翻 (eye-rolling)",
+      "value": "孤独症/类孤独症样行为 (autistic behavior); 运动发育停滞伴倒退 (developmental regression); 双手功能退化，手部刻板动作（拍手、掐指、绞手）(hand stereotypies); 语言功能丧失 (loss of acquired speech); 步态逐渐不稳 (gait instability/ataxia); 运动、语言、认知反应逐渐落后于同龄儿 (global developmental delay); 大运动及精细运动发育落后 (delayed motor development); 认知障碍，反应迟钝 (cognitive impairment); 吞咽困难 (dysphagia/feeding difficulty); 睡眠增多 (sleep disturbance); 清醒期间断呼吸暂停 (waking apnea/breathing abnormality); 体重不增、生长发育迟缓 (growth failure); 脑电图癫痫样放电 (epileptiform discharges); 不合时宜的尖叫 (inappropriate screaming); 痛觉敏感性下降 (decreased pain sensitivity); 双眼频繁上翻 (frequent eye rolling)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -96,14 +96,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "7 months (生后 7 个月起发育落后；约 1 岁起语言功能丧失)",
+      "value": "约7个月 (around 7 months of age)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo (新发突变；父母该位点均无变异)",
+      "value": "de novo",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

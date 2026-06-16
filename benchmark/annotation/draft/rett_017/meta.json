@@ -8,11 +8,11 @@
   "reviewer": null,
   "review_notes": "[cohort_study] Reports specific genetic variants (de novo, X-linked, homozygous/compound heterozygous) observed in a cohort of 19 human RTT-like patients, with methodological analyses (aCGH, exome sequencing).",
   "rejection_reason": "",
-  "generated_at": "2026-06-16T07:48:21+00:00",
+  "generated_at": "2026-06-16T08:24:17+00:00",
   "reviewed_at": null,
   "promoted_at": null,
   "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
   "variant_count": 0,
-  "clinical_feature_count": 6
+  "clinical_feature_count": 5
 }

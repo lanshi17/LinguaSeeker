@@ -3,7 +3,7 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "MECP2-related severe neonatal encephalopathy (within the Rett syndrome/MECP2 disorder spectrum)",
+  "disease_label": "MECP2-related severe neonatal encephalopathy (with Rett syndrome spectrum)",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "source_pmid": null,
@@ -18,9 +18,9 @@
       "hgvs_c": "c.1477G>A",
       "hgvs_p": "p.Val493Met",
       "variant_type": "missense (single nucleotide variation)",
-      "clinical_significance": "variant of uncertain significance (VUS)",
-      "exon": "3",
-      "domain": "C-terminal region (aa 493, outside MBD and TRD)"
+      "clinical_significance": "variant of unknown significance (VUS)",
+      "exon": "exon 3",
+      "domain": "NLS"
     }
   ],
   "expected_evidence": [
@@ -33,14 +33,14 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "MECP2-related severe neonatal encephalopathy (within the Rett syndrome/MECP2 disorder spectrum)",
+      "value": "MECP2-related severe neonatal encephalopathy (with Rett syndrome spectrum)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.gene_disease_relationship",
-      "value": "associated",
+      "value": "causative",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -74,22 +74,15 @@
       "evaluation_type": "precision_only"
     },
     {
-      "field_id": "A.functional_domain_or_hotspot",
-      "value": "C-terminal region (aa 493, outside MBD and TRD)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001298; HP:0001319; HP:0001250; HP:0002104; HP:0002059; HP:0007033; HP:0002119; HP:0001518",
+      "value": "HP:0001250; HP:0001252; HP:0012759",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "neonatal encephalopathy; marked hypotonia; reduced spontaneous movements; poor respiratory effort / apnea; multiple clonic seizures; cerebral atrophy; cerebellar dysplasia; multicystic encephalomalacia with cystic changes in midbrain; ventriculomegaly; Grade I intraventricular hemorrhage; small for gestational age; stupor; normal head circumference at birth",
+      "value": "neonatal encephalopathy; marked hypotonia; reduced spontaneous movements; apnea / poor respiratory effort; clonic seizures; stupor; cerebral atrophy; cerebellar dysplasia; multicystic encephalomalacia; ventriculomegaly; Grade I intraventricular hemorrhage",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -103,7 +96,7 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "neonatal (encephalopathic at birth; seizures at 68 hours of life)",
+      "value": "neonatal (encephalopathy at birth; seizures at 68 hours of life)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

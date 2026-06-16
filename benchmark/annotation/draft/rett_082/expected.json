@@ -3,13 +3,13 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome",
+  "disease_label": "Rett syndrome (classical/typical)",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "source_pmid": null,
   "source_doi": "10.7499/j.issn.1008-8830.2014.04.017",
-  "source_title": "Rett综合征的临床特点及MECP2基因突变分析",
-  "source_journal": "中国当代儿科杂志 (Chinese Journal of Contemporary Pediatrics)",
+  "source_title": "Clinical features and MECP2 mutations in children with Rett syndrome",
+  "source_journal": "Chinese Journal of Contemporary Pediatrics (中国当代儿科杂志)",
   "source_year": "2014",
   "source_language": "zh",
   "source_pdf_path": "",
@@ -18,7 +18,7 @@
       "hgvs_c": "c.316C>T",
       "hgvs_p": "p.R106W",
       "variant_type": "missense",
-      "clinical_significance": "",
+      "clinical_significance": "pathogenic",
       "exon": "3",
       "domain": "MBD"
     },
@@ -26,15 +26,15 @@
       "hgvs_c": "c.1126C>T",
       "hgvs_p": "p.P376S",
       "variant_type": "missense",
-      "clinical_significance": "",
+      "clinical_significance": "pathogenic",
       "exon": "4",
-      "domain": "CTS"
+      "domain": "CTS (C-terminal segment)"
     },
     {
       "hgvs_c": "c.808C>T",
       "hgvs_p": "p.R270X",
       "variant_type": "nonsense",
-      "clinical_significance": "",
+      "clinical_significance": "pathogenic",
       "exon": "4",
       "domain": "TRD"
     },
@@ -42,15 +42,15 @@
       "hgvs_c": "c.502C>T",
       "hgvs_p": "p.R168X",
       "variant_type": "nonsense",
-      "clinical_significance": "",
+      "clinical_significance": "pathogenic",
       "exon": "4",
-      "domain": "outside functional domains"
+      "domain": "outside functional domains (truncates protein before TRD)"
     },
     {
       "hgvs_c": "c.913insT",
       "hgvs_p": "p.K305fs",
-      "variant_type": "frameshift insertion",
-      "clinical_significance": "novel",
+      "variant_type": "frameshift (insertion)",
+      "clinical_significance": "pathogenic (novel, first reported)",
       "exon": "4",
       "domain": "TRD"
     }
@@ -65,7 +65,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome",
+      "value": "Rett syndrome (classical/typical)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -118,7 +118,7 @@
         "missense",
         "nonsense",
         "nonsense",
-        "frameshift insertion"
+        "frameshift (insertion)"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
@@ -128,9 +128,9 @@
       "value": "MBD",
       "candidates": [
         "MBD",
-        "CTS",
+        "CTS (C-terminal segment)",
         "TRD",
-        "outside functional domains",
+        "outside functional domains (truncates protein before TRD)",
         "TRD"
       ],
       "source": "article",
@@ -138,14 +138,14 @@
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001263; HP:0001249; HP:0002371; HP:0012171; HP:0001250; HP:0002353",
+      "value": "HP:0001344; HP:0002072; HP:0002194; HP:0001250; HP:0001263; HP:0001249",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "语言功能降低或丧失; 手的技能降低; 手的刻板动作（玩手指、抓头发、扳手指、挠头）; 坐和走的功能受限; 脑电图异常/癎性放电; 发育落后; 智力低下",
+      "value": "loss or reduction of language/speech function; loss of hand skills with stereotypic hand movements (finger playing, hair grabbing, finger twisting, scratching); impaired sitting and walking ability; abnormal EEG with epileptiform discharges; developmental delay (some markedly delayed); intellectual disability",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -166,7 +166,7 @@
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo",
+      "value": "de novo (no mutations detected in any of the patients' parents)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

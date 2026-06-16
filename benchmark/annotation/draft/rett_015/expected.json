@@ -19,8 +19,8 @@
       "hgvs_p": "p.R270X",
       "variant_type": "nonsense",
       "clinical_significance": "pathogenic",
-      "exon": "exon 4 (abstract states exon 3; main text and figure state exon 4)",
-      "domain": "TRD (transcription repression domain, aa 201-310)"
+      "exon": "4",
+      "domain": "TRD"
     }
   ],
   "expected_evidence": [
@@ -75,21 +75,21 @@
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "TRD (transcription repression domain, aa 201-310)",
+      "value": "TRD",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001263; HP:0000252; HP:0001252; HP:0000733; HP:0001344; HP:0002540; HP:0003763; HP:0001321",
+      "value": "HP:0001263; HP:0004322; HP:0001344; HP:0001252; HP:0002072; HP:0000253; HP:0003763; HP:0002376; HP:0002194; HP:0000505",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "moderate developmental delay; severe growth retardation; postnatal head circumference deceleration (microcephaly, <3rd centile at age 3); hypotonia; stereotypic hand movements (hand-to-mouth, twisting, clapping); bruxism (gnashing teeth); absent speech; loss of acquired purposeful hand skills / regression; inability to crawl or walk; absent eye contact and poor visual fixation; sharp wave activity at right central region on interictal EEG; no seizure history",
+      "value": "moderate developmental delay; severe growth retardation; absent speech (could not talk); hypotonia; stereotypic hand movements (hand twisting, clapping, putting hand into mouth); postnatal deceleration of head growth (head circumference <3rd centile at age 3); bruxism (gnashing teeth); developmental regression (lost head control); delayed motor milestones (sat with support at 10 months, without support at 15 months, never crawled or walked); absent eye contact and poor visual fixation; sharp wave activity on EEG (no clinical seizures)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -103,14 +103,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "infancy (held head at 4 months then lost the ability; regression in first year); presented at 3 years",
+      "value": "approximately 4 months (onset of regression in infancy)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo (mutation not detected in mother)",
+      "value": "de novo",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

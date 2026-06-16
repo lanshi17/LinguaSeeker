@@ -3,7 +3,7 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "classical Rett syndrome",
+  "disease_label": "Classical Rett syndrome",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "source_pmid": null,
@@ -17,9 +17,9 @@
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "variant_type": "large heterozygous deletion (whole-gene deletion spanning the entire MECP2 coding region; junction ~37kb upstream of exon 1 and ~18kb downstream of exon 4)",
+      "variant_type": "large heterozygous deletion (whole gene deletion spanning entire MECP2 coding region)",
       "clinical_significance": "pathogenic",
-      "exon": "exons 1-4 (entire gene)",
+      "exon": "exons 1-4 (entire coding region); deletion junction 37kb upstream of exon 1 and 18kb downstream of exon 4",
       "domain": ""
     }
   ],
@@ -33,7 +33,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "classical Rett syndrome",
+      "value": "Classical Rett syndrome",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -54,14 +54,14 @@
     },
     {
       "field_id": "A.variant_type",
-      "value": "large heterozygous deletion (whole-gene deletion spanning the entire MECP2 coding region; junction ~37kb upstream of exon 1 and ~18kb downstream of exon 4)",
+      "value": "large heterozygous deletion (whole gene deletion spanning entire MECP2 coding region)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0010864; HP:0005484; HP:0012171",
+      "value": "HP:0002376; HP:0001249; HP:0000253; HP:0002072",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

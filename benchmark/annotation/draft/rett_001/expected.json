@@ -81,6 +81,16 @@
       "evaluation_type": "precision_only"
     },
     {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "TRD",
+      "candidates": [
+        "TRD",
+        "TRD"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
       "field_id": "C.de_novo_status",
       "value": "unknown",
       "candidates": [],

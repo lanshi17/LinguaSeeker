@@ -3,9 +3,9 @@
   "source": "rett_literature",
   "gene_symbol": "FOXG1",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome (congenital/atypical and classical RTT); patient 1 severe RTT-like neurodevelopmental disorder, patient 2 classical RTT",
+  "disease_label": "Rett syndrome (classical and congenital/atypical RTT; FOXG1-related severe RTT-like neurodevelopmental disorder)",
   "mondo_id": "MONDO:0010726",
-  "moi": "AD (autosomal dominant, haploinsufficiency; both variants de novo). Note: FOXG1 is autosomal, not X-linked.",
+  "moi": "de novo heterozygous (FOXG1 is autosomal, 14q12; haploinsufficiency). Not X-linked",
   "source_pmid": null,
   "source_doi": "10.1136/jmg.2009.067355",
   "source_title": "Phenotypic variability in Rett syndrome associated with FOXG1 mutations in females",
@@ -17,18 +17,18 @@
     {
       "hgvs_c": "c.924A>G",
       "hgvs_p": "p.Trp308X",
-      "variant_type": "nonsense (truncating)",
+      "variant_type": "nonsense (truncating, premature stop codon)",
       "clinical_significance": "pathogenic",
       "exon": "exon 1",
-      "domain": "Truncation removes both GBD (Groucho-binding domain) and JBD (JARID1B-binding domain). Note: results text states c.924A>G; Figure 1A legend states c.924G>A (discrepancy in source)."
+      "domain": "missing both GBD (Groucho-binding domain) and JBD (JARID1B-binding domain)"
     },
     {
       "hgvs_c": "c.1200C>G",
       "hgvs_p": "p.Tyr400X",
-      "variant_type": "nonsense (truncating)",
+      "variant_type": "nonsense (truncating, premature stop codon)",
       "clinical_significance": "pathogenic",
       "exon": "exon 1",
-      "domain": "More carboxy-terminal truncation; retains intact GBD, may retain residual repression activity"
+      "domain": "retains intact GBD (Groucho-binding domain)"
     }
   ],
   "expected_evidence": [
@@ -41,7 +41,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome (congenital/atypical and classical RTT); patient 1 severe RTT-like neurodevelopmental disorder, patient 2 classical RTT",
+      "value": "Rett syndrome (classical and congenital/atypical RTT; FOXG1-related severe RTT-like neurodevelopmental disorder)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -55,7 +55,7 @@
     },
     {
       "field_id": "B.mode_of_inheritance_reported",
-      "value": "AD (autosomal dominant, haploinsufficiency; both variants de novo). Note: FOXG1 is autosomal, not X-linked.",
+      "value": "de novo heterozygous (FOXG1 is autosomal, 14q12; haploinsufficiency). Not X-linked",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -82,34 +82,34 @@
     },
     {
       "field_id": "A.variant_type",
-      "value": "nonsense (truncating)",
+      "value": "nonsense (truncating, premature stop codon)",
       "candidates": [
-        "nonsense (truncating)",
-        "nonsense (truncating)"
+        "nonsense (truncating, premature stop codon)",
+        "nonsense (truncating, premature stop codon)"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "Truncation removes both GBD (Groucho-binding domain) and JBD (JARID1B-binding domain). Note: results text states c.924A>G; Figure 1A legend states c.924G>A (discrepancy in source).",
+      "value": "missing both GBD (Groucho-binding domain) and JBD (JARID1B-binding domain)",
       "candidates": [
-        "Truncation removes both GBD (Groucho-binding domain) and JBD (JARID1B-binding domain). Note: results text states c.924A>G; Figure 1A legend states c.924G>A (discrepancy in source).",
-        "More carboxy-terminal truncation; retains intact GBD, may retain residual repression activity"
+        "missing both GBD (Groucho-binding domain) and JBD (JARID1B-binding domain)",
+        "retains intact GBD (Groucho-binding domain)"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0012171; HP:0001250; HP:0005484; HP:0000486; HP:0001252; HP:0001344; HP:0003763; HP:0001251; HP:0002307; HP:0011968; HP:0002079; HP:0002119; HP:0000729; HP:0002072",
+      "value": "HP:0000568; HP:0011968; HP:0001290; HP:0001250; HP:0001344; HP:0002072; HP:0003763; HP:0000253; HP:0001263; HP:0002194; HP:0000756; HP:0001251",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "Postnatal/acquired microcephaly (head growth deceleration); Developmental delay / no acquisition of speech; Loss/absence of purposeful hand skills; Hand stereotypies; Severe epilepsy with hyperthermia-induced seizures and myoclonic seizures (patient 1); Strabismus; Feeding/swallowing difficulties; Global hypotonia; Foot deformity (equinovarus); Choreic movements; Sialorrhoea / drooling; Bruxism; Inappropriate episodes of laughing; Autistic behaviour with poor eye contact (patient 2); Ataxia (patient 2); Self-abusive behaviour (patient 2); Hemihypotrophy of left body (patient 2); Bone fractures suggestive of osteoporosis (patient 1); Brain malformations: ventricular enlargement, corpus callosum hypoplasia, decreased white matter, paucity of gyral development (patient 1); Facial dysmorphism: protruding ears, anteverted nostrils, open mouth (patient 2)",
+      "value": "strabismus; feeding difficulties / swallowing difficulties; global hypotonia; severe epilepsy with hyperthermia-induced seizures; spontaneous myoclonic seizures; never acquired speech / absence of speech; hand stereotypies / repetitive stereotyped hand movements; bruxism; postnatal head growth deceleration / acquired microcephaly; global developmental delay; delayed walking (delayed motor development); autistic behaviour with poor eye contact; ataxia; choreic movements; sialorrhoea / drooling; interaction dysfunction; foot deformity (equinovarus); brain malformations (ventricular enlargement, hypoplasia/agenesis of corpus callosum, decreased white matter, paucity of gyral development); self-abusive behaviour / biting hands; inappropriate episodes of laughing; night screaming fits; hemihypotrophy of left body half; bone fractures suggestive of osteoporosis; minor anomalies (protruding ears, anteverted nostrils, open mouth appearance)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -123,14 +123,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "Patient 1: ~4 months (head growth deceleration noted at 2 months); Patient 2: ~6 months",
+      "value": "Patient 1: head growth deceleration at 2 months, symptoms at 4 months; Patient 2: developmental delay noticed at 6 months",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo (both mutations confirmed de novo by parental testing)",
+      "value": "de novo (both mutated alleles confirmed de novo by parental testing)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

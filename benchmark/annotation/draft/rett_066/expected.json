@@ -82,14 +82,14 @@
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0001270; HP:0000750; HP:0001249; HP:0012171; HP:0010841; HP:0002540",
+      "value": "HP:0001263; HP:0002194; HP:0002072; HP:0002376; HP:0001344; HP:0001250; HP:0000756; HP:0001251; HP:0012759",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "발달 퇴화 (developmental regression); 언어 및 운동 발달 지연 (language and motor developmental delay); 의도적인 손 기능 소실 (loss of purposeful hand use); 수부 운동 상동증 - 양손을 입으로 가져가는 동작, 몸통 흔들기 (hand stereotypies, body rocking); 독립 보행 불능 (inability to walk independently); 하지 근력 저하 (lower limb hypotonia/weakness); 심한 발달 지연 - Bayley 정신/운동발달 지수 50 이하 (severe developmental delay, intellectual disability); 수면 뇌파상 다발성 극파 (multifocal spikes on sleep EEG); 소두증 없음 (no microcephaly, head circumference 50th percentile); 경련 없음 (no clinical seizures); 과호흡/무호흡 없음 (no hyperventilation or apnea)",
+      "value": "언어 및 운동 발달 지연 (language and motor developmental delay, severe); 운동 발달 지연 (delayed motor development; could not stand or walk at 22 months); 수부 운동 상동증 (hand stereotypies; repetitive hand-to-mouth movements, body rocking); 발달 퇴화 (developmental regression; gradual loss of purposeful hand use/grasping); 언어 소실 / 의미 있는 단어 표현 못함 (absent meaningful speech, only 'mama'/'dada'); 수면 뇌파상 다발성 극파 (multifocal spikes on sleep EEG; no clinical seizures observed in patient); 자폐증 (autistic behavior, described as Rett feature); 보행 운동 실조증 (gait ataxia, described as Rett feature); 간헐적 과호흡 (intermittent hyperventilation, described as Rett feature; not observed in this patient)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -103,7 +103,7 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "생후 3-4개월경 발달 지연 인지 (infancy, around 3-4 months); 진단 시 2세 (18-22개월)",
+      "value": "infancy (delayed head control noted at 3-4 months; presented at 18-22 months)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

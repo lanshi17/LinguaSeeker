@@ -3,9 +3,9 @@
   "source": "rett_literature",
   "gene_symbol": "FOXG1",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Congenital variant Rett syndrome (atypical Rett syndrome); 14q12 microdeletion Rett syndrome-like phenotype",
+  "disease_label": "Congenital variant Rett syndrome (atypical Rett syndrome)",
   "mondo_id": "MONDO:0010726",
-  "moi": "",
+  "moi": "de novo (autosomal); not specified as a formal inheritance mode",
   "source_pmid": null,
   "source_doi": "10.1038/ejhg.2012.208",
   "source_title": "14q12 microdeletions excluding FOXG1 give rise to a congenital variant Rett syndrome-like phenotype",
@@ -17,34 +17,10 @@
     {
       "hgvs_c": "c.256dupC",
       "hgvs_p": "p.Gln86ProfsX35",
-      "variant_type": "frameshift (cytosine duplication)",
+      "variant_type": "frameshift (cytosine duplication at nucleotide 256)",
       "clinical_significance": "pathogenic",
       "exon": "",
       "domain": "MBD"
-    },
-    {
-      "hgvs_c": "",
-      "hgvs_p": "",
-      "variant_type": "interstitial deletion 14q12 (1.17 Mb, 28.765-29.942 Mb, HG18; includes PRKD1, FOXG1 intact) - Case 1",
-      "clinical_significance": "pathogenic",
-      "exon": "",
-      "domain": ""
-    },
-    {
-      "hgvs_c": "",
-      "hgvs_p": "",
-      "variant_type": "interstitial deletion 14q12 (1.15 Mb, 28.407-29.558 Mb, HG18; includes PRKD1, FOXG1 ~0.1 Mb outside) - Case 2",
-      "clinical_significance": "pathogenic",
-      "exon": "",
-      "domain": ""
-    },
-    {
-      "hgvs_c": "",
-      "hgvs_p": "",
-      "variant_type": "interstitial deletion 14q12 (0.89 Mb, 28.499-29.386 Mb, HG18; includes part of PRKD1, FOXG1 ~0.18 Mb outside) - Case 3",
-      "clinical_significance": "pathogenic",
-      "exon": "",
-      "domain": ""
     }
   ],
   "expected_evidence": [
@@ -57,7 +33,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Congenital variant Rett syndrome (atypical Rett syndrome); 14q12 microdeletion Rett syndrome-like phenotype",
+      "value": "Congenital variant Rett syndrome (atypical Rett syndrome)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -65,6 +41,13 @@
     {
       "field_id": "A.gene_disease_relationship",
       "value": "associated",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "de novo (autosomal); not specified as a formal inheritance mode",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -85,47 +68,42 @@
     },
     {
       "field_id": "A.variant_type",
-      "value": "frameshift (cytosine duplication)",
-      "candidates": [
-        "frameshift (cytosine duplication)",
-        "interstitial deletion 14q12 (1.17 Mb, 28.765-29.942 Mb, HG18; includes PRKD1, FOXG1 intact) - Case 1",
-        "interstitial deletion 14q12 (1.15 Mb, 28.407-29.558 Mb, HG18; includes PRKD1, FOXG1 ~0.1 Mb outside) - Case 2",
-        "interstitial deletion 14q12 (0.89 Mb, 28.499-29.386 Mb, HG18; includes part of PRKD1, FOXG1 ~0.18 Mb outside) - Case 3"
-      ],
+      "value": "frameshift (cytosine duplication at nucleotide 256)",
+      "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001263; HP:0010864; HP:0005484; HP:0001290; HP:0001250; HP:0001274; HP:0012171; HP:0003763; HP:0002019; HP:0002360; HP:0011968; HP:0002650; HP:0000486; HP:0002883; HP:0002104; HP:0002540; HP:0004349",
+      "value": "HP:0001249; HP:0001263; HP:0000252; HP:0000253; HP:0001252; HP:0001290; HP:0001250; HP:0002072; HP:0011968; HP:0002019; HP:0003763; HP:0002360; HP:0000568; HP:0012171; HP:0002650; HP:0012759; HP:0001257; HP:0001344; HP:0001371; HP:0002194",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "severe to profound intellectual impairment; early-onset developmental delay without regression; postnatal microcephaly; truncal hypotonia with limb hypertonia; seizure disorder (infantile spasms; tonic-clonic); agenesis of the corpus callosum; subtle facial dysmorphism; hand stereotypies (midline hand grasping, wringing, tapping, mouthing); inability to walk; absent or minimal speech; feeding difficulties / poor hand function; bruxism; constipation; disturbed sleep pattern; cold extremities; tongue thrusting / protruding tongue; strabismus (esotropia); abnormal breathing pattern (hyperventilation, deep breathing, sleep-disordered breathing/apnea); scoliosis; spastic quadriparesis (Case 1); reduced bone mineral density (Case 1)",
+      "value": "severe intellectual impairment; early-onset developmental delay without regression; postnatal/progressive microcephaly; truncal hypotonia; limb hypertonia / spastic quadriparesis with brisk deep tendon reflexes; seizure disorder (including infantile spasms; onset 1 year and 11 years); stereotypic hand movements (hand grasping, wringing, tapping, mouthing); feeding difficulties; constipation; bruxism; disturbed sleep pattern; strabismus / esotropia; cold hands and feet; thoracolumbar scoliosis; disturbed breathing pattern (hyperventilation, deep breathing, sleep-disordered breathing with apnoea); fixed flexion deformities; absent or minimal speech; tongue thrusting / protruding tongue; agenesis of the corpus callosum; subtle facial dysmorphism; delayed motor development (unable to walk)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.sex",
-      "value": "2 female (Cases 1, 2), 1 male (Case 3); FOXG1 c.256dupC patient (Patient 4) female",
+      "value": "Female (Patient 4 with FOXG1 mutation; reported microdeletion patients: 2 female, 1 male)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "congenital / early infantile (hypotonia from birth; developmental delay evident in first months)",
+      "value": "Congenital/early-onset (infantile)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo (Case 2 microdeletion confirmed de novo; Cases 1 and 3 parental studies normal; FOXG1 c.256dupC confirmed de novo in Patient 4)",
+      "value": "de novo",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

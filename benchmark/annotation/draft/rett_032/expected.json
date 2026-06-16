@@ -18,7 +18,7 @@
       "hgvs_c": "c.547C>T",
       "hgvs_p": "p.T158M",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic (disease allele)",
+      "clinical_significance": "pathogenic",
       "exon": "",
       "domain": "MBD"
     },
@@ -26,31 +26,31 @@
       "hgvs_c": "c.576C>T",
       "hgvs_p": "p.R168X",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic (disease allele)",
+      "clinical_significance": "pathogenic",
       "exon": "",
-      "domain": "between MBD and TRD"
+      "domain": "between MBD and TRD (deletes whole TRD)"
     },
     {
       "hgvs_c": "c.882C>T",
       "hgvs_p": "p.R270X",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic (disease allele)",
+      "clinical_significance": "pathogenic",
       "exon": "",
-      "domain": "TRD (partial removal)"
+      "domain": "TRD"
     },
     {
       "hgvs_c": "c.954C>T",
       "hgvs_p": "p.R294X",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic (disease allele)",
+      "clinical_significance": "pathogenic",
       "exon": "",
-      "domain": "TRD (partial removal)"
+      "domain": "TRD"
     },
     {
       "hgvs_c": "c.979C>A",
       "hgvs_p": "p.P302H",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic (disease allele)",
+      "clinical_significance": "pathogenic",
       "exon": "",
       "domain": "TRD"
     },
@@ -58,7 +58,7 @@
       "hgvs_c": "c.990C>T",
       "hgvs_p": "p.R306C",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic (disease allele)",
+      "clinical_significance": "pathogenic",
       "exon": "",
       "domain": "TRD"
     },
@@ -66,7 +66,7 @@
       "hgvs_c": "c.676insG",
       "hgvs_p": "p.201GlyFS-235X",
       "variant_type": "frameshift",
-      "clinical_significance": "pathogenic (disease allele)",
+      "clinical_significance": "pathogenic",
       "exon": "",
       "domain": "between MBD and TRD (deletes whole TRD)"
     },
@@ -74,41 +74,41 @@
       "hgvs_c": "c.880delG",
       "hgvs_p": "p.269AlaFS-288X",
       "variant_type": "frameshift",
-      "clinical_significance": "pathogenic (disease allele)",
+      "clinical_significance": "pathogenic",
       "exon": "",
-      "domain": "TRD (partial removal)"
+      "domain": "TRD (partial)"
     },
     {
       "hgvs_c": "",
-      "hgvs_p": "",
-      "variant_type": "frameshift (34 bp deletion, nt 859-892)",
-      "clinical_significance": "pathogenic (disease allele)",
+      "hgvs_p": "34bpdeletion(nucleotides859-892)",
+      "variant_type": "frameshift (microdeletion)",
+      "clinical_significance": "pathogenic",
       "exon": "",
-      "domain": "TRD (partial removal)"
+      "domain": "TRD (partial)"
     },
     {
       "hgvs_c": "",
-      "hgvs_p": "",
-      "variant_type": "frameshift (388 bp deletion, nt 922-1309/923-1310)",
-      "clinical_significance": "pathogenic (disease allele)",
+      "hgvs_p": "388bpdeletion(nucleotides922-1309/923-1310)",
+      "variant_type": "frameshift (microdeletion)",
+      "clinical_significance": "pathogenic",
       "exon": "",
-      "domain": "TRD (partial removal)"
+      "domain": "TRD (partial)"
     },
     {
       "hgvs_c": "",
-      "hgvs_p": "",
-      "variant_type": "frameshift (259 bp deletion, nt 988-1246)",
-      "clinical_significance": "pathogenic (disease allele)",
+      "hgvs_p": "259bpdeletion(nucleotides988-1246)",
+      "variant_type": "frameshift (microdeletion)",
+      "clinical_significance": "pathogenic",
       "exon": "",
-      "domain": "TRD (partial removal)"
+      "domain": "TRD (partial)"
     },
     {
       "hgvs_c": "",
-      "hgvs_p": "",
-      "variant_type": "frameshift (154 bp deletion, nt 1110-1263 region)",
-      "clinical_significance": "pathogenic (disease allele); does not affect MBD or TRD",
+      "hgvs_p": "154bpdeletion(nucleotides1110-1263/1111-1264/1112-1265)",
+      "variant_type": "frameshift (microdeletion)",
+      "clinical_significance": "pathogenic",
       "exon": "",
-      "domain": "C-terminal, downstream of MBD/TRD"
+      "domain": "C-terminal, outside MBD/TRD"
     },
     {
       "hgvs_c": "c.676C>T",
@@ -222,6 +222,10 @@
         "p.R306C",
         "p.201GlyFS-235X",
         "p.269AlaFS-288X",
+        "34bp deletion (nucleotides 859-892)",
+        "388bp deletion (nucleotides 922-1309/923-1310)",
+        "259bp deletion (nucleotides 988-1246)",
+        "154bp deletion (nucleotides 1110-1263/1111-1264/1112-1265)",
         "p.A201V",
         "p.G232A",
         "p.P251L",
@@ -244,10 +248,10 @@
         "missense",
         "frameshift",
         "frameshift",
-        "frameshift (34 bp deletion, nt 859-892)",
-        "frameshift (388 bp deletion, nt 922-1309/923-1310)",
-        "frameshift (259 bp deletion, nt 988-1246)",
-        "frameshift (154 bp deletion, nt 1110-1263 region)",
+        "frameshift (microdeletion)",
+        "frameshift (microdeletion)",
+        "frameshift (microdeletion)",
+        "frameshift (microdeletion)",
         "missense",
         "missense",
         "missense",
@@ -263,17 +267,19 @@
       "value": "MBD",
       "candidates": [
         "MBD",
-        "between MBD and TRD",
-        "TRD (partial removal)",
-        "TRD (partial removal)",
+        "between MBD and TRD (deletes whole TRD)",
+        "TRD",
+        "TRD",
         "TRD",
         "TRD",
         "between MBD and TRD (deletes whole TRD)",
-        "TRD (partial removal)",
-        "TRD (partial removal)",
-        "TRD (partial removal)",
-        "TRD (partial removal)",
-        "C-terminal, downstream of MBD/TRD",
+        "TRD (partial)",
+        "TRD (partial)",
+        "TRD (partial)",
+        "TRD (partial)",
+        "C-terminal, outside MBD/TRD",
+        "TRD",
+        "TRD",
         "TRD"
       ],
       "source": "article",
@@ -281,14 +287,14 @@
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0001249; HP:0012171; HP:0001250; HP:0000252; HP:0001290; HP:0000729; HP:0002650",
+      "value": "HP:0000756; HP:0001249; HP:0002072; HP:0001250; HP:0000252; HP:0001252; HP:0002650; HP:0012759; HP:0002376; HP:0001344; HP:0002194",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "autistic tendency/behavior; severe mental retardation; stereotyped hand movements; seizures/epilepsy; acquired (postnatal) microcephaly; hypotonia; lack of interlimb coordination; developmental regression; loss of acquired hand use; abnormal respiration; dystonic posture of limbs; scoliosis; delayed/abnormal crawling and walking; absent or severely limited speech",
+      "value": "autistic tendency / autistic behavior; severe mental retardation; stereotyped hand movements (hand stereotypy); seizures / epilepsy; acquired microcephaly; hypotonia; scoliosis; abnormal respiration; developmental regression / loss of acquired hand use; absent or minimal speech; delayed motor milestones (head control, crawling, walking); lack of interlimb coordination; dystonic posture of limbs",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -302,14 +308,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "early childhood; head growth deceleration in late infancy, acquired microcephaly around 2 years of age",
+      "value": "early infancy onset with deceleration of head growth in late infancy and acquired microcephaly around 2 years of age; severe symptoms appear age-dependently from early childhood",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "unknown (sporadic cases; disease missense variants absent from unaffected family members and controls, but de novo status not explicitly confirmed)",
+      "value": "sporadic cases; disease mutations absent from unaffected family members and 107 normal controls (presumed de novo, not explicitly confirmed)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

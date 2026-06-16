@@ -3,12 +3,12 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "",
+  "disease_label": "Rett syndrome",
   "mondo_id": "MONDO:0010726",
-  "moi": "",
+  "moi": "XD",
   "source_pmid": null,
   "source_doi": null,
-  "source_title": "RSRT MECP2 iPSC Collection at Coriell Institute / RSRT MECP2 Fibroblast Collection at Infinity BiologiX",
+  "source_title": "RSRT MECP2 iPSC and Fibroblast Collections at Coriell Institute and Infinity BiologiX",
   "source_journal": null,
   "source_year": null,
   "source_language": "en",
@@ -20,7 +20,7 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "N-terminal (pre-MBD)"
     },
     {
       "hgvs_c": "c.316C>T",
@@ -52,7 +52,7 @@
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "inter-domain (MBD-TRD)"
     },
     {
       "hgvs_c": "c.763C>T",
@@ -89,15 +89,15 @@
     {
       "hgvs_c": "c.215del",
       "hgvs_p": "p.P72Rfs*53",
-      "variant_type": "frameshift (deletion)",
+      "variant_type": "frameshift deletion",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "N-terminal (pre-MBD)"
     },
     {
       "hgvs_c": "c.753delC",
       "hgvs_p": "p.G252Afs",
-      "variant_type": "frameshift (deletion)",
+      "variant_type": "frameshift deletion",
       "clinical_significance": "",
       "exon": "",
       "domain": "TRD"
@@ -105,7 +105,7 @@
     {
       "hgvs_c": "c.806delG",
       "hgvs_p": "p.G269Afs*20",
-      "variant_type": "frameshift (deletion)",
+      "variant_type": "frameshift deletion",
       "clinical_significance": "",
       "exon": "",
       "domain": "TRD"
@@ -113,10 +113,10 @@
     {
       "hgvs_c": "c.44_57dup14",
       "hgvs_p": "p.R20EfsX29",
-      "variant_type": "frameshift (duplication)",
+      "variant_type": "duplication/frameshift",
       "clinical_significance": "",
       "exon": "",
-      "domain": ""
+      "domain": "N-terminal (pre-MBD)"
     },
     {
       "hgvs_c": "c.62+1delGT",
@@ -131,7 +131,7 @@
       "hgvs_p": "",
       "variant_type": "splicing",
       "clinical_significance": "",
-      "exon": "intron 1 (IVSI+2T>G)",
+      "exon": "intron 1",
       "domain": ""
     },
     {
@@ -145,17 +145,17 @@
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "variant_type": "large deletion (exon 4 partial deletion: codon 377 into 3' UTR)",
+      "variant_type": "large deletion",
       "clinical_significance": "",
-      "exon": "exon 4",
+      "exon": "exon 4 partial deletion: codon 377 into 3' UTR",
       "domain": ""
     },
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "variant_type": "large deletion (97kb interstitial deletion of Xq28)",
+      "variant_type": "large deletion",
       "clinical_significance": "",
-      "exon": "",
+      "exon": "97kb interstitial deletion of Xq28",
       "domain": ""
     }
   ],
@@ -163,6 +163,27 @@
     {
       "field_id": "A.gene_symbol",
       "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -225,39 +246,43 @@
         "nonsense",
         "nonsense",
         "missense",
-        "frameshift (deletion)",
-        "frameshift (deletion)",
-        "frameshift (deletion)",
-        "frameshift (duplication)",
+        "frameshift deletion",
+        "frameshift deletion",
+        "frameshift deletion",
+        "duplication/frameshift",
         "splicing",
         "splicing",
         "splicing",
-        "large deletion (exon 4 partial deletion: codon 377 into 3' UTR)",
-        "large deletion (97kb interstitial deletion of Xq28)"
+        "large deletion",
+        "large deletion"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD",
+      "value": "N-terminal (pre-MBD)",
       "candidates": [
+        "N-terminal (pre-MBD)",
         "MBD",
         "MBD",
         "MBD",
+        "inter-domain (MBD-TRD)",
         "TRD",
         "TRD",
         "TRD",
         "TRD",
+        "N-terminal (pre-MBD)",
         "TRD",
-        "TRD"
+        "TRD",
+        "N-terminal (pre-MBD)"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.sex",
-      "value": "predominantly F; M for p.P72Rfs*53, c.62+2T>G; M/F for p.G269Afs*20",
+      "value": "predominantly female (F); some male (M) and M/F lines",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

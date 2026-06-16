@@ -3,7 +3,7 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder / Rett-like syndrome)",
+  "disease_label": "Заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder / Rett-like syndrome)",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "source_pmid": null,
@@ -17,10 +17,10 @@
     {
       "hgvs_c": "c.1217_1445del",
       "hgvs_p": "p.Gln406Profs*30",
-      "variant_type": "frameshift deletion (deletion of 228 nucleotides, NM_004992.4; heterozygous deletion of chromosome X segment 154030384–154030612)",
-      "clinical_significance": "pathogenic (described in female patients with variable Rett syndrome course, OMIM 312750, in some cases associated with pharmacoresistant epilepsy)",
+      "variant_type": "frameshift deletion (228 nt deletion)",
+      "clinical_significance": "pathogenic",
       "exon": "4",
-      "domain": "C-terminal domain (codon 406, downstream of TRD aa 201-310)"
+      "domain": "C-terminal region (beyond TRD; codon 406)"
     }
   ],
   "expected_evidence": [
@@ -33,7 +33,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder / Rett-like syndrome)",
+      "value": "Заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder / Rett-like syndrome)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -68,28 +68,28 @@
     },
     {
       "field_id": "A.variant_type",
-      "value": "frameshift deletion (deletion of 228 nucleotides, NM_004992.4; heterozygous deletion of chromosome X segment 154030384–154030612)",
+      "value": "frameshift deletion (228 nt deletion)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "C-terminal domain (codon 406, downstream of TRD aa 201-310)",
+      "value": "C-terminal region (beyond TRD; codon 406)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0001250; HP:0001249; HP:0012171; HP:0001288; HP:0001251; HP:0001252; HP:0007359; HP:0002307; HP:0001257",
+      "value": "HP:0001250; HP:0001263; HP:0001249; HP:0002072; HP:0002376; HP:0001252; HP:0001290; HP:0001251; HP:0001344; HP:0002194; HP:0011968",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "developmental regression after period of normal/delayed early development; delayed motor development (head control 3.5 mo, sitting 8 mo, walking 1 year 7 months); ataxia / cerebellar gait disturbance; delayed speech development (first words at 2.5 years), loss of speech; moderate intellectual disability (Wechsler IQ 44); pharmacoresistant epilepsy (atonic, myoclonic, tonic, bilateral tonic-clonic seizures; reflex seizures provoked by sound/touch); diffuse muscular hypotonia; brisk lower-limb tendon reflexes, bilateral Babinski sign; hand stereotypies (waving, hand shaking, finger fumbling); loss of acquired purposeful hand and motor skills; truncal ataxia, dysmetria, intention tremor; loss of ability to walk and stand independently; cerebellar volume reduction / hypoplasia of vermis and cerebellar hemispheres on MRI; lethargy and reduced activity / drowsiness; loss of toileting skills and feeding ability (required nasogastric/gastrostomy feeding); transient elevation of blood ammonia (152.6 µmol/L) and lactate (4.8 mmol/L)",
+      "value": "эпилептические приступы (фармакорезистентная эпилепсия); задержка моторного развития; мозжечковая атаксия / шаткость походки; диффузная мышечная гипотония; регресс в психическом, речевом и двигательном развитии; умеренная умственная отсталость (IQ 44); задержка психоречевого развития; двигательные стереотипии рук (перебирание пальцами, размахивание, тряска кистями); утрата речи (отсутствие собственной речи); нарушение питания (снижение аппетита, отсутствие жевания, питание через зонд/гастростому); нарушение мелкой моторики, интенция и дисметрия в руках; уменьшение объема мозжечка / гипоплазия червя и гемисфер мозжечка (по МРТ); высокие сухожильные рефлексы, патологический рефлекс Бабинского",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -103,14 +103,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "early childhood with developmental delay; seizure onset at 7 years; severe regression at 9-10 years",
+      "value": "Задержка моторного развития с младенчества; дебют эпилептических приступов в возрасте 7 лет",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "unknown (born to healthy non-consanguineous parents, healthy sibling; de novo status not explicitly confirmed for the MECP2 deletion)",
+      "value": "unknown (родители здоровы, статус de novo в тексте не указан)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

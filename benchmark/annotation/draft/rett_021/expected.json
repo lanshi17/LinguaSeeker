@@ -52,7 +52,7 @@
       "variant_type": "nonsense",
       "clinical_significance": "pathogenic",
       "exon": "",
-      "domain": "inter-domain (between MBD and TRD)"
+      "domain": "other (between MBD and TRD)"
     },
     {
       "hgvs_c": "c.763C>T",
@@ -65,7 +65,7 @@
     {
       "hgvs_c": "c.806delG",
       "hgvs_p": "p.(G269Afs*20)",
-      "variant_type": "frameshift deletion",
+      "variant_type": "frameshift",
       "clinical_significance": "pathogenic",
       "exon": "",
       "domain": "TRD"
@@ -170,7 +170,7 @@
         "missense",
         "nonsense",
         "nonsense",
-        "frameshift deletion",
+        "frameshift",
         "nonsense",
         "nonsense",
         "missense"
@@ -186,7 +186,7 @@
         "MBD",
         "MBD",
         "MBD",
-        "inter-domain (between MBD and TRD)",
+        "other (between MBD and TRD)",
         "TRD",
         "TRD",
         "TRD",
@@ -198,7 +198,7 @@
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002371; HP:0001288; HP:0000733; HP:0001249; HP:0002376",
+      "value": "HP:0002072; HP:0002376; HP:0001249; HP:0001344",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -219,7 +219,7 @@
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo in probands; shown to originate from paternal germline mosaicism",
+      "value": "apparently de novo in offspring but inherited from paternal germline mosaicism",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

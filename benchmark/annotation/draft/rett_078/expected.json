@@ -75,14 +75,14 @@
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0100023; HP:0000252; HP:0002069; HP:0001257; HP:0001347; HP:0003487; HP:0000817; HP:0000748; HP:0002360; HP:0003763; HP:0007021; HP:0000729",
+      "value": "HP:0000252; HP:0000253; HP:0002072; HP:0001250; HP:0002376; HP:0001257; HP:0002360; HP:0003763; HP:0001344",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "Normal development until 10 months; Psychomotor regression; Microcephaly (head circumference deceleration from 10 months); Loss of eye contact at 16 months; Walking difficulty at 18 months; Generalized afebrile tonic-clonic seizures at 27 months; Stereotypic hand movements (finger licking and biting); Self-harm behavior; Increased muscle tone / spasticity; Hyperreflexia; Bilateral positive Babinski sign; Gait apraxia; Bruxism (teeth grinding); Sleep disturbances; Uncontrollable laughter and crying spells; Reduced pain sensitivity; Loss of communication skills; Autistic features",
+      "value": "microcephaly with negative head circumference deviation from 10 months; progressive slowing of head growth; stereotypic hand movements (finger licking and biting); generalized afebrile tonic-clonic seizures; psychomotor regression / developmental regression; increased generalized muscle tone (spasticity); increased deep tendon reflexes; bilateral positive Babinski; gait apraxia / difficulty walking; loss of communication skills; loss of eye contact; sleep disturbance; bruxism (teeth grinding); uncontrollable laughing attacks; eye gaze episodes; reduced pain sensitivity; self-injurious behavior",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

@@ -3,9 +3,9 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Síndrome de duplicación MECP2 (MECP2 duplication syndrome)",
+  "disease_label": "MECP2 duplication syndrome (síndrome de duplicación MECP2)",
   "mondo_id": "MONDO:0010726",
-  "moi": "X-linked (ligado a X; afecta principalmente a varones, mujeres portadoras generalmente asintomáticas)",
+  "moi": "X-linked",
   "source_pmid": null,
   "source_doi": "10.33588/rn.7008.2019457",
   "source_title": "Síndrome de duplicación MECP2 familiar",
@@ -17,10 +17,10 @@
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "variant_type": "duplication (CNV)",
+      "variant_type": "duplication (copy number gain, Xq28 including MECP2; 416 kb)",
       "clinical_significance": "pathogenic",
       "exon": "",
-      "domain": "whole-gene duplication of Xq28 including MECP2 (~416 kb)"
+      "domain": ""
     }
   ],
   "expected_evidence": [
@@ -33,7 +33,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Síndrome de duplicación MECP2 (MECP2 duplication syndrome)",
+      "value": "MECP2 duplication syndrome (síndrome de duplicación MECP2)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -47,56 +47,49 @@
     },
     {
       "field_id": "B.mode_of_inheritance_reported",
-      "value": "X-linked (ligado a X; afecta principalmente a varones, mujeres portadoras generalmente asintomáticas)",
+      "value": "X-linked",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "A.variant_type",
-      "value": "duplication (CNV)",
-      "candidates": [],
-      "source": "article",
-      "evaluation_type": "precision_only"
-    },
-    {
-      "field_id": "A.functional_domain_or_hotspot",
-      "value": "whole-gene duplication of Xq28 including MECP2 (~416 kb)",
+      "value": "duplication (copy number gain, Xq28 including MECP2; 416 kb)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001252; HP:0001263; HP:0002376; HP:0000729; HP:0001249; HP:0001250; HP:0002205; HP:0001257; HP:0000733; HP:0002020; HP:0002019; HP:0025324; HP:0002307; HP:0001344",
+      "value": "HP:0001252; HP:0001263; HP:0002376; HP:0000756; HP:0001344; HP:0001249; HP:0001250; HP:0001257; HP:0002072; HP:0002019; HP:0003763; HP:0002650; HP:0000568; HP:0002194; HP:0011968",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "hipotonía axial / hipotonía temprana; retraso psicomotor / retraso global del desarrollo; regresión de los hitos del desarrollo; rasgos del espectro autista; escaso desarrollo del lenguaje / ausencia de lenguaje expresivo; discapacidad intelectual de moderada a grave; epilepsia (50-80% de los casos, a menudo refractaria); infecciones respiratorias recurrentes; espasticidad progresiva; estereotipias manuales / movimientos estereotipados de las manos; reflujo gastroesofágico; estreñimiento; bruxismo; sialorrea; dificultad para la marcha; rasgos dismórficos (hipoplasia mediofacial, puente nasal estrecho, labio inferior grueso, orejas grandes, dedos cónicos, pies pequeños); escoliosis; estrabismo divergente e hipermetropía; hipertensión pulmonar (causa de muerte precoz)",
+      "value": "hipotonía axial/temprana; retraso psicomotor / retraso global del desarrollo; regresión de los hitos del desarrollo; rasgos del espectro autista; escaso desarrollo del lenguaje / ausencia de lenguaje expresivo; discapacidad intelectual de moderada a grave; epilepsia (50-80% de los casos, frecuentemente refractaria); espasticidad progresiva; estereotipias manuales / movimientos estereotipados de las manos; estreñimiento; bruxismo; escoliosis; estrabismo divergente; dificultad para la marcha; problemas respiratorios y de nutrición; infecciones respiratorias recurrentes; reflujo gastroesofágico; sialorrea; hipermetropía; rasgos dismórficos (hipoplasia mediofacial, puente nasal estrecho, labio inferior grueso, orejas grandes y prominentes, cabello grueso, dedos cónicos, pies pequeños); hipertensión pulmonar (descrita como causa de muerte precoz)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.sex",
-      "value": "male (ambos casos son varones)",
+      "value": "male (ambos casos varones)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "lactancia temprana (caso 1 evaluado a los 6 meses; caso 2 a los 13 meses)",
+      "value": "infancy; caso 1 remitido a los 6 meses, caso 2 a los 13 meses",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "inherited (duplicación heredada de la madre portadora; herencia familiar confirmada en madre, dos tías maternas y abuela materna)",
+      "value": "inherited (duplicación heredada de la madre portadora; familia con múltiples portadoras: madre, dos tías maternas y abuela materna)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

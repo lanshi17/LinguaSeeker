@@ -18,55 +18,55 @@
       "hgvs_c": "",
       "hgvs_p": "p.Y141X",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "MBD (aa 78-162)"
+      "domain": "MBD"
     },
     {
       "hgvs_c": "",
       "hgvs_p": "p.R270X",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "TRD (aa 201-310)"
+      "domain": "TRD"
     },
     {
       "hgvs_c": "c.905C>T",
       "hgvs_p": "p.P302H",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "TRD (aa 201-310)"
+      "domain": "TRD"
     },
     {
       "hgvs_c": "",
       "hgvs_p": "p.R306C",
       "variant_type": "missense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "TRD (aa 201-310)"
+      "domain": "TRD"
     },
     {
       "hgvs_c": "",
       "hgvs_p": "p.R255X",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "TRD (aa 201-310)"
+      "domain": "TRD"
     },
     {
       "hgvs_c": "",
       "hgvs_p": "p.R294X",
       "variant_type": "nonsense",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "",
-      "domain": "TRD (aa 201-310)"
+      "domain": "TRD"
     },
     {
       "hgvs_c": "",
       "hgvs_p": "",
       "variant_type": "deletion",
-      "clinical_significance": "pathogenic",
+      "clinical_significance": "",
       "exon": "exons 1-2",
       "domain": ""
     }
@@ -138,28 +138,28 @@
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD (aa 78-162)",
+      "value": "MBD",
       "candidates": [
-        "MBD (aa 78-162)",
-        "TRD (aa 201-310)",
-        "TRD (aa 201-310)",
-        "TRD (aa 201-310)",
-        "TRD (aa 201-310)",
-        "TRD (aa 201-310)"
+        "MBD",
+        "TRD",
+        "TRD",
+        "TRD",
+        "TRD",
+        "TRD"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0001250; HP:0012171; HP:0000729; HP:0001249; HP:0002883; HP:0002104",
+      "value": "HP:0001250; HP:0012759; HP:0000756; HP:0001249; HP:0002376",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "normal development up to 6-18 months followed by motor regression; autistic features/behavior; epilepsy/seizures (present in ~70% of patients); generalized seizures; refractory epilepsy; absence seizures; partial seizures; hyperventilation bursts; apneas; mental retardation; loss of purposeful hand use / hand stereotypies",
+      "value": "epilepsy/seizures (generalized, partial, absence, atonic, refractory, status epilepticus); respiratory anomalies (hyperventilation bursts and apneas); autistic behavior; mental retardation; motor regression / failure to acquire new skills",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

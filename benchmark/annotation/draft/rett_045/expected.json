@@ -18,7 +18,7 @@
       "hgvs_c": "c.397C>T",
       "hgvs_p": "p.R133C",
       "variant_type": "missense",
-      "clinical_significance": "Pathogenic (less severe)",
+      "clinical_significance": "pathogenic (less severe)",
       "exon": "",
       "domain": "MBD"
     },
@@ -26,7 +26,7 @@
       "hgvs_c": "c.880C>T",
       "hgvs_p": "p.R294X",
       "variant_type": "nonsense",
-      "clinical_significance": "Pathogenic (less severe)",
+      "clinical_significance": "pathogenic (less severe)",
       "exon": "",
       "domain": "TRD"
     },
@@ -34,7 +34,7 @@
       "hgvs_c": "c.906C>T",
       "hgvs_p": "p.R306C",
       "variant_type": "missense",
-      "clinical_significance": "Pathogenic (less severe)",
+      "clinical_significance": "pathogenic (less severe)",
       "exon": "",
       "domain": "TRD"
     },
@@ -42,7 +42,7 @@
       "hgvs_c": "c.473C>T",
       "hgvs_p": "p.T158M",
       "variant_type": "missense",
-      "clinical_significance": "Pathogenic (less severe)",
+      "clinical_significance": "pathogenic (less severe)",
       "exon": "",
       "domain": "MBD"
     },
@@ -50,7 +50,7 @@
       "hgvs_c": "c.306C>G",
       "hgvs_p": "p.R106T",
       "variant_type": "missense",
-      "clinical_significance": "Pathogenic (more severe)",
+      "clinical_significance": "pathogenic (more severe)",
       "exon": "",
       "domain": "MBD"
     },
@@ -58,15 +58,15 @@
       "hgvs_c": "c.502C>T",
       "hgvs_p": "p.R168X",
       "variant_type": "nonsense",
-      "clinical_significance": "Pathogenic (more severe)",
+      "clinical_significance": "pathogenic (more severe)",
       "exon": "",
-      "domain": ""
+      "domain": "inter-domain (between MBD and TRD)"
     },
     {
       "hgvs_c": "c.763C>T",
       "hgvs_p": "p.R255X",
       "variant_type": "nonsense",
-      "clinical_significance": "Pathogenic (more severe)",
+      "clinical_significance": "pathogenic (more severe)",
       "exon": "",
       "domain": "TRD"
     },
@@ -74,7 +74,7 @@
       "hgvs_c": "c.808C>T",
       "hgvs_p": "p.R270X",
       "variant_type": "nonsense",
-      "clinical_significance": "Pathogenic (more severe)",
+      "clinical_significance": "pathogenic (more severe)",
       "exon": "",
       "domain": "TRD"
     }
@@ -165,6 +165,7 @@
         "TRD",
         "MBD",
         "MBD",
+        "inter-domain (between MBD and TRD)",
         "TRD",
         "TRD"
       ],
@@ -173,14 +174,14 @@
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0002371; HP:0002650; HP:0004349; HP:0000939; HP:0002659; HP:0001250; HP:0002540",
+      "value": "HP:0002650; HP:0002376; HP:0001344; HP:0001250",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "developmental regression; loss of speech; loss of hand skills; low bone mineral density; osteoporosis/osteopenia; fragility fractures; scoliosis; inability to walk / reduced ambulation; epilepsy",
+      "value": "scoliosis; developmental regression; loss of speech; loss of hand skills; epilepsy/seizures; low bone mineral density / osteoporosis; fragility fractures (especially femur); reduced mobility / inability to walk",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

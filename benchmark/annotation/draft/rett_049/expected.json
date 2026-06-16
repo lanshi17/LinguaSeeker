@@ -3,7 +3,7 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome (two typical RTT cases; one atypical preserved speech variant)",
+  "disease_label": "Rett syndrome (two typical RTT; one atypical preserved speech variant)",
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "source_pmid": null,
@@ -17,26 +17,26 @@
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "variant_type": "Structural variant - ~200 Kbp translocation from chromosome 6 to chromosome X; t(6;X)(q26;q28); breakpoint hg38 chrX:154,032,104",
-      "clinical_significance": "pathogenic (causative; novel, de novo)",
+      "variant_type": "translocation",
+      "clinical_significance": "pathogenic",
       "exon": "breakpoint between exons 3 and 4",
-      "domain": ""
+      "domain": "disrupts MECP2_e1 (NM_004992.4) and MECP2_e2 (NM_001110792.3) core region; t(6;X)(q26;q28), ~200 kbp insertion from chr6"
     },
     {
       "hgvs_c": "",
       "hgvs_p": "",
-      "variant_type": "Complex structural variant (cSV): two deletions (~5 Kbp and ~60 Kbp) plus a ~105 Kbp inversion; removes downstream portion of both MECP2 isoforms including exons 3 and 4 and the entire 3' UTR",
-      "clinical_significance": "pathogenic (causative; novel, de novo)",
-      "exon": "exons 3 and 4 (and 3' UTR)",
-      "domain": ""
+      "variant_type": "complex structural variant (two deletions ~5Kbp and ~60Kbp plus ~105Kbp inversion)",
+      "clinical_significance": "pathogenic",
+      "exon": "removes exons 3 and 4 plus entire 3' UTR",
+      "domain": "downstream portion of both MECP2 isoforms; likely NMD"
     },
     {
       "hgvs_c": "NC_000023.11:g.154027486_154030665del",
-      "hgvs_p": "frameshift/stop-lossaffectingaminoacids397to498,generatinganovel149-residuesequencebeforeaprematurestopcodon(stopatposition545)",
-      "variant_type": "Structural variant - ~3,200 bp heterozygous deletion (frameshift, stop-loss); removes terminal portion of exon 4 and 2,889 bp of the 3' UTR",
-      "clinical_significance": "pathogenic (causative; novel, de novo)",
-      "exon": "exon 4 (terminal portion) and 3' UTR",
-      "domain": "C-terminal region"
+      "hgvs_p": "frameshiftalteringproteinfromaa397,prematurestopatposition545(affectsaa397-498,novel149-residuesequence)",
+      "variant_type": "deletion (~3,200 bp)",
+      "clinical_significance": "pathogenic",
+      "exon": "exon 4 (terminal portion) plus 2,889 bp of 3' UTR",
+      "domain": "C-terminal region (stop-loss)"
     }
   ],
   "expected_evidence": [
@@ -49,7 +49,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome (two typical RTT cases; one atypical preserved speech variant)",
+      "value": "Rett syndrome (two typical RTT; one atypical preserved speech variant)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -77,60 +77,64 @@
     },
     {
       "field_id": "A.variant_hgvs_p",
-      "value": "frameshift/stop-loss affecting amino acids 397 to 498, generating a novel 149-residue sequence before a premature stop codon (stop at position 545)",
+      "value": "frameshift altering protein from aa 397, premature stop at position 545 (affects aa 397-498, novel 149-residue sequence)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.variant_type",
-      "value": "Structural variant - ~200 Kbp translocation from chromosome 6 to chromosome X; t(6;X)(q26;q28); breakpoint hg38 chrX:154,032,104",
+      "value": "translocation",
       "candidates": [
-        "Structural variant - ~200 Kbp translocation from chromosome 6 to chromosome X; t(6;X)(q26;q28); breakpoint hg38 chrX:154,032,104",
-        "Complex structural variant (cSV): two deletions (~5 Kbp and ~60 Kbp) plus a ~105 Kbp inversion; removes downstream portion of both MECP2 isoforms including exons 3 and 4 and the entire 3' UTR",
-        "Structural variant - ~3,200 bp heterozygous deletion (frameshift, stop-loss); removes terminal portion of exon 4 and 2,889 bp of the 3' UTR"
+        "translocation",
+        "complex structural variant (two deletions ~5Kbp and ~60Kbp plus ~105Kbp inversion)",
+        "deletion (~3,200 bp)"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "C-terminal region",
-      "candidates": [],
+      "value": "disrupts MECP2_e1 (NM_004992.4) and MECP2_e2 (NM_001110792.3) core region; t(6;X)(q26;q28), ~200 kbp insertion from chr6",
+      "candidates": [
+        "disrupts MECP2_e1 (NM_004992.4) and MECP2_e2 (NM_001110792.3) core region; t(6;X)(q26;q28), ~200 kbp insertion from chr6",
+        "downstream portion of both MECP2 isoforms; likely NMD",
+        "C-terminal region (stop-loss)"
+      ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0012171; HP:0001257; HP:0001250; HP:0002883; HP:0002104; HP:0000252; HP:0001252; HP:0000729; HP:0002371; HP:0001288; HP:0002066; HP:0002360; HP:0003763; HP:0002019; HP:0011968; HP:0001508; HP:0001337; HP:0002020; HP:0002650",
+      "value": "HP:0001263; HP:0002376; HP:0002072; HP:0001344; HP:0001250; HP:0012759; HP:0000756; HP:0003763; HP:0002360; HP:0001252; HP:0011968; HP:0002019; HP:0000568; HP:0001257; HP:0002650; HP:0001251; HP:0000252; HP:0000253; HP:0002194; HP:0001371",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "developmental regression (motor and cognitive); loss of purposeful hand use; hand stereotypies (hand tapping, hand washing, clapping); seizures (focal with impaired awareness; generalized tonic-clonic; ESES suspected); breathing abnormalities (hyperventilation, breath-holding, apneas); microcephaly / decelerating head growth (below 3rd percentile by 18 months in Case 3); apraxic ataxic wide-based gait / loss of independent walking; hypotonia; autism spectrum disorder; loss of speech / limited verbal communication; sleep disturbances; bruxism (daytime/awake); constipation; feeding/chewing/swallowing difficulties, poor weight gain; tremor and eye-rolling events; gastroesophageal reflux; scoliosis; lower limb spasticity; preserved/intense eye contact and eye-pointing/eye-gaze communication",
+      "value": "developmental and motor delay; developmental regression / loss of acquired skills; loss of hand usage with hand stereotypies (tapping, washing, clapping); loss of acquired speech / limited verbal communication; seizures (focal with impaired awareness; generalized tonic-clonic); breathing abnormalities (hyperventilation, breath-holding, apneas); autistic features / autism spectrum disorder diagnosis; daytime/awake bruxism; sleep disturbance; hypotonia; feeding difficulties / poor chewing and swallowing / poor weight gain; constipation; bilateral squint / strabismus; lower limb spasticity; scoliosis; apraxic ataxic wide-based gait; microcephaly / deceleration of head growth (below 3rd percentile); delayed motor milestones (delayed walking, loss of walking ability); early contractures",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.sex",
-      "value": "female (all three cases)",
+      "value": "female (all three patients)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "infancy; behavioral/developmental changes and regression around 1 year of age (hand-use decline and head growth deceleration through 18-24 months)",
+      "value": "infancy (behavioral changes / regression around 1 year of age)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo (all three SVs confirmed absent in parents and unaffected siblings by PCR/Sanger)",
+      "value": "de novo (all three SVs confirmed absent in parents and siblings)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

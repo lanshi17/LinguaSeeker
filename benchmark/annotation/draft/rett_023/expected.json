@@ -9,7 +9,7 @@
   "source_pmid": null,
   "source_doi": null,
   "source_title": "Neurogenic Bladder: A Rare Autonomic Sign in a Patient with Preserved Speech Variant of the Rett Syndrome (Zappella Variant)",
-  "source_journal": "Turkish Journal of Pediatric Diseases (Turkish J Pediatr Dis 2024;18:256-259)",
+  "source_journal": "Turkish Journal of Pediatric Disease (Turkish J Pediatr Dis 2024;18:256-259)",
   "source_year": "2024",
   "source_language": "tr",
   "source_pdf_path": "",
@@ -20,7 +20,7 @@
       "variant_type": "missense",
       "clinical_significance": "likely pathogenic",
       "exon": "exon 3",
-      "domain": "C-terminal domain (CTD-α)"
+      "domain": "CTD-α (C-terminal domain)"
     }
   ],
   "expected_evidence": [
@@ -75,21 +75,21 @@
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "C-terminal domain (CTD-α)",
+      "value": "CTD-α (C-terminal domain)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001250; HP:0000011; HP:0000076; HP:0000126; HP:0001263; HP:0001249; HP:0010529; HP:0000718; HP:0000748; HP:0012622",
+      "value": "HP:0001250; HP:0002072; HP:0001263; HP:0001249; HP:0002194",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "neurogenic bladder; vesicoureteral reflux (grade 4/5); hydroureteronephrosis; chronic renal disease; epileptic seizures; hand stereotypies (hand wringing); intense eye contact / eye pointing; preserved speech (can form 2-3 word sentences); preserved purposeful hand movements; delayed walking (age 2); delayed speech onset (age 5); cognitive impairment / developmental delay; echolalia; excessive activity; aggressive behavior; inappropriate laughter; normal head circumference (no microcephaly)",
+      "value": "epileptic seizures; hand wringing stereotypies; intense eye contact / eye pointing; developmental delay / developmental problems; cognitive impairment / intellectual disability; echolalia; excessive activity; delayed walking (started walking at 2 years); delayed speech (started talking at 5 years); aggressive behavior; inappropriate laughing; neurogenic bladder; vesicoureteral reflux; hydroureteronephrosis; chronic renal disease",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -103,14 +103,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "11 months (neurogenic bladder and seizures onset)",
+      "value": "11 months (seizures and neurogenic bladder onset)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "presumed de novo (maternal MECP2 testing negative; paternal testing not reported)",
+      "value": "likely de novo (mother tested negative for MECP2 pathogenic variant; father not reported)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

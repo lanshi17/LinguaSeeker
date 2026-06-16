@@ -18,7 +18,7 @@
       "hgvs_c": "c.455C>T",
       "hgvs_p": "p.P152L",
       "variant_type": "missense",
-      "clinical_significance": "de novo; not previously reported in dbSNP/1000G/RettBASE; loss-of-function on functional assay",
+      "clinical_significance": "not previously reported; de novo; loss-of-function on functional assay (no effect on dendritic growth)",
       "exon": "exon 2",
       "domain": "MBD"
     },
@@ -26,7 +26,7 @@
       "hgvs_c": "c.1162C>T",
       "hgvs_p": "p.P376S",
       "variant_type": "missense",
-      "clinical_significance": "maternally inherited; rs61752387; previously reported in RTT patients; possible gain-of-function on axonal development",
+      "clinical_significance": "previously reported in RTT patients (rs61752387); maternally inherited; possible gain-of-function on axonal growth",
       "exon": "exon 3",
       "domain": "TRD"
     },
@@ -34,9 +34,9 @@
       "hgvs_c": "c.880C>T",
       "hgvs_p": "p.R294X",
       "variant_type": "nonsense/truncating",
-      "clinical_significance": "de novo; rs61751362; previously reported in RTT patients",
+      "clinical_significance": "previously reported in RTT patients (rs61751362); de novo",
       "exon": "exon 4",
-      "domain": "C-terminal"
+      "domain": "C-terminal (C-ter)"
     }
   ],
   "expected_evidence": [
@@ -107,42 +107,42 @@
       "candidates": [
         "MBD",
         "TRD",
-        "C-terminal"
+        "C-terminal (C-ter)"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0000729; HP:0001249; HP:0000752; HP:0000750",
+      "value": "HP:0000756; HP:0001249; HP:0002194",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "poor social interaction; language/communication impairment; repetitive/stereotypic behavior; functional impairment in daily life and learning; attention deficit and hyperactivity (P.138); mental retardation (P.660); delayed speech (P.548, first word at 26 months); Rett-specific features negative (no loss of hand skills, no seizures, no motor abnormalities)",
+      "value": "autistic behavior / autism spectrum disorder; poor social interaction; language developmental delay (P.548); motor development delay (P.548); mental retardation / intellectual disability (P.660); attention deficit and hyperactivity features (P.138, not formally diagnosed); dyslexia; mathematics disorder; Rett syndrome features (loss of hand skills, seizures, motor abnormalities) were ABSENT/negative",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.sex",
-      "value": "P.138 female, P.548 male, P.660 female",
+      "value": "2 female (P.138, P.660), 1 male (P.548)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "P.138 onset age 3; P.548 onset before 2 years; P.660 onset at 32 months",
+      "value": "P.138 onset at age 3; P.548 onset before 2 years; P.660 onset at 32 months",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "Mixed: p.P152L (P.138) and p.R294X (P.660) de novo; p.P376S (P.548) maternally inherited",
+      "value": "Mixed: p.P152L (de novo), p.R294X (de novo), p.P376S (maternally inherited)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

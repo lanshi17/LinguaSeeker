@@ -114,14 +114,14 @@
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001249; HP:0012171; HP:0002376",
+      "value": "HP:0001249; HP:0002072; HP:0002194",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "intellectual disability; motor impairment; hand stereotypies; developmental regression",
+      "value": "intellectual disability; motor impairment; hand stereotypies",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

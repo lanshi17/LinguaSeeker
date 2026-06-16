@@ -3,9 +3,9 @@
   "source": "rett_literature",
   "gene_symbol": "FOXG1",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome, congenital variant (FOXG1-related Rett syndrome)",
+  "disease_label": "Rett syndrome, congenital variant",
   "mondo_id": "MONDO:0010726",
-  "moi": "AD (autosomal dominant, monoallelic; FOXG1 on 14q12)",
+  "moi": "AD (autosomal dominant; FOXG1 maps to 14q12, not X-linked)",
   "source_pmid": null,
   "source_doi": "10.21203/rs.3.rs-1953777/v1",
   "source_title": "Identification of a mutation of FOXG1 gene and comprehensive analysis for molecular factors in Chinese FOXG1-related Rett syndrome",
@@ -18,40 +18,40 @@
       "hgvs_c": "c.385G>T",
       "hgvs_p": "p.Glu129Ter",
       "variant_type": "nonsense (stop gain)",
-      "clinical_significance": "Pathogenic (PVS1+PS2+PM2)",
-      "exon": "single exon (FOXG1 contains only one exon)",
-      "domain": "N-terminal region, upstream of forkhead domain"
+      "clinical_significance": "Pathogenic",
+      "exon": "1 (FOXG1 is single-exon)",
+      "domain": "N-terminal (upstream of forkhead domain)"
     },
     {
       "hgvs_c": "c.460dup",
       "hgvs_p": "",
-      "variant_type": "frameshift (single-nucleotide insertion)",
-      "clinical_significance": "Pathogenic (PVS1+PS2+PM2)",
-      "exon": "single exon",
+      "variant_type": "frameshift (duplication)",
+      "clinical_significance": "Pathogenic",
+      "exon": "1",
       "domain": ""
     },
     {
       "hgvs_c": "c.506dup",
       "hgvs_p": "",
-      "variant_type": "frameshift (single-nucleotide insertion)",
-      "clinical_significance": "Pathogenic (PVS1+PS2+PM2)",
-      "exon": "single exon",
+      "variant_type": "frameshift (duplication)",
+      "clinical_significance": "Pathogenic",
+      "exon": "1",
       "domain": ""
     },
     {
       "hgvs_c": "c.858dup",
       "hgvs_p": "",
-      "variant_type": "frameshift (single-nucleotide insertion)",
-      "clinical_significance": "Pathogenic (PVS1+PS2+PM2)",
-      "exon": "single exon",
+      "variant_type": "frameshift (duplication)",
+      "clinical_significance": "Pathogenic",
+      "exon": "1",
       "domain": ""
     },
     {
       "hgvs_c": "c.974dup",
       "hgvs_p": "",
-      "variant_type": "frameshift (single-nucleotide insertion)",
-      "clinical_significance": "Pathogenic (PVS1+PS2+PM2)",
-      "exon": "single exon",
+      "variant_type": "frameshift (duplication)",
+      "clinical_significance": "Pathogenic",
+      "exon": "1",
       "domain": ""
     },
     {
@@ -59,7 +59,7 @@
       "hgvs_p": "p.Ser197Ile",
       "variant_type": "missense",
       "clinical_significance": "Likely pathogenic",
-      "exon": "single exon",
+      "exon": "1",
       "domain": "Forkhead domain (FHD, DNA-binding)"
     },
     {
@@ -67,7 +67,7 @@
       "hgvs_p": "p.Asn232Tyr",
       "variant_type": "missense",
       "clinical_significance": "Likely pathogenic",
-      "exon": "single exon",
+      "exon": "1",
       "domain": "Forkhead domain (FHD, DNA-binding)"
     },
     {
@@ -75,7 +75,7 @@
       "hgvs_p": "p.Gln480Arg",
       "variant_type": "missense",
       "clinical_significance": "Likely pathogenic",
-      "exon": "single exon",
+      "exon": "1",
       "domain": "C-terminal disordered region"
     }
   ],
@@ -89,7 +89,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome, congenital variant (FOXG1-related Rett syndrome)",
+      "value": "Rett syndrome, congenital variant",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -103,7 +103,7 @@
     },
     {
       "field_id": "B.mode_of_inheritance_reported",
-      "value": "AD (autosomal dominant, monoallelic; FOXG1 on 14q12)",
+      "value": "AD (autosomal dominant; FOXG1 maps to 14q12, not X-linked)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -141,10 +141,10 @@
       "value": "nonsense (stop gain)",
       "candidates": [
         "nonsense (stop gain)",
-        "frameshift (single-nucleotide insertion)",
-        "frameshift (single-nucleotide insertion)",
-        "frameshift (single-nucleotide insertion)",
-        "frameshift (single-nucleotide insertion)",
+        "frameshift (duplication)",
+        "frameshift (duplication)",
+        "frameshift (duplication)",
+        "frameshift (duplication)",
         "missense",
         "missense",
         "missense"
@@ -154,9 +154,9 @@
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "N-terminal region, upstream of forkhead domain",
+      "value": "N-terminal (upstream of forkhead domain)",
       "candidates": [
-        "N-terminal region, upstream of forkhead domain",
+        "N-terminal (upstream of forkhead domain)",
         "Forkhead domain (FHD, DNA-binding)",
         "Forkhead domain (FHD, DNA-binding)",
         "C-terminal disordered region"
@@ -166,14 +166,14 @@
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001263; HP:0000252; HP:0004322; HP:0001252; HP:0001344; HP:0012171; HP:0000817; HP:0011968; HP:0002360; HP:0003763; HP:0002069; HP:0002079; HP:0012448",
+      "value": "HP:0001263; HP:0000252; HP:0004322; HP:0001252; HP:0011968; HP:0002360; HP:0003763; HP:0001250; HP:0001344; HP:0002072; HP:0002194; HP:0000756; HP:0002376; HP:0000505; HP:0000365; HP:0001249",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "psychomotor developmental delay; microcephaly; short stature; hypotonia; lack of speech development; stereotypic hand movements (shaking and flapping); poor eye contact; feeding difficulties; sleep disturbance; bruxism while awake; generalized tonic-clonic seizures (onset 18 months); abnormal EEG (generalized temporal spike and spike-slow waves); corpus callosum hypoplasia; small bilateral temporal lobes / underdevelopment of temporal lobes; delayed myelination; no period of normal development before regression",
+      "value": "psychomotor developmental delay; microcephaly; short stature; hypotonia of the limbs; feeding difficulties; sleep disturbance / sleep rhythm disorder; bruxism while awake; generalized tonic-clonic seizures (onset 18 months); lack of speech development; stereotypic hand movements (shaking, flapping; no purposeful grasp); delayed motor development (no head control, cannot sit/stand/roll); impaired social interaction / poor eye contact; developmental regression (reported in subset of cohort); abnormal EEG (generalized temporal spike and spike-slow waves); corpus callosum hypoplasia; underdevelopment of frontal and temporal lobes; delayed myelination; prolonged flash VEP latencies (visual pathway); prolonged ABR latencies (auditory pathway); intellectual disability",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -187,14 +187,14 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "developmental delay noted after birth, diagnosed by 7 months; seizure onset at 1 year 6 months (18 months)",
+      "value": "After birth (developmental delay diagnosed at 7 months; seizure onset at 18 months); proband evaluated at 1 year 11 months",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "C.de_novo_status",
-      "value": "de novo (supported by ACMG PS2; no chromosomal aberrations detected in parents)",
+      "value": "de novo (ACMG criteria PVS1+PS2+PM2; PS2 indicates de novo; trio-WES performed)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

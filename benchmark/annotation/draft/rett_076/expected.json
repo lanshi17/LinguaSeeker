@@ -3,13 +3,13 @@
   "source": "rett_literature",
   "gene_symbol": "MECP2",
   "hgnc_id": "HGNC:6992",
-  "disease_label": "Rett syndrome",
+  "disease_label": "Rett syndrome (classic/typical and atypical/variant subtypes discussed)",
   "mondo_id": "MONDO:0010726",
-  "moi": "",
+  "moi": "XD",
   "source_pmid": null,
   "source_doi": null,
   "source_title": "Rett Sendromlu Hastaların Klinik ve Moleküler Değerlendirmesi ve Genotip-Fenotip Korelasyonunun Araştırılması",
-  "source_journal": null,
+  "source_journal": "Hacettepe Üniversitesi Tıp Fakültesi, Çocuk Sağlığı ve Hastalıkları Anabilim Dalı (Uzmanlık Tezi / specialty thesis)",
   "source_year": "2015",
   "source_language": "tr",
   "source_pdf_path": "",
@@ -20,7 +20,7 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD (aa 78-162)"
     },
     {
       "hgvs_c": "",
@@ -28,15 +28,15 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD (aa 78-162)"
     },
     {
       "hgvs_c": "",
       "hgvs_p": "p.Arg152Arg",
-      "variant_type": "synonymous (reported as missense in article)",
+      "variant_type": "synonymous (reported in article under MBD missense list)",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD (aa 78-162)"
     },
     {
       "hgvs_c": "",
@@ -44,7 +44,7 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD (aa 78-162)"
     },
     {
       "hgvs_c": "",
@@ -60,7 +60,7 @@
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD (aa 201-310)"
     },
     {
       "hgvs_c": "",
@@ -68,7 +68,7 @@
       "variant_type": "nonsense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD (aa 201-310)"
     },
     {
       "hgvs_c": "",
@@ -76,19 +76,19 @@
       "variant_type": "missense",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD (aa 201-310)"
     },
     {
       "hgvs_c": "c.808delG",
       "hgvs_p": "",
-      "variant_type": "frameshift/deletion",
+      "variant_type": "frameshift deletion",
       "clinical_significance": "",
       "exon": "",
-      "domain": "TRD"
+      "domain": "TRD (aa 201-310)"
     },
     {
       "hgvs_c": "",
-      "hgvs_p": "p.X487R",
+      "hgvs_p": "p.Ter487Arg",
       "variant_type": "non-stop (stop-loss)",
       "clinical_significance": "",
       "exon": "",
@@ -97,7 +97,7 @@
     {
       "hgvs_c": "c.1164delA",
       "hgvs_p": "",
-      "variant_type": "frameshift",
+      "variant_type": "frameshift deletion",
       "clinical_significance": "",
       "exon": "",
       "domain": "C-terminal"
@@ -107,7 +107,7 @@
       "hgvs_p": "",
       "variant_type": "large deletion (exon 3-4 deletion)",
       "clinical_significance": "",
-      "exon": "3-4",
+      "exon": "exon 3-4",
       "domain": ""
     }
   ],
@@ -121,7 +121,7 @@
     },
     {
       "field_id": "B.disease_diagnosis",
-      "value": "Rett syndrome",
+      "value": "Rett syndrome (classic/typical and atypical/variant subtypes discussed)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -129,6 +129,13 @@
     {
       "field_id": "A.gene_disease_relationship",
       "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -155,7 +162,7 @@
         "p.Arg255Ter",
         "p.Arg270Ter",
         "p.Arg306Cys",
-        "p.X487R"
+        "p.Ter487Arg"
       ],
       "source": "article",
       "evaluation_type": "precision_only"
@@ -166,15 +173,15 @@
       "candidates": [
         "missense",
         "missense",
-        "synonymous (reported as missense in article)",
+        "synonymous (reported in article under MBD missense list)",
         "missense",
         "nonsense",
         "nonsense",
         "nonsense",
         "missense",
-        "frameshift/deletion",
+        "frameshift deletion",
         "non-stop (stop-loss)",
-        "frameshift",
+        "frameshift deletion",
         "large deletion (exon 3-4 deletion)"
       ],
       "source": "article",
@@ -182,17 +189,17 @@
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD",
+      "value": "MBD (aa 78-162)",
       "candidates": [
-        "MBD",
-        "MBD",
-        "MBD",
-        "MBD",
+        "MBD (aa 78-162)",
+        "MBD (aa 78-162)",
+        "MBD (aa 78-162)",
+        "MBD (aa 78-162)",
         "interdomain",
-        "TRD",
-        "TRD",
-        "TRD",
-        "TRD",
+        "TRD (aa 201-310)",
+        "TRD (aa 201-310)",
+        "TRD (aa 201-310)",
+        "TRD (aa 201-310)",
         "C-terminal",
         "C-terminal"
       ],
@@ -201,14 +208,14 @@
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0002376; HP:0012171; HP:0001250; HP:0005484; HP:0002371; HP:0002360; HP:0002650; HP:0001508; HP:0001251; HP:0000729; HP:0003763; HP:0002883",
+      "value": "HP:0002376; HP:0002072; HP:0001344; HP:0001250; HP:0000252; HP:0000253; HP:0012759; HP:0000756; HP:0002650; HP:0003763; HP:0002360; HP:0011968; HP:0002019; HP:0012171; HP:0004322; HP:0001251",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "early neurological regression following normal early development; loss of acquired purposeful hand use; stereotypic hand movements (hand wringing, clapping, mouthing, rubbing); loss of acquired speech/communication; seizures; postnatal microcephaly / deceleration of head circumference growth; growth failure; feeding/gastrointestinal problems; sleep disturbance; breathing abnormalities (hyperventilation, apnea); autonomic dysfunction; scoliosis/kyphosis; bruxism; ataxia and gait apraxia; small cold feet, small thin hands",
+      "value": "early neurological regression following normal early development; loss of acquired purposeful hand use; stereotypic hand movements (hand-wringing, squeezing, clapping, mouthing, rubbing); loss of speech/communication skills; seizures / epilepsy; postnatal microcephaly / deceleration of head growth; breathing abnormalities (hyperventilation, breath-holding, apnea); autistic behavior / social withdrawal; scoliosis/kyphosis; bruxism (teeth grinding); sleep disturbance; feeding/gastrointestinal problems; constipation, gastroesophageal reflux; peripheral vasomotor disturbance / cold cyanotic hands and feet; growth failure / weight and height deceleration; ataxia, apraxia, broad-based gait; dystonia, rigidity, extrapyramidal movement and posture abnormalities; autonomic dysfunction, cardiac abnormalities (prolonged QT)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"

@@ -17,10 +17,10 @@
     {
       "hgvs_c": "c.396_397insA",
       "hgvs_p": "p.Arg133fsTer2",
-      "variant_type": "frameshift insertion (truncating)",
-      "clinical_significance": "novel pathogenic (de novo truncating variant, not previously reported in dbSNP, 1000 Genomes, ExAC, gnomAD)",
+      "variant_type": "insertion (frameshift/truncating)",
+      "clinical_significance": "pathogenic (novel, never reported in dbSNP, 1000 Genomes, ExAC, gnomAD)",
       "exon": "",
-      "domain": "MBD"
+      "domain": "MBD (aa 78-162)"
     }
   ],
   "expected_evidence": [
@@ -68,28 +68,28 @@
     },
     {
       "field_id": "A.variant_type",
-      "value": "frameshift insertion (truncating)",
+      "value": "insertion (frameshift/truncating)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "A.functional_domain_or_hotspot",
-      "value": "MBD",
+      "value": "MBD (aa 78-162)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_only"
     },
     {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001319; HP:0001252; HP:0001263; HP:0001249; HP:0002650; HP:0002791; HP:0002871; HP:0012418; HP:0000252; HP:0002353; HP:0001508; HP:0002013",
+      "value": "HP:0001252; HP:0001263; HP:0002194; HP:0002650; HP:0011968; HP:0000756; HP:0012759",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "severe central hypotonia present at birth; neurodevelopmental impairment / psychomotor delay; poor head control; impaired hand grasp / poor hand grip; reduced weight gain; recurrent emesis; sleep hypoventilation; persistent periodic breathing; central apneas; sustained nocturnal oxygen desaturation / hypoxemia; sleep hypercapnia; precocious scoliosis (T4-L1 Cobb angle 26°); poorly-organized EEG activity; progressive microcephaly (head circumference 9th centile); mild bilateral ventricle and subarachnoid space widening on brain MR",
+      "value": "severe central/axial hypotonia present at birth; neurodevelopmental impairment / psychomotor delay; poor head control and impaired hand grip (delayed motor development); precocious scoliosis (T4-L1 Cobb angle 26°); reduced weight gain and recurrent emesis (feeding difficulties); autistic behaviours / poor eye contact and social impairment; sleep hypoventilation, central apneas, persistent periodic breathing, and sleep hypercapnia; poorly-organized EEG with diffuse irritating signals",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
@@ -103,7 +103,7 @@
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "congenital / at birth (hypotonia present at birth, neonatal onset)",
+      "value": "at birth (neonatal/congenital onset)",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
