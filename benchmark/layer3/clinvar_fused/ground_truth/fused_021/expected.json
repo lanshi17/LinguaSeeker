@@ -1,0 +1,189 @@
+{
+  "entry_id": "fused_021",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "FOXG1",
+    "hgnc_id": "HGNC:3811",
+    "disease_label": "FOXG1 disorder",
+    "mondo_id": "MONDO:0100040",
+    "moi": "AD",
+    "classification": "Definitive",
+    "gcep": "Rett and Angelman-like Disorders Gene Curation Expert Panel",
+    "classification_date": "2018-07-02T14:08:27.839Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3f14c6c5-b051-4c94-b9c6-3b80771eed22-2018-07-02T140827.839Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 95268,
+      "hgvs_name": "NM_005249.5(FOXG1):c.460dup (p.Glu154fs)",
+      "hgvs_c": "c.460dup",
+      "hgvs_p": "p.Glu154fs",
+      "variant_type": "dup",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs398124204",
+      "phenotype_ids": "MedGen:C3661900|MONDO:MONDO:0100040,MedGen:C3150705,OMIM:613454,Orphanet:3095,Orphanet:561854|MeSH:D030342,MedGen:C0950123|Human Phenotype Ontology:HP:0002060,MedGen:C4021762|",
+      "phenotype_list": "not provided|FOXG1 disorder|Inborn genetic diseases|Abnormal cerebral morphology|FOXG1-related disorder"
+    },
+    {
+      "variation_id": 158602,
+      "hgvs_name": "NM_005249.5(FOXG1):c.799G>A (p.Gly267Ser)",
+      "hgvs_c": "c.799G>A",
+      "hgvs_p": "p.Gly267Ser",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs587783643",
+      "phenotype_ids": "MONDO:MONDO:0100040,MedGen:C3150705,OMIM:613454,Orphanet:3095,Orphanet:561854|MedGen:C3661900",
+      "phenotype_list": "FOXG1 disorder|not provided"
+    },
+    {
+      "variation_id": 167092,
+      "hgvs_name": "NM_005249.5(FOXG1):c.670G>A (p.Gly224Ser)",
+      "hgvs_c": "c.670G>A",
+      "hgvs_p": "p.Gly224Ser",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs727503935",
+      "phenotype_ids": "MedGen:C3661900|MONDO:MONDO:0100040,MedGen:C3150705,OMIM:613454,Orphanet:3095,Orphanet:561854|MONDO:MONDO:0010726,MedGen:C0035372,OMIM:312750,Orphanet:3095,Orphanet:778",
+      "phenotype_list": "not provided|FOXG1 disorder|Rett syndrome"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "FOXG1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "FOXG1 disorder",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.460dup",
+      "candidates": [
+        "c.460dup",
+        "c.799G>A",
+        "c.670G>A"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Glu154fs",
+      "candidates": [
+        "p.Glu154fs",
+        "p.Gly267Ser",
+        "p.Gly224Ser"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "dup",
+      "candidates": [
+        "dup",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Likely pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:3811",
+    "disease": "MONDO:0100040",
+    "variant_candidates": [
+      "ClinVarVariation:95268",
+      "ClinVarVariation:158602",
+      "ClinVarVariation:167092"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "FOXG1",
+      "hgnc_id": "HGNC:3811"
+    },
+    "disease": {
+      "text": "FOXG1 disorder",
+      "mondo_id": "MONDO:0100040"
+    },
+    "variants": [
+      {
+        "text": "c.460dup",
+        "variation_id": "ClinVarVariation:95268",
+        "rsid": "rs398124204"
+      },
+      {
+        "text": "c.799G>A",
+        "variation_id": "ClinVarVariation:158602",
+        "rsid": "rs587783643"
+      },
+      {
+        "text": "c.670G>A",
+        "variation_id": "ClinVarVariation:167092",
+        "rsid": "rs727503935"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "",
+  "source_pmc": "PMC13247733",
+  "source_pdf_url": "https://europepmc.org/article/PMC/13247733?pdf=render",
+  "source_title": "Genetic causes of the lissencephaly spectrum: insights from chromosomal microarray and clinical/whole-exome sequencing",
+  "source_journal": "",
+  "source_year": "2026",
+  "notes": "",
+  "literature_search_strategy": "\"FOXG1\" AND \"c.460dup\" AND OPEN_ACCESS:y"
+}

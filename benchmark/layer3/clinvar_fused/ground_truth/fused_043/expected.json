@@ -1,0 +1,188 @@
+{
+  "entry_id": "fused_043",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "KCNQ4",
+    "hgnc_id": "HGNC:6298",
+    "disease_label": "nonsyndromic genetic hearing loss",
+    "mondo_id": "MONDO:0019497",
+    "moi": "AD",
+    "classification": "Definitive",
+    "gcep": "Hearing Loss Gene Curation Expert Panel",
+    "classification_date": "2017-11-21T17:00:00.000Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_88196c6d-4bd7-4aff-ba98-c7b4411c562d-2017-11-21T170000.000Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 6241,
+      "hgvs_name": "NM_004700.4(KCNQ4):c.853G>A (p.Gly285Ser)",
+      "hgvs_c": "c.853G>A",
+      "hgvs_p": "p.Gly285Ser",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs28937588",
+      "phenotype_ids": "MONDO:MONDO:0010817,MedGen:C2677637,OMIM:600101,Orphanet:90635|MONDO:MONDO:0019497,MedGen:C5680182,Orphanet:87884|MedGen:C5680250,Orphanet:96210|MedGen:C3661900",
+      "phenotype_list": "Autosomal dominant nonsyndromic hearing loss 2A|Nonsyndromic genetic hearing loss|Rare genetic deafness|not provided"
+    },
+    {
+      "variation_id": 208366,
+      "hgvs_name": "NM_004700.4(KCNQ4):c.803CCT[1] (p.Ser269del)",
+      "hgvs_c": "c.803CCT[1]",
+      "hgvs_p": "p.Ser269del",
+      "variant_type": "other",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs797044966",
+      "phenotype_ids": "MedGen:C3661900|MONDO:MONDO:0010817,MedGen:C2677637,OMIM:600101,Orphanet:90635|MedGen:CN169374|MONDO:MONDO:0019497,MedGen:C5680182,Orphanet:87884",
+      "phenotype_list": "not provided|Autosomal dominant nonsyndromic hearing loss 2A|not specified|Nonsyndromic genetic hearing loss"
+    },
+    {
+      "variation_id": 505302,
+      "hgvs_name": "NM_004700.4(KCNQ4):c.825G>C (p.Trp275Cys)",
+      "hgvs_c": "c.825G>C",
+      "hgvs_p": "p.Trp275Cys",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs956666801",
+      "phenotype_ids": "MedGen:CN169374|MONDO:MONDO:0019497,MedGen:C5680182,Orphanet:87884|MedGen:C3661900",
+      "phenotype_list": "not specified|Nonsyndromic genetic hearing loss|not provided"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "KCNQ4",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "nonsyndromic genetic hearing loss",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.853G>A",
+      "candidates": [
+        "c.853G>A",
+        "c.803CCT[1]",
+        "c.825G>C"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Gly285Ser",
+      "candidates": [
+        "p.Gly285Ser",
+        "p.Ser269del",
+        "p.Trp275Cys"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "other",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Likely pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6298",
+    "disease": "MONDO:0019497",
+    "variant_candidates": [
+      "ClinVarVariation:6241",
+      "ClinVarVariation:208366",
+      "ClinVarVariation:505302"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "KCNQ4",
+      "hgnc_id": "HGNC:6298"
+    },
+    "disease": {
+      "text": "nonsyndromic genetic hearing loss",
+      "mondo_id": "MONDO:0019497"
+    },
+    "variants": [
+      {
+        "text": "c.853G>A",
+        "variation_id": "ClinVarVariation:6241",
+        "rsid": "rs28937588"
+      },
+      {
+        "text": "c.803CCT[1]",
+        "variation_id": "ClinVarVariation:208366",
+        "rsid": "rs797044966"
+      },
+      {
+        "text": "c.825G>C",
+        "variation_id": "ClinVarVariation:505302",
+        "rsid": "rs956666801"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": null,
+  "source_pmc": null,
+  "source_pdf_url": null,
+  "source_title": null,
+  "source_journal": null,
+  "source_year": null,
+  "notes": ""
+}
