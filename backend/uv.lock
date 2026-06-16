@@ -698,7 +698,7 @@ dependencies = [
     { name = "pillow" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
-    { name = "pyjstage-py312" },
+    { name = "pyjstage2" },
     { name = "pymupdf" },
     { name = "pysocks" },
     { name = "python-dotenv" },
@@ -758,7 +758,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=10.0.0" },
     { name = "pydantic", specifier = ">=2.7.0" },
     { name = "pydantic-settings", specifier = ">=2.3.0" },
-    { name = "pyjstage-py312", specifier = ">=0.1.1" },
+    { name = "pyjstage2", specifier = ">=0.1.2" },
     { name = "pymupdf", specifier = ">=1.27.2.3" },
     { name = "pysocks", specifier = ">=1.7.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.2.0" },
@@ -2904,8 +2904,8 @@ wheels = [
 ]
 
 [[package]]
-name = "pyjstage-py312"
-version = "0.1.1"
+name = "pyjstage2"
+version = "0.1.2"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
 dependencies = [
     { name = "certifi" },
@@ -2915,9 +2915,9 @@ dependencies = [
     { name = "requests" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/4d/e0/87f7acb795623bb7bce109eeeec0b4834e8502ec2a4e7cc48625d425b4e5/pyjstage_py312-0.1.1.tar.gz", hash = "sha256:2f0e7003b49de969a109a3aa7f29dea8b47689482d9d562e92c670a10d4e278d", size = 12004 }
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/b5/13/bdec596609ef5cf61d03f13e3899b91ec61cd2d30f6b903e58a5005e347c/pyjstage2-0.1.2.tar.gz", hash = "sha256:2a69214bbb21d6d33922bc130da494a985e4310e42158f514a8ae837df2b9f16", size = 12892 }
 wheels = [
-    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/3e/93/eef5f312a81ee340723875b63ef98003f915261e51af144b61e928a57438/pyjstage_py312-0.1.1-py3-none-any.whl", hash = "sha256:af968ac1944b0ccfc706bfc1bb00794d2a25275451cf6117dbeb2485f2eb2b3f", size = 10849 },
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/2b/a7/9c911fa0511ab8392526314536926f176207ec9007cc2483cc05700fb12c/pyjstage2-0.1.2-py3-none-any.whl", hash = "sha256:cc1099389fd0212f51b9e15c1158a99f98f703e98600b4eca4a17f6459d278ec", size = 11396 },
 ]
 
 [[package]]

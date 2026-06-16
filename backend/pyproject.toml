@@ -42,7 +42,7 @@ dependencies = [
     "weasyprint>=69.0",
     "markdown>=3.10.2",
     "fpdf2>=2.8.7",
-    "pyjstage-py312>=0.1.1",
+    "pyjstage2>=0.1.2",
 ]
 
 [project.optional-dependencies]
