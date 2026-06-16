@@ -177,11 +177,12 @@
       "variant"
     ]
   },
-  "source_pmid": null,
-  "source_pmc": null,
-  "source_pdf_url": null,
-  "source_title": null,
-  "source_journal": null,
-  "source_year": null,
-  "notes": ""
+  "source_pmid": "38022513",
+  "source_pmc": "PMC10657814",
+  "source_pdf_url": "https://europepmc.org/article/PMC/10657814?pdf=render",
+  "source_title": "Clinicopathological characteristics, molecular landscape, and biomarker landscape for predicting the efficacy of PD-1/PD-L1 inhibitors in Chinese population with mismatch repair deficient urothelial carcinoma: a real-world study.",
+  "source_journal": "",
+  "source_year": "2023",
+  "notes": "",
+  "literature_search_strategy": "\"MSH2\" AND \"c.1216C>T\" AND OPEN_ACCESS:y"
 }

@@ -7220,13 +7220,14 @@
         "variant"
       ]
     },
-    "source_pmid": null,
-    "source_pmc": null,
-    "source_pdf_url": null,
-    "source_title": null,
-    "source_journal": null,
-    "source_year": null,
-    "notes": ""
+    "source_pmid": "37895245",
+    "source_pmc": "PMC10606310",
+    "source_pdf_url": "https://europepmc.org/article/PMC/10606310?pdf=render",
+    "source_title": "Role of RNA Alternative Splicing in T Cell Function and Disease.",
+    "source_journal": "",
+    "source_year": "2023",
+    "notes": "",
+    "literature_search_strategy": "\"IL7R\" AND \"c.538-1G>A\" AND OPEN_ACCESS:y"
   },
   {
     "entry_id": "fused_039",
@@ -7408,13 +7409,14 @@
         "variant"
       ]
     },
-    "source_pmid": null,
-    "source_pmc": null,
-    "source_pdf_url": null,
-    "source_title": null,
-    "source_journal": null,
-    "source_year": null,
-    "notes": ""
+    "source_pmid": "34066320",
+    "source_pmc": "PMC8148153",
+    "source_pdf_url": "https://europepmc.org/article/PMC/8148153?pdf=render",
+    "source_title": "Genetic Confirmation and Identification of Novel Variants for Glanzmann Thrombasthenia and Other Inherited Platelet Function Disorders: A Study by the Korean Pediatric Hematology Oncology Group (KPHOG).",
+    "source_journal": "",
+    "source_year": "2021",
+    "notes": "",
+    "literature_search_strategy": "\"ITGA2B\" AND \"c.1750C>T\" AND OPEN_ACCESS:y"
   },
   {
     "entry_id": "fused_040",
@@ -7596,13 +7598,14 @@
         "variant"
       ]
     },
-    "source_pmid": null,
-    "source_pmc": null,
-    "source_pdf_url": null,
-    "source_title": null,
-    "source_journal": null,
-    "source_year": null,
-    "notes": ""
+    "source_pmid": "32754152",
+    "source_pmc": "PMC7381310",
+    "source_pdf_url": "https://europepmc.org/article/PMC/7381310?pdf=render",
+    "source_title": "Second-Tier Next Generation Sequencing Integrated in Nationwide Newborn Screening Provides Rapid Molecular Diagnostics of Severe Combined Immunodeficiency.",
+    "source_journal": "",
+    "source_year": "2020",
+    "notes": "",
+    "literature_search_strategy": "\"JAK3\" AND \"c.1695C>A\" AND OPEN_ACCESS:y"
   },
   {
     "entry_id": "fused_041",
@@ -7783,13 +7786,14 @@
         "variant"
       ]
     },
-    "source_pmid": null,
-    "source_pmc": null,
-    "source_pdf_url": null,
-    "source_title": null,
-    "source_journal": null,
-    "source_year": null,
-    "notes": ""
+    "source_pmid": "37124559",
+    "source_pmc": "PMC10134391",
+    "source_pdf_url": "https://europepmc.org/article/PMC/10134391?pdf=render",
+    "source_title": "SGK1 inhibition attenuated the action potential duration in patient- and genotype-specific re-engineered heart cells with congenital long QT syndrome.",
+    "source_journal": "",
+    "source_year": "2023",
+    "notes": "",
+    "literature_search_strategy": "\"KCNQ1\" AND \"c.760G>A\" AND OPEN_ACCESS:y"
   },
   {
     "entry_id": "fused_042",
@@ -7971,13 +7975,14 @@
         "variant"
       ]
     },
-    "source_pmid": null,
-    "source_pmc": null,
-    "source_pdf_url": null,
-    "source_title": null,
-    "source_journal": null,
-    "source_year": null,
-    "notes": ""
+    "source_pmid": "37124559",
+    "source_pmc": "PMC10134391",
+    "source_pdf_url": "https://europepmc.org/article/PMC/10134391?pdf=render",
+    "source_title": "SGK1 inhibition attenuated the action potential duration in patient- and genotype-specific re-engineered heart cells with congenital long QT syndrome.",
+    "source_journal": "",
+    "source_year": "2023",
+    "notes": "",
+    "literature_search_strategy": "\"KCNQ1\" AND \"c.760G>A\" AND OPEN_ACCESS:y"
   },
   {
     "entry_id": "fused_043",
@@ -8159,13 +8164,14 @@
         "variant"
       ]
     },
-    "source_pmid": null,
-    "source_pmc": null,
-    "source_pdf_url": null,
-    "source_title": null,
-    "source_journal": null,
-    "source_year": null,
-    "notes": ""
+    "source_pmid": "36140355",
+    "source_pmc": "PMC9496569",
+    "source_pdf_url": "https://europepmc.org/article/PMC/9496569?pdf=render",
+    "source_title": "The Pathological Mechanisms of Hearing Loss Caused by &lt;i&gt;KCNQ1&lt;/i&gt; and &lt;i&gt;KCNQ4&lt;/i&gt; Variants.",
+    "source_journal": "",
+    "source_year": "2022",
+    "notes": "",
+    "literature_search_strategy": "\"KCNQ4\" AND \"c.853G>A\" AND OPEN_ACCESS:y"
   },
   {
     "entry_id": "fused_044",
@@ -8347,13 +8353,14 @@
         "variant"
       ]
     },
-    "source_pmid": null,
-    "source_pmc": null,
-    "source_pdf_url": null,
-    "source_title": null,
-    "source_journal": null,
-    "source_year": null,
-    "notes": ""
+    "source_pmid": "39600113",
+    "source_pmc": "PMC11599428",
+    "source_pdf_url": "https://europepmc.org/article/PMC/11599428?pdf=render",
+    "source_title": "Pathogenicity of the LDLR c.97C&gt;T (p.Gln33Ter) Mutation in Familial Hypercholesterolemia.",
+    "source_journal": "",
+    "source_year": "2024",
+    "notes": "",
+    "literature_search_strategy": "\"LDLR\" AND \"c.97C>T\" AND OPEN_ACCESS:y"
   },
   {
     "entry_id": "fused_045",
@@ -8535,13 +8542,14 @@
         "variant"
       ]
     },
-    "source_pmid": null,
-    "source_pmc": null,
-    "source_pdf_url": null,
-    "source_title": null,
-    "source_journal": null,
-    "source_year": null,
-    "notes": ""
+    "source_pmid": "39843543",
+    "source_pmc": "PMC11754816",
+    "source_pdf_url": "https://europepmc.org/article/PMC/11754816?pdf=render",
+    "source_title": "Integrated gene expression and alternative splicing analysis in human and mouse models of Rett syndrome.",
+    "source_journal": "",
+    "source_year": "2025",
+    "notes": "",
+    "literature_search_strategy": "\"MECP2\" AND \"c.433C>T\" AND OPEN_ACCESS:y"
   },
   {
     "entry_id": "fused_046",
@@ -8723,13 +8731,14 @@
         "variant"
       ]
     },
-    "source_pmid": null,
-    "source_pmc": null,
-    "source_pdf_url": null,
-    "source_title": null,
-    "source_journal": null,
-    "source_year": null,
-    "notes": ""
+    "source_pmid": "38962751",
+    "source_pmc": "PMC11221071",
+    "source_pdf_url": "https://europepmc.org/article/PMC/11221071?pdf=render",
+    "source_title": "Medulloblastomas with <i>ELP1</i> pathogenic variants: A weakly penetrant syndrome with a restricted spectrum in a limited age window.",
+    "source_journal": "",
+    "source_year": "2024",
+    "notes": "",
+    "literature_search_strategy": "\"MLH1\" AND \"c.131C>T\" AND OPEN_ACCESS:y"
   },
   {
     "entry_id": "fused_047",
@@ -8911,13 +8920,14 @@
         "variant"
       ]
     },
-    "source_pmid": null,
-    "source_pmc": null,
-    "source_pdf_url": null,
-    "source_title": null,
-    "source_journal": null,
-    "source_year": null,
-    "notes": ""
+    "source_pmid": "41567619",
+    "source_pmc": "PMC12816796",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12816796?pdf=render",
+    "source_title": "Severe leukemoid reaction and spontaneous tumor lysis syndrome in a young patient with undifferentiated Lynch syndrome-associated ovarian cancer.",
+    "source_journal": "",
+    "source_year": "2026",
+    "notes": "",
+    "literature_search_strategy": "\"MLH1\" AND \"c.676C>T\" AND OPEN_ACCESS:y"
   },
   {
     "entry_id": "fused_048",
@@ -9099,13 +9109,14 @@
         "variant"
       ]
     },
-    "source_pmid": null,
-    "source_pmc": null,
-    "source_pdf_url": null,
-    "source_title": null,
-    "source_journal": null,
-    "source_year": null,
-    "notes": ""
+    "source_pmid": "31773066",
+    "source_pmc": "PMC6849642",
+    "source_pdf_url": "https://europepmc.org/article/PMC/6849642?pdf=render",
+    "source_title": "Japanese Society for Cancer of the Colon and Rectum (JSCCR) Guidelines 2016 for the Clinical Practice of Hereditary Colorectal Cancer (Translated Version).",
+    "source_journal": "",
+    "source_year": "2018",
+    "notes": "",
+    "literature_search_strategy": "\"MSH2\" AND \"c.1865C>T\" AND OPEN_ACCESS:y"
   },
   {
     "entry_id": "fused_049",
@@ -9286,12 +9297,4349 @@
         "variant"
       ]
     },
-    "source_pmid": null,
-    "source_pmc": null,
-    "source_pdf_url": null,
-    "source_title": null,
-    "source_journal": null,
-    "source_year": null,
-    "notes": ""
+    "source_pmid": "38022513",
+    "source_pmc": "PMC10657814",
+    "source_pdf_url": "https://europepmc.org/article/PMC/10657814?pdf=render",
+    "source_title": "Clinicopathological characteristics, molecular landscape, and biomarker landscape for predicting the efficacy of PD-1/PD-L1 inhibitors in Chinese population with mismatch repair deficient urothelial carcinoma: a real-world study.",
+    "source_journal": "",
+    "source_year": "2023",
+    "notes": "",
+    "literature_search_strategy": "\"MSH2\" AND \"c.1216C>T\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_050",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MSH6",
+      "hgnc_id": "HGNC:7329",
+      "disease_label": "mismatch repair cancer syndrome 1",
+      "mondo_id": "MONDO:0010159",
+      "moi": "AR",
+      "classification": "Definitive",
+      "gcep": "Hereditary Cancer Gene Curation Expert Panel",
+      "classification_date": "2018-10-09T14:57:26.378Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b7d02927-ac93-4a43-a86d-01cd381f4e9f-2018-10-09T145726.378Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 89205,
+        "hgvs_name": "NM_000179.3(MSH6):c.1596dup (p.Glu533Ter)",
+        "hgvs_c": "c.1596dup",
+        "hgvs_p": "p.Glu533Ter",
+        "variant_type": "dup",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs587779217",
+        "phenotype_ids": "MONDO:MONDO:0010159,MedGen:C5399763,OMIM:276300,Orphanet:252202|MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144",
+        "phenotype_list": "Mismatch repair cancer syndrome 1|Lynch syndrome"
+      },
+      {
+        "variation_id": 89256,
+        "hgvs_name": "NM_000179.3(MSH6):c.2150_2153del (p.Val717fs)",
+        "hgvs_c": "c.2150_2153del",
+        "hgvs_p": "p.Val717fs",
+        "variant_type": "deletion",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267608058",
+        "phenotype_ids": "MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0002032,MedGen:C0699790|MONDO:MONDO:0030841,MedGen:C5436807,OMIM:619097;Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089;MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144|MONDO:MONDO:0010159,MedGen:C5399763,OMIM:276300,Orphanet:252202|Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089||MONDO:MONDO:0030841,MedGen:C5436807,OMIM:619097",
+        "phenotype_list": "Lynch syndrome|Hereditary cancer-predisposing syndrome|not provided|Lynch syndrome 5|Hereditary nonpolyposis colorectal neoplasms|Carcinoma of colon|Mismatch repair cancer syndrome 3;Endometrial carcinoma;Lynch syndrome 5|Mismatch repair cancer syndrome 1|Endometrial carcinoma|MSH6-related disorder|Mismatch repair cancer syndrome 3"
+      },
+      {
+        "variation_id": 89352,
+        "hgvs_name": "NM_000179.3(MSH6):c.3202C>T (p.Arg1068Ter)",
+        "hgvs_c": "c.3202C>T",
+        "hgvs_p": "p.Arg1068Ter",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs63749843",
+        "phenotype_ids": "MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144|MedGen:C3661900|MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0010159,MedGen:C5399763,OMIM:276300,Orphanet:252202;Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089;MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144|Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089||MONDO:MONDO:0002032,MedGen:C0699790|Human Phenotype Ontology:HP:0012126,MONDO:MONDO:0001056,MeSH:D013274,MedGen:C0024623,OMIM:613659|MONDO:MONDO:0018630,MedGen:C1333990,OMIM:PS120435,Orphanet:443909|",
+        "phenotype_list": "Lynch syndrome|Hereditary cancer-predisposing syndrome|Lynch syndrome 1|not provided|Lynch syndrome 5|Hereditary nonpolyposis colorectal neoplasms|Mismatch repair cancer syndrome 1;Endometrial carcinoma;Lynch syndrome 5|Endometrial carcinoma|Lynch-like syndrome|Carcinoma of colon|Gastric cancer|Hereditary nonpolyposis colon cancer|MSH6-related disorder"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MSH6",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mismatch repair cancer syndrome 1",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "AR",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "value": "c.1596dup",
+        "candidates": [
+          "c.1596dup",
+          "c.2150_2153del",
+          "c.3202C>T"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "value": "p.Glu533Ter",
+        "candidates": [
+          "p.Glu533Ter",
+          "p.Val717fs",
+          "p.Arg1068Ter"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "dup",
+        "candidates": [
+          "dup",
+          "deletion",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Pathogenic",
+          "Pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7329",
+      "disease": "MONDO:0010159",
+      "variant_candidates": [
+        "ClinVarVariation:89205",
+        "ClinVarVariation:89256",
+        "ClinVarVariation:89352"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MSH6",
+        "hgnc_id": "HGNC:7329"
+      },
+      "disease": {
+        "text": "mismatch repair cancer syndrome 1",
+        "mondo_id": "MONDO:0010159"
+      },
+      "variants": [
+        {
+          "text": "c.1596dup",
+          "variation_id": "ClinVarVariation:89205",
+          "rsid": "rs587779217"
+        },
+        {
+          "text": "c.2150_2153del",
+          "variation_id": "ClinVarVariation:89256",
+          "rsid": "rs267608058"
+        },
+        {
+          "text": "c.3202C>T",
+          "variation_id": "ClinVarVariation:89352",
+          "rsid": "rs63749843"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41987265",
+    "source_pmc": "PMC13218002",
+    "source_pdf_url": "https://europepmc.org/article/PMC/13218002?pdf=render",
+    "source_title": "Molecular and clinical characteristics of glioma patients with germline pathogenic mutations of Lynch syndrome genes: a large-scale multicenter study.",
+    "source_journal": "",
+    "source_year": "2026",
+    "notes": "",
+    "literature_search_strategy": "\"MSH6\" AND \"c.2150_2153del\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_051",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MSH6",
+      "hgnc_id": "HGNC:7329",
+      "disease_label": "Lynch syndrome",
+      "mondo_id": "MONDO:0005835",
+      "moi": "AD",
+      "classification": "Definitive",
+      "gcep": "Hereditary Cancer Gene Curation Expert Panel",
+      "classification_date": "2023-07-05T17:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bc6e042d-74ad-42fc-9638-7f53f8bc32f9-2023-07-05T170000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 8932,
+        "hgvs_name": "NM_000179.3(MSH6):c.651dup (p.Lys218Ter)",
+        "hgvs_c": "c.651dup",
+        "hgvs_p": "p.Lys218Ter",
+        "variant_type": "dup",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs63750955",
+        "phenotype_ids": "MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144|MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MedGen:C3661900|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144|MONDO:MONDO:0018630,MedGen:C1333990,OMIM:PS120435,Orphanet:443909|Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089|MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144;Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089;MONDO:MONDO:0030841,MedGen:C5436807,OMIM:619097|",
+        "phenotype_list": "Lynch syndrome 5|Lynch syndrome|not provided|Hereditary cancer-predisposing syndrome|Hereditary nonpolyposis colorectal neoplasms|Lynch syndrome 1|Hereditary nonpolyposis colon cancer|Endometrial carcinoma|Lynch syndrome 5;Endometrial carcinoma;Mismatch repair cancer syndrome 3|MSH6-related disorder"
+      },
+      {
+        "variation_id": 36593,
+        "hgvs_name": "NM_000179.3(MSH6):c.3699_3702del (p.Lys1233fs)",
+        "hgvs_c": "c.3699_3702del",
+        "hgvs_p": "p.Lys1233fs",
+        "variant_type": "deletion",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs193922343",
+        "phenotype_ids": "MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0018630,MedGen:C1333990,OMIM:PS120435,Orphanet:443909|Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089|MONDO:MONDO:0030841,MedGen:C5436807,OMIM:619097;MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144|",
+        "phenotype_list": "Lynch syndrome|Hereditary cancer-predisposing syndrome|not provided|Lynch syndrome 5|Hereditary nonpolyposis colorectal neoplasms|Hereditary nonpolyposis colon cancer|Endometrial carcinoma|Mismatch repair cancer syndrome 3;Lynch syndrome 5|MSH6-related disorder"
+      },
+      {
+        "variation_id": 42472,
+        "hgvs_name": "NM_000179.3(MSH6):c.3991C>T (p.Arg1331Ter)",
+        "hgvs_c": "c.3991C>T",
+        "hgvs_p": "p.Arg1331Ter",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267608094",
+        "phenotype_ids": "MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0018630,MedGen:C1333990,OMIM:PS120435,Orphanet:443909|Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089;MONDO:MONDO:0013710,MedGen:C1833477,OMIM:614350,Orphanet:144;MONDO:MONDO:0030841,MedGen:C5436807,OMIM:619097|MedGen:CN221562|Human Phenotype Ontology:HP:0012114,MONDO:MONDO:0002447,MedGen:C0476089,OMIM:608089|",
+        "phenotype_list": "Lynch syndrome|Hereditary cancer-predisposing syndrome|not provided|Lynch syndrome 5|Hereditary nonpolyposis colorectal neoplasms|Hereditary nonpolyposis colon cancer|Endometrial carcinoma;Lynch syndrome 5;Mismatch repair cancer syndrome 3|Breast and/or ovarian cancer|Endometrial carcinoma|MSH6-related disorder"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MSH6",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "Lynch syndrome",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "AD",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "value": "c.651dup",
+        "candidates": [
+          "c.651dup",
+          "c.3699_3702del",
+          "c.3991C>T"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "value": "p.Lys218Ter",
+        "candidates": [
+          "p.Lys218Ter",
+          "p.Lys1233fs",
+          "p.Arg1331Ter"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "dup",
+        "candidates": [
+          "dup",
+          "deletion",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Pathogenic",
+          "Pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7329",
+      "disease": "MONDO:0005835",
+      "variant_candidates": [
+        "ClinVarVariation:8932",
+        "ClinVarVariation:36593",
+        "ClinVarVariation:42472"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MSH6",
+        "hgnc_id": "HGNC:7329"
+      },
+      "disease": {
+        "text": "Lynch syndrome",
+        "mondo_id": "MONDO:0005835"
+      },
+      "variants": [
+        {
+          "text": "c.651dup",
+          "variation_id": "ClinVarVariation:8932",
+          "rsid": "rs63750955"
+        },
+        {
+          "text": "c.3699_3702del",
+          "variation_id": "ClinVarVariation:36593",
+          "rsid": "rs193922343"
+        },
+        {
+          "text": "c.3991C>T",
+          "variation_id": "ClinVarVariation:42472",
+          "rsid": "rs267608094"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "34964038",
+    "source_pmc": "PMC8697338",
+    "source_pdf_url": "https://europepmc.org/article/PMC/8697338?pdf=render",
+    "source_title": "High Prevalence of Constitutional Mismatch Repair Deficiency in a Pediatric T-cell Lymphoblastic Lymphoma Cohort.",
+    "source_journal": "",
+    "source_year": "2022",
+    "notes": "",
+    "literature_search_strategy": "\"MSH6\" AND \"c.651dup\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_052",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-ATP6",
+      "hgnc_id": "HGNC:7414",
+      "disease_label": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2023-05-18T16:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8d7b0569-8dfe-40cf-a83b-44071430206f-2023-05-18T160000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9642,
+        "hgvs_name": "NC_012920.1(MT-ATP6):m.8993T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476133",
+        "phenotype_ids": "MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0010781,MedGen:C1838916,OMIM:500010|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MONDO:MONDO:0027069,MedGen:C3275684,OMIM:500015|MONDO:MONDO:0010794,MedGen:C1328349,OMIM:551500,Orphanet:644|MedGen:C3661900|Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104",
+        "phenotype_list": "Leigh syndrome|Ataxia and polyneuropathy, adult-onset|Mitochondrial disease|Mitochondrial complex 5 (ATP synthase) deficiency, mitochondrial type 1|NARP syndrome|not provided|Leber optic atrophy"
+      },
+      {
+        "variation_id": 9644,
+        "hgvs_name": "NC_012920.1(MT-ATP6):m.9176T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476135",
+        "phenotype_ids": "MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0010774,MedGen:C1839022,OMIM:500003|MONDO:MONDO:0027069,MedGen:C3275684,OMIM:500015|MedGen:C3661900|Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MONDO:MONDO:0017917,MedGen:C4755299,Orphanet:320360|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MONDO:MONDO:0970944,MedGen:CN377802,OMIM:500017|MONDO:MONDO:0010794,MedGen:C1328349,OMIM:551500,Orphanet:644||MedGen:CN381104",
+        "phenotype_list": "Leigh syndrome|Striatonigral degeneration, infantile, mitochondrial|Mitochondrial complex 5 (ATP synthase) deficiency, mitochondrial type 1|not provided|Leber optic atrophy|Maternally-inherited spastic paraplegia|Mitochondrial disease|Leigh syndrome, mitochondrial|NARP syndrome|MT-ATP6-related disorder|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9647,
+        "hgvs_name": "NC_012920.1(MT-ATP6):m.9185T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476138",
+        "phenotype_ids": "MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0015626,MedGen:C0007959,OMIM:PS118220,Orphanet:166|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MONDO:MONDO:0027069,MedGen:C3275684,OMIM:500015|MedGen:C3661900|Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MedGen:CN043634|MONDO:MONDO:0007309,MedGen:C0270911,OMIM:118220,Orphanet:101081|MONDO:MONDO:0010794,MedGen:C1328349,OMIM:551500,Orphanet:644|MedGen:CN381104|",
+        "phenotype_list": "Leigh syndrome|Charcot-Marie-Tooth disease|Mitochondrial disease|Mitochondrial complex 5 (ATP synthase) deficiency, mitochondrial type 1|not provided|Leber optic atrophy|Mitochondrial DNA-Associated Leigh Syndrome and NARP|Charcot-Marie-Tooth disease, type IA|NARP syndrome|Primary Mitochondrial Disorders|MT-ATP6-related mitochondrial disease"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-ATP6",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mitochondrial disease",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Pathogenic",
+          "Pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7414",
+      "disease": "MONDO:0044970",
+      "variant_candidates": [
+        "ClinVarVariation:9642",
+        "ClinVarVariation:9644",
+        "ClinVarVariation:9647"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-ATP6",
+        "hgnc_id": "HGNC:7414"
+      },
+      "disease": {
+        "text": "mitochondrial disease",
+        "mondo_id": "MONDO:0044970"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-ATP6):m.8993T>C",
+          "variation_id": "ClinVarVariation:9642",
+          "rsid": "rs199476133"
+        },
+        {
+          "text": "NC_012920.1(MT-ATP6):m.9176T>C",
+          "variation_id": "ClinVarVariation:9644",
+          "rsid": "rs199476135"
+        },
+        {
+          "text": "NC_012920.1(MT-ATP6):m.9185T>C",
+          "variation_id": "ClinVarVariation:9647",
+          "rsid": "rs199476138"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "42033631",
+    "source_pmc": "PMC13110232",
+    "source_pdf_url": "https://europepmc.org/article/PMC/13110232?pdf=render",
+    "source_title": "MT-ATP6 9035T&gt;C Variant Causes Ataxia With Azoospermia and Apparent Anticipation in a Four-generation Kindred.",
+    "source_journal": "",
+    "source_year": "2026",
+    "notes": "",
+    "literature_search_strategy": "\"MT-ATP6\" AND \"mitochondrial disease\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_053",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-ATP6",
+      "hgnc_id": "HGNC:7414",
+      "disease_label": "Leigh syndrome",
+      "mondo_id": "MONDO:0009723",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2021-06-28T14:53:50.161Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e492464b-cb98-4bf4-a12e-169b59576b04-2021-06-28T145350.161Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9642,
+        "hgvs_name": "NC_012920.1(MT-ATP6):m.8993T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476133",
+        "phenotype_ids": "MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0010781,MedGen:C1838916,OMIM:500010|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MONDO:MONDO:0027069,MedGen:C3275684,OMIM:500015|MONDO:MONDO:0010794,MedGen:C1328349,OMIM:551500,Orphanet:644|MedGen:C3661900|Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104",
+        "phenotype_list": "Leigh syndrome|Ataxia and polyneuropathy, adult-onset|Mitochondrial disease|Mitochondrial complex 5 (ATP synthase) deficiency, mitochondrial type 1|NARP syndrome|not provided|Leber optic atrophy"
+      },
+      {
+        "variation_id": 9644,
+        "hgvs_name": "NC_012920.1(MT-ATP6):m.9176T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476135",
+        "phenotype_ids": "MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0010774,MedGen:C1839022,OMIM:500003|MONDO:MONDO:0027069,MedGen:C3275684,OMIM:500015|MedGen:C3661900|Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MONDO:MONDO:0017917,MedGen:C4755299,Orphanet:320360|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MONDO:MONDO:0970944,MedGen:CN377802,OMIM:500017|MONDO:MONDO:0010794,MedGen:C1328349,OMIM:551500,Orphanet:644||MedGen:CN381104",
+        "phenotype_list": "Leigh syndrome|Striatonigral degeneration, infantile, mitochondrial|Mitochondrial complex 5 (ATP synthase) deficiency, mitochondrial type 1|not provided|Leber optic atrophy|Maternally-inherited spastic paraplegia|Mitochondrial disease|Leigh syndrome, mitochondrial|NARP syndrome|MT-ATP6-related disorder|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9647,
+        "hgvs_name": "NC_012920.1(MT-ATP6):m.9185T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476138",
+        "phenotype_ids": "MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0015626,MedGen:C0007959,OMIM:PS118220,Orphanet:166|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MONDO:MONDO:0027069,MedGen:C3275684,OMIM:500015|MedGen:C3661900|Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MedGen:CN043634|MONDO:MONDO:0007309,MedGen:C0270911,OMIM:118220,Orphanet:101081|MONDO:MONDO:0010794,MedGen:C1328349,OMIM:551500,Orphanet:644|MedGen:CN381104|",
+        "phenotype_list": "Leigh syndrome|Charcot-Marie-Tooth disease|Mitochondrial disease|Mitochondrial complex 5 (ATP synthase) deficiency, mitochondrial type 1|not provided|Leber optic atrophy|Mitochondrial DNA-Associated Leigh Syndrome and NARP|Charcot-Marie-Tooth disease, type IA|NARP syndrome|Primary Mitochondrial Disorders|MT-ATP6-related mitochondrial disease"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-ATP6",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "Leigh syndrome",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Pathogenic",
+          "Pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7414",
+      "disease": "MONDO:0009723",
+      "variant_candidates": [
+        "ClinVarVariation:9642",
+        "ClinVarVariation:9644",
+        "ClinVarVariation:9647"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-ATP6",
+        "hgnc_id": "HGNC:7414"
+      },
+      "disease": {
+        "text": "Leigh syndrome",
+        "mondo_id": "MONDO:0009723"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-ATP6):m.8993T>C",
+          "variation_id": "ClinVarVariation:9642",
+          "rsid": "rs199476133"
+        },
+        {
+          "text": "NC_012920.1(MT-ATP6):m.9176T>C",
+          "variation_id": "ClinVarVariation:9644",
+          "rsid": "rs199476135"
+        },
+        {
+          "text": "NC_012920.1(MT-ATP6):m.9185T>C",
+          "variation_id": "ClinVarVariation:9647",
+          "rsid": "rs199476138"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41267082",
+    "source_pmc": "PMC12632149",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12632149?pdf=render",
+    "source_title": "Expanding research and care for Leigh syndrome: efforts of a patient-led advocacy organization.",
+    "source_journal": "",
+    "source_year": "2025",
+    "notes": "",
+    "literature_search_strategy": "\"MT-ATP6\" AND \"Leigh syndrome\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_054",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-CO2",
+      "hgnc_id": "HGNC:7421",
+      "disease_label": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2023-07-11T16:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a8665d7c-6fca-44ba-9c37-d6e530ca263b-2023-07-11T160000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9658,
+        "hgvs_name": "NC_012920.1(MT-CO2):m.7587T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199474825",
+        "phenotype_ids": "MONDO:MONDO:0700250,MedGen:C5435656,OMIM:220110|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Mitochondrial complex IV deficiency, nuclear type 1|Mitochondrial disease"
+      },
+      {
+        "variation_id": 9662,
+        "hgvs_name": "NC_012920.1(MT-CO2):m.7896G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199474829",
+        "phenotype_ids": "MONDO:MONDO:0700250,MedGen:C5435656,OMIM:220110|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Mitochondrial complex IV deficiency, nuclear type 1|Mitochondrial disease"
+      },
+      {
+        "variation_id": 488349,
+        "hgvs_name": "NC_012920.1(MT-CO2):m.8088del",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "deletion",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs1556423388",
+        "phenotype_ids": "MONDO:MONDO:0700250,MedGen:C5435656,OMIM:220110|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Mitochondrial complex IV deficiency, nuclear type 1|Mitochondrial disease"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-CO2",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mitochondrial disease",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "deletion"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Likely pathogenic",
+        "candidates": [
+          "Likely pathogenic",
+          "Pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7421",
+      "disease": "MONDO:0044970",
+      "variant_candidates": [
+        "ClinVarVariation:9658",
+        "ClinVarVariation:9662",
+        "ClinVarVariation:488349"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-CO2",
+        "hgnc_id": "HGNC:7421"
+      },
+      "disease": {
+        "text": "mitochondrial disease",
+        "mondo_id": "MONDO:0044970"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-CO2):m.7587T>C",
+          "variation_id": "ClinVarVariation:9658",
+          "rsid": "rs199474825"
+        },
+        {
+          "text": "NC_012920.1(MT-CO2):m.7896G>A",
+          "variation_id": "ClinVarVariation:9662",
+          "rsid": "rs199474829"
+        },
+        {
+          "text": "NC_012920.1(MT-CO2):m.8088del",
+          "variation_id": "ClinVarVariation:488349",
+          "rsid": "rs1556423388"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41419202",
+    "source_pmc": "PMC12870770",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12870770?pdf=render",
+    "source_title": "The cytochrome c oxidase subunit COX6B1 is required for redox-sensitive early assembly and late stabilization of complex IV.",
+    "source_journal": "",
+    "source_year": "2026",
+    "notes": "",
+    "literature_search_strategy": "\"MT-CO2\" AND \"mitochondrial disease\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_055",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-CO3",
+      "hgnc_id": "HGNC:7422",
+      "disease_label": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2023-03-20T16:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d58759e1-bf55-44f2-9a97-839a9360d156-2023-03-20T160000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9654,
+        "hgvs_name": "NC_012920.1(MT-CO3):m.9487_9501del",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "deletion",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267606612",
+        "phenotype_ids": "MONDO:MONDO:0700250,MedGen:C5435656,OMIM:220110|MedGen:C4017626|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Mitochondrial complex IV deficiency, nuclear type 1|Mitochondrial complex IV deficiency with recurrent myoglobinuria|Mitochondrial disease"
+      },
+      {
+        "variation_id": 9655,
+        "hgvs_name": "NC_012920.1(MT-CO3):m.9952G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267606613",
+        "phenotype_ids": "MONDO:MONDO:0700250,MedGen:C5435656,OMIM:220110|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Mitochondrial complex IV deficiency, nuclear type 1|Mitochondrial disease"
+      },
+      {
+        "variation_id": 9656,
+        "hgvs_name": "NC_012920.1(MT-CO3):m.9537dup",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "dup",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267606614",
+        "phenotype_ids": "MONDO:MONDO:0700250,MedGen:C5435656,OMIM:220110|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "Mitochondrial complex IV deficiency, nuclear type 1|Leigh syndrome|Mitochondrial disease|Primary Mitochondrial Disorders"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-CO3",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mitochondrial disease",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "deletion",
+        "candidates": [
+          "deletion",
+          "missense",
+          "dup"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Likely pathogenic",
+        "candidates": [
+          "Likely pathogenic",
+          "Likely pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7422",
+      "disease": "MONDO:0044970",
+      "variant_candidates": [
+        "ClinVarVariation:9654",
+        "ClinVarVariation:9655",
+        "ClinVarVariation:9656"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-CO3",
+        "hgnc_id": "HGNC:7422"
+      },
+      "disease": {
+        "text": "mitochondrial disease",
+        "mondo_id": "MONDO:0044970"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-CO3):m.9487_9501del",
+          "variation_id": "ClinVarVariation:9654",
+          "rsid": "rs267606612"
+        },
+        {
+          "text": "NC_012920.1(MT-CO3):m.9952G>A",
+          "variation_id": "ClinVarVariation:9655",
+          "rsid": "rs267606613"
+        },
+        {
+          "text": "NC_012920.1(MT-CO3):m.9537dup",
+          "variation_id": "ClinVarVariation:9656",
+          "rsid": "rs267606614"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41419202",
+    "source_pmc": "PMC12870770",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12870770?pdf=render",
+    "source_title": "The cytochrome c oxidase subunit COX6B1 is required for redox-sensitive early assembly and late stabilization of complex IV.",
+    "source_journal": "",
+    "source_year": "2026",
+    "notes": "",
+    "literature_search_strategy": "\"MT-CO3\" AND \"mitochondrial disease\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_056",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-CYB",
+      "hgnc_id": "HGNC:7427",
+      "disease_label": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2024-03-04T17:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7ee50909-c576-4998-81bc-09980529cbb2-2024-03-04T170000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9680,
+        "hgvs_name": "NC_012920.1(MT-CYB):m.15242G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs207459999",
+        "phenotype_ids": "MONDO:MONDO:0004675,MedGen:C0162666|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "Mitochondrial encephalomyopathy|Leigh syndrome|Mitochondrial disease|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9681,
+        "hgvs_name": "NC_012920.1(MT-CYB):m.15150G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs207460000",
+        "phenotype_ids": "Human Phenotype Ontology:HP:0003546,MedGen:C0424551|MONDO:MONDO:0010780,MedGen:C3151898,OMIM:500009,Orphanet:254864|Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Exercise intolerance|Mitochondrial myopathy with reversible cytochrome C oxidase deficiency|Leber optic atrophy|Mitochondrial disease"
+      },
+      {
+        "variation_id": 9686,
+        "hgvs_name": "NC_012920.1(MT-CYB):m.14783TTAA[1]",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "other",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs207460005",
+        "phenotype_ids": "MedGen:C4016600|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Parkinsonism/MELAS overlap syndrome|Mitochondrial disease"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-CYB",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mitochondrial disease",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "other"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Likely pathogenic",
+        "candidates": [
+          "Likely pathogenic",
+          "Likely pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7427",
+      "disease": "MONDO:0044970",
+      "variant_candidates": [
+        "ClinVarVariation:9680",
+        "ClinVarVariation:9681",
+        "ClinVarVariation:9686"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-CYB",
+        "hgnc_id": "HGNC:7427"
+      },
+      "disease": {
+        "text": "mitochondrial disease",
+        "mondo_id": "MONDO:0044970"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-CYB):m.15242G>A",
+          "variation_id": "ClinVarVariation:9680",
+          "rsid": "rs207459999"
+        },
+        {
+          "text": "NC_012920.1(MT-CYB):m.15150G>A",
+          "variation_id": "ClinVarVariation:9681",
+          "rsid": "rs207460000"
+        },
+        {
+          "text": "NC_012920.1(MT-CYB):m.14783TTAA[1]",
+          "variation_id": "ClinVarVariation:9686",
+          "rsid": "rs207460005"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "39940884",
+    "source_pmc": "PMC11817157",
+    "source_pdf_url": "https://europepmc.org/article/PMC/11817157?pdf=render",
+    "source_title": "Adult Leigh Syndrome Associated with the m.15635T&gt;C Mitochondrial DNA Variant Affecting the Cytochrome &lt;i&gt;b&lt;/i&gt; (&lt;i&gt;MT-CYB&lt;/i&gt;) Gene.",
+    "source_journal": "",
+    "source_year": "2025",
+    "notes": "",
+    "literature_search_strategy": "\"MT-CYB\" AND \"mitochondrial disease\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_057",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-ND1",
+      "hgnc_id": "HGNC:7455",
+      "disease_label": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2023-04-03T16:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1d55015a-dd90-479e-8e5b-4693e321c705-2023-04-03T160000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9722,
+        "hgvs_name": "NC_012920.1(MT-ND1):m.3460G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476118",
+        "phenotype_ids": "Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MedGen:C3661900||MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|Human Phenotype Ontology:HP:0000648,Human Phenotype Ontology:HP:0007751,Human Phenotype Ontology:HP:0007855,MONDO:MONDO:0003608,MedGen:C0029124|MONDO:MONDO:0010772,MedGen:C1839040,OMIM:500001,Orphanet:99718|MedGen:CN381104",
+        "phenotype_list": "Leber optic atrophy|Leigh syndrome|not provided|MITOCHONDRIAL COMPLEX I DEFICIENCY, MITOCHONDRIAL TYPE 3|Mitochondrial disease|Optic atrophy|Leber optic atrophy and dystonia|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9731,
+        "hgvs_name": "NC_012920.1(MT-ND1):m.3902_3908inv",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "other",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs-1",
+        "phenotype_ids": "|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "MITOCHONDRIAL COMPLEX I DEFICIENCY, MITOCHONDRIAL TYPE 3|Mitochondrial disease"
+      },
+      {
+        "variation_id": 9733,
+        "hgvs_name": "NC_012920.1(MT-ND1):m.3697G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476122",
+        "phenotype_ids": "MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MONDO:MONDO:0010772,MedGen:C1839040,OMIM:500001,Orphanet:99718|Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|7 conditions|MedGen:CN381104",
+        "phenotype_list": "MELAS syndrome|Leber optic atrophy and dystonia|Leber optic atrophy|Mitochondrial disease|7 conditions|Primary Mitochondrial Disorders"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-ND1",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mitochondrial disease",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "other",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Likely pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7455",
+      "disease": "MONDO:0044970",
+      "variant_candidates": [
+        "ClinVarVariation:9722",
+        "ClinVarVariation:9731",
+        "ClinVarVariation:9733"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-ND1",
+        "hgnc_id": "HGNC:7455"
+      },
+      "disease": {
+        "text": "mitochondrial disease",
+        "mondo_id": "MONDO:0044970"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-ND1):m.3460G>A",
+          "variation_id": "ClinVarVariation:9722",
+          "rsid": "rs199476118"
+        },
+        {
+          "text": "NC_012920.1(MT-ND1):m.3902_3908inv",
+          "variation_id": "ClinVarVariation:9731",
+          "rsid": "rs-1"
+        },
+        {
+          "text": "NC_012920.1(MT-ND1):m.3697G>A",
+          "variation_id": "ClinVarVariation:9733",
+          "rsid": "rs199476122"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41437048",
+    "source_pmc": "PMC12729811",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12729811?pdf=render",
+    "source_title": "Advances in gene therapy for mitochondrial genetic disorders: current status and clinical implementation challenges.",
+    "source_journal": "",
+    "source_year": "2025",
+    "notes": "",
+    "literature_search_strategy": "\"MT-ND1\" AND \"mitochondrial disease\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_058",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-ND3",
+      "hgnc_id": "HGNC:7458",
+      "disease_label": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2023-03-06T17:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_06aaf3f7-69d3-415d-be22-257ed21abbc1-2023-03-06T170000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9712,
+        "hgvs_name": "NC_012920.1(MT-ND3):m.10191T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267606890",
+        "phenotype_ids": "MONDO:MONDO:0027068,MedGen:C4746992,OMIM:500014|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0100133,MeSH:C537475,MedGen:C1838979,Orphanet:2609|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "Mitochondrial complex I deficiency, mitochondrial type 1|Leigh syndrome|Mitochondrial complex I deficiency|Mitochondrial disease|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9714,
+        "hgvs_name": "NC_012920.1(MT-ND3):m.10158T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476117",
+        "phenotype_ids": "MONDO:MONDO:0027068,MedGen:C4746992,OMIM:500014|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MedGen:C3661900|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "Mitochondrial complex I deficiency, mitochondrial type 1|Leigh syndrome|not provided|Mitochondrial disease|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9715,
+        "hgvs_name": "NC_012920.1(MT-ND3):m.10197G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267606891",
+        "phenotype_ids": "MONDO:MONDO:0027068,MedGen:C4746992,OMIM:500014|MONDO:MONDO:0010772,MedGen:C1839040,OMIM:500001,Orphanet:99718|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MedGen:C3661900|MedGen:CN043634|MedGen:CN169374|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380||MONDO:MONDO:0020714,MedGen:C5193223,OMIM:251900|MedGen:CN381104",
+        "phenotype_list": "Mitochondrial complex I deficiency, mitochondrial type 1|Leber optic atrophy and dystonia|Leigh syndrome|not provided|Mitochondrial DNA-Associated Leigh Syndrome and NARP|not specified|Mitochondrial disease|See cases|Mitochondrial myopathy, episodic, with optic atrophy and reversible leukoencephalopathy|Primary Mitochondrial Disorders"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-ND3",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mitochondrial disease",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Pathogenic",
+          "Pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7458",
+      "disease": "MONDO:0044970",
+      "variant_candidates": [
+        "ClinVarVariation:9712",
+        "ClinVarVariation:9714",
+        "ClinVarVariation:9715"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-ND3",
+        "hgnc_id": "HGNC:7458"
+      },
+      "disease": {
+        "text": "mitochondrial disease",
+        "mondo_id": "MONDO:0044970"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-ND3):m.10191T>C",
+          "variation_id": "ClinVarVariation:9712",
+          "rsid": "rs267606890"
+        },
+        {
+          "text": "NC_012920.1(MT-ND3):m.10158T>C",
+          "variation_id": "ClinVarVariation:9714",
+          "rsid": "rs199476117"
+        },
+        {
+          "text": "NC_012920.1(MT-ND3):m.10197G>A",
+          "variation_id": "ClinVarVariation:9715",
+          "rsid": "rs267606891"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41744643",
+    "source_pmc": "PMC12937636",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12937636?pdf=render",
+    "source_title": "Generative AI Accelerates Genotype-Phenotype Characterization of a 1600-Case Leigh Syndrome Virtual Cohort from Published Literature.",
+    "source_journal": "",
+    "source_year": "2026",
+    "notes": "",
+    "literature_search_strategy": "\"MT-ND3\" AND \"mitochondrial disease\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_059",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-ND3",
+      "hgnc_id": "HGNC:7458",
+      "disease_label": "Leigh syndrome",
+      "mondo_id": "MONDO:0009723",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2021-03-24T04:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8af71e8b-b1f8-45d6-9dd7-e403a6f6080e-2021-03-24T040000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9712,
+        "hgvs_name": "NC_012920.1(MT-ND3):m.10191T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267606890",
+        "phenotype_ids": "MONDO:MONDO:0027068,MedGen:C4746992,OMIM:500014|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0100133,MeSH:C537475,MedGen:C1838979,Orphanet:2609|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "Mitochondrial complex I deficiency, mitochondrial type 1|Leigh syndrome|Mitochondrial complex I deficiency|Mitochondrial disease|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9714,
+        "hgvs_name": "NC_012920.1(MT-ND3):m.10158T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476117",
+        "phenotype_ids": "MONDO:MONDO:0027068,MedGen:C4746992,OMIM:500014|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MedGen:C3661900|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "Mitochondrial complex I deficiency, mitochondrial type 1|Leigh syndrome|not provided|Mitochondrial disease|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9715,
+        "hgvs_name": "NC_012920.1(MT-ND3):m.10197G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267606891",
+        "phenotype_ids": "MONDO:MONDO:0027068,MedGen:C4746992,OMIM:500014|MONDO:MONDO:0010772,MedGen:C1839040,OMIM:500001,Orphanet:99718|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MedGen:C3661900|MedGen:CN043634|MedGen:CN169374|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380||MONDO:MONDO:0020714,MedGen:C5193223,OMIM:251900|MedGen:CN381104",
+        "phenotype_list": "Mitochondrial complex I deficiency, mitochondrial type 1|Leber optic atrophy and dystonia|Leigh syndrome|not provided|Mitochondrial DNA-Associated Leigh Syndrome and NARP|not specified|Mitochondrial disease|See cases|Mitochondrial myopathy, episodic, with optic atrophy and reversible leukoencephalopathy|Primary Mitochondrial Disorders"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-ND3",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "Leigh syndrome",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Pathogenic",
+          "Pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7458",
+      "disease": "MONDO:0009723",
+      "variant_candidates": [
+        "ClinVarVariation:9712",
+        "ClinVarVariation:9714",
+        "ClinVarVariation:9715"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-ND3",
+        "hgnc_id": "HGNC:7458"
+      },
+      "disease": {
+        "text": "Leigh syndrome",
+        "mondo_id": "MONDO:0009723"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-ND3):m.10191T>C",
+          "variation_id": "ClinVarVariation:9712",
+          "rsid": "rs267606890"
+        },
+        {
+          "text": "NC_012920.1(MT-ND3):m.10158T>C",
+          "variation_id": "ClinVarVariation:9714",
+          "rsid": "rs199476117"
+        },
+        {
+          "text": "NC_012920.1(MT-ND3):m.10197G>A",
+          "variation_id": "ClinVarVariation:9715",
+          "rsid": "rs267606891"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41744643",
+    "source_pmc": "PMC12937636",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12937636?pdf=render",
+    "source_title": "Generative AI Accelerates Genotype-Phenotype Characterization of a 1600-Case Leigh Syndrome Virtual Cohort from Published Literature.",
+    "source_journal": "",
+    "source_year": "2026",
+    "notes": "",
+    "literature_search_strategy": "\"MT-ND3\" AND \"Leigh syndrome\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_060",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-ND5",
+      "hgnc_id": "HGNC:7461",
+      "disease_label": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2023-05-03T16:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_af2efc84-7d75-49a9-ae61-2ea59bf3ce5f-2023-05-03T160000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9698,
+        "hgvs_name": "NC_012920.1(MT-ND5):m.12706T>C (p.Phe124Leu)",
+        "hgvs_c": "",
+        "hgvs_p": "p.Phe124Leu",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267606893",
+        "phenotype_ids": "MedGen:C1838951|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Leigh syndrome due to mitochondrial complex I deficiency|Leigh syndrome|Leber optic atrophy|Mitochondrial disease"
+      },
+      {
+        "variation_id": 9702,
+        "hgvs_name": "NC_012920.1(MT-ND5):m.13513G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267606897",
+        "phenotype_ids": "MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MedGen:C1838951|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MedGen:C3661900|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "MELAS syndrome|Leigh syndrome due to mitochondrial complex I deficiency|Leigh syndrome|not provided|Mitochondrial disease|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9703,
+        "hgvs_name": "NC_012920.1(MT-ND5):m.13042G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267606898",
+        "phenotype_ids": "MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MONDO:MONDO:0010790,MedGen:C0162672,OMIM:545000,Orphanet:551|MedGen:C1838951|Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "MELAS syndrome|MERRF syndrome|Leigh syndrome due to mitochondrial complex I deficiency|Leber optic atrophy|Mitochondrial disease|Primary Mitochondrial Disorders"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-ND5",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mitochondrial disease",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "value": "p.Phe124Leu",
+        "candidates": [
+          "p.Phe124Leu"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Likely pathogenic",
+        "candidates": [
+          "Likely pathogenic",
+          "Pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7461",
+      "disease": "MONDO:0044970",
+      "variant_candidates": [
+        "ClinVarVariation:9698",
+        "ClinVarVariation:9702",
+        "ClinVarVariation:9703"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-ND5",
+        "hgnc_id": "HGNC:7461"
+      },
+      "disease": {
+        "text": "mitochondrial disease",
+        "mondo_id": "MONDO:0044970"
+      },
+      "variants": [
+        {
+          "text": "p.Phe124Leu",
+          "variation_id": "ClinVarVariation:9698",
+          "rsid": "rs267606893"
+        },
+        {
+          "text": "NC_012920.1(MT-ND5):m.13513G>A",
+          "variation_id": "ClinVarVariation:9702",
+          "rsid": "rs267606897"
+        },
+        {
+          "text": "NC_012920.1(MT-ND5):m.13042G>A",
+          "variation_id": "ClinVarVariation:9703",
+          "rsid": "rs267606898"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "40400026",
+    "source_pmc": "PMC12096736",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12096736?pdf=render",
+    "source_title": "Untargeted proteomics enables ultra-rapid variant prioritisation in mitochondrial and other rare diseases.",
+    "source_journal": "",
+    "source_year": "2025",
+    "notes": "",
+    "literature_search_strategy": "\"MT-ND5\" AND \"NC_012920.1(MT-ND5):m.13513G>A\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_061",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-ND5",
+      "hgnc_id": "HGNC:7461",
+      "disease_label": "Leigh syndrome",
+      "mondo_id": "MONDO:0009723",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2021-06-14T15:55:37.548Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e941d385-716f-4264-8f24-ffe3022579e2-2021-06-14T155537.548Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9698,
+        "hgvs_name": "NC_012920.1(MT-ND5):m.12706T>C (p.Phe124Leu)",
+        "hgvs_c": "",
+        "hgvs_p": "p.Phe124Leu",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267606893",
+        "phenotype_ids": "MedGen:C1838951|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Leigh syndrome due to mitochondrial complex I deficiency|Leigh syndrome|Leber optic atrophy|Mitochondrial disease"
+      },
+      {
+        "variation_id": 9702,
+        "hgvs_name": "NC_012920.1(MT-ND5):m.13513G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs267606897",
+        "phenotype_ids": "MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MedGen:C1838951|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MedGen:C3661900|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "MELAS syndrome|Leigh syndrome due to mitochondrial complex I deficiency|Leigh syndrome|not provided|Mitochondrial disease|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 155889,
+        "hgvs_name": "NC_012920.1(MT-ND5):m.13514A>G",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs587776440",
+        "phenotype_ids": "MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550",
+        "phenotype_list": "Leigh syndrome|Mitochondrial disease|MELAS syndrome"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-ND5",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "Leigh syndrome",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "value": "p.Phe124Leu",
+        "candidates": [
+          "p.Phe124Leu"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Likely pathogenic",
+        "candidates": [
+          "Likely pathogenic",
+          "Pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7461",
+      "disease": "MONDO:0009723",
+      "variant_candidates": [
+        "ClinVarVariation:9698",
+        "ClinVarVariation:9702",
+        "ClinVarVariation:155889"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-ND5",
+        "hgnc_id": "HGNC:7461"
+      },
+      "disease": {
+        "text": "Leigh syndrome",
+        "mondo_id": "MONDO:0009723"
+      },
+      "variants": [
+        {
+          "text": "p.Phe124Leu",
+          "variation_id": "ClinVarVariation:9698",
+          "rsid": "rs267606893"
+        },
+        {
+          "text": "NC_012920.1(MT-ND5):m.13513G>A",
+          "variation_id": "ClinVarVariation:9702",
+          "rsid": "rs267606897"
+        },
+        {
+          "text": "NC_012920.1(MT-ND5):m.13514A>G",
+          "variation_id": "ClinVarVariation:155889",
+          "rsid": "rs587776440"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "40400026",
+    "source_pmc": "PMC12096736",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12096736?pdf=render",
+    "source_title": "Untargeted proteomics enables ultra-rapid variant prioritisation in mitochondrial and other rare diseases.",
+    "source_journal": "",
+    "source_year": "2025",
+    "notes": "",
+    "literature_search_strategy": "\"MT-ND5\" AND \"NC_012920.1(MT-ND5):m.13513G>A\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_062",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-ND6",
+      "hgnc_id": "HGNC:7462",
+      "disease_label": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2023-05-03T16:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7f581c96-e3cc-49bb-aa2b-98650efa4157-2023-05-03T160000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9688,
+        "hgvs_name": "NC_012920.1(MT-ND6):m.14484T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476104",
+        "phenotype_ids": "Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MedGen:C3661900|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|Human Phenotype Ontology:HP:0000648,Human Phenotype Ontology:HP:0007751,Human Phenotype Ontology:HP:0007855,MONDO:MONDO:0003608,MedGen:C0029124|Human Phenotype Ontology:HP:0000556,Human Phenotype Ontology:HP:0007736,Human Phenotype Ontology:HP:0007910,Human Phenotype Ontology:HP:0007974,Human Phenotype Ontology:HP:0007982,MONDO:MONDO:0019118,MeSH:D058499,MedGen:C0854723,Orphanet:71862|MONDO:MONDO:0010772,MedGen:C1839040,OMIM:500001,Orphanet:99718|MedGen:CN381104",
+        "phenotype_list": "Leber optic atrophy|Leigh syndrome|not provided|Mitochondrial disease|Optic atrophy|Retinal dystrophy|Leber optic atrophy and dystonia|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9691,
+        "hgvs_name": "NC_012920.1(MT-ND6):m.14495A>G",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476106",
+        "phenotype_ids": "Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Leber optic atrophy|Mitochondrial disease"
+      },
+      {
+        "variation_id": 9692,
+        "hgvs_name": "NC_012920.1(MT-ND6):m.14453G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476107",
+        "phenotype_ids": "MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "MELAS syndrome|Leigh syndrome|Mitochondrial disease|Primary Mitochondrial Disorders"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-ND6",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mitochondrial disease",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Likely pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7462",
+      "disease": "MONDO:0044970",
+      "variant_candidates": [
+        "ClinVarVariation:9688",
+        "ClinVarVariation:9691",
+        "ClinVarVariation:9692"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-ND6",
+        "hgnc_id": "HGNC:7462"
+      },
+      "disease": {
+        "text": "mitochondrial disease",
+        "mondo_id": "MONDO:0044970"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-ND6):m.14484T>C",
+          "variation_id": "ClinVarVariation:9688",
+          "rsid": "rs199476104"
+        },
+        {
+          "text": "NC_012920.1(MT-ND6):m.14495A>G",
+          "variation_id": "ClinVarVariation:9691",
+          "rsid": "rs199476106"
+        },
+        {
+          "text": "NC_012920.1(MT-ND6):m.14453G>A",
+          "variation_id": "ClinVarVariation:9692",
+          "rsid": "rs199476107"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41504202",
+    "source_pmc": "PMC12781225",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12781225?pdf=render",
+    "source_title": "Amyotrophic Lateral Sclerosis With Concurrent LHON-associated m.14484T>C Mutation: A Case Report and Literature Review.",
+    "source_journal": "",
+    "source_year": "2025",
+    "notes": "",
+    "literature_search_strategy": "\"MT-ND6\" AND \"mitochondrial disease\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_063",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-ND6",
+      "hgnc_id": "HGNC:7462",
+      "disease_label": "Leigh syndrome",
+      "mondo_id": "MONDO:0009723",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2021-05-17T04:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_836f975f-27f5-47c9-a58e-35089b6b39e6-2021-05-17T040000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9688,
+        "hgvs_name": "NC_012920.1(MT-ND6):m.14484T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476104",
+        "phenotype_ids": "Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MedGen:C3661900|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|Human Phenotype Ontology:HP:0000648,Human Phenotype Ontology:HP:0007751,Human Phenotype Ontology:HP:0007855,MONDO:MONDO:0003608,MedGen:C0029124|Human Phenotype Ontology:HP:0000556,Human Phenotype Ontology:HP:0007736,Human Phenotype Ontology:HP:0007910,Human Phenotype Ontology:HP:0007974,Human Phenotype Ontology:HP:0007982,MONDO:MONDO:0019118,MeSH:D058499,MedGen:C0854723,Orphanet:71862|MONDO:MONDO:0010772,MedGen:C1839040,OMIM:500001,Orphanet:99718|MedGen:CN381104",
+        "phenotype_list": "Leber optic atrophy|Leigh syndrome|not provided|Mitochondrial disease|Optic atrophy|Retinal dystrophy|Leber optic atrophy and dystonia|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9692,
+        "hgvs_name": "NC_012920.1(MT-ND6):m.14453G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476107",
+        "phenotype_ids": "MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "MELAS syndrome|Leigh syndrome|Mitochondrial disease|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9694,
+        "hgvs_name": "NC_012920.1(MT-ND6):m.14487T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476109",
+        "phenotype_ids": "MedGen:C1838951|MedGen:C1838954|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|Human Phenotype Ontology:HP:0001086,Human Phenotype Ontology:HP:0001112,MONDO:MONDO:0010788,MedGen:C0917796,OMIM:535000,Orphanet:104|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550",
+        "phenotype_list": "Leigh syndrome due to mitochondrial complex I deficiency|Striatal necrosis, bilateral, with dystonia|Leigh syndrome|Leber optic atrophy|Mitochondrial disease|MELAS syndrome"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-ND6",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "Leigh syndrome",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Likely pathogenic",
+          "Pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7462",
+      "disease": "MONDO:0009723",
+      "variant_candidates": [
+        "ClinVarVariation:9688",
+        "ClinVarVariation:9692",
+        "ClinVarVariation:9694"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-ND6",
+        "hgnc_id": "HGNC:7462"
+      },
+      "disease": {
+        "text": "Leigh syndrome",
+        "mondo_id": "MONDO:0009723"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-ND6):m.14484T>C",
+          "variation_id": "ClinVarVariation:9688",
+          "rsid": "rs199476104"
+        },
+        {
+          "text": "NC_012920.1(MT-ND6):m.14453G>A",
+          "variation_id": "ClinVarVariation:9692",
+          "rsid": "rs199476107"
+        },
+        {
+          "text": "NC_012920.1(MT-ND6):m.14487T>C",
+          "variation_id": "ClinVarVariation:9694",
+          "rsid": "rs199476109"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41437048",
+    "source_pmc": "PMC12729811",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12729811?pdf=render",
+    "source_title": "Advances in gene therapy for mitochondrial genetic disorders: current status and clinical implementation challenges.",
+    "source_journal": "",
+    "source_year": "2025",
+    "notes": "",
+    "literature_search_strategy": "\"MT-ND6\" AND \"Leigh syndrome\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_064",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-TK",
+      "hgnc_id": "HGNC:7489",
+      "disease_label": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2023-04-17T16:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3d7a973c-7786-48a1-bf82-3764761739ba-2023-04-17T160000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9579,
+        "hgvs_name": "NC_012920.1(MT-TK):m.8344A>G",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs118192098",
+        "phenotype_ids": "MONDO:MONDO:0010790,MedGen:C0162672,OMIM:545000,Orphanet:551|MONDO:MONDO:0010796,MedGen:C1838867,OMIM:556500|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MedGen:C3661900|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|||MONDO:MONDO:0015150,MedGen:C0393556,Orphanet:102013|MONDO:MONDO:0011173,MedGen:C3275998,OMIM:601977|MedGen:CN381104",
+        "phenotype_list": "MERRF syndrome|Parkinson disease, mitochondrial|Leigh syndrome|not provided|Mitochondrial disease|MELAS syndrome|MT-TK-related mitochondrial disorder|MT-TK-related disorder|Complex hereditary spastic paraplegia|Thrombocythemia 2|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9580,
+        "hgvs_name": "NC_012920.1(MT-TK):m.8356T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs118192099",
+        "phenotype_ids": "MedGen:C3151970|MONDO:MONDO:0010790,MedGen:C0162672,OMIM:545000,Orphanet:551|MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "MERRF/MELAS overlap syndrome|MERRF syndrome|MELAS syndrome|Mitochondrial disease"
+      },
+      {
+        "variation_id": 9581,
+        "hgvs_name": "NC_012920.1(MT-TK):m.8363G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs118192100",
+        "phenotype_ids": "MedGen:C4016620|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MONDO:MONDO:0010790,MedGen:C0162672,OMIM:545000,Orphanet:551|MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|",
+        "phenotype_list": "Cardiomyopathy and Deafness|Leigh syndrome|MERRF syndrome|MELAS syndrome|Mitochondrial disease|MT-TK-related disorder"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-TK",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mitochondrial disease",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Likely pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7489",
+      "disease": "MONDO:0044970",
+      "variant_candidates": [
+        "ClinVarVariation:9579",
+        "ClinVarVariation:9580",
+        "ClinVarVariation:9581"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-TK",
+        "hgnc_id": "HGNC:7489"
+      },
+      "disease": {
+        "text": "mitochondrial disease",
+        "mondo_id": "MONDO:0044970"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-TK):m.8344A>G",
+          "variation_id": "ClinVarVariation:9579",
+          "rsid": "rs118192098"
+        },
+        {
+          "text": "NC_012920.1(MT-TK):m.8356T>C",
+          "variation_id": "ClinVarVariation:9580",
+          "rsid": "rs118192099"
+        },
+        {
+          "text": "NC_012920.1(MT-TK):m.8363G>A",
+          "variation_id": "ClinVarVariation:9581",
+          "rsid": "rs118192100"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41116046",
+    "source_pmc": "PMC12816666",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12816666?pdf=render",
+    "source_title": "Nanopore long-read sequencing for the critically ill facilitates ultrarapid diagnostics and urgent clinical decision making.",
+    "source_journal": "",
+    "source_year": "2026",
+    "notes": "",
+    "literature_search_strategy": "\"MT-TK\" AND \"NC_012920.1(MT-TK):m.8344A>G\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_065",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-TL1",
+      "hgnc_id": "HGNC:7490",
+      "disease_label": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2023-04-17T16:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_555b9573-762e-4c6a-904e-f2227c916bc4-2023-04-17T160000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9589,
+        "hgvs_name": "NC_012920.1(MT-TL1):m.3243A>G",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199474657",
+        "phenotype_ids": "MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MONDO:MONDO:0010778,MedGen:C0152164,OMIM:500007|MONDO:MONDO:0007932,MedGen:C3495438,OMIM:153800|MONDO:MONDO:0700250,MedGen:C5435656,OMIM:220110|MONDO:MONDO:0009610,MedGen:C0342727,OMIM:250950,Orphanet:67046|MedGen:C3151970|MONDO:MONDO:0010785,MedGen:C0342289,OMIM:520000,Orphanet:225|MONDO:MONDO:0009723,MedGen:C2931891,OMIM:256000,Orphanet:506|MedGen:C3661900|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|Human Phenotype Ontology:HP:0000833,Human Phenotype Ontology:HP:0001952,MONDO:MONDO:0001076,MedGen:C0271650;Human Phenotype Ontology:HP:0000374,Human Phenotype Ontology:HP:0000407,Human Phenotype Ontology:HP:0001753,Human Phenotype Ontology:HP:0001916,Human Phenotype Ontology:HP:0008538,Human Phenotype Ontology:HP:0008553,Human Phenotype Ontology:HP:0008565,Human Phenotype Ontology:HP:0008576,Human Phenotype Ontology:HP:0008611,Human Phenotype Ontology:HP:0008613,Human Phenotype Ontology:HP:0008614,MONDO:MONDO:0020678,MeSH:D006319,MedGen:C0018784;Human Phenotype Ontology:HP:0001509,Human Phenotype Ontology:HP:0003501,Human Phenotype Ontology:HP:0003507,Human Phenotype Ontology:HP:0003512,Human Phenotype Ontology:HP:0003518,Human Phenotype Ontology:HP:0003519,Human Phenotype Ontology:HP:0004322,Human Phenotype Ontology:HP:0008871,Human Phenotype Ontology:HP:0008882,Human Phenotype Ontology:HP:0008888,Human Phenotype Ontology:HP:0008913,MedGen:C0349588;Human Phenotype Ontology:HP:0001297,Human Phenotype Ontology:HP:0002452,MONDO:MONDO:0005098,MeSH:D020521,MedGen:C0038454|MONDO:MONDO:0010790,MedGen:C0162672,OMIM:545000,Orphanet:551;MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|Human Phenotype Ontology:HP:0100021,MONDO:MONDO:0006497,MedGen:C0007789|MedGen:CN169374||Human Phenotype Ontology:HP:0001639,MONDO:MONDO:0005045,MeSH:D002312,MedGen:C0007194,Orphanet:217569;MedGen:CN230159;MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550;MONDO:MONDO:0010785,MedGen:C0342289,OMIM:520000,Orphanet:225|MedGen:C2732267|MONDO:MONDO:0970944,MedGen:CN377802,OMIM:500017|Human Phenotype Ontology:HP:0005152,MONDO:MONDO:0010771,MedGen:C1708371,OMIM:500000,Orphanet:137675|MedGen:C5569013,Orphanet:254788|||MONDO:MONDO:0011303,MedGen:C4551527,OMIM:603278,Orphanet:656",
+        "phenotype_list": "MELAS syndrome|Cyclical vomiting syndrome|Age related macular degeneration 2|Mitochondrial complex IV deficiency, nuclear type 1|3-methylglutaconic aciduria type 1|MERRF/MELAS overlap syndrome|Diabetes-deafness syndrome maternally transmitted|Leigh syndrome|not provided|Mitochondrial disease|Glucose intolerance;Sensorineural hearing loss disorder;Short stature;Stroke disorder|MERRF syndrome;MELAS syndrome|Cerebral palsy|not specified|See cases|Hypertrophic cardiomyopathy;Leigh Syndrome (mtDNA mutation);MELAS syndrome;Diabetes-deafness syndrome maternally transmitted|Auditory neuropathy spectrum disorder|Leigh syndrome, mitochondrial|Histiocytoid cardiomyopathy|Maternally-inherited mitochondrial myopathy|MT-TL1-related disorders|MT-TL1-related disorder|Focal segmental glomerulosclerosis 1"
+      },
+      {
+        "variation_id": 9590,
+        "hgvs_name": "NC_012920.1(MT-TL1):m.3271T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199474658",
+        "phenotype_ids": "MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MedGen:CN169374|MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550;MONDO:MONDO:0010790,MedGen:C0162672,OMIM:545000,Orphanet:551|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "MELAS syndrome|not specified|MELAS syndrome;MERRF syndrome|Mitochondrial disease|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9591,
+        "hgvs_name": "NC_012920.1(MT-TL1):m.3256C>T",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199474659",
+        "phenotype_ids": "MONDO:MONDO:0010790,MedGen:C0162672,OMIM:545000,Orphanet:551|MedGen:C4017627|MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "MERRF syndrome|Diabetes mellitus, noninsulin-dependent, maternally transmitted|MELAS syndrome|Mitochondrial disease"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-TL1",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mitochondrial disease",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7490",
+      "disease": "MONDO:0044970",
+      "variant_candidates": [
+        "ClinVarVariation:9589",
+        "ClinVarVariation:9590",
+        "ClinVarVariation:9591"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-TL1",
+        "hgnc_id": "HGNC:7490"
+      },
+      "disease": {
+        "text": "mitochondrial disease",
+        "mondo_id": "MONDO:0044970"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-TL1):m.3243A>G",
+          "variation_id": "ClinVarVariation:9589",
+          "rsid": "rs199474657"
+        },
+        {
+          "text": "NC_012920.1(MT-TL1):m.3271T>C",
+          "variation_id": "ClinVarVariation:9590",
+          "rsid": "rs199474658"
+        },
+        {
+          "text": "NC_012920.1(MT-TL1):m.3256C>T",
+          "variation_id": "ClinVarVariation:9591",
+          "rsid": "rs199474659"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "40656658",
+    "source_pmc": "PMC12254466",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12254466?pdf=render",
+    "source_title": "Mitochondrial DNA Pathogenic Variant Prevalence in Primary Mitochondrial Disease Patients With African (L) Mitochondrial Genome Haplogroups.",
+    "source_journal": "",
+    "source_year": "2025",
+    "notes": "",
+    "literature_search_strategy": "\"MT-TL1\" AND \"NC_012920.1(MT-TL1):m.3243A>G\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_066",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-TN",
+      "hgnc_id": "HGNC:7493",
+      "disease_label": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2022-10-20T16:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4659b074-c4eb-4290-9716-f39a213e37cc-2022-10-20T160000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9620,
+        "hgvs_name": "NC_012920.1(MT-TN):m.5703G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476130",
+        "phenotype_ids": "MedGen:C4016605|MONDO:MONDO:0700250,MedGen:C5435656,OMIM:220110|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "Ophthalmoplegia, isolated|Mitochondrial complex IV deficiency, nuclear type 1|Mitochondrial disease|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 9622,
+        "hgvs_name": "NC_012920.1(MT-TN):m.5728T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199476132",
+        "phenotype_ids": "|MONDO:MONDO:0700250,MedGen:C5435656,OMIM:220110|MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:C3661900|MedGen:CN381104",
+        "phenotype_list": "MITOCHONDRIAL COMPLEX I DEFICIENCY, MITOCHONDRIAL TYPE 2|Mitochondrial complex IV deficiency, nuclear type 1|MELAS syndrome|Mitochondrial disease|not provided|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 986477,
+        "hgvs_name": "NC_012920.1(MT-TN):m.5690A>G",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs2521956863",
+        "phenotype_ids": "MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Mitochondrial disease"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-TN",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mitochondrial disease",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Likely pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7493",
+      "disease": "MONDO:0044970",
+      "variant_candidates": [
+        "ClinVarVariation:9620",
+        "ClinVarVariation:9622",
+        "ClinVarVariation:986477"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-TN",
+        "hgnc_id": "HGNC:7493"
+      },
+      "disease": {
+        "text": "mitochondrial disease",
+        "mondo_id": "MONDO:0044970"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-TN):m.5703G>A",
+          "variation_id": "ClinVarVariation:9620",
+          "rsid": "rs199476130"
+        },
+        {
+          "text": "NC_012920.1(MT-TN):m.5728T>C",
+          "variation_id": "ClinVarVariation:9622",
+          "rsid": "rs199476132"
+        },
+        {
+          "text": "NC_012920.1(MT-TN):m.5690A>G",
+          "variation_id": "ClinVarVariation:986477",
+          "rsid": "rs2521956863"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "38759022",
+    "source_pmc": "PMC11307028",
+    "source_pdf_url": "https://europepmc.org/article/PMC/11307028?pdf=render",
+    "source_title": "Increased Diagnostic Yield by Reanalysis of Whole Exome Sequencing Data in Mitochondrial Disease.",
+    "source_journal": "",
+    "source_year": "2024",
+    "notes": "",
+    "literature_search_strategy": "\"MT-TN\" AND \"mitochondrial disease\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_067",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-TS1",
+      "hgnc_id": "HGNC:7497",
+      "disease_label": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2023-01-19T17:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d6647b8f-3d8a-4a6f-b54d-383a33fc9828-2023-01-19T170000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9562,
+        "hgvs_name": "NC_012920.1(MT-TS1):m.7512T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199474817",
+        "phenotype_ids": "MedGen:C4016626|MedGen:C3151970|MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MONDO:MONDO:0700250,MedGen:C5435656,OMIM:220110|Human Phenotype Ontology:HP:0002070,MedGen:C0750937|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Mitochondrial cytochrome c oxidase deficiency|MERRF/MELAS overlap syndrome|MELAS syndrome|Mitochondrial complex IV deficiency, nuclear type 1|Limb ataxia|Mitochondrial disease"
+      },
+      {
+        "variation_id": 9565,
+        "hgvs_name": "NC_012920.1(MT-TS1):m.7510T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199474820",
+        "phenotype_ids": "MONDO:MONDO:0010779,MedGen:C3151897,OMIM:500008,Orphanet:90641|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Mitochondrial non-syndromic sensorineural hearing loss|Mitochondrial disease"
+      },
+      {
+        "variation_id": 9566,
+        "hgvs_name": "NC_012920.1(MT-TS1):m.7511T>C",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199474821",
+        "phenotype_ids": "MONDO:MONDO:0010779,MedGen:C3151897,OMIM:500008,Orphanet:90641|MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MONDO:MONDO:0700250,MedGen:C5435656,OMIM:220110|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "Mitochondrial non-syndromic sensorineural hearing loss|MELAS syndrome|Mitochondrial complex IV deficiency, nuclear type 1|Mitochondrial disease"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-TS1",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mitochondrial disease",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Likely pathogenic",
+        "candidates": [
+          "Likely pathogenic",
+          "Likely pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7497",
+      "disease": "MONDO:0044970",
+      "variant_candidates": [
+        "ClinVarVariation:9562",
+        "ClinVarVariation:9565",
+        "ClinVarVariation:9566"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-TS1",
+        "hgnc_id": "HGNC:7497"
+      },
+      "disease": {
+        "text": "mitochondrial disease",
+        "mondo_id": "MONDO:0044970"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-TS1):m.7512T>C",
+          "variation_id": "ClinVarVariation:9562",
+          "rsid": "rs199474817"
+        },
+        {
+          "text": "NC_012920.1(MT-TS1):m.7510T>C",
+          "variation_id": "ClinVarVariation:9565",
+          "rsid": "rs199474820"
+        },
+        {
+          "text": "NC_012920.1(MT-TS1):m.7511T>C",
+          "variation_id": "ClinVarVariation:9566",
+          "rsid": "rs199474821"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41613296",
+    "source_pmc": "PMC12848932",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12848932?pdf=render",
+    "source_title": "Unveiling a Novel MT-TS1 m.7479G>A in Mitochondrial Diabetes: The Critical Role of mtDNA Sequencing in Atypical Cases.",
+    "source_journal": "",
+    "source_year": "2026",
+    "notes": "",
+    "literature_search_strategy": "\"MT-TS1\" AND \"mitochondrial disease\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_068",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MT-TW",
+      "hgnc_id": "HGNC:7501",
+      "disease_label": "mitochondrial disease",
+      "mondo_id": "MONDO:0044970",
+      "moi": "MT",
+      "classification": "Definitive",
+      "gcep": "Mitochondrial Diseases Gene Curation Expert Panel",
+      "classification_date": "2023-05-03T16:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_03bdbd98-2ffd-4b0f-8d97-b1d89a4a2b61-2023-05-03T160000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 9556,
+        "hgvs_name": "NC_012920.1(MT-TW):m.5521G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs199474673",
+        "phenotype_ids": "Human Phenotype Ontology:HP:0003737,Human Phenotype Ontology:HP:0008960,MONDO:MONDO:0009637,MedGen:C0162670,Orphanet:206966|MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:C3661900|MedGen:CN381104",
+        "phenotype_list": "Inborn mitochondrial myopathy|MELAS syndrome|Mitochondrial disease|not provided|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 30007,
+        "hgvs_name": "NC_012920.1(MT-TW):m.5556G>A",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs387906736",
+        "phenotype_ids": "MONDO:MONDO:0004675,MedGen:C0162666|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380|MedGen:CN381104",
+        "phenotype_list": "Mitochondrial encephalomyopathy|Mitochondrial disease|Primary Mitochondrial Disorders"
+      },
+      {
+        "variation_id": 689929,
+        "hgvs_name": "NC_012920.1(MT-TW):m.5536_5537insT",
+        "hgvs_c": "",
+        "hgvs_p": "",
+        "variant_type": "insertion",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs1603220010",
+        "phenotype_ids": "MONDO:MONDO:0010789,MedGen:C0162671,OMIM:540000,Orphanet:550|MONDO:MONDO:0044970,MeSH:D028361,MedGen:C0751651,Orphanet:68380",
+        "phenotype_list": "MELAS syndrome|Mitochondrial disease"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MT-TW",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "mitochondrial disease",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "MT",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "insertion"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Likely pathogenic",
+        "candidates": [
+          "Likely pathogenic",
+          "Likely pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7501",
+      "disease": "MONDO:0044970",
+      "variant_candidates": [
+        "ClinVarVariation:9556",
+        "ClinVarVariation:30007",
+        "ClinVarVariation:689929"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MT-TW",
+        "hgnc_id": "HGNC:7501"
+      },
+      "disease": {
+        "text": "mitochondrial disease",
+        "mondo_id": "MONDO:0044970"
+      },
+      "variants": [
+        {
+          "text": "NC_012920.1(MT-TW):m.5521G>A",
+          "variation_id": "ClinVarVariation:9556",
+          "rsid": "rs199474673"
+        },
+        {
+          "text": "NC_012920.1(MT-TW):m.5556G>A",
+          "variation_id": "ClinVarVariation:30007",
+          "rsid": "rs387906736"
+        },
+        {
+          "text": "NC_012920.1(MT-TW):m.5536_5537insT",
+          "variation_id": "ClinVarVariation:689929",
+          "rsid": "rs1603220010"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41928125",
+    "source_pmc": "PMC13170298",
+    "source_pdf_url": "https://europepmc.org/article/PMC/13170298?pdf=render",
+    "source_title": "From confusion to diagnosis: a rare case of melas syndrome in a patient with familial consanguinity, recurrent stroke-like episodes, and concurrent FSGS.",
+    "source_journal": "",
+    "source_year": "2026",
+    "notes": "",
+    "literature_search_strategy": "\"MT-TW\" AND \"mitochondrial disease\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_069",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MTM1",
+      "hgnc_id": "HGNC:7448",
+      "disease_label": "X-linked myotubular myopathy",
+      "mondo_id": "MONDO:0010683",
+      "moi": "XL",
+      "classification": "Definitive",
+      "gcep": "Congenital Myopathies and Myasthenic Syndromes Gene Curation Expert Panel",
+      "classification_date": "2019-11-22T17:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2b60f008-871f-4c5f-aa46-099d09fb66df-2019-11-22T170000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 11055,
+        "hgvs_name": "NM_000252.3(MTM1):c.205C>T (p.Arg69Cys)",
+        "hgvs_c": "c.205C>T",
+        "hgvs_p": "p.Arg69Cys",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs132630304",
+        "phenotype_ids": "MONDO:MONDO:0010683,MedGen:C0410203,OMIM:310400,Orphanet:596|MedGen:C3661900|MONDO:MONDO:0018947,MedGen:C0175709,OMIM:PS160150,Orphanet:595",
+        "phenotype_list": "Severe X-linked myotubular myopathy|not provided|Centronuclear myopathy"
+      },
+      {
+        "variation_id": 11057,
+        "hgvs_name": "NM_000252.3(MTM1):c.141_144del",
+        "hgvs_c": "c.141_144del",
+        "hgvs_p": "",
+        "variant_type": "deletion",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs587783791",
+        "phenotype_ids": "MONDO:MONDO:0010683,MedGen:C0410203,OMIM:310400,Orphanet:596|MedGen:C3661900||MONDO:MONDO:0018947,MedGen:C0175709,OMIM:PS160150,Orphanet:595",
+        "phenotype_list": "Severe X-linked myotubular myopathy|not provided|MTM1-related disorder|Centronuclear myopathy"
+      },
+      {
+        "variation_id": 11060,
+        "hgvs_name": "NM_000252.3(MTM1):c.670C>T (p.Arg224Ter)",
+        "hgvs_c": "c.670C>T",
+        "hgvs_p": "p.Arg224Ter",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs132630306",
+        "phenotype_ids": "MONDO:MONDO:0010683,MedGen:C0410203,OMIM:310400,Orphanet:596|MONDO:MONDO:0018947,MedGen:C0175709,OMIM:PS160150,Orphanet:595|MedGen:C3661900",
+        "phenotype_list": "Severe X-linked myotubular myopathy|Centronuclear myopathy|not provided"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MTM1",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "X-linked myotubular myopathy",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "XL",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "value": "c.205C>T",
+        "candidates": [
+          "c.205C>T",
+          "c.141_144del",
+          "c.670C>T"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "value": "p.Arg69Cys",
+        "candidates": [
+          "p.Arg69Cys",
+          "p.Arg224Ter"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "deletion",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Pathogenic",
+          "Pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7448",
+      "disease": "MONDO:0010683",
+      "variant_candidates": [
+        "ClinVarVariation:11055",
+        "ClinVarVariation:11057",
+        "ClinVarVariation:11060"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MTM1",
+        "hgnc_id": "HGNC:7448"
+      },
+      "disease": {
+        "text": "X-linked myotubular myopathy",
+        "mondo_id": "MONDO:0010683"
+      },
+      "variants": [
+        {
+          "text": "c.205C>T",
+          "variation_id": "ClinVarVariation:11055",
+          "rsid": "rs132630304"
+        },
+        {
+          "text": "c.141_144del",
+          "variation_id": "ClinVarVariation:11057",
+          "rsid": "rs587783791"
+        },
+        {
+          "text": "c.670C>T",
+          "variation_id": "ClinVarVariation:11060",
+          "rsid": "rs132630306"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41955018",
+    "source_pmc": "PMC13232722",
+    "source_pdf_url": "https://europepmc.org/article/PMC/13232722?pdf=render",
+    "source_title": "Pharmacological PIK3C2B inhibition rescues XLMTM phenotype in mouse models and identifies molecular markers of disease.",
+    "source_journal": "",
+    "source_year": "2026",
+    "notes": "",
+    "literature_search_strategy": "\"MTM1\" AND \"c.205C>T\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_070",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MTOR",
+      "hgnc_id": "HGNC:3942",
+      "disease_label": "overgrowth syndrome and/or cerebral malformations due to abnormalities in MTOR pathway genes",
+      "mondo_id": "MONDO:0100283",
+      "moi": "AD",
+      "classification": "Definitive",
+      "gcep": "Brain Malformations Gene Curation Expert Panel",
+      "classification_date": "2021-07-29T21:32:56.506Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_92ce0145-031d-41c4-8b74-0f9411629b64-2021-07-29T213256.506Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 156702,
+        "hgvs_name": "NM_004958.4(MTOR):c.5930C>A (p.Thr1977Lys)",
+        "hgvs_c": "c.5930C>A",
+        "hgvs_p": "p.Thr1977Lys",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs587777893",
+        "phenotype_ids": "MedGen:C3661900|MONDO:MONDO:0100283,MedGen:CN300503|MONDO:MONDO:0014716,MedGen:C4225259,OMIM:616638,Orphanet:457485|Human Phenotype Ontology:HP:0032051,MONDO:MONDO:0011818,MedGen:C1846385,OMIM:607341,Orphanet:268994",
+        "phenotype_list": "not provided|Overgrowth syndrome and/or cerebral malformations due to abnormalities in MTOR pathway genes|Macrocephaly-intellectual disability-neurodevelopmental disorder-small thorax syndrome|Isolated focal cortical dysplasia type II"
+      },
+      {
+        "variation_id": 156703,
+        "hgvs_name": "NM_004958.4(MTOR):c.6644C>T (p.Ser2215Phe)",
+        "hgvs_c": "c.6644C>T",
+        "hgvs_p": "p.Ser2215Phe",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs587777894",
+        "phenotype_ids": "MedGen:C3661900|Human Phenotype Ontology:HP:0032051,MONDO:MONDO:0011818,MedGen:C1846385,OMIM:607341,Orphanet:268994|MONDO:MONDO:0100283,MedGen:CN300503",
+        "phenotype_list": "not provided|Isolated focal cortical dysplasia type II|Overgrowth syndrome and/or cerebral malformations due to abnormalities in MTOR pathway genes"
+      },
+      {
+        "variation_id": 374796,
+        "hgvs_name": "NM_004958.4(MTOR):c.4447T>C (p.Cys1483Arg)",
+        "hgvs_c": "c.4447T>C",
+        "hgvs_p": "p.Cys1483Arg",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs1057519914",
+        "phenotype_ids": "Human Phenotype Ontology:HP:0007206,MONDO:MONDO:0020492,MedGen:C0431391,Orphanet:99802|MONDO:MONDO:0100283,MedGen:CN300503",
+        "phenotype_list": "Hemimegalencephaly|Overgrowth syndrome and/or cerebral malformations due to abnormalities in MTOR pathway genes"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MTOR",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "overgrowth syndrome and/or cerebral malformations due to abnormalities in MTOR pathway genes",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "AD",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "value": "c.5930C>A",
+        "candidates": [
+          "c.5930C>A",
+          "c.6644C>T",
+          "c.4447T>C"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "value": "p.Thr1977Lys",
+        "candidates": [
+          "p.Thr1977Lys",
+          "p.Ser2215Phe",
+          "p.Cys1483Arg"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Pathogenic",
+          "Pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:3942",
+      "disease": "MONDO:0100283",
+      "variant_candidates": [
+        "ClinVarVariation:156702",
+        "ClinVarVariation:156703",
+        "ClinVarVariation:374796"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MTOR",
+        "hgnc_id": "HGNC:3942"
+      },
+      "disease": {
+        "text": "overgrowth syndrome and/or cerebral malformations due to abnormalities in MTOR pathway genes",
+        "mondo_id": "MONDO:0100283"
+      },
+      "variants": [
+        {
+          "text": "c.5930C>A",
+          "variation_id": "ClinVarVariation:156702",
+          "rsid": "rs587777893"
+        },
+        {
+          "text": "c.6644C>T",
+          "variation_id": "ClinVarVariation:156703",
+          "rsid": "rs587777894"
+        },
+        {
+          "text": "c.4447T>C",
+          "variation_id": "ClinVarVariation:374796",
+          "rsid": "rs1057519914"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "37938323",
+    "source_pmc": "PMC10700445",
+    "source_pdf_url": "https://europepmc.org/article/PMC/10700445?pdf=render",
+    "source_title": "mTOR eosinophilic renal cell carcinoma: a distinctive tumor characterized by mTOR mutation, loss of chromosome 1, cathepsin-K expression, and response to target therapy.",
+    "source_journal": "",
+    "source_year": "2023",
+    "notes": "",
+    "literature_search_strategy": "\"MTOR\" AND \"c.5930C>A\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_071",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MYBPC3",
+      "hgnc_id": "HGNC:7551",
+      "disease_label": "hypertrophic cardiomyopathy",
+      "mondo_id": "MONDO:0005045",
+      "moi": "AD",
+      "classification": "Definitive",
+      "gcep": "Hereditary Cardiovascular Disease Gene Curation Expert Panel",
+      "classification_date": "2021-10-07T16:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e65896e-33f5-439d-8749-aba08a539dd0-2021-10-07T160000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 42537,
+        "hgvs_name": "NM_000256.3(MYBPC3):c.1483C>G (p.Arg495Gly)",
+        "hgvs_c": "c.1483C>G",
+        "hgvs_p": "p.Arg495Gly",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs397515905",
+        "phenotype_ids": "MedGen:C3661900|Human Phenotype Ontology:HP:0001639,MONDO:MONDO:0005045,MeSH:D002312,MedGen:C0007194,Orphanet:217569|MedGen:CN230736|MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600|Human Phenotype Ontology:HP:0001638,MONDO:MONDO:0004994,MedGen:C0878544,Orphanet:167848|MONDO:MONDO:0014163,MedGen:C3715165,OMIM:615396,Orphanet:154,Orphanet:54260|MONDO:MONDO:0007268,MedGen:C1861862,OMIM:115197",
+        "phenotype_list": "not provided|Hypertrophic cardiomyopathy|Cardiovascular phenotype|Hypertrophic cardiomyopathy 1|Cardiomyopathy|Left ventricular noncompaction 10|Hypertrophic cardiomyopathy 4"
+      },
+      {
+        "variation_id": 42541,
+        "hgvs_name": "NM_000256.3(MYBPC3):c.1505G>A (p.Arg502Gln)",
+        "hgvs_c": "c.1505G>A",
+        "hgvs_p": "p.Arg502Gln",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs397515907",
+        "phenotype_ids": "MONDO:MONDO:0007268,MedGen:C1861862,OMIM:115197|MedGen:C3661900|Human Phenotype Ontology:HP:0001639,MONDO:MONDO:0005045,MeSH:D002312,MedGen:C0007194,Orphanet:217569|MedGen:CN230736|Human Phenotype Ontology:HP:0001638,MONDO:MONDO:0004994,MedGen:C0878544,Orphanet:167848|MONDO:MONDO:0024573,MeSH:D024741,MedGen:C0949658,OMIM:PS192600,Orphanet:99739|MONDO:MONDO:0014163,MedGen:C3715165,OMIM:615396,Orphanet:154,Orphanet:54260|",
+        "phenotype_list": "Hypertrophic cardiomyopathy 4|not provided|Hypertrophic cardiomyopathy|Cardiovascular phenotype|Cardiomyopathy|Primary familial hypertrophic cardiomyopathy|Left ventricular noncompaction 10|MYBPC3-related disorder"
+      },
+      {
+        "variation_id": 164113,
+        "hgvs_name": "NM_000256.3(MYBPC3):c.1484G>A (p.Arg495Gln)",
+        "hgvs_c": "c.1484G>A",
+        "hgvs_p": "p.Arg495Gln",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs200411226",
+        "phenotype_ids": "Human Phenotype Ontology:HP:0001639,MONDO:MONDO:0005045,MeSH:D002312,MedGen:C0007194,Orphanet:217569|MONDO:MONDO:0024573,MeSH:D024741,MedGen:C0949658,OMIM:PS192600,Orphanet:99739|MONDO:MONDO:0007268,MedGen:C1861862,OMIM:115197|MedGen:C3661900|MedGen:CN230736|MONDO:MONDO:0014163,MedGen:C3715165,OMIM:615396,Orphanet:154,Orphanet:54260;MONDO:MONDO:0007268,MedGen:C1861862,OMIM:115197|Human Phenotype Ontology:HP:0001638,MONDO:MONDO:0004994,MedGen:C0878544,Orphanet:167848||MONDO:MONDO:0014163,MedGen:C3715165,OMIM:615396,Orphanet:154,Orphanet:54260||",
+        "phenotype_list": "Hypertrophic cardiomyopathy|Primary familial hypertrophic cardiomyopathy|Hypertrophic cardiomyopathy 4|not provided|Cardiovascular phenotype|Left ventricular noncompaction 10;Hypertrophic cardiomyopathy 4|Cardiomyopathy|See cases|Left ventricular noncompaction 10|MYBPC3-related disorder|MYBPC3-related cardiomyopathies"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MYBPC3",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "hypertrophic cardiomyopathy",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "AD",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "value": "c.1483C>G",
+        "candidates": [
+          "c.1483C>G",
+          "c.1505G>A",
+          "c.1484G>A"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "value": "p.Arg495Gly",
+        "candidates": [
+          "p.Arg495Gly",
+          "p.Arg502Gln",
+          "p.Arg495Gln"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Likely pathogenic",
+        "candidates": [
+          "Likely pathogenic",
+          "Pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7551",
+      "disease": "MONDO:0005045",
+      "variant_candidates": [
+        "ClinVarVariation:42537",
+        "ClinVarVariation:42541",
+        "ClinVarVariation:164113"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MYBPC3",
+        "hgnc_id": "HGNC:7551"
+      },
+      "disease": {
+        "text": "hypertrophic cardiomyopathy",
+        "mondo_id": "MONDO:0005045"
+      },
+      "variants": [
+        {
+          "text": "c.1483C>G",
+          "variation_id": "ClinVarVariation:42537",
+          "rsid": "rs397515905"
+        },
+        {
+          "text": "c.1505G>A",
+          "variation_id": "ClinVarVariation:42541",
+          "rsid": "rs397515907"
+        },
+        {
+          "text": "c.1484G>A",
+          "variation_id": "ClinVarVariation:164113",
+          "rsid": "rs200411226"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "",
+    "source_pmc": "PMC11242481",
+    "source_pdf_url": "https://europepmc.org/article/PMC/11242481?pdf=render",
+    "source_title": "Patterns of Left Ventricular Remodelling in Children and Young Patients with Hypertrophic Cardiomyopathy",
+    "source_journal": "",
+    "source_year": "2024",
+    "notes": "",
+    "literature_search_strategy": "\"MYBPC3\" AND \"c.1483C>G\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_072",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MYH7",
+      "hgnc_id": "HGNC:7577",
+      "disease_label": "MYH7-related skeletal myopathy",
+      "mondo_id": "MONDO:0008050",
+      "moi": "AD",
+      "classification": "Definitive",
+      "gcep": "Congenital Myopathies and Myasthenic Syndromes Gene Curation Expert Panel",
+      "classification_date": "2021-05-13T16:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8974721a-f333-4fb7-b8b7-043233d3d100-2021-05-13T160000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 42875,
+        "hgvs_name": "NM_000257.4(MYH7):c.1988G>A (p.Arg663His)",
+        "hgvs_c": "c.1988G>A",
+        "hgvs_p": "p.Arg663His",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs371898076",
+        "phenotype_ids": "MONDO:MONDO:0024573,MeSH:D024741,MedGen:C0949658,OMIM:PS192600,Orphanet:99739|MedGen:C3661900|MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600|Human Phenotype Ontology:HP:0001639,MONDO:MONDO:0005045,MeSH:D002312,MedGen:C0007194,Orphanet:217569|MedGen:CN230736|MONDO:MONDO:0009708,MedGen:C1850709,OMIM:255160,Orphanet:636970;MONDO:MONDO:0008409,MedGen:C1842160,OMIM:608358,Orphanet:437572,Orphanet:636965;MONDO:MONDO:0013262,MedGen:C1834481,OMIM:613426,Orphanet:154,Orphanet:54260;MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600;MONDO:MONDO:0008050,MedGen:C4552004,OMIM:160500,Orphanet:59135|MedGen:CN169374|6 conditions|Human Phenotype Ontology:HP:0001638,MONDO:MONDO:0004994,MedGen:C0878544,Orphanet:167848|",
+        "phenotype_list": "Primary familial hypertrophic cardiomyopathy|not provided|Hypertrophic cardiomyopathy 1|Hypertrophic cardiomyopathy|Cardiovascular phenotype|Myopathy, myosin storage, autosomal recessive;Myosin storage myopathy;Dilated cardiomyopathy 1S;Hypertrophic cardiomyopathy 1;MYH7-related skeletal myopathy|not specified|6 conditions|Cardiomyopathy|MYH7-related disorder"
+      },
+      {
+        "variation_id": 42992,
+        "hgvs_name": "NM_000257.4(MYH7):c.4130C>T (p.Thr1377Met)",
+        "hgvs_c": "c.4130C>T",
+        "hgvs_p": "p.Thr1377Met",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs397516201",
+        "phenotype_ids": "MONDO:MONDO:0024573,MeSH:D024741,MedGen:C0949658,OMIM:PS192600,Orphanet:99739|MedGen:C3661900|Human Phenotype Ontology:HP:0001639,MONDO:MONDO:0005045,MeSH:D002312,MedGen:C0007194,Orphanet:217569|MedGen:CN230736|Human Phenotype Ontology:HP:0001638,MONDO:MONDO:0004994,MedGen:C0878544,Orphanet:167848|MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600|6 conditions||MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600;MONDO:MONDO:0009708,MedGen:C1850709,OMIM:255160,Orphanet:636970;MONDO:MONDO:0008409,MedGen:C1842160,OMIM:608358,Orphanet:437572,Orphanet:636965;MONDO:MONDO:0013262,MedGen:C1834481,OMIM:613426,Orphanet:154,Orphanet:54260;MONDO:MONDO:0008050,MedGen:C4552004,OMIM:160500,Orphanet:59135",
+        "phenotype_list": "Primary familial hypertrophic cardiomyopathy|not provided|Hypertrophic cardiomyopathy|Cardiovascular phenotype|Cardiomyopathy|Hypertrophic cardiomyopathy 1|6 conditions|MYH7-related disorder|Hypertrophic cardiomyopathy 1;Myopathy, myosin storage, autosomal recessive;Myosin storage myopathy;Dilated cardiomyopathy 1S;MYH7-related skeletal myopathy"
+      },
+      {
+        "variation_id": 43003,
+        "hgvs_name": "NM_000257.4(MYH7):c.4258C>T (p.Arg1420Trp)",
+        "hgvs_c": "c.4258C>T",
+        "hgvs_p": "p.Arg1420Trp",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs145213771",
+        "phenotype_ids": "MONDO:MONDO:0024573,MeSH:D024741,MedGen:C0949658,OMIM:PS192600,Orphanet:99739|Human Phenotype Ontology:HP:0001639,MONDO:MONDO:0005045,MeSH:D002312,MedGen:C0007194,Orphanet:217569|Human Phenotype Ontology:HP:0001638,MONDO:MONDO:0004994,MedGen:C0878544,Orphanet:167848|MedGen:C3661900|6 conditions|MONDO:MONDO:0008050,MedGen:C4552004,OMIM:160500,Orphanet:59135|MONDO:MONDO:0009708,MedGen:C1850709,OMIM:255160,Orphanet:636970|MONDO:MONDO:0008409,MedGen:C1842160,OMIM:608358,Orphanet:437572,Orphanet:636965|MONDO:MONDO:0013262,MedGen:C1834481,OMIM:613426,Orphanet:154,Orphanet:54260|MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600|MONDO:MONDO:0008409,MedGen:C1842160,OMIM:608358,Orphanet:437572,Orphanet:636965;MONDO:MONDO:0009708,MedGen:C1850709,OMIM:255160,Orphanet:636970;MONDO:MONDO:0013262,MedGen:C1834481,OMIM:613426,Orphanet:154,Orphanet:54260;MONDO:MONDO:0008050,MedGen:C4552004,OMIM:160500,Orphanet:59135;MONDO:MONDO:0008647,MedGen:C3495498,OMIM:192600|MedGen:CN230736",
+        "phenotype_list": "Primary familial hypertrophic cardiomyopathy|Hypertrophic cardiomyopathy|Cardiomyopathy|not provided|6 conditions|MYH7-related skeletal myopathy|Myopathy, myosin storage, autosomal recessive|Myosin storage myopathy|Dilated cardiomyopathy 1S|Hypertrophic cardiomyopathy 1|Myosin storage myopathy;Myopathy, myosin storage, autosomal recessive;Dilated cardiomyopathy 1S;MYH7-related skeletal myopathy;Hypertrophic cardiomyopathy 1|Cardiovascular phenotype"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MYH7",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "MYH7-related skeletal myopathy",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "AD",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "value": "c.1988G>A",
+        "candidates": [
+          "c.1988G>A",
+          "c.4130C>T",
+          "c.4258C>T"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "value": "p.Arg663His",
+        "candidates": [
+          "p.Arg663His",
+          "p.Thr1377Met",
+          "p.Arg1420Trp"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Pathogenic",
+        "candidates": [
+          "Pathogenic",
+          "Pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7577",
+      "disease": "MONDO:0008050",
+      "variant_candidates": [
+        "ClinVarVariation:42875",
+        "ClinVarVariation:42992",
+        "ClinVarVariation:43003"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MYH7",
+        "hgnc_id": "HGNC:7577"
+      },
+      "disease": {
+        "text": "MYH7-related skeletal myopathy",
+        "mondo_id": "MONDO:0008050"
+      },
+      "variants": [
+        {
+          "text": "c.1988G>A",
+          "variation_id": "ClinVarVariation:42875",
+          "rsid": "rs371898076"
+        },
+        {
+          "text": "c.4130C>T",
+          "variation_id": "ClinVarVariation:42992",
+          "rsid": "rs397516201"
+        },
+        {
+          "text": "c.4258C>T",
+          "variation_id": "ClinVarVariation:43003",
+          "rsid": "rs145213771"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "41516100",
+    "source_pmc": "PMC12785989",
+    "source_pdf_url": "https://europepmc.org/article/PMC/12785989?pdf=render",
+    "source_title": "Hypertrophic Cardiomyopathy Genotype-Phenotype Analysis in Lithuanian Single-Center Cohort.",
+    "source_journal": "",
+    "source_year": "2025",
+    "notes": "",
+    "literature_search_strategy": "\"MYH7\" AND \"c.1988G>A\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_073",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MYO15A",
+      "hgnc_id": "HGNC:7594",
+      "disease_label": "nonsyndromic genetic hearing loss",
+      "mondo_id": "MONDO:0019497",
+      "moi": "AR",
+      "classification": "Definitive",
+      "gcep": "Hearing Loss Gene Curation Expert Panel",
+      "classification_date": "2017-11-21T17:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2cf0898e-5e63-4327-9341-fdf26490beee-2017-11-21T170000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 6950,
+        "hgvs_name": "NM_016239.4(MYO15A):c.6337A>T (p.Ile2113Phe)",
+        "hgvs_c": "c.6337A>T",
+        "hgvs_p": "p.Ile2113Phe",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs121908965",
+        "phenotype_ids": "MONDO:MONDO:0010860,MedGen:C1838263,OMIM:600316,Orphanet:90636|MONDO:MONDO:0019497,MedGen:C5680182,Orphanet:87884|MedGen:C3661900",
+        "phenotype_list": "Autosomal recessive nonsyndromic hearing loss 3|Nonsyndromic genetic hearing loss|not provided"
+      },
+      {
+        "variation_id": 449526,
+        "hgvs_name": "NM_016239.4(MYO15A):c.4176C>A (p.Tyr1392Ter)",
+        "hgvs_c": "c.4176C>A",
+        "hgvs_p": "p.Tyr1392Ter",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs1199192203",
+        "phenotype_ids": "MedGen:C3661900|MONDO:MONDO:0019497,MedGen:C5680182,Orphanet:87884|MONDO:MONDO:0010860,MedGen:C1838263,OMIM:600316,Orphanet:90636",
+        "phenotype_list": "not provided|Nonsyndromic genetic hearing loss|Autosomal recessive nonsyndromic hearing loss 3"
+      },
+      {
+        "variation_id": 500061,
+        "hgvs_name": "NM_016239.4(MYO15A):c.1137del (p.Tyr380fs)",
+        "hgvs_c": "c.1137del",
+        "hgvs_p": "p.Tyr380fs",
+        "variant_type": "deletion",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs769260536",
+        "phenotype_ids": "MedGen:C3661900|MONDO:MONDO:0010860,MedGen:C1838263,OMIM:600316,Orphanet:90636|Human Phenotype Ontology:HP:0000365,Human Phenotype Ontology:HP:0000404,Human Phenotype Ontology:HP:0001728,Human Phenotype Ontology:HP:0001729,Human Phenotype Ontology:HP:0001754,Human Phenotype Ontology:HP:0008560,Human Phenotype Ontology:HP:0008563,MONDO:MONDO:0005365,MedGen:C1384666|MedGen:C5680250,Orphanet:96210|MONDO:MONDO:0019497,MedGen:C5680182,Orphanet:87884",
+        "phenotype_list": "not provided|Autosomal recessive nonsyndromic hearing loss 3|Hearing impairment|Rare genetic deafness|Nonsyndromic genetic hearing loss"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MYO15A",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "nonsyndromic genetic hearing loss",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "AR",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "value": "c.6337A>T",
+        "candidates": [
+          "c.6337A>T",
+          "c.4176C>A",
+          "c.1137del"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "value": "p.Ile2113Phe",
+        "candidates": [
+          "p.Ile2113Phe",
+          "p.Tyr1392Ter",
+          "p.Tyr380fs"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "deletion"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Likely pathogenic",
+        "candidates": [
+          "Likely pathogenic",
+          "Pathogenic",
+          "Likely pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7594",
+      "disease": "MONDO:0019497",
+      "variant_candidates": [
+        "ClinVarVariation:6950",
+        "ClinVarVariation:449526",
+        "ClinVarVariation:500061"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MYO15A",
+        "hgnc_id": "HGNC:7594"
+      },
+      "disease": {
+        "text": "nonsyndromic genetic hearing loss",
+        "mondo_id": "MONDO:0019497"
+      },
+      "variants": [
+        {
+          "text": "c.6337A>T",
+          "variation_id": "ClinVarVariation:6950",
+          "rsid": "rs121908965"
+        },
+        {
+          "text": "c.4176C>A",
+          "variation_id": "ClinVarVariation:449526",
+          "rsid": "rs1199192203"
+        },
+        {
+          "text": "c.1137del",
+          "variation_id": "ClinVarVariation:500061",
+          "rsid": "rs769260536"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "35346193",
+    "source_pmc": "PMC8962197",
+    "source_pdf_url": "https://europepmc.org/article/PMC/8962197?pdf=render",
+    "source_title": "Analysis of the genotype-phenotype correlation of MYO15A variants in Chinese non-syndromic hearing loss patients.",
+    "source_journal": "",
+    "source_year": "2022",
+    "notes": "",
+    "literature_search_strategy": "\"MYO15A\" AND \"c.6337A>T\" AND OPEN_ACCESS:y"
+  },
+  {
+    "entry_id": "fused_074",
+    "source": "clingen_clinvar_fused",
+    "clingen": {
+      "gene_symbol": "MYO7A",
+      "hgnc_id": "HGNC:7606",
+      "disease_label": "Usher syndrome type 1",
+      "mondo_id": "MONDO:0010168",
+      "moi": "AR",
+      "classification": "Definitive",
+      "gcep": "Hearing Loss Gene Curation Expert Panel",
+      "classification_date": "2018-06-28T16:00:00.000Z",
+      "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1e897a2f-d4cf-4e13-85d8-f37405a09b18-2018-06-28T160000.000Z"
+    },
+    "clinvar_variants": [
+      {
+        "variation_id": 43186,
+        "hgvs_name": "NM_000260.4(MYO7A):c.2558G>A (p.Arg853His)",
+        "hgvs_c": "c.2558G>A",
+        "hgvs_p": "p.Arg853His",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs111033437",
+        "phenotype_ids": "MedGen:CN169374|MedGen:C3661900|MONDO:MONDO:0011032,MedGen:C1832475,OMIM:601317,Orphanet:90635;MONDO:MONDO:0010807,MedGen:C1838701,OMIM:600060,Orphanet:90636;MONDO:MONDO:0010168,MedGen:C1568247,OMIM:276900,Orphanet:231169,Orphanet:886|MONDO:MONDO:0011032,MedGen:C1832475,OMIM:601317,Orphanet:90635|MONDO:MONDO:0019497,MedGen:C5680182,Orphanet:87884||MeSH:D030342,MedGen:C0950123|MONDO:MONDO:0700087,MedGen:C2931206",
+        "phenotype_list": "not specified|not provided|Autosomal dominant nonsyndromic hearing loss 11;Autosomal recessive nonsyndromic hearing loss 2;Usher syndrome type 1|Autosomal dominant nonsyndromic hearing loss 11|Nonsyndromic genetic hearing loss|MYO7A-related disorder|Inborn genetic diseases|Usher syndrome type 1B"
+      },
+      {
+        "variation_id": 43196,
+        "hgvs_name": "NM_000260.4(MYO7A):c.2904G>T (p.Glu968Asp)",
+        "hgvs_c": "c.2904G>T",
+        "hgvs_p": "p.Glu968Asp",
+        "variant_type": "missense",
+        "clinical_significance": "Likely pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs111033233",
+        "phenotype_ids": "MedGen:C5680250,Orphanet:96210|MedGen:C3661900|MONDO:MONDO:0010807,MedGen:C1838701,OMIM:600060,Orphanet:90636|MONDO:MONDO:0700087,MedGen:C2931206|Human Phenotype Ontology:HP:0000556,Human Phenotype Ontology:HP:0007736,Human Phenotype Ontology:HP:0007910,Human Phenotype Ontology:HP:0007974,Human Phenotype Ontology:HP:0007982,MONDO:MONDO:0019118,MeSH:D058499,MedGen:C0854723,Orphanet:71862|MONDO:MONDO:0011032,MedGen:C1832475,OMIM:601317,Orphanet:90635;MONDO:MONDO:0010168,MedGen:C1568247,OMIM:276900,Orphanet:231169,Orphanet:886;MONDO:MONDO:0010807,MedGen:C1838701,OMIM:600060,Orphanet:90636",
+        "phenotype_list": "Rare genetic deafness|not provided|Autosomal recessive nonsyndromic hearing loss 2|Usher syndrome type 1B|Retinal dystrophy|Autosomal dominant nonsyndromic hearing loss 11;Usher syndrome type 1;Autosomal recessive nonsyndromic hearing loss 2"
+      },
+      {
+        "variation_id": 43230,
+        "hgvs_name": "NM_000260.4(MYO7A):c.401T>A (p.Ile134Asn)",
+        "hgvs_c": "c.401T>A",
+        "hgvs_p": "p.Ile134Asn",
+        "variant_type": "missense",
+        "clinical_significance": "Pathogenic",
+        "review_status": "reviewed by expert panel",
+        "review_stars": 3,
+        "rsid": "rs111033181",
+        "phenotype_ids": "MedGen:C5680250,Orphanet:96210|MONDO:MONDO:0010168,MedGen:C1568247,OMIM:276900,Orphanet:231169,Orphanet:886;MONDO:MONDO:0010807,MedGen:C1838701,OMIM:600060,Orphanet:90636|Human Phenotype Ontology:HP:0000556,Human Phenotype Ontology:HP:0007736,Human Phenotype Ontology:HP:0007910,Human Phenotype Ontology:HP:0007974,Human Phenotype Ontology:HP:0007982,MONDO:MONDO:0019118,MeSH:D058499,MedGen:C0854723,Orphanet:71862|MedGen:C3661900|MONDO:MONDO:0019501,MeSH:D052245,MedGen:CN469326,OMIM:PS276900,Orphanet:886||MONDO:MONDO:0011032,MedGen:C1832475,OMIM:601317,Orphanet:90635;MONDO:MONDO:0010168,MedGen:C1568247,OMIM:276900,Orphanet:231169,Orphanet:886;MONDO:MONDO:0010807,MedGen:C1838701,OMIM:600060,Orphanet:90636|MONDO:MONDO:0700087,MedGen:C2931206",
+        "phenotype_list": "Rare genetic deafness|Usher syndrome type 1;Autosomal recessive nonsyndromic hearing loss 2|Retinal dystrophy|not provided|Usher syndrome|MYO7A-related disorder|Autosomal dominant nonsyndromic hearing loss 11;Usher syndrome type 1;Autosomal recessive nonsyndromic hearing loss 2|Usher syndrome type 1B"
+      }
+    ],
+    "expected_evidence": [
+      {
+        "field_id": "A.gene_symbol",
+        "value": "MYO7A",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.disease_diagnosis",
+        "value": "Usher syndrome type 1",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.gene_disease_relationship",
+        "value": "causative",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "B.mode_of_inheritance_reported",
+        "value": "AR",
+        "source": "clingen",
+        "evaluation_type": "precision_recall"
+      },
+      {
+        "field_id": "A.variant_hgvs_c",
+        "value": "c.2558G>A",
+        "candidates": [
+          "c.2558G>A",
+          "c.2904G>T",
+          "c.401T>A"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_hgvs_p",
+        "value": "p.Arg853His",
+        "candidates": [
+          "p.Arg853His",
+          "p.Glu968Asp",
+          "p.Ile134Asn"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "A.variant_type",
+        "value": "missense",
+        "candidates": [
+          "missense",
+          "missense",
+          "missense"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      },
+      {
+        "field_id": "J.clinvar_assertion",
+        "value": "Likely pathogenic",
+        "candidates": [
+          "Likely pathogenic",
+          "Likely pathogenic",
+          "Pathogenic"
+        ],
+        "source": "clinvar",
+        "evaluation_type": "precision_only"
+      }
+    ],
+    "expected_standardization": {
+      "gene": "HGNC:7606",
+      "disease": "MONDO:0010168",
+      "variant_candidates": [
+        "ClinVarVariation:43186",
+        "ClinVarVariation:43196",
+        "ClinVarVariation:43230"
+      ]
+    },
+    "expected_entities": {
+      "gene": {
+        "text": "MYO7A",
+        "hgnc_id": "HGNC:7606"
+      },
+      "disease": {
+        "text": "Usher syndrome type 1",
+        "mondo_id": "MONDO:0010168"
+      },
+      "variants": [
+        {
+          "text": "c.2558G>A",
+          "variation_id": "ClinVarVariation:43186",
+          "rsid": "rs111033437"
+        },
+        {
+          "text": "c.2904G>T",
+          "variation_id": "ClinVarVariation:43196",
+          "rsid": "rs111033233"
+        },
+        {
+          "text": "c.401T>A",
+          "variation_id": "ClinVarVariation:43230",
+          "rsid": "rs111033181"
+        }
+      ]
+    },
+    "evaluation_config": {
+      "gene_disease_fields": [
+        "A.gene_symbol",
+        "B.disease_diagnosis",
+        "A.gene_disease_relationship",
+        "B.mode_of_inheritance_reported"
+      ],
+      "variant_fields": [
+        "A.variant_hgvs_c",
+        "A.variant_hgvs_p",
+        "A.variant_type",
+        "J.clinvar_assertion"
+      ],
+      "standardization_fields": [
+        "gene",
+        "disease",
+        "variant"
+      ]
+    },
+    "source_pmid": "38594301",
+    "source_pmc": "PMC11003999",
+    "source_pdf_url": "https://europepmc.org/article/PMC/11003999?pdf=render",
+    "source_title": "The prevalence and clinical features of MYO7A-related hearing loss including DFNA11, DFNB2 and USH1B.",
+    "source_journal": "",
+    "source_year": "2024",
+    "notes": "",
+    "literature_search_strategy": "\"MYO7A\" AND \"c.2558G>A\" AND OPEN_ACCESS:y"
   }
 ]
