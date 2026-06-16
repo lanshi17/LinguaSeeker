@@ -87,3 +87,30 @@ def test_benchmark_b_pilot_selector_writes_frozen_manifest(tmp_path: Path) -> No
     assert report_path.exists()
     assert report_path.name == "benchmark_b_pilot_selection.json"
     assert "PilotSelected=10/10" in format_benchmark_b_pilot_selection(report)
+
+
+def test_benchmark_b_pilot_selector_default_source_root_finds_multilingual_case_reports(
+    tmp_path: Path,
+) -> None:
+    selection_root = tmp_path / "ground_truth"
+    source_root = tmp_path / "pipeline" / "input"
+    entry_ids = [f"clingen_{index:03d}" for index in range(3)]
+    _write_selection(selection_root, entry_ids)
+
+    for entry_id in entry_ids:
+        _write_source_pdf(source_root, "en", entry_id)
+        _write_source_pdf(source_root, "ja", entry_id)
+
+    report = build_benchmark_b_pilot_selection(
+        BenchmarkBPilotSelectionConfig(
+            selection_path=selection_root / "selection.json",
+            source_corpus_root=source_root,
+            output_path=selection_root / "benchmark_b_pilot_selection.json",
+            target_size=10,
+        )
+    )
+
+    assert report.summary.eligible_count == 3
+    assert report.summary.selected_count == 3
+    assert [case.entry_id for case in report.selected_cases] == entry_ids
+    assert all(case.non_english_source_count == 1 for case in report.selected_cases)

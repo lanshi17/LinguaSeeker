@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -141,7 +142,10 @@ async def main_async() -> None:
                 encoding="utf-8",
             )
             if not has_variant:
-                update_status(manifest, entry_id, "rejected")
+                rejected_dir = cfg.resolved_paths["rejected_dir"] / entry_id
+                rejected_dir.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(entry_dir), str(rejected_dir))
+                update_status(manifest, entry_id, "rejected", str(rejected_dir))
 
         logger.info("[{}] {} | {} | {} | {}", status_icon, entry_id, language, article_type, reason)
 

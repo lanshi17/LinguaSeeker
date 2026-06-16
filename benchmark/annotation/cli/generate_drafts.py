@@ -105,6 +105,9 @@ async def main_async() -> None:
         if meta_path.exists():
             with open(meta_path) as f:
                 meta = DraftMeta(**json.load(f))
+            if meta.review_status == "rejected":
+                logger.info("Skipping {} (rejected)", entry_id)
+                continue
             language = meta.language
         else:
             language = "en"
