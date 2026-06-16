@@ -25,11 +25,45 @@ Extract the following information from the article text:
 5. **Variants**: HGVS coding (c.) and protein (p.) notation, variant type, exon, protein domain.
    - Only extract variants explicitly stated in the article text.
    - Common MECP2 mutations: p.R255X, p.R270X, p.R306C, p.T158M, p.R168X, p.R133C.
-6. **Clinical features**: HPO terms, key phenotypes, patient sex, age of onset.
-   - Rett-specific features: developmental regression, hand stereotypies, seizures, \
-     breathing abnormalities, microcephaly, growth failure, sleep disturbances.
-7. **De novo status**: Whether the variant is de novo, inherited, or unknown.
-8. **Functional domain**: MBD (aa 78-162), TRD (aa 201-310), or other MECP2 domain.
+6. **HPO terms** (REQUIRED when clinical features are described): Map every clinical \
+feature mentioned in the article to its HPO code using the table below. \
+Include ALL applicable HPO terms. This field must NOT be empty if any clinical \
+features are reported.
+
+   Common Rett HPO mappings:
+   - Seizures / epilepsy → HP:0001250
+   - Global developmental delay → HP:0001263
+   - Intellectual disability → HP:0001249
+   - Hand stereotypies / hand-wringing → HP:0002072
+   - Developmental regression → HP:0002376
+   - Microcephaly → HP:0000252
+   - Progressive microcephaly → HP:0000253
+   - Hypotonia → HP:0001252
+   - Generalized hypotonia → HP:0001290
+   - Spasticity → HP:0001257
+   - Ataxia / gait ataxia → HP:0001251
+   - Breathing abnormalities / hyperventilation / apnea → HP:0012759
+   - Autistic behavior → HP:0000756
+   - Scoliosis → HP:0002650
+   - Short stature / growth failure → HP:0004322
+   - Strabismus → HP:0000568
+   - Sleep disturbance → HP:0002360
+   - Bruxism → HP:0003763
+   - Feeding difficulties → HP:0011968
+   - Constipation → HP:0002019
+   - Cold extremities → HP:0012171
+   - Delayed motor development → HP:0002194
+   - Absent speech → HP:0001344
+   - Flexion contracture → HP:0001371
+   - Visual impairment → HP:0000505
+   - Hearing impairment → HP:0000365
+   - Atrial septal defect → HP:0001631
+
+7. **Clinical phenotypes**: Natural language descriptions of the clinical features \
+(separate from HPO codes).
+8. **Patient demographics**: Sex, age of onset.
+9. **De novo status**: Whether the variant is de novo, inherited, or unknown.
+10. **Functional domain**: MBD (aa 78-162), TRD (aa 201-310), or other MECP2 domain.
 
 Respond with a valid JSON object matching the schema below. If information is not \
 found, use empty strings or null. Do NOT fabricate data not present in the article.
@@ -50,8 +84,8 @@ JSON schema:
       "domain": "string"
     }
   ],
-  "hpo_terms": ["HP:XXXXXXX", ...],
-  "clinical_phenotypes": ["string", ...],
+  "hpo_terms": ["HP:0001250", "HP:0001263", ...],
+  "clinical_phenotypes": ["seizures", "developmental delay", ...],
   "sex": "string",
   "age_of_onset": "string",
   "de_novo_status": "string",
