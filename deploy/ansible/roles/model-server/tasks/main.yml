@@ -1,4 +1,4 @@
-# ── Model Server (Embedding / Rerank / LLM via systemd) ──────────────────
+# ── Model Server (Embedding / Rerank / DocParse via systemd) ───────────────
 
 - name: Sync model-server source code
   synchronize:
@@ -16,6 +16,19 @@
     chdir: "{{ project_root }}/services/model-server"
   environment:
     UV_CACHE_DIR: "{{ project_root }}/.cache/uv"
+
+- name: Create model-server config directory
+  file:
+    path: "{{ project_root }}/services/model-server/config"
+    state: directory
+    mode: "0755"
+
+- name: Deploy model-server configuration
+  template:
+    src: model-server.yaml.j2
+    dest: "{{ project_root }}/services/model-server/config/{{ acmg_environment }}.yaml"
+    mode: "0644"
+  notify: Restart model-server
 
 - name: Deploy model-server systemd service
   template:

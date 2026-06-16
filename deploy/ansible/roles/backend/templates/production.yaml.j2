@@ -39,10 +39,9 @@ mineru:
   max_file_size_mb: {{ mineru_max_file_size_mb }}
   remote_poll_interval: {{ mineru_remote_poll_interval }}
   remote_max_poll_attempts: {{ mineru_remote_max_poll_attempts }}
-  local_model_server_url: "{{ mineru_local_model_server_url }}"
-  local_model_id: "{{ mineru_local_model_id }}"
+  local_api_url: "{{ mineru_local_api_url }}"
   local_timeout: {{ mineru_local_timeout }}
-  local_dpi: {{ mineru_local_dpi }}
+  local_backend: {{ mineru_local_backend }}
 
 # ── Database ─────────────────────────────────────────────────────────────
 postgres:
@@ -69,9 +68,3 @@ web_search:
 network:
   proxy: "{{ network_proxy }}"
   no_proxy: "{{ network_no_proxy }}"
-
-# ── Model Server GPU ─────────────────────────────────────────────────────
-embedding_gpu_memory_utilization: {{ embedding_gpu_memory_utilization }}
-embedding_max_model_len: {{ embedding_max_model_len }}
-rerank_gpu_memory_utilization: {{ rerank_gpu_memory_utilization }}
-doc_parse_gpu_memory_utilization: {{ doc_parse_gpu_memory_utilization }}

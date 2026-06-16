@@ -16,7 +16,33 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # `repo_root/backend/`.
 _BACKEND_ROOT = Path(__file__).resolve().parents[3] / "backend"
 
+# Load backend config first (shared API keys, LLM endpoints, etc.)
 load_backend_config_into_env(_BACKEND_ROOT)
+
+# Then load model-server's own config (model IDs, GPU settings, etc.)
+# This overrides any matching keys from the backend config.
+_MODEL_SERVER_ROOT = Path(__file__).resolve().parents[1]
+_MS_CONFIG_DIR = _MODEL_SERVER_ROOT / "config"
+_MS_ENV = os.environ.get("ENVIRONMENT", "development")
+_MS_CONFIG_FILE = _MS_CONFIG_DIR / f"{_MS_ENV}.yaml"
+
+if _MS_CONFIG_FILE.exists():
+    import yaml
+
+    with _MS_CONFIG_FILE.open(encoding="utf-8") as _f:
+        _ms_cfg = yaml.safe_load(_f) or {}
+
+    def _flatten_to_env(data: dict, prefix: str = "") -> None:
+        for key, value in data.items():
+            flat_key = f"{prefix}_{key}" if prefix else str(key)
+            if isinstance(value, dict):
+                _flatten_to_env(value, flat_key)
+                continue
+            env_key = flat_key.upper()
+            if env_key not in os.environ:
+                os.environ[env_key] = str(value)
+
+    _flatten_to_env(_ms_cfg)
 
 
 # ── Settings model ──────────────────────────────────────────────────────
@@ -46,15 +72,15 @@ class Settings(BaseSettings):
     # LLM model (placeholder — for future local LLM)
     llm_model_id: str = ""
 
-    # Document parsing model (MinerU)
-    doc_parse_model_id: str = ""
-    doc_parse_image_analysis: bool = False
-
     # vllm shared settings
     vllm_gpu_memory_utilization: float = 0.9
     embedding_gpu_memory_utilization: float = 0.9
     rerank_gpu_memory_utilization: float = 0.9
+
+    # Document parsing (MinerU)
+    doc_parse_backend: str = "vlm"
     doc_parse_gpu_memory_utilization: float = 0.9
+    doc_parse_model_path: str = "opendatalab/MinerU2.5-Pro-2604-1.2B"
 
 
 @lru_cache(maxsize=1)
