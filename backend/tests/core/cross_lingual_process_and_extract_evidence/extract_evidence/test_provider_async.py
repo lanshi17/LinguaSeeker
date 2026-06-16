@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pydantic import BaseModel
+from langchain_core.messages import AIMessage
 
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.config_context import (
     EvidenceExtractionConfigContext,
@@ -95,3 +96,22 @@ async def test_concurrent_ainvoke_structured_calls(
     # All 3 should have started before any finished (concurrent)
     assert len(call_log) == 3
     assert call_log[2] - call_log[0] < 0.03
+
+
+@pytest.mark.asyncio
+async def test_ainvoke_json_text_falls_back_to_raw_client_after_attribute_error(
+    provider: LangChainEvidenceProvider,
+) -> None:
+    """JSON fallback should bypass pool wrappers that fail on list schemas."""
+    raw_client = MagicMock()
+    raw_client.ainvoke = AsyncMock(return_value=AIMessage(content='{"value": "raw-ok"}'))
+
+    pool_client = MagicMock()
+    pool_client._clients = [raw_client]
+    pool_client.ainvoke = AsyncMock(side_effect=AttributeError("'list' object has no attribute 'model_dump'"))
+
+    result = await provider._ainvoke_json_text(pool_client, "prompt", _SampleOutput)
+
+    assert result == _SampleOutput(value="raw-ok")
+    pool_client.ainvoke.assert_awaited_once()
+    raw_client.ainvoke.assert_awaited_once()

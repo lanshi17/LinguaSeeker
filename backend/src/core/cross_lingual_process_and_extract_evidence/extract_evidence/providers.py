@@ -151,7 +151,7 @@ class LangChainEvidenceProvider:
                 logger.warning("Stage {} transient failure {}/{}: {}", stage, attempt, self._ctx.max_retries, exc)
             except Exception as exc:
                 last_exc = exc
-                if self._is_unsupported_response_format(exc) or isinstance(exc, TypeError):
+                if self._is_unsupported_response_format(exc) or isinstance(exc, (TypeError, AttributeError)):
                     logger.warning(
                         "Stage {} structured output error ({}), falling back to JSON text: {}",
                         stage,
@@ -179,7 +179,13 @@ class LangChainEvidenceProvider:
             "Do not wrap it in Markdown code fences.\n"
             f"{json.dumps(schema, ensure_ascii=False)}"
         )
-        message = await client.ainvoke([HumanMessage(content=fallback_prompt)])
+        try:
+            message = await client.ainvoke([HumanMessage(content=fallback_prompt)])
+        except AttributeError:
+            # langchain may internally call .model_dump() on list schemas;
+            # fall back to the first raw client without pool wrapper
+            raw = client._clients[0] if hasattr(client, '_clients') and client._clients else client
+            message = await raw.ainvoke([HumanMessage(content=fallback_prompt)])
         content = message.content
         if not isinstance(content, str):
             raise RuntimeError("Fallback JSON response content is not text")
@@ -230,7 +236,11 @@ class LangChainEvidenceProvider:
             "Do not wrap it in Markdown code fences.\n"
             f"{json.dumps(schema, ensure_ascii=False)}"
         )
-        message = client.invoke([HumanMessage(content=fallback_prompt)])
+        try:
+            message = client.invoke([HumanMessage(content=fallback_prompt)])
+        except AttributeError:
+            raw = client._clients[0] if hasattr(client, '_clients') and client._clients else client
+            message = raw.invoke([HumanMessage(content=fallback_prompt)])
         content = message.content
         if not isinstance(content, str):
             raise RuntimeError("Fallback JSON response content is not text")

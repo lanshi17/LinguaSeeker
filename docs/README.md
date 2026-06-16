@@ -44,6 +44,7 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 | 2026-06-15 | [BIBM Main Paper Claim Matrix](active/2026-06-15-bibm-main-paper-claim-matrix.md) | in-progress |
 | 2026-06-15 | [BIBM Main Paper Outline](active/2026-06-15-bibm-main-paper-outline.md) | in-progress |
 | 2026-06-15 | [BIBM Main Paper Limitations](active/2026-06-15-bibm-main-paper-limitations.md) | in-progress |
+| 2026-06-15 | [BIBM Main Paper Pipeline Optimization & Benchmark Plan](active/2026-06-15-bibm-main-paper-pipeline-optimization-and-benchmark-plan.md) | in-progress |
 | 2026-06-15 | [Main Paper Tables Developer Guide](active/2026-06-15-main-paper-tables-guide.md) | in-progress |
 | 2026-06-15 | [Learned Arbitrator Gate A Report](active/2026-06-15-learned-arbitrator-gate-a-report.md) | negative ablation |
 | 2026-06-15 | [BIBM Main Paper LaTeX](active/2026-06-15-bibm-main-paper-tex/) | in-progress |
@@ -67,7 +68,6 @@ Use `YYYY-MM-DD-<kebab-case-description>.md` for new documents.
 
 | Date | Title | Status |
 |------|-------|--------|
-| 2026-06-15 | [BIBM Main Paper Pipeline Optimization & Benchmark Plan](planned/2026-06-15-bibm-main-paper-pipeline-optimization-and-benchmark-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Next Gate Plan](planned/2026-06-14-bibm-main-paper-next-gate-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Detailed Plan](planned/2026-06-14-bibm-main-paper-detailed-plan.md) | planned |
 | 2026-06-14 | [BIBM Main Paper Rescue Plan](planned/2026-06-14-bibm-main-paper-rescue.md) | planned |
