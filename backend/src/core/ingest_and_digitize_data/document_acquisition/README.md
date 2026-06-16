@@ -66,24 +66,15 @@ DocumentAcquisitionService (facade)
     │   └── search_parallel() — concurrent search with asyncio.Semaphore
     │
     ├── doi_fallback.py — DOI landing page probe → PDF extraction
-    ├── web_providers.py — dispatcher to JS-rendered scrapers
     ├── normalizers.py — per-provider → OnlineAcquisitionItem
     ├── pubmed_service.py — PubMed esearch/esummary/efetch
     ├── provider_health.py — sliding-window health tracking
-    ├── literature_type_classifier.py — keyword-based classification
-    │
-    └── web/ (crawl4ai + httpx scrapers)
-        ├── base.py — shared crawl4ai/HTML utilities
-        ├── pubscholar.py — PubScholar (Chinese)
-        ├── cyberleninka.py — CyberLeninka (Russian)
-        ├── hans_publishers.py — Hans Publishers (Chinese)
-        ├── chinaxiv.py — ChinaXiv (Chinese)
-        ├── koreascience.py — KoreaScience (Korean)
-        ├── redalyc.py — Redalyc / La Referencia (Spanish/Portuguese)
-        └── locators.py — XPath/CSS selectors for UI automation
+    └── literature_type_classifier.py — keyword-based classification
 ```
 
-Data flows top-down: the facade dispatches to a submodule, which calls the gateway (Rust `net_io`) for API providers or the web scrapers for JS-rendered sites. All raw provider responses are normalized to `OnlineAcquisitionItem` before returning.
+Data flows top-down: the facade dispatches to a submodule, which calls the gateway (Rust `net_io`) for API providers. All raw provider responses are normalized to `OnlineAcquisitionItem` before returning.
+
+**Note**: Web scraper adapters (crawl4ai-based) were archived on 2026-06-16 due to high maintenance costs and instability. See `docs/archive/deprecated-modules/web-scraper-adapters/`.
 
 ## Public API
 
@@ -157,7 +148,6 @@ The workflow uses a cascading fallback strategy for both search and download:
 
 1. **API providers** (Rust `net_io`): crossref → unpaywall → openalex → europepmc → pmc → jstage → doaj → scielo → base → core → openaire → arxiv → biorxiv → medrxiv → cinii
 2. **DOI fallback**: If API providers fail and a DOI is available, probe the DOI landing page for a direct PDF link
-3. **Web providers** (Python crawl4ai/httpx): pubscholar, cyberleninka, hans_publishers, chinaxiv, koreascience, redalyc, la_referencia
 
 The initial provider is selected based on identifier type:
 - PMCID/PMID → `pmc`
@@ -165,18 +155,22 @@ The initial provider is selected based on identifier type:
 - DOI + download → `unpaywall`
 - No identifier → `crossref`
 
+**Note**: Web provider fallback tier was removed on 2026-06-16. See archived module at `docs/archive/deprecated-modules/web-scraper-adapters/`.
+
 ### Multilingual Routing
 
 `search_service.build_provider_plan()` selects provider order based on language:
 
 | Language | Priority |
 |----------|----------|
-| `zh` (Chinese) | pubscholar → chinaxiv → hans_publishers → crossref → unpaywall → doaj → pmc |
+| `zh` (Chinese) | crossref → unpaywall → doaj → pmc |
 | `ja` (Japanese) | jstage → cinii → crossref → unpaywall → doaj → pmc |
-| `ko` (Korean) | koreascience → crossref → unpaywall → doaj |
-| `es`/`pt` (Spanish/Portuguese) | scielo → redalyc → crossref → unpaywall |
+| `ko` (Korean) | crossref → unpaywall → doaj |
+| `es`/`pt` (Spanish/Portuguese) | scielo → crossref → unpaywall |
 | `en` (English) | pmc → crossref → arxiv → biorxiv → medrxiv → openaire → base → core → unpaywall → doaj |
 | `auto` | crossref → unpaywall → doaj → pmc |
+
+**Note**: Web providers (pubscholar, chinaxiv, hans_publishers, koreascience, redalyc) were removed from routing on 2026-06-16.
 
 ### Provider Health Tracking
 
@@ -204,13 +198,11 @@ Unicode hyphen/dash variants in DOIs are normalized to ASCII hyphens (`gateway._
 
 Supports English, Chinese, Japanese, Korean, Spanish, Portuguese, and Russian keywords.
 
-### Web Scrapers
+### Web Scrapers (Archived)
 
-Web providers use a two-tier strategy:
-1. **Direct HTTP** (httpx): Try public APIs or static HTML parsing first (fastest)
-2. **Browser automation** (crawl4ai): Fallback for JS-rendered sites. Uses `LLMExtractionStrategy` to extract structured data from rendered pages
+Web scraper adapters were archived on 2026-06-16 due to high maintenance costs and instability. The original module is preserved at `docs/archive/deprecated-modules/web-scraper-adapters/`.
 
-Shared utilities in `web/base.py`: `crawl4ai_search()` orchestrates browser + LLM extraction; `download_pdf_from_candidates()` validates `%PDF` magic bytes; `extract_pdf_links_from_html()` uses Rust parser when available, falls back to selectolax.
+Original architecture used crawl4ai + Playwright for browser automation with LLM-assisted structured extraction. Direct HTTP (httpx) was attempted first as a faster fallback.
 
 ### File Deduplication (Local Upload)
 
@@ -237,8 +229,8 @@ result = await service.acquire(DocumentAcquisitionRequest(
 ))
 
 # route.used shows which provider succeeded
-print(result.route.used)     # "web"
-print(result.route.web_provider)  # "pubscholar"
+print(result.route.used)     # "api"
+print(result.route.api_provider)  # e.g., "crossref"
 ```
 
 ### Download by DOI with fallback
@@ -334,14 +326,9 @@ if result.deduplicated:
 4. Add to `API_PROVIDER_CHAIN` in `workflow.py` for fallback inclusion
 5. Add to `LANG_PROVIDER_MATRIX` in `search_service.py` for language-based routing
 
-### Adding a new web scraper
+### Adding a new web scraper (Archived)
 
-1. Create `online_acquisition/web/<provider>.py` with `<provider>_search()` and `<provider>_download()` functions
-2. Use `crawl4ai_search()` from `base.py` for JS-rendered sites, or httpx for static pages
-3. Register in `web_providers.py` `call_web_provider()` dispatcher
-4. Add `XPath/CSS` locators to `web/locators.py`
-5. Add to `WebProvider` literal type in `contracts.py`
-6. Add to `LANG_PROVIDER_MATRIX` if language-specific
+Web scraper adapters are no longer maintained. The archived module at `docs/archive/deprecated-modules/web-scraper-adapters/` contains the original implementation for reference only. New providers should be implemented as Rust-based API providers in `backend/libs/net-io/`.
 
 ### Modifying the fallback chain
 
@@ -353,7 +340,6 @@ Edit `API_PROVIDER_CHAIN` in `workflow.py` to change the order or add/remove pro
 - **Retry**: `call_provider_with_retry()` retries up to 2 attempts with exponential backoff (0.5s × attempt)
 - **Health-based reordering**: Unhealthy providers (<50% success rate) are deprioritized in multilingual search
 - **Deduplication**: `search_service.dedupe_candidates()` uses DOI/URL/title matching; O(n) per provider call
-- **Web scrapers**: crawl4ai launches a headless browser per request; avoid using for high-throughput scenarios. Direct HTTP is attempted first
 - **Concurrency**: `search_parallel()` uses `asyncio.Semaphore(4)` for concurrent provider calls
 - **PDF validation**: All downloaded PDFs are validated by checking `%PDF` magic bytes before writing to disk
 
@@ -363,11 +349,11 @@ Edit `API_PROVIDER_CHAIN` in `workflow.py` to change the order or add/remove pro
 |------------|---------|
 | `rust_io.net` (via `src.utils.rust_io`) | HTTP I/O for API providers (crossref, unpaywall, etc.) |
 | `rust_io.files` (via `src.utils.rust_io`) | SHA-256 hashing and file write for local upload |
-| `httpx` | Async HTTP for DOI fallback, web scrapers, PDF download |
-| `selectolax` | Fast HTML parsing for web scrapers |
-| `crawl4ai` | Headless browser automation for JS-rendered academic sites |
+| `httpx` | Async HTTP for DOI fallback and PDF download |
 | `pydantic` | Request/response validation (`OnlineAcquisitionRequest`, `OnlineAcquisitionItem`) |
 | `loguru` | Structured logging |
+
+**Removed dependencies** (archived 2026-06-16): `crawl4ai`, `selectolax` — previously used for web scraper adapters.
 
 ## Testing
 
@@ -393,4 +379,5 @@ uv run pytest tests/core/ingest_and_digitize_data/document_acquisition/test_serv
 | `online_acquisition/test_gateway.py` | `call_provider()`, `search_provider()`, `download_from_provider()` |
 | `online_acquisition/test_contracts.py` | `OnlineAcquisitionRequest`, `OnlineAcquisitionItem` validation |
 | `online_acquisition/test_normalizers.py` | Per-provider normalizer functions, `NORMALIZER_MAP` |
-| `online_acquisition/test_web_providers.py` | `call_web_provider()` dispatcher, web scraper integration |
+
+**Note**: `test_web_providers.py` was removed on 2026-06-16 along with the web scraper module.
