@@ -27,7 +27,7 @@ def _skip_if_no_results(results: list, lang: str) -> None:
 
 @pytest.mark.asyncio
 async def test_search_zh_chinese():
-    """Chinese literature search (pubscholar, chinaxiv, hans_publishers, crossref …)."""
+    """Chinese literature search (crossref, unpaywall, openalex, doaj, pmc)."""
     results = await search_multilingual(
         target="BRCA1",
         disease="乳腺癌",
@@ -94,7 +94,7 @@ async def test_search_pt_portuguese():
 
 @pytest.mark.asyncio
 async def test_search_en_english():
-    """English literature search (pmc, crossref, arxiv, biorxiv …)."""
+    """English literature search (pmc, europepmc, crossref, arxiv, biorxiv, medrxiv, openalex, openaire, base, core, unpaywall, doaj)."""
     results = await search_multilingual(
         target="BRCA1",
         disease="breast cancer",
@@ -107,7 +107,7 @@ async def test_search_en_english():
 
 @pytest.mark.asyncio
 async def test_search_auto_language():
-    """Auto-detected language routing (crossref, unpaywall, doaj, pmc)."""
+    """Auto-detected language routing (crossref, unpaywall, openalex, europepmc, doaj, pmc)."""
     results = await search_multilingual(
         target="BRCA1",
         disease="breast cancer",
