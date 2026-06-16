@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_003",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_De_novo_deletion_in_MECP2_in_monozygotic_twin_pair_with_Rett_syndrome.pdf",
+  "language": "en",
+  "parse_status": "parsed",
+  "annotation_status": "generated",
+  "review_status": "ground_truth",
+  "reviewer": "auto-review",
+  "review_notes": "",
+  "rejection_reason": "",
+  "generated_at": "2026-06-16T08:22:36+00:00",
+  "reviewed_at": "2026-06-16T09:12:49+00:00",
+  "promoted_at": "2026-06-16T09:13:10+00:00",
+  "llm_model": "claude-opus-4-8",
+  "parse_backend": "mineru",
+  "variant_count": 1,
+  "clinical_feature_count": 6
+}

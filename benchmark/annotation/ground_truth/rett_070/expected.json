@@ -1,0 +1,150 @@
+{
+  "entry_id": "rett_070",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder / Rett-like syndrome)",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": "10.33978/2307-3586-2024-20-40-56-63",
+  "source_title": "Клинический случай пациента школьного возраста с заболеванием спектра синдрома Ретта и делецией в гене MECP2",
+  "source_journal": "Эффективная фармакотерапия",
+  "source_year": "2024",
+  "source_language": "ru",
+  "source_pdf_path": "",
+  "variants": [
+    {
+      "hgvs_c": "c.1217_1445del",
+      "hgvs_p": "p.Gln406Profs*30",
+      "variant_type": "frameshift deletion (228 nt deletion)",
+      "clinical_significance": "pathogenic",
+      "exon": "4",
+      "domain": "C-terminal region (beyond TRD; codon 406)"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Заболевание спектра синдрома Ретта (Rett syndrome spectrum disorder / Rett-like syndrome)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.1217_1445del",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Gln406Profs*30",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "frameshift deletion (228 nt deletion)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "C-terminal region (beyond TRD; codon 406)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001250; HP:0001263; HP:0001249; HP:0002072; HP:0002376; HP:0001252; HP:0001290; HP:0001251; HP:0001344; HP:0002194; HP:0011968",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "эпилептические приступы (фармакорезистентная эпилепсия); задержка моторного развития; мозжечковая атаксия / шаткость походки; диффузная мышечная гипотония; регресс в психическом, речевом и двигательном развитии; умеренная умственная отсталость (IQ 44); задержка психоречевого развития; двигательные стереотипии рук (перебирание пальцами, размахивание, тряска кистями); утрата речи (отсутствие собственной речи); нарушение питания (снижение аппетита, отсутствие жевания, питание через зонд/гастростому); нарушение мелкой моторики, интенция и дисметрия в руках; уменьшение объема мозжечка / гипоплазия червя и гемисфер мозжечка (по МРТ); высокие сухожильные рефлексы, патологический рефлекс Бабинского",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "Задержка моторного развития с младенчества; дебют эпилептических приступов в возрасте 7 лет",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "unknown (родители здоровы, статус de novo в тексте не указан)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": ""
+}

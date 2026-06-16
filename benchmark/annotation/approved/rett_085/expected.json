@@ -1,0 +1,164 @@
+{
+  "entry_id": "rett_085",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "典型Rett综合征 (typical Rett syndrome)",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": "10.3969/j.issn.1004-583X.2017.11.020",
+  "source_title": "Rett综合征一例及其MECP2基因新突变",
+  "source_journal": "临床荟萃 (Clinical Focus)",
+  "source_year": "2017",
+  "source_language": "zh",
+  "source_pdf_path": "",
+  "variants": [
+    {
+      "hgvs_c": "c.468C>G",
+      "hgvs_p": "p.Asp156Glu",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "MBD"
+    },
+    {
+      "hgvs_c": "c.426",
+      "hgvs_p": "",
+      "variant_type": "synonymous",
+      "clinical_significance": "benign",
+      "exon": "",
+      "domain": ""
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "典型Rett综合征 (typical Rett syndrome)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.468C>G",
+      "candidates": [
+        "c.468C>G",
+        "c.426"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Asp156Glu",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "synonymous"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "MBD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0002376; HP:0001263; HP:0001344; HP:0002072; HP:0003763; HP:0001251; HP:0001249",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "智能及动作发育倒退 (developmental regression); 运动及智力发育迟缓 (motor and intellectual developmental delay); 语言功能丧失/不说话 (loss of acquired speech); 双手不自主、刻板的扭绞动作 (hand-wringing stereotypies); 手部精细动作丧失 (loss of acquired hand skills); 磨牙 (bruxism); 步态不稳 (unstable gait); 轻度脑萎缩、脑发育不全 (mild cerebral atrophy)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "出生后约2岁起出现智能及动作发育倒退（具体月龄文中数字缺失，不完全明确）",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "de novo",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": ""
+}

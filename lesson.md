@@ -2834,3 +2834,39 @@ lifecycle transitions.
 **Solution**: Kept Benchmark A as a readiness report with explicit invalid/missing annotation states, froze Benchmark B as a deterministic pilot-selection manifest, and marked both as conservative status entries in the tables and claim matrix.
 
 **Prevention**: When a new paper-facing artifact is a status or freeze step, keep it separate from experimental metrics in both code and manuscript. Update the manifest, tables, and claim matrix together so they tell the same story.
+
+## 2026-06-16 — relevance_gate read the wrong LLM credential field
+
+**Problem**: `uv run python benchmark/literature_acquisition/rett_download.py cleanup` failed with
+`openai.OpenAIError: Missing credentials` at the point where `relevance_gate.run_relevance_gate`
+constructed its `AsyncOpenAI` client. Dedup had already run successfully on 92 PDFs across 11
+languages, so the failure was strictly in the LLM gate step.
+
+**Investigation**:
+1. Confirmed `vault/development.yaml` has `fast_llm.api_keys: [sk-fkjoPhN…]` with a real key.
+2. Read `relevance_gate.py:280` and saw it pulls `cfg.llm.api_key` (single string) instead of
+   the `all_api_keys` list property.
+3. Ran a one-liner to inspect the loaded settings:
+   - `cfg.llm.api_key == ''` (empty — `fast_llm_api_key` defaults to "")
+   - `cfg.llm.api_keys == ['sk-fkjoPhN…']` (real key lives here)
+   - `cfg.llm.all_api_keys == ['sk-fkjoPhN…']` (deduped property)
+4. Grepped other LLM call sites: `providers.py` and `config_context.py` both go through
+   `cfg.llm.all_api_keys`. `relevance_gate.py` was the only outlier.
+
+**Root cause**: `relevance_gate.run_relevance_gate` read the single-value `cfg.llm.api_key`
+field, which layered config never populates in the dev environment. The actual key sits in the
+`api_keys` list (or via the `all_api_keys` property) and only that path was wired elsewhere.
+
+**Fix**:
+- `relevance_gate.py` now reads `cfg.llm.all_api_keys`, adds an `if not api_keys: skip`
+  guard mirroring the `model`/`base_url` check, and uses `api_keys[0]` to build the client.
+- Smoke-tested with `asyncio.run(run_relevance_gate(...))` on an empty list and a missing file —
+  both paths return early as designed, no `OpenAIError` raised.
+
+**Prevention**:
+- All new LLM client construction must go through `src.utils.llm_adapter.create_llm_client`
+  or read `cfg.<domain>.all_api_keys` — never the bare `api_key` field.
+- Add a unit test for `run_relevance_gate` covering the "no API key configured" early-return
+  so this regression cannot reappear silently.
+- If a credential is missing, the gate should always skip cleanly and mark all downloads as
+  relevant (preserving the corpus) rather than raising out of the script.

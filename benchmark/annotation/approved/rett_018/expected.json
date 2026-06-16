@@ -1,0 +1,254 @@
+{
+  "entry_id": "rett_018",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett syndrome (classic and atypical RTT, with some carriers presenting only mild mental retardation)",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": null,
+  "source_title": "Two new Rett syndrome families and review of the literature: expanding the knowledge of MECP2 frameshift mutations",
+  "source_journal": null,
+  "source_year": null,
+  "source_language": "en",
+  "source_pdf_path": "",
+  "variants": [
+    {
+      "hgvs_c": "c.1157_1197del41",
+      "hgvs_p": "p.L386fs",
+      "variant_type": "frameshift deletion",
+      "clinical_significance": "pathogenic",
+      "exon": "exon 4",
+      "domain": "C-terminal (within the deletion-prone region, DPR)"
+    },
+    {
+      "hgvs_c": "c.1159_delCCinsT",
+      "hgvs_p": "p.P387fs",
+      "variant_type": "frameshift (deletion-insertion)",
+      "clinical_significance": "pathogenic",
+      "exon": "exon 4",
+      "domain": "C-terminal (within the deletion-prone region, DPR)"
+    },
+    {
+      "hgvs_c": "c.215delC",
+      "hgvs_p": "",
+      "variant_type": "frameshift (single-nucleotide deletion)",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": ""
+    },
+    {
+      "hgvs_c": "c.32_50delins11",
+      "hgvs_p": "",
+      "variant_type": "frameshift (small intragenic rearrangement)",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": ""
+    },
+    {
+      "hgvs_c": "c.766_779dup14",
+      "hgvs_p": "",
+      "variant_type": "frameshift (small intragenic rearrangement/duplication)",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": ""
+    },
+    {
+      "hgvs_c": "c.808delC",
+      "hgvs_p": "",
+      "variant_type": "frameshift (single-nucleotide deletion)",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": ""
+    },
+    {
+      "hgvs_c": "c.1150_1187del38",
+      "hgvs_p": "",
+      "variant_type": "frameshift (C-terminal deletion)",
+      "clinical_significance": "pathogenic",
+      "exon": "exon 4",
+      "domain": "C-terminal (DPR)"
+    },
+    {
+      "hgvs_c": "c.1156_1199del44",
+      "hgvs_p": "",
+      "variant_type": "frameshift (C-terminal deletion)",
+      "clinical_significance": "pathogenic",
+      "exon": "exon 4",
+      "domain": "C-terminal (DPR)"
+    },
+    {
+      "hgvs_c": "c.1164_1204del44",
+      "hgvs_p": "",
+      "variant_type": "frameshift (C-terminal deletion)",
+      "clinical_significance": "pathogenic",
+      "exon": "exon 4",
+      "domain": "C-terminal (DPR)"
+    },
+    {
+      "hgvs_c": "c.1168_1196del29",
+      "hgvs_p": "",
+      "variant_type": "frameshift (C-terminal deletion)",
+      "clinical_significance": "pathogenic",
+      "exon": "exon 4",
+      "domain": "C-terminal (DPR)"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome (classic and atypical RTT, with some carriers presenting only mild mental retardation)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.1157_1197del41",
+      "candidates": [
+        "c.1157_1197del41",
+        "c.1159_delCCinsT",
+        "c.215delC",
+        "c.32_50delins11",
+        "c.766_779dup14",
+        "c.808delC",
+        "c.1150_1187del38",
+        "c.1156_1199del44",
+        "c.1164_1204del44",
+        "c.1168_1196del29"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.L386fs",
+      "candidates": [
+        "p.L386fs",
+        "p.P387fs"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "frameshift deletion",
+      "candidates": [
+        "frameshift deletion",
+        "frameshift (deletion-insertion)",
+        "frameshift (single-nucleotide deletion)",
+        "frameshift (small intragenic rearrangement)",
+        "frameshift (small intragenic rearrangement/duplication)",
+        "frameshift (single-nucleotide deletion)",
+        "frameshift (C-terminal deletion)",
+        "frameshift (C-terminal deletion)",
+        "frameshift (C-terminal deletion)",
+        "frameshift (C-terminal deletion)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "C-terminal (within the deletion-prone region, DPR)",
+      "candidates": [
+        "C-terminal (within the deletion-prone region, DPR)",
+        "C-terminal (within the deletion-prone region, DPR)",
+        "C-terminal (DPR)",
+        "C-terminal (DPR)",
+        "C-terminal (DPR)",
+        "C-terminal (DPR)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001250; HP:0001249; HP:0001263; HP:0002376; HP:0002072; HP:0000252; HP:0002650; HP:0001251; HP:0001252; HP:0012759; HP:0003763; HP:0002194; HP:0001344; HP:0004322",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "epileptic seizures / epilepsy; mild to moderate mental retardation / cognitive impairment; developmental delay; developmental regression; stereotypic hand movements / hand-wringing; hand dyspraxia; microcephaly / head circumference below percentiles; kyphosis and scoliosis; ataxia (truncal and fine motor); generalized hypotonia; forced breathing / respiratory irregularities; teeth grinding (bruxism); delayed motor development; absent or limited speech; growth retardation; delayed nociception",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "Predominantly female; one affected male (Family B, II:4)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "Infancy to early childhood (developmental stagnation/regression noted between ~7 months and kindergarten age)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "Inherited / familial — the C-terminal frameshift mutations segregate from carrier mothers in both families (Table 1 lists separate de novo frameshift cases, mostly of paternal origin)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": ""
+}

@@ -4,128 +4,128 @@
     {
       "entry_id": "rett_000",
       "language": "de",
-      "status": "rejected",
+      "status": "draft",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_14791314647633_123.pdf",
       "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_000",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T04:49:08+00:00"
+      "updated_at": "2026-06-16T10:24:23+00:00"
     },
     {
       "entry_id": "rett_001",
       "language": "de",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_15238900393129_129.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_001",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_001",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_002",
       "language": "de",
       "status": "rejected",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_15592177871669_132.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_002",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/rejected/rett_002",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T04:49:06+00:00"
+      "updated_at": "2026-06-16T10:21:29+00:00"
     },
     {
       "entry_id": "rett_003",
       "language": "de",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_De_novo_deletion_in_MECP2_in_monozygotic_twin_pair_with_Rett_syndrome.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_003",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_003",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_004",
       "language": "de",
-      "status": "rejected",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_Genetic_Aspects_of_Rett_Syndrome.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_004",
+      "current_dir": "ground_truth/rett_004",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T04:49:06+00:00"
+      "updated_at": "2026-06-16T10:26:01+00:00"
     },
     {
       "entry_id": "rett_005",
       "language": "de",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_MECP2_Pathogenic_Variations_in_Rett_Syndrome_A_Case_Report.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_005",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_005",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_006",
       "language": "de",
-      "status": "rejected",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_MeCP2_Domains_for_Function_and_Toxicity_in_Rett_and_Duplication_Syndrome.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_006",
+      "current_dir": "ground_truth/rett_006",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T04:49:16+00:00"
+      "updated_at": "2026-06-16T10:26:01+00:00"
     },
     {
       "entry_id": "rett_007",
       "language": "de",
-      "status": "rejected",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_Reactome_Loss_of_function_of_MECP2_in_Rett_syndrome_R-HSA-9005891.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_007",
+      "current_dir": "ground_truth/rett_007",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T04:49:14+00:00"
+      "updated_at": "2026-06-16T10:26:01+00:00"
     },
     {
       "entry_id": "rett_008",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_14q12_microdeletions_excluding_FOXG1_give_rise_to_a_congenital_variant_Rett_syndrome-like_phenotype.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_008",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_008",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_009",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_A_rare_case_of_a_male_child_with_post-zygotic_de_novo_mosaic_variant_c538C_T_in.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_009",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_009",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_010",
       "language": "en",
       "status": "rejected",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Abnormalities_of_cell_packing_density_and_dendritic_complexity_in_the_MeCP2_A140V_mouse_model_of_Ret.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_010",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/rejected/rett_010",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T04:49:23+00:00"
+      "updated_at": "2026-06-16T10:21:33+00:00"
     },
     {
       "entry_id": "rett_011",
       "language": "en",
-      "status": "rejected",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Abolished_clustering_of_MeCP2.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_011",
+      "current_dir": "ground_truth/rett_011",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T04:49:26+00:00"
+      "updated_at": "2026-06-16T10:26:01+00:00"
     },
     {
       "entry_id": "rett_012",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Autonomic_breathing_abnormalities_in_Rett_syndrome_caregiver_perspectives_in_an_international_databa.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_012",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_012",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_013",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Detection_of_heterozygous_deletions_and_duplications_in_the_MECP2_gene_in_Rett_syndrome_by_Robust_Do.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_013",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_013",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_014",
@@ -139,65 +139,65 @@
     {
       "entry_id": "rett_015",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Genetic_Approach_to_Rett_Syndrome_with_MECP2_p-R270X_Mutation.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_015",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_015",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_016",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Identification_of_autism-related_MECP2_mutations_by_whole-exome_sequencing_and_functional_validation.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_016",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_016",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_017",
       "language": "en",
-      "status": "draft",
+      "status": "rejected",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Identification_of_novel_genetic_causes_of_Rett_syndrome-like_phenotypes.pdf",
       "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_017",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:12:32+00:00"
     },
     {
       "entry_id": "rett_018",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_MECP2_Frameshift_Mutations_in_Rett_Syndrome_Families.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_018",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_018",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_019",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_MECP2_Gene-Related_Severe_Neonatal_Encephalopathy_Case_in_Female_Neon.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_019",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_019",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_020",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_MECP2_Variants_in_Males_More_Common_than_Previously_Appreciated.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_020",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_020",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_021",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_MECP2_germline_mosaicism_in_Rett_syndrome_inheritance.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_021",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_021",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_022",
@@ -211,20 +211,20 @@
     {
       "entry_id": "rett_023",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Neurogenic_Bladder_in_Preserved_Speech_Variant_of_Rett_Syndrome.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_023",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_023",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_024",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Phenotypic_variability_in_Rett_syndrome_associated_with_FOXG1_mutations_in_females.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_024",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_024",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_025",
@@ -238,11 +238,11 @@
     {
       "entry_id": "rett_026",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Rett_Syndrome_in_Neurodevelopmental_Disorders.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_026",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_026",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_027",
@@ -256,29 +256,29 @@
     {
       "entry_id": "rett_028",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Spectrum_of_MECP2_mutations_in_Vietnamese_patients_with_RETT_syndrome.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_028",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_028",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_029",
       "language": "en",
-      "status": "draft",
+      "status": "rejected",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Whole_exome_sequencing_of_Rett_syndrome-like_patients_reveals_the_mutational_diversity_of_the_clinic.pdf",
       "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_029",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:12:32+00:00"
     },
     {
       "entry_id": "rett_030",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_document_f369459c.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_030",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_030",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_031",
@@ -292,47 +292,47 @@
     {
       "entry_id": "rett_032",
       "language": "en",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_p231-236HG4552.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_032",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_032",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_033",
       "language": "es",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/es/es_Familial_MECP2_Duplication_Syndrome.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_033",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_033",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_034",
       "language": "es",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/es/es_RETT_SYNDROME_RARE_CASE_REPORT.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_034",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_034",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_035",
       "language": "es",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/es/es_Rett_syndrome_in_a_male_infant_with_pathogenic_variant_in_MECP2.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_035",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_035",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_036",
       "language": "es",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/es/es_Sindrome_de_Rett_en_un_lactante_varon_con_variante_patogenica_en_MECP2.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_036",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_036",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_037",
@@ -373,11 +373,11 @@
     {
       "entry_id": "rett_041",
       "language": "fr",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_Diapositive_1.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_041",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_041",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_042",
@@ -391,11 +391,11 @@
     {
       "entry_id": "rett_043",
       "language": "fr",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_MECP2_Mutation_Catalog_from_RSRT_and_Coriell_Institute_Collections.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_043",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_043",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_044",
@@ -409,11 +409,11 @@
     {
       "entry_id": "rett_045",
       "language": "fr",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_Methyl-CpG-binding_protein_2_MECP2_mutation_type_is_associated_with_bone_disease_severity_in_Rett_sy.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_045",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_045",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_046",
@@ -445,11 +445,11 @@
     {
       "entry_id": "rett_049",
       "language": "fr",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_Unraveling_MECP2_structural_variants_in_previously_elusive_Rett_syndrome_cases_through_IGV_interpret.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_049",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_049",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_050",
@@ -463,11 +463,11 @@
     {
       "entry_id": "rett_051",
       "language": "it",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/it/it_Case_Report_Prenatal_Diagnosis_for_a_Rett_Syndrome_Family_Caused_by_a_Novel_MECP2_Deletion_With_Hete.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_051",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_051",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_052",
@@ -499,11 +499,11 @@
     {
       "entry_id": "rett_055",
       "language": "ja",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_Clinical_Characteristics_of_Rett_Syndrome_Related_to_MECP2_CDKL5_and_FOXG1.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_055",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_055",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_056",
@@ -562,29 +562,29 @@
     {
       "entry_id": "rett_062",
       "language": "ja",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_document43a77ff7.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_062",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_062",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_063",
       "language": "ja",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_document_f2a2cd03.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_063",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_063",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_064",
       "language": "ja",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_pone0068851_17.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_064",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_064",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_065",
@@ -598,56 +598,56 @@
     {
       "entry_id": "rett_066",
       "language": "ko",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ko/ko_A_Case_of_Rett_Syndrome_with_MECP2_Gene_Mutation.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_066",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_066",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_067",
       "language": "ko",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ko/ko_Mutational_Analysis_of_MECP2_Gene_in_34_Rett_Syndrome.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_067",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_067",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_068",
       "language": "pt",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/pt/pt_Hypoventilation_and_sleep_hypercapnia_in_a_case_of_congenital_variant-like_Rett_syndrome.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_068",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_068",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_069",
       "language": "ru",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/ru_Clinical_Case_of_Rett_Syndrome_the_Experience_of_Observing_Older_Preschooler.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_069",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_069",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_070",
       "language": "ru",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/ru_Clinical_Case_of_School-Age_Patient_with_Rett_Syndrome_and_MECP2_Deletion.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_070",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_070",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_071",
       "language": "ru",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ru/ru_Rett_Syndrome_a_clinical_case.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_071",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_071",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_072",
@@ -688,92 +688,92 @@
     {
       "entry_id": "rett_076",
       "language": "tr",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/tr/tr_Rett_sendromlu_hastalarn_klinik_ve_molekuler_degerlendirmesi_ve_genotip-fenotip_korelasyonunun_arast.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_076",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_076",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_077",
       "language": "tr",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/tr/tr_Typical_Rett_Syndrome_in_Boy_with_Hemizygous_MECP2_c316CT_Mutation.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_077",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_077",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_078",
       "language": "tr",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/tr/tr_Yeni_Boyut_2indd.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_078",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_078",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_079",
       "language": "zh",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_A_Case_of_Rett_Syndrome.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_079",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_079",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_080",
       "language": "zh",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_A_case_report_of_Rett_syndrome.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_080",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_080",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_081",
       "language": "zh",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_Case_of_Rett_Syndrome_in_a_Male_Infant_Caused_by_MECP2_Gene_Mutation.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_081",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_081",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_082",
       "language": "zh",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_Clinical_features_and_MECP2_mutations_in_children_with_Rett_syndrome.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_082",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_082",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_083",
       "language": "zh",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_Gene_mutation_analysis_of_5_children_with_Rett_syndrome-like_phenotype.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_083",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_083",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:59:47+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_084",
       "language": "zh",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_Report_of_a_boy_with_Rett_syndrome_caused_by_a_novel_MECP2_mutation.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_084",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_084",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_085",
       "language": "zh",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_Rett_Syndrome_Case_with_Novel_MECP2_Mutation.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_085",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_085",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_086",
@@ -787,11 +787,11 @@
     {
       "entry_id": "rett_087",
       "language": "zh",
-      "status": "draft",
+      "status": "ground_truth",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_document_10eacc93.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_087",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/ground_truth/rett_087",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T08:34:50+00:00"
+      "updated_at": "2026-06-16T09:13:10+00:00"
     },
     {
       "entry_id": "rett_088",
@@ -803,5 +803,5 @@
       "updated_at": "2026-06-16T04:51:00+00:00"
     }
   ],
-  "last_updated": "2026-06-16T08:59:47+00:00"
+  "last_updated": "2026-06-16T10:26:01+00:00"
 }

@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_087",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_document_10eacc93.pdf",
+  "language": "zh",
+  "parse_status": "parsed",
+  "annotation_status": "generated",
+  "review_status": "approved",
+  "reviewer": "auto-review",
+  "review_notes": "",
+  "rejection_reason": "",
+  "generated_at": "2026-06-16T08:34:50+00:00",
+  "reviewed_at": "2026-06-16T09:12:50+00:00",
+  "promoted_at": null,
+  "llm_model": "claude-opus-4-8",
+  "parse_backend": "mineru",
+  "variant_count": 1,
+  "clinical_feature_count": 6
+}

@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_006",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_Clinical_features_and_MECP2_mutations_in_children_with_Rett_syndrome.pdf",
+  "language": "zh",
+  "parse_status": "parsed",
+  "annotation_status": "generated",
+  "review_status": "draft",
+  "reviewer": null,
+  "review_notes": "[case_series] Reports specific MECP2 gene variants in 9 Rett syndrome patients (e.g., c.913insT, c.316C>T, c.502C>T, c.808C>T, c.1126C>T with amino acid changes such as R106W, R168X, R270X, P376S; HGVS-style nomenclature included). Study design is a small clinical case series analyzing mutations in affected children and their parents.",
+  "rejection_reason": "",
+  "generated_at": "2026-06-16T10:23:05+00:00",
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "claude-opus-4-8",
+  "parse_backend": "mineru",
+  "variant_count": 5,
+  "clinical_feature_count": 6
+}
