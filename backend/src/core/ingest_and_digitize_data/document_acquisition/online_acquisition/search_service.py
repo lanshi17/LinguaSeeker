@@ -25,6 +25,7 @@ LANG_PROVIDER_MATRIX: Dict[str, List[ProviderPlanItem]] = {
     "zh": [
         {"route": "api", "provider": "crossref"},
         {"route": "api", "provider": "unpaywall"},
+        {"route": "api", "provider": "openalex"},
         {"route": "api", "provider": "doaj"},
         {"route": "api", "provider": "pmc"},
     ],
@@ -53,10 +54,12 @@ LANG_PROVIDER_MATRIX: Dict[str, List[ProviderPlanItem]] = {
     ],
     "en": [
         {"route": "api", "provider": "pmc"},
+        {"route": "api", "provider": "europepmc"},
         {"route": "api", "provider": "crossref"},
         {"route": "api", "provider": "arxiv"},
         {"route": "api", "provider": "biorxiv"},
         {"route": "api", "provider": "medrxiv"},
+        {"route": "api", "provider": "openalex"},
         {"route": "api", "provider": "openaire"},
         {"route": "api", "provider": "base"},
         {"route": "api", "provider": "core"},
@@ -66,6 +69,8 @@ LANG_PROVIDER_MATRIX: Dict[str, List[ProviderPlanItem]] = {
     "auto": [
         {"route": "api", "provider": "crossref"},
         {"route": "api", "provider": "unpaywall"},
+        {"route": "api", "provider": "openalex"},
+        {"route": "api", "provider": "europepmc"},
         {"route": "api", "provider": "doaj"},
         {"route": "api", "provider": "pmc"},
     ],
