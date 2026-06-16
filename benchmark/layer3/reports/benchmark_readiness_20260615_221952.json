@@ -1,0 +1,201 @@
+{
+  "evaluation_id": "benchmark_readiness_20260615_221952",
+  "timestamp": "2026-06-15T22:19:52",
+  "config": {
+    "ground_truth_root": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth",
+    "entry_ids": [],
+    "limit": null
+  },
+  "overall": {
+    "total_entries": 30,
+    "annotated_count": 30,
+    "invalid_count": 0,
+    "missing_count": 0,
+    "alignment_annotation_coverage": 1.0,
+    "invalid_entry_ids": [],
+    "missing_entry_ids": []
+  },
+  "rows": [
+    {
+      "entry_id": "clingen_000",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_000/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_001",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_001/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_002",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_002/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_003",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_003/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_004",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_004/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_005",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_005/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_006",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_006/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_007",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_007/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_008",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_008/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_009",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_009/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_010",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_010/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_011",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_011/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_012",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_012/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_013",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_013/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_014",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_014/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_015",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_015/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_016",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_016/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_017",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_017/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_018",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_018/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_019",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_019/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_020",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_020/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_021",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_021/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_022",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_022/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_023",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_023/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_024",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_024/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_025",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_025/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_026",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_026/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_027",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_027/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_028",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_028/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    },
+    {
+      "entry_id": "clingen_029",
+      "status": "annotated",
+      "annotation_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth/clingen_029/alignment_annotations.json",
+      "message": "Alignment annotations are present."
+    }
+  ],
+  "warnings": []
+}

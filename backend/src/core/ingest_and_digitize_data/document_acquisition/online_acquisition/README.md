@@ -1,6 +1,6 @@
 # Online Acquisition Module
 
-> Phase 1 submodule — searches and downloads academic literature from **14 API providers** and **7 web scrapers** with multi-level fallback chains, DOI resolution, and multilingual support.
+> Phase 1 submodule — searches and downloads academic literature from **14 API providers** with multi-level fallback chains, DOI resolution, and multilingual support. Web scrapers were archived on 2026-06-16.
 
 ## Quick Start
 
@@ -37,8 +37,7 @@ online_acquisition_workflow() [workflow.py]  ← single public entry point
 ├─ DOWNLOAD path:
 │   └─ _handle_download()
 │       ├─ download_from_provider()  → net_io + _download_pdf_from_candidates()
-│       ├─ DOI fallback → doi_fallback_download()
-│       └─ Web fallback → call_web_provider()  → 7 web scrapers
+│       └─ DOI fallback → doi_fallback_download()
 │
 └─ ProviderHealthTracker  — sliding-window stats, auto-deprioritizes unhealthy providers
 ```
@@ -48,15 +47,18 @@ online_acquisition_workflow() [workflow.py]  ← single public entry point
 | Type | Providers |
 |------|-----------|
 | **API** (via Rust `net-io`) | crossref, unpaywall, openalex, europepmc, pmc, jstage, doaj, scielo, base, core, openaire, arxiv, biorxiv, cinii |
-| **Web** (via Python scrapers) | pubscholar, cyberleninka, hans_publishers, chinaxiv, koreascience, redalyc |
+
+**Note**: Web scrapers (pubscholar, cyberleninka, hans_publishers, chinaxiv, koreascience, redalyc) were archived on 2026-06-16. See `docs/archive/deprecated-modules/web-scraper-adapters/`.
 
 ### Fallback Chain
 
 ```
-DOI query → [crossref → unpaywall → openalex → europepmc] → DOI landing probe → web scraper
-PMID/PMCID → [pmc] → DOI fallback → web scraper
-Text query → [crossref → ...] → web scraper
+DOI query → [crossref → unpaywall → openalex → europepmc] → DOI landing probe
+PMID/PMCID → [pmc] → DOI fallback
+Text query → [crossref → ...]
 ```
+
+**Note**: Web scraper fallback tier was removed on 2026-06-16.
 
 ## Public API
 
@@ -103,7 +105,9 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
 | `normalize_pmc` | pmc | Esummary format (articleids), generic XML |
 | `normalize_openalex` | openalex | Nested authorships, primary_location.source |
 | `normalize_europepmc` | europepmc | fullTextUrlList for PDF links |
-| `normalize_web_generic` | pubscholar, cyberleninka, hans | String-split authors |
+| `normalize_web_generic` | (archived) | Previously handled web scraper output |
+
+**Note**: Web provider normalizers were archived on 2026-06-16.
 
 ## Internal Design
 
@@ -111,7 +115,9 @@ async def online_acquisition_workflow(payload: Dict[str, Any]) -> Dict[str, Any]
 
 1. **Explicit provider** (`request.api_provider` set) → skip chain, call directly
 2. **Identifier-based** (DOI/PMID/PMCID detected) → chain pre-selected
-3. **Text query** → default chain with web fallback
+3. **Text query** → default chain (API providers only)
+
+**Note**: Web fallback was removed on 2026-06-16.
 
 ### DOI resolution
 
@@ -185,12 +191,9 @@ result = asyncio.run(online_acquisition_workflow({
 4. Add to `NORMALIZER_MAP` registry
 5. Optionally add to `API_PROVIDER_CHAIN` in `workflow.py`
 
-### Adding a new web scraper
+### Adding a new web scraper (Archived)
 
-1. Add provider name to `WebProvider` literal in `contracts.py`
-2. Implement in `web/` directory
-3. Register in `web_providers.py`
-4. It will automatically be available as a fallback option
+Web scraper adapters are no longer maintained. The archived module at `docs/archive/deprecated-modules/web-scraper-adapters/` contains the original implementation for reference only. New providers should be implemented as Rust-based API providers in `backend/libs/net-io/`.
 
 ### Changing the fallback chain
 
