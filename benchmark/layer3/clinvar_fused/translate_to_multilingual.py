@@ -122,21 +122,38 @@ async def translate_all(
     target_langs: list[str] | None = None,
     limit: int | None = None,
     entry_ids: list[str] | None = None,
+    llm_base_url: str | None = None,
+    llm_api_key: str | None = None,
+    llm_model: str | None = None,
 ) -> None:
-    from src.core.config import get_config
     from src.utils.llm_adapter import create_llm_client
 
-    cfg = get_config()
-    llm_cfg = cfg.llm
+    if llm_base_url and llm_api_key and llm_model:
+        base_url = llm_base_url
+        api_key = llm_api_key
+        model = llm_model
+        api_keys: list[str] = []
+        timeout = 120
+    else:
+        from src.core.config import get_config
+        cfg = get_config()
+        llm_cfg = cfg.llm
+        base_url = llm_cfg.base_url
+        api_key = llm_cfg.api_key
+        model = llm_cfg.model
+        api_keys = llm_cfg.all_api_keys
+        timeout = llm_cfg.timeout
+
+    logger.info("LLM: model={} base_url={}", model, base_url)
 
     llm = create_llm_client(
-        model=llm_cfg.model,
-        api_key=llm_cfg.api_key,
-        base_url=llm_cfg.base_url,
-        api_keys=llm_cfg.all_api_keys,
+        model=model,
+        api_key=api_key,
+        base_url=base_url,
+        api_keys=api_keys,
         temperature=0.1,
         max_tokens=8192,
-        timeout=llm_cfg.timeout,
+        timeout=timeout,
     )
 
     langs = target_langs or list(TARGET_LANGUAGES.keys())
@@ -205,10 +222,16 @@ if __name__ == "__main__":
     parser.add_argument("--langs", nargs="+", default=None, help="Target languages (zh ja ko)")
     parser.add_argument("--limit", type=int, default=None, help="Max entries to translate")
     parser.add_argument("--entries", nargs="+", default=None, help="Specific entry IDs")
+    parser.add_argument("--base-url", default=None, help="LLM API base URL")
+    parser.add_argument("--api-key", default=None, help="LLM API key")
+    parser.add_argument("--model", default=None, help="LLM model name")
     args = parser.parse_args()
 
     asyncio.run(translate_all(
         target_langs=args.langs,
         limit=args.limit,
         entry_ids=args.entries,
+        llm_base_url=args.base_url,
+        llm_api_key=args.api_key,
+        llm_model=args.model,
     ))
