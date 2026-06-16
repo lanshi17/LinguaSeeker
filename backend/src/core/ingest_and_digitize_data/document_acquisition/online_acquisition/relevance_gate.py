@@ -277,7 +277,7 @@ async def run_relevance_gate(
     cfg = get_config()
     model = (cfg.llm.model or "").strip()
     base_url = (cfg.llm.base_url or "").strip().rstrip("/")
-    api_key = (cfg.llm.api_key or "").strip()
+    api_keys = cfg.llm.all_api_keys
 
     if not model or not base_url:
         logger.warning("relevance_gate skipped: missing LLM config")
@@ -285,9 +285,15 @@ async def run_relevance_gate(
             total=len(downloads),
             relevant=len(downloads),
         )
+    if not api_keys:
+        logger.warning("relevance_gate skipped: no LLM API key configured")
+        return RelevanceGateResult(
+            total=len(downloads),
+            relevant=len(downloads),
+        )
 
     max_tokens = resolve_max_tokens(cfg.llm.max_tokens, percentage=0.5)
-    client = AsyncOpenAI(base_url=base_url, api_key=api_key)
+    client = AsyncOpenAI(base_url=base_url, api_key=api_keys[0])
     sem = asyncio.Semaphore(concurrency)
 
     logger.info(f"relevance_gate: checking {len(downloads)} downloads against query: {query[:80]}")
