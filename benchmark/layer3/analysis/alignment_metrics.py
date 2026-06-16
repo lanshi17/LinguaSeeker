@@ -14,6 +14,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
     DualEvidenceExtractionResult,
     EvidenceAlignmentLabel,
     EvidenceAlignmentRecord,
+    EvidenceSupportLabel,
 )
 from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.reconcile.alignment import (
     build_alignment_records,
@@ -36,9 +37,11 @@ class AlignmentCountsPayload(TypedDict):
     alignment_correct: int
     support_total: int
     support_correct: int
+    drift_gold_positive: int
     drift_tp: int
     drift_fp: int
     drift_fn: int
+    conflict_gold_positive: int
     conflict_tp: int
     conflict_fp: int
     conflict_fn: int
@@ -75,9 +78,11 @@ class AlignmentCounts:
     alignment_correct: int = 0
     support_total: int = 0
     support_correct: int = 0
+    drift_gold_positive: int = 0
     drift_tp: int = 0
     drift_fp: int = 0
     drift_fn: int = 0
+    conflict_gold_positive: int = 0
     conflict_tp: int = 0
     conflict_fp: int = 0
     conflict_fn: int = 0
@@ -130,8 +135,9 @@ def build_alignment_metric_report(config: AlignmentMetricConfig) -> AlignmentMet
                 field_counts,
             )
             gold_label_counts[gold.alignment_label.value] += 1
-            if predicted is not None:
-                predicted_label_counts[predicted.alignment_label.value] += 1
+            predicted_alignment = _predicted_alignment_label(gold, predicted)
+            if predicted_alignment is not None:
+                predicted_label_counts[predicted_alignment.value] += 1
 
     return AlignmentMetricReport(
         config=config,
@@ -260,20 +266,44 @@ def _compare_record(
     gold: EvidenceAlignmentRecord,
     predicted: EvidenceAlignmentRecord | None,
 ) -> AlignmentCounts:
-    predicted_alignment = predicted.alignment_label if predicted is not None else None
-    predicted_support = predicted.support_label if predicted is not None else None
+    predicted_alignment = _predicted_alignment_label(gold, predicted)
+    predicted_support = _predicted_support_label(gold, predicted)
     return AlignmentCounts(
         total=1,
         alignment_correct=int(predicted_alignment == gold.alignment_label),
         support_total=1,
         support_correct=int(predicted_support == gold.support_label),
+        drift_gold_positive=int(gold.alignment_label == EvidenceAlignmentLabel.DRIFTED),
         drift_tp=int(gold.alignment_label == EvidenceAlignmentLabel.DRIFTED and predicted_alignment == EvidenceAlignmentLabel.DRIFTED),
         drift_fp=int(gold.alignment_label != EvidenceAlignmentLabel.DRIFTED and predicted_alignment == EvidenceAlignmentLabel.DRIFTED),
         drift_fn=int(gold.alignment_label == EvidenceAlignmentLabel.DRIFTED and predicted_alignment != EvidenceAlignmentLabel.DRIFTED),
+        conflict_gold_positive=int(gold.alignment_label == EvidenceAlignmentLabel.CONFLICT),
         conflict_tp=int(gold.alignment_label == EvidenceAlignmentLabel.CONFLICT and predicted_alignment == EvidenceAlignmentLabel.CONFLICT),
         conflict_fp=int(gold.alignment_label != EvidenceAlignmentLabel.CONFLICT and predicted_alignment == EvidenceAlignmentLabel.CONFLICT),
         conflict_fn=int(gold.alignment_label == EvidenceAlignmentLabel.CONFLICT and predicted_alignment != EvidenceAlignmentLabel.CONFLICT),
     )
+
+
+def _predicted_alignment_label(
+    gold: EvidenceAlignmentRecord,
+    predicted: EvidenceAlignmentRecord | None,
+) -> EvidenceAlignmentLabel | None:
+    if predicted is not None:
+        return predicted.alignment_label
+    if gold.alignment_label == EvidenceAlignmentLabel.MISSING:
+        return EvidenceAlignmentLabel.MISSING
+    return None
+
+
+def _predicted_support_label(
+    gold: EvidenceAlignmentRecord,
+    predicted: EvidenceAlignmentRecord | None,
+) -> EvidenceSupportLabel | None:
+    if predicted is not None:
+        return predicted.support_label
+    if gold.alignment_label == EvidenceAlignmentLabel.MISSING:
+        return EvidenceSupportLabel.INSUFFICIENT
+    return None
 
 
 def _metrics_from_counts(counts: AlignmentCounts) -> AlignmentMetrics:
@@ -291,9 +321,11 @@ def _add_counts(left: AlignmentCounts, right: AlignmentCounts) -> AlignmentCount
         alignment_correct=left.alignment_correct + right.alignment_correct,
         support_total=left.support_total + right.support_total,
         support_correct=left.support_correct + right.support_correct,
+        drift_gold_positive=left.drift_gold_positive + right.drift_gold_positive,
         drift_tp=left.drift_tp + right.drift_tp,
         drift_fp=left.drift_fp + right.drift_fp,
         drift_fn=left.drift_fn + right.drift_fn,
+        conflict_gold_positive=left.conflict_gold_positive + right.conflict_gold_positive,
         conflict_tp=left.conflict_tp + right.conflict_tp,
         conflict_fp=left.conflict_fp + right.conflict_fp,
         conflict_fn=left.conflict_fn + right.conflict_fn,
@@ -331,9 +363,11 @@ def _counts_payload(counts: AlignmentCounts) -> AlignmentCountsPayload:
         "alignment_correct": counts.alignment_correct,
         "support_total": counts.support_total,
         "support_correct": counts.support_correct,
+        "drift_gold_positive": counts.drift_gold_positive,
         "drift_tp": counts.drift_tp,
         "drift_fp": counts.drift_fp,
         "drift_fn": counts.drift_fn,
+        "conflict_gold_positive": counts.conflict_gold_positive,
         "conflict_tp": counts.conflict_tp,
         "conflict_fp": counts.conflict_fp,
         "conflict_fn": counts.conflict_fn,

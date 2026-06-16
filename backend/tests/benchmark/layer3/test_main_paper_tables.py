@@ -81,6 +81,12 @@ def _manifest_report(path: Path) -> Path:
                     "f1": 0.8743,
                 }
             ],
+            "source_inventory_summary": {
+                "clinvar_fused_entry_count": 75,
+                "main_multilingual_pdf_count": 185,
+                "structured_anchor_count": 3,
+                "raw_pdf_count": 185,
+            },
         },
     )
 

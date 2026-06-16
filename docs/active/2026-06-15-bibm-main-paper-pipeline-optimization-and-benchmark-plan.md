@@ -1,8 +1,8 @@
 # BIBM Main Paper Pipeline Optimization & Benchmark Plan
 
-**Status:** completed (all acceptance criteria verified)
+**Status:** in-progress
 **Created:** 2026-06-15
-**Updated:** 2026-06-15 (second pass — execution gaps identified)
+**Started:** 2026-06-16
 **Scope:** BIBM Main Paper (not demo/resource track)
 **Owner:** CrossEvidence backend / benchmark team
 
@@ -95,23 +95,36 @@ original-first extraction flow without inventing a new acquisition target set.
 
 ### ❌ Verified blockers (gate the acceptance criteria)
 
-1. **Language metadata is NOT propagated into extraction artifacts (critical, gates both A and B).**
-   `clingen_000/preprocessed/phase_2/extraction_result.json` evidence items have
-   `article_language=None`, `is_english=None`, `evidence_source_language=None` across all
-   three tracks. `_is_english()` returns `False` on missing fields, so **every item is
-   mis-classified as non-English**. Consequence: `evidence_augmentation_metrics` runs but
-   reports `NonEnglishYield=1.0` and `CoverageGain=0.0` (denominator 0) — **invalid numbers**.
+1. **Language metadata propagation is partially fixed; scored Benchmark B still lacks non-English extraction artifacts.**
+   `src/core/cross_lingual_process_and_extract_evidence/extract_evidence/workflow.py`
+   now contains a `language_metadata` workflow node, with regression tests in
+   `backend/tests/core/cross_lingual_process_and_extract_evidence/extract_evidence/test_language_metadata.py`.
+   The metric layer now treats missing language metadata as
+   `unknown_language_evidence_count` instead of non-English yield. Consequence:
+   `evidence_augmentation_metrics --limit 2` no longer reports the previous false
+   `NonEnglishYield=1.0`; it correctly reports zero non-English yield for current
+   ClinGen-only artifacts. The remaining Benchmark B blocker is producing or annotating
+   actual zh/ja/ko Phase 2 artifacts with source-valid spans.
 2. **Alignment gold annotations: 0/30.** `benchmark_readiness_20260615_193750.json` confirms
    `annotated_count=0`, `missing_count=30`. No `alignment_annotations.json` exists.
    → Alignment Accuracy / Drift Detection F1 / Conflict Detection F1 **cannot be computed**;
    `alignment_metrics` returns `N=0`.
-3. **Neither new-metric command has produced a report.** `reports/` has no `*alignment*` or
-   `*augment*` files. Main-paper Table 4 currently carries traceability only.
-4. **Drift detection is shallow.** `alignment.py` only implements relationship-cue drift +
+3. **Source inventory report is produced; augmentation/alignment result reports remain gated by artifacts/annotations.**
+   `benchmark/layer3/reports/source_inventory_20260616_095316.json` freezes the
+   actual local ClinVar + zh/ja/ko raw source inventory. Alignment and augmentation
+   result reports still need scored gold annotations and non-English Phase 2 artifacts
+   before they are paper-facing result tables.
+4. **Benchmark B Phase 2 queue is frozen for the N=10 pilot.**
+   `benchmark/layer3/ground_truth/benchmark_b_phase2_queue.json` joins the N=10
+   pilot selection, `selection.json` targets, and the source inventory. It contains
+   30 queued sources: 10 Chinese, 10 Japanese, and 10 Korean case-report PDFs, with
+   no missing pilot languages. This queue is an execution manifest, not a scored
+   result; it is the input for the next PDF-to-Phase-2-artifact run.
+5. **Drift detection is shallow.** `alignment.py` only implements relationship-cue drift +
    conflict-value lookup. Plan §3's **negation loss, numeric drift (allele count / frequency
    / family count), table-row/caption correspondence** are NOT implemented.
-5. **Manuscript claim matrix** not present as a standalone artifact.
-6. **Repo hygiene.** Working tree has uncommitted `backend/pyproject.toml`, `uv.lock`,
+6. **Manuscript claim matrix** not present as a standalone artifact.
+7. **Repo hygiene.** Working tree has uncommitted `backend/pyproject.toml`, `uv.lock`,
    `lesson.md`; untracked `.qoder/` and `reconcile/README.md`.
 
 ---
@@ -389,15 +402,18 @@ effective execution order must interleave:
 
 ```
 Step 0  →  Repo hygiene (commit / clean working tree)
-Step 1  →  Pipeline: propagate article_language into EvidenceItem (blocker #1)
+Step 1  →  Raw source inventory: freeze ClinVar + zh/ja/ko local-source manifest
+            Verify: source_inventory separates structured anchors, local PDFs, and scored gold
+Step 2  →  Pipeline: propagate article_language into EvidenceItem (blocker #1)
             Verify: extraction_result.json items carry non-null article_language per track
-Step 2a →  Benchmark A: annotate 30 entries × 3 fields (alignment_annotations.json)
-Step 2b →  Pipeline: add negation + numeric drift detectors (blocker #4)
-Step 3  →  Run alignment_metrics --write and evidence_augmentation_metrics --write
+Step 3a →  Benchmark A: annotate 30 entries × 3 fields (alignment_annotations.json)
+Step 3b →  Pipeline: add negation + numeric drift detectors (blocker #4)
+Step 4  →  Run alignment_metrics --write and evidence_augmentation_metrics --write
             Verify: reports land in benchmark/layer3/reports/; numbers are plausible
-Step 4  →  Merge Table 4 (alignment/drift/conflict) into main_paper_tables
-Step 5  →  Benchmark B N=10 pilot; gate N=30/N=50 expansion on measured yield
-Step 6  →  Manuscript claim matrix; finalize
+Step 5  →  Merge Table 4 (alignment/drift/conflict) into main_paper_tables
+Step 6  →  Benchmark B N=10 pilot; freeze Phase 2 queue, run queued zh/ja/ko PDFs,
+            then gate N=30/N=50 expansion on measured yield
+Step 7  →  Manuscript claim matrix; finalize
 ```
 
 ## Test Plan
@@ -441,6 +457,8 @@ PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.laye
 New expected commands after implementation:
 
 ```bash
+PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.source_inventory --write
+PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.benchmark_b_phase2_queue --write
 PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.alignment_metrics --write
 PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.layer3.analysis.evidence_augmentation_metrics --write
 ```
@@ -456,6 +474,8 @@ PYTHONPATH=.:backend uv run --project backend --no-sync python -m benchmark.laye
   publishable.
 - `source_inventory` for the multilingual corpus must separate gold, structured anchor,
   and unlabeled pools before any score is reported.
+- `benchmark_b_phase2_queue` must report 30 queued zh/ja/ko sources for the N=10 pilot
+  before any Benchmark B Phase 2 batch run is launched.
 
 Acceptance criteria:
 
