@@ -97,6 +97,61 @@ def test_build_manifest_rejects_missing_report_paths(tmp_path: Path) -> None:
 
 def test_manifest_payload_records_baseline_and_no_go_gate(tmp_path: Path) -> None:
     ablation_report = _ablation_report(tmp_path / "ablation.json")
+    alignment_report = _write_json(
+        tmp_path / "alignment_metrics_20260616_124445.json",
+        {
+            "overall": {
+                "alignment": {
+                    "alignment_accuracy": 0.8667,
+                    "support_label_accuracy": 0.9,
+                    "drift_detection_f1": 0.0,
+                    "conflict_detection_f1": 0.0,
+                }
+            },
+            "counts": {"total": 90},
+            "by_field": {},
+        },
+    )
+    evidence_augmentation_report = _write_json(
+        tmp_path / "evidence_augmentation_metrics_20260615_224236.json",
+        {
+            "overall": {
+                "evidence_coverage_gain": 0.0647,
+                "non_english_evidence_yield": 0.0608,
+                "unique_evidence_gain": 56,
+                "traceable_augmentation_rate": 1.0,
+                "interpretation_relevant_evidence_gain": 0.1964,
+                "reviewer_burden": 0.0,
+            },
+            "per_case": [],
+        },
+    )
+    benchmark_b_runtime_report = _write_json(
+        tmp_path / "benchmark_b_phase2_runtime_metrics_20260616_135521.json",
+        {
+            "overall": {
+                "evidence_coverage_gain": 1.0,
+                "non_english_evidence_yield": 0.5,
+                "unique_evidence_gain": 6,
+                "traceable_augmentation_rate": 1.0,
+                "interpretation_relevant_evidence_gain": 0.1667,
+                "reviewer_burden": 0.0,
+            },
+            "per_case": [{"phase2_status": "completed"}],
+            "warnings": [],
+        },
+    )
+    source_inventory_report = _write_json(
+        tmp_path / "source_inventory_20260616_165214.json",
+        {
+            "summary": {
+                "structured_anchor_count": 3,
+                "clinvar_fused_entry_count": 75,
+                "raw_pdf_count": 185,
+                "main_multilingual_pdf_count": 185,
+            }
+        },
+    )
     manifest = build_manifest(
         coverage_report_path=_coverage_report(tmp_path / "coverage.json"),
         ablation_report_path=ablation_report,
@@ -106,6 +161,10 @@ def test_manifest_payload_records_baseline_and_no_go_gate(tmp_path: Path) -> Non
             _baseline_report(tmp_path / "baseline_b1.json", label="B1"),
         ),
         git_commit="abc123",
+        alignment_report_path=alignment_report,
+        evidence_augmentation_report_path=evidence_augmentation_report,
+        benchmark_b_runtime_report_path=benchmark_b_runtime_report,
+        source_inventory_report_path=source_inventory_report,
     )
 
     payload = manifest_to_payload(manifest)
@@ -118,6 +177,10 @@ def test_manifest_payload_records_baseline_and_no_go_gate(tmp_path: Path) -> Non
     assert payload["baselines"][0]["label"] == "B0"
     assert payload["source_reports"]["benchmark_a_readiness_report"] is None
     assert payload["source_reports"]["benchmark_b_pilot_selection_report"] is None
+    assert payload["source_reports"]["alignment_report"] == str(alignment_report)
+    assert payload["source_reports"]["evidence_augmentation_report"] == str(evidence_augmentation_report)
+    assert payload["source_reports"]["benchmark_b_runtime_report"] == str(benchmark_b_runtime_report)
+    assert payload["source_reports"]["source_inventory_report"] == str(source_inventory_report)
 
 
 def test_manifest_payload_records_reproducibility_and_no_leakage(tmp_path: Path) -> None:

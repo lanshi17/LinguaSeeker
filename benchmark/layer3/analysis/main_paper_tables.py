@@ -122,6 +122,7 @@ def _dataset_rows(manifest: Mapping[str, Any]) -> tuple[Mapping[str, object], ..
     coverage = _mapping(manifest.get("coverage"))
     reproducibility = _mapping(manifest.get("reproducibility"))
     source_reports = _mapping(manifest.get("source_reports"))
+    source_inventory_summary = _mapping(manifest.get("source_inventory_summary"))
     entry_ids = _list(reproducibility.get("entry_ids"))
     return (
         {
@@ -133,6 +134,8 @@ def _dataset_rows(manifest: Mapping[str, Any]) -> tuple[Mapping[str, object], ..
             "benchmark_b_pilot_selection_status": _readiness_status(source_reports.get("benchmark_b_pilot_selection_report")),
             "git_commit": str(reproducibility.get("git_commit") or manifest.get("git_commit") or ""),
             "ablation_report": str(source_reports.get("ablation_report") or ""),
+            "clinvar_fused_entry_count": _int(source_inventory_summary.get("clinvar_fused_entry_count")),
+            "main_multilingual_pdf_count": _int(source_inventory_summary.get("main_multilingual_pdf_count")),
         },
     )
 

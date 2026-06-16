@@ -2796,3 +2796,87 @@ lifecycle transitions.
 **Solution**: Kept Benchmark A as a readiness report with explicit invalid/missing annotation states, froze Benchmark B as a deterministic pilot-selection manifest, and marked both as conservative status entries in the tables and claim matrix.
 
 **Prevention**: When a new paper-facing artifact is a status or freeze step, keep it separate from experimental metrics in both code and manuscript. Update the manifest, tables, and claim matrix together so they tell the same story.
+
+## 2026-06-15 — Apply patches must target the active worktree explicitly
+
+**Problem**: While implementing the raw source inventory module in an isolated git worktree, the first `apply_patch` call added two new files to the original project checkout instead of the active worktree.
+
+**Investigation**: A focused test run from the worktree reported `file or directory not found`, while `git status` in the original checkout showed the newly added files as untracked. No tracked or user-authored files were overwritten.
+
+**Root cause**: `apply_patch` is scoped to the tool's default workspace unless file paths are absolute. The shell `workdir` used for reads and test runs does not automatically change where `apply_patch` writes.
+
+**Solution**: Removed only the two untracked files created by this task from the original checkout with `rm`, then reapplied the patch using absolute paths under the isolated worktree.
+
+**Prevention**: In worktree-based tasks, use absolute paths in every `apply_patch` hunk or confirm the patch tool's effective root before creating files. After the first edit, check `git status` in both the original checkout and the worktree.
+
+## 2026-06-16 — Missing evidence language must be a third metric state, not non-English
+
+**Problem**: `evidence_augmentation_metrics` classified every found item as either English or non-English by calling `_is_english()`. When `article_language`, `evidence_source_language`, and `is_english` were all missing, `_is_english()` returned `False`, so unknown-language evidence inflated non-English added evidence and yield.
+
+**Investigation**: Added a regression fixture with one English evidence item and one found item with no language metadata. The test showed `non_english_added_evidence_count=1` before the fix, proving the metric could produce a false multilingual gain from missing metadata alone.
+
+**Root cause**: The metric used a binary language classifier for a three-state data quality problem. Missing provenance metadata is neither English nor non-English and must be exposed as a data-quality count.
+
+**Solution**: Replaced the internal metric classifier with `_language_bucket()` returning `en`, `non_en`, or `unknown`; added `unknown_language_evidence_count` to the matrix payload; excluded unknown-language items from non-English yield and cross-language conflict counts.
+
+**Prevention**: Benchmark metrics that depend on provenance must model missing provenance explicitly. Do not let absent metadata fall through to the positive experimental condition.
+
+## 2026-06-16 — Benchmark B execution queues must bind source PDFs to target metadata
+
+**Problem**: The local zh/ja/ko corpus contains both ClinGen-linked `case_report/<entry_id>.pdf` files and unrelated or unclassified PDFs. If a Phase 2 pilot queue simply consumes every non-English PDF from source inventory, it can mix unlabeled pressure-test material into the scored Benchmark B pilot.
+
+**Investigation**: Compared `benchmark_b_pilot_selection.json`, `selection.json`, and `source_inventory_20260616_095316.json`. The usable pilot subset is the intersection of selected `clingen_*` entries, paper-facing languages (`zh`, `ja`, `ko`), and `case_report/<entry_id>.pdf` paths. Functional, sequencing, unclassified, and extra named PDFs do not have frozen target metadata or gold status.
+
+**Root cause**: Source provenance and evaluation target scope are separate manifests. The inventory proves that a PDF exists, but it does not by itself prove the PDF belongs to a scored gene-disease case.
+
+**Solution**: Added `benchmark_b_phase2_queue.py` to join pilot selection, source inventory, and `selection.json` target metadata before any Phase 2 run. The queue includes only `zh/ja/ko` case-report PDFs whose filename maps to a selected `entry_id`.
+
+**Prevention**: Any future Benchmark B execution must start from the queue manifest, not directly from a directory glob over raw PDFs. Treat source inventory as provenance and queue manifests as execution scope.
+
+## 2026-06-16 — Paper tables must not discover result reports by timestamp
+
+**Problem**: Main paper tables could silently use whichever `alignment_metrics_*.json` or `evidence_augmentation_metrics_*.json` looked newest in the reports directory. After runtime smoke experiments were added, that made it easy to mix frozen paper metrics with exploratory or smoke reports.
+
+**Investigation**: Reproduced the issue with a manifest in a temporary directory whose `source_reports` pointed at local fixture reports. The table builder still preferred an existing worktree report when the path resolver checked the current working directory before the manifest directory.
+
+**Root cause**: Paper tables treated report discovery as a directory-level concern instead of a manifest-level contract. Relative report paths were also resolved in the wrong order.
+
+**Solution**: Added explicit `alignment_report`, `evidence_augmentation_report`, and `benchmark_b_runtime_report` entries to the rescue manifest and reproducibility ledger. Updated table generation to read only manifest-declared paths and to resolve manifest-relative paths before worktree-relative paths. Added Table 9 for Benchmark B runtime smoke so smoke evidence is not folded into static Benchmark B augmentation metrics.
+
+**Prevention**: Every paper-facing number must come from a manifest-declared source report. Runtime smoke reports and frozen benchmark reports need separate table surfaces and separate claims.
+
+## 2026-06-16 — Alignment metrics must treat absent predictions as missing when gold is missing
+
+**Problem**: `A.disease_diagnosis` alignment accuracy was 0.0333 even though the gold annotations marked all 30 disease fields as `missing/insufficient`, and most artifacts simply had no disease alignment record.
+
+**Investigation**: Compared each `alignment_annotations.json` disease record against derived predicted records. The metric counted a missing predicted record as `None`, so a gold `missing` record without a predicted field was incorrectly scored as a failed prediction.
+
+**Root cause**: The metric conflated "no predicted alignment record" with "wrong prediction" even when the gold label explicitly says the evidence is missing. For alignment evaluation, an absent predicted field is the predicted equivalent of `missing/insufficient` when gold is also missing.
+
+**Solution**: Updated `alignment_metrics` so absent predictions count as `missing` and `insufficient` only when the gold label is `missing`. Regenerated `alignment_metrics_20260616_144749.json`; overall AlignmentAccuracy and SupportAccuracy rose to 0.9556, and Table 7 now exposes `drift_gold_positive=0` and `conflict_gold_positive=0` so reviewers can see drift/conflict F1 is not supported by positive gold cases yet.
+
+**Prevention**: Multi-class metrics with an explicit `missing` class must define absent-prediction semantics in code and tests. Always report positive-class support counts beside F1 for sparse labels.
+
+## 2026-06-16 — Main paper readiness notes must read the declared report payload
+
+**Problem**: `main_paper_tables_20260616_161005.md` correctly pointed at `benchmark_readiness_20260616_124611.json`, but Table 6 still said alignment annotations were required before Benchmark A metrics were reportable.
+
+**Investigation**: The readiness report already had `annotated_count=30`, `missing_count=0`, `invalid_count=0`, and `alignment_annotation_coverage=1.0`. The stale sentence came from a hard-coded note in `_readiness_rows`, which only checked whether a report path existed.
+
+**Root cause**: Table 6 treated readiness as a path-presence status instead of a manifest-declared report with measured coverage fields.
+
+**Solution**: Added a regression test for complete Benchmark A readiness, updated `_readiness_rows` to load the manifest-declared readiness report, and regenerated `main_paper_tables_20260616_161508.md/csv`. Table 6 now states that alignment annotations cover 30/30 entries.
+
+**Prevention**: Paper-facing tables must derive status text from the same manifest-declared report that supplies the metric, not from static prose or timestamp discovery.
+
+## 2026-06-16 — Benchmark B sample timeouts can hide late partial Phase 2 progress
+
+**Problem**: The `clingen_000:zh` Benchmark B sample was recorded as a timeout even though Phase 2 translation artifacts were later present on disk.
+
+**Investigation**: The pipeline directory for run `1d2c89b9-659e-43b9-9ffe-ae792746a3f1` contained `phase_2/<document_id>/{original.json,translated.json,metadata.json}` but no final `phase_2/extraction_result.json`. Logs showed translation completed, then catalog extraction failed with a request timeout; a retry reused the existing translation output and skipped translation.
+
+**Root cause**: The CLI polling window and Phase 2 status endpoint are not strong enough evidence for final extraction completion. Translation can complete while catalog extraction still fails or retries.
+
+**Solution**: Runtime metrics now recover timeout rows only when a real final artifact exists, deduplicate by `queue_id`, and expose `attempted_samples`, `phase2_completed`, `timeout_count`, `failed_count`, and incomplete queue IDs. The latest runtime table reports 4 attempted samples, 3 completed Phase 2 artifacts, and 1 timeout.
+
+**Prevention**: For Benchmark B accounting, use final artifact existence as the completion source of truth. Keep timeout/failed samples visible instead of silently converting partial translation progress into evidence-yield results.

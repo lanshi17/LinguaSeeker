@@ -64,9 +64,13 @@ class SourceReportsPayload(TypedDict):
     coverage_report: str
     ablation_report: str
     g2_report: str
+    source_inventory_report: str | None
     traceability_report: str | None
     benchmark_a_readiness_report: str | None
     benchmark_b_pilot_selection_report: str | None
+    alignment_report: str | None
+    evidence_augmentation_report: str | None
+    benchmark_b_runtime_report: str | None
     baseline_reports: list[str]
 
 
@@ -99,6 +103,7 @@ class MainPaperRescueManifestPayload(TypedDict):
     strategies: list[StrategyMetricPayload]
     g2_statistics: G2SummaryPayload
     baselines: list[BaselineReportPayload]
+    source_inventory_summary: dict[str, object]
 
 
 @dataclass(frozen=True)
@@ -179,9 +184,13 @@ class MainPaperRescueManifest:
     coverage_report_path: Path
     ablation_report_path: Path
     g2_report_path: Path
+    source_inventory_report_path: Path | None
     traceability_report_path: Path | None
     benchmark_a_readiness_report_path: Path | None
     benchmark_b_pilot_selection_report_path: Path | None
+    alignment_report_path: Path | None
+    evidence_augmentation_report_path: Path | None
+    benchmark_b_runtime_report_path: Path | None
     reproducibility: ReproducibilityLedger
     no_leakage: NoLeakageDeclaration
     coverage: CoverageSummary
@@ -199,9 +208,13 @@ def build_manifest(
     git_commit: str | None = None,
     entry_ids: tuple[str, ...] | None = None,
     ground_truth_root: Path | None = None,
+    source_inventory_report_path: Path | None = None,
     traceability_report_path: Path | None = None,
     benchmark_a_readiness_report_path: Path | None = None,
     benchmark_b_pilot_selection_report_path: Path | None = None,
+    alignment_report_path: Path | None = None,
+    evidence_augmentation_report_path: Path | None = None,
+    benchmark_b_runtime_report_path: Path | None = None,
     commands: Mapping[str, str] | None = None,
     no_leakage: NoLeakageDeclaration | None = None,
 ) -> MainPaperRescueManifest:
@@ -210,12 +223,20 @@ def build_manifest(
     ablation_payload = _load_json_object(ablation_report_path)
     g2_payload = _load_json_object(g2_report_path)
     baseline_payloads = tuple(_load_json_object(path) for path in baseline_report_paths)
+    if source_inventory_report_path is not None and not source_inventory_report_path.exists():
+        raise FileNotFoundError(source_inventory_report_path)
     if traceability_report_path is not None and not traceability_report_path.exists():
         raise FileNotFoundError(traceability_report_path)
     if benchmark_a_readiness_report_path is not None and not benchmark_a_readiness_report_path.exists():
         raise FileNotFoundError(benchmark_a_readiness_report_path)
     if benchmark_b_pilot_selection_report_path is not None and not benchmark_b_pilot_selection_report_path.exists():
         raise FileNotFoundError(benchmark_b_pilot_selection_report_path)
+    if alignment_report_path is not None and not alignment_report_path.exists():
+        raise FileNotFoundError(alignment_report_path)
+    if evidence_augmentation_report_path is not None and not evidence_augmentation_report_path.exists():
+        raise FileNotFoundError(evidence_augmentation_report_path)
+    if benchmark_b_runtime_report_path is not None and not benchmark_b_runtime_report_path.exists():
+        raise FileNotFoundError(benchmark_b_runtime_report_path)
     frozen_entry_ids = _resolve_entry_ids(
         explicit_entry_ids=entry_ids,
         ablation_payload=ablation_payload,
@@ -239,6 +260,10 @@ def build_manifest(
         ablation_report_path=ablation_report_path,
         g2_report_path=g2_report_path,
         traceability_report_path=traceability_report_path,
+        source_inventory_report_path=source_inventory_report_path,
+        alignment_report_path=alignment_report_path,
+        evidence_augmentation_report_path=evidence_augmentation_report_path,
+        benchmark_b_runtime_report_path=benchmark_b_runtime_report_path,
         benchmark_a_readiness_report_path=benchmark_a_readiness_report_path,
         benchmark_b_pilot_selection_report_path=benchmark_b_pilot_selection_report_path,
         reproducibility=ReproducibilityLedger(
@@ -248,9 +273,13 @@ def build_manifest(
                 coverage_report_path=coverage_report_path,
                 ablation_report_path=ablation_report_path,
                 g2_report_path=g2_report_path,
+                source_inventory_report_path=source_inventory_report_path,
                 traceability_report_path=traceability_report_path,
                 benchmark_a_readiness_report_path=benchmark_a_readiness_report_path,
                 benchmark_b_pilot_selection_report_path=benchmark_b_pilot_selection_report_path,
+                alignment_report_path=alignment_report_path,
+                evidence_augmentation_report_path=evidence_augmentation_report_path,
+                benchmark_b_runtime_report_path=benchmark_b_runtime_report_path,
                 baseline_report_paths=baseline_report_paths,
             ),
             commands=commands
@@ -258,9 +287,13 @@ def build_manifest(
                 coverage_report_path=coverage_report_path,
                 ablation_report_path=ablation_report_path,
                 g2_report_path=g2_report_path,
+                source_inventory_report_path=source_inventory_report_path,
                 traceability_report_path=traceability_report_path,
                 benchmark_a_readiness_report_path=benchmark_a_readiness_report_path,
                 benchmark_b_pilot_selection_report_path=benchmark_b_pilot_selection_report_path,
+                alignment_report_path=alignment_report_path,
+                evidence_augmentation_report_path=evidence_augmentation_report_path,
+                benchmark_b_runtime_report_path=benchmark_b_runtime_report_path,
                 baseline_report_paths=baseline_report_paths,
             ),
         ),
@@ -284,6 +317,9 @@ def manifest_to_payload(manifest: MainPaperRescueManifest) -> MainPaperRescueMan
             "coverage_report": str(manifest.coverage_report_path),
             "ablation_report": str(manifest.ablation_report_path),
             "g2_report": str(manifest.g2_report_path),
+            "source_inventory_report": (
+                str(manifest.source_inventory_report_path) if manifest.source_inventory_report_path else None
+            ),
             "traceability_report": str(manifest.traceability_report_path) if manifest.traceability_report_path else None,
             "benchmark_a_readiness_report": (
                 str(manifest.benchmark_a_readiness_report_path)
@@ -293,6 +329,17 @@ def manifest_to_payload(manifest: MainPaperRescueManifest) -> MainPaperRescueMan
             "benchmark_b_pilot_selection_report": (
                 str(manifest.benchmark_b_pilot_selection_report_path)
                 if manifest.benchmark_b_pilot_selection_report_path
+                else None
+            ),
+            "alignment_report": str(manifest.alignment_report_path) if manifest.alignment_report_path else None,
+            "evidence_augmentation_report": (
+                str(manifest.evidence_augmentation_report_path)
+                if manifest.evidence_augmentation_report_path
+                else None
+            ),
+            "benchmark_b_runtime_report": (
+                str(manifest.benchmark_b_runtime_report_path)
+                if manifest.benchmark_b_runtime_report_path
                 else None
             ),
             "baseline_reports": [str(summary.report_path) for summary in manifest.baselines],
@@ -337,6 +384,7 @@ def manifest_to_payload(manifest: MainPaperRescueManifest) -> MainPaperRescueMan
             "significant": manifest.g2_statistics.significant,
             "main_paper_ready": manifest.g2_statistics.main_paper_ready,
         },
+        "source_inventory_summary": _load_source_inventory_summary(manifest.source_inventory_report_path),
         "baselines": [
             {
                 "label": baseline.label,
@@ -372,9 +420,13 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--ablation-report", type=Path, required=True)
     parser.add_argument("--g2-report", type=Path, required=True)
     parser.add_argument("--baseline-report", type=Path, action="append", default=[])
+    parser.add_argument("--source-inventory-report", type=Path, default=None)
     parser.add_argument("--traceability-report", type=Path, default=None)
     parser.add_argument("--benchmark-a-readiness-report", type=Path, default=None)
     parser.add_argument("--benchmark-b-pilot-selection-report", type=Path, default=None)
+    parser.add_argument("--alignment-report", type=Path, default=None)
+    parser.add_argument("--evidence-augmentation-report", type=Path, default=None)
+    parser.add_argument("--benchmark-b-runtime-report", type=Path, default=None)
     parser.add_argument("--entry-id", action="append", default=[])
     parser.add_argument("--ground-truth-root", type=Path, default=GROUND_TRUTH_DIR)
     parser.add_argument("--reports-dir", type=Path, default=REPORTS_DIR)
@@ -388,9 +440,13 @@ def main(argv: list[str] | None = None) -> None:
         baseline_report_paths=tuple(args.baseline_report),
         entry_ids=tuple(args.entry_id) or None,
         ground_truth_root=args.ground_truth_root,
+        source_inventory_report_path=args.source_inventory_report,
         traceability_report_path=args.traceability_report,
         benchmark_a_readiness_report_path=args.benchmark_a_readiness_report,
         benchmark_b_pilot_selection_report_path=args.benchmark_b_pilot_selection_report,
+        alignment_report_path=args.alignment_report,
+        evidence_augmentation_report_path=args.evidence_augmentation_report,
+        benchmark_b_runtime_report_path=args.benchmark_b_runtime_report,
     )
     if args.write:
         print(f"REPORT: {write_manifest(manifest, reports_dir=args.reports_dir)}")
@@ -613,18 +669,30 @@ def _generated_report_paths(
     coverage_report_path: Path,
     ablation_report_path: Path,
     g2_report_path: Path,
+    source_inventory_report_path: Path | None,
     traceability_report_path: Path | None,
     benchmark_a_readiness_report_path: Path | None,
     benchmark_b_pilot_selection_report_path: Path | None,
+    alignment_report_path: Path | None,
+    evidence_augmentation_report_path: Path | None,
+    benchmark_b_runtime_report_path: Path | None,
     baseline_report_paths: tuple[Path, ...],
 ) -> tuple[Path, ...]:
     report_paths: list[Path] = [coverage_report_path, ablation_report_path, g2_report_path]
+    if source_inventory_report_path is not None:
+        report_paths.append(source_inventory_report_path)
     if traceability_report_path is not None:
         report_paths.append(traceability_report_path)
     if benchmark_a_readiness_report_path is not None:
         report_paths.append(benchmark_a_readiness_report_path)
     if benchmark_b_pilot_selection_report_path is not None:
         report_paths.append(benchmark_b_pilot_selection_report_path)
+    if alignment_report_path is not None:
+        report_paths.append(alignment_report_path)
+    if evidence_augmentation_report_path is not None:
+        report_paths.append(evidence_augmentation_report_path)
+    if benchmark_b_runtime_report_path is not None:
+        report_paths.append(benchmark_b_runtime_report_path)
     report_paths.extend(baseline_report_paths)
     return tuple(report_paths)
 
@@ -634,9 +702,13 @@ def _default_commands(
     coverage_report_path: Path,
     ablation_report_path: Path,
     g2_report_path: Path,
+    source_inventory_report_path: Path | None,
     traceability_report_path: Path | None,
     benchmark_a_readiness_report_path: Path | None,
     benchmark_b_pilot_selection_report_path: Path | None,
+    alignment_report_path: Path | None,
+    evidence_augmentation_report_path: Path | None,
+    benchmark_b_runtime_report_path: Path | None,
     baseline_report_paths: tuple[Path, ...],
 ) -> Mapping[str, str]:
     manifest_parts = [
@@ -646,12 +718,20 @@ def _default_commands(
         f"--ablation-report {ablation_report_path}",
         f"--g2-report {g2_report_path}",
     ]
+    if source_inventory_report_path is not None:
+        manifest_parts.append(f"--source-inventory-report {source_inventory_report_path}")
     if traceability_report_path is not None:
         manifest_parts.append(f"--traceability-report {traceability_report_path}")
     if benchmark_a_readiness_report_path is not None:
         manifest_parts.append(f"--benchmark-a-readiness-report {benchmark_a_readiness_report_path}")
     if benchmark_b_pilot_selection_report_path is not None:
         manifest_parts.append(f"--benchmark-b-pilot-selection-report {benchmark_b_pilot_selection_report_path}")
+    if alignment_report_path is not None:
+        manifest_parts.append(f"--alignment-report {alignment_report_path}")
+    if evidence_augmentation_report_path is not None:
+        manifest_parts.append(f"--evidence-augmentation-report {evidence_augmentation_report_path}")
+    if benchmark_b_runtime_report_path is not None:
+        manifest_parts.append(f"--benchmark-b-runtime-report {benchmark_b_runtime_report_path}")
     for baseline_report_path in baseline_report_paths:
         manifest_parts.append(f"--baseline-report {baseline_report_path}")
     manifest_parts.append("--write")
@@ -664,6 +744,8 @@ def _default_commands(
         "python -m benchmark.layer3.analysis.diagnose_baselines --write",
         "benchmark_a_readiness": "PYTHONPATH=.:backend uv run --project backend --no-sync "
         "python -m benchmark.layer3.analysis.benchmark_readiness --write",
+        "source_inventory": "PYTHONPATH=.:backend uv run --project backend --no-sync "
+        "python -m benchmark.layer3.analysis.source_inventory --write",
         "benchmark_b_pilot_selection": "PYTHONPATH=.:backend uv run --project backend --no-sync "
         "python -m benchmark.layer3.analysis.select_benchmark_b_pilot --write",
         "g2_statistics": "PYTHONPATH=.:backend uv run --project backend --no-sync "
@@ -672,6 +754,22 @@ def _default_commands(
         "--baseline-strategy grounded_hard_rule "
         "--candidate-strategy context_verifier_reconcile --write",
         "manifest": " ".join(manifest_parts),
+    }
+
+
+def _load_source_inventory_summary(source_inventory_report_path: Path | None) -> dict[str, object]:
+    """Load the summary section from a source inventory report, or return empty defaults."""
+    if source_inventory_report_path is None or not source_inventory_report_path.exists():
+        return {}
+    payload = _load_json_object(source_inventory_report_path)
+    summary = payload.get("summary")
+    if not isinstance(summary, Mapping):
+        return {}
+    return {
+        "clinvar_fused_entry_count": int(summary.get("clinvar_fused_entry_count", 0)),
+        "main_multilingual_pdf_count": int(summary.get("main_multilingual_pdf_count", 0)),
+        "structured_anchor_count": int(summary.get("structured_anchor_count", 0)),
+        "raw_pdf_count": int(summary.get("raw_pdf_count", 0)),
     }
 
 
