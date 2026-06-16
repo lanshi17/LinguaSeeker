@@ -18,10 +18,10 @@ from src.manifest import add_entry, load_manifest, save_manifest
 from src.models import DraftMeta, ManifestEntry
 from src.pdf_parser import (
     MinerUConfig,
-    MinerUError,
+    ParseOutput,
     detect_language_from_filename,
+    parse_batch_mineru,
     parse_pdf_pymupdf,
-    parse_pdfs_mineru,
 )
 
 
@@ -45,6 +45,51 @@ def _build_mineru_config() -> MinerUConfig:
     )
 
 
+def _write_entry(
+    entry_id: str,
+    pdf_path: Path,
+    lang: str,
+    md: str,
+    draft_dir: Path,
+    manifest,
+    backend: str,
+    images: dict[str, bytes] | None = None,
+) -> None:
+    entry_dir = draft_dir / entry_id
+    entry_dir.mkdir(parents=True, exist_ok=True)
+    (entry_dir / "source.md").write_text(md, encoding="utf-8")
+    shutil.copy2(pdf_path, entry_dir / "source.pdf")
+
+    if images:
+        images_dir = entry_dir / "images"
+        images_dir.mkdir(exist_ok=True)
+        for rel_path, data in images.items():
+            img_path = entry_dir / rel_path
+            img_path.parent.mkdir(parents=True, exist_ok=True)
+            img_path.write_bytes(data)
+
+    meta = DraftMeta(
+        entry_id=entry_id,
+        pdf_path=str(pdf_path),
+        language=lang,
+        parse_status="parsed",
+        parse_backend=backend,
+    )
+    (entry_dir / "meta.json").write_text(
+        json.dumps(meta.model_dump(), indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+
+    add_entry(manifest, ManifestEntry(
+        entry_id=entry_id,
+        language=lang,
+        status="parsed",
+        pdf_path=str(pdf_path),
+        current_dir=str(entry_dir),
+        created_at=_now_iso(),
+        updated_at=_now_iso(),
+    ))
+
+
 async def main_async() -> None:
     parser = argparse.ArgumentParser(description="Parse Rett PDFs into source.md via MinerU API")
     parser.add_argument("--lang", nargs="+", help="Filter by language codes (e.g., en zh ja)")
@@ -60,122 +105,96 @@ async def main_async() -> None:
     manifest_path = paths["ground_truth_dir"] / "manifest.json"
     manifest = load_manifest(manifest_path)
 
-    pdf_files: list[Path] = []
+    # Collect all PDFs with stable entry IDs
+    all_pdfs: list[tuple[int, Path]] = []
+    idx = 0
     for lang_dir in sorted(pdf_dir.iterdir()):
         if not lang_dir.is_dir():
             continue
         if args.lang and lang_dir.name not in args.lang:
             continue
-        pdf_files.extend(sorted(lang_dir.glob("*.pdf")))
+        for pdf_path in sorted(lang_dir.glob("*.pdf")):
+            all_pdfs.append((idx, pdf_path))
+            idx += 1
 
     if args.limit:
-        pdf_files = pdf_files[: args.limit]
+        all_pdfs = all_pdfs[: args.limit]
 
-    logger.info("Found {} PDFs to process", len(pdf_files))
+    logger.info("Found {} PDFs to process", len(all_pdfs))
 
-    use_mineru = cfg.pdf_parser.backend == "mineru"
+    use_mineru = cfg.pdf_parser.backend == "mineru" and cfg.mineru_token
+    if cfg.pdf_parser.backend == "mineru" and not cfg.mineru_token:
+        logger.warning("MinerU token not set, falling back to pymupdf")
+        use_mineru = False
+
     processed = 0
     failed = 0
 
-    if use_mineru and cfg.mineru_token:
+    if use_mineru:
         mineru_config = _build_mineru_config()
-        to_parse = [
-            p for p in pdf_files
-            if args.force or not (draft_dir / f"rett_{pdf_files.index(p):03d}" / "source.md").exists()
-        ]
 
-        results = await parse_pdfs_mineru(to_parse, mineru_config)
+        # Filter to only PDFs that need processing
+        pending: list[tuple[int, Path]] = []
+        for entry_idx, pdf_path in all_pdfs:
+            entry_id = f"rett_{entry_idx:03d}"
+            if args.force or not (draft_dir / entry_id / "source.md").exists():
+                pending.append((entry_idx, pdf_path))
 
-        for idx, pdf_path in enumerate(pdf_files):
-            entry_id = f"rett_{idx:03d}"
-            lang = detect_language_from_filename(pdf_path.name)
-            entry_dir = draft_dir / entry_id
+        # Process in batches, writing results after each batch
+        total_batches = (len(pending) + mineru_config.batch_size - 1) // mineru_config.batch_size
+        for batch_num in range(total_batches):
+            start = batch_num * mineru_config.batch_size
+            batch = pending[start: start + mineru_config.batch_size]
+            batch_paths = [p for _, p in batch]
 
-            if not args.force and (entry_dir / "source.md").exists():
-                continue
+            logger.info("MinerU batch {}/{}: {} files", batch_num + 1, total_batches, len(batch_paths))
+            results = await parse_batch_mineru(batch_paths, mineru_config)
 
-            md = results.get(pdf_path.name, "")
+            # Write results for this batch immediately
+            for entry_idx, pdf_path in batch:
+                entry_id = f"rett_{entry_idx:03d}"
+                lang = detect_language_from_filename(pdf_path.name)
 
-            if not md and args.fallback:
-                logger.info("MinerU failed for {}, falling back to pymupdf", pdf_path.name)
-                md = parse_pdf_pymupdf(pdf_path)
+                output = results.get(pdf_path.name)
+                md = output.markdown if output else ""
+                imgs = output.images if output else {}
 
-            if not md:
-                logger.warning("No text extracted for {}", pdf_path.name)
-                failed += 1
-                continue
+                if not md and args.fallback:
+                    logger.info("MinerU failed for {}, falling back to pymupdf", pdf_path.name)
+                    md = parse_pdf_pymupdf(pdf_path)
 
-            entry_dir.mkdir(parents=True, exist_ok=True)
-            (entry_dir / "source.md").write_text(md, encoding="utf-8")
-            shutil.copy2(pdf_path, entry_dir / "source.pdf")
+                if not md:
+                    logger.warning("No text extracted for {}", pdf_path.name)
+                    failed += 1
+                    continue
 
-            meta = DraftMeta(
-                entry_id=entry_id,
-                pdf_path=str(pdf_path),
-                language=lang,
-                parse_status="parsed",
-                parse_backend="mineru",
-            )
-            (entry_dir / "meta.json").write_text(
-                json.dumps(meta.model_dump(), indent=2, ensure_ascii=False), encoding="utf-8"
-            )
+                _write_entry(entry_id, pdf_path, lang, md, draft_dir, manifest, "mineru", images=imgs)
+                processed += 1
 
-            add_entry(manifest, ManifestEntry(
-                entry_id=entry_id,
-                language=lang,
-                status="parsed",
-                pdf_path=str(pdf_path),
-                current_dir=str(entry_dir),
-                created_at=_now_iso(),
-                updated_at=_now_iso(),
-            ))
-            processed += 1
+            # Save manifest after each batch
+            save_manifest(manifest, manifest_path)
+            logger.info("Batch {}/{} done: {} processed so far", batch_num + 1, total_batches, processed)
     else:
-        if use_mineru and not cfg.mineru_token:
-            logger.warning("MinerU token not set, falling back to pymupdf")
-
-        for idx, pdf_path in enumerate(pdf_files):
-            entry_id = f"rett_{idx:03d}"
+        for entry_idx, pdf_path in all_pdfs:
+            entry_id = f"rett_{entry_idx:03d}"
             lang = detect_language_from_filename(pdf_path.name)
             entry_dir = draft_dir / entry_id
 
             if not args.force and (entry_dir / "source.md").exists():
                 continue
 
-            entry_dir.mkdir(parents=True, exist_ok=True)
-            logger.info("[{}/{}] Parsing {} -> {}", idx + 1, len(pdf_files), pdf_path.name, entry_id)
+            logger.info("[{}/{}] Parsing {} -> {}", processed + failed + 1, len(all_pdfs), pdf_path.name, entry_id)
 
             md = parse_pdf_pymupdf(pdf_path)
             if not md:
                 failed += 1
                 continue
 
-            (entry_dir / "source.md").write_text(md, encoding="utf-8")
-            shutil.copy2(pdf_path, entry_dir / "source.pdf")
-
-            meta = DraftMeta(
-                entry_id=entry_id,
-                pdf_path=str(pdf_path),
-                language=lang,
-                parse_status="parsed",
-                parse_backend="pymupdf",
-            )
-            (entry_dir / "meta.json").write_text(
-                json.dumps(meta.model_dump(), indent=2, ensure_ascii=False), encoding="utf-8"
-            )
-
-            add_entry(manifest, ManifestEntry(
-                entry_id=entry_id,
-                language=lang,
-                status="parsed",
-                pdf_path=str(pdf_path),
-                current_dir=str(entry_dir),
-                created_at=_now_iso(),
-                updated_at=_now_iso(),
-            ))
+            _write_entry(entry_id, pdf_path, lang, md, draft_dir, manifest, "pymupdf")
             processed += 1
 
-    save_manifest(manifest, manifest_path)
+        save_manifest(manifest, manifest_path)
+
     logger.info("Done: {} processed, {} failed", processed, failed)
 
 

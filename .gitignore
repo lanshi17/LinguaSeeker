@@ -103,3 +103,6 @@ opencode.jsonc
 .playwright-mcp/*
 .*-mcp/*
 .qoder/
+benchmark/annotation/draft/*/*.md
+benchmark/annotation/draft/*/images
+
