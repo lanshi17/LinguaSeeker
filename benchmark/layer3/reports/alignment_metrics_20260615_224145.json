@@ -1,0 +1,69 @@
+{
+  "evaluation_id": "alignment_metrics_20260615_224145",
+  "timestamp": "2026-06-15T22:41:45",
+  "config": {
+    "ground_truth_root": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/layer3/ground_truth",
+    "entry_ids": [],
+    "limit": null
+  },
+  "overall": {
+    "alignment": {
+      "alignment_accuracy": 0.8667,
+      "support_label_accuracy": 0.9,
+      "drift_detection_f1": 0.0,
+      "conflict_detection_f1": 0.0
+    }
+  },
+  "by_field": {
+    "A.gene_disease_relationship": {
+      "alignment": {
+        "alignment_accuracy": 0.8333,
+        "support_label_accuracy": 0.8333,
+        "drift_detection_f1": 0.0,
+        "conflict_detection_f1": 0.0
+      }
+    },
+    "A.gene_symbol": {
+      "alignment": {
+        "alignment_accuracy": 0.9667,
+        "support_label_accuracy": 0.9667,
+        "drift_detection_f1": 0.0,
+        "conflict_detection_f1": 0.0
+      }
+    },
+    "B.disease_diagnosis": {
+      "alignment": {
+        "alignment_accuracy": 0.8,
+        "support_label_accuracy": 0.9,
+        "drift_detection_f1": 0.0,
+        "conflict_detection_f1": 0.0
+      }
+    }
+  },
+  "counts": {
+    "total": 90,
+    "alignment_correct": 78,
+    "support_total": 90,
+    "support_correct": 81,
+    "drift_tp": 0,
+    "drift_fp": 1,
+    "drift_fn": 0,
+    "conflict_tp": 0,
+    "conflict_fp": 1,
+    "conflict_fn": 0
+  },
+  "label_counts": {
+    "gold": {
+      "aligned": 76,
+      "missing": 14
+    },
+    "predicted": {
+      "aligned": 66,
+      "conflict": 1,
+      "drifted": 1,
+      "missing": 17,
+      "partial": 3
+    }
+  },
+  "warnings": []
+}

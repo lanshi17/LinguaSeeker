@@ -1,8 +1,8 @@
 # BIBM Main Paper Claim Matrix
 
-**Status:** in-progress
+**Status:** verified-baseline
 **Created:** 2026-06-15
-**Completed:** —
+**Completed:** 2026-06-15 (benchmark metrics verified)
 **PR:** —
 
 ## Purpose
@@ -21,9 +21,11 @@ This matrix binds every paper-facing claim to frozen evidence artifacts. It is t
 | Internal source-grounded traceability | `benchmark/layer3/reports/traceability_source_grounded_reconcile_20260615_013609.json` | TraceableF1=0.8889 |
 | Same-window prompt-only frontier sweep | `benchmark/layer3/reports/prompt_model_baseline_tables_20260615_114312.md` | B6-B10 citation-required prompt-only baselines, release cohort 2025-08-07 to 2025-09-30, same provider gateway and prompt; strongest GPT-5 F1=0.9222, TraceableF1=0.9109 |
 | Error diagnosis | `benchmark/layer3/reports/contextual_reconcile_diagnosis_20260615_011335.json` | `source_label_visibility_limit=5`, `disease_boundary_error=2`, `candidate_absent=2` |
-| Benchmark A readiness | `benchmark/layer3/reports/benchmark_readiness_*.json` | Current state report: alignment annotations are missing or invalid on the frozen N=30 set; Benchmark A metrics are not yet reportable without gold annotation files |
-| Benchmark B pilot selection | `benchmark/layer3/ground_truth/benchmark_b_pilot_selection.json` | Frozen multilingual pilot selection from the existing non-English corpus; use this as the source for the N=10 pilot, not as an experimental result |
-| Paper tables | `benchmark/layer3/reports/main_paper_tables_20260615_194001.md` | Tables 1-6 generated from the frozen manifest |
+| Benchmark A readiness | `benchmark/layer3/reports/benchmark_readiness_20260615_221952.json` | 30/30 entries annotated, alignment_annotation_coverage=1.0; Benchmark A metrics are now reportable |
+| Alignment metrics | `benchmark/layer3/reports/alignment_metrics_20260615_224145.json` | N=90 records (3 fields × 30 entries); overall alignment_accuracy=0.8667; gene_symbol=0.9667, gene_disease_relationship=0.8333, disease_diagnosis=0.8; drift_f1=0.0, conflict_f1=0.0 (no drift/conflict in ClinGen gold set) |
+| Augmentation metrics | `benchmark/layer3/reports/evidence_augmentation_metrics_20260615_221957.json` | N=30 cases; CoverageGain=0.0647, NonEnglishYield=0.0608, UniqueGain=56, TraceableRate=1.0, InterpretationRelevant=0.1964, ReviewerBurden=0.0; 5/30 cases show non-English augmentation |
+| Benchmark B pilot selection | `benchmark/layer3/ground_truth/benchmark_b_pilot_selection.json` | Frozen multilingual pilot selection (N=10 cases, 7 languages each); use this as the source for the N=10 pilot, not as an experimental result |
+| Paper tables | `benchmark/layer3/reports/main_paper_tables_20260615_224250.md` | Tables 1-8 generated from the frozen manifest; Tables 7-8 add alignment and augmentation metrics |
 
 ## Primary Paper Position
 
@@ -51,6 +53,8 @@ On a frozen N=30 ClinGen/ACMG-style benchmark, context-verifier reconciliation i
 | Traceable utility | "TraceableF1 improves from 0.8820/0.8889 for internal grounded baselines to 0.9474." | Traceability reports for candidate, `grounded_hard_rule`, `source_grounded_reconcile` | B0-B4 do not emit a comparable citation surface. |
 | Error analysis | "Remaining relationship errors include source-label visibility limits where the article-local evidence does not expose the ClinGen validity label." | Diagnosis report with `source_label_visibility_limit=5` | Do not tune runtime extraction to ClinGen gold labels unless that context is explicitly allowed. |
 | Field strength | "Disease diagnosis and gene symbol extraction are strong; relationship semantics remains the hardest field." | Disease F1=0.9655, gene F1=0.9831, relationship F1=0.8889 | Relationship labels can encode external curation semantics not present in source text. |
+| Cross-lingual alignment | "The alignment layer achieves 86.7% overall label accuracy across 3 scorable fields × 30 entries, with gene symbol at 96.7%, gene-disease relationship at 83.3%, and disease diagnosis at 80.0%." | Alignment metrics: alignment_accuracy=0.8667, gene_symbol=0.9667, gene_disease=0.8333, disease_diagnosis=0.8 | Drift F1=0.0 and Conflict F1=0.0 because the ClinGen English-only gold set has zero drift/conflict cases. |
+| Evidence augmentation | "The dual-track pipeline augments evidence coverage by 6.5% over single-track extraction, with 100% of augmented evidence being source-traceable and zero reviewer burden." | Augmentation metrics: CoverageGain=0.0647, TraceableRate=1.0, ReviewerBurden=0.0 | 5/30 cases show augmentation; these are cases where English-only extraction failed but the translated track recovered evidence. True non-English evidence gain requires running the pipeline on zh/ja/ko raw corpora. |
 
 ## Qualified Claims
 
@@ -59,8 +63,8 @@ On a frozen N=30 ClinGen/ACMG-style benchmark, context-verifier reconciliation i
 | "Reduces hallucinated citation risk" | Directly compare against the citation-required B6-B10 prompt-only frontier sweep and internal grounded strategies. For B0-B4, state that their current reports have no citation surface, so HCR is not directly comparable. |
 | "Cross-lingual consistency" | Report CLC as a reliability/audit metric, not as proof of native multilingual superiority. The current ClinGen benchmark is not native multilingual gold data. |
 | "Main Paper ready" | Say the internal grounded-baseline statistics pass the Main Paper evidence gate; do not say all SOTA baseline superiority gates are closed. |
-| "Benchmark A readiness" | Say alignment-annotation coverage is reportable but not yet sufficient for Benchmark A metrics unless valid `alignment_annotations.json` files exist. |
-| "Benchmark B pilot selection" | Say the multilingual pilot is frozen and eligible for downstream experiments, but do not imply evidence yield has been measured yet. |
+| "Benchmark A readiness" | Say alignment annotations are complete (30/30) and Benchmark A metrics are reportable. Report alignment accuracy per field (overall 86.7%, gene 96.7%, relationship 83.3%, disease 80.0%); note that drift/conflict F1 is 0.0 due to the English-only gold set having no such cases. |
+| "Benchmark B pilot selection" | Say the multilingual pilot is frozen (N=10) and augmentation metrics are computed on the existing extraction artifacts (CoverageGain=6.5%, TraceableRate=100%). Do not claim true non-English evidence gain — that requires running the pipeline on zh/ja/ko raw corpora. |
 | "ACMG/ClinGen evidence automation" | Say structured evidence extraction and reconciliation, not clinical ACMG classification automation. |
 
 ## Forbidden Claims

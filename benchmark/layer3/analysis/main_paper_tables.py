@@ -17,6 +17,8 @@ TABLE_ABLATION = "Table 3 Ablation study"
 TABLE_TRACEABILITY = "Table 4 Traceability metrics"
 TABLE_ERRORS = "Table 5 Error breakdown"
 TABLE_READINESS = "Table 6 Benchmark readiness and pilot selection"
+TABLE_ALIGNMENT = "Table 7 Alignment and drift/conflict detection"
+TABLE_AUGMENTATION = "Table 8 Evidence augmentation metrics"
 
 ERROR_ROOT_CAUSE_ORDER = (
     "wrong_relationship_semantics",
@@ -77,6 +79,8 @@ def build_main_paper_tables(manifest_path: Path) -> MainPaperTables:
             MainPaperTable(TABLE_TRACEABILITY, _traceability_rows(manifest, manifest_path=manifest_path)),
             MainPaperTable(TABLE_ERRORS, _error_rows(manifest, manifest_path=manifest_path)),
             MainPaperTable(TABLE_READINESS, _readiness_rows(manifest)),
+            MainPaperTable(TABLE_ALIGNMENT, _alignment_rows(manifest_path)),
+            MainPaperTable(TABLE_AUGMENTATION, _augmentation_rows(manifest_path)),
         ),
     )
 
@@ -260,6 +264,101 @@ def _readiness_rows(manifest: Mapping[str, Any]) -> tuple[Mapping[str, object], 
             "status": _readiness_status(pilot_report),
             "report_path": pilot_report,
             "note": "Multilingual pilot selection is frozen from the existing non-English corpus.",
+        },
+    )
+
+
+def _latest_report(manifest_path: Path, pattern: str) -> Mapping[str, Any] | None:
+    reports_dir = manifest_path.parent
+    candidates = sorted(reports_dir.glob(pattern))
+    if not candidates:
+        return None
+    return _load_json_object(candidates[-1])
+
+
+def _alignment_rows(manifest_path: Path) -> tuple[Mapping[str, object], ...]:
+    payload = _latest_report(manifest_path, "alignment_metrics_*.json")
+    if not payload:
+        return (
+            {
+                "scope": "overall",
+                "alignment_accuracy": None,
+                "support_accuracy": None,
+                "drift_detection_f1": None,
+                "conflict_detection_f1": None,
+                "N": 0,
+            },
+        )
+    overall = _mapping(_mapping(payload.get("overall")).get("alignment"))
+    counts = _mapping(payload.get("counts"))
+    rows: list[Mapping[str, object]] = [
+        {
+            "scope": "overall",
+            "alignment_accuracy": _optional_float(overall.get("alignment_accuracy")),
+            "support_accuracy": _optional_float(overall.get("support_label_accuracy")),
+            "drift_detection_f1": _optional_float(overall.get("drift_detection_f1")),
+            "conflict_detection_f1": _optional_float(overall.get("conflict_detection_f1")),
+            "N": _int(counts.get("total")),
+        }
+    ]
+    by_field = _mapping(payload.get("by_field"))
+    for field_id in sorted(by_field):
+        field_alignment = _mapping(_mapping(by_field[field_id]).get("alignment"))
+        rows.append(
+            {
+                "scope": field_id,
+                "alignment_accuracy": _optional_float(field_alignment.get("alignment_accuracy")),
+                "support_accuracy": _optional_float(field_alignment.get("support_label_accuracy")),
+                "drift_detection_f1": _optional_float(field_alignment.get("drift_detection_f1")),
+                "conflict_detection_f1": _optional_float(field_alignment.get("conflict_detection_f1")),
+                "N": "",
+            }
+        )
+    return tuple(rows)
+
+
+def _augmentation_rows(manifest_path: Path) -> tuple[Mapping[str, object], ...]:
+    payload = _latest_report(manifest_path, "evidence_augmentation_metrics_*.json")
+    if not payload:
+        return (
+            {
+                "scope": "overall",
+                "evidence_coverage_gain": None,
+                "non_english_evidence_yield": None,
+                "unique_evidence_gain": None,
+                "traceable_augmentation_rate": None,
+                "interpretation_relevant_evidence_gain": None,
+                "reviewer_burden": None,
+                "N": 0,
+            },
+        )
+    overall = _mapping(payload.get("overall"))
+    total_cases = len(_list(payload.get("per_case")))
+    augmented_cases = sum(
+        1
+        for case in _list(payload.get("per_case"))
+        if _int(_mapping(case.get("matrix")).get("non_english_added_evidence_count")) > 0
+    )
+    return (
+        {
+            "scope": "overall",
+            "evidence_coverage_gain": _optional_float(overall.get("evidence_coverage_gain")),
+            "non_english_evidence_yield": _optional_float(overall.get("non_english_evidence_yield")),
+            "unique_evidence_gain": _int(overall.get("unique_evidence_gain")),
+            "traceable_augmentation_rate": _optional_float(overall.get("traceable_augmentation_rate")),
+            "interpretation_relevant_evidence_gain": _optional_float(overall.get("interpretation_relevant_evidence_gain")),
+            "reviewer_burden": _optional_float(overall.get("reviewer_burden")),
+            "N": total_cases,
+        },
+        {
+            "scope": f"augmented_cases ({augmented_cases})",
+            "evidence_coverage_gain": "",
+            "non_english_evidence_yield": "",
+            "unique_evidence_gain": "",
+            "traceable_augmentation_rate": "",
+            "interpretation_relevant_evidence_gain": "",
+            "reviewer_burden": "",
+            "N": augmented_cases,
         },
     )
 
