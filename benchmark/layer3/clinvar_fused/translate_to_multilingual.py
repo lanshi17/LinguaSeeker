@@ -77,27 +77,30 @@ Rules:
 
 
 async def translate_chunk(
-    llm: object,
+    llms: list,
     chunk: str,
     lang_code: str,
     lang_name: str,
     sem: asyncio.Semaphore,
 ) -> str:
+    messages = [
+        SystemMessage(content=_build_system_prompt(lang_name)),
+        HumanMessage(content=chunk),
+    ]
     async with sem:
-        try:
-            messages = [
-                SystemMessage(content=_build_system_prompt(lang_name)),
-                HumanMessage(content=chunk),
-            ]
-            result = await llm.ainvoke(messages)
-            return str(result.content) if hasattr(result, "content") else str(result)
-        except Exception as e:
-            logger.error("Translation failed for lang={}: {}", lang_code, e)
-            return f"[TRANSLATION FAILED: {e}]\n\n{chunk}"
+        for llm in llms:
+            try:
+                result = await llm.ainvoke(messages)
+                return str(result.content) if hasattr(result, "content") else str(result)
+            except Exception as e:
+                logger.warning("Provider failed ({}), trying next: {}", type(e).__name__, str(e)[:80])
+                continue
+        logger.error("All providers failed for lang={}", lang_code)
+        return f"[TRANSLATION FAILED: all providers]\n\n{chunk}"
 
 
 async def translate_article(
-    llm: object,
+    llms: list,
     entry_id: str,
     source_text: str,
     lang_code: str,
@@ -107,12 +110,12 @@ async def translate_article(
     sections = _split_into_sections(source_text)
 
     if len(sections) <= 1:
-        return await translate_chunk(llm, source_text, lang_code, lang_name, sem)
+        return await translate_chunk(llms, source_text, lang_code, lang_name, sem)
 
     translated_sections: list[str] = []
     for i, section in enumerate(sections):
         logger.debug("[{}] section {}/{} ({})", entry_id, i + 1, len(sections), lang_code)
-        translated = await translate_chunk(llm, section, lang_code, lang_name, sem)
+        translated = await translate_chunk(llms, section, lang_code, lang_name, sem)
         translated_sections.append(translated)
 
     return "\n\n".join(translated_sections)
@@ -122,39 +125,33 @@ async def translate_all(
     target_langs: list[str] | None = None,
     limit: int | None = None,
     entry_ids: list[str] | None = None,
-    llm_base_url: str | None = None,
-    llm_api_key: str | None = None,
-    llm_model: str | None = None,
+    providers: list[dict[str, str]] | None = None,
 ) -> None:
     from src.utils.llm_adapter import create_llm_client
 
-    if llm_base_url and llm_api_key and llm_model:
-        base_url = llm_base_url
-        api_key = llm_api_key
-        model = llm_model
-        api_keys: list[str] = []
-        timeout = 120
-    else:
+    if not providers:
         from src.core.config import get_config
         cfg = get_config()
         llm_cfg = cfg.llm
-        base_url = llm_cfg.base_url
-        api_key = llm_cfg.api_key
-        model = llm_cfg.model
-        api_keys = llm_cfg.all_api_keys
-        timeout = llm_cfg.timeout
+        providers = [{
+            "base_url": llm_cfg.base_url,
+            "api_key": llm_cfg.api_key,
+            "model": llm_cfg.model,
+        }]
 
-    logger.info("LLM: model={} base_url={}", model, base_url)
+    llms: list = []
+    for p in providers:
+        logger.info("Provider: {} model={}", p["base_url"], p["model"])
+        llms.append(create_llm_client(
+            model=p["model"],
+            api_key=p["api_key"],
+            base_url=p["base_url"],
+            temperature=0.1,
+            max_tokens=8192,
+            timeout=120,
+        ))
 
-    llm = create_llm_client(
-        model=model,
-        api_key=api_key,
-        base_url=base_url,
-        api_keys=api_keys,
-        temperature=0.1,
-        max_tokens=8192,
-        timeout=timeout,
-    )
+    logger.info("LLM providers: {}", len(llms))
 
     langs = target_langs or list(TARGET_LANGUAGES.keys())
     logger.info("Target languages: {}", langs)
@@ -200,7 +197,7 @@ async def translate_all(
 
             logger.info("[{}] translating to {}...", entry_id, lang_code)
             translated = await translate_article(
-                llm, entry_id, source_text, lang_code, lang_name, sem
+                llms, entry_id, source_text, lang_code, lang_name, sem
             )
 
             if translated:
@@ -215,6 +212,22 @@ async def translate_all(
     logger.info("Done. {}/{} translations completed", completed, total_tasks)
 
 
+def _build_providers() -> list[dict[str, str]]:
+    """Build multi-provider config. Edit here to add/remove providers."""
+    return [
+        {
+            "base_url": "https://open.cherryin.cc/v1",
+            "api_key": "***REDACTED_API_KEY***",
+            "model": "tencent/hunyuan-mt-7b(free)",
+        },
+        {
+            "base_url": "https://api.siliconflow.cn/v1",
+            "api_key": "***REDACTED_API_KEY***",
+            "model": "tencent/Hunyuan-MT-7B",
+        },
+    ]
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -222,16 +235,16 @@ if __name__ == "__main__":
     parser.add_argument("--langs", nargs="+", default=None, help="Target languages (zh ja ko)")
     parser.add_argument("--limit", type=int, default=None, help="Max entries to translate")
     parser.add_argument("--entries", nargs="+", default=None, help="Specific entry IDs")
-    parser.add_argument("--base-url", default=None, help="LLM API base URL")
-    parser.add_argument("--api-key", default=None, help="LLM API key")
-    parser.add_argument("--model", default=None, help="LLM model name")
+    parser.add_argument("--providers", type=int, default=None, help="Number of providers to use (default: all)")
     args = parser.parse_args()
+
+    providers = _build_providers()
+    if args.providers:
+        providers = providers[: args.providers]
 
     asyncio.run(translate_all(
         target_langs=args.langs,
         limit=args.limit,
         entry_ids=args.entries,
-        llm_base_url=args.base_url,
-        llm_api_key=args.api_key,
-        llm_model=args.model,
+        providers=providers,
     ))
