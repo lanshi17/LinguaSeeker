@@ -8,7 +8,7 @@ from pathlib import Path
 import time
 from typing import Mapping, TypedDict
 
-from benchmark.layer3.evaluate import GROUND_TRUTH_DIR
+from benchmark.layer3.evaluate import GROUND_TRUTH_DIR, REPORTS_DIR
 
 SOURCE_CORPUS_ROOT = Path(__file__).resolve().parents[2] / "pipeline" / "input"
 
@@ -106,14 +106,20 @@ def build_benchmark_b_pilot_selection(
 ) -> BenchmarkBPilotSelectionReport:
     """Build a deterministic multilingual pilot selection."""
     entry_ids = _entry_ids(config.selection_path)
+    source_corpus_root = _resolve_source_corpus_root(config.source_corpus_root)
     eligible_cases: list[BenchmarkBPilotCase] = []
     excluded_english_only_entry_ids: list[str] = []
     warnings: list[str] = []
 
+    if source_corpus_root != config.source_corpus_root:
+        warnings.append(
+            f"source_corpus_root fallback: using {source_corpus_root} because {config.source_corpus_root} was missing",
+        )
+
     for entry_id in entry_ids:
-        source_files = _source_files_for_entry(entry_id, config.source_corpus_root)
+        source_files = _source_files_for_entry(entry_id, source_corpus_root)
         if not source_files:
-            warnings.append(f"{entry_id}: no source PDFs found in {config.source_corpus_root}")
+            warnings.append(f"{entry_id}: no source PDFs found in {source_corpus_root}")
             continue
 
         source_languages = tuple(sorted(file.language for file in source_files))
@@ -263,6 +269,31 @@ def _source_files_for_entry(entry_id: str, source_corpus_root: Path) -> list[Ben
         if pdf_path.exists():
             source_files.append(BenchmarkBPilotSourceFile(language=language_dir.name, path=pdf_path))
     return source_files
+
+
+def _resolve_source_corpus_root(source_corpus_root: Path) -> Path:
+    if source_corpus_root.exists():
+        return source_corpus_root
+
+    latest_inventory = _latest_source_inventory_report(REPORTS_DIR)
+    if latest_inventory is not None:
+        payload = json.loads(latest_inventory.read_text(encoding="utf-8"))
+        if isinstance(payload, Mapping):
+            config = payload.get("config")
+            if isinstance(config, Mapping):
+                repo_root = str(config.get("repo_root") or "").strip()
+                if repo_root:
+                    candidate = Path(repo_root) / "benchmark" / "pipeline" / "input"
+                    if candidate.exists():
+                        return candidate
+    return source_corpus_root
+
+
+def _latest_source_inventory_report(reports_dir: Path) -> Path | None:
+    candidates = sorted(reports_dir.glob("source_inventory_*.json"))
+    if not candidates:
+        return None
+    return candidates[-1]
 
 
 if __name__ == "__main__":

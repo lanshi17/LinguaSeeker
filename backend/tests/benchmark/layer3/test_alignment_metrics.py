@@ -7,6 +7,7 @@ from pathlib import Path
 from benchmark.layer3.analysis.alignment_metrics import (
     AlignmentMetricConfig,
     build_alignment_metric_report,
+    alignment_report_to_payload,
 )
 
 
@@ -179,3 +180,50 @@ def test_alignment_metrics_ignore_expected_json_for_gold_labels(tmp_path: Path) 
 
     assert report.overall.alignment_accuracy == 1.0
     assert report.counts.total == 1
+
+
+def test_alignment_metrics_counts_absent_prediction_as_missing_when_gold_is_missing(tmp_path: Path) -> None:
+    entry_dir = tmp_path / "clingen_000"
+    artifact_dir = entry_dir / "preprocessed" / "phase_2"
+    artifact_dir.mkdir(parents=True)
+    (tmp_path / "selection.json").write_text(json.dumps([{"entry_id": "clingen_000"}]), encoding="utf-8")
+    (entry_dir / "alignment_annotations.json").write_text(
+        json.dumps(
+            {
+                "records": [
+                    {
+                        "entry_id": "clingen_000",
+                        "field_id": "A.disease_diagnosis",
+                        "original_value": None,
+                        "translated_value": None,
+                        "normalized_value": "example disease",
+                        "original_span_id": "",
+                        "translated_span_id": "",
+                        "alignment_label": "missing",
+                        "support_label": "insufficient",
+                        "confidence": 1.0,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    (artifact_dir / "extraction_result.json").write_text(
+        json.dumps({"alignment_records": []}),
+        encoding="utf-8",
+    )
+
+    report = build_alignment_metric_report(AlignmentMetricConfig(ground_truth_root=tmp_path))
+
+    assert report.overall.alignment_accuracy == 1.0
+    assert report.overall.support_label_accuracy == 1.0
+
+
+def test_alignment_report_payload_exposes_drift_and_conflict_gold_positive_counts(tmp_path: Path) -> None:
+    _write_alignment_case(tmp_path, gold_label="aligned", predicted_label="drifted")
+
+    report = build_alignment_metric_report(AlignmentMetricConfig(ground_truth_root=tmp_path))
+    payload = alignment_report_to_payload(report)
+
+    assert payload["counts"]["drift_gold_positive"] == 0
+    assert payload["counts"]["conflict_gold_positive"] == 0
