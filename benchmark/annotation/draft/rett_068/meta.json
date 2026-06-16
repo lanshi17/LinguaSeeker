@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/pt/pt_Hypoventilation_and_sleep_hypercapnia_in_a_case_of_congenital_variant-like_Rett_syndrome.pdf",
   "language": "en",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[case_report] Reports a single human patient with Rett syndrome carrying a de novo MECP2 variant described with HGVS notation: c.396_397insA (p.Arg133fsTer2). This is a case report including specific genetic variant data from a human patient.",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:55:01+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 1,
+  "clinical_feature_count": 6
 }

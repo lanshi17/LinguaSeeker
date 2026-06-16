@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_Methyl-CpG-binding_protein_2_MECP2_mutation_type_is_associated_with_bone_disease_severity_in_Rett_sy.pdf",
   "language": "en",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[cohort_study] Reports specific MECP2 mutations with nucleotide and amino acid changes (e.g., c.397C>T -> p.R133C, etc.) observed in Rett syndrome patients; retrospective analysis of a patient cohort assessing genotype-phenotype correlations.",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:52:41+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 8,
+  "clinical_feature_count": 5
 }

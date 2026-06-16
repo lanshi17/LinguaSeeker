@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ko/ko_Mutational_Analysis_of_MECP2_Gene_in_34_Rett_Syndrome.pdf",
   "language": "ko",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[cohort_study] Provides detailed MECP2 gene mutations (nucleotide changes and corresponding amino acid changes) observed in 34 Rett syndrome patients, including novel mutations, based on direct sequencing and RFLP analyses.",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:55:18+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 12,
+  "clinical_feature_count": 6
 }

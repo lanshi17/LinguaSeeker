@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_MECP2_Gene-Related_Severe_Neonatal_Encephalopathy_Case_in_Female_Neon.pdf",
   "language": "en",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[case_report] Contains a described human patient case with a specific MECP2 variant (c.1477G>A; p.Val493Met) identified by exome sequencing, reported as a variant of unknown significance, with discussion of its potential role in disease.",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:48:50+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 1,
+  "clinical_feature_count": 6
 }

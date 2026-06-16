@@ -1,0 +1,143 @@
+{
+  "entry_id": "rett_051",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett syndrome (typical/classic)",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": "10.3389/fped.2021.748641",
+  "source_title": "Case Report: Prenatal Diagnosis for a Rett Syndrome Family Caused by a Novel MECP2 Deletion With Heteroduplexes of PCR Product",
+  "source_journal": "Frontiers in Pediatrics",
+  "source_year": "2021",
+  "source_language": "en",
+  "source_pdf_path": "",
+  "variants": [
+    {
+      "hgvs_c": "c.441_1153del713",
+      "hgvs_p": "",
+      "variant_type": "frameshift deletion (713-bp deletion, premature termination at codon 154 of the 487 aa protein)",
+      "clinical_significance": "pathogenic",
+      "exon": "exon 4",
+      "domain": "large loss spanning from the methyl-CpG binding domain (MBD) to the C-terminal domain"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome (typical/classic)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.441_1153del713",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "frameshift deletion (713-bp deletion, premature termination at codon 154 of the 487 aa protein)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "large loss spanning from the methyl-CpG binding domain (MBD) to the C-terminal domain",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0002376; HP:0002371; HP:0012171; HP:0001250",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "developmental regression after a period of normal development; loss of acquired speech (said 'papa'/'mama' at 11 months, stopped after 13 months); loss of acquired purposeful hand skills (began at 15 months); stereotypical hand movements (frequent hand wringing); epilepsy/seizures (developed at 30 months, treated with sodium valproate and lamotrigine); emotional/social withdrawal (no longer responding to parents' call)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "~13 months (regression began after 13 months; normal development up to ~11 months)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "unknown / not de novo confirmed; not detected in parental blood and not found in paternal sperm, but maternal germline mosaicism could not be ruled out, so the deletion is probably inherited from a germline-mosaic parent",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": ""
+}

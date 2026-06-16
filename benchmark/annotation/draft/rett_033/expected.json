@@ -1,0 +1,136 @@
+{
+  "entry_id": "rett_033",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Síndrome de duplicación MECP2 (MECP2 duplication syndrome)",
+  "mondo_id": "MONDO:0010726",
+  "moi": "X-linked (ligado a X; afecta principalmente a varones, mujeres portadoras generalmente asintomáticas)",
+  "source_pmid": null,
+  "source_doi": "10.33588/rn.7008.2019457",
+  "source_title": "Síndrome de duplicación MECP2 familiar",
+  "source_journal": "Revista de Neurología",
+  "source_year": "2020",
+  "source_language": "es",
+  "source_pdf_path": "",
+  "variants": [
+    {
+      "hgvs_c": "",
+      "hgvs_p": "",
+      "variant_type": "duplication (CNV)",
+      "clinical_significance": "pathogenic",
+      "exon": "",
+      "domain": "whole-gene duplication of Xq28 including MECP2 (~416 kb)"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Síndrome de duplicación MECP2 (MECP2 duplication syndrome)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "X-linked (ligado a X; afecta principalmente a varones, mujeres portadoras generalmente asintomáticas)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "duplication (CNV)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "whole-gene duplication of Xq28 including MECP2 (~416 kb)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001252; HP:0001263; HP:0002376; HP:0000729; HP:0001249; HP:0001250; HP:0002205; HP:0001257; HP:0000733; HP:0002020; HP:0002019; HP:0025324; HP:0002307; HP:0001344",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "hipotonía axial / hipotonía temprana; retraso psicomotor / retraso global del desarrollo; regresión de los hitos del desarrollo; rasgos del espectro autista; escaso desarrollo del lenguaje / ausencia de lenguaje expresivo; discapacidad intelectual de moderada a grave; epilepsia (50-80% de los casos, a menudo refractaria); infecciones respiratorias recurrentes; espasticidad progresiva; estereotipias manuales / movimientos estereotipados de las manos; reflujo gastroesofágico; estreñimiento; bruxismo; sialorrea; dificultad para la marcha; rasgos dismórficos (hipoplasia mediofacial, puente nasal estrecho, labio inferior grueso, orejas grandes, dedos cónicos, pies pequeños); escoliosis; estrabismo divergente e hipermetropía; hipertensión pulmonar (causa de muerte precoz)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "male (ambos casos son varones)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "lactancia temprana (caso 1 evaluado a los 6 meses; caso 2 a los 13 meses)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "inherited (duplicación heredada de la madre portadora; herencia familiar confirmada en madre, dos tías maternas y abuela materna)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": ""
+}

@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_MECP2_germline_mosaicism_in_Rett_syndrome_inheritance.pdf",
   "language": "en",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[cohort_study] Article reports specific MECP2 germline mosaic mutations with exact nucleotide and amino acid changes (e.g., c.316C>T -> p.R106W, etc.) detected in human sperm and blood from fathers of RTT patients and healthy controls, constituting primary human cohort data rather than a review or non-human study.",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:49:12+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 10,
+  "clinical_feature_count": 5
 }

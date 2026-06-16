@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_De_novo_deletion_in_MECP2_in_monozygotic_twin_pair_with_Rett_syndrome.pdf",
   "language": "en",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[case_report] Reports a de novo heterozygous deletion in exon 3 of MECP2 in a monozygotic twin pair with Rett syndrome, i.e., a human genetic variant observed in patient-derived samples.",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:46:57+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 1,
+  "clinical_feature_count": 6
 }

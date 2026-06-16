@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_MECP2_Frameshift_Mutations_in_Rett_Syndrome_Families.pdf",
   "language": "en",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[case_series] Describes two new Rett syndrome families with MECP2 frameshift mutations (human patients) and includes genotyping/sequencing data and segregation analyses, along with a literature review.",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:48:31+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 10,
+  "clinical_feature_count": 6
 }

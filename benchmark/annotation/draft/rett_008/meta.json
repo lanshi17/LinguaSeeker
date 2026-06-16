@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_14q12_microdeletions_excluding_FOXG1_give_rise_to_a_congenital_variant_Rett_syndrome-like_phenotype.pdf",
   "language": "en",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[case_series] The article presents three case descriptions with interstitial 14q12 deletions and references a previously reported FOXG1 frameshift mutation (c.256dupC, p.Gln86ProfsX35) observed in a patient, providing human genetic variant data (CNVs and a pathogenic point mutation).",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:47:54+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 4,
+  "clinical_feature_count": 5
 }

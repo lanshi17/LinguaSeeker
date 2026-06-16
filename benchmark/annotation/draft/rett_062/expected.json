@@ -1,0 +1,160 @@
+{
+  "entry_id": "rett_062",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett syndrome (typical and atypical/variant forms; includes preserved speech/Zappella variant)",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": null,
+  "source_title": "レット症候群：自閉性障害をもつ特異な発達障害",
+  "source_journal": "SRL宝函",
+  "source_year": "2013",
+  "source_language": "ja",
+  "source_pdf_path": "",
+  "variants": [
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Arg133Cys",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic (milder phenotype; frequent in Zappella/preserved speech variant, DNA-binding retained)",
+      "exon": "",
+      "domain": "MBD"
+    },
+    {
+      "hgvs_c": "",
+      "hgvs_p": "p.Ala140Val",
+      "variant_type": "missense",
+      "clinical_significance": "pathogenic (milder phenotype; mild ID in females, intellectual disability in males, PPM-X; transcriptional repression relatively preserved)",
+      "exon": "",
+      "domain": "MBD"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome (typical and atypical/variant forms; includes preserved speech/Zappella variant)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg133Cys",
+      "candidates": [
+        "p.Arg133Cys",
+        "p.Ala140Val"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "MBD",
+      "candidates": [
+        "MBD",
+        "MBD"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0002376; HP:0000733; HP:0001250; HP:0000252; HP:0005484; HP:0001508; HP:0002360; HP:0002650; HP:0003763; HP:0002104; HP:0002883; HP:0001249; HP:0000729; HP:0002066",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "developmental regression after a period of normal/near-normal early development; loss of purposeful hand use and acquired language; hand stereotypies (hand-wringing, hand-mouthing, clapping); epilepsy (generalized tonic-clonic and complex partial seizures; ~50-90%); breathing abnormalities (apnea, hyperventilation, breath-holding); acquired (postnatal) microcephaly; growth failure / poor weight gain; sleep rhythm disturbance; gait abnormality / gait apraxia, ataxia; autistic behavior; scoliosis / spinal deformity; bruxism; autonomic dysfunction (cold extremities, QT prolongation, reduced heart rate); dystonia and limb deformity with age",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "predominantly female (rare male cases: Klinefelter 47,XXY or somatic mosaicism)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "infancy; apparent normal development to ~6-18 months, regression after ~18 months",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "unknown (not specified for an individual case in the text)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": ""
+}

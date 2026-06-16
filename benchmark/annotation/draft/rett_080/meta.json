@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_A_case_report_of_Rett_syndrome.pdf",
   "language": "zh",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[case_report] Reports a Rett syndrome case with a specific MECP2 pathogenic variant: c.502C>T (p.R168X); main text is in Chinese (with an English title/abstract).",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:56:37+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 1,
+  "clinical_feature_count": 6
 }

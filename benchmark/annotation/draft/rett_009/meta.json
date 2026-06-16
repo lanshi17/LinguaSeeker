@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_A_rare_case_of_a_male_child_with_post-zygotic_de_novo_mosaic_variant_c538C_T_in.pdf",
   "language": "en",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[case_report] The article reports a human patient case with a specific MECP2 mosaic variant: c.538C>T (p.R180*), including read depth, mosaic fraction, parental segregation, and ACMG classification.",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:47:23+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 1,
+  "clinical_feature_count": 6
 }

@@ -1,0 +1,150 @@
+{
+  "entry_id": "rett_009",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett syndrome (classical)",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": null,
+  "source_title": "A rare case of a male child with post-zygotic de novo mosaic variant c.538C>T in MECP2 gene: a case report of Rett syndrome",
+  "source_journal": null,
+  "source_year": "2021",
+  "source_language": "en",
+  "source_pdf_path": "",
+  "variants": [
+    {
+      "hgvs_c": "c.538C>T",
+      "hgvs_p": "p.Arg180Ter",
+      "variant_type": "nonsense (single base substitution, loss of function)",
+      "clinical_significance": "Pathogenic",
+      "exon": "exon 3",
+      "domain": "Methyl-CpG binding domain (MBD)"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome (classical)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.538C>T",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg180Ter",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "nonsense (single base substitution, loss of function)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "Methyl-CpG binding domain (MBD)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0001263; HP:0001250; HP:0002373; HP:0000729; HP:0100258; HP:0000954; HP:0100023; HP:0001622; HP:0002104; HP:0002353",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "global developmental delay; premature birth (32 weeks); neonatal apnea; febrile seizure (onset 1 year 9 months); abnormal EEG with epileptiform activity; autism spectrum disorder (DSM-5); unilateral pre-axial polydactyly; simian crease (single transverse palmar crease) on right hand; stereotypic hand movements; poor hand skills; absent language/speech; poor gait, walks only with support; breathing disturbance; inappropriate laugh/screaming spells; sudden tightening of body; normal head circumference, height and weight for age; normal brain MRI; no developmental regression",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "male",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "infancy (global developmental delay from early infancy; seizure onset at 1 year 9 months)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "de novo (post-zygotic somatic mosaicism; ~32% variant allele fraction in blood; parents wildtype)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": ""
+}

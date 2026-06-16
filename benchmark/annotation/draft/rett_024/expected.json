@@ -1,0 +1,170 @@
+{
+  "entry_id": "rett_024",
+  "source": "rett_literature",
+  "gene_symbol": "FOXG1",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett syndrome (congenital/atypical and classical RTT); patient 1 severe RTT-like neurodevelopmental disorder, patient 2 classical RTT",
+  "mondo_id": "MONDO:0010726",
+  "moi": "AD (autosomal dominant, haploinsufficiency; both variants de novo). Note: FOXG1 is autosomal, not X-linked.",
+  "source_pmid": null,
+  "source_doi": "10.1136/jmg.2009.067355",
+  "source_title": "Phenotypic variability in Rett syndrome associated with FOXG1 mutations in females",
+  "source_journal": "Journal of Medical Genetics",
+  "source_year": "2010",
+  "source_language": "en",
+  "source_pdf_path": "",
+  "variants": [
+    {
+      "hgvs_c": "c.924A>G",
+      "hgvs_p": "p.Trp308X",
+      "variant_type": "nonsense (truncating)",
+      "clinical_significance": "pathogenic",
+      "exon": "exon 1",
+      "domain": "Truncation removes both GBD (Groucho-binding domain) and JBD (JARID1B-binding domain). Note: results text states c.924A>G; Figure 1A legend states c.924G>A (discrepancy in source)."
+    },
+    {
+      "hgvs_c": "c.1200C>G",
+      "hgvs_p": "p.Tyr400X",
+      "variant_type": "nonsense (truncating)",
+      "clinical_significance": "pathogenic",
+      "exon": "exon 1",
+      "domain": "More carboxy-terminal truncation; retains intact GBD, may retain residual repression activity"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "FOXG1",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome (congenital/atypical and classical RTT); patient 1 severe RTT-like neurodevelopmental disorder, patient 2 classical RTT",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD (autosomal dominant, haploinsufficiency; both variants de novo). Note: FOXG1 is autosomal, not X-linked.",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.924A>G",
+      "candidates": [
+        "c.924A>G",
+        "c.1200C>G"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Trp308X",
+      "candidates": [
+        "p.Trp308X",
+        "p.Tyr400X"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "nonsense (truncating)",
+      "candidates": [
+        "nonsense (truncating)",
+        "nonsense (truncating)"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "Truncation removes both GBD (Groucho-binding domain) and JBD (JARID1B-binding domain). Note: results text states c.924A>G; Figure 1A legend states c.924G>A (discrepancy in source).",
+      "candidates": [
+        "Truncation removes both GBD (Groucho-binding domain) and JBD (JARID1B-binding domain). Note: results text states c.924A>G; Figure 1A legend states c.924G>A (discrepancy in source).",
+        "More carboxy-terminal truncation; retains intact GBD, may retain residual repression activity"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0012171; HP:0001250; HP:0005484; HP:0000486; HP:0001252; HP:0001344; HP:0003763; HP:0001251; HP:0002307; HP:0011968; HP:0002079; HP:0002119; HP:0000729; HP:0002072",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "Postnatal/acquired microcephaly (head growth deceleration); Developmental delay / no acquisition of speech; Loss/absence of purposeful hand skills; Hand stereotypies; Severe epilepsy with hyperthermia-induced seizures and myoclonic seizures (patient 1); Strabismus; Feeding/swallowing difficulties; Global hypotonia; Foot deformity (equinovarus); Choreic movements; Sialorrhoea / drooling; Bruxism; Inappropriate episodes of laughing; Autistic behaviour with poor eye contact (patient 2); Ataxia (patient 2); Self-abusive behaviour (patient 2); Hemihypotrophy of left body (patient 2); Bone fractures suggestive of osteoporosis (patient 1); Brain malformations: ventricular enlargement, corpus callosum hypoplasia, decreased white matter, paucity of gyral development (patient 1); Facial dysmorphism: protruding ears, anteverted nostrils, open mouth (patient 2)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female (both patients)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "Patient 1: ~4 months (head growth deceleration noted at 2 months); Patient 2: ~6 months",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "de novo (both mutations confirmed de novo by parental testing)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": ""
+}

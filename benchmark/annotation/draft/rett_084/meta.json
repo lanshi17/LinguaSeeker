@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_Report_of_a_boy_with_Rett_syndrome_caused_by_a_novel_MECP2_mutation.pdf",
   "language": "zh",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[case_report] Reports a novel MECP2 mutation in a human patient (c.194delC, p.S65X) with sequencing validation and parental genotypes, i.e., human patient genetic variant data.",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:57:17+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 1,
+  "clinical_feature_count": 6
 }

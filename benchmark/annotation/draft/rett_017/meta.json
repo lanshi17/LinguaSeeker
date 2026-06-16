@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Identification_of_novel_genetic_causes_of_Rett_syndrome-like_phenotypes.pdf",
   "language": "en",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[cohort_study] Reports specific genetic variants (de novo, X-linked, homozygous/compound heterozygous) observed in a cohort of 19 human RTT-like patients, with methodological analyses (aCGH, exome sequencing).",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:48:21+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
   "variant_count": 0,
-  "clinical_feature_count": 0
+  "clinical_feature_count": 6
 }

@@ -108,3 +108,4 @@ benchmark/annotation/draft/*/images
 
 benchmark/annotation/rejected/*/*.md
 benchmark/annotation/rejected/*/images
+**/archive/*

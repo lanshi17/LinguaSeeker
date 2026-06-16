@@ -1,0 +1,143 @@
+{
+  "entry_id": "rett_080",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "典型 Rett 综合征 (typical Rett syndrome)",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": "10.11724/jdmu.2022.06.20",
+  "source_title": "Rett 综合征 1 例 (A case report of Rett syndrome)",
+  "source_journal": "大连医科大学学报 (Journal of Dalian Medical University)",
+  "source_year": "2022",
+  "source_language": "zh",
+  "source_pdf_path": "",
+  "variants": [
+    {
+      "hgvs_c": "c.502C>T",
+      "hgvs_p": "p.R168X",
+      "variant_type": "nonsense (无义突变)",
+      "clinical_significance": "pathogenic (致病性, ACMG)",
+      "exon": "",
+      "domain": ""
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "典型 Rett 综合征 (typical Rett syndrome)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.502C>T",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.R168X",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "nonsense (无义突变)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0002376; HP:0008733; HP:0100023; HP:0001288; HP:0001250; HP:0002353; HP:0002360; HP:0002104; HP:0000729; HP:0001249; HP:0001510; HP:0002015; HP:0000737; HP:0007328",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "运动发育停滞伴倒退 (developmental regression); 部分或完全丧失目的性手部技能 (loss of purposeful hand skills); 语言功能丧失 (loss of acquired language); 手部刻板运动：绞手、拍手、掐指 (hand stereotypies); 步态不稳/运动功能障碍 (gait abnormality); 孤独症样行为 (autistic features); 癫痫样放电/脑电图异常 (epileptiform discharges on EEG); 睡眠增多/睡眠节律紊乱 (sleep disturbance); 清醒期间断呼吸暂停 (waking apnea / breathing abnormality); 认知障碍/智能发育落后 (cognitive impairment); 生长发育迟缓、体重不增 (growth failure); 吞咽困难 (dysphagia); 易激惹、尖叫样抗拒 (irritability, screaming); 可疑痛觉障碍/痛觉敏感性下降 (reduced pain sensitivity); 双眼频繁上翻 (eye-rolling)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "7 months (生后 7 个月起发育落后；约 1 岁起语言功能丧失)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "de novo (新发突变；父母该位点均无变异)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": ""
+}

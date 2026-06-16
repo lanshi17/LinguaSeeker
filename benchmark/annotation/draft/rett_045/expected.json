@@ -1,0 +1,234 @@
+{
+  "entry_id": "rett_045",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Rett syndrome",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": null,
+  "source_title": "Methyl-CpG-binding protein 2 (MECP2) mutation type is associated with bone disease severity in Rett syndrome",
+  "source_journal": null,
+  "source_year": "2020",
+  "source_language": "en",
+  "source_pdf_path": "",
+  "variants": [
+    {
+      "hgvs_c": "c.397C>T",
+      "hgvs_p": "p.R133C",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic (less severe)",
+      "exon": "",
+      "domain": "MBD"
+    },
+    {
+      "hgvs_c": "c.880C>T",
+      "hgvs_p": "p.R294X",
+      "variant_type": "nonsense",
+      "clinical_significance": "Pathogenic (less severe)",
+      "exon": "",
+      "domain": "TRD"
+    },
+    {
+      "hgvs_c": "c.906C>T",
+      "hgvs_p": "p.R306C",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic (less severe)",
+      "exon": "",
+      "domain": "TRD"
+    },
+    {
+      "hgvs_c": "c.473C>T",
+      "hgvs_p": "p.T158M",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic (less severe)",
+      "exon": "",
+      "domain": "MBD"
+    },
+    {
+      "hgvs_c": "c.306C>G",
+      "hgvs_p": "p.R106T",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic (more severe)",
+      "exon": "",
+      "domain": "MBD"
+    },
+    {
+      "hgvs_c": "c.502C>T",
+      "hgvs_p": "p.R168X",
+      "variant_type": "nonsense",
+      "clinical_significance": "Pathogenic (more severe)",
+      "exon": "",
+      "domain": ""
+    },
+    {
+      "hgvs_c": "c.763C>T",
+      "hgvs_p": "p.R255X",
+      "variant_type": "nonsense",
+      "clinical_significance": "Pathogenic (more severe)",
+      "exon": "",
+      "domain": "TRD"
+    },
+    {
+      "hgvs_c": "c.808C>T",
+      "hgvs_p": "p.R270X",
+      "variant_type": "nonsense",
+      "clinical_significance": "Pathogenic (more severe)",
+      "exon": "",
+      "domain": "TRD"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Rett syndrome",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.397C>T",
+      "candidates": [
+        "c.397C>T",
+        "c.880C>T",
+        "c.906C>T",
+        "c.473C>T",
+        "c.306C>G",
+        "c.502C>T",
+        "c.763C>T",
+        "c.808C>T"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.R133C",
+      "candidates": [
+        "p.R133C",
+        "p.R294X",
+        "p.R306C",
+        "p.T158M",
+        "p.R106T",
+        "p.R168X",
+        "p.R255X",
+        "p.R270X"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "nonsense",
+        "missense",
+        "missense",
+        "missense",
+        "nonsense",
+        "nonsense",
+        "nonsense"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "MBD",
+      "candidates": [
+        "MBD",
+        "TRD",
+        "TRD",
+        "MBD",
+        "MBD",
+        "TRD",
+        "TRD"
+      ],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0002376; HP:0002371; HP:0002650; HP:0004349; HP:0000939; HP:0002659; HP:0001250; HP:0002540",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "developmental regression; loss of speech; loss of hand skills; low bone mineral density; osteoporosis/osteopenia; fragility fractures; scoliosis; inability to walk / reduced ambulation; epilepsy",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "unknown",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": ""
+}

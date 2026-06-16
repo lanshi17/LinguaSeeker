@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_document_10eacc93.pdf",
   "language": "zh",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[case_report] Contains explicit human MECP2 variant c.710C>G (p.Pro237Arg) detected in a Rett syndrome patient (de novo) with ACMG classification; single-patient case report in Chinese.",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:57:48+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 1,
+  "clinical_feature_count": 6
 }

@@ -3,16 +3,16 @@
   "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Neurogenic_Bladder_in_Preserved_Speech_Variant_of_Rett_Syndrome.pdf",
   "language": "tr",
   "parse_status": "parsed",
-  "annotation_status": "pending",
+  "annotation_status": "generated",
   "review_status": "draft",
   "reviewer": null,
   "review_notes": "[case_report] The article reports a heterozygous MECP2 c.961C>T (p.Arg321Trp) missense variant in a Rett syndrome patient (human data) and presents a single-case clinical description consistent with a case report. The text is primarily in Turkish with bilingual sections (English abstract), typical of a Turkish journal article.",
   "rejection_reason": "",
-  "generated_at": null,
+  "generated_at": "2026-06-16T07:49:11+00:00",
   "reviewed_at": null,
   "promoted_at": null,
-  "llm_model": "",
+  "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 1,
+  "clinical_feature_count": 6
 }

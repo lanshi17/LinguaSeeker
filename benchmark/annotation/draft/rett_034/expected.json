@@ -1,0 +1,150 @@
+{
+  "entry_id": "rett_034",
+  "source": "rett_literature",
+  "gene_symbol": "MECP2",
+  "hgnc_id": "HGNC:6992",
+  "disease_label": "Síndrome de Rett (typical/classic Rett syndrome)",
+  "mondo_id": "MONDO:0010726",
+  "moi": "XD",
+  "source_pmid": null,
+  "source_doi": null,
+  "source_title": "Síndrome de Rett – Relato de um caso raro",
+  "source_journal": null,
+  "source_year": null,
+  "source_language": "pt",
+  "source_pdf_path": "",
+  "variants": [
+    {
+      "hgvs_c": "c.763C>T",
+      "hgvs_p": "p.Arg255(statedasp.Arg255;c.763C>Tcorrespondstotheknownnonsensevariantp.Arg255*/p.R255X)",
+      "variant_type": "nonsense (stop-gain)",
+      "clinical_significance": "pathogenic (reported as positive/diagnostic for Rett syndrome)",
+      "exon": "4",
+      "domain": "TRD (transcription repression domain, aa 201-310)"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MECP2",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "Síndrome de Rett (typical/classic Rett syndrome)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "XD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.763C>T",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg255 (stated as p.Arg255; c.763C>T corresponds to the known nonsense variant p.Arg255*/p.R255X)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "nonsense (stop-gain)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "TRD (transcription repression domain, aa 201-310)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "B.hpo_terms",
+      "value": "HP:0002376; HP:0000733; HP:0001344; HP:0001250; HP:0002069; HP:0007359; HP:0000729; HP:0001288; HP:0100785; HP:0000718; HP:0007328; HP:0001763",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.clinical_phenotypes",
+      "value": "psychomotor/developmental regression beginning at 1 year 6 months; midline hand stereotypies (hand clapping, hand rubbing/wringing); loss of purposeful hand use (only rudimentary use preserved); absent speech / non-verbal; autistic features; generalized tonic-clonic seizures; focal dysperceptive seizures (epileptic origin); gait difficulty / inability to stand without assistance; insomnia / sleep disturbance; aggressiveness; reduced sensitivity to pain; unexplained screaming episodes; total dependence for daily activities; preserved eye contact; congenital pes planus (flat feet); lactose intolerance",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "female",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.age_of_onset",
+      "value": "1 year 6 months (18 months)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "unknown (no family history of similar cases or consanguinity reported; parental testing not described)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:6992",
+    "disease": "MONDO:0010726"
+  },
+  "expected_entities": {},
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "A.functional_domain_or_hotspot"
+    ],
+    "clinical_fields": [
+      "B.hpo_terms",
+      "B.clinical_phenotypes",
+      "B.sex",
+      "B.age_of_onset",
+      "C.de_novo_status"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease"
+    ]
+  },
+  "notes": ""
+}
