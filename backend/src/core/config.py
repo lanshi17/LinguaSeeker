@@ -147,10 +147,9 @@ class ParseDocumentConfig(BaseModel):
 
     mineru_remote_poll_interval: float = 2.0
     mineru_remote_max_poll_attempts: int = 150
-    mineru_local_model_server_url: str = "http://localhost:8001"
-    mineru_local_model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B"
-    mineru_local_timeout: float = 120.0
-    mineru_local_dpi: int = 200
+    mineru_local_api_url: str = "http://localhost:8001"
+    mineru_local_timeout: float = 600.0
+    mineru_local_backend: str = "vlm"
 
 
 class RedisConfig(BaseModel):
@@ -308,10 +307,9 @@ class Settings(BaseSettings):
 
     mineru_remote_poll_interval: float = 2.0
     mineru_remote_max_poll_attempts: int = 150
-    mineru_local_model_server_url: str = "http://localhost:8001"
-    mineru_local_model_id: str = "opendatalab/MinerU2.5-Pro-2604-1.2B"
-    mineru_local_timeout: float = 120.0
-    mineru_local_dpi: int = 200
+    mineru_local_api_url: str = "http://localhost:8001"
+    mineru_local_timeout: float = 600.0
+    mineru_local_backend: str = "vlm"
 
     # ── Model Server flat fields (MODEL_SERVER_*) ─────────────────────
 
@@ -427,10 +425,9 @@ class Settings(BaseSettings):
         self.parse_document = ParseDocumentConfig(
             mineru_remote_poll_interval=self.mineru_remote_poll_interval,
             mineru_remote_max_poll_attempts=self.mineru_remote_max_poll_attempts,
-            mineru_local_model_server_url=self.mineru_local_model_server_url,
-            mineru_local_model_id=self.mineru_local_model_id,
+            mineru_local_api_url=self.mineru_local_api_url,
             mineru_local_timeout=self.mineru_local_timeout,
-            mineru_local_dpi=self.mineru_local_dpi,
+            mineru_local_backend=self.mineru_local_backend,
         )
         self.redis = RedisConfig(
             host=self.redis_host,

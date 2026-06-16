@@ -36,4 +36,4 @@ all:
     redis_host: "127.0.0.1"
     embedding_base_url: "http://127.0.0.1:8001/v1"
     rerank_base_url: "http://127.0.0.1:8001/v1"
-    mineru_local_model_server_url: "http://127.0.0.1:8001"
+    mineru_local_api_url: "http://127.0.0.1:8001"

@@ -7,4 +7,3 @@ class ModelType(StrEnum):
     EMBEDDING = "embedding"
     RERANK = "rerank"
     LLM = "llm"
-    VLM = "vlm"
