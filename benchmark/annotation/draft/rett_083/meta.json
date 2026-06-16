@@ -8,11 +8,11 @@
   "reviewer": null,
   "review_notes": "[case_series] 报道5例 RTT样表型患儿的基因突变分析，包含明确的人类患者的基因变异信息（如c.509C>T p.Thr170Met、c.538C>T p.Arg180Ter、c.842delG p.Gly281AlafsTer20、c.844delC p.Arg282GlufsTer19，以及Xq28重复变异涉及MECP2等），属于具体变异在患者中的观察。",
   "rejection_reason": "",
-  "generated_at": "2026-06-16T08:34:19+00:00",
+  "generated_at": "2026-06-16T08:59:47+00:00",
   "reviewed_at": null,
   "promoted_at": null,
   "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 0
+  "variant_count": 5,
+  "clinical_feature_count": 6
 }
