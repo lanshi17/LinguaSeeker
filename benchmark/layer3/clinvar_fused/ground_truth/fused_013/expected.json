@@ -1,0 +1,189 @@
+{
+  "entry_id": "fused_013",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "CYP1B1",
+    "hgnc_id": "HGNC:2597",
+    "disease_label": "CYP1B1-related glaucoma with or without anterior segment dysgenesis",
+    "mondo_id": "MONDO:0800472",
+    "moi": "AR",
+    "classification": "Definitive",
+    "gcep": "Glaucoma and Neuro-Ophthalmology Gene Curation Expert Panel",
+    "classification_date": "2023-01-19T17:00:00.000Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_107502fc-115b-4ee0-ba83-7081a17d1ebc-2023-01-19T170000.000Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 7730,
+      "hgvs_name": "NM_000104.4(CYP1B1):c.182G>A (p.Gly61Glu)",
+      "hgvs_c": "c.182G>A",
+      "hgvs_p": "p.Gly61Glu",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs28936700",
+      "phenotype_ids": "MONDO:MONDO:0009277,MedGen:C1856439,OMIM:231300,Orphanet:98976,Orphanet:98977|MedGen:C3661900|MONDO:MONDO:0020366,MedGen:C0020302|MONDO:MONDO:0015016,MedGen:C4310623,OMIM:617315|MONDO:MONDO:0009277,MedGen:C1856439,OMIM:231300,Orphanet:98976,Orphanet:98977;MONDO:MONDO:0015016,MedGen:C4310623,OMIM:617315|Human Phenotype Ontology:HP:0008007,MONDO:MONDO:0000365,MedGen:C1533041|MedGen:CN239260|MONDO:MONDO:0009277,MedGen:C1856439,OMIM:231300,Orphanet:98976,Orphanet:98977;MONDO:MONDO:0010968,MedGen:C1832977,OMIM:600975,Orphanet:98976;MONDO:MONDO:0015016,MedGen:C4310623,OMIM:617315|MONDO:MONDO:0800472,MedGen:CN375931|MONDO:MONDO:0012688,MedGen:C3888124,OMIM:611544,Orphanet:91492",
+      "phenotype_list": "Glaucoma 3A|not provided|Congenital glaucoma|Anterior segment dysgenesis 6|Glaucoma 3A;Anterior segment dysgenesis 6|Primary congenital glaucoma|CYP1B1-related disorder|Glaucoma 3A;Glaucoma 3, primary infantile, B;Anterior segment dysgenesis 6|CYP1B1-related glaucoma with or without anterior segment dysgenesis|Cataract 17 multiple types"
+    },
+    {
+      "variation_id": 7732,
+      "hgvs_name": "NM_000104.4(CYP1B1):c.1093G>T (p.Gly365Trp)",
+      "hgvs_c": "c.1093G>T",
+      "hgvs_p": "p.Gly365Trp",
+      "variant_type": "missense",
+      "clinical_significance": "Likely pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs55771538",
+      "phenotype_ids": "MONDO:MONDO:0009277,MedGen:C1856439,OMIM:231300,Orphanet:98976,Orphanet:98977|MONDO:MONDO:0800472,MedGen:CN375931",
+      "phenotype_list": "Glaucoma 3A|CYP1B1-related glaucoma with or without anterior segment dysgenesis"
+    },
+    {
+      "variation_id": 7733,
+      "hgvs_name": "NM_000104.4(CYP1B1):c.1405C>T (p.Arg469Trp)",
+      "hgvs_c": "c.1405C>T",
+      "hgvs_p": "p.Arg469Trp",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs28936701",
+      "phenotype_ids": "MONDO:MONDO:0009277,MedGen:C1856439,OMIM:231300,Orphanet:98976,Orphanet:98977|MedGen:C3661900|Human Phenotype Ontology:HP:0008007,MONDO:MONDO:0000365,MedGen:C1533041|MONDO:MONDO:0020366,MedGen:C0020302|MONDO:MONDO:0015016,MedGen:C4310623,OMIM:617315|MedGen:CN239260|MONDO:MONDO:0015016,MedGen:C4310623,OMIM:617315;MONDO:MONDO:0009277,MedGen:C1856439,OMIM:231300,Orphanet:98976,Orphanet:98977|MONDO:MONDO:0800472,MedGen:CN375931",
+      "phenotype_list": "Glaucoma 3A|not provided|Primary congenital glaucoma|Congenital glaucoma|Anterior segment dysgenesis 6|CYP1B1-related disorder|Anterior segment dysgenesis 6;Glaucoma 3A|CYP1B1-related glaucoma with or without anterior segment dysgenesis"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "CYP1B1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "CYP1B1-related glaucoma with or without anterior segment dysgenesis",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.182G>A",
+      "candidates": [
+        "c.182G>A",
+        "c.1093G>T",
+        "c.1405C>T"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Gly61Glu",
+      "candidates": [
+        "p.Gly61Glu",
+        "p.Gly365Trp",
+        "p.Arg469Trp"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Likely pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:2597",
+    "disease": "MONDO:0800472",
+    "variant_candidates": [
+      "ClinVarVariation:7730",
+      "ClinVarVariation:7732",
+      "ClinVarVariation:7733"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "CYP1B1",
+      "hgnc_id": "HGNC:2597"
+    },
+    "disease": {
+      "text": "CYP1B1-related glaucoma with or without anterior segment dysgenesis",
+      "mondo_id": "MONDO:0800472"
+    },
+    "variants": [
+      {
+        "text": "c.182G>A",
+        "variation_id": "ClinVarVariation:7730",
+        "rsid": "rs28936700"
+      },
+      {
+        "text": "c.1093G>T",
+        "variation_id": "ClinVarVariation:7732",
+        "rsid": "rs55771538"
+      },
+      {
+        "text": "c.1405C>T",
+        "variation_id": "ClinVarVariation:7733",
+        "rsid": "rs28936701"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "41567338",
+  "source_pmc": "PMC12815791",
+  "source_pdf_url": "https://europepmc.org/article/PMC/12815791?pdf=render",
+  "source_title": "Prevention and early intervention screening for inherited ocular diseases in Saudi Arabia: a national perspective.",
+  "source_journal": "",
+  "source_year": "2025",
+  "notes": "",
+  "literature_search_strategy": "\"CYP1B1\" AND \"c.182G>A\" AND OPEN_ACCESS:y"
+}

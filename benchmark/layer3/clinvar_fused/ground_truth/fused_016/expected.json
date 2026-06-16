@@ -1,0 +1,189 @@
+{
+  "entry_id": "fused_016",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "DNM2",
+    "hgnc_id": "HGNC:2974",
+    "disease_label": "autosomal dominant centronuclear myopathy",
+    "mondo_id": "MONDO:0008048",
+    "moi": "AD",
+    "classification": "Definitive",
+    "gcep": "Congenital Myopathies and Myasthenic Syndromes Gene Curation Expert Panel",
+    "classification_date": "2019-12-20T17:00:00.000Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e4156721-f6b9-482c-b610-97753f3f722d-2019-12-20T170000.000Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 7279,
+      "hgvs_name": "NM_001005361.3(DNM2):c.1106G>A (p.Arg369Gln)",
+      "hgvs_c": "c.1106G>A",
+      "hgvs_p": "p.Arg369Gln",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs121909089",
+      "phenotype_ids": "MONDO:MONDO:0008048,MeSH:D020914,MedGen:C4551952,OMIM:160150,Orphanet:169189|MONDO:MONDO:0018947,MedGen:C0175709,OMIM:PS160150,Orphanet:595|MONDO:MONDO:0011674,MedGen:C1847902,OMIM:606482,Orphanet:100044,Orphanet:228179|MedGen:C3661900",
+      "phenotype_list": "Autosomal dominant centronuclear myopathy|Centronuclear myopathy|Charcot-Marie-Tooth disease dominant intermediate B|not provided"
+    },
+    {
+      "variation_id": 7280,
+      "hgvs_name": "NM_001005361.3(DNM2):c.1105C>T (p.Arg369Trp)",
+      "hgvs_c": "c.1105C>T",
+      "hgvs_p": "p.Arg369Trp",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs121909090",
+      "phenotype_ids": "MONDO:MONDO:0008048,MeSH:D020914,MedGen:C4551952,OMIM:160150,Orphanet:169189|MONDO:MONDO:0018947,MedGen:C0175709,OMIM:PS160150,Orphanet:595|MONDO:MONDO:0011674,MedGen:C1847902,OMIM:606482,Orphanet:100044,Orphanet:228179|MONDO:MONDO:0015626,MedGen:C0007959,OMIM:PS118220,Orphanet:166|MedGen:C3661900|Human Phenotype Ontology:HP:0006785,Human Phenotype Ontology:HP:0009066,MONDO:MONDO:0016971,MeSH:D049288,MedGen:C0686353,Orphanet:263",
+      "phenotype_list": "Autosomal dominant centronuclear myopathy|Centronuclear myopathy|Charcot-Marie-Tooth disease dominant intermediate B|Charcot-Marie-Tooth disease|not provided|Limb-girdle muscular dystrophy"
+    },
+    {
+      "variation_id": 7281,
+      "hgvs_name": "NM_001005361.3(DNM2):c.1393C>T (p.Arg465Trp)",
+      "hgvs_c": "c.1393C>T",
+      "hgvs_p": "p.Arg465Trp",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs121909091",
+      "phenotype_ids": "MONDO:MONDO:0008048,MeSH:D020914,MedGen:C4551952,OMIM:160150,Orphanet:169189|MONDO:MONDO:0018947,MedGen:C0175709,OMIM:PS160150,Orphanet:595|MedGen:C3661900|MONDO:MONDO:0011674,MedGen:C1847902,OMIM:606482,Orphanet:100044,Orphanet:228179|Human Phenotype Ontology:HP:0003011,Human Phenotype Ontology:HP:0003197,Human Phenotype Ontology:HP:0003708,MedGen:C4021745|",
+      "phenotype_list": "Autosomal dominant centronuclear myopathy|Centronuclear myopathy|not provided|Charcot-Marie-Tooth disease dominant intermediate B|Abnormality of the musculature|DNM2-related disorder"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "DNM2",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "autosomal dominant centronuclear myopathy",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AD",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.1106G>A",
+      "candidates": [
+        "c.1106G>A",
+        "c.1105C>T",
+        "c.1393C>T"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg369Gln",
+      "candidates": [
+        "p.Arg369Gln",
+        "p.Arg369Trp",
+        "p.Arg465Trp"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [
+        "missense",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:2974",
+    "disease": "MONDO:0008048",
+    "variant_candidates": [
+      "ClinVarVariation:7279",
+      "ClinVarVariation:7280",
+      "ClinVarVariation:7281"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "DNM2",
+      "hgnc_id": "HGNC:2974"
+    },
+    "disease": {
+      "text": "autosomal dominant centronuclear myopathy",
+      "mondo_id": "MONDO:0008048"
+    },
+    "variants": [
+      {
+        "text": "c.1106G>A",
+        "variation_id": "ClinVarVariation:7279",
+        "rsid": "rs121909089"
+      },
+      {
+        "text": "c.1105C>T",
+        "variation_id": "ClinVarVariation:7280",
+        "rsid": "rs121909090"
+      },
+      {
+        "text": "c.1393C>T",
+        "variation_id": "ClinVarVariation:7281",
+        "rsid": "rs121909091"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": "40259930",
+  "source_pmc": "PMC12010121",
+  "source_pdf_url": "https://europepmc.org/article/PMC/12010121?pdf=render",
+  "source_title": "A novel &lt;i&gt;DNM2&lt;/i&gt; variant associated with centronuclear myopathy: a case report.",
+  "source_journal": "",
+  "source_year": "2025",
+  "notes": "",
+  "literature_search_strategy": "\"DNM2\" AND \"c.1106G>A\" AND OPEN_ACCESS:y"
+}
