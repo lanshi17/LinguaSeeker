@@ -1,8 +1,8 @@
 # ClinGen + ClinVar Fused Benchmark Dataset Plan
 
-**Status:** planned
+**Status:** in-progress (Phase 1+2 complete, Phase 3+4 pending)
 **Created:** 2026-06-15
-**Updated:** 2026-06-15
+**Updated:** 2026-06-16
 **Scope:** Benchmark Layer 3 — 第二数据集（Dataset 2）
 **Owner:** CrossEvidence benchmark team
 
