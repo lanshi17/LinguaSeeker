@@ -541,7 +541,7 @@ def main() -> None:
 
     # Step 4: Select
     print("Step 4: Selecting top entries...")
-    selected = select_entries(fused, target_count=50)
+    selected = select_entries(fused, target_count=75)
     print(f"  Selected: {len(selected)} entries")
 
     # Print selection summary

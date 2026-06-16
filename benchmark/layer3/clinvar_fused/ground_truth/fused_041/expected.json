@@ -177,11 +177,12 @@
       "variant"
     ]
   },
-  "source_pmid": null,
-  "source_pmc": null,
-  "source_pdf_url": null,
-  "source_title": null,
-  "source_journal": null,
-  "source_year": null,
-  "notes": ""
+  "source_pmid": "37124559",
+  "source_pmc": "PMC10134391",
+  "source_pdf_url": "https://europepmc.org/article/PMC/10134391?pdf=render",
+  "source_title": "SGK1 inhibition attenuated the action potential duration in patient- and genotype-specific re-engineered heart cells with congenital long QT syndrome.",
+  "source_journal": "",
+  "source_year": "2023",
+  "notes": "",
+  "literature_search_strategy": "\"KCNQ1\" AND \"c.760G>A\" AND OPEN_ACCESS:y"
 }

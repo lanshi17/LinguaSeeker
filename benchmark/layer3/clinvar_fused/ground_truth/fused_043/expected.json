@@ -178,11 +178,12 @@
       "variant"
     ]
   },
-  "source_pmid": null,
-  "source_pmc": null,
-  "source_pdf_url": null,
-  "source_title": null,
-  "source_journal": null,
-  "source_year": null,
-  "notes": ""
+  "source_pmid": "36140355",
+  "source_pmc": "PMC9496569",
+  "source_pdf_url": "https://europepmc.org/article/PMC/9496569?pdf=render",
+  "source_title": "The Pathological Mechanisms of Hearing Loss Caused by &lt;i&gt;KCNQ1&lt;/i&gt; and &lt;i&gt;KCNQ4&lt;/i&gt; Variants.",
+  "source_journal": "",
+  "source_year": "2022",
+  "notes": "",
+  "literature_search_strategy": "\"KCNQ4\" AND \"c.853G>A\" AND OPEN_ACCESS:y"
 }

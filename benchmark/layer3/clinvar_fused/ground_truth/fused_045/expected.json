@@ -178,11 +178,12 @@
       "variant"
     ]
   },
-  "source_pmid": null,
-  "source_pmc": null,
-  "source_pdf_url": null,
-  "source_title": null,
-  "source_journal": null,
-  "source_year": null,
-  "notes": ""
+  "source_pmid": "39843543",
+  "source_pmc": "PMC11754816",
+  "source_pdf_url": "https://europepmc.org/article/PMC/11754816?pdf=render",
+  "source_title": "Integrated gene expression and alternative splicing analysis in human and mouse models of Rett syndrome.",
+  "source_journal": "",
+  "source_year": "2025",
+  "notes": "",
+  "literature_search_strategy": "\"MECP2\" AND \"c.433C>T\" AND OPEN_ACCESS:y"
 }

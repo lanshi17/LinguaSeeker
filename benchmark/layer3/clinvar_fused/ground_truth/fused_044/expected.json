@@ -178,11 +178,12 @@
       "variant"
     ]
   },
-  "source_pmid": null,
-  "source_pmc": null,
-  "source_pdf_url": null,
-  "source_title": null,
-  "source_journal": null,
-  "source_year": null,
-  "notes": ""
+  "source_pmid": "39600113",
+  "source_pmc": "PMC11599428",
+  "source_pdf_url": "https://europepmc.org/article/PMC/11599428?pdf=render",
+  "source_title": "Pathogenicity of the LDLR c.97C&gt;T (p.Gln33Ter) Mutation in Familial Hypercholesterolemia.",
+  "source_journal": "",
+  "source_year": "2024",
+  "notes": "",
+  "literature_search_strategy": "\"LDLR\" AND \"c.97C>T\" AND OPEN_ACCESS:y"
 }
