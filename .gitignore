@@ -106,3 +106,5 @@ opencode.jsonc
 benchmark/annotation/draft/*/*.md
 benchmark/annotation/draft/*/images
 
+benchmark/annotation/rejected/*/*.md
+benchmark/annotation/rejected/*/images

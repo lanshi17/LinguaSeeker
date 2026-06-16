@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_056",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_Clinical_Research_Group_for_Rett_Syndrome_and_Related_Disorders.pdf",
+  "language": "ja",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[other] The text only lists investigators and affiliations for a Rett syndrome clinical investigation group; no genetic variant data or patient results are presented.",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

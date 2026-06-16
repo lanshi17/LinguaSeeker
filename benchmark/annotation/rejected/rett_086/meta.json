@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_086",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/zh_Two_Cases_of_Classic_Rett_Syndrome.pdf",
+  "language": "zh",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[case_series] 文章标题为“典型 Rett综合征2例报告”，描述两例Rett综合征患者的临床资料与诊断，未提供具体的基因变异信息（无HGVS记法、突变名、氨基酸/核苷酸变化等）。",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_007",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_Reactome_Loss_of_function_of_MECP2_in_Rett_syndrome_R-HSA-9005891.pdf",
+  "language": "en",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[functional_study] The text is a Reactome pathway annotation describing functional aspects of MECP2 in Rett syndrome and cites general mutation information and databases, but does not present specific HGVS/variant data from human patients within this document.",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

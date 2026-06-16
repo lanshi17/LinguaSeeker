@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_011",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Abolished_clustering_of_MeCP2.pdf",
+  "language": "en",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[functional_study] The study uses a cell-based model (NIH3T3) overexpressing MeCP2T158M to screen drugs and assess rescue of MeCP2 speckles; it does not report new genetic variants observed in human patients or human-derived samples. Background RTT variants are discussed, but no patient-derived data are presented.",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

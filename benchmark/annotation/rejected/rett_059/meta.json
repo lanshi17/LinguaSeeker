@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_059",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_Microsoft_Word_docx.pdf",
+  "language": "ja",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[cohort_study] The article reports MRI volumetric analysis in Rett syndrome patients and controls but does not provide specific genetic variant data (no HGVS or mutation/amino acid/nucleotide changes are listed). It describes MeCP2 mutation confirmation for diagnosis, but without variant details. The study design is a cross-sectional comparative analysis between RTT patients and controls, i.e., a cohort-like study.",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

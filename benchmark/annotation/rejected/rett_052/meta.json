@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_052",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_22_RTT.pdf",
+  "language": "ja",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[cohort_study] The article reports RTT nationwide epidemiology and various research projects but does not provide explicit human genetic variants with HGVS or mutation names; variant data are not specified in the text.",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

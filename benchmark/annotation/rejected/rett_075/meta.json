@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_075",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/tr/tr_Rett_Syndrome_Etiology_Clinical_Features_and_Molecular_Basis.pdf",
+  "language": "tr",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[review] The article is a Turkish review paper on Rett syndrome, discussing MECP2 and CDKL5 mutations in general without listing specific genetic variants, HGVS notations, or patient-derived variant data in the provided text.",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

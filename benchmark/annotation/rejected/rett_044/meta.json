@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_044",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_MeCP2_Knockout_Rat_Model_for_Rett_Syndrome.pdf",
+  "language": "en",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[functional_study] No specific human genetic variants (HGVS, nucleotide or amino acid changes) are reported. The text describes a MeCP2 knockout rat model and its phenotypes, with background on Rett syndrome in humans, but does not present human patient variant data.",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

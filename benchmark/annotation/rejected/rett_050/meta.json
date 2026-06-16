@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_050",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_ZTALMY_for_CDKL5_Deficiency_Seizures_in_Rett_Spectrum.pdf",
+  "language": "en",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[other] Regulatory drug labeling/prescribing information; no reported human genetic variants.",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

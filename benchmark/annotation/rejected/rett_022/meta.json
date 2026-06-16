@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_022",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Neul10-RTTdiagnosticcriteria-finalauthorMS.pdf",
+  "language": "en",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[review] The piece is a consensus diagnostic criteria/guideline for Rett syndrome and discusses background genetics (MECP2, CDKL5, FOXG1) but does not report specific genetic variants observed in human patients (no HGVS or mutation-level data in the text).",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

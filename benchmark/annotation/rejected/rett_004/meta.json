@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_004",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_Genetic_Aspects_of_Rett_Syndrome.pdf",
+  "language": "de",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[review] The piece is a German-language review/educational overview of Rett syndrome genetics. It discusses genes and variants conceptually and cites prior studies, but does not report specific genetic variants (HGVS, mutation names, amino acid/nucleotide changes) observed in human patients or samples.",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

@@ -10,7 +10,7 @@ from typing import Mapping, TypedDict
 
 from benchmark.layer3.evaluate import GROUND_TRUTH_DIR
 
-SOURCE_CORPUS_ROOT = Path(__file__).resolve().parents[2] / "pipeline" / "input" / "ground_truth"
+SOURCE_CORPUS_ROOT = Path(__file__).resolve().parents[2] / "pipeline" / "input"
 
 
 class BenchmarkBPilotSourceFilePayload(TypedDict):

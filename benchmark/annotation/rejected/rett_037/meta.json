@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_037",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_16282417192931_121.pdf",
+  "language": "en",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[functional_study] No specific human patient or human-derived sample genetic variants (HGVS or mutation names) are reported; the study uses comparative genomics and functional validation in MECP2-knockdown human neural cells.",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

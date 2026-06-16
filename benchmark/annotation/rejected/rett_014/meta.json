@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_014",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/en/en_Epigenetics_in_rare_neurological_diseases.pdf",
+  "language": "en",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[review] The article is a review summarizing epigenetic mechanisms in rare neurological diseases and does not present new genetic variant observations from human patients or samples, although it cites known variants (e.g., MECP2 mutations) in RTT.",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

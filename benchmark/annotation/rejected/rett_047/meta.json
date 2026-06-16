@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_047",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_Prevalence_and_onset_of_comorbidities_in_the_CDKL5_disorder_differ_from_Rett_syndrome.pdf",
+  "language": "en",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[cohort_study] The article analyzes prevalence and onset of comorbidities in CDKL5 disorder using registry data and discusses mutation groups conceptually, but does not report explicit genetic variants with HGVS notation, nucleotide changes, or amino acid changes in human patients.",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

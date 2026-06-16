@@ -2,6 +2,18 @@
 
 # Lesson Log
 
+## 2026-06-16: Benchmark B pilot and queue selection were pointing at the wrong corpus root
+
+**Problem**: `select_benchmark_b_pilot` and `benchmark_b_phase2_queue` were using a path under `benchmark/pipeline/input/ground_truth`, so the pilot selection reported `Eligible=0` and the queue reported `QueuedSources=0` even though the real multilingual corpus existed under `benchmark/pipeline/input/`.
+
+**Investigation**: Re-read the source inventory and confirmed the real files live under `benchmark/pipeline/input/{ja,ko,zh}/case_report/*.pdf`, with the inventory report storing `repo_root=/data/yangzs/Projects/01_ACMG_Lingua`. The pilot manifest already contained the correct absolute PDF paths, but the queue builder was reconstructing paths from a stale root and producing the wrong location.
+
+**Root cause**: The pilot selection defaulted to a nonexistent `ground_truth` subdirectory, and the queue builder trusted a path reconstruction step that was not needed once the source inventory already carried absolute source paths.
+
+**Fix**: Changed the pilot default root to `benchmark/pipeline/input`, added a fallback to the latest `source_inventory_*.json` repo root when the current worktree path is missing, and simplified the queue builder to use the inventory repo root plus the absolute PDF paths it already receives. Added regressions for both selection and queue path bridging.
+
+**Prevention**: For benchmark manifests, prefer authoritative absolute source paths from the inventory layer over reconstructing paths from stale assumptions. If a report says `Eligible=0` or `QueuedSources=0`, verify the corpus root before assuming the data is absent.
+
 ## 2026-06-16: /v1/models 404 does not mean the model server is offline
 
 **Problem**: I checked `http://127.0.0.1:8001/v1/models` and saw `{"detail":"Not Found"}`, which could be mistaken for a general LLM outage.

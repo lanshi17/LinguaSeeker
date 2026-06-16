@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_038",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/fr/fr_CDKL5_Deficiency_Disorder.pdf",
+  "language": "en",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[review] The text is from a GeneReviews clinical summary and does not provide patient-level genetic variant data or HGVS/mutation names. It discusses general CDKL5 pathogenic variants and concepts (e.g., de novo variants, mosaicism) without listing specific variants observed in individual patients.",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}

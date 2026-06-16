@@ -1,0 +1,18 @@
+{
+  "entry_id": "rett_053",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/ja/ja_Brainstem_Mechanisms_in_Rett_Syndrome_Autonomic_Dysfunction.pdf",
+  "language": "en",
+  "parse_status": "parsed",
+  "annotation_status": "pending",
+  "review_status": "rejected",
+  "reviewer": null,
+  "review_notes": "",
+  "rejection_reason": "[review] The article is a narrative review/perspective on Rett syndrome and 5-HT1A agonists; it does not report specific human genetic variants (no HGVS names or amino acid/nucleotide changes).",
+  "generated_at": null,
+  "reviewed_at": null,
+  "promoted_at": null,
+  "llm_model": "",
+  "parse_backend": "mineru",
+  "variant_count": 0,
+  "clinical_feature_count": 0
+}
