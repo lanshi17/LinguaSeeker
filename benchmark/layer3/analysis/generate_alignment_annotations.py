@@ -9,7 +9,7 @@ both tracks are expected to recover, not the predictor's own output.
 
 Scoring scope (Benchmark A): three scorable fields per entry.
   - ``A.gene_symbol``
-  - ``A.disease_diagnosis``
+  - ``B.disease_diagnosis``
   - ``A.gene_disease_relationship``
 
 Gold label policy for the English-only transport set:
@@ -48,7 +48,7 @@ from src.core.cross_lingual_process_and_extract_evidence.extract_evidence.contra
 
 SCORABLE_FIELDS: tuple[str, ...] = (
     "A.gene_symbol",
-    "A.disease_diagnosis",
+    "B.disease_diagnosis",
     "A.gene_disease_relationship",
 )
 
@@ -172,7 +172,7 @@ def _gold_values_by_field(expected: Mapping[str, Any]) -> dict[str, str]:
     if gene:
         values["A.gene_symbol"] = gene.upper()
     if disease:
-        values["A.disease_diagnosis"] = disease.casefold()
+        values["B.disease_diagnosis"] = disease.casefold()
     relationship = _gold_relationship(expected)
     if relationship:
         values["A.gene_disease_relationship"] = relationship

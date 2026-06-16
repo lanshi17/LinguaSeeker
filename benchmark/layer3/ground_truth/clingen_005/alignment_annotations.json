@@ -16,15 +16,15 @@
     },
     {
       "entry_id": "clingen_005",
-      "field_id": "A.disease_diagnosis",
-      "original_value": null,
-      "translated_value": null,
+      "field_id": "B.disease_diagnosis",
+      "original_value": "maturity-onset diabetes of the young, type 12",
+      "translated_value": "maturity-onset diabetes of the young, type 12 (MODY12)",
       "normalized_value": "monogenic diabetes",
-      "original_span_id": "",
-      "translated_span_id": "",
-      "alignment_label": "missing",
-      "support_label": "insufficient",
-      "drift_reason": "gold_value_not_recovered",
+      "original_span_id": "gold",
+      "translated_span_id": "gold",
+      "alignment_label": "aligned",
+      "support_label": "supports",
+      "drift_reason": "gold_value_recovered_both_tracks",
       "confidence": 1.0
     },
     {
