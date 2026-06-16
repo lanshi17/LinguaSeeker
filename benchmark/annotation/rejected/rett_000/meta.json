@@ -1,18 +1,18 @@
 {
   "entry_id": "rett_000",
-  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_14791314647633_123.pdf",
-  "language": "en",
+  "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/zh/MECP2基因新发突变致男童Rett综合征1例_袁延涵.pdf",
+  "language": "zh",
   "parse_status": "parsed",
   "annotation_status": "generated",
   "review_status": "rejected",
   "reviewer": null,
-  "review_notes": "",
-  "rejection_reason": "[functional_study] The study uses Mecp2-null/y and Tg1 mouse neurons to investigate cell-autonomous and autocrine BDNF signaling; no human patient data or human-derived genetic variants are reported.",
-  "generated_at": "2026-06-16T04:47:29+00:00",
-  "reviewed_at": null,
+  "review_notes": "[case_report] The article describes a single clinical case of Rett syndrome in a male child and reports a specific MECP2 missense mutation in the patient (c.317G>A, p.Arg106Gln) with de novo status in parents.",
+  "rejection_reason": "",
+  "generated_at": "2026-06-16T10:22:48+00:00",
+  "reviewed_at": "2026-06-16T10:41:23+00:00",
   "promoted_at": null,
   "llm_model": "claude-opus-4-8",
   "parse_backend": "mineru",
-  "variant_count": 0,
-  "clinical_feature_count": 5
+  "variant_count": 1,
+  "clinical_feature_count": 6
 }

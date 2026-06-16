@@ -4,11 +4,11 @@
     {
       "entry_id": "rett_000",
       "language": "de",
-      "status": "draft",
+      "status": "rejected",
       "pdf_path": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/literature_acquisition/downloads/rett/de/de_14791314647633_123.pdf",
-      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/draft/rett_000",
+      "current_dir": "/data/yangzs/Projects/01_ACMG_Lingua/benchmark/annotation/rejected/rett_000",
       "created_at": "2026-06-16T04:29:51+00:00",
-      "updated_at": "2026-06-16T10:24:23+00:00"
+      "updated_at": "2026-06-16T10:41:23+00:00"
     },
     {
       "entry_id": "rett_001",
@@ -803,5 +803,5 @@
       "updated_at": "2026-06-16T04:51:00+00:00"
     }
   ],
-  "last_updated": "2026-06-16T10:26:01+00:00"
+  "last_updated": "2026-06-16T10:41:23+00:00"
 }

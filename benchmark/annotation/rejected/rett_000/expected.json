@@ -7,13 +7,22 @@
   "mondo_id": "MONDO:0010726",
   "moi": "XD",
   "source_pmid": null,
-  "source_doi": "10.7554/eLife.19374",
-  "source_title": "Loss of MeCP2 disrupts cell autonomous and autocrine BDNF signaling in mouse glutamatergic neurons",
-  "source_journal": "eLife",
-  "source_year": "2016",
-  "source_language": "de",
+  "source_doi": "10.11817/j.issn.2095-6959.2023.230324",
+  "source_title": "MECP2基因新发突变致男童Rett综合征1例 (Newly identified MECP2 gene mutation causing Rett syndrome in a male child: A case report)",
+  "source_journal": "临床与病理杂志 (Journal of Clinical and Pathological Research)",
+  "source_year": "2023",
+  "source_language": "zh",
   "source_pdf_path": "",
-  "variants": [],
+  "variants": [
+    {
+      "hgvs_c": "c.317G>A",
+      "hgvs_p": "p.Arg106Gln",
+      "variant_type": "missense",
+      "clinical_significance": "",
+      "exon": "",
+      "domain": "MBD"
+    }
+  ],
   "expected_evidence": [
     {
       "field_id": "A.gene_symbol",
@@ -44,22 +53,64 @@
       "evaluation_type": "precision_recall"
     },
     {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.317G>A",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Arg106Gln",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "missense",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.functional_domain_or_hotspot",
+      "value": "MBD",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_only"
+    },
+    {
       "field_id": "B.hpo_terms",
-      "value": "HP:0001250; HP:0001249; HP:0100023; HP:0002098; HP:0001251; HP:0000729; HP:0000252; HP:0002376",
+      "value": "HP:0011968; HP:0001263; HP:0012759; HP:0002194; HP:0000365",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.clinical_phenotypes",
-      "value": "regression of head growth; seizures; mental retardation; stereotypic hand-wringing movements; breathing irregularities; ataxia; autistic behavior; developmental regression; impaired coordination",
+      "value": "喂养困难 (feeding difficulties); 发育迟缓 (developmental delay); 呼吸暂停 (apnea, choking during feeding); 抬头困难、不能独坐及爬行 (difficulty lifting head, unable to sit independently or crawl; delayed motor development); 不自主左右摇头 (involuntary head shaking); 四肢肌张力稍高 (slightly increased limb muscle tone); 双耳听力筛查未通过 (failed bilateral hearing screening); 促甲状腺激素升高 (elevated thyroid-stimulating hormone); 卵圆孔未闭 (patent foramen ovale); 重症肺炎、需机械通气 (severe pneumonia requiring mechanical ventilation)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.sex",
+      "value": "male",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
     },
     {
       "field_id": "B.age_of_onset",
-      "value": "6-18 months (human Rett syndrome, per article)",
+      "value": "neonatal (symptoms from ~10 days after birth; presented at 8 months)",
+      "candidates": [],
+      "source": "article",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "C.de_novo_status",
+      "value": "de novo",
       "candidates": [],
       "source": "article",
       "evaluation_type": "precision_recall"
