@@ -16,15 +16,15 @@
     },
     {
       "entry_id": "clingen_013",
-      "field_id": "A.disease_diagnosis",
-      "original_value": null,
+      "field_id": "B.disease_diagnosis",
+      "original_value": "periventricular nodular heterotopia",
       "translated_value": "periventricular nodular heterotopia",
       "normalized_value": "periventricular nodular heterotopia",
-      "original_span_id": "",
+      "original_span_id": "gold",
       "translated_span_id": "gold",
-      "alignment_label": "missing",
-      "support_label": "insufficient",
-      "drift_reason": "gold_value_single_track_only",
+      "alignment_label": "aligned",
+      "support_label": "supports",
+      "drift_reason": "gold_value_recovered_both_tracks",
       "confidence": 1.0
     },
     {

@@ -16,15 +16,15 @@
     },
     {
       "entry_id": "clingen_021",
-      "field_id": "A.disease_diagnosis",
+      "field_id": "B.disease_diagnosis",
       "original_value": null,
-      "translated_value": null,
+      "translated_value": "amyotrophic lateral sclerosis",
       "normalized_value": "amyotrophic lateral sclerosis",
       "original_span_id": "",
-      "translated_span_id": "",
+      "translated_span_id": "gold",
       "alignment_label": "missing",
       "support_label": "insufficient",
-      "drift_reason": "gold_value_not_recovered",
+      "drift_reason": "gold_value_single_track_only",
       "confidence": 1.0
     },
     {

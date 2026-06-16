@@ -16,15 +16,15 @@
     },
     {
       "entry_id": "clingen_027",
-      "field_id": "A.disease_diagnosis",
-      "original_value": null,
+      "field_id": "B.disease_diagnosis",
+      "original_value": "epilepsy",
       "translated_value": null,
       "normalized_value": "epilepsy",
-      "original_span_id": "",
+      "original_span_id": "gold",
       "translated_span_id": "",
       "alignment_label": "missing",
       "support_label": "insufficient",
-      "drift_reason": "gold_value_not_recovered",
+      "drift_reason": "gold_value_single_track_only",
       "confidence": 1.0
     },
     {
