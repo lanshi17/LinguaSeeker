@@ -121,11 +121,17 @@ async def _poll_batch(
     raise MinerUError(f"Batch {batch_id[:8]} timed out after {config.max_poll_attempts} polls")
 
 
+@dataclass
+class ParseOutput:
+    markdown: str
+    images: dict[str, bytes]  # relative path -> file bytes
+
+
 async def _download_markdown(
     client: httpx.AsyncClient,
     zip_url: str,
-) -> str:
-    """Download result zip and extract full.md content."""
+) -> ParseOutput:
+    """Download result zip and extract full.md + images."""
     resp = await client.get(zip_url, timeout=120.0)
     resp.raise_for_status()
 
@@ -136,27 +142,78 @@ async def _download_markdown(
         with zipfile.ZipFile(zip_path) as zf:
             zf.extractall(tmp_dir)
 
-        md_files = list(Path(tmp_dir).rglob("*.md"))
+        images: dict[str, bytes] = {}
+        for images_dir in Path(tmp_dir).rglob("images"):
+            if not images_dir.is_dir():
+                continue
+            for img_file in images_dir.iterdir():
+                if img_file.is_file():
+                    rel_path = f"images/{img_file.name}"
+                    images[rel_path] = img_file.read_bytes()
+
         full_md = Path(tmp_dir) / "full.md"
         if full_md.exists():
-            return full_md.read_text(encoding="utf-8")
+            return ParseOutput(markdown=full_md.read_text(encoding="utf-8"), images=images)
 
+        md_files = list(Path(tmp_dir).rglob("*.md"))
         if md_files:
             parts = [f.read_text(encoding="utf-8") for f in sorted(md_files)]
-            return "\n\n".join(parts)
+            return ParseOutput(markdown="\n\n".join(parts), images=images)
 
     raise MinerUError(f"No markdown found in zip from {zip_url}")
+
+
+async def parse_batch_mineru(
+    pdf_paths: list[Path],
+    config: MinerUConfig,
+) -> dict[str, ParseOutput]:
+    """Parse a single batch of PDFs via MinerU. Returns {filename: ParseOutput}."""
+    results: dict[str, ParseOutput] = {}
+    file_names = [p.name for p in pdf_paths]
+
+    async with httpx.AsyncClient() as client:
+        batch_id, presigned_urls = await _request_upload_urls(client, config, file_names)
+
+        for url, path in zip(presigned_urls, pdf_paths):
+            logger.debug("Uploading {}", path.name)
+            await _upload_file(client, url, path)
+
+        logger.info("Batch {} uploaded, polling...", batch_id[:8])
+        extract_results = await _poll_batch(client, config, batch_id)
+
+        for item in extract_results:
+            file_name = item.get("file_name", "")
+            state = item.get("state", "")
+            if state != "done":
+                err = item.get("err_msg", "unknown")
+                logger.warning("MinerU failed for {}: {}", file_name, err)
+                continue
+
+            zip_url = item.get("full_zip_url", "")
+            if not zip_url:
+                logger.warning("No zip URL for done item: {}", file_name)
+                continue
+
+            try:
+                output = await _download_markdown(client, zip_url)
+                output.markdown = _clean_markdown(output.markdown)
+                results[file_name] = output
+                logger.info("Parsed {}: {} chars, {} images", file_name, len(output.markdown), len(output.images))
+            except Exception as e:
+                logger.error("Failed to extract {}: {}", file_name, e)
+
+    return results
 
 
 async def parse_pdfs_mineru(
     pdf_paths: list[Path],
     config: MinerUConfig,
-) -> dict[str, str]:
+) -> dict[str, ParseOutput]:
     """Parse a batch of PDFs via MinerU cloud API.
 
-    Returns: dict mapping pdf_path.name → markdown text.
+    Returns: dict mapping pdf_path.name → ParseOutput.
     """
-    results: dict[str, str] = {}
+    results: dict[str, ParseOutput] = {}
 
     for batch_start in range(0, len(pdf_paths), config.batch_size):
         batch = pdf_paths[batch_start: batch_start + config.batch_size]
@@ -164,38 +221,8 @@ async def parse_pdfs_mineru(
         total_batches = (len(pdf_paths) + config.batch_size - 1) // config.batch_size
         logger.info("MinerU batch {}/{}: {} files", batch_num, total_batches, len(batch))
 
-        file_names = [p.name for p in batch]
-
-        async with httpx.AsyncClient() as client:
-            batch_id, presigned_urls = await _request_upload_urls(client, config, file_names)
-
-            for url, path in zip(presigned_urls, batch):
-                logger.debug("Uploading {}", path.name)
-                await _upload_file(client, url, path)
-
-            logger.info("Batch {} uploaded, polling...", batch_id[:8])
-            extract_results = await _poll_batch(client, config, batch_id)
-
-            for item in extract_results:
-                file_name = item.get("file_name", "")
-                state = item.get("state", "")
-                if state != "done":
-                    err = item.get("err_msg", "unknown")
-                    logger.warning("MinerU failed for {}: {}", file_name, err)
-                    continue
-
-                zip_url = item.get("full_zip_url", "")
-                if not zip_url:
-                    logger.warning("No zip URL for done item: {}", file_name)
-                    continue
-
-                try:
-                    md = await _download_markdown(client, zip_url)
-                    md = _clean_markdown(md)
-                    results[file_name] = md
-                    logger.info("Parsed {}: {} chars", file_name, len(md))
-                except Exception as e:
-                    logger.error("Failed to extract {}: {}", file_name, e)
+        batch_results = await parse_batch_mineru(batch, config)
+        results.update(batch_results)
 
     return results
 

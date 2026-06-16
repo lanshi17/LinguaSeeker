@@ -129,30 +129,16 @@ benchmark/annotation/
 
 ## Schema 兼容性
 
-`expected.json` 的 `expected_evidence` 字段完全使用主项目 `EVIDENCE_FIELD_SPECS` 目录（A–J 类别，138 字段），与 fused dataset 格式兼容：
+`expected.json` 的证据字段（`expected_evidence`）完全使用主项目 `EVIDENCE_FIELD_SPECS` 目录定义的标准 `field_id`（10 个类别 A–J，共 138 个字段），与 ClinGen/ClinVar-fused 数据集格式一致。
 
-| field_id | 类别 | 说明 | evaluation_type |
-|----------|------|------|-----------------|
-| `A.gene_symbol` | A. 变异信息 | MECP2 | precision_recall |
-| `A.gene_disease_relationship` | A. 变异信息 | causative | precision_recall |
-| `A.variant_hgvs_c` | A. 变异信息 | c. 编码变异 | precision_only |
-| `A.variant_hgvs_p` | A. 变异信息 | p. 蛋白变异 | precision_only |
-| `A.variant_type` | A. 变异信息 | missense/nonsense/frameshift 等 | precision_only |
-| `A.functional_domain_or_hotspot` | A. 变异信息 | MBD/TRD | precision_only |
-| `B.disease_diagnosis` | B. 病例/表型 | Rett syndrome | precision_recall |
-| `B.mode_of_inheritance_reported` | B. 病例/表型 | XD | precision_recall |
-| `B.hpo_terms` | B. 病例/表型 | HPO 术语 | precision_recall |
-| `B.clinical_phenotypes` | B. 病例/表型 | 临床表型 | precision_recall |
-| `B.sex` | B. 病例/表型 | 患者性别 | precision_recall |
-| `B.age_of_onset` | B. 病例/表型 | 发病年龄 | precision_recall |
-| `C.de_novo_status` | C. 家系/遗传 | de novo 状态 | precision_recall |
+每条 `expected_evidence` 记录对应文章中实际出现的一个字段，包含 `field_id`、`value`、`evaluation_type`（`precision_recall` 或 `precision_only`）、`candidates`（多变体时可选值列表）。不同文章提取到的字段数量和种类各不相同，不强制固定字段集。
 
-Rett 综合征特有字段：
-- 基因固定为 **MECP2**（HGNC:6992），偶见 CDKL5/FOXG1（非典型 Rett）
-- 疾病固定为 **Rett syndrome**（MONDO:0010726）
-- 遗传方式 **XD**（X 连锁显性）
+**Rett 数据集特征**：
+- 基因通常为 **MECP2**（HGNC:6992），非典型 Rett 可见 CDKL5/FOXG1
+- 疾病为 **Rett syndrome**（MONDO:0010726），遗传方式 **XD**（X 连锁显性）
 - 常见变异：p.R255X, p.R270X, p.R306C, p.T158M, p.R168X, p.R133C
 - 蛋白结构域：MBD（aa 78–162）、TRD（aa 201–310）
+- 临床特征：发育退化、手部刻板动作、癫痫、呼吸异常、小头畸形等
 
 ## 完整工作流示例
 
