@@ -1,0 +1,188 @@
+{
+  "entry_id": "fused_047",
+  "source": "clingen_clinvar_fused",
+  "clingen": {
+    "gene_symbol": "MLH1",
+    "hgnc_id": "HGNC:7127",
+    "disease_label": "mismatch repair cancer syndrome 1",
+    "mondo_id": "MONDO:0010159",
+    "moi": "AR",
+    "classification": "Definitive",
+    "gcep": "Hereditary Cancer Gene Curation Expert Panel",
+    "classification_date": "2018-10-09T15:06:23.105Z",
+    "report_url": "https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a313ad2e-5c2a-4bb4-bed4-3b4f9b5095df-2018-10-09T150623.105Z"
+  },
+  "clinvar_variants": [
+    {
+      "variation_id": 17080,
+      "hgvs_name": "NM_000249.4(MLH1):c.1846AAG[2] (p.Lys618del)",
+      "hgvs_c": "c.1846AAG[2]",
+      "hgvs_p": "p.Lys618del",
+      "variant_type": "other",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs63751247",
+      "phenotype_ids": "MONDO:MONDO:0010159,MedGen:C5399763,OMIM:276300,Orphanet:252202|MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MONDO:MONDO:0012249,MedGen:C1333991,OMIM:609310,Orphanet:144|MedGen:C3661900|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144|MONDO:MONDO:0002032,MedGen:C0699790||MONDO:MONDO:0008018,MedGen:C1321489,OMIM:158320,Orphanet:587;MONDO:MONDO:0012249,MedGen:C1333991,OMIM:609310,Orphanet:144;MONDO:MONDO:0010159,MedGen:C5399763,OMIM:276300,Orphanet:252202|MONDO:MONDO:0008018,MedGen:C1321489,OMIM:158320,Orphanet:587;MONDO:MONDO:0012249,MedGen:C1333991,OMIM:609310,Orphanet:144|MONDO:MONDO:0018630,MedGen:C1333990,OMIM:PS120435,Orphanet:443909",
+      "phenotype_list": "Mismatch repair cancer syndrome 1|Lynch syndrome|Hereditary cancer-predisposing syndrome|Colorectal cancer, hereditary nonpolyposis, type 2|not provided|Hereditary nonpolyposis colorectal neoplasms|Lynch syndrome 1|Carcinoma of colon|Lynch-like syndrome|Muir-Torré syndrome;Colorectal cancer, hereditary nonpolyposis, type 2;Mismatch repair cancer syndrome 1|Muir-Torré syndrome;Colorectal cancer, hereditary nonpolyposis, type 2|Hereditary nonpolyposis colon cancer"
+    },
+    {
+      "variation_id": 17087,
+      "hgvs_name": "NM_000249.4(MLH1):c.676C>T (p.Arg226Ter)",
+      "hgvs_c": "c.676C>T",
+      "hgvs_p": "p.Arg226Ter",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs63751615",
+      "phenotype_ids": "MONDO:MONDO:0012249,MedGen:C1333991,OMIM:609310,Orphanet:144|MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162|MedGen:C3661900|MeSH:D003123,MedGen:C0009405|MONDO:MONDO:0007356,MedGen:C2936783,OMIM:120435,Orphanet:144||MONDO:MONDO:0010159,MedGen:C5399763,OMIM:276300,Orphanet:252202|MONDO:MONDO:0008018,MedGen:C1321489,OMIM:158320,Orphanet:587|MedGen:CN221562|MONDO:MONDO:0018630,MedGen:C1333990,OMIM:PS120435,Orphanet:443909",
+      "phenotype_list": "Colorectal cancer, hereditary nonpolyposis, type 2|Lynch syndrome|Hereditary cancer-predisposing syndrome|not provided|Hereditary nonpolyposis colorectal neoplasms|Lynch syndrome 1|Lynch-like syndrome|Mismatch repair cancer syndrome 1|Muir-Torré syndrome|Breast and/or ovarian cancer|Hereditary nonpolyposis colon cancer"
+    },
+    {
+      "variation_id": 17088,
+      "hgvs_name": "NM_000249.4(MLH1):c.199G>T (p.Gly67Trp)",
+      "hgvs_c": "c.199G>T",
+      "hgvs_p": "p.Gly67Trp",
+      "variant_type": "missense",
+      "clinical_significance": "Pathogenic",
+      "review_status": "reviewed by expert panel",
+      "review_stars": 3,
+      "rsid": "rs63750206",
+      "phenotype_ids": "MONDO:MONDO:0012249,MedGen:C1333991,OMIM:609310,Orphanet:144|MONDO:MONDO:0005835,MedGen:C4552100,Orphanet:144|MONDO:MONDO:0010159,MedGen:C5399763,OMIM:276300,Orphanet:252202|MONDO:MONDO:0015356,MeSH:D009386,MedGen:C0027672,Orphanet:140162",
+      "phenotype_list": "Colorectal cancer, hereditary nonpolyposis, type 2|Lynch syndrome|Mismatch repair cancer syndrome 1|Hereditary cancer-predisposing syndrome"
+    }
+  ],
+  "expected_evidence": [
+    {
+      "field_id": "A.gene_symbol",
+      "value": "MLH1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.disease_diagnosis",
+      "value": "mismatch repair cancer syndrome 1",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.gene_disease_relationship",
+      "value": "causative",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "B.mode_of_inheritance_reported",
+      "value": "AR",
+      "source": "clingen",
+      "evaluation_type": "precision_recall"
+    },
+    {
+      "field_id": "A.variant_hgvs_c",
+      "value": "c.1846AAG[2]",
+      "candidates": [
+        "c.1846AAG[2]",
+        "c.676C>T",
+        "c.199G>T"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_hgvs_p",
+      "value": "p.Lys618del",
+      "candidates": [
+        "p.Lys618del",
+        "p.Arg226Ter",
+        "p.Gly67Trp"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "A.variant_type",
+      "value": "other",
+      "candidates": [
+        "other",
+        "missense",
+        "missense"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    },
+    {
+      "field_id": "J.clinvar_assertion",
+      "value": "Pathogenic",
+      "candidates": [
+        "Pathogenic",
+        "Pathogenic",
+        "Pathogenic"
+      ],
+      "source": "clinvar",
+      "evaluation_type": "precision_only"
+    }
+  ],
+  "expected_standardization": {
+    "gene": "HGNC:7127",
+    "disease": "MONDO:0010159",
+    "variant_candidates": [
+      "ClinVarVariation:17080",
+      "ClinVarVariation:17087",
+      "ClinVarVariation:17088"
+    ]
+  },
+  "expected_entities": {
+    "gene": {
+      "text": "MLH1",
+      "hgnc_id": "HGNC:7127"
+    },
+    "disease": {
+      "text": "mismatch repair cancer syndrome 1",
+      "mondo_id": "MONDO:0010159"
+    },
+    "variants": [
+      {
+        "text": "c.1846AAG[2]",
+        "variation_id": "ClinVarVariation:17080",
+        "rsid": "rs63751247"
+      },
+      {
+        "text": "c.676C>T",
+        "variation_id": "ClinVarVariation:17087",
+        "rsid": "rs63751615"
+      },
+      {
+        "text": "c.199G>T",
+        "variation_id": "ClinVarVariation:17088",
+        "rsid": "rs63750206"
+      }
+    ]
+  },
+  "evaluation_config": {
+    "gene_disease_fields": [
+      "A.gene_symbol",
+      "B.disease_diagnosis",
+      "A.gene_disease_relationship",
+      "B.mode_of_inheritance_reported"
+    ],
+    "variant_fields": [
+      "A.variant_hgvs_c",
+      "A.variant_hgvs_p",
+      "A.variant_type",
+      "J.clinvar_assertion"
+    ],
+    "standardization_fields": [
+      "gene",
+      "disease",
+      "variant"
+    ]
+  },
+  "source_pmid": null,
+  "source_pmc": null,
+  "source_pdf_url": null,
+  "source_title": null,
+  "source_journal": null,
+  "source_year": null,
+  "notes": ""
+}
