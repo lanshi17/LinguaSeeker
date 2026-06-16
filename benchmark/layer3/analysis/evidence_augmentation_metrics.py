@@ -19,6 +19,7 @@ class EvidenceAugmentationMatrixPayload(TypedDict):
     english_only_evidence_count: int
     multilingual_evidence_count: int
     non_english_added_evidence_count: int
+    unknown_language_evidence_count: int
     duplicated_evidence_count: int
     conflicting_evidence_count: int
     traceable_added_evidence_count: int
@@ -74,6 +75,7 @@ class EvidenceAugmentationMatrix:
     english_only_evidence_count: int
     multilingual_evidence_count: int
     non_english_added_evidence_count: int
+    unknown_language_evidence_count: int
     duplicated_evidence_count: int
     conflicting_evidence_count: int
     traceable_added_evidence_count: int
@@ -247,8 +249,9 @@ def _found_items(raw_items: object) -> list[Mapping[str, Any]]:
 
 
 def _build_matrix(items: list[Mapping[str, Any]]) -> EvidenceAugmentationMatrix:
-    english_items = [item for item in items if _is_english(item)]
-    non_english_items = [item for item in items if not _is_english(item)]
+    english_items = [item for item in items if _language_bucket(item) == "en"]
+    non_english_items = [item for item in items if _language_bucket(item) == "non_en"]
+    unknown_language_count = sum(1 for item in items if _language_bucket(item) == "unknown")
     english_keys = {_evidence_key(item) for item in english_items}
     non_english_added = [item for item in non_english_items if _evidence_key(item) not in english_keys]
     duplicated_count = sum(1 for item in non_english_items if _evidence_key(item) in english_keys)
@@ -262,6 +265,7 @@ def _build_matrix(items: list[Mapping[str, Any]]) -> EvidenceAugmentationMatrix:
         english_only_evidence_count=len(english_items),
         multilingual_evidence_count=len(items),
         non_english_added_evidence_count=len(non_english_added),
+        unknown_language_evidence_count=unknown_language_count,
         duplicated_evidence_count=duplicated_count,
         conflicting_evidence_count=len(conflict_fields),
         traceable_added_evidence_count=sum(1 for item in non_english_added if _has_traceable_source(item)),
@@ -306,12 +310,19 @@ def _aggregate_metrics(cases: tuple[EvidenceAugmentationCaseReport, ...]) -> Evi
     )
 
 
-def _is_english(item: Mapping[str, Any]) -> bool:
+def _language_bucket(item: Mapping[str, Any]) -> str:
+    """Classify an evidence item as English, non-English, or language-unknown."""
     explicit = item.get("is_english")
     if isinstance(explicit, bool):
-        return explicit
+        return "en" if explicit else "non_en"
     language = str(item.get("evidence_source_language") or item.get("article_language") or "").strip().casefold()
-    return language in {"en", "eng", "english"}
+    if not language:
+        return "unknown"
+    return "en" if language in {"en", "eng", "english"} else "non_en"
+
+
+def _is_english(item: Mapping[str, Any]) -> bool:
+    return _language_bucket(item) == "en"
 
 
 def _evidence_key(item: Mapping[str, Any]) -> _EvidenceKey:
@@ -328,8 +339,11 @@ def _conflict_fields(items: list[Mapping[str, Any]]) -> set[str]:
         field_id = str(item.get("field_id", ""))
         if not field_id:
             continue
+        language_bucket = _language_bucket(item)
+        if language_bucket == "unknown":
+            continue
         values_by_field[field_id].add(_normalize_value(item.get("value")))
-        languages_by_field[field_id].add("en" if _is_english(item) else "non_en")
+        languages_by_field[field_id].add(language_bucket)
     return {
         field_id
         for field_id, values in values_by_field.items()
@@ -406,6 +420,7 @@ def _matrix_payload(matrix: EvidenceAugmentationMatrix) -> EvidenceAugmentationM
         "english_only_evidence_count": matrix.english_only_evidence_count,
         "multilingual_evidence_count": matrix.multilingual_evidence_count,
         "non_english_added_evidence_count": matrix.non_english_added_evidence_count,
+        "unknown_language_evidence_count": matrix.unknown_language_evidence_count,
         "duplicated_evidence_count": matrix.duplicated_evidence_count,
         "conflicting_evidence_count": matrix.conflicting_evidence_count,
         "traceable_added_evidence_count": matrix.traceable_added_evidence_count,

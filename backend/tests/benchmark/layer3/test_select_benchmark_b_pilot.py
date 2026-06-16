@@ -87,3 +87,39 @@ def test_benchmark_b_pilot_selector_writes_frozen_manifest(tmp_path: Path) -> No
     assert report_path.exists()
     assert report_path.name == "benchmark_b_pilot_selection.json"
     assert "PilotSelected=10/10" in format_benchmark_b_pilot_selection(report)
+
+
+def test_benchmark_b_pilot_selector_falls_back_to_latest_source_inventory_root(
+    tmp_path: Path,
+) -> None:
+    repo_root = tmp_path / "repo"
+    selection_root = tmp_path / "ground_truth"
+    reports_root = tmp_path / "reports"
+    source_root = repo_root / "benchmark" / "pipeline" / "input"
+    entry_ids = [f"clingen_{index:03d}" for index in range(2)]
+    _write_selection(selection_root, entry_ids)
+
+    for entry_id in entry_ids:
+        _write_source_pdf(source_root, "en", entry_id)
+        _write_source_pdf(source_root, "ja", entry_id)
+
+    inventory_path = reports_root / "source_inventory_20260616_000000.json"
+    inventory_path.parent.mkdir(parents=True, exist_ok=True)
+    inventory_path.write_text(
+        json.dumps({"config": {"repo_root": str(repo_root)}}),
+        encoding="utf-8",
+    )
+
+    report = build_benchmark_b_pilot_selection(
+        BenchmarkBPilotSelectionConfig(
+            selection_path=selection_root / "selection.json",
+            source_corpus_root=selection_root / "missing-root",
+            output_path=selection_root / "benchmark_b_pilot_selection.json",
+            target_size=10,
+        )
+    )
+
+    assert report.summary.eligible_count == 2
+    assert report.summary.selected_count == 2
+    assert report.warnings
+    assert "fallback" in report.warnings[0]

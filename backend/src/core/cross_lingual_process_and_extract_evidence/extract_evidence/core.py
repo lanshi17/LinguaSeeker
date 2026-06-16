@@ -826,7 +826,7 @@ class SourceGrounder:
     def _map_block_type(block_type: str) -> str:
         mapping = {"chart": "figure", "image": "figure", "table": "table"}
         mapped = mapping.get(block_type, block_type)
-        return mapped if mapped in EvidenceItemNormalizer._KNOWN_CONTEXT_TYPES else "text"
+        return mapped if mapped in SourceGrounder._KNOWN_CONTEXT_TYPES else "text"
 
     def _find_block_for_offsets(
         self,
